@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import typing as t
 from copy import copy
 from dataclasses import asdict
@@ -22,9 +24,10 @@ from enum import Enum
 import click
 import construct as c
 from construct_classes import Struct
+from slhdsa import PublicKey, SecretKey, sha2_128s  # noqa: I900
 from typing_extensions import Protocol, Self, runtime_checkable
 
-from .. import cosi, firmware
+from .. import _ed25519, cosi, firmware
 from ..firmware import models as fw_models
 
 SYM_OK = click.style("\u2714", fg="green")
@@ -84,7 +87,7 @@ def _format_container(
     truncate_after: t.Optional[int] = 64,
     truncate_to: t.Optional[int] = 32,
 ) -> str:
-    def mostly_printable(bytes: bytes) -> bool:
+    def mostly_printable(bytes: bytes | bytearray) -> bool:
         if not bytes:
             return True
         printable = sum(1 for byte in bytes if 0x20 <= byte <= 0x7E)
@@ -184,7 +187,7 @@ def format_header(
 
 
 def format_secmon_header(
-    header: firmware.secmon.SecmonHeader,
+    header: firmware.SecmonHeader,
     code_hash: bytes,
     digest: bytes,
     sig_status: Status,
@@ -254,17 +257,6 @@ class SignableImageProto(Protocol):
         """Check if the image has a signature."""
         ...
 
-    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
-        """Return public keys that should be used to sign the image.
-
-        This does _not_ return the keys with which the image is actually signed.
-        In particular, `image.public_keys()` will return the production
-        keys even if the image is signed with development keys.
-
-        If dev_keys is True, return development keys.
-        """
-        ...
-
 
 @runtime_checkable
 class CosiSignedImage(SignableImageProto, Protocol):
@@ -278,22 +270,6 @@ class LegacySignedImage(SignableImageProto, Protocol):
     def slots(self) -> t.Iterable[int]: ...
 
     def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None: ...
-
-    def public_keys(
-        self, dev_keys: bool = False, signature_version: int = 3
-    ) -> t.Sequence[bytes]:
-        """Return public keys that should be used to sign the image.
-
-        This does _not_ return the keys with which the image is actually signed.
-        In particular, `image.public_keys()` will return the production
-        keys even if the image is signed with development keys.
-
-        If dev_keys is True, return development keys.
-
-        Specifying signature_version allows to return keys for a different signature
-        scheme version. The default is the newest version 3.
-        """
-        ...
 
 
 class CosiSignatureHeaderProto(Protocol):
@@ -457,7 +433,72 @@ class SecmonImage(firmware.SecmonImage, CosiSignedMixin):
             raise firmware.InvalidSignatureError("Invalid bootloader signature")
 
     def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
-        return self.get_model_keys(dev_keys).boardloader_keys
+        return self.get_model_keys(dev_keys).secmon_keys
+
+
+class BootloaderV2Image(firmware.BootableImage):
+    NAME: t.ClassVar[str] = "bootloader"
+    DEV_ED25519_KEYS_PRIVATE = _make_dev_keys(b"\x41", b"\x42")
+
+    def signature_present(self) -> bool:
+        return any(not all_zero(sig) for sig in self.unauth.slh_signatures) or any(
+            not all_zero(sig) for sig in self.unauth.ec_signatures
+        )
+
+    def sign_with_devkeys(self) -> None:
+        # sigmask is a part of the signed part of the header the
+        # digest is calculated from
+        self.header.sigmask = (1 << 0) | (1 << 1)
+
+        digest = self.merkle_root()
+
+        # SLH signature signs the image digest
+        for idx, key in enumerate(fw_models.ROOT_SLH_DSA_KEYS_DEV_PRIVATE):
+            key = SecretKey.from_digest(key, sha2_128s)
+            self.unauth.slh_signatures[idx] = key.sign(digest)
+
+        hash_params = self.get_hash_params()
+        hash_fn = hash_params.hash_function
+
+        for idx, key in enumerate(self.DEV_ED25519_KEYS_PRIVATE):
+            # The EC signature signs both the image digest and the SLH signature
+            ext_digest = hash_fn(digest + self.unauth.slh_signatures[idx]).digest()
+            self.unauth.ec_signatures[idx] = _ed25519.signature_unsafe(
+                ext_digest, key, fw_models.ROOT_ED25519_KEYS_DEV[idx]
+            )
+
+    def format(self, verbose: bool = False) -> str:
+        header_dict = asdict(self)
+        header_out = header_dict.copy()
+
+        for key, val in header_out.items():
+            if "version" in key:
+                header_out[key] = LiteralStr(_format_version(val))
+
+        output = [
+            "Firmware Header " + _format_container(header_out),
+            f"Leaf hash: {click.style(self.leaf_hash().hex(), bold=True)}",
+            f"Merkle root: {click.style(self.merkle_root().hex(), bold=True)}",
+        ]
+
+        return "\n".join(output)
+
+    def verify(self, dev_keys: bool = False) -> None:
+        digest = self.merkle_root()
+
+        hash_fn = self.get_hash_params().hash_function
+
+        for idx, key in enumerate(self.public_ec_keys(dev_keys)):
+            ext_digest = hash_fn(digest + self.unauth.slh_signatures[idx]).digest()
+            try:
+                _ed25519.checkvalid(self.unauth.ec_signatures[idx], ext_digest, key)
+            except _ed25519.SignatureMismatch:
+                raise firmware.InvalidSignatureError("Invalid bootloader signature")
+
+        for idx, key in enumerate(self.public_pq_keys(dev_keys)):
+            key = PublicKey.from_digest(key, sha2_128s)
+            if not key.verify(digest, self.unauth.slh_signatures[idx]):
+                raise firmware.InvalidSignatureError("Invalid bootloader signature")
 
 
 class LegacyFirmware(firmware.LegacyFirmware):

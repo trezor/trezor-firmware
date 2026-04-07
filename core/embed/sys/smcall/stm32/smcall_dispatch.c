@@ -21,34 +21,38 @@
 
 #include <trezor_rtl.h>
 
-#include <sec/entropy.h>
+#include <sec/board_capabilities.h>
+#include <sec/fwutils.h>
 #include <sec/random_delays.h>
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
+#include <sec/unit_properties.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/system.h>
-#include <util/board_capabilities.h>
-#include <util/fwutils.h>
-#include <util/unit_properties.h>
+
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
+
+#ifdef USE_SECRET_KEYS
+#include <sec/secret_keys.h>
+#endif
 
 #ifdef USE_BACKUP_RAM
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #endif
 
 #ifdef USE_OPTIGA
 #include <sec/optiga.h>
+#include <sec/optiga_init.h>
 #endif
 
 #ifdef USE_SUSPEND
-#include <sys/suspend_io.h>
+#include <sec/suspend_io.h>
 #endif
 
-#ifdef LOCKABLE_BOOTLOADER
-#include <sec/secret.h>
-#endif
-
-#include <util/bl_check.h>
+#include <sec/boot_image.h>
 
 #include "smcall_numbers.h"
 #include "smcall_probe.h"
@@ -69,17 +73,14 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       bootargs_get_args__verified(boot_args);
     } break;
 
-    case SMCALL_BL_CHECK_CHECK: {
-      const uint8_t *hash_00 = (const uint8_t *)args[0];
-      const uint8_t *hash_FF = (const uint8_t *)args[1];
-      size_t hash_len = args[2];
-      args[0] = bl_check_check__verified(hash_00, hash_FF, hash_len);
+    case SMCALL_BOOT_IMAGE_CHECK: {
+      const boot_image_t *image = (const boot_image_t *)args[0];
+      args[0] = boot_image_check__verified(image);
     } break;
 
-    case SMCALL_BL_CHECK_REPLACE: {
-      const uint8_t *data = (const uint8_t *)args[0];
-      size_t len = args[1];
-      bl_check_replace__verified(data, len);
+    case SMCALL_BOOT_IMAGE_REPLACE: {
+      const boot_image_t *image = (const boot_image_t *)args[0];
+      boot_image_replace__verified(image);
     } break;
 
     case SMCALL_GET_BOARD_NAME: {
@@ -133,11 +134,32 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       unit_properties_get__verified(props);
     } break;
 
+    case SMCALL_UNIT_PROPERTIES_GET_SN: {
+      uint8_t *device_sn = (uint8_t *)args[0];
+      size_t max_device_sn_size = args[1];
+      size_t *device_sn_size = (size_t *)args[2];
+      args[0] = unit_properties_get_sn__verified(device_sn, max_device_sn_size,
+                                                 device_sn_size);
+    } break;
+
+#ifdef USE_SECRET
 #ifdef LOCKABLE_BOOTLOADER
     case SMCALL_SECRET_BOOTLOADER_LOCKED: {
       args[0] = secret_bootloader_locked();
     } break;
 #endif
+#endif
+
+#ifdef USE_NRF_AUTH
+    case SMCALL_SECRET_VALIDATE_NRF_PAIRING: {
+      const uint8_t *message = (const uint8_t *)args[0];
+      size_t message_len = args[1];
+      const uint8_t *mac = (const uint8_t *)args[2];
+      size_t mac_len = args[3];
+      args[0] = secret_validate_nrf_pairing__verified(message, message_len, mac,
+                                                      mac_len);
+    } break;
+#endif  // USE_NRF_AUTH
 
     case SMCALL_WAIT_RANDOM: {
       wait_random();
@@ -179,10 +201,16 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] = optiga_read_sec__verified(sec);
     } break;
 
-    case SMCALL_OPTIGA_RANDOM_BUFFER: {
-      uint8_t *dest = (uint8_t *)args[0];
-      size_t size = args[1];
-      args[0] = optiga_random_buffer__verified(dest, size);
+    case SMCALL_OPTIGA_CLOSE_CHANNEL: {
+      optiga_close_channel();
+    } break;
+
+    case SMCALL_OPTIGA_POWER_DOWN: {
+      optiga_power_down();
+    } break;
+
+    case SMCALL_OPTIGA_INIT_AND_CONFIGURE: {
+      optiga_init_and_configure();
     } break;
 
 #if PYOPT == 0
@@ -190,13 +218,19 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       optiga_set_sec_max();
     } break;
 #endif
+#endif  // USE_OPTIGA
+
+#ifdef USE_SECRET_KEYS
+    case SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
+      uint16_t rotation_index = args[0];
+      uint8_t *dest = (uint8_t *)args[1];
+      args[0] = secret_key_delegated_identity__verified(rotation_index, dest);
+    } break;
 #endif
 
-    case SMCALL_STORAGE_INIT: {
+    case SMCALL_STORAGE_SETUP: {
       PIN_UI_WAIT_CALLBACK callback = (PIN_UI_WAIT_CALLBACK)args[0];
-      const uint8_t *salt = (const uint8_t *)args[1];
-      uint16_t salt_len = args[2];
-      storage_init__verified(callback, salt, salt_len);
+      storage_setup__verified(callback);
     } break;
 
     case SMCALL_STORAGE_WIPE: {
@@ -231,14 +265,10 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 
     case SMCALL_STORAGE_CHANGE_PIN: {
-      const uint8_t *oldpin = (const uint8_t *)args[0];
-      size_t oldpin_len = args[1];
-      const uint8_t *newpin = (const uint8_t *)args[2];
-      size_t newpin_len = args[3];
-      const uint8_t *old_ext_salt = (const uint8_t *)args[4];
-      const uint8_t *new_ext_salt = (const uint8_t *)args[5];
-      args[0] = storage_change_pin__verified(
-          oldpin, oldpin_len, newpin, newpin_len, old_ext_salt, new_ext_salt);
+      const uint8_t *newpin = (const uint8_t *)args[0];
+      size_t newpin_len = args[1];
+      const uint8_t *new_ext_salt = (const uint8_t *)args[2];
+      args[0] = storage_change_pin__verified(newpin, newpin_len, new_ext_salt);
     } break;
 
     case SMCALL_STORAGE_ENSURE_NOT_WIPE_CODE: {
@@ -298,13 +328,16 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] = storage_next_counter__verified(key, count);
     } break;
 
-    case SMCALL_ENTROPY_GET: {
-      uint8_t *buf = (uint8_t *)args[0];
-      entropy_get__verified(buf);
+    case SMCALL_RNG_FILL_BUFFER: {
+      uint8_t *buffer = (uint8_t *)args[0];
+      size_t buffer_size = args[1];
+      rng_fill_buffer__verified(buffer, buffer_size);
     } break;
 
-    case SMCALL_RNG_GET: {
-      args[0] = rng_get();
+    case SMCALL_RNG_FILL_BUFFER_STRONG: {
+      uint8_t *buffer = (uint8_t *)args[0];
+      size_t buffer_size = args[1];
+      args[0] = rng_fill_buffer_strong__verified(buffer, buffer_size);
     } break;
 
     case SMCALL_FIRMWARE_GET_VENDOR: {
@@ -333,26 +366,24 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] = tropic_ping__verified(msg_out, msg_in, msg_len);
     } break;
 
-    case SMCALL_TROPIC_GET_CERT: {
-      uint8_t *buf = (uint8_t *)args[0];
-      uint16_t buf_size = (uint16_t)args[1];
-      args[0] = tropic_get_cert__verified(buf, buf_size);
-    } break;
     case SMCALL_TROPIC_ECC_KEY_GENERATE: {
       uint16_t slot_index = (uint16_t)args[0];
       args[0] = tropic_ecc_key_generate__verified(slot_index);
-
     } break;
+
     case SMCALL_TROPIC_ECC_SIGN: {
       uint16_t key_slot_index = (uint16_t)args[0];
       const uint8_t *dig = (const uint8_t *)args[1];
       uint16_t dig_len = (uint16_t)args[2];
       uint8_t *sig = (uint8_t *)args[3];
-      uint16_t sig_len = (uint16_t)args[4];
+      args[0] = tropic_ecc_sign__verified(key_slot_index, dig, dig_len, sig);
+    } break;
 
-      args[0] =
-          tropic_ecc_sign__verified(key_slot_index, dig, dig_len, sig, sig_len);
-
+    case SMCALL_TROPIC_DATA_READ: {
+      uint16_t udata_slot = (uint16_t)args[0];
+      uint8_t *data = (uint8_t *)args[1];
+      uint16_t *size = (uint16_t *)args[2];
+      args[0] = tropic_data_read__verified(udata_slot, data, size);
     } break;
 #endif
 
@@ -377,7 +408,29 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       size_t data_size = (size_t)args[3];
       args[0] = backup_ram_write__verified(key, type, data, data_size);
     } break;
-#endif
+#endif  // USE_BACKUP_RAM
+
+#ifdef USE_TELEMETRY
+    // ------------------------------------------------------------------
+    // Telemetry
+    case SMCALL_TELEMETRY_UPDATE_BATT_TEMP: {
+      telemetry_update_battery_temp(u32_to_float(args[0]));
+    } break;
+
+    case SMCALL_TELEMETRY_UPDATE_BATT_ERRORS: {
+      telemetry_batt_errors_t errors = {.all = args[0]};
+      telemetry_update_battery_errors(errors);
+    } break;
+
+    case SMCALL_TELEMETRY_UPDATE_BATT_CYCLES: {
+      telemetry_update_battery_cycles(u32_to_float(args[0]));
+    } break;
+
+    case SMCALL_TELEMETRY_GET: {
+      telemetry_data_t *out = (telemetry_data_t *)args[0];
+      args[0] = telemetry_get__verified(out);
+    } break;
+#endif  // USE_TELEMETRY
 
     default:
       system_exit_fatal("Invalid smcall", __FILE__, __LINE__);

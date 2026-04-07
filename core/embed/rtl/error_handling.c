@@ -19,18 +19,45 @@
 
 #include <trezor_rtl.h>
 
-#include <sys/system.h>
-
 #ifndef TREZOR_EMULATOR
 // Stack check guard value set in startup code.
 // This is used if stack protection is enabled.
-uint32_t __stack_chk_guard = 0;
+THREAD_LOCAL uint32_t __stack_chk_guard = 0;
 #endif
 
 // Calls to this function are inserted by the compiler
 // when stack protection is enabled.
 void __attribute__((noreturn, used)) __stack_chk_fail(void) {
   error_shutdown("(SS)");
+}
+
+const char *ts_string(ts_t status) {
+  if (ts_eq(status, TS_OK)) {
+    return "OK";
+  } else if (ts_eq(status, TS_EINVAL)) {
+    return "EINVAL";
+  } else if (ts_eq(status, TS_ENOMEM)) {
+    return "ENOMEM";
+  } else if (ts_eq(status, TS_ENOENT)) {
+    return "ENOENT";
+  } else if (ts_eq(status, TS_EBUSY)) {
+    return "EBUSY";
+  } else if (ts_eq(status, TS_ETIMEDOUT)) {
+    return "ETIMEDOUT";
+  } else if (ts_eq(status, TS_EIO)) {
+    return "EIO";
+  } else if (ts_eq(status, TS_EBADMSG)) {
+    return "EBADMSG";
+  } else if (ts_eq(status, TS_EACCES)) {
+    return "EACCES";
+    // Trezor-specific error codes
+  } else if (ts_eq(status, TS_ENOINIT)) {
+    return "ENOINIT";
+  } else if (ts_eq(status, TS_ENOEN)) {
+    return "ENOEN";
+  } else {
+    return "?ERROR";
+  }
 }
 
 void __attribute__((noreturn))
@@ -49,22 +76,4 @@ __fatal_error(const char *msg, const char *file, int line) {
   system_exit_fatal(msg, file, line);
   while (1)
     ;
-}
-
-void __attribute__((noreturn)) show_wipe_code_screen(void) {
-  error_shutdown_ex("WIPE CODE ENTERED",
-                    "All data has been erased from the device",
-                    "PLEASE RECONNECT\nTHE DEVICE");
-}
-
-void __attribute__((noreturn)) show_pin_too_many_screen(void) {
-  error_shutdown_ex("PIN ATTEMPTS\nEXCEEDED",
-                    "All data has been\nerased from the device",
-                    "Please reconnect the\ndevice");
-}
-
-void __attribute__((noreturn)) show_install_restricted_screen(void) {
-  error_shutdown_ex("INSTALL RESTRICTED",
-                    "Installation of custom firmware is currently restricted.",
-                    "Please visit\ntrezor.io/bootloader");
 }

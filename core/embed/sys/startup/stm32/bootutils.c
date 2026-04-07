@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -29,7 +31,6 @@
 #include <sys/stack_utils.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
-#include <util/image.h>
 
 #ifdef STM32F4
 #include <io/display.h>
@@ -173,7 +174,7 @@ static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
     SysTick_Config(HAL_RCC_GetSysClockFreq() / 1000U);
     NVIC_SetPriority(SysTick_IRQn, 0);
 #endif
-    jump_to_vectbl(BOOTLOADER_START + IMAGE_HEADER_SIZE, command);
+    jump_to_vectbl(BOOTLOADER_START + BOOTLOADER_VECTBL_OFFSET, command);
   }
 #else
 #error Unsupported platform
@@ -223,21 +224,21 @@ __attribute__((noreturn)) void reboot_with_rsod(
   // Set bootargs area to the new command and arguments
   reboot_with_args(BOOT_COMMAND_SHOW_RSOD, pminfo, sizeof(*pminfo));
 }
+__attribute__((noreturn)) void reboot_and_wipe(
+    const bootutils_wipe_info_t* info) {
+  reboot_with_args(BOOT_COMMAND_WIPE, info, sizeof(*info));
+}
 
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
-#ifndef RSOD_INFINITE_LOOP
-  systick_delay_ms(10 * 1000);
-#endif
 #ifdef RSOD_INFINITE_LOOP
   halt_device();
 #else
+  systick_delay_ms(10 * 1000);
   reboot_device();
 #endif
 }
 
 #endif  // SECURE_MODE
-
-#ifdef KERNEL_MODE
 
 static void jump_to_next_stage_phase_2(uint32_t arg1, uint32_t arg2) {
   // We are now running on a new stack. We cannot be sure about

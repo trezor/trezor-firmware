@@ -24,14 +24,11 @@ use heapless::Vec;
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, HeaderMsg, Hint, QrScreen, ShortMenuVec, TextScreen, TextScreenMsg,
-        VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
+        ActionBar, Header, Hint, QrScreen, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme::{self, gradient::Gradient},
 };
-
-const ITEM_PADDING: i16 = 16;
-const GROUP_PADDING: i16 = 20;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Receive {
@@ -101,7 +98,7 @@ pub fn new_receive(
     };
 
     let text_style = if chunkify {
-        theme::get_chunkified_text_style(content.len())
+        &theme::TEXT_MONO_ADDRESS_CHUNKS
     } else {
         &theme::TEXT_MONO_ADDRESS
     };
@@ -109,7 +106,8 @@ pub fn new_receive(
     let mut paragraphs = ParagraphVecShort::new();
     if let Some(description) = description {
         paragraphs.add(
-            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description).with_bottom_padding(ITEM_PADDING),
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description)
+                .with_bottom_padding(theme::PROP_INNER_SPACING),
         );
     }
     paragraphs.add(Paragraph::new(text_style, content));
@@ -131,6 +129,7 @@ pub fn new_receive(
     )
     .with_header(Header::new(title).with_menu_button())
     .with_subtitle(subtitle.unwrap_or(TString::empty()))
+    .with_hint(Hint::new_page_counter())
     .with_action_bar(ActionBar::new_single(button));
     if let Some(hint) = hint {
         address_screen = address_screen.with_hint(Hint::new_warning_caution(hint));
@@ -154,15 +153,9 @@ pub fn new_receive(
                 TR::address_details__account_info.into(),
                 theme::menu_item_title(),
             ))
-            .with_item(Button::new_menu_item(
-                TR::buttons__cancel.into(),
-                theme::menu_item_title_orange(),
-            )),
+            .with_item(Button::new_cancel_menu_item(TR::buttons__cancel.into())),
     )
-    .with_header(
-        Header::new(title)
-            .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
-    )
+    .with_header(Header::new(title).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
         VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
@@ -170,11 +163,7 @@ pub fn new_receive(
     });
 
     // QrCode
-    let content_qr = QrScreen::new(qr.map(|s| Qr::new(s, case_sensitive))?)
-        .with_header(
-            Header::new(title_qr.into())
-                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
-        )
+    let content_qr = QrScreen::new(title_qr.into(), qr.map(|s| Qr::new(s, case_sensitive))?)
         .map(|_| Some(FlowMsg::Cancelled));
 
     // AccountInfo
@@ -184,7 +173,10 @@ pub fn new_receive(
             &theme::TEXT_SMALL_LIGHT,
             TR::words__account.into(),
         ));
-        para.add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, a).with_top_padding(ITEM_PADDING));
+        para.add(
+            Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, a)
+                .with_top_padding(theme::PROP_INNER_SPACING),
+        );
     }
 
     if let Some(p) = path {
@@ -193,12 +185,12 @@ pub fn new_receive(
                 &theme::TEXT_SMALL_LIGHT,
                 TR::address_details__derivation_path.into(),
             )
-            .with_top_padding(GROUP_PADDING)
+            .with_top_padding(theme::PROPS_SPACING)
             .no_break(),
         );
         para.add(
             Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, p)
-                .with_top_padding(ITEM_PADDING)
+                .with_top_padding(theme::PROP_INNER_SPACING)
                 .break_after(),
         );
     }
@@ -209,7 +201,7 @@ pub fn new_receive(
         para.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break());
         para.add(
             Paragraph::new(&theme::TEXT_MONO_LIGHT, value)
-                .with_top_padding(ITEM_PADDING)
+                .with_top_padding(theme::PROP_INNER_SPACING)
                 .break_after(),
         );
     }
@@ -218,10 +210,7 @@ pub fn new_receive(
         para.into_paragraphs()
             .with_placement(LinearPlacement::vertical()),
     )
-    .with_header(
-        Header::new(TR::address_details__account_info.into())
-            .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
-    )
+    .with_header(Header::new(TR::address_details__account_info.into()).with_close_button())
     .map(|_| Some(FlowMsg::Cancelled));
 
     // Cancel

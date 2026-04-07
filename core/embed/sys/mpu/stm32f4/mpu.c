@@ -218,7 +218,7 @@ mpu_mode_t mpu_get_mode(void) {
   return drv->mode;
 }
 
-void mpu_set_active_applet(applet_layout_t* layout) {
+void mpu_set_active_applet(const applet_layout_t* layout) {
   // On STM32F4 one coreapp applet is allowed to run at a time
 }
 
@@ -299,8 +299,16 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       break;
 #endif
 
+#if !defined(BOARDLOADER) && !PRODUCTION
+    case MPU_MODE_BOARDLOADER:
+      // Boardloader (Privileged, Read-Write, Non-Executable)
+      // Subregion: 48KB = 64KB except 2/8 at end
+      SET_REGION( 6, FLASH_BASE,           SIZE_64KB,  0xC0, FLASH_DATA, PRIV_RW );
+      break;
+#endif
+
 #if !defined(BOARDLOADER) && !defined(BOOTLOADER)
-    case MPU_MODE_BOOTUPDATE:
+    case MPU_MODE_BOOTLOADER:
       DIS_REGION( 5 );
       // Bootloader (Privileged, Read-Write, Non-Executable)
       SET_REGION( 6, FLASH_BASE + 0x20000, SIZE_128KB, 0x00, FLASH_DATA, PRIV_RW );

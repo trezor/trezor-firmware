@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,24 +17,27 @@
 from typing import TYPE_CHECKING, Optional
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .client import Session
     from .tools import Address
 
 
-def get_entropy(client: "TrezorClient", size: int) -> bytes:
-    return client.call(messages.GetEntropy(size=size), expect=messages.Entropy).entropy
+@workflow(capability=messages.Capability.Crypto)
+def get_entropy(session: "Session", size: int) -> bytes:
+    return session.call(messages.GetEntropy(size=size), expect=messages.Entropy).entropy
 
 
+@workflow(capability=messages.Capability.Crypto)
 def sign_identity(
-    client: "TrezorClient",
+    session: "Session",
     identity: messages.IdentityType,
     challenge_hidden: bytes,
     challenge_visual: str,
     ecdsa_curve_name: Optional[str] = None,
 ) -> messages.SignedIdentity:
-    return client.call(
+    return session.call(
         messages.SignIdentity(
             identity=identity,
             challenge_hidden=challenge_hidden,
@@ -45,13 +48,14 @@ def sign_identity(
     )
 
 
+@workflow(capability=messages.Capability.Crypto)
 def get_ecdh_session_key(
-    client: "TrezorClient",
+    session: "Session",
     identity: messages.IdentityType,
     peer_public_key: bytes,
     ecdsa_curve_name: Optional[str] = None,
 ) -> messages.ECDHSessionKey:
-    return client.call(
+    return session.call(
         messages.GetECDHSessionKey(
             identity=identity,
             peer_public_key=peer_public_key,
@@ -61,8 +65,9 @@ def get_ecdh_session_key(
     )
 
 
+@workflow(capability=messages.Capability.Crypto)
 def encrypt_keyvalue(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     key: str,
     value: bytes,
@@ -70,7 +75,7 @@ def encrypt_keyvalue(
     ask_on_decrypt: bool = True,
     iv: bytes = b"",
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.CipherKeyValue(
             address_n=n,
             key=key,
@@ -84,8 +89,9 @@ def encrypt_keyvalue(
     ).value
 
 
+@workflow(capability=messages.Capability.Crypto)
 def decrypt_keyvalue(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     key: str,
     value: bytes,
@@ -93,7 +99,7 @@ def decrypt_keyvalue(
     ask_on_decrypt: bool = True,
     iv: bytes = b"",
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.CipherKeyValue(
             address_n=n,
             key=key,
@@ -107,13 +113,15 @@ def decrypt_keyvalue(
     ).value
 
 
-def get_nonce(client: "TrezorClient") -> bytes:
-    return client.call(messages.GetNonce(), expect=messages.Nonce).nonce
+@workflow(capability=messages.Capability.Crypto)
+def get_nonce(session: "Session") -> bytes:
+    return session.call(messages.GetNonce(), expect=messages.Nonce).nonce
 
 
+@workflow()
 def payment_notification(
-    client: "TrezorClient", payment_req: messages.PaymentRequest
+    session: "Session", payment_req: messages.PaymentRequest
 ) -> None:
-    client.call(
+    session.call(
         messages.PaymentNotification(payment_req=payment_req), expect=messages.Success
     )

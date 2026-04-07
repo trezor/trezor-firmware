@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZOR_TYPES_H
-#define TREZOR_TYPES_H
+#pragma once
 
 // `trezor_types.h` consolidates commonly needed includes for interface
 // header files and provides essential types required in most files.
@@ -26,10 +25,12 @@
 // Avoid adding additional includes here unless absolutely necessary,
 // as it may pollute the global namespace across the project.
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
 
+#include "rtl/conversion.h"
+#include "rtl/error_handling.h"
 #include "rtl/secbool.h"
-
-#endif  // TREZOR_TYPES_H

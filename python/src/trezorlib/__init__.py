@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -14,4 +14,15 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-__version__ = "0.13.11"
+import importlib.metadata
+import warnings
+
+
+def __getattr__(name: str) -> str:
+    if name == "__version__":
+        warnings.warn(
+            "__version__ is deprecated and will be removed in 0.15.0, use importlib.metadata.version('trezor') instead",
+            DeprecationWarning,
+        )
+        return importlib.metadata.version("trezor")
+    raise AttributeError(f"module {__name__} has no attribute {name}")

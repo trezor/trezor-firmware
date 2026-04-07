@@ -11,24 +11,16 @@ use crate::{
 };
 
 #[derive(Copy, Clone)]
-pub struct SwipeSettings {
-    pub duration: Duration,
+pub enum SwipeSettings {
+    Default,
+    Immediate,
 }
 
 impl SwipeSettings {
-    pub const fn new(duration: Duration) -> Self {
-        Self { duration }
-    }
-
-    pub const fn default() -> Self {
-        Self {
-            duration: Duration::from_millis(333),
-        }
-    }
-
-    pub const fn immediate() -> Self {
-        Self {
-            duration: Duration::from_millis(0),
+    fn duration(&self) -> Duration {
+        match self {
+            Self::Default => Duration::from_millis(333),
+            Self::Immediate => Duration::from_millis(0),
         }
     }
 }
@@ -93,7 +85,7 @@ impl SwipeConfig {
     }
 
     pub fn duration(&self, dir: Direction) -> Option<Duration> {
-        self[dir].as_ref().map(|s| s.duration)
+        self[dir].as_ref().map(|s| s.duration())
     }
 
     pub fn with_horizontal_pages(mut self) -> Self {
@@ -110,18 +102,18 @@ impl SwipeConfig {
         match self.page_axis {
             Some(Axis::Horizontal) => {
                 if pager.has_prev() {
-                    self.right = Some(SwipeSettings::default());
+                    self.right = Some(SwipeSettings::Default);
                 }
                 if pager.has_next() {
-                    self.left = Some(SwipeSettings::default());
+                    self.left = Some(SwipeSettings::Default);
                 }
             }
             Some(Axis::Vertical) => {
                 if pager.has_prev() {
-                    self.down = Some(SwipeSettings::default());
+                    self.down = Some(SwipeSettings::Default);
                 }
                 if pager.has_next() {
-                    self.up = Some(SwipeSettings::default());
+                    self.up = Some(SwipeSettings::Default);
                 }
             }
             _ => {}

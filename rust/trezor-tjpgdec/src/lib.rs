@@ -178,7 +178,12 @@ impl<'p> JDEC<'p> {
         }
     }
 
-    fn jpeg_in(&mut self, inbuf_offset: Option<usize>, n_data: usize, input_func: &mut dyn JpegInput) -> usize {
+    fn jpeg_in(
+        &mut self,
+        inbuf_offset: Option<usize>,
+        n_data: usize,
+        input_func: &mut dyn JpegInput,
+    ) -> usize {
         if let Some(offset) = inbuf_offset {
             let inbuf = &mut self.inbuf[offset..offset + n_data];
             input_func.read(Some(inbuf), n_data)
@@ -358,7 +363,12 @@ impl<'p> JDEC<'p> {
     /// `self`: decompressor object reference
     /// `id`: table ID (0:Y, 1:C)
     /// `cls`: table class (0:DC, 1:AC)
-    fn huffext(&mut self, id: usize, cls: usize, input_func: &mut dyn JpegInput) -> Result<i32, Error> {
+    fn huffext(
+        &mut self,
+        id: usize,
+        cls: usize,
+        input_func: &mut dyn JpegInput,
+    ) -> Result<i32, Error> {
         let mut dc: usize = self.dctr;
         let mut dp: usize = self.dptr;
         let mut d: u32;
@@ -1327,7 +1337,11 @@ impl<'p> JDEC<'p> {
                     // Align stream read offset to JD_SZBUF
                     ofs %= JD_SZBUF as u32;
                     if ofs != 0 {
-                        jd.dctr = jd.jpeg_in(Some(ofs as usize), (JD_SZBUF as u32 - ofs) as usize, input_func);
+                        jd.dctr = jd.jpeg_in(
+                            Some(ofs as usize),
+                            (JD_SZBUF as u32 - ofs) as usize,
+                            input_func,
+                        );
                     }
                     jd.dptr = (ofs - (if JD_FASTDECODE != 0 { 0 } else { 1 })) as usize;
                     return Ok(jd); // Initialization succeeded. Ready to
@@ -1357,7 +1371,11 @@ impl<'p> JDEC<'p> {
     ///
     /// If the output function returns `false`, the decompression is interrupted.
     /// It's possible later to call `decomp()` again to resume the decompression.
-    pub fn decomp(&mut self, input_func: &mut dyn JpegInput, output_func: &mut dyn JpegOutput) -> Result<(), Error> {
+    pub fn decomp(
+        &mut self,
+        input_func: &mut dyn JpegInput,
+        output_func: &mut dyn JpegOutput,
+    ) -> Result<(), Error> {
         let mx = self.msx as u16 * 8; // Size of the MCU (pixel)
         let my = self.msy as u16 * 8; // Size of the MCU (pixel)
         while self.mcu_y < self.height {
@@ -1398,7 +1416,6 @@ impl<'p> JDEC<'p> {
     pub fn next_mcu(&self) -> (u16, u16) {
         (self.mcu_x, self.mcu_y)
     }
-
 }
 
 pub trait JpegInput {

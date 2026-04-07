@@ -8,8 +8,8 @@
 
 #include <io/display.h>
 #include <sec/secret.h>
-#include <util/flash.h>
-#include <util/flash_otp.h>
+#include <sys/flash.h>
+#include <sys/flash_otp.h>
 
 int prodtest_main(void);
 
@@ -20,7 +20,7 @@ void usage(void) {
       "socat' in Ubuntu)\n");
   printf(
       "Bind the UDP with 'socat -d -d  "
-      "pty,link=/dev/ttyVCP0,mode=666,raw,echo=0   UDP:127.0.0.1:21424'\n");
+      "pty,link=/dev/ttyVCP0,mode=666,raw,echo=0   UDP:127.0.0.1:21327'\n");
   printf("Then you can connect with you terminal to /dev/ttyVCP0\n");
   printf("  -h  show this help\n");
 }

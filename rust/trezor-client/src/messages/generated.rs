@@ -52,6 +52,8 @@ trezor_message_impl! {
     DataChunkRequest => MessageType_DataChunkRequest,
     DataChunkAck => MessageType_DataChunkAck,
     SetBrightness => MessageType_SetBrightness,
+    GetSerialNumber => MessageType_GetSerialNumber,
+    SerialNumber => MessageType_SerialNumber,
     SetU2FCounter => MessageType_SetU2FCounter,
     GetNextU2FCounter => MessageType_GetNextU2FCounter,
     NextU2FCounter => MessageType_NextU2FCounter,
@@ -89,6 +91,11 @@ trezor_message_impl! {
     DebugLinkGcInfo => MessageType_DebugLinkGcInfo,
     DebugLinkGetPairingInfo => MessageType_DebugLinkGetPairingInfo,
     DebugLinkPairingInfo => MessageType_DebugLinkPairingInfo,
+    DebugLinkSetLogFilter => MessageType_DebugLinkSetLogFilter,
+    DebugLinkN4W1Connected => MessageType_DebugLinkN4W1Connected,
+    DebugLinkN4W1Write => MessageType_DebugLinkN4W1Write,
+    DebugLinkN4W1Read => MessageType_DebugLinkN4W1Read,
+    DebugLinkN4W1Response => MessageType_DebugLinkN4W1Response,
     ThpCreateNewSession => MessageType_ThpCreateNewSession,
     ThpCredentialRequest => MessageType_ThpCredentialRequest,
     ThpCredentialResponse => MessageType_ThpCredentialResponse,
@@ -102,6 +109,8 @@ trezor_message_impl! {
     BenchmarkNames => MessageType_BenchmarkNames,
     BenchmarkRun => MessageType_BenchmarkRun,
     BenchmarkResult => MessageType_BenchmarkResult,
+    TelemetryGet => MessageType_TelemetryGet,
+    Telemetry => MessageType_Telemetry,
 }
 
 #[cfg(feature = "bitcoin")]
@@ -154,6 +163,10 @@ trezor_message_impl! {
     CardanoTxInlineDatumChunk => MessageType_CardanoTxInlineDatumChunk,
     CardanoTxReferenceScriptChunk => MessageType_CardanoTxReferenceScriptChunk,
     CardanoTxReferenceInput => MessageType_CardanoTxReferenceInput,
+    CardanoSignMessageInit => MessageType_CardanoSignMessageInit,
+    CardanoMessageDataRequest => MessageType_CardanoMessageDataRequest,
+    CardanoMessageDataResponse => MessageType_CardanoMessageDataResponse,
+    CardanoMessageSignature => MessageType_CardanoMessageSignature,
 }
 
 #[cfg(feature = "eos")]
@@ -186,6 +199,18 @@ trezor_message_impl! {
     EthereumTypedDataValueAck => MessageType_EthereumTypedDataValueAck,
     EthereumTypedDataSignature => MessageType_EthereumTypedDataSignature,
     EthereumSignTypedHash => MessageType_EthereumSignTypedHash,
+}
+
+#[cfg(feature = "evolu")]
+trezor_message_impl! {
+    EvoluGetNode => MessageType_EvoluGetNode,
+    EvoluNode => MessageType_EvoluNode,
+    EvoluSignRegistrationRequest => MessageType_EvoluSignRegistrationRequest,
+    EvoluRegistrationRequest => MessageType_EvoluRegistrationRequest,
+    EvoluGetDelegatedIdentityKey => MessageType_EvoluGetDelegatedIdentityKey,
+    EvoluDelegatedIdentityKey => MessageType_EvoluDelegatedIdentityKey,
+    EvoluIndexManagement => MessageType_EvoluIndexManagement,
+    EvoluIndexManagementResponse => MessageType_EvoluIndexManagementResponse,
 }
 
 #[cfg(feature = "monero")]
@@ -297,10 +322,26 @@ trezor_message_impl! {
     TezosPublicKey => MessageType_TezosPublicKey,
 }
 
+#[cfg(feature = "tron")]
+trezor_message_impl! {
+    TronGetAddress => MessageType_TronGetAddress,
+    TronAddress => MessageType_TronAddress,
+    TronSignTx => MessageType_TronSignTx,
+    TronSignature => MessageType_TronSignature,
+    TronContractRequest => MessageType_TronContractRequest,
+    TronTransferContract => MessageType_TronTransferContract,
+    TronTriggerSmartContract => MessageType_TronTriggerSmartContract,
+    TronFreezeBalanceV2Contract => MessageType_TronFreezeBalanceV2Contract,
+    TronUnfreezeBalanceV2Contract => MessageType_TronUnfreezeBalanceV2Contract,
+    TronWithdrawUnfreeze => MessageType_TronWithdrawUnfreeze,
+    TronVoteWitnessContract => MessageType_TronVoteWitnessContract,
+}
+
 #[cfg(feature = "webauthn")]
 trezor_message_impl! {
     WebAuthnListResidentCredentials => MessageType_WebAuthnListResidentCredentials,
     WebAuthnCredentials => MessageType_WebAuthnCredentials,
     WebAuthnAddResidentCredential => MessageType_WebAuthnAddResidentCredential,
     WebAuthnRemoveResidentCredential => MessageType_WebAuthnRemoveResidentCredential,
+    WebAuthnCredentialsAck => MessageType_WebAuthnCredentialsAck,
 }

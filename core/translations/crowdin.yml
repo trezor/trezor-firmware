@@ -25,18 +25,22 @@
 files: [
   {
     "source": "en_Bolt.json",
-    "translation": "%two_letters_code%_Bolt.%file_extension%"
+    "translation": "%two_letters_code%_Bolt.%file_extension%",
+    "update_option": "update_as_unapproved"
   },
   {
     "source": "en_Caesar.json",
-    "translation": "%two_letters_code%_Caesar.%file_extension%"
+    "translation": "%two_letters_code%_Caesar.%file_extension%",
+    "update_option": "update_as_unapproved"
   },
   {
     "source": "en_Delizia.json",
-    "translation": "%two_letters_code%_Delizia.%file_extension%"
+    "translation": "%two_letters_code%_Delizia.%file_extension%",
+    "update_option": "update_as_unapproved"
   },
   {
     "source": "en_Eckhart.json",
-    "translation": "%two_letters_code%_Eckhart.%file_extension%"
+    "translation": "%two_letters_code%_Eckhart.%file_extension%",
+    "update_option": "update_as_unapproved"
   }
 ]

@@ -20,14 +20,10 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-_confidential_section_loadaddr = LOADADDR(.confidential);
-_confidential_section_start = ADDR(.confidential);
-_confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
-
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_codelen = _bootloader_code_end - ADDR(.flash);
 
 SECTIONS {
   .header : ALIGN(4) {
@@ -40,13 +36,13 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
-    . = ALIGN(512);
+    . = ALIGN(4);
   } >FLASH AT>FLASH
 
   .data : ALIGN(4) {
     *(.data*);
-    . = ALIGN(512);
-  } >AUX1_RAM AT>FLASH
+    . = ALIGN(4);
+  } >MAIN_RAM AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -55,7 +51,7 @@ SECTIONS {
   .bss : ALIGN(4) {
     *(.bss*);
     . = ALIGN(4);
-  } >AUX1_RAM
+  } >MAIN_RAM
 
   .buf : ALIGN(4) {
     *(.buf*);
@@ -67,11 +63,6 @@ SECTIONS {
   .stack : ALIGN(8) {
     . = 16K; /* Overflow causes UsageFault */
   } >MAIN_RAM
-
-  .confidential : ALIGN(512) {
-    *(.confidential*);
-    . = ALIGN(512);
-  } >MAIN_RAM AT>FLASH
 
   .fb1 : ALIGN(4) {
     *(.fb1*);
@@ -89,4 +80,13 @@ SECTIONS {
     *(.boot_args*);
     . = ALIGN(8);
   } >BOOT_ARGS
+
+  .flash : ALIGN(4) {
+    /* Pad the rest of bootloader area with zeros */
+    BYTE(0x00)
+    FILL(0x00)
+    /* Use alignment required by the boardloader */
+    . = ALIGN(512);
+    _bootloader_code_end = .;
+  } >FLASH
 }

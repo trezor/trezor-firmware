@@ -94,7 +94,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         ))),
     )
     .with_swipeup_footer(None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map_to_button_msg();
 
     let content_step_menu = Frame::left_aligned(
@@ -107,7 +107,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_menu_button()
     .button_styled(theme::button_warning_low())
     .with_swipeup_footer(None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map_to_button_msg();
 
     let content_step_hold = Frame::left_aligned(
@@ -115,7 +115,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
     .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     let content_step_done = Frame::left_aligned(
@@ -133,7 +133,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         VerticalMenu::empty()
             .item(theme::ICON_CHEVRON_RIGHT, TR::tutorial__did_you_know.into())
             .item(theme::ICON_REBOOT, TR::tutorial__restart_tutorial.into())
-            .danger(theme::ICON_CANCEL, TR::tutorial__exit.into()),
+            .cancel_item(TR::tutorial__exit.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);
@@ -153,7 +153,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         SwipeContent::new(PromptScreen::new_hold_to_confirm_danger()),
     )
     .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&ShowTutorial::StepWelcome)?;

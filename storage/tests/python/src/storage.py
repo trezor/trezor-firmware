@@ -113,11 +113,12 @@ class Storage:
     def get_pin_rem(self) -> int:
         return consts.PIN_MAX_TRIES - self.pin_log.get_failures_count()
 
-    def change_pin(self, oldpin: str, newpin: str) -> bool:
+    def change_pin(self, newpin: str, oldpin: str | None = None) -> bool:
         if not self.initialized or not self.unlocked:
             return False
-        if not self.check_pin(oldpin):
-            return False
+        if oldpin is not None:
+            if not self.check_pin(oldpin):
+                return False
         self._set_pin(newpin)
         return True
 
@@ -154,7 +155,7 @@ class Storage:
         counter = val.to_bytes(4, sys.byteorder)
 
         if self.nc.is_byte_access():
-            counter += bytearray(b"\xFF" * consts.COUNTER_TAIL_SIZE)
+            counter += bytearray(b"\xff" * consts.COUNTER_TAIL_SIZE)
         self.set(key, counter)
 
     def next_counter(self, key: int) -> int:
@@ -234,7 +235,7 @@ class Storage:
     def _set_encrypt(self, key: int, val: bytes):
         # In C, data are preallocated beforehand for encrypted values,
         # to match the behaviour we do the same.
-        preallocate = b"\xFF" * (
+        preallocate = b"\xff" * (
             consts.CHACHA_IV_SIZE + len(val) + consts.POLY1305_MAC_SIZE
         )
         self.nc.set(key, preallocate)

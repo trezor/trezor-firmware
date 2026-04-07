@@ -15,7 +15,7 @@ runs:
   using: composite
   steps:
     - name: Set AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
       with:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-west-1
@@ -26,14 +26,17 @@ runs:
         MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
         OUTDIR=${{ github.run_id }}
         mkdir -p $OUTDIR
-        nix-shell --run "poetry run python ci/prepare_ui_artifacts.py || true"
+        nix-shell --run "uv run python ci/prepare_ui_artifacts.py || true"
         mv -v tests/ui_tests/reports/test/* $OUTDIR
         mv -v tests/ui_tests/fixtures.*.json $OUTDIR
 
         # rename all model/job-speficific report files, so they won't be overwritten during upload
         cd $OUTDIR
         for F in *; do
-          if [ -f "$F" ]; then
+          # skip renaming since it has the same contents for all jobs
+          if [ "$F" = "testreport.js" ]; then
+            echo "Skip $F"
+          elif [ -f "$F" ]; then
             mv -v $F $MODELJOB-$F
           fi
         done
@@ -50,16 +53,16 @@ runs:
         # Upload report
         du -sh ${{ github.run_id }}
         ls -l ${{ github.run_id }}
-        aws s3 cp --recursive --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }} &
+        aws s3 cp --no-overwrite --recursive --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }} &
         PID1=$!
 
         # Upload test screen recording
         du -sh ci/ui_test_records
-        aws s3 sync --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests &
+        aws s3 cp --no-overwrite --recursive --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests &
         PID2=$!
         # TODO: generate directory listing / autoindex
 
-        # Wait for the above sync jobs to finish (fail if one of them fails)
+        # Wait for the above copy jobs to finish (fail if one of them fails)
         wait $PID1
         wait $PID2
       shell: sh

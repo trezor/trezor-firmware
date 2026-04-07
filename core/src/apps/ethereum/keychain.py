@@ -104,11 +104,12 @@ def _schemas_from_network(
     if network_info is networks.UNKNOWN_NETWORK:
         # allow Ethereum or testnet paths for unknown networks
         slip44_id = (60, 1)
-    elif network_info.slip44 not in (60, 1):
-        # allow cross-signing with Ethereum unless it's testnet
+    elif network_info.slip44 != 60:
+        # allow cross-signing with Ethereum for all non-mainnet networks
         slip44_id = (network_info.slip44, 60)
     else:
-        slip44_id = (network_info.slip44,)
+        # legacy testnet slip44 = 1
+        slip44_id = (network_info.slip44, 1)
 
     schemas = [paths.PathSchema.parse(pattern, slip44_id) for pattern in patterns]
     return [s.copy() for s in schemas]
@@ -118,7 +119,7 @@ def with_keychain_from_path(
     *patterns: str,
 ) -> Callable[[HandlerAddressN[MsgInAddressN, MsgOut]], Handler[MsgInAddressN, MsgOut]]:
     def decorator(
-        func: HandlerAddressN[MsgInAddressN, MsgOut]
+        func: HandlerAddressN[MsgInAddressN, MsgOut],
     ) -> Handler[MsgInAddressN, MsgOut]:
         async def wrapper(msg: MsgInAddressN) -> MsgOut:
             slip44 = _slip44_from_address_n(msg.address_n)
@@ -134,7 +135,7 @@ def with_keychain_from_path(
 
 
 def with_keychain_from_chain_id(
-    func: HandlerChainId[MsgInSignTx, MsgOut]
+    func: HandlerChainId[MsgInSignTx, MsgOut],
 ) -> Handler[MsgInSignTx, MsgOut]:
     # this is only for SignTx, and only PATTERN_ADDRESS is allowed
     async def wrapper(msg: MsgInSignTx) -> MsgOut:

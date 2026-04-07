@@ -5,12 +5,13 @@ HARDENED = const(0x8000_0000)
 SLIP25_PURPOSE = const(10025 | HARDENED)
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Callable, Collection, Container, Iterable, Sequence, TypeVar
 
     from typing_extensions import Protocol
 
     Bip32Path = list[int]
-    Slip21Path = Sequence[bytes]
+    Slip21Path = Sequence[AnyBytes]
     PathType = TypeVar("PathType", Bip32Path, Slip21Path, contravariant=True)
 
     class PathSchemaType(Protocol):
@@ -290,7 +291,7 @@ class PathSchema:
                     # Which in practice it is, the only non-Collection is Interval.
                     # But we're not going to introduce an additional type requirement
                     # for the sake of __repr__ that doesn't exist in production anyway
-                    collection: Collection[int] = component  # type: ignore [Expression of type "Container[int]" is incompatible with declared type "Collection[int]"]
+                    collection: Collection[int] = component  # type: ignore [Type "Container[int]" is not assignable to declared type "Collection[int]"]
                     component_str = ",".join(str(unharden(i)) for i in collection)
                     if len(collection) > 1:
                         component_str = "[" + component_str + "]"
@@ -367,6 +368,29 @@ def address_n_to_str(address_n: Iterable[int]) -> str:
     return "m/" + "/".join(_path_item(i) for i in address_n)
 
 
+def address_n_slip21_to_str(address_n: Slip21Path) -> str:
+    if not address_n:
+        return "m"
+
+    def label_to_str(label: AnyBytes) -> str:
+        out = []
+        for b in label:
+            if b == ord("\\"):
+                # Escape \ as \\
+                out.append("\\\\")
+            elif b == ord("/"):
+                # Escape / as \/
+                out.append("\\/")
+            elif 32 <= b <= 126:
+                out.append(chr(b))
+            else:
+                # Display non-ASCII-printable bytes as \xNN
+                out.append(f"\\x{b:02x}")
+        return "".join(out)
+
+    return "m/" + "/".join(label_to_str(label) for label in address_n)
+
+
 def unharden(item: int) -> int:
     return item ^ (item & HARDENED)
 
@@ -374,10 +398,12 @@ def unharden(item: int) -> int:
 def get_account_name(
     coin: str, address_n: Bip32Path, pattern: str | Sequence[str], slip44_id: int
 ) -> str | None:
+    from trezor.strings import format_amount_unit
+
     account_num = _get_account_num(address_n, pattern, slip44_id)
     if account_num is None:
         return None
-    return f"{coin} #{account_num}"
+    return format_amount_unit(coin, f"#{account_num}")
 
 
 def _get_account_num(

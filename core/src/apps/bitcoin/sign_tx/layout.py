@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata
 
@@ -18,8 +18,11 @@ from ..common import (
 from ..keychain import address_n_to_name
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.enums import AmountUnit
     from trezor.messages import PaymentRequest, TxOutput
+    from trezor.ui.layouts import StrPropertyType
 
     from apps.common.coininfo import CoinInfo
     from apps.common.paths import Bip32Path
@@ -43,16 +46,16 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
         decimals -= 3
         shortcut = "m" + shortcut
     # we don't need to do anything for AmountUnit.BITCOIN
-    return f"{format_amount(amount, decimals)} {shortcut}"
+    return format_amount_unit(format_amount(amount, decimals), shortcut)
 
 
 def account_label(coin: CoinInfo, address_n: Bip32Path | None) -> str:
-    return (
-        TR.bitcoin__multiple_accounts
-        if address_n is None
-        else address_n_to_name(coin, list(address_n) + [0] * BIP32_WALLET_DEPTH)
-        or f"Path {address_n_to_str(address_n)}"
-    )
+    if address_n is None:
+        return TR.bitcoin__multiple_accounts
+    else:
+        return address_n_to_name(
+            coin, list(address_n) + [0] * BIP32_WALLET_DEPTH
+        ) or address_n_to_str(address_n)
 
 
 async def confirm_output(
@@ -151,34 +154,78 @@ async def confirm_decred_sstx_submission(
     )
 
 
-async def should_show_payment_request_details(
-    msg: PaymentRequest,
+async def show_payment_request_details(
+    provider_address: str,
+    payment_request: PaymentRequest,
     coin: CoinInfo,
     amount_unit: AmountUnit,
-) -> bool:
+    address_n: Bip32Path | None,
+) -> None:
     from trezor import wire
+    from trezor.ui.layouts.slip24 import Refund, Trade
 
-    memo_texts: list[str] = []
-    for m in msg.memos:
-        if m.text_memo is not None:
-            memo_texts.append(m.text_memo.text)
-        elif m.refund_memo is not None:
-            pass
-        elif m.coin_purchase_memo is not None:
-            memo_texts.append(f"{TR.words__buying} {m.coin_purchase_memo.amount}.")
+    from apps.common.payment_request import parse_amount
+
+    total_amount = format_coin_amount(parse_amount(payment_request), coin, amount_unit)
+
+    texts = []
+    refunds = []
+    trades = []
+    for memo in payment_request.memos:
+        if memo.text_memo is not None:
+            texts.append((None, memo.text_memo.text))
+        elif memo.text_details_memo is not None:
+            texts.append((memo.text_details_memo.title, memo.text_details_memo.text))
+        elif memo.refund_memo:
+            refund_address_n = memo.refund_memo.address_n
+            refund_account = account_label(coin, refund_address_n)
+            refund_account_path = (
+                address_n_to_str(refund_address_n) if refund_address_n else None
+            )
+            refunds.append(
+                Refund(memo.refund_memo.address, refund_account, refund_account_path)
+            )
+        elif memo.coin_purchase_memo:
+            coin_purchase_address_n = memo.coin_purchase_memo.address_n
+            coin_purchase_account = account_label(coin, coin_purchase_address_n)
+            coin_purchase_account_path = (
+                address_n_to_str(coin_purchase_address_n)
+                if coin_purchase_address_n
+                else None
+            )
+            trades.append(
+                Trade(
+                    f"-\u00a0{total_amount}",
+                    f"+\u00a0{memo.coin_purchase_memo.amount}",
+                    memo.coin_purchase_memo.address,
+                    coin_purchase_account,
+                    coin_purchase_account_path,
+                )
+            )
         else:
             raise wire.DataError("Unrecognized memo type in payment request memo.")
 
-    assert msg.amount is not None
+    account = account_label(coin, address_n)
+    account_path = address_n_to_str(address_n) if address_n else None
+    account_items: list[StrPropertyType] = []
+    if account:
+        account_items.append((TR.words__account, account, True))
+    if account_path:
+        account_items.append((TR.address_details__derivation_path, account_path, True))
 
-    return await layouts.should_show_payment_request_details(
-        msg.recipient_name,
-        format_coin_amount(msg.amount, coin, amount_unit),
-        memo_texts,
+    await layouts.confirm_payment_request(
+        payment_request.recipient_name,
+        provider_address,
+        texts,
+        refunds,
+        trades,
+        account_items,
+        None,
+        None,
     )
 
 
-async def confirm_replacement(title: str, txid: bytes) -> None:
+async def confirm_replacement(title: str, txid: AnyBytes) -> None:
     from ubinascii import hexlify
 
     await layouts.confirm_replacement(
@@ -241,13 +288,21 @@ async def confirm_total(
     amount_unit: AmountUnit,
     address_n: Bip32Path | None,
 ) -> None:
+    account = account_label(coin, address_n)
+    account_path = address_n_to_str(address_n) if address_n else None
+    account_items: list[StrPropertyType] = [(TR.words__account, account, None)]
+    if account_path and account_path != account:
+        account_items.append((TR.address_details__derivation_path, account_path, None))
 
     await layouts.confirm_total(
         format_coin_amount(spending, coin, amount_unit),
         format_coin_amount(fee, coin, amount_unit),
-        fee_rate_amount=format_fee_rate(fee_rate, coin) if fee_rate >= 0 else None,
-        source_account=account_label(coin, address_n),
-        source_account_path=address_n_to_str(address_n) if address_n else None,
+        account_items=account_items,
+        fee_items=(
+            [(TR.confirm_total__fee_rate, format_fee_rate(fee_rate, coin), None)]
+            if fee_rate >= 0
+            else None
+        ),
     )
 
 

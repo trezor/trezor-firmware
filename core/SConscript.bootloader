@@ -1,29 +1,36 @@
 # pylint: disable=E0602
 
 import os
-import shlex
 import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
+DEBUGLINK = ARGUMENTS.get('DEBUGLINK', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
+UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
+DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 
 FEATURES_WANTED = [
     "ble",
+    "boot_ucb",
     "consumption_mask",
     "display",
     "dma2d",
     "input",
     "iwdg",
+    "kernel_mode",
     "power_manager",
     "rgb_led",
     "rtc",
     "secure_domain",
+    "secure_mode",
     "suspend",
+    "telemetry",
     "usb",
+    "usb_iface_wire",
     ]
 
 if TREZOR_MODEL in ('T3W1', ):
@@ -39,25 +46,39 @@ SOURCE_HAL = []
 PATH_HAL = []
 RUST_UI_FEATURES = []
 
+if DEBUGLINK:
+    FEATURES_WANTED.append("usb_iface_debug")
+    CPPDEFINES_MOD.append("DEBUGLINK")
+
+if DBG_CONSOLE != "":
+    FEATURES_WANTED += ["dbg_console"]
+
+env = Environment(
+    ENV=os.environ,
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)}",
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+    DBG_CONSOLE=DBG_CONSOLE,
+    )
+
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-storage',
 ]
 CPPDEFINES_MOD += [
-    'KERNEL_MODE',
-    'SECURE_MODE',
     'AES_128',
     'AES_192',
     'USE_KECCAK',
     'ED25519_NO_PRECOMP',
     'FANCY_FATAL_ERROR',
+    ('DISABLE_ANIMATION', '1' if DISABLE_ANIMATION else '0'),
 ]
 
-SOURCE_MOD += [
-    'vendor/trezor-storage/flash_area.c',
-]
 SOURCE_MOD_CRYPTO = [
     'vendor/trezor-crypto/blake2s.c',
     'vendor/trezor-crypto/chacha_drbg.c',
@@ -73,32 +94,49 @@ SOURCE_MOD_CRYPTO = [
     'vendor/trezor-crypto/sha2.c',
 ]
 
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    PQ_SIGNATURE_PATH = 'vendor/sphincsplus/ref/'
+    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s '
+    PQ_SIGNATURE_SOURCE = [
+        'vendor/sphincsplus/ref/address.c',
+        'vendor/sphincsplus/ref/fors.c',
+        'vendor/sphincsplus/ref/hash_sha2.c',
+        'vendor/sphincsplus/ref/sha2.c',
+        'vendor/sphincsplus/ref/sign.c',
+        'vendor/sphincsplus/ref/thash_sha2_simple.c',
+        'vendor/sphincsplus/ref/utils.c',
+        'vendor/sphincsplus/ref/wots.c',
+    ]
+
 # modtrezorui
 CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 
 SOURCE_MOD += [
-    'embed/upymod/modtrezorcrypto/rand.c',
-    'embed/gfx/bitblt/gfx_bitblt.c',
-    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
-    'embed/gfx/fonts/font_bitmap.c',
-    'embed/gfx/gfx_color.c',
-    'embed/gfx/gfx_draw.c',
-    'embed/gfx/terminal.c',
     'embed/io/display/display_utils.c',
-    'embed/util/flash/flash_utils.c',
-    'embed/util/image/image.c',
-    'embed/util/rsod/rsod.c',
-    'embed/util/scm_revision/scm_revision.c',
+    'embed/io/gfx/bitblt/gfx_bitblt.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/io/gfx/gfx_color.c',
+    'embed/io/gfx/gfx_draw.c',
+    'embed/io/gfx/rsod.c',
+    'embed/io/gfx/terminal/font_bitmap.c',
+    'embed/io/gfx/terminal/terminal.c',
     'embed/rtl/error_handling.c',
-    'embed/rtl/mini_printf.c',
+    'embed/rtl/scm_revision.c',
+    'embed/rtl/strutils.c',
+    'embed/sec/image/image.c',
+    'embed/sec/rsod/rsod_special.c',
+    'embed/sys/flash/flash_utils.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+if not PRODUCTION:
+    SOURCE_MOD += ['embed/rtl/printf.c']
 
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
@@ -108,20 +146,10 @@ SOURCE_NANOPB = [
 
 ui.init_ui(TREZOR_MODEL, "bootloader", RUST_UI_FEATURES)
 
-env = Environment(
-    ENV=os.environ,
-    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)}",
-    CPPDEFINES_IMPLICIT=[],
-    CPPDEFPREFIX="-D'",
-    CPPDEFSUFFIX="'",
-    )
-
-FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
-
 SOURCE_BOOTLOADER = [
-    'embed/projects/bootloader/header.S',
     'embed/projects/bootloader/bootui.c',
     'embed/projects/bootloader/main.c',
+    'embed/projects/bootloader/ui_helpers.c',
     'embed/projects/bootloader/workflow/wf_firmware_update.c',
     'embed/projects/bootloader/workflow/wf_wipe_device.c',
     'embed/projects/bootloader/workflow/wf_get_features.c',
@@ -137,8 +165,30 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/wire/wire_iface_ble.c',
     'embed/projects/bootloader/protob/protob.c',
     'embed/projects/bootloader/protob/pb/messages.pb.c',
+    'embed/projects/bootloader/fw_check.c',
     'embed/projects/bootloader/version_check.c',
 ]
+
+if DEBUGLINK:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/workflow/debuglink.c',
+        'embed/projects/bootloader/wire/debug_iface_usb.c',
+        'embed/projects/bootloader/protob/protob_debug.c',
+        'embed/projects/bootloader/protob/pb/messages-debug.pb.c',
+    ]
+
+if "boot_ucb" in FEATURES_AVAILABLE:
+    env.Replace(
+        HEADERTOOL='headertool_pq',
+    )
+else:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/header.S',
+    ]
+    env.Replace(
+        HEADERTOOL='headertool',
+    )
+
 
 if ('LOCKABLE_BOOTLOADER', '1') in CPPDEFINES_HAL:
     SOURCE_BOOTLOADER += [
@@ -169,12 +219,11 @@ ALLPATHS = [
         'embed/projects/bootloader/protob',
         'embed/rtl/inc',
         'embed/models',
+        'embed/io/gfx/inc',
+        'embed/io/translations/inc',
+        'embed/sec/image/inc',
+        'embed/sec/rsod/inc',
         'embed/sys/bsp/inc',
-        'embed/gfx/inc',
-        'embed/util/translations/inc',
-        'embed/util/image/inc',
-        'embed/util/rsod/inc',
-        'embed/util/scm_revision/inc',
         'embed/upymod/modtrezorui',
         'vendor/nanopb',
     ] + CPPPATH_MOD + PATH_HAL
@@ -205,10 +254,6 @@ env.Replace(
     )
 
 env.Replace(
-    HEADERTOOL='headertool',
-)
-
-env.Replace(
     ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_HAL,
     ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}"]))
 
@@ -223,8 +268,13 @@ cmake_gen = env.Command(
 #
 features = ['bootloader',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 
-if UI_DEBUG_OVERLAY:
+if DEBUGLINK:
+    features.append('debuglink')
+    features.append('ui_debug')
     features.append('ui_debug_overlay')
+
+if UI_PERFORMANCE_OVERLAY:
+    features.append('ui_performance_overlay')
 
 rust = tools.add_rust_lib(
     env=env,
@@ -246,6 +296,12 @@ obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-
 obj_program += env.Object(source=SOURCE_BOOTLOADER)
 obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_HAL)
+obj_program += [rust]
+
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    obj_program += env.Object(
+        source=PQ_SIGNATURE_SOURCE, CCFLAGS="$CCFLAGS -Wno-incompatible-pointer-types"
+    )
 
 
 linkerscript_gen = env.Command(
@@ -262,7 +318,6 @@ program_elf = env.Command(
 )
 
 env.Depends(program_elf, linkerscript_gen)
-env.Depends(program_elf, rust)
 
 SUFFIX = '_qa' if BOOTLOADER_QA else ''
 
@@ -279,7 +334,7 @@ program_bin = env.Command(
     target='bootloader.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )

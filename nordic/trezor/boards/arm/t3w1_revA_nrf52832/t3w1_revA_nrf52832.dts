@@ -17,12 +17,9 @@
 		zephyr,console = &uart0;
 		zephyr,shell-uart = &uart0;
 		zephyr,uart-mcumgr = &uart0;
-		zephyr,bt-mon-uart = &uart0;
-		zephyr,bt-c2h-uart = &uart0;
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
-		zephyr,bt-hci = &bt_hci_controller;
 	};
 
 	leds {
@@ -74,13 +71,6 @@
 	};
 };
 
-&bt_hci_sdc {
-    status = "disabled";
-};
-
-&bt_hci_controller {
-    status = "okay";
-};
 
 &adc {
 	status = "okay";

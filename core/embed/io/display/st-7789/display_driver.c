@@ -71,7 +71,7 @@ bool display_init(display_content_mode_t mode) {
     display_io_init_fmc();
     display_panel_init();
     display_panel_set_little_endian();
-    backlight_init(BACKLIGHT_RESET);
+    backlight_init(BACKLIGHT_RESET, GAMMA_EXP);
   } else {
     // Reinitialize FMC to set correct timing
     // We have to do this in reinit because boardloader is fixed.
@@ -80,7 +80,7 @@ bool display_init(display_content_mode_t mode) {
     // Important for model T as this is not set in boardloader
     display_panel_set_little_endian();
     display_panel_reinit();
-    backlight_init(BACKLIGHT_RETAIN);
+    backlight_init(BACKLIGHT_RETAIN, GAMMA_EXP);
   }
 
 #ifdef FRAMEBUFFER
@@ -131,11 +131,11 @@ void display_deinit(display_content_mode_t mode) {
   drv->initialized = false;
 }
 
-int display_set_backlight(int level) {
+bool display_set_backlight(uint8_t level) {
   display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
-    return 0;
+    return false;
   }
 
 #ifndef BOARDLOADER
@@ -148,7 +148,7 @@ int display_set_backlight(int level) {
   return backlight_set(level);
 }
 
-int display_get_backlight(void) { return backlight_get(); }
+uint8_t display_get_backlight(void) { return backlight_get(); }
 
 int display_set_orientation(int angle) {
   display_driver_t* drv = &g_display_driver;

@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-optiga.h
@@ -23,7 +24,7 @@ def get_certificate(cert_index: int) -> bytes:
 # upymod/modtrezorcrypto/modtrezorcrypto-optiga.h
 def sign(
     key_index: int,
-    digest: bytes,
+    digest: AnyBytes,
 ) -> bytes:
     """
     Uses the private key at key_index to produce a DER-encoded signature of

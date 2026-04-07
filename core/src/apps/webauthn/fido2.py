@@ -11,18 +11,19 @@ from trezor.crypto.curve import nist256p1
 from trezor.ui import Layout
 from trezor.ui.layouts import error_popup
 
-from apps.base import set_homescreen
 from apps.common import cbor
+from apps.common.lock_manager import set_homescreen
 
 from . import common
 from .credential import Credential, Fido2Credential
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Awaitable, Callable, Coroutine, Iterable, Iterator
 
     from .credential import U2fCredential
 
-    HID = io.HID
+    HID = io.USBIF
 
 
 _CID_BROADCAST = const(0xFFFF_FFFF)  # broadcast channel id
@@ -1303,14 +1304,14 @@ def _msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     return Cmd(cid, _CMD_MSG, buf)
 
 
-def basic_attestation_sign(data: Iterable[bytes]) -> bytes:
+def basic_attestation_sign(data: Iterable[AnyBytes]) -> AnyBytes:
     from trezor.crypto import der
 
     dig = hashlib.sha256()
     for segment in data:
         dig.update(segment)
     sig = nist256p1.sign(_FIDO_ATT_PRIV_KEY, dig.digest(), False)
-    return der.encode_seq((sig[1:33], sig[33:]))
+    return der.encode_signature(sig)
 
 
 def _msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:

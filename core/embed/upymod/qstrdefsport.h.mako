@@ -26,12 +26,13 @@ ALTCOINS = (
     "solana",
     "stellar",
     "tezos",
+    "tron",
     "webauthn",
     "zcash",
 )
 
 ALTCOINS_RE = re.compile("|".join(ALTCOINS), flags=re.IGNORECASE)
-THP_RE = re.compile(r"\.thp", flags=re.IGNORECASE)
+THP_RE = re.compile(r"\.thp|cache_thp", flags=re.IGNORECASE)
 DEBUG_RE = re.compile("debug|prof|wire_log", flags=re.IGNORECASE)
 
 pyfiles = chain.from_iterable(sorted(SRCDIR.glob(p)) for p in PATTERNS)
@@ -59,7 +60,8 @@ def make_import_qstrs(import_names):
     return sorted(import_qstrs)
 %>\
 
-#error This header should not be part of the build, its purpose is only to add missed Qstrings
+// This header should not be part of the build, its purpose is only to add
+// missed Qstrings to MicroPython frozen Qstr pool.
 
 // explanation:
 // uPy collects string literals and symbol names from all frozen modules, and

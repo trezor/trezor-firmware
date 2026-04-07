@@ -17,11 +17,10 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-_confidential_section_loadaddr = LOADADDR(.confidential);
-_confidential_section_start = ADDR(.confidential);
-_confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
+_tls_section_start = ADDR(.tls);
+_tls_section_size = SIZEOF(.tls);
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_codelen = SIZEOF(.flash) + SIZEOF(.data);
 
 _heap_start = ADDR(.heap);
 _heap_end = ADDR(.heap) + SIZEOF(.heap);
@@ -59,6 +58,11 @@ SECTIONS {
     *(.ARM.exidx*);
   }
 
+  .tls : ALIGN(32) {
+    *(.tls*); /* 32-byte alignment required by MPU */
+    . = ALIGN(32);
+  } > AUX1_RAM
+
   .bss : ALIGN(4) {
     *(.no_dma_buffers*);
     *(.bss*);
@@ -68,11 +72,6 @@ SECTIONS {
   .stack : ALIGN(8) {
     . = 32K; /* Overflow causes UsageFault */
   } >AUX2_RAM
-
-  .confidential : ALIGN(512) {
-    *(.confidential*);
-    . = ALIGN(512);
-  } >AUX2_RAM AT>FLASH
 
   .buf : ALIGN(4) {
     *(.buf*);

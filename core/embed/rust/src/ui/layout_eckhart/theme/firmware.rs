@@ -1,8 +1,11 @@
 use crate::{
     time::ShortDuration,
-    ui::component::text::{
-        layout::{Chunks, LineBreaking, PageBreaking},
-        TextStyle,
+    ui::{
+        component::text::{
+            layout::{Chunks, LineBreaking, PageBreaking},
+            TextStyle,
+        },
+        notification::NotificationLevel,
     },
 };
 
@@ -13,6 +16,14 @@ use super::{
     },
     *,
 };
+
+// props settings
+pub const PROP_INNER_SPACING: i16 = 12; // [px]
+pub const PROPS_SPACING: i16 = 16; // [px]
+pub const PROPS_SPACING_EXTRA: i16 = 20; // [px]
+pub const PROPS_KEY_FONT: TextStyle = TEXT_SMALL_LIGHT;
+pub const PROPS_VALUE_FONT: TextStyle = TEXT_MONO_LIGHT;
+pub const PROPS_VALUE_MONO_FONT: TextStyle = TEXT_MONO_LIGHT;
 
 pub const CONFIRM_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
 pub const ERASE_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
@@ -25,129 +36,136 @@ pub const TEXT_SUPER_BIG: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_EXTRALIGHT_72,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 /// TT Satoshi Extra Light - 46 (Char keyboard, Backup check)
 pub const TEXT_BIG: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_EXTRALIGHT_46,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
-);
+    GREY,
+    GREY,
+)
+.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 /// TT Satoshi Regular - 38 (Screen text, Menu item label)
-pub const TEXT_REGULAR: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_REGULAR_38,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-);
+pub const TEXT_REGULAR: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_LIGHT, BG, GREY, GREY);
+pub const TEXT_REGULAR_ELLIPSIS: TextStyle = TEXT_REGULAR
+    .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 /// TT Satoshi Medium - 26 (Screen text, Button label, Input value)
-pub const TEXT_MEDIUM: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_MEDIUM_26,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-);
+pub const TEXT_MEDIUM: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_LIGHT, BG, GREY, GREY);
 
-pub const TEXT_MEDIUM_GREY: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY, BG, GREY, GREY);
+pub const TEXT_MEDIUM_GREY: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_MEDIUM_26,
+    GREY,
+    BG,
+    GREY_DARK,
+    GREY_DARK,
+);
 
 /// TT Satoshi Regular - 22 (Screen title, Hint, PageCounter, Secondary info)
 /// with negative line spacing to make it more compact
-pub const TEXT_SMALL: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY).with_line_spacing(-4);
+pub const TEXT_SMALL: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_REGULAR_22,
+    GREY,
+    BG,
+    GREY_DARK,
+    GREY_DARK,
+)
+.with_line_spacing(-4);
+pub const TEXT_SMALL_BLACK: TextStyle = TextStyle {
+    text_color: BG,
+    ..TEXT_SMALL
+};
 /// Roboto Mono Medium - 38 (Number value)
 pub const TEXT_MONO_MEDIUM: TextStyle = TextStyle::new(
     fonts::FONT_MONO_MEDIUM_38,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
-)
-.with_line_breaking(LineBreaking::BreakAtWhitespace);
-
-pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle = TextStyle::new(
-    fonts::FONT_MONO_MEDIUM_38,
-    GREY_LIGHT,
-    BG,
     GREY_LIGHT,
     GREY_LIGHT,
 )
 .with_line_breaking(LineBreaking::BreakAtWhitespace);
 
-pub const TEXT_MONO_MEDIUM_LIGHT_DATA: TextStyle =
-    TEXT_MONO_MEDIUM_LIGHT.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle =
+    TextStyle::new(fonts::FONT_MONO_MEDIUM_38, GREY_LIGHT, BG, GREY, GREY)
+        .with_line_breaking(LineBreaking::BreakAtWhitespace)
+        .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
+
+pub const TEXT_MONO_MEDIUM_LIGHT_DATA: TextStyle = TEXT_MONO_MEDIUM_LIGHT
+    .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 
 /// Roboto Mono Light - 30 (Address, data)
-pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
-    fonts::FONT_MONO_LIGHT_30,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-)
-.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+pub const TEXT_MONO_LIGHT: TextStyle =
+    TextStyle::new(fonts::FONT_MONO_LIGHT_30, GREY_LIGHT, BG, GREY, GREY)
+        .with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+
+pub const TEXT_MONO_LIGHT_ELLIPSIS: TextStyle =
+    TextStyle::new(fonts::FONT_MONO_LIGHT_30, GREY_LIGHT, BG, GREY, GREY)
+        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+        .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 
 pub const TEXT_REGULAR_WARNING: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, RED, BG, GREY, GREY);
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, RED, BG, FG, FG);
 
 pub const TEXT_MEDIUM_EXTRA_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_MEDIUM_26,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 
-pub const TEXT_SMALL_LIGHT: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_REGULAR_22,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-)
-.with_line_spacing(-4);
+pub const TEXT_SMALL_LIGHT: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY_LIGHT, BG, GREY, GREY)
+        .with_line_spacing(-4);
 
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
 pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_LIGHT
-    .with_chunks(Chunks::new(4, 8))
-    .with_line_spacing(24);
+    .with_chunks(Chunks::new(4, 13).with_max_rows(5))
+    .with_line_spacing(22)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 
 pub const TEXT_MONO_ADDRESS: TextStyle = TEXT_MONO_LIGHT
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 
-/// Decide the text style of chunkified text according to its length.
-pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle {
-    &TEXT_MONO_ADDRESS_CHUNKS
-}
-
 pub const TEXT_MONO_EXTRA_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_MONO_LIGHT_30,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 
 pub const TEXT_CHECKLIST_INACTIVE: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_MEDIUM_26,
     GREY_DARK,
     BG,
+    GREY_EXTRA_DARK,
+    GREY_EXTRA_DARK,
+);
+
+pub const TEXT_MENU_ITEM_SUBTITLE: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_REGULAR_22,
+    GREY,
+    BG,
     GREY_DARK,
     GREY_DARK,
 );
 
-pub const TEXT_MENU_ITEM_SUBTITLE: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY);
-
-pub const TEXT_MENU_ITEM_SUBTITLE_GREEN: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREEN, BG, GREEN, GREEN);
+pub const TEXT_MENU_ITEM_SUBTITLE_GREEN: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_REGULAR_22,
+    GREEN,
+    BG,
+    GREEN_DARK,
+    GREEN_DARK,
+);
 
 const fn label_title(color: Color) -> TextStyle {
     TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, color, BG, color, color).with_line_spacing(-4)
@@ -188,7 +206,7 @@ pub const fn button_default() -> ButtonStyleSheet {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY,
             button_color: BG,
-            icon_color: GREY,
+            icon_color: GREY_EXTRA_DARK,
         },
     }
 }
@@ -272,9 +290,9 @@ pub const fn button_actionbar_danger() -> ButtonStyleSheet {
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: ORANGE,
+            text_color: ORANGE_DIMMED,
             button_color: ORANGE_DARK,
-            icon_color: ORANGE,
+            icon_color: ORANGE_DIMMED,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
@@ -303,6 +321,30 @@ pub const fn button_header() -> ButtonStyleSheet {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: BG,
+            icon_color: GREY_LIGHT,
+        },
+    }
+}
+
+pub const fn button_header_inverted() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: BG,
+            button_color: FG,
+            icon_color: BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_DARK,
+            button_color: GREY_LIGHT,
+            icon_color: GREY_DARK,
+        },
+        // unused
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: GREY_EXTRA_LIGHT,
             icon_color: GREY_LIGHT,
         },
     }
@@ -351,11 +393,11 @@ pub const fn menu_item_title_red() -> ButtonStyleSheet {
 }
 
 macro_rules! button_homebar_style {
-    ($icon_color:expr) => {
+    ($icon_color:expr, $text_color:expr) => {
         ButtonStyleSheet {
             normal: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_MEDIUM_26,
-                text_color: GREY_LIGHT,
+                text_color: $text_color,
                 button_color: GREY_SUPER_DARK,
                 icon_color: $icon_color,
             },
@@ -375,14 +417,37 @@ macro_rules! button_homebar_style {
         }
     };
 }
-pub const fn button_homebar_style(notification_level: u8) -> (ButtonStyleSheet, Gradient) {
-    // NOTE: 0 is the highest severity.
-    match notification_level {
-        0 => (button_homebar_style!(RED), Gradient::Alert),
-        1 => (button_homebar_style!(GREY_LIGHT), Gradient::Warning),
-        2 => (button_homebar_style!(GREY_LIGHT), Gradient::DefaultGrey),
-        3 => (button_homebar_style!(GREY_LIGHT), Gradient::SignGreen),
-        _ => (button_homebar_style!(GREY_LIGHT), Gradient::DefaultGrey),
+
+pub const fn button_homebar_style(
+    nl: Option<&NotificationLevel>,
+    actionable: bool,
+) -> (ButtonStyleSheet, Gradient) {
+    match (nl, actionable) {
+        (Some(NotificationLevel::Alert), true) => {
+            (button_homebar_style!(RED, RED), Gradient::Alert)
+        }
+        (Some(NotificationLevel::Alert), false) => {
+            (button_homebar_style!(RED, GREY_LIGHT), Gradient::Alert)
+        }
+        (Some(NotificationLevel::Warning), true) => {
+            (button_homebar_style!(GREY_LIGHT, YELLOW), Gradient::Warning)
+        }
+        (Some(NotificationLevel::Warning), false) => (
+            button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
+            Gradient::Warning,
+        ),
+        (Some(NotificationLevel::Info), _) => (
+            button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
+            Gradient::DefaultGrey,
+        ),
+        (Some(NotificationLevel::Success), _) => (
+            button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
+            Gradient::SignGreen,
+        ),
+        (None, _) => (
+            button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
+            Gradient::DefaultGrey,
+        ),
     }
 }
 
@@ -515,6 +580,30 @@ pub const fn button_always_disabled() -> ButtonStyleSheet {
         normal: style,
         active: style,
         disabled: style,
+    }
+}
+
+pub const fn button_menu_tutorial() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREEN_LIME,
+            button_color: BG,
+            icon_color: GREEN_LIME,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREEN_LIME,
+            button_color: GREEN_EXTRA_DARK,
+            icon_color: GREEN_LIME,
+        },
+        // not used
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
+        },
     }
 }
 

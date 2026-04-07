@@ -8,6 +8,7 @@ from . import addresses
 from .helpers.utils import get_public_key_hash
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any
 
     from trezor import messages
@@ -184,9 +185,9 @@ def cborize(
 def cborize_stake_credential(
     keychain: seed.Keychain,
     path: list[int],
-    script_hash: bytes | None,
-    key_hash: bytes | None,
-) -> tuple[int, bytes]:
+    script_hash: AnyBytes | None,
+    key_hash: AnyBytes | None,
+) -> tuple[int, AnyBytes]:
     if key_hash or path:
         return 0, key_hash or get_public_key_hash(keychain, path)
 
@@ -323,7 +324,7 @@ def validate_pool_relay(pool_relay: messages.CardanoPoolRelayParameters) -> None
         raise RuntimeError  # should be unreachable
 
 
-def cborize_drep(drep: messages.CardanoDRep) -> tuple[int, bytes] | tuple[int]:
+def cborize_drep(drep: messages.CardanoDRep) -> tuple[int, AnyBytes] | tuple[int]:
     if drep.type == CardanoDRepType.KEY_HASH:
         assert drep.key_hash is not None
         return 0, drep.key_hash
@@ -340,7 +341,7 @@ def cborize_drep(drep: messages.CardanoDRep) -> tuple[int, bytes] | tuple[int]:
 
 def cborize_pool_owner(
     keychain: seed.Keychain, pool_owner: messages.CardanoPoolOwner
-) -> bytes:
+) -> AnyBytes:
     if pool_owner.staking_key_path:
         return get_public_key_hash(keychain, pool_owner.staking_key_path)
     elif pool_owner.staking_key_hash:
@@ -349,7 +350,7 @@ def cborize_pool_owner(
         raise ValueError
 
 
-def _cborize_ipv6_address(ipv6_address: bytes | None) -> bytes | None:
+def _cborize_ipv6_address(ipv6_address: AnyBytes | None) -> bytes | None:
     if ipv6_address is None:
         return None
 

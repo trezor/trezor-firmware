@@ -1,5 +1,5 @@
 from micropython import const
-from typing import Sequence
+from typing import TYPE_CHECKING, Iterable, Protocol, Sequence
 
 from trezor.ui.layouts.reset import (  # noqa: F401
     show_share_words,
@@ -9,6 +9,9 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_prompt_threshold,
     slip39_show_checklist,
 )
+
+if TYPE_CHECKING:
+    from trezor.messages import BackupMethod
 
 _NUM_OF_CHOICES = const(3)
 
@@ -43,12 +46,32 @@ async def _confirm_word(
     return selected_word == checked_word
 
 
-async def _share_words_confirmed(
-    share_index: int | None,
-    share_words: Sequence[str],
-    num_of_shares: int | None = None,
-    group_index: int | None = None,
-) -> bool:
+class ShareInfo:
+    def __init__(
+        self,
+        *,
+        words: Sequence[str],
+        index: int | None,
+        num_of_shares: int | None = None,
+        group_index: int | None = None,
+    ) -> None:
+        self.words = words
+        self.index = index
+        self.num_of_shares = num_of_shares
+        self.group_index = group_index
+
+
+if TYPE_CHECKING:
+
+    class BackupHandler(Protocol):
+        async def intro(self, num_of_words: int | None = None) -> None:
+            """Show introductory layout about the backup."""
+
+        async def backup(self, iter_shares: Iterable[ShareInfo]) -> None:
+            """Backup all the provided shares."""
+
+
+async def _share_words_confirmed(share: ShareInfo) -> bool:
     """Shows initial dialog asking the user to select words, then presents
     word selectors. Shows success popup if the user is done, failure if the confirmation
     went wrong.
@@ -60,11 +83,11 @@ async def _share_words_confirmed(
         show_share_confirmation_success,
     )
 
-    if await _do_confirm_share_words(share_index, share_words, group_index):
+    if await _do_confirm_share_words(share.index, share.words, share.group_index):
         await show_share_confirmation_success(
-            share_index,
-            num_of_shares,
-            group_index,
+            share.index,
+            share.num_of_shares,
+            share.group_index,
         )
         return True
     else:
@@ -94,20 +117,6 @@ async def _do_confirm_share_words(
     return True
 
 
-async def show_backup_intro(
-    single_share: bool, num_of_words: int | None = None
-) -> None:
-    from trezor.ui.layouts.reset import show_intro_backup
-
-    await show_intro_backup(single_share, num_of_words)
-
-
-async def show_backup_warning() -> None:
-    from trezor.ui.layouts.reset import show_warning_backup
-
-    await show_warning_backup()
-
-
 async def show_backup_success() -> None:
     from trezor.ui.layouts.reset import show_success_backup
 
@@ -118,53 +127,78 @@ async def show_backup_success() -> None:
 # ===
 
 
-async def show_and_confirm_single_share(words: Sequence[str]) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning()
-
-    while True:
-        # display paginated mnemonic on the screen
-        await show_share_words(words)
-
-        # make the user confirm some words from the mnemonic
-        if await _share_words_confirmed(None, words):
-            break  # mnemonic is confirmed, go next
+async def show_and_confirm_single_share(
+    handler: BackupHandler, words: Sequence[str]
+) -> None:
+    return await handler.backup((ShareInfo(words=words, index=None),))
 
 
 # Complex setups: SLIP39, except 1-of-1
 # ===
 
 
-async def slip39_basic_show_and_confirm_shares(shares: Sequence[str]) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning()
-
-    for index, share in enumerate(shares):
-        share_words = share.split(" ")
-        while True:
-            # display paginated share on the screen
-            await show_share_words(share_words, index)
-
-            # make the user confirm words from the share
-            if await _share_words_confirmed(index, share_words, len(shares)):
-                break  # this share is confirmed, go to next one
+async def slip39_basic_show_and_confirm_shares(
+    handler: BackupHandler, shares: Sequence[str]
+) -> None:
+    return await handler.backup(
+        ShareInfo(words=share.split(" "), index=index, num_of_shares=len(shares))
+        for index, share in enumerate(shares)
+    )
 
 
 async def slip39_advanced_show_and_confirm_shares(
+    handler: BackupHandler,
     shares: Sequence[Sequence[str]],
 ) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning()
+    return await handler.backup(
+        ShareInfo(
+            words=share.split(" "),
+            index=share_index,
+            num_of_shares=len(group),
+            group_index=group_index,
+        )
+        for group_index, group in enumerate(shares)
+        for share_index, share in enumerate(group)
+    )
 
-    for group_index, group in enumerate(shares):
-        for share_index, share in enumerate(group):
-            share_words = share.split(" ")
+
+class _DisplayBackup:
+
+    async def intro(self, num_of_words: int | None = None) -> None:
+        from trezor.ui.layouts.reset import show_intro_backup
+
+        # show backup information (`num_of_words` is unset for multi-share backups)
+        await show_intro_backup(num_of_words=num_of_words)
+
+    async def backup(self, iter_shares: Iterable[ShareInfo]) -> None:
+        from trezor.ui.layouts.reset import show_warning_backup
+
+        # warn user about mnemonic safety
+        await show_warning_backup()
+
+        # backup all shares
+        for share in iter_shares:
             while True:
                 # display paginated share on the screen
-                await show_share_words(share_words, share_index, group_index)
+                await show_share_words(
+                    share_words=share.words,
+                    share_index=share.index,
+                    group_index=share.group_index,
+                )
 
                 # make the user confirm words from the share
-                if await _share_words_confirmed(
-                    share_index, share_words, len(group), group_index
-                ):
+                if await _share_words_confirmed(share):
                     break  # this share is confirmed, go to next one
+
+
+async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
+    # TODO: prompt the user if method is `None`.
+    if __debug__:
+        from trezor.enums import BackupMethod
+
+        if method not in (None, BackupMethod.Display):
+            from trezor import log
+
+            log.warning(__name__, "Unsupported backup method: %s", method)
+
+    return _DisplayBackup()

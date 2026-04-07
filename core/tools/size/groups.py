@@ -17,7 +17,7 @@ CORE_DIR = HERE.parent.parent
 if len(sys.argv) > 1:
     BIN_TO_ANALYZE = sys.argv[1]
 else:
-    BIN_TO_ANALYZE = CORE_DIR / "build/firmware/firmware.elf"  # type: ignore
+    BIN_TO_ANALYZE = CORE_DIR / "build/firmware/firmware.elf"
 FILE_TO_SAVE = HERE / "size_binary_firmware_elf_results.txt"
 
 
@@ -72,6 +72,7 @@ def _categories_func(row: DataRow) -> str | None:
                     "src/apps/stellar/",
                     "src/apps/eos/",
                     "src/apps/tezos/",
+                    "src/apps/tron/",
                     "src/apps/ripple/",
                     "src/apps/zcash/",
                 )
@@ -79,7 +80,6 @@ def _categories_func(row: DataRow) -> str | None:
         ),
         "Other apps": lambda row: row.source_definition.startswith("src/apps/"),
         "Rest of src/": lambda row: row.source_definition.startswith("src/"),
-        "Fonts": lambda row: row.source_definition.startswith("embed/gfx/fonts/"),
         "Embed firmware": lambda row: row.source_definition.startswith(
             "embed/projects/firmware/"
         ),
@@ -96,9 +96,7 @@ def _categories_func(row: DataRow) -> str | None:
             "embed/upymod/modtrezorutils/"
         ),
         "Embed upymod": lambda row: row.source_definition.startswith("embed/upymod/"),
-        "Embed lib": lambda row: row.source_definition.startswith(
-            ("embed/rtl/", "embed/gfx/")
-        ),
+        "Embed lib": lambda row: row.source_definition.startswith("embed/rtl/"),
         "Rust": lambda row: (
             row.language == "Rust"
             or row.source_definition.startswith(("embed/rust/", "/cargo/registry"))

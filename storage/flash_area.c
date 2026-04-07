@@ -108,19 +108,7 @@ secbool flash_area_write_word(const flash_area_t *area, uint32_t offset,
   return flash_write_word(sector, sector_offset, data);
 }
 
-#else  // not defined FLASH_BIT_ACCESS
-
-secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
-                                  const uint32_t *data) {
-  uint16_t sector;
-  uint32_t sector_offset;
-  if (get_sector_and_offset(area, offset, &sector, &sector_offset) != sectrue) {
-    return secfalse;
-  }
-  return flash_write_quadword(sector, sector_offset, data);
-}
-
-#endif  // not defined FLASH_BIT_ACCESS
+#endif  // FLASH_BIT_ACCESS
 
 #ifdef USE_FLASH_BURST
 secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
@@ -221,6 +209,22 @@ secbool __wur flash_area_write_data_padded(const flash_area_t *area,
     }
   }
 
+  return sectrue;
+}
+
+secbool flash_area_is_erased(const flash_area_t *area) {
+  for (int i = 0; i < area->num_subareas; i++) {
+    uint16_t first_sector = area->subarea[i].first_sector;
+    uint16_t num_sectors = area->subarea[i].num_sectors;
+    uint32_t subarea_size = flash_sector_size(first_sector, num_sectors);
+    const uint32_t *ptr =
+        (const uint32_t *)flash_get_address(first_sector, 0, 0);
+    for (uint32_t j = 0; j < subarea_size / sizeof(uint32_t); j++) {
+      if (ptr[j] != 0xFFFFFFFF) {
+        return secfalse;
+      }
+    }
+  }
   return sectrue;
 }
 

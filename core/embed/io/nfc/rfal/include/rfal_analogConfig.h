@@ -15,7 +15,7 @@
 ******************************************************************************/
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -58,10 +58,12 @@
  ******************************************************************************
  */
 
+#ifndef RFAL_ANALOG_CONFIG_TBL_SIZE
+    #define RFAL_ANALOG_CONFIG_TBL_SIZE             (1024U)   /*!< Maximum number of Register-Mask-Value in the Setting List    */
+#endif /* RFAL_ANALOG_CONFIG_TBL_SIZE */
+
 #define RFAL_ANALOG_CONFIG_LUT_SIZE                 (87U)     /*!< Maximum number of Configuration IDs in the Loop Up Table     */
 #define RFAL_ANALOG_CONFIG_LUT_NOT_FOUND            (0xFFU)   /*!< Index value indicating no Configuration IDs found            */
-
-#define RFAL_ANALOG_CONFIG_TBL_SIZE                 (1024U)   /*!< Maximum number of Register-Mask-Value in the Setting List    */
 
 /*
  ******************************************************************************

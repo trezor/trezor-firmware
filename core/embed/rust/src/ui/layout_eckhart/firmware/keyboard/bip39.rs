@@ -2,14 +2,13 @@ use crate::{
     trezorhal::bip39,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
-        geometry::{Alignment, Offset, Point, Rect},
+        geometry::{Alignment, Offset, Rect},
         shape::{Renderer, Text},
     },
 };
 
 use super::super::super::{
     component::{Button, ButtonMsg},
-    constant::WIDTH,
     firmware::keyboard::{
         common::{render_pending_marker, MultiTapKeyboard},
         mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
@@ -122,39 +121,41 @@ impl Component for Bip39Input {
         let area = self.button.area();
         let style = self.button.style();
         let suggestion_style = self.button_suggestion.style();
+        let entered = self.textbox.content();
+        let entered_width = style.font.text_width(entered);
 
-        // Paint the entered content (the prefix of the suggested word).
-        let text = self.textbox.content();
-        let width = style.font.text_width(text);
+        let shown_width = if let Some(suggested) = self.suggested_word {
+            style.font.text_width(suggested)
+        } else {
+            entered_width
+        };
 
         // User input together with suggestion is centered vertically in the input area
-        // and centered horizontally on the screen
-        let text_base_y = area.left_center().y + style.font.allcase_text_height() / 2;
-        let text_base_x = if let Some(word) = self.suggested_word {
-            style.font.horz_center(0, WIDTH, word)
-        } else {
-            style.font.horz_center(0, WIDTH, text)
-        };
-        let text_base = Point::new(text_base_x, text_base_y);
+        let mut cursor = area.center().ofs(Offset::new(
+            -shown_width / 2,
+            style.font.visible_text_height("1") / 2,
+        ));
 
         self.button.render(target);
 
-        // Render text input + suggested completion
-        Text::new(text_base, text, style.font)
+        // Render entered text input
+        Text::new(cursor, entered, style.font)
             .with_fg(style.text_color)
             .with_align(Alignment::Start)
             .render(target);
-        if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
-            let word_baseline = text_base + Offset::x(width);
-            Text::new(word_baseline, word, style.font)
+
+        // Render the pending marker.
+        if self.multi_tap.pending_key().is_some() {
+            render_pending_marker(target, cursor, entered, style.font, style.text_color);
+        }
+
+        // Render remaining of the suggested word if any
+        if let Some(suggested) = self.suggested_word.and_then(|w| w.get(entered.len()..)) {
+            cursor.x += entered_width;
+            Text::new(cursor, suggested, style.font)
                 .with_fg(suggestion_style.text_color)
                 .with_align(Alignment::Start)
                 .render(target);
-        }
-
-        // Paint the pending marker.
-        if self.multi_tap.pending_key().is_some() {
-            render_pending_marker(target, text_base, text, style.font, style.text_color);
         }
     }
 }

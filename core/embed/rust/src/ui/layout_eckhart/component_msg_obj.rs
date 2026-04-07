@@ -1,3 +1,5 @@
+use num_traits::ToPrimitive;
+
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
@@ -7,7 +9,6 @@ use crate::{
     error::Error,
     micropython::{obj::Obj, util::new_tuple},
     ui::layout::{
-        device_menu_result::*,
         obj::ComponentMsgObj,
         result::{CANCELLED, CONFIRMED, INFO},
     },
@@ -17,8 +18,8 @@ use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
     Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
     PinKeyboardMsg, ProgressScreen, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
-    SelectWordScreen, SetBrightnessScreen, TextScreen, TextScreenMsg, ValueInput, ValueInputScreen,
-    ValueInputScreenMsg,
+    SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
+    TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -26,6 +27,15 @@ impl ComponentMsgObj for PinKeyboard<'_> {
         match msg {
             PinKeyboardMsg::Confirmed => self.pin().try_into(),
             PinKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<I: StringInput> ComponentMsgObj for StringKeyboard<I> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            StringKeyboardMsg::Confirmed(content) => content.as_str().try_into(),
+            StringKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -145,19 +155,18 @@ impl ComponentMsgObj for SetBrightnessScreen {
     }
 }
 
-impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
+impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            DeviceMenuMsg::BackupFailed => Ok(BACKUP_FAILED.as_obj()),
-            DeviceMenuMsg::DevicePair => Ok(DEVICE_PAIR.as_obj()),
-            DeviceMenuMsg::DeviceDisconnect(index) => {
-                Ok(new_tuple(&[DEVICE_DISCONNECT.as_obj(), index.try_into()?])?)
-            }
-            DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),
-            DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
-            DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
-            DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
-            DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
+        if matches!(msg, DeviceMenuMsg::Close) {
+            return Ok(CANCELLED.as_obj());
         }
+        let action_obj = msg.to_u8().into();
+        let result: Option<u8> = match msg {
+            DeviceMenuMsg::UnpairDevice | DeviceMenuMsg::RefreshMenu => self.result_arg,
+            _ => None,
+        };
+        let result_obj = result.into();
+        let parent_idx_obj = DeviceMenuScreen::parent(msg).to_u8().into();
+        new_tuple(&[action_obj, result_obj, parent_idx_obj])
     }
 }

@@ -36,7 +36,7 @@ impl PairingFinalizationScreen {
         Self {
             header: BldHeader::new("Bluetooth pairing".into()),
             message: Label::left_aligned(
-                "Waiting for confirmation on host device.".into(),
+                "Waiting for Bluetooth pairing confirmation on your other device.".into(),
                 theme::TEXT_NORMAL,
             ),
             action_bar: BldActionBar::new_single(btn),
@@ -64,6 +64,7 @@ impl Component for PairingFinalizationScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.header.event(ctx, event);
         if let Some(BldActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
             // Single mode ActionBar used to CancelPairing - so we map it to Msg::Cancel
             return Some(PairingFinalizationMsg::Cancel);

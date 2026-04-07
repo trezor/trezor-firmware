@@ -97,14 +97,7 @@ pub type StorageResult<T> = Result<T, StorageError>;
 /// This function must be called before any other storage function.
 pub fn init() {
     unsafe {
-        let mut entropy_data: [u8; ffi::HW_ENTROPY_LEN as usize] =
-            [0; ffi::HW_ENTROPY_LEN as usize];
-        ffi::entropy_get(entropy_data.as_mut_ptr());
-        ffi::storage_init(
-            Some(callback_wrapper),
-            entropy_data.as_ptr(),
-            entropy_data.len() as u16,
-        );
+        ffi::storage_setup(Some(callback_wrapper));
     }
 }
 
@@ -135,29 +128,22 @@ pub fn lock() {
 /// Returns true if the PIN + salt combination is correct.
 pub fn unlock(pin: &str, salt: Option<&ExternalSalt>) -> bool {
     let salt = salt.map(|s| s.as_ptr()).unwrap_or(ptr::null());
-    ffi::sectrue == unsafe { ffi::storage_unlock(pin.as_ptr() as *const _, pin.len(), salt) }
+    let result = unsafe { ffi::storage_unlock(pin.as_ptr() as *const _, pin.len(), salt) };
+    matches!(result, ffi::storage_unlock_result_t::UNLOCK_OK)
 }
 
 /// Change PIN and/or external salt.
 /// Returns true if the PIN + salt combination is correct and the change was
 /// successful.
-pub fn change_pin(
-    old_pin: &str,
-    new_pin: &str,
-    old_salt: Option<&ExternalSalt>,
-    new_salt: Option<&ExternalSalt>,
-) -> bool {
-    ffi::sectrue
-        == unsafe {
-            ffi::storage_change_pin(
-                old_pin.as_ptr() as *const _,
-                old_pin.len(),
-                new_pin.as_ptr() as *const _,
-                new_pin.len(),
-                old_salt.map(|s| s.as_ptr()).unwrap_or(ptr::null()),
-                new_salt.map(|s| s.as_ptr()).unwrap_or(ptr::null()),
-            )
-        }
+pub fn change_pin(new_pin: &str, new_salt: Option<&ExternalSalt>) -> bool {
+    let result = unsafe {
+        ffi::storage_change_pin(
+            new_pin.as_ptr() as *const _,
+            new_pin.len(),
+            new_salt.map(|s| s.as_ptr()).unwrap_or(ptr::null()),
+        )
+    };
+    matches!(result, ffi::storage_pin_change_result_t::PIN_CHANGE_OK)
 }
 
 /// Check if storage has PIN set.
@@ -267,9 +253,6 @@ mod tests {
     const APPKEY: u16 = 0x0101;
 
     fn init_storage(unlock: bool) {
-        unsafe {
-            ffi::flash_init();
-        }
         init();
         wipe();
         lock();
@@ -343,8 +326,8 @@ mod tests {
 
         assert!(!unlock("1234", None));
 
-        //unlock("", None);
-        assert!(change_pin("", "1234", None, None));
+        unlock("", None);
+        assert!(change_pin("1234", None));
         assert!(has_pin());
 
         lock();

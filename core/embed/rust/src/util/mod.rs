@@ -1,3 +1,6 @@
+#[cfg(feature = "micropython")]
+pub mod interpolate;
+
 /// Constructs a string from a C string.
 ///
 /// # Safety

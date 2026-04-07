@@ -11,6 +11,7 @@ from trezor.messages import CardanoTxItemAck, CardanoTxOutput
 from trezor.wire import DataError, ProcessError
 from trezor.wire.context import call as ctx_call
 
+from apps.cardano.helpers.chunks import ChunkIterator
 from apps.common import safety_checks
 
 from .. import addresses, certificates, layout, seed
@@ -21,16 +22,18 @@ from ..helpers.hash_builder_collection import (
     HashBuilderList,
     HashBuilderSet,
 )
-from ..helpers.paths import SCHEMA_STAKING
+from ..helpers.paths import SCHEMA_STAKING, SLIP44_ID
 from ..helpers.utils import derive_public_key
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from enum import IntEnum
     from typing import Any, Awaitable, ClassVar
 
     from trezor.enums import CardanoAddressType
 
     from apps.common import cbor
+    from apps.common.keychain import Keychain as Slip21Keychain
     from apps.common.paths import PathSchema
 
     from ..helpers.hash_builder_collection import HashBuilderEmbeddedCBOR
@@ -70,8 +73,6 @@ _DATUM_OPTION_KEY_INLINE = const(1)
 
 _POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT = const(10)
 
-_MAX_CHUNK_SIZE = const(1024)
-
 
 class SuiteTxType(IntEnum):
     """
@@ -104,11 +105,13 @@ class Signer:
         self,
         msg: messages.CardanoSignTxInit,
         keychain: seed.Keychain,
+        slip21_keychain: Slip21Keychain,
     ) -> None:
         from ..helpers.account_path_check import AccountPathChecker
 
         self.msg = msg
         self.keychain = keychain
+        self.slip21_keychain = slip21_keychain
         self.total_out = 0  # sum of output amounts
         self.change_out = 0  # sum of change amounts
 
@@ -192,7 +195,7 @@ class Signer:
                 await self._process_certificates(certificates_set)
 
         if msg.withdrawals_count > 0:
-            withdrawals_dict: HashBuilderDict[bytes, int] = HashBuilderDict(
+            withdrawals_dict: HashBuilderDict[AnyBytes, int] = HashBuilderDict(
                 msg.withdrawals_count, ProcessError("Invalid withdrawal")
             )
             with add(_TX_BODY_KEY_WITHDRAWALS, withdrawals_dict):
@@ -205,7 +208,7 @@ class Signer:
             add(_TX_BODY_KEY_VALIDITY_INTERVAL_START, msg.validity_interval_start)
 
         if msg.minting_asset_groups_count > 0:
-            minting_dict: HashBuilderDict[bytes, HashBuilderDict] = HashBuilderDict(
+            minting_dict: HashBuilderDict[AnyBytes, HashBuilderDict] = HashBuilderDict(
                 msg.minting_asset_groups_count,
                 ProcessError("Invalid mint token bundle"),
             )
@@ -216,14 +219,14 @@ class Signer:
             await self._process_script_data_hash()
 
         if msg.collateral_inputs_count > 0:
-            collateral_inputs_set: HashBuilderSet[tuple[bytes, int]] = HBS(
+            collateral_inputs_set: HashBuilderSet[tuple[AnyBytes, int]] = HBS(
                 msg.collateral_inputs_count, tagged=self.msg.tag_cbor_sets
             )
             with add(_TX_BODY_KEY_COLLATERAL_INPUTS, collateral_inputs_set):
                 await self._process_collateral_inputs(collateral_inputs_set)
 
         if msg.required_signers_count > 0:
-            required_signers_set: HashBuilderSet[bytes] = HBS(
+            required_signers_set: HashBuilderSet[AnyBytes] = HBS(
                 msg.required_signers_count, tagged=self.msg.tag_cbor_sets
             )
             with add(_TX_BODY_KEY_REQUIRED_SIGNERS, required_signers_set):
@@ -239,7 +242,7 @@ class Signer:
             add(_TX_BODY_KEY_TOTAL_COLLATERAL, msg.total_collateral)
 
         if msg.reference_inputs_count > 0:
-            reference_inputs_set: HashBuilderSet[tuple[bytes, int]] = HBS(
+            reference_inputs_set: HashBuilderSet[tuple[AnyBytes, int]] = HBS(
                 msg.reference_inputs_count, tagged=self.msg.tag_cbor_sets
             )
             with add(_TX_BODY_KEY_REFERENCE_INPUTS, reference_inputs_set):
@@ -249,6 +252,9 @@ class Signer:
         from ..helpers.utils import validate_network_info
 
         msg = self.msg  # local_cache_attribute
+
+        if msg.payment_req and msg.outputs_count > 1:
+            raise ProcessError("Multiple outputs not supported for payment requests")
 
         if msg.fee > LOVELACE_MAX_SUPPLY:
             raise ProcessError("Fee is out of range!")
@@ -272,7 +278,7 @@ class Signer:
     # inputs
 
     async def _process_inputs(
-        self, inputs_list: HashBuilderList[tuple[bytes, int]]
+        self, inputs_list: HashBuilderList[tuple[AnyBytes, int]]
     ) -> None:
         for _ in range(self.msg.inputs_count):
             input: messages.CardanoTxInput = await ctx_call(
@@ -334,6 +340,8 @@ class Signer:
             raise RuntimeError  # should be unreachable
 
     def _validate_output(self, output: CardanoTxOutput) -> None:
+        from apps.common.payment_request import PaymentRequestVerifier
+
         from ..helpers import OUTPUT_DATUM_HASH_SIZE
 
         address_parameters = output.address_parameters  # local_cache_attribute
@@ -370,11 +378,36 @@ class Signer:
             if output.format != CardanoTxOutputSerializationFormat.MAP_BABBAGE:
                 raise ProcessError("Invalid output")
 
+        if self.msg.payment_req:
+            self.payment_req_verifier = PaymentRequestVerifier(
+                self.msg.payment_req, SLIP44_ID, self.slip21_keychain
+            )
+            assert output.address is not None
+            self.payment_req_verifier.add_output(
+                output.amount, output.address, change=self._is_change_output(output)
+            )
+            self.payment_req_verifier.verify()
+        else:
+            self.payment_req_verifier = None
+
         self.account_path_checker.add_output(output)
 
     async def _show_output_init(
         self, output: CardanoTxOutput, output_index: int
     ) -> None:
+        if self.payment_req_verifier:
+            assert self.msg.payment_req
+            assert output.address
+            address_n = (
+                output.address_parameters.address_n
+                if output.address_parameters
+                else None
+            )
+            await layout.require_confirm_payment_request(
+                output.address, self.msg.payment_req, address_n, self.msg.network_id
+            )
+            return
+
         address_type = self._get_output_address_type(output)
         if (
             output.datum_hash is None
@@ -545,7 +578,7 @@ class Signer:
 
         output_value_list.append(output.amount)
 
-        asset_groups_dict: HashBuilderDict[bytes, HashBuilderDict[bytes, int]] = (
+        asset_groups_dict: HashBuilderDict[AnyBytes, HashBuilderDict[AnyBytes, int]] = (
             HashBuilderDict(
                 output.asset_groups_count,
                 ProcessError("Invalid token bundle in output"),
@@ -562,7 +595,7 @@ class Signer:
 
     async def _process_asset_groups(
         self,
-        asset_groups_dict: HashBuilderDict[bytes, HashBuilderDict[bytes, int]],
+        asset_groups_dict: HashBuilderDict[AnyBytes, HashBuilderDict[AnyBytes, int]],
         asset_groups_count: int,
         should_show_tokens: bool,
     ) -> None:
@@ -572,7 +605,7 @@ class Signer:
             )
             self._validate_asset_group(asset_group)
 
-            tokens: HashBuilderDict[bytes, int] = HashBuilderDict(
+            tokens: HashBuilderDict[AnyBytes, int] = HashBuilderDict(
                 asset_group.tokens_count,
                 ProcessError("Invalid token bundle in output"),
             )
@@ -602,8 +635,8 @@ class Signer:
 
     async def _process_tokens(
         self,
-        tokens_dict: HashBuilderDict[bytes, int],
-        policy_id: bytes,
+        tokens_dict: HashBuilderDict[AnyBytes, int],
+        policy_id: AnyBytes,
         tokens_count: int,
         should_show_tokens: bool,
     ) -> None:
@@ -647,17 +680,11 @@ class Signer:
     ) -> None:
         assert inline_datum_size > 0
 
-        chunks_count = self._get_chunks_count(inline_datum_size)
-        for chunk_number in range(chunks_count):
-            chunk: messages.CardanoTxInlineDatumChunk = await ctx_call(
-                CardanoTxItemAck(), messages.CardanoTxInlineDatumChunk
-            )
-            self._validate_chunk(
-                chunk.data,
-                chunk_number,
-                chunks_count,
-                ProcessError("Invalid inline datum chunk"),
-            )
+        async for chunk_number, chunk in ChunkIterator(
+            total_size=inline_datum_size,
+            ack_msg=CardanoTxItemAck(),
+            chunk_type=messages.CardanoTxInlineDatumChunk,
+        ):
             if chunk_number == 0 and should_show:
                 await self._show_if_showing_details(
                     layout.confirm_inline_datum(chunk.data, inline_datum_size)
@@ -674,17 +701,11 @@ class Signer:
     ) -> None:
         assert reference_script_size > 0
 
-        chunks_count = self._get_chunks_count(reference_script_size)
-        for chunk_number in range(chunks_count):
-            chunk: messages.CardanoTxReferenceScriptChunk = await ctx_call(
-                CardanoTxItemAck(), messages.CardanoTxReferenceScriptChunk
-            )
-            self._validate_chunk(
-                chunk.data,
-                chunk_number,
-                chunks_count,
-                ProcessError("Invalid reference script chunk"),
-            )
+        async for chunk_number, chunk in ChunkIterator(
+            total_size=reference_script_size,
+            ack_msg=CardanoTxItemAck(),
+            chunk_type=messages.CardanoTxReferenceScriptChunk,
+        ):
             if chunk_number == 0 and should_show:
                 await self._show_if_showing_details(
                     layout.confirm_reference_script(chunk.data, reference_script_size)
@@ -814,7 +835,7 @@ class Signer:
     # withdrawals
 
     async def _process_withdrawals(
-        self, withdrawals_dict: HashBuilderDict[bytes, int]
+        self, withdrawals_dict: HashBuilderDict[AnyBytes, int]
     ) -> None:
         for _ in range(self.msg.withdrawals_count):
             withdrawal: messages.CardanoTxWithdrawal = await ctx_call(
@@ -879,7 +900,7 @@ class Signer:
     # minting
 
     async def _process_minting(
-        self, minting_dict: HashBuilderDict[bytes, HashBuilderDict]
+        self, minting_dict: HashBuilderDict[AnyBytes, HashBuilderDict]
     ) -> None:
         token_minting: messages.CardanoTxMint = await ctx_call(
             CardanoTxItemAck(), messages.CardanoTxMint
@@ -893,7 +914,7 @@ class Signer:
             )
             self._validate_asset_group(asset_group, is_mint=True)
 
-            tokens: HashBuilderDict[bytes, int] = HashBuilderDict(
+            tokens: HashBuilderDict[AnyBytes, int] = HashBuilderDict(
                 asset_group.tokens_count, ProcessError("Invalid mint token bundle")
             )
             with minting_dict.add(asset_group.policy_id, tokens):
@@ -907,8 +928,8 @@ class Signer:
 
     async def _process_minting_tokens(
         self,
-        tokens: HashBuilderDict[bytes, int],
-        policy_id: bytes,
+        tokens: HashBuilderDict[AnyBytes, int],
+        policy_id: AnyBytes,
         tokens_count: int,
     ) -> None:
         for _ in range(tokens_count):
@@ -941,7 +962,7 @@ class Signer:
     # collateral inputs
 
     async def _process_collateral_inputs(
-        self, collateral_inputs_list: HashBuilderList[tuple[bytes, int]]
+        self, collateral_inputs_list: HashBuilderList[tuple[AnyBytes, int]]
     ) -> None:
         for _ in range(self.msg.collateral_inputs_count):
             collateral_input: messages.CardanoTxCollateralInput = await ctx_call(
@@ -970,7 +991,7 @@ class Signer:
     # required signers
 
     async def _process_required_signers(
-        self, required_signers_set: HashBuilderSet[bytes]
+        self, required_signers_set: HashBuilderSet[AnyBytes]
     ) -> None:
         from ..helpers.utils import get_public_key_hash
 
@@ -1103,7 +1124,7 @@ class Signer:
     # reference inputs
 
     async def _process_reference_inputs(
-        self, reference_inputs_list: HashBuilderList[tuple[bytes, int]]
+        self, reference_inputs_list: HashBuilderList[tuple[AnyBytes, int]]
     ) -> None:
         for _ in range(self.msg.reference_inputs_count):
             reference_input: messages.CardanoTxReferenceInput = await ctx_call(
@@ -1125,7 +1146,9 @@ class Signer:
 
     # witness requests
 
-    async def _process_witness_requests(self, tx_hash: bytes) -> CardanoTxResponseType:
+    async def _process_witness_requests(
+        self, tx_hash: AnyBytes
+    ) -> CardanoTxResponseType:
         response: CardanoTxResponseType = CardanoTxItemAck()
 
         for _ in range(self.msg.witness_requests_count):
@@ -1213,24 +1236,8 @@ class Signer:
             self.msg.network_id,
         )
 
-    def _get_chunks_count(self, data_size: int) -> int:
-        assert data_size > 0
-        return (data_size - 1) // _MAX_CHUNK_SIZE + 1
-
-    def _validate_chunk(
-        self,
-        chunk_data: bytes,
-        chunk_number: int,
-        chunks_count: int,
-        error: ProcessError,
-    ) -> None:
-        if chunk_number < chunks_count - 1 and len(chunk_data) != _MAX_CHUNK_SIZE:
-            raise error
-        if chunk_number == chunks_count - 1 and len(chunk_data) > _MAX_CHUNK_SIZE:
-            raise error
-
     def _get_byron_witness(
-        self, path: list[int], tx_hash: bytes
+        self, path: list[int], tx_hash: AnyBytes
     ) -> messages.CardanoTxWitnessResponse:
         node = self.keychain.derive(path)
         return messages.CardanoTxWitnessResponse(
@@ -1241,7 +1248,7 @@ class Signer:
         )
 
     def _get_shelley_witness(
-        self, path: list[int], tx_hash: bytes
+        self, path: list[int], tx_hash: AnyBytes
     ) -> messages.CardanoTxWitnessResponse:
         return messages.CardanoTxWitnessResponse(
             type=CardanoTxWitnessType.SHELLEY_WITNESS,
@@ -1249,7 +1256,7 @@ class Signer:
             signature=self._sign_tx_hash(tx_hash, path),
         )
 
-    def _sign_tx_hash(self, tx_body_hash: bytes, path: list[int]) -> bytes:
+    def _sign_tx_hash(self, tx_body_hash: AnyBytes, path: list[int]) -> bytes:
         from trezor.crypto.curve import ed25519
 
         node = self.keychain.derive(path)

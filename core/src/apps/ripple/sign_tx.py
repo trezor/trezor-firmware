@@ -16,7 +16,7 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha512
     from trezor.messages import RippleSignedTx
-    from trezor.ui.layouts import show_continue_in_app
+    from trezor.ui.layouts import show_continue_in_app, show_warning
     from trezor.wire import ProcessError
 
     from apps.common import paths
@@ -56,11 +56,18 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
             address += f"?dt={payment.destination_tag}"
         verifier.add_output(payment.amount, address)
         verifier.verify()
-        # TODO Show payment request memos.
-        await layout.require_confirm_tx(msg.payment_req.recipient_name, payment.amount)
+        await layout.require_confirm_payment_request(
+            address, msg.payment_req, msg.address_n
+        )
     else:
         if payment.destination_tag is not None:
             await layout.require_confirm_destination_tag(payment.destination_tag)
+        else:
+            await show_warning(
+                br_name="confirm_destination_tag",
+                content=TR.ripple__destination_tag_missing,
+            )
+
         await layout.require_confirm_tx(
             payment.destination, payment.amount, chunkify=bool(msg.chunkify)
         )
@@ -70,7 +77,7 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     # Signs and encodes signature into DER format
     first_half_of_sha512 = sha512(to_sign).digest()[:32]
     sig = secp256k1.sign(node.private_key(), first_half_of_sha512)
-    sig_encoded = der.encode_seq((sig[1:33], sig[33:65]))
+    sig_encoded = der.encode_signature(sig)
 
     tx = serialize(msg, source_address, node.public_key(), sig_encoded)
     show_continue_in_app(TR.send__transaction_signed)

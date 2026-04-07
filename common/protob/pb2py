@@ -91,30 +91,36 @@ if not PROTOC:
 PROTOC_PREFIX = Path(PROTOC).resolve().parent.parent
 
 
-ENUM_ENTRY = c.PrefixedArray(c.Byte, c.Int16ul)
+ENUM_ENTRY = c.PrefixedArray(c.Int16ul, c.Int16ul)
 
-FIELD_STRUCT = c.Struct(
-    "tag" / c.Byte,
-    "flags_and_type"
-    / c.BitStruct(
-        "is_required" / c.Flag,
-        "is_repeated" / c.Flag,
-        "is_experimental" / c.Flag,
-        c.Padding(1),
-        "type" / c.BitsInteger(4),
+FIELD_STRUCT = c.Aligned(
+    2,
+    c.Struct(
+        "tag" / c.Byte,
+        "flags_and_type"
+        / c.BitStruct(
+            "is_required" / c.Flag,
+            "is_repeated" / c.Flag,
+            "is_experimental" / c.Flag,
+            c.Padding(1),
+            "type" / c.BitsInteger(4),
+        ),
+        "enum_or_msg_offset" / c.Int16ul,
+        "name" / c.Int16ul,
     ),
-    "enum_or_msg_offset" / c.Int16ul,
-    "name" / c.Int16ul,
 )
 
-MSG_ENTRY = c.Struct(
-    "fields_count" / c.Rebuild(c.Byte, c.len_(c.this.fields)),
-    "defaults_size" / c.Rebuild(c.Byte, c.len_(c.this.defaults)),
-    # highest bit = is_experimental
-    # the rest = wire_id, 0x7FFF iff unset
-    "flags_and_wire_type" / c.Int16ul,
-    "fields" / c.Array(c.this.fields_count, FIELD_STRUCT),
-    "defaults" / c.Bytes(c.this.defaults_size),
+MSG_ENTRY = c.Aligned(
+    2,
+    c.Struct(
+        "fields_count" / c.Rebuild(c.Byte, c.len_(c.this.fields)),
+        "defaults_size" / c.Rebuild(c.Byte, c.len_(c.this.defaults)),
+        # highest bit = is_experimental
+        # the rest = wire_id, 0x7FFF iff unset
+        "flags_and_wire_type" / c.Int16ul,
+        "fields" / c.Array(c.this.fields_count, FIELD_STRUCT),
+        "defaults" / c.Bytes(c.this.defaults_size),
+    ),
 )
 
 DEFAULT_VARINT_ENTRY = c.Sequence(c.Byte, c.VarInt)

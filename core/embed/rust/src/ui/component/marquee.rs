@@ -37,7 +37,7 @@ pub struct Marquee {
 }
 
 impl Marquee {
-    pub fn new(text: TString<'static>, font: Font, fg: Color, bg: Color) -> Self {
+    pub const fn new(text: TString<'static>, font: Font, fg: Color, bg: Color) -> Self {
         Self {
             area: Rect::zero(),
             pause_timer: Timer::new(),
@@ -69,6 +69,11 @@ impl Marquee {
 
             self.min_offset = 0;
             self.max_offset = max_offset;
+
+            // If text fits completely, don't start animation
+            if max_offset >= 0 {
+                return;
+            }
 
             let anim = Animation::new(self.min_offset, max_offset, self.duration, now);
 
@@ -120,7 +125,7 @@ impl Marquee {
     }
 
     pub fn render_anim<'s>(&'s self, target: &mut impl Renderer<'s>, offset: i16) {
-        target.in_window(self.area, &|target| {
+        target.in_clip(self.area, &|target| {
             let text_height = self.font.text_height();
             let pos = self.area.top_left() + Offset::new(offset, text_height - 1);
             self.text.map(|t| {
@@ -141,8 +146,9 @@ impl Component for Marquee {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Not doing anything if animations are disabled.
-        if animation_disabled() {
+        // Not doing anything if animations are disabled or if we never started (text
+        // fits)
+        if animation_disabled() || matches!(self.state, State::Initial) {
             return None;
         }
 

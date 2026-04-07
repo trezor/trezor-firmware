@@ -6,5 +6,5 @@ CORE = HERE.parent.parent
 TRANSLATIONS_DIR = CORE / "translations"
 
 ENGLISH_LANG = "en"
-FOREIGN_LANGUAGES = ["cs", "de", "es", "fr", "it", "pt"]
+FOREIGN_LANGUAGES = ["cs", "de", "es", "fr", "pt"]
 ALL_LANGUAGES = [ENGLISH_LANG] + FOREIGN_LANGUAGES

@@ -25,6 +25,7 @@ pub enum Error {
     #[cfg(feature = "micropython")]
     ValueErrorParam(&'static CStr, Obj),
     RuntimeError(&'static CStr),
+    NotImplementedError,
 }
 
 macro_rules! value_error {
@@ -80,6 +81,9 @@ impl Error {
                     } else {
                         ffi::mp_obj_new_exception(&ffi::mp_type_RuntimeError)
                     }
+                }
+                Error::NotImplementedError => {
+                    ffi::mp_obj_new_exception(&ffi::mp_type_NotImplementedError)
                 }
             }
         }

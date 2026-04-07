@@ -40,7 +40,10 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
         ["[" + ",".join(f'"{t}"' for t in tag) + "]" for tag in tags]
     )
 
-    info_items = [("Created", str(created_at)), ("Tags", serialized_tags)]
+    info_items = [
+        ("Created", str(created_at), None),
+        ("Tags", serialized_tags, None),
+    ]
     await confirm_value(title, content, "", "nostr_sign_event", info_items=info_items)
 
     serialized_event = f'[0,"{hexlify(pk).decode()}",{created_at},{kind},[{serialized_tags}],"{content}"]'

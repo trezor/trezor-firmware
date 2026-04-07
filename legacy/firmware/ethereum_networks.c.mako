@@ -12,8 +12,8 @@ static const EthereumNetworkInfo networks[NETWORKS_COUNT] = {
   {
     .chain_id = ${n.chain_id},
     .slip44 = ${n.slip44},
-    .symbol = ${c_str(n.shortcut)},  /* ${n.name} */
-    .name = "",
+    .symbol = ${c_str(n.symbol)},
+    .name = ${c_str(n.name)},
   },
 % endfor
 };

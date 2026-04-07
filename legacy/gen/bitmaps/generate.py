@@ -43,8 +43,7 @@ with open("../bitmaps.c", "wt") as f:
     f.close()
 
 with open("../bitmaps.h", "wt") as f:
-    f.write(
-        """#ifndef __BITMAPS_H__
+    f.write("""#ifndef __BITMAPS_H__
 #define __BITMAPS_H__
 
 #include <stdint.h>
@@ -54,8 +53,7 @@ typedef struct {
   const uint8_t *data;
 } BITMAP;
 
-"""
-    )
+""")
 
     for i in range(cnt):
         f.write(hdrs[i])

@@ -4,8 +4,10 @@ from hashlib import blake2s
 from pathlib import Path
 
 import click
+import construct as c
 
-from trezorlib.firmware.core import FirmwareImage, Model
+from trezorlib.firmware.core import BootableImage, FirmwareImage
+from trezorlib.firmware.models import Model
 
 from .common import MODELS_DIR
 from .layout_parser import find_value
@@ -70,7 +72,11 @@ def bootloader_str(file: Path, model: str) -> str:
     bytes_00 = to_uint_array(aligned_digest(file, data, b"\x00", aligned_size))
     bytes_ff = to_uint_array(aligned_digest(file, data, b"\xff", aligned_size))
 
-    bl = FirmwareImage.parse(data)
+    try:
+        bl = BootableImage.parse(data)
+    except c.ConstructError:
+        bl = FirmwareImage.parse(data)
+
     version_str = ".".join(str(x) for x in bl.header.version)
     if not isinstance(bl.header.hw_model, Model):
         raise ValueError(
@@ -92,7 +98,7 @@ def bootloader_str(file: Path, model: str) -> str:
 
 @click.command()
 @click.option("-c", "--check", is_flag=True, help="Do not write, only check.")
-def main(check):
+def main(check: bool) -> None:
 
     models = list(MODELS_DIR.iterdir())
 

@@ -3,16 +3,14 @@ from typing import TYPE_CHECKING
 
 from trezor import utils
 
-# Traditional cache keys
-APP_COMMON_SEED = const(0)
-APP_COMMON_AUTHORIZATION_TYPE = const(1)
-APP_COMMON_AUTHORIZATION_DATA = const(2)
-APP_COMMON_NONCE = const(3)
-if not utils.BITCOIN_ONLY:
-    APP_COMMON_DERIVE_CARDANO = const(4)
-    APP_CARDANO_ICARUS_SECRET = const(5)
-    APP_CARDANO_ICARUS_TREZOR_SECRET = const(6)
-    APP_MONERO_LIVE_REFRESH = const(7)
+if utils.USE_THP:
+    # Cache keys for THP
+    from .cache_thp_keys import *  # noqa F401, F403
+
+else:
+    # Cache keys for Codec
+    from .cache_codec_keys import *  # noqa F401, F403
+
 
 # Keys that are valid across sessions
 SESSIONLESS_FLAG = const(128)
@@ -26,6 +24,7 @@ APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Sequence, TypeVar, overload
 
     T = TypeVar("T")
@@ -78,7 +77,7 @@ class DataCache:
         utils.ensure(key < len(self.fields))
         return self.data[key][0] == 1
 
-    def set(self, key: int, value: bytes) -> None:
+    def set(self, key: int, value: AnyBytes) -> None:
         utils.ensure(key < len(self.fields))
         utils.ensure(len(value) <= self.fields[key])
         self.data[key][0] = 1

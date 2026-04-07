@@ -25,8 +25,6 @@
 #define SECURE_CHANNEL_OUTPUT_SIZE (sizeof(noise_request_t))
 #define SECURE_CHANNEL_TAG_SIZE (NOISE_TAG_SIZE)
 
-// TODO: Consider returning an enum indiciating success, cryptography error or
-// state error
 bool secure_channel_handshake_1(uint8_t output[SECURE_CHANNEL_OUTPUT_SIZE]);
 bool secure_channel_handshake_2(const uint8_t input[SECURE_CHANNEL_INPUT_SIZE]);
 bool secure_channel_encrypt(const uint8_t* plaintext, size_t plaintext_length,

@@ -18,6 +18,9 @@
  */
 
 #include "secure_channel.h"
+#include "hsm_keys.h"
+
+#include "memzero.h"
 
 #include "string.h"
 
@@ -34,9 +37,23 @@ typedef enum {
 static noise_state_t noise_state = SECURE_CHANNEL_STATE_0;
 static noise_context_t noise_context = {0};
 
-// TODO: Use real keys
-static curve25519_key prodtest_private_key = {0};
-static curve25519_key hsm_public_key = {0};
+static curve25519_key prodtest_private_key = {
+    0xc8, 0x56, 0x36, 0x89, 0xf5, 0xa6, 0x70, 0x66, 0x43, 0xeb, 0xe3,
+    0x7e, 0xff, 0x7a, 0x2c, 0x20, 0x31, 0x27, 0x58, 0xbe, 0x5f, 0x01,
+    0xc8, 0x6f, 0x9b, 0xe7, 0xe2, 0xe6, 0x0b, 0xee, 0x7e, 0x55};
+
+static curve25519_key hsm_public_keys[] = {
+#if PRODUCTION
+#ifdef HSM_PUBLIC_PROD_X25519
+    HSM_PUBLIC_PROD_X25519,
+#endif
+#ifdef HSM_PUBLIC_PROD_BACKUP_X25519
+    HSM_PUBLIC_PROD_BACKUP_X25519,
+#endif
+#else
+    HSM_PUBLIC_DEBUG_X25519,
+#endif
+};
 
 bool secure_channel_handshake_1(uint8_t output[SECURE_CHANNEL_OUTPUT_SIZE]) {
   if (!noise_create_handshake_request(&noise_context,
@@ -55,15 +72,14 @@ bool secure_channel_handshake_2(
     return false;
   }
 
-  if (!noise_handle_handshake_response(&noise_context, prodtest_private_key,
-                                       hsm_public_key,
-                                       (const noise_response_t*)input)) {
-    // TODO: Uncomment the following line
-    // return false;
+  if (!noise_handle_handshake_response_multiple_keys(
+          &noise_context, prodtest_private_key, hsm_public_keys,
+          sizeof(hsm_public_keys) / sizeof(hsm_public_keys[0]),
+          (const noise_response_t*)input)) {
+    return false;
   }
 
   noise_state = SECURE_CHANNEL_STATE_2;
-
   return true;
 }
 
@@ -75,13 +91,7 @@ bool secure_channel_encrypt(const uint8_t* plaintext, size_t plaintext_length,
     return false;
   }
 
-  // TODO: Remove the following 3 lines
-  memcpy(ciphertext, plaintext, plaintext_length);
-  memset(ciphertext + plaintext_length, 0, NOISE_TAG_SIZE);
-  return true;
-
-  // TODO: Uncomment the following 3 lines
-  // return noise_send_message(&noise_context, associated_data,
-  //                           associated_data_length, plaintext,
-  //                           plaintext_length, ciphertext);
+  return noise_send_message(&noise_context, associated_data,
+                            associated_data_length, plaintext, plaintext_length,
+                            ciphertext);
 }

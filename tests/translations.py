@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import re
 import threading
@@ -8,8 +10,7 @@ from pathlib import Path
 
 from trezorlib import cosi, device, models
 from trezorlib._internal import translations
-from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession, LayoutType
 
 from . import common
 
@@ -59,25 +60,25 @@ def sign_blob(blob: translations.TranslationsBlob) -> bytes:
 
 def build_and_sign_blob(
     lang_or_def: translations.JsonDef | Path | str,
-    client: Client,
+    session: DebugSession,
 ) -> bytes:
-    blob = prepare_blob(lang_or_def, client.model, client.version)
+    blob = prepare_blob(lang_or_def, session.model, session.version)
     return sign_blob(blob)
 
 
-def set_language(client: Client, lang: str, *, force: bool = False):
+def set_language(session: DebugSession, lang: str, *, force: bool = False):
     if lang.startswith("en"):
         language_data = b""
     else:
-        language_data = build_and_sign_blob(lang, client)
-    with client:
-        if not client.features.language.startswith(lang) or force:
-            device.change_language(client, language_data)  # type: ignore
-    _CURRENT_TRANSLATION.LAYOUT = client.layout_type
+        language_data = build_and_sign_blob(lang, session)
+    with session.test_ctx:
+        if not session.features.language.startswith(lang) or force:
+            device.change_language(session, language_data)  # type: ignore
+    _CURRENT_TRANSLATION.LAYOUT = session.layout_type
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
-def get_language(_client: Client) -> str:
+def get_language() -> str:
     for lang in LANGUAGES:
         if _CURRENT_TRANSLATION.TR == TRANSLATIONS[lang]:
             return lang
@@ -132,8 +133,7 @@ class Translation:
         raise KeyError(key)
 
     def translate(self, key: str, _stacklevel: int = 0) -> str:
-        tr = self._translate_raw(key, _stacklevel=_stacklevel + 1)
-        return tr.replace("\xa0", " ").strip()
+        return self._translate_raw(key, _stacklevel=_stacklevel + 1).strip()
 
     def as_regexp(self, key: str, _stacklevel: int = 0) -> re.Pattern:
         tr = self.translate(key, _stacklevel=_stacklevel + 1)

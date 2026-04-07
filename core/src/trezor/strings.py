@@ -21,10 +21,11 @@ def format_amount(amount: int, decimals: int) -> str:
     return s
 
 
-def format_ordinal(number: int) -> str:
-    return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(
-        4 if 10 <= number % 100 < 20 else number % 10, "th"
-    )
+def format_amount_unit(amount: str, unit: str) -> str:
+    """
+    Formats an amount and a unit.
+    """
+    return f"{amount} {unit}"
 
 
 def format_plural_english(string: str, count: int, plural: str) -> str:
@@ -146,3 +147,16 @@ def format_autolock_duration(auto_lock_ms: int) -> str:
         auto_lock_label = TR.plurals__lock_after_x_seconds
 
     return format_plural("{count} {plural}", auto_lock_num, auto_lock_label)
+
+
+def trim_str(s: str, max_bytes: int) -> str:
+    """
+    Trim a string, so the result's byte size will be less or equal to `max_bytes`.
+    """
+    assert max_bytes >= 0
+    for i, char in enumerate(s):
+        char_size = len(char.encode())
+        if max_bytes < char_size:
+            return s[:i]
+        max_bytes -= char_size
+    return s

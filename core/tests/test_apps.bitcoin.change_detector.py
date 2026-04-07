@@ -1,5 +1,5 @@
-from common import H_, unittest  # isort:skip
-from ubinascii import unhexlify
+# flake8: noqa: F403,F405
+from common import *  # isort:skip
 
 from trezor.enums import InputScriptType, MultisigPubkeysOrder, OutputScriptType
 from trezor.enums.MultisigPubkeysOrder import LEXICOGRAPHIC, PRESERVED

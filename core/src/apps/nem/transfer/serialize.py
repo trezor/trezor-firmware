@@ -8,6 +8,8 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.crypto import bip32
     from trezor.messages import (
         NEMImportanceTransfer,
@@ -21,8 +23,8 @@ if TYPE_CHECKING:
 def serialize_transfer(
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
-    public_key: bytes,
-    payload: bytes,
+    public_key: AnyBytes,
+    payload: AnyBytes,
     encrypted: bool,
 ) -> bytearray:
     from ..helpers import NEM_TRANSACTION_TYPE_TRANSFER
@@ -69,8 +71,8 @@ def serialize_mosaic(w: Writer, namespace: str, mosaic: str, quantity: int) -> N
 
 
 def serialize_importance_transfer(
-    common: NEMTransactionCommon, imp: NEMImportanceTransfer, public_key: bytes
-) -> bytes:
+    common: NEMTransactionCommon, imp: NEMImportanceTransfer, public_key: AnyBytes
+) -> bytearray:
     from ..helpers import NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER
 
     w = serialize_tx_common(
@@ -84,7 +86,7 @@ def serialize_importance_transfer(
 
 def get_transfer_payload(
     transfer: NEMTransfer, node: bip32.HDNode
-) -> tuple[bytes, bool]:
+) -> tuple[AnyBytes, bool]:
     from trezor.crypto import random
 
     from ..helpers import AES_BLOCK_SIZE, NEM_SALT_SIZE

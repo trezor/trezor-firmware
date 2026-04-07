@@ -17,7 +17,7 @@ CORE_DIR = HERE.parent.parent
 if len(sys.argv) > 1:
     BIN_TO_ANALYZE = sys.argv[1]
 else:
-    BIN_TO_ANALYZE = CORE_DIR / "build/firmware/firmware.elf"  # type: ignore
+    BIN_TO_ANALYZE = CORE_DIR / "build/firmware/firmware.elf"
 
 
 def apps_categories(row: DataRow) -> str | None:

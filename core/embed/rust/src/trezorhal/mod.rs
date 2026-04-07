@@ -25,6 +25,7 @@ pub mod random;
 #[cfg(feature = "rgb_led")]
 pub mod rgb_led;
 pub mod slip39;
+#[cfg(feature = "storage")]
 pub mod storage;
 #[cfg(feature = "translations")]
 pub mod translations;
@@ -42,6 +43,9 @@ pub mod sysevent;
 #[cfg(feature = "power_manager")]
 pub mod power_manager;
 
+#[cfg(feature = "bootloader")]
+pub mod bootloader;
+
 #[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod layout_buf;
 
@@ -50,3 +54,6 @@ pub mod irq;
 
 #[cfg(feature = "nrf")]
 pub mod nrf;
+
+#[cfg(feature = "dbg_console")]
+pub mod syslog;

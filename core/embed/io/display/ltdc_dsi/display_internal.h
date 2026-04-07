@@ -33,11 +33,47 @@
 #include "panels/stm32u5a9j-dk/stm32u5a9j-dk.h"
 #endif
 
+#define GAMMA_EXP_DEFAULT 1.0f
+
+#ifndef GAMMA_EXP
+#define GAMMA_EXP GAMMA_EXP_DEFAULT
+#endif
+
 // Hardware requires physical frame buffer alignment
 #ifdef USE_TRUSTZONE
 #define PHYSICAL_FRAME_BUFFER_ALIGNMENT TZ_SRAM_ALIGNMENT
 #else
 #define PHYSICAL_FRAME_BUFFER_ALIGNMENT 32
+#endif
+
+#define LINE_EVENT_GENERAL_LINE (drv->hlcd_ltdc.Init.AccumulatedActiveH)
+
+#if REFRESH_RATE_SCALING_SUPPORTED
+#define LINE_EVENT_REFRESH_RATE_LINE (drv->hlcd_ltdc.Init.TotalHeigh)
+
+#define REFRESH_RATE_HI2LO_TIMEOUT_MS 2000U  // 2 seconds
+// IMPORTANT:
+// The "REFRESH_RATE_CFG_TIMEOUT_US" timeout must be sufficiently low because
+// the line takes max 29.75us at 18.518519MHz pixel clock and 544 pixel line
+// width (including porches and sync).
+// The higher value could lead to the situation that the refresh rate change
+// is applied in a wrong position of the display frame causing visible
+// artifacts.
+#define REFRESH_RATE_CFG_TIMEOUT_US 30U  // 30 microseconds
+
+// Supported display refresh rates
+typedef enum {
+  REFRESH_RATE_HI,
+  REFRESH_RATE_LO,
+  REFRESH_RATE_COUNT  // Number of refresh rate options (sentinel value)
+} display_refresh_rate_t;
+
+// Display refresh rate SM states
+typedef enum {
+  REFRESH_RATE_IDLE,
+  REFRESH_RATE_REQUESTED,
+  REFRESH_RATE_UPDATING
+} display_refresh_rate_state_t;
 #endif
 
 typedef struct {
@@ -52,8 +88,15 @@ typedef struct {
   // Current display orientation (0, 90, 180, 270)
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
-  int backlight_level;
+  uint8_t backlight_level;
   // The current frame buffer selector
+
+#if REFRESH_RATE_SCALING_SUPPORTED
+  volatile display_refresh_rate_state_t refresh_rate_state;
+  volatile display_refresh_rate_t refresh_rate;
+  volatile uint32_t refresh_rate_timeout_ms;
+  volatile bool refresh_rate_timeout_set;
+#endif
 
   DSI_HandleTypeDef hlcd_dsi;
   LTDC_HandleTypeDef hlcd_ltdc;
@@ -87,6 +130,13 @@ const uint32_t *panel_lut_get(void);
 
 bool display_gfxmmu_init(display_driver_t *drv);
 void display_gfxmmu_deinit(display_driver_t *drv);
+#endif
+
+#if REFRESH_RATE_SCALING_SUPPORTED
+void display_refresh_rate_timeout_set(void);
+void display_refresh_rate_timeout_check(void);
+void display_refresh_rate_set(display_refresh_rate_t refresh_rate);
+void display_refresh_rate_config(void);
 #endif
 
 #endif  // TREZOR_HAL_DISPLAY_INTERNAL_H

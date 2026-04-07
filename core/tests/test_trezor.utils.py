@@ -1,8 +1,6 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import utils
-
 
 class TestUtils(unittest.TestCase):
     def test_chunks(self):
@@ -60,11 +58,11 @@ class TestUtils(unittest.TestCase):
         ):
             self.assertEqual(
                 utils.firmware_hash(),
-                b"R\x17\x04\xaaC\x12\x8e\xbb\xa3RP\x83'J\x899'\xc2[\xa8\xac\x8a\x100&\x06\xba\xa2'C\xdb\x19",
+                b"od\xd6\x0f)\xda\xdd#\xf08<Q\xa0\xc5\x95\xb4\xa4\xd7\xda\x95*\x1f<z\x03\xde\x14\x9f\x1fz9L",
             )
             self.assertEqual(
                 utils.firmware_hash(b"0123456789abcdef"),
-                b"\xc3?\x7f\x0c0\xf1\xb8\xe5]0\xb7\xfd\x05!\xde\xab\xb6^\xd2R\xba\x18nw\x0c\x99\xc9\x1a(\x8b\xb1\xeb",
+                b"\x9f\xb2q\xf1q\xcb\x9bj\x91[\xac\x9bb\xad\x80\xd21\x9fR\xdb\xaeu\x01\xdd\xb1\xd7\xdbC\xfd\xfa\xe8o",
             )
         else:
             self.assertEqual(
@@ -75,6 +73,13 @@ class TestUtils(unittest.TestCase):
                 utils.firmware_hash(b"0123456789abcdef"),
                 b"\xa0\x93@\x98\xa6\x80\xdb\x07m\xdf~\xe2'E\xf1\x19\xd8\xfd\xa4`\x10H\xf0_\xdbf\xa6N\xdd\xc0\xcf\xed",
             )
+
+    def test_memzero(self):
+        data = bytearray(range(10))
+        utils.memzero(memoryview(data)[3:7])
+        self.assertEqual(data, bytearray([0, 1, 2, 0, 0, 0, 0, 7, 8, 9]))
+        utils.memzero(data)
+        self.assertEqual(data, bytearray(10))
 
 
 if __name__ == "__main__":

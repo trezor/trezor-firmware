@@ -33,6 +33,15 @@
 [submodule "vendor/libtropic"]
 	path = vendor/libtropic
 	url = https://github.com/tropicsquare/libtropic.git
+	branch = develop
 [submodule "vendor/ts-tvl"]
 	path = vendor/ts-tvl
 	url = https://github.com/tropicsquare/ts-tvl
+[submodule "vendor/sphincsplus"]
+	path = vendor/sphincsplus
+	url = https://github.com/sphincs/sphincsplus/
+	branch = consistent-basew
+[submodule "vendor/mldsa-native"]
+	path = vendor/mldsa-native
+	url = https://github.com/pq-code-package/mldsa-native.git
+	ignore = untracked

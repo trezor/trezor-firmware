@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <util/fwutils.h>
+#include <sec/fwutils.h>
 
 #ifdef USE_BLE
 #include "prodtest_ble.h"
@@ -31,6 +31,10 @@
 #include "prodtest.h"
 
 #include <version.h>
+
+#define MEM_BUFFER_SIZE (4 * 1024)
+static uint8_t mem_buffer[MEM_BUFFER_SIZE];
+static size_t mem_buffer_len = 0;
 
 static void prodtest_prodtest_intro(cli_t* cli) {
   cli_trace(cli, "Welcome to Trezor %s Production Test Firmware v%d.%d.%d.%d.",
@@ -85,6 +89,30 @@ static void prodtest_homescreen(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_mem_write(cli_t* cli) {
+  if (cli_arg_count(cli) != 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (!cli_arg_hex(cli, "hexdata", mem_buffer, MEM_BUFFER_SIZE,
+                   &mem_buffer_len)) {
+    cli_error_arg(cli, "Failed to parse hex data.");
+    return;
+  }
+
+  cli_ok(cli, "");
+}
+
+static void prodtest_mem_read(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_ok_hexdata(cli, mem_buffer, mem_buffer_len);
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -112,5 +140,19 @@ PRODTEST_CLI_CMD(
   .name = "prodtest-homescreen",
   .func = prodtest_homescreen,
   .info = "Shows prodtest homescreen",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "prodtest-mem-write",
+  .func = prodtest_mem_write,
+  .info = "Write data into RAM buffer",
+  .args = "<hexdata>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "prodtest-mem-read",
+  .func = prodtest_mem_read,
+  .info = "Read data from RAM buffer",
   .args = ""
 );

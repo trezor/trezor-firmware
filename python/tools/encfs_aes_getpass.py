@@ -2,7 +2,7 @@
 
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -25,6 +25,7 @@ encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt
 """
 
 import hashlib
+import importlib.metadata
 import json
 import os
 import sys
@@ -32,12 +33,12 @@ from typing import TYPE_CHECKING, Sequence
 
 import trezorlib
 import trezorlib.misc
-from trezorlib.client import TrezorClient
+from trezorlib.client import get_default_client, get_default_session
 from trezorlib.tools import Address
 from trezorlib.transport import enumerate_devices
-from trezorlib.ui import ClickUI
 
-version_tuple = tuple(map(int, trezorlib.__version__.split(".")))
+trezor_version = importlib.metadata.version("trezor")
+version_tuple = tuple(map(int, trezor_version.split(".")))
 if not (0, 11) <= version_tuple < (0, 14):
     raise RuntimeError("trezorlib version mismatch (required: 0.13, 0.12, or 0.11)")
 
@@ -71,16 +72,15 @@ def choose_device(devices: Sequence["Transport"]) -> "Transport":
     sys.stderr.write("Available devices:\n")
     for d in devices:
         try:
-            client = TrezorClient(d, ui=ClickUI())
-        except IOError:
-            sys.stderr.write("[-] <device is currently in use>\n")
+            client = get_default_client("encfs_aes_getpass", d)
+        except Exception:
+            sys.stderr.write("[-] <failed to create client>\n")
             continue
-
-        if client.features.label:
-            sys.stderr.write(f"[{i}] {client.features.label}\n")
         else:
-            sys.stderr.write(f"[{i}] <no label>\n")
-        client.close()
+            if client.features.label:
+                sys.stderr.write(f"[{i}] {client.features.label}\n")
+            else:
+                sys.stderr.write(f"[{i}] <no label>\n")
         i += 1
 
     sys.stderr.write("----------------------------\n")
@@ -106,7 +106,8 @@ def main() -> None:
 
     devices = wait_for_devices()
     transport = choose_device(devices)
-    client = TrezorClient(transport, ui=ClickUI())
+    client = get_default_client("encfs_aes_getpass", transport, credentials=())  # TODO
+    session = get_default_session(client)
 
     rootdir = os.environ["encfs_root"]  # Read "man encfs" for more
     passw_file = os.path.join(rootdir, "password.dat")
@@ -120,7 +121,7 @@ def main() -> None:
         sys.stderr.write("Computer asked Trezor for new strong password.\n")
 
         # 32 bytes, good for AES
-        trezor_entropy = trezorlib.misc.get_entropy(client, 32)
+        trezor_entropy = trezorlib.misc.get_entropy(session, 32)
         urandom_entropy = os.urandom(32)
         passw = hashlib.sha256(trezor_entropy + urandom_entropy).digest()
 
@@ -129,7 +130,7 @@ def main() -> None:
 
         bip32_path = Address([10, 0])
         passw_encrypted = trezorlib.misc.encrypt_keyvalue(
-            client, bip32_path, label, passw, False, True
+            session, bip32_path, label, passw, False, True
         )
 
         data = {
@@ -144,7 +145,7 @@ def main() -> None:
     data = json.load(open(passw_file, "r"))
 
     passw = trezorlib.misc.decrypt_keyvalue(
-        client,
+        session,
         data["bip32_path"],
         data["label"],
         bytes.fromhex(data["password_encrypted_hex"]),

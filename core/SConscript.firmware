@@ -2,7 +2,6 @@
 # fmt: off
 
 import os
-import shlex
 import tools, models, ui
 import random
 
@@ -15,7 +14,9 @@ EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
+DEBUGLINK = ARGUMENTS.get('DEBUGLINK', '0') == '1'
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
+DISABLE_TROPIC = ARGUMENTS.get('DISABLE_TROPIC', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 SCM_REVISION = ARGUMENTS.get('SCM_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
@@ -24,14 +25,21 @@ LOG_STACK_USAGE = ARGUMENTS.get('LOG_STACK_USAGE', '0') == '1'
 MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '0')
 DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 BLOCK_ON_VCP = ARGUMENTS.get('BLOCK_ON_VCP', '0') == '1'
-UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
+UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
+EXTAPP_SUPPORT = ARGUMENTS.get('EXTAPP_SUPPORT', '0') == '1'
 
 STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
 if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
     raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
 if STORAGE_INSECURE_TESTING_MODE:
     DISABLE_OPTIGA = True
+    DISABLE_TROPIC = True
     PYOPT = "0"
+
+if DEBUGLINK or PYOPT == '0':
+  DEBUGLINK = True
+  PYOPT = '0'
 
 if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
@@ -49,25 +57,45 @@ FEATURE_FLAGS = {
 
 FEATURES_WANTED = [
     "ble",
+    "boot_ucb",
     "consumption_mask",
     "display",
     "dma2d",
     "haptic",
     "input",
+    "ipc",
     "optiga",
     "power_manager",
     "rgb_led",
     "sd_card",
     "secmon_layout",
+    "serial_number",
+    "storage",
     "suspend",
+    'telemetry',
     "tropic",
     "usb",
+    "usb_iface_wire",
     ]
 
 if DISABLE_OPTIGA:
     if PYOPT != '0':
         raise RuntimeError("DISABLE_OPTIGA requires PYOPT=0")
     FEATURES_WANTED.remove("optiga")
+
+if DISABLE_TROPIC:
+    if PRODUCTION:
+        raise RuntimeError("DISABLE_TROPIC requires non-production build")
+    FEATURES_WANTED.remove("tropic")
+
+if PYOPT == '0':
+    DBG_CONSOLE = DBG_CONSOLE or "VCP"
+
+if DBG_CONSOLE != "":
+    FEATURES_WANTED += ["dbg_console"]
+
+if TREZOR_MODEL in ['T3W1'] and EXTAPP_SUPPORT:
+    FEATURES_WANTED += ["app_loading"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -81,10 +109,13 @@ RUST_UI_FEATURES = []
 
 FROZEN = True
 
+if DEBUGLINK:
+    FEATURES_WANTED += ["usb_iface_debug"]
+    CPPDEFINES_MOD += ['DEBUGLINK']
+
 # modtrezorconfig
 CPPPATH_MOD += [
     'embed/upymod/modtrezorconfig',
-    'vendor/trezor-storage',
 ]
 SOURCE_MOD += [
     'embed/upymod/modtrezorconfig/modtrezorconfig.c',
@@ -114,7 +145,6 @@ SOURCE_MOD += [
     'embed/upymod/trezorobj.c',
     'embed/upymod/modtrezorcrypto/crc.c',
     'embed/upymod/modtrezorcrypto/modtrezorcrypto.c',
-    'embed/upymod/modtrezorcrypto/rand.c',
 ]
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/address.c',
@@ -235,30 +265,44 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/upymod/modtrezorui/modtrezorui.c',
-    'embed/gfx/bitblt/gfx_bitblt.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
-    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
-    'embed/gfx/fonts/font_bitmap.c',
-    'embed/gfx/gfx_color.c',
-    'embed/gfx/gfx_draw.c',
-    'embed/gfx/terminal.c',
     'embed/io/display/display_utils.c',
-    'embed/util/image/image.c',
-    'embed/util/translations/translations.c',
-    'embed/util/rsod/rsod.c',
-    'embed/util/scm_revision/scm_revision.c',
+    'embed/io/gfx/bitblt/gfx_bitblt.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/io/gfx/gfx_color.c',
+    'embed/io/gfx/gfx_draw.c',
+    'embed/io/gfx/rsod.c',
+    'embed/io/gfx/terminal/font_bitmap.c',
+    'embed/io/gfx/terminal/terminal.c',
+    'embed/io/translations/translations.c',
     'embed/rtl/error_handling.c',
-    'embed/rtl/mini_printf.c',
+    'embed/rtl/scm_revision.c',
+    'embed/rtl/strutils.c',
+    'embed/sec/image/boot_image_embdata.c',
+    'embed/sec/image/image.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
 
+if not PRODUCTION:
+    SOURCE_MOD += ['embed/rtl/printf.c']
+
+if "app_loading" in FEATURES_WANTED:
+    SOURCE_MOD += [
+        'embed/api/trezor_api_v1_impl.c',
+        'embed/upymod/modtrezorapp/modtrezorapp.c',
+    ]
+
+
 CPPDEFINES_MOD += [
     'TRANSLATIONS',
     'FANCY_FATAL_ERROR',
     ]
+
+if TREZOR_MODEL in ["T3W1", "T3T1"]:
+    CPPDEFINES_MOD += ('THREAD_LOCAL', '__attribute__((section(".tls")))'),
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -391,8 +435,6 @@ SOURCE_MICROPYTHON_SPEED = [
     'vendor/micropython/py/vm.c',
 ]
 
-CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
-
 if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']
 
@@ -428,6 +470,7 @@ env = Environment(
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
+    DBG_CONSOLE=DBG_CONSOLE,
     )
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
@@ -439,10 +482,10 @@ SOURCE_FIRMWARE = [
     'embed/projects/firmware/nlrthumb.c',
 ]
 
-if 'sd_card' in FEATURES_AVAILABLE:
-    SDCARD = True
-else:
-    SDCARD = False
+SDCARD = ('sd_card' in FEATURES_AVAILABLE)
+OPTIGA = ('optiga' in FEATURES_AVAILABLE)
+SERIAL_NUMBER = ('serial_number' in FEATURES_AVAILABLE)
+BACKLIGHT = ('backlight' in FEATURES_AVAILABLE)
 
 env.Tool('micropython')
 
@@ -464,17 +507,16 @@ env.Replace(
 
 ALLPATHS = [
         '.',
+        'embed/api',
         'embed/rust',
         'embed/projects/firmware',
         'embed/rtl/inc',
         'embed/models',
-        'embed/gfx/inc',
+        'embed/io/gfx/inc',
+        'embed/io/translations/inc',
         'embed/sys/bsp/inc',
-        'embed/util/bl_check/inc',
-        'embed/util/image/inc',
-        'embed/util/rsod/inc',
-        'embed/util/scm_revision/inc',
-        'embed/util/translations/inc',
+        'embed/sec/image/inc',
+        'embed/sec/rsod/inc',
         'embed/upymod/modtrezorui',
         'vendor/micropython',
     ] + CPPPATH_MOD + PATH_HAL
@@ -636,17 +678,32 @@ if FROZEN:
         ] if not EVERYTHING else []
     ))
 
+    if THP:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/thp/*.py'))
+    if not THP or PYOPT == '0':
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/codec/*.py'))
+
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/wire/wire_log.py'
         ] if PYOPT != '0' else []
     ))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/codec/*.py'))
+
+    if 'power_manager' in FEATURES_AVAILABLE:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/power_management/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
         exclude=(
             ([SOURCE_PY_DIR + 'storage/sd_salt.py'] if not SDCARD else []) +
-            ([SOURCE_PY_DIR + 'storage/debug.py'] if PYOPT != '0' else [])
+            ([SOURCE_PY_DIR + 'storage/debug.py'] if PYOPT != '0' else []) +
+            ([
+                SOURCE_PY_DIR + 'storage/cache_codec.py',
+                SOURCE_PY_DIR + 'storage/cache_codec_keys.py'
+            ] if THP and PYOPT != '0' else []) +
+            ([
+                SOURCE_PY_DIR + 'storage/cache_thp.py',
+                SOURCE_PY_DIR + 'storage/cache_thp_keys.py'
+            ] if not THP else [])
         )
     ))
 
@@ -666,6 +723,7 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/enums/Stellar*.py',
             SOURCE_PY_DIR + 'trezor/enums/Tezos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Zcash*.py',
+            SOURCE_PY_DIR + 'trezor/enums/Tron*.py'
         ] + (
             SOURCE_PY_DEBUG_ENUMS if PYOPT != '0' else []
         ) + (
@@ -683,24 +741,29 @@ if FROZEN:
         )
     ))
     if PYOPT == '0':
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
+        exclude_n4w1 = [SOURCE_PY_DIR + 'apps/debug/n4w1_mock.py'] if TREZOR_MODEL != "T3W1" else []
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py', exclude=exclude_n4w1))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/homescreen/device_menu.py',
         ] if TREZOR_MODEL != "T3W1" else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
-        exclude=[
-            SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if not SDCARD else [])
-    )
+        exclude=(
+            ([SOURCE_PY_DIR + 'apps/management/sd_protect.py'] if not SDCARD else []) +
+            ([SOURCE_PY_DIR + 'apps/management/authenticate_device.py'] if not OPTIGA else []) +
+            ([SOURCE_PY_DIR + 'apps/management/get_serial_number.py'] if not SERIAL_NUMBER else []) +
+            ([SOURCE_PY_DIR + 'apps/management/set_brightness.py'] if not BACKLIGHT else [])
+        )
+    ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py',
         exclude=(
-            ([SOURCE_PY_DIR + 'apps/management/ble/*.py'] if "ble" not in FEATURES_AVAILABLE else []) +
-            ([SOURCE_PY_DIR + 'apps/management/pm/*.py'] if "power_manager" not in FEATURES_AVAILABLE else [])
+            ([SOURCE_PY_DIR + 'apps/management/ble/*.py'] if "ble" not in FEATURES_AVAILABLE else [])
         ))
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
+    if 'telemetry' in FEATURES_AVAILABLE:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/telemetry/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*/*.py',
         exclude=[
@@ -709,6 +772,12 @@ if FROZEN:
             SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py',
         ])
     )
+
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/evolu/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/evolu/sign_registration_request.py'
+        ] if not ('optiga' in FEATURES_AVAILABLE) else [])
+    )  # TODO: refactor to `OPTIGA` after rebase
 
     if BENCHMARK:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/benchmark/*.py'))
@@ -773,17 +842,20 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
 
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tron/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tron*.py'))
+
     source_mpy = env.FrozenModule(
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight='backlight' in FEATURES_AVAILABLE,
-        optiga='optiga' in FEATURES_AVAILABLE,
+        backlight=BACKLIGHT,
+        optiga=OPTIGA,
+        tropic='tropic' in FEATURES_AVAILABLE,
         use_ble='ble' in FEATURES_AVAILABLE,
         use_button='button' in FEATURES_AVAILABLE,
         use_touch='touch' in FEATURES_AVAILABLE,
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
-        tropic='tropic' in FEATURES_AVAILABLE,
         thp=THP,
         power_manager='power_manager' in FEATURES_AVAILABLE,
         )
@@ -848,11 +920,16 @@ env.Depends(protobuf_blobs, qstr_generated)
 features = ['micropython', 'protobuf', 'ui', 'translations'] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 if PYOPT == '0':
     features.append('debug')
+    features.append('debuglink')
     features.append('ui_debug')
+    features.append('ui_debug_overlay')
 if EVERYTHING:
     features.append('universal_fw')
-if UI_DEBUG_OVERLAY:
-    features.append('ui_debug_overlay')
+if UI_PERFORMANCE_OVERLAY:
+    features.append('ui_performance_overlay')
+if not PRODUCTION:
+    features.append('dev_keys')
+
 
 rust = tools.add_rust_lib(
     env=env,
@@ -862,6 +939,7 @@ rust = tools.add_rust_lib(
     all_paths=ALLPATHS,
     build_dir=str(Dir('.').abspath),
 )
+obj_program += [rust]
 
 
 env.Depends(rust, protobuf_blobs)
@@ -906,23 +984,35 @@ tools.embed_raw_binary(
         )
 
 if 'nrf' in FEATURES_AVAILABLE:
+    suffix = "-dev" if BOOTLOADER_DEVEL else ""
+
     tools.embed_raw_binary(
             obj_program,
             env,
             'nrf_app',
             'build/firmware/nrf_app.o',
-            f'embed/models/{TREZOR_MODEL}/trezor-ble.bin',
+            f'embed/models/{TREZOR_MODEL}/trezor-ble{suffix}.bin',
             )
 
-tools.embed_compressed_binary(
-        obj_program,
-        env,
-        'bootloader',
-        'embed/projects/bootloaders/bootloader.o',
-        f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-        'firmware',
-        'bootloader',
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    # embed uncompressed bootloader image
+    tools.embed_raw_binary(
+            obj_program,
+            env,
+            'bootloader',
+            'embed/projects/bootloaders/bootloader.o',
+            f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
         )
+else:
+    # embed compressed bootloader image
+    tools.embed_compressed_binary(
+            obj_program,
+            env,
+            'bootloader',
+            'embed/projects/bootloaders/bootloader.o',
+            f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+            'firmware',
+            )
 
 env.Depends(obj_program, qstr_generated)
 
@@ -943,7 +1033,6 @@ env.Depends(program_elf, linkerscript_gen)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
-env.Depends(program_elf, rust)
 
 BINARY_NAME = f"build/firmware/firmware-{TREZOR_MODEL}"
 if not EVERYTHING:
@@ -956,21 +1045,19 @@ BINARY_NAME += ".bin"
 
 if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
     action_bin=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
         '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
         '$CP $TARGET ' + BINARY_NAME,
     ]
-elif 'STM32U5G9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
+else:
     action_bin=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE ${TARGET}',
         '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$CP $TARGET ' + BINARY_NAME,
         ]
-else:
-    raise Exception("Unknown MCU")
 
 if STORAGE_INSECURE_TESTING_MODE:
     INSECURE_TESTING_MODE_STR = """

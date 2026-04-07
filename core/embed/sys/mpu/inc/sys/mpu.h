@@ -34,8 +34,11 @@ typedef enum {
   MPU_MODE_DISABLED,      // MPU is disabled
   MPU_MODE_DEFAULT,       // Default
   MPU_MODE_BOARDCAPS,     // + boardloader capabilities (privileged RO)
-  MPU_MODE_BOOTUPDATE,    // + bootloader area (privileged RW)
+  MPU_MODE_BOARDLOADER,   // + boardloader (privileged RW, non-production only)
+  MPU_MODE_BOOTLOADER,    // + bootloader area (privileged RW)
   MPU_MODE_BOOTARGS,      // + boot arguments (privileged RW)
+  MPU_MODE_BOOTUCB,       // + boot update control block (privileged RW)
+  MPU_MODE_BOOTUPDATE,    // + boot update data (privileged RW)
   MPU_MODE_OTP,           // + OTP (privileged RW)
   MPU_MODE_FSMC_REGS,     // + FSMC control registers (privileged RW)
   MPU_MODE_FLASHOB,       // + Option bytes mapping (privileged RW)
@@ -82,12 +85,15 @@ typedef struct {
   mpu_area_t code1;
   // Read-only code area #2
   mpu_area_t code2;
+  // Thread-local storage area
+  // (used only if not a part of data1 or data2)
+  mpu_area_t tls;
 
 } applet_layout_t;
 
 // Sets the MPU to allow unprivileged access to the given applet
 // (just one applet at a time can be visible)
-void mpu_set_active_applet(applet_layout_t* layout);
+void mpu_set_active_applet(const applet_layout_t* layout);
 
 // Sets the MPU to allow access to the
 // framebuffer at the given address and size.

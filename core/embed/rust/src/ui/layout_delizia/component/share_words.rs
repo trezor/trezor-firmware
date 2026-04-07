@@ -3,7 +3,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            base::AttachType, paginated::PaginateFull, text::TextStyle, Component, Event, EventCtx,
+            base::AttachType, paginated::Paginate, text::TextStyle, Component, Event, EventCtx,
             Never,
         },
         event::SwipeEvent,
@@ -141,7 +141,7 @@ impl<'a> Component for ShareWords<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.share_words.len());
+        ctx.set_page_count(self.share_words.len() as u16);
 
         let (_, should_animate) = self.should_animate_attach(event);
 
@@ -242,7 +242,7 @@ impl<'a> Component for ShareWords<'a> {
     }
 }
 
-impl PaginateFull for ShareWords<'_> {
+impl Paginate for ShareWords<'_> {
     fn pager(&self) -> Pager {
         Pager::new(self.share_words.len() as u16).with_current(self.page_index)
     }

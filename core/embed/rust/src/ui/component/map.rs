@@ -72,7 +72,7 @@ impl<T, F> PageMap<T, F> {
 impl<T, F> Component for PageMap<T, F>
 where
     T: Component,
-    F: Fn(usize) -> usize,
+    F: Fn(u16) -> u16,
 {
     type Msg = T::Msg;
 

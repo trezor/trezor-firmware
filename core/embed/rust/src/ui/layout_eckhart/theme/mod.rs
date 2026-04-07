@@ -1,3 +1,5 @@
+#[cfg(feature = "micropython")]
+pub mod background;
 pub mod backlight;
 #[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod bootloader;
@@ -10,12 +12,13 @@ pub use firmware::*;
 use crate::ui::{
     component::text::TextStyle,
     display::Color,
-    geometry::{Grid, Insets, Offset, Rect},
+    geometry::{Grid, Insets, Offset, Point, Rect},
     util::include_icon,
 };
 
 use super::fonts;
-
+#[cfg(feature = "micropython")]
+pub use background::ScreenBackground;
 pub use gradient::Gradient;
 
 // Color palette.
@@ -36,6 +39,8 @@ pub const GREEN: Color = Color::rgb(0x08, 0x74, 0x48);
 pub const GREEN_DARK: Color = Color::rgb(0x06, 0x1E, 0x19);
 pub const GREEN_EXTRA_DARK: Color = Color::rgb(0x03, 0x10, 0x0C);
 
+pub const GREEN_BRIGHT: Color = Color::rgb(0x60, 0xE1, 0x98); // used for Connected indicator
+
 pub const ORANGE: Color = Color::rgb(0xFF, 0x63, 0x30);
 pub const ORANGE_DIMMED: Color = Color::rgb(0x9E, 0x57, 0x42);
 pub const ORANGE_DARK: Color = Color::rgb(0x18, 0x0C, 0x0A);
@@ -49,16 +54,39 @@ pub const BLUE: Color = Color::rgb(0x00, 0x46, 0xFF);
 
 pub const RED: Color = Color::rgb(0xFF, 0x30, 0x30);
 
+// Color palette - LED diode
+pub const LED_WHITE: Color = Color::rgb(0x23, 0x23, 0x20);
+pub const LED_GREEN_LIGHT: Color = Color::rgb(0x04, 0x0D, 0x04);
+pub const LED_GREEN_LIME: Color = Color::rgb(0x23, 0x4B, 0x0A);
+pub const LED_ORANGE: Color = Color::rgb(0xBC, 0x2A, 0x06);
+pub const LED_RED: Color = Color::rgb(0x64, 0x06, 0x03);
+pub const LED_YELLOW: Color = Color::rgb(0x16, 0x10, 0x00);
+pub const LED_BLUE: Color = Color::rgb(0x05, 0x05, 0x32);
+pub const fn color_to_led_color(color: Color) -> Color {
+    match color {
+        WHITE => LED_WHITE,
+        GREEN_LIME => LED_GREEN_LIME,
+        GREEN_LIGHT => LED_GREEN_LIGHT,
+        ORANGE => LED_ORANGE,
+        RED => LED_RED,
+        YELLOW => LED_YELLOW,
+        BLUE => LED_BLUE,
+        _ => color,
+    }
+}
+
 // Common constants
 pub const PADDING: i16 = 24; // [px]
 pub const HEADER_HEIGHT: i16 = 96; // [px]
 pub const SIDE_INSETS: Insets = Insets::sides(PADDING);
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
-
-// props settings
-pub const PROP_INNER_SPACING: i16 = 12; // [px]
-pub const PROPS_SPACING: i16 = 16; // [px]
+/// Where to place main content if no Header is used on the Screen
+pub const CONTENT_INSETS_NO_HEADER: Insets = Insets::new(38, PADDING, ACTION_BAR_HEIGHT, PADDING);
+/// Where to place main text of progress screens of bootloader and firmware
+pub const PROGRESS_TEXT_ORIGIN: Point = super::constant::SCREEN
+    .top_left()
+    .ofs(Offset::new(PADDING, CONTENT_INSETS_NO_HEADER.top));
 
 // checklist settings
 pub const CHECKLIST_CHECK_WIDTH: i16 = 32; // [px]
@@ -119,15 +147,18 @@ include_icon!(
     ICON_SPECIAL_CHARS,
     "layout_eckhart/res/keyboard/special_chars_group.toif"
 );
-// Welcome screen.
-include_icon!(ICON_LOGO, "layout_eckhart/res/lock_full.toif");
-// Homescreen notifications.
-include_icon!(ICON_WARNING40, "layout_eckhart/res/warning40.toif");
 
 // Battery icons
 include_icon!(ICON_BATTERY_ZAP, "layout_eckhart/res/battery/zap.toif");
 include_icon!(ICON_BATTERY_FULL, "layout_eckhart/res/battery/full.toif");
-include_icon!(ICON_BATTERY_MID, "layout_eckhart/res/battery/mid.toif");
+include_icon!(
+    ICON_BATTERY_MID_PLUS,
+    "layout_eckhart/res/battery/mid_plus.toif"
+);
+include_icon!(
+    ICON_BATTERY_MID_MINUS,
+    "layout_eckhart/res/battery/mid_minus.toif"
+);
 include_icon!(ICON_BATTERY_LOW, "layout_eckhart/res/battery/low.toif");
 include_icon!(ICON_BATTERY_EMPTY, "layout_eckhart/res/battery/empty.toif");
 
@@ -150,13 +181,51 @@ include_icon!(
     "layout_eckhart/res/defaut_homescreen/hs_tile2.toif"
 );
 
+// Icon for the bootup screen
+include_icon!(ICON_SEVEN, "layout_eckhart/res/bootloader/7.toif");
+
+// Tutorial screen icons
+include_icon!(ICON_TROPIC, "layout_eckhart/res/tropic.toif");
+include_icon!(ICON_SECURED, "layout_eckhart/res/secured.toif");
+
+// Regulatory screen icons
+include_icon!(
+    ICON_ARGENTINA,
+    "layout_eckhart/res/regulatory/argentina.toif"
+);
+include_icon!(ICON_EUROPE, "layout_eckhart/res/regulatory/europe.toif");
+include_icon!(ICON_FCC, "layout_eckhart/res/regulatory/fcc.toif");
+include_icon!(ICON_JAPAN_1, "layout_eckhart/res/regulatory/japan_1.toif");
+include_icon!(ICON_JAPAN_2, "layout_eckhart/res/regulatory/japan_2.toif");
+include_icon!(ICON_KOREA_1, "layout_eckhart/res/regulatory/korea_1.toif");
+include_icon!(ICON_KOREA_2, "layout_eckhart/res/regulatory/korea_2.toif");
+include_icon!(ICON_KOREA_3, "layout_eckhart/res/regulatory/korea_3.toif");
+include_icon!(ICON_RCM, "layout_eckhart/res/regulatory/rcm.toif");
+include_icon!(
+    ICON_SINGAPORE,
+    "layout_eckhart/res/regulatory/singapore.toif"
+);
+include_icon!(
+    ICON_SOUTH_AFRICA,
+    "layout_eckhart/res/regulatory/south_africa.toif"
+);
+include_icon!(ICON_TAIWAN, "layout_eckhart/res/regulatory/taiwan.toif");
+include_icon!(ICON_UKRAINE, "layout_eckhart/res/regulatory/ukraine.toif");
+include_icon!(
+    ICON_UNITED_ARAB_EMIRATES,
+    "layout_eckhart/res/regulatory/uae.toif"
+);
+
+// Square icon for BLE connection items
+include_icon!(ICON_SQUARE, "layout_eckhart/res/square.toif");
+
 // Common text styles and button styles must use fonts accessible from both
 // bootloader and firmware
 
 pub const TEXT_NORMAL: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_LIGHT, BG, FG, FG);
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SMALL: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_LIGHT, BG, FG, FG);
+    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SMALL_RED: TextStyle = TextStyle {
     text_color: RED,
     ..TEXT_SMALL

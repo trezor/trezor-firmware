@@ -40,7 +40,7 @@ typedef struct _mp_obj_AesGcm_t {
   } state;
 } mp_obj_AesGcm_t;
 
-/// def __init__(self, key: bytes, iv: bytes) -> None:
+/// def __init__(self, key: AnyBytes, iv: AnyBytes) -> None:
 ///     """
 ///     Initialize the AES-GCM context for encryption or decryption.
 ///     """
@@ -67,7 +67,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_make_new(const mp_obj_type_t *type,
   return MP_OBJ_FROM_PTR(o);
 }
 
-/// def reset(self, iv: bytes) -> None:
+/// def reset(self, iv: AnyBytes) -> None:
 ///     """
 ///     Reset the IV for encryption or decryption.
 ///     """
@@ -85,7 +85,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_reset(mp_obj_t self, mp_obj_t iv) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_reset_obj,
                                  mod_trezorcrypto_AesGcm_reset);
 
-/// def encrypt(self, data: bytes) -> bytes:
+/// def encrypt(self, data: AnyBytes) -> bytes:
 ///     """
 ///     Encrypt data chunk.
 ///     """
@@ -110,7 +110,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_encrypt_obj,
                                  mod_trezorcrypto_AesGcm_encrypt);
 
-/// def encrypt_in_place(self, data: bytearray | memoryview) -> int:
+/// def encrypt_in_place(self, data: AnyBuffer) -> int:
 ///     """
 ///     Encrypt data chunk in place. Returns the length of the encrypted data.
 ///     """
@@ -132,7 +132,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt_in_place(mp_obj_t self,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_encrypt_in_place_obj,
                                  mod_trezorcrypto_AesGcm_encrypt_in_place);
 
-/// def decrypt(self, data: bytes) -> bytes:
+/// def decrypt(self, data: AnyBytes) -> bytes:
 ///     """
 ///     Decrypt data chunk.
 ///     """
@@ -157,7 +157,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_decrypt_obj,
                                  mod_trezorcrypto_AesGcm_decrypt);
 
-/// def decrypt_in_place(self, data: bytearray | memoryview) -> int:
+/// def decrypt_in_place(self, data: AnyBuffer) -> int:
 ///     """
 ///     Decrypt data chunk in place. Returns the length of the decrypted data.
 ///     """
@@ -179,7 +179,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt_in_place(mp_obj_t self,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_decrypt_in_place_obj,
                                  mod_trezorcrypto_AesGcm_decrypt_in_place);
 
-/// def auth(self, data: bytes) -> None:
+/// def auth(self, data: AnyBytes) -> None:
 ///     """
 ///     Include authenticated data chunk in the GCM authentication tag. This can
 ///     be called repeatedly to add authenticated data at any point before

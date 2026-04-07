@@ -22,6 +22,7 @@ async def request_word_count(recovery_type: RecoveryType) -> int:
         "recovery_word_count",
         ButtonRequestType.MnemonicWordCount,
     )
+    assert isinstance(count, (int, str))
     return int(count)
 
 
@@ -221,7 +222,7 @@ async def show_already_added() -> None:
     )
 
 
-async def show_group_thresholod() -> None:
+async def show_group_threshold() -> None:
     await show_recovery_warning(
         "warning_group_threshold",
         TR.recovery__group_threshold_reached,

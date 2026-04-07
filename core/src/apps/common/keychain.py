@@ -34,7 +34,9 @@ if TYPE_CHECKING:
         def __del__(self) -> None: ...
 
 
-FORBIDDEN_KEY_PATH = DataError("Forbidden key path")
+class ForbiddenKeyPath(DataError):
+    def __init__(self) -> None:
+        super().__init__("Forbidden key path")
 
 
 class LRUCache:
@@ -103,7 +105,16 @@ class Keychain:
         if self.is_in_keychain(path):
             return
 
-        raise FORBIDDEN_KEY_PATH
+        raise ForbiddenKeyPath()
+
+    def verify_slip21_path(self, path: paths.Slip21Path) -> None:
+        if not safety_checks.is_strict():
+            return
+
+        if any(ns == path[: len(ns)] for ns in self.slip21_namespaces):
+            return
+
+        raise ForbiddenKeyPath()
 
     def is_in_keychain(self, path: paths.Bip32Path) -> bool:
         return any(schema.match(path) for schema in self.schemas)
@@ -147,10 +158,7 @@ class Keychain:
     def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node:
         from .seed import Slip21Node
 
-        if safety_checks.is_strict() and not any(
-            ns == path[: len(ns)] for ns in self.slip21_namespaces
-        ):
-            raise FORBIDDEN_KEY_PATH
+        self.verify_slip21_path(path)
 
         return self._derive_with_cache(
             1,
@@ -179,19 +187,19 @@ async def get_keychain(
 
 def with_slip44_keychain(
     *patterns: str,
-    slip44_id: int,
+    slip44_id: int | None = None,
     curve: str = "secp256k1",
     allow_testnet: bool = True,
     slip21_namespaces: Iterable[paths.Slip21Path] = (),
 ) -> Callable[[HandlerWithKeychain[MsgIn, MsgOut]], Handler[MsgIn, MsgOut]]:
-    if not patterns:
-        raise ValueError  # specify a pattern
-
-    slip_44_ids = (slip44_id, 1) if allow_testnet else slip44_id
+    if slip44_id is not None:
+        slip44_ids = (slip44_id, 1) if allow_testnet else slip44_id
+    else:
+        slip44_ids = tuple()
 
     schemas = []
     for pattern in patterns:
-        schemas.append(paths.PathSchema.parse(pattern, slip_44_ids))
+        schemas.append(paths.PathSchema.parse(pattern, slip44_ids))
     schemas = [s.copy() for s in schemas]
 
     def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:

@@ -1,15 +1,27 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorutils/modtrezorutils-meminfo.h
 def meminfo(filename: str | None) -> None:
-    """Dumps map of micropython GC arena to a file.
+    """
+    Dumps map of micropython GC arena to a file.
     The JSON file can be decoded by analyze-memory-dump.py
-     """
+    """
+from trezor import utils
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def consteq(sec: bytes, pub: bytes) -> bool:
+def telemetry_get() -> tuple[int, int, int, int] | None:
+    """
+    Retrieves the stored telemetry data. Returns a tuple
+    (min_temp_milli_c, max_temp_milli_c, battery_errors, battery_cycles)
+    or None if telemetry is not available.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
     """
     Compares the private information in `sec` with public, user-provided
     information in `pub`.  Runs in constant time, corresponding to a length
@@ -20,9 +32,9 @@ def consteq(sec: bytes, pub: bytes) -> bool:
 
 # upymod/modtrezorutils/modtrezorutils.c
 def memcpy(
-    dst: bytearray | memoryview,
+    dst: AnyBuffer,
     dst_ofs: int,
-    src: bytes,
+    src: AnyBytes,
     src_ofs: int,
     n: int | None = None,
 ) -> int:
@@ -35,6 +47,15 @@ def memcpy(
 
 
 # upymod/modtrezorutils/modtrezorutils.c
+def memzero(
+    dst: AnyBuffer,
+) -> None:
+    """
+    Zeroes all bytes at `dst`.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
 def halt(msg: str | None = None) -> None:
     """
     Halts execution.
@@ -43,7 +64,7 @@ def halt(msg: str | None = None) -> None:
 
 # upymod/modtrezorutils/modtrezorutils.c
 def firmware_hash(
-    challenge: bytes | None = None,
+    challenge: AnyBytes | None = None,
     callback: Callable[[int, int], None] | None = None,
 ) -> bytes:
     """
@@ -56,6 +77,14 @@ def firmware_hash(
 def firmware_vendor() -> str:
     """
     Returns the firmware vendor string from the vendor header.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def delegated_identity(rotation_index: int) -> bytes:
+    """
+    Returns the delegated identity key used for registration and space
+    management at Quota Manager.
     """
 
 
@@ -78,6 +107,19 @@ def unit_packaging() -> int | None:
     """
     Returns the packaging version of the unit.
     """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def unit_production_date() -> tuple[int, int, int] | None:
+    """
+    Returns the unit production date as (year, month, day), or None if
+    unavailable.
+    """
+if utils.USE_SERIAL_NUMBER:
+    def serial_number() -> str:
+        """
+        Returns unit serial number.
+        """
 
 
 # upymod/modtrezorutils/modtrezorutils.c
@@ -141,12 +183,25 @@ if __debug__:
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def reboot_to_bootloader(
-    boot_command : int = 0,
-    boot_args : bytes | None = None,
+def reboot_and_upgrade(
+    hash : AnyBytes,
 ) -> None:
     """
-    Reboots to bootloader.
+    Reboots to perform upgrade to FW with specified hash.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def reboot_to_bootloader() -> None:
+    """
+    Reboots the device and stay in bootloader.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def reboot() -> None:
+    """
+    Reboots the device.
     """
 VersionTuple = Tuple[int, int, int, int]
 
@@ -155,20 +210,41 @@ VersionTuple = Tuple[int, int, int, int]
 class FirmwareHeaderInfo(NamedTuple):
     version: VersionTuple
     vendor: str
-    fingerprint: bytes
-    hash: bytes
+    fingerprint: AnyBytes
+    hash: AnyBytes
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def check_firmware_header(header : bytes) -> FirmwareHeaderInfo:
+def check_firmware_header(header : AnyBytes) -> FirmwareHeaderInfo:
     """Parses incoming firmware header and returns information about it."""
 
 
 # upymod/modtrezorutils/modtrezorutils.c
 def bootloader_locked() -> bool | None:
     """
-    Returns True/False if the the bootloader is locked/unlocked and None if
+    Returns True/False if the bootloader is locked/unlocked and None if
     the feature is not supported.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def notify_send(event: int) -> None:
+    """
+    Sends a notification to host
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def nrf_get_version() -> VersionTuple:
+    """
+    Reads version of nRF firmware
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def set_log_filter(filter: str) -> None:
+    """
+    Sets filter string for syslog
     """
 SCM_REVISION: bytes
 """Git commit hash of the firmware."""
@@ -178,10 +254,14 @@ USE_BLE: bool
 """Whether the hardware supports BLE."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
+USE_SERIAL_NUMBER: bool
+"""Whether the hardware support exporting its serial number."""
 USE_BACKLIGHT: bool
 """Whether the hardware supports backlight brightness control."""
 USE_HAPTIC: bool
 """Whether the hardware supports haptic feedback."""
+USE_RGB_LED: bool
+"""Whether the hardware supports RGB LED."""
 USE_OPTIGA: bool
 """Whether the hardware supports Optiga secure element."""
 USE_TROPIC: bool
@@ -192,6 +272,14 @@ USE_BUTTON: bool
 """Whether the hardware supports two-button input."""
 USE_POWER_MANAGER: bool
 """Whether the hardware has a battery."""
+USE_NRF: bool
+"""Whether the hardware has a nRF chip."""
+USE_DBG_CONSOLE: bool
+"""Whether a debug console is enabled."""
+USE_APP_LOADING: bool
+"""Whether the firmware supports loading 3rd-party applications."""
+USE_TELEMETRY: bool
+"""Whether a telemetry is supported."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str
@@ -212,6 +300,27 @@ UI_LAYOUT: str
 """UI layout identifier ("BOLT"-T, "CAESAR"-TS3, "DELIZIA"-TS5)."""
 USE_THP: bool
 """Whether the firmware supports Trezor-Host Protocol (version 2)."""
+NOTIFY_BOOT: int
+"""Notification event: boot completed."""
+NOTIFY_UNLOCK: int
+"""Notification event: device unlocked from hardlock"""
+NOTIFY_LOCK: int
+"""Notification event: device locked to hardlock"""
+NOTIFY_DISCONNECT: int
+"""Notification event: user-initiated disconnect from host"""
+NOTIFY_SETTING_CHANGE: int
+"""Notification event: change of settings"""
+NOTIFY_SOFTLOCK: int
+"""Notification event: device soft-locked"""
+NOTIFY_SOFTUNLOCK: int
+"""Notification event: device soft-unlocked"""
+NOTIFY_PIN_CHANGE: int
+"""Notification event: PIN changed on the device"""
+NOTIFY_WIPE: int
+"""Notification event: factory reset (wipe) invoked"""
+NOTIFY_UNPAIR: int
+"""Notification event: BLE bonding for current connection deleted"""
+
 if __debug__:
     DISABLE_ANIMATION: bool
     """Whether the firmware should disable animations."""

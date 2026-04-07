@@ -14,7 +14,7 @@ class RelayController:
     DEDITEC_PORT = 9912
     MAX_PIN = 16  # Max PIN index (1-16)
 
-    def __init__(self, ip_address: str):
+    def __init__(self, ip_address: str) -> None:
         """
         Initilize relay controller.
 
@@ -111,5 +111,5 @@ class RelayController:
 
         return self.deditec.control_relay(pins_on=[pin], pins_off=[])
 
-    def close(self):
+    def close(self) -> None:
         pass

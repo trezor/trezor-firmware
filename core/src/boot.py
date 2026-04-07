@@ -10,6 +10,7 @@ welcome_screen_start_ms = utime.ticks_ms()
 
 import storage
 import storage.device
+
 from trezor import config, io, log, loop, ui, utils, wire, translations
 from trezor.pin import (
     allow_all_loader_messages,
@@ -22,6 +23,11 @@ from apps.common.request_pin import can_lock_device, verify_user_pin
 
 if utils.USE_OPTIGA:
     from trezor.crypto import optiga
+
+if utils.USE_POWER_MANAGER:
+    from micropython import const
+    from trezor import workflow
+    from apps.common import lock_manager
 
 # have to use "==" over "in (list)" so that it can be statically replaced
 # with the correct value during the build process
@@ -46,6 +52,35 @@ def enforce_welcome_screen_duration() -> None:
         utime.sleep_ms(100)
 
 
+if not utils.USE_POWER_MANAGER:
+
+    async def pin_unlock_sequence() -> None:
+        lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
+        await lockscreen.get_result()
+        lockscreen.__del__()
+        await verify_user_pin()
+
+else:
+    _SUSPEND_MARKER: int = const(1)
+
+    async def wait_for_suspend() -> int:
+        lock_manager.notify_bootscreen.clear()
+        await lock_manager.notify_bootscreen
+        return _SUSPEND_MARKER
+
+    async def pin_unlock_sequence() -> None:
+        while True:
+            lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
+            await lockscreen.get_result()
+            lockscreen.__del__()
+            res = await loop.race(verify_user_pin(), wait_for_suspend())
+            if res is _SUSPEND_MARKER:
+                # make some delay for the suspend
+                await loop.sleep(100)
+                continue
+            return
+
+
 async def bootscreen() -> None:
     """Sequence of actions to be done on boot (after device is connected).
 
@@ -55,6 +90,9 @@ async def bootscreen() -> None:
     Any non-PIN loaders are ignored during this function.
     Allowing all of them before returning.
     """
+    if utils.USE_POWER_MANAGER:
+        lock_manager.configure_autodim()
+
     while True:
         try:
 
@@ -65,15 +103,12 @@ async def bootscreen() -> None:
                 ui.display.orientation(storage.device.get_rotation())
                 if utils.USE_HAPTIC:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
-                lockscreen = Lockscreen(
-                    label=storage.device.get_label(), bootscreen=True
-                )
-                await lockscreen.get_result()
-                lockscreen.__del__()
-                await verify_user_pin()
+                if utils.USE_RGB_LED:
+                    io.rgb_led.rgb_led_set_enabled(storage.device.get_rgb_led())
+                await pin_unlock_sequence()
                 storage.init_unlocked()
                 allow_all_loader_messages()
-                return
+                break
             else:
                 # Even if PIN is not configured, storage needs to be unlocked, unless it has just been initialized.
                 if not config.is_unlocked():
@@ -83,6 +118,8 @@ async def bootscreen() -> None:
                 rotation = storage.device.get_rotation()
                 if utils.USE_HAPTIC:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
+                if utils.USE_RGB_LED:
+                    io.rgb_led.rgb_led_set_enabled(storage.device.get_rgb_led())
 
                 if rotation != ui.display.orientation():
                     # there is a slight delay before next screen is shown,
@@ -91,7 +128,7 @@ async def bootscreen() -> None:
                         ui.backlight_fade(ui.BacklightLevels.NONE)
                     ui.display.orientation(rotation)
                 allow_all_loader_messages()
-                return
+                break
         except wire.PinCancelled:
             # verify_user_pin will convert a SdCardUnavailable (in case of sd salt)
             # to PinCancelled exception.
@@ -102,6 +139,10 @@ async def bootscreen() -> None:
             if __debug__:
                 log.exception(__name__, e)
             utils.halt(e.__class__.__name__)
+
+    if utils.USE_POWER_MANAGER:
+        workflow.idle_timer.clear()
+    loop.clear()
 
 
 # Display emulator warning.
@@ -114,6 +155,8 @@ if not utils.USE_OPTIGA or (optiga.get_sec() or 0) < 150:
 
 config.init(show_pin_timeout)
 translations.init()
+if utils.USE_POWER_MANAGER:
+    lock_manager.boot()
 
 if __debug__ and not utils.EMULATOR:
     config.wipe()

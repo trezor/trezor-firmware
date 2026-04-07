@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,18 +17,21 @@
 from typing import TYPE_CHECKING
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .client import Session
 
 
+@workflow()
 def list_names(
-    client: "TrezorClient",
+    session: "Session",
 ) -> messages.BenchmarkNames:
-    return client.call(messages.BenchmarkListNames(), expect=messages.BenchmarkNames)
+    return session.call(messages.BenchmarkListNames(), expect=messages.BenchmarkNames)
 
 
-def run(client: "TrezorClient", name: str) -> messages.BenchmarkResult:
-    return client.call(
+@workflow()
+def run(session: "Session", name: str) -> messages.BenchmarkResult:
+    return session.call(
         messages.BenchmarkRun(name=name), expect=messages.BenchmarkResult
     )

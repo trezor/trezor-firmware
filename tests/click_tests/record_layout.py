@@ -28,6 +28,7 @@ from trezorlib import (
     ripple,
     stellar,
     tezos,
+    tron,
 )
 from trezorlib.cli.trezorctl import cli as main
 
@@ -48,6 +49,7 @@ MODULES = (
     ripple,
     stellar,
     tezos,
+    tron,
 )
 
 
@@ -266,14 +268,12 @@ def call_to_strs(call):
 
 
 if __name__ == "__main__":
-    echo(
-        """\
+    echo("""\
 Quick&Dirty Test Case Recorder.
 
 Use as you would use trezorctl, input clicking commands via host keyboard
 for best results.
-"""
-    )
+""")
     try:
         main()
     finally:

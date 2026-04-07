@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - 'release/**'
+      - 'secfix/**'
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -45,16 +46,16 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "export PRODUCTION=1 && poetry run legacy/script/cibuild"
-      - run: nix-shell --run "poetry run legacy/script/setup"
-      - run: nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
-      - run: nix-shell --run "poetry run make -C legacy/demo"
+      - run: nix-shell --run "export PRODUCTION=1 && uv run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/setup"
+      - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
+      - run: nix-shell --run "uv run make -C legacy/demo"
         if: matrix.coins == 'universal' && matrix.type == 'normal'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-firmware-${{ matrix.coins }}-${{ matrix.type }}
           path: legacy/firmware/firmware-*.bin
@@ -76,13 +77,13 @@ jobs:
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: cp legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-${{ matrix.coins }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-emu-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -105,13 +106,13 @@ jobs:
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-arm-legacy-T1B1-${{ matrix.coins }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-emu-arm-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -131,18 +132,18 @@ jobs:
       EMULATOR: 1
       PYTEST_TIMEOUT: 120
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C legacy test_emu_ui"
+      - run: nix-shell --run "uv run make -C legacy test_emu_ui"
         if: matrix.coins == 'universal'
-      - run: nix-shell --run "poetry run make -C legacy test_emu"
+      - run: nix-shell --run "uv run make -C legacy test_emu"
         if: matrix.coins != 'universal'
       - uses: ./.github/actions/ui-report
         with:
@@ -166,17 +167,17 @@ jobs:
       TREZOR_UPGRADE_TEST: legacy
       PYTEST_TIMEOUT: 120
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-universal-debuglink-${{ matrix.asan }}
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "tests/download_emulators.sh"
-      - run: nix-shell --run "poetry run pytest tests/upgrade_tests"
+      - run: nix-shell --run "tests/download_emulators.sh T1B1"
+      - run: nix-shell --run "uv run pytest tests/upgrade_tests"
 
   legacy_hwi_test:
     name: HWI test
@@ -187,10 +188,10 @@ jobs:
     env:
       EMULATOR: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-universal-debuglink-noasan
           path: legacy/firmware
@@ -201,18 +202,18 @@ jobs:
 
   legacy_upload_emu:
     name: Upload emulator binaries
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' && github.repository == 'trezor/trezor-firmware'
     runs-on: ubuntu-latest
     needs:
       - legacy_emu
       - legacy_emu_arm
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           pattern: legacy-emu*debuglink-noasan
           merge-multiple: true
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1

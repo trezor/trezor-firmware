@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Awaitable
 
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
-from trezor import TR, wire
+from trezor import TR, utils, wire
 from trezor.messages import Success
-from trezor.ui.layouts.recovery import show_invalid_mnemonic
+from trezor.wire import message_handler
 
 from apps.common import backup_types
 from apps.management.recovery_device.recover import RecoveryAborted
@@ -40,18 +40,27 @@ async def recovery_process() -> Success:
 
     recovery_type = storage_recovery.get_type()
 
-    wire.message_handler.AVOID_RESTARTING_FOR = (
-        MessageType.Initialize,
-        MessageType.GetFeatures,
-        MessageType.EndSession,
-    )
+    if utils.USE_THP:
+        message_handler.AVOID_RESTARTING_FOR = (
+            MessageType.GetFeatures,
+            MessageType.EndSession,
+        )
+    else:
+        message_handler.AVOID_RESTARTING_FOR = (
+            MessageType.Initialize,
+            MessageType.GetFeatures,
+            MessageType.EndSession,
+        )
     try:
         return await _continue_recovery_process()
     except recover.RecoveryAborted:
         storage_recovery.end_progress()
         backup.deactivate_repeated_backup()
         if recovery_type == RecoveryType.NormalRecovery:
-            storage.wipe()
+            from trezor.wire.context import try_get_ctx_ids
+
+            storage.wipe(clear_cache=False)
+            storage.wipe_cache(excluded=try_get_ctx_ids())
         raise wire.ActionCancelled
 
 
@@ -61,75 +70,114 @@ async def _continue_repeated_backup() -> None:
     from apps.common import backup
     from apps.management.backup_device import perform_backup
 
-    wire.message_handler.AVOID_RESTARTING_FOR = (
-        MessageType.Initialize,
-        MessageType.GetFeatures,
-        MessageType.EndSession,
-    )
+    if utils.USE_THP:
+        message_handler.AVOID_RESTARTING_FOR = (
+            MessageType.GetFeatures,
+            MessageType.EndSession,
+        )
+    else:
+        message_handler.AVOID_RESTARTING_FOR = (
+            MessageType.Initialize,
+            MessageType.GetFeatures,
+            MessageType.EndSession,
+        )
 
     try:
-        await perform_backup(is_repeated_backup=True)
+        # During on-device flow, the backup method will be chosen later.
+        await perform_backup(is_repeated_backup=True, method=None)
     finally:
         backup.deactivate_repeated_backup()
 
 
-async def _continue_recovery_process() -> Success:
-    from trezor import utils
-    from trezor.enums import RecoveryType
-    from trezor.errors import MnemonicError
+class _DisplayHandler:
+    def __init__(
+        self,
+        recovery_type: RecoveryType,
+        word_count: int,
+        backup_type: BackupType | None,
+    ) -> None:
+        self.recovery_type = recovery_type
+        self.word_count = word_count
+        self.backup_type = backup_type
 
-    # gather the current recovery state from storage
-    recovery_type = storage_recovery.get_type()
-    word_count, backup_type = recover.load_slip39_state()
-
-    # Both word_count and backup_type are derived from the same data. Both will be
-    # either set or unset. We use 'backup_type is None' to detect status of both.
-    # The following variable indicates that we are (re)starting the first recovery step,
-    # which includes word count selection.
-    is_first_step = backup_type is None
-
-    if not is_first_step:
-        assert word_count is not None
-        # If we continue recovery, show starting screen with word count immediately.
-        await _request_share_first_screen(word_count, recovery_type)
-
-    secret = None
-    while secret is None:
-        if is_first_step:
+    @classmethod
+    async def load(cls, recovery_type: RecoveryType) -> "_DisplayHandler":
+        # `slip39_state is None` indicates that we are (re)starting the first recovery step,
+        # which includes word count selection.
+        if (slip39_state := recover.load_slip39_state()) is None:
             # If we are starting recovery, ask for word count first...
-            # _request_word_count
-            # For others than Caesar (TS3), just continue straight to word count keyboard
-            # pylint: disable-next=consider-using-in
-            if utils.UI_LAYOUT == "CAESAR":
-                await layout.homescreen_dialog(
-                    TR.buttons__continue, TR.recovery__num_of_words
-                )
-            # ask for the number of words
             try:
                 word_count = await layout.request_word_count(recovery_type)
             except wire.ActionCancelled:
                 raise RecoveryAborted
             # ...and only then show the starting screen with word count.
-            await _request_share_first_screen(word_count, recovery_type)
-        assert word_count is not None
+            # Backup type will be deduced from the first share.
+            backup_type = None
+        else:
+            # SLIP-39 recovery is ongoing (at least one share was entered).
+            word_count, backup_type = slip39_state
 
-        # ask for mnemonic words one by one
-        words = await layout.request_mnemonic(word_count, backup_type)
+        return cls(recovery_type, word_count, backup_type)
 
-        # if they were invalid or some checks failed we continue and request them again
-        if not words:
-            continue
+    async def show_state(self, is_retry: bool) -> None:
+        if is_retry and self.backup_type is not None:
+            # skip showing recovery state on retries (if first share was entered)
+            return
+        await _request_share_first_screen(self.word_count, self.recovery_type)
+
+    async def request_mnemonic(self) -> str | None:
+        """Return the mnemonic or `None` on cancellation/validation error."""
+        from .word_validity import WordValidityResult
 
         try:
-            secret, backup_type = await _process_words(words)
-            # If _process_words succeeded, we now have both backup_type (from
-            # its result) and word_count (from _request_word_count earlier), which means
-            # that the first step is complete.
-            is_first_step = False
-        except MnemonicError:
-            await show_invalid_mnemonic(word_count)
+            # returns `None` on cancellation
+            return await layout.request_mnemonic(self.word_count, self.backup_type)
+        except WordValidityResult as exc:
+            # if they were invalid or some checks failed we continue and request them again
+            await exc.show_error()
+            return None
 
-    assert backup_type is not None
+    def show_invalid_mnemonic(self) -> Awaitable[None]:
+        from trezor.ui.layouts.recovery import show_invalid_mnemonic
+
+        return show_invalid_mnemonic(self.word_count)
+
+
+async def _recover_secret(recovery_type: RecoveryType) -> tuple[bytes, BackupType]:
+    from trezor.errors import MnemonicError
+
+    # Show recovery state in the beginning, on some failures, and after a successful share entry.
+    is_retry = False
+
+    while True:
+        # Load existing recovery state (persisted by _process_words below).
+        handler = await _DisplayHandler.load(recovery_type)
+        await handler.show_state(is_retry)
+        is_retry = False
+
+        # Ask for mnemonic words one by one.
+        # Returns `None` on cancellation/validation error.
+        if (words := await handler.request_mnemonic()) is None:
+            continue
+        try:
+            if (result := await _process_words(words)) is not None:
+                return result
+            # If _process_words succeeded, at least one share was entered.
+        except MnemonicError:
+            await handler.show_invalid_mnemonic()
+            is_retry = True  # Retry share entry (without showing recovery state)
+
+
+async def _continue_recovery_process() -> Success:
+    from trezor.enums import RecoveryType
+
+    # gather the current recovery state from storage
+    recovery_type = storage_recovery.get_type()
+
+    # run recovery process - may raise RecoveryAborted
+    secret, backup_type = await _recover_secret(recovery_type)
+
+    # finish recovery
     if recovery_type == RecoveryType.DryRun:
         result = await _finish_recovery_dry_run(secret, backup_type)
     elif recovery_type == RecoveryType.UnlockRepeatedBackup:
@@ -217,8 +265,12 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
     if backup_type is None:
         raise RuntimeError
 
-    storage_device.store_mnemonic_secret(secret, needs_backup=False, no_backup=False)
     storage_device.set_backup_type(backup_type)
+    storage_device.store_mnemonic_secret(
+        secret=secret,
+        needs_backup=False,
+        no_backup=False,
+    )
     if backup_types.is_slip39_backup_type(backup_type):
         if not backup_types.is_extendable_backup_type(backup_type):
             identifier = storage_recovery.get_slip39_identifier()
@@ -239,7 +291,7 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
     return Success(message="Device recovered")
 
 
-async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
+async def _process_words(words: str) -> tuple[bytes, BackupType] | None:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
@@ -254,7 +306,7 @@ async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
         assert share is not None
         if share.group_count and share.group_count > 1:
             await layout.show_group_share_success(share.index, share.group_index)
-        await _request_share_next_screen()
+        return None  # more shares are needed
 
     return secret, backup_type
 
@@ -267,7 +319,14 @@ async def _request_share_first_screen(
     if backup_types.is_slip39_word_count(word_count):
         remaining = storage_recovery.fetch_slip39_remaining_shares()
         if remaining:
-            await _request_share_next_screen()
+            group_count = storage_recovery.get_slip39_group_count()
+            if group_count > 1:
+                await layout.enter_share(
+                    remaining_shares_info=_get_remaining_groups_and_shares()
+                )
+            else:
+                entered = len(storage_recovery_shares.fetch_group(0))
+                await layout.enter_share(entered_remaining=(entered, remaining[0]))
         else:
             if recovery_type == RecoveryType.UnlockRepeatedBackup:
                 text = TR.recovery__enter_backup
@@ -288,22 +347,6 @@ async def _request_share_first_screen(
             TR.recovery__word_count_template.format(word_count),
             show_instructions=True,
         )
-
-
-async def _request_share_next_screen() -> None:
-    remaining = storage_recovery.fetch_slip39_remaining_shares()
-    group_count = storage_recovery.get_slip39_group_count()
-    if not remaining:
-        # 'remaining' should be stored at this point
-        raise RuntimeError
-
-    if group_count > 1:
-        await layout.enter_share(
-            remaining_shares_info=_get_remaining_groups_and_shares()
-        )
-    else:
-        entered = len(storage_recovery_shares.fetch_group(0))
-        await layout.enter_share(entered_remaining=(entered, remaining[0]))
 
 
 def _get_remaining_groups_and_shares() -> "RemainingSharesInfo":

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor.strings import format_amount, format_timestamp
+from trezor.strings import format_amount, format_amount_unit, format_timestamp
 
 from .definitions import unknown_token
 
@@ -19,7 +19,7 @@ def format_pubkey(value: bytes | None) -> str:
 
 def format_lamports(value: int) -> str:
     formatted = format_amount(value, decimals=9)
-    return f"{formatted} SOL"
+    return format_amount_unit(formatted, "SOL")
 
 
 def format_token_amount(
@@ -27,7 +27,7 @@ def format_token_amount(
 ) -> str:
     formatted = format_amount(value, decimals=decimals)
     token = definitions.get_token(mint) or unknown_token(mint)
-    return f"{formatted} {token.symbol}"
+    return format_amount_unit(formatted, token.symbol)
 
 
 def format_unix_timestamp(value: int) -> str:

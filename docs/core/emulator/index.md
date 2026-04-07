@@ -20,9 +20,9 @@ Any other usage of the emulator is discouraged. Doing so runs the risk of losing
 ## How to run
 
 1. [build](../build/emulator.md) the emulator
-2. run `emu.py` inside the poetry environment:
-   - either enter `poetry shell` first, and then use `./emu.py`
-   - or always use `poetry run ./emu.py`
+2. run `emu.py` inside the `uv` environment:
+   - either activate the `uv` environment first, and then use `./emu.py`
+   - or always use `uv run ./emu.py`
 3. start the bridge:
    - to initialise the [bridge](https://github.com/trezor/trezord-go) with emulator support, start it with `trezord-go -e 21324`
    - alternatively, launch the [desktop suite](https://suite.trezor.io/) from the command line with the argument `--bridge-dev`

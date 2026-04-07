@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,16 +17,15 @@
 from __future__ import annotations
 
 import logging
-import struct
-from typing import TYPE_CHECKING, Any, Iterable
+import typing as t
 
 import requests
 from typing_extensions import Self
 
 from ..log import DUMP_PACKETS
-from . import DeviceIsBusy, MessagePayload, Transport, TransportException
+from . import DeviceIsBusy, Transport, TransportException
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from ..models import TrezorModel
 
 LOG = logging.getLogger(__name__)
@@ -35,6 +34,8 @@ TREZORD_HOST = "http://127.0.0.1:21325"
 TREZORD_ORIGIN_HEADER = {"Origin": "https://python.trezor.io"}
 
 TREZORD_VERSION_MODERN = (2, 0, 25)
+# https://github.com/trezor/trezor-suite/commit/4881cefcd4aec9f4da44220cf5ee4c79fd5eb3ff
+TREZORD_VERSION_THP_SUPPORT = (3, 1, 0)
 
 CONNECTION = requests.Session()
 CONNECTION.headers.update(TREZORD_ORIGIN_HEADER)
@@ -58,10 +59,17 @@ def call_bridge(
     return r
 
 
-def is_legacy_bridge() -> bool:
+def get_bridge_version() -> t.Tuple[int, ...]:
     config = call_bridge("configure").json()
-    version_tuple = tuple(map(int, config["version"].split(".")))
-    return version_tuple < TREZORD_VERSION_MODERN
+    return tuple(map(int, config["version"].split(".")))
+
+
+def is_legacy_bridge() -> bool:
+    return get_bridge_version() < TREZORD_VERSION_MODERN
+
+
+def supports_protocolV2() -> bool:
+    return get_bridge_version() >= TREZORD_VERSION_THP_SUPPORT
 
 
 class BridgeHandle:
@@ -114,16 +122,18 @@ class BridgeTransport(Transport):
     """
 
     PATH_PREFIX = "bridge"
-    ENABLED: bool = True
+    ENABLED = True
+    CHUNK_SIZE = None
 
     def __init__(
-        self, device: dict[str, Any], legacy: bool, debug: bool = False
+        self, device: dict[str, t.Any], legacy: bool, debug: bool = False
     ) -> None:
         if legacy and debug:
             raise TransportException("Debugging not supported on legacy Bridge")
-
         self.device = device
-        self.session: str | None = None
+        self.session: str | None = device["session"]
+        if debug:
+            self.session = device["debugSession"]
         self.debug = debug
         self.legacy = legacy
 
@@ -154,8 +164,8 @@ class BridgeTransport(Transport):
 
     @classmethod
     def enumerate(
-        cls, _models: Iterable[TrezorModel] | None = None
-    ) -> Iterable["BridgeTransport"]:
+        cls, models: t.Iterable[TrezorModel] | None = None
+    ) -> t.Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
             return [
@@ -164,7 +174,7 @@ class BridgeTransport(Transport):
         except Exception:
             return []
 
-    def begin_session(self) -> None:
+    def _open(self) -> None:
         try:
             data = self._call("acquire/" + self.device["path"])
         except BridgeException as e:
@@ -173,18 +183,17 @@ class BridgeTransport(Transport):
             raise
         self.session = data.json()["session"]
 
-    def end_session(self) -> None:
+    def _close(self) -> None:
         if not self.session:
             return
         self._call("release")
         self.session = None
 
-    def write(self, message_type: int, message_data: bytes) -> None:
-        header = struct.pack(">HL", message_type, len(message_data))
-        self.handle.write_buf(header + message_data)
+    def write_chunk(self, chunk: bytes, /) -> None:
+        self.handle.write_buf(chunk)
 
-    def read(self, timeout: float | None = None) -> MessagePayload:
-        data = self.handle.read_buf(timeout=timeout)
-        headerlen = struct.calcsize(">HL")
-        msg_type, datalen = struct.unpack(">HL", data[:headerlen])
-        return msg_type, data[headerlen : headerlen + datalen]
+    def read_chunk(self, *, timeout: float | None = None) -> bytes:
+        return self.handle.read_buf(timeout=timeout)
+
+    def is_open(self) -> bool:
+        return self.session is not None

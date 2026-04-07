@@ -21,9 +21,9 @@
 
 #include <trezor_rtl.h>
 
+#include <io/power_manager.h>
 #include <rtl/cli.h>
-#include <sys/backup_ram.h>
-#include <sys/power_manager.h>
+#include <sec/backup_ram.h>
 #include <sys/systick.h>
 
 static void prodtest_backup_ram_list(cli_t* cli) {
@@ -59,6 +59,8 @@ static void prodtest_backup_ram_list(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+#if !PRODUCTION
+
 static void prodtest_backup_ram_erase(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -74,8 +76,6 @@ static void prodtest_backup_ram_erase(cli_t* cli) {
 
   cli_ok(cli, "");
 }
-
-#if !PRODUCTION
 
 static void prodtest_backup_ram_read(cli_t* cli) {
   if (cli_arg_count(cli) != 1) {
@@ -187,14 +187,14 @@ PRODTEST_CLI_CMD(
    .args = ""
 );
 
+#if !PRODUCTION
+
 PRODTEST_CLI_CMD(
     .name = "backup-ram-erase",
     .func = prodtest_backup_ram_erase,
     .info = "Erase all backup RAM",
     .args = ""
 );
-
-#if !PRODUCTION
 
 PRODTEST_CLI_CMD(
    .name = "backup-ram-read",

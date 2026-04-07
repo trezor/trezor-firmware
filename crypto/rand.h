@@ -27,10 +27,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef USE_INSECURE_PRNG
 void random_reseed(const uint32_t value);
-uint32_t random32(void);
+#endif
+
 void random_buffer(uint8_t *buf, size_t len);
-void random_xor(uint8_t *buf, size_t len);
+
+static inline uint32_t random32(void) {
+  uint32_t r = 0;
+  random_buffer((uint8_t *)&r, sizeof(r));
+  return r;
+}
 
 uint32_t random_uniform(uint32_t n);
 void random_permute(char *buf, size_t len);

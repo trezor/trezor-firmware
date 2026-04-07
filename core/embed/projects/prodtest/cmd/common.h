@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __COMMON_H
-#define __COMMON_H
+#pragma once
 
 #include <rtl/cli.h>
 
@@ -28,4 +27,4 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
                       const uint8_t* sig, size_t sig_size,
                       const uint8_t challenge[CHALLENGE_SIZE]);
 
-#endif  // __COMMON_H
+void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len));

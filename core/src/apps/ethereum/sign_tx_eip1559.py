@@ -44,10 +44,15 @@ async def sign_tx_eip1559(
     from apps.common import paths
 
     from .helpers import format_ethereum_amount, get_fee_items_eip1559
-    from .sign_tx import check_common_fields, confirm_tx_data, send_request_chunk
+    from .sign_tx import (
+        check_common_fields,
+        confirm_tx_data,
+        request_initial_data,
+        send_request_chunk,
+    )
 
     gas_limit = msg.gas_limit  # local_cache_attribute
-    data_total = msg.data_length  # local_cache_attribute
+    data_length = msg.data_length  # local_cache_attribute
 
     # check
     if len(msg.max_gas_fee) + len(gas_limit) > 30:
@@ -77,31 +82,13 @@ async def sign_tx_eip1559(
 
         slip44_id = paths.unharden(msg.address_n[1])
         payment_req_verifier = PaymentRequestVerifier(
-            msg.payment_req, slip44_id, keychain
+            msg.payment_req, slip44_id, keychain, amount_size_bytes=32
         )
-
-    await confirm_tx_data(
-        msg,
-        defs,
-        address_bytes,
-        maximum_fee,
-        fee_items,
-        data_total,
-        payment_req_verifier,
-    )
-
-    # transaction data confirmed, proceed with signing
-    data = bytearray()
-    data += msg.data_initial_chunk
-    data_left = data_total - len(msg.data_initial_chunk)
-
-    total_length = _get_total_length(msg, data_total)
 
     sha = HashWriter(sha3_256(keccak=True))
 
     rlp.write(sha, _TX_TYPE)
-
-    rlp.write_header(sha, total_length, rlp.LIST_HEADER_BYTE)
+    rlp.write_header(sha, _get_digest_length(msg, data_length), rlp.LIST_HEADER_BYTE)
 
     fields: tuple[rlp.RLPItem, ...] = (
         msg.chain_id,
@@ -115,16 +102,33 @@ async def sign_tx_eip1559(
     for field in fields:
         rlp.write(sha, field)
 
-    if data_left == 0:
-        rlp.write(sha, data)
-    else:
-        rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, data)
-        sha.extend(data)
+    initial_data = await request_initial_data(msg, sha)
 
-    while data_left > 0:
-        resp = await send_request_chunk(data_left)
-        data_left -= len(resp.data_chunk)
-        sha.extend(resp.data_chunk)
+    confirm_data_chunk, confirm_summary = await confirm_tx_data(
+        initial_data,
+        msg,
+        defs,
+        None,
+        address_bytes,
+        maximum_fee,
+        fee_items,
+        payment_req_verifier,
+    )
+
+    if confirm_data_chunk is not None:
+        await confirm_data_chunk(initial_data)
+
+        data_left = data_length - len(initial_data)
+        while data_left > 0:
+            resp = await send_request_chunk(data_left)
+            chunk = resp.data_chunk
+            await confirm_data_chunk(chunk)
+            data_left -= len(chunk)
+            sha.extend(chunk)
+
+    if confirm_summary is not None:
+        # blind signer's summary
+        await confirm_summary
 
     # write_access_list
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)
@@ -138,13 +142,15 @@ async def sign_tx_eip1559(
         rlp.write(sha, item.storage_keys)
 
     digest = sha.get_digest()
+
+    # transaction data confirmed, proceed with signing
     result = _sign_digest(msg, keychain, digest)
 
     show_continue_in_app(TR.send__transaction_signed)
     return result
 
 
-def _get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
+def _get_digest_length(msg: EthereumSignTxEIP1559, data_length: int) -> int:
     length = 0
 
     fields: tuple[rlp.RLPItem, ...] = (
@@ -159,8 +165,8 @@ def _get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
     for field in fields:
         length += rlp.length(field)
 
-    length += rlp.header_length(data_total, msg.data_initial_chunk)
-    length += data_total
+    length += rlp.header_length(data_length, msg.data_initial_chunk)
+    length += data_length
 
     # access_list_length
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)

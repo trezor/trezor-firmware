@@ -12,7 +12,6 @@ SConscript('SConscript.kernel', variant_dir='build/kernel', duplicate=False)
 SConscript('SConscript.firmware', variant_dir='build/firmware', duplicate=False)
 SConscript('SConscript.prodtest', variant_dir='build/prodtest', duplicate=False)
 SConscript('SConscript.prodtest_emu', variant_dir='build/prodtest_emu', duplicate=False)
-SConscript('SConscript.reflash', variant_dir='build/reflash', duplicate=False)
 SConscript('SConscript.unix', variant_dir='build/unix', duplicate=False)
 
 if ARGUMENTS.get('QUIET_MODE', '0') == '1':

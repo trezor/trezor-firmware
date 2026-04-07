@@ -24,8 +24,8 @@
 #include "wire_iface_ble.h"
 
 #include <io/ble.h>
-#include <rtl/mini_printf.h>
-#include <sec/rng.h>
+#include <rtl/strutils.h>
+#include <sys/rng.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
@@ -103,6 +103,7 @@ wire_iface_t* ble_iface_init(void) {
   iface->write = &ble_write_;
   iface->read = &ble_read_;
   iface->error = &ble_error;
+  iface->wireless = true;
 
   ble_start();
 
@@ -112,15 +113,8 @@ wire_iface_t* ble_iface_init(void) {
 
   if (!state.connectable && !state.pairing) {
     if (state.peer_count > 0) {
-      ble_command_t cmd = {
-          .cmd_type = BLE_SWITCH_ON,
-          .data = {.adv_start =
-                       {
-                           .name = MODEL_FULL_NAME,
-                           .static_mac = false,
-                       }},
-      };
-      ble_issue_command(&cmd);
+      ble_set_name((const uint8_t*)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
+      ble_switch_on();
     }
   }
 
@@ -136,11 +130,7 @@ void ble_iface_deinit(void) {
     return;
   }
 
-  ble_command_t cmd = {
-      .cmd_type = BLE_SWITCH_OFF,
-  };
-  ble_issue_command(&cmd);
-
+  ble_keep_connection();
   ble_stop();
 
   memset(iface, 0, sizeof(wire_iface_t));
@@ -149,24 +139,26 @@ void ble_iface_deinit(void) {
 void ble_iface_end_pairing(void) {
   ble_state_t state = {0};
 
+  ble_reject_pairing();
+  ble_set_name((const uint8_t*)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
+
   ble_get_state(&state);
 
   if (state.peer_count > 0) {
-    ble_command_t cmd = {.cmd_type = BLE_SWITCH_ON};
-    memcpy(cmd.data.adv_start.name, MODEL_FULL_NAME,
-           MIN(sizeof(MODEL_FULL_NAME), BLE_ADV_NAME_LEN));
-    ble_issue_command(&cmd);
+    ble_switch_on();
   } else {
-    ble_command_t cmd = {.cmd_type = BLE_SWITCH_OFF};
-    ble_issue_command(&cmd);
+    ble_switch_off();
   }
 }
 
-char get_random_char(void) {
-  static const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const size_t max_index = sizeof(charset) - 1;  // exclude terminating '\0'
-  uint32_t key = rng_get() % max_index;
-  return charset[key];
+static char get_random_from_charset(const char* charset) {
+  const size_t max_index = strlen(charset);
+
+  if (max_index == 0) {
+    return '\0';
+  }
+
+  return charset[rng_get() % max_index];
 }
 
 bool ble_iface_start_pairing(void) {
@@ -176,35 +168,27 @@ bool ble_iface_start_pairing(void) {
 
   uint16_t retry_cnt = 0;
 
-  while (state.connected && retry_cnt < 10) {
-    ble_command_t cmd_disconnect = {
-        .cmd_type = BLE_DISCONNECT,
-    };
-    ble_issue_command(&cmd_disconnect);
-    systick_delay_ms(20);
-    ble_get_state(&state);
-    retry_cnt++;
-  }
+  static const char DIGITS[] = "0123456789";
+  static const char UPPERCASE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-  if (state.connected) {
+  char suffix[] = {
+      ' ',
+      '(',
+      get_random_from_charset(UPPERCASE),
+      get_random_from_charset(DIGITS),
+      get_random_from_charset(UPPERCASE),
+      ')',
+      '\0',
+  };
+
+  char adv_name[BLE_ADV_NAME_LEN] = "";
+  cstr_append(adv_name, sizeof(adv_name), MODEL_FULL_NAME);
+  cstr_append(adv_name, sizeof(adv_name), suffix);
+
+  if (!ble_enter_pairing_mode((const uint8_t*)adv_name,
+                              strnlen(adv_name, BLE_ADV_NAME_LEN))) {
     return false;
   }
-
-  ble_event_flush();
-
-  char adv_name[BLE_ADV_NAME_LEN];
-  mini_snprintf(adv_name, sizeof(adv_name), "%s (%c%c%c)", MODEL_FULL_NAME,
-                get_random_char(), get_random_char(), get_random_char());
-
-  ble_command_t cmd = {
-      .cmd_type = BLE_PAIRING_MODE,
-      .data = {.adv_start =
-                   {
-                       .static_mac = false,
-                   }},
-  };
-  memcpy(cmd.data.adv_start.name, adv_name, BLE_ADV_NAME_LEN);
-  ble_issue_command(&cmd);
 
   retry_cnt = 0;
   ble_get_state(&state);
@@ -220,6 +204,13 @@ bool ble_iface_start_pairing(void) {
   }
 
   return true;
+}
+
+wire_iface_t* ble_iface_get(void) {
+  if (!g_ble_iface.initialized) {
+    return NULL;
+  }
+  return &g_ble_iface;
 }
 
 #endif

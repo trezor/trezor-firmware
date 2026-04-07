@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never, PaginateFull},
+    component::{Component, Event, EventCtx, Never, Paginate},
     geometry::{Alignment, Offset, Rect},
     shape::Renderer,
     util::Pager,
@@ -62,7 +62,7 @@ impl FormattedText {
 }
 
 // Pagination
-impl PaginateFull for FormattedText {
+impl Paginate for FormattedText {
     fn pager(&self) -> Pager {
         self.pager
     }

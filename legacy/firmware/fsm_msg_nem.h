@@ -164,7 +164,12 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
   hdnode_get_nem_address(node, common->network, address);
 
   if (msg->has_transfer) {
-    nem_canonicalizeMosaics(&msg->transfer);
+    if (!nem_canonicalizeMosaics(&msg->transfer)) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Failed to canonicalize mosaics"));
+      layoutHome();
+      return;
+    }
   }
 
   if (msg->has_transfer && !nem_askTransfer(common, &msg->transfer, network)) {

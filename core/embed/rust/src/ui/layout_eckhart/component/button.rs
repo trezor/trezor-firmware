@@ -1,10 +1,13 @@
+#[cfg(feature = "translations")]
+use crate::translations::TR;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
+
 use crate::{
     strutil::TString,
-    time::{Duration, ShortDuration},
+    time::{Duration, Instant, ShortDuration},
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Timer},
+        component::{text::TextStyle, Component, Event, EventCtx, Marquee, Timer},
         constant,
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
@@ -14,7 +17,10 @@ use crate::{
     },
 };
 
-use super::super::theme::{self, Gradient};
+use super::super::{
+    component::ConnectionIndicator,
+    theme::{self, Gradient},
+};
 
 pub enum ButtonMsg {
     Pressed,
@@ -29,6 +35,16 @@ enum RadiusOrGradient {
     None,
 }
 
+#[derive(Clone, Copy)]
+pub enum HapticMode {
+    /// Vibrate on TouchStart (default)
+    OnPress,
+    /// Vibrate only on confirmed click
+    OnClick,
+    /// No haptic feedback
+    Off,
+}
+
 pub struct Button {
     area: Rect,
     touch_expand: Insets,
@@ -41,13 +57,19 @@ pub struct Button {
     long_press: ShortDuration, // long press requires non-zero duration
     long_press_danger: bool,
     long_timer: Timer,
-    haptic: bool,
+    haptic: HapticMode,
+    subtext_marquee: Option<Marquee>,
+    connection_indicator: Option<ConnectionIndicator>,
+    #[cfg(feature = "ui_debug")]
+    skip_test_visit: bool, // used by debuglink
 }
 
 impl Button {
     const MENU_ITEM_RADIUS: u8 = 12;
     const MENU_ITEM_ALIGNMENT: Alignment = Alignment::Start;
     pub const MENU_ITEM_CONTENT_OFFSET: Offset = Offset::x(12);
+    const CONN_ICON_WIDTH: i16 = 34;
+    const SUBTEXT_GAP: i16 = 4; // extra pixels between text and subtext
 
     #[cfg(feature = "micropython")]
     const DEFAULT_STYLESHEET: ButtonStyleSheet = theme::firmware::button_default();
@@ -55,6 +77,26 @@ impl Button {
     const DEFAULT_STYLESHEET: ButtonStyleSheet = theme::bootloader::button_default();
 
     pub const fn new(content: ButtonContent) -> Self {
+        let subtext_marquee = match content {
+            ButtonContent::TextAndSubtext {
+                subtext,
+                subtext_style,
+                ..
+            } => Some(Marquee::new(
+                subtext,
+                subtext_style.text_font,
+                subtext_style.text_color,
+                subtext_style.background_color,
+            )),
+            _ => None,
+        };
+        let connection_indicator = match content {
+            ButtonContent::TextAndSubtext {
+                connection_indicator: true,
+                ..
+            } => Some(ConnectionIndicator::new()),
+            _ => None,
+        };
         Self {
             content,
             content_offset: Offset::zero(),
@@ -67,7 +109,11 @@ impl Button {
             long_press: ShortDuration::ZERO,
             long_press_danger: false,
             long_timer: Timer::new(),
-            haptic: true,
+            haptic: HapticMode::OnPress,
+            subtext_marquee,
+            connection_indicator,
+            #[cfg(feature = "ui_debug")]
+            skip_test_visit: false,
         }
     }
 
@@ -77,6 +123,16 @@ impl Button {
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
             .with_radius(Self::MENU_ITEM_RADIUS)
+    }
+
+    #[cfg(feature = "micropython")]
+    pub fn new_cancel_menu_item(text: TString<'static>) -> Self {
+        Self::with_text(text)
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(theme::firmware::menu_item_title_orange())
+            .with_radius(Self::MENU_ITEM_RADIUS)
+            .set_is_cancel()
     }
 
     pub fn new_single_line_menu_item(text: TString<'static>, stylesheet: ButtonStyleSheet) -> Self {
@@ -100,6 +156,43 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
+    pub fn new_single_line_menu_item_with_subtext(
+        text: TString<'static>,
+        stylesheet: ButtonStyleSheet,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+    ) -> Self {
+        Self::with_single_line_text_and_subtext(text, subtext, subtext_style)
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(stylesheet)
+            .with_radius(Self::MENU_ITEM_RADIUS)
+    }
+
+    #[cfg(feature = "micropython")]
+    pub fn new_connection_item(
+        text: TString<'static>,
+        stylesheet: ButtonStyleSheet,
+        connected: bool,
+    ) -> Self {
+        let subtext = if connected {
+            TR::words__connected.into()
+        } else {
+            TR::words__disconnected.into()
+        };
+
+        Self::with_clipped_text_and_subtext(
+            text,
+            subtext,
+            &theme::TEXT_MENU_ITEM_SUBTITLE,
+            connected,
+        )
+        .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+        .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+        .styled(stylesheet)
+        .with_radius(Self::MENU_ITEM_RADIUS)
+    }
+
     pub const fn with_single_line_text(text: TString<'static>) -> Self {
         Self::new(ButtonContent::single_line_text(text))
     }
@@ -113,11 +206,41 @@ impl Button {
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
     ) -> Self {
-        Self::new(ButtonContent::TextAndSubtext {
+        Self::new(ButtonContent::text_and_subtext(
             text,
             subtext,
             subtext_style,
-        })
+        ))
+    }
+
+    pub fn with_clipped_text_and_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+        connected_indicator: bool,
+    ) -> Self {
+        let mut button = Self::new(ButtonContent::clipped_text_and_subtext(
+            text,
+            subtext,
+            subtext_style,
+            connected_indicator,
+        ));
+        if connected_indicator {
+            button.connection_indicator = Some(ConnectionIndicator::new_polled());
+        }
+        button
+    }
+
+    pub fn with_single_line_text_and_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+    ) -> Self {
+        Self::new(ButtonContent::single_line_text_and_subtext(
+            text,
+            subtext,
+            subtext_style,
+        ))
     }
 
     pub const fn with_icon(icon: Icon) -> Self {
@@ -169,11 +292,6 @@ impl Button {
         self
     }
 
-    pub fn without_haptics(mut self) -> Self {
-        self.haptic = false;
-        self
-    }
-
     pub fn with_gradient(mut self, gradient: Gradient) -> Self {
         self.radius_or_gradient = RadiusOrGradient::Gradient(gradient);
         self
@@ -181,6 +299,17 @@ impl Button {
 
     pub fn has_gradient(&self) -> bool {
         matches!(self.radius_or_gradient, RadiusOrGradient::Gradient(_))
+    }
+
+    #[cfg(feature = "ui_debug")]
+    pub fn set_is_cancel(mut self) -> Self {
+        self.skip_test_visit = true;
+        self
+    }
+
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn set_is_cancel(self) -> Self {
+        self
     }
 
     pub fn enable_if(&mut self, ctx: &mut EventCtx, enabled: bool) {
@@ -199,10 +328,16 @@ impl Button {
     }
 
     pub fn enable(&mut self, ctx: &mut EventCtx) {
+        if let Some(m) = &mut self.subtext_marquee {
+            m.start(ctx, Instant::now());
+        }
         self.set(ctx, State::Initial)
     }
 
     pub fn disable(&mut self, ctx: &mut EventCtx) {
+        if let Some(m) = &mut self.subtext_marquee {
+            m.reset();
+        }
         self.set(ctx, State::Disabled)
     }
 
@@ -241,7 +376,7 @@ impl Button {
         self.content_offset = offset;
     }
 
-    pub fn content(&self) -> &ButtonContent {
+    pub const fn content(&self) -> &ButtonContent {
         &self.content
     }
 
@@ -268,9 +403,15 @@ impl Button {
         }
     }
 
-    fn text_height(&self, text: &str, single_line: bool, width: i16) -> i16 {
+    fn text_height(&self, text: &str, single_line: bool, break_words: bool, width: i16) -> i16 {
         if single_line {
             self.style().font.line_height()
+        } else if break_words {
+            if self.stylesheet.normal.font.text_width(text) <= width {
+                return self.style().font.line_height();
+            } else {
+                self.style().font.line_height() * 2 - constant::LINE_SPACE
+            }
         } else {
             let (t1, t2) = split_two_lines(text, self.stylesheet.normal.font, width);
             if t1.is_empty() || t2.is_empty() {
@@ -286,12 +427,19 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => 0,
             ButtonContent::Text { text, single_line } => {
-                text.map(|t| self.text_height(t, *single_line, width))
+                text.map(|t| self.text_height(t, *single_line, false, width))
             }
             ButtonContent::Icon(icon) => icon.toif.height(),
-            ButtonContent::TextAndSubtext { text, .. } => {
-                text.map(|t| self.text_height(t, false, width) + self.baseline_subtext_height())
-            }
+            ButtonContent::TextAndSubtext {
+                text,
+                single_line,
+                break_words,
+                ..
+            } => text.map(|t| {
+                self.text_height(t, *single_line, *break_words, width)
+                    + Self::SUBTEXT_GAP
+                    + self.baseline_subtext_height()
+            }),
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(..) => theme::ACTION_BAR_HEIGHT,
         }
@@ -328,6 +476,10 @@ impl Button {
             self.state = state;
             ctx.request_paint();
         }
+    }
+
+    pub fn set_haptic_mode(&mut self, mode: HapticMode) {
+        self.haptic = mode;
     }
 
     pub fn render_background<'s>(
@@ -373,13 +525,13 @@ impl Button {
                 .with_alpha(alpha)
                 .render(target)
         };
-        let render_origin = |y_offset: i16| {
+        let render_origin = |offset: Offset| {
             match self.text_align {
                 Alignment::Start => self.area.left_center().ofs(self.content_offset),
                 Alignment::Center => self.area.center().ofs(self.content_offset),
                 Alignment::End => self.area.right_center().ofs(self.content_offset.neg()),
             }
-            .ofs(Offset::y(y_offset))
+            .ofs(offset)
         };
 
         match &self.content {
@@ -388,24 +540,28 @@ impl Button {
                 let text_baseline_height = self.baseline_text_height();
                 text.map(|t| {
                     if *single_line {
-                        show_text(t, render_origin(text_baseline_height / 2));
+                        show_text(t, render_origin(Offset::y(text_baseline_height / 2)));
                     } else {
                         let (t1, t2) = split_two_lines(
                             t,
                             stylesheet.font,
-                            self.area.width() - 2 * self.content_offset.x,
+                            self.area.width() - 2 * self.content_offset.x.abs(),
                         );
 
                         if t1.is_empty() || t2.is_empty() {
-                            show_text(t, render_origin(text_baseline_height / 2));
+                            show_text(t, render_origin(Offset::y(text_baseline_height / 2)));
                         } else {
                             show_text(
                                 t1,
-                                render_origin(-(text_baseline_height / 2 + constant::LINE_SPACE)),
+                                render_origin(Offset::y(
+                                    -(text_baseline_height / 2 + constant::LINE_SPACE),
+                                )),
                             );
                             show_text(
                                 t2,
-                                render_origin(text_baseline_height + constant::LINE_SPACE * 2),
+                                render_origin(Offset::y(
+                                    text_baseline_height + constant::LINE_SPACE * 2,
+                                )),
                             );
                         }
                     }
@@ -413,58 +569,104 @@ impl Button {
             }
             ButtonContent::TextAndSubtext {
                 text,
-                subtext,
-                subtext_style,
+                single_line,
+                break_words,
+                ..
             } => {
                 let text_baseline_height = self.baseline_text_height();
-                let single_line_text = text.map(|t| {
-                    let (t1, t2) = split_two_lines(
-                        t,
-                        stylesheet.font,
-                        self.area.width() - 2 * self.content_offset.x,
-                    );
-                    if t1.is_empty() || t2.is_empty() {
+                let available_width = self.area.width() - 2 * self.content_offset.x;
+                text.map(|t| {
+                    if *single_line {
                         show_text(
                             t,
-                            render_origin(text_baseline_height / 2 - constant::LINE_SPACE * 2),
+                            render_origin(Offset::y(
+                                text_baseline_height / 2 - constant::LINE_SPACE * 2,
+                            )),
                         );
-                        true
+                    } else if *break_words {
+                        let first = stylesheet
+                            .font
+                            .longest_prefix_break_words(available_width, t);
+
+                        if first == t {
+                            // The first line fits
+                            show_text(
+                                first,
+                                render_origin(Offset::y(
+                                    text_baseline_height / 2 - constant::LINE_SPACE * 2,
+                                )),
+                            );
+                        } else {
+                            show_text(
+                                first,
+                                render_origin(Offset::y(
+                                    -(text_baseline_height / 2 + constant::LINE_SPACE * 3),
+                                )),
+                            );
+                            let remaining = t[first.len()..].trim();
+                            if stylesheet.font.text_width(remaining) <= available_width {
+                                // The second line fits
+                                show_text(
+                                    remaining,
+                                    render_origin(Offset::y(
+                                        text_baseline_height - constant::LINE_SPACE * 2,
+                                    )),
+                                );
+                            } else {
+                                // Break the second line and add the ellipsis
+                                let ellipsis = "...";
+                                let width = available_width - stylesheet.font.text_width(ellipsis);
+                                let second =
+                                    stylesheet.font.longest_prefix_break_words(width, remaining);
+                                show_text(
+                                    second,
+                                    render_origin(Offset::y(
+                                        text_baseline_height - constant::LINE_SPACE * 2,
+                                    )),
+                                );
+                                show_text(
+                                    ellipsis,
+                                    render_origin(Offset::new(
+                                        stylesheet.font.text_width(second),
+                                        text_baseline_height - constant::LINE_SPACE * 2,
+                                    )),
+                                );
+                            }
+                        }
                     } else {
-                        show_text(
-                            t1,
-                            render_origin(-(text_baseline_height / 2 + constant::LINE_SPACE * 3)),
-                        );
-                        show_text(
-                            t2,
-                            render_origin(text_baseline_height - constant::LINE_SPACE * 2),
-                        );
-                        false
+                        let (t1, t2) = split_two_lines(t, stylesheet.font, available_width);
+                        if t1.is_empty() || t2.is_empty() {
+                            show_text(
+                                t,
+                                render_origin(Offset::y(
+                                    text_baseline_height / 2 - constant::LINE_SPACE * 2,
+                                )),
+                            );
+                        } else {
+                            show_text(
+                                t1,
+                                render_origin(Offset::y(
+                                    -(text_baseline_height / 2 + constant::LINE_SPACE * 3),
+                                )),
+                            );
+                            show_text(
+                                t2,
+                                render_origin(Offset::y(
+                                    text_baseline_height - constant::LINE_SPACE * 2,
+                                )),
+                            );
+                        }
                     }
                 });
 
-                subtext.map(|subtext| {
-                    #[cfg(feature = "ui_debug")]
-                    if subtext_style.text_font.text_width(subtext) > self.area.width() {
-                        fatal_error!(&uformat!(len: 128, "Subtext too long: '{}'", subtext));
-                    }
-                    shape::Text::new(
-                        render_origin(if single_line_text {
-                            text_baseline_height / 2
-                                + constant::LINE_SPACE
-                                + self.baseline_subtext_height()
-                        } else {
-                            text_baseline_height
-                                + constant::LINE_SPACE * 2
-                                + self.baseline_subtext_height()
-                        }),
-                        subtext,
-                        subtext_style.text_font,
-                    )
-                    .with_fg(subtext_style.text_color)
-                    .with_align(self.text_align)
-                    .with_alpha(alpha)
-                    .render(target);
-                });
+                if let Some(ci) = &self.connection_indicator {
+                    ci.render(target);
+                }
+                if let Some(m) = &self.subtext_marquee {
+                    m.render(target);
+                } else {
+                    unreachable!();
+                };
             }
             ButtonContent::Icon(icon) => {
                 shape::ToifImage::new(self.area.center() + self.content_offset, icon.toif)
@@ -512,10 +714,54 @@ impl Component for Button {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
+
+        if let ButtonContent::TextAndSubtext {
+            connection_indicator: connected_indicator,
+            ..
+        } = self.content
+        {
+            let subtext_start = (bounds.height() + self.content_height(bounds.width())) / 2
+                - self.baseline_subtext_height();
+
+            // Place the connection indicator if present
+            if connected_indicator {
+                if let Some(ci) = self.connection_indicator.as_mut() {
+                    let ci_size = ConnectionIndicator::AREA_SIZE_NEEDED;
+                    let ci_area = Rect::from_top_left_and_size(
+                        Point::new(
+                            bounds.top_left().x + self.content_offset.x,
+                            bounds.top_left().y + subtext_start,
+                        ),
+                        Offset::new(ci_size, ci_size),
+                    );
+                    ci.place(ci_area);
+                }
+            }
+
+            if let Some(m) = self.subtext_marquee.as_mut() {
+                const INDICATOR_SUBTEXT_GAP: i16 = 12;
+                let indicator_offset = if let Some(ci) = &self.connection_indicator {
+                    ci.content_width() + INDICATOR_SUBTEXT_GAP
+                } else {
+                    0
+                };
+                let marquee_area = self
+                    .area
+                    .inset(Insets::top(subtext_start))
+                    .inset(Insets::sides(self.content_offset.x))
+                    .inset(Insets::left(indicator_offset));
+                m.place(marquee_area);
+            }
+        }
+
         self.area
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Some(m) = &mut self.subtext_marquee {
+            m.event(ctx, event);
+        }
+
         let touch_area = self.touch_area();
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
@@ -527,7 +773,7 @@ impl Component for Button {
                         // Touch started in our area, transform to `Pressed` state.
                         if touch_area.contains(pos) {
                             #[cfg(feature = "haptic")]
-                            if self.haptic {
+                            if matches!(self.haptic, HapticMode::OnPress) {
                                 play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
@@ -558,6 +804,10 @@ impl Component for Button {
                     }
                     State::Pressed if touch_area.contains(pos) => {
                         // Touch finished in our area, we got clicked.
+                        #[cfg(feature = "haptic")]
+                        if matches!(self.haptic, HapticMode::OnClick) {
+                            play(HapticEffect::ButtonPress);
+                        }
                         self.set(ctx, State::Initial);
                         return Some(ButtonMsg::Clicked);
                     }
@@ -597,7 +847,7 @@ impl Component for Button {
             Event::Timer(_) if self.long_timer.expire(event) => {
                 if matches!(self.state, State::Pressed) {
                     #[cfg(feature = "haptic")]
-                    if self.haptic {
+                    if !matches!(self.haptic, HapticMode::Off) {
                         play(HapticEffect::ButtonPress);
                     }
                     self.set(ctx, State::Initial);
@@ -606,6 +856,7 @@ impl Component for Button {
             }
             _ => {}
         };
+
         None
     }
 
@@ -620,6 +871,7 @@ impl Component for Button {
 impl crate::trace::Trace for Button {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Button");
+        t.bool("skip_test_visit", self.skip_test_visit);
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text { text, .. } => t.string("text", *text),
@@ -660,8 +912,11 @@ pub enum ButtonContent {
     },
     TextAndSubtext {
         text: TString<'static>,
+        single_line: bool,
+        break_words: bool,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
+        connection_indicator: bool,
     },
     Icon(Icon),
     #[cfg(feature = "micropython")]
@@ -680,6 +935,52 @@ impl ButtonContent {
         Self::Text {
             text,
             single_line: true,
+        }
+    }
+
+    pub const fn text_and_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+    ) -> Self {
+        Self::TextAndSubtext {
+            text,
+            single_line: false,
+            break_words: false,
+            subtext,
+            subtext_style,
+            connection_indicator: false,
+        }
+    }
+
+    pub const fn clipped_text_and_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+        connected_indicator: bool,
+    ) -> Self {
+        Self::TextAndSubtext {
+            text,
+            single_line: false,
+            break_words: true,
+            subtext,
+            subtext_style,
+            connection_indicator: connected_indicator,
+        }
+    }
+
+    pub const fn single_line_text_and_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+    ) -> Self {
+        Self::TextAndSubtext {
+            text,
+            single_line: true,
+            break_words: false,
+            subtext,
+            subtext_style,
+            connection_indicator: false,
         }
     }
 }

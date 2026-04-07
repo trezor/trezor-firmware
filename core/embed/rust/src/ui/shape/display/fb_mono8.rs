@@ -6,6 +6,9 @@ use crate::ui::{
     },
 };
 
+#[cfg(feature = "ui_debug_overlay")]
+use crate::ui::{CommonUI, ModelUI};
+
 use crate::trezorhal::display;
 
 use static_alloc::Bump;
@@ -61,5 +64,13 @@ where
         let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
 
         func(&mut target);
+
+        #[cfg(feature = "ui_debug_overlay")]
+        {
+            // In debug mode, render the debug overlay.
+            if !display::is_recording() {
+                ModelUI::render_debug_overlay(&mut target);
+            }
+        }
     }
 }

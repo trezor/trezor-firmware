@@ -1,26 +1,29 @@
 from __future__ import annotations
 
+from types import ModuleType
 from typing import Optional
 
 from . import emulator, trezor_t3t1_revE
 
 
 def configure_board(
-    revision: Optional[int | str],
+    revision: Optional[str],
     features_wanted: list[str],
-    env: dict,  # type: ignore
+    env: dict,
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],
 ):
     defines += (("MODEL_HEADER", '"T3T1/model_T3T1.h"'),)
     defines += (("VERSIONS_HEADER", '"T3T1/versions.h"'),)
+    defines += (("OTP_LAYOUT_HEADER", '"T3T1/otp_layout.h"'),)
+    defines += (("UNIT_PROPERTIES_CONTENT_HEADER", '"T3T1/unit_properties_content.h"'),)
 
     # Set default revision if None
     revision = revision or "E"
 
     # Mapping of revisions to their respective configurations
-    revision_map = {
+    revision_map: dict[str, ModuleType] = {
         "emulator": emulator,
         "E": trezor_t3t1_revE,
     }

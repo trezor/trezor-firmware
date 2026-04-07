@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
-    assert debug.read_layout().title() == TR.reset__title_create_wallet
+    debug.synchronize_at(TR.reset__title_create_wallet)
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Delizia:
@@ -60,24 +60,28 @@ def cancel_backup(
         debug.press_left()
     elif debug.layout_type is LayoutType.Delizia:
         debug.click(debug.screen_buttons.menu())
-        debug.click(debug.screen_buttons.vertical_menu_items()[0])
+        debug.button_actions.navigate_to_menu_item(0)
         if confirm:
             debug.swipe_up()
             debug.click(debug.screen_buttons.tap_to_confirm())
     elif debug.layout_type is LayoutType.Eckhart:
-        debug.click(debug.screen_buttons.menu())
-        debug.click(debug.screen_buttons.vertical_menu_items()[0])
-        debug.click(debug.screen_buttons.ok())
+        if confirm:
+            debug.click(debug.screen_buttons.menu())
+            debug.button_actions.navigate_to_menu_item(0)
+            debug.click(debug.screen_buttons.ok())
+        else:
+            debug.click(debug.screen_buttons.cancel())
     else:
         raise RuntimeError("Unknown model")
+    debug.read_layout()
 
 
 def set_selection(debug: "DebugLink", diff: int) -> None:
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         if debug.layout_type is LayoutType.Eckhart:
-            assert "ValueInputScreen" in debug.read_layout().all_components()
+            debug.synchronize_at("ValueInputScreen")
         else:
-            assert "NumberInputDialog" in debug.read_layout().all_components()
+            debug.synchronize_at("NumberInputDialog")
 
         button = (
             debug.screen_buttons.number_input_minus()
@@ -186,7 +190,7 @@ def confirm_words(debug: "DebugLink", words: list[str], skip_intro=False) -> Non
             word_pos = int(word_pos_match.group(0))
             # Unifying both the buttons and words to lowercase
             btn_texts = [
-                text.lower() for text in layout.tt_check_seed_button_contents()
+                text.lower() for text in layout.bolt_check_seed_button_contents()
             ]
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
@@ -197,8 +201,8 @@ def confirm_words(debug: "DebugLink", words: list[str], skip_intro=False) -> Non
         debug.press_right()
         layout = debug.read_layout()
         for _ in range(3):
-            # "SELECT 2ND WORD"
-            #         ^
+            # "SELECT WORD 2 of 20"
+            #              ^
             word_pos_match = re.search(r"\d+", layout.title())
             assert word_pos_match is not None
             word_pos = int(word_pos_match.group(0))
@@ -221,7 +225,7 @@ def confirm_words(debug: "DebugLink", words: list[str], skip_intro=False) -> Non
             word_pos = int(word_pos_match.group(0))
             # Unifying both the buttons and words to lowercase
             btn_texts = [
-                text.lower() for text in layout.tt_check_seed_button_contents()
+                text.lower() for text in layout.bolt_check_seed_button_contents()
             ]
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
@@ -245,7 +249,7 @@ def confirm_words(debug: "DebugLink", words: list[str], skip_intro=False) -> Non
             word_pos = int(word_pos_match.group(0))
             # Unifying both the buttons and words to lowercase
             btn_texts = [
-                text.lower() for text in layout.tt_check_seed_button_contents()
+                text.lower() for text in layout.bolt_check_seed_button_contents()
             ]
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)

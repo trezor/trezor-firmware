@@ -8,12 +8,15 @@ from trezor.ui.layouts import (
     confirm_metadata,
     confirm_output,
     confirm_properties,
+    confirm_stellar_output,
 )
 from trezor.wire import DataError, ProcessError
 
 from ..layout import format_amount
 
 if TYPE_CHECKING:
+    from buffer_types import StrOrBytes
+
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
@@ -54,10 +57,13 @@ async def confirm_allow_trust_op(op: StellarAllowTrustOp) -> None:
     )
 
 
-async def confirm_account_merge_op(op: StellarAccountMergeOp) -> None:
+async def confirm_account_merge_op(
+    op: StellarAccountMergeOp, output_index: int
+) -> None:
     await confirm_address(
         TR.stellar__account_merge,
         op.destination_account,
+        subtitle=f"{TR.words__recipient} #{output_index + 1}",
         description=TR.stellar__all_will_be_sent_to,
         br_name="op_account_merge",
     )
@@ -82,14 +88,13 @@ async def confirm_change_trust_op(op: StellarChangeTrustOp) -> None:
     await confirm_asset_issuer(op.asset)
 
 
-async def confirm_create_account_op(op: StellarCreateAccountOp) -> None:
-    await confirm_properties(
-        "op_create_account",
-        TR.stellar__create_account,
-        (
-            (TR.words__account, op.new_account, True),
-            (TR.stellar__initial_balance, format_amount(op.starting_balance), False),
-        ),
+async def confirm_create_account_op(
+    op: StellarCreateAccountOp, output_index: int
+) -> None:
+    await confirm_output(
+        op.new_account,
+        format_amount(op.starting_balance),
+        output_index=output_index,
     )
 
 
@@ -137,18 +142,22 @@ async def _confirm_offer(
     buying_asset = op.buying_asset  # local_cache_attribute
     selling_asset = op.selling_asset  # local_cache_attribute
 
+    buying: PropertyType
+    selling: PropertyType
+    price: PropertyType
+
     if StellarManageBuyOfferOp.is_type_of(op):
-        buying: PropertyType = (
+        buying = (
             TR.stellar__buying,
             format_amount(op.amount, buying_asset),
             False,
         )
-        selling: PropertyType = (
+        selling = (
             TR.stellar__selling,
             format_asset(selling_asset),
             False,
         )
-        price: PropertyType = (
+        price = (
             TR.stellar__price_per_template.format(format_asset(selling_asset)),
             str(op.price_n / op.price_d),
             False,
@@ -159,13 +168,13 @@ async def _confirm_offer(
             (buying, selling, price),
         )
     else:
-        selling: PropertyType = (
+        selling = (
             TR.stellar__selling,
             format_amount(op.amount, selling_asset),
             False,
         )
-        buying: PropertyType = (TR.stellar__buying, format_asset(buying_asset), False)
-        price: PropertyType = (
+        buying = (TR.stellar__buying, format_asset(buying_asset), False)
+        price = (
             TR.stellar__price_per_template.format(format_asset(buying_asset)),
             str(op.price_n / op.price_d),
             False,
@@ -201,7 +210,9 @@ async def confirm_manage_data_op(op: StellarManageDataOp) -> None:
 
 async def confirm_path_payment_strict_receive_op(
     op: StellarPathPaymentStrictReceiveOp,
+    output_index: int,
 ) -> None:
+    # TODO: show output index in the subtitle
     await confirm_output(
         op.destination_account,
         format_amount(op.destination_amount, op.destination_asset),
@@ -220,7 +231,9 @@ async def confirm_path_payment_strict_receive_op(
 
 async def confirm_path_payment_strict_send_op(
     op: StellarPathPaymentStrictSendOp,
+    output_index: int,
 ) -> None:
+    # TODO: show output index in the subtitle
     await confirm_output(
         op.destination_account,
         format_amount(op.destination_min, op.destination_asset),
@@ -237,12 +250,13 @@ async def confirm_path_payment_strict_send_op(
     await confirm_asset_issuer(op.send_asset)
 
 
-async def confirm_payment_op(op: StellarPaymentOp) -> None:
-    await confirm_output(
+async def confirm_payment_op(op: StellarPaymentOp, output_index: int) -> None:
+    await confirm_stellar_output(
         op.destination_account,
         format_amount(op.amount, op.asset),
+        output_index,
+        op.asset,
     )
-    await confirm_asset_issuer(op.asset)
 
 
 async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
@@ -296,7 +310,7 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
             title = TR.stellar__add_signer
         else:
             title = TR.stellar__remove_signer
-        data: str | bytes = ""
+        data: StrOrBytes = ""
         if signer_type == StellarSignerType.ACCOUNT:
             description = TR.words__account
             data = helpers.address_from_public_key(signer_key)

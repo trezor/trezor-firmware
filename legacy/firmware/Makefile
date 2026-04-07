@@ -81,6 +81,9 @@ OBJS += ../vendor/trezor-crypto/nist256p1.o
 OBJS += ../vendor/trezor-crypto/hmac_drbg.o
 OBJS += ../vendor/trezor-crypto/rfc6979.o
 OBJS += ../vendor/trezor-crypto/rand.o
+ifeq ($(EMULATOR),1)
+OBJS += ../vendor/trezor-crypto/rand_insecure.o
+endif
 OBJS += ../vendor/trezor-crypto/memzero.o
 
 OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.o
@@ -165,6 +168,7 @@ CFLAGS += -I../vendor/nanopb -Iprotob -DPB_FIELD_16BIT=1 -DPB_ENCODE_ARRAYS_UNPA
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DUSE_MONERO=0
 CFLAGS += -DUSE_OPTIGA=0
+CFLAGS += -DUSE_TROPIC=0
 ifneq ($(BITCOIN_ONLY),1)
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_NEM=1

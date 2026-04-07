@@ -8,6 +8,12 @@ class Error(Exception):
         self.message = message
 
 
+class SilentError(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__()
+        self.message = message
+
+
 class UnexpectedMessage(Error):
     def __init__(self, message: str) -> None:
         super().__init__(FailureType.UnexpectedMessage, message)

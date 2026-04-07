@@ -1,5 +1,5 @@
 use crate::{
-    strutil::TString,
+    trezorhal::ble,
     ui::{
         component::{Component, Event, EventCtx},
         geometry::{Alignment, Rect},
@@ -8,11 +8,7 @@ use crate::{
 };
 
 use super::{
-    super::{
-        component::{Button, FuelGauge},
-        cshape::ScreenBorder,
-        theme,
-    },
+    super::{component::Button, cshape::ScreenBorder, theme},
     bld_menu::BldMenuSelectionMsg,
     BldHeader, BldHeaderMsg, BldMenu,
 };
@@ -40,11 +36,12 @@ impl BldMenuScreen {
     pub fn new() -> Self {
         let bluetooth = Button::with_text("Pair new device".into())
             .styled(theme::bootloader::button_bld_menu())
-            .with_text_align(Alignment::Start);
-        let reboot = Button::with_text("Reboot".into())
+            .with_text_align(Alignment::Start)
+            .initially_enabled(ble::get_enabled());
+        let reboot = Button::with_text("Restart".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
-        let turnoff = Button::with_text("Power off".into())
+        let turnoff = Button::with_text("Turn off".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
         let reset = Button::with_text("Factory reset".into())
@@ -57,9 +54,7 @@ impl BldMenuScreen {
             .item(turnoff)
             .item(reset);
         Self {
-            header: BldHeader::new(TString::empty())
-                .with_fuel_gauge(Some(FuelGauge::always()))
-                .with_close_button(),
+            header: BldHeader::new_with_fuel_gauge().with_close_button(),
             menu,
             screen_border: None,
         }

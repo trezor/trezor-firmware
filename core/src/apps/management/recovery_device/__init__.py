@@ -8,7 +8,14 @@ if TYPE_CHECKING:
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
 # All except `type` are allowed for T1 compatibility, but their values are ignored.
 # If set, `enforce_wordlist` must be True, because we do not support non-enforcing.
-DRY_RUN_ALLOWED_FIELDS = ("type", "word_count", "enforce_wordlist", "input_method")
+# `backup_method` allows choosing between different ways to input the shares (on Core devices).
+DRY_RUN_ALLOWED_FIELDS = (
+    "type",
+    "word_count",
+    "enforce_wordlist",
+    "input_method",
+    "backup_method",
+)
 
 
 async def recovery_device(msg: RecoveryDevice) -> Success:
@@ -24,6 +31,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     from trezor import TR, config, wire, workflow
     from trezor.enums import BackupType
     from trezor.ui.layouts import confirm_reset_device, prompt_recovery_check
+    from trezor.wire.context import try_get_ctx_ids
 
     from apps.common import mnemonic
     from apps.common.request_pin import (
@@ -38,14 +46,19 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
 
     # --------------------------------------------------------
     # validate
-    if recovery_type == RecoveryType.NormalRecovery:
+    if recovery_type is RecoveryType.NormalRecovery:
         if storage_device.is_initialized():
             raise wire.UnexpectedMessage("Already initialized")
     elif recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
         if not storage_device.is_initialized():
             raise wire.NotInitialized("Device is not initialized")
-        if (
-            recovery_type == RecoveryType.UnlockRepeatedBackup
+        elif recovery_type is RecoveryType.DryRun:
+            if storage_device.no_backup():
+                raise wire.ProcessError("Dry-run not available for seedless devices")
+            elif storage_device.needs_backup() or storage_device.unfinished_backup():
+                raise wire.ProcessError("Cannot do dry-run without backed-up seed")
+        elif (
+            recovery_type is RecoveryType.UnlockRepeatedBackup
             and mnemonic.get_type() == BackupType.Bip39
         ):
             raise wire.ProcessError("Repeated Backup not available for BIP39 backups")
@@ -69,13 +82,14 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     if recovery_type == RecoveryType.NormalRecovery:
         await confirm_reset_device(recovery=True)
 
-        # wipe storage to make sure the device is in a clear state
-        storage.reset()
+        # wipe storage to make sure the device is in a clear state (except protocol cache)
+        storage.reset(excluded=try_get_ctx_ids())
 
         # set up pin if requested
         if msg.pin_protection:
             newpin = await request_pin_confirm(allow_cancel=False)
-            config.change_pin("", newpin, None, None)
+            if not config.change_pin(newpin, None):
+                raise wire.ProcessError("Failed to set PIN")
 
         storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
 

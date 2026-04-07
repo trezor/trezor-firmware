@@ -9,7 +9,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
-            Component, ComponentExt, EventCtx, PaginateFull,
+            Component, ComponentExt, EventCtx, Paginate,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -68,6 +68,58 @@ impl ConfirmActionStrings {
     }
 }
 
+pub struct ConfirmActionOptions {
+    pub hold: bool,
+    pub swipe_down: bool,
+    pub swipe_up: bool,
+    pub page_limit: Option<u16>,
+    pub page_counter: bool,
+    pub frame_margin: usize,
+}
+
+impl ConfirmActionOptions {
+    pub fn new() -> Self {
+        Self {
+            hold: false,
+            swipe_down: false,
+            swipe_up: false,
+            page_limit: None,
+            page_counter: false,
+            frame_margin: 0,
+        }
+    }
+
+    pub fn with_hold(mut self, hold: bool) -> Self {
+        self.hold = hold;
+        self
+    }
+
+    pub fn with_swipe_down(mut self, swipe_down: bool) -> Self {
+        self.swipe_down = swipe_down;
+        self
+    }
+
+    pub fn with_swipe_up(mut self, swipe_up: bool) -> Self {
+        self.swipe_up = swipe_up;
+        self
+    }
+
+    pub fn with_page_limit(mut self, page_limit: Option<u16>) -> Self {
+        self.page_limit = page_limit;
+        self
+    }
+
+    pub fn with_page_counter(mut self, page_counter: bool) -> Self {
+        self.page_counter = page_counter;
+        self
+    }
+
+    pub fn with_frame_margin(mut self, frame_margin: usize) -> Self {
+        self.frame_margin = frame_margin;
+        self
+    }
+}
+
 #[derive(PartialEq)]
 pub struct ConfirmActionMenuStrings {
     verb_cancel: TString<'static>,
@@ -109,6 +161,7 @@ impl FlowController for ConfirmAction {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Action, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Action, Direction::Down) => self.return_msg(FlowMsg::Back),
             _ => self.do_nothing(),
         }
     }
@@ -138,6 +191,7 @@ impl FlowController for ConfirmActionWithConfirmation {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Action, Direction::Up) => Self::Confirmation.swipe(direction),
+            (Self::Action, Direction::Down) => self.return_msg(FlowMsg::Back),
             (Self::Confirmation, Direction::Down) => Self::Action.swipe(direction),
             _ => self.do_nothing(),
         }
@@ -170,6 +224,7 @@ impl FlowController for ConfirmActionWithMenu {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Action, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Action, Direction::Down) => self.return_msg(FlowMsg::Back),
             _ => self.do_nothing(),
         }
     }
@@ -202,6 +257,7 @@ impl FlowController for ConfirmActionWithMenuAndConfirmation {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Action, Direction::Up) => Self::Confirmation.swipe(direction),
+            (Self::Action, Direction::Down) => self.return_msg(FlowMsg::Back),
             (Self::Confirmation, Direction::Down) => Self::Action.swipe(direction),
             _ => self.do_nothing(),
         }
@@ -263,29 +319,27 @@ pub fn new_confirm_action(
             ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_cancel(verb_cancel))
         },
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
-        hold,
-        None,
-        0,
-        false,
+        ConfirmActionOptions::new().with_hold(hold),
     )
 }
 
 #[inline(never)]
-fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
+fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     content: SwipeContent<SwipePage<T>>,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
-    hold: bool,
-    frame_margin: usize,
-    page_counter: bool,
+    options: ConfirmActionOptions,
 ) -> Result<SwipeFlow, error::Error> {
     let (prompt_screen, prompt_pages, flow, page) =
-        create_flow(strings.title, strings.prompt_screen, hold, &extra);
+        create_flow(strings.title, strings.prompt_screen, options.hold, &extra);
 
     let mut content = Frame::left_aligned(strings.title, content)
-        .with_margin(frame_margin)
+        .with_margin(options.frame_margin)
         .with_swipeup_footer(strings.footer_description)
         .with_vertical_pages();
+    if options.swipe_down {
+        content = content.with_swipe(Direction::Down, SwipeSettings::Default);
+    }
 
     content = match extra {
         ConfirmActionExtra::ExternalMenu => content.with_menu_button().with_external_menu(),
@@ -293,8 +347,8 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
         ConfirmActionExtra::Cancel => content.with_cancel_button(),
     };
 
-    if page_counter {
-        fn footer_update_fn<T: Component + PaginateFull>(
+    if options.page_counter {
+        fn footer_update_fn<T: Component + Paginate>(
             content: &SwipeContent<SwipePage<T>>,
             ctx: &mut EventCtx,
             footer: &mut Footer,
@@ -317,9 +371,33 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
 
     let mut flow = flow?;
     flow.add_page(page, content)?;
-    create_menu(&mut flow, &extra, prompt_screen)?;
-    create_confirm(&mut flow, &extra, strings.subtitle, hold, prompt_screen)?;
 
+    let menu = match &extra {
+        ConfirmActionExtra::Menu(menu) => Some(menu),
+        _ => None,
+    };
+    let prompt_state: &'static dyn FlowController = match menu {
+        Some(_) => &ConfirmActionWithMenuAndConfirmation::Confirmation,
+        None => &ConfirmActionWithConfirmation::Confirmation,
+    };
+    let menu_state: &'static dyn FlowController = match prompt_screen {
+        Some(_) => &ConfirmActionWithMenuAndConfirmation::Menu,
+        None => &ConfirmActionWithMenu::Menu,
+    };
+
+    if let Some(menu_strings) = menu {
+        create_menu(&mut flow, menu_strings, menu_state)?;
+    }
+    if let Some(prompt_title) = prompt_screen {
+        create_confirm(
+            &mut flow,
+            &extra,
+            strings.subtitle,
+            options.hold,
+            prompt_title,
+            prompt_state,
+        )?;
+    }
     Ok(flow)
 }
 
@@ -330,12 +408,12 @@ fn create_flow(
     extra: &ConfirmActionExtra,
 ) -> (
     Option<TString<'static>>,
-    usize,
+    u16,
     Result<SwipeFlow, Error>,
     &'static dyn FlowController,
 ) {
     let prompt_screen = prompt_screen.or_else(|| hold.then_some(title));
-    let prompt_pages: usize = prompt_screen.is_some().into();
+    let prompt_pages: u16 = prompt_screen.is_some().into();
     let initial_page: &dyn FlowController = match (extra, prompt_screen.is_some()) {
         (ConfirmActionExtra::Menu { .. }, false) => &ConfirmActionWithMenu::Action,
         (ConfirmActionExtra::Menu { .. }, true) => &ConfirmActionWithMenuAndConfirmation::Action,
@@ -357,36 +435,30 @@ fn create_flow(
 
 fn create_menu(
     flow: &mut SwipeFlow,
-    extra: &ConfirmActionExtra,
-    prompt_screen: Option<TString<'static>>,
+    menu_strings: &ConfirmActionMenuStrings,
+    menu_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
-    if let ConfirmActionExtra::Menu(menu_strings) = extra {
-        let mut menu = VerticalMenu::empty();
-        let mut menu_items = Vec::<usize, 2>::new();
+    let mut menu = VerticalMenu::empty();
+    let mut menu_items = Vec::<usize, 2>::new();
 
-        if let Some(verb_info) = menu_strings.verb_info {
-            menu = menu.item(theme::ICON_CHEVRON_RIGHT, verb_info);
-            unwrap!(menu_items.push(MENU_ITEM_INFO));
-        }
-
-        menu = menu.danger(theme::ICON_CANCEL, menu_strings.verb_cancel);
-        unwrap!(menu_items.push(MENU_ITEM_CANCEL));
-
-        let content_menu = Frame::left_aligned("".into(), menu).with_cancel_button();
-
-        let content_menu = content_menu.map(move |msg| match msg {
-            VerticalMenuChoiceMsg::Selected(i) => {
-                let selected_item = menu_items[i];
-                Some(FlowMsg::Choice(selected_item))
-            }
-        });
-
-        if prompt_screen.is_some() {
-            flow.add_page(&ConfirmActionWithMenuAndConfirmation::Menu, content_menu)?;
-        } else {
-            flow.add_page(&ConfirmActionWithMenu::Menu, content_menu)?;
-        }
+    if let Some(verb_info) = menu_strings.verb_info {
+        menu = menu.item(theme::ICON_CHEVRON_RIGHT, verb_info);
+        unwrap!(menu_items.push(MENU_ITEM_INFO));
     }
+
+    menu = menu.cancel_item(menu_strings.verb_cancel);
+    unwrap!(menu_items.push(MENU_ITEM_CANCEL));
+
+    let content_menu = Frame::left_aligned("".into(), menu).with_cancel_button();
+
+    let content_menu = content_menu.map(move |msg| match msg {
+        VerticalMenuChoiceMsg::Selected(i) => {
+            let selected_item = menu_items[i];
+            Some(FlowMsg::Choice(selected_item))
+        }
+    });
+
+    flow.add_page(menu_state, content_menu)?;
     Ok(())
 }
 
@@ -396,59 +468,51 @@ fn create_confirm(
     extra: &ConfirmActionExtra,
     subtitle: Option<TString<'static>>,
     hold: bool,
-    prompt_screen: Option<TString<'static>>,
+    prompt_title: TString<'static>,
+    prompt_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
-    if let Some(prompt_title) = prompt_screen {
-        let (prompt, prompt_action) = if hold {
-            (
-                PromptScreen::new_hold_to_confirm(),
-                TR::instructions__hold_to_confirm.into(),
-            )
-        } else {
-            (
-                PromptScreen::new_tap_to_confirm(),
-                TR::instructions__tap_to_confirm.into(),
-            )
-        };
+    let (prompt, prompt_action) = if hold {
+        (
+            PromptScreen::new_hold_to_confirm(),
+            TR::instructions__hold_to_confirm.into(),
+        )
+    } else {
+        (
+            PromptScreen::new_tap_to_confirm(),
+            TR::instructions__tap_to_confirm.into(),
+        )
+    };
 
-        let mut content_confirm = Frame::left_aligned(prompt_title, SwipeContent::new(prompt))
-            .with_footer(prompt_action, None)
-            .with_swipe(Direction::Down, SwipeSettings::default());
+    let mut content_confirm = Frame::left_aligned(prompt_title, SwipeContent::new(prompt))
+        .with_footer(prompt_action, None)
+        .with_swipe(Direction::Down, SwipeSettings::Default);
 
-        if matches!(extra, ConfirmActionExtra::Menu(_)) {
-            content_confirm = content_confirm.with_menu_button();
-        }
-
-        if let Some(subtitle) = subtitle {
-            content_confirm = content_confirm.with_subtitle(subtitle);
-        }
-
-        let content_confirm = content_confirm.map(super::util::map_to_confirm);
-
-        flow.add_page(
-            &ConfirmActionWithMenuAndConfirmation::Confirmation,
-            content_confirm,
-        )?;
+    if matches!(extra, ConfirmActionExtra::Menu(_)) {
+        content_confirm = content_confirm.with_menu_button();
     }
+
+    if let Some(subtitle) = subtitle {
+        content_confirm = content_confirm.with_subtitle(subtitle);
+    }
+
+    flow.add_page(
+        prompt_state,
+        content_confirm.map(super::util::map_to_confirm),
+    )?;
     Ok(())
 }
 
 #[inline(never)]
-pub fn new_confirm_action_simple<T: Component + PaginateFull + MaybeTrace + 'static>(
+pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>(
     content: T,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
-    hold: bool,
-    page_limit: Option<u16>,
-    frame_margin: usize,
-    page_counter: bool,
+    options: ConfirmActionOptions,
 ) -> Result<SwipeFlow, error::Error> {
     new_confirm_action_uni(
-        SwipeContent::new(SwipePage::vertical(content).with_limit(page_limit)),
+        SwipeContent::new(SwipePage::vertical(content).with_limit(options.page_limit)),
         extra,
         strings,
-        hold,
-        frame_margin,
-        page_counter,
+        options,
     )
 }

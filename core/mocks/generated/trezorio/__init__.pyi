@@ -1,50 +1,39 @@
 from typing import *
+from buffer_types import *
 
 
-# upymod/modtrezorio/modtrezorio-hid.h
-class HID:
+# upymod/modtrezorio/modtrezorio-ipc.h
+def ipc_send(remote: int, fn: int, data: AnyBytes) -> None:
     """
-    USB HID interface configuration.
+    Sends an IPC message to the specified remote task.
     """
 
-    def __init__(
-        self,
-        iface_num: int,
-        ep_in: int,
-        ep_out: int,
-        emu_port: int,
-        report_desc: bytes,
-        subclass: int = 0,
-        protocol: int = 0,
-        polling_interval: int = 1,
-        max_packet_len: int = 64,
-    ) -> None:
+
+# upymod/modtrezorio/modtrezorio-ipc.h
+class IpcMessage:
+    """
+    IPC message structure.
+    """
+
+    def fn(self) -> int:
         """
+        Returns the function number.
         """
 
-    def iface_num(self) -> int:
+    def remote(self) -> int:
         """
-        Returns the configured number of this interface.
-        """
-
-    def write(self, msg: bytes) -> int:
-        """
-        Sends message using USB HID (device) or UDP (emulator).
+        Returns the remote task ID.
         """
 
-    def read(self, buf: bytearray, offset: int = 0) -> int:
+    def free(self) -> None:
         """
-        Reads message using USB HID (device) or UDP (emulator).
+        Frees the IPC message resources.
         """
 
-    def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
+    def data(self) -> bytes:
         """
-        Sends message using USB HID (device) or UDP (emulator).
+        Returns the IPC message data as bytes.
         """
-    RX_PACKET_LEN: ClassVar[int]
-    """Length of one USB RX packet."""
-    TX_PACKET_LEN: ClassVar[int]
-    """Length of one USB TX packet."""
 
 
 # upymod/modtrezorio/modtrezorio-poll.h
@@ -65,6 +54,44 @@ def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
     """
 
 
+# upymod/modtrezorio/modtrezorio-usb-if.h
+class USBIF:
+    """
+    USB USBIF interface configuration.
+    """
+
+    def __init__(
+        self,
+        handle: int,
+    ) -> None:
+        """
+        """
+
+    def iface_num(self) -> int:
+        """
+        Returns the configured number of this interface.
+        """
+
+    def write(self, msg: AnyBytes) -> int:
+        """
+        Sends message using USB interface.
+        """
+
+    def write_blocking(self, msg: AnyBytes, timeout_ms: int) -> int:
+        """
+        Sends message using USB interface.
+        """
+
+    def read(self, buf: bytearray, offset: int = 0) -> int:
+        """
+        Reads message using USB interface
+        """
+    RX_PACKET_LEN: ClassVar[int]
+    """Length of one USB RX packet."""
+    TX_PACKET_LEN: ClassVar[int]
+    """Length of one USB TX packet."""
+
+
 # upymod/modtrezorio/modtrezorio-usb.h
 class USB:
     """
@@ -73,24 +100,8 @@ class USB:
 
     def __init__(
         self,
-        vendor_id: int,
-        product_id: int,
-        release_num: int,
-        device_class: int = 0,
-        device_subclass: int = 0,
-        device_protocol: int = 0,
-        manufacturer: str = "",
-        product: str = "",
-        interface: str = "",
-        usb21_enabled: bool = True,
-        usb21_landing: bool = True,
     ) -> None:
         """
-        """
-
-    def add(self, iface: HID | VCP | WebUSB) -> None:
-        """
-        Registers passed interface into the USB stack.
         """
 
     def open(self, serial_number: str) -> None:
@@ -102,71 +113,7 @@ class USB:
         """
         Cleans up the USB stack.
         """
-
-
-# upymod/modtrezorio/modtrezorio-vcp.h
-class VCP:
-    """
-    USB VCP interface configuration.
-    """
-
-    def __init__(
-        self,
-        iface_num: int,
-        data_iface_num: int,
-        ep_in: int,
-        ep_out: int,
-        ep_cmd: int,
-        emu_port: int,
-    ) -> None:
-        """
-        """
-
-    def iface_num(self) -> int:
-        """
-        Returns the configured number of this interface.
-        """
-
-
-# upymod/modtrezorio/modtrezorio-webusb.h
-class WebUSB:
-    """
-    USB WebUSB interface configuration.
-    """
-
-    def __init__(
-        self,
-        iface_num: int,
-        ep_in: int,
-        ep_out: int,
-        emu_port: int,
-        subclass: int = 0,
-        protocol: int = 0,
-        polling_interval: int = 1,
-        max_packet_len: int = 64,
-    ) -> None:
-        """
-        """
-
-    def iface_num(self) -> int:
-        """
-        Returns the configured number of this interface.
-        """
-
-    def write(self, msg: bytes) -> int:
-        """
-        Sends message using USB WebUSB (device) or UDP (emulator).
-        """
-
-    def read(self, buf: bytearray, offset: int = 0) -> int:
-        """
-        Reads message using USB WebUSB (device) or UDP (emulator).
-        """
-    RX_PACKET_LEN: ClassVar[int]
-    """Length of one USB RX packet."""
-    TX_PACKET_LEN: ClassVar[int]
-    """Length of one USB TX packet."""
-from . import fatfs, haptic, sdcard, ble, pm
+from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc, app_cache
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
 
@@ -174,6 +121,8 @@ BLE: int  # interface id of the BLE events
 BLE_EVENT: int # interface id for BLE events
 
 PM_EVENT: int  # interface id for power manager events
+
+IPC2_EVENT: int  # interface id for IPC2 events
 
 TOUCH: int  # interface id of the touch events
 TOUCH_START: int  # event id of touch start event
@@ -185,4 +134,7 @@ BUTTON_RELEASED: int  # button up event
 BUTTON_LEFT: int  # button number of left button
 BUTTON_RIGHT: int  # button number of right button
 USB_EVENT: int # interface id for USB events
-WireInterface = Union[HID, WebUSB, BleInterface]
+WireInterface = USBIF | BLEIF
+USBIF_WIRE: int  # interface id of the USB wire interface
+USBIF_DEBUG: int  # interface id of the USB debug interface
+USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn

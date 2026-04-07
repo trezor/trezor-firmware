@@ -26,7 +26,7 @@ async def authorize_coinjoin(
     from trezor.wire import DataError
 
     from apps.common import authorization, safety_checks
-    from apps.common.keychain import FORBIDDEN_KEY_PATH
+    from apps.common.keychain import ForbiddenKeyPath
     from apps.common.paths import SLIP25_PURPOSE, validate_path
 
     from .common import BIP32_WALLET_DEPTH, format_fee_rate
@@ -59,7 +59,7 @@ async def authorize_coinjoin(
         raise DataError("Empty path not allowed.")
 
     if address_n[0] != SLIP25_PURPOSE and safety_checks_is_strict:
-        raise FORBIDDEN_KEY_PATH
+        raise ForbiddenKeyPath()
 
     max_fee_per_vbyte = format_fee_rate(
         msg.max_fee_per_kvbyte / 1000, coin, include_shortcut=True

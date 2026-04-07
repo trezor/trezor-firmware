@@ -62,6 +62,7 @@ if utils.INTERNAL_MODEL in ("T2T1",):  # pylint: disable=internal-model-tuple-co
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+@unittest.skipUnless(utils.INTERNAL_MODEL == "T2T1", "only for T2T1")
 class TestSignTxDecred(unittest.TestCase):
     # pylint: disable=C0301
 
@@ -408,8 +409,4 @@ class TestSignTxDecred(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if utils.INTERNAL_MODEL in (  # pylint: disable=internal-model-tuple-comparison
-        "T2T1",
-    ):
-
-        unittest.main()
+    unittest.main()

@@ -6,7 +6,10 @@ use crate::{
     time::ShortDuration,
     ui::{
         component::{
-            text::{layout::Chunks, LineBreaking, PageBreaking, TextStyle},
+            text::{
+                layout::Chunks, paragraphs::PARAGRAPH_BOTTOM_SPACE, LineBreaking, PageBreaking,
+                TextStyle,
+            },
             FixedHeightBar,
         },
         display::Color,
@@ -760,15 +763,8 @@ pub const TEXT_MONO_GREY_LIGHT: TextStyle = TextStyle {
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
 pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_DATA
-    .with_chunks(Chunks::new(4, 9))
-    .with_line_spacing(5);
-/// Smaller horizontal chunk offset, used e.g. for long Cardano addresses.
-/// Also moving the next page ellipsis to the left (as there is a space on the
-/// left). Last but not least, maximum number of rows is 4 in this case.
-pub const TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET: TextStyle = TEXT_MONO_DATA
-    .with_chunks(Chunks::new(4, 7).with_max_rows(4))
-    .with_line_spacing(5)
-    .with_ellipsis_icon(ICON_PAGE_NEXT, -12);
+    .with_chunks(Chunks::new(4, 10).with_max_rows(4))
+    .with_line_spacing(4);
 
 // TODO: remove TextStyles below when ui-t3t1 done
 pub const TEXT_NORMAL: TextStyle =
@@ -777,18 +773,6 @@ pub const TEXT_DEMIBOLD: TextStyle =
     TextStyle::new(fonts::FONT_DEMIBOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_BOLD: TextStyle =
     TextStyle::new(fonts::FONT_DEMIBOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
-
-/// Decide the text style of chunkified text according to its length.
-pub fn get_chunkified_text_style(character_length: usize) -> &'static TextStyle {
-    // Longer addresses have smaller x_offset so they fit even with scrollbar
-    // (as they will be shown on more than one page)
-    const FITS_ON_ONE_PAGE: usize = 16 * 4;
-    if character_length <= FITS_ON_ONE_PAGE {
-        &TEXT_MONO_ADDRESS_CHUNKS
-    } else {
-        &TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET
-    }
-}
 
 pub const TEXT_NORMAL_GREY_EXTRA_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_DEMIBOLD,
@@ -826,6 +810,13 @@ pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
 pub const RESULT_FOOTER_HEIGHT: i16 = 62;
 pub const DETAILS_SPACING: i16 = 8;
+
+// props settings
+pub const PROP_INNER_SPACING: i16 = PARAGRAPH_BOTTOM_SPACE;
+pub const PROPS_SPACING: i16 = PARAGRAPH_BOTTOM_SPACE;
+pub const PROPS_KEY_FONT: TextStyle = TEXT_SUB_GREY_LIGHT;
+pub const PROPS_VALUE_FONT: TextStyle = TEXT_MONO;
+pub const PROPS_VALUE_MONO_FONT: TextStyle = TEXT_MONO_DATA;
 
 // checklist settings
 pub const CHECKLIST_CHECK_WIDTH: i16 = 32; // icon width (20px) + padding (12px)

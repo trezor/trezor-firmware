@@ -68,7 +68,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
 
     let content_menu = Frame::left_aligned(
         "".into(),
-        VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
+        VerticalMenu::empty().cancel_item(TR::backup__title_skip.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);
@@ -87,7 +87,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     )
     .with_cancel_button()
     .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipe(Direction::Up, SwipeSettings::Default)
     .map_to_button_msg();
 
     let content_skip_confirm = Frame::left_aligned(
@@ -96,7 +96,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     )
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&PromptBackup::Intro)?;

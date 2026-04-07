@@ -20,17 +20,19 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/rsod_special.h>
 #include <sys/bootargs.h>
+#include <sys/bootutils.h>
+#include <sys/flash.h>
+#include <sys/flash_utils.h>
 #include <sys/systick.h>
-#include <util/flash.h>
-#include <util/flash_utils.h>
 
 #if defined(LOCKABLE_BOOTLOADER) || USE_STORAGE_HWKEY
 #include <sec/secret.h>
 #endif
 
 #ifdef USE_BACKUP_RAM
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #endif
 
 #include "bootui.h"
@@ -41,6 +43,8 @@
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"
 #endif
+
+#define MESSAGE_RX_TIMEOUT 10000
 
 typedef enum {
   UPLOAD_OK = 0,
@@ -66,6 +70,7 @@ typedef enum {
   UPLOAD_ERR_INVALID_SECMON_HEADER_SIG = -19,
   UPLOAD_ERR_INVALID_SECMON_MODEL = -20,
   UPLOAD_ERR_INVALID_SECMON_HASH = -21,
+  UPLOAD_ERR_INVALID_SECMON_VERSION = -23,
   UPLOAD_ERR_SECMON_TOO_BIG = -22,
 } upload_status_t;
 
@@ -83,8 +88,10 @@ typedef struct {
   uint32_t erase_offset;                // offset of flash memory to erase
   int32_t firmware_upload_chunk_retry;  // retry counter
   size_t headers_offset;                // offset of headers in the first block
-  size_t read_offset;   // offset of the next read data in the chunk buffer
-  uint32_t chunk_size;  // size of already received chunk data
+  size_t read_offset;       // offset of the next read data in the chunk buffer
+  uint32_t chunk_size;      // size of already received chunk data
+  bool confirmed;           // true if the firmware is confirmed by the user
+  bool wireless_transport;  // whether the transport is over BLE
 #ifdef USE_SECMON_VERIFICATION
   size_t secmon_code_offset;     // offset of the secmon code in the first block
   size_t secmon_code_size;       // size of the secmon code
@@ -170,13 +177,14 @@ static void fw_data_received(size_t len, void *ctx) {
   firmware_update_ctx_t *context = (firmware_update_ctx_t *)ctx;
 
   context->chunk_size += len;
-  // update loader but skip first block
-  if (context->firmware_block > 0) {
+  // update loader only after the update is confirmed
+  if (context->confirmed) {
     ui_screen_install_progress_upload(
         1000 *
-        (context->firmware_block * IMAGE_CHUNK_SIZE + context->chunk_size) /
-        (context->firmware_block * IMAGE_CHUNK_SIZE +
-         context->firmware_remaining));
+            (context->firmware_block * IMAGE_CHUNK_SIZE + context->chunk_size) /
+            (context->firmware_block * IMAGE_CHUNK_SIZE +
+             context->firmware_remaining),
+        context->wireless_transport);
   }
 }
 
@@ -280,6 +288,12 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          "Invalid secmon signature");
         return UPLOAD_ERR_INVALID_SECMON_HEADER_SIG;
+      }
+
+      if (sectrue != check_secmon_min_version(secmon_hdr->monotonic)) {
+        send_msg_failure(iface, FailureType_Failure_ProcessError,
+                         "Secmon downgrade protection");
+        return UPLOAD_ERR_INVALID_SECMON_VERSION;
       }
 
       ctx->secmon_code_size = secmon_hdr->codelen;
@@ -400,7 +414,8 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         return UPLOAD_ERR_USER_ABORT;
       }
 
-      ui_screen_install_start();
+      ui_screen_install_start(ctx->wireless_transport);
+      ctx->confirmed = true;
 
       // if firmware is not upgrade, erase storage
       if (sectrue != should_keep_seed) {
@@ -603,6 +618,8 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
     return WF_ERROR;
   }
 
+  ctx.wireless_transport = iface->wire->wireless;
+
   ctx.firmware_remaining = msg.has_length ? msg.length : 0;
   if ((ctx.firmware_remaining > 0) &&
       ((ctx.firmware_remaining % sizeof(uint32_t)) == 0) &&
@@ -628,6 +645,8 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
 
   upload_status_t s = UPLOAD_IN_PROGRESS;
 
+  uint32_t msg_deadline = ticks_timeout(MESSAGE_RX_TIMEOUT);
+
   while (true) {
     sysevents_t awaited = {0};
     sysevents_t signalled = {0};
@@ -637,6 +656,11 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
     if (awaited.read_ready != signalled.read_ready) {
+      if (ticks_expired(msg_deadline)) {
+        // timeout
+        ui_screen_fail();
+        return WF_ERROR;
+      }
       continue;
     }
 
@@ -647,6 +671,8 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
       return WF_ERROR;
     }
     s = process_msg_FirmwareUpload(iface, &ctx);
+
+    msg_deadline = ticks_timeout(MESSAGE_RX_TIMEOUT);
 
     if (s < 0 && s != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
       if (s == UPLOAD_ERR_BOOTLOADER_LOCKED) {
@@ -660,7 +686,7 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
       systick_delay_ms(100);
       return WF_CANCELLED;
     } else if (s == UPLOAD_OK) {  // last chunk received
-      ui_screen_install_progress_upload(1000);
+      ui_screen_install_progress_upload(1000, ctx.wireless_transport);
       ui_screen_done(4, sectrue);
       ui_screen_done(3, secfalse);
       systick_delay_ms(1000);

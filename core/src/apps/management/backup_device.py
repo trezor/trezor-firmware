@@ -6,11 +6,12 @@ from trezor.enums import BackupType
 if TYPE_CHECKING:
     from typing import Sequence
 
-    from trezor.messages import BackupDevice, Success
+    from trezor.messages import BackupDevice, BackupMethod, Success
 
 
 async def perform_backup(
     is_repeated_backup: bool,
+    method: BackupMethod | None,
     group_threshold: int | None = None,
     groups: Sequence[tuple[int, int]] = (),
 ) -> None:
@@ -53,15 +54,28 @@ async def perform_backup(
     backup.deactivate_repeated_backup()
     storage_device.set_backed_up()
 
+    # Choose backup handler (prompt the user if method is `None`)
+    handler = await layout.choose_backup_handler(method)
+
     if group_threshold is not None:
         # Parameters provided from host side.
         assert backup_types.is_slip39_backup_type(backup_type)
         extendable = backup_types.is_extendable_backup_type(backup_type)
         # Run the backup process directly.
-        await backup_slip39_custom(mnemonic_secret, group_threshold, groups, extendable)
+        await backup_slip39_custom(
+            handler=handler,
+            encrypted_master_secret=mnemonic_secret,
+            group_threshold=group_threshold,
+            groups=groups,
+            extendable=extendable,
+        )
     else:
         # No parameters provided, allow the user to configure them on screen.
-        await backup_seed(backup_type, mnemonic_secret)
+        await backup_seed(
+            handler=handler,
+            backup_type=backup_type,
+            mnemonic_secret=mnemonic_secret,
+        )
 
     # If the backup was successful, clear the unfinished flag and show success.
 
@@ -103,6 +117,13 @@ async def backup_device(msg: BackupDevice) -> Success:
     elif len(groups) > 0:
         raise wire.DataError("group_threshold is missing")
 
-    await perform_backup(is_repeated_backup, group_threshold, groups)
+    # avoid failing backup process due to I/O-related errors
+    with wire.context.continue_on_errors("Backup in progress"):
+        await perform_backup(
+            is_repeated_backup=is_repeated_backup,
+            method=msg.backup_method,
+            group_threshold=group_threshold,
+            groups=groups,
+        )
 
     return Success(message="Seed successfully backed up")

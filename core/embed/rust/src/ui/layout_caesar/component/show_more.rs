@@ -18,6 +18,7 @@ pub enum CancelInfoConfirmMsg {
 pub struct ShowMore<T> {
     content: Child<T>,
     buttons: Child<ButtonController>,
+    #[cfg(feature = "ui_debug")]
     has_menu: bool,
 }
 
@@ -29,21 +30,29 @@ where
         content: T,
         cancel_button: Option<TString<'static>>,
         button: TString<'static>,
+        verb_info: TString<'static>,
     ) -> Self {
         let btn_layout = if let Some(cancel_text) = cancel_button {
-            ButtonLayout::text_armed_info(cancel_text, button)
+            ButtonLayout::text_armed_text(cancel_text, button, verb_info)
         } else {
-            ButtonLayout::cancel_armed_info(button)
+            ButtonLayout::cancel_armed_text(button, verb_info)
         };
         Self {
             content: Child::new(content),
             buttons: Child::new(ButtonController::new(btn_layout)),
+            #[cfg(feature = "ui_debug")]
             has_menu: false,
         }
     }
 
+    #[cfg(feature = "ui_debug")]
     pub fn with_menu(mut self, has_menu: bool) -> Self {
         self.has_menu = has_menu;
+        self
+    }
+
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn with_menu(self, _has_menu: bool) -> Self {
         self
     }
 }

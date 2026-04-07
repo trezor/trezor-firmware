@@ -23,3 +23,12 @@
 
 // Initializes the BLE module
 bool ble_init(void);
+
+// Stop advertising
+void advertising_stop(void);
+
+// Set connection to suspended state- slower interval and so
+void connection_suspend(void);
+
+// Resume connection - faster interval
+void connection_resume(void);

@@ -55,7 +55,8 @@ class StorageComparison(RuleBasedStateMachine):
 
     @rule(oldpin=pins, newpin=pins)
     def change_pin(self, oldpin, newpin):
-        assert len(set(s.change_pin(oldpin, newpin) for s in self.storages)) == 1
+        assert len(set(s.unlock(oldpin) for s in self.storages)) == 1
+        assert len(set(s.change_pin(newpin) for s in self.storages)) == 1
         self.ensure_unlocked()
 
     @rule()

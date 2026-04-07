@@ -28,11 +28,9 @@ async def confirm_fido(
         from trezor import io
 
         confirm.touch_event(io.TOUCH_START, 220, 220)
-        if confirm.paint():
-            ui.refresh()
+        confirm.paint()
         msg = confirm.touch_event(io.TOUCH_END, 220, 220)
-        if confirm.paint():
-            ui.refresh()
+        confirm.paint()
         assert msg is trezorui_api.LayoutState.DONE
         retval = confirm.return_value()
         assert isinstance(retval, int)

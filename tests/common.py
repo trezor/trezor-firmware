@@ -27,12 +27,13 @@ import pytest
 
 from trezorlib import btc, messages, models, tools
 from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import TrezorTestContext as Client
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import MarkDecorator
 
+    from trezorlib.client import Session
     from trezorlib.debuglink import DebugLink
-    from trezorlib.debuglink import TrezorClientDebugLink as Client
     from trezorlib.messages import ButtonRequest
 
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
@@ -111,10 +112,15 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
                     skiplist.append(models.T3B1)
                 if skip_model == "t3t1":
                     skiplist.append(models.T3T1)
+                if skip_model == "t3w1":
+                    skiplist.append(models.T3W1)
             if skiplist:
-                skip_marks = [pytest.mark.models(skip=skiplist)]
+                extra_marks = [pytest.mark.models(skip=skiplist)]
             else:
-                skip_marks = []
+                extra_marks = []
+
+            if test.get("experimental"):
+                extra_marks.append(pytest.mark.experimental)
 
             tests.append(
                 pytest.param(
@@ -126,7 +132,7 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
                             mnemonic=fixture["setup"]["mnemonic"],
                         )
                     ]
-                    + skip_marks,
+                    + extra_marks,
                     id=test_id,
                 )
             )
@@ -350,7 +356,8 @@ def click_info_button_delizia_eckhart(debug: "DebugLink"):
     layout = debug.read_layout()
     assert "VerticalMenu" in layout.all_components()
     # Click on the first item in the vertical menu
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
+
     layout = debug.read_layout()
 
     # Go through the info screen pages
@@ -373,10 +380,10 @@ def check_pin_backoff_time(attempts: int, start: float) -> None:
     assert got >= expected
 
 
-def get_test_address(client: "Client") -> str:
+def get_test_address(session: "Session") -> str:
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
-    return btc.get_address(client, "Testnet", TEST_ADDRESS_N)
+    return btc.get_address(session, "Testnet", TEST_ADDRESS_N)
 
 
 def compact_size(n: int) -> bytes:
@@ -418,5 +425,5 @@ def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
             debug.swipe_up()
 
 
-def is_core(client: "Client") -> bool:
-    return client.model is not models.T1B1
+def is_core(session: Client | Session) -> bool:
+    return session.model is not models.T1B1

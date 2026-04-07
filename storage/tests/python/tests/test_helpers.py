@@ -8,7 +8,7 @@ def test_read_bytes_by_words():
     assert n == 0x0102030405060708
     assert array == helpers.to_bytes_by_words(n, PIN_LOG_SIZE)[56:]
 
-    array = b"\xFF\xFF\xFF\x01\x01\x05\x09\x01"
+    array = b"\xff\xff\xff\x01\x01\x05\x09\x01"
     n = helpers.to_int_by_words(array)
     assert n == 0x01FFFFFF01090501
     assert array == helpers.to_bytes_by_words(n, PIN_LOG_SIZE)[56:]

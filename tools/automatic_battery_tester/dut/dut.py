@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import serial
 from hardware_ctl.relay_controller import RelayController
@@ -44,13 +47,13 @@ class Dut:
 
     def __init__(
         self,
-        name,
-        cpu_id=None,
-        usb_port=None,
-        relay_port=None,
+        name: str,
+        cpu_id: str | None = None,
+        usb_port: str | None = None,
+        relay_port: int | None = None,
         relay_ctl: RelayController | None = None,
-        verbose=False,
-    ):
+        verbose: bool = False,
+    ) -> None:
 
         self.name = name
         self.relay_ctl = relay_ctl
@@ -106,7 +109,7 @@ class Dut:
 
         # device should start charging
         report = self.read_report()
-        if not report.usb == "USB_connected":
+        if not report or not report.usb == "USB_connected":
             self.init_error()
             raise RuntimeError(
                 f"{self.name} USB not connected. Check VCP and relay ports"
@@ -116,26 +119,26 @@ class Dut:
         self.disable_charging()
         self.power_down()
 
-    def init_error(self):
+    def init_error(self) -> None:
         self.display_error()
         self.disable_charging()
         self.power_down()
 
-    def display_error(self):
+    def display_error(self) -> None:
         self.display_bars("R")
         time.sleep(3)
 
-    def display_ok(self):
+    def display_ok(self) -> None:
         self.display_bars("G")
         time.sleep(3)
 
-    def get_cpu_id_hash(self):
+    def get_cpu_id_hash(self) -> str:
         return self.cpu_id_hash
 
-    def get_relay_port(self):
+    def get_relay_port(self) -> int | None:
         return self.relay_port
 
-    def generate_id_hash(self, cpu_id):
+    def generate_id_hash(self, cpu_id: str | None) -> str:
         """
         Generate a unique ID hash for the DUT based on its CPU ID.
         :param cpu_id: The CPU ID of the DUT.
@@ -148,35 +151,37 @@ class Dut:
         digest = hashlib.sha256(device_id_bytes).digest()
         return digest[:2].hex()
 
-    def set_verbose(self, verbose):
+    def set_verbose(self, verbose: bool) -> None:
         self.verbose = verbose
 
-    def get_verbose(self):
+    def get_verbose(self) -> bool:
         return self.verbose
 
-    def entry_interactive_mode(self):
+    def entry_interactive_mode(self) -> None:
         # Enter interactive mode
         self.send_command(".", skip_response=True)
 
-    def power_up(self):
+    def power_up(self) -> None:
         """
         Power up the DUT by activating the relay.
         """
         if self.relay_port is None:
             logging.debug("Relay port not set for DUT, skipping power up.")
             return
+        assert self.relay_ctl is not None
         self.relay_ctl.set_relay_on(self.relay_port)
 
-    def power_down(self):
+    def power_down(self) -> None:
         """
         Power down the DUT by deactivating the relay.
         """
         if self.relay_port is None:
             logging.debug("Relay port not set for DUT, skipping power down.")
             return
+        assert self.relay_ctl is not None
         self.relay_ctl.set_relay_off(self.relay_port)
 
-    def display_bars(self, value: str):
+    def display_bars(self, value: str) -> bool:
         """
         Display bars on the DUT's screen.
         :param value: A string representing the bars to display (e.g., "G" for green).
@@ -185,7 +190,7 @@ class Dut:
         response = self.send_command("display-bars", value)
         return response.OK
 
-    def ping(self):
+    def ping(self) -> bool:
         """
         Send a ping command to the DUT and wait for a response.
         Returns True if the DUT responds with "OK", False otherwise.
@@ -193,17 +198,17 @@ class Dut:
         response = self.send_command("ping")
         return response.OK
 
-    def enable_charging(self):
+    def enable_charging(self) -> bool:
 
         response = self.send_command("pm-charge-enable")
         return response.OK
 
-    def disable_charging(self):
+    def disable_charging(self) -> bool:
 
         response = self.send_command("pm-charge-disable")
         return response.OK
 
-    def set_soc_limit(self, soc_limit: int):
+    def set_soc_limit(self, soc_limit: int) -> bool:
         """
         Set the state of charge (SoC) limit for the DUT.
         :param soc_limit: The SoC limit to set (0-100).
@@ -215,7 +220,7 @@ class Dut:
         response = self.send_command("pm-set-soc-limit", soc_limit)
         return response.OK
 
-    def set_backlight(self, value: int):
+    def set_backlight(self, value: int) -> bool:
 
         if not 0 <= value <= 255:
             raise ValueError("Backlight value must be between 0 and 255.")
@@ -224,7 +229,7 @@ class Dut:
 
         return response.OK
 
-    def get_cpuid(self):
+    def get_cpuid(self) -> str | None:
 
         response = self.send_command("get-cpuid")
         if not response.OK:
@@ -239,6 +244,7 @@ class Dut:
     def parse_report(self, response: DutProdtestResponse) -> DutReportData:
 
         data = DutReportData()
+        assert response.timestamp is not None
         data.time = response.timestamp
         data.power_state = response.data_entries[0][0]
         data.usb = response.data_entries[0][1]
@@ -256,7 +262,7 @@ class Dut:
 
         return data
 
-    def read_report(self) -> DutReportData:
+    def read_report(self) -> DutReportData | None:
         """
         Read the PM report from the DUT.
         Returns a ProdtestResponse object containing the report data.
@@ -268,10 +274,12 @@ class Dut:
 
         return self.parse_report(response)
 
-    def send_command(self, cmd, *args, skip_response=False):
+    def send_command(
+        self, cmd: str, *args: Any, skip_response: bool = False
+    ) -> DutProdtestResponse:
 
         if self.vcp is None:
-            raise "VPC not initalized"
+            raise RuntimeError("VPC not initalized")
 
         response = DutProdtestResponse()
         # assert(len == 0)
@@ -326,12 +334,12 @@ class Dut:
     def log_data(
         self,
         output_directory: Path,
-        test_time_id,
-        test_scenario,
-        test_phase,
-        temp,
-        verbose=False,
-    ):
+        test_time_id: str,
+        test_scenario: str,
+        test_phase: str,
+        temp: str,
+        verbose: bool = False,
+    ) -> None:
 
         # Log file name format:
         # > <device_id_hash>.<time_identifier>.<test_scenario>.<test><temperarture>.csv
@@ -366,17 +374,17 @@ class Dut:
         if verbose:
             print(str(report.timestamp) + "," + ",".join(report.data_entries[0]))
 
-    def _log_output(self, message):
+    def _log_output(self, message: str) -> None:
         if self.verbose:
             prefix = f"\033[95m[{self.name}]\033[0m"
             logging.debug(prefix + " > " + message)
 
-    def _log_input(self, message):
+    def _log_input(self, message: str) -> None:
         if self.verbose:
             prefix = f"\033[95m[{self.name}]\033[0m"
             logging.debug(prefix + " < " + message)
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the DUT's serial port and clean up resources.
         """
@@ -390,7 +398,7 @@ class Dut:
         self.relay_ctl = None
         self.relay_port = None
 
-    def __del__(self):
+    def __del__(self) -> None:
         try:
             if hasattr(self, "vcp") and self.vcp is not None and self.vcp.is_open:
                 self.close()

@@ -2,33 +2,43 @@ import utime
 from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
-from trezor import log, loop
+from trezor import log, loop, utils
 from trezor.enums import MessageType
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from typing import Callable, TypeVar
 
     IdleCallback = Callable[[], None]
+    T = TypeVar("T")
 
 if __debug__:
     # Used in `on_close` below for memory statistics.
 
     import micropython
 
-    from trezor import utils
-
-
-ALLOW_WHILE_LOCKED = (
-    MessageType.Initialize,
-    MessageType.EndSession,
-    MessageType.GetFeatures,
-    MessageType.Cancel,
-    MessageType.LockDevice,
-    MessageType.DoPreauthorized,
-    MessageType.WipeDevice,
-    MessageType.SetBusy,
-    MessageType.Ping,
-)
+if utils.USE_THP:
+    ALLOW_WHILE_LOCKED = (
+        MessageType.EndSession,
+        MessageType.GetFeatures,
+        MessageType.Cancel,
+        MessageType.LockDevice,
+        MessageType.DoPreauthorized,
+        MessageType.WipeDevice,
+        MessageType.SetBusy,
+        MessageType.Ping,
+    )
+else:
+    ALLOW_WHILE_LOCKED = (
+        MessageType.Initialize,
+        MessageType.EndSession,
+        MessageType.GetFeatures,
+        MessageType.Cancel,
+        MessageType.LockDevice,
+        MessageType.DoPreauthorized,
+        MessageType.WipeDevice,
+        MessageType.SetBusy,
+        MessageType.Ping,
+    )
 
 
 # Set of workflow tasks.  Multiple workflows can be running at the same time.
@@ -72,7 +82,7 @@ def _on_close(workflow: loop.spawn) -> None:
             micropython.mem_info()
 
 
-def spawn(workflow: loop.Task) -> loop.spawn:
+def spawn(workflow: loop.Task[T]) -> loop.spawn[T]:
     """Spawn a workflow task.
 
     Creates an instance of loop.spawn for the workflow and registers it into the
@@ -101,7 +111,6 @@ def start_default() -> None:
     If a default task is already running, nothing will happen.
     """
     global default_task
-    global default_constructor
     global autolock_interrupts_workflow
 
     assert default_constructor is not None
@@ -260,6 +269,13 @@ class IdleTimer:
         task = self.tasks.pop(callback, None)
         if task is not None:
             loop.close(task)
+
+    def clear(self) -> None:
+        """Clear all idle callbacks."""
+        for _, task in self.tasks.items():
+            loop.close(task)
+        self.timeouts.clear()
+        self.tasks.clear()
 
 
 idle_timer = IdleTimer()

@@ -10,6 +10,8 @@ from .signer import Signer, SuiteTxType
 if TYPE_CHECKING:
     from trezor import messages
 
+    from apps.common.keychain import Keychain as Slip21Keychain
+
 
 class OrdinarySigner(Signer):
     """
@@ -23,8 +25,9 @@ class OrdinarySigner(Signer):
         self,
         msg: messages.CardanoSignTxInit,
         keychain: seed.Keychain,
+        slip21_keychain: Slip21Keychain,
     ) -> None:
-        super().__init__(msg, keychain)
+        super().__init__(msg, keychain, slip21_keychain)
         self.suite_tx_type: SuiteTxType = self._suite_tx_type()
 
     def _validate_tx_init(self) -> None:

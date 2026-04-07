@@ -7,7 +7,7 @@ from trezor.enums import ButtonRequestType, RecoveryType
 from apps.common import backup_types
 
 from ..common import interact
-from . import raise_if_cancelled
+from . import raise_if_not_confirmed
 
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 CANCELLED = trezorui_api.CANCELLED  # global_import_cache
@@ -25,6 +25,7 @@ async def request_word_count(recovery_type: RecoveryType) -> int:
         "recovery_word_count",
         ButtonRequestType.MnemonicWordCount,
     )
+    assert isinstance(count, (int, str))
     return int(count)
 
 
@@ -36,14 +37,13 @@ async def request_word(
     prefill_word: str = "",
 ) -> str:
     prompt = TR.recovery__word_x_of_y_template.format(word_index + 1, word_count)
-    can_go_back = word_index > 0
     if is_slip39:
         keyboard = trezorui_api.request_slip39(
-            prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
+            prompt=prompt, prefill_word=prefill_word, can_go_back=True
         )
     else:
         keyboard = trezorui_api.request_bip39(
-            prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
+            prompt=prompt, prefill_word=prefill_word, can_go_back=True
         )
 
     word: str = await interact(
@@ -90,7 +90,7 @@ def format_remaining_shares_info(
 
 
 async def show_group_share_success(share_index: int, group_index: int) -> None:
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         trezorui_api.show_group_share_success(
             lines=[
                 f"{TR.recovery__share_from_group_entered_template.format(share_index + 1, group_index + 1)}",
@@ -162,7 +162,7 @@ async def show_already_added() -> None:
     )
 
 
-async def show_group_thresholod() -> None:
+async def show_group_threshold() -> None:
     await show_recovery_warning(
         "warning_group_threshold",
         f"{TR.recovery__group_threshold_reached} {TR.recovery__enter_share_from_diff_group}",
@@ -176,7 +176,7 @@ async def show_recovery_warning(
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         trezorui_api.show_warning(
             title=subheader or TR.words__important,
             value=content or "",

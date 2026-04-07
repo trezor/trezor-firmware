@@ -2,6 +2,7 @@ mod api;
 mod base64;
 mod crc16;
 mod echo;
+mod image_info;
 mod reset;
 mod upload;
 
@@ -24,6 +25,7 @@ pub const SMP_GROUP_IMAGE: u16 = 1;
 
 pub const SMP_CMD_ID_ECHO: u8 = 0;
 pub const SMP_CMD_ID_RESET: u8 = 5;
+pub const SMP_CMD_ID_IMAGE_STATE: u8 = 0;
 pub const SMP_CMD_ID_IMAGE_UPLOAD: u8 = 1;
 
 pub const SMP_OP_READ: u8 = 0;
@@ -61,7 +63,7 @@ static SMP_RECEIVER: ReceiverStorage = ReceiverStorage(UnsafeCell::new(None));
 /// SMP_RECEIVER without locking IRQ, data races could occur.
 unsafe impl Sync for ReceiverStorage {}
 
-#[derive(Debug)]
+#[cfg_attr(test, derive(Debug))]
 pub enum SmpError {
     Timeout,
     WrongMessage,
@@ -226,6 +228,7 @@ impl<'a> Write for SmpBuffer<'a> {
 #[derive(Copy, Clone, PartialEq)]
 pub enum MsgType {
     Echo,
+    ImageStateResponse,
     ImageUploadResponse,
     Unknown,
 }
@@ -344,6 +347,9 @@ impl SmpReceiver {
             (SMP_GROUP_OS, SMP_CMD_ID_ECHO) => {
                 self.msg_type = Some(MsgType::Echo);
             }
+            (SMP_GROUP_IMAGE, SMP_CMD_ID_IMAGE_STATE) => {
+                self.msg_type = Some(MsgType::ImageStateResponse);
+            }
             (SMP_GROUP_IMAGE, SMP_CMD_ID_IMAGE_UPLOAD) => {
                 self.msg_type = Some(MsgType::ImageUploadResponse);
             }
@@ -456,6 +462,7 @@ pub fn wait_for_response(
         irq_unlock(key);
         if let Some(msg_type) = msg_type {
             if msg_type != expected_msg_type {
+                receiver_release();
                 return Err(SmpError::WrongMessage);
             }
 

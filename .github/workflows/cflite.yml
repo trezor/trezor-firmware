@@ -15,16 +15,18 @@ permissions: read-all
 
 jobs:
   PR:
+    # run only in public repositories - fuzzer will fail in private forks (missing auth)
+    if: github.event.repository.private == false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         sanitizer: [address]
     steps:
-      - uses: actions/checkout@v4  # needed to use the modified `run-fuzzers` action
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2  # needed to use the modified `run-fuzzers` action
       - name: Build Fuzzers (${{ matrix.sanitizer }})
         id: build
-        uses: google/clusterfuzzlite/actions/build_fuzzers@v1
+        uses: google/clusterfuzzlite/actions/build_fuzzers@404f5476ff06687c1030ecfb0832755b0c4b91bc  # google/clusterfuzzlite/actions/build_fuzzers@v1
         with:
           sanitizer: ${{ matrix.sanitizer }}
           language: c

@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Tuple
 import pytest
 
 from trezorlib import btc, device, exceptions, messages
+from trezorlib.client import PassphraseSetting
 from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path
@@ -66,13 +67,14 @@ def _center_button(debug: DebugLink) -> Tuple[int, int]:
 
 def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int):
     debug = device_handler.debuglink()
-
-    device_handler.run(device.apply_settings, auto_lock_delay_ms=delay_ms)  # type: ignore
-
-    assert "PinKeyboard" in debug.read_layout().all_components()
-
+    session = device_handler.get_session()
+    debug.synchronize_at("PinKeyboard")
     debug.input("1234")
+    session = device_handler.result()
 
+    device_handler.run_with_provided_session(session, device.apply_settings, auto_lock_delay_ms=delay_ms)  # type: ignore
+
+    debug.synchronize_at(TR.auto_lock__title)
     assert TR.regexp("auto_lock__change_template").match(
         debug.read_layout().text_content().strip()
     )
@@ -83,13 +85,14 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
         layout = debug.read_layout()
     assert layout.main_component() == "Homescreen"
     device_handler.result()
+    return session
 
 
 @pytest.mark.setup_client(pin=PIN4)
 def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
     """Autolock will lock the device that is waiting for the user
     to confirm transaction."""
-    set_autolock_delay(device_handler, 10_000)
+    session = set_autolock_delay(device_handler, 10_000)
 
     debug = device_handler.debuglink()
     # try to sign a transaction
@@ -106,8 +109,9 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    device_handler.run(btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)  # type: ignore
+    device_handler.run_with_provided_session(session, btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)  # type: ignore
 
+    debug.synchronize_at([TR.words__send, TR.words__address, TR.words__recipient])
     assert (
         "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1"
         in debug.read_layout().text_content().replace(" ", "")
@@ -146,6 +150,10 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     set_autolock_delay(device_handler, 10_000)
 
     debug = device_handler.debuglink()
+
+    # Prepare session to use later
+    session = device_handler.client.get_session()
+
     # try to sign a transaction
     inp1 = messages.TxInputType(
         address_n=parse_path("86h/0h/0h/0/0"),
@@ -161,10 +169,11 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    device_handler.run(
-        btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
+    device_handler.run_with_provided_session(
+        session, btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
     )
 
+    debug.synchronize_at([TR.words__send, TR.words__address, TR.words__recipient])
     assert (
         "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1"
         in debug.read_layout().text_content().replace(" ", "")
@@ -194,25 +203,25 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
 
     def sleepy_filter(msg: MessageType) -> MessageType:
         time.sleep(10.1)
-        device_handler.client.set_filter(messages.TxAck, None)
+        session.test_ctx.set_filter(messages.TxAck, None)
         return msg
 
-    with device_handler.client:
-        device_handler.client.set_filter(messages.TxAck, sleepy_filter)
+    with session.test_ctx as client:
+        client.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
+        # don't wait for layout change, to avoid "layout deadlock detected" error
         if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
-            debug.click(debug.screen_buttons.ok())
+            debug.click(debug.screen_buttons.ok(), wait=False)
         elif debug.layout_type is LayoutType.Caesar:
-            debug.press_middle()
+            debug.press_middle(wait=False)
         elif debug.layout_type is LayoutType.Delizia:
-            debug.click(debug.screen_buttons.tap_to_confirm())
+            debug.click(debug.screen_buttons.tap_to_confirm(), wait=False)
         else:
             raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
         signatures, tx = device_handler.result()
         assert len(signatures) == 1
         assert tx
-
     assert device_handler.features().unlocked is False
 
 
@@ -221,10 +230,8 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    # get address
-    device_handler.run(common.get_test_address)  # type: ignore
-
-    debug.synchronize_at("PassphraseKeyboard")
+    device_handler.get_session(passphrase=PassphraseSetting.ON_DEVICE)  # type: ignore
+    debug.synchronize_at(["PassphraseKeyboard", "StringKeyboard"])
 
     if debug.layout_type is LayoutType.Caesar:
         # Going into the selected character category
@@ -256,7 +263,10 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     elif debug.layout_type is LayoutType.Caesar:
         debug.input("j" * 8)
 
-    # address corresponding to "jjjjjjjj" passphrase
+    session = device_handler.result()
+
+    # get address corresponding to "jjjjjjjj" passphrase
+    device_handler.run_with_provided_session(session, common.get_test_address)
     assert device_handler.result() == "mnF4yRWJXmzRB6EuBzuVigqeqTqirQupxJ"
 
 
@@ -265,10 +275,9 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    # get address
-    device_handler.run(common.get_test_address)  # type: ignore
-
-    debug.synchronize_at("PassphraseKeyboard")
+    # get address (derive_seed)
+    device_handler.get_session(passphrase=PassphraseSetting.ON_DEVICE)
+    debug.synchronize_at(["PassphraseKeyboard", "StringKeyboard"])
 
     if debug.layout_type is LayoutType.Caesar:
         # Going into the selected character category
@@ -300,7 +309,9 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
 
 def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
-    assert TR.recovery__check_dry_run in debug.read_layout().text_content()
+    debug.synchronize_at(
+        [TR.recovery__title_dry_run, TR.reset__check_wallet_backup_title]
+    )
     layout = go_next(debug)
     assert "PinKeyboard" in layout.all_components()
 
@@ -315,7 +326,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run(device.recover, type=messages.RecoveryType.DryRun)
+    device_handler.run_with_session(device.recover, type=messages.RecoveryType.DryRun)
 
     layout = unlock_dry_run(debug)
     assert TR.recovery__num_of_words in debug.read_layout().text_content()
@@ -351,7 +362,7 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run(device.recover, type=messages.RecoveryType.DryRun)
+    device_handler.run_with_session(device.recover, type=messages.RecoveryType.DryRun)
 
     unlock_dry_run(debug)
 
@@ -383,7 +394,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run(device.recover, type=messages.RecoveryType.DryRun)
+    device_handler.run_with_session(device.recover, type=messages.RecoveryType.DryRun)
 
     unlock_dry_run(debug)
 
@@ -444,11 +455,14 @@ def test_autolock_does_not_interrupt_preauthorized(
 ):
     # NOTE: FAKE input tx
     # NOTE: mostly copy-pasted from test_authorize_coinjoin.py::test_sign_tx
-    set_autolock_delay(device_handler, 10_000)
+    session = set_autolock_delay(device_handler, 10_000)
 
     debug = device_handler.debuglink()
 
-    device_handler.run(
+    # Prepare session to use later
+
+    device_handler.run_with_provided_session(
+        session,
         btc.authorize_coinjoin,
         coordinator="www.example.com",
         max_rounds=2,
@@ -562,14 +576,15 @@ def test_autolock_does_not_interrupt_preauthorized(
 
     def sleepy_filter(msg: MessageType) -> MessageType:
         time.sleep(10.1)
-        device_handler.client.set_filter(messages.SignTx, None)
+        session.test_ctx.set_filter(messages.SignTx, None)
         return msg
 
-    with device_handler.client:
+    with session.test_ctx as client:
         # Start DoPreauthorized flow when device is unlocked. Wait 10s before
         # delivering SignTx, by that time autolock timer should have fired.
-        device_handler.client.set_filter(messages.SignTx, sleepy_filter)
-        device_handler.run(
+        client.set_filter(messages.SignTx, sleepy_filter)
+        device_handler.run_with_provided_session(
+            session,
             btc.sign_tx,
             "Testnet",
             inputs,

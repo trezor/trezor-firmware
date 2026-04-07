@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from trezor.wire import ProcessError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import NEMSignTx, NEMTransactionCommon
 
 
@@ -187,7 +189,7 @@ def _validate_common(common: NEMTransactionCommon, inner: bool = False) -> None:
         _validate_public_key(signer, "Invalid signer public key in inner transaction")
 
 
-def _validate_public_key(public_key: bytes | None, err_msg: str) -> None:
+def _validate_public_key(public_key: AnyBytes | None, err_msg: str) -> None:
     from .helpers import NEM_PUBLIC_KEY_SIZE
 
     if not public_key:

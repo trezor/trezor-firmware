@@ -33,7 +33,6 @@
 #include <string.h>
 
 #include "rtl/compiler_traits.h"
-#include "rtl/error_handling.h"
 
 #ifndef MIN_8bits
 #define MIN_8bits(a, b)                  \
@@ -64,6 +63,12 @@
 
 #ifndef UNUSED
 #define UNUSED(x) (void)(x)
+#endif
+
+#ifndef THREAD_LOCAL
+// Used to mark thread-local variables in coreapp.
+// THREAD_LOCAL is defined by the build system.
+#define THREAD_LOCAL
 #endif
 
 #endif  // TREZOR_RTL_H

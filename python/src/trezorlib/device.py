@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -28,16 +28,10 @@ from slip10 import SLIP10
 
 from . import messages
 from .exceptions import Cancelled, TrezorException
-from .tools import (
-    Address,
-    _deprecation_retval_helper,
-    _return_success,
-    parse_path,
-    session,
-)
+from .tools import Address, parse_path, workflow
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .client import Session
 
 
 RECOVERY_BACK = "\x08"  # backspace character, sent literally
@@ -47,21 +41,22 @@ ENTROPY_CHECK_MIN_VERSION = (2, 8, 7)
 HOMESCREEN_STREAMING_MIN_VERSION = (2, 8, 11)
 
 
-@session
+@workflow(refresh_features=True)
 def apply_settings(
-    client: "TrezorClient",
+    session: "Session",
     label: Optional[str] = None,
     language: Optional[str] = None,
     use_passphrase: Optional[bool] = None,
     homescreen: Optional[bytes] = None,
     passphrase_always_on_device: Optional[bool] = None,
     auto_lock_delay_ms: Optional[int] = None,
+    auto_lock_delay_battery_ms: Optional[int] = None,
     display_rotation: Optional[messages.DisplayRotation] = None,
     safety_checks: Optional[messages.SafetyCheckLevel] = None,
     experimental_features: Optional[bool] = None,
     hide_passphrase_from_host: Optional[bool] = None,
     haptic_feedback: Optional[bool] = None,
-) -> str | None:
+) -> None:
     if language is not None:
         warnings.warn(
             "language ignored. Use change_language() to set device language.",
@@ -72,6 +67,7 @@ def apply_settings(
         use_passphrase=use_passphrase,
         passphrase_always_on_device=passphrase_always_on_device,
         auto_lock_delay_ms=auto_lock_delay_ms,
+        auto_lock_delay_battery_ms=auto_lock_delay_battery_ms,
         display_rotation=display_rotation,
         safety_checks=safety_checks,
         experimental_features=experimental_features,
@@ -79,20 +75,17 @@ def apply_settings(
         haptic_feedback=haptic_feedback,
     )
 
-    if homescreen and client.version >= HOMESCREEN_STREAMING_MIN_VERSION:
+    if homescreen and session.version >= HOMESCREEN_STREAMING_MIN_VERSION:
         settings.homescreen_length = len(homescreen)
-        response = client.call(settings, expect=messages.DataChunkRequest)
-        _send_chunked_data(client, response, homescreen)
-        out = messages.Success()
+        response = session.call(settings, expect=messages.DataChunkRequest)
+        _send_chunked_data(session, response, homescreen)
     else:
         settings.homescreen = homescreen
-        out = client.call(settings, expect=messages.Success)
-    client.refresh_features()
-    return _return_success(out)
+        session.call(settings, expect=messages.Success)
 
 
 def _send_chunked_data(
-    client: "TrezorClient",
+    session: "Session",
     request: "messages.DataChunkRequest",
     language_data: bytes,
 ) -> None:
@@ -102,69 +95,54 @@ def _send_chunked_data(
         data_length = response.data_length
         data_offset = response.data_offset
         chunk = language_data[data_offset : data_offset + data_length]
-        response = client.call(messages.DataChunkAck(data_chunk=chunk))
+        response = session.call(messages.DataChunkAck(data_chunk=chunk))
 
 
-@session
+@workflow(refresh_features=True)
 def change_language(
-    client: "TrezorClient",
+    session: "Session",
     language_data: bytes,
     show_display: bool | None = None,
-) -> str | None:
+) -> None:
     data_length = len(language_data)
     msg = messages.ChangeLanguage(data_length=data_length, show_display=show_display)
 
-    response = client.call(msg)
+    response = session.call(msg)
     if data_length > 0:
         response = messages.DataChunkRequest.ensure_isinstance(response)
-        _send_chunked_data(client, response, language_data)
+        _send_chunked_data(session, response, language_data)
     else:
         messages.Success.ensure_isinstance(response)
-    client.refresh_features()  # changing the language in features
-    return _return_success(messages.Success(message="Language changed."))
 
 
-@session
-def apply_flags(client: "TrezorClient", flags: int) -> str | None:
-    out = client.call(messages.ApplyFlags(flags=flags), expect=messages.Success)
-    client.refresh_features()
-    return _return_success(out)
+@workflow(refresh_features=True)
+def apply_flags(session: "Session", flags: int) -> None:
+    session.call(messages.ApplyFlags(flags=flags), expect=messages.Success)
 
 
-@session
-def change_pin(client: "TrezorClient", remove: bool = False) -> str | None:
-    ret = client.call(messages.ChangePin(remove=remove), expect=messages.Success)
-    client.refresh_features()
-    return _return_success(ret)
+@workflow(refresh_features=True)
+def change_pin(session: "Session", remove: bool = False) -> None:
+    session.call(messages.ChangePin(remove=remove), expect=messages.Success)
 
 
-@session
-def change_wipe_code(client: "TrezorClient", remove: bool = False) -> str | None:
-    ret = client.call(messages.ChangeWipeCode(remove=remove), expect=messages.Success)
-    client.refresh_features()
-    return _return_success(ret)
+@workflow(refresh_features=True)
+def change_wipe_code(session: "Session", remove: bool = False) -> None:
+    session.call(messages.ChangeWipeCode(remove=remove), expect=messages.Success)
 
 
-@session
-def sd_protect(
-    client: "TrezorClient", operation: messages.SdProtectOperationType
-) -> str | None:
-    ret = client.call(messages.SdProtect(operation=operation), expect=messages.Success)
-    client.refresh_features()
-    return _return_success(ret)
+@workflow(refresh_features=True)
+def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -> None:
+    session.call(messages.SdProtect(operation=operation), expect=messages.Success)
 
 
-@session
-def wipe(client: "TrezorClient") -> str | None:
-    ret = client.call(messages.WipeDevice(), expect=messages.Success)
-    if not client.features.bootloader_mode:
-        client.init_device()
-    return _return_success(ret)
+@workflow(invalidate_client=True)
+def wipe(session: "Session") -> None:
+    session.call(messages.WipeDevice(), expect=messages.Success)
 
 
-@session
+@workflow(refresh_features=True)
 def recover(
-    client: "TrezorClient",
+    session: "Session",
     word_count: int = 24,
     passphrase_protection: bool = False,
     pin_protection: bool = True,
@@ -176,7 +154,7 @@ def recover(
     u2f_counter: Optional[int] = None,
     *,
     type: Optional[messages.RecoveryType] = None,
-) -> messages.Success | None:
+) -> None:
     if language is not None:
         warnings.warn(
             "language ignored. Use change_language() to set device language.",
@@ -200,13 +178,13 @@ def recover(
     if type is None:
         type = messages.RecoveryType.NormalRecovery
 
-    if client.features.model == "1" and input_callback is None:
+    if session.features.model == "1" and input_callback is None:
         raise RuntimeError("Input callback required for Trezor One")
 
     if word_count not in (12, 18, 24):
         raise ValueError("Invalid word count. Use 12/18/24")
 
-    if client.features.initialized and type == messages.RecoveryType.NormalRecovery:
+    if session.features.initialized and type == messages.RecoveryType.NormalRecovery:
         raise RuntimeError(
             "Device already initialized. Call device.wipe() and try again."
         )
@@ -228,25 +206,21 @@ def recover(
         msg.label = label
         msg.u2f_counter = u2f_counter
 
-    res = client.call(msg)
+    res = session.call(msg)
 
     while isinstance(res, messages.WordRequest):
         try:
             assert input_callback is not None
             inp = input_callback(res.type)
-            res = client.call(messages.WordAck(word=inp))
+            res = session.call(messages.WordAck(word=inp))
         except Cancelled:
-            res = client.call(messages.Cancel())
+            res = session.call(messages.Cancel())
 
     # check that the result is a Success
-    res = messages.Success.ensure_isinstance(res)
-    # reinitialize the device
-    client.init_device()
-
-    return _deprecation_retval_helper(res)
+    messages.Success.ensure_isinstance(res)
 
 
-def is_slip39_backup_type(backup_type: messages.BackupType):
+def is_slip39_backup_type(backup_type: messages.BackupType) -> bool:
     return backup_type in (
         messages.BackupType.Slip39_Basic,
         messages.BackupType.Slip39_Advanced,
@@ -287,7 +261,7 @@ def _seed_from_entropy(
 
 
 def reset(
-    client: "TrezorClient",
+    session: "Session",
     display_random: bool = False,
     strength: Optional[int] = None,
     passphrase_protection: bool = False,
@@ -320,7 +294,7 @@ def reset(
         )
 
     setup(
-        client,
+        session,
         strength=strength,
         passphrase_protection=passphrase_protection,
         pin_protection=pin_protection,
@@ -331,16 +305,14 @@ def reset(
         backup_type=backup_type,
     )
 
-    return _return_success(messages.Success(message="Initialized"))
-
 
 def _get_external_entropy() -> bytes:
     return secrets.token_bytes(32)
 
 
-@session
+@workflow(refresh_features=True)
 def setup(
-    client: "TrezorClient",
+    session: "Session",
     *,
     strength: Optional[int] = None,
     passphrase_protection: bool = True,
@@ -350,6 +322,7 @@ def setup(
     skip_backup: bool = False,
     no_backup: bool = False,
     backup_type: Optional[messages.BackupType] = None,
+    backup_method: Optional[messages.BackupMethod] = None,
     entropy_check_count: Optional[int] = None,
     paths: Iterable[Address] = [],
     _get_entropy: Callable[[], bytes] = _get_external_entropy,
@@ -395,19 +368,19 @@ def setup(
         check.
     """
 
-    if client.features.initialized:
+    if session.features.initialized:
         raise RuntimeError(
             "Device is initialized already. Call wipe_device() and try again."
         )
 
     if strength is None:
-        if client.features.model == "1":
+        if session.features.model == "1":
             strength = 256
         else:
             strength = 128
 
     if backup_type is None:
-        if client.version < SLIP39_EXTENDABLE_MIN_VERSION:
+        if session.version < SLIP39_EXTENDABLE_MIN_VERSION:
             # includes Trezor One 1.x.x
             backup_type = messages.BackupType.Bip39
         else:
@@ -418,7 +391,7 @@ def setup(
         paths = [parse_path("m/84h/0h/0h"), parse_path("m/44h/60h/0h")]
 
     if entropy_check_count is None:
-        if client.version < ENTROPY_CHECK_MIN_VERSION:
+        if session.version < ENTROPY_CHECK_MIN_VERSION:
             # includes Trezor One 1.x.x
             entropy_check_count = 0
         else:
@@ -435,21 +408,21 @@ def setup(
         no_backup=bool(no_backup),
         backup_type=backup_type,
         entropy_check=entropy_check_count > 0,
+        backup_method=backup_method,
     )
     if entropy_check_count > 0:
         xpubs = _reset_with_entropycheck(
-            client, msg, entropy_check_count, paths, _get_entropy
+            session, msg, entropy_check_count, paths, _get_entropy
         )
     else:
-        _reset_no_entropycheck(client, msg, _get_entropy)
+        _reset_no_entropycheck(session, msg, _get_entropy)
         xpubs = []
 
-    client.init_device()
     return xpubs
 
 
 def _reset_no_entropycheck(
-    client: "TrezorClient",
+    session: "Session",
     msg: messages.ResetDevice,
     get_entropy: Callable[[], bytes],
 ) -> None:
@@ -461,12 +434,12 @@ def _reset_no_entropycheck(
     << Success
     """
     assert msg.entropy_check is False
-    client.call(msg, expect=messages.EntropyRequest)
-    client.call(messages.EntropyAck(entropy=get_entropy()), expect=messages.Success)
+    session.call(msg, expect=messages.EntropyRequest)
+    session.call(messages.EntropyAck(entropy=get_entropy()), expect=messages.Success)
 
 
 def _reset_with_entropycheck(
-    client: "TrezorClient",
+    session: "Session",
     reset_msg: messages.ResetDevice,
     entropy_check_count: int,
     paths: Iterable[Address],
@@ -502,7 +475,7 @@ def _reset_with_entropycheck(
     def get_xpubs() -> list[tuple[Address, str]]:
         xpubs = []
         for path in paths:
-            resp = client.call(
+            resp = session.call(
                 messages.GetPublicKey(address_n=path), expect=messages.PublicKey
             )
             xpubs.append((path, resp.xpub))
@@ -531,13 +504,13 @@ def _reset_with_entropycheck(
                 raise TrezorException("Invalid XPUB in entropy check")
 
     xpubs = []
-    resp = client.call(reset_msg, expect=messages.EntropyRequest)
+    resp = session.call(reset_msg, expect=messages.EntropyRequest)
     entropy_commitment = resp.entropy_commitment
 
     while True:
         # provide external entropy for this round
         external_entropy = get_entropy()
-        client.call(
+        session.call(
             messages.EntropyAck(entropy=external_entropy),
             expect=messages.EntropyCheckReady,
         )
@@ -547,7 +520,7 @@ def _reset_with_entropycheck(
 
         if entropy_check_count <= 0:
             # last round, wait for a Success and exit the loop
-            client.call(
+            session.call(
                 messages.EntropyCheckContinue(finish=True),
                 expect=messages.Success,
             )
@@ -556,7 +529,7 @@ def _reset_with_entropycheck(
         entropy_check_count -= 1
 
         # Next round starts.
-        resp = client.call(
+        resp = session.call(
             messages.EntropyCheckContinue(finish=False),
             expect=messages.EntropyRequest,
         )
@@ -577,97 +550,100 @@ def _reset_with_entropycheck(
     return xpubs
 
 
-@session
+@workflow(refresh_features=True)
 def backup(
-    client: "TrezorClient",
+    session: "Session",
     group_threshold: Optional[int] = None,
     groups: Iterable[tuple[int, int]] = (),
-) -> str | None:
-    ret = client.call(
+    backup_method: Optional[messages.BackupMethod] = None,
+) -> None:
+    session.call(
         messages.BackupDevice(
             group_threshold=group_threshold,
             groups=[
                 messages.Slip39Group(member_threshold=t, member_count=c)
                 for t, c in groups
             ],
+            backup_method=backup_method,
         ),
         expect=messages.Success,
     )
-    client.refresh_features()
-    return _return_success(ret)
 
 
-def cancel_authorization(client: "TrezorClient") -> str | None:
-    ret = client.call(messages.CancelAuthorization(), expect=messages.Success)
-    return _return_success(ret)
+@workflow()
+def cancel_authorization(session: "Session") -> None:
+    session.call(messages.CancelAuthorization(), expect=messages.Success)
 
 
-def unlock_path(client: "TrezorClient", n: "Address") -> bytes:
-    resp = client.call(
+@workflow()
+def unlock_path(session: "Session", n: "Address") -> bytes:
+    resp = session.call(
         messages.UnlockPath(address_n=n), expect=messages.UnlockedPathRequest
     )
 
     # Cancel the UnlockPath workflow now that we have the authentication code.
     try:
-        client.call(messages.Cancel())
+        session.call(messages.Cancel())
     except Cancelled:
         return resp.mac
     else:
         raise TrezorException("Unexpected response in UnlockPath flow")
 
 
-@session
+@workflow()
 def reboot_to_bootloader(
-    client: "TrezorClient",
+    session: "Session",
     boot_command: messages.BootCommand = messages.BootCommand.STOP_AND_WAIT,
     firmware_header: Optional[bytes] = None,
-    language_data: bytes = b"",
-) -> str | None:
-    response = client.call(
+) -> None:
+    session.call(
         messages.RebootToBootloader(
             boot_command=boot_command,
             firmware_header=firmware_header,
-            language_data_length=len(language_data),
-        )
+        ),
+        expect=messages.Success,
     )
-    if isinstance(response, messages.DataChunkRequest):
-        response = _send_chunked_data(client, response, language_data)
-    return _return_success(messages.Success(message=""))
 
 
-@session
-def show_device_tutorial(client: "TrezorClient") -> str | None:
-    ret = client.call(messages.ShowDeviceTutorial(), expect=messages.Success)
-    return _return_success(ret)
+@workflow()
+def show_device_tutorial(session: "Session") -> None:
+    session.call(messages.ShowDeviceTutorial(), expect=messages.Success)
 
 
-@session
-def unlock_bootloader(client: "TrezorClient") -> str | None:
-    ret = client.call(messages.UnlockBootloader(), expect=messages.Success)
-    return _return_success(ret)
+@workflow()
+def unlock_bootloader(session: "Session") -> None:
+    session.call(messages.UnlockBootloader(), expect=messages.Success)
 
 
-@session
-def set_busy(client: "TrezorClient", expiry_ms: Optional[int]) -> str | None:
+@workflow(refresh_features=True)
+def set_busy(session: "Session", expiry_ms: Optional[int]) -> None:
     """Sets or clears the busy state of the device.
 
     In the busy state the device shows a "Do not disconnect" message instead of the homescreen.
     Setting `expiry_ms=None` clears the busy state.
     """
-    ret = client.call(messages.SetBusy(expiry_ms=expiry_ms), expect=messages.Success)
-    client.refresh_features()
-    return _return_success(ret)
+    session.call(messages.SetBusy(expiry_ms=expiry_ms), expect=messages.Success)
 
 
-def authenticate(
-    client: "TrezorClient", challenge: bytes
-) -> messages.AuthenticityProof:
-    return client.call(
+@workflow()
+def authenticate(session: "Session", challenge: bytes) -> messages.AuthenticityProof:
+    return session.call(
         messages.AuthenticateDevice(challenge=challenge),
         expect=messages.AuthenticityProof,
     )
 
 
-def set_brightness(client: "TrezorClient", value: Optional[int] = None) -> str | None:
-    ret = client.call(messages.SetBrightness(value=value), expect=messages.Success)
-    return _return_success(ret)
+@workflow()
+def set_brightness(session: "Session", value: Optional[int] = None) -> None:
+    session.call(messages.SetBrightness(value=value), expect=messages.Success)
+
+
+@workflow()
+def get_serial_number(session: "Session") -> str:
+    ret = session.call(messages.GetSerialNumber(), expect=messages.SerialNumber)
+    return ret.serial_number
+
+
+@workflow()
+def get_telemetry(session: "Session") -> messages.Telemetry:
+    return session.call(messages.TelemetryGet(), expect=messages.Telemetry)

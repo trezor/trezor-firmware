@@ -15,7 +15,7 @@ if __debug__:
 if TYPE_CHECKING:
     from typing import TypeVar
 
-    from .. import BufferProvider, WireInterface
+    from .. import Provider, WireInterface
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
@@ -26,7 +26,7 @@ class CodecContext(Context):
     def __init__(
         self,
         iface: WireInterface,
-        buffer_provider: BufferProvider,
+        buffer_provider: Provider[bytearray],
     ) -> None:
         self.buffer_provider = buffer_provider
         self._buffer = None
@@ -43,7 +43,7 @@ class CodecContext(Context):
 
     async def read(
         self,
-        expected_types: Container[int],
+        expected_types: Container[int] | None,
         expected_type: type[protobuf.MessageType] | None = None,
     ) -> protobuf.MessageType:
         if __debug__:
@@ -59,11 +59,13 @@ class CodecContext(Context):
 
         # If we got a message with unexpected type, raise the message via
         # `UnexpectedMessageError` and let the session handler deal with it.
-        if msg.type not in expected_types:
+        if not expected_types or msg.type not in expected_types:
             raise UnexpectedMessageException(msg)
 
         if expected_type is None:
-            expected_type = protobuf.type_for_wire("MessageType", msg.type)
+            expected_type = protobuf.type_for_wire(
+                self.message_type_enum_name, msg.type
+            )
 
         if __debug__:
             log.debug(

@@ -17,15 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_USB_CLASS_HID_H
-#define TREZORHAL_USB_CLASS_HID_H
+#pragma once
 
 #include <trezor_types.h>
+
+#include <sys/sysevent.h>
 
 /* usb_hid_info_t contains all information for setting up a HID interface.  All
  * passed pointers need to live at least until the interface is disabled
  * (usb_stop is called). */
 typedef struct {
+  syshandle_t handle;
   const uint8_t *report_desc;  // With length of report_desc_len bytes
   uint8_t *rx_buffer;          // With length of max_packet_len bytes
   uint8_t iface_num;           // Address of this HID interface
@@ -43,15 +45,3 @@ typedef struct {
 } usb_hid_info_t;
 
 secbool __wur usb_hid_add(const usb_hid_info_t *hid_info);
-secbool __wur usb_hid_can_read(uint8_t iface_num);
-secbool __wur usb_hid_can_write(uint8_t iface_num);
-int __wur usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len);
-int __wur usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len);
-
-int __wur usb_hid_read_select(uint32_t timeout);
-int __wur usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                                int timeout);
-int __wur usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf,
-                                 uint32_t len, int timeout);
-
-#endif  // TREZORHAL_USB_CLASS_HID_H

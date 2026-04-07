@@ -1,6 +1,10 @@
 name: "[Bot] add to GitHub project"
 
-on: [issues, pull_request]
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
 
 permissions:
   contents: read
@@ -9,34 +13,30 @@ permissions:
   repository-projects: write
 
 jobs:
-  project-add-pull-request:
+  project-add:
+    # run only in 'trezor/trezor-firmware' repository
+    if: github.repository == 'trezor/trezor-firmware'
     runs-on: ubuntu-latest
     steps:
       - name: Generate GitHub App token
         id: trezor-bot-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # actions/create-github-app-token@v2.2.1
         with:
           app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
           private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+
       - name: Add new pull request to the Firmware project
-        uses: actions/add-to-project@main
-        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        # run only for pull requests
+        if: github.event_name == 'pull_request'
+        uses: actions/add-to-project@158aad9ed186a4842abf69d0f8071a0ff95312d0  # main@2026-01-06
         with:
           project-url: https://github.com/orgs/trezor/projects/60
           github-token: ${{ steps.trezor-bot-token.outputs.token }}
 
-  project-add-issue:
-    name: Add new issue to the Firmware project
-    runs-on: ubuntu-latest
-    steps:
-      - name: Generate GitHub App token
-        id: trezor-bot-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
-          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
-      - uses: actions/add-to-project@main
-        if: github.event_name == 'issues' && github.event.action == 'opened'
+      - name: Add new issue to the Firmware project
+        # run only for issues
+        if: github.event_name == 'issues'
+        uses: actions/add-to-project@158aad9ed186a4842abf69d0f8071a0ff95312d0  # main@2026-01-06
         with:
           project-url: https://github.com/orgs/trezor/projects/60
           github-token: ${{ steps.trezor-bot-token.outputs.token }}

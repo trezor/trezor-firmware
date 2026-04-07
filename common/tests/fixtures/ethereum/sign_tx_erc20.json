@@ -236,6 +236,48 @@
                 "sig_s": "42f03f5dd99ed5b2368e85048546468fd9ae962bb0c7b6650bf0a39b9b2bb517"
             },
             "skip_models": ["t1"]
+        },
+        {
+            "name": "unknown_call_unknown_token_unknown_chain",
+            "parameters": {
+                "comment": "Unknown call - unknown token unknown chain",
+                "data": "abababab000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdddddddddddddddddddddddddddddddddddddddd",
+                "chain_id": 200901,
+                "fake_defs": false,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 401838,
+                "sig_r": "ed7a8a9c774301a075dd5c3b4fceb6ee045acc90469c5d1d8979f4018173cf2b",
+                "sig_s": "23b644d3974a4e4d4646fbab3c149f00e1d1b0521f654091c5fc2cf6b1ef59ba"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "approve_avantis",
+            "parameters": {
+                "comment": "Avantis Approve - contains ERC-8021",
+                "data": "095ea7b3000000000000000000000000944766f715b51967e56afde5f0aa76ceacc9e7f9000000000000000000000000000000000000000000000000000000000098968062635f73637869696d61390b0080218021802180218021802180218021",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "chain_id": 8453,
+                "nonce": "0x01b6",
+                "gas_price": "0x14",
+                "gas_limit": "0x11d98",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 16941,
+                "sig_r": "23159b30f585016f909fdddc41951cb2aa2274a659d324b239fac41c5b94110c",
+                "sig_s": "401e555170f25b08c89c360992026a9a3bc0d3315091393910816478815e362e"
+            }
         }
     ]
 }

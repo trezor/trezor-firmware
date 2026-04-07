@@ -22,11 +22,20 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <util/flash_otp.h>
+#include <rtl/printf.h>
+#include <sec/unit_properties.h>
+#include <sys/flash_otp.h>
 
 #include <stdlib.h>
 #include "prodtest_optiga.h"
-#include "rtl/mini_printf.h"
+
+#ifdef USE_TROPIC
+#include "prodtest_tropic.h"
+#endif
+
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
 
 static void prodtest_otp_variant_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -35,6 +44,7 @@ static void prodtest_otp_variant_read(cli_t* cli) {
   }
 
   uint8_t block[FLASH_OTP_BLOCK_SIZE] = {0};
+  uint8_t block_rework[FLASH_OTP_BLOCK_SIZE] = {0};
 
   cli_trace(cli, "Reading device OTP memory...");
 
@@ -42,6 +52,17 @@ static void prodtest_otp_variant_read(cli_t* cli) {
       flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, block, sizeof(block))) {
     cli_error(cli, CLI_ERROR, "Failed to read OTP memory.");
     return;
+  }
+
+  if (sectrue != flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT_REWORK, 0,
+                                block_rework, sizeof(block_rework))) {
+    cli_error(cli, CLI_ERROR, "Failed to read OTP memory.");
+    return;
+  }
+
+  if (block_rework[0] != 0xFF) {
+    cli_trace(cli, "Rework block present, using it instead of the original.");
+    memcpy(block, block_rework, sizeof(block));
   }
 
   char block_hex[FLASH_OTP_BLOCK_SIZE * 2 + 1];
@@ -62,7 +83,7 @@ static void prodtest_otp_variant_read(cli_t* cli) {
     if (i != 0) {
       *dst++ = ' ';
     }
-    mini_snprintf(dst, buffer_size, "%d", block[i]);
+    snprintf_(dst, buffer_size, "%d", block[i]);
     dst += strlen(dst);
     buffer_size -= strlen(dst);
   }
@@ -78,6 +99,7 @@ static void prodtest_otp_variant_write(cli_t* cli) {
 #else
   bool dry_run = true;
 #endif
+  bool rework = false;
 
   int arg_idx = 0;
   int val_count = 0;
@@ -90,6 +112,9 @@ static void prodtest_otp_variant_write(cli_t* cli) {
 
     if (strcmp(arg, "--execute") == 0) {
       dry_run = false;
+    } else if (strcmp(arg, "--rework") == 0) {
+      dry_run = false;
+      rework = true;
     } else if (strcmp(arg, "--dry-run") == 0) {
       dry_run = true;
     } else if (!cstr_parse_uint32(arg, 0, &val) || val > 255) {
@@ -116,6 +141,13 @@ static void prodtest_otp_variant_write(cli_t* cli) {
     cli_trace(cli, "");
   }
 
+#ifdef SECRET_LOCK_SLOT_OFFSET
+  if (sectrue != secret_is_locked()) {
+    cli_error(cli, CLI_ERROR, "Secrets not locked");
+    return;
+  }
+#endif
+
 #ifdef USE_OPTIGA
   optiga_locked_status optiga_status = get_optiga_locked_status(cli);
 
@@ -130,7 +162,50 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   }
 #endif
 
-  if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT)) {
+#ifdef USE_TROPIC
+  tropic_locked_status tropic_status = get_tropic_locked_status(cli);
+
+  if (tropic_status == TROPIC_LOCKED_FALSE) {
+    cli_error(cli, CLI_ERROR, "Tropic not locked");
+    return;
+  }
+
+  if (tropic_status != TROPIC_LOCKED_TRUE) {
+    // Error reported by get_optiga_locked_status().
+    return;
+  }
+#endif
+
+  uint8_t block_num = FLASH_OTP_BLOCK_DEVICE_VARIANT;
+
+  if (rework) {
+    block_num = FLASH_OTP_BLOCK_DEVICE_VARIANT_REWORK;
+
+    if (sectrue == flash_otp_is_locked(block_num)) {
+      cli_error(cli, CLI_ERROR_LOCKED,
+                "OTP rework block is locked and cannot be written again.");
+      return;
+    }
+
+    if (sectrue != flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT)) {
+      cli_error(cli, CLI_ERROR_LOCKED,
+                "Variant first block in not locked, rework not allowed.");
+      return;
+    }
+
+    uint8_t block_read[FLASH_OTP_BLOCK_SIZE] = {0};
+    if (sectrue != flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, block_read,
+                                  sizeof(block_read))) {
+      cli_error(cli, CLI_ERROR, "Failed to read OTP memory.");
+      return;
+    }
+    if (memcmp(block_read, block, sizeof(block_read)) == 0) {
+      cli_error(cli, CLI_ERROR, "Rework not needed, already up to date.");
+      return;
+    }
+  }
+
+  if (sectrue == flash_otp_is_locked(block_num)) {
     cli_error(cli, CLI_ERROR_LOCKED,
               "OTP block is locked and cannot be written again.");
     return;
@@ -146,8 +221,7 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   cli_trace(cli, "Bytes written: %s", block_hex);
 
   if (!dry_run) {
-    if (sectrue != flash_otp_write(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, block,
-                                   sizeof(block))) {
+    if (sectrue != flash_otp_write(block_num, 0, block, sizeof(block))) {
       cli_error(cli, CLI_ERROR, "Failed to write OTP block.");
       return;
     }
@@ -156,11 +230,15 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   cli_trace(cli, "Locking OTP block...");
 
   if (!dry_run) {
-    if (sectrue != flash_otp_lock(FLASH_OTP_BLOCK_DEVICE_VARIANT)) {
+    if (sectrue != flash_otp_lock(block_num)) {
       cli_error(cli, CLI_ERROR, "Failed to lock the OTP block.");
       return;
     }
   }
+
+  // reset cached properties
+  unit_properties_deinit();
+  unit_properties_init();
 
   // Respond with an OK message
   cli_ok(cli, "");
@@ -179,5 +257,5 @@ PRODTEST_CLI_CMD(
   .name = "otp-variant-write",
   .func = prodtest_otp_variant_write,
   .info = "Write the device variant info into OTP memory",
-  .args = "<values...> [--execute | --dry-run]"
+  .args = "<values...> [--execute | --dry-run | --rework]"
 );

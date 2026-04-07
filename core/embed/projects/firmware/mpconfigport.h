@@ -104,6 +104,7 @@
 #define MICROPY_PY_REVERSE_SPECIAL_METHODS (0)
 #define MICROPY_PY_ALL_SPECIAL_METHODS (0)
 #define MICROPY_PY_BUILTINS_COMPILE (MICROPY_ENABLE_COMPILER)
+#define MICROPY_PY_BUILTINS_COMPLEX (0)
 #define MICROPY_PY_BUILTINS_EXECFILE (MICROPY_ENABLE_COMPILER)
 #define MICROPY_PY_BUILTINS_NOTIMPLEMENTED (1)
 #define MICROPY_PY_BUILTINS_INPUT   (0)
@@ -116,6 +117,7 @@
 #define MICROPY_PY_COLLECTIONS       (0)
 #define MICROPY_PY_COLLECTIONS_DEQUE (0)
 #define MICROPY_PY_COLLECTIONS_ORDEREDDICT (0)
+#define MICROPY_PY_MATH             (0)
 #define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (0)
 #define MICROPY_PY_MATH_ISCLOSE     (0)
 #define MICROPY_PY_MATH_FACTORIAL   (0)
@@ -161,6 +163,9 @@
 #define MICROPY_PY_USOCKET          (0)
 #define MICROPY_PY_NETWORK          (0)
 
+// allocate traceback data only on debug builds
+#define MICROPY_PY_SYS_TRACEBACK_DISABLE (PYOPT)
+
 #define MICROPY_PY_TREZORCONFIG     (1)
 #define MICROPY_PY_TREZORCRYPTO     (1)
 #define MICROPY_PY_TREZORIO         (1)
@@ -169,15 +174,7 @@
 #define MICROPY_PY_TREZORPROTO      (1)
 #define MICROPY_PY_TREZORTRANSLATE  (1)
 #define MICROPY_PY_TREZORUI_API     (1)
-
-#ifdef SYSTEM_VIEW
-#define MP_PLAT_PRINT_STRN(str, len) segger_print(str, len)
-// uncomment DEST_RTT and comment DEST_SYSTEMVIEW
-// if you want to print to RTT instead of SystemView
-// OpenOCD supports only the RTT output method
-// #define SYSTEMVIEW_DEST_RTT         (1)
-#define SYSTEMVIEW_DEST_SYSTEMVIEW  (1)
-#endif
+#define MICROPY_PY_TREZORAPP        (USE_APP_LOADING)
 
 #define MP_STATE_PORT MP_STATE_VM
 
@@ -200,10 +197,8 @@ typedef int mp_int_t; // must be pointer size
 typedef unsigned int mp_uint_t; // must be pointer size
 typedef long mp_off_t;
 
-#include <sys/irq.h>
-
-#define MICROPY_BEGIN_ATOMIC_SECTION()     irq_lock()
-#define MICROPY_END_ATOMIC_SECTION(state)  irq_unlock(state)
+#define MICROPY_BEGIN_ATOMIC_SECTION()     (0)
+#define MICROPY_END_ATOMIC_SECTION(state)  (void)(state)
 #define MICROPY_EVENT_POLL_HOOK \
     do { \
         extern void mp_handle_pending(bool); \

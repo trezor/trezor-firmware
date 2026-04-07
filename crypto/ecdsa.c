@@ -418,13 +418,13 @@ int point_multiply(const ecdsa_curve *curve, const bignum256 *k,
   }
 
   int i = 0, j = 0;
-  static CONFIDENTIAL bignum256 a;
+  LOCAL_CONFIDENTIAL bignum256 a;
   uint32_t *aptr = NULL;
   uint32_t abits = 0;
   int ashift = 0;
   uint32_t is_even = (k->val[0] & 1) - 1;
   uint32_t bits = {0}, sign = {0}, nsign = {0};
-  static CONFIDENTIAL jacobian_curve_point jres;
+  LOCAL_CONFIDENTIAL jacobian_curve_point jres;
   curve_point pmult[8] = {0};
   const bignum256 *prime = &curve->prime;
 
@@ -544,10 +544,10 @@ int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
   }
 
   int i = {0}, j = {0};
-  static CONFIDENTIAL bignum256 a;
+  LOCAL_CONFIDENTIAL bignum256 a;
   uint32_t is_even = (k->val[0] & 1) - 1;
   uint32_t lowbits = 0;
-  static CONFIDENTIAL jacobian_curve_point jres;
+  LOCAL_CONFIDENTIAL jacobian_curve_point jres;
   const bignum256 *prime = &curve->prime;
 
   // is_even = 0xffffffff if k is even, 0 otherwise.
@@ -646,6 +646,7 @@ int tc_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
   bn_read_be(priv_key, &k);
   if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
     // Invalid private key.
+    memzero(&k, sizeof(k));
     return 2;
   }
 
@@ -682,10 +683,10 @@ int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
 int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
                          const uint8_t *digest, uint8_t *sig, uint8_t *pby,
                          int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
+  int ret = -1;
   int i = 0;
   curve_point R = {0};
-  bignum256 k = {0}, z = {0}, randk = {0};
-  bignum256 *s = &R.y;
+  bignum256 k = {0}, z = {0}, randk = {0}, s = {0};
   uint8_t by;  // signature recovery byte
 
 #if USE_RFC6979
@@ -699,7 +700,8 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
     // so this is most likely an indication of a bug. Furthermore, the signature
     // has no value, because in this case it can be easily forged for any public
     // key, see ecdsa_verify_digest().
-    return 1;
+    ret = 1;
+    goto cleanup;
   }
 
   for (i = 0; i < 10000; i++) {
@@ -728,34 +730,35 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
       continue;
     }
 
-    bn_read_be(priv_key, s);
-    if (bn_is_zero(s) || !bn_is_less(s, &curve->order)) {
+    bn_read_be(priv_key, &s);
+    if (bn_is_zero(&s) || !bn_is_less(&s, &curve->order)) {
       // Invalid private key.
-      return 2;
+      ret = 2;
+      goto cleanup;
     }
 
     // randomize operations to counter side-channel attacks
     generate_k_random(&randk, &curve->order);
     bn_multiply(&randk, &k, &curve->order);  // k*rand
     bn_inverse(&k, &curve->order);           // (k*rand)^-1
-    bn_multiply(&R.x, s, &curve->order);     // R.x*priv
-    bn_add(s, &z);                           // R.x*priv + z
-    bn_multiply(&k, s, &curve->order);       // (k*rand)^-1 (R.x*priv + z)
-    bn_multiply(&randk, s, &curve->order);   // k^-1 (R.x*priv + z)
-    bn_mod(s, &curve->order);
+    bn_multiply(&R.x, &s, &curve->order);    // R.x*priv
+    bn_add(&s, &z);                          // R.x*priv + z
+    bn_multiply(&k, &s, &curve->order);      // (k*rand)^-1 (R.x*priv + z)
+    bn_multiply(&randk, &s, &curve->order);  // k^-1 (R.x*priv + z)
+    bn_mod(&s, &curve->order);
     // if s is zero, we retry
-    if (bn_is_zero(s)) {
+    if (bn_is_zero(&s)) {
       continue;
     }
 
     // if S > order/2 => S = -S
-    if (bn_is_less(&curve->order_half, s)) {
-      bn_subtract(&curve->order, s, s);
+    if (bn_is_less(&curve->order_half, &s)) {
+      bn_subtract(&curve->order, &s, &s);
       by ^= 1;
     }
     // we are done, R.x and s is the result signature
     bn_write_be(&R.x, sig);
-    bn_write_be(s, sig + 32);
+    bn_write_be(&s, sig + 32);
 
     // check if the signature is acceptable or retry
     if (is_canonical && !is_canonical(by, sig)) {
@@ -765,23 +768,22 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
     if (pby) {
       *pby = by;
     }
-
-    memzero(&k, sizeof(k));
-    memzero(&randk, sizeof(randk));
-#if USE_RFC6979
-    memzero(&rng, sizeof(rng));
-#endif
-    return 0;
+    ret = 0;
+    goto cleanup;
   }
 
   // Too many retries without a valid signature
   // -> fail with an error
+cleanup:
+  memzero(&R, sizeof(R));
   memzero(&k, sizeof(k));
   memzero(&randk, sizeof(randk));
+  memzero(&z, sizeof(z));
+  memzero(&s, sizeof(s));
 #if USE_RFC6979
   memzero(&rng, sizeof(rng));
 #endif
-  return -1;
+  return ret;
 }
 
 // returns 0 on success
@@ -793,6 +795,7 @@ int tc_ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
   bn_read_be(priv_key, &k);
   if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
     // Invalid private key.
+    memzero(&k, sizeof(k));
     memzero(pub_key, 33);
     return -1;
   }
@@ -818,6 +821,7 @@ int tc_ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key,
   bn_read_be(priv_key, &k);
   if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
     // Invalid private key.
+    memzero(&k, sizeof(k));
     memzero(pub_key, 65);
     return -1;
   }

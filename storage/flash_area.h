@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include "secbool.h"
 
-#include "flash.h"
+#include "flash_ll.h"
 
 /**
  * Flash driver interface is designed to abstract away differences between
@@ -67,8 +67,6 @@ secbool __wur flash_area_write_byte(const flash_area_t *area, uint32_t offset,
 secbool __wur flash_area_write_word(const flash_area_t *area, uint32_t offset,
                                     uint32_t data);
 #endif
-secbool __wur flash_area_write_quadword(const flash_area_t *area,
-                                        uint32_t offset, const uint32_t *data);
 
 secbool __wur flash_area_write_burst(const flash_area_t *area, uint32_t offset,
                                      const uint32_t *data);
@@ -92,6 +90,10 @@ secbool __wur flash_area_write_data_padded(const flash_area_t *area,
                                            uint32_t offset, const void *data,
                                            uint32_t data_size, uint8_t padding,
                                            uint32_t total_size);
+
+// Returns sectrue if the flash area is completely erased
+// (all words are 0xFFFFFFFF), otherwise returns secfalse
+secbool __wur flash_area_is_erased(const flash_area_t *area);
 
 secbool __wur flash_area_erase(const flash_area_t *area,
                                void (*progress)(int pos, int len));

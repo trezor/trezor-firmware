@@ -1,7 +1,8 @@
 import argparse
+from typing import Iterable
 
 
-def gen(sources, dirs, defs):
+def gen(sources: Iterable[str], dirs: Iterable[str], defs: Iterable[str]) -> None:
     target = "CMakeLists.txt"
 
     with open(target, "w") as f:

@@ -2,9 +2,9 @@ use crate::{
     strutil::TString,
     time::{Duration, Stopwatch},
     ui::{
-        component::{Component, Event, EventCtx, Never},
+        component::{Component, Event, EventCtx},
         display::Color,
-        geometry::{Offset, Rect},
+        geometry::{Alignment2D, Insets, Offset, Rect},
         lerp::Lerp,
         shape::{self, Renderer},
     },
@@ -15,6 +15,15 @@ use super::{
     constant::SCREEN,
 };
 
+#[cfg(feature = "haptic")]
+use pareen;
+
+#[cfg(feature = "haptic")]
+use crate::trezorhal::haptic;
+
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::LedState;
+
 /// A component that displays a border that grows from the bottom of the screen
 /// to the top. The animation is parametrizable by color and duration.
 pub struct HoldToConfirmAnim {
@@ -24,20 +33,34 @@ pub struct HoldToConfirmAnim {
     color: Color,
     /// Screen border shape
     border: ScreenBorder,
-    /// Timer for the animation
-    timer: Stopwatch,
     /// Header overlay text shown during the animation
     header_overlay: Option<TString<'static>>,
-    /// Rollback animation state
-    rollback: RollbackState,
+    /// Animation state
+    state: AnimState,
+    #[cfg(feature = "rgb_led")]
+    led_color: Color,
 }
 
-/// State of the rollback animation, when `stop` is called.
-struct RollbackState {
-    /// Timer for the rollback animation
-    timer: Stopwatch,
-    /// Point in time of the growth animation when the rollback was initiated
-    duration: Duration,
+pub enum HoldToConfirmMsg {
+    /// The hold to confirm action was completed
+    Finalized,
+}
+
+enum AnimState {
+    Idle,
+    /// Growing border from start
+    Growing {
+        stopwatch: Stopwatch,
+    },
+    /// State of the rollback animation, when `stop` is called.
+    RollingBack {
+        stopwatch: Stopwatch,
+        started_at: Duration,
+    },
+    /// Finalizing animation after confirmation, when `finalize` is called.
+    Finalizing {
+        stopwatch: Stopwatch,
+    },
 }
 
 impl HoldToConfirmAnim {
@@ -51,6 +74,8 @@ impl HoldToConfirmAnim {
     /// Duration ratio for the rollback animation after `stop` is called
     const ROLLBACK_DURATION_RATIO: f32 = Self::TOP_DURATION_RATIO;
 
+    const FINALIZING_DURATION: Duration = Duration::from_millis(500);
+
     /// Duration after which the header overlay is shown after `start` is called
     const HEADER_OVERLAY_DELAY: Duration = Duration::from_millis(300);
 
@@ -60,12 +85,10 @@ impl HoldToConfirmAnim {
             total_duration: theme::CONFIRM_HOLD_DURATION.into(),
             color: default_color,
             border: ScreenBorder::new(default_color),
-            timer: Stopwatch::default(),
             header_overlay: None,
-            rollback: RollbackState {
-                timer: Stopwatch::default(),
-                duration: Duration::default(),
-            },
+            state: AnimState::Idle,
+            #[cfg(feature = "rgb_led")]
+            led_color: Color::black(),
         }
     }
 
@@ -86,23 +109,45 @@ impl HoldToConfirmAnim {
     }
 
     pub fn start(&mut self) {
-        self.timer = Stopwatch::new_started();
+        self.state = AnimState::Growing {
+            stopwatch: Stopwatch::new_started(),
+        };
     }
 
     pub fn stop(&mut self) {
-        self.rollback.timer = Stopwatch::new_started();
-        self.rollback.duration = self.timer.elapsed();
-        self.timer = Stopwatch::new_stopped();
+        if let AnimState::Growing { stopwatch } = &self.state {
+            let started_at = stopwatch.elapsed();
+            self.state = AnimState::RollingBack {
+                stopwatch: Stopwatch::new_started(),
+                started_at,
+            };
+        }
     }
 
-    fn is_active(&self) -> bool {
-        self.timer.is_running_within(self.total_duration)
+    pub fn finalize(&mut self) {
+        #[cfg(feature = "rgb_led")]
+        self.update_led_color(theme::color_to_led_color(self.color));
+        self.state = AnimState::Finalizing {
+            stopwatch: Stopwatch::new_started(),
+        };
     }
 
-    fn is_rollback(&self) -> bool {
-        self.rollback
-            .timer
-            .is_running_within(self.rollback_duration())
+    #[cfg(feature = "rgb_led")]
+    fn update_led_color(&mut self, led_color: Color) {
+        self.led_color = led_color;
+    }
+
+    fn is_animating(&self) -> bool {
+        match &self.state {
+            AnimState::Idle => false,
+            AnimState::Growing { stopwatch } => stopwatch.is_running_within(self.total_duration),
+            AnimState::RollingBack { stopwatch, .. } => {
+                stopwatch.is_running_within(self.rollback_duration())
+            }
+            AnimState::Finalizing { stopwatch } => {
+                stopwatch.is_running_within(Self::FINALIZING_DURATION)
+            }
+        }
     }
 
     fn rollback_duration(&self) -> Duration {
@@ -111,7 +156,7 @@ impl HoldToConfirmAnim {
 }
 
 impl Component for HoldToConfirmAnim {
-    type Msg = Never;
+    type Msg = HoldToConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         bounds
@@ -119,40 +164,59 @@ impl Component for HoldToConfirmAnim {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if self.is_active() || self.is_rollback() {
+            if self.is_animating() {
                 ctx.request_anim_frame();
                 ctx.request_paint();
             }
-        };
+            // Finalizing just completed
+            if let AnimState::Finalizing { stopwatch } = &self.state {
+                if stopwatch.is_running() && !stopwatch.is_running_within(Self::FINALIZING_DURATION)
+                {
+                    #[cfg(feature = "rgb_led")]
+                    self.update_led_color(Color::black());
+                    return Some(HoldToConfirmMsg::Finalized);
+                }
+            }
+        }
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // Rollback & Fading out animation
-        if self.is_rollback() {
-            let rollback_elapsed = self.rollback.timer.elapsed();
-            let alpha = self.get_rollback_alpha(rollback_elapsed);
-            let rollback_duration_progressed = self
-                .rollback
-                .duration
-                .checked_add(rollback_elapsed)
-                .unwrap_or_default();
-            let (clip, top_gap) = self.get_clips(rollback_duration_progressed);
-            let top_back_rollback = self.get_top_gap_rollback(rollback_elapsed);
-            let top_gap = top_gap.union(top_back_rollback);
-            self.render_clipped_border(clip, top_gap, alpha, target);
-        }
-
-        // Growing animation
-        if self.is_active() {
-            // override header with custom text
-            if self.timer.elapsed() > Self::HEADER_OVERLAY_DELAY {
-                self.render_header_overlay(target);
+        match &self.state {
+            AnimState::Idle => {}
+            AnimState::RollingBack {
+                stopwatch,
+                started_at,
+            } => {
+                let rollback_elapsed = stopwatch.elapsed();
+                let alpha = self.get_rollback_alpha(rollback_elapsed);
+                let rollback_duration_progressed =
+                    started_at.checked_add(rollback_elapsed).unwrap_or_default();
+                let (clip, top_gap) = self.get_clips(rollback_duration_progressed);
+                let top_back_rollback = self.get_top_gap_rollback(rollback_elapsed);
+                let top_gap = top_gap.union(top_back_rollback);
+                self.render_clipped_border(clip, top_gap, alpha, target);
             }
-            // growing border
-            let (clip, top_gap) = self.get_clips(self.timer.elapsed());
-            self.render_clipped_border(clip, top_gap, u8::MAX, target);
+            AnimState::Growing { stopwatch } => {
+                let elapsed = stopwatch.elapsed();
+                if elapsed > Self::HEADER_OVERLAY_DELAY {
+                    self.render_header_overlay(target);
+                }
+                let (clip, top_gap) = self.get_clips(elapsed);
+                self.render_clipped_border(clip, top_gap, u8::MAX, target);
+
+                #[cfg(feature = "haptic")]
+                haptic::play_custom(self.get_haptic(elapsed), 100);
+            }
+            AnimState::Finalizing { stopwatch } => {
+                let elapsed = stopwatch.elapsed();
+                let alpha = self.get_finalizing_alpha(elapsed);
+                self.render_done_icon(alpha, target);
+                self.border.render(alpha, target);
+            }
         }
+        #[cfg(feature = "rgb_led")]
+        target.set_led_state(LedState::Static(self.led_color));
     }
 }
 
@@ -168,7 +232,7 @@ impl HoldToConfirmAnim {
             // FIXME: vert_center is precisely aligned with the `Header` title (which uses
             // `Label`) but this solution might break with `Header` changes
             let text_offset = Offset::new(
-                Header::HEADER_INSETS.left,
+                theme::PADDING,
                 font.vert_center(0, Header::HEADER_HEIGHT - 1, "A"),
             );
             let text_pos = header_pad.top_left() + text_offset;
@@ -181,6 +245,22 @@ impl HoldToConfirmAnim {
                     .render(target);
             });
         }
+    }
+    fn render_done_icon<'s>(&'s self, alpha: u8, target: &mut impl Renderer<'s>) {
+        let icon = theme::ICON_DONE;
+        let header_pad = Rect::from_top_left_and_size(
+            SCREEN.top_left(),
+            Offset::new(SCREEN.width(), Header::HEADER_HEIGHT),
+        );
+        let icon_area = header_pad.inset(Insets::left(theme::PADDING));
+        shape::Bar::new(header_pad)
+            .with_bg(theme::BG)
+            .render(target);
+        shape::ToifImage::new(icon_area.left_center(), icon.toif)
+            .with_fg(self.color)
+            .with_alpha(alpha)
+            .with_align(Alignment2D::CENTER_LEFT)
+            .render(target);
     }
 
     fn render_clipped_border<'s>(
@@ -203,6 +283,17 @@ impl HoldToConfirmAnim {
     fn get_rollback_alpha(&self, elapsed: Duration) -> u8 {
         let progress = (elapsed / self.rollback_duration()).clamp(0.0, 1.0);
         let shift = pareen::constant(0.0).seq_ease_out(
+            0.0,
+            easer::functions::Cubic,
+            1.0,
+            pareen::constant(1.0),
+        );
+        u8::lerp(u8::MAX, u8::MIN, shift.eval(progress))
+    }
+
+    fn get_finalizing_alpha(&self, elapsed: Duration) -> u8 {
+        let progress = (elapsed / Self::FINALIZING_DURATION).clamp(0.0, 1.0);
+        let shift = pareen::constant(0.0).seq_ease_in(
             0.0,
             easer::functions::Cubic,
             1.0,
@@ -281,6 +372,23 @@ impl HoldToConfirmAnim {
             // Animation complete
             _ => (SCREEN, TOP_GAP_ZERO),
         }
+    }
+
+    #[cfg(feature = "haptic")]
+    fn get_haptic(&self, elapsed: Duration) -> i8 {
+        // Normalize elapsed time
+        let progress = (elapsed / self.total_duration).clamp(0.0, 1.0);
+
+        // Create a linear easing from 0.0 to 1.0 over normalized progress
+        let ease = pareen::constant(0.0).seq_ease_in(
+            0.0,
+            easer::functions::Linear,
+            1.0,
+            pareen::constant(1.0),
+        );
+
+        // Scale eased value to 0–100
+        (100.0 * ease.eval(progress)) as i8
     }
 }
 

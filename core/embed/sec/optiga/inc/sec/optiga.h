@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_OPTIGA_H
-#define TREZORHAL_OPTIGA_H
+#pragma once
 
 #include <trezor_types.h>
 
+#include <sec/storage.h>
+
 #include "optiga_common.h"
-#include "storage.h"
 
 #define OPTIGA_DEVICE_CERT_INDEX 1
 #define OPTIGA_DEVICE_ECC_KEY_INDEX 0
@@ -61,14 +61,41 @@ void optiga_set_sec_max(void);
 
 bool __wur optiga_random_buffer(uint8_t *dest, size_t size);
 
-bool __wur optiga_pin_set(optiga_ui_progress_t ui_progress,
-                          uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
+void optiga_random_buffer_time(uint32_t *time_ms);
 
-uint32_t optiga_estimate_time_ms(storage_pin_op_t op);
+bool __wur optiga_pin_init(optiga_ui_progress_t ui_progress);
+
+void optiga_pin_init_time(uint32_t *time_ms);
+
+bool optiga_pin_stretch_cmac_ecdh(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
+
+void optiga_pin_stretch_cmac_ecdh_time(uint32_t *time_ms, uint8_t *optiga_sec,
+                                       uint32_t *optiga_last_time_decreased_ms);
+
+bool __wur optiga_pin_set(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretched_pins[STRETCHED_PIN_COUNT][OPTIGA_PIN_SECRET_SIZE],
+    uint8_t hmac_reset_key[OPTIGA_PIN_SECRET_SIZE]);
+
+void optiga_pin_set_time(uint32_t *time_ms, uint8_t *optiga_sec,
+                         uint32_t *optiga_last_time_decreased_ms);
+
+bool __wur
+optiga_pin_reset_hmac_counter(optiga_ui_progress_t ui_progress,
+                              const uint8_t reset_key[OPTIGA_PIN_SECRET_SIZE]);
+
+void optiga_pin_reset_hmac_counter_time(
+    uint32_t *time_ms, uint8_t *optiga_sec,
+    uint32_t *optiga_last_time_decreased_ms);
 
 optiga_pin_result __wur
-optiga_pin_verify(optiga_ui_progress_t ui_progress,
+optiga_pin_verify(optiga_ui_progress_t ui_progress, uint8_t index,
                   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
+
+void optiga_pin_verify_time(uint8_t pin_index, uint32_t *time_ms,
+                            uint8_t *optiga_sec, uint32_t *optiga_last_time);
 
 optiga_pin_result __wur
 optiga_pin_verify_v4(optiga_ui_progress_t ui_progress,
@@ -82,5 +109,3 @@ bool __wur optiga_pin_get_rem(uint32_t *ctr);
 bool __wur optiga_pin_decrease_rem_v4(uint32_t count);
 
 bool __wur optiga_pin_decrease_rem(uint32_t count);
-
-#endif

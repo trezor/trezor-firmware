@@ -64,7 +64,8 @@ void secp256k1_default_error_callback_fn(const char *str, void *data) {
 uint32_t system_millis_lock_start = 0;
 
 /* Busyscreen timeout */
-uint32_t system_millis_busy_deadline = 0;
+static uint32_t system_millis_busy_start = 0;
+static uint32_t system_millis_busy_length = 0;
 
 void check_lock_screen(void) {
   buttonUpdate();
@@ -117,11 +118,19 @@ void check_lock_screen(void) {
   }
 }
 
+void trezor_set_busy(uint32_t length_ms) {
+  system_millis_busy_start = timer_ms();
+  system_millis_busy_length = length_ms;
+}
+
+bool trezor_is_busy(void) {
+  return timer_ms() - system_millis_busy_start < system_millis_busy_length;
+}
+
 void check_busy_screen(void) {
   // Clear the busy screen once it expires.
-  if (system_millis_busy_deadline != 0 &&
-      system_millis_busy_deadline < timer_ms()) {
-    system_millis_busy_deadline = 0;
+  if (system_millis_busy_length != 0 && !trezor_is_busy()) {
+    system_millis_busy_length = 0;
     layoutHome();
   }
 }

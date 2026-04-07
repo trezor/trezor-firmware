@@ -12,6 +12,7 @@
 typedef struct {
   TIM_HandleTypeDef tim;
   bool initialized;
+  bool enabled;
 } rgb_led_t;
 
 static rgb_led_t g_rgb_led = {0};
@@ -64,6 +65,7 @@ void rgb_led_init(void) {
   HAL_TIM_PWM_Start(&drv->tim, TIM_CHANNEL_3);
 
   drv->initialized = true;
+  drv->enabled = true;
 }
 
 void rgb_led_deinit(void) {
@@ -82,9 +84,38 @@ void rgb_led_deinit(void) {
   drv->initialized = false;
 }
 
+void rgb_led_set_enabled(bool enabled) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  // If the RGB LED is to be disabled, turn off the LED
+  if (!enabled) {
+    rgb_led_set_color(0);
+  }
+
+  drv->enabled = enabled;
+}
+
+bool rgb_led_get_enabled(void) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  return drv->enabled;
+}
+
 void rgb_led_set_color(uint32_t color) {
   rgb_led_t* drv = &g_rgb_led;
   if (!drv->initialized) {
+    return;
+  }
+
+  if (!drv->enabled) {
     return;
   }
 

@@ -117,10 +117,7 @@ pub fn new_confirm_value_intro(
             value_menu_label,
             theme::menu_item_title(),
         ))
-        .with_item(Button::new_menu_item(
-            cancel_menu_label,
-            theme::menu_item_title_orange(),
-        ));
+        .with_item(Button::new_cancel_menu_item(cancel_menu_label));
 
     let content_menu = VerticalMenuScreen::new(menu_items)
         .with_header(Header::new(TString::empty()).with_close_button())

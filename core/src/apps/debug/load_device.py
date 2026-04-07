@@ -60,15 +60,18 @@ async def load_device(msg: LoadDevice) -> Success:
             storage_device.set_slip39_identifier(identifier)
         storage_device.set_slip39_iteration_exponent(iteration_exponent)
 
+    storage_device.set_backup_type(backup_type)
     storage_device.store_mnemonic_secret(
-        secret,
+        secret=secret,
         needs_backup=msg.needs_backup is True,
         no_backup=msg.no_backup is True,
+        allow_derivation_fail=msg.skip_checksum is True,
     )
-    storage_device.set_backup_type(backup_type)
+    if msg.unfinished_backup is not None:
+        storage_device.set_unfinished_backup(bool(msg.unfinished_backup))
     storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
     storage_device.set_label(msg.label or "")
     if msg.pin:
-        config.change_pin("", msg.pin, None, None)
+        config.change_pin(msg.pin, None)
 
     return Success(message="Device loaded")

@@ -1,0 +1,66 @@
+name: Crowdin - context generation (manual)
+run-name: ${{ inputs.all-languages && 'Crowdin - every language context generation' || format('Crowdin - <{0}> language context generation', inputs.language) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      language:
+        description: Select a language to generate UI flows for
+        required: true
+        type: choice
+        default: cs
+        options:
+          - cs
+          - fr
+          - de
+          - es
+          - pt
+      all-languages:
+        description: Generate UI flows for all languages (overrides language input)
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  core_emu:
+    name: Build emulator (${{ matrix.model }}, universal, debuglink, noasan)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [T2T1, T3B1, T3T1, T3W1]
+    env:
+      TREZOR_MODEL: ${{ matrix.model }}
+      BITCOIN_ONLY: 0
+      PYOPT: 0
+      ADDRESS_SANITIZER: 0
+      QUIET_MODE: 1
+      DISABLE_TROPIC: 0
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make -C core build_unix_frozen"
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
+          path: |
+            core/build/unix/trezor-emu-core*
+          retention-days: 7
+
+  # Context tests for Core. Generates screenshots of UI flows of curated list of tests
+  # for selected language. To be used as context for Crowdin localization work.
+  core_context_tests_single_language:
+    needs: core_emu
+    if: ${{ !inputs.all-languages }}
+    uses: ./.github/workflows/crowdin-ui-check-reuse.yml
+    with:
+      languages: '["en", "${{ inputs.language }}"]'
+
+  core_context_tests_all_languages:
+    needs: core_emu
+    if: ${{ inputs.all-languages }}
+    uses: ./.github/workflows/crowdin-ui-check-reuse.yml
+    with:
+      languages: '["en", "cs", "fr", "de", "es", "pt"]'

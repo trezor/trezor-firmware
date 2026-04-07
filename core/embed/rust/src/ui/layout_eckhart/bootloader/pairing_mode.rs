@@ -89,6 +89,9 @@ impl Component for PairingModeScreen {
         if let Event::BLE(BLEEvent::Disconnected) = event {
             return Some(PairingMsg::Cancel);
         }
+        if let Event::BLE(BLEEvent::PairingNotNeeded) = event {
+            return Some(PairingMsg::Cancel);
+        }
 
         None
     }

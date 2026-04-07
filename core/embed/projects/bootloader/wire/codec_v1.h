@@ -28,6 +28,8 @@
 typedef struct {
   // initialized flag
   bool initialized;
+  // wireless flag
+  bool wireless;
   // identifier of the interface used for polling communication events
   uint8_t poll_iface_id;
   // size of TX packet

@@ -232,6 +232,11 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
     __HAL_RCC_USBPHYC_CLK_ENABLE();
 
+
+#ifdef SECURE_MODE
+    // If not in secure mode, this initialization is done
+    // in secure monitor
+
     /* Enable VDDUSB */
     __HAL_RCC_PWR_CLK_ENABLE();
     HAL_PWREx_EnableVddUSB();
@@ -239,6 +244,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     /*configure VOSR register of USB*/
     HAL_PWREx_EnableUSBHSTranceiverSupply();
     __HAL_RCC_PWR_CLK_DISABLE();
+#endif
 
 
     /*Configuring the SYSCFG registers OTG_HS PHY*/

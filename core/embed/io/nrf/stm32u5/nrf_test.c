@@ -226,6 +226,7 @@ cleanup:
 }
 
 #ifdef SECURE_MODE
+#ifdef USE_NRF_AUTH
 bool nrf_test_pair(void) {
   nrf_register_listener(NRF_SERVICE_PRODTEST, nrf_test_cb);
 
@@ -260,6 +261,7 @@ bool nrf_test_pair(void) {
 
   return false;
 }
+#endif
 #endif
 
 #endif

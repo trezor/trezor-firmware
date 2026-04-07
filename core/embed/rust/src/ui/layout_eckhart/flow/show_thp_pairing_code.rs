@@ -55,12 +55,12 @@ pub fn new_show_thp_pairing_code(
     code: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
-    ops.add_text(description, fonts::FONT_SATOSHI_REGULAR_38)
+    ops.add_text_with_font(description, fonts::FONT_SATOSHI_REGULAR_38)
         .add_newline()
         .add_newline()
         .add_newline()
         .add_alignment(Alignment::Center)
-        .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
+        .add_text_with_font(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
     let screen =
         TextScreen::new(FormattedText::new(ops)).with_header(Header::new(title).with_menu_button());
     let main_content = screen.map(|msg| match msg {
@@ -70,10 +70,7 @@ pub fn new_show_thp_pairing_code(
     });
 
     let mut menu = VerticalMenu::<ShortMenuVec>::empty();
-    menu.item(Button::new_menu_item(
-        TR::buttons__cancel.into(),
-        theme::menu_item_title_orange(),
-    ));
+    menu.item(Button::new_cancel_menu_item(TR::buttons__cancel.into()));
 
     let menu_content = VerticalMenuScreen::new(menu)
         .with_header(Header::new(TString::empty()).with_close_button())

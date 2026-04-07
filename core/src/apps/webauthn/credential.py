@@ -14,6 +14,7 @@ from apps.common.paths import HARDENED
 from .common import COSE_ALG_EDDSA, COSE_ALG_ES256, COSE_CURVE_ED25519, COSE_CURVE_P256
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Iterable
 
     from trezor.crypto import bip32
@@ -90,12 +91,12 @@ class Credential:
     def sign(self, data: Iterable[bytes]) -> bytes:
         raise NotImplementedError
 
-    def _u2f_sign(self, data: Iterable[bytes]) -> bytes:
+    def _u2f_sign(self, data: Iterable[AnyBytes]) -> AnyBytes:
         dig = hashlib.sha256()
         for segment in data:
             dig.update(segment)
         sig = nist256p1.sign(self._private_key(), dig.digest(), False)
-        return der.encode_seq((sig[1:33], sig[33:]))
+        return der.encode_signature(sig)
 
     def bogus_signature(self) -> bytes:
         raise NotImplementedError
@@ -217,7 +218,7 @@ class Fido2Credential(Credential):
         get = data.get  # local_cache_attribute
 
         cred = cls()
-        cred.rp_id = get(_CRED_ID_RP_ID, None)
+        cred.rp_id = get(_CRED_ID_RP_ID, "")
         cred.rp_id_hash = rp_id_hash
         cred.rp_name = get(_CRED_ID_RP_NAME, None)
         cred.user_id = get(_CRED_ID_USER_ID, None)
@@ -329,7 +330,7 @@ class Fido2Credential(Credential):
             )
         raise TypeError
 
-    def sign(self, data: Iterable[bytes]) -> bytes:
+    def sign(self, data: Iterable[bytes]) -> AnyBytes:
         if (self.algorithm, self.curve) == (
             COSE_ALG_ES256,
             COSE_CURVE_P256,
@@ -345,12 +346,12 @@ class Fido2Credential(Credential):
 
         raise TypeError
 
-    def bogus_signature(self) -> bytes:
+    def bogus_signature(self) -> AnyBytes:
         if (self.algorithm, self.curve) == (
             COSE_ALG_ES256,
             COSE_CURVE_P256,
         ):
-            return der.encode_seq((b"\x0a" * 32, b"\x0a" * 32))
+            return der.encode_signature(b"\x0a" * 64)
         elif (self.algorithm, self.curve) == (
             COSE_ALG_EDDSA,
             COSE_CURVE_ED25519,
@@ -398,11 +399,11 @@ class U2fCredential(Credential):
     def public_key(self) -> bytes:
         return nist256p1.publickey(self._private_key(), False)
 
-    def sign(self, data: Iterable[bytes]) -> bytes:
+    def sign(self, data: Iterable[bytes]) -> AnyBytes:
         return self._u2f_sign(data)
 
-    def bogus_signature(self) -> bytes:
-        return der.encode_seq((b"\x0a" * 32, b"\x0a" * 32))
+    def bogus_signature(self) -> AnyBytes:
+        return der.encode_signature(b"\x0a" * 64)
 
     def generate_key_handle(self) -> None:
         # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'

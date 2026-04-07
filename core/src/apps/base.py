@@ -7,9 +7,10 @@ from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
 from trezor.wire import context
-from trezor.wire.message_handler import filters, remove_filter
+from trezor.wire.message_handler import filters
 
 from . import workflow_handlers
+from .common import lock_manager
 
 if TYPE_CHECKING:
     from typing import NoReturn
@@ -27,10 +28,14 @@ if TYPE_CHECKING:
         Ping,
         SetBusy,
     )
-    from trezor.wire import Handler, Msg
 
-
-_SCREENSAVER_IS_ON = False
+    if utils.USE_THP:
+        from trezor.messages import (
+            Failure,
+            ThpCreateNewSession,
+            ThpCredentialRequest,
+            ThpCredentialResponse,
+        )
 
 
 def busy_expiry_ms() -> int:
@@ -48,10 +53,9 @@ def busy_expiry_ms() -> int:
     return expiry_ms if expiry_ms > 0 else 0
 
 
-def _language_version_matches() -> bool | None:
+def _language_version_matches() -> bool:
     """
     Whether translation blob version matches firmware version.
-    Returns None if there is no blob.
     """
     from trezor import translations
 
@@ -71,7 +75,7 @@ def get_features() -> Features:
 
     from apps.common import backup, mnemonic, safety_checks
 
-    v_major, v_minor, v_patch, _v_build = utils.VERSION
+    v_major, v_minor, v_patch, v_build = utils.VERSION
 
     f = Features(
         vendor="trezor.io",
@@ -81,6 +85,7 @@ def get_features() -> Features:
         major_version=v_major,
         minor_version=v_minor,
         patch_version=v_patch,
+        build_version=v_build,
         revision=utils.SCM_REVISION,
         model=utils.MODEL,
         internal_model=utils.INTERNAL_MODEL,
@@ -126,6 +131,7 @@ def get_features() -> Features:
             Capability.Ripple,
             Capability.Stellar,
             Capability.Tezos,
+            Capability.Tron,
             Capability.U2F,
             Capability.Shamir,
             Capability.ShamirGroups,
@@ -171,6 +177,13 @@ def get_features() -> Features:
 
     f.initialized = storage_device.is_initialized()
 
+    if utils.USE_POWER_MANAGER:
+        from trezorio import pm
+
+        f.soc = pm.soc()
+        f.wireless_connected = pm.is_wireless_connected()
+        f.usb_connected = pm.is_usb_connected()
+
     # private fields:
     if config.is_unlocked():
         # passphrase_protection is private, see #1807
@@ -209,36 +222,182 @@ def get_features() -> Features:
         f.experimental_features = storage_device.get_experimental_features()
         f.hide_passphrase_from_host = storage_device.get_hide_passphrase_from_host()
 
+        if utils.USE_POWER_MANAGER:
+            f.auto_lock_delay_battery_ms = (
+                storage_device.get_autolock_delay_battery_ms()
+            )
+
+        if utils.USE_RGB_LED:
+            f.led = storage_device.get_rgb_led()
+
     return f
 
 
-async def handle_Initialize(msg: Initialize) -> Features:
-    import storage.cache_codec as cache_codec
+if utils.USE_THP:
 
-    session_id = cache_codec.start_session(msg.session_id)
+    async def handle_ThpCreateNewSession(
+        message: ThpCreateNewSession,
+    ) -> Success | Failure:
+        """
+        Creates a new `ThpSession` based on the provided parameters and returns a
+        `Success` message on success.
 
-    if not utils.BITCOIN_ONLY:
-        from storage.cache_common import APP_COMMON_DERIVE_CARDANO
+        Returns an appropriate `Failure` message if session creation fails.
+        """
+        from trezor import log
+        from trezor.enums import FailureType
+        from trezor.messages import Failure
+        from trezor.wire import NotInitialized
+        from trezor.wire.context import get_context
+        from trezor.wire.errors import ActionCancelled, DataError
+        from trezor.wire.thp.session_context import GenericSessionContext
+        from trezor.wire.thp.session_manager import get_new_session_context
 
-        derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
-        have_seed = context.cache_is_set(APP_COMMON_SEED)
-        if (
-            have_seed
-            and msg.derive_cardano is not None
-            and msg.derive_cardano != bool(derive_cardano)
-        ):
-            # seed is already derived, and host wants to change derive_cardano setting
-            # => create a new session
-            cache_codec.end_current_session()
-            session_id = cache_codec.start_session()
-            have_seed = False
+        from apps.common.seed import derive_and_store_roots
 
-        if not have_seed:
-            context.cache_set_bool(APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano))
+        ctx = get_context()
 
-    features = get_features()
-    features.session_id = session_id
-    return features
+        # Assert that context `ctx` is `GenericSessionContext`
+        assert isinstance(ctx, GenericSessionContext)
+
+        channel = ctx.channel
+        session_id = ctx.session_id
+
+        # Do not use `ctx` beyond this point, as it is techically
+        # allowed to change in between await statements
+
+        if not 0 <= session_id <= 255:
+            return Failure(
+                code=FailureType.DataError,
+                message="Invalid session_id for session creation.",
+            )
+
+        new_session = get_new_session_context(
+            channel_ctx=channel, session_id=session_id
+        )
+        try:
+            await lock_manager.unlock_device()
+            await derive_and_store_roots(new_session, message)
+        except DataError as e:
+            return Failure(code=FailureType.DataError, message=e.message)
+        except ActionCancelled as e:
+            return Failure(code=FailureType.ActionCancelled, message=e.message)
+        except NotInitialized as e:
+            return Failure(code=FailureType.NotInitialized, message=e.message)
+        # TODO handle other errors (`Exception` when "Cardano icarus secret is already set!")
+
+        if __debug__:
+            log.debug(
+                __name__,
+                "New session with sid %d and passphrase %s created.",
+                session_id,
+                message.passphrase if message.passphrase is not None else "",
+            )
+
+        return Success(message="New session created.")
+
+    async def handle_ThpCredentialRequest(
+        message: ThpCredentialRequest,
+    ) -> ThpCredentialResponse | Failure:
+        from trezor.messages import ThpCredentialMetadata, ThpCredentialResponse
+        from trezor.wire.context import get_context
+        from trezor.wire.thp import crypto
+        from trezor.wire.thp.session_context import GenericSessionContext
+
+        from apps.thp.credential_manager import (
+            decode_credential,
+            issue_credential,
+            validate_credential,
+        )
+
+        ctx = get_context()
+
+        # Assert that context `ctx` is `GenericSessionContext`
+        assert isinstance(ctx, GenericSessionContext)
+
+        # Check that request contains a host static public_key
+        if message.host_static_public_key is None:
+            return _get_autoconnect_failure(
+                "Credential request must contain a host static public_key."
+            )
+
+        # Check that request contains valid credential
+        if message.credential is None:
+            return _get_autoconnect_failure(
+                "Credential request must contain a previously issued pairing credential."
+            )
+        credential = decode_credential(message.credential)
+        if not validate_credential(credential, message.host_static_public_key):
+            return _get_autoconnect_failure(
+                "Credential request contains an invalid pairing credential."
+            )
+
+        autoconnect = False
+        if message.autoconnect is not None:
+            autoconnect = message.autoconnect
+
+        assert credential.cred_metadata is not None
+        cred_metadata = ThpCredentialMetadata(
+            host_name=credential.cred_metadata.host_name,
+            app_name=credential.cred_metadata.app_name,
+            autoconnect=autoconnect,
+        )
+        if autoconnect:
+            from trezor.wire.thp import ui
+
+            await ui.show_autoconnect_credential_confirmation_screen(
+                cred_metadata.host_name, cred_metadata.app_name
+            )
+        new_cred = issue_credential(
+            host_static_public_key=message.host_static_public_key,
+            credential_metadata=cred_metadata,
+        )
+        trezor_static_public_key = crypto.get_trezor_static_public_key()
+
+        return ThpCredentialResponse(
+            trezor_static_public_key=trezor_static_public_key, credential=new_cred
+        )
+
+    def _get_autoconnect_failure(msg: str) -> Failure:
+        from trezor.enums import FailureType
+        from trezor.messages import Failure
+
+        return Failure(
+            code=FailureType.DataError,
+            message=msg,
+        )
+
+else:
+
+    async def handle_Initialize(msg: Initialize) -> Features:
+        import storage.cache_codec as cache_codec
+
+        session_id = cache_codec.start_session(msg.session_id)
+
+        if not utils.BITCOIN_ONLY:
+            from storage.cache_common import APP_COMMON_DERIVE_CARDANO
+
+            derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
+            have_seed = context.cache_is_set(APP_COMMON_SEED)
+            if (
+                have_seed
+                and msg.derive_cardano is not None
+                and msg.derive_cardano != bool(derive_cardano)
+            ):
+                # seed is already derived, and host wants to change derive_cardano setting
+                # => create a new session
+                cache_codec.end_current_session()
+                session_id = cache_codec.start_session()
+                have_seed = False
+
+            if not have_seed:
+                context.cache_set_bool(
+                    APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano)
+                )
+
+        features = get_features()
+        features.session_id = session_id
+        return features
 
 
 async def handle_GetFeatures(msg: GetFeatures) -> Features:
@@ -251,7 +410,7 @@ async def handle_Cancel(msg: Cancel) -> NoReturn:
 
 
 async def handle_LockDevice(msg: LockDevice) -> Success:
-    lock_device()
+    lock_manager.lock_device()
     return Success()
 
 
@@ -266,7 +425,7 @@ async def handle_SetBusy(msg: SetBusy) -> Success:
         context.cache_set_int(APP_COMMON_BUSY_DEADLINE_MS, deadline)
     else:
         context.cache_delete(APP_COMMON_BUSY_DEADLINE_MS)
-    set_homescreen()
+    lock_manager.set_homescreen()
     workflow.close_others()
     return Success()
 
@@ -352,6 +511,7 @@ async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
     req = await call_any(UnlockedPathRequest(mac=expected_mac), *wire_types)
 
     assert req.MESSAGE_WIRE_TYPE in wire_types
+    assert req.MESSAGE_WIRE_TYPE is not None
     handler = workflow_handlers.find_registered_handler(req.MESSAGE_WIRE_TYPE)
     assert handler is not None
     return await handler(req, msg)  # type: ignore [Expected 1 positional argument]
@@ -365,115 +525,18 @@ async def handle_CancelAuthorization(msg: CancelAuthorization) -> protobuf.Messa
     return Success(message="Authorization cancelled")
 
 
-def set_homescreen() -> None:
-    import storage.recovery as storage_recovery
-
-    from apps.common import backup
-
-    set_default = workflow.set_default  # local_cache_attribute
-
-    if context.cache_is_set(APP_COMMON_BUSY_DEADLINE_MS):
-        from apps.homescreen import busyscreen
-
-        set_default(busyscreen)
-
-    elif not config.is_unlocked():
-        from apps.homescreen import lockscreen
-
-        set_default(lockscreen)
-
-    elif _SCREENSAVER_IS_ON:
-        from apps.homescreen import screensaver
-
-        set_default(screensaver, restart=True)
-
-    elif storage_recovery.is_in_progress() or backup.repeated_backup_enabled():
-        from apps.management.recovery_device.homescreen import recovery_homescreen
-
-        set_default(recovery_homescreen)
-
-    else:
-        from apps.homescreen import homescreen
-
-        set_default(homescreen)
-
-
-def lock_device(interrupt_workflow: bool = True) -> None:
-    if config.has_pin():
-        config.lock()
-        filters.append(_pinlock_filter)
-        set_homescreen()
-        if interrupt_workflow:
-            workflow.close_others()
-
-
-def lock_device_if_unlocked() -> None:
-    from apps.common.request_pin import can_lock_device
-
-    if not utils.USE_BACKLIGHT and not can_lock_device():
-        # on OLED devices without PIN, trigger screensaver
-        global _SCREENSAVER_IS_ON
-
-        _SCREENSAVER_IS_ON = True
-        set_homescreen()
-
-    elif config.is_unlocked():
-        lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
-
-
-async def unlock_device() -> None:
-    """Ensure the device is in unlocked state.
-
-    If the storage is locked, attempt to unlock it. Reset the homescreen and the wire
-    handler.
-    """
-    from apps.common.request_pin import verify_user_pin
-
-    global _SCREENSAVER_IS_ON
-
-    if not config.is_unlocked():
-        # verify_user_pin will raise if the PIN was invalid
-        await verify_user_pin()
-
-    _SCREENSAVER_IS_ON = False
-    set_homescreen()
-    remove_filter(_pinlock_filter)
-
-
-def _pinlock_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:
-    if msg_type in workflow.ALLOW_WHILE_LOCKED:
-        return prev_handler
-
-    async def wrapper(msg: Msg) -> protobuf.MessageType:
-        await unlock_device()
-        return await prev_handler(msg)
-
-    return wrapper
-
-
-# this function is also called when handling ApplySettings
-def reload_settings_from_storage() -> None:
-    from trezor import ui
-
-    workflow.idle_timer.set(
-        storage_device.get_autolock_delay_ms(), lock_device_if_unlocked
-    )
-    wire.message_handler.EXPERIMENTAL_ENABLED = (
-        storage_device.get_experimental_features()
-    )
-    if ui.display.orientation() != storage_device.get_rotation():
-        ui.backlight_fade(ui.BacklightLevels.DIM)
-        ui.display.orientation(storage_device.get_rotation())
-
-
 def boot() -> None:
     from apps.common import backup
 
     MT = MessageType  # local_cache_global
 
     # Register workflow handlers
+    if utils.USE_THP:
+        workflow_handlers.register(MT.ThpCreateNewSession, handle_ThpCreateNewSession)
+        workflow_handlers.register(MT.ThpCredentialRequest, handle_ThpCredentialRequest)
+    else:
+        workflow_handlers.register(MT.Initialize, handle_Initialize)
     for msg_type, handler in [
-        (MT.Initialize, handle_Initialize),
         (MT.GetFeatures, handle_GetFeatures),
         (MT.Cancel, handle_Cancel),
         (MT.LockDevice, handle_LockDevice),
@@ -486,14 +549,10 @@ def boot() -> None:
     ]:
         workflow_handlers.register(msg_type, handler)
 
-    reload_settings_from_storage()
-    if utils.USE_POWER_MANAGER:
-        from apps.management.pm.autodim import autodim_display
-
-        workflow.idle_timer.set(30_000, autodim_display)
-
+    lock_manager.reload_settings_from_storage()
     if backup.repeated_backup_enabled():
         backup.activate_repeated_backup()
     if not config.is_unlocked():
         # pinlocked handler should always be the last one
-        filters.append(_pinlock_filter)
+        # TODO: hide this inside lock_manager
+        filters.append(lock_manager._pinlock_filter)

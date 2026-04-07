@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-use super::super::theme;
+use super::super::{super::component::ButtonContent, theme};
 
 /// Contains state commonly used in implementations multi-tap keyboards.
 pub struct MultiTapKeyboard {
@@ -110,6 +110,50 @@ impl MultiTapKeyboard {
     }
 }
 
+/// Enum keeping track of which keyboard is shown and which comes next. Keep the
+/// number of values and the constant PAGE_COUNT in sync.
+#[repr(u32)]
+#[derive(Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+pub(crate) enum KeyboardLayout {
+    LettersLower = 0,
+    LettersUpper = 1,
+    Numeric = 2,
+    Special = 3,
+}
+
+impl KeyboardLayout {
+    pub fn next(self) -> Self {
+        match self {
+            Self::LettersLower => Self::LettersUpper,
+            Self::LettersUpper => Self::Numeric,
+            Self::Numeric => Self::Special,
+            Self::Special => Self::LettersLower,
+        }
+    }
+
+    pub fn prev(self) -> Self {
+        match self {
+            Self::LettersLower => Self::Special,
+            Self::LettersUpper => Self::LettersLower,
+            Self::Numeric => Self::LettersUpper,
+            Self::Special => Self::Numeric,
+        }
+    }
+}
+
+impl From<KeyboardLayout> for ButtonContent {
+    /// Used to get content for the "next keyboard" button
+    fn from(kl: KeyboardLayout) -> Self {
+        match kl {
+            KeyboardLayout::LettersLower => ButtonContent::single_line_text("abc".into()),
+            KeyboardLayout::LettersUpper => ButtonContent::single_line_text("ABC".into()),
+            KeyboardLayout::Numeric => ButtonContent::single_line_text("123".into()),
+            KeyboardLayout::Special => ButtonContent::Icon(theme::ICON_ASTERISK),
+        }
+    }
+}
+
 /// Create a visible "underscoring" of the last letter of a text.
 pub fn render_pending_marker<'s>(
     target: &mut impl Renderer<'s>,
@@ -146,13 +190,28 @@ pub const KEYPAD_VISIBLE_HEIGHT: i16 = 440;
 pub const INPUT_TOUCH_HEIGHT: i16 = 96;
 
 const TEXTBOX_HEIGHT: i16 = 72;
-const INPUT_SIDE_PADDING: i16 = 24;
 const INPUT_TOP_PADDING: i16 = 16;
+const PROMPT_HEIGHT: i16 = 44;
+const PROMPT_TOP_PADDING: i16 = 35;
+const PROMPT_RIGHT_PADDING: i16 = 38;
 
 pub const KEYBOARD_INPUT_RADIUS: i16 = 12;
 pub const KEYBOARD_INPUT_INSETS: Insets = Insets::new(
     INPUT_TOP_PADDING,
-    INPUT_SIDE_PADDING,
+    theme::PADDING,
     INPUT_TOUCH_HEIGHT - INPUT_TOP_PADDING - TEXTBOX_HEIGHT,
-    INPUT_SIDE_PADDING,
+    theme::PADDING,
+);
+pub const KEYBOARD_PROMPT_INSETS: Insets = Insets::new(
+    PROMPT_TOP_PADDING,
+    PROMPT_RIGHT_PADDING,
+    INPUT_TOUCH_HEIGHT - PROMPT_TOP_PADDING - PROMPT_HEIGHT,
+    theme::PADDING,
+);
+
+pub const SHOWN_INSETS: Insets = Insets::new(
+    INPUT_TOP_PADDING,
+    theme::PADDING,
+    INPUT_TOP_PADDING,
+    theme::PADDING,
 );

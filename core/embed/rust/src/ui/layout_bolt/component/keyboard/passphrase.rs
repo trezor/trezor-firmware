@@ -3,12 +3,12 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
+            Paginate,
         },
         display,
         geometry::{Grid, Offset, Rect},
-        shape,
-        shape::Renderer,
-        util::long_line_content_with_ellipsis,
+        shape::{self, Renderer},
+        util::{long_line_content_with_ellipsis, Pager},
     },
 };
 
@@ -35,6 +35,7 @@ pub struct PassphraseKeyboard {
     keys: [Child<Button>; KEY_COUNT],
     scrollbar: ScrollBar,
     fade: Cell<bool>,
+    max_len: usize,
 }
 
 const STARTING_PAGE: usize = 1;
@@ -48,14 +49,43 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];
 
-const MAX_LENGTH: usize = 50;
+/// Enum keeping track of which keyboard is shown and which comes next. Keep the
+/// number of values and the constant PAGE_COUNT in sync.
+#[repr(u32)]
+#[derive(Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+pub(crate) enum KeyboardLayout {
+    Numeric = 0,
+    LettersLower = 1,
+    LettersUpper = 2,
+    Special = 3,
+}
+
+impl KeyboardLayout {
+    /// Number of variants (kept in sync with the enum by using the last
+    /// discriminant).
+    pub const VARIANT_COUNT: usize = KeyboardLayout::Special as usize + 1;
+
+    /// Map page index -> layout (bounds must be valid).
+    pub const fn from_page_unchecked(page: usize) -> Self {
+        // Order must match KEYBOARD rows.
+        const MAP: [KeyboardLayout; KeyboardLayout::VARIANT_COUNT] = [
+            KeyboardLayout::Numeric,
+            KeyboardLayout::LettersLower,
+            KeyboardLayout::LettersUpper,
+            KeyboardLayout::Special,
+        ];
+        MAP[page]
+    }
+}
+
 const INPUT_AREA_HEIGHT: i16 = ScrollBar::DOT_SIZE + 9;
 
 impl PassphraseKeyboard {
-    pub fn new() -> Self {
+    pub fn new(max_len: usize) -> Self {
         Self {
             page_swipe: Swipe::horizontal(),
-            input: Input::new().into_child(),
+            input: Input::new(max_len).into_child(),
             confirm: Button::with_icon(theme::ICON_CONFIRM)
                 .styled(theme::button_confirm())
                 .into_child(),
@@ -73,6 +103,7 @@ impl PassphraseKeyboard {
             }),
             scrollbar: ScrollBar::horizontal(),
             fade: Cell::new(false),
+            max_len,
         }
     }
 
@@ -95,18 +126,19 @@ impl PassphraseKeyboard {
 
     fn on_page_swipe(&mut self, ctx: &mut EventCtx, swipe: SwipeDirection) {
         // Change the page number.
-        let key_page = self.scrollbar.active_page;
-        let key_page = match swipe {
-            SwipeDirection::Left => (key_page as isize + 1) as usize % PAGE_COUNT,
-            SwipeDirection::Right => (key_page as isize - 1) as usize % PAGE_COUNT,
-            _ => key_page,
+        let mut pager = self.scrollbar.pager();
+        match swipe {
+            SwipeDirection::Left => pager.goto_next(),
+            SwipeDirection::Right => pager.goto_prev(),
+            _ => false,
         };
-        self.scrollbar.go_to(key_page);
+
+        self.scrollbar.set_pager(pager);
         // Clear the pending state.
         self.input
             .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
         // Update buttons.
-        self.replace_button_content(ctx, key_page);
+        self.replace_button_content(ctx, pager.current().into());
         // Reset backlight to normal level on next paint.
         self.fade.set(true);
         // So that swipe does not visually enable the input buttons when max length
@@ -165,7 +197,7 @@ impl PassphraseKeyboard {
     /// We should disable the input when the passphrase has reached maximum
     /// length and we are not cycling through the characters.
     fn is_button_active(&self, key: usize) -> bool {
-        let textbox_not_full = self.input.inner().textbox.len() < MAX_LENGTH;
+        let textbox_not_full = self.input.inner().textbox.len() < self.max_len;
         let key_is_pending = {
             if let Some(pending) = self.input.inner().multi_tap.pending_key() {
                 pending == key
@@ -203,7 +235,7 @@ impl Component for PassphraseKeyboard {
         self.back.place(back_btn_area);
         self.scrollbar.place(scroll_area);
         self.scrollbar
-            .set_count_and_active_page(PAGE_COUNT, STARTING_PAGE);
+            .set_pager(Pager::new(PAGE_COUNT as u16).with_current(STARTING_PAGE as u16));
 
         // Place all the character buttons.
         for (key, btn) in &mut self.keys.iter_mut().enumerate() {
@@ -317,10 +349,10 @@ struct Input {
 }
 
 impl Input {
-    fn new() -> Self {
+    fn new(max_len: usize) -> Self {
         Self {
             area: Rect::zero(),
-            textbox: TextBox::empty(MAX_LENGTH),
+            textbox: TextBox::empty(max_len),
             multi_tap: MultiTapKeyboard::new(),
         }
     }
@@ -375,7 +407,11 @@ impl Component for Input {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PassphraseKeyboard {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        let page = self.scrollbar.pager().current();
+        debug_assert!(page < PAGE_COUNT as u16);
+        let active_layout = uformat!("{:?}", KeyboardLayout::from_page_unchecked(page.into()));
         t.component("PassphraseKeyboard");
+        t.string("active_layout", active_layout.as_str().into());
         t.string("passphrase", self.passphrase().into());
     }
 }

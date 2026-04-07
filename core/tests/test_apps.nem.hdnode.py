@@ -9,6 +9,7 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+@unittest.skipUnless(utils.INTERNAL_MODEL == "T2T1", "only for T2T1")
 class TestNemHDNode(unittest.TestCase):
     def test_addresses(self):
         # test vectors from https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/1.test-keys.dat
@@ -320,5 +321,4 @@ class TestNemHDNode(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if utils.INTERNAL_MODEL == "T2T1":
-        unittest.main()
+    unittest.main()

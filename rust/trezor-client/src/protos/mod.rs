@@ -25,6 +25,7 @@ mod generated {
         messages_management
         messages_benchmark
         messages_thp
+        messages_telemetry
         options
 
         "bitcoin" => messages_bitcoin
@@ -32,6 +33,7 @@ mod generated {
         "ethereum" => messages_ethereum_eip712
         "cardano" => messages_cardano
         "eos" => messages_eos
+        "evolu" => messages_evolu
         "monero" => messages_monero
         "nem" => messages_nem
         "nostr" => messages_nostr
@@ -39,6 +41,7 @@ mod generated {
         "solana" => messages_solana
         "stellar" => messages_stellar
         "tezos" => messages_tezos
+        "tron" => messages_tron
         "webauthn" => messages_webauthn
     }
 }

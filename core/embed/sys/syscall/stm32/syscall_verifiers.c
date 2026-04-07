@@ -31,15 +31,16 @@
 #ifdef KERNEL
 
 // Checks if bitblt destination is accessible
-#define CHECK_BB_DST(_bb)                                       \
-  if (!probe_write_access((_bb)->dst_row,                       \
-                          (_bb)->dst_stride * (_bb)->height)) { \
-    goto access_violation;                                      \
+#define CHECK_BB_DST(_bb)                                               \
+  if (!probe_write_access((_bb)->dst_row, (size_t)(_bb)->dst_stride *   \
+                                              (size_t)(_bb)->height)) { \
+    goto access_violation;                                              \
   }
 
 // Checks if bitblt source is accessible
 #define CHECK_BB_SRC(_bb)                                                      \
-  if (!probe_read_access((_bb)->src_row, (_bb)->src_stride * (_bb)->height)) { \
+  if (!probe_read_access((_bb)->src_row,                                       \
+                         (size_t)(_bb)->src_stride * (size_t)(_bb)->height)) { \
     goto access_violation;                                                     \
   }
 
@@ -62,31 +63,188 @@ access_violation:
   apptask_access_violation();
 }
 
+ssize_t syshandle_read__verified(syshandle_t handle, void *buffer,
+                                 size_t buffer_size) {
+  if (!probe_write_access(buffer, buffer_size)) {
+    goto access_violation;
+  }
+
+  return syshandle_read(handle, buffer, buffer_size);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
+ssize_t syshandle_write__verified(syshandle_t handle, const void *data,
+                                  size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  return syshandle_write(handle, data, data_size);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
 // ---------------------------------------------------------------------
 
-bool bl_check_check__verified(const uint8_t *hash_00, const uint8_t *hash_FF,
-                              size_t hash_len) {
-  if (!probe_read_access(hash_00, hash_len)) {
+#ifdef USE_DBG_CONSOLE
+
+ssize_t dbg_console_read__verified(void *buffer, size_t buffer_size) {
+  if (!probe_write_access(buffer, buffer_size)) {
     goto access_violation;
   }
 
-  if (!probe_read_access(hash_FF, hash_len)) {
+  return dbg_console_read(buffer, buffer_size);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
+ssize_t dbg_console_write__verified(const void *data, size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
     goto access_violation;
   }
 
-  return bl_check_check(hash_00, hash_FF, hash_len);
+  return dbg_console_write(data, data_size);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
+#endif  // USE_DBG_CONSOLE
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_DBG_CONSOLE
+
+bool syslog_start_record__verified(const log_source_t *source,
+                                   log_level_t level) {
+  if (!probe_read_access(source, sizeof(*source))) {
+    goto access_violation;
+  }
+
+  return syslog_start_record(source, level);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
+                                     bool end_record) {
+  if (!probe_read_access(text, text_len)) {
+    goto access_violation;
+  }
+
+  return syslog_write_chunk(text, text_len, end_record);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
+bool syslog_set_filter__verified(const char *filter, size_t filter_len) {
+  if (!probe_read_access(filter, filter_len)) {
+    goto access_violation;
+  }
+
+  return syslog_set_filter(filter, filter_len);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_DBG_CONSOLE
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_IPC
+
+bool ipc_register__verified(systask_id_t origin, void *buffer, size_t size) {
+  if (!probe_write_access(buffer, size)) {
+    goto access_violation;
+  }
+
+  return ipc_register(origin, buffer, size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool ipc_try_receive__verified(ipc_message_t *msg) {
+  if (!probe_write_access(msg, sizeof(*msg))) {
+    goto access_violation;
+  }
+
+  return ipc_try_receive(msg);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+void ipc_message_free__verified(ipc_message_t *msg) {
+  if (!probe_read_access(msg, sizeof(*msg))) {
+    goto access_violation;
+  }
+
+  // We don't not check the block pointed by `msg->data`,
+  // because the msg->data is treated as a "token" and validated
+  // in the ipc_message_free() itself.
+
+  ipc_message_free(msg);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
+                        size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  return ipc_send(remote, fn, data, data_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_IPC
+
+// ---------------------------------------------------------------------
+
+bool boot_image_check__verified(const boot_image_t *image) {
+  if (!probe_read_access(image, sizeof(*image))) {
+    goto access_violation;
+  }
+
+  return boot_image_check(image);
 
 access_violation:
   apptask_access_violation();
   return false;
 };
 
-void bl_check_replace__verified(const uint8_t *data, size_t len) {
-  if (!probe_read_access(data, len)) {
+void boot_image_replace__verified(const boot_image_t *image) {
+  if (!probe_read_access(image, sizeof(*image))) {
     goto access_violation;
   }
 
-  bl_check_replace(data, len);
+  if (!probe_read_access(image->image_ptr, image->image_size)) {
+    goto access_violation;
+  }
+
+  boot_image_replace(image);
   return;
 
 access_violation:
@@ -266,161 +424,16 @@ access_violation:
   apptask_access_violation();
 }
 
-int usb_hid_read__verified(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  if (!probe_write_access(buf, len)) {
+secbool usb_start__verified(const usb_start_params_t *params) {
+  if (!probe_read_access(params, sizeof(*params))) {
     goto access_violation;
   }
 
-  return usb_hid_read(iface_num, buf, len);
+  return usb_start(params);
 
 access_violation:
   apptask_access_violation();
-  return 0;
-}
-
-int usb_hid_write__verified(uint8_t iface_num, const uint8_t *buf,
-                            uint32_t len) {
-  if (!probe_read_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_hid_write(iface_num, buf, len);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-int usb_hid_read_blocking__verified(uint8_t iface_num, uint8_t *buf,
-                                    uint32_t len, int timeout) {
-  if (!probe_write_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_hid_read_blocking(iface_num, buf, len, timeout);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-int usb_hid_write_blocking__verified(uint8_t iface_num, const uint8_t *buf,
-                                     uint32_t len, int timeout) {
-  if (!probe_read_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_hid_write_blocking(iface_num, buf, len, timeout);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-// ---------------------------------------------------------------------
-
-int usb_vcp_read__verified(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  if (!probe_write_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_vcp_read(iface_num, buf, len);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-int usb_vcp_write__verified(uint8_t iface_num, const uint8_t *buf,
-                            uint32_t len) {
-  if (!probe_read_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_vcp_write(iface_num, buf, len);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-int usb_vcp_read_blocking__verified(uint8_t iface_num, uint8_t *buf,
-                                    uint32_t len, int timeout) {
-  if (!probe_write_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_vcp_read_blocking(iface_num, buf, len, timeout);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-int usb_vcp_write_blocking__verified(uint8_t iface_num, const uint8_t *buf,
-                                     uint32_t len, int timeout) {
-  if (!probe_read_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_vcp_write_blocking(iface_num, buf, len, timeout);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-// ---------------------------------------------------------------------
-
-int usb_webusb_read__verified(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  if (!probe_write_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_webusb_read(iface_num, buf, len);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-int usb_webusb_write__verified(uint8_t iface_num, const uint8_t *buf,
-                               uint32_t len) {
-  if (!probe_read_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_webusb_write(iface_num, buf, len);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-int usb_webusb_read_blocking__verified(uint8_t iface_num, uint8_t *buf,
-                                       uint32_t len, int timeout) {
-  if (!probe_write_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_webusb_read_blocking(iface_num, buf, len, timeout);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
-}
-
-int usb_webusb_write_blocking__verified(uint8_t iface_num, const uint8_t *buf,
-                                        uint32_t len, int timeout) {
-  if (!probe_read_access(buf, len)) {
-    goto access_violation;
-  }
-
-  return usb_webusb_write_blocking(iface_num, buf, len, timeout);
-
-access_violation:
-  apptask_access_violation();
-  return 0;
+  return secfalse;
 }
 
 // ---------------------------------------------------------------------
@@ -477,6 +490,24 @@ void unit_properties_get__verified(unit_properties_t *props) {
 
 access_violation:
   apptask_access_violation();
+}
+
+bool unit_properties_get_sn__verified(uint8_t *device_sn,
+                                      size_t max_device_sn_size,
+                                      size_t *device_sn_size) {
+  if (!probe_write_access(device_sn, max_device_sn_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(device_sn_size, sizeof(*device_sn_size))) {
+    goto access_violation;
+  }
+
+  return unit_properties_get_sn(device_sn, max_device_sn_size, device_sn_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
 }
 
 // ---------------------------------------------------------------------
@@ -547,37 +578,73 @@ access_violation:
   return false;
 }
 
-bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size) {
-  if (!probe_write_access(dest, size)) {
+#endif  // USE_OPTIGA
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_SECRET_KEYS
+#include <sec/secret_keys.h>
+
+secbool secret_key_delegated_identity__verified(
+    uint16_t rotation_index, uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  if (!probe_write_access(dest, ECDSA_PRIVATE_KEY_SIZE)) {
     goto access_violation;
   }
 
-  return optiga_random_buffer(dest, size);
+  return secret_key_delegated_identity(rotation_index, dest);
+
+access_violation:
+  apptask_access_violation();
+  return secfalse;
+}
+#endif
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_TELEMETRY
+bool telemetry_get__verified(telemetry_data_t *out) {
+  if (!probe_write_access(out, sizeof(*out))) {
+    goto access_violation;
+  }
+
+  return telemetry_get(out);
 
 access_violation:
   apptask_access_violation();
   return false;
 }
-
-#endif  // USE_OPTIGA
+#endif
 
 // ---------------------------------------------------------------------
 
-void storage_init__verified(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                            const uint16_t salt_len) {
-  if (!probe_read_access(salt, salt_len)) {
+static PIN_UI_WAIT_CALLBACK storage_callback = NULL;
+
+static secbool storage_callback_wrapper(uint32_t wait, uint32_t progress,
+                                        enum storage_ui_message_t message) {
+  secbool result;
+
+  applet_t *applet = syscall_get_context();
+  result = systask_invoke_callback(&applet->task, wait, progress, message,
+                                   storage_callback);
+  return result;
+}
+
+void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback) {
+  if (!probe_execute_access(callback)) {
     goto access_violation;
   }
+  storage_callback = callback;
 
-  storage_init(callback, salt, salt_len);
+  storage_setup(storage_callback_wrapper);
   return;
 
 access_violation:
   apptask_access_violation();
 }
 
-secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
-                                 const uint8_t *ext_salt) {
+storage_unlock_result_t storage_unlock__verified(const uint8_t *pin,
+                                                 size_t pin_len,
+                                                 const uint8_t *ext_salt) {
   if (!probe_read_access(pin, pin_len)) {
     goto access_violation;
   }
@@ -590,22 +657,12 @@ secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
 
 access_violation:
   apptask_access_violation();
-  return secfalse;
+  return UNLOCK_ACCESS_VIOLATION;
 }
 
-secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
-                                     const uint8_t *newpin, size_t newpin_len,
-                                     const uint8_t *old_ext_salt,
-                                     const uint8_t *new_ext_salt) {
-  if (!probe_read_access(oldpin, oldpin_len)) {
-    goto access_violation;
-  }
-
+storage_pin_change_result_t storage_change_pin__verified(
+    const uint8_t *newpin, size_t newpin_len, const uint8_t *new_ext_salt) {
   if (!probe_read_access(newpin, newpin_len)) {
-    goto access_violation;
-  }
-
-  if (!probe_read_access(old_ext_salt, EXTERNAL_SALT_SIZE)) {
     goto access_violation;
   }
 
@@ -613,12 +670,11 @@ secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
     goto access_violation;
   }
 
-  return storage_change_pin(oldpin, oldpin_len, newpin, newpin_len,
-                            old_ext_salt, new_ext_salt);
+  return storage_change_pin(newpin, newpin_len, new_ext_salt);
 
 access_violation:
   apptask_access_violation();
-  return secfalse;
+  return PIN_CHANGE_ACCESS_VIOLATION;
 }
 
 void storage_ensure_not_wipe_code__verified(const uint8_t *pin,
@@ -702,6 +758,32 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+void rng_fill_buffer__verified(void *buffer, size_t buffer_size) {
+  if (!probe_write_access(buffer, buffer_size)) {
+    goto access_violation;
+  }
+
+  rng_fill_buffer(buffer, buffer_size);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+bool rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size) {
+  if (!probe_write_access(buffer, buffer_size)) {
+    goto access_violation;
+  }
+
+  return rng_fill_buffer_strong(buffer, buffer_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+// ---------------------------------------------------------------------
+
 bool translations_write__verified(const uint8_t *data, uint32_t offset,
                                   uint32_t len) {
   if (!probe_read_access(data, len)) {
@@ -725,20 +807,6 @@ const uint8_t *translations_read__verified(uint32_t *len, uint32_t offset) {
 access_violation:
   apptask_access_violation();
   return NULL;
-}
-
-// ---------------------------------------------------------------------
-
-void entropy_get__verified(uint8_t *buf) {
-  if (!probe_write_access(buf, HW_ENTROPY_LEN)) {
-    goto access_violation;
-  }
-
-  entropy_get(buf);
-  return;
-
-access_violation:
-  apptask_access_violation();
 }
 
 // ---------------------------------------------------------------------
@@ -783,12 +851,25 @@ access_violation:
 // ---------------------------------------------------------------------
 
 #ifdef USE_BLE
-bool ble_issue_command__verified(ble_command_t *command) {
-  if (!probe_read_access(command, sizeof(*command))) {
+
+bool ble_enter_pairing_mode__verified(const uint8_t *name, size_t name_len) {
+  if (!probe_read_access(name, name_len)) {
     goto access_violation;
   }
 
-  return ble_issue_command(command);
+  return ble_enter_pairing_mode(name, name_len);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool ble_allow_pairing__verified(const uint8_t *pairing_code) {
+  if (!probe_read_access(pairing_code, BLE_PAIRING_CODE_LEN)) {
+    goto access_violation;
+  }
+
+  return ble_allow_pairing(pairing_code);
 
 access_violation:
   apptask_access_violation();
@@ -844,6 +925,46 @@ access_violation:
   apptask_access_violation();
   return 0;
 }
+
+void ble_set_name__verified(const uint8_t *name, size_t len) {
+  if (!probe_read_access(name, len)) {
+    goto access_violation;
+  }
+
+  ble_set_name(name, len);
+
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+bool ble_unpair__verified(const bt_le_addr_t *addr) {
+  if (!probe_read_access(addr, sizeof(*addr))) {
+    goto access_violation;
+  }
+
+  return ble_unpair(addr);
+
+access_violation:
+  apptask_access_violation();
+
+  return false;
+}
+
+uint8_t ble_get_bond_list__verified(bt_le_addr_t *bonds, size_t count) {
+  if (!probe_write_access(bonds, sizeof(bt_le_addr_t) * count)) {
+    goto access_violation;
+  }
+
+  return ble_get_bond_list(bonds, count);
+
+access_violation:
+  apptask_access_violation();
+
+  return 0;
+}
+
 #endif
 
 // ---------------------------------------------------------------------
@@ -932,6 +1053,14 @@ access_violation:
 
 jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {
   if (!probe_write_access(input, sizeof(*input))) {
+    goto access_violation;
+  }
+
+  if (input->offset > input->size) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(input->data, input->size - input->offset)) {
     goto access_violation;
   }
 
@@ -1201,7 +1330,9 @@ access_violation:
 #endif
 
 #ifdef USE_TROPIC
+#include <libtropic_common.h>
 #include <sec/tropic.h>
+#include "ecdsa.h"
 
 bool tropic_ping__verified(const uint8_t *msg_out, uint8_t *msg_in,
                            uint16_t msg_len) {
@@ -1219,37 +1350,98 @@ access_violation:
   return false;
 }
 
-bool tropic_get_cert__verified(uint8_t *buf, uint16_t buf_size) {
-  if (!probe_write_access(buf, buf_size)) {
-    goto access_violation;
-  }
-
-  return tropic_get_cert(buf, buf_size);
-access_violation:
-  apptask_access_violation();
-  return false;
-}
-
 bool tropic_ecc_key_generate__verified(uint16_t slot_index) {
   return tropic_ecc_key_generate(slot_index);
 }
 
 bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
-                               uint16_t dig_len, uint8_t *sig,
-                               uint16_t sig_len) {
+                               uint16_t dig_len, uint8_t *sig) {
   if (!probe_read_access(dig, dig_len)) {
     goto access_violation;
   }
 
-  if (!probe_write_access(sig, sig_len)) {
+  if (!probe_write_access(sig, ECDSA_RAW_SIGNATURE_SIZE)) {
     goto access_violation;
   }
 
-  return tropic_ecc_sign(key_slot_index, dig, dig_len, sig, sig_len);
+  return tropic_ecc_sign(key_slot_index, dig, dig_len, sig);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
+                                uint16_t *size) {
+  if (!probe_write_access(data, TROPIC_SLOT_MAX_SIZE_V1)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(size, sizeof(*size))) {
+    goto access_violation;
+  }
+
+  return tropic_data_read(udata_slot, data, size);
 access_violation:
   apptask_access_violation();
   return false;
 }
 #endif
+
+#ifdef USE_APP_LOADING
+
+ts_t app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id) {
+  if (!probe_read_access(hash, sizeof(*hash))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(task_id, sizeof(*task_id))) {
+    goto access_violation;
+  }
+
+  return app_task_spawn(hash, task_id);
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_task_get_pminfo__verified(systask_id_t task_id,
+                                   systask_postmortem_t *pminfo) {
+  if (!probe_write_access(pminfo, sizeof(*pminfo))) {
+    goto access_violation;
+  }
+
+  return app_task_get_pminfo(task_id, pminfo);
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+app_cache_handle_t app_cache_create_image__verified(const app_hash_t *hash,
+                                                    size_t image_size) {
+  if (!probe_read_access(hash, sizeof(*hash))) {
+    goto access_violation;
+  }
+
+  return app_cache_create_image(hash, image_size);
+
+access_violation:
+  apptask_access_violation();
+  return APP_CACHE_INVALID_HANDLE;
+}
+
+ts_t app_cache_write_image__verified(app_cache_handle_t handle,
+                                     uintptr_t offset, const void *data,
+                                     size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+  return app_cache_write_image(handle, offset, data, data_size);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+#endif  // USE_APP_LOADING
 
 #endif  // KERNEL

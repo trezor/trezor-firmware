@@ -1,12 +1,11 @@
+use heapless::String;
+
 use crate::{
     strutil::{ShortString, TString},
     time::Duration,
     ui::{
         component::{
-            text::{
-                layout::{Chunks, LayoutFit, LineBreaking},
-                TextStyle,
-            },
+            text::{layout::LayoutFit, LineBreaking, TextStyle},
             Component, Event, EventCtx, Label, TextLayout, Timer,
         },
         display::Icon,
@@ -21,7 +20,7 @@ use super::{
     super::super::{component::ButtonContent, constant::SCREEN, theme},
     common::{
         FADING_ICON_COLORS, FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS,
-        KEYBOARD_INPUT_RADIUS, KEYPAD_VISIBLE_HEIGHT,
+        KEYBOARD_INPUT_RADIUS, KEYBOARD_PROMPT_INSETS, KEYPAD_VISIBLE_HEIGHT, SHOWN_INSETS,
     },
     keypad::{ButtonState, Keypad, KeypadMsg, KeypadState},
 };
@@ -32,10 +31,11 @@ pub enum PinKeyboardMsg {
 }
 
 pub struct PinKeyboard<'a> {
+    prompt: Label<'a>,
+    attempts: Label<'a>,
+    warning: Option<Label<'a>>,
     allow_cancel: bool,
-    major_prompt: Label<'a>,
-    minor_prompt: Label<'a>,
-    major_warning: Option<Label<'a>>,
+    last_attempt: bool,
     keypad: Keypad,
     input: PinInput,
     warning_timer: Timer,
@@ -43,22 +43,32 @@ pub struct PinKeyboard<'a> {
 
 impl<'a> PinKeyboard<'a> {
     const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
+    const MAJOR_WARNING_TIMEOUT: Duration = Duration::from_secs(2);
+    // Ad hoc number that so that all languages can reasonably show the attempts
+    // prompt
+    const ATTEMPTS_WIDTH: i16 = 85;
 
     pub fn new(
-        major_prompt: TString<'a>,
-        minor_prompt: TString<'a>,
-        major_warning: Option<TString<'a>>,
+        prompt: TString<'a>,
+        attempts: TString<'a>,
+        warning: Option<TString<'a>>,
         allow_cancel: bool,
+        last_attempt: bool,
     ) -> Self {
+        let attempts_style = if last_attempt {
+            theme::label_title_warning()
+        } else {
+            theme::TEXT_SMALL_LIGHT
+        }
+        .with_line_breaking(LineBreaking::BreakAtWhitespace);
         Self {
-            allow_cancel,
-            major_prompt: Label::left_aligned(major_prompt, theme::firmware::TEXT_SMALL)
-                .vertically_centered(),
-            minor_prompt: Label::right_aligned(minor_prompt, theme::firmware::TEXT_SMALL)
-                .vertically_centered(),
-            major_warning: major_warning.map(|text| {
+            prompt: Label::left_aligned(prompt, theme::firmware::TEXT_SMALL).vertically_centered(),
+            attempts: Label::centered(attempts, attempts_style).vertically_centered(),
+            warning: warning.map(|text| {
                 Label::left_aligned(text, theme::firmware::TEXT_SMALL).vertically_centered()
             }),
+            allow_cancel,
+            last_attempt,
             input: PinInput::new(),
             keypad: Keypad::new_numeric(true),
             warning_timer: Timer::new(),
@@ -135,15 +145,15 @@ impl Component for PinKeyboard<'_> {
         let (_, keypad_area) = bounds.split_bottom(KEYPAD_VISIBLE_HEIGHT);
         let (input_touch_area, _) = bounds.split_top(INPUT_TOUCH_HEIGHT);
 
+        let prompts_area = input_touch_area.inset(KEYBOARD_PROMPT_INSETS);
+        let (prompt_area, attempts_area) = prompts_area.split_right(Self::ATTEMPTS_WIDTH);
+
         // Prompts and PIN dots placement.
         self.input.place(input_touch_area);
-        self.major_prompt
-            .place(input_touch_area.inset(KEYBOARD_INPUT_INSETS));
-        self.minor_prompt
-            .place(input_touch_area.inset(KEYBOARD_INPUT_INSETS));
-        self.major_warning
-            .as_mut()
-            .map(|c| c.place(input_touch_area.inset(KEYBOARD_INPUT_INSETS)));
+        self.prompt.place(prompt_area);
+        // Remaining tries prompt
+        self.attempts.place(attempts_area);
+        self.warning.place(prompt_area);
 
         // Keypad placement
         self.keypad.place(keypad_area);
@@ -155,15 +165,15 @@ impl Component for PinKeyboard<'_> {
         match event {
             // Set up timer to switch off warning prompt.
             Event::Attach(_) => {
-                if self.major_warning.is_some() {
-                    self.warning_timer.start(ctx, Duration::from_secs(2));
+                if self.warning.is_some() {
+                    self.warning_timer.start(ctx, Self::MAJOR_WARNING_TIMEOUT);
                 }
                 // Update the keypad state in the first event
                 self.update_keypad_state(ctx);
             }
             // Hide warning, show major prompt.
             Event::Timer(_) if self.warning_timer.expire(event) => {
-                self.major_warning = None;
+                self.warning = None;
             }
 
             _ => {}
@@ -229,12 +239,12 @@ impl Component for PinKeyboard<'_> {
 
         // Render prompt when the pin is empty
         if empty {
-            if let Some(ref w) = self.major_warning {
+            if let Some(ref w) = self.warning {
                 w.render(target);
             } else {
-                self.major_prompt.render(target);
+                self.prompt.render(target);
             }
-            self.minor_prompt.render(target);
+            self.attempts.render(target);
         }
 
         // When the entire pin is shown, the input area might overlap the keypad so it
@@ -275,14 +285,12 @@ impl PinInput {
     const MAX_SHOWN_LEN: usize = 19; // max number of icons per line
 
     const TWITCH: i16 = 4;
-    const SHOWN_INSETS: Insets = Insets::new(12, 24, 12, 24);
-    const SHOWN_STYLE: TextStyle = theme::TEXT_REGULAR
-        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
-        .with_chunks(Chunks::new(1, 8));
+    const SHOWN_STYLE: TextStyle =
+        theme::TEXT_REGULAR.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+    const HIDDEN_STYLE: TextStyle = theme::TEXT_REGULAR;
     const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(200);
     const PIN_ICON: Icon = theme::ICON_DASH_VERTICAL;
-    const ICON_WIDTH: i16 = Self::PIN_ICON.toif.width();
-    const ICON_SPACE: i16 = 12;
+    const ICON_SPACING: i16 = 12;
 
     fn new() -> Self {
         Self {
@@ -294,11 +302,12 @@ impl PinInput {
         }
     }
 
-    fn size(&self) -> Offset {
+    fn width(&self) -> i16 {
         let ndots = self.pin().len().min(Self::MAX_SHOWN_LEN);
-        let mut width = Self::ICON_WIDTH * (ndots as i16);
-        width += Self::ICON_SPACE * (ndots.saturating_sub(1) as i16);
-        Offset::new(width, 6)
+        let mut width = Self::PIN_ICON.toif.width() * (ndots as i16);
+        // the last digit is wider than the icon so we count one extra space as well
+        width += Self::ICON_SPACING * (ndots as i16);
+        width
     }
 
     fn is_empty(&self) -> bool {
@@ -327,6 +336,20 @@ impl PinInput {
         &self.digits
     }
 
+    /// Adds spaces between characters. Output length is capped at 99 since
+    /// PIN_MAX_LEN is 50. Example: "12345" becomes "1 2 3 4 5"
+    /// TODO: Switch to ShortString if and when we can increase its size PR#4531
+    fn space_out_pin(pin: &str) -> String<99> {
+        let mut spaced_out_pin: String<99> = String::new();
+        for (i, c) in pin.chars().enumerate() {
+            unwrap!(spaced_out_pin.push(c));
+            if i < pin.len() - 1 {
+                unwrap!(spaced_out_pin.push(' '));
+            }
+        }
+        spaced_out_pin
+    }
+
     fn update_shown_area(&mut self) {
         // The area where the pin is shown
         let mut shown_area = self.area.inset(KEYBOARD_INPUT_INSETS);
@@ -334,8 +357,8 @@ impl PinInput {
         // Extend the shown area until the text fits
         while let LayoutFit::OutOfBounds { .. } = TextLayout::new(Self::SHOWN_STYLE)
             .with_align(Alignment::Start)
-            .with_bounds(shown_area.inset(Self::SHOWN_INSETS))
-            .fit_text(self.pin())
+            .with_bounds(shown_area.inset(SHOWN_INSETS))
+            .fit_text(&Self::space_out_pin(self.pin()))
         {
             shown_area =
                 shown_area.outset(Insets::bottom(Self::SHOWN_STYLE.text_font.line_height()));
@@ -348,26 +371,34 @@ impl PinInput {
         // Make sure the pin should be shown
         debug_assert_eq!(self.display_style, DisplayStyle::Shown);
 
+        let base_shown_area = self.area.inset(KEYBOARD_INPUT_INSETS);
+        let multiline_pin = self.shown_area.height() > base_shown_area.height();
+        let alignment = if multiline_pin {
+            // Multi-line pin is left aligned
+            Alignment::Start
+        } else {
+            Alignment::Center
+        };
+
         Bar::new(self.shown_area)
             .with_bg(theme::GREY_SUPER_DARK)
             .with_radius(KEYBOARD_INPUT_RADIUS)
             .render(target);
 
         TextLayout::new(Self::SHOWN_STYLE)
-            .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
-            .with_align(Alignment::Start)
-            .render_text(self.pin(), target, true);
+            .with_bounds(self.shown_area.inset(SHOWN_INSETS))
+            .with_align(alignment)
+            .render_text(&Self::space_out_pin(self.pin()), target, true);
     }
 
     fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {
         debug_assert_ne!(self.display_style, DisplayStyle::Shown);
 
         let hidden_area: Rect = self.area.inset(KEYBOARD_INPUT_INSETS);
-        let style = theme::TEXT_REGULAR;
         let pin_len = self.pin().len();
         let last_digit = self.display_style == DisplayStyle::LastOnly;
 
-        let mut cursor = self.size().snap(hidden_area.center(), Alignment2D::CENTER);
+        let mut cursor = hidden_area.center().ofs(Offset::x(self.width() / 2).neg());
 
         // Render only when there are characters
         if pin_len == 0 {
@@ -389,10 +420,10 @@ impl PinInput {
         for (i, &fg_color) in FADING_ICON_COLORS.iter().enumerate() {
             if pin_len > visible_len + (FADING_ICON_COUNT - 1 - i) {
                 ToifImage::new(cursor, Self::PIN_ICON.toif)
-                    .with_align(Alignment2D::TOP_LEFT)
+                    .with_align(Alignment2D::CENTER_LEFT)
                     .with_fg(fg_color)
                     .render(target);
-                cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
+                cursor.x += Self::ICON_SPACING + Self::PIN_ICON.toif.width();
                 char_idx += 1;
             }
         }
@@ -401,10 +432,10 @@ impl PinInput {
             // Classical icons
             for _ in char_idx..visible_icons {
                 ToifImage::new(cursor, Self::PIN_ICON.toif)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(style.text_color)
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .with_fg(Self::HIDDEN_STYLE.text_color)
                     .render(target);
-                cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
+                cursor.x += Self::ICON_SPACING + Self::PIN_ICON.toif.width();
             }
         }
 
@@ -412,14 +443,13 @@ impl PinInput {
             // This should not fail because pin_len > 0
             let last = &self.digits.as_str()[(pin_len - 1)..pin_len];
 
-            // Adapt x and y positions for the character
-            cursor.y = hidden_area.left_center().y + style.text_font.allcase_text_height() / 2;
-            cursor.x -= style.text_font.text_width(last) / 2 - Self::ICON_WIDTH / 2;
+            // Adapt y position for the character
+            cursor.y += Self::HIDDEN_STYLE.text_font.visible_text_height("1") / 2;
 
             // Paint the last character
-            Text::new(cursor, last, style.text_font)
+            Text::new(cursor, last, Self::HIDDEN_STYLE.text_font)
                 .with_align(Alignment::Start)
-                .with_fg(style.text_color)
+                .with_fg(Self::HIDDEN_STYLE.text_color)
                 .render(target);
         }
     }

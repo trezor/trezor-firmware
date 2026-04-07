@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -24,7 +26,6 @@
 #include <rtl/sizedefs.h>
 #include <sys/irq.h>
 #include <sys/trustzone.h>
-#include <util/image.h>
 
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
 
@@ -78,10 +79,10 @@ static void tz_configure_sau(void) {
   SET_REGION(1, NONSECURE_CODE_START,  NONSECURE_CODE_SIZE, 0);
   SET_REGION(2, ASSETS_START,          ASSETS_MAXSIZE,      0);
   SET_REGION(3, SGSTUBS_START,         SGSTUBS_SIZE,        1);
-  SET_REGION(4, NONSECURE_RAM_START,   NONSECURE_RAM_SIZE,  0);
-  SET_REGION(5, PERIPH_BASE_NS,        SIZE_256M,           0);
-  SET_REGION(6, GFXMMU_VIRTUAL_BUFFERS_BASE_NS, SIZE_16M,   0);
-  DIS_REGION(7);
+  SET_REGION(4, NONSECURE_RAM1_START,  NONSECURE_RAM1_SIZE, 0);
+  SET_REGION(5, NONSECURE_RAM2_START,  NONSECURE_RAM2_SIZE, 0);
+  SET_REGION(6, PERIPH_BASE_NS,        SIZE_256M,           0);
+  SET_REGION(7, GFXMMU_VIRTUAL_BUFFERS_BASE_NS, SIZE_16M,   0);
   // clang-format on
 
   SAU->CTRL = SAU_CTRL_ENABLE_Msk;
@@ -501,7 +502,8 @@ void tz_init(void) {
 
   // Make part of the FLASH and SRAM regions non-secure
   // so the kernel can access them
-  tz_set_sram_unsecure(NONSECURE_RAM_START, NONSECURE_RAM_SIZE, true);
+  tz_set_sram_unsecure(NONSECURE_RAM1_START, NONSECURE_RAM1_SIZE, true);
+  tz_set_sram_unsecure(NONSECURE_RAM2_START, NONSECURE_RAM2_SIZE, true);
   tz_set_flash_unsecure(NONSECURE_CODE_START, NONSECURE_CODE_SIZE, true);
   tz_set_flash_unsecure(ASSETS_START, ASSETS_MAXSIZE, true);
 
@@ -525,6 +527,22 @@ void tz_init(void) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_HASH, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 
+  // Set RAMCFG as secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_RAMCFG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  // Set WWDG as secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_WWDG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  // Set CACHE registers as secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_ICACHE_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_DCACHE1_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_DCACHE2_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
   // Set all interrupts as non-secure
   for (int i = 0; i < 512; i++) {
     NVIC_SetTargetState(i);
@@ -533,11 +551,43 @@ void tz_init(void) {
   // Set GTZC interrupt as secure
   NVIC_ClearTargetState(GTZC_IRQn);
 
+  // System Configuration Controller accessible only from secure mode
+  SYSCFG->SECCFGR |= SYSCFG_SECCFGR_FPUSEC | SYSCFG_SECCFGR_CLASSBSEC |
+                     SYSCFG_SECCFGR_SYSCFGSEC;
+
+  // Disable chaching of SRAM in DCACHE2 (used only by GPU which we do not use)
+  SYSCFG->CFGR1 &= ~SYSCFG_CFGR1_SRAMCACHED;
+
+  // All RCC peripherals secure by default
+  const uint32_t RCC_SECCFGR_ALL_BITS =
+      RCC_SECCFGR_HSISEC | RCC_SECCFGR_HSESEC | RCC_SECCFGR_MSISEC |
+      RCC_SECCFGR_LSISEC | RCC_SECCFGR_LSESEC | RCC_SECCFGR_SYSCLKSEC |
+      RCC_SECCFGR_PRESCSEC | RCC_SECCFGR_PLL1SEC | RCC_SECCFGR_PLL2SEC |
+      RCC_SECCFGR_PLL3SEC | RCC_SECCFGR_ICLKSEC | RCC_SECCFGR_HSI48SEC |
+      RCC_SECCFGR_RMVFSEC;
+
+  // RCC should be accessible only from secure/privileged mode
+  // (only exceptions is PLL3 used for display deriver, which is non-secure)
+  RCC->SECCFGR |= RCC_SECCFGR_ALL_BITS;  // All secure
+  RCC->SECCFGR &= ~RCC_SECCFGR_PLL3SEC;  // PLL3 non-secure
+  RCC->PRIVCFGR |= RCC_PRIVCFGR_SPRIV | RCC_PRIVCFGR_NSPRIV;
+
+  const uint32_t PWR_SECCFGR_ALL_BITS =
+      PWR_SECCFGR_WUP1SEC | PWR_SECCFGR_WUP2SEC | PWR_SECCFGR_WUP3SEC |
+      PWR_SECCFGR_WUP4SEC | PWR_SECCFGR_WUP5SEC | PWR_SECCFGR_WUP6SEC |
+      PWR_SECCFGR_WUP7SEC | PWR_SECCFGR_WUP8SEC | PWR_SECCFGR_LPMSEC |
+      PWR_SECCFGR_VDMSEC | PWR_SECCFGR_VBSEC | PWR_SECCFGR_APCSEC;
+
+  // PWR should be accessible only from secure/privileged mode
+  PWR->SECCFGR |= PWR_SECCFGR_ALL_BITS;  // All secure
+  PWR->PRIVCFGR |= PWR_PRIVCFGR_NSPRIV | PWR_PRIVCFGR_SPRIV;
+
   // Make GPDMA1 non-secure & privilege mode
-  // Channel 12 is secure, all others are non-secure
+  // Channel 12 (used for hash processor) is secure, all others are non-secure
 
   __HAL_RCC_GPDMA1_CLK_ENABLE();
-  GPDMA1->SECCFGR &= ~0xEFFF;
+  GPDMA1->SECCFGR &= ~0xFFFF;
+  GPDMA1->SECCFGR |= (1 << 12);
   GPDMA1->PRIVCFGR |= 0xFFFF;
 
   // Enable all GPIOS and make them non-secure & privileged
@@ -566,6 +616,15 @@ void tz_init(void) {
   GPIOI->SECCFGR &= ~0xFFFF;
 #ifdef GPIOJ
   GPIOJ->SECCFGR &= ~0xFFFF;
+#endif
+
+#ifdef USE_HW_REVISION
+  HW_REVISION_0_PORT->SECCFGR |= HW_REVISION_0_PIN;
+  HW_REVISION_1_PORT->SECCFGR |= HW_REVISION_1_PIN;
+  HW_REVISION_2_PORT->SECCFGR |= HW_REVISION_2_PIN;
+#ifdef HW_REVISION_3_PIN
+  HW_REVISION_3_PORT->SECCFGR |= HW_REVISION_3_PIN;
+#endif
 #endif
 
 #ifdef USE_TAMPER
@@ -600,13 +659,16 @@ void tz_init(void) {
       TROPIC01_SPI_GTZC_PERIPH, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 #endif
 
-  // Set all clocks except (TODO!@#) non-secure & privileged
-
-  RCC->SECCFGR |= RCC_SECCFGR_LSESEC | RCC_SECCFGR_LSISEC;  // !@# improve
-  // todo: PLL3 - display - non-secure
-  // Access to RCC only from privileged mode
-  RCC->PRIVCFGR |= RCC_PRIVCFGR_SPRIV | RCC_PRIVCFGR_NSPRIV;
-
   tz_enable_illegal_access_interrupt();
+
+  // Lock SAU configuration & AIRCR register against further modifications
+  SYSCFG->CSLCKR |= SYSCFG_CSLCKR_LOCKSAU | SYSCFG_CSLCKR_LOCKSVTAIRCR;
+
+  // Lock GTZC peripheral attributes against further modifications
+  GTZC_TZSC1->CR |= GTZC_TZSC_CR_LCK_Msk;
+  GTZC_TZSC2->CR |= GTZC_TZSC_CR_LCK_Msk;
 }
+
 #endif  // SECMON
+
+#endif  // KERNEL_MODE

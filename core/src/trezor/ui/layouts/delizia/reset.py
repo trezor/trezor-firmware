@@ -6,7 +6,7 @@ from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
 from ..common import interact
-from . import raise_if_cancelled, show_success
+from . import raise_if_not_confirmed, show_success
 
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
@@ -37,7 +37,7 @@ def show_share_words(
     assert len(instructions) < 3
     text_confirm = TR.reset__words_written_down_template.format(words_count)
 
-    return raise_if_cancelled(
+    return raise_if_not_confirmed(
         trezorui_api.show_share_words_extended(
             words=share_words,
             subtitle=subtitle,
@@ -282,9 +282,8 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
     )
 
 
-async def show_intro_backup(single_share: bool, num_of_words: int | None) -> None:
-    if single_share:
-        assert num_of_words is not None
+async def show_intro_backup(num_of_words: int | None) -> None:
+    if num_of_words is not None:
         description = TR.backup__info_single_share_backup.format(num_of_words)
     else:
         description = TR.backup__info_multi_share_backup
@@ -327,7 +326,7 @@ def show_reset_warning(
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
-    return raise_if_cancelled(
+    return raise_if_not_confirmed(
         trezorui_api.show_warning(
             title=subheader or "",
             description=content,

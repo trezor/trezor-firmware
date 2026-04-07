@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import logging
 import shutil
+import typing as t
 from contextlib import contextmanager
-from typing import Callable, Generator
 
 import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
+
+LOG = logging.getLogger(__name__)
 
 from . import common
 from .common import SCREENS_DIR, UI_TESTS_DIR, TestCase, TestResult
@@ -37,8 +40,10 @@ def _process_tested(result: TestResult, item: Node) -> None:
 
 @contextmanager
 def screen_recording(
-    client: Client, request: pytest.FixtureRequest
-) -> Generator[None, None, None]:
+    client: Client,
+    request: pytest.FixtureRequest,
+    client_callback: t.Callable[[], Client] | None = None,
+) -> t.Generator[None, None, None]:
     test_ui = request.config.getoption("ui")
     if not test_ui:
         yield
@@ -51,16 +56,21 @@ def screen_recording(
     shutil.rmtree(testcase.actual_dir, ignore_errors=True)
     testcase.actual_dir.mkdir()
 
+    # Make sure the device is ready - otherwise, the next `DebugLinkRecordScreen` request
+    # may be lost due to an event loop restart.
+    client.sync_responses()
     try:
+        # reseed right before recording to ensure consistent randomness.
+        client.debug.reseed(0)
         client.debug.start_recording(str(testcase.actual_dir))
         yield
     finally:
-        client.ensure_open()
+        if client_callback:
+            client = client_callback()
+
+        # Wait for response, which gives the emulator time to catch up and redraw the homescreen.
+        # Otherwise there's a race condition between that and stopping recording.
         client.sync_responses()
-        # Wait for response to Initialize, which gives the emulator time to catch up
-        # and redraw the homescreen. Otherwise there's a race condition between that
-        # and stopping recording.
-        client.init_device()
         client.debug.stop_recording()
 
     result = testcase.build_result(request)
@@ -110,7 +120,7 @@ def _should_write_ui_report(exitstatus: pytest.ExitCode) -> bool:
 
 
 def terminal_summary(
-    println: Callable[[str], None],
+    println: t.Callable[[str], None],
     ui_option: str,
     check_missing: bool,
     exitstatus: pytest.ExitCode,

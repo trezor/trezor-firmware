@@ -24,13 +24,17 @@
 
 #include <io/usb.h>
 #include <sec/random_delays.h>
+#include <sys/irq.h>
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
+
+#ifdef USE_POWER_MANAGER
+#include <io/power_manager.h>
+#endif
 
 #include "usb_internal.h"
 
 #define USB_MAX_CONFIG_DESC_SIZE 256
-#define USB_MAX_STR_SIZE 62
 #define USB_MAX_STR_DESC_SIZE (USB_MAX_STR_SIZE * 2 + 2)
 
 #if defined(USE_USB_FS)
@@ -44,10 +48,10 @@
 #endif
 
 typedef struct {
-  const char *manufacturer;
-  const char *product;
-  const char *serial_number;
-  const char *interface;
+  char manufacturer[USB_MAX_STR_SIZE + 1];
+  char product[USB_MAX_STR_SIZE + 1];
+  char serial_number[USB_MAX_STR_SIZE + 1];
+  char interface[USB_MAX_STR_SIZE + 1];
 } usb_dev_string_table_t;
 
 typedef struct {
@@ -89,6 +93,8 @@ typedef struct {
   uint32_t ready_time;
   // Set to `sectrue` if the USB stack was ready sinced the last start
   secbool was_ready;
+  // Old state configured
+  bool was_configured;
 
   // Task local storage for USB driver
   usb_driver_tls_t tls[SYSTASK_MAX_TASKS];
@@ -104,12 +110,6 @@ static usb_driver_t g_usb_driver = {
 static const USBD_ClassTypeDef usb_class;
 static const USBD_DescriptorsTypeDef usb_descriptors;
 static const syshandle_vmt_t g_usb_handle_vmt;
-
-static secbool __wur check_desc_str(const char *s) {
-  if (NULL == s) return secfalse;
-  if (strlen(s) > USB_MAX_STR_SIZE) return secfalse;
-  return sectrue;
-}
 
 secbool usb_init(const usb_dev_info_t *dev_info) {
   usb_driver_t *drv = &g_usb_driver;
@@ -146,23 +146,12 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   drv->dev_desc.bNumConfigurations = 1;
 
   // String table
-  if (sectrue != check_desc_str(dev_info->manufacturer)) {
-    return secfalse;
-  }
-  if (sectrue != check_desc_str(dev_info->product)) {
-    return secfalse;
-  }
-  if (sectrue != check_desc_str(dev_info->serial_number)) {
-    return secfalse;
-  }
-  if (sectrue != check_desc_str(dev_info->interface)) {
-    return secfalse;
-  }
-
-  drv->str_table.manufacturer = dev_info->manufacturer;
-  drv->str_table.product = dev_info->product;
-  drv->str_table.serial_number = dev_info->serial_number;
-  drv->str_table.interface = dev_info->interface;
+  strncpy(drv->str_table.manufacturer, dev_info->manufacturer,
+          USB_MAX_STR_SIZE);
+  strncpy(drv->str_table.product, dev_info->product, USB_MAX_STR_SIZE);
+  strncpy(drv->str_table.serial_number, dev_info->serial_number,
+          USB_MAX_STR_SIZE);
+  strncpy(drv->str_table.interface, dev_info->interface, USB_MAX_STR_SIZE);
 
   drv->config_desc = (usb_config_descriptor_t *)(drv->desc_buffer);
 
@@ -205,7 +194,7 @@ void usb_deinit(void) {
   drv->initialized = secfalse;
 }
 
-secbool usb_start(void) {
+secbool usb_start(const usb_start_params_t *params) {
   usb_driver_t *drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
@@ -215,7 +204,23 @@ secbool usb_start(void) {
 
   if (drv->dev_handle.dev_state != USBD_STATE_UNINITIALIZED) {
     // The driver has been started already
-    return sectrue;
+    if (params != NULL &&
+        (drv->usb21_landing != params->usb21_landing ||
+         strncmp(drv->str_table.serial_number, params->serial_number,
+                 USB_MAX_STR_SIZE) != 0)) {
+      // If the USB 2.1 landing or serial number has changed, we need to stop
+      // and restart the driver.
+      usb_stop();
+    } else {
+      // The driver is already started and the settings are the same.
+      return sectrue;
+    }
+  }
+
+  if (params != NULL) {
+    drv->usb21_landing = params->usb21_landing;
+    strncpy(drv->str_table.serial_number, params->serial_number,
+            USB_MAX_STR_SIZE);
   }
 
   drv->was_ready = secfalse;
@@ -275,41 +280,65 @@ static secbool usb_configured(void) {
     return secfalse;
   }
 
-  secbool powered_from_usb = sectrue;  // TODO
+#ifdef USE_POWER_MANAGER
+  secbool powered_from_usb = secfalse;
+#else
+  secbool powered_from_usb = sectrue;
+#endif
 
   secbool ready = secfalse;
 
   if (pdev->dev_state == USBD_STATE_CONFIGURED) {
     // USB is configured, ready to transfer data
     ready = sectrue;
-  } else if (pdev->dev_state == USBD_STATE_SUSPENDED &&
-             pdev->dev_old_state == USBD_STATE_CONFIGURED) {
+    drv->was_configured = true;
+  } else if (pdev->dev_state == USBD_STATE_SUSPENDED && drv->was_configured) {
     // USB is suspended, but was configured before
     //
     // Linux has autosuspend device after 2 seconds by default.
     // So a suspended device that was seen as configured is reported as
     // configured.
-    //
+
+#ifdef USE_POWER_MANAGER
+    pm_state_t state = {0};
+    pm_status_t status = pm_get_state(&state);
+
+    if (status == PM_OK && state.usb_connected) {
+      ready = sectrue;
+    }
+#else
     ready = sectrue;
+#endif
+
   } else if ((drv->was_ready == secfalse) && (powered_from_usb == sectrue)) {
     // First run after the startup with USB power
     drv->was_ready = sectrue;
     ready = sectrue;
   }
 
-  // This is a workaround to handle the glitches in the USB connection,
-  // especially for USB-powered-only devices. This should be
-  // revisited and probably fixed elsewhere.
+  uint32_t now = hal_ticks_ms();
 
-  uint32_t ticks = hal_ticks_ms();
+  if (sectrue == powered_from_usb) {
+    if (ready == sectrue) {
+      irq_key_t irq_key = irq_lock();
+      drv->ready_time = now;
+      irq_unlock(irq_key);
+    } else {
+      // This is a workaround to handle the glitches in the USB connection,
+      // especially for USB-powered-only devices. This should be
+      // revisited and probably fixed elsewhere.
 
-  if (ready == sectrue) {
-    drv->ready_time = ticks;
-  } else if ((drv->was_ready == sectrue) && (ticks - drv->ready_time) < 2000) {
-    // NOTE: When the timer overflows the timeout is shortened.
-    //       We are ignoring it for now.
-    ready = sectrue;
+      irq_key_t irq_key = irq_lock();
+      bool ready_recently = (int32_t)(now - drv->ready_time) < 2000;
+      irq_unlock(irq_key);
+
+      if ((drv->was_ready == sectrue) && ready_recently) {
+        ready = sectrue;
+      }
+    }
   }
+
+  drv->was_configured = sectrue == ready;
 
   return ready;
 }
@@ -729,6 +758,8 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
 
 static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
   usb_driver_t *drv = &g_usb_driver;
+
+  drv->ready_time = hal_ticks_ms();
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     usb_iface_t *iface = &drv->ifaces[i];

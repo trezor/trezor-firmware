@@ -29,6 +29,10 @@
 #include "wire/wire_iface_ble.h"
 #include "workflow.h"
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 static bool encode_pairing_code(uint32_t code, uint8_t *outbuf) {
   if (code > 999999) {
     return false;
@@ -40,8 +44,9 @@ static bool encode_pairing_code(uint32_t code, uint8_t *outbuf) {
   return true;
 }
 
-workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
-                                               const image_header *const hdr) {
+workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw) {
+  ble_set_enabled(true);
+
   if (!ble_iface_start_pairing()) {
     return WF_OK_PAIRING_FAILED;
   }
@@ -49,13 +54,17 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   char name[BLE_ADV_NAME_LEN + 1] = {0};
   ble_get_advertising_name(name, sizeof(name));
 
-  c_layout_t layout;
-  memset(&layout, 0, sizeof(layout));
-  screen_pairing_mode(ui_get_initial_setup(), name, strlen(name), &layout);
+#ifdef USE_RGB_LED
+  rgb_led_effect_start(RGB_LED_EFFECT_PAIRING, 0);
+#endif
 
   uint32_t code = 0;
   workflow_result_t res =
-      workflow_host_control(vhdr, hdr, &layout, &code, NULL);
+      screen_pairing_mode(ui_get_initial_setup(), name, strlen(name), &code);
+
+#ifdef USE_RGB_LED
+  rgb_led_effect_stop();
+#endif
 
   if (res != WF_OK_UI_ACTION) {
     ble_iface_end_pairing();
@@ -72,19 +81,11 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   uint8_t pairing_code[BLE_PAIRING_CODE_LEN] = {0};
 
   if (result != CONFIRM || !encode_pairing_code(code, pairing_code)) {
-    ble_command_t cmd = {
-        .cmd_type = BLE_REJECT_PAIRING,
-    };
-    ble_issue_command(&cmd);
+    ble_iface_end_pairing();
     return WF_OK_PAIRING_FAILED;
   }
 
-  ble_command_t cmd = {
-      .cmd_type = BLE_ALLOW_PAIRING,
-      .data_len = sizeof(pairing_code),
-  };
-  memcpy(cmd.data.raw, pairing_code, sizeof(pairing_code));
-  ble_issue_command(&cmd);
+  ble_allow_pairing(pairing_code);
 
   bool skip_finalization = false;
 
@@ -111,30 +112,37 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
       return WF_OK_PAIRING_FAILED;
     }
     if (r == PAIRING_FINALIZATION_CANCEL) {
-      ble_command_t disconnect = {.cmd_type = BLE_DISCONNECT};
-      ble_issue_command(&disconnect);
+      ble_disconnect();
       ble_iface_end_pairing();
       return WF_OK_PAIRING_FAILED;
     }
   }
 
+  ble_set_name((const uint8_t *)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
   return WF_OK_PAIRING_COMPLETED;
 }
 
-workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
-                                          const image_header *const hdr,
+workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
                                           protob_ios_t *ios) {
-  ble_iface_start_pairing();
+  ble_set_enabled(true);
+
+  if (!ble_iface_start_pairing()) {
+    return WF_OK_PAIRING_FAILED;
+  }
 
   char name[BLE_ADV_NAME_LEN + 1] = {0};
   ble_get_advertising_name(name, sizeof(name));
 
-  c_layout_t layout;
-  memset(&layout, 0, sizeof(layout));
-  screen_wireless_setup(name, strlen(name), &layout);
+#ifdef USE_RGB_LED
+  rgb_led_effect_start(RGB_LED_EFFECT_PAIRING, 0);
+#endif
 
   uint32_t code = 0;
-  workflow_result_t res = workflow_host_control(vhdr, hdr, &layout, &code, ios);
+  workflow_result_t res = screen_wireless_setup(name, strlen(name), &code);
+
+#ifdef USE_RGB_LED
+  rgb_led_effect_stop();
+#endif
 
   if (res != WF_OK_UI_ACTION) {
     ble_iface_end_pairing();
@@ -151,19 +159,11 @@ workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
   uint8_t pairing_code[BLE_PAIRING_CODE_LEN] = {0};
 
   if (result != CONFIRM || !encode_pairing_code(code, pairing_code)) {
-    ble_command_t cmd = {
-        .cmd_type = BLE_REJECT_PAIRING,
-    };
-    ble_issue_command(&cmd);
+    ble_iface_end_pairing();
     return WF_OK_PAIRING_FAILED;
   }
 
-  ble_command_t cmd = {
-      .cmd_type = BLE_ALLOW_PAIRING,
-      .data_len = sizeof(pairing_code),
-  };
-  memcpy(cmd.data.raw, pairing_code, sizeof(pairing_code));
-  ble_issue_command(&cmd);
+  ble_allow_pairing(pairing_code);
 
   bool skip_finalization = false;
 
@@ -190,13 +190,13 @@ workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
       return WF_OK_PAIRING_FAILED;
     }
     if (r == PAIRING_FINALIZATION_CANCEL) {
-      ble_command_t disconnect = {.cmd_type = BLE_DISCONNECT};
-      ble_issue_command(&disconnect);
+      ble_disconnect();
       ble_iface_end_pairing();
       return WF_OK_PAIRING_FAILED;
     }
   }
 
+  ble_set_name((const uint8_t *)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
   return WF_OK_PAIRING_COMPLETED;
 }
 

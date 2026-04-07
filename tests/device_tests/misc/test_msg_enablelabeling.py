@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import misc
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 
 from ... import translations as TR
 from ...common import MNEMONIC12
@@ -35,10 +35,11 @@ def test_encrypt(client: Client):
         client.debug.swipe_up()
         client.debug.press_yes()
 
-    with client:
+    session = client.get_session()
+    with session.test_ctx as client:
         client.set_input_flow(input_flow())
         misc.encrypt_keyvalue(
-            client,
+            session,
             [],
             "Enable labeling?",
             b"",

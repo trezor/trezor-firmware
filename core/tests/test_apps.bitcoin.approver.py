@@ -1,4 +1,5 @@
-from common import H_, await_result, unittest  # isort:skip
+# flake8: noqa: F403,F405
+from common import *  # isort:skip
 
 import storage.cache_codec
 from trezor import wire
@@ -11,8 +12,6 @@ from trezor.messages import (
     TxInput,
     TxOutput,
 )
-from trezor.wire import context
-from trezor.wire.codec.codec_context import CodecContext
 
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
@@ -21,13 +20,7 @@ from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
 
 
-class TestApprover(unittest.TestCase):
-
-    def setUpClass(self):
-        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-
-    def tearDownClass(self):
-        context.CURRENT_CONTEXT = None
+class TestApprover(TestCaseWithContext):
 
     def setUp(self):
         self.coin = coins.by_name("Bitcoin")
@@ -54,7 +47,8 @@ class TestApprover(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDTAPROOT,
         )
-        storage.cache_codec.start_session()
+        if not utils.USE_THP:
+            storage.cache_codec.start_session()
 
     def make_coinjoin_request(self, inputs):
         return CoinJoinRequest(

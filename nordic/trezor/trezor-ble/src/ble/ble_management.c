@@ -23,6 +23,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/types.h>
 
+#include <zephyr/bluetooth/services/bas.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/crc.h>
 
@@ -60,6 +61,9 @@ void ble_management_send_status_event(void) {
   msg.app_version = 0;
   msg.bld_version = 0;
   msg.busy_flag = ble_get_busy_flag();
+  msg.flags.bonded_connection = connection_is_bonded();
+  msg.flags.high_speed = connection_is_high_speed();
+  msg.flags.reserved = 0;
 
   if (connected) {
     memcpy(msg.connected_addr, bt_conn_get_dst(conn)->a.val, BT_ADDR_SIZE);
@@ -68,6 +72,8 @@ void ble_management_send_status_event(void) {
     memset(msg.connected_addr, 0, BT_ADDR_SIZE);
     msg.connected_addr_type = 0;
   }
+
+  msg.power_level = ble_get_tx_power();
 
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&msg, sizeof(msg));
 }
@@ -123,6 +129,28 @@ static void management_send_mac(uint8_t *mac) {
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
+static void management_send_bonds(void) {
+  bt_addr_le_t addr_list[CONFIG_BT_MAX_PAIRED] = {0};
+  size_t bond_count = bonds_get_all(addr_list, CONFIG_BT_MAX_PAIRED);
+
+  uint8_t tx_data[1 + (CONFIG_BT_MAX_PAIRED * (1 + BT_ADDR_SIZE))] = {0};
+
+  tx_data[0] = INTERNAL_EVENT_BOND_LIST;
+  tx_data[1] = bond_count;
+  for (size_t i = 0; i < bond_count; i++) {
+    tx_data[2 + i * (1 + BT_ADDR_SIZE)] = addr_list[i].type;
+    memcpy(&tx_data[2 + i * (1 + BT_ADDR_SIZE) + 1], addr_list[i].a.val,
+           BT_ADDR_SIZE);
+  }
+
+  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)tx_data,
+                    sizeof(tx_data));
+}
+
+static void management_update_battery(uint8_t level) {
+  bt_bas_set_battery_level(level);
+}
+
 static void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
   bool success = true;
@@ -137,12 +165,13 @@ static void process_command(uint8_t *data, uint16_t len) {
 
       int name_len = strnlen(cmd->name, BLE_ADV_NAME_LEN);
 
-      if (cmd->whitelist != 0) {
+      if (cmd->flags.whitelist != 0) {
         pairing_num_comp_reply(false, NULL);
       }
 
-      advertising_start(cmd->whitelist != 0, cmd->color, cmd->device_code,
-                        cmd->static_addr, (char *)cmd->name, name_len);
+      advertising_start(cmd->flags.whitelist != 0, cmd->flags.user_disconnect,
+                        cmd->color, cmd->device_code, cmd->static_addr,
+                        (char *)cmd->name, name_len);
     } break;
     case INTERNAL_CMD_ADVERTISING_OFF:
       advertising_stop();
@@ -164,7 +193,13 @@ static void process_command(uint8_t *data, uint16_t len) {
       pairing_num_comp_reply(false, NULL);
       break;
     case INTERNAL_CMD_UNPAIR:
-      success = bonds_erase_current();
+      if (len < (1 + sizeof(bt_addr_le_t))) {
+        success = bonds_erase_current();
+      } else {
+        bt_addr_le_t addr;
+        memcpy(&addr, &data[1], sizeof(addr));
+        success = bonds_erase_device(&addr);
+      }
       break;
     case INTERNAL_CMD_GET_MAC: {
       uint8_t mac[BT_ADDR_SIZE] = {0};
@@ -174,7 +209,31 @@ static void process_command(uint8_t *data, uint16_t len) {
     } break;
     case INTERNAL_CMD_SET_BUSY: {
       ble_set_busy_flag(data[1]);
-    }
+    } break;
+    case INTERNAL_CMD_GET_BOND_LIST: {
+      management_send_bonds();
+    } break;
+    case INTERNAL_CMD_SET_SPEED_HIGH: {
+      connection_set_high_speed();
+    } break;
+    case INTERNAL_CMD_SET_SPEED_LOW: {
+      connection_set_low_speed();
+    } break;
+    case INTERNAL_CMD_NOTIFY: {
+      struct bt_conn *conn = connection_get_current();
+      if (conn != NULL) {
+        service_notify(conn, &data[1], len - 1);
+      }
+    } break;
+    case INTERNAL_CMD_BATTERY_UPDATE: {
+      management_update_battery(data[1]);
+    } break;
+    case INTERNAL_CMD_SET_TX_POWER: {
+      int8_t tx_power = (int8_t)data[1];
+      if (ble_set_tx_power(tx_power) != 0) {
+        success = false;
+      }
+    } break;
     default:
       break;
   }
@@ -201,5 +260,5 @@ void ble_management_thread(void) {
   }
 }
 
-K_THREAD_DEFINE(ble_management_thread_id, CONFIG_DEFAULT_THREAD_STACK_SIZE,
-                ble_management_thread, NULL, NULL, NULL, 7, 0, 0);
+K_THREAD_DEFINE(ble_management_thread_id, 2048, ble_management_thread, NULL,
+                NULL, NULL, 7, 0, 0);

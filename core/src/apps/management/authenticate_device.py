@@ -7,7 +7,6 @@ if TYPE_CHECKING:
 async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     from trezor import TR, utils, wire
     from trezor.crypto import optiga
-    from trezor.crypto.der import read_length
     from trezor.crypto.hashlib import sha256
     from trezor.loop import sleep
     from trezor.messages import AuthenticityProof
@@ -15,6 +14,7 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     from trezor.ui.layouts.progress import progress
     from trezor.utils import BufferReader, bootloader_locked
 
+    from apps.common.certificates import parse_cert_chain
     from apps.common.writers import write_compact_size
 
     if not bootloader_locked():
@@ -29,30 +29,37 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     )
 
     header = b"AuthenticateDevice:"
-    h = utils.HashWriter(sha256())
-    write_compact_size(h, len(header))
-    h.extend(header)
-    write_compact_size(h, len(msg.challenge))
-    h.extend(msg.challenge)
+    challenge_bytes = utils.empty_bytearray(1 + len(header) + 1 + len(msg.challenge))
+    write_compact_size(challenge_bytes, len(header))
+    challenge_bytes.extend(header)
+    write_compact_size(challenge_bytes, len(msg.challenge))
+    challenge_bytes.extend(msg.challenge)
 
     spinner = progress(TR.progress__authenticity_check)
     spinner.report(0)
 
     try:
-        signature = optiga.sign(optiga.DEVICE_ECC_KEY_INDEX, h.get_digest())
+        optiga_signature = optiga.sign(
+            optiga.DEVICE_ECC_KEY_INDEX, sha256(challenge_bytes).digest()
+        )
     except optiga.SigningInaccessible:
-        raise wire.ProcessError("Signing inaccessible.")
+        raise wire.ProcessError("Optiga signing inaccessible.")
 
-    certificates = []
     r = BufferReader(optiga.get_certificate(optiga.DEVICE_CERT_INDEX))
-    while r.remaining_count() > 0:
-        cert_begin = r.offset
-        if r.get() != 0x30:
-            wire.FirmwareError("Device certificate is corrupted.")
-        n = read_length(r)
-        cert_len = r.offset - cert_begin + n
-        r.seek(cert_begin)
-        certificates.append(r.read_memoryview(cert_len))
+    optiga_certificates = parse_cert_chain(r)
+
+    tropic_certificates = None
+    tropic_signature = None
+    if utils.USE_TROPIC:
+        from trezor.crypto import tropic
+
+        try:
+            tropic_signature = tropic.sign(tropic.DEVICE_KEY_SLOT, challenge_bytes)
+        except tropic.TropicError:
+            raise wire.ProcessError("Tropic signing failed.")
+
+        r = BufferReader(tropic.get_user_data(tropic.DEVICE_CERT_INDEX))
+        tropic_certificates = parse_cert_chain(r)
 
     if not utils.DISABLE_ANIMATION:
         frame_delay = sleep(60)
@@ -63,6 +70,8 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
         spinner.report(1000)
 
     return AuthenticityProof(
-        certificates=certificates,
-        signature=signature,
+        optiga_certificates=optiga_certificates,
+        optiga_signature=optiga_signature,
+        tropic_certificates=tropic_certificates,
+        tropic_signature=tropic_signature,
     )

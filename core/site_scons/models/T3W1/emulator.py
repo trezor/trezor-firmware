@@ -18,7 +18,9 @@ def configure(
     hw_revision = 0
     mcu = "STM32U5G9xx"
 
-    unix_common_files(env, defines, sources, paths)
+    features_available += unix_common_files(
+        env, features_wanted, defines, sources, paths
+    )
 
     defines += [
         "FRAMEBUFFER",
@@ -44,6 +46,15 @@ def configure(
         ("FLASH_BLOCK_WORDS", "1"),
     ]
 
+    paths += ["embed/sec/secret/inc"]
+    sources += ["embed/sec/secret/unix/secret.c"]
+    defines += [("USE_SECRET", "1")]
+
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/unix/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
+
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/unix/sbu.c"]
         paths += ["embed/io/sbu/inc"]
@@ -66,28 +77,35 @@ def configure(
         sources += [
             "embed/sec/tropic/tropic.c",
             "embed/sec/tropic/unix/tropic01.c",
+            "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_aesgcm.c",
+            "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_common.c",
+            "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_hmac_sha256.c",
+            "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_sha256.c",
+            "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_x25519.c",
+            "vendor/libtropic/hal/posix/tcp/libtropic_port_posix_tcp.c",
             "vendor/libtropic/src/libtropic.c",
+            "vendor/libtropic/src/libtropic_l2.c",
+            "vendor/libtropic/src/libtropic_l3.c",
+            "vendor/libtropic/src/lt_asn1_der.c",
             "vendor/libtropic/src/lt_crc16.c",
             "vendor/libtropic/src/lt_hkdf.c",
             "vendor/libtropic/src/lt_l1.c",
-            "vendor/libtropic/src/lt_l1_port_wrap.c",
-            "vendor/libtropic/src/lt_l2.c",
             "vendor/libtropic/src/lt_l2_frame_check.c",
-            "vendor/libtropic/src/lt_l3.c",
-            "vendor/libtropic/src/lt_random.c",
-            "vendor/libtropic/hal/port/unix/lt_port_unix_tcp.c",
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_aesgcm.c",
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_ed25519.c",
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_sha256.c",
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_x25519.c",
+            "vendor/libtropic/src/lt_l3_process.c",
+            "vendor/libtropic/src/lt_port_wrap.c",
+            "vendor/libtropic/src/lt_tr01_attrs.c",
         ]
         paths += ["embed/sec/tropic/inc"]
         paths += ["vendor/libtropic/include"]
         paths += ["vendor/libtropic/src"]
-        defines += ["USE_TREZOR_CRYPTO"]
-        defines += [("LT_USE_TREZOR_CRYPTO", "1")]
+
         features_available.append("tropic")
         defines += [("USE_TROPIC", "1")]
+        defines += [("LT_USE_TREZOR_CRYPTO", "1")]
+        defines += [("LT_HELPERS", "1")]
+
+        paths += ["vendor/libtropic/TROPIC01_fw_update_files/boot_v_1_0_1/fw_v_1_0_0"]
+        defines += [("ABAB", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/unix/touch.c"]
@@ -102,6 +120,10 @@ def configure(
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
 
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/touch/touch_debug.c"]
+            sources += ["embed/io/button/button_debug.c"]
+
     if "ble" in features_wanted:
         sources += ["embed/io/ble/unix/ble.c"]
         paths += ["embed/io/ble/inc"]
@@ -109,23 +131,32 @@ def configure(
         defines += [("USE_BLE", "1")]
 
     sources += [
-        "embed/sys/power_manager/unix/power_manager.c",
+        "embed/io/power_manager/unix/power_manager.c",
     ]
     defines += [("USE_POWER_MANAGER", "1")]
-    paths += ["embed/sys/power_manager/inc"]
+    paths += ["embed/io/power_manager/inc"]
     features_available.append("power_manager")
 
-    paths += ["embed/sys/suspend/inc"]
+    sources += ["embed/sec/telemetry/unix/telemetry.c"]
+    paths += ["embed/sec/telemetry/inc"]
+    defines += [("USE_TELEMETRY", "1")]
+    features_available.append("telemetry")
+
+    paths += ["embed/io/suspend/inc"]
 
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 
-    sources += ["embed/util/flash/stm32u5/flash_layout.c"]
+    sources += ["embed/sys/flash/stm32u5/flash_layout.c"]
 
     defines += ["USE_HW_JPEG_DECODER"]
     features_available.append("hw_jpeg_decoder")
     sources += [
-        "embed/gfx/jpegdec/unix/jpegdec.c",
+        "embed/io/gfx/jpegdec/unix/jpegdec.c",
     ]
+
+    if "serial_number" in features_wanted:
+        defines += [("USE_SERIAL_NUMBER", "1")]
+        features_available.append("serial_number")
 
     return features_available

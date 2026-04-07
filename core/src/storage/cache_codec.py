@@ -6,6 +6,7 @@ from storage.cache_common import DataCache
 from trezor import utils
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import TypeVar
 
     T = TypeVar("T")
@@ -70,7 +71,6 @@ def initialize() -> None:
     # sized bytearrays, then call `clear()` on all existing objects, which
     # resets them to zero length. The `clear()` function uses `arr[:]`, which
     # allocates a slice.
-    global _SESSIONS
     for _ in range(_MAX_SESSIONS_COUNT):
         _SESSIONS.append(SessionCache())
 
@@ -88,7 +88,7 @@ def get_active_session() -> SessionCache | None:
     return _SESSIONS[_active_session_idx]
 
 
-def start_session(received_session_id: bytes | None = None) -> bytes:
+def start_session(received_session_id: AnyBytes | None = None) -> AnyBytes:
     global _active_session_idx
     global _session_usage_counter
 

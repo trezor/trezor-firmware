@@ -5,7 +5,7 @@
 /// - `InvalidLength` if the input length is not a multiple of 4 for decoding.
 /// - `InvalidCharacter` if an invalid Base64 character is encountered during
 ///   decoding.
-#[derive(Debug)]
+#[cfg_attr(test, derive(Debug))]
 pub enum Base64Error {
     OutputBufferTooSmall,
     InvalidLength,
@@ -127,7 +127,6 @@ extern crate std;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::vec::Vec;
 
     #[test]
     fn test_encode_decode() {

@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <sys/tamper.h>
+#include <sec/tamper.h>
 
 static void prodtest_tamper_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {

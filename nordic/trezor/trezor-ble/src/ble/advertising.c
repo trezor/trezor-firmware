@@ -35,10 +35,27 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define ADV_FLAG_PAIRING 0x01
 #define ADV_FLAG_BOND_MEM_FULL 0x02
 #define ADV_FLAG_DEV_CONNECTED 0x04
+#define ADV_FLAG_USER_DISCONNECT 0x08
+
+#define ADV_INTERVAL_FAST_MIN_MS 20
+#define ADV_INTERVAL_FAST_MAX_MS 25
+#define ADV_INTERVAL_SLOW_MIN_MS 152.5
+#define ADV_INTERVAL_SLOW_MAX_MS 211.25
+
+#define ADV_INTERVAL_MS_TO_UNITS(x) ((int)(x / 0.625))
+
+#define ADV_INTERVAL_FAST_MIN ADV_INTERVAL_MS_TO_UNITS(ADV_INTERVAL_FAST_MIN_MS)
+#define ADV_INTERVAL_FAST_MAX ADV_INTERVAL_MS_TO_UNITS(ADV_INTERVAL_FAST_MAX_MS)
+#define ADV_INTERVAL_SLOW_MIN ADV_INTERVAL_MS_TO_UNITS(ADV_INTERVAL_SLOW_MIN_MS)
+#define ADV_INTERVAL_SLOW_MAX ADV_INTERVAL_MS_TO_UNITS(ADV_INTERVAL_SLOW_MAX_MS)
 
 bool advertising = false;
 bool advertising_wl = false;
 
+// Add mutex for synchronization
+static K_MUTEX_DEFINE(adv_mutex);
+
+uint32_t adv_options = 0;
 uint8_t manufacturer_data[8] = {0x29, 0x0F, 0, 0, 0, 0, 0, 0};
 
 static struct bt_data advertising_data[2];
@@ -47,6 +64,16 @@ static const struct bt_data scan_response_data[] = {
     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_TRZ_VAL),
     BT_DATA(BT_DATA_MANUFACTURER_DATA, manufacturer_data, 8),
 };
+
+static void change_adv_work_handler(struct k_work *work);
+static void change_adv_interval_handler(struct k_timer *timer_id);
+K_TIMER_DEFINE(change_adv_timer, change_adv_interval_handler, NULL);
+static K_WORK_DEFINE(change_adv_work, change_adv_work_handler);
+
+static void change_adv_interval_handler(struct k_timer *timer_id) {
+  // This is safe to do in an ISR
+  k_work_submit(&change_adv_work);
+}
 
 static void add_to_whitelist(const struct bt_bond_info *info, void *user_data) {
   char addr[BT_ADDR_LE_STR_LEN];
@@ -65,10 +92,49 @@ void advertising_setup_wl(void) {
   bt_foreach_bond(BT_ID_DEFAULT, add_to_whitelist, NULL);
 }
 
-void advertising_start(bool wl, uint8_t color, uint8_t device_code,
-                       bool static_addr, char *name, int name_len) {
+static void change_adv_work_handler(struct k_work *work) {
+  k_mutex_lock(&adv_mutex, K_FOREVER);
+
+  if (!advertising) {
+    k_mutex_unlock(&adv_mutex);
+    return;
+  }
+
+  int err;
+  LOG_INF("30s timer expired. Switching to slow advertising interval (%d ms).",
+          ADV_INTERVAL_SLOW_MIN);
+
+  // Stop current advertising
+  err = bt_le_adv_stop();
+  if (err) {
+    LOG_ERR("Failed to stop advertising (err %d)", err);
+    k_mutex_unlock(&adv_mutex);
+    return;
+  }
+
+  // Restart advertising with new parameters
+  err = bt_le_adv_start(BT_LE_ADV_PARAM(adv_options, ADV_INTERVAL_SLOW_MIN,
+                                        ADV_INTERVAL_SLOW_MAX, NULL),
+                        advertising_data, ARRAY_SIZE(advertising_data),
+                        scan_response_data, ARRAY_SIZE(scan_response_data));
+
+  if (err) {
+    LOG_ERR("Failed to restart advertising with slow interval (err %d)", err);
+  } else {
+    LOG_INF("Successfully restarted advertising with slow interval.");
+  }
+
+  k_mutex_unlock(&adv_mutex);
+}
+
+void advertising_start(bool wl, bool user_disconnect, uint8_t color,
+                       uint8_t device_code, bool static_addr, char *name,
+                       int name_len) {
+  k_mutex_lock(&adv_mutex, K_FOREVER);
+
   if (advertising) {
     LOG_WRN("Restarting advertising");
+    k_timer_stop(&change_adv_timer);
     bt_le_adv_stop();
   }
   int err;
@@ -88,6 +154,9 @@ void advertising_start(bool wl, uint8_t color, uint8_t device_code,
   if (connection_is_connected()) {
     manufacturer_data[2] |= ADV_FLAG_DEV_CONNECTED;
   }
+  if (user_disconnect) {
+    manufacturer_data[2] |= ADV_FLAG_USER_DISCONNECT;
+  }
 
   manufacturer_data[3] = color;
   manufacturer_data[4] = device_code;
@@ -100,7 +169,11 @@ void advertising_start(bool wl, uint8_t color, uint8_t device_code,
   /* Fill second element for the name */
   advertising_data[1].type = BT_DATA_NAME_COMPLETE;
   advertising_data[1].data_len = name_len;
-  advertising_data[1].data = (const uint8_t *)name;
+
+  static char adv_name[BLE_ADV_NAME_LEN + 1] = {0};
+  memset(adv_name, 0, BLE_ADV_NAME_LEN + 1);
+  memcpy(adv_name, name, name_len);
+  advertising_data[1].data = (const uint8_t *)adv_name;
 
   char gap_name[BLE_ADV_NAME_LEN + 1] = {0};
   memcpy(gap_name, name, name_len);
@@ -119,7 +192,10 @@ void advertising_start(bool wl, uint8_t color, uint8_t device_code,
       options |= BT_LE_ADV_OPT_USE_IDENTITY;
     }
 
-    err = bt_le_adv_start(BT_LE_ADV_PARAM(options, 160, 1600, NULL),
+    adv_options = options;
+
+    err = bt_le_adv_start(BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST_MIN,
+                                          ADV_INTERVAL_FAST_MAX, NULL),
                           advertising_data, ARRAY_SIZE(advertising_data),
                           scan_response_data, ARRAY_SIZE(scan_response_data));
   } else {
@@ -133,38 +209,53 @@ void advertising_start(bool wl, uint8_t color, uint8_t device_code,
       options |= BT_LE_ADV_OPT_USE_IDENTITY;
     }
 
-    err = bt_le_adv_start(BT_LE_ADV_PARAM(options, 160, 1600, NULL),
+    adv_options = options;
+
+    err = bt_le_adv_start(BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST_MIN,
+                                          ADV_INTERVAL_FAST_MAX, NULL),
                           advertising_data, ARRAY_SIZE(advertising_data),
                           scan_response_data, ARRAY_SIZE(scan_response_data));
   }
   if (err) {
     LOG_ERR("Advertising failed to start (err %d)", err);
     ble_management_send_status_event();
+    k_mutex_unlock(&adv_mutex);
     return;
   }
   advertising = true;
   advertising_wl = wl;
 
+  k_timer_start(&change_adv_timer, K_SECONDS(30), K_NO_WAIT);
+  LOG_INF("Started 30-second timer to switch advertising interval.");
+
   ble_management_send_status_event();
+  k_mutex_unlock(&adv_mutex);
 }
 
 void advertising_stop(void) {
+  k_mutex_lock(&adv_mutex, K_FOREVER);
+
   if (!advertising) {
     LOG_WRN("Not advertising");
-
     ble_management_send_status_event();
+    k_mutex_unlock(&adv_mutex);
     return;
   }
+
+  // Stop the timer first to prevent work handler from running
+  k_timer_stop(&change_adv_timer);
 
   int err = bt_le_adv_stop();
   if (err) {
     LOG_ERR("Advertising failed to stop (err %d)", err);
     ble_management_send_status_event();
+    k_mutex_unlock(&adv_mutex);
     return;
   }
   advertising = false;
   advertising_wl = false;
   ble_management_send_status_event();
+  k_mutex_unlock(&adv_mutex);
 }
 
 bool advertising_is_advertising(void) { return advertising; }

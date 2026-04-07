@@ -8,12 +8,12 @@ write_uint32 = writers.write_uint32_be
 write_uint64 = writers.write_uint64_be
 
 if TYPE_CHECKING:
-    from typing import AnyStr
+    from buffer_types import StrOrBytes
 
     from trezor.utils import Writer
 
 
-def write_string(w: Writer, s: AnyStr) -> None:
+def write_string(w: Writer, s: StrOrBytes) -> None:
     """Write XDR string padded to a multiple of 4 bytes."""
     # NOTE: 2 bytes smaller than if-else
     buf = s.encode() if isinstance(s, str) else s

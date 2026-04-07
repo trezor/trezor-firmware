@@ -22,9 +22,15 @@
 #include <trezor_rtl.h>
 
 #include <io/usb_vcp.h>
+#include <sys/irq.h>
 #include <sys/sysevent_source.h>
 
+#ifdef USE_SUSPEND
+#include <io/suspend.h>
+#endif
+
 #include "usb_internal.h"
+#include "usb_rbuf.h"
 
 // Communications Device Class Code (bFunctionClass, bInterfaceClass)
 #define USB_CLASS_CDC 0x02
@@ -125,14 +131,6 @@ typedef enum {
   USB_CDC_SPACE_PARITY = 4,
 } usb_cdc_line_coding_bParityType_t;
 
-/* usb_rbuf_t is used internally for the RX/TX buffering. */
-typedef struct {
-  size_t cap;
-  volatile size_t read;
-  volatile size_t write;
-  uint8_t *buf;
-} usb_rbuf_t;
-
 // Maximal length of packets on IN CMD EP
 #define USB_CDC_MAX_CMD_PACKET_LEN 0x08
 
@@ -141,6 +139,7 @@ typedef struct {
  * usb_vcp_class_init.  See usb_vcp_info_t for details of the configuration
  * fields. */
 typedef struct {
+  syshandle_t handle;
   USBD_HandleTypeDef *dev_handle;
   const usb_vcp_descriptor_block_t *desc_block;
   usb_rbuf_t rx_ring;
@@ -154,6 +153,7 @@ typedef struct {
   uint8_t ep_out;
   uint16_t max_packet_len;
   uint8_t ep_in_is_idle;  // Set to 1 after IN endpoint gets idle
+  bool recv_pending;
   uint8_t cmd_buffer[USB_CDC_MAX_CMD_PACKET_LEN];
 } usb_vcp_state_t;
 
@@ -164,9 +164,6 @@ static const USBD_ClassTypeDef usb_vcp_class;
 static const USBD_ClassTypeDef usb_vcp_data_class;
 
 static const syshandle_vmt_t usb_vcp_handle_vmt;
-
-#define usb_get_vcp_state(iface_num) \
-  ((usb_vcp_state_t *)usb_get_iface_state(iface_num, &usb_vcp_class))
 
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
@@ -303,17 +300,11 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   d->ep_in.bInterval = 0;
 
   // Interface state
+  state->handle = info->handle;
   state->desc_block = d;
 
-  state->rx_ring.buf = info->rx_buffer;
-  state->rx_ring.cap = info->rx_buffer_len;
-  state->rx_ring.read = 0;
-  state->rx_ring.write = 0;
-
-  state->tx_ring.buf = info->tx_buffer;
-  state->tx_ring.cap = info->tx_buffer_len;
-  state->tx_ring.read = 0;
-  state->tx_ring.write = 0;
+  usb_rbuf_init(&state->rx_ring, info->rx_buffer, info->rx_buffer_len);
+  usb_rbuf_init(&state->tx_ring, info->tx_buffer, info->tx_buffer_len);
 
   state->rx_packet = info->rx_packet;
   state->tx_packet = info->tx_packet;
@@ -337,99 +328,6 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   return sectrue;
 }
 
-static inline size_t ring_length(usb_rbuf_t *b) { return (b->write - b->read); }
-
-static inline int ring_empty(usb_rbuf_t *b) { return ring_length(b) == 0; }
-
-static inline int ring_full(usb_rbuf_t *b) { return ring_length(b) == b->cap; }
-
-secbool usb_vcp_can_read(uint8_t iface_num) {
-  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
-  if (state == NULL) {
-    return secfalse;  // Invalid interface number
-  }
-  if (ring_empty(&state->rx_ring)) {
-    return secfalse;  // Nothing in the rx buffer
-  }
-  return sectrue;
-}
-
-secbool usb_vcp_can_write(uint8_t iface_num) {
-  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
-  if (state == NULL) {
-    return secfalse;  // Invalid interface number
-  }
-  if (ring_full(&state->tx_ring)) {
-    return secfalse;  // Tx ring buffer is full
-  }
-  return sectrue;
-}
-
-int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
-  if (state == NULL) {
-    return -1;  // Invalid interface number
-  }
-
-  // Read from the rx ring buffer
-  usb_rbuf_t *b = &state->rx_ring;
-  size_t mask = b->cap - 1;
-  size_t i;
-  for (i = 0; (i < len) && !ring_empty(b); i++) {
-    buf[i] = b->buf[b->read & mask];
-    b->read++;
-  }
-  return i;
-}
-
-int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
-  if (state == NULL) {
-    return -1;  // Invalid interface number
-  }
-
-  // Write into the tx ring buffer
-  usb_rbuf_t *b = &state->tx_ring;
-  size_t mask = b->cap - 1;
-  size_t i;
-  for (i = 0; (i < len) && !ring_full(b); i++) {
-    b->buf[b->write & mask] = buf[i];
-    b->write++;
-  }
-
-  return i;
-}
-
-int usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                          int timeout) {
-  uint32_t start = HAL_GetTick();
-  while (sectrue != usb_vcp_can_read(iface_num)) {
-    if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
-      return 0;  // Timeout
-    }
-    __WFI();  // Enter sleep mode, waiting for interrupt
-  }
-  return usb_vcp_read(iface_num, buf, len);
-}
-
-int usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
-                           int timeout) {
-  uint32_t start = HAL_GetTick();
-  uint32_t i = 0;
-  while (i < len) {
-    while (sectrue != usb_vcp_can_write(iface_num)) {
-      if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
-        return i;  // Timeout
-      }
-      __WFI();  // Enter sleep mode, waiting for interrupt
-    }
-    int ret = usb_vcp_write(iface_num, buf + i, len - i);
-    if (ret < 0) return ret;
-    i += ret;
-  }
-  return i;
-}
-
 static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
 
@@ -442,19 +340,17 @@ static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
                  USB_CDC_MAX_CMD_PACKET_LEN);
 
   // Reset the state
-  state->rx_ring.read = 0;
-  state->rx_ring.write = 0;
-  state->tx_ring.read = 0;
-  state->tx_ring.write = 0;
+  usb_rbuf_reset(&state->rx_ring);
+  usb_rbuf_reset(&state->tx_ring);
+
   state->ep_in_is_idle = 1;
 
   // Prepare the OUT EP to receive next packet
   USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet,
                          state->max_packet_len);
+  state->recv_pending = true;
 
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
-  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
-  if (!syshandle_register(handle, &usb_vcp_handle_vmt, state)) {
+  if (!syshandle_register(state->handle, &usb_vcp_handle_vmt, state)) {
     return USBD_FAIL;
   }
 
@@ -464,9 +360,7 @@ static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
 
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
-  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
-  syshandle_unregister(handle);
+  syshandle_unregister(state->handle);
 
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);
@@ -531,25 +425,26 @@ static uint8_t usb_vcp_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   if (ep_num == state->ep_out) {
     uint32_t len = USBD_LL_GetRxDataSize(dev, ep_num);
 
-    // Write into the rx ring buffer
-    usb_rbuf_t *b = &state->rx_ring;
-    size_t mask = b->cap - 1;
-    size_t i;
-    for (i = 0; i < len; i++) {
-      if (state->rx_intr_fn != NULL) {
+    if (state->rx_intr_fn != NULL) {
+      for (size_t i = 0; i < len; i++) {
         if (state->rx_packet[i] == state->rx_intr_byte) {
           state->rx_intr_fn();
         }
       }
-      if (!ring_full(b)) {
-        b->buf[b->write & mask] = state->rx_packet[i];
-        b->write++;
-      }
     }
 
-    // Prepare the OUT EP to receive next packet
-    USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet,
-                           state->max_packet_len);
+    usb_rbuf_write(&state->rx_ring, state->rx_packet, len);
+
+    state->recv_pending = false;
+    if (usb_rbuf_unused_bytes(&state->rx_ring) >= state->max_packet_len) {
+      USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet,
+                             state->max_packet_len);
+      state->recv_pending = true;
+    }
+
+#ifdef USE_SUSPEND
+    wakeup_flags_set(WAKEUP_FLAG_USB);
+#endif
   }
 
   return USBD_OK;
@@ -562,22 +457,15 @@ static uint8_t usb_vcp_class_sof(USBD_HandleTypeDef *dev) {
     return USBD_OK;
   }
 
-  // Read from the tx ring buffer
-  usb_rbuf_t *b = &state->tx_ring;
-  uint8_t *buf = state->tx_packet;
   // We avoid sending full packets as they stall the hosts pipeline, see:
   // <http://www.cypress.com/?id=4&rID=92719>
-  size_t len = state->max_packet_len - 1;
-  size_t mask = b->cap - 1;
-  size_t i;
-  for (i = 0; (i < len) && !ring_empty(b); i++) {
-    buf[i] = b->buf[b->read & mask];
-    b->read++;
-  }
+  uint16_t buf_size = state->max_packet_len - 1;
 
-  if (i > 0) {
+  uint16_t to_send = usb_rbuf_read(&state->tx_ring, state->tx_packet, buf_size);
+
+  if (to_send > 0) {
     state->ep_in_is_idle = 0;
-    USBD_LL_Transmit(dev, state->ep_in, buf, (uint16_t)i);
+    USBD_LL_Transmit(dev, state->ep_in, state->tx_packet, to_send);
   }
 
   return USBD_OK;
@@ -607,42 +495,63 @@ static void on_event_poll(void *context, bool read_awaited,
                           bool write_awaited) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
 
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
-  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
-
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
   // logic simple.
 
-  if (read_awaited && usb_vcp_can_read(iface_num)) {
-    syshandle_signal_read_ready(handle, NULL);
+  if (read_awaited && !usb_rbuf_is_empty(&state->rx_ring)) {
+    syshandle_signal_read_ready(state->handle, NULL);
   }
 
-  if (write_awaited && usb_vcp_can_write(iface_num)) {
-    syshandle_signal_write_ready(handle, NULL);
+  if (write_awaited && !usb_rbuf_is_full(&state->tx_ring)) {
+    syshandle_signal_write_ready(state->handle, NULL);
   }
 }
 
 static bool on_check_read_ready(void *context, systask_id_t task_id,
                                 void *param) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
 
   UNUSED(task_id);
   UNUSED(param);
 
-  return usb_vcp_can_read(iface_num);
+  return !usb_rbuf_is_empty(&state->rx_ring);
 }
 
 static bool on_check_write_ready(void *context, systask_id_t task_id,
                                  void *param) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
 
   UNUSED(task_id);
   UNUSED(param);
 
-  return usb_vcp_can_write(iface_num);
+  return !usb_rbuf_is_full(&state->tx_ring);
+}
+
+static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+
+  ssize_t recved_size = usb_rbuf_read(&state->rx_ring, buffer, buffer_size);
+
+  irq_key_t irq_key = irq_lock();
+
+  if (!state->recv_pending &&
+      usb_rbuf_unused_bytes(&state->rx_ring) >= state->max_packet_len) {
+    // Restart receiving if there is enough space in the ring buffer
+    USBD_LL_PrepareReceive(state->dev_handle, state->ep_out, state->rx_packet,
+                           state->max_packet_len);
+    state->recv_pending = true;
+  }
+
+  irq_unlock(irq_key);
+
+  return recved_size;
+}
+
+static ssize_t on_write(void *context, const void *data, size_t data_size) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+
+  return usb_rbuf_write(&state->tx_ring, (const uint8_t *)data, data_size);
 }
 
 static const syshandle_vmt_t usb_vcp_handle_vmt = {
@@ -651,6 +560,8 @@ static const syshandle_vmt_t usb_vcp_handle_vmt = {
     .check_read_ready = on_check_read_ready,
     .check_write_ready = on_check_write_ready,
     .poll = on_event_poll,
+    .read = on_read,
+    .write = on_write,
 };
 
 #endif  // KERNEL_MODE

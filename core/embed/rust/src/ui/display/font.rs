@@ -25,9 +25,6 @@ pub struct FontInfo {
 /// Convenience type for font references defined in the `fonts` module.
 pub type Font = &'static FontInfo;
 
-// SAFETY: We are in a single-threaded environment.
-unsafe impl Sync for FontInfo {}
-
 /// Representation of a single glyph.
 /// We use standard typographic terms. For a nice explanation, see, e.g.,
 /// the FreeType docs at https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
@@ -351,6 +348,27 @@ impl FontInfo {
         })
     }
 
+    /// Get the longest prefix of a given `text` (breaking at letter boundaries)
+    /// that will fit into the area `width` pixels wide.
+    pub fn longest_prefix_break_words<'a>(&'static self, width: i16, text: &'a str) -> &'a str {
+        let mut prefix = text;
+        loop {
+            if self.text_width(prefix) <= width {
+                return prefix;
+            }
+            // remove exactly one UTF-8 char from the end
+            if let Some((i, _)) = prefix.char_indices().next_back() {
+                if i == 0 {
+                    return "";
+                }
+                debug_assert!(prefix.is_char_boundary(i));
+                prefix = &prefix[..i];
+            } else {
+                return ""; // empty string
+            }
+        }
+    }
+
     /// Get the length of the longest suffix from a given `text`
     /// that will fit into the area `width` pixels wide.
     pub fn longest_suffix(&'static self, width: i16, text: &str) -> usize {
@@ -399,5 +417,77 @@ impl GlyphMetrics for Font {
 
     fn line_height(&self) -> i16 {
         FontInfo::line_height(self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "layout_bolt")] {
+            use crate::ui::layout_bolt::fonts::FONT_NORMAL as FONT;
+        } else if #[cfg(feature = "layout_caesar")] {
+            use crate::ui::layout_caesar::fonts::FONT_NORMAL as FONT;
+        } else if #[cfg(feature = "layout_delizia")] {
+            use crate::ui::layout_delizia::fonts::FONT_DEMIBOLD as FONT;
+        } else if #[cfg(feature = "layout_eckhart")] {
+            use crate::ui::layout_eckhart::fonts::FONT_SATOSHI_MEDIUM_26 as FONT;
+        } else {
+            compile_error!("Non supported layout feature enabled");
+        }
+    }
+
+    #[test]
+    fn longest_prefix_break_words_ascii() {
+        let text = "Hello world";
+
+        let w_h = FONT.text_width("H");
+        let w_hello = FONT.text_width("Hello");
+        let w_full = FONT.text_width(text);
+
+        assert_eq!(FONT.longest_prefix_break_words(-10, text), "");
+        assert_eq!(FONT.longest_prefix_break_words(0, text), "");
+        assert_eq!(FONT.longest_prefix_break_words(w_h - 1, text), "");
+        assert_eq!(FONT.longest_prefix_break_words(w_h, text), "H");
+
+        // Just below "Hello" fits "Hell"
+        assert_eq!(FONT.longest_prefix_break_words(w_hello - 1, text), "Hell");
+        assert_eq!(FONT.longest_prefix_break_words(w_hello, text), "Hello");
+
+        // Exact full width and bigger should return the whole string
+        assert_eq!(FONT.longest_prefix_break_words(w_full, text), text);
+        assert_eq!(FONT.longest_prefix_break_words(w_full + 1, text), text);
+    }
+
+    #[test]
+    fn longest_prefix_break_words_unicode() {
+        let text = "Ačéà";
+
+        // Pick checkpoints
+        let p1 = &text[.."A".len()];
+        let p2 = &text[.."Ač".len()];
+        let p3 = &text[.."Ačé".len()];
+        let w1 = FONT.text_width(p1);
+        let w2 = FONT.text_width(p2);
+        let w3 = FONT.text_width(p3);
+        let w_full = FONT.text_width(text);
+
+        // Below first char → empty; at first char → that char
+        assert_eq!(FONT.longest_prefix_break_words(0, text), "");
+        assert_eq!(FONT.longest_prefix_break_words(w1 - 1, text), "");
+        assert_eq!(FONT.longest_prefix_break_words(w1, text), p1);
+
+        // Subsequent boundaries
+        assert_eq!(FONT.longest_prefix_break_words(w2 - 1, text), p1);
+        assert_eq!(FONT.longest_prefix_break_words(w2, text), p2);
+        assert_eq!(FONT.longest_prefix_break_words(w3 - 1, text), p2);
+        assert_eq!(FONT.longest_prefix_break_words(w3, text), p3);
+
+        // Full width or larger → full text
+        assert_eq!(FONT.longest_prefix_break_words(w_full, text), text);
+        assert_eq!(
+            FONT.longest_prefix_break_words(w_full.saturating_add(500), text),
+            text
+        );
     }
 }

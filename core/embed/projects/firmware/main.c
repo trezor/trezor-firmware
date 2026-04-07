@@ -34,11 +34,13 @@
 #include "ports/stm32/pendsv.h"
 
 #include <io/display.h>
+#include <io/notify.h>
+#include <io/rsod.h>
+#include <sec/boot_image.h>
 #include <sys/linker_utils.h>
+#include <sys/logging.h>
 #include <sys/systask.h>
 #include <sys/system.h>
-#include <util/bl_check.h>
-#include <util/rsod.h>
 #include "rust_ui_common.h"
 
 #include <blake2s.h>
@@ -49,22 +51,9 @@
 #include "zkp_context.h"
 #endif
 
-#define CONCAT_NAME_HELPER(prefix, name, suffix) prefix##name##suffix
-#define CONCAT_NAME(name, var) CONCAT_NAME_HELPER(BOOTLOADER_, name, var)
-
-#if BOOTLOADER_QA
-// QA bootloaders
-#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_00)
-#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_FF)
-#else
-// normal bootloaders
-#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _00)
-#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _FF)
+#ifdef USE_BLE
+#include <io/ble.h>
 #endif
-
-// symbols from bootloader.bin => bootloader.o
-extern const void _deflated_bootloader_start;
-extern const void _deflated_bootloader_size;
 
 #ifdef USE_NRF
 #include <io/nrf.h>
@@ -74,6 +63,8 @@ extern const void nrf_app_end;
 extern const void nrf_app_size;
 
 #endif
+
+LOG_DECLARE(coreapp_main)
 
 int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
@@ -87,19 +78,9 @@ int main_func(uint32_t cmd, void *arg) {
   bool update_required = false;
 
 #if PRODUCTION || BOOTLOADER_QA
-
-  // replace bootloader with the latest one
-  const uint8_t *data = (const uint8_t *)&_deflated_bootloader_start;
-  const size_t len = (size_t)&_deflated_bootloader_size;
-
-  uint8_t hash_00[] = BOOTLOADER_00;
-  uint8_t hash_FF[] = BOOTLOADER_FF;
-
-  // Check if the boardloader is valid and replace it if not
-  bool bl_update_required =
-      bl_check_check(hash_00, hash_FF, BLAKE2S_DIGEST_LENGTH);
+  // Check if the bootloader is valid and replace it if not
+  bool bl_update_required = boot_image_check(boot_image_get_embdata());
   update_required = update_required || bl_update_required;
-
 #endif
 
 #ifdef USE_NRF
@@ -114,7 +95,7 @@ int main_func(uint32_t cmd, void *arg) {
 
 #if PRODUCTION || BOOTLOADER_QA
     if (bl_update_required) {
-      bl_check_replace(data, len);
+      boot_image_replace(boot_image_get_embdata());
     }
 #endif
 
@@ -131,13 +112,23 @@ int main_func(uint32_t cmd, void *arg) {
   }
 #endif
 
+#ifdef USE_NRF
+#if PRODUCTION
+  if (!nrf_authenticate()) {
+    error_shutdown("Bluetooth authentication failed");
+  }
+#endif
+#endif
+
   screen_boot_stage_2(fading);
+
+  notify_send(NOTIFY_BOOT);
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
-  printf("CORE: Preparing stack\n");
+  LOG_INF("Preparing stack");
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.
   mp_stack_set_top(&_stack_section_end);
@@ -150,22 +141,22 @@ int main_func(uint32_t cmd, void *arg) {
 #endif
 
   // GC init
-  printf("CORE: Starting GC\n");
+  LOG_INF("Starting GC");
   gc_init(&_heap_start, &_heap_end);
 
   // Interpreter init
-  printf("CORE: Starting interpreter\n");
+  LOG_INF("Starting interpreter");
   mp_init();
   mp_obj_list_init(mp_sys_argv, 0);
   mp_obj_list_init(mp_sys_path, 0);
   mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__dot_frozen));
 
   // Execute the main script
-  printf("CORE: Executing main script\n");
+  LOG_INF("Executing main script");
   pyexec_frozen_module("main.py");
 
   // Clean up
-  printf("CORE: Main script finished, cleaning up\n");
+  LOG_INF("Main script finished, cleaning up");
   mp_deinit();
 
   // Python code shouldn't ever exit, avoid black screen if it does

@@ -108,16 +108,17 @@ typedef struct {
 
 #ifdef SECMON
 #undef MEMREGION_ALL_RUNTIME_RAM
-#define MEMREGION_ALL_RUNTIME_RAM                                  \
-  ({                                                               \
-    (memregion_t){                                                 \
-        .block =                                                   \
-            {                                                      \
-                MEMBLOCK(NONSECURE_RAM_START, NONSECURE_RAM_SIZE), \
-                MEMBLOCK(BOOTARGS_START, BOOTARGS_SIZE),           \
-                MEMBLOCK(SECMON_RAM_START, SECMON_RAM_SIZE),       \
-            },                                                     \
-    };                                                             \
+#define MEMREGION_ALL_RUNTIME_RAM                                    \
+  ({                                                                 \
+    (memregion_t){                                                   \
+        .block =                                                     \
+            {                                                        \
+                MEMBLOCK(BOOTARGS_START, BOOTARGS_SIZE),             \
+                MEMBLOCK(NONSECURE_RAM1_START, NONSECURE_RAM1_SIZE), \
+                MEMBLOCK(SECMON_RAM_START, SECMON_RAM_SIZE),         \
+                MEMBLOCK(NONSECURE_RAM2_START, NONSECURE_RAM2_SIZE), \
+            },                                                       \
+    };                                                               \
   })
 #endif  // SECMON
 
@@ -131,14 +132,15 @@ typedef struct {
 #undef MEMREGION_ALL_STARTUP_RAM
 #undef MEMREGION_ALL_RUNTIME_RAM
 
-#define MEMREGION_ALL_STARTUP_RAM                                  \
-  ({                                                               \
-    (memregion_t){                                                 \
-        .block =                                                   \
-            {                                                      \
-                MEMBLOCK(NONSECURE_RAM_START, NONSECURE_RAM_SIZE), \
-            },                                                     \
-    };                                                             \
+#define MEMREGION_ALL_STARTUP_RAM                                    \
+  ({                                                                 \
+    (memregion_t){                                                   \
+        .block =                                                     \
+            {                                                        \
+                MEMBLOCK(NONSECURE_RAM1_START, NONSECURE_RAM1_SIZE), \
+                MEMBLOCK(NONSECURE_RAM2_START, NONSECURE_RAM2_SIZE), \
+            },                                                       \
+    };                                                               \
   })
 
 #define MEMREGION_ALL_RUNTIME_RAM MEMREGION_ALL_STARTUP_RAM

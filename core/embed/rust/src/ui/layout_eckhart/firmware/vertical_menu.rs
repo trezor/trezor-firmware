@@ -12,7 +12,7 @@ use crate::{
 };
 
 use super::{
-    super::component::{Button, ButtonMsg},
+    super::component::{Button, ButtonMsg, HapticMode},
     theme,
 };
 use heapless::Vec;
@@ -20,10 +20,12 @@ use heapless::Vec;
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
 pub const LONG_MENU_ITEMS: usize = 100;
+pub const MEDIUM_MENU_ITEMS: usize = 10;
 pub const SHORT_MENU_ITEMS: usize = 5;
 
 pub type LongMenuGc = GcBox<Vec<Button, LONG_MENU_ITEMS>>;
 pub type ShortMenuVec = Vec<Button, SHORT_MENU_ITEMS>;
+pub type MediumMenuVec = Vec<Button, MEDIUM_MENU_ITEMS>;
 
 pub trait MenuItems: Default {
     fn empty() -> Self {
@@ -36,7 +38,7 @@ pub trait MenuItems: Default {
     fn get_last(&self) -> Option<&Button>;
 }
 
-impl MenuItems for ShortMenuVec {
+impl<const N: usize> MenuItems for Vec<Button, N> {
     fn push(&mut self, button: Button) {
         unwrap!(self.push(button));
     }
@@ -97,8 +99,10 @@ pub struct VerticalMenu<T = ShortMenuVec> {
     offset_y: i16,
     /// Maximum vertical offset.
     offset_y_max: i16,
-    /// Whether to show separators between buttons.
-    separators: bool,
+    /// Whether the first button touch area should be shrunk.
+    /// If true, the first button will overlap the header.
+    /// When using subtitle, the overlap should be disabled.
+    top_component_overlap: bool,
 }
 
 pub enum VerticalMenuMsg {
@@ -108,6 +112,12 @@ pub enum VerticalMenuMsg {
 impl<T: MenuItems> VerticalMenu<T> {
     const SIDE_INSETS: Insets = Insets::sides(12);
     const MENU_ITEM_CONTENT_PADDING: i16 = 32;
+    #[cfg(test)]
+    pub const TEST_MENU_ITEM_CONTENT_PADDING: i16 = Self::MENU_ITEM_CONTENT_PADDING;
+
+    // Overlap with the header. Must be lower than MENU_ITEM_CONTENT_PADDING so the
+    // content is not clipped.
+    pub const BUTTON_TOP_SHRINK: i16 = 24;
 
     fn new(buttons: T) -> Self {
         Self {
@@ -116,7 +126,7 @@ impl<T: MenuItems> VerticalMenu<T> {
             total_height: 0,
             offset_y: 0,
             offset_y_max: 0,
-            separators: false,
+            top_component_overlap: true,
         }
     }
 
@@ -124,18 +134,25 @@ impl<T: MenuItems> VerticalMenu<T> {
         Self::new(T::default())
     }
 
-    pub fn with_separators(mut self) -> Self {
-        self.separators = true;
-        self
-    }
-
     pub fn with_item(mut self, button: Button) -> Self {
         self.buttons.push(button);
         self
     }
 
+    /// Set haptic mode for all buttons in the menu.
+    pub fn set_haptic_mode(&mut self, mode: HapticMode) {
+        for button in self.buttons.iter_mut() {
+            button.set_haptic_mode(mode);
+        }
+    }
+
     pub fn item(&mut self, button: Button) -> &mut Self {
         self.buttons.push(button);
+        self
+    }
+
+    pub fn no_top_component_overlap(&mut self) -> &mut Self {
+        self.top_component_overlap = false;
         self
     }
 
@@ -160,17 +177,49 @@ impl<T: MenuItems> VerticalMenu<T> {
     }
 
     /// Update state of menu buttons based on the current offset.
-    /// Enable only buttons that are fully visible in the menu area.
-    /// Meaningful only if the menu is scrollable.
-    /// If the menu fits its area, all buttons are enabled.
+    /// Disable only buttons that are fully hidden from the menu view.
+    /// Shrink the top button's touch area if it overlaps with the header.
     pub fn update_button_states(&mut self, ctx: &mut EventCtx) {
         for button in self.buttons.iter_mut() {
-            let in_bounds = button
-                .area()
-                .translate(Offset::y(-self.offset_y))
-                .union(self.bounds)
-                == self.bounds;
-            button.enable_if(ctx, in_bounds);
+            let button_shifted_area = button.area().translate(Offset::y(-self.offset_y));
+            let intersection = button_shifted_area.clamp(self.bounds);
+            let intersection_no_overlap =
+                button_shifted_area.clamp(self.bounds.inset(Insets::top(Self::BUTTON_TOP_SHRINK)));
+            let fully_hidden = intersection.is_empty();
+            // overlap is in the top no-touch overlap area
+            let only_in_no_touch_area = self.top_component_overlap
+                && intersection.height() <= Self::BUTTON_TOP_SHRINK
+                && intersection.top_left() == self.bounds.top_left();
+            // Disable button if it is fully outside the menu area or only in the no-touch
+            // area
+            button.enable_if(ctx, !fully_hidden && !only_in_no_touch_area);
+
+            let is_fully_visible_non_overlap =
+                !self.top_component_overlap && intersection.eq(&button_shifted_area);
+            let is_fully_visible_overlap =
+                self.top_component_overlap && intersection.eq(&intersection_no_overlap);
+            let is_bottom_edge_item =
+                intersection.bottom_left() != button_shifted_area.bottom_left();
+
+            // Start with a normal touch area
+            button.set_expanded_touch_area(Insets::zero());
+
+            // Skip the cases where no shrinking is needed
+            if fully_hidden
+                || is_fully_visible_non_overlap
+                || is_fully_visible_overlap
+                || is_bottom_edge_item
+                || only_in_no_touch_area
+            {
+                continue;
+            }
+
+            let mut top_shrink = button_shifted_area.height() - intersection.height();
+            if self.top_component_overlap {
+                top_shrink += Self::BUTTON_TOP_SHRINK;
+            }
+
+            button.set_expanded_touch_area(Insets::top(-top_shrink));
         }
     }
 
@@ -189,7 +238,11 @@ impl<T: MenuItems> VerticalMenu<T> {
 
         // The offset could reach only discrete values of cumsum of button heights
         let current = self.offset_y;
-        let mut cumsum = 0;
+        let mut cumsum = if self.top_component_overlap {
+            -Self::BUTTON_TOP_SHRINK
+        } else {
+            0
+        };
 
         for button in self
             .buttons
@@ -218,23 +271,38 @@ impl<T: MenuItems> VerticalMenu<T> {
         // The menu is scrollable until the last button is visible
         #[cfg(feature = "ui_debug")]
         if animation_disabled() {
-            self.offset_y_max = self.total_height
+            let offset_y_base = self.total_height
                 - self
                     .buttons
                     .get_last()
                     .unwrap_or(&Button::empty())
                     .area()
                     .height();
+            self.offset_y_max = if self.top_component_overlap {
+                offset_y_base - Self::BUTTON_TOP_SHRINK
+            } else {
+                offset_y_base
+            };
             return;
         }
 
         // Calculate the overflow of the menu area
-        let menu_overflow = (self.total_height - self.bounds.height()).max(0);
+        let overflow_base = (self.total_height - self.bounds.height()).max(0);
+        let menu_overflow = if self.top_component_overlap {
+            (overflow_base - Self::BUTTON_TOP_SHRINK).max(0)
+        } else {
+            overflow_base
+        };
 
         // Find the first button from the top that would completely fit in the menu area
         // in the bottom position
         for button in self.buttons.iter() {
-            let offset = button.area().top_left().y - self.bounds.top_left().y;
+            let offset_base = (button.area().top_left().y - self.bounds.top_left().y).max(0);
+            let offset = if self.top_component_overlap {
+                (offset_base - Self::BUTTON_TOP_SHRINK).max(0)
+            } else {
+                offset_base
+            };
             if offset > menu_overflow {
                 self.offset_y_max = offset;
                 return;
@@ -267,20 +335,34 @@ impl<T: MenuItems> VerticalMenu<T> {
     }
 
     fn render_separators<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        #[inline]
+        fn button_separator(button: &Button) -> Rect {
+            Rect::from_top_left_and_size(
+                button
+                    .area()
+                    .top_left()
+                    .ofs(Offset::x(button.content_offset().x)),
+                Offset::new(button.area().width() - 2 * button.content_offset().x, 1),
+            )
+        }
+
+        if !self.top_component_overlap {
+            if let Some(button) = self.buttons.iter().next() {
+                if !button.is_pressed() {
+                    Bar::new(button_separator(button))
+                        .with_fg(theme::GREY_EXTRA_DARK)
+                        .render(target);
+                }
+            }
+        }
+
         for pair in self.buttons.iter().as_slice().windows(2) {
             let [button_prev, button] = pair else {
                 continue;
             };
 
             if !button.is_pressed() && !button_prev.is_pressed() {
-                let separator = Rect::from_top_left_and_size(
-                    button
-                        .area()
-                        .top_left()
-                        .ofs(Offset::x(button.content_offset().x)),
-                    Offset::new(button.area().width() - 2 * button.content_offset().x, 1),
-                );
-                Bar::new(separator)
+                Bar::new(button_separator(button))
                     .with_fg(theme::GREY_EXTRA_DARK)
                     .render(target);
             }
@@ -306,7 +388,6 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
                 Rect::from_top_left_and_size(top_left, Offset::new(button_width, button_height));
 
             button.place(button_bounds);
-
             top_left = top_left + Offset::y(button_height);
         }
 
@@ -337,9 +418,7 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
                 self.render_buttons(target);
 
                 // Render separators between buttons
-                if self.separators {
-                    self.render_separators(target);
-                }
+                self.render_separators(target);
             });
         });
     }
@@ -357,5 +436,19 @@ impl<T: MenuItems> crate::trace::Trace for VerticalMenu<T> {
                 button_list.child(button);
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_overlap_limit() {
+        // The overlap must be smaller than the padding so that the text is not clipped
+        debug_assert!(
+            VerticalMenu::<ShortMenuVec>::BUTTON_TOP_SHRINK
+                < VerticalMenu::<ShortMenuVec>::TEST_MENU_ITEM_CONTENT_PADDING
+        );
     }
 }

@@ -52,7 +52,7 @@ use crate::{
     },
 };
 
-#[cfg(feature = "ui_debug")]
+#[cfg(any(feature = "rgb_led", feature = "ui_debug"))]
 use crate::ui::shape::Renderer;
 
 impl AttachType {
@@ -157,6 +157,10 @@ where
         let mut overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
             self.inner.render(target);
+
+            #[cfg(feature = "rgb_led")]
+            target.led_state().set();
+
             #[cfg(feature = "ui_debug")]
             if target.should_raise_overflow_exception() {
                 overflow = true;
@@ -312,7 +316,7 @@ impl LayoutObjInner {
 
         // Update page count if it changed
         if let Some(count) = self.event_ctx.page_count() {
-            self.page_count = count as u16;
+            self.page_count = count;
         }
 
         Ok(msg.into())
@@ -408,8 +412,8 @@ impl LayoutObj {
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
                 Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
                 Qstr::MP_QSTR_usb_event => obj_fn_var!(2, 2, ui_layout_usb_event).as_obj(),
-                Qstr::MP_QSTR_ble_event=> obj_fn_var!(3, 3, ui_layout_ble_event).as_obj(),
-                Qstr::MP_QSTR_pm_event=> obj_fn_2!(ui_layout_pm_event).as_obj(),
+                Qstr::MP_QSTR_ble_event => obj_fn_var!(3, 3, ui_layout_ble_event).as_obj(),
+                Qstr::MP_QSTR_pm_event => obj_fn_2!(ui_layout_pm_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
@@ -632,6 +636,9 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         let painted = this.inner_mut().obj_paint_if_requested();
+        if painted? {
+            display::refresh();
+        }
         Ok(painted?.into())
     };
     unsafe { util::try_or_raise(block) }

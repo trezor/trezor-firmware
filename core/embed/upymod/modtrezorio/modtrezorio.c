@@ -45,12 +45,11 @@ uint32_t last_touch_sample_time = 0;
     mp_raise_ValueError((mp_rom_error_text_t)msg); \
   }
 
+#include "embed/upymod/trezorobj.h"
+
 // clang-format off
-#include "modtrezorio-hid.h"
-#include "modtrezorio-poll.h"
-#include "modtrezorio-vcp.h"
-#include "modtrezorio-webusb.h"
 #include "modtrezorio-usb.h"
+#include "modtrezorio-usb-if.h"
 // clang-format on
 #ifdef USE_SD_CARD
 #include "modtrezorio-fatfs.h"
@@ -59,12 +58,19 @@ uint32_t last_touch_sample_time = 0;
 #ifdef USE_HAPTIC
 #include "modtrezorio-haptic.h"
 #endif
+#ifdef USE_RGB_LED
+#include "modtrezorio-rgb_led.h"
+#endif
 #ifdef USE_POWER_MANAGER
 #include "modtrezorio-pm.h"
 #endif
+#ifdef USE_IPC
+#include "modtrezorio-ipc.h"
+#endif
+#include "modtrezorio-poll.h"
 
 /// package: trezorio.__init__
-/// from . import fatfs, haptic, sdcard, ble, pm
+/// from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc, app_cache
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -73,6 +79,8 @@ uint32_t last_touch_sample_time = 0;
 /// BLE_EVENT: int # interface id for BLE events
 ///
 /// PM_EVENT: int  # interface id for power manager events
+///
+/// IPC2_EVENT: int  # interface id for IPC2 events
 ///
 /// TOUCH: int  # interface id of the touch events
 /// TOUCH_START: int  # event id of touch start event
@@ -87,7 +95,10 @@ uint32_t last_touch_sample_time = 0;
 
 /// USB_EVENT: int # interface id for USB events
 
-/// WireInterface = Union[HID, WebUSB, BleInterface]
+/// WireInterface = USBIF | BLEIF
+/// USBIF_WIRE: int  # interface id of the USB wire interface
+/// USBIF_DEBUG: int  # interface id of the USB debug interface
+/// USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn
 
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
@@ -99,6 +110,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 
 #ifdef USE_HAPTIC
     {MP_ROM_QSTR(MP_QSTR_haptic), MP_ROM_PTR(&mod_trezorio_haptic_module)},
+#endif
+
+#ifdef USE_RGB_LED
+    {MP_ROM_QSTR(MP_QSTR_rgb_led), MP_ROM_PTR(&mod_trezorio_rgb_led_module)},
 #endif
 
 #ifdef USE_BLE
@@ -121,11 +136,15 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_pm), MP_ROM_PTR(&mod_trezorio_pm_module)},
     {MP_ROM_QSTR(MP_QSTR_PM_EVENT), MP_ROM_INT(SYSHANDLE_POWER_MANAGER)},
 #endif
-
+#ifdef USE_IPC
+    {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},
+    {MP_ROM_QSTR(MP_QSTR_ipc_send), MP_ROM_PTR(&mod_trezorio_ipc_send_obj)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezorio_USB_type)},
-    {MP_ROM_QSTR(MP_QSTR_HID), MP_ROM_PTR(&mod_trezorio_HID_type)},
-    {MP_ROM_QSTR(MP_QSTR_VCP), MP_ROM_PTR(&mod_trezorio_VCP_type)},
-    {MP_ROM_QSTR(MP_QSTR_WebUSB), MP_ROM_PTR(&mod_trezorio_WebUSB_type)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF), MP_ROM_PTR(&mod_trezorio_USBIF_type)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF_WIRE), MP_ROM_INT(SYSHANDLE_USB_WIRE)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF_DEBUG), MP_ROM_INT(SYSHANDLE_USB_DEBUG)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF_WEBAUTHN), MP_ROM_INT(SYSHANDLE_USB_WEBAUTHN)},
 
     {MP_ROM_QSTR(MP_QSTR_poll), MP_ROM_PTR(&mod_trezorio_poll_obj)},
     {MP_ROM_QSTR(MP_QSTR_POLL_READ), MP_ROM_INT(POLL_READ)},

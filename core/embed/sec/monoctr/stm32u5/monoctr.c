@@ -23,8 +23,8 @@
 
 #include <sec/monoctr.h>
 #include <sec/secret.h>
+#include <sys/flash.h>
 #include <sys/mpu.h>
-#include "flash_area.h"
 
 static int32_t get_offset(monoctr_type_t type) {
   switch (type) {
@@ -32,6 +32,10 @@ static int32_t get_offset(monoctr_type_t type) {
       return SECRET_MONOTONIC_COUNTER_0_OFFSET;
     case MONOCTR_FIRMWARE_VERSION:
       return SECRET_MONOTONIC_COUNTER_1_OFFSET;
+#ifdef SECRET_MONOTONIC_COUNTER_2_OFFSET
+    case MONOCTR_SECMON_VERSION:
+      return SECRET_MONOTONIC_COUNTER_2_OFFSET;
+#endif
     default:
       return -1;
   }
@@ -43,6 +47,10 @@ static size_t get_length(monoctr_type_t type) {
       return SECRET_MONOTONIC_COUNTER_0_LEN;
     case MONOCTR_FIRMWARE_VERSION:
       return SECRET_MONOTONIC_COUNTER_1_LEN;
+#ifdef SECRET_MONOTONIC_COUNTER_2_LEN
+    case MONOCTR_SECMON_VERSION:
+      return SECRET_MONOTONIC_COUNTER_2_LEN;
+#endif
     default:
       return 0;
   }
@@ -75,7 +83,9 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
 
   for (int i = 0; i < value; i++) {
     uint32_t data[4] = {0};
-    secret_write((uint8_t *)data, offset + i * 16, 16);
+    if (sectrue != secret_write((uint8_t *)data, offset + i * 16, 16)) {
+      return secfalse;
+    }
   }
 
   return sectrue;

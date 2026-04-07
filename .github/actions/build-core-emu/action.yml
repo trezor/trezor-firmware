@@ -1,0 +1,72 @@
+name: 'Build core emulator'
+description: 'Build, upload to S3, and store core emulator artifact'
+inputs:
+  model:
+    description: 'Trezor model'
+    required: true
+  version:
+    description: 'Version string'
+    required: true
+  artifact-name:
+    description: 'Artifact name'
+    required: true
+  binary-suffix:
+    description: 'Binary suffix appended to version, e.g. -arm'
+    required: false
+    default: ''
+  s3-subpath:
+    description: 'Optional extra S3 subpath under model path, e.g. T3W1_tropic_on/'
+    required: false
+    default: ''
+  build-bootloader:
+    description: 'Build bootloader before unix emulator build'
+    required: false
+    default: 'true'
+runs:
+  using: 'composite'
+  steps:
+    - uses: ./.github/actions/environment
+
+    - run: nix-shell --run "uv run make -C core build_bootloader_emu"
+      if: inputs.build-bootloader == 'true'
+      shell: sh
+
+    - run: nix-shell --run "uv run make -C core build_unix_frozen"
+      shell: sh
+
+    - id: prepare_binary
+      run: |
+        TARGET="core/build/unix/trezor-emu-core-${{ inputs.model }}-v${{ inputs.version }}${{ inputs.binary-suffix }}"
+        if [ "${{ inputs.binary-suffix }}" = "-arm" ]; then
+          mv core/build/unix/trezor-emu-core "$TARGET"
+        else
+          cp core/build/unix/trezor-emu-core "$TARGET"
+        fi
+        echo "binary_path=$TARGET" >> "$GITHUB_OUTPUT"
+      shell: sh
+
+    - name: Configure aws credentials
+      if: github.repository == 'trezor/trezor-firmware'
+      uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
+      with:
+        role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+        aws-region: eu-west-1
+
+    - name: Upload emulator binaries
+      if: github.repository == 'trezor/trezor-firmware'
+      run: |
+        SUBPATH="${{ inputs.s3-subpath }}"
+        SUBPATH="${SUBPATH#/}"
+        if [ -n "$SUBPATH" ] && [ "${SUBPATH%/}" = "$SUBPATH" ]; then
+          SUBPATH="${SUBPATH}/"
+        fi
+        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.model }}/${SUBPATH}"
+      shell: sh
+
+    - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          core/build/unix/trezor-emu-core*
+          core/build/bootloader_emu/bootloader.elf
+        retention-days: 7

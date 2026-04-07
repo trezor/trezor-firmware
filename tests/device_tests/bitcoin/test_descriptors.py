@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import btc, messages, models
 from trezorlib.cli import btc as btc_cli
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import H_
 
 from ...input_flows import InputFlowShowXpubQRCode
@@ -161,18 +161,20 @@ def _address_n(purpose, coin, account, script_type):
     return res
 
 
-@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "coin, account, purpose, script_type, descriptors", VECTORS_DESCRIPTORS
 )
-def test_descriptors(client: Client, coin, account, purpose, script_type, descriptors):
-    with client:
-        IF = InputFlowShowXpubQRCode(client)
-        client.set_input_flow(IF.get())
+def test_descriptors(
+    session: Session, coin, account, purpose, script_type, descriptors
+):
+    with session.test_ctx as client:
+        if client.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session)
+            client.set_input_flow(IF.get())
 
         address_n = _address_n(purpose, coin, account, script_type)
         res = btc.get_public_node(
-            client,
+            session,
             _address_n(purpose, coin, account, script_type),
             show_display=True,
             coin_name=coin,
@@ -187,13 +189,31 @@ def test_descriptors(client: Client, coin, account, purpose, script_type, descri
     "coin, account, purpose, script_type, descriptors", VECTORS_DESCRIPTORS
 )
 def test_descriptors_trezorlib(
-    client: Client, coin, account, purpose, script_type, descriptors
+    session: Session, coin, account, purpose, script_type, descriptors
 ):
-    with client:
-        if client.model != models.T1B1:
-            IF = InputFlowShowXpubQRCode(client)
+    with session.test_ctx as client:
+        if session.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session)
             client.set_input_flow(IF.get())
         res = btc_cli._get_descriptor(
-            client, coin, account, purpose, script_type, show_display=True
+            session, coin, account, purpose, script_type, show_display=True
         )
         assert res == descriptors
+
+
+def test_descriptors_unsupported(session: Session):
+    with session.test_ctx as client:
+        if session.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session)
+            client.set_input_flow(IF.get())
+
+        address_n = [H_(45), H_(0)]
+        res = btc.get_public_node(
+            session,
+            address_n,
+            show_display=True,
+            coin_name="Bitcoin",
+            script_type=messages.InputScriptType.SPENDMULTISIG,
+            ignore_xpub_magic=True,
+        )
+        assert res.descriptor is None

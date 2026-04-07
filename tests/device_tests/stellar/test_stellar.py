@@ -54,23 +54,67 @@ from base64 import b64encode
 
 import pytest
 
-from trezorlib import messages, protobuf, stellar
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib import btc, messages, misc, protobuf, stellar
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowShowAddressQRCode
+from ..payment_req import (
+    CoinPurchaseMemo,
+    RefundMemo,
+    TextDetailsMemo,
+    make_payment_request,
+)
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.stellar]
 
 
-def parameters_to_proto(parameters):
+def parameters_to_proto(session, parameters):
     tx_data = parameters["tx"]
     ops_data = parameters["operations"]
 
     tx_data["address_n"] = parse_path(parameters["address_n"])
     tx_data["network_passphrase"] = parameters["network_passphrase"]
     tx_data["num_operations"] = len(ops_data)
+
+    if parameters.get("payment_request"):
+        purchase_memo = CoinPurchaseMemo(
+            amount="0.00001 BTC",
+            coin_name="Bitcoin",
+            slip44=0,
+            address_n=parse_path("m/44h/0h/0h/0/0"),
+        )
+        purchase_memo.address_resp = btc.get_authenticated_address(
+            session, purchase_memo.coin_name, purchase_memo.address_n
+        )
+        refund_memo = RefundMemo(address_n=parse_path("m/44h/148h/1h"))
+        refund_memo.address_resp = stellar.get_authenticated_address(
+            session, refund_memo.address_n, False
+        )
+        text_details_memo = TextDetailsMemo(
+            title="Are you sure...",
+            text="... you want to swap your valuable tokens for some sats?",
+        )
+        memos = [purchase_memo, refund_memo, text_details_memo]
+        nonce = misc.get_nonce(session)
+        payment_request = make_payment_request(
+            session,
+            recipient_name="trezor.io",
+            slip44=148,
+            outputs=[
+                (
+                    o.get("amount", 0),
+                    o["destination_account"],
+                )
+                for o in parameters["operations"]
+            ],
+            memos=memos,
+            nonce=nonce,
+        )
+    else:
+        payment_request = None
 
     def make_op(operation_data):
         type_name = operation_data["_message_type"]
@@ -79,23 +123,38 @@ def parameters_to_proto(parameters):
         return protobuf.dict_to_proto(cls, operation_data)
 
     tx = protobuf.dict_to_proto(messages.StellarSignTx, tx_data)
+    if payment_request:
+        tx.payment_req = payment_request
     operations = [make_op(op) for op in ops_data]
     return tx, operations
 
 
 @parametrize_using_common_fixtures("stellar/sign_tx.json")
-def test_sign_tx(client: Client, parameters, result):
-    tx, operations = parameters_to_proto(parameters)
-    response = stellar.sign_tx(
-        client, tx, operations, tx.address_n, tx.network_passphrase
-    )
-    assert response.public_key.hex() == result["public_key"]
-    assert b64encode(response.signature).decode() == result["signature"]
+def test_sign_tx(session: Session, parameters, result):
+    tx, operations = parameters_to_proto(session, parameters)
+
+    if "signature" in result:
+        response = stellar.sign_tx(
+            session,
+            tx,
+            operations,
+            tx.address_n,
+            tx.network_passphrase,
+        )
+        assert response.public_key.hex() == result["public_key"]
+        assert b64encode(response.signature).decode() == result["signature"]
+    elif "error_message" in result:
+        with pytest.raises(TrezorFailure, match=result["error_message"]):
+            stellar.sign_tx(
+                session, tx, operations, tx.address_n, tx.network_passphrase
+            )
+    else:
+        assert False, "Invalid expected result"
 
 
 @parametrize_using_common_fixtures("stellar/sign_tx.json")
 @pytest.mark.skipif(not stellar.HAVE_STELLAR_SDK, reason="requires Stellar SDK")
-def test_xdr(parameters, result):
+def test_xdr(session: Session, parameters, result):
     from stellar_sdk import TransactionEnvelope
 
     envelope = TransactionEnvelope.from_xdr(
@@ -103,27 +162,27 @@ def test_xdr(parameters, result):
     )
     tx, operations = stellar.from_envelope(envelope)
     tx.address_n = parse_path(parameters["address_n"])
-    tx_expected, operations_expected = parameters_to_proto(parameters)
+    tx_expected, operations_expected = parameters_to_proto(session, parameters)
     assert tx == tx_expected
     for expected, actual in zip(operations_expected, operations):
         assert expected == actual
 
 
 @parametrize_using_common_fixtures("stellar/get_address.json")
-def test_get_address(client: Client, parameters, result):
+def test_get_address(session: Session, parameters, result):
     address_n = parse_path(parameters["path"])
-    address = stellar.get_address(client, address_n, show_display=True)
+    address = stellar.get_address(session, address_n, show_display=True)
     assert address == result["address"]
 
 
 @pytest.mark.models("core")
 @parametrize_using_common_fixtures("stellar/get_address.json")
-def test_get_address_chunkify_details(client: Client, parameters, result):
-    with client:
-        IF = InputFlowShowAddressQRCode(client)
+def test_get_address_chunkify_details(session: Session, parameters, result):
+    with session.test_ctx as client:
+        IF = InputFlowShowAddressQRCode(session)
         client.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
         address = stellar.get_address(
-            client, address_n, show_display=True, chunkify=True
+            session, address_n, show_display=True, chunkify=True
         )
         assert address == result["address"]

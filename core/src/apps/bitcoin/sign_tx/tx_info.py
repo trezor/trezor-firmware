@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from .. import writers
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Protocol
 
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
         ) -> None: ...
 
         async def write_prev_tx_footer(
-            self, w: writers.Writer, tx: PrevTx, prev_hash: bytes
+            self, w: writers.Writer, tx: PrevTx, prev_hash: AnyBytes
         ) -> None: ...
 
 
@@ -65,14 +66,14 @@ class TxInfoBase:
         # The minimum nSequence of all inputs.
         self.min_sequence = _SEQUENCE_FINAL
 
-    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None:
         # all inputs are included (non-segwit as well)
         self.sig_hasher.add_input(txi, script_pubkey)
         writers.write_tx_input_check(self.h_tx_check, txi)
         self.min_sequence = min(self.min_sequence, txi.sequence)
         self.change_detector.add_input(txi)
 
-    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    def add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         self.sig_hasher.add_output(txo, script_pubkey)
         writers.write_tx_output(self.h_tx_check, txo, script_pubkey)
 
@@ -101,7 +102,7 @@ class TxInfo(TxInfoBase):
 
 # Used to keep track of any original transactions which are being replaced by the current transaction.
 class OriginalTxInfo(TxInfoBase):
-    def __init__(self, signer: Signer, tx: PrevTx, orig_hash: bytes) -> None:
+    def __init__(self, signer: Signer, tx: PrevTx, orig_hash: AnyBytes) -> None:
         super().__init__(signer, tx)
         self.tx = tx
         self.signer = signer
@@ -118,11 +119,11 @@ class OriginalTxInfo(TxInfoBase):
         signer.write_tx_header(self.h_tx, tx, witness_marker=False)
         writers.write_compact_size(self.h_tx, tx.inputs_count)
 
-    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None:
         super().add_input(txi, script_pubkey)
         writers.write_tx_input(self.h_tx, txi, txi.script_sig or bytes())
 
-    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    def add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         super().add_output(txo, script_pubkey)
 
         if self.index == 0:

@@ -1,0 +1,1109 @@
+{
+  "comment": "raw field is used only for debugging. TODO: Remove raw field",
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "name": "TransferContract",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "e942",
+          "ref_block_hash": "6394747da9fee421",
+          "expiration": 1752562632000,
+          "timestamp": 1752562572000
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 18123456
+        },
+        "raw_data_hex": "0a02e94222086394747da9fee42140c08afee680335a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870e0b5fae68033",
+        "raw": {
+          "visible": false,
+          "txID": "91813c4e057a4c881d9dc4981f041c33cffb17c41e860a53eb68e7995f5de821",
+          "raw_data_hex": "0a02e94222086394747da9fee42140c08afee680335a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870e0b5fae68033",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "amount": 18123456
+                  },
+                  "type_url": "type.googleapis.com/protocol.TransferContract"
+                },
+                "type": "TransferContract"
+              }
+            ],
+            "ref_block_bytes": "e942",
+            "ref_block_hash": "6394747da9fee421",
+            "expiration": 1752562632000,
+            "timestamp": 1752562572000
+          }
+        }
+      },
+      "result": {
+        "signature": "a7f8602b02413e9dded0170daa5b4ada9a2679198af276be456f4faea1bc326f5070789bec5e6471de3f726f4fe0c9daced8df183e4a62804db26d5650c59a521C"
+      }
+    },
+    {
+      "name": "TransferContract_amount_int64_max",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "0fc4",
+          "ref_block_hash": "9643b084bc8b5cde",
+          "expiration": 1752568944000,
+          "timestamp": 1752571244333
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 9223372036854775807
+        },
+        "raw_data_hex": "0a020fc422089643b084bc8b5cde4080abffe980335a6d080112690a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412380a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318ffffffffffffffff7f70adde8beb8033",
+        "comment": "TronWeb JavaScript SDK does not support big integers"
+      },
+      "result": {
+        "signature": "36db819a6c50b8c770ff1067a2753692fa8c8bfa7efde8ddfc2f891f7053d9955f6ffd0ee7d6217b448ac3515d97f6877159b721f2a78da78d1fcc10c1019dd51b"
+      }
+    },
+    {
+      "name": "Note_hello_world",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "ea2a",
+          "ref_block_hash": "d43320ee5a8b677f",
+          "expiration": 1752563334000,
+          "timestamp": 1752563274000,
+          "data": "68656c6c6f20776f726c6421"
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 18123456
+        },
+        "raw_data_hex": "0a02ea2a2208d43320ee5a8b677f40f0f6a8e78033520c68656c6c6f20776f726c64215a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d2087090a2a5e78033",
+        "raw": {
+          "txID": "2b166e72fe1cfb71345d5061d15e10ac2cc5ee3bb85b5ad34a14c9bf112b8372",
+          "raw_data": {
+            "data": "68656c6c6f20776f726c6421",
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "amount": 18123456,
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TransferContract"
+                },
+                "type": "TransferContract"
+              }
+            ],
+            "ref_block_bytes": "ea2a",
+            "ref_block_hash": "d43320ee5a8b677f",
+            "expiration": 1752563334000,
+            "timestamp": 1752563274000
+          },
+          "raw_data_hex": "0a02ea2a2208d43320ee5a8b677f40f0f6a8e78033520c68656c6c6f20776f726c64215a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d2087090a2a5e78033",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "7b43c3e8977db4f5475656eec2e643bf1549d923f29c28c009c85b51556a78602aa0f3f2780cb19655dfa8d4eb2102a3c6b3440ce5b7448a814c860cdc925dd21C"
+      }
+    },
+    {
+      "name": "Note_bad_utf8_bytes",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "ea2a",
+          "ref_block_hash": "d43320ee5a8b677f",
+          "expiration": 1752563334000,
+          "timestamp": 1752563274000,
+          "data": "deaddeaddeaddeaddeaddeaddeaddeaddead"
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 18123456
+        },
+        "raw_data_hex": "0a02ea2a2208d43320ee5a8b677f40f0f6a8e780335212deaddeaddeaddeaddeaddeaddeaddeaddead5a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d2087090a2a5e78033",
+        "raw": {
+          "txID": "b7922b85edb82ea58f4510d46b0ad2dd5fb112fb7ee89fc39590c7147f3f1a29",
+          "raw_data": {
+            "data": "deaddeaddeaddeaddeaddeaddeaddeaddead",
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "amount": 18123456,
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TransferContract"
+                },
+                "type": "TransferContract"
+              }
+            ],
+            "ref_block_bytes": "ea2a",
+            "ref_block_hash": "d43320ee5a8b677f",
+            "expiration": 1752563334000,
+            "timestamp": 1752563274000
+          },
+          "raw_data_hex": "0a02ea2a2208d43320ee5a8b677f40f0f6a8e780335212deaddeaddeaddeaddeaddeaddeaddeaddead5a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d2087090a2a5e78033",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "b573db3a80dd15cfa8fbf2961a2d615ca0f62b4eb3b591bd0e3ac009dd31cc2461aeb9d31306c9e30f0afdcfa256bdfc03fed5fe01d441a5c867b2b142a9bbbe1B"
+      }
+    },
+    {
+      "name": "Note_too_long_string",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "ea54",
+          "ref_block_hash": "e5ae03970dae489a",
+          "expiration": 1752563466000,
+          "timestamp": 1752563406000,
+          "data": "deade7fb3e7e39d4c650449e8d80c2731c4cc7fe0c7888a189a6eb1ead3621729a3ae8578299b2a1a35edf5ce3d9ae732cc4f202a34304900156ab37a78917609ae58dae01cb4de5ed98ff79a56e7f0e41f6042d3a734ae3b438209294a8a1899ddd4dee47c1cc86a0b2bf7d57d8457dfeed5fc2a24cd553c08a831f10a02ce5fb776d287e71e6a1a899ae966a0928f01ce6d3c4b0ee5151872c6dd80fefbfb79cff1949bfb5aba76b624e4c58eadf6c8ad97680e34d50807dc628dce44b39f3f405d5da406eb109cabdfc8c782be22f39c2e8814946e69977781fd66c691416b2785f41b508db37e819257751ee97794a57d7a8db5fb4b2cfce6031b76874922010"
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 18123456
+        },
+        "raw_data_hex": "0a02ea542208e5ae03970dae489a4090feb0e78033528202deade7fb3e7e39d4c650449e8d80c2731c4cc7fe0c7888a189a6eb1ead3621729a3ae8578299b2a1a35edf5ce3d9ae732cc4f202a34304900156ab37a78917609ae58dae01cb4de5ed98ff79a56e7f0e41f6042d3a734ae3b438209294a8a1899ddd4dee47c1cc86a0b2bf7d57d8457dfeed5fc2a24cd553c08a831f10a02ce5fb776d287e71e6a1a899ae966a0928f01ce6d3c4b0ee5151872c6dd80fefbfb79cff1949bfb5aba76b624e4c58eadf6c8ad97680e34d50807dc628dce44b39f3f405d5da406eb109cabdfc8c782be22f39c2e8814946e69977781fd66c691416b2785f41b508db37e819257751ee97794a57d7a8db5fb4b2cfce6031b768749220105a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870b0a9ade78033",
+        "raw": {
+          "txID": "cf8f946e3dc28d9f6076c7dbb5418c5996fce003b7bdca34a50b052200d7d575",
+          "raw_data": {
+            "data": "deade7fb3e7e39d4c650449e8d80c2731c4cc7fe0c7888a189a6eb1ead3621729a3ae8578299b2a1a35edf5ce3d9ae732cc4f202a34304900156ab37a78917609ae58dae01cb4de5ed98ff79a56e7f0e41f6042d3a734ae3b438209294a8a1899ddd4dee47c1cc86a0b2bf7d57d8457dfeed5fc2a24cd553c08a831f10a02ce5fb776d287e71e6a1a899ae966a0928f01ce6d3c4b0ee5151872c6dd80fefbfb79cff1949bfb5aba76b624e4c58eadf6c8ad97680e34d50807dc628dce44b39f3f405d5da406eb109cabdfc8c782be22f39c2e8814946e69977781fd66c691416b2785f41b508db37e819257751ee97794a57d7a8db5fb4b2cfce6031b76874922010",
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "amount": 18123456,
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TransferContract"
+                },
+                "type": "TransferContract"
+              }
+            ],
+            "ref_block_bytes": "ea54",
+            "ref_block_hash": "e5ae03970dae489a",
+            "expiration": 1752563466000,
+            "timestamp": 1752563406000
+          },
+          "raw_data_hex": "0a02ea542208e5ae03970dae489a4090feb0e78033528202deade7fb3e7e39d4c650449e8d80c2731c4cc7fe0c7888a189a6eb1ead3621729a3ae8578299b2a1a35edf5ce3d9ae732cc4f202a34304900156ab37a78917609ae58dae01cb4de5ed98ff79a56e7f0e41f6042d3a734ae3b438209294a8a1899ddd4dee47c1cc86a0b2bf7d57d8457dfeed5fc2a24cd553c08a831f10a02ce5fb776d287e71e6a1a899ae966a0928f01ce6d3c4b0ee5151872c6dd80fefbfb79cff1949bfb5aba76b624e4c58eadf6c8ad97680e34d50807dc628dce44b39f3f405d5da406eb109cabdfc8c782be22f39c2e8814946e69977781fd66c691416b2785f41b508db37e819257751ee97794a57d7a8db5fb4b2cfce6031b768749220105a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870b0a9ade78033",
+          "visible": false
+        }
+      },
+      "result": {
+        "error_message": "Tron: data field too long"
+      }
+    },
+    {
+      "name": "TriggerSmartContract_USDT_transfer",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "dae0",
+          "ref_block_hash": "9ab5c70b3a11405f",
+          "expiration": 1766454906000,
+          "fee_limit": 50000000,
+          "timestamp": 1766453046721
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb450",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+        },
+        "raw_data_hex": "0a02dae022089ab5c70b3a11405f409099abc7b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb45070c1dbb9c6b433900180e1eb17",
+        "raw": {
+          "txID": "3b76769f2fae94ffad214967c013b714110f26c740b4bf2d5702069d125353de",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb450",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "dae0",
+            "ref_block_hash": "9ab5c70b3a11405f",
+            "expiration": 1766454906000,
+            "fee_limit": 50000000,
+            "timestamp": 1766453046721
+          },
+          "raw_data_hex": "0a02dae022089ab5c70b3a11405f409099abc7b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb45070c1dbb9c6b433900180e1eb17",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "f99e2f704c78b07d49fcfa4cc7cd032635807f9a1f09b57adc2232cac38d0d42428008bd9953944e0276123ee6851a266078df9c68e5c4db158be05377dadd7b1C"
+      }
+    },
+    {
+      "name": "Stake_for_Energy",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "7e0b",
+          "ref_block_hash": "ed0f599cb230d512",
+          "expiration": 1770551739000,
+          "timestamp": 1770551679000
+        },
+        "contract": {
+          "_message_type": "TronFreezeBalanceV2Contract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "balance": 50000000,
+          "resource": "ENERGY"
+        },
+        "raw_data_hex": "0a027e0b2208ed0f599cb230d51240f884eee8c3335a5a083612560a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e7472616374121e0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080e1eb1718017098b0eae8c333",
+        "raw": {
+          "visible": false,
+          "txID": "310c0ffb157a8432c75cf2c9d03df6503002fa5d237f2eade6446b691ba30ead",
+          "raw_data_hex": "0a027e0b2208ed0f599cb230d51240f884eee8c3335a5a083612560a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e7472616374121e0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080e1eb1718017098b0eae8c333",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "balance": 50000000,
+                    "resource": "ENERGY"
+                  },
+                  "type_url": "type.googleapis.com/protocol.FreezeBalanceV2Contract"
+                },
+                "type": "FreezeBalanceV2Contract"
+              }
+            ],
+            "ref_block_bytes": "7e0b",
+            "ref_block_hash": "ed0f599cb230d512",
+            "expiration": 1770551739000,
+            "timestamp": 1770551679000
+          }
+        }
+      },
+      "result": {
+        "signature": "39114ab6d33aafc741057c7245272b286d71fd4242052445cd058170073bbee1534e6752f2d1a305916fbac06fb0803641df604c713ee927e872a0ad972d18d01C"
+      }
+    },
+    {
+      "name": "Stake_for_Bandwidth",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "7dd7",
+          "ref_block_hash": "007205b57e8b5510",
+          "expiration": 1770551583000,
+          "timestamp": 1770551523000
+        },
+        "contract": {
+          "_message_type": "TronFreezeBalanceV2Contract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "balance": 9223372036854740
+        },
+        "raw_data_hex": "0a027dd72208007205b57e8b55104098c2e4e8c3335a5c083612580a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e747261637412200a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5810d4a78dafba93b11070b8ede0e8c333",
+        "raw": {
+          "visible": false,
+          "txID": "1420f34f1cb3d4963503e94ccc67bba8319f382aeee9793f8f11f77d6368efd9",
+          "raw_data_hex": "0a027dd72208007205b57e8b55104098c2e4e8c3335a5c083612580a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e747261637412200a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5810d4a78dafba93b11070b8ede0e8c333",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "balance": 9223372036854740
+                  },
+                  "type_url": "type.googleapis.com/protocol.FreezeBalanceV2Contract"
+                },
+                "type": "FreezeBalanceV2Contract"
+              }
+            ],
+            "ref_block_bytes": "7dd7",
+            "ref_block_hash": "007205b57e8b5510",
+            "expiration": 1770551583000,
+            "timestamp": 1770551523000
+          }
+        }
+      },
+      "result": {
+        "signature": "046e780100fff665c831d7d70d5fe34e5c5a29aadfb18cd15fd707576799690e75006369ea9327121862edbd17abd218ec40a50f32e7636975f7b4d5445f1fce1C"
+      }
+    },
+    {
+      "name": "Unstake_for_Energy",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "d991",
+          "ref_block_hash": "43b74d04209c1777",
+          "expiration": 1771418313000,
+          "timestamp": 1771417053000
+        },
+        "contract": {
+          "_message_type": "TronUnfreezeBalanceV2Contract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "balance": 10000000,
+          "resource": "ENERGY"
+        },
+        "raw_data_hex": "0a02d991220843b74d04209c177740a8c28986c7335a5c083712580a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121e0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080ade204180170c8cebc85c733",
+        "raw": {
+          "visible": false,
+          "txID": "6b2f6aa8875e887094d51d9e8a8e4c9e1653ffd20c92640a71eebdc919fbe48b",
+          "raw_data_hex": "0a02d991220843b74d04209c177740a8c28986c7335a5c083712580a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121e0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080ade204180170c8cebc85c733",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "resource": "ENERGY",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "balance": 10000000
+                  },
+                  "type_url": "type.googleapis.com/protocol.UnfreezeBalanceV2Contract"
+                },
+                "type": "UnfreezeBalanceV2Contract"
+              }
+            ],
+            "ref_block_bytes": "d991",
+            "ref_block_hash": "43b74d04209c1777",
+            "expiration": 1771418313000,
+            "timestamp": 1771417053000
+          }
+        }
+      },
+      "result": {
+        "signature": "1f3a3c4028ef2e11a1c904b746f1136f2535c1eacf652eec89d7d3604565af7d0a1cfa24a10408d8146ac01e055b7fec25fc863bb636c7b85dad7018de528b161B"
+      }
+    },
+    {
+      "name": "Unstake_for_Bandwidth",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "f2b7",
+          "ref_block_hash": "fb75c38816f843ef",
+          "expiration": 1771437825000,
+          "timestamp": 1771436565000
+        },
+        "contract": {
+          "_message_type": "TronUnfreezeBalanceV2Contract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "balance": 10000000
+        },
+        "raw_data_hex": "0a02f2b72208fb75c38816f843ef40e8b7b08fc7335a5a083712560a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121c0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080ade2047088c4e38ec733",
+        "raw": {
+          "visible": false,
+          "txID": "4a530390c629644f05b974ca6d55ccc2684bebf9b0441f09dc7c53b129e520db",
+          "raw_data_hex": "0a02f2b72208fb75c38816f843ef40e8b7b08fc7335a5a083712560a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121c0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080ade2047088c4e38ec733",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "balance": 10000000
+                  },
+                  "type_url": "type.googleapis.com/protocol.UnfreezeBalanceV2Contract"
+                },
+                "type": "UnfreezeBalanceV2Contract"
+              }
+            ],
+            "ref_block_bytes": "f2b7",
+            "ref_block_hash": "fb75c38816f843ef",
+            "expiration": 1771437825000,
+            "timestamp": 1771436565000
+          }
+        }
+      },
+      "result": {
+        "signature": "b4d10dbd35e1c4e925f45c38809e648df9936f6e5a9fa49ffd90f6ca81abc0595aa388f797114963a5a2be71b982832112846dfdd5b8125c0bcedb2822047a591B"
+      }
+    },
+    {
+      "name": "Claim_Unfrozen_Balance",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "f55c",
+          "ref_block_hash": "e53dfa7c93866297",
+          "expiration": 1771439874000,
+          "timestamp": 1771438614000
+        },
+        "contract": {
+          "_message_type": "TronWithdrawUnfreeze",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58"
+        },
+        "raw_data_hex": "0a02f55c2208e53dfa7c9386629740d0bfad90c7335a5a083812560a3b747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5769746864726177457870697265556e667265657a65436f6e747261637412170a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5870f0cbe08fc733",
+        "raw": {
+          "visible": false,
+          "txID": "0e9a64350214495a4a6439c3ca27e8d3707c47c7ca489ed8cb12d9783f676603",
+          "raw_data_hex": "0a02f55c2208e53dfa7c9386629740d0bfad90c7335a5a083812560a3b747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5769746864726177457870697265556e667265657a65436f6e747261637412170a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5870f0cbe08fc733",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58"
+                  },
+                  "type_url": "type.googleapis.com/protocol.WithdrawExpireUnfreezeContract"
+                },
+                "type": "WithdrawExpireUnfreezeContract"
+              }
+            ],
+            "ref_block_bytes": "f55c",
+            "ref_block_hash": "e53dfa7c93866297",
+            "expiration": 1771439874000,
+            "timestamp": 1771438614000
+          }
+        }
+      },
+      "result": {
+        "signature": "833f6ba5c449a28ee6c58d98298f2f7cce8be1b7f70396e763ec216ca1d396b152bcefe9c7dde9970db2f1d38ecfba5aa20023f966f685da0048944415cb56f31C"
+      }
+    },
+    {
+      "name": "TriggerSmartContract_unknown_contract",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "30a2",
+          "ref_block_hash": "2d8cae7382b48775",
+          "expiration": 1766521434000,
+          "fee_limit": 50000000,
+          "timestamp": 1766519576813
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d00000",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "41d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c76"
+        },
+        "raw_data_hex": "0a0230a222082d8cae7382b487754090df87e7b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121541d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c762244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d0000070edb196e6b433900180e1eb17",
+        "raw": {
+          "visible": false,
+          "txID": "547eb950894b04fb3d6d66d4b34562d59525ffeef363836b0ad696f37a5d8ce6",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d00000",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "41d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c76"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "30a2",
+            "ref_block_hash": "2d8cae7382b48775",
+            "expiration": 1766521434000,
+            "fee_limit": 50000000,
+            "timestamp": 1766519576813
+          }
+        }
+      },
+      "result": {
+        "signature": "6147d601b05fc3c2da8c33e303d4f2a866f5f6da424a87dd89c31ed92cbac204151d5ae4a316be889cc48f1cefefc742959f2eab40e62ff8a890c726dcb4be5d1B"
+      }
+    }
+    ,
+    {
+      "name": "TriggerSmartContract_transfer_TRC20_fee_too_high",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "339a",
+          "ref_block_hash": "f3ac5279ff8e1b6b",
+          "expiration": 1766523738000,
+          "fee_limit": 15000000001,
+          "timestamp": 1766521878167
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d00000",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "41d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c76"
+        },
+        "raw_data_hex": "0a02339a2208f3ac5279ff8e1b6b4090af94e8b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121541d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c762244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d000007097eda2e7b433900181acc7f037",
+        "raw": {
+          "txID": "e7bd2d37525df5734fa6f32ca5f1494e3b3ad14c5463a788eed70fcecdbb528f",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d00000",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "41d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c76"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "339a",
+            "ref_block_hash": "f3ac5279ff8e1b6b",
+            "expiration": 1766523738000,
+            "fee_limit": 15000000001,
+            "timestamp": 1766521878167
+          },
+          "raw_data_hex": "0a02339a2208f3ac5279ff8e1b6b4090af94e8b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121541d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c762244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d000007097eda2e7b433900181acc7f037"
+        }
+      },
+      "result": {
+        "error_message": "Tron: fees too high"
+      }
+    },
+    {
+      "name": "Revoke_TRC-20",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "ee38",
+          "ref_block_hash": "fdc0ba410e4ca5f4",
+          "expiration": 1770838608000,
+          "fee_limit": 100000000,
+          "timestamp": 1770837350109
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a580000000000000000000000000000000000000000000000000000000000000000",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+        },
+        "raw_data_hex": "0a02ee382208fdc0ba410e4ca5f4408091d3f1c4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a58000000000000000000000000000000000000000000000000000000000000000070ddad86f1c433900180c2d72f",
+        "raw": {
+          "visible": false,
+          "txID": "4119bea29cccc12aa804b2ce0b51674a8b205bb866497a44cb65cc5fdde808d5",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a580000000000000000000000000000000000000000000000000000000000000000",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "ee38",
+            "ref_block_hash": "fdc0ba410e4ca5f4",
+            "expiration": 1770838608000,
+            "fee_limit": 100000000,
+            "timestamp": 1770837350109
+          },
+          "raw_data_hex": "0a02ee382208fdc0ba410e4ca5f4408091d3f1c4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a58000000000000000000000000000000000000000000000000000000000000000070ddad86f1c433900180c2d72f"
+        }
+      },
+      "result": {
+        "signature": "41d04615b2aa579831d1b862194bba46251e23e8982e63d3a3da5d02e0a95bba1860859b6da4094f3d29527fbec0642e5592e1134399e5fa3fedcda12a6bdb9d1C"
+      }
+    }
+    ,
+    {
+      "name": "Approve_TRC-20",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "126f",
+          "ref_block_hash": "5a53092b4881dc82",
+          "expiration": 1770866703000,
+          "fee_limit": 100000000,
+          "timestamp": 1770865445048
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a580000000000000000000000000000000000000000000000000000001029c12300",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+        },
+        "raw_data_hex": "0a02126f22085a53092b4881dc824098f585ffc4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a580000000000000000000000000000000000000000000000000000001029c1230070b891b9fec433900180c2d72f",
+        "raw": {
+          "txID": "d537fcc7283aa59646581aa3ef58332009e1c27b72c9ccb12b8687ef85d5b1f5",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a580000000000000000000000000000000000000000000000000000001029c12300",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "126f",
+            "ref_block_hash": "5a53092b4881dc82",
+            "expiration": 1770866703000,
+            "fee_limit": 100000000,
+            "timestamp": 1770865445048
+          },
+          "raw_data_hex": "0a02126f22085a53092b4881dc824098f585ffc4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a580000000000000000000000000000000000000000000000000000001029c1230070b891b9fec433900180c2d72f",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "a98b753f6c2e6d63996327c452ba781e6f87f9cff100c356281998a270e937a60b7f009f84c94c80ee593b2cf28323897a9781ab4db49462d4194e3a926ea3ee1C"
+      }
+    }
+    ,
+    {
+      "name": "Approve_TRC-20_Unlimited",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "11fd",
+          "ref_block_hash": "3b71c814205c1b58",
+          "expiration": 1770866361000,
+          "fee_limit": 100000000,
+          "timestamp": 1770865103125
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a58ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+        },
+        "raw_data_hex": "0a0211fd22083b71c814205c1b5840a885f1fec4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a58ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7095a2a4fec433900180c2d72f",
+        "raw": {
+          "txID": "1c55764bbd34e0c29a15322b55d63fe316d5492c4116e722b6ea61dab0e4f80e",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a58ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "11fd",
+            "ref_block_hash": "3b71c814205c1b58",
+            "expiration": 1770866361000,
+            "fee_limit": 100000000,
+            "timestamp": 1770865103125
+          },
+          "raw_data_hex": "0a0211fd22083b71c814205c1b5840a885f1fec4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244095ea7b3000000000000000000000000f2cd810c48c401d392ead3c6e1e1cb9f57750a58ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7095a2a4fec433900180c2d72f",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "7b69949daef46d44024f67d29fadafd61bbc5e8dfe61750df318232c587855c42315a5dc00562724c18e1ddc6f387a7e2fdc340a9ee0dae555eba39f045c589e1C"
+      }
+    },
+    {
+      "name": "Vote_9_candidates",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "4cbf",
+          "ref_block_hash": "46d6116f36a802ef",
+          "expiration": 1772103447000,
+          "timestamp": 1772102187000
+        },
+        "contract": {
+          "_message_type": "TronVoteWitnessContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "votes": [
+            {
+              "address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+              "count": 3
+            },
+            {
+              "address": "41f279598aff304907ca03b0498c686d010d3d80bb",
+              "count": 1
+            },
+            {
+              "address": "41cf9e12e0f48573c84bc88d8ff7c50567485aaa24",
+              "count": 340419167
+            },
+            {
+              "address": "41e76da262ad1ca05274f74258ee18bc7fcc4987dc",
+              "count": 384804424
+            },
+            {
+              "address": "41e61626ef01662b320a8ba38372e9db9cca940a3b",
+              "count": 498400241
+            },
+            {
+              "address": "41290bf92b578a1c615ebb273aff6a285230c02f65",
+              "count": 934422650
+            },
+            {
+              "address": "41e71c365c9dbf284ca8c1eed2d7877638941b9011",
+              "count": 986878351
+            },
+            {
+              "address": "41977f82c69011cf4a7db6f7339edcded85c614d45",
+              "count": 522045096
+            },
+            {
+              "address": "41cd8d8ad1b4a5bd7afe46949421d2b411a3601717",
+              "count": 924051795
+            }
+          ]
+        },
+        "raw_data_hex": "0a024cbf220846d6116f36a802ef40d8e3e2ccc9335ae002080412db020a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412a6020a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812190a1541f16412b9a17ee9408646e2a21e16478f72ed1e95100312190a1541f279598aff304907ca03b0498c686d010d3d80bb1001121d0a1541cf9e12e0f48573c84bc88d8ff7c50567485aaa2410dfc4a9a201121d0a1541e76da262ad1ca05274f74258ee18bc7fcc4987dc10c8ccbeb701121d0a1541e61626ef01662b320a8ba38372e9db9cca940a3b10f1f7d3ed01121d0a1541290bf92b578a1c615ebb273aff6a285230c02f6510fad0c8bd03121d0a1541e71c365c9dbf284ca8c1eed2d7877638941b9011108fa3cad603121d0a1541977f82c69011cf4a7db6f7339edcded85c614d4510a88df7f801121d0a1541cd8d8ad1b4a5bd7afe46949421d2b411a360171710d3d2cfb80370f8ef95ccc933",
+        "raw": {
+          "txID": "f237ac366fbf48a1f6e5554db8f37d4320f7e3152a01806289df1d403d3aa47b",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "votes": [
+                      {
+                        "vote_address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+                        "vote_count": 3
+                      },
+                      {
+                        "vote_address": "41f279598aff304907ca03b0498c686d010d3d80bb",
+                        "vote_count": 1
+                      },
+                      {
+                        "vote_address": "41cf9e12e0f48573c84bc88d8ff7c50567485aaa24",
+                        "vote_count": 340419167
+                      },
+                      {
+                        "vote_address": "41e76da262ad1ca05274f74258ee18bc7fcc4987dc",
+                        "vote_count": 384804424
+                      },
+                      {
+                        "vote_address": "41e61626ef01662b320a8ba38372e9db9cca940a3b",
+                        "vote_count": 498400241
+                      },
+                      {
+                        "vote_address": "41290bf92b578a1c615ebb273aff6a285230c02f65",
+                        "vote_count": 934422650
+                      },
+                      {
+                        "vote_address": "41e71c365c9dbf284ca8c1eed2d7877638941b9011",
+                        "vote_count": 986878351
+                      },
+                      {
+                        "vote_address": "41977f82c69011cf4a7db6f7339edcded85c614d45",
+                        "vote_count": 522045096
+                      },
+                      {
+                        "vote_address": "41cd8d8ad1b4a5bd7afe46949421d2b411a3601717",
+                        "vote_count": 924051795
+                      }
+                    ]
+                  },
+                  "type_url": "type.googleapis.com/protocol.VoteWitnessContract"
+                },
+                "type": "VoteWitnessContract"
+              }
+            ],
+            "ref_block_bytes": "4cbf",
+            "ref_block_hash": "46d6116f36a802ef",
+            "expiration": 1772103447000,
+            "timestamp": 1772102187000
+          },
+          "raw_data_hex": "0a024cbf220846d6116f36a802ef40d8e3e2ccc9335ae002080412db020a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412a6020a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812190a1541f16412b9a17ee9408646e2a21e16478f72ed1e95100312190a1541f279598aff304907ca03b0498c686d010d3d80bb1001121d0a1541cf9e12e0f48573c84bc88d8ff7c50567485aaa2410dfc4a9a201121d0a1541e76da262ad1ca05274f74258ee18bc7fcc4987dc10c8ccbeb701121d0a1541e61626ef01662b320a8ba38372e9db9cca940a3b10f1f7d3ed01121d0a1541290bf92b578a1c615ebb273aff6a285230c02f6510fad0c8bd03121d0a1541e71c365c9dbf284ca8c1eed2d7877638941b9011108fa3cad603121d0a1541977f82c69011cf4a7db6f7339edcded85c614d4510a88df7f801121d0a1541cd8d8ad1b4a5bd7afe46949421d2b411a360171710d3d2cfb80370f8ef95ccc933",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "56dd74befa406b9f40552354f92e72ecf95857529b54dd06abff2543bb4a122d6fd0799b97909d0c0305e67ebf881608f7c4e867c5793c2d84cce9caee8041821B"
+      }
+    },
+    {
+      "name": "Vote_4_candidates",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "16f1",
+          "ref_block_hash": "9595f045a80bd4af",
+          "expiration": 1772458899000,
+          "timestamp": 1772457639000
+        },
+        "contract": {
+          "_message_type": "TronVoteWitnessContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "votes": [
+            {
+              "address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+              "count": 11606
+            },
+            {
+              "address": "41f279598aff304907ca03b0498c686d010d3d80bb",
+              "count": 12496
+            },
+            {
+              "address": "41cf9e12e0f48573c84bc88d8ff7c50567485aaa24",
+              "count": 2587
+            },
+            {
+              "address": "41e76da262ad1ca05274f74258ee18bc7fcc4987dc",
+              "count": 8594
+            }
+          ]
+        },
+        "raw_data_hex": "0a0216f122089595f045a80bd4af40b8eca1f6ca335ac101080412bc010a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e74726163741287010a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121a0a1541f16412b9a17ee9408646e2a21e16478f72ed1e9510d65a121a0a1541f279598aff304907ca03b0498c686d010d3d80bb10d061121a0a1541cf9e12e0f48573c84bc88d8ff7c50567485aaa24109b14121a0a1541e76da262ad1ca05274f74258ee18bc7fcc4987dc10924370d8f8d4f5ca33",
+        "raw": {
+          "txID": "d295ec668a08d438d86da2eb03e121c40ba505810eb0a4523b920d8bb7a597f7",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "votes": [
+                      {
+                        "vote_address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+                        "vote_count": 11606
+                      },
+                      {
+                        "vote_address": "41f279598aff304907ca03b0498c686d010d3d80bb",
+                        "vote_count": 12496
+                      },
+                      {
+                        "vote_address": "41cf9e12e0f48573c84bc88d8ff7c50567485aaa24",
+                        "vote_count": 2587
+                      },
+                      {
+                        "vote_address": "41e76da262ad1ca05274f74258ee18bc7fcc4987dc",
+                        "vote_count": 8594
+                      }
+                    ]
+                  },
+                  "type_url": "type.googleapis.com/protocol.VoteWitnessContract"
+                },
+                "type": "VoteWitnessContract"
+              }
+            ],
+            "ref_block_bytes": "16f1",
+            "ref_block_hash": "9595f045a80bd4af",
+            "expiration": 1772458899000,
+            "timestamp": 1772457639000
+          },
+          "raw_data_hex": "0a0216f122089595f045a80bd4af40b8eca1f6ca335ac101080412bc010a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e74726163741287010a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121a0a1541f16412b9a17ee9408646e2a21e16478f72ed1e9510d65a121a0a1541f279598aff304907ca03b0498c686d010d3d80bb10d061121a0a1541cf9e12e0f48573c84bc88d8ff7c50567485aaa24109b14121a0a1541e76da262ad1ca05274f74258ee18bc7fcc4987dc10924370d8f8d4f5ca33",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "2bac74b1801846677d0c675226e3de26c5360c095f6487b106103582f698c84638a2a120e64365186eef19f55dcdfa0c031fa1f7d2c27001b5483be0726c40101C"
+      }
+    },
+    {
+      "name": "Vote_10_candidates_too_many",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "1910",
+          "ref_block_hash": "aba08959fb606016",
+          "expiration": 1772460540000,
+          "timestamp": 1772459280000
+        },
+        "contract": {
+          "_message_type": "TronVoteWitnessContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "votes": [
+            {
+              "address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+              "count": 4706
+            },
+            {
+              "address": "41f279598aff304907ca03b0498c686d010d3d80bb",
+              "count": 15473
+            },
+            {
+              "address": "41cf9e12e0f48573c84bc88d8ff7c50567485aaa24",
+              "count": 12701
+            },
+            {
+              "address": "41e76da262ad1ca05274f74258ee18bc7fcc4987dc",
+              "count": 18791
+            },
+            {
+              "address": "41e61626ef01662b320a8ba38372e9db9cca940a3b",
+              "count": 11495
+            },
+            {
+              "address": "41290bf92b578a1c615ebb273aff6a285230c02f65",
+              "count": 12347
+            },
+            {
+              "address": "41e71c365c9dbf284ca8c1eed2d7877638941b9011",
+              "count": 15823
+            },
+            {
+              "address": "41977f82c69011cf4a7db6f7339edcded85c614d45",
+              "count": 17323
+            },
+            {
+              "address": "41cd8d8ad1b4a5bd7afe46949421d2b411a3601717",
+              "count": 5535
+            },
+            {
+              "address": "410257b56399ef8d835b42f68e6476f7fe8ca2d283",
+              "count": 9685
+            }
+          ]
+        },
+        "raw_data_hex": "0a0219102208aba08959fb60601640e08086f7ca335aeb02080412e6020a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412b1020a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121a0a1541f16412b9a17ee9408646e2a21e16478f72ed1e9510e224121a0a1541f279598aff304907ca03b0498c686d010d3d80bb10f178121a0a1541cf9e12e0f48573c84bc88d8ff7c50567485aaa24109d63121b0a1541e76da262ad1ca05274f74258ee18bc7fcc4987dc10e79201121a0a1541e61626ef01662b320a8ba38372e9db9cca940a3b10e759121a0a1541290bf92b578a1c615ebb273aff6a285230c02f6510bb60121a0a1541e71c365c9dbf284ca8c1eed2d7877638941b901110cf7b121b0a1541977f82c69011cf4a7db6f7339edcded85c614d4510ab8701121a0a1541cd8d8ad1b4a5bd7afe46949421d2b411a3601717109f2b121a0a15410257b56399ef8d835b42f68e6476f7fe8ca2d28310d54b70808db9f6ca33",
+        "raw": {
+          "txID": "713c7e88fc0bcdc29f830289d90c4248fb002b3a91ce9191881f202856ff0356",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "votes": [
+                      {
+                        "vote_address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+                        "vote_count": 4706
+                      },
+                      {
+                        "vote_address": "41f279598aff304907ca03b0498c686d010d3d80bb",
+                        "vote_count": 15473
+                      },
+                      {
+                        "vote_address": "41cf9e12e0f48573c84bc88d8ff7c50567485aaa24",
+                        "vote_count": 12701
+                      },
+                      {
+                        "vote_address": "41e76da262ad1ca05274f74258ee18bc7fcc4987dc",
+                        "vote_count": 18791
+                      },
+                      {
+                        "vote_address": "41e61626ef01662b320a8ba38372e9db9cca940a3b",
+                        "vote_count": 11495
+                      },
+                      {
+                        "vote_address": "41290bf92b578a1c615ebb273aff6a285230c02f65",
+                        "vote_count": 12347
+                      },
+                      {
+                        "vote_address": "41e71c365c9dbf284ca8c1eed2d7877638941b9011",
+                        "vote_count": 15823
+                      },
+                      {
+                        "vote_address": "41977f82c69011cf4a7db6f7339edcded85c614d45",
+                        "vote_count": 17323
+                      },
+                      {
+                        "vote_address": "41cd8d8ad1b4a5bd7afe46949421d2b411a3601717",
+                        "vote_count": 5535
+                      },
+                      {
+                        "vote_address": "410257b56399ef8d835b42f68e6476f7fe8ca2d283",
+                        "vote_count": 9685
+                      }
+                    ]
+                  },
+                  "type_url": "type.googleapis.com/protocol.VoteWitnessContract"
+                },
+                "type": "VoteWitnessContract"
+              }
+            ],
+            "ref_block_bytes": "1910",
+            "ref_block_hash": "aba08959fb606016",
+            "expiration": 1772460540000,
+            "timestamp": 1772459280000
+          },
+          "raw_data_hex": "0a0219102208aba08959fb60601640e08086f7ca335aeb02080412e6020a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412b1020a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121a0a1541f16412b9a17ee9408646e2a21e16478f72ed1e9510e224121a0a1541f279598aff304907ca03b0498c686d010d3d80bb10f178121a0a1541cf9e12e0f48573c84bc88d8ff7c50567485aaa24109d63121b0a1541e76da262ad1ca05274f74258ee18bc7fcc4987dc10e79201121a0a1541e61626ef01662b320a8ba38372e9db9cca940a3b10e759121a0a1541290bf92b578a1c615ebb273aff6a285230c02f6510bb60121a0a1541e71c365c9dbf284ca8c1eed2d7877638941b901110cf7b121b0a1541977f82c69011cf4a7db6f7339edcded85c614d4510ab8701121a0a1541cd8d8ad1b4a5bd7afe46949421d2b411a3601717109f2b121a0a15410257b56399ef8d835b42f68e6476f7fe8ca2d28310d54b70808db9f6ca33",
+          "visible": false
+        }
+      },
+      "result": {
+        "error_message": "Tron: too many votes"
+      }
+    },
+    {
+      "name": "Vote_1_candidate",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "4ea1",
+          "ref_block_hash": "dee739b870d6de54",
+          "expiration": 1772104911000,
+          "timestamp": 1772103651000
+        },
+        "contract": {
+          "_message_type": "TronVoteWitnessContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "votes": [
+            {
+              "address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+              "count": 1000
+            }
+          ]
+        },
+        "raw_data_hex": "0a024ea12208dee739b870d6de54409891bccdc9335a6b080412670a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121a0a1541f16412b9a17ee9408646e2a21e16478f72ed1e9510e80770b89defccc933",
+        "raw": {
+          "txID": "b680afc82000d1af6fb42bb34e1177134193cc738ac37eb0011c43f8edfecae0",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "votes": [
+                      {
+                        "vote_address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+                        "vote_count": 1000
+                      }
+                    ]
+                  },
+                  "type_url": "type.googleapis.com/protocol.VoteWitnessContract"
+                },
+                "type": "VoteWitnessContract"
+              }
+            ],
+            "ref_block_bytes": "4ea1",
+            "ref_block_hash": "dee739b870d6de54",
+            "expiration": 1772104911000,
+            "timestamp": 1772103651000
+          },
+          "raw_data_hex": "0a024ea12208dee739b870d6de54409891bccdc9335a6b080412670a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121a0a1541f16412b9a17ee9408646e2a21e16478f72ed1e9510e80770b89defccc933",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "460fe864e1367df5c5b35e1c4a71588af06fd20337d2323b5c69fc6f31f1f9961374e0fb942aede50bbcdfebedadcb8f542c4b3188563d1c56fba3d52d59286b1B"
+      }
+    }
+  ]
+}

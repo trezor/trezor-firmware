@@ -6,6 +6,7 @@ from trezor.wire import DataError
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Sequence
 
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
@@ -64,7 +65,7 @@ class Zcash(Bitcoinlike):
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         await self.sign_nonsegwit_bip143_input(i_sign)
 
-    def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
+    def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[AnyBytes, AnyBytes]:
         from apps.bitcoin.common import ecdsa_sign
 
         node = self.keychain.derive(txi.address_n)
@@ -121,7 +122,7 @@ class Zcash(Bitcoinlike):
         # serialize Orchard bundle
         write_compact_size(w, 0)  # nActionsOrchard
 
-    def output_derive_script(self, txo: TxOutput) -> bytes:
+    def output_derive_script(self, txo: TxOutput) -> AnyBytes:
         from trezor.enums import OutputScriptType
 
         from apps.bitcoin import scripts

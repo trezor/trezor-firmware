@@ -3,17 +3,19 @@ from typing import TYPE_CHECKING
 from . import layout, serialize
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.crypto import bip32
     from trezor.messages import NEMImportanceTransfer, NEMTransactionCommon, NEMTransfer
 
 
 async def transfer(
-    public_key: bytes,
+    public_key: AnyBytes,
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     node: bip32.HDNode,
     chunkify: bool,
-) -> bytes:
+) -> bytearray:
     transfer.mosaics = serialize.canonicalize_mosaics(transfer.mosaics)
     payload, encrypted = serialize.get_transfer_payload(transfer, node)
 
@@ -26,9 +28,9 @@ async def transfer(
 
 
 async def importance_transfer(
-    public_key: bytes,
+    public_key: AnyBytes,
     common: NEMTransactionCommon,
     imp: NEMImportanceTransfer,
-) -> bytes:
+) -> bytearray:
     await layout.ask_importance_transfer(common, imp)
     return serialize.serialize_importance_transfer(common, imp, public_key)

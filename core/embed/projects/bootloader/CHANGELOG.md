@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.16 [18th March 2026]
+
+### Added
+- Added version build number to Features message.  [#6225]
+- [T3W1] Introduced Secure Monitor downgrade protection.  [#6244]
+- Adjusted version strings to show build version number.  [#6245]
+
+### Fixed
+- [T3W1] Fixed text position on waiting for host screen in bootloader when no menu is shown.  [#6307]
+
+## 2.1.15 [19th November 2025]
+
+### Fixed
+- [T3W1] Erase BLE bonds too after entering wipe code.  [#5939]
+- [T3W1] Respect BLE on/off settings in bootloader.  [#5952]
+- [T3W1] Fixed battery drain when waiting for unofficial firmware confirmation.  [#5993]
+- [T3W1] Adjust random part of BLE device name during pairing.  [#6019]
+- [T3W1] Restart bluetooth on reboot from device menu.  [#6023]
+
+## 2.1.14 [21st October 2025]
+
+### Changed
+- Minor UX improvements.
+
+## 2.1.13 [(internal release)]
+
+### Added
+- Signal FW corrupted to host via features message.  [#5857]
+
+## 2.1.12 [(internal release)]
+
+### Changed
+- Minor bug fixes.
+
+## 2.1.11 [(internal release)]
+
+### Added
+- Add cancel button to Connect to host screen.  [#4833]
+
+### Changed
+- Major code clean-up and refactoring.  [#4572]
+- Always allow reboot from bootloader menu.  [#5155]
+- Erase storage when bootloader is unlocked.  [#5345]
+
+### Fixed
+- Allow running firmware on locked bootloader device based on allow_run_with_secret flag.  [#4649]
+- [T2B1,T3B1] Fix screen title when confirming installation.  [#5057]
+- Fixed progress bar delay when installing firmware.  [#5484]
+
 ## 2.1.10 [19th February 2025]
 
 ### Fixed
@@ -177,3 +226,20 @@ Internal only release for Model R prototypes.
 [#4140]: https://github.com/trezor/trezor-firmware/pull/4140
 [#4195]: https://github.com/trezor/trezor-firmware/pull/4195
 [#4492]: https://github.com/trezor/trezor-firmware/pull/4492
+[#4572]: https://github.com/trezor/trezor-firmware/pull/4572
+[#4649]: https://github.com/trezor/trezor-firmware/pull/4649
+[#4833]: https://github.com/trezor/trezor-firmware/pull/4833
+[#5057]: https://github.com/trezor/trezor-firmware/pull/5057
+[#5155]: https://github.com/trezor/trezor-firmware/pull/5155
+[#5345]: https://github.com/trezor/trezor-firmware/pull/5345
+[#5484]: https://github.com/trezor/trezor-firmware/pull/5484
+[#5857]: https://github.com/trezor/trezor-firmware/pull/5857
+[#5939]: https://github.com/trezor/trezor-firmware/pull/5939
+[#5952]: https://github.com/trezor/trezor-firmware/pull/5952
+[#5993]: https://github.com/trezor/trezor-firmware/pull/5993
+[#6019]: https://github.com/trezor/trezor-firmware/pull/6019
+[#6023]: https://github.com/trezor/trezor-firmware/pull/6023
+[#6225]: https://github.com/trezor/trezor-firmware/pull/6225
+[#6244]: https://github.com/trezor/trezor-firmware/pull/6244
+[#6245]: https://github.com/trezor/trezor-firmware/pull/6245
+[#6307]: https://github.com/trezor/trezor-firmware/pull/6307

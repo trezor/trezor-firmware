@@ -56,16 +56,16 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.management.change_wipe_code"
     if msg_type == MessageType.GetNonce:
         return "apps.management.get_nonce"
+    if utils.USE_SERIAL_NUMBER and msg_type == MessageType.GetSerialNumber:
+        return "apps.management.get_serial_number"
     if msg_type == MessageType.RebootToBootloader:
         return "apps.management.reboot_to_bootloader"
 
-    if (
-        # pylint: disable-next=consider-using-in
-        utils.INTERNAL_MODEL == "T2B1"
-        or utils.INTERNAL_MODEL == "T3B1"
-        or utils.INTERNAL_MODEL == "T3T1"
-    ) and msg_type == MessageType.ShowDeviceTutorial:
+    if msg_type == MessageType.ShowDeviceTutorial:
         return "apps.management.show_tutorial"
+
+    if utils.USE_TELEMETRY and msg_type == MessageType.TelemetryGet:
+        return "apps.telemetry.get_telemetry"
 
     if utils.USE_BACKLIGHT and msg_type == MessageType.SetBrightness:
         return "apps.management.set_brightness"
@@ -109,6 +109,18 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.cipher_key_value"
     if msg_type == MessageType.GetFirmwareHash:
         return "apps.misc.get_firmware_hash"
+    if msg_type == MessageType.PaymentNotification:
+        return "apps.misc.payment_notification"
+
+    # evolu
+    if msg_type == MessageType.EvoluGetNode:
+        return "apps.evolu.get_node"
+    if msg_type == MessageType.EvoluGetDelegatedIdentityKey:
+        return "apps.evolu.get_delegated_identity_key"
+    if msg_type == MessageType.EvoluIndexManagement:
+        return "apps.evolu.index_management"
+    if utils.USE_OPTIGA and msg_type == MessageType.EvoluSignRegistrationRequest:
+        return "apps.evolu.sign_registration_request"
 
     if not utils.BITCOIN_ONLY:
         # When promoting the Nostr app to production-level
@@ -120,6 +132,12 @@ def _find_message_handler_module(msg_type: int) -> str:
                 return "apps.nostr.get_pubkey"
             if msg_type == MessageType.NostrSignEvent:
                 return "apps.nostr.sign_event"
+
+        # tron
+        if msg_type == MessageType.TronGetAddress:
+            return "apps.tron.get_address"
+        if msg_type == MessageType.TronSignTx:
+            return "apps.tron.sign_tx"
 
         if msg_type == MessageType.SetU2FCounter:
             return "apps.management.set_u2f_counter"
@@ -193,6 +211,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.cardano.sign_tx"
         if msg_type == MessageType.CardanoGetNativeScriptHash:
             return "apps.cardano.get_native_script_hash"
+        if msg_type == MessageType.CardanoSignMessageInit:
+            return "apps.cardano.sign_message"
 
         # tezos
         if msg_type == MessageType.TezosGetAddress:

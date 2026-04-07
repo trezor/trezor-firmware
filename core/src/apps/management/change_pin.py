@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import TR, config, wire
+from trezor import TR, config, utils, wire
 
 if TYPE_CHECKING:
     from typing import Awaitable
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 async def change_pin(msg: ChangePin) -> Success:
     from storage.device import is_initialized
     from trezor.messages import Success
-    from trezor.ui.layouts import success_pin_change
+    from trezor.ui.layouts import pin_wipe_code_exists_popup, success_pin_change
 
     from apps.common.request_pin import (
         error_pin_invalid,
@@ -26,11 +26,20 @@ async def change_pin(msg: ChangePin) -> Success:
     # confirm that user wants to change the pin
     await _require_confirm_change_pin(msg)
 
+    # Do not allow to remove the PIN if the wipe code is set.
+    if msg.remove and config.has_wipe_code():
+        await pin_wipe_code_exists_popup(
+            TR.pin__wipe_code_exists_title,
+            TR.pin__wipe_code_exists_description,
+            TR.buttons__continue,
+        )
+        raise RuntimeError  # should be unreachable
+
     # get old pin
     curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)
 
-    # if changing pin, pre-check the entered pin before getting new pin
-    if curpin and not msg.remove:
+    # check the entered pin before getting new pin
+    if config.has_pin():
         if not config.check_pin(curpin, salt):
             await error_pin_invalid()
 
@@ -41,11 +50,10 @@ async def change_pin(msg: ChangePin) -> Success:
         newpin = ""
 
     # write into storage
-    if not config.change_pin(curpin, newpin, salt, salt):
-        if newpin:
-            await error_pin_matches_wipe_code()
-        else:
-            await error_pin_invalid()
+    if not config.change_pin(newpin, salt):
+        await error_pin_matches_wipe_code()
+
+    utils.notify_send(utils.NOTIFY_PIN_CHANGE)
 
     if newpin:
         if curpin:
@@ -63,7 +71,7 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
     from trezor.ui.layouts import (
         confirm_change_pin,
         confirm_remove_pin,
-        confirm_set_new_pin,
+        confirm_set_new_code,
     )
 
     has_pin = config.has_pin()
@@ -79,15 +87,12 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
         return confirm_change_pin(
             "change_pin",
             TR.pin__title_settings,
-            description=TR.pin__change,
+            description=TR.pin__change_question,
         )
 
     if not msg.remove and not has_pin:  # setting new pin
-        return confirm_set_new_pin(
-            "set_pin",
-            TR.pin__title_settings,
-            TR.pin__turn_on,
-            TR.pin__info,
+        return confirm_set_new_code(
+            is_wipe_code=False,
         )
 
     # removing non-existing PIN

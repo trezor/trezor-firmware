@@ -1,0 +1,183 @@
+syntax = "proto2";
+package hw.trezor.messages.tron;
+
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageTron";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
+// All uint64 are actually int64 in TRON. int64 is not supported on our firmware.
+
+// TRON docs are more regularly updated than tronprotocol/protocol repository on Github:
+// https://developers.tron.network/docs/tron-contracttype
+
+/**
+ * Request: Ask device for Tron address corresponding to address_n path
+ * @start
+ * @next TronAddress
+ * @next Failure
+ */
+message TronGetAddress {
+    repeated uint32 address_n = 1;   // BIP-32 path to derive the key from master node
+    optional bool show_display = 2;  // Optionally show on display before sending the result
+    optional bool chunkify = 3;      // Display the address in chunks of 4 characters
+}
+
+/**
+ * Response: Contains Tron address derived from device private seed
+ * @end
+ */
+message TronAddress {
+    required string address = 1;  // Tron address in Base58Check encoding
+    optional bytes mac = 2;       // Address authentication code
+}
+
+/**
+ * Request: Ask device to sign Tron transaction. Provides mandatory contract-agnostic transaction details.
+ * @start
+ * @next TronContractRequest
+ */
+message TronSignTx {
+    repeated uint32 address_n = 1;       // BIP-32 path to derive the key from master node
+    required bytes ref_block_bytes = 2;  // The height of the transaction reference block, using the 6th to 8th
+                                         // (exclusive) bytes of the reference block height, a total of 2 bytes
+    required bytes ref_block_hash = 3;   // The hash of the transaction reference block
+    required uint64 expiration = 4;      // Transaction expiration time, beyond which the transaction
+                                         // will no longer be packed
+    optional bytes data = 5;             // Transaction memo. (256 bytes maximum, this is a Trezor limitation,
+                                         // not a Tron protocol limitation)
+    required uint64 timestamp = 6;       // Transaction timestamp, set as the transaction creation time
+    optional uint64 fee_limit = 7;  // Not TRX. Maximum Energy cost. Only for deploying or triggering smart contracts.
+}
+
+/**
+ * Response: Device ready to receive contract details
+ * @next TronTransferContract
+ * @next TronVoteWitnessContract
+ * @next TronTriggerSmartContract
+ * @next TronFreezeBalanceV2Contract
+ * @next TronUnfreezeBalanceV2Contract
+ * @next TronWithdrawUnfreeze
+ */
+message TronContractRequest {}
+
+/**
+ * Request: Fill in TransferContract details
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L32-L36
+message TronTransferContract {
+    // https://developers.tron.network/docs/tron-contracttype#2-transfercontract
+    required bytes owner_address = 1;  // Sender's address, Base58Check encoding
+    required bytes to_address = 2;     // Recipient's address, Base58Check encoding
+    required uint64 amount = 3;        // Transfer amount (in SUN)
+}
+
+/**
+ * Request: Fill in VoteWitnessContract details
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/4c726956542b8dff5a4bd5c54aa07cd9da257d08/core/contract/witness_contract.proto#L19-L27
+message TronVoteWitnessContract {
+    message TronVote {
+        required bytes address = 1;  // SR address to vote for
+        required uint64 count = 2;   // Number of votes assigned to SR
+    }
+
+    required bytes owner_address = 1;  // Voter address
+    repeated TronVote votes = 2;       // Votes split among SR addresses (max 9)
+}
+
+/**
+ * Request: Fill in TriggerSmartContract details. TRC-10 not supported.
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/smart_contract.proto#L74
+message TronTriggerSmartContract {
+    required bytes owner_address = 1;     // Sender account, signs transaction
+    required bytes contract_address = 2;  // Target smart contract address
+    required bytes data = 4;              // ABI-encoded function call data
+}
+
+/**
+ * Request: Freeze(Stake) TRX for Energy or Bandwidth (FreezeBalanceV2Contract. FreezeBalanceContract deprecated)
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L84-L88
+message TronFreezeBalanceV2Contract {
+    required bytes owner_address = 1;                              // Account whose TRX has to be frozen
+    required uint64 balance = 2;                                   // Amount to be frozen (in SUN)
+    optional TronResourceCode resource = 3 [default = BANDWIDTH];  // Resource obtained against freezing.
+                                                                   // Optional with default required in proto2
+}
+
+/**
+ * Request: Unfreeze TRX (UnfreezeBalanceV2Contract)
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L90-L94
+message TronUnfreezeBalanceV2Contract {
+    required bytes owner_address = 1;                              // Account whose TRX has to be unfrozen
+    required uint64 balance = 2;                                   // Amount to be unfrozen (in SUN)
+    optional TronResourceCode resource = 3 [default = BANDWIDTH];  // Resource being forfeited.
+}
+
+/**
+ * Request: Claim unfrozen TRX after their unstaking duration (WithdrawExpireUnfreezeContract)
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/4c726956542b8dff5a4bd5c54aa07cd9da257d08/core/contract/balance_contract.proto#L96
+message TronWithdrawUnfreeze {
+    required bytes owner_address = 1;  // Address to claim all unfrozen TRX.
+}
+
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/common.proto#L9C1-L13C2
+// Staking/Unstaking can not happen just for TRON_POWER:
+// https://developers.tron.network/reference/freezebalancev2-1
+enum TronResourceCode {
+    BANDWIDTH = 0;
+    ENERGY = 1;
+}
+
+/**
+ * Response: signature for transaction
+ * @end
+ */
+message TronSignature {
+    required bytes signature = 1;  // Signature of the transaction
+}
+
+/**
+ * TronRawTransaction and embedded messages are used to encode the Tron transaction, not for communication.
+ * @start
+ * @end
+ */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L431-L445
+message TronRawTransaction {
+    required bytes ref_block_bytes = 1;
+    required bytes ref_block_hash = 4;
+    required uint64 expiration = 8;
+    optional bytes data = 10;
+    repeated TronRawContract contract = 11;
+    required uint64 timestamp = 14;
+    optional uint64 fee_limit = 18;
+
+    // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L337-L385
+    message TronRawContract {
+        message TronRawParameter {
+            required string type_url = 1;  // e.g., "type.googleapis.com/protocol.TransferContract"
+            required bytes value = 2;      // The serialized value of the contract parameter, e.g., TronTransferContract
+        }
+
+        enum TronRawContractType {
+            TransferContract = 1;
+            VoteWitnessContract = 4;
+            TriggerSmartContract = 31;
+            FreezeBalanceV2Contract = 54;
+            UnfreezeBalanceV2Contract = 55;
+            WithdrawExpireUnfreezeContract = 56;
+        }
+
+        required TronRawContractType type = 1;
+        required TronRawParameter parameter = 2;
+    }
+}

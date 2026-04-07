@@ -1,8 +1,10 @@
-from common import unhexlify, unittest  # isort:skip
+# flake8: noqa: F403,F405
+from common import *  # isort:skip
 
 from trezor.crypto import bip39
 from trezor.enums import InputScriptType
 from trezor.messages import HDNodeType, MultisigRedeemScriptType
+from trezor.wire import DataError
 
 from apps.bitcoin import ownership, scripts
 from apps.bitcoin.addresses import (
@@ -585,6 +587,80 @@ class TestOwnershipProof(unittest.TestCase):
                 proof, script_pubkey, commitment_data, keychain, coin
             )
         )
+
+    def test_p2wsh_invalid_proof(self):
+        # Creates an invalid OwnershipProof for a 2-of-2 multisig address in which the same signature appears twice.
+
+        coin = coins.by_name("Bitcoin")
+        seed1 = bip39.seed(" ".join(["all"] * 12), "")
+        seed2 = bip39.seed(" ".join(["all"] * 12), "TREZOR")
+        commitment_data = b"TREZOR"
+
+        nodes = []
+        keychains = []
+        for seed in [seed1, seed2]:
+            keychain = Keychain(
+                seed,
+                coin.curve_name,
+                [AlwaysMatchingSchema],
+                slip21_namespaces=[[b"SLIP-0019"]],
+            )
+            keychains.append(keychain)
+            node = keychain.derive([84 | HARDENED, 0 | HARDENED, 0 | HARDENED])
+            nodes.append(
+                HDNodeType(
+                    depth=node.depth(),
+                    child_num=node.child_num(),
+                    fingerprint=node.fingerprint(),
+                    chain_code=node.chain_code(),
+                    public_key=node.public_key(),
+                )
+            )
+
+        multisig = MultisigRedeemScriptType(
+            nodes=nodes,
+            address_n=[1, 0],
+            signatures=[b"", b""],
+            m=2,
+        )
+
+        pubkeys = multisig_get_pubkeys(multisig)
+        address = _address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
+        script_pubkey = scripts.output_derive_script(address, coin)
+        ownership_ids = [b"\x00" * 32, b"\x00" * 32]
+
+        # Sign with the first key.
+        _, signature = ownership.generate_proof(
+            node=keychains[0].derive([84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0]),
+            script_type=InputScriptType.SPENDWITNESS,
+            multisig=multisig,
+            coin=coin,
+            user_confirmed=False,
+            ownership_ids=ownership_ids,
+            script_pubkey=script_pubkey,
+            commitment_data=commitment_data,
+        )
+
+        # Use the first signature for the second key.
+        multisig.signatures[1] = signature
+
+        # Sign with the first key again.
+        proof, signature = ownership.generate_proof(
+            node=keychains[0].derive([84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0]),
+            script_type=InputScriptType.SPENDWITNESS,
+            multisig=multisig,
+            coin=coin,
+            user_confirmed=False,
+            ownership_ids=ownership_ids,
+            script_pubkey=script_pubkey,
+            commitment_data=commitment_data,
+        )
+
+        with self.assertRaises(DataError) as e:
+            ownership.verify_nonownership(
+                proof, script_pubkey, commitment_data, keychain, coin
+            )
+        self.assertEqual(e.value.message, "Invalid signature")
 
 
 if __name__ == "__main__":

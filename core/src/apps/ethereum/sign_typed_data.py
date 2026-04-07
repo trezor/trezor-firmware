@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from trezor.enums import EthereumDataType
 from trezor.wire import DataError
@@ -9,6 +9,8 @@ from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 from .layout import should_show_struct
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import (
         EthereumFieldType,
         EthereumSignTypedData,
@@ -28,8 +30,10 @@ async def sign_typed_data(
     keychain: Keychain,
     defs: Definitions,
 ) -> EthereumTypedDataSignature:
+    from trezor import TR
     from trezor.crypto.curve import secp256k1
     from trezor.messages import EthereumTypedDataSignature
+    from trezor.ui.layouts.progress import progress
 
     from apps.common import paths
 
@@ -43,14 +47,16 @@ async def sign_typed_data(
 
     # Display address so user can validate it
     await require_confirm_address(address_bytes)
-
     data_hash = await _generate_typed_data_hash(
         msg.primary_type, msg.metamask_v4_compat, msg.show_message_hash
     )
 
+    progress_obj = progress(title=TR.progress__signing_transaction)
+    progress_obj.report(600)
     signature = secp256k1.sign(
         node.private_key(), data_hash, False, secp256k1.CANONICAL_SIG_ETHEREUM
     )
+    progress_obj.stop()
 
     return EthereumTypedDataSignature(
         address=address_from_bytes(address_bytes, defs.network),
@@ -61,7 +67,7 @@ async def sign_typed_data(
 async def _generate_typed_data_hash(
     primary_type: str,
     metamask_v4_compat: bool = True,
-    show_message_hash: bytes | None = None,
+    show_message_hash: AnyBytes | None = None,
 ) -> bytes:
     """
     Generate typed data hash according to EIP-712 specification
@@ -70,6 +76,7 @@ async def _generate_typed_data_hash(
     metamask_v4_compat - a flag that enables compatibility with MetaMask's signTypedData_v4 method
     """
     from trezor import TR
+    from trezor.ui.layouts.progress import progress
 
     from .layout import (
         confirm_empty_typed_message,
@@ -78,11 +85,13 @@ async def _generate_typed_data_hash(
         should_show_domain,
     )
 
+    progress_obj = progress(indeterminate=True)
+
     typed_data_envelope = TypedDataEnvelope(
         primary_type,
         metamask_v4_compat,
     )
-    await typed_data_envelope.collect_types()
+    await typed_data_envelope.collect_types(lambda p: progress_obj.report(int(p * 700)))
 
     name, version = await _get_name_and_version_for_domain(typed_data_envelope)
     show_domain = await should_show_domain(name, version)
@@ -91,7 +100,10 @@ async def _generate_typed_data_hash(
         [0],
         show_domain,
         ["EIP712Domain"],
+        lambda p: progress_obj.report(700 + int(p * 300)),
     )
+
+    progress_obj.stop()
 
     # Setting the primary_type to "EIP712Domain" is technically in spec
     # In this case, we ignore the "message" part and only use the "domain" part
@@ -106,12 +118,15 @@ async def _generate_typed_data_hash(
             TR.ethereum__title_confirm_message,
             TR.ethereum__show_full_message,
         )
+        progress_obj = progress(title=TR.progress__loading_transaction)
         message_hash = await typed_data_envelope.hash_struct(
             primary_type,
             [1],
             show_message,
             [primary_type],
+            lambda p: progress_obj.report(int(p * 1000)),
         )
+        progress_obj.stop()
 
     if show_message_hash is not None:
         if message_hash != show_message_hash:
@@ -130,7 +145,7 @@ def get_hash_writer() -> HashWriter:
     return HashWriter(sha3_256(keccak=True))
 
 
-def keccak256(message: bytes) -> bytes:
+def keccak256(message: AnyBytes) -> bytes:
     h = get_hash_writer()
     h.extend(message)
     return h.get_digest()
@@ -148,12 +163,21 @@ class TypedDataEnvelope:
         self.metamask_v4_compat = metamask_v4_compat
         self.types: dict[str, EthereumTypedDataStructAck] = {}
 
-    async def collect_types(self) -> None:
+    async def collect_types(
+        self,
+        report_progress: Callable[[float], None],
+    ) -> None:
         """Aggregate type collection process for both domain and message data."""
-        await self._collect_types("EIP712Domain")
-        await self._collect_types(self.primary_type)
+        await self._collect_types("EIP712Domain", lambda p: report_progress(p * 0.5))
+        await self._collect_types(
+            self.primary_type, lambda p: report_progress(0.5 + p * 0.5)
+        )
 
-    async def _collect_types(self, type_name: str) -> None:
+    async def _collect_types(
+        self,
+        type_name: str,
+        report_progress: Callable[[float], None] | None = None,
+    ) -> None:
         """Recursively collect types from the client."""
         from trezor.messages import (
             EthereumTypedDataStructAck,
@@ -163,7 +187,10 @@ class TypedDataEnvelope:
         req = EthereumTypedDataStructRequest(name=type_name)
         current_type = await call(req, EthereumTypedDataStructAck)
         self.types[type_name] = current_type
-        for member in current_type.members:
+        members_count = len(current_type.members)
+        for i, member in enumerate(current_type.members):
+            if report_progress:
+                report_progress(i / members_count)
             member_type = member.type
             validate_field_type(member_type)
             while member_type.data_type == EthereumDataType.ARRAY:
@@ -182,6 +209,7 @@ class TypedDataEnvelope:
         member_path: list[int],
         show_data: bool,
         parent_objects: list[str],
+        report_progress: Callable[[float], None] | None = None,
     ) -> bytes:
         """Generate a hash representation of the whole struct."""
         w = get_hash_writer()
@@ -192,6 +220,7 @@ class TypedDataEnvelope:
             member_path,
             show_data,
             parent_objects,
+            report_progress,
         )
         return w.get_digest()
 
@@ -251,6 +280,7 @@ class TypedDataEnvelope:
         member_path: list[int],
         show_data: bool,
         parent_objects: list[str],
+        report_progress: Callable[[float], None] | None = None,
     ) -> None:
         """
         Gradually fetch data from client and encode the whole struct.
@@ -263,9 +293,12 @@ class TypedDataEnvelope:
         from .layout import confirm_typed_value, should_show_array
 
         type_members = self.types[primary_type].members
+        members_count = len(type_members)
         member_value_path = member_path + [0]
         current_parent_objects = parent_objects + [""]
         for member_index, member in enumerate(type_members):
+            if report_progress:
+                report_progress(member_index / members_count)
             member_value_path[-1] = member_index
             field_name = member.name
             field_type = member.type
@@ -368,7 +401,7 @@ class TypedDataEnvelope:
 def encode_field(
     w: HashWriter,
     field: EthereumFieldType,
-    value: bytes,
+    value: AnyBytes,
 ) -> None:
     """
     SPEC:
@@ -413,7 +446,7 @@ def encode_field(
         raise ValueError  # Unsupported data type for field encoding
 
 
-def write_leftpad32(w: HashWriter, value: bytes, signed: bool = False) -> None:
+def write_leftpad32(w: HashWriter, value: AnyBytes, signed: bool = False) -> None:
     assert len(value) <= 32
 
     # Values need to be sign-extended, so accounting for negative ints
@@ -427,7 +460,7 @@ def write_leftpad32(w: HashWriter, value: bytes, signed: bool = False) -> None:
     w.extend(value)
 
 
-def _validate_value(field: EthereumFieldType, value: bytes) -> None:
+def _validate_value(field: EthereumFieldType, value: AnyBytes) -> None:
     """
     Make sure the byte data we receive are not corrupted or incorrect.
 
@@ -449,7 +482,7 @@ def _validate_value(field: EthereumFieldType, value: bytes) -> None:
             raise DataError("Invalid address")
     elif field.data_type == EthereumDataType.STRING:
         try:
-            value.decode()
+            bytes(value).decode()
         except UnicodeError:
             raise DataError("Invalid UTF-8")
 
@@ -518,7 +551,7 @@ async def _get_array_size(member_path: list[int]) -> int:
 async def get_value(
     field: EthereumFieldType,
     member_value_path: list[int],
-) -> bytes:
+) -> AnyBytes:
     """Get a single value from the client and perform its validation."""
     from trezor.messages import EthereumTypedDataValueAck, EthereumTypedDataValueRequest
 
@@ -535,7 +568,7 @@ async def get_value(
 
 async def _get_name_and_version_for_domain(
     typed_data_envelope: TypedDataEnvelope,
-) -> tuple[bytes, bytes]:
+) -> tuple[AnyBytes, AnyBytes]:
     domain_name = b"unknown"
     domain_version = b"unknown"
 

@@ -1,15 +1,27 @@
 # BLE setup - called from main.py near the end of firmware startup
 # please note BLE may already be set up by bootloader
 
+import utime
+
 import storage.device
 import trezorble as ble
-from trezor import log
+from trezor import log, utils
 
 try:
+    enable = storage.device.get_ble()
+    ble.set_enabled(enable)
     ble.start_comm()
+    if enable:
 
-    # allow connections from bonded peers if any
-    if ble.peer_count() > 0:
-        ble.start_advertising(True, storage.device.get_label())
+        start_ms = utime.ticks_ms()
+
+        while utime.ticks_diff(utime.ticks_ms(), start_ms) < 5000:
+            if utils.EMULATOR or ble.is_started():
+                break
+
+        # allow connections from bonded peers if any
+        if ble.peer_count() > 0:
+            ble.start_advertising(True, storage.device.get_label())
 except Exception as e:
-    log.exception(__name__, e)
+    if __debug__:
+        log.exception(__name__, e)

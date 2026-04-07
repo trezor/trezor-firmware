@@ -322,8 +322,7 @@ static secbool config_upgrade_v10(void) {
   if (config.has_pin) {
     size_t pin_len =
         MIN(strnlen(config.pin, sizeof(config.pin)), (size_t)MAX_PIN_LEN);
-    storage_change_pin(PIN_EMPTY, PIN_EMPTY_LEN, (const uint8_t *)config.pin,
-                       pin_len, NULL, NULL);
+    storage_change_pin((const uint8_t *)config.pin, pin_len, NULL);
   }
 
   while (pin_wait != 0) {
@@ -505,7 +504,7 @@ void config_loadDevice(const LoadDevice *msg) {
                                  msg->passphrase_protection);
 
   if (msg->has_pin) {
-    config_changePin("", msg->pin);
+    config_changePin(msg->pin);
   }
 
   if (msg->mnemonics_count) {
@@ -529,6 +528,10 @@ void config_loadDevice(const LoadDevice *msg) {
 
   if (msg->has_no_backup && msg->no_backup) {
     config_setNoBackup();
+  }
+
+  if (msg->has_unfinished_backup) {
+    config_setUnfinishedBackup(msg->unfinished_backup);
   }
 }
 
@@ -618,16 +621,6 @@ const uint8_t *config_getSeed(void) {
                         _("Passphrase dismissed"));
         layoutHome();
         return NULL;
-      }
-    }
-    // if storage was not imported (i.e. it was properly generated or recovered)
-    bool imported = false;
-    config_get_bool(KEY_IMPORTED, &imported);
-    if (!imported) {
-      // test whether mnemonic is a valid BIP-0039 mnemonic
-      if (!mnemonic_check(mnemonic)) {
-        // and if not then halt the device
-        error_shutdown(_("Storage failure"), _("detected."), NULL, NULL);
       }
     }
     char oldTiny = usbTiny(1);
@@ -815,27 +808,26 @@ bool config_containsMnemonic(const char *mnemonic) {
 }
 
 /* Check whether pin matches storage.  The pin must be
- * a null-terminated string with at most 9 characters.
+ * a null-terminated string with at most 50 characters.
  */
 bool config_unlock(const char *pin) {
   char oldTiny = usbTiny(1);
-  secbool ret =
+  storage_unlock_result_t ret =
       storage_unlock((const uint8_t *)pin, strnlen(pin, MAX_PIN_LEN), NULL);
   usbTiny(oldTiny);
-  return sectrue == ret;
+  return UNLOCK_OK == ret;
 }
 
 bool config_hasPin(void) { return sectrue == storage_has_pin(); }
 
-bool config_changePin(const char *old_pin, const char *new_pin) {
+bool config_changePin(const char *new_pin) {
   char oldTiny = usbTiny(1);
-  secbool ret = storage_change_pin(
-      (const uint8_t *)old_pin, strnlen(old_pin, MAX_PIN_LEN),
-      (const uint8_t *)new_pin, strnlen(new_pin, MAX_PIN_LEN), NULL, NULL);
+  storage_pin_change_result_t ret = storage_change_pin(
+      (const uint8_t *)new_pin, strnlen(new_pin, MAX_PIN_LEN), NULL);
   usbTiny(oldTiny);
 
 #if DEBUG_LINK
-  if (sectrue == ret) {
+  if (PIN_CHANGE_OK == ret) {
     if (new_pin[0] != '\0') {
       storage_set(KEY_DEBUG_LINK_PIN, new_pin, strnlen(new_pin, MAX_PIN_LEN));
     } else {
@@ -844,7 +836,7 @@ bool config_changePin(const char *old_pin, const char *new_pin) {
   }
 #endif
 
-  return sectrue == ret;
+  return PIN_CHANGE_OK == ret;
 }
 
 #if DEBUG_LINK

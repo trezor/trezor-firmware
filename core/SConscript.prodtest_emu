@@ -1,12 +1,12 @@
 # pylint: disable=E0602
 
 import os
-import shlex
 import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = 'emulator'
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 
 FEATURE_FLAGS = {
     "AES_GCM": True,
@@ -24,13 +24,25 @@ if not models.has_emulator(TREZOR_MODEL):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led", "display", "tropic",  "sd_card", "usb"]
+FEATURES_WANTED = [
+    "display",
+    "input",
+    "kernel_mode",
+    "rgb_led",
+    "sd_card",
+    "secure_mode",
+    'telemetry',
+    "tropic",
+    "usb",
+    "usb_iface_vcp",
+]
+
+if DBG_CONSOLE != "":
+    FEATURES_WANTED += ["dbg_console"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = [
-    'KERNEL_MODE',
-    'SECURE_MODE',
     'AES_128',
     'USE_INSECURE_PRNG',
 ]
@@ -44,11 +56,8 @@ RUST_UI_FEATURES = []
 # modtrezorcrypto
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-storage',
 ]
-SOURCE_MOD += [
-    'vendor/trezor-storage/flash_area.c',
-]
+
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/aes/aes_modes.c',
     'vendor/trezor-crypto/aes/aesccm.c',
@@ -82,6 +91,7 @@ SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/noise.c',
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/rand.c',
+    'vendor/trezor-crypto/rand_insecure.c',
     'vendor/trezor-crypto/ripemd160.c',
     'vendor/trezor-crypto/rfc6979.c',
     'vendor/trezor-crypto/secp256k1.c',
@@ -101,6 +111,16 @@ if FEATURE_FLAGS["AES_GCM"]:
         'vendor/trezor-crypto/aes/aesgcm.c',
     ]
 
+SOURCE_MLDSA = [
+        'vendor/mldsa-native/mldsa/fips202/fips202.c',
+        'vendor/mldsa-native/mldsa/fips202/fips202x4.c',
+        'vendor/mldsa-native/mldsa/fips202/keccakf1600.c',
+        'vendor/mldsa-native/mldsa/ntt.c',
+        'vendor/mldsa-native/mldsa/packing.c',
+        'vendor/mldsa-native/mldsa/poly.c',
+        'vendor/mldsa-native/mldsa/polyvec.c',
+        'vendor/mldsa-native/mldsa/sign.c',
+]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -108,24 +128,25 @@ CPPPATH_MOD += [
 ]
 
 SOURCE_MOD += [
-    'embed/gfx/bitblt/gfx_bitblt.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
-    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
-    'embed/gfx/fonts/font_bitmap.c',
-    'embed/gfx/gfx_color.c',
-    'embed/gfx/gfx_draw.c',
-    'embed/gfx/terminal.c',
     'embed/io/display/display_utils.c',
-    'embed/util/bl_check/bl_check.c',
-    'embed/util/image/image.c',
-    'embed/util/rsod/rsod.c',
-    'embed/util/scm_revision/scm_revision.c',
+    'embed/io/gfx/bitblt/gfx_bitblt.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/io/gfx/gfx_color.c',
+    'embed/io/gfx/gfx_draw.c',
+    'embed/io/gfx/rsod.c',
+    'embed/io/gfx/terminal/font_bitmap.c',
+    'embed/io/gfx/terminal/terminal.c',
     'embed/rtl/cli.c',
     'embed/rtl/error_handling.c',
-    'embed/rtl/mini_printf.c',
+    'embed/rtl/printf.c',
+    'embed/rtl/scm_revision.c',
     'embed/rtl/strutils.c',
     'embed/rtl/unit_test.c',
+    'embed/sec/image/boot_image.c',
+    'embed/sec/image/image.c',
+    'embed/sec/rsod/rsod_special.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -150,6 +171,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_ble.c',
     'embed/projects/prodtest/cmd/prodtest_bootloader.c',
     'embed/projects/prodtest/cmd/prodtest_button.c',
+    'embed/projects/prodtest/cmd/prodtest_crc.c',
     'embed/projects/prodtest/cmd/prodtest_display.c',
     'embed/projects/prodtest/cmd/prodtest_prodtest.c',
     'embed/projects/prodtest/cmd/prodtest_backup_ram.c',
@@ -170,6 +192,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_tamper.c',
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
     'embed/projects/prodtest/cmd/prodtest_secure_channel.c',
+    'embed/projects/prodtest/cmd/prodtest_telemetry.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
     'embed/projects/prodtest/cmd/prodtest_tropic.c',
     'embed/projects/prodtest/cmd/secure_channel.c',
@@ -200,12 +223,10 @@ ALLPATHS = ['embed/rust',
            'embed/rtl/inc',
            'embed/models',
            'embed/projects/unix',
-           'embed/gfx/inc',
-           'embed/util/bl_check/inc',
-           'embed/util/image/inc',
-           'embed/util/rsod/inc',
-           'embed/util/scm_revision/inc',
-           'embed/util/translations/inc',
+           'embed/io/gfx/inc',
+           'embed/io/translations/inc',
+           'embed/sec/image/inc',
+           'embed/sec/rsod/inc',
        ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(
@@ -283,14 +304,14 @@ obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero')
 obj_program += env.Object(source=SOURCE_PRODTEST)
 obj_program += env.Object(source=SOURCE_HAL)
+obj_program += env.Object(source=SOURCE_MLDSA)
+obj_program += [rust]
 
 program_elf = env.Command(
     target='prodtest.elf',
     source=obj_program,
     action=
     '$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS')
-
-env.Depends(program_elf, rust)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)

@@ -371,6 +371,8 @@ pub struct Features {
     pub minor_version: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.patch_version)
     pub patch_version: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.build_version)
+    pub build_version: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.bootloader_mode)
     pub bootloader_mode: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.device_id)
@@ -409,6 +411,8 @@ pub struct Features {
     pub fw_minor: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.fw_patch)
     pub fw_patch: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.fw_build)
+    pub fw_build: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.fw_vendor)
     pub fw_vendor: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.unfinished_backup)
@@ -467,6 +471,18 @@ pub struct Features {
     pub recovery_type: ::std::option::Option<::protobuf::EnumOrUnknown<RecoveryType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.optiga_sec)
     pub optiga_sec: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.soc)
+    pub soc: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.firmware_corrupted)
+    pub firmware_corrupted: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.auto_lock_delay_battery_ms)
+    pub auto_lock_delay_battery_ms: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.led)
+    pub led: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.usb_connected)
+    pub usb_connected: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.wireless_connected)
+    pub wireless_connected: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.Features.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -574,6 +590,25 @@ impl Features {
     // Param is passed by value, moved
     pub fn set_patch_version(&mut self, v: u32) {
         self.patch_version = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 build_version = 61;
+
+    pub fn build_version(&self) -> u32 {
+        self.build_version.unwrap_or(0)
+    }
+
+    pub fn clear_build_version(&mut self) {
+        self.build_version = ::std::option::Option::None;
+    }
+
+    pub fn has_build_version(&self) -> bool {
+        self.build_version.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_build_version(&mut self, v: u32) {
+        self.build_version = ::std::option::Option::Some(v);
     }
 
     // optional bool bootloader_mode = 5;
@@ -1040,6 +1075,25 @@ impl Features {
     // Param is passed by value, moved
     pub fn set_fw_patch(&mut self, v: u32) {
         self.fw_patch = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 fw_build = 62;
+
+    pub fn fw_build(&self) -> u32 {
+        self.fw_build.unwrap_or(0)
+    }
+
+    pub fn clear_fw_build(&mut self) {
+        self.fw_build = ::std::option::Option::None;
+    }
+
+    pub fn has_fw_build(&self) -> bool {
+        self.fw_build.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_fw_build(&mut self, v: u32) {
+        self.fw_build = ::std::option::Option::Some(v);
     }
 
     // optional string fw_vendor = 25;
@@ -1643,8 +1697,122 @@ impl Features {
         self.optiga_sec = ::std::option::Option::Some(v);
     }
 
+    // optional uint32 soc = 55;
+
+    pub fn soc(&self) -> u32 {
+        self.soc.unwrap_or(0)
+    }
+
+    pub fn clear_soc(&mut self) {
+        self.soc = ::std::option::Option::None;
+    }
+
+    pub fn has_soc(&self) -> bool {
+        self.soc.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_soc(&mut self, v: u32) {
+        self.soc = ::std::option::Option::Some(v);
+    }
+
+    // optional bool firmware_corrupted = 56;
+
+    pub fn firmware_corrupted(&self) -> bool {
+        self.firmware_corrupted.unwrap_or(false)
+    }
+
+    pub fn clear_firmware_corrupted(&mut self) {
+        self.firmware_corrupted = ::std::option::Option::None;
+    }
+
+    pub fn has_firmware_corrupted(&self) -> bool {
+        self.firmware_corrupted.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_firmware_corrupted(&mut self, v: bool) {
+        self.firmware_corrupted = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 auto_lock_delay_battery_ms = 57;
+
+    pub fn auto_lock_delay_battery_ms(&self) -> u32 {
+        self.auto_lock_delay_battery_ms.unwrap_or(0)
+    }
+
+    pub fn clear_auto_lock_delay_battery_ms(&mut self) {
+        self.auto_lock_delay_battery_ms = ::std::option::Option::None;
+    }
+
+    pub fn has_auto_lock_delay_battery_ms(&self) -> bool {
+        self.auto_lock_delay_battery_ms.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_auto_lock_delay_battery_ms(&mut self, v: u32) {
+        self.auto_lock_delay_battery_ms = ::std::option::Option::Some(v);
+    }
+
+    // optional bool led = 58;
+
+    pub fn led(&self) -> bool {
+        self.led.unwrap_or(false)
+    }
+
+    pub fn clear_led(&mut self) {
+        self.led = ::std::option::Option::None;
+    }
+
+    pub fn has_led(&self) -> bool {
+        self.led.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_led(&mut self, v: bool) {
+        self.led = ::std::option::Option::Some(v);
+    }
+
+    // optional bool usb_connected = 59;
+
+    pub fn usb_connected(&self) -> bool {
+        self.usb_connected.unwrap_or(false)
+    }
+
+    pub fn clear_usb_connected(&mut self) {
+        self.usb_connected = ::std::option::Option::None;
+    }
+
+    pub fn has_usb_connected(&self) -> bool {
+        self.usb_connected.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_usb_connected(&mut self, v: bool) {
+        self.usb_connected = ::std::option::Option::Some(v);
+    }
+
+    // optional bool wireless_connected = 60;
+
+    pub fn wireless_connected(&self) -> bool {
+        self.wireless_connected.unwrap_or(false)
+    }
+
+    pub fn clear_wireless_connected(&mut self) {
+        self.wireless_connected = ::std::option::Option::None;
+    }
+
+    pub fn has_wireless_connected(&self) -> bool {
+        self.wireless_connected.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_wireless_connected(&mut self, v: bool) {
+        self.wireless_connected = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(52);
+        let mut fields = ::std::vec::Vec::with_capacity(60);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "vendor",
@@ -1665,6 +1833,11 @@ impl Features {
             "patch_version",
             |m: &Features| { &m.patch_version },
             |m: &mut Features| { &mut m.patch_version },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "build_version",
+            |m: &Features| { &m.build_version },
+            |m: &mut Features| { &mut m.build_version },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "bootloader_mode",
@@ -1760,6 +1933,11 @@ impl Features {
             "fw_patch",
             |m: &Features| { &m.fw_patch },
             |m: &mut Features| { &mut m.fw_patch },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "fw_build",
+            |m: &Features| { &m.fw_build },
+            |m: &mut Features| { &mut m.fw_build },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "fw_vendor",
@@ -1906,6 +2084,36 @@ impl Features {
             |m: &Features| { &m.optiga_sec },
             |m: &mut Features| { &mut m.optiga_sec },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "soc",
+            |m: &Features| { &m.soc },
+            |m: &mut Features| { &mut m.soc },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "firmware_corrupted",
+            |m: &Features| { &m.firmware_corrupted },
+            |m: &mut Features| { &mut m.firmware_corrupted },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "auto_lock_delay_battery_ms",
+            |m: &Features| { &m.auto_lock_delay_battery_ms },
+            |m: &mut Features| { &mut m.auto_lock_delay_battery_ms },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "led",
+            |m: &Features| { &m.led },
+            |m: &mut Features| { &mut m.led },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "usb_connected",
+            |m: &Features| { &m.usb_connected },
+            |m: &mut Features| { &mut m.usb_connected },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "wireless_connected",
+            |m: &Features| { &m.wireless_connected },
+            |m: &mut Features| { &mut m.wireless_connected },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Features>(
             "Features",
             fields,
@@ -1944,6 +2152,9 @@ impl ::protobuf::Message for Features {
                 },
                 32 => {
                     self.patch_version = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                488 => {
+                    self.build_version = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 40 => {
                     self.bootloader_mode = ::std::option::Option::Some(is.read_bool()?);
@@ -2001,6 +2212,9 @@ impl ::protobuf::Message for Features {
                 },
                 192 => {
                     self.fw_patch = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                496 => {
+                    self.fw_build = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 202 => {
                     self.fw_vendor = ::std::option::Option::Some(is.read_string()?);
@@ -2092,6 +2306,24 @@ impl ::protobuf::Message for Features {
                 432 => {
                     self.optiga_sec = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                440 => {
+                    self.soc = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                448 => {
+                    self.firmware_corrupted = ::std::option::Option::Some(is.read_bool()?);
+                },
+                456 => {
+                    self.auto_lock_delay_battery_ms = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                464 => {
+                    self.led = ::std::option::Option::Some(is.read_bool()?);
+                },
+                472 => {
+                    self.usb_connected = ::std::option::Option::Some(is.read_bool()?);
+                },
+                480 => {
+                    self.wireless_connected = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2115,6 +2347,9 @@ impl ::protobuf::Message for Features {
         }
         if let Some(v) = self.patch_version {
             my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        if let Some(v) = self.build_version {
+            my_size += ::protobuf::rt::uint32_size(61, v);
         }
         if let Some(v) = self.bootloader_mode {
             my_size += 1 + 1;
@@ -2172,6 +2407,9 @@ impl ::protobuf::Message for Features {
         }
         if let Some(v) = self.fw_patch {
             my_size += ::protobuf::rt::uint32_size(24, v);
+        }
+        if let Some(v) = self.fw_build {
+            my_size += ::protobuf::rt::uint32_size(62, v);
         }
         if let Some(v) = self.fw_vendor.as_ref() {
             my_size += ::protobuf::rt::string_size(25, &v);
@@ -2260,6 +2498,24 @@ impl ::protobuf::Message for Features {
         if let Some(v) = self.optiga_sec {
             my_size += ::protobuf::rt::uint32_size(54, v);
         }
+        if let Some(v) = self.soc {
+            my_size += ::protobuf::rt::uint32_size(55, v);
+        }
+        if let Some(v) = self.firmware_corrupted {
+            my_size += 2 + 1;
+        }
+        if let Some(v) = self.auto_lock_delay_battery_ms {
+            my_size += ::protobuf::rt::uint32_size(57, v);
+        }
+        if let Some(v) = self.led {
+            my_size += 2 + 1;
+        }
+        if let Some(v) = self.usb_connected {
+            my_size += 2 + 1;
+        }
+        if let Some(v) = self.wireless_connected {
+            my_size += 2 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2277,6 +2533,9 @@ impl ::protobuf::Message for Features {
         }
         if let Some(v) = self.patch_version {
             os.write_uint32(4, v)?;
+        }
+        if let Some(v) = self.build_version {
+            os.write_uint32(61, v)?;
         }
         if let Some(v) = self.bootloader_mode {
             os.write_bool(5, v)?;
@@ -2334,6 +2593,9 @@ impl ::protobuf::Message for Features {
         }
         if let Some(v) = self.fw_patch {
             os.write_uint32(24, v)?;
+        }
+        if let Some(v) = self.fw_build {
+            os.write_uint32(62, v)?;
         }
         if let Some(v) = self.fw_vendor.as_ref() {
             os.write_string(25, v)?;
@@ -2422,6 +2684,24 @@ impl ::protobuf::Message for Features {
         if let Some(v) = self.optiga_sec {
             os.write_uint32(54, v)?;
         }
+        if let Some(v) = self.soc {
+            os.write_uint32(55, v)?;
+        }
+        if let Some(v) = self.firmware_corrupted {
+            os.write_bool(56, v)?;
+        }
+        if let Some(v) = self.auto_lock_delay_battery_ms {
+            os.write_uint32(57, v)?;
+        }
+        if let Some(v) = self.led {
+            os.write_bool(58, v)?;
+        }
+        if let Some(v) = self.usb_connected {
+            os.write_bool(59, v)?;
+        }
+        if let Some(v) = self.wireless_connected {
+            os.write_bool(60, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2443,6 +2723,7 @@ impl ::protobuf::Message for Features {
         self.major_version = ::std::option::Option::None;
         self.minor_version = ::std::option::Option::None;
         self.patch_version = ::std::option::Option::None;
+        self.build_version = ::std::option::Option::None;
         self.bootloader_mode = ::std::option::Option::None;
         self.device_id = ::std::option::Option::None;
         self.pin_protection = ::std::option::Option::None;
@@ -2462,6 +2743,7 @@ impl ::protobuf::Message for Features {
         self.fw_major = ::std::option::Option::None;
         self.fw_minor = ::std::option::Option::None;
         self.fw_patch = ::std::option::Option::None;
+        self.fw_build = ::std::option::Option::None;
         self.fw_vendor = ::std::option::Option::None;
         self.unfinished_backup = ::std::option::Option::None;
         self.no_backup = ::std::option::Option::None;
@@ -2491,6 +2773,12 @@ impl ::protobuf::Message for Features {
         self.haptic_feedback = ::std::option::Option::None;
         self.recovery_type = ::std::option::Option::None;
         self.optiga_sec = ::std::option::Option::None;
+        self.soc = ::std::option::Option::None;
+        self.firmware_corrupted = ::std::option::Option::None;
+        self.auto_lock_delay_battery_ms = ::std::option::Option::None;
+        self.led = ::std::option::Option::None;
+        self.usb_connected = ::std::option::Option::None;
+        self.wireless_connected = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2500,6 +2788,7 @@ impl ::protobuf::Message for Features {
             major_version: ::std::option::Option::None,
             minor_version: ::std::option::Option::None,
             patch_version: ::std::option::Option::None,
+            build_version: ::std::option::Option::None,
             bootloader_mode: ::std::option::Option::None,
             device_id: ::std::option::Option::None,
             pin_protection: ::std::option::Option::None,
@@ -2519,6 +2808,7 @@ impl ::protobuf::Message for Features {
             fw_major: ::std::option::Option::None,
             fw_minor: ::std::option::Option::None,
             fw_patch: ::std::option::Option::None,
+            fw_build: ::std::option::Option::None,
             fw_vendor: ::std::option::Option::None,
             unfinished_backup: ::std::option::Option::None,
             no_backup: ::std::option::Option::None,
@@ -2548,6 +2838,12 @@ impl ::protobuf::Message for Features {
             haptic_feedback: ::std::option::Option::None,
             recovery_type: ::std::option::Option::None,
             optiga_sec: ::std::option::Option::None,
+            soc: ::std::option::Option::None,
+            firmware_corrupted: ::std::option::Option::None,
+            auto_lock_delay_battery_ms: ::std::option::Option::None,
+            led: ::std::option::Option::None,
+            usb_connected: ::std::option::Option::None,
+            wireless_connected: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2756,6 +3052,8 @@ pub mod features {
         Capability_BLE = 22,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_NFC)
         Capability_NFC = 23,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Tron)
+        Capability_Tron = 24,
     }
 
     impl ::protobuf::Enum for Capability {
@@ -2790,6 +3088,7 @@ pub mod features {
                 21 => ::std::option::Option::Some(Capability::Capability_Haptic),
                 22 => ::std::option::Option::Some(Capability::Capability_BLE),
                 23 => ::std::option::Option::Some(Capability::Capability_NFC),
+                24 => ::std::option::Option::Some(Capability::Capability_Tron),
                 _ => ::std::option::Option::None
             }
         }
@@ -2819,6 +3118,7 @@ pub mod features {
                 "Capability_Haptic" => ::std::option::Option::Some(Capability::Capability_Haptic),
                 "Capability_BLE" => ::std::option::Option::Some(Capability::Capability_BLE),
                 "Capability_NFC" => ::std::option::Option::Some(Capability::Capability_NFC),
+                "Capability_Tron" => ::std::option::Option::Some(Capability::Capability_Tron),
                 _ => ::std::option::Option::None
             }
         }
@@ -2847,6 +3147,7 @@ pub mod features {
             Capability::Capability_Haptic,
             Capability::Capability_BLE,
             Capability::Capability_NFC,
+            Capability::Capability_Tron,
         ];
     }
 
@@ -2881,6 +3182,7 @@ pub mod features {
                 Capability::Capability_Haptic => 20,
                 Capability::Capability_BLE => 21,
                 Capability::Capability_NFC => 22,
+                Capability::Capability_Tron => 23,
             };
             Self::enum_descriptor().value_by_index(index)
         }
@@ -3277,6 +3579,8 @@ pub struct ApplySettings {
     pub haptic_feedback: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.homescreen_length)
     pub homescreen_length: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.auto_lock_delay_battery_ms)
+    pub auto_lock_delay_battery_ms: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.ApplySettings.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -3597,8 +3901,27 @@ impl ApplySettings {
         self.homescreen_length = ::std::option::Option::Some(v);
     }
 
+    // optional uint32 auto_lock_delay_battery_ms = 15;
+
+    pub fn auto_lock_delay_battery_ms(&self) -> u32 {
+        self.auto_lock_delay_battery_ms.unwrap_or(0)
+    }
+
+    pub fn clear_auto_lock_delay_battery_ms(&mut self) {
+        self.auto_lock_delay_battery_ms = ::std::option::Option::None;
+    }
+
+    pub fn has_auto_lock_delay_battery_ms(&self) -> bool {
+        self.auto_lock_delay_battery_ms.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_auto_lock_delay_battery_ms(&mut self, v: u32) {
+        self.auto_lock_delay_battery_ms = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(13);
+        let mut fields = ::std::vec::Vec::with_capacity(14);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "language",
@@ -3665,6 +3988,11 @@ impl ApplySettings {
             |m: &ApplySettings| { &m.homescreen_length },
             |m: &mut ApplySettings| { &mut m.homescreen_length },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "auto_lock_delay_battery_ms",
+            |m: &ApplySettings| { &m.auto_lock_delay_battery_ms },
+            |m: &mut ApplySettings| { &mut m.auto_lock_delay_battery_ms },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ApplySettings>(
             "ApplySettings",
             fields,
@@ -3722,6 +4050,9 @@ impl ::protobuf::Message for ApplySettings {
                 112 => {
                     self.homescreen_length = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                120 => {
+                    self.auto_lock_delay_battery_ms = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -3773,6 +4104,9 @@ impl ::protobuf::Message for ApplySettings {
         if let Some(v) = self.homescreen_length {
             my_size += ::protobuf::rt::uint32_size(14, v);
         }
+        if let Some(v) = self.auto_lock_delay_battery_ms {
+            my_size += ::protobuf::rt::uint32_size(15, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -3818,6 +4152,9 @@ impl ::protobuf::Message for ApplySettings {
         if let Some(v) = self.homescreen_length {
             os.write_uint32(14, v)?;
         }
+        if let Some(v) = self.auto_lock_delay_battery_ms {
+            os.write_uint32(15, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -3848,6 +4185,7 @@ impl ::protobuf::Message for ApplySettings {
         self.hide_passphrase_from_host = ::std::option::Option::None;
         self.haptic_feedback = ::std::option::Option::None;
         self.homescreen_length = ::std::option::Option::None;
+        self.auto_lock_delay_battery_ms = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -3866,6 +4204,7 @@ impl ::protobuf::Message for ApplySettings {
             hide_passphrase_from_host: ::std::option::Option::None,
             haptic_feedback: ::std::option::Option::None,
             homescreen_length: ::std::option::Option::None,
+            auto_lock_delay_battery_ms: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6145,10 +6484,14 @@ impl ::protobuf::reflect::ProtobufValue for AuthenticateDevice {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct AuthenticityProof {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.certificates)
-    pub certificates: ::std::vec::Vec<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.signature)
-    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.optiga_certificates)
+    pub optiga_certificates: ::std::vec::Vec<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.optiga_signature)
+    pub optiga_signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.tropic_certificates)
+    pub tropic_certificates: ::std::vec::Vec<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.tropic_signature)
+    pub tropic_signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.AuthenticityProof.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -6165,54 +6508,100 @@ impl AuthenticityProof {
         ::std::default::Default::default()
     }
 
-    // required bytes signature = 2;
+    // required bytes optiga_signature = 2;
 
-    pub fn signature(&self) -> &[u8] {
-        match self.signature.as_ref() {
+    pub fn optiga_signature(&self) -> &[u8] {
+        match self.optiga_signature.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_signature(&mut self) {
-        self.signature = ::std::option::Option::None;
+    pub fn clear_optiga_signature(&mut self) {
+        self.optiga_signature = ::std::option::Option::None;
     }
 
-    pub fn has_signature(&self) -> bool {
-        self.signature.is_some()
+    pub fn has_optiga_signature(&self) -> bool {
+        self.optiga_signature.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
-        self.signature = ::std::option::Option::Some(v);
+    pub fn set_optiga_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.optiga_signature = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.signature.is_none() {
-            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_optiga_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.optiga_signature.is_none() {
+            self.optiga_signature = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.signature.as_mut().unwrap()
+        self.optiga_signature.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
-        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_optiga_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.optiga_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes tropic_signature = 4;
+
+    pub fn tropic_signature(&self) -> &[u8] {
+        match self.tropic_signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_tropic_signature(&mut self) {
+        self.tropic_signature = ::std::option::Option::None;
+    }
+
+    pub fn has_tropic_signature(&self) -> bool {
+        self.tropic_signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_tropic_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.tropic_signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_tropic_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.tropic_signature.is_none() {
+            self.tropic_signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.tropic_signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_tropic_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.tropic_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
-            "certificates",
-            |m: &AuthenticityProof| { &m.certificates },
-            |m: &mut AuthenticityProof| { &mut m.certificates },
+            "optiga_certificates",
+            |m: &AuthenticityProof| { &m.optiga_certificates },
+            |m: &mut AuthenticityProof| { &mut m.optiga_certificates },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "signature",
-            |m: &AuthenticityProof| { &m.signature },
-            |m: &mut AuthenticityProof| { &mut m.signature },
+            "optiga_signature",
+            |m: &AuthenticityProof| { &m.optiga_signature },
+            |m: &mut AuthenticityProof| { &mut m.optiga_signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "tropic_certificates",
+            |m: &AuthenticityProof| { &m.tropic_certificates },
+            |m: &mut AuthenticityProof| { &mut m.tropic_certificates },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "tropic_signature",
+            |m: &AuthenticityProof| { &m.tropic_signature },
+            |m: &mut AuthenticityProof| { &mut m.tropic_signature },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<AuthenticityProof>(
             "AuthenticityProof",
@@ -6226,7 +6615,7 @@ impl ::protobuf::Message for AuthenticityProof {
     const NAME: &'static str = "AuthenticityProof";
 
     fn is_initialized(&self) -> bool {
-        if self.signature.is_none() {
+        if self.optiga_signature.is_none() {
             return false;
         }
         true
@@ -6236,10 +6625,16 @@ impl ::protobuf::Message for AuthenticityProof {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.certificates.push(is.read_bytes()?);
+                    self.optiga_certificates.push(is.read_bytes()?);
                 },
                 18 => {
-                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
+                    self.optiga_signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.tropic_certificates.push(is.read_bytes()?);
+                },
+                34 => {
+                    self.tropic_signature = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -6253,11 +6648,17 @@ impl ::protobuf::Message for AuthenticityProof {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        for value in &self.certificates {
+        for value in &self.optiga_certificates {
             my_size += ::protobuf::rt::bytes_size(1, &value);
         };
-        if let Some(v) = self.signature.as_ref() {
+        if let Some(v) = self.optiga_signature.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        for value in &self.tropic_certificates {
+            my_size += ::protobuf::rt::bytes_size(3, &value);
+        };
+        if let Some(v) = self.tropic_signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -6265,11 +6666,17 @@ impl ::protobuf::Message for AuthenticityProof {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        for v in &self.certificates {
+        for v in &self.optiga_certificates {
             os.write_bytes(1, &v)?;
         };
-        if let Some(v) = self.signature.as_ref() {
+        if let Some(v) = self.optiga_signature.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        for v in &self.tropic_certificates {
+            os.write_bytes(3, &v)?;
+        };
+        if let Some(v) = self.tropic_signature.as_ref() {
+            os.write_bytes(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -6288,15 +6695,19 @@ impl ::protobuf::Message for AuthenticityProof {
     }
 
     fn clear(&mut self) {
-        self.certificates.clear();
-        self.signature = ::std::option::Option::None;
+        self.optiga_certificates.clear();
+        self.optiga_signature = ::std::option::Option::None;
+        self.tropic_certificates.clear();
+        self.tropic_signature = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static AuthenticityProof {
         static instance: AuthenticityProof = AuthenticityProof {
-            certificates: ::std::vec::Vec::new(),
-            signature: ::std::option::Option::None,
+            optiga_certificates: ::std::vec::Vec::new(),
+            optiga_signature: ::std::option::Option::None,
+            tropic_certificates: ::std::vec::Vec::new(),
+            tropic_signature: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6445,6 +6856,8 @@ pub struct LoadDevice {
     pub needs_backup: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.LoadDevice.no_backup)
     pub no_backup: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.LoadDevice.unfinished_backup)
+    pub unfinished_backup: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.LoadDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -6664,8 +7077,27 @@ impl LoadDevice {
         self.no_backup = ::std::option::Option::Some(v);
     }
 
+    // optional bool unfinished_backup = 11;
+
+    pub fn unfinished_backup(&self) -> bool {
+        self.unfinished_backup.unwrap_or(false)
+    }
+
+    pub fn clear_unfinished_backup(&mut self) {
+        self.unfinished_backup = ::std::option::Option::None;
+    }
+
+    pub fn has_unfinished_backup(&self) -> bool {
+        self.unfinished_backup.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_unfinished_backup(&mut self, v: bool) {
+        self.unfinished_backup = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(10);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "mnemonics",
@@ -6712,6 +7144,11 @@ impl LoadDevice {
             |m: &LoadDevice| { &m.no_backup },
             |m: &mut LoadDevice| { &mut m.no_backup },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "unfinished_backup",
+            |m: &LoadDevice| { &m.unfinished_backup },
+            |m: &mut LoadDevice| { &mut m.unfinished_backup },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<LoadDevice>(
             "LoadDevice",
             fields,
@@ -6757,6 +7194,9 @@ impl ::protobuf::Message for LoadDevice {
                 80 => {
                     self.no_backup = ::std::option::Option::Some(is.read_bool()?);
                 },
+                88 => {
+                    self.unfinished_backup = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -6796,6 +7236,9 @@ impl ::protobuf::Message for LoadDevice {
         if let Some(v) = self.no_backup {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.unfinished_backup {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -6829,6 +7272,9 @@ impl ::protobuf::Message for LoadDevice {
         if let Some(v) = self.no_backup {
             os.write_bool(10, v)?;
         }
+        if let Some(v) = self.unfinished_backup {
+            os.write_bool(11, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -6855,6 +7301,7 @@ impl ::protobuf::Message for LoadDevice {
         self.u2f_counter = ::std::option::Option::None;
         self.needs_backup = ::std::option::Option::None;
         self.no_backup = ::std::option::Option::None;
+        self.unfinished_backup = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -6869,6 +7316,7 @@ impl ::protobuf::Message for LoadDevice {
             u2f_counter: ::std::option::Option::None,
             needs_backup: ::std::option::Option::None,
             no_backup: ::std::option::Option::None,
+            unfinished_backup: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6916,6 +7364,8 @@ pub struct ResetDevice {
     pub backup_type: ::std::option::Option<::protobuf::EnumOrUnknown<BackupType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ResetDevice.entropy_check)
     pub entropy_check: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.ResetDevice.backup_method)
+    pub backup_method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.ResetDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -7159,8 +7609,30 @@ impl ResetDevice {
         self.entropy_check = ::std::option::Option::Some(v);
     }
 
+    // optional .hw.trezor.messages.management.BackupMethod backup_method = 12;
+
+    pub fn backup_method(&self) -> BackupMethod {
+        match self.backup_method {
+            Some(e) => e.enum_value_or(BackupMethod::Display),
+            None => BackupMethod::Display,
+        }
+    }
+
+    pub fn clear_backup_method(&mut self) {
+        self.backup_method = ::std::option::Option::None;
+    }
+
+    pub fn has_backup_method(&self) -> bool {
+        self.backup_method.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_backup_method(&mut self, v: BackupMethod) {
+        self.backup_method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(10);
+        let mut fields = ::std::vec::Vec::with_capacity(11);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "strength",
@@ -7212,6 +7684,11 @@ impl ResetDevice {
             |m: &ResetDevice| { &m.entropy_check },
             |m: &mut ResetDevice| { &mut m.entropy_check },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "backup_method",
+            |m: &ResetDevice| { &m.backup_method },
+            |m: &mut ResetDevice| { &mut m.backup_method },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ResetDevice>(
             "ResetDevice",
             fields,
@@ -7260,6 +7737,9 @@ impl ::protobuf::Message for ResetDevice {
                 88 => {
                     self.entropy_check = ::std::option::Option::Some(is.read_bool()?);
                 },
+                96 => {
+                    self.backup_method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -7302,6 +7782,9 @@ impl ::protobuf::Message for ResetDevice {
         if let Some(v) = self.entropy_check {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.backup_method {
+            my_size += ::protobuf::rt::int32_size(12, v.value());
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -7338,6 +7821,9 @@ impl ::protobuf::Message for ResetDevice {
         if let Some(v) = self.entropy_check {
             os.write_bool(11, v)?;
         }
+        if let Some(v) = self.backup_method {
+            os.write_enum(12, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -7365,6 +7851,7 @@ impl ::protobuf::Message for ResetDevice {
         self.no_backup = ::std::option::Option::None;
         self.backup_type = ::std::option::Option::None;
         self.entropy_check = ::std::option::Option::None;
+        self.backup_method = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -7380,6 +7867,7 @@ impl ::protobuf::Message for ResetDevice {
             no_backup: ::std::option::Option::None,
             backup_type: ::std::option::Option::None,
             entropy_check: ::std::option::Option::None,
+            backup_method: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -7411,6 +7899,8 @@ pub struct BackupDevice {
     pub group_threshold: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.groups)
     pub groups: ::std::vec::Vec<backup_device::Slip39Group>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.backup_method)
+    pub backup_method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.BackupDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -7446,8 +7936,30 @@ impl BackupDevice {
         self.group_threshold = ::std::option::Option::Some(v);
     }
 
+    // optional .hw.trezor.messages.management.BackupMethod backup_method = 3;
+
+    pub fn backup_method(&self) -> BackupMethod {
+        match self.backup_method {
+            Some(e) => e.enum_value_or(BackupMethod::Display),
+            None => BackupMethod::Display,
+        }
+    }
+
+    pub fn clear_backup_method(&mut self) {
+        self.backup_method = ::std::option::Option::None;
+    }
+
+    pub fn has_backup_method(&self) -> bool {
+        self.backup_method.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_backup_method(&mut self, v: BackupMethod) {
+        self.backup_method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "group_threshold",
@@ -7458,6 +7970,11 @@ impl BackupDevice {
             "groups",
             |m: &BackupDevice| { &m.groups },
             |m: &mut BackupDevice| { &mut m.groups },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "backup_method",
+            |m: &BackupDevice| { &m.backup_method },
+            |m: &mut BackupDevice| { &mut m.backup_method },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<BackupDevice>(
             "BackupDevice",
@@ -7488,6 +8005,9 @@ impl ::protobuf::Message for BackupDevice {
                 18 => {
                     self.groups.push(is.read_message()?);
                 },
+                24 => {
+                    self.backup_method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -7507,6 +8027,9 @@ impl ::protobuf::Message for BackupDevice {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         };
+        if let Some(v) = self.backup_method {
+            my_size += ::protobuf::rt::int32_size(3, v.value());
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -7519,6 +8042,9 @@ impl ::protobuf::Message for BackupDevice {
         for v in &self.groups {
             ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
         };
+        if let Some(v) = self.backup_method {
+            os.write_enum(3, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -7538,6 +8064,7 @@ impl ::protobuf::Message for BackupDevice {
     fn clear(&mut self) {
         self.group_threshold = ::std::option::Option::None;
         self.groups.clear();
+        self.backup_method = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -7545,6 +8072,7 @@ impl ::protobuf::Message for BackupDevice {
         static instance: BackupDevice = BackupDevice {
             group_threshold: ::std::option::Option::None,
             groups: ::std::vec::Vec::new(),
+            backup_method: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -8394,6 +8922,8 @@ pub struct RecoveryDevice {
     pub u2f_counter: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.RecoveryDevice.type)
     pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<RecoveryType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.RecoveryDevice.backup_method)
+    pub backup_method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.RecoveryDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -8621,8 +9151,30 @@ impl RecoveryDevice {
         self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
+    // optional .hw.trezor.messages.management.BackupMethod backup_method = 11;
+
+    pub fn backup_method(&self) -> BackupMethod {
+        match self.backup_method {
+            Some(e) => e.enum_value_or(BackupMethod::Display),
+            None => BackupMethod::Display,
+        }
+    }
+
+    pub fn clear_backup_method(&mut self) {
+        self.backup_method = ::std::option::Option::None;
+    }
+
+    pub fn has_backup_method(&self) -> bool {
+        self.backup_method.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_backup_method(&mut self, v: BackupMethod) {
+        self.backup_method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(10);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "word_count",
@@ -8669,6 +9221,11 @@ impl RecoveryDevice {
             |m: &RecoveryDevice| { &m.type_ },
             |m: &mut RecoveryDevice| { &mut m.type_ },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "backup_method",
+            |m: &RecoveryDevice| { &m.backup_method },
+            |m: &mut RecoveryDevice| { &mut m.backup_method },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RecoveryDevice>(
             "RecoveryDevice",
             fields,
@@ -8714,6 +9271,9 @@ impl ::protobuf::Message for RecoveryDevice {
                 80 => {
                     self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
+                88 => {
+                    self.backup_method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -8753,6 +9313,9 @@ impl ::protobuf::Message for RecoveryDevice {
         if let Some(v) = self.type_ {
             my_size += ::protobuf::rt::int32_size(10, v.value());
         }
+        if let Some(v) = self.backup_method {
+            my_size += ::protobuf::rt::int32_size(11, v.value());
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -8786,6 +9349,9 @@ impl ::protobuf::Message for RecoveryDevice {
         if let Some(v) = self.type_ {
             os.write_enum(10, ::protobuf::EnumOrUnknown::value(&v))?;
         }
+        if let Some(v) = self.backup_method {
+            os.write_enum(11, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -8812,6 +9378,7 @@ impl ::protobuf::Message for RecoveryDevice {
         self.input_method = ::std::option::Option::None;
         self.u2f_counter = ::std::option::Option::None;
         self.type_ = ::std::option::Option::None;
+        self.backup_method = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -8826,6 +9393,7 @@ impl ::protobuf::Message for RecoveryDevice {
             input_method: ::std::option::Option::None,
             u2f_counter: ::std::option::Option::None,
             type_: ::std::option::Option::None,
+            backup_method: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -10000,8 +10568,6 @@ pub struct RebootToBootloader {
     pub boot_command: ::std::option::Option<::protobuf::EnumOrUnknown<reboot_to_bootloader::BootCommand>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_header)
     pub firmware_header: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.language_data_length)
-    pub language_data_length: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.RebootToBootloader.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -10076,27 +10642,8 @@ impl RebootToBootloader {
         self.firmware_header.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional uint32 language_data_length = 3;
-
-    pub fn language_data_length(&self) -> u32 {
-        self.language_data_length.unwrap_or(0u32)
-    }
-
-    pub fn clear_language_data_length(&mut self) {
-        self.language_data_length = ::std::option::Option::None;
-    }
-
-    pub fn has_language_data_length(&self) -> bool {
-        self.language_data_length.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_language_data_length(&mut self, v: u32) {
-        self.language_data_length = ::std::option::Option::Some(v);
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "boot_command",
@@ -10107,11 +10654,6 @@ impl RebootToBootloader {
             "firmware_header",
             |m: &RebootToBootloader| { &m.firmware_header },
             |m: &mut RebootToBootloader| { &mut m.firmware_header },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "language_data_length",
-            |m: &RebootToBootloader| { &m.language_data_length },
-            |m: &mut RebootToBootloader| { &mut m.language_data_length },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RebootToBootloader>(
             "RebootToBootloader",
@@ -10137,9 +10679,6 @@ impl ::protobuf::Message for RebootToBootloader {
                 18 => {
                     self.firmware_header = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                24 => {
-                    self.language_data_length = ::std::option::Option::Some(is.read_uint32()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -10158,9 +10697,6 @@ impl ::protobuf::Message for RebootToBootloader {
         if let Some(v) = self.firmware_header.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
-        if let Some(v) = self.language_data_length {
-            my_size += ::protobuf::rt::uint32_size(3, v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -10172,9 +10708,6 @@ impl ::protobuf::Message for RebootToBootloader {
         }
         if let Some(v) = self.firmware_header.as_ref() {
             os.write_bytes(2, v)?;
-        }
-        if let Some(v) = self.language_data_length {
-            os.write_uint32(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -10195,7 +10728,6 @@ impl ::protobuf::Message for RebootToBootloader {
     fn clear(&mut self) {
         self.boot_command = ::std::option::Option::None;
         self.firmware_header = ::std::option::Option::None;
-        self.language_data_length = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -10203,7 +10735,6 @@ impl ::protobuf::Message for RebootToBootloader {
         static instance: RebootToBootloader = RebootToBootloader {
             boot_command: ::std::option::Option::None,
             firmware_header: ::std::option::Option::None,
-            language_data_length: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -11243,6 +11774,270 @@ impl ::protobuf::reflect::ProtobufValue for SetBrightness {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.management.GetSerialNumber)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct GetSerialNumber {
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.management.GetSerialNumber.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a GetSerialNumber {
+    fn default() -> &'a GetSerialNumber {
+        <GetSerialNumber as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl GetSerialNumber {
+    pub fn new() -> GetSerialNumber {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<GetSerialNumber>(
+            "GetSerialNumber",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for GetSerialNumber {
+    const NAME: &'static str = "GetSerialNumber";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> GetSerialNumber {
+        GetSerialNumber::new()
+    }
+
+    fn clear(&mut self) {
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static GetSerialNumber {
+        static instance: GetSerialNumber = GetSerialNumber {
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for GetSerialNumber {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("GetSerialNumber").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for GetSerialNumber {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GetSerialNumber {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.management.SerialNumber)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SerialNumber {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.SerialNumber.serial_number)
+    pub serial_number: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.management.SerialNumber.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SerialNumber {
+    fn default() -> &'a SerialNumber {
+        <SerialNumber as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SerialNumber {
+    pub fn new() -> SerialNumber {
+        ::std::default::Default::default()
+    }
+
+    // required string serial_number = 1;
+
+    pub fn serial_number(&self) -> &str {
+        match self.serial_number.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_serial_number(&mut self) {
+        self.serial_number = ::std::option::Option::None;
+    }
+
+    pub fn has_serial_number(&self) -> bool {
+        self.serial_number.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_serial_number(&mut self, v: ::std::string::String) {
+        self.serial_number = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_serial_number(&mut self) -> &mut ::std::string::String {
+        if self.serial_number.is_none() {
+            self.serial_number = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.serial_number.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_serial_number(&mut self) -> ::std::string::String {
+        self.serial_number.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "serial_number",
+            |m: &SerialNumber| { &m.serial_number },
+            |m: &mut SerialNumber| { &mut m.serial_number },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SerialNumber>(
+            "SerialNumber",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SerialNumber {
+    const NAME: &'static str = "SerialNumber";
+
+    fn is_initialized(&self) -> bool {
+        if self.serial_number.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.serial_number = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.serial_number.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.serial_number.as_ref() {
+            os.write_string(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SerialNumber {
+        SerialNumber::new()
+    }
+
+    fn clear(&mut self) {
+        self.serial_number = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SerialNumber {
+        static instance: SerialNumber = SerialNumber {
+            serial_number: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SerialNumber {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SerialNumber").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SerialNumber {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SerialNumber {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.management.BackupType)
 pub enum BackupType {
@@ -11322,6 +12117,68 @@ impl ::std::default::Default for BackupType {
 impl BackupType {
     fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
         ::protobuf::reflect::GeneratedEnumDescriptorData::new::<BackupType>("BackupType")
+    }
+}
+
+#[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+// @@protoc_insertion_point(enum:hw.trezor.messages.management.BackupMethod)
+pub enum BackupMethod {
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupMethod.Display)
+    Display = 0,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupMethod.N4W1)
+    N4W1 = 1,
+}
+
+impl ::protobuf::Enum for BackupMethod {
+    const NAME: &'static str = "BackupMethod";
+
+    fn value(&self) -> i32 {
+        *self as i32
+    }
+
+    fn from_i32(value: i32) -> ::std::option::Option<BackupMethod> {
+        match value {
+            0 => ::std::option::Option::Some(BackupMethod::Display),
+            1 => ::std::option::Option::Some(BackupMethod::N4W1),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    fn from_str(str: &str) -> ::std::option::Option<BackupMethod> {
+        match str {
+            "Display" => ::std::option::Option::Some(BackupMethod::Display),
+            "N4W1" => ::std::option::Option::Some(BackupMethod::N4W1),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    const VALUES: &'static [BackupMethod] = &[
+        BackupMethod::Display,
+        BackupMethod::N4W1,
+    ];
+}
+
+impl ::protobuf::EnumFull for BackupMethod {
+    fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().enum_by_package_relative_name("BackupMethod").unwrap()).clone()
+    }
+
+    fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+        let index = *self as usize;
+        Self::enum_descriptor().value_by_index(index)
+    }
+}
+
+impl ::std::default::Default for BackupMethod {
+    fn default() -> Self {
+        BackupMethod::Display
+    }
+}
+
+impl BackupMethod {
+    fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<BackupMethod>("BackupMethod")
     }
 }
 
@@ -11613,141 +12470,156 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xba\x18\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xf2\x1a\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
-    tchVersion\x12'\n\x0fbootloader_mode\x18\x05\x20\x01(\x08R\x0ebootloader\
-    Mode\x12\x1b\n\tdevice_id\x18\x06\x20\x01(\tR\x08deviceId\x12%\n\x0epin_\
-    protection\x18\x07\x20\x01(\x08R\rpinProtection\x123\n\x15passphrase_pro\
-    tection\x18\x08\x20\x01(\x08R\x14passphraseProtection\x12\x1a\n\x08langu\
-    age\x18\t\x20\x01(\tR\x08language\x12\x14\n\x05label\x18\n\x20\x01(\tR\
-    \x05label\x12\x20\n\x0binitialized\x18\x0c\x20\x01(\x08R\x0binitialized\
-    \x12\x1a\n\x08revision\x18\r\x20\x01(\x0cR\x08revision\x12'\n\x0fbootloa\
-    der_hash\x18\x0e\x20\x01(\x0cR\x0ebootloaderHash\x12\x1a\n\x08imported\
-    \x18\x0f\x20\x01(\x08R\x08imported\x12\x1a\n\x08unlocked\x18\x10\x20\x01\
-    (\x08R\x08unlocked\x120\n\x12_passphrase_cached\x18\x11\x20\x01(\x08R\
-    \x10PassphraseCachedB\x02\x18\x01\x12)\n\x10firmware_present\x18\x12\x20\
-    \x01(\x08R\x0ffirmwarePresent\x12k\n\x13backup_availability\x18\x13\x20\
-    \x01(\x0e2:.hw.trezor.messages.management.Features.BackupAvailabilityR\
-    \x12backupAvailability\x12\x14\n\x05flags\x18\x14\x20\x01(\rR\x05flags\
-    \x12\x14\n\x05model\x18\x15\x20\x01(\tR\x05model\x12\x19\n\x08fw_major\
-    \x18\x16\x20\x01(\rR\x07fwMajor\x12\x19\n\x08fw_minor\x18\x17\x20\x01(\r\
-    R\x07fwMinor\x12\x19\n\x08fw_patch\x18\x18\x20\x01(\rR\x07fwPatch\x12\
-    \x1b\n\tfw_vendor\x18\x19\x20\x01(\tR\x08fwVendor\x12+\n\x11unfinished_b\
-    ackup\x18\x1b\x20\x01(\x08R\x10unfinishedBackup\x12\x1b\n\tno_backup\x18\
-    \x1c\x20\x01(\x08R\x08noBackup\x12_\n\x0frecovery_status\x18\x1d\x20\x01\
-    (\x0e26.hw.trezor.messages.management.Features.RecoveryStatusR\x0erecove\
-    ryStatus\x12V\n\x0ccapabilities\x18\x1e\x20\x03(\x0e22.hw.trezor.message\
-    s.management.Features.CapabilityR\x0ccapabilities\x12J\n\x0bbackup_type\
-    \x18\x1f\x20\x01(\x0e2).hw.trezor.messages.management.BackupTypeR\nbacku\
-    pType\x12&\n\x0fsd_card_present\x18\x20\x20\x01(\x08R\rsdCardPresent\x12\
-    #\n\rsd_protection\x18!\x20\x01(\x08R\x0csdProtection\x120\n\x14wipe_cod\
-    e_protection\x18\"\x20\x01(\x08R\x12wipeCodeProtection\x12\x1d\n\nsessio\
-    n_id\x18#\x20\x01(\x0cR\tsessionId\x12=\n\x1bpassphrase_always_on_device\
-    \x18$\x20\x01(\x08R\x18passphraseAlwaysOnDevice\x12T\n\rsafety_checks\
-    \x18%\x20\x01(\x0e2/.hw.trezor.messages.management.SafetyCheckLevelR\x0c\
-    safetyChecks\x12+\n\x12auto_lock_delay_ms\x18&\x20\x01(\rR\x0fautoLockDe\
-    layMs\x12Y\n\x10display_rotation\x18'\x20\x01(\x0e2..hw.trezor.messages.\
-    management.DisplayRotationR\x0fdisplayRotation\x123\n\x15experimental_fe\
-    atures\x18(\x20\x01(\x08R\x14experimentalFeatures\x12\x12\n\x04busy\x18)\
-    \x20\x01(\x08R\x04busy\x12\\\n\x11homescreen_format\x18*\x20\x01(\x0e2/.\
-    hw.trezor.messages.management.HomescreenFormatR\x10homescreenFormat\x129\
-    \n\x19hide_passphrase_from_host\x18+\x20\x01(\x08R\x16hidePassphraseFrom\
-    Host\x12%\n\x0einternal_model\x18,\x20\x01(\tR\rinternalModel\x12\x1d\n\
-    \nunit_color\x18-\x20\x01(\rR\tunitColor\x12!\n\x0cunit_btconly\x18.\x20\
-    \x01(\x08R\x0bunitBtconly\x12)\n\x10homescreen_width\x18/\x20\x01(\rR\
-    \x0fhomescreenWidth\x12+\n\x11homescreen_height\x180\x20\x01(\rR\x10home\
-    screenHeight\x12+\n\x11bootloader_locked\x181\x20\x01(\x08R\x10bootloade\
-    rLocked\x12>\n\x18language_version_matches\x182\x20\x01(\x08:\x04trueR\
-    \x16languageVersionMatches\x12%\n\x0eunit_packaging\x183\x20\x01(\rR\run\
-    itPackaging\x12'\n\x0fhaptic_feedback\x184\x20\x01(\x08R\x0ehapticFeedba\
-    ck\x12P\n\rrecovery_type\x185\x20\x01(\x0e2+.hw.trezor.messages.manageme\
-    nt.RecoveryTypeR\x0crecoveryType\x12\x1d\n\noptiga_sec\x186\x20\x01(\rR\
-    \toptigaSec\"C\n\x12BackupAvailability\x12\x10\n\x0cNotAvailable\x10\0\
-    \x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvailable\x10\x02\"7\n\x0eRecove\
-    ryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\n\x08Recovery\x10\x01\x12\n\
-    \n\x06Backup\x10\x02\"\xf6\x04\n\nCapability\x12\x1c\n\x12Capability_Bit\
-    coin\x10\x01\x1a\x04\x80\xa6\x1d\x01\x12\x1b\n\x17Capability_Bitcoin_lik\
-    e\x10\x02\x12\x16\n\x12Capability_Binance\x10\x03\x12\x16\n\x12Capabilit\
-    y_Cardano\x10\x04\x12\x1b\n\x11Capability_Crypto\x10\x05\x1a\x04\x80\xa6\
-    \x1d\x01\x12\x12\n\x0eCapability_EOS\x10\x06\x12\x17\n\x13Capability_Eth\
-    ereum\x10\x07\x12\x17\n\x0fCapability_Lisk\x10\x08\x1a\x02\x08\x01\x12\
-    \x15\n\x11Capability_Monero\x10\t\x12\x12\n\x0eCapability_NEM\x10\n\x12\
-    \x15\n\x11Capability_Ripple\x10\x0b\x12\x16\n\x12Capability_Stellar\x10\
-    \x0c\x12\x14\n\x10Capability_Tezos\x10\r\x12\x12\n\x0eCapability_U2F\x10\
-    \x0e\x12\x1b\n\x11Capability_Shamir\x10\x0f\x1a\x04\x80\xa6\x1d\x01\x12!\
-    \n\x17Capability_ShamirGroups\x10\x10\x1a\x04\x80\xa6\x1d\x01\x12$\n\x1a\
-    Capability_PassphraseEntry\x10\x11\x1a\x04\x80\xa6\x1d\x01\x12\x15\n\x11\
-    Capability_Solana\x10\x12\x12!\n\x17Capability_Translations\x10\x13\x1a\
-    \x04\x80\xa6\x1d\x01\x12\x1f\n\x15Capability_Brightness\x10\x14\x1a\x04\
-    \x80\xa6\x1d\x01\x12\x1b\n\x11Capability_Haptic\x10\x15\x1a\x04\x80\xa6\
-    \x1d\x01\x12\x18\n\x0eCapability_BLE\x10\x16\x1a\x04\x80\xa6\x1d\x01\x12\
-    \x18\n\x0eCapability_NFC\x10\x17\x1a\x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\
-    \x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpiry_ms\x18\
-    \x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\xa1\x05\n\rApplySetti\
-    ngs\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\x02\x18\x01\
-    \x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0euse_passphras\
-    e\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\x18\x04\x20\
-    \x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\x18\x05\x20\x01(\rR\
-    \x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_lock_delay_ms\x18\x06\
-    \x20\x01(\rR\x0fautoLockDelayMs\x12Y\n\x10display_rotation\x18\x07\x20\
-    \x01(\x0e2..hw.trezor.messages.management.DisplayRotationR\x0fdisplayRot\
-    ation\x12=\n\x1bpassphrase_always_on_device\x18\x08\x20\x01(\x08R\x18pas\
-    sphraseAlwaysOnDevice\x12T\n\rsafety_checks\x18\t\x20\x01(\x0e2/.hw.trez\
-    or.messages.management.SafetyCheckLevelR\x0csafetyChecks\x123\n\x15exper\
-    imental_features\x18\n\x20\x01(\x08R\x14experimentalFeatures\x129\n\x19h\
-    ide_passphrase_from_host\x18\x0b\x20\x01(\x08R\x16hidePassphraseFromHost\
-    \x12'\n\x0fhaptic_feedback\x18\r\x20\x01(\x08R\x0ehapticFeedback\x12+\n\
-    \x11homescreen_length\x18\x0e\x20\x01(\rR\x10homescreenLength\"T\n\x0eCh\
-    angeLanguage\x12\x1f\n\x0bdata_length\x18\x01\x20\x02(\rR\ndataLength\
-    \x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\"T\n\x10Dat\
-    aChunkRequest\x12\x1f\n\x0bdata_length\x18\x01\x20\x02(\rR\ndataLength\
-    \x12\x1f\n\x0bdata_offset\x18\x02\x20\x02(\rR\ndataOffset\"-\n\x0cDataCh\
-    unkAck\x12\x1d\n\ndata_chunk\x18\x01\x20\x02(\x0cR\tdataChunk\"\"\n\nApp\
-    lyFlags\x12\x14\n\x05flags\x18\x01\x20\x02(\rR\x05flags\"#\n\tChangePin\
-    \x12\x16\n\x06remove\x18\x01\x20\x01(\x08R\x06remove\"(\n\x0eChangeWipeC\
-    ode\x12\x16\n\x06remove\x18\x01\x20\x01(\x08R\x06remove\"\xaa\x01\n\tSdP\
-    rotect\x12]\n\toperation\x18\x01\x20\x02(\x0e2?.hw.trezor.messages.manag\
-    ement.SdProtect.SdProtectOperationTypeR\toperation\">\n\x16SdProtectOper\
-    ationType\x12\x0b\n\x07DISABLE\x10\0\x12\n\n\x06ENABLE\x10\x01\x12\x0b\n\
-    \x07REFRESH\x10\x02\"O\n\x04Ping\x12\x1a\n\x07message\x18\x01\x20\x01(\t\
-    :\0R\x07message\x12+\n\x11button_protection\x18\x02\x20\x01(\x08R\x10but\
-    tonProtection\"\x08\n\x06Cancel\"\x20\n\nGetEntropy\x12\x12\n\x04size\
-    \x18\x01\x20\x02(\rR\x04size\"#\n\x07Entropy\x12\x18\n\x07entropy\x18\
-    \x01\x20\x02(\x0cR\x07entropy\"/\n\x0fGetFirmwareHash\x12\x1c\n\tchallen\
-    ge\x18\x01\x20\x01(\x0cR\tchallenge\"\"\n\x0cFirmwareHash\x12\x12\n\x04h\
-    ash\x18\x01\x20\x02(\x0cR\x04hash\"2\n\x12AuthenticateDevice\x12\x1c\n\t\
-    challenge\x18\x01\x20\x02(\x0cR\tchallenge\"U\n\x11AuthenticityProof\x12\
-    \"\n\x0ccertificates\x18\x01\x20\x03(\x0cR\x0ccertificates\x12\x1c\n\tsi\
-    gnature\x18\x02\x20\x02(\x0cR\tsignature\"\x0c\n\nWipeDevice\"\xad\x02\n\
-    \nLoadDevice\x12\x1c\n\tmnemonics\x18\x01\x20\x03(\tR\tmnemonics\x12\x10\
-    \n\x03pin\x18\x03\x20\x01(\tR\x03pin\x123\n\x15passphrase_protection\x18\
-    \x04\x20\x01(\x08R\x14passphraseProtection\x12\x1e\n\x08language\x18\x05\
-    \x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01\
-    (\tR\x05label\x12#\n\rskip_checksum\x18\x07\x20\x01(\x08R\x0cskipChecksu\
-    m\x12\x1f\n\x0bu2f_counter\x18\x08\x20\x01(\rR\nu2fCounter\x12!\n\x0cnee\
-    ds_backup\x18\t\x20\x01(\x08R\x0bneedsBackup\x12\x1b\n\tno_backup\x18\n\
-    \x20\x01(\x08R\x08noBackup\"\x9d\x03\n\x0bResetDevice\x12\x1f\n\x08stren\
-    gth\x18\x02\x20\x01(\r:\x03256R\x08strength\x123\n\x15passphrase_protect\
-    ion\x18\x03\x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protecti\
-    on\x18\x04\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x05\
-    \x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01\
-    (\tR\x05label\x12\x1f\n\x0bu2f_counter\x18\x07\x20\x01(\rR\nu2fCounter\
-    \x12\x1f\n\x0bskip_backup\x18\x08\x20\x01(\x08R\nskipBackup\x12\x1b\n\tn\
-    o_backup\x18\t\x20\x01(\x08R\x08noBackup\x12Q\n\x0bbackup_type\x18\n\x20\
-    \x01(\x0e2).hw.trezor.messages.management.BackupType:\x05Bip39R\nbackupT\
-    ype\x12#\n\rentropy_check\x18\x0b\x20\x01(\x08R\x0centropyCheckJ\x04\x08\
-    \x01\x10\x02\"\xe5\x01\n\x0cBackupDevice\x12'\n\x0fgroup_threshold\x18\
-    \x01\x20\x01(\rR\x0egroupThreshold\x12O\n\x06groups\x18\x02\x20\x03(\x0b\
-    27.hw.trezor.messages.management.BackupDevice.Slip39GroupR\x06groups\x1a\
-    [\n\x0bSlip39Group\x12)\n\x10member_threshold\x18\x01\x20\x02(\rR\x0fmem\
-    berThreshold\x12!\n\x0cmember_count\x18\x02\x20\x02(\rR\x0bmemberCount\"\
-    b\n\x0eEntropyRequest\x12-\n\x12entropy_commitment\x18\x01\x20\x01(\x0cR\
+    tchVersion\x12#\n\rbuild_version\x18=\x20\x01(\rR\x0cbuildVersion\x12'\n\
+    \x0fbootloader_mode\x18\x05\x20\x01(\x08R\x0ebootloaderMode\x12\x1b\n\td\
+    evice_id\x18\x06\x20\x01(\tR\x08deviceId\x12%\n\x0epin_protection\x18\
+    \x07\x20\x01(\x08R\rpinProtection\x123\n\x15passphrase_protection\x18\
+    \x08\x20\x01(\x08R\x14passphraseProtection\x12\x1a\n\x08language\x18\t\
+    \x20\x01(\tR\x08language\x12\x14\n\x05label\x18\n\x20\x01(\tR\x05label\
+    \x12\x20\n\x0binitialized\x18\x0c\x20\x01(\x08R\x0binitialized\x12\x1a\n\
+    \x08revision\x18\r\x20\x01(\x0cR\x08revision\x12'\n\x0fbootloader_hash\
+    \x18\x0e\x20\x01(\x0cR\x0ebootloaderHash\x12\x1a\n\x08imported\x18\x0f\
+    \x20\x01(\x08R\x08imported\x12\x1a\n\x08unlocked\x18\x10\x20\x01(\x08R\
+    \x08unlocked\x120\n\x12_passphrase_cached\x18\x11\x20\x01(\x08R\x10Passp\
+    hraseCachedB\x02\x18\x01\x12)\n\x10firmware_present\x18\x12\x20\x01(\x08\
+    R\x0ffirmwarePresent\x12k\n\x13backup_availability\x18\x13\x20\x01(\x0e2\
+    :.hw.trezor.messages.management.Features.BackupAvailabilityR\x12backupAv\
+    ailability\x12\x14\n\x05flags\x18\x14\x20\x01(\rR\x05flags\x12\x14\n\x05\
+    model\x18\x15\x20\x01(\tR\x05model\x12\x19\n\x08fw_major\x18\x16\x20\x01\
+    (\rR\x07fwMajor\x12\x19\n\x08fw_minor\x18\x17\x20\x01(\rR\x07fwMinor\x12\
+    \x19\n\x08fw_patch\x18\x18\x20\x01(\rR\x07fwPatch\x12\x19\n\x08fw_build\
+    \x18>\x20\x01(\rR\x07fwBuild\x12\x1b\n\tfw_vendor\x18\x19\x20\x01(\tR\
+    \x08fwVendor\x12+\n\x11unfinished_backup\x18\x1b\x20\x01(\x08R\x10unfini\
+    shedBackup\x12\x1b\n\tno_backup\x18\x1c\x20\x01(\x08R\x08noBackup\x12_\n\
+    \x0frecovery_status\x18\x1d\x20\x01(\x0e26.hw.trezor.messages.management\
+    .Features.RecoveryStatusR\x0erecoveryStatus\x12V\n\x0ccapabilities\x18\
+    \x1e\x20\x03(\x0e22.hw.trezor.messages.management.Features.CapabilityR\
+    \x0ccapabilities\x12J\n\x0bbackup_type\x18\x1f\x20\x01(\x0e2).hw.trezor.\
+    messages.management.BackupTypeR\nbackupType\x12&\n\x0fsd_card_present\
+    \x18\x20\x20\x01(\x08R\rsdCardPresent\x12#\n\rsd_protection\x18!\x20\x01\
+    (\x08R\x0csdProtection\x120\n\x14wipe_code_protection\x18\"\x20\x01(\x08\
+    R\x12wipeCodeProtection\x12\x1d\n\nsession_id\x18#\x20\x01(\x0cR\tsessio\
+    nId\x12=\n\x1bpassphrase_always_on_device\x18$\x20\x01(\x08R\x18passphra\
+    seAlwaysOnDevice\x12T\n\rsafety_checks\x18%\x20\x01(\x0e2/.hw.trezor.mes\
+    sages.management.SafetyCheckLevelR\x0csafetyChecks\x12+\n\x12auto_lock_d\
+    elay_ms\x18&\x20\x01(\rR\x0fautoLockDelayMs\x12Y\n\x10display_rotation\
+    \x18'\x20\x01(\x0e2..hw.trezor.messages.management.DisplayRotationR\x0fd\
+    isplayRotation\x123\n\x15experimental_features\x18(\x20\x01(\x08R\x14exp\
+    erimentalFeatures\x12\x12\n\x04busy\x18)\x20\x01(\x08R\x04busy\x12\\\n\
+    \x11homescreen_format\x18*\x20\x01(\x0e2/.hw.trezor.messages.management.\
+    HomescreenFormatR\x10homescreenFormat\x129\n\x19hide_passphrase_from_hos\
+    t\x18+\x20\x01(\x08R\x16hidePassphraseFromHost\x12%\n\x0einternal_model\
+    \x18,\x20\x01(\tR\rinternalModel\x12\x1d\n\nunit_color\x18-\x20\x01(\rR\
+    \tunitColor\x12!\n\x0cunit_btconly\x18.\x20\x01(\x08R\x0bunitBtconly\x12\
+    )\n\x10homescreen_width\x18/\x20\x01(\rR\x0fhomescreenWidth\x12+\n\x11ho\
+    mescreen_height\x180\x20\x01(\rR\x10homescreenHeight\x12+\n\x11bootloade\
+    r_locked\x181\x20\x01(\x08R\x10bootloaderLocked\x12>\n\x18language_versi\
+    on_matches\x182\x20\x01(\x08:\x04trueR\x16languageVersionMatches\x12%\n\
+    \x0eunit_packaging\x183\x20\x01(\rR\runitPackaging\x12'\n\x0fhaptic_feed\
+    back\x184\x20\x01(\x08R\x0ehapticFeedback\x12P\n\rrecovery_type\x185\x20\
+    \x01(\x0e2+.hw.trezor.messages.management.RecoveryTypeR\x0crecoveryType\
+    \x12\x1d\n\noptiga_sec\x186\x20\x01(\rR\toptigaSec\x12\x10\n\x03soc\x187\
+    \x20\x01(\rR\x03soc\x12-\n\x12firmware_corrupted\x188\x20\x01(\x08R\x11f\
+    irmwareCorrupted\x12:\n\x1aauto_lock_delay_battery_ms\x189\x20\x01(\rR\
+    \x16autoLockDelayBatteryMs\x12\x10\n\x03led\x18:\x20\x01(\x08R\x03led\
+    \x12#\n\rusb_connected\x18;\x20\x01(\x08R\x0cusbConnected\x12-\n\x12wire\
+    less_connected\x18<\x20\x01(\x08R\x11wirelessConnected\"C\n\x12BackupAva\
+    ilability\x12\x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\
+    \x12\r\n\tAvailable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\
+    \x10\0\x12\x0c\n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\x8b\x05\
+    \n\nCapability\x12\x1c\n\x12Capability_Bitcoin\x10\x01\x1a\x04\x80\xa6\
+    \x1d\x01\x12\x1b\n\x17Capability_Bitcoin_like\x10\x02\x12\x16\n\x12Capab\
+    ility_Binance\x10\x03\x12\x16\n\x12Capability_Cardano\x10\x04\x12\x1b\n\
+    \x11Capability_Crypto\x10\x05\x1a\x04\x80\xa6\x1d\x01\x12\x12\n\x0eCapab\
+    ility_EOS\x10\x06\x12\x17\n\x13Capability_Ethereum\x10\x07\x12\x17\n\x0f\
+    Capability_Lisk\x10\x08\x1a\x02\x08\x01\x12\x15\n\x11Capability_Monero\
+    \x10\t\x12\x12\n\x0eCapability_NEM\x10\n\x12\x15\n\x11Capability_Ripple\
+    \x10\x0b\x12\x16\n\x12Capability_Stellar\x10\x0c\x12\x14\n\x10Capability\
+    _Tezos\x10\r\x12\x12\n\x0eCapability_U2F\x10\x0e\x12\x1b\n\x11Capability\
+    _Shamir\x10\x0f\x1a\x04\x80\xa6\x1d\x01\x12!\n\x17Capability_ShamirGroup\
+    s\x10\x10\x1a\x04\x80\xa6\x1d\x01\x12$\n\x1aCapability_PassphraseEntry\
+    \x10\x11\x1a\x04\x80\xa6\x1d\x01\x12\x15\n\x11Capability_Solana\x10\x12\
+    \x12!\n\x17Capability_Translations\x10\x13\x1a\x04\x80\xa6\x1d\x01\x12\
+    \x1f\n\x15Capability_Brightness\x10\x14\x1a\x04\x80\xa6\x1d\x01\x12\x1b\
+    \n\x11Capability_Haptic\x10\x15\x1a\x04\x80\xa6\x1d\x01\x12\x18\n\x0eCap\
+    ability_BLE\x10\x16\x1a\x04\x80\xa6\x1d\x01\x12\x18\n\x0eCapability_NFC\
+    \x10\x17\x1a\x04\x80\xa6\x1d\x01\x12\x13\n\x0fCapability_Tron\x10\x18\
+    \x1a\x04\xc8\xf3\x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\t\
+    expiry_ms\x18\x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\xdd\x05\
+    \n\rApplySettings\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\
+    \x02\x18\x01\x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0eu\
+    se_passphrase\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\
+    \x18\x04\x20\x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\x18\x05\
+    \x20\x01(\rR\x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_lock_delay_\
+    ms\x18\x06\x20\x01(\rR\x0fautoLockDelayMs\x12Y\n\x10display_rotation\x18\
+    \x07\x20\x01(\x0e2..hw.trezor.messages.management.DisplayRotationR\x0fdi\
+    splayRotation\x12=\n\x1bpassphrase_always_on_device\x18\x08\x20\x01(\x08\
+    R\x18passphraseAlwaysOnDevice\x12T\n\rsafety_checks\x18\t\x20\x01(\x0e2/\
+    .hw.trezor.messages.management.SafetyCheckLevelR\x0csafetyChecks\x123\n\
+    \x15experimental_features\x18\n\x20\x01(\x08R\x14experimentalFeatures\
+    \x129\n\x19hide_passphrase_from_host\x18\x0b\x20\x01(\x08R\x16hidePassph\
+    raseFromHost\x12'\n\x0fhaptic_feedback\x18\r\x20\x01(\x08R\x0ehapticFeed\
+    back\x12+\n\x11homescreen_length\x18\x0e\x20\x01(\rR\x10homescreenLength\
+    \x12:\n\x1aauto_lock_delay_battery_ms\x18\x0f\x20\x01(\rR\x16autoLockDel\
+    ayBatteryMs\"T\n\x0eChangeLanguage\x12\x1f\n\x0bdata_length\x18\x01\x20\
+    \x02(\rR\ndataLength\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bsho\
+    wDisplay\"T\n\x10DataChunkRequest\x12\x1f\n\x0bdata_length\x18\x01\x20\
+    \x02(\rR\ndataLength\x12\x1f\n\x0bdata_offset\x18\x02\x20\x02(\rR\ndataO\
+    ffset\"-\n\x0cDataChunkAck\x12\x1d\n\ndata_chunk\x18\x01\x20\x02(\x0cR\t\
+    dataChunk\"\"\n\nApplyFlags\x12\x14\n\x05flags\x18\x01\x20\x02(\rR\x05fl\
+    ags\"#\n\tChangePin\x12\x16\n\x06remove\x18\x01\x20\x01(\x08R\x06remove\
+    \"(\n\x0eChangeWipeCode\x12\x16\n\x06remove\x18\x01\x20\x01(\x08R\x06rem\
+    ove\"\xaa\x01\n\tSdProtect\x12]\n\toperation\x18\x01\x20\x02(\x0e2?.hw.t\
+    rezor.messages.management.SdProtect.SdProtectOperationTypeR\toperation\"\
+    >\n\x16SdProtectOperationType\x12\x0b\n\x07DISABLE\x10\0\x12\n\n\x06ENAB\
+    LE\x10\x01\x12\x0b\n\x07REFRESH\x10\x02\"O\n\x04Ping\x12\x1a\n\x07messag\
+    e\x18\x01\x20\x01(\t:\0R\x07message\x12+\n\x11button_protection\x18\x02\
+    \x20\x01(\x08R\x10buttonProtection\"\x08\n\x06Cancel\"\x20\n\nGetEntropy\
+    \x12\x12\n\x04size\x18\x01\x20\x02(\rR\x04size\"#\n\x07Entropy\x12\x18\n\
+    \x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"/\n\x0fGetFirmwareHash\x12\
+    \x1c\n\tchallenge\x18\x01\x20\x01(\x0cR\tchallenge\"\"\n\x0cFirmwareHash\
+    \x12\x12\n\x04hash\x18\x01\x20\x02(\x0cR\x04hash\"2\n\x12AuthenticateDev\
+    ice\x12\x1c\n\tchallenge\x18\x01\x20\x02(\x0cR\tchallenge\"\xcb\x01\n\
+    \x11AuthenticityProof\x12/\n\x13optiga_certificates\x18\x01\x20\x03(\x0c\
+    R\x12optigaCertificates\x12)\n\x10optiga_signature\x18\x02\x20\x02(\x0cR\
+    \x0foptigaSignature\x12/\n\x13tropic_certificates\x18\x03\x20\x03(\x0cR\
+    \x12tropicCertificates\x12)\n\x10tropic_signature\x18\x04\x20\x01(\x0cR\
+    \x0ftropicSignature\"\x0c\n\nWipeDevice\"\xda\x02\n\nLoadDevice\x12\x1c\
+    \n\tmnemonics\x18\x01\x20\x03(\tR\tmnemonics\x12\x10\n\x03pin\x18\x03\
+    \x20\x01(\tR\x03pin\x123\n\x15passphrase_protection\x18\x04\x20\x01(\x08\
+    R\x14passphraseProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08l\
+    anguageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12\
+    #\n\rskip_checksum\x18\x07\x20\x01(\x08R\x0cskipChecksum\x12\x1f\n\x0bu2\
+    f_counter\x18\x08\x20\x01(\rR\nu2fCounter\x12!\n\x0cneeds_backup\x18\t\
+    \x20\x01(\x08R\x0bneedsBackup\x12\x1b\n\tno_backup\x18\n\x20\x01(\x08R\
+    \x08noBackup\x12+\n\x11unfinished_backup\x18\x0b\x20\x01(\x08R\x10unfini\
+    shedBackup\"\xf8\x03\n\x0bResetDevice\x12\x1f\n\x08strength\x18\x02\x20\
+    \x01(\r:\x03256R\x08strength\x123\n\x15passphrase_protection\x18\x03\x20\
+    \x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\x18\x04\x20\
+    \x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08l\
+    anguageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12\
+    \x1f\n\x0bu2f_counter\x18\x07\x20\x01(\rR\nu2fCounter\x12\x1f\n\x0bskip_\
+    backup\x18\x08\x20\x01(\x08R\nskipBackup\x12\x1b\n\tno_backup\x18\t\x20\
+    \x01(\x08R\x08noBackup\x12Q\n\x0bbackup_type\x18\n\x20\x01(\x0e2).hw.tre\
+    zor.messages.management.BackupType:\x05Bip39R\nbackupType\x12#\n\rentrop\
+    y_check\x18\x0b\x20\x01(\x08R\x0centropyCheck\x12Y\n\rbackup_method\x18\
+    \x0c\x20\x01(\x0e2+.hw.trezor.messages.management.BackupMethod:\x07Displ\
+    ayR\x0cbackupMethodJ\x04\x08\x01\x10\x02\"\xc0\x02\n\x0cBackupDevice\x12\
+    '\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\x0egroupThreshold\x12O\n\x06g\
+    roups\x18\x02\x20\x03(\x0b27.hw.trezor.messages.management.BackupDevice.\
+    Slip39GroupR\x06groups\x12Y\n\rbackup_method\x18\x03\x20\x01(\x0e2+.hw.t\
+    rezor.messages.management.BackupMethod:\x07DisplayR\x0cbackupMethod\x1a[\
+    \n\x0bSlip39Group\x12)\n\x10member_threshold\x18\x01\x20\x02(\rR\x0fmemb\
+    erThreshold\x12!\n\x0cmember_count\x18\x02\x20\x02(\rR\x0bmemberCount\"b\
+    \n\x0eEntropyRequest\x12-\n\x12entropy_commitment\x18\x01\x20\x01(\x0cR\
     \x11entropyCommitment\x12!\n\x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bpr\
     evEntropy\"&\n\nEntropyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\
     \x07entropy\"\x13\n\x11EntropyCheckReady\"5\n\x14EntropyCheckContinue\
-    \x12\x1d\n\x06finish\x18\x01\x20\x01(\x08:\x05falseR\x06finish\"\x8d\x04\
+    \x12\x1d\n\x06finish\x18\x01\x20\x01(\x08:\x05falseR\x06finish\"\xe8\x04\
     \n\x0eRecoveryDevice\x12\x1d\n\nword_count\x18\x01\x20\x01(\rR\twordCoun\
     t\x123\n\x15passphrase_protection\x18\x02\x20\x01(\x08R\x14passphrasePro\
     tection\x12%\n\x0epin_protection\x18\x03\x20\x01(\x08R\rpinProtection\
@@ -11757,41 +12629,44 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\x0e2G.hw.trezor.messages.management.RecoveryDevice.RecoveryDev\
     iceInputMethodR\x0binputMethod\x12\x1f\n\x0bu2f_counter\x18\t\x20\x01(\r\
     R\nu2fCounter\x12O\n\x04type\x18\n\x20\x01(\x0e2+.hw.trezor.messages.man\
-    agement.RecoveryType:\x0eNormalRecoveryR\x04type\";\n\x19RecoveryDeviceI\
-    nputMethod\x12\x12\n\x0eScrambledWords\x10\0\x12\n\n\x06Matrix\x10\x01J\
-    \x04\x08\x07\x10\x08\"\xc5\x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\
-    \x20\x02(\x0e2:.hw.trezor.messages.management.WordRequest.WordRequestTyp\
-    eR\x04type\"f\n\x0fWordRequestType\x12\x19\n\x15WordRequestType_Plain\
-    \x10\0\x12\x1b\n\x17WordRequestType_Matrix9\x10\x01\x12\x1b\n\x17WordReq\
-    uestType_Matrix6\x10\x02\"\x1d\n\x07WordAck\x12\x12\n\x04word\x18\x01\
-    \x20\x02(\tR\x04word\"0\n\rSetU2FCounter\x12\x1f\n\x0bu2f_counter\x18\
-    \x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\"1\n\x0eNextU2\
-    FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x11\
-    \n\x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\x15\n\x13CancelA\
-    uthorization\"\x9a\x02\n\x12RebootToBootloader\x12o\n\x0cboot_command\
-    \x18\x01\x20\x01(\x0e2=.hw.trezor.messages.management.RebootToBootloader\
-    .BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ffirmware_header\
-    \x18\x02\x20\x01(\x0cR\x0efirmwareHeader\x123\n\x14language_data_length\
-    \x18\x03\x20\x01(\r:\x010R\x12languageDataLength\"5\n\x0bBootCommand\x12\
-    \x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01\"\x10\n\
-    \x08GetNonce:\x04\x88\xb2\x19\x01\"#\n\x05Nonce\x12\x14\n\x05nonce\x18\
-    \x01\x20\x02(\x0cR\x05nonce:\x04\x88\xb2\x19\x01\";\n\nUnlockPath\x12\
+    agement.RecoveryType:\x0eNormalRecoveryR\x04type\x12Y\n\rbackup_method\
+    \x18\x0b\x20\x01(\x0e2+.hw.trezor.messages.management.BackupMethod:\x07D\
+    isplayR\x0cbackupMethod\";\n\x19RecoveryDeviceInputMethod\x12\x12\n\x0eS\
+    crambledWords\x10\0\x12\n\n\x06Matrix\x10\x01J\x04\x08\x07\x10\x08\"\xc5\
+    \x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.me\
+    ssages.management.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWordReque\
+    stType\x12\x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequest\
+    Type_Matrix9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\
+    \n\x07WordAck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2F\
+    Counter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\
+    \x11GetNextU2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\
+    \x18\x01\x20\x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14P\
+    reauthorizedRequest\"\x15\n\x13CancelAuthorization\"\xeb\x01\n\x12Reboot\
+    ToBootloader\x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.mes\
+    sages.management.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bboot\
+    Command\x12'\n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeade\
+    r\"5\n\x0bBootCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTAL\
+    L_UPGRADE\x10\x01J\x04\x08\x03\x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonc\
+    e\x12\x14\n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\
     \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\
     \x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\
     \x18\x01\x20\x02(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10U\
     nlockBootloader\"%\n\rSetBrightness\x12\x14\n\x05value\x18\x01\x20\x01(\
-    \rR\x05value*\x99\x01\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\x0c\
-    Slip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\n\x18S\
-    lip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_Basic_Extendable\x10\
-    \x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\x05*G\n\x10SafetyCheckL\
-    evel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\x15\n\
-    \x11PromptTemporarily\x10\x02*=\n\x0fDisplayRotation\x12\t\n\x05North\
-    \x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\x10\xb4\x01\x12\t\n\x04We\
-    st\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toif\x10\x01\x12\x08\
-    \n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\n\x0cRecoveryType\x12\x12\
-    \n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\x10\x01\x12\x18\n\x14Unlock\
-    RepeatedBackup\x10\x02BB\n#com.satoshilabs.trezor.lib.protobufB\x17Trezo\
-    rMessageManagement\x80\xa6\x1d\x01\
+    \rR\x05value\"\x11\n\x0fGetSerialNumber\"3\n\x0cSerialNumber\x12#\n\rser\
+    ial_number\x18\x01\x20\x02(\tR\x0cserialNumber*\x99\x01\n\nBackupType\
+    \x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fS\
+    lip39_Advanced\x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\
+    \x1b\n\x17Slip39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_E\
+    xtendable\x10\x05*%\n\x0cBackupMethod\x12\x0b\n\x07Display\x10\0\x12\x08\
+    \n\x04N4W1\x10\x01*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\
+    \x10\n\x0cPromptAlways\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\
+    \n\x0fDisplayRotation\x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\
+    \n\n\x05South\x10\xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenF\
+    ormat\x12\x08\n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04T\
+    oiG\x10\x03*H\n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\
+    \n\x06DryRun\x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.s\
+    atoshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\
+    \x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -11810,7 +12685,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(48);
+            let mut messages = ::std::vec::Vec::with_capacity(50);
             messages.push(Initialize::generated_message_descriptor_data());
             messages.push(GetFeatures::generated_message_descriptor_data());
             messages.push(Features::generated_message_descriptor_data());
@@ -11858,9 +12733,12 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(ShowDeviceTutorial::generated_message_descriptor_data());
             messages.push(UnlockBootloader::generated_message_descriptor_data());
             messages.push(SetBrightness::generated_message_descriptor_data());
+            messages.push(GetSerialNumber::generated_message_descriptor_data());
+            messages.push(SerialNumber::generated_message_descriptor_data());
             messages.push(backup_device::Slip39Group::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(12);
+            let mut enums = ::std::vec::Vec::with_capacity(13);
             enums.push(BackupType::generated_enum_descriptor_data());
+            enums.push(BackupMethod::generated_enum_descriptor_data());
             enums.push(SafetyCheckLevel::generated_enum_descriptor_data());
             enums.push(DisplayRotation::generated_enum_descriptor_data());
             enums.push(HomescreenFormat::generated_enum_descriptor_data());

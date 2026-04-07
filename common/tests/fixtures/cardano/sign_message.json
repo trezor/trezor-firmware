@@ -1,0 +1,125 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "description": "Sign short non-ASCII payload",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "payload": "ff00",
+        "prefer_hex_display": true
+      },
+      "result": {
+        "signature": "5ad6ba670e65353b2c1ad4053a1ed4a9348a73fe965ffa0afafa24bad06e3eb3e325d49029604c09bf665c3c43a750ec81a43b1f8b746b07e999b913b980d006",
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
+      }
+    },
+    {
+      "description": "Sign short non-ASCII payload with address parameters",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "network_id": 1,
+        "protocol_magic": 764824073,
+        "payload": "ff00",
+        "address_parameters": {
+          "addressType": 0,
+          "path": "m/1852'/1815'/0'/0/0",
+          "stakingPath": "m/1852'/1815'/0'/2/0"
+        },
+        "prefer_hex_display": true
+      },
+      "result": {
+        "signature": "9efaff0b74c0beb2cadd727d8bafe13b31107235c5fc46c6c33e596e024d391c9fbe37072e43965add6ee0a4788562382031486b74fd59d636aa1ca3b1ddfe06",
+        "address": "0180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
+      }
+    },
+    {
+      "description": "Sign short ASCII payload",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "payload": "54657374",
+        "prefer_hex_display": false
+      },
+      "result": {
+        "signature": "2201b8e7fa9ea919935e06ecc3e845433855066acaaf61cb8e624a2eb7139b73a9d126e7ee04548fff06ac933bd5419fc78c5aebee9b536cbee1481b52ec3e03",
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
+      }
+    },
+    {
+      "description": "Sign short ASCII payload rendered as hex",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "payload": "54657374",
+        "prefer_hex_display": true
+      },
+      "result": {
+        "signature": "2201b8e7fa9ea919935e06ecc3e845433855066acaaf61cb8e624a2eb7139b73a9d126e7ee04548fff06ac933bd5419fc78c5aebee9b536cbee1481b52ec3e03",
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
+      }
+    },
+    {
+      "description": "Sign empty payload",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "payload": "",
+        "prefer_hex_display": true
+      },
+      "result": {
+        "signature": "b09177a06cb2deba7ada89fec96fc4380e746f67c6b16a9ef9ae6b7cbbe941fdad8a8a573b809cd88db296b91b476c436033a29d86a63959e270047e47cd5d0d",
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
+      }
+    },
+    {
+      "description": "Non-ASCII payload falls back to hex",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "network_id": 1,
+        "protocol_magic": 764824073,
+        "payload": "ff",
+        "prefer_hex_display": false
+      },
+      "result": {
+        "signature": "eb7e48bb2de912b24ea4e295cfbf338e95e2a2d9c5eb41d72ddd8ebf96ca6128696e91e65e20a755821781b8ea0b4aa7ffcfa6ab0c7da2c67ecaf33fcd596509",
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
+      }
+    },
+    {
+      "description": "Ambiguous ASCII payload falls back to hex",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "network_id": 1,
+        "protocol_magic": 764824073,
+        "payload": "20",
+        "prefer_hex_display": false
+      },
+      "result": {
+        "signature": "1cd79c511e58e0d00bc402c24631a982c0f596e13cad38447d4f31213d085b23b9990b45023450f5ab4d47987993af662702b07bfc8195feb80b2c9e1c1dc10f",
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
+      }
+    },
+    {
+      "description": "Long payload",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "network_id": 1,
+        "protocol_magic": 764824073,
+        "payload": "aaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff00011100011aaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbddd1bbbdddaafffaaafff000111000111bbbdddaaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff00011100011aaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbdddaaafffaaafff000111000111bbbddd1bbbdddaafffaaafff000111000111bbbdddee",
+        "prefer_hex_display": true
+      },
+      "result": {
+        "signature": "6d1e9bf2f704413b1a99340bb88f27a4a74f00fe7ed891b814a9a0167b6482b0b92982a5eb0be513fe5e432c4a79550d615222cf9ffcf70f42f8e600bf302c0f",
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
+      }
+    }
+  ]
+}

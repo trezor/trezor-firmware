@@ -25,7 +25,7 @@ if TYPE_CHECKING:
         Busy = 15
         ThpUnallocatedSession = 16
         InvalidProtocol = 17
-        BufferError = 18
+        InProgress = 19
         FirmwareError = 99
 
     class ButtonRequestType(IntEnum):
@@ -182,6 +182,10 @@ if TYPE_CHECKING:
         Slip39_Basic_Extendable = 4
         Slip39_Advanced_Extendable = 5
 
+    class BackupMethod(IntEnum):
+        Display = 0
+        N4W1 = 1
+
     class SafetyCheckLevel(IntEnum):
         Strict = 0
         PromptAlways = 1
@@ -237,6 +241,7 @@ if TYPE_CHECKING:
         Haptic = 21
         BLE = 22
         NFC = 23
+        Tron = 24
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0
@@ -373,6 +378,18 @@ if TYPE_CHECKING:
         QrCode = 3
         NFC = 4
 
+    class TronResourceCode(IntEnum):
+        BANDWIDTH = 0
+        ENERGY = 1
+
+    class TronRawContractType(IntEnum):
+        TransferContract = 1
+        VoteWitnessContract = 4
+        TriggerSmartContract = 31
+        FreezeBalanceV2Contract = 54
+        UnfreezeBalanceV2Contract = 55
+        WithdrawExpireUnfreezeContract = 56
+
     class MessageType(IntEnum):
         Initialize = 0
         Ping = 1
@@ -427,6 +444,8 @@ if TYPE_CHECKING:
         DataChunkRequest = 991
         DataChunkAck = 992
         SetBrightness = 993
+        GetSerialNumber = 996
+        SerialNumber = 997
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81
@@ -479,6 +498,11 @@ if TYPE_CHECKING:
         DebugLinkGcInfo = 9010
         DebugLinkGetPairingInfo = 9011
         DebugLinkPairingInfo = 9012
+        DebugLinkSetLogFilter = 9013
+        DebugLinkN4W1Connected = 9014
+        DebugLinkN4W1Write = 9015
+        DebugLinkN4W1Read = 9016
+        DebugLinkN4W1Response = 9017
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56
@@ -557,6 +581,10 @@ if TYPE_CHECKING:
         CardanoTxInlineDatumChunk = 335
         CardanoTxReferenceScriptChunk = 336
         CardanoTxReferenceInput = 337
+        CardanoSignMessageInit = 338
+        CardanoMessageDataRequest = 339
+        CardanoMessageDataResponse = 340
+        CardanoMessageSignature = 341
         RippleGetAddress = 400
         RippleAddress = 401
         RippleSignTx = 402
@@ -607,6 +635,7 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
+        WebAuthnCredentialsAck = 804
         SolanaGetPublicKey = 900
         SolanaPublicKey = 901
         SolanaGetAddress = 902
@@ -626,7 +655,28 @@ if TYPE_CHECKING:
         NostrPubkey = 2002
         NostrSignEvent = 2003
         NostrEventSignature = 2004
+        EvoluGetNode = 2100
+        EvoluNode = 2101
+        EvoluSignRegistrationRequest = 2102
+        EvoluRegistrationRequest = 2103
+        EvoluGetDelegatedIdentityKey = 2104
+        EvoluDelegatedIdentityKey = 2105
+        EvoluIndexManagement = 2106
+        EvoluIndexManagementResponse = 2107
+        TronGetAddress = 2200
+        TronAddress = 2201
+        TronSignTx = 2202
+        TronSignature = 2203
+        TronContractRequest = 2204
+        TronTransferContract = 2205
+        TronTriggerSmartContract = 2206
+        TronFreezeBalanceV2Contract = 2207
+        TronUnfreezeBalanceV2Contract = 2208
+        TronWithdrawUnfreeze = 2209
+        TronVoteWitnessContract = 2210
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
         BenchmarkResult = 9103
+        TelemetryGet = 1100
+        Telemetry = 1101

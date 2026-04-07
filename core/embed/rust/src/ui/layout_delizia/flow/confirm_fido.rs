@@ -5,7 +5,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            paginated::PaginateFull as _,
+            paginated::Paginate as _,
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             EventCtx,
@@ -139,7 +139,7 @@ pub fn new_confirm_fido(
         TR::instructions__swipe_down.into(),
     )
     .register_footer_update_fn(footer_update_fn)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .with_vertical_pages()
     .map(super::util::map_to_choice);
 
@@ -163,12 +163,12 @@ pub fn new_confirm_fido(
     let content_tap = Frame::left_aligned(title, PromptScreen::new_tap_to_confirm())
         .with_menu_button()
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
-        .with_swipe(Direction::Down, SwipeSettings::default())
+        .with_swipe(Direction::Down, SwipeSettings::Default)
         .map(super::util::map_to_confirm);
 
     let content_menu = Frame::left_aligned(
         "".into(),
-        VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
+        VerticalMenu::empty().cancel_item(TR::buttons__cancel.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);

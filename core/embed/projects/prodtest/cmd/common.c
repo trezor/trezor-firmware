@@ -1,13 +1,94 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <sec/unit_properties.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include "common.h"
 
 #include "buffer.h"
 #include "der.h"
 #include "ecdsa.h"
 #include "ed25519-donna/ed25519.h"
+#include "hsm_keys.h"
 #include "memzero.h"
 #include "nist256p1.h"
 #include "sha2.h"
 #include "string.h"
+
+#include <../vendor/mldsa-native/mldsa/sign.h>
+
+// HSM root certification authority public keys.
+const uint8_t ROOT_KEYS_P256[][ECDSA_PUBLIC_KEY_SIZE] = {
+#if PRODUCTION
+#ifdef DEV_AUTH_ROOT_PROD_P256
+    DEV_AUTH_ROOT_PROD_P256,
+#endif
+#ifdef DEV_AUTH_ROOT_PROD_BACKUP_P256
+    DEV_AUTH_ROOT_PROD_BACKUP_P256,
+#endif
+#else
+#ifdef DEV_AUTH_ROOT_DEBUG_P256
+    DEV_AUTH_ROOT_DEBUG_P256,
+#endif
+#ifdef DEV_AUTH_ROOT_STAGING_P256
+    DEV_AUTH_ROOT_STAGING_P256,
+#endif
+#endif
+};
+
+const ed25519_public_key ROOT_KEYS_ED25519[] = {
+#if PRODUCTION
+#ifdef DEV_AUTH_ROOT_PROD_ED25519
+    DEV_AUTH_ROOT_PROD_ED25519,
+#endif
+#ifdef DEV_AUTH_ROOT_PROD_BACKUP_ED25519
+    DEV_AUTH_ROOT_PROD_BACKUP_ED25519,
+#endif
+#else
+#ifdef DEV_AUTH_ROOT_DEBUG_ED25519
+    DEV_AUTH_ROOT_DEBUG_ED25519,
+#endif
+#ifdef DEV_AUTH_ROOT_STAGING_ED25519
+    DEV_AUTH_ROOT_STAGING_ED25519,
+#endif
+#endif
+};
+
+const uint8_t ROOT_KEYS_MLDSA44[][CRYPTO_PUBLICKEYBYTES] = {
+#if PRODUCTION
+#ifdef DEV_AUTH_ROOT_PROD_MLDSA44
+    DEV_AUTH_ROOT_PROD_MLDSA44,
+#endif
+#ifdef DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44
+    DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44,
+#endif
+#else
+#ifdef DEV_AUTH_ROOT_DEBUG_MLDSA44
+    DEV_AUTH_ROOT_DEBUG_MLDSA44,
+#endif
+#ifdef DEV_AUTH_ROOT_STAGING_MLDSA44
+    DEV_AUTH_ROOT_STAGING_MLDSA44,
+#endif
+#endif
+};
 
 // Identifier of context-specific constructed tag 3, which is used for
 // extensions in X.509.
@@ -36,10 +117,23 @@ static const uint8_t EDDSA_25519[] = {
       0x2b, 0x65, 0x70, // corresponds to EdDSA 25519 in X.509
 };
 
+static const uint8_t MLDSA44[] = {
+  0x30, 0x0b, // a sequence of 11 bytes
+    0x06, 0x09, // an OID of 9 bytes
+      0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x03, 0x11, // corresponds to id-ml-dsa-44 in X.509
+};
+
 static const uint8_t OID_COMMON_NAME[] = {
   0x06, 0x03, // an OID of 3 bytes
     0x55, 0x04, 0x03, // corresponds to commonName in X.509
 };
+
+#if !(defined TREZOR_MODEL_T3B1 || defined TREZOR_MODEL_T3T1)
+static const uint8_t OID_SERIAL_NUMBER[] = {
+  0x06, 0x03, // an OID of 3 bytes
+    0x55, 0x04, 0x05, // corresponds to serialNumber in X.509
+};
+#endif
 
 static const uint8_t SUBJECT_COMMON_NAME[] = {
 #ifdef TREZOR_MODEL_T2B1
@@ -51,10 +145,17 @@ static const uint8_t SUBJECT_COMMON_NAME[] = {
 #ifdef TREZOR_MODEL_T3T1
   'T', '3', 'T', '1', ' ', 'T', 'r', 'e', 'z', 'o', 'r', ' ', 'S', 'a', 'f', 'e', ' ', '5',
 #endif
+#ifdef TREZOR_MODEL_T3W1
+  'T', '3', 'W', '1', ' ', 'T', 'r', 'e', 'z', 'o', 'r', ' ', 'S', 'a', 'f', 'e', ' ', '7',
+#endif
 };
 // clang-format on
 
-typedef enum { ALG_ID_ECDSA_P256_WITH_SHA256, ALG_ID_EDDSA_25519 } alg_id_t;
+typedef enum {
+  ALG_ID_ECDSA_P256_WITH_SHA256,
+  ALG_ID_EDDSA_25519,
+  ALG_ID_MLDSA44
+} alg_id_t;
 
 static bool get_algorithm(DER_ITEM* alg, alg_id_t* alg_id) {
   if (alg->buf.size == sizeof(ECDSA_P256_WITH_SHA256) &&
@@ -70,6 +171,12 @@ static bool get_algorithm(DER_ITEM* alg, alg_id_t* alg_id) {
     return true;
   }
 
+  if (alg->buf.size == sizeof(MLDSA44) &&
+      memcmp(alg->buf.data, MLDSA44, sizeof(MLDSA44)) == 0) {
+    *alg_id = ALG_ID_MLDSA44;
+    return true;
+  }
+
   return false;
 }
 
@@ -79,8 +186,7 @@ static bool get_cert_extensions(DER_ITEM* tbs_cert, DER_ITEM* extensions) {
   while (der_read_item(&tbs_cert->buf, &cert_item)) {
     if (cert_item.id == DER_X509_EXTENSIONS) {
       // Open the extensions sequence.
-      return der_read_item(&cert_item.buf, extensions) &&
-             extensions->id == DER_SEQUENCE;
+      return der_read_item_expected(&cert_item.buf, DER_SEQUENCE, extensions);
     }
   }
   return false;
@@ -93,7 +199,7 @@ static bool get_extension_value(const uint8_t* extension_oid,
   DER_ITEM extension = {0};
   while (der_read_item(&extensions->buf, &extension)) {
     DER_ITEM extension_id = {0};
-    if (der_read_item(&extension.buf, &extension_id) &&
+    if (der_read_item_expected(&extension.buf, DER_OID, &extension_id) &&
         extension_id.buf.size == extension_oid_size &&
         memcmp(extension_id.buf.data, extension_oid, extension_oid_size) == 0) {
       // Find the extension's extnValue, skipping the optional critical flag.
@@ -131,8 +237,8 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
 
   // Open the AuthorityKeyIdentifier sequence.
   DER_ITEM auth_key_id = {0};
-  if (!der_read_item(&extension_value.buf, &auth_key_id) ||
-      auth_key_id.id != DER_SEQUENCE) {
+  if (!der_read_item_expected(&extension_value.buf, DER_SEQUENCE,
+                              &auth_key_id)) {
     cli_error(cli, CLI_ERROR,
               "get_authority_key_digest, failed to open authority key "
               "identifier extnValue.");
@@ -141,8 +247,8 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
 
   // Find the keyIdentifier field.
   DER_ITEM key_id = {0};
-  if (!der_read_item(&auth_key_id.buf, &key_id) ||
-      key_id.id != DER_X509_KEY_IDENTIFIER) {
+  if (!der_read_item_expected(&auth_key_id.buf, DER_X509_KEY_IDENTIFIER,
+                              &key_id)) {
     cli_error(cli, CLI_ERROR,
               "get_authority_key_digest, failed to find keyIdentifier field.");
     return false;
@@ -159,44 +265,48 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
   return true;
 }
 
-static bool get_common_name(DER_ITEM* name, const uint8_t** common_name,
-                            size_t* common_name_size) {
+static bool get_name_attribute(DER_ITEM* name, const uint8_t* type,
+                               size_t type_size, const uint8_t** value,
+                               size_t* value_size) {
   if (name->id != DER_SEQUENCE) {
     return false;
   }
 
-  DER_ITEM distinguished_name = {0};
-  if (!der_read_item(&name->buf, &distinguished_name) ||
-      distinguished_name.id != DER_SET) {
-    return false;
+  DER_ITEM relative_distinguished_name = {0};
+  while (der_read_item_expected(&name->buf, DER_SET,
+                                &relative_distinguished_name)) {
+    DER_ITEM attribute = {0};
+    if (!der_read_item_expected(&relative_distinguished_name.buf, DER_SEQUENCE,
+                                &attribute)) {
+      return false;
+    }
+
+    DER_ITEM attribute_type = {0};
+    if (!der_read_item_expected(&attribute.buf, DER_OID, &attribute_type)) {
+      return false;
+    }
+
+    if (attribute_type.buf.size != type_size ||
+        memcmp(attribute_type.buf.data, type, type_size) != 0) {
+      continue;
+    }
+
+    DER_ITEM attribute_value = {0};
+    if (!der_read_item(&attribute.buf, &attribute_value) ||
+        (attribute_value.id != DER_UTF8_STRING &&
+         attribute_value.id != DER_PRINTABLE_STRING)) {
+      return false;
+    }
+
+    if (!buffer_ptr(&attribute_value.buf, value)) {
+      return false;
+    }
+    *value_size = buffer_remaining(&attribute_value.buf);
+    return true;
   }
 
-  DER_ITEM attribute = {0};
-  if (!der_read_item(&distinguished_name.buf, &attribute) ||
-      attribute.id != DER_SEQUENCE) {
-    return false;
-  }
-
-  DER_ITEM attribute_type = {0};
-  if (!der_read_item(&attribute.buf, &attribute_type) ||
-      attribute_type.buf.size != sizeof(OID_COMMON_NAME) ||
-      memcmp(attribute_type.buf.data, OID_COMMON_NAME,
-             sizeof(OID_COMMON_NAME)) != 0) {
-    return false;
-  }
-
-  DER_ITEM attribute_value = {0};
-  if (!der_read_item(&attribute.buf, &attribute_value) ||
-      attribute_value.id != DER_UTF8_STRING) {
-    return false;
-  }
-
-  if (!buffer_ptr(&attribute_value.buf, common_name)) {
-    return false;
-  }
-  *common_name_size = buffer_remaining(&attribute_value.buf);
-
-  return true;
+  // Attribute not found or the tag of `relative_distinguished_name` is invalid.
+  return false;
 }
 
 static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
@@ -235,6 +345,60 @@ static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
     return true;
   }
 
+  if (alg_id == ALG_ID_MLDSA44) {
+    if (pub_key_size != CRYPTO_PUBLICKEYBYTES) {
+      return false;
+    }
+
+    if (crypto_sign_verify(sig, sig_size, msg, msg_size, (const uint8_t*)"", 0,
+                           pub_key) != 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+static bool get_root_public_key(
+    alg_id_t alg_id, const uint8_t authority_key_digest[SHA1_DIGEST_LENGTH],
+    const uint8_t** pub_key, size_t* pub_key_size) {
+  const uint8_t* root_keys = NULL;
+  int root_key_count = 0;
+  size_t root_key_size = 0;
+  switch (alg_id) {
+    case ALG_ID_ECDSA_P256_WITH_SHA256:
+      root_keys = (const uint8_t*)ROOT_KEYS_P256;
+      root_key_count = sizeof(ROOT_KEYS_P256) / sizeof(ROOT_KEYS_P256[0]);
+      root_key_size = sizeof(ROOT_KEYS_P256[0]);
+      break;
+    case ALG_ID_EDDSA_25519:
+      root_keys = (const uint8_t*)ROOT_KEYS_ED25519;
+      root_key_count = sizeof(ROOT_KEYS_ED25519) / sizeof(ROOT_KEYS_ED25519[0]);
+      root_key_size = sizeof(ROOT_KEYS_ED25519[0]);
+      break;
+    case ALG_ID_MLDSA44:
+      root_keys = (const uint8_t*)ROOT_KEYS_MLDSA44;
+      root_key_count = sizeof(ROOT_KEYS_MLDSA44) / sizeof(ROOT_KEYS_MLDSA44[0]);
+      root_key_size = sizeof(ROOT_KEYS_MLDSA44[0]);
+      break;
+    default:
+      return false;
+  }
+
+  for (int i = 0; i < root_key_count; ++i) {
+    uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
+    const uint8_t* root_key = root_keys + i * root_key_size;
+    sha1_Raw(root_key, root_key_size, pub_key_digest);
+    if (memcmp(authority_key_digest, pub_key_digest, sizeof(pub_key_digest)) ==
+        0) {
+      *pub_key = root_key;
+      *pub_key_size = root_key_size;
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -268,7 +432,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // Read the next certificate in the chain.
     cert_count += 1;
     DER_ITEM cert = {0};
-    if (!der_read_item(&chain_reader, &cert) || cert.id != DER_SEQUENCE) {
+    if (!der_read_item_expected(&chain_reader, DER_SEQUENCE, &cert)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 1, cert %d.",
                 cert_count);
@@ -277,14 +441,14 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the tbsCertificate.
     DER_ITEM tbs_cert = {0};
-    if (!der_read_item(&cert.buf, &tbs_cert)) {
+    if (!der_read_item_expected(&cert.buf, DER_SEQUENCE, &tbs_cert)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 2, cert %d.",
                 cert_count);
       return false;
     }
 
-    // Skip the version, serialNumber, signature, issuer and validity
+    // Skip the version, serialNumber, signature algorithm, issuer and validity
     DER_ITEM der_item = {0};
     for (int i = 0; i < 5; ++i) {
       if (!der_read_item(&tbs_cert.buf, &der_item)) {
@@ -297,7 +461,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the subject.
     DER_ITEM subject = {0};
-    if (!der_read_item(&tbs_cert.buf, &subject)) {
+    if (!der_read_item_expected(&tbs_cert.buf, DER_SEQUENCE, &subject)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 4, cert %d.",
                 cert_count);
@@ -308,7 +472,9 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       // Check the common name of the subject of the device certificate.
       const uint8_t* common_name = NULL;
       size_t common_name_size = 0;
-      if (!get_common_name(&subject, &common_name, &common_name_size) ||
+      if (!get_name_attribute(&subject, OID_COMMON_NAME,
+                              sizeof(OID_COMMON_NAME), &common_name,
+                              &common_name_size) ||
           common_name_size != sizeof(SUBJECT_COMMON_NAME) ||
           memcmp(common_name, SUBJECT_COMMON_NAME,
                  sizeof(SUBJECT_COMMON_NAME)) != 0) {
@@ -316,11 +482,39 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
                   "check_device_cert_chain, invalid common name.");
         return false;
       }
+
+#if !(defined TREZOR_MODEL_T3B1 || defined TREZOR_MODEL_T3T1)
+      // Check that the serial number of the subject, matches the device.
+      uint8_t device_sn[MAX_DEVICE_SN_SIZE] = {0};
+      size_t device_sn_size = 0;
+      if (!unit_properties_get_sn(device_sn, sizeof(device_sn),
+                                  &device_sn_size) ||
+          device_sn_size == 0) {
+        cli_error(cli, CLI_ERROR,
+                  "check_device_cert_chain, device_sn not set.");
+      }
+
+      const uint8_t* subject_sn = NULL;
+      size_t subject_sn_size = 0;
+      if (!get_name_attribute(&subject, OID_SERIAL_NUMBER,
+                              sizeof(OID_SERIAL_NUMBER), &subject_sn,
+                              &subject_sn_size)) {
+        cli_error(cli, CLI_ERROR,
+                  "check_device_cert_chain, serialNumber not set.");
+      }
+
+      if (subject_sn_size != device_sn_size ||
+          memcmp(subject_sn, device_sn, device_sn_size) != 0) {
+        cli_error(cli, CLI_ERROR,
+                  "check_device_cert_chain, serial number mismatch.");
+        return false;
+      }
+#endif
     }
 
     // Read the Subject Public Key Info.
     DER_ITEM pub_key_info = {0};
-    if (!der_read_item(&tbs_cert.buf, &pub_key_info)) {
+    if (!der_read_item_expected(&tbs_cert.buf, DER_SEQUENCE, &pub_key_info)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 5, cert %d.",
                 cert_count);
@@ -329,7 +523,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the algorithm
     DER_ITEM alg = {0};
-    if (!der_read_item(&pub_key_info.buf, &alg) ||
+    if (!der_read_item_expected(&pub_key_info.buf, DER_SEQUENCE, &alg) ||
         !get_algorithm(&alg, &alg_id)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, reading algorithm, cert %d.",
@@ -340,7 +534,8 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // Read the public key.
     DER_ITEM pub_key_val = {0};
     uint8_t unused_bits = 0;
-    if (!der_read_item(&pub_key_info.buf, &pub_key_val)) {
+    if (!der_read_item_expected(&pub_key_info.buf, DER_BIT_STRING,
+                                &pub_key_val)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 6, cert %d.",
                 cert_count);
@@ -378,7 +573,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // skip the signatureAlgorithm
     DER_ITEM sig_alg = {0};
-    if (!der_read_item(&cert.buf, &sig_alg)) {
+    if (!der_read_item_expected(&cert.buf, DER_SEQUENCE, &sig_alg)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 7, cert %d.", "%d.",
                 cert_count);
@@ -387,7 +582,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the signature and save it for the next signature verification.
     DER_ITEM sig_val = {0};
-    if (!der_read_item(&cert.buf, &sig_val) || sig_val.id != DER_BIT_STRING ||
+    if (!der_read_item_expected(&cert.buf, DER_BIT_STRING, &sig_val) ||
         !buffer_get(&sig_val.buf, &unused_bits) || unused_bits != 0 ||
         !buffer_ptr(&sig_val.buf, &sig)) {
       cli_error(cli, CLI_ERROR,
@@ -401,7 +596,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
   if (alg_id == ALG_ID_ECDSA_P256_WITH_SHA256) {
     // Verify that the signature of the last certificate in the chain matches
     // its own AuthorityKeyIdentifier to verify the integrity of the certificate
-    // data. This is done only for ECDSA, since EdDSA does not allow to recover
+    // data. This is done only for ECDSA, since EdDSA does not allow recovery of
     // the public key from the signature.
     uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
     sha256_Raw(message, message_size, digest);
@@ -413,6 +608,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       return false;
     }
 
+    bool matches = false;
     for (int recid = 0; recid < 4; ++recid) {
       uint8_t recovered_pub_key[65] = {0};
       if (ecdsa_recover_pub_from_sig(&nist256p1, recovered_pub_key, decoded_sig,
@@ -421,14 +617,137 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
         sha1_Raw(recovered_pub_key, sizeof(recovered_pub_key), pub_key_digest);
         if (memcmp(authority_key_digest, pub_key_digest,
                    sizeof(pub_key_digest)) == 0) {
-          return true;
+          matches = true;
+          break;
         }
       }
     }
+    if (!matches) {
+      cli_error(cli, CLI_ERROR,
+                "check_device_cert_chain, ecdsa_verify_digest root.");
+      return false;
+    }
+  }
+
+  if (!get_root_public_key(alg_id, authority_key_digest, &pub_key,
+                           &pub_key_size)) {
+    const char msg[] =
+        "check_device_cert_chain, failed to get root public key.";
+#if PRODUCTION
+    cli_error(cli, CLI_ERROR, msg);
+    return false;
+#else
+    // In non-production mode we succeed and write the certificate even if the
+    // root key is unknown, but we at least emit a warning.
+    cli_trace(cli, msg);
+    return true;
+#endif
+  }
+
+  // Verify the last signature.
+  if (!verify_signature(alg_id, pub_key, pub_key_size, sig, sig_size, message,
+                        message_size)) {
     cli_error(cli, CLI_ERROR,
-              "check_device_cert_chain, ecdsa_verify_digest root.");
+              "check_device_cert_chain, verify_signature, cert %d.",
+              cert_count);
     return false;
   }
 
   return true;
+}
+
+#ifdef USE_NRF
+#define BINARY_MAXSIZE \
+  (0x50000 > BOOTLOADER_MAXSIZE ? 0x50000 : BOOTLOADER_MAXSIZE)
+#else
+#define BINARY_MAXSIZE BOOTLOADER_MAXSIZE
+#endif
+
+__attribute__((section(".buf"),
+               aligned(4))) static uint8_t binary_buffer[BINARY_MAXSIZE];
+static size_t binary_len = 0;
+static bool binary_update_in_progress = false;
+
+void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len)) {
+  if (cli_arg_count(cli) < 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char* phase = cli_arg(cli, "phase");
+
+  if (phase == NULL) {
+    cli_error_arg(cli, "Expecting phase (begin|chunk|end).");
+  }
+
+  if (0 == strcmp(phase, "begin")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      goto cleanup;
+    }
+
+    // Reset our state
+    binary_len = 0;
+    binary_update_in_progress = true;
+    cli_trace(cli, "Begin");
+    cli_ok(cli, "");
+
+  } else if (0 == strcmp(phase, "chunk")) {
+    if (cli_arg_count(cli) < 2) {
+      cli_error_arg_count(cli);
+      goto cleanup;
+    }
+
+    if (!binary_update_in_progress) {
+      cli_error(cli, CLI_ERROR, "Update not started. Use 'begin' first.");
+      goto cleanup;
+    }
+
+    // Receive next piece of the image
+    size_t chunk_len = 0;
+
+    if (!cli_arg_hex(cli, "hex-data", &binary_buffer[binary_len],
+                     sizeof(binary_buffer) - binary_len, &chunk_len)) {
+      cli_error_arg(cli, "Expecting hex data for chunk.");
+      goto cleanup;
+    }
+
+    binary_len += chunk_len;
+
+    cli_ok(cli, "%u %u", (unsigned)chunk_len, (unsigned)binary_len);
+
+  } else if (0 == strcmp(phase, "end")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      goto cleanup;
+    }
+
+    if (binary_len == 0) {
+      cli_error(cli, CLI_ERROR, "No data received");
+      goto cleanup;
+    }
+
+    if (!finalize(binary_buffer, binary_len)) {
+      binary_len = 0;
+      cli_error(cli, CLI_ERROR, "Error while finalizing the update");
+      goto cleanup;
+    }
+
+    cli_trace(cli, "Update successful (%u bytes)", (unsigned)binary_len);
+    cli_ok(cli, "");
+
+    // Reset state so next begin must come before chunks
+    binary_len = 0;
+    binary_update_in_progress = false;
+
+  } else {
+    cli_error(cli, CLI_ERROR, "Unknown phase '%s' (begin|chunk|end)", phase);
+    goto cleanup;
+  }
+
+  return;
+
+cleanup:
+  binary_update_in_progress = false;
+  binary_len = 0;
 }

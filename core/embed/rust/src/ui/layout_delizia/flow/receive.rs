@@ -101,7 +101,7 @@ pub fn new_receive(
         extra: "".into(),
         value: content.into(),
         font: if chunkify {
-            theme::get_chunkified_text_style(content.len())
+            &theme::TEXT_MONO_ADDRESS_CHUNKS
         } else {
             &theme::TEXT_MONO_DATA
         },
@@ -123,7 +123,7 @@ pub fn new_receive(
     let content_tap =
         Frame::left_aligned(title, SwipeContent::new(PromptScreen::new_tap_to_confirm()))
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
-            .with_swipe(Direction::Down, SwipeSettings::default())
+            .with_swipe(Direction::Down, SwipeSettings::Default)
             .map(super::util::map_to_confirm);
 
     // Menu
@@ -135,7 +135,7 @@ pub fn new_receive(
                 theme::ICON_CHEVRON_RIGHT,
                 TR::address_details__account_info.into(),
             )
-            .danger(theme::ICON_CANCEL, cancel_title.into()),
+            .cancel_item(cancel_title.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);
@@ -175,7 +175,7 @@ pub fn new_receive(
         Frame::left_aligned(cancel_title.into(), PromptScreen::new_tap_to_cancel())
             .with_cancel_button()
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
-            .with_swipe(Direction::Down, SwipeSettings::default())
+            .with_swipe(Direction::Down, SwipeSettings::Default)
             .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&Receive::Content)?;

@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -37,6 +37,7 @@ class SecmonHeader(Struct):
     version: tuple[int, int, int, int]
     hw_model: Model | bytes
     hw_revision: int
+    monotonic: int
     hash: bytes
 
     sigmask: int
@@ -51,7 +52,8 @@ class SecmonHeader(Struct):
         "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
         "hw_model" / EnumAdapter(c.Bytes(4), Model),
         "hw_revision" / c.Int8ul,
-        "_reserved" / c.Padding(3),
+        "monotonic" / c.Int8ul,
+        "_reserved" / c.Padding(2),
         "hash" / c.Bytes(32),
 
         "_reserved" / c.Padding(391),

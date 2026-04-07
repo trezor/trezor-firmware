@@ -10,7 +10,7 @@ use crate::{
     error::Error,
     micropython::{gc::GcBox, obj::Obj},
     ui::{
-        component::{paginated::PaginateFull, Component, Never},
+        component::{paginated::Paginate, Component, Never},
         flow::Swipable,
         layout::{
             obj::ComponentMsgObj,
@@ -75,7 +75,7 @@ where
 
 impl<T> ComponentMsgObj for Frame<T>
 where
-    T: ComponentMsgObj + PaginateFull,
+    T: ComponentMsgObj + Paginate,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {

@@ -156,7 +156,7 @@ def reformat_toif_icons(p: str | Path) -> None:
             reformat_toif_icon(os.path.join(p, file))
 
 
-def change_icon_format():
+def change_icon_format() -> None:
     # bootloader icons
     reformat_c_icons(CORE_DIR / "embed/projects/bootloader")
 

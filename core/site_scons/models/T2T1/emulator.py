@@ -18,7 +18,9 @@ def configure(
     hw_revision = 0
     mcu = "STM32F427xx"
 
-    unix_common_files(env, defines, sources, paths)
+    features_available += unix_common_files(
+        env, features_wanted, defines, sources, paths
+    )
 
     features_available.append("display_rgb565")
     defines += [
@@ -37,6 +39,11 @@ def configure(
         ("FLASH_BIT_ACCESS", "1"),
         ("FLASH_BLOCK_WORDS", "1"),
     ]
+
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/unix/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
 
     if "sd_card" in features_wanted:
         features_available.append("sd_card")
@@ -60,9 +67,12 @@ def configure(
         features_available.append("touch")
         defines += [("USE_TOUCH", "1")]
 
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/touch/touch_debug.c"]
+
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 
-    sources += ["embed/util/flash/stm32f4/flash_layout.c"]
+    sources += ["embed/sys/flash/stm32f4/flash_layout.c"]
 
     return features_available

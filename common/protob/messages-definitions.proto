@@ -2,8 +2,8 @@ syntax = "proto2";
 package hw.trezor.messages.definitions;
 
 // Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageDefinitions";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 /**
  * Definitions type enum.
@@ -55,7 +55,7 @@ message EthereumTokenInfo {
  * @embed
  */
 message SolanaTokenInfo {
-    required bytes mint = 1;         // token mint - unique token id
+    required bytes mint = 1;  // token mint - unique token id
     required string symbol = 2;
     required string name = 3;
 }

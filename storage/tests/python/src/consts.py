@@ -93,8 +93,8 @@ WORD_SIZE = 4
 # Boolean values are stored as a simple 0/1 int.
 TRUE_BYTE = b"\x01"
 FALSE_BYTE = b"\x00"
-TRUE_WORD = b"\xA5\x69\x5A\xC3"
-FALSE_WORD = b"\x5A\x96\xA5\x3C"
+TRUE_WORD = b"\xa5\x69\x5a\xc3"
+FALSE_WORD = b"\x5a\x96\xa5\x3c"
 
 # ----- Crypto ----- #
 

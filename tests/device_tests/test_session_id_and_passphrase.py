@@ -14,18 +14,22 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import random
 
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import LayoutType, TrezorTestContext
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import FailureType, SafetyCheckLevel
+from trezorlib.protocol_v1 import SessionV1, TrezorClientV1
 from trezorlib.tools import parse_path
 
 from .. import translations as TR
+
+pytestmark = pytest.mark.protocol("v1")
 
 XPUB_PASSPHRASES = {
     "A": "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG",
@@ -49,17 +53,7 @@ XPUB_REQUEST = messages.GetPublicKey(address_n=ADDRESS_N, coin_name="Bitcoin")
 SESSIONS_STORED = 10
 
 
-def _init_session(client: Client, session_id=None, derive_cardano=False):
-    """Call Initialize, check and return the session ID."""
-    response = client.call(
-        messages.Initialize(session_id=session_id, derive_cardano=derive_cardano)
-    )
-    assert isinstance(response, messages.Features)
-    assert len(response.session_id) == 32
-    return response.session_id
-
-
-def _get_xpub(client: Client, passphrase=None):
+def _get_xpub(session: SessionV1, passphrase: str | None = None) -> str:
     """Get XPUB and check that the appropriate passphrase flow has happened."""
     if passphrase is not None:
         expected_responses = [
@@ -71,125 +65,156 @@ def _get_xpub(client: Client, passphrase=None):
     else:
         expected_responses = [messages.PublicKey]
 
-    with client:
-        client.use_passphrase(passphrase or "")
-        client.set_expected_responses(expected_responses)
-        result = client.call(XPUB_REQUEST)
+    with session.test_ctx as test_ctx:  # type: ignore
+        test_ctx.set_expected_responses(expected_responses)
+        result = session.call_raw(XPUB_REQUEST)
+        if passphrase is not None:
+            result = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
+            while isinstance(result, messages.ButtonRequest):
+                result = test_ctx.client._callback_button(session, result)
+        assert isinstance(result, messages.PublicKey)
         return result.xpub
 
 
+def _get_session(
+    test_ctx: TrezorTestContext, session_id: bytes | None = None
+) -> SessionV1:
+    """Call Initialize, check and return the session."""
+    assert isinstance(test_ctx.client, TrezorClientV1)
+    if session_id is not None:
+        session = SessionV1(test_ctx.client, id=session_id)
+    else:
+        session = SessionV1(test_ctx.client)
+    session.initialize()
+    return test_ctx._wrap_session(session)  # type: ignore
+
+
+def _initialize_ok(session: SessionV1) -> bool:
+    session.client._last_active_session = session
+    resp = session.call_raw(messages.Initialize(session_id=session.id))
+    features = messages.Features.ensure_isinstance(resp)
+    return features.session_id == session.id
+
+
 @pytest.mark.setup_client(passphrase=True)
-def test_session_with_passphrase(client: Client):
-    # Let's start the communication by calling Initialize.
-    session_id = _init_session(client)
+def test_session_with_passphrase(test_ctx: TrezorTestContext):
+    session = _get_session(test_ctx)
 
     # GetPublicKey requires passphrase and since it is not cached,
     # Trezor will prompt for it.
-    assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
+    assert _get_xpub(session, passphrase="A") == XPUB_PASSPHRASES["A"]
 
     # Call Initialize again, this time with the received session id and then call
     # GetPublicKey. The passphrase should be cached now so Trezor must
     # not ask for it again, whilst returning the same xpub.
-    new_session_id = _init_session(client, session_id=session_id)
-    assert new_session_id == session_id
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
+    assert _initialize_ok(session)
+    assert _get_xpub(session) == XPUB_PASSPHRASES["A"]
 
     # If we set session id in Initialize to None, the cache will be cleared
     # and Trezor will ask for the passphrase again.
-    new_session_id = _init_session(client)
-    assert new_session_id != session_id
-    assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
+    session_2 = _get_session(test_ctx)
+    assert session_2.id != session.id
+    assert _get_xpub(session_2, passphrase="A") == XPUB_PASSPHRASES["A"]
 
-    # Unknown session id is the same as setting it to None.
-    _init_session(client, session_id=b"X" * 32)
-    assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
+    # Unknown session id leads to FailedSessionResumption in trezorlib.
+    # Trezor ignores the invalid session_id and creates a new session
+    resp = session_2.call(messages.Initialize(session_id=b"X" * 32))
+    assert isinstance(resp, messages.Features)
+
+    session_3 = _get_session(test_ctx, session_id=resp.session_id)
+
+    assert session_3.id is not None
+    assert len(session_3.id) == 32
+    assert session_3.id != b"X" * 32
+    assert session_3.id != session.id
+    assert session_3.id != session_2.id
+    assert _get_xpub(session_3, passphrase="A") == XPUB_PASSPHRASES["A"]
 
 
 @pytest.mark.setup_client(passphrase=True)
-def test_multiple_sessions(client: Client):
+def test_multiple_sessions(test_ctx: TrezorTestContext):
     # start SESSIONS_STORED sessions
-    session_ids = []
+    SESSIONS_STORED = 10
+    sessions = []
     for _ in range(SESSIONS_STORED):
-        session_ids.append(_init_session(client))
+        session = _get_session(test_ctx)
+        sessions.append(session)
 
     # Resume each session
-    for session_id in session_ids:
-        new_session_id = _init_session(client, session_id)
-        assert session_id == new_session_id
+    for i in range(SESSIONS_STORED):
+        assert _initialize_ok(sessions[i])
 
     # Creating a new session replaces the least-recently-used session
-    _init_session(client)
+    test_ctx.get_session()
 
     # Resuming session 1 through SESSIONS_STORED will still work
-    for session_id in session_ids[1:]:
-        new_session_id = _init_session(client, session_id)
-        assert session_id == new_session_id
+    for i in range(1, SESSIONS_STORED):
+        assert _initialize_ok(sessions[i])
 
     # Resuming session 0 will not work
-    new_session_id = _init_session(client, session_ids[0])
-    assert new_session_id != session_ids[0]
+    assert not _initialize_ok(sessions[0])
 
     # New session bumped out the least-recently-used anonymous session.
     # Resuming session 1 through SESSIONS_STORED will still work
-    for session_id in session_ids[1:]:
-        new_session_id = _init_session(client, session_id)
-        assert session_id == new_session_id
+    for i in range(1, SESSIONS_STORED):
+        assert _initialize_ok(sessions[i])
 
     # Creating a new session replaces session_ids[0] again
-    _init_session(client)
+    _get_session(test_ctx)
 
     # Resuming all sessions one by one will in turn bump out the previous session.
-    for session_id in session_ids:
-        new_session_id = _init_session(client, session_id)
-        assert session_id != new_session_id
+    for i in range(SESSIONS_STORED):
+        assert not _initialize_ok(sessions[i])
 
 
 @pytest.mark.setup_client(passphrase=True)
-def test_multiple_passphrases(client: Client):
+def test_multiple_passphrases(test_ctx: TrezorTestContext):
     # start a session
-    session_a = _init_session(client)
-    assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
+    session_a = _get_session(test_ctx)
+    session_a_id = session_a.id
+    assert _get_xpub(session_a, passphrase="A") == XPUB_PASSPHRASES["A"]
     # start it again wit the same session id
-    new_session_id = _init_session(client, session_id=session_a)
+    session_a.initialize()
     # session is the same
-    assert new_session_id == session_a
+    assert session_a.id == session_a_id
     # passphrase is not prompted
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
+    assert _get_xpub(session_a) == XPUB_PASSPHRASES["A"]
 
     # start a second session
-    session_b = _init_session(client)
+    session_b = _get_session(test_ctx)
+    session_b_id = session_b.id
     # new session -> new session id and passphrase prompt
-    assert _get_xpub(client, passphrase="B") == XPUB_PASSPHRASES["B"]
+    assert _get_xpub(session_b, passphrase="B") == XPUB_PASSPHRASES["B"]
 
     # provide the same session id -> must not ask for passphrase again.
-    new_session_id = _init_session(client, session_id=session_b)
-    assert new_session_id == session_b
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["B"]
+    session_b.initialize()
+    assert session_b.id == session_b_id
+    assert _get_xpub(session_b) == XPUB_PASSPHRASES["B"]
 
     # provide the first session id -> must not ask for passphrase again and return the same result.
-    new_session_id = _init_session(client, session_id=session_a)
-    assert new_session_id == session_a
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
+    session_a.initialize()
+    assert session_a.id == session_a_id
+    assert _get_xpub(session_a) == XPUB_PASSPHRASES["A"]
 
     # provide the second session id -> must not ask for passphrase again and return the same result.
-    new_session_id = _init_session(client, session_id=session_b)
-    assert new_session_id == session_b
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["B"]
+    session_b.initialize()
+    assert session_b.id == session_b_id
+    assert _get_xpub(session_b) == XPUB_PASSPHRASES["B"]
 
 
 @pytest.mark.slow
 @pytest.mark.setup_client(passphrase=True)
-def test_max_sessions_with_passphrases(client: Client):
+def test_max_sessions_with_passphrases(test_ctx: TrezorTestContext):
     # for the following tests, we are using as many passphrases as there are available sessions
     assert len(XPUB_PASSPHRASES) == SESSIONS_STORED
 
     # start as many sessions as the limit is
-    session_ids = {}
+    sessions = {}
     for passphrase, xpub in XPUB_PASSPHRASES.items():
-        session_id = _init_session(client)
-        assert session_id not in session_ids.values()
-        session_ids[passphrase] = session_id
-        assert _get_xpub(client, passphrase=passphrase) == xpub
+        session = _get_session(test_ctx)
+        assert session.id not in {s.id for s in sessions.values()}
+        sessions[passphrase] = session
+        assert _get_xpub(session, passphrase=passphrase) == xpub
 
     # passphrase is not prompted for the started the sessions, regardless the order
     # let's try 20 different orderings
@@ -198,171 +223,178 @@ def test_max_sessions_with_passphrases(client: Client):
     for _ in range(20):
         random.shuffle(shuffling)
         for passphrase in shuffling:
-            session_id = _init_session(client, session_id=session_ids[passphrase])
-            assert session_id == session_ids[passphrase]
-            assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES[passphrase]
+            assert _initialize_ok(sessions[passphrase])
+            assert _get_xpub(sessions[passphrase]) == XPUB_PASSPHRASES[passphrase]
 
     # make sure the usage order is the reverse of the creation order
     for passphrase in reversed(passphrases):
-        session_id = _init_session(client, session_id=session_ids[passphrase])
-        assert session_id == session_ids[passphrase]
-        assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES[passphrase]
+        assert _initialize_ok(sessions[passphrase])
+        assert _get_xpub(sessions[passphrase]) == XPUB_PASSPHRASES[passphrase]
 
     # creating one more session will exceed the limit
-    _init_session(client)
+    new_session = _get_session(test_ctx)
     # new session asks for passphrase
-    _get_xpub(client, passphrase="XX")
+    _get_xpub(new_session, passphrase="XX")
 
     # restoring the sessions in reverse will evict the next-up session
     for passphrase in reversed(passphrases):
-        _init_session(client, session_id=session_ids[passphrase])
-        _get_xpub(client, passphrase="whatever")  # passphrase is prompted
+        assert not _initialize_ok(sessions[passphrase])
+
+        _get_xpub(sessions[passphrase], passphrase="whatever")  # passphrase is prompted
 
 
-def test_session_enable_passphrase(client: Client):
+def test_session_enable_passphrase(test_ctx: TrezorTestContext):
     # Let's start the communication by calling Initialize.
-    session_id = _init_session(client)
+    session = _get_session(test_ctx)
 
     # Trezor will not prompt for passphrase because it is turned off.
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASE_NONE
+    assert _get_xpub(session) == XPUB_PASSPHRASE_NONE
 
     # Turn on passphrase.
     # Emit the call explicitly to avoid ClearSession done by the library function
-    response = client.call(messages.ApplySettings(use_passphrase=True))
+    response = session.call(messages.ApplySettings(use_passphrase=True))
     assert isinstance(response, messages.Success)
 
     # The session id is unchanged, therefore we do not prompt for the passphrase.
-    new_session_id = _init_session(client, session_id=session_id)
-    assert session_id == new_session_id
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASE_NONE
+    session_id = session.id
+    session.initialize()
+    assert session_id == session.id
+    assert _get_xpub(session) == XPUB_PASSPHRASE_NONE
 
     # We clear the session id now, so the passphrase should be asked.
-    new_session_id = _init_session(client)
-    assert session_id != new_session_id
-    assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
+    new_session = _get_session(test_ctx)
+    assert session_id != new_session.id
+    assert _get_xpub(new_session, passphrase="A") == XPUB_PASSPHRASES["A"]
 
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(passphrase=True)
-def test_passphrase_on_device(client: Client):
-    _init_session(client)
-
+def test_passphrase_on_device(test_ctx: TrezorTestContext):
+    # _init_session(client)
+    session = _get_session(test_ctx)
     # try to get xpub with passphrase on host:
-    response = client.call_raw(XPUB_REQUEST)
+    response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
     # using `client.call` to auto-skip subsequent ButtonRequests for "show passphrase"
-    response = client.call(messages.PassphraseAck(passphrase="A", on_device=False))
+    response = session.call(messages.PassphraseAck(passphrase="A", on_device=False))
 
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASES["A"]
 
     # try to get xpub again, passphrase should be cached
-    response = client.call_raw(XPUB_REQUEST)
+    response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASES["A"]
 
     # make a new session
-    _init_session(client)
+    session2 = _get_session(test_ctx)
 
     # try to get xpub with passphrase on device:
-    response = client.call_raw(XPUB_REQUEST)
+    response = session2.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
-    response = client.call_raw(messages.PassphraseAck(on_device=True))
+    response = session2.call_raw(messages.PassphraseAck(on_device=True))
     # no "show passphrase" here
     assert isinstance(response, messages.ButtonRequest)
-    client.debug.input("A")
-    response = client.call_raw(messages.ButtonAck())
+    test_ctx.debug.input("A")
+    response = session2.call_raw(messages.ButtonAck())
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASES["A"]
 
     # try to get xpub again, passphrase should be cached
-    response = client.call_raw(XPUB_REQUEST)
+    response = session2.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASES["A"]
 
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(passphrase=True)
-def test_passphrase_always_on_device(client: Client):
+def test_passphrase_always_on_device(test_ctx: TrezorTestContext):
     # Let's start the communication by calling Initialize.
-    session_id = _init_session(client)
+    session = _get_session(test_ctx)
 
     # Force passphrase entry on Trezor.
-    response = client.call(messages.ApplySettings(passphrase_always_on_device=True))
+    response = session.call(messages.ApplySettings(passphrase_always_on_device=True))
     assert isinstance(response, messages.Success)
 
     # Since we enabled the always_on_device setting, Trezor will send ButtonRequests and ask for it on the device.
-    response = client.call_raw(XPUB_REQUEST)
+    response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.ButtonRequest)
-    client.debug.input("")  # Input empty passphrase.
-    response = client.call_raw(messages.ButtonAck())
+    test_ctx.debug.input("")  # Input empty passphrase.
+    response = session.call_raw(messages.ButtonAck())
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASE_NONE
 
     # Passphrase will not be prompted. The session id stays the same and the passphrase is cached.
-    _init_session(client, session_id=session_id)
-    response = client.call_raw(XPUB_REQUEST)
+    session.initialize()
+    response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASE_NONE
 
     # In case we want to add a new passphrase we need to send session_id = None.
-    _init_session(client)
-    response = client.call_raw(XPUB_REQUEST)
+    new_session = _get_session(test_ctx)
+    response = new_session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.ButtonRequest)
-    client.debug.input("A")  # Input non-empty passphrase.
-    response = client.call_raw(messages.ButtonAck())
+    test_ctx.debug.input("A")  # Input non-empty passphrase.
+    response = new_session.call_raw(messages.ButtonAck())
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASES["A"]
 
 
 @pytest.mark.models("legacy")
 @pytest.mark.setup_client(passphrase="")
-def test_passphrase_on_device_not_possible_on_t1(client: Client):
+def test_passphrase_on_device_not_possible_on_t1(test_ctx: TrezorTestContext):
+    session = test_ctx.get_seedless_session()
     # This setting makes no sense on T1.
-    response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
+    response = session.call_raw(
+        messages.ApplySettings(passphrase_always_on_device=True)
+    )
     assert isinstance(response, messages.Failure)
     assert response.code == FailureType.DataError
 
     # T1 should not accept on_device request
-    response = client.call_raw(XPUB_REQUEST)
+    response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
-    response = client.call_raw(messages.PassphraseAck(on_device=True))
+    response = session.call_raw(messages.PassphraseAck(on_device=True))
     assert isinstance(response, messages.Failure)
     assert response.code == FailureType.DataError
 
 
 @pytest.mark.setup_client(passphrase=True)
-def test_passphrase_ack_mismatch(client: Client):
-    response = client.call_raw(XPUB_REQUEST)
+def test_passphrase_ack_mismatch(test_ctx: TrezorTestContext):
+    session = test_ctx.get_seedless_session()
+    response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
-    response = client.call_raw(messages.PassphraseAck(passphrase="A", on_device=True))
-    assert isinstance(response, messages.Failure)
-    assert response.code == FailureType.DataError
-
-
-@pytest.mark.setup_client(passphrase="")
-def test_passphrase_missing(client: Client):
-    response = client.call_raw(XPUB_REQUEST)
-    assert isinstance(response, messages.PassphraseRequest)
-    response = client.call_raw(messages.PassphraseAck(passphrase=None))
-    assert isinstance(response, messages.Failure)
-    assert response.code == FailureType.DataError
-
-    response = client.call_raw(XPUB_REQUEST)
-    assert isinstance(response, messages.PassphraseRequest)
-    response = client.call_raw(messages.PassphraseAck(passphrase=None, on_device=False))
+    response = session.call_raw(messages.PassphraseAck(passphrase="A", on_device=True))
     assert isinstance(response, messages.Failure)
     assert response.code == FailureType.DataError
 
 
 @pytest.mark.setup_client(passphrase=True)
-def test_passphrase_length(client: Client):
+def test_passphrase_missing(test_ctx: TrezorTestContext):
+    session = test_ctx.get_seedless_session()
+    response = session.call_raw(XPUB_REQUEST)
+    assert isinstance(response, messages.PassphraseRequest)
+    response = session.call_raw(messages.PassphraseAck(passphrase=None))
+    assert isinstance(response, messages.Failure)
+    assert response.code == FailureType.DataError
+
+    response = session.call_raw(XPUB_REQUEST)
+    assert isinstance(response, messages.PassphraseRequest)
+    response = session.call_raw(
+        messages.PassphraseAck(passphrase=None, on_device=False)
+    )
+    assert isinstance(response, messages.Failure)
+    assert response.code == FailureType.DataError
+
+
+@pytest.mark.setup_client(passphrase=True)
+def test_passphrase_length(test_ctx: TrezorTestContext):
     def call(passphrase: str, expected_result: bool):
-        _init_session(client)
-        response = client.call_raw(XPUB_REQUEST)
+        session = _get_session(test_ctx)
+        response = session.call_raw(XPUB_REQUEST)
         assert isinstance(response, messages.PassphraseRequest)
         try:
-            response = client.call(messages.PassphraseAck(passphrase=passphrase))
+            response = session.call(messages.PassphraseAck(passphrase=passphrase))
             assert expected_result is True, "Call should have failed"
             assert isinstance(response, messages.PublicKey)
         except exceptions.TrezorFailure as e:
@@ -381,70 +413,73 @@ def test_passphrase_length(client: Client):
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(passphrase=True)
-def test_hide_passphrase_from_host(client: Client):
+def test_hide_passphrase_from_host(test_ctx: TrezorTestContext):
     # Without safety checks, turning it on fails
-    with pytest.raises(TrezorFailure, match="Safety checks are strict"), client:
-        device.apply_settings(client, hide_passphrase_from_host=True)
+    session = _get_session(test_ctx)
+    with pytest.raises(TrezorFailure, match="Safety checks are strict"):
+        device.apply_settings(session, hide_passphrase_from_host=True)
 
-    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
 
     # Turning it on
-    device.apply_settings(client, hide_passphrase_from_host=True)
+    device.apply_settings(session, hide_passphrase_from_host=True)
 
     passphrase = "abc"
-
-    with client:
+    session = _get_session(test_ctx)
+    with test_ctx:
 
         def input_flow():
             yield
-            content = client.debug.read_layout().text_content().lower()
+            content = test_ctx.debug.read_layout().text_content().lower()
             assert TR.passphrase__from_host_not_shown[:50].lower() in content
-            if client.layout_type in (
+            if test_ctx.layout_type in (
                 LayoutType.Bolt,
                 LayoutType.Delizia,
                 LayoutType.Eckhart,
             ):
-                client.debug.press_yes()
-            elif client.layout_type is LayoutType.Caesar:
-                client.debug.press_right()
-                client.debug.press_right()
-                client.debug.press_yes()
+                test_ctx.debug.press_yes()
+            elif test_ctx.layout_type is LayoutType.Caesar:
+                test_ctx.debug.press_right()
+                test_ctx.debug.press_right()
+                test_ctx.debug.press_yes()
             else:
                 raise KeyError
 
-        client.watch_layout()
-        client.set_input_flow(input_flow)
-        client.set_expected_responses(
+        test_ctx.watch_layout()
+        test_ctx.set_input_flow(input_flow)
+        test_ctx.set_expected_responses(
             [
                 messages.PassphraseRequest,
                 messages.ButtonRequest,
                 messages.PublicKey,
             ]
         )
-        client.use_passphrase(passphrase)
-        result = client.call(XPUB_REQUEST)
-        assert isinstance(result, messages.PublicKey)
-        xpub_hidden_passphrase = result.xpub
+        resp = session.call_raw(XPUB_REQUEST)
+        resp = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
+        assert isinstance(resp, messages.ButtonRequest)
+        resp = session.client._callback_button(session, resp)
+        assert isinstance(resp, messages.PublicKey)
+        xpub_hidden_passphrase = resp.xpub
 
     # Turning it off
-    device.apply_settings(client, hide_passphrase_from_host=False)
+    device.apply_settings(session, hide_passphrase_from_host=False)
 
     # Starting new session, otherwise the passphrase would be cached
-    _init_session(client)
+    session = _get_session(test_ctx)
 
-    with client:
+    with test_ctx:
 
         def input_flow():
             yield
             assert (
                 TR.passphrase__next_screen_will_show_passphrase
-                in client.debug.read_layout().text_content()
+                in test_ctx.debug.read_layout().text_content()
             )
-            client.debug.press_yes()
+            test_ctx.debug.press_yes()
 
             yield
 
-            title = client.debug.read_layout().title()
+            title = test_ctx.debug.read_layout().title()
             assert any(
                 needle in title
                 for needle in [
@@ -452,12 +487,12 @@ def test_hide_passphrase_from_host(client: Client):
                     TR.passphrase__title_confirm,
                 ]
             )
-            assert passphrase in client.debug.read_layout().text_content()
-            client.debug.press_yes()
+            assert passphrase in test_ctx.debug.read_layout().text_content()
+            test_ctx.debug.press_yes()
 
-        client.watch_layout()
-        client.set_input_flow(input_flow)
-        client.set_expected_responses(
+        test_ctx.watch_layout()
+        test_ctx.set_input_flow(input_flow)
+        test_ctx.set_expected_responses(
             [
                 messages.PassphraseRequest,
                 messages.ButtonRequest,
@@ -465,23 +500,31 @@ def test_hide_passphrase_from_host(client: Client):
                 messages.PublicKey,
             ]
         )
-        client.use_passphrase(passphrase)
-        result = client.call(XPUB_REQUEST)
-        assert isinstance(result, messages.PublicKey)
-        xpub_shown_passphrase = result.xpub
+        resp = session.call_raw(XPUB_REQUEST)
+        assert isinstance(resp, messages.PassphraseRequest)
+        resp = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
+        assert isinstance(resp, messages.ButtonRequest)
+        resp = session.client._callback_button(session, resp)
+        assert isinstance(resp, messages.ButtonRequest)
+        resp = session.client._callback_button(session, resp)
+        assert isinstance(resp, messages.PublicKey)
+        xpub_shown_passphrase = resp.xpub
 
     assert xpub_hidden_passphrase == xpub_shown_passphrase
 
 
-def _get_xpub_cardano(client: Client, passphrase):
+def _get_xpub_cardano(
+    session: SessionV1,
+    passphrase: str | None = None,
+):
     msg = messages.CardanoGetPublicKey(
         address_n=parse_path("m/44h/1815h/0h/0/0"),
         derivation_type=messages.CardanoDerivationType.ICARUS,
     )
-    response = client.call_raw(msg)
+    response = session.call_raw(msg)
     if passphrase is not None:
         assert isinstance(response, messages.PassphraseRequest)
-        response = client.call(messages.PassphraseAck(passphrase=passphrase))
+        response = session.call(messages.PassphraseAck(passphrase=passphrase))
     assert isinstance(response, messages.CardanoPublicKey)
     return response.xpub
 
@@ -489,36 +532,40 @@ def _get_xpub_cardano(client: Client, passphrase):
 @pytest.mark.models("core")
 @pytest.mark.altcoin
 @pytest.mark.setup_client(passphrase=True)
-def test_cardano_passphrase(client: Client):
+def test_cardano_passphrase(test_ctx: TrezorTestContext):
     # Cardano has a separate derivation method that needs to access the plaintext
     # of the passphrase.
     # Historically, Cardano calls would ask for passphrase again. Now, they should not.
 
-    session_id = _init_session(client, derive_cardano=True)
+    # session_id = _init_session(client, derive_cardano=True)
 
     # GetPublicKey requires passphrase and since it is not cached,
     # Trezor will prompt for it.
-    assert _get_xpub(client, passphrase="B") == XPUB_PASSPHRASES["B"]
+    session = _get_session(test_ctx)
+    session.initialize(derive_cardano=True)
+    assert _get_xpub(session, passphrase="B") == XPUB_PASSPHRASES["B"]
 
     # The passphrase is now cached for non-Cardano coins.
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["B"]
+    assert _get_xpub(session) == XPUB_PASSPHRASES["B"]
 
     # The passphrase should be cached for Cardano as well
-    assert _get_xpub_cardano(client, passphrase=None) == XPUB_CARDANO_PASSPHRASE_B
+    assert _get_xpub_cardano(session) == XPUB_CARDANO_PASSPHRASE_B
 
     # Initialize with the session id does not destroy the state
-    _init_session(client, session_id=session_id, derive_cardano=True)
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["B"]
-    assert _get_xpub_cardano(client, passphrase=None) == XPUB_CARDANO_PASSPHRASE_B
+    session.initialize()
+    # _init_session(client, session_id=session_id, derive_cardano=True)
+    assert _get_xpub(session) == XPUB_PASSPHRASES["B"]
+    assert _get_xpub_cardano(session) == XPUB_CARDANO_PASSPHRASE_B
 
     # New session will destroy the state
-    _init_session(client, derive_cardano=True)
+    new_session = _get_session(test_ctx)
+    new_session.initialize(derive_cardano=True)
 
     # Cardano must ask for passphrase again
-    assert _get_xpub_cardano(client, passphrase="A") == XPUB_CARDANO_PASSPHRASE_A
+    assert _get_xpub_cardano(new_session, passphrase="A") == XPUB_CARDANO_PASSPHRASE_A
 
     # Passphrase is now cached for Cardano
-    assert _get_xpub_cardano(client, passphrase=None) == XPUB_CARDANO_PASSPHRASE_A
+    assert _get_xpub_cardano(new_session) == XPUB_CARDANO_PASSPHRASE_A
 
     # Passphrase is cached for non-Cardano coins too
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
+    assert _get_xpub(new_session) == XPUB_PASSPHRASES["A"]

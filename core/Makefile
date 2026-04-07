@@ -17,7 +17,6 @@ BOOTLOADER_CI_BUILD_DIR   = $(BUILD_DIR)/bootloader_ci
 BOOTLOADER_EMU_BUILD_DIR  = $(BUILD_DIR)/bootloader_emu
 PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
 PRODTEST_EMU_BUILD_DIR    = $(BUILD_DIR)/prodtest_emu
-REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 KERNEL_BUILD_DIR      = $(BUILD_DIR)/kernel
 SECMON_BUILD_DIR      = $(BUILD_DIR)/secmon
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
@@ -29,27 +28,28 @@ UNIX_PORT_OPTS ?=
 CROSS_PORT_OPTS ?=
 
 PRODUCTION ?= 0
+DEBUGLINK ?= 0
 PYOPT      ?= 1
 BITCOIN_ONLY ?= 0
 BOOTLOADER_QA ?= 0
 BOOTLOADER_DEVEL ?= 0
 UNSAFE_FW ?= 0
-DISABLE_OPTIGA ?= 0
-DISABLE_TROPIC ?= 1
-TREZOR_MODEL ?= T2T1
+TREZOR_MODEL ?= T3W1
 TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
-THP ?= 0
+THP ?= $(if $(filter T3W1,$(TREZOR_MODEL)),1,0)
 BENCHMARK ?= 0
 LOG_STACK_USAGE ?= 0
 TREZOR_EMULATOR_DEBUGGABLE ?= 0
 QUIET_MODE ?= 0
 TREZOR_DISABLE_ANIMATION ?= $(if $(filter 0,$(PYOPT)),1,0)
 STORAGE_INSECURE_TESTING_MODE ?= 0
-UI_DEBUG_OVERLAY ?= 0
+UI_PERFORMANCE_OVERLAY ?= 0
+DBG_CONSOLE ?=
+EXTAPP_SUPPORT ?= 0
 
 # If set, VCP writes will be blocking, in order to allow reliable debug data transmission over VCP.
 # Disabled by default, to prevent debug firmware from getting stuck while writing log messages (if the host is not reading them).
@@ -129,12 +129,11 @@ SCONS_VARS = \
 	UNSAFE_FW="$(UNSAFE_FW)" \
 	CFLAGS="$(CFLAGS)" \
 	CMAKELISTS="$(CMAKELISTS)" \
-	DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
-	DISABLE_TROPIC="$(DISABLE_TROPIC)" \
 	HW_REVISION="$(HW_REVISION)" \
 	LOG_STACK_USAGE="$(LOG_STACK_USAGE)" \
 	MICROPY_ENABLE_SOURCE_LINE="$(MICROPY_ENABLE_SOURCE_LINE)" \
 	PRODUCTION="$(PRODUCTION)" \
+	DEBUGLINK="$(DEBUGLINK)" \
 	PYOPT="$(PYOPT)" \
 	QUIET_MODE="$(QUIET_MODE)" \
 	SCM_REVISION="$(SCM_REVISION)" \
@@ -145,8 +144,18 @@ SCONS_VARS = \
 	TREZOR_EMULATOR_DEBUGGABLE=$(TREZOR_EMULATOR_DEBUGGABLE) \
 	TREZOR_MEMPERF="$(TREZOR_MEMPERF)" \
 	TREZOR_MODEL="$(TREZOR_MODEL)" \
-	UI_DEBUG_OVERLAY="$(UI_DEBUG_OVERLAY)" \
-	BLOCK_ON_VCP="$(BLOCK_ON_VCP)"
+	UI_PERFORMANCE_OVERLAY="$(UI_PERFORMANCE_OVERLAY)" \
+	BLOCK_ON_VCP="$(BLOCK_ON_VCP)" \
+	DBG_CONSOLE="$(DBG_CONSOLE)" \
+	EXTAPP_SUPPORT="$(EXTAPP_SUPPORT)"
+
+ifdef DISABLE_OPTIGA
+SCONS_VARS += DISABLE_OPTIGA="$(DISABLE_OPTIGA)"
+endif
+
+ifdef DISABLE_TROPIC
+SCONS_VARS += DISABLE_TROPIC="$(DISABLE_TROPIC)"
+endif
 
 SCONS_OPTS = -Q -j $(JOBS)
 ifeq ($(QUIET_MODE),1)
@@ -185,7 +194,7 @@ test_rust: ## run rs unit tests
 		-- --test-threads=1 --nocapture
 
 test_emu_sanity: ## make sure the emulator doesn't crash on startup
-	$(EMU) --disable-animation --headless --temporary-profile -c -- trezorctl -v ping "Hello World!"
+	timeout -v 10 $(EMU) --disable-animation --headless --temporary-profile --command true
 
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) --lang=$(TEST_LANG)
@@ -315,11 +324,6 @@ build_prodtest: ## build production test firmware
 build_prodtest_emu: ## build the unix prodtest emulator
 	$(SCONS) $(PRODTEST_EMU_BUILD_DIR)/prodtest.elf
 
-build_reflash: ## build reflash firmware + reflash image
-	$(SCONS) $(REFLASH_BUILD_DIR)/reflash.bin
-	dd if=build/boardloader/boardloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=0
-	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
-
 build_secmon: ## build security monitor image
 	$(SCONS) $(SECMON_BUILD_DIR)/secmon.bin
 
@@ -351,7 +355,7 @@ build_cross: ## build mpy-cross port
 ## clean commands:
 
 clean: clean_boardloader clean_bootloader clean_bootloader_emu clean_bootloader_ci \
-	clean_prodtest clean_reflash clean_firmware clean_kernel clean_secmon clean_unix clean_cross ## clean all
+	clean_prodtest clean_prodtest_emu clean_firmware clean_kernel clean_secmon clean_unix clean_cross ## clean all
 	rm -f ".sconsign.dblite"
 
 clean_boardloader: ## clean boardloader build
@@ -369,8 +373,8 @@ clean_bootloader_emu: ## clean bootloader_emu build
 clean_prodtest: ## clean prodtest build
 	rm -rf $(PRODTEST_BUILD_DIR)
 
-clean_reflash: ## clean reflash build
-	rm -rf $(REFLASH_BUILD_DIR)
+clean_prodtest_emu: ## clean prodtest_emu build
+	rm -rf $(PRODTEST_EMU_BUILD_DIR)
 
 clean_secmon: ## clean security monitor build
 	rm -rf $(SECMON_BUILD_DIR)
@@ -471,10 +475,6 @@ gdb_firmware: $(FIRMWARE_BUILD_DIR)/firmware.elf ## start remote gdb session to 
 	$(GDB) $<
 
 ## misc commands:
-
-binctl: ## print info about binary files
-	./tools/headertool.py $(BOOTLOADER_BUILD_DIR)/bootloader.bin
-	./tools/headertool.py $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 bloaty: ## run bloaty size profiler
 	bloaty -d symbols -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less

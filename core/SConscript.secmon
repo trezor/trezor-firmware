@@ -14,30 +14,38 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
+DISABLE_TROPIC = ARGUMENTS.get('DISABLE_TROPIC', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 
 STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
 if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
     raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
 if STORAGE_INSECURE_TESTING_MODE:
     DISABLE_OPTIGA = True
+    DISABLE_TROPIC = True
     PYOPT = "0"
 
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
-    "SYSTEM_VIEW": False,
     "AES_GCM": True,
 }
 
 FEATURES_WANTED = [
+    "boot_ucb",
     "consumption_mask",
     "optiga",
+    "kernel_mode",
     "secmon_layout",
     "secure_domain",
+    "secure_mode",
+    "storage",
     "suspend",
+    "telemetry",
     "tropic",
+    "nrf_auth"
     ]
 
 if DISABLE_OPTIGA:
@@ -45,6 +53,11 @@ if DISABLE_OPTIGA:
     if PRODUCTION:
         raise RuntimeError("DISABLE_OPTIGA requires non-production build")
     FEATURES_WANTED.remove("optiga")
+
+if DISABLE_TROPIC:
+    if PRODUCTION:
+        raise RuntimeError("DISABLE_TROPIC requires non-production build")
+    FEATURES_WANTED.remove("tropic")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -55,20 +68,22 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 
+
+if DBG_CONSOLE != "":
+    FEATURES_WANTED += ["dbg_console"]
+
 FROZEN = True
 
-# modtrezorconfig
-CPPPATH_MOD += [
-    'embed/upymod/modtrezorconfig',
-    'vendor/trezor-storage',
-    'vendor/micropython/lib/uzlib',
-]
-SOURCE_MOD += [
-    'vendor/trezor-storage/norcow.c',
-    'vendor/trezor-storage/storage.c',
-    'vendor/trezor-storage/storage_utils.c',
-    'vendor/trezor-storage/flash_area.c',
-]
+env = Environment(
+    ENV=os.environ,
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} -USCM_REVISION_INIT",
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+    DBG_CONSOLE=DBG_CONSOLE,
+)
+
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
@@ -76,8 +91,6 @@ CPPPATH_MOD += [
     'vendor/trezor-crypto',
 ]
 CPPDEFINES_MOD += [
-    'KERNEL_MODE',
-    'SECURE_MODE',
     'AES_128',
     'AES_192',
     ('USE_BIP32_CACHE', '0'),
@@ -185,17 +198,34 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/trezor-crypto/zkp_bip340.c',
     ]
 
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    PQ_SIGNATURE_PATH = 'vendor/sphincsplus/ref/'
+    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s '
+    PQ_SIGNATURE_SOURCE = [
+        'vendor/sphincsplus/ref/address.c',
+        'vendor/sphincsplus/ref/fors.c',
+        'vendor/sphincsplus/ref/hash_sha2.c',
+        'vendor/sphincsplus/ref/sha2.c',
+        'vendor/sphincsplus/ref/sign.c',
+        'vendor/sphincsplus/ref/thash_sha2_simple.c',
+        'vendor/sphincsplus/ref/utils.c',
+        'vendor/sphincsplus/ref/wots.c',
+    ]
+
 SOURCE_MOD += [
-    'embed/util/bl_check/bl_check.c',
-    'embed/util/translations/translations.c',
-    'embed/util/image/image.c',
+    'embed/io/translations/translations.c',
     'embed/rtl/error_handling.c',
-    'embed/rtl/mini_printf.c',
-    'embed/upymod/modtrezorcrypto/rand.c',
+    'embed/rtl/strutils.c',
+    'embed/sec/image/boot_image.c',
+    'embed/sec/image/image.c',
+    'embed/sec/rsod/rsod_special.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+if not PRODUCTION:
+    SOURCE_MOD += ['embed/rtl/printf.c']
 
 CPPDEFINES_MOD += [
     'TRANSLATIONS',
@@ -204,23 +234,6 @@ CPPDEFINES_MOD += [
 
 if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']
-
-if FEATURE_FLAGS["SYSTEM_VIEW"]:
-    SOURCE_MOD += [
-        'embed/sys/systemview/stm32/config/SEGGER_SYSVIEW_Config_NoOS.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_SYSVIEW.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_RTT.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_RTT_ASM_ARMv7M.S',
-        'embed/sys/systemview/stm32/segger/Syscalls/SEGGER_RTT_Syscalls_GCC.c',
-        'embed/sys/systemview/systemview.c',
-    ]
-    CPPPATH_MOD += [
-        'embed/sys/systemview/inc',
-        'embed/sys/systemview/stm32/config',
-        'embed/sys/systemview/stm32/segger',
-    ]
-    CPPDEFINES_MOD += ['SYSTEM_VIEW']
-    CCFLAGS_MOD += '-DSYSTEM_VIEW '
 
 TRANSLATION_DATA = [
     "translations/en.json",
@@ -236,14 +249,6 @@ if THP:
 if STORAGE_INSECURE_TESTING_MODE:
     CPPDEFINES_MOD += ['STORAGE_INSECURE_TESTING_MODE']
 
-env = Environment(
-    ENV=os.environ,
-    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} -USCM_REVISION_INIT",
-    CPPDEFINES_IMPLICIT=[],
-    CPPDEFPREFIX="-D'",
-    CPPDEFSUFFIX="'",
-)
-
 if TREZOR_MODEL not in ['T3W1', 'D002']:
     # Skipping build and creating empty secmon.bin
     secmon_bin = env.Command(
@@ -253,7 +258,6 @@ if TREZOR_MODEL not in ['T3W1', 'D002']:
     )
     Return()
 
-FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 FEATURE_FLAGS["AES_GCM"] = FEATURE_FLAGS["AES_GCM"] or "tropic" in FEATURES_AVAILABLE
 
@@ -303,12 +307,11 @@ ALLPATHS = [
         'embed/projects/firmware',
         'embed/rtl/inc',
         'embed/models',
-        'embed/gfx/inc',
+        'embed/io/gfx/inc',
+        'embed/io/translations/inc',
+        'embed/sec/image/inc',
+        'embed/sec/rsod/inc',
         'embed/sys/bsp/inc',
-        'embed/util/bl_check/inc',
-        'embed/util/image/inc',
-        'embed/util/rsod/inc',
-        'embed/util/translations/inc',
     ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(
@@ -355,6 +358,11 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
 obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_HAL))
+
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    obj_program += env.Object(
+        source=PQ_SIGNATURE_SOURCE, CCFLAGS="$CCFLAGS -Wno-incompatible-pointer-types"
+    )
 
 env.Replace(
     ALLSOURCES=source_files,
@@ -419,12 +427,12 @@ BINARY_NAME += ".bin"
 
 if TREZOR_MODEL in ('T3B1', 'T3T1'):
     action_bin=[
-        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .gnu.sgstubs $SOURCE ${TARGET}',
         '$CP $TARGET ' + BINARY_NAME,
     ]
 else:
     action_bin=[
-        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .gnu.sgstubs $SOURCE ${TARGET}',
         '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ]

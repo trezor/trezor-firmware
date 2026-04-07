@@ -18,6 +18,13 @@ tr.bad a:visited {
     right: 5px;
     width: 500px;
     padding: 1em;
+    font-family: Inter, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #1f2937;
+    background: #f3f4f6;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 10%);
 }
 
 #markbox #buttons {
@@ -25,11 +32,17 @@ tr.bad a:visited {
     justify-content: space-evenly;
 }
 
+#markbox .mark {
+    display: flex;
+    flex-direction: column;
+}
+
 #markbox button {
     border: 3px solid;
     font-size: 20pt;
     padding: 1em;
     background: white;
+    border-radius: 10px;
 }
 
 #markbox #mark-ok {

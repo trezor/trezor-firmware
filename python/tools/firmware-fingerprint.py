@@ -2,7 +2,7 @@
 
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -31,10 +31,35 @@ def firmware_fingerprint(filename: BinaryIO, output: TextIO) -> None:
     """Display fingerprint of a firmware file."""
     data = filename.read()
 
+    orig_err = None
     try:
-        click.echo(firmware_headers.parse_image(data).digest().hex(), file=output)
+        fw = firmware_headers.parse_image(data)
     except Exception as e:
-        click.echo(e, err=True)
+        orig_err = e
+    else:
+        if isinstance(fw, firmware_headers.VendorFirmware):
+            try:
+                # try to parse code as secmon
+                # if it succeeds, the image is secmon-only and the fingerprint
+                # relevant for signing is that of the secmon
+                secmon = firmware_headers.SecmonImage.parse(fw.firmware.code)
+                click.echo(secmon.digest().hex(), file=output)
+                return
+            except Exception:
+                pass
+        click.echo(fw.digest().hex(), file=output)
+        return
+
+    try:
+        click.echo(
+            firmware_headers.BootloaderV2Image.parse(data).merkle_root().hex(),
+            file=output,
+        )
+    except Exception as e:
+        if orig_err is not None:
+            click.echo(orig_err, err=True)
+        else:
+            click.echo(e, err=True)
         sys.exit(2)
 
 

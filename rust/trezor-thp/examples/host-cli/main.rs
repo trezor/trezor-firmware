@@ -1,0 +1,126 @@
+mod client;
+mod pb;
+
+use std::{env, net::SocketAddr, str::FromStr};
+
+use protobuf::Message;
+
+use trezor_thp::{
+    Backend, Channel, Host,
+    channel::host::{ChannelOpen, Mux},
+    credential::{CredentialStore, NullCredentialStore},
+};
+
+use client::Client;
+use pb::{
+    messages::MessageType::*, messages_common::*, messages_management::*,
+    messages_thp::ThpMessageType::*, messages_thp::*,
+};
+
+struct RustCrypto;
+
+impl Backend for RustCrypto {
+    type DH = trezor_noise_rust_crypto::X25519;
+    type Cipher = trezor_noise_rust_crypto::Aes256Gcm;
+    type Hash = trezor_noise_rust_crypto::Sha256;
+
+    fn random_bytes(dest: &mut [u8]) {
+        getrandom::fill(dest).unwrap();
+    }
+}
+
+type HostChannel = Channel<Host, RustCrypto>;
+
+fn do_allocation<C>(client: &mut Client<Mux<C, RustCrypto>>)
+where
+    C: CredentialStore,
+{
+    client.call(0, &[]);
+}
+
+fn do_handshake<C>(client: &mut Client<ChannelOpen<C, RustCrypto>>)
+where
+    C: CredentialStore,
+{
+    client.device_properties = client.channel.device_properties().into();
+    let device_properties =
+        ThpDeviceProperties::parse_from_bytes(&client.device_properties).unwrap();
+    log::debug!("Device properties: {:?}.", device_properties);
+    // Handshake should finish within 2 request-response cycles.
+    client.call(0, &[]);
+    client.call(0, &[]);
+}
+
+fn do_pairing(client: &mut Client<HostChannel>) {
+    let device_properties =
+        ThpDeviceProperties::parse_from_bytes(&client.device_properties).unwrap();
+
+    let mut pairing_methods = Vec::new();
+    for p in &device_properties.pairing_methods {
+        if let Ok(method) = p.enum_value() {
+            pairing_methods.push(method);
+        }
+    }
+
+    if pairing_methods.contains(&ThpPairingMethod::SkipPairing) {
+        do_pairing_skip(client)
+    } else {
+        log::error!("Device does not support SkipPairing.");
+        panic!();
+    }
+}
+
+fn do_pairing_skip(client: &mut Client<HostChannel>) {
+    let mut pairing_request = ThpPairingRequest::new();
+    pairing_request.set_host_name("localhost".into());
+    pairing_request.set_app_name("trezor-thp/examples".into());
+
+    client.call_pb::<ThpPairingRequestApproved, _>(
+        ThpMessageType_ThpPairingRequest,
+        pairing_request,
+        ThpMessageType_ThpPairingRequestApproved,
+    );
+
+    let mut select_method = ThpSelectMethod::new();
+    select_method.set_selected_pairing_method(ThpPairingMethod::SkipPairing);
+    client.call_pb::<ThpEndResponse, _>(
+        ThpMessageType_ThpSelectMethod,
+        select_method,
+        ThpMessageType_ThpEndResponse,
+    );
+}
+
+fn do_ping(client: &mut Client<Channel<Host, RustCrypto>>) {
+    let mut ping = Ping::new();
+    ping.set_message("trezor-thp/examples".into());
+    ping.set_button_protection(true);
+    let success = client.call_pb::<Success, _>(MessageType_Ping, ping, MessageType_Success);
+    println!("{}({})", Success::NAME, success);
+}
+
+fn get_address() -> SocketAddr {
+    let port_str = env::args().nth(1).unwrap_or("21324".to_string());
+    let port = u16::from_str(&port_str).expect("UDP port number");
+    SocketAddr::from(([127, 0, 0, 1], port))
+}
+
+pub fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(env_logger::Env::default().filter_or("RUST_LOG", "info"));
+
+    let cred_lookup = NullCredentialStore;
+    let mut channel = Mux::<_, RustCrypto>::new(cred_lookup);
+    channel.request_channel(false);
+    let mut client = Client::open(get_address(), channel);
+
+    do_allocation(&mut client);
+    assert!(client.channel.channel_alloc_ready());
+    let mut client = client.map(|c| c.complete().unwrap());
+
+    do_handshake(&mut client);
+    assert!(client.channel.handshake_done());
+    let mut client = client.map(|c| c.complete().unwrap());
+
+    do_pairing(&mut client);
+    do_ping(&mut client);
+    Ok(())
+}

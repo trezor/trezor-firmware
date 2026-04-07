@@ -5,7 +5,7 @@ use crate::{
         component::{
             swipe_detect::SwipeConfig,
             text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
-            Component, Event, EventCtx, PaginateFull,
+            Component, Event, EventCtx, Paginate,
         },
         flow::Swipable,
         geometry::{LinearPlacement, Rect},
@@ -90,7 +90,7 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Update page count of the screen
-        ctx.set_page_count(self.paragraph.pager().total().into());
+        ctx.set_page_count(self.paragraph.pager().total());
 
         if let Event::Attach(_) = event {
             self.update_text(ctx);
@@ -135,7 +135,7 @@ impl<F: Fn() -> TString<'static>> Swipable for UpdatableInfoScreen<F> {
     }
 }
 
-trait UpdatableTextContent: Component + PaginateFull {}
+trait UpdatableTextContent: Component + Paginate {}
 impl<'a, T> UpdatableTextContent for Paragraphs<T> where T: ParagraphSource<'a> {}
 
 #[cfg(feature = "ui_debug")]

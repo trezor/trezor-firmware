@@ -35,6 +35,7 @@ where
     /// Possibly enforcing the second button to be ignored after some time after
     /// pressing the first button
     ignore_second_button_ms: Option<u32>,
+    #[cfg(feature = "ui_debug")]
     has_menu: bool,
 }
 
@@ -62,6 +63,7 @@ where
             return_confirmed_index: false,
             show_scrollbar: true,
             ignore_second_button_ms: None,
+            #[cfg(feature = "ui_debug")]
             has_menu: false,
         }
     }
@@ -96,8 +98,14 @@ where
         self.return_confirmed_index.then_some(self.page_counter)
     }
 
+    #[cfg(feature = "ui_debug")]
     pub fn with_menu(mut self, has_menu: bool) -> Self {
         self.has_menu = has_menu;
+        self
+    }
+
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn with_menu(self, _has_menu: bool) -> Self {
         self
     }
 
@@ -185,9 +193,9 @@ where
     /// Current choice is still the same, only its inner state has changed
     /// (its sub-page changed).
     fn update_after_current_choice_inner_change(&mut self, ctx: &mut EventCtx) {
-        let inner_page = self.current_page.get_current_page();
+        let inner_page = self.current_page.pager().current();
         self.scrollbar.mutate(ctx, |ctx, scrollbar| {
-            scrollbar.change_page(self.page_counter + inner_page);
+            scrollbar.change_page(self.page_counter as u16 + inner_page);
             scrollbar.request_complete_repaint(ctx);
         });
         self.update(ctx, false);
@@ -196,12 +204,12 @@ where
     /// When current choice contains paginated content, it may use the button
     /// event to just paginate itself.
     fn event_consumed_by_current_choice(&mut self, ctx: &mut EventCtx, pos: ButtonPos) -> bool {
-        if matches!(pos, ButtonPos::Left) && self.current_page.has_prev_page() {
-            self.current_page.go_to_prev_page();
+        if matches!(pos, ButtonPos::Left) && self.current_page.pager().has_prev() {
+            self.current_page.prev_page();
             self.update_after_current_choice_inner_change(ctx);
             true
-        } else if matches!(pos, ButtonPos::Right) && self.current_page.has_next_page() {
-            self.current_page.go_to_next_page();
+        } else if matches!(pos, ButtonPos::Right) && self.current_page.pager().has_next() {
+            self.current_page.next_page();
             self.update_after_current_choice_inner_change(ctx);
             true
         } else {

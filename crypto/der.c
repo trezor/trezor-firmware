@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Trezor Company s.r.o.
+ * Copyright (c) 2023, 2026 Trezor Company s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -21,6 +21,7 @@
  */
 
 #include "der.h"
+#include <string.h>
 
 bool der_read_length(BUFFER_READER *buf, size_t *len) {
   // Read the initial octet.
@@ -107,13 +108,30 @@ bool der_read_item(BUFFER_READER *buf, DER_ITEM *item) {
   return buffer_seek(&item->buf, header_size);
 }
 
+bool der_read_item_expected(BUFFER_READER *buf, const uint8_t expected_id,
+                            DER_ITEM *item) {
+  return der_read_item(buf, item) && item->id == expected_id;
+}
+
+bool der_equal(const DER_ITEM *a, const DER_ITEM *b) {
+  if (a->id != b->id) {
+    return false;
+  }
+
+  if (a->buf.size != b->buf.size) {
+    return false;
+  }
+
+  return memcmp(a->buf.data, b->buf.data, a->buf.size) == 0;
+}
+
 // Reencode a positive integer which violates the encoding rules in Rec. ITU-T
 // X.690, section 8.3.2 (the bits of the first octet and bit 8 of the second
 // octet shall not all be zero).
 bool der_reencode_int(BUFFER_READER *reader, BUFFER_WRITER *writer) {
   // Read a DER-encoded integer.
   DER_ITEM item = {0};
-  if (!der_read_item(reader, &item) || item.id != DER_INTEGER) {
+  if (!der_read_item_expected(reader, DER_INTEGER, &item)) {
     return false;
   }
 

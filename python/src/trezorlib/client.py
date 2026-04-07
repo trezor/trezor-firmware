@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -16,365 +16,445 @@
 
 from __future__ import annotations
 
+import enum
 import logging
 import os
+import platform
+import typing as t
+import unicodedata
 import warnings
-from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar
+from abc import ABCMeta, abstractmethod
+from contextlib import AbstractContextManager, nullcontext
+from dataclasses import dataclass
 
-from mnemonic import Mnemonic
+import typing_extensions as tx
 
-from . import exceptions, mapping, messages, models
-from .log import DUMP_BYTES
-from .messages import Capability
+from . import exceptions, messages, models
+from .mapping import DEFAULT_MAPPING
 from .protobuf import MessageType
-from .tools import parse_path, session
+from .tools import enter_context, parse_path
+from .transport import Transport, get_transport
 
-if TYPE_CHECKING:
-    from .transport import Transport
-    from .ui import TrezorClientUI
+if t.TYPE_CHECKING:
+    from .mapping import ProtobufMapping
+    from .thp import pairing
+    from .thp.credentials import Credential
 
-UI = TypeVar("UI", bound="TrezorClientUI")
-MT = TypeVar("MT", bound=MessageType)
+MT = t.TypeVar("MT", bound=MessageType)
+ClientType = t.TypeVar("ClientType", bound="TrezorClient")
+SessionType = t.TypeVar("SessionType", bound="Session")
+SessionIdType = t.TypeVar("SessionIdType", contravariant=True)
 
 LOG = logging.getLogger(__name__)
 
 MAX_PASSPHRASE_LENGTH = 50
 MAX_PIN_LENGTH = 50
 
-PASSPHRASE_ON_DEVICE = object()
-PASSPHRASE_TEST_PATH = parse_path("44h/1h/0h/0/0")
-
-OUTDATED_FIRMWARE_ERROR = """
-Your Trezor firmware is out of date. Update it with the following command:
-  trezorctl firmware update
-Or visit https://suite.trezor.io/
-""".strip()
+_DEFAULT_READ_TIMEOUT: int | None = None
 
 
-def get_default_client(
-    path: Optional[str] = None, ui: Optional["TrezorClientUI"] = None, **kwargs: Any
-) -> "TrezorClient":
-    """Get a client for a connected Trezor device.
+class PassphraseSetting(enum.Enum):
+    """Passphrase setting for a session."""
 
-    Returns a TrezorClient instance with minimum fuss.
-
-    If path is specified, does a prefix-search for the specified device. Otherwise, uses
-    the value of TREZOR_PATH env variable, or finds first connected Trezor.
-    If no UI is supplied, instantiates the default CLI UI.
-    """
-    from .transport import get_transport
-    from .ui import ClickUI
-
-    if path is None:
-        path = os.getenv("TREZOR_PATH")
-
-    transport = get_transport(path, prefix_search=True)
-    if ui is None:
-        ui = ClickUI()
-
-    return TrezorClient(transport, ui, **kwargs)
+    STANDARD_WALLET = ""
+    """Open the default wallet with no passphrase."""
+    ON_DEVICE = object()
+    """Request passphrase entry on the device."""
+    AUTO = object()
+    """If passphrase is enabled and the device supports it, request passphrase
+    entry on the device. Otherwise, open the default wallet with no
+    passphrase."""
+    NONE = None
+    """Create a management session where wallet operations are disabled."""
 
 
-class TrezorClient(Generic[UI]):
-    """Trezor client, a connection to a Trezor device.
+GET_ROOT_FINGERPRINT_MESSAGE = messages.GetPublicKey(
+    address_n=parse_path("m/0h"),
+    show_display=False,
+    ignore_xpub_magic=True,
+    ecdsa_curve_name="secp256k1",
+)
 
-    This class allows you to manage connection state, send and receive protobuf
-    messages, handle user interactions, and perform some generic tasks
-    (send a cancel message, initialize or clear a session, ping the device).
-    """
 
-    model: models.TrezorModel
-    transport: "Transport"
-    session_id: Optional[bytes]
-    ui: UI
-    features: messages.Features
+class Session(t.Generic[ClientType, SessionIdType]):
+    def __init__(
+        self,
+        client: ClientType,
+        id: SessionIdType,
+        *,
+        root_fingerprint: bytes | None = None,
+    ) -> None:
+        self.client = client
+        self.id = id
+        self.is_invalid = False
+        self._root_fingerprint = root_fingerprint
+
+    def _log_short_id(self) -> str:
+        if self.id is None:
+            return f"(none:{id(self)})"
+        return repr(self.id)[:8]
+
+    @enter_context
+    def get_root_fingerprint(self) -> bytes:
+        if self._root_fingerprint is None:
+            self.ensure_unlocked()
+            assert self._root_fingerprint is not None
+        return self._root_fingerprint
+
+    def call(
+        self,
+        msg: MessageType,
+        *,
+        expect: type[MT] = MessageType,
+        timeout: float | None = None,
+    ) -> MT:
+        """Call a method on this session, process and return the response."""
+        if self.is_invalid:
+            raise exceptions.InvalidSessionError(self.id)
+        with self:
+            return self.client._call(self, msg, expect=expect, timeout=timeout)
+
+    def call_raw(self, msg: MessageType, timeout: float | None = None) -> MessageType:
+        """Invoke a single call-response round-trip to the device.
+
+        No processing is done on the response: errors are not converted to exceptions,
+        internal workflow callbacks are not triggered.
+        """
+        return self.client._call_raw(self, msg, timeout)
+
+    def read(self, timeout: float | None = None) -> MessageType:
+        """Read a single message from the device."""
+        return self.client._read(self, timeout)
+
+    def write(self, msg: MessageType) -> None:
+        """Write a single message to the device."""
+        return self.client._write(self, msg)
+
+    def close(self) -> None:
+        """End and invalidate this session."""
+        LOG.info("Closing session %s", self)
+        try:
+            self.call(messages.EndSession())
+        except Exception as e:
+            LOG.warning("Failed to end session: %s", e)
+        finally:
+            self.is_invalid = True
+
+    def cancel(self) -> None:
+        """Send a Cancel signal to the device, interrupting the current workflow."""
+        self.write(messages.Cancel())
+
+    @property
+    def features(self) -> messages.Features:
+        return self.client.features
+
+    def refresh_features(self) -> messages.Features:
+        return self.client.refresh_features()
+
+    @property
+    def model(self) -> models.TrezorModel:
+        return self.client.model
+
+    @property
+    def version(self) -> tuple[int, int, int]:
+        return self.client.version
+
+    def __enter__(self) -> tx.Self:
+        self.client.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        self.client.__exit__(exc_type, exc_value, traceback)
+
+    @enter_context
+    def ensure_unlocked(self) -> None:
+        """Ensure that the device is unlocked.
+
+        This method only works on sessions that have a passphrase derived, and
+        transitively, only on an initialized device.
+
+        Go through `client.ensure_unlocked()` if you want to abstract away the
+        choice of a correct session for this operation.
+        """
+        resp = self.call(GET_ROOT_FINGERPRINT_MESSAGE, expect=messages.PublicKey)
+        # resp.root_fingerprint is not available on <1.9.4 & <2.3.5
+        assert resp.node.fingerprint is not None
+        root_fingerprint = resp.node.fingerprint.to_bytes(4, "big")
+        if self._root_fingerprint is None:
+            self._root_fingerprint = root_fingerprint
+        assert self._root_fingerprint == root_fingerprint
+        self.refresh_features()
+
+    @enter_context
+    def lock(self) -> None:
+        self.client.lock(_use_session=self)
+
+
+@dataclass
+class AppManifest:
+    app_name: str
+    host_name: str = platform.node()
+
+    button_callback: t.Callable[[messages.ButtonRequest], None] | None = None
+    pin_callback: t.Callable[[messages.PinMatrixRequest], str] | None = None
+
+    credentials: (
+        t.Collection[Credential] | t.Callable[[], t.Collection[Credential]]
+    ) = ()
+
+    def _callback_pin(self, msg: messages.PinMatrixRequest) -> str:
+        if self.pin_callback is None:
+            raise RuntimeError("PIN callback was not specified")
+        return self.pin_callback(msg)
+
+    def _callback_button(self, msg: messages.ButtonRequest) -> None:
+        if self.button_callback is not None:
+            self.button_callback(msg)
+
+    def get_credentials(self) -> t.Collection[Credential]:
+        if callable(self.credentials):
+            return self.credentials()
+        return self.credentials
+
+
+class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
+    _features: messages.Features | None = None
 
     def __init__(
         self,
-        transport: "Transport",
-        ui: UI,
-        session_id: Optional[bytes] = None,
-        derive_cardano: Optional[bool] = None,
-        model: Optional[models.TrezorModel] = None,
-        _init_device: bool = True,
+        app: AppManifest,
+        transport: Transport,
+        *,
+        model: models.TrezorModel | None,
+        mapping: ProtobufMapping | None,
+        pairing: pairing.PairingController,
     ) -> None:
-        """Create a TrezorClient instance.
-
-        You have to provide a `transport`, i.e., a raw connection to the device. You can
-        use `trezorlib.transport.get_transport` to find one.
-
-        You have to provide a UI implementation for the three kinds of interaction:
-        - button request (notify the user that their interaction is needed)
-        - PIN request (on T1, ask the user to input numbers for a PIN matrix)
-        - passphrase request (ask the user to enter a passphrase) See `trezorlib.ui` for
-          details.
-
-        You can supply a `session_id` you might have saved in the previous session. If
-        you do, the user might not need to enter their passphrase again.
-
-        You can provide Trezor model information. If not provided, it is detected from
-        the model name reported at initialization time.
-
-        By default, the instance will open a connection to the Trezor device, send an
-        `Initialize` message, set up the `features` field from the response, and connect
-        to a session. By specifying `_init_device=False`, this step is skipped. Notably,
-        this means that `client.features` is unset. Use `client.init_device()` or
-        `client.refresh_features()` to fix that, otherwise A LOT OF THINGS will break.
-        Only use this if you are _sure_ that you know what you are doing. This feature
-        might be removed at any time.
         """
-        LOG.info(f"creating client instance for device: {transport.get_path()}")
-        # Here, self.model could be set to None. Unless _init_device is False, it will
-        # get correctly reconfigured as part of the init_device flow.
-        self.model = model  # type: ignore ["None" is incompatible with "TrezorModel"]
-        if self.model:
-            self.mapping = self.model.default_mapping
-        else:
-            self.mapping = mapping.DEFAULT_MAPPING
+        TODO
+        """
+        LOG.info(
+            f"creating client instance {type(self).__name__} for device: {transport}"
+        )
+        self.app = app
         self.transport = transport
-        self.ui = ui
-        self.session_counter = 0
-        self.session_id = session_id
-        if _init_device:
-            self.init_device(session_id=session_id, derive_cardano=derive_cardano)
+        self._model = model
+        self._mapping = mapping
+        self._features = None
+        self.pairing = pairing
+        self._interact_ctx = self._interact()
 
-    def open(self) -> None:
-        if self.session_counter == 0:
-            self.transport.begin_session()
-        self.session_counter += 1
+    # ===== Internal methods for overriding in subclasses =====
 
-    def close(self) -> None:
-        self.session_counter = max(self.session_counter - 1, 0)
-        if self.session_counter == 0:
-            # TODO call EndSession here?
-            self.transport.end_session()
-
-    def cancel(self) -> None:
-        self._raw_write(messages.Cancel())
-
-    def call_raw(self, msg: MessageType) -> MessageType:
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        self._raw_write(msg)
-        return self._raw_read()
-
-    def _raw_write(self, msg: MessageType) -> None:
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        LOG.debug(
-            f"sending message: {msg.__class__.__name__}",
-            extra={"protobuf": msg},
-        )
-        msg_type, msg_bytes = self.mapping.encode(msg)
-        LOG.log(
-            DUMP_BYTES,
-            f"encoded as type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
-        )
-        self.transport.write(msg_type, msg_bytes)
-
-    def _raw_read(self) -> MessageType:
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        msg_type, msg_bytes = self.transport.read()
-        LOG.log(
-            DUMP_BYTES,
-            f"received type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
-        )
-        msg = self.mapping.decode(msg_type, msg_bytes)
-        LOG.debug(
-            f"received message: {msg.__class__.__name__}",
-            extra={"protobuf": msg},
-        )
-        return msg
-
-    def _callback_pin(self, msg: messages.PinMatrixRequest) -> MessageType:
-        try:
-            pin = self.ui.get_pin(msg.type)
-        except exceptions.Cancelled:
-            self.call_raw(messages.Cancel())
-            raise
-
-        if any(d not in "123456789" for d in pin) or not (
-            1 <= len(pin) <= MAX_PIN_LENGTH
-        ):
-            self.call_raw(messages.Cancel())
-            raise ValueError("Invalid PIN provided")
-
-        resp = self.call_raw(messages.PinMatrixAck(pin=pin))
-        if isinstance(resp, messages.Failure) and resp.code in (
-            messages.FailureType.PinInvalid,
-            messages.FailureType.PinCancelled,
-            messages.FailureType.PinExpected,
-        ):
-            raise exceptions.PinException(resp.code, resp.message)
-        else:
-            return resp
-
-    def _callback_passphrase(self, msg: messages.PassphraseRequest) -> MessageType:
-        available_on_device = Capability.PassphraseEntry in self.features.capabilities
-
-        def send_passphrase(
-            passphrase: Optional[str] = None, on_device: Optional[bool] = None
-        ) -> MessageType:
-            msg = messages.PassphraseAck(passphrase=passphrase, on_device=on_device)
-            resp = self.call_raw(msg)
-            if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
-                self.session_id = resp.state
-                resp = self.call_raw(messages.Deprecated_PassphraseStateAck())
-            return resp
-
-        # short-circuit old style entry
-        if msg._on_device is True:
-            return send_passphrase(None, None)
-
-        try:
-            passphrase = self.ui.get_passphrase(available_on_device=available_on_device)
-        except exceptions.Cancelled:
-            self.call_raw(messages.Cancel())
-            raise
-
-        if passphrase is PASSPHRASE_ON_DEVICE:
-            if not available_on_device:
-                self.call_raw(messages.Cancel())
-                raise RuntimeError("Device is not capable of entering passphrase")
-            else:
-                return send_passphrase(on_device=True)
-
-        # else process host-entered passphrase
-        if not isinstance(passphrase, str):
-            raise RuntimeError("Passphrase must be a str")
-        passphrase = Mnemonic.normalize_string(passphrase)
-        if len(passphrase) > MAX_PASSPHRASE_LENGTH:
-            self.call_raw(messages.Cancel())
-            raise ValueError("Passphrase too long")
-
-        return send_passphrase(passphrase, on_device=False)
-
-    def _callback_button(self, msg: messages.ButtonRequest) -> MessageType:
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        # do this raw - send ButtonAck first, notify UI later
-        self._raw_write(messages.ButtonAck())
-        self.ui.button_request(msg)
-        return self._raw_read()
-
-    @session
-    def call(self, msg: MessageType, expect: type[MT] = MessageType) -> MT:
-        self.check_firmware_version()
-        resp = self.call_raw(msg)
-        while True:
-            if isinstance(resp, messages.PinMatrixRequest):
-                resp = self._callback_pin(resp)
-            elif isinstance(resp, messages.PassphraseRequest):
-                resp = self._callback_passphrase(resp)
-            elif isinstance(resp, messages.ButtonRequest):
-                resp = self._callback_button(resp)
-            elif isinstance(resp, messages.Failure):
-                if resp.code == messages.FailureType.ActionCancelled:
-                    raise exceptions.Cancelled
-                raise exceptions.TrezorFailure(resp)
-            elif not isinstance(resp, expect):
-                raise exceptions.UnexpectedMessageError(expect, resp)
-            else:
-                return resp
-
-    def _refresh_features(self, features: messages.Features) -> None:
-        """Update internal fields based on passed-in Features message."""
-
-        if not self.model:
-            self.model = models.detect(features)
-
-        if features.vendor not in self.model.vendors:
-            raise exceptions.TrezorException(f"Unrecognized vendor: {features.vendor}")
-
-        self.features = features
-        self.version = (
-            self.features.major_version,
-            self.features.minor_version,
-            self.features.patch_version,
-        )
-        self.check_firmware_version(warn_only=True)
-        if self.features.session_id is not None:
-            self.session_id = self.features.session_id
-            self.features.session_id = None
-
-    @session
-    def refresh_features(self) -> messages.Features:
-        """Reload features from the device.
-
-        Should be called after changing settings or performing operations that affect
-        device state.
+    @abstractmethod
+    def _write(self, session: SessionType, msg: MessageType) -> None:
+        """Convert a message to the appropriate bytes representation for the given session
+        and write it to the transport.
         """
-        resp = self.call_raw(messages.GetFeatures())
-        if not isinstance(resp, messages.Features):
-            raise exceptions.TrezorException("Unexpected response to GetFeatures")
-        self._refresh_features(resp)
-        return resp
+        raise NotImplementedError
 
-    @session
-    def init_device(
+    @abstractmethod
+    def _read(self, session: SessionType, timeout: float | None = None) -> MessageType:
+        """Read the next message from the transport that is intended for the given session."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get_any_session(self) -> SessionType:
+        """Get an arbitrary but valid session.
+
+        Used for internal calls that do not want to activate a specific session.
+        Users of the library SHOULD NOT use this method; use `get_session()`
+        with the appropriate parameters instead.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get_session(
         self,
         *,
-        session_id: Optional[bytes] = None,
-        new_session: bool = False,
-        derive_cardano: Optional[bool] = None,
-    ) -> Optional[bytes]:
-        """Initialize the device and return a session ID.
+        passphrase: str | t.Literal[PassphraseSetting.ON_DEVICE] | None,
+        derive_cardano: bool,
+    ) -> SessionType:
+        """Get a new session with the given passphrase and `derive_cardano` flag.
 
-        You can optionally specify a session ID. If the session still exists on the
-        device, the same session ID will be returned and the session is resumed.
-        Otherwise a different session ID is returned.
-
-        Specify `new_session=True` to open a fresh session. Since firmware version
-        1.9.0/2.3.0, the previous session will remain cached on the device, and can be
-        resumed by calling `init_device` again with the appropriate session ID.
-
-        If neither `new_session` nor `session_id` is specified, the current session ID
-        will be reused. If no session ID was cached, a new session ID will be allocated
-        and returned.
-
-        # Version notes:
-
-        Trezor One older than 1.9.0 does not have session management. Optional arguments
-        have no effect and the function returns None
-
-        Trezor T older than 2.3.0 does not have session cache. Requesting a new session
-        will overwrite the old one. In addition, this function will always return None.
-        A valid session_id can be obtained from the `session_id` attribute, but only
-        after a passphrase-protected call is performed. You can use the following code:
-
-        >>> client.init_device()
-        >>> client.ensure_unlocked()
-        >>> valid_session_id = client.session_id
+        This internal method is used by `get_session()`, so that TrezorClient
+        subclasses do not have to check for Cardano in capabilities.
         """
-        if new_session:
-            self.session_id = None
-        elif session_id is not None:
-            self.session_id = session_id
+        raise NotImplementedError
 
-        resp = self.call_raw(
-            messages.Initialize(
-                session_id=self.session_id,
-                derive_cardano=derive_cardano,
-            )
+    def _interact(self, *, force_flush: bool = False) -> AbstractContextManager:
+        return nullcontext()
+
+    # ===== Common implementations =====
+
+    def __enter__(self) -> tx.Self:
+        """(Re)Open a connection to the device."""
+        self.transport.__enter__()
+        self._interact_ctx.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        try:
+            self._interact_ctx.__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.transport.__exit__(exc_type, exc_value, traceback)
+
+    def connect(self) -> None:
+        """Establish a connection to the device.
+
+        When connecting to a THP device with active screen lock, the channel
+        will fail to establish. The user must unlock their device first, even if
+        a valid credential is available.
+
+        Normally, calling `get_session()` will trigger the PIN prompt if
+        required to open the channel. However, other operations that are
+        normally "silent" from the user's perspective can fail with a
+        `DeviceLockedError`. (One notable example is reading `client.features`.)
+
+        `connect()` ensures an open channel, triggering a PIN unlock if
+        required. Subsequent silent operations will be able to proceed.
+
+        `connect()` does nothing if a connection is already established.
+        Notably, if the device was locked _after_ the channel was established,
+        `connect()` will not cause it to unlock. If that is your requirement,
+        use `client.ensure_unlocked()` instead.
+        """
+
+    def is_connected(self) -> bool:
+        return True
+
+    def check_capability(self, capability: messages.Capability) -> None:
+        if not self.features.capabilities:
+            # Older firmware didn't support `Features.capabilities`
+            return
+
+        if capability not in self.features.capabilities:
+            raise exceptions.MissingCapability(self.version, capability)
+
+    def get_session(
+        self,
+        passphrase: str | PassphraseSetting | None = PassphraseSetting.STANDARD_WALLET,
+        *,
+        derive_cardano: bool = False,
+    ) -> SessionType:
+        """Get a new session with the given passphrase.
+
+        Passphrase can be provided as a string or a [`PassphraseSetting`] enum
+        value. Set `passphrase=PassphraseSetting.ON_DEVICE` to request the
+        passphrase on the device. Set `passphrase=PassphraseSetting.AUTO` to
+        automatically determine whether to request the passphrase on the device
+        based on the device's capabilities.
+
+        If passphrase is None or `PassphraseSetting.NONE`, the returned session
+        will be "seedless", that is, it will not be possible to call any methods
+        that require the user's seed (such as wallet addresses or signature
+        operations).
+
+        Use `derive_cardano=True` to request activation of Cardano-specific
+        operations in this session. If Cardano is not available, an exception
+        will be raised. (Note that Cardano operations may still be available
+        even if `derive_cardano` is set to False.)
+
+        The value of `derive_cardano` is ignored if `passphrase` is set to None.
+        """
+        self.connect()
+        self.check_firmware_version()
+
+        if derive_cardano:
+            self.check_capability(messages.Capability.Cardano)
+
+        if passphrase is PassphraseSetting.ON_DEVICE:
+            self.check_capability(messages.Capability.PassphraseEntry)
+
+        if isinstance(passphrase, str):
+            passphrase = unicodedata.normalize("NFKD", passphrase)
+
+        passphrase_is_nonempty = isinstance(passphrase, str) and passphrase != ""
+        must_request_passphrase = (
+            passphrase_is_nonempty or passphrase is PassphraseSetting.ON_DEVICE
         )
-        if isinstance(resp, messages.Failure):
-            # can happen if `derive_cardano` does not match the current session
-            raise exceptions.TrezorFailure(resp)
-        if not isinstance(resp, messages.Features):
-            raise exceptions.TrezorException("Unexpected response to Initialize")
+        if must_request_passphrase and self.features.passphrase_protection is False:
+            raise exceptions.PassphraseError(
+                "Passphrase protection is disabled on this device."
+            )
+        if passphrase_is_nonempty and self.features.passphrase_always_on_device:
+            raise exceptions.PassphraseError(
+                "Only on-device entry allowed for passphrase."
+            )
 
-        if self.session_id is not None and resp.session_id == self.session_id:
-            LOG.info("Successfully resumed session")
-        elif session_id is not None:
-            LOG.info("Failed to resume session")
+        # coerce PassphraseSetting to str, None, or ON_DEVICE
+        if passphrase is PassphraseSetting.STANDARD_WALLET:
+            passphrase = ""
+        elif passphrase is PassphraseSetting.AUTO:
+            if (
+                self.features.passphrase_protection
+                and messages.Capability.PassphraseEntry in self.features.capabilities
+            ):
+                passphrase = PassphraseSetting.ON_DEVICE
+            else:
+                passphrase = ""
+        elif passphrase is PassphraseSetting.NONE:
+            passphrase = None
 
-        # TT < 2.3.0 compatibility:
-        # _refresh_features will clear out the session_id field. We want this function
-        # to return its value, so that callers can rely on it being either a valid
-        # session_id, or None if we can't do that.
-        # Older TT FW does not report session_id in Features and self.session_id might
-        # be invalid because TT will not allocate a session_id until a passphrase
-        # exchange happens.
-        reported_session_id = resp.session_id
-        self._refresh_features(resp)
-        return reported_session_id
+        return self._get_session(passphrase=passphrase, derive_cardano=derive_cardano)
+
+    @property
+    def features(self) -> messages.Features:
+        if self._features is not None:
+            return self._features
+        self._features = self._get_features()
+        self.check_firmware_version(warn_only=True)
+        return self._features
+
+    def _get_features(self) -> messages.Features:
+        with self._get_any_session() as session:
+            resp = session.call_raw(messages.GetFeatures())
+        return messages.Features.ensure_isinstance(resp)
+
+    @property
+    def model(self) -> models.TrezorModel:
+        if self._model is None:
+            self._model = models.detect(self.features)
+            if self.features.vendor not in self._model.vendors:
+                raise exceptions.TrezorException(
+                    f"Unrecognized vendor: {self.features.vendor}"
+                )
+        return self._model
+
+    @property
+    def mapping(self) -> ProtobufMapping:
+        if self._mapping is None:
+            if self._model is None:
+                # short-circuit the case where we need some mapping in order
+                # to run model detection via GetFeatures
+                return DEFAULT_MAPPING
+            self._mapping = self.model.default_mapping
+        return self._mapping
+
+    @property
+    def version(self) -> tuple[int, int, int]:
+        f = self.features
+        ver = (
+            f.major_version,
+            f.minor_version,
+            f.patch_version,
+        )
+        return ver
+
+    def refresh_features(self) -> messages.Features:
+        # clear cached features
+        self._features = None
+        # trigger a refresh
+        return self.features
 
     def is_outdated(self) -> bool:
         if self.features.bootloader_mode:
@@ -386,103 +466,214 @@ class TrezorClient(Generic[UI]):
             if warn_only:
                 warnings.warn("Firmware is out of date", stacklevel=2)
             else:
-                raise exceptions.OutdatedFirmwareError(OUTDATED_FIRMWARE_ERROR)
+                raise exceptions.OutdatedFirmwareError
 
-    def ping(self, msg: str, button_protection: bool = False) -> str:
-        # We would like ping to work on any valid TrezorClient instance, but
-        # due to the protection modes, we need to go through self.call, and that will
-        # raise an exception if the firmware is too old.
-        # So we short-circuit the simplest variant of ping with call_raw.
-        if not button_protection:
-            # XXX this should be: `with self:`
-            try:
-                self.open()
-                resp = self.call_raw(messages.Ping(message=msg))
-                if isinstance(resp, messages.ButtonRequest):
-                    # device is PIN-locked.
-                    # respond and hope for the best
-                    resp = self._callback_button(resp)
-                resp = messages.Success.ensure_isinstance(resp)
-                assert resp.message is not None
-                return resp.message
-            finally:
-                self.close()
+    def _call_raw(
+        self,
+        session: SessionType,
+        msg: MessageType,
+        timeout: float | None = None,
+    ) -> MessageType:
+        """Send a message to the transport and return the raw response.
 
-        resp = self.call(
-            messages.Ping(message=msg, button_protection=button_protection),
-            expect=messages.Success,
-        )
-        assert resp.message is not None
-        return resp.message
-
-    def get_device_id(self) -> Optional[str]:
-        return self.features.device_id
-
-    @session
-    def lock(self, *, _refresh_features: bool = True) -> None:
-        """Lock the device.
-
-        If the device does not have a PIN configured, this will do nothing.
-        Otherwise, a lock screen will be shown and the device will prompt for PIN
-        before further actions.
-
-        This call does _not_ invalidate passphrase cache. If passphrase is in use,
-        the device will not prompt for it after unlocking.
-
-        To invalidate passphrase cache, use `end_session()`. To lock _and_ invalidate
-        passphrase cache, use `clear_session()`.
+        Does not perform any sort of handling on the response: errors are not
+        converted to exceptions, internal workflow callbacks are not triggered.
         """
-        # Private argument _refresh_features can be used internally to avoid
-        # refreshing in cases where we will refresh soon anyway. This is used
-        # in TrezorClient.clear_session()
-        self.call(messages.LockDevice())
-        if _refresh_features:
-            self.refresh_features()
+        self._write(session, msg)
+        return self._read(session, timeout)
 
-    @session
-    def ensure_unlocked(self) -> None:
-        """Ensure the device is unlocked and a passphrase is cached.
+    def ping(
+        self,
+        message: str,
+        button_protection: bool | None = None,
+        timeout: float | None = None,
+    ) -> str:
+        with self._get_any_session() as session:
+            resp = session.call(
+                messages.Ping(message=message, button_protection=button_protection),
+                expect=messages.Success,
+                timeout=timeout,
+            )
+            assert resp.message is not None
+            return resp.message
 
-        If the device is locked, this will prompt for PIN. If passphrase is enabled
-        and no passphrase is cached for the current session, the device will also
-        prompt for passphrase.
+    def _call(
+        self,
+        session: SessionType,
+        msg: MessageType,
+        *,
+        expect: type[MT] = MessageType,
+        timeout: float | None = None,
+    ) -> MT:
+        resp = session.call_raw(msg, timeout=timeout)
+        while True:
+            if isinstance(resp, messages.PinMatrixRequest):
+                resp = self._callback_pin(session, resp)
+            elif isinstance(resp, messages.ButtonRequest):
+                resp = self._callback_button(session, resp)
+            elif isinstance(resp, messages.Failure):
+                if resp.code in (
+                    messages.FailureType.ActionCancelled,
+                    messages.FailureType.PinCancelled,
+                ):
+                    raise exceptions.Cancelled
+                elif resp.code == messages.FailureType.InvalidSession:
+                    raise exceptions.InvalidSessionError(session.id)
+                raise exceptions.TrezorFailure(resp)
+            elif isinstance(resp, messages.PassphraseRequest):
+                raise exceptions.InvalidSessionError(session.id, from_message=resp)
+            elif not isinstance(resp, expect):
+                raise exceptions.UnexpectedMessageError(expect, resp)
+            else:
+                return resp
 
-        After calling this method, further actions on the device will not prompt for
-        PIN or passphrase until the device is locked or the session becomes invalid.
-        """
-        from .btc import get_address
+    def _callback_pin(
+        self, session: SessionType, msg: messages.PinMatrixRequest
+    ) -> MessageType:
+        try:
+            pin = self.app._callback_pin(msg)
+        except exceptions.Cancelled:
+            session.call_raw(messages.Cancel())
+            raise
 
-        get_address(self, "Testnet", PASSPHRASE_TEST_PATH)
+        if any(d not in "123456789" for d in pin) or not (
+            1 <= len(pin) <= MAX_PIN_LENGTH
+        ):
+            session.call_raw(messages.Cancel())
+            raise ValueError("Invalid PIN provided")
+
+        resp = session.call_raw(messages.PinMatrixAck(pin=pin))
+        if isinstance(resp, messages.Failure) and resp.code in (
+            messages.FailureType.PinInvalid,
+            messages.FailureType.PinCancelled,
+            messages.FailureType.PinExpected,
+        ):
+            raise exceptions.PinException(resp.code, resp.message)
+        else:
+            return resp
+
+    def _callback_button(
+        self, session: SessionType, msg: messages.ButtonRequest
+    ) -> MessageType:
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
+        # do this raw - send ButtonAck first, notify UI later
+        session.write(messages.ButtonAck())
+        self.app._callback_button(msg)
+        return session.read()
+
+    def cancel(self) -> None:
+        """Send a Cancel signal to the device, interrupting the current workflow."""
+        with self._get_any_session() as session:
+            session.cancel()
+
+    def lock(self, *, _use_session: SessionType | None = None) -> None:
+        """Lock the device with a PIN prompt, if enabled."""
+        session = _use_session or self._get_any_session()
+        with session:
+            session.call_raw(messages.LockDevice())
         self.refresh_features()
 
-    def end_session(self) -> None:
-        """Close the current session and clear cached passphrase.
+    def ensure_unlocked(self) -> None:
+        """Ensure the device is unlocked."""
+        if not self.features.initialized:
+            # uninitialized device cannot be locked
+            return
+        session = self.get_session(passphrase=PassphraseSetting.STANDARD_WALLET)
+        with session:
+            session.ensure_unlocked()
 
-        The session will become invalid until `init_device()` is called again.
-        If passphrase is enabled, further actions will prompt for it again.
+    def _invalidate(self) -> None:
+        """Invalidate the client after a device wipe.
 
-        This is a no-op in bootloader mode, as it does not support session management.
+        All state that is no longer valid after a wipe should be cleared here.
         """
-        # since: 2.3.4, 1.9.4
-        try:
-            if not self.features.bootloader_mode:
-                self.call(messages.EndSession())
-        except exceptions.TrezorFailure:
-            # A failure most likely means that the FW version does not support
-            # the EndSession call. We ignore the failure and clear the local session_id.
-            # The client-side end result is identical.
-            pass
-        self.session_id = None
+        self._features = None
 
-    @session
-    def clear_session(self) -> None:
-        """Lock the device and present a fresh session.
 
-        The current session will be invalidated and a new one will be started. If the
-        device has PIN enabled, it will become locked.
+def get_default_client(
+    app_name: str,
+    path_or_transport: str | Transport | None = None,
+    *,
+    credentials: t.Collection[Credential] = (),
+    button_callback: t.Callable[[messages.ButtonRequest], None] | None = None,
+    pin_callback: t.Callable[[messages.PinMatrixRequest], str] | None = None,
+    code_entry_callback: t.Callable[[], str] | None = None,
+    **kwargs: t.Any,
+) -> "TrezorClient":
+    """Get a client for a connected Trezor device.
 
-        Equivalent to calling `lock()`, `end_session()` and `init_device()`.
-        """
-        self.lock(_refresh_features=False)
-        self.end_session()
-        self.init_device(new_session=True)
+    Returns a TrezorClient instance with minimum fuss.
+
+    If path is specified, does a prefix-search for the specified device. Otherwise, uses
+    the value of TREZOR_PATH env variable, or finds first connected Trezor.
+    """
+    if path_or_transport is None:
+        path_or_transport = os.getenv("TREZOR_PATH")
+    if isinstance(path_or_transport, Transport):
+        transport = path_or_transport
+    else:
+        transport = get_transport(path_or_transport, prefix_search=True)
+
+    app = AppManifest(
+        app_name=app_name,
+        credentials=credentials,
+        button_callback=button_callback,
+        pin_callback=pin_callback,
+    )
+    client = get_client(app, transport, **kwargs)
+
+    if not client.pairing.is_paired():
+        from .thp.pairing import default_pairing_flow
+
+        default_pairing_flow(
+            client.pairing,
+            code_entry_callback=code_entry_callback,
+            request_credential=False,
+        )
+    return client
+
+
+def get_default_session(
+    client: TrezorClient,
+    passphrase_callback: t.Callable[[], str] | None = None,
+    *,
+    derive_cardano: bool = False,
+) -> Session:
+    """Get a default session for a connected Trezor device.
+
+    The first argument must be a previously created and paired client instance,
+    e.g., via `get_client` or `get_default_client`.
+
+    The logic for determining what passphrase to use is as follows:
+
+    1. If the device has passphrase disabled, the default wallet is used
+    2. If the device allows on-device entry, passphrase is requested on the
+       device
+    3. If `passphrase_callback` is provided, it is used to get the passphrase
+    4. Otherwise, the default wallet is used
+    """
+    passphrase = PassphraseSetting.STANDARD_WALLET
+    client.ensure_unlocked()
+    if client.features.passphrase_protection:
+        if messages.Capability.PassphraseEntry in client.features.capabilities:
+            passphrase = PassphraseSetting.ON_DEVICE
+        elif passphrase_callback is not None:
+            passphrase = passphrase_callback()
+    return client.get_session(passphrase=passphrase, derive_cardano=derive_cardano)
+
+
+def get_client(
+    app: AppManifest,
+    transport: Transport,
+    *,
+    mapping: ProtobufMapping | None = None,
+    model: models.TrezorModel | None = None,
+) -> TrezorClient:
+    from .protocol_v1 import TrezorClientV1, probe
+    from .thp.client import TrezorClientThp
+
+    if probe(transport):
+        cls = TrezorClientV1
+    else:
+        cls = TrezorClientThp
+    return cls(app=app, transport=transport, mapping=mapping, model=model)

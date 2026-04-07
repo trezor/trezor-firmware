@@ -47,8 +47,9 @@ def test_reset_slip39_basic(
 
     assert features.initialized is False
 
-    device_handler.run(
+    device_handler.run_with_session(
         device.setup,
+        seedless=True,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,
         pin_protection=False,
@@ -57,6 +58,7 @@ def test_reset_slip39_basic(
         _get_entropy=MOCK_GET_ENTROPY,
     )
 
+    debug.synchronize_at(TR.reset__title_create_wallet)
     # confirm new wallet
     reset.confirm_new_wallet(debug)
 
@@ -78,15 +80,13 @@ def test_reset_slip39_basic(
     reset.confirm_read(debug)
 
     # confirm checklist
-    # TODO: resolve foreign glyphs extraction from the layout
-    if TR.get_language(debug) != "pt":
-        assert any(
-            needle in debug.read_layout().text_content()
-            for needle in [
-                TR.reset__slip39_checklist_set_num_shares,
-                TR.reset__slip39_checklist_num_shares,
-            ]
-        )
+    assert any(
+        needle in debug.read_layout().text_content()
+        for needle in [
+            TR.reset__slip39_checklist_set_num_shares,
+            TR.reset__slip39_checklist_num_shares,
+        ]
+    )
     reset.confirm_read(debug)
 
     # set num of shares - default is 5

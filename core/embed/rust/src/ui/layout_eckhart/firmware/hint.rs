@@ -1,10 +1,10 @@
 use crate::{
-    strutil::TString,
+    strutil::{ShortString, TString},
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Pad},
+        component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
         constant::screen,
-        display::{Color, Icon},
-        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
+        display::{Color, Font, Icon},
+        geometry::{Alignment, Alignment2D, Insets, Point, Rect},
         shape::{self, Renderer, Text},
         util::Pager,
     },
@@ -22,7 +22,6 @@ use super::{super::fonts, theme};
 pub struct Hint<'a> {
     content_area: Rect,
     content: HintContent<'a>,
-    pad: Pad,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -36,14 +35,11 @@ impl<'a> Hint<'a> {
     pub const HEIGHT_MINIMAL: i16 = 40;
     /// height of the multi line component [px]
     pub const HEIGHT_MAXIMAL: i16 = 66;
-    /// margins from the edges of the screen [px]
-    const HINT_INSETS: Insets = Insets::new(16, 24, 24, 24);
 
     fn from_content(content: HintContent<'a>) -> Self {
         Self {
             content_area: Rect::zero(),
             content,
-            pad: Pad::with_background(theme::BG),
         }
     }
 
@@ -106,7 +102,22 @@ impl<'a> Hint<'a> {
     /// Returns the height of the content including padding. In case of the
     /// instruction, the height is calculated based on the text length.
     pub fn height(&self) -> i16 {
-        self.content.height() + Self::HINT_INSETS.top + Self::HINT_INSETS.bottom
+        let insets = self.content.insets();
+        self.content.height() + insets.top + insets.bottom
+    }
+
+    /// Returns the height of the content without padding.
+    pub fn height_no_padding(&self) -> i16 {
+        self.content.height()
+    }
+
+    /// Returns the width of the content.
+    pub fn width(&self) -> i16 {
+        self.content.width()
+    }
+
+    pub fn is_page_counter(&self) -> bool {
+        matches!(self.content, HintContent::PageCounter(_))
     }
 }
 
@@ -117,20 +128,21 @@ impl<'a> Component for Hint<'a> {
         debug_assert!(bounds.width() == screen().width());
         debug_assert!(bounds.height() == self.height());
 
-        let pad_area = bounds
-            .inset(Insets::top(Self::HINT_INSETS.top))
-            .inset(Insets::bottom(Self::HINT_INSETS.bottom));
-        self.pad.place(pad_area);
+        let bounds = bounds.inset(self.content.insets());
 
-        let bounds = bounds.inset(Self::HINT_INSETS);
+        match &mut self.content {
+            HintContent::Instruction(instruction) => {
+                let text_area = match instruction.icon {
+                    Some(_) => bounds.split_left(instruction.icon_width()).1,
+                    None => bounds,
+                };
+                instruction.label.place(text_area);
+            }
+            HintContent::PageCounter(page_counter) => {
+                page_counter.place(bounds);
+            }
+        };
 
-        if let HintContent::Instruction(instruction) = &mut self.content {
-            let text_area = match instruction.icon {
-                Some(_) => bounds.split_left(instruction.icon_width()).1,
-                None => bounds,
-            };
-            instruction.label.place(text_area);
-        }
         self.content_area = bounds;
         self.content_area
     }
@@ -140,7 +152,6 @@ impl<'a> Component for Hint<'a> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.pad.render(target);
         self.content.render(self.content_area, target);
     }
 }
@@ -155,13 +166,27 @@ impl<'a> HintContent<'a> {
         }
     }
 
+    fn width(&self) -> i16 {
+        match self {
+            HintContent::Instruction(instruction) => instruction.width(),
+            HintContent::PageCounter(page_counter) => page_counter.width(),
+        }
+    }
+
     fn render<'s>(&'s self, area: Rect, target: &mut impl Renderer<'s>)
     where
         's: 'a,
     {
         match self {
             HintContent::Instruction(instruction) => instruction.render(target, area),
-            HintContent::PageCounter(page_counter) => page_counter.render(target, area),
+            HintContent::PageCounter(page_counter) => page_counter.render(target),
+        }
+    }
+
+    fn insets(&self) -> Insets {
+        match self {
+            HintContent::Instruction(_) => Instruction::INSETS,
+            HintContent::PageCounter(_) => PageCounter::INSETS,
         }
     }
 }
@@ -178,6 +203,8 @@ struct Instruction<'a> {
 impl<'a> Instruction<'a> {
     /// default style for instruction text
     const STYLE_INSTRUCTION: &'static TextStyle = &theme::firmware::TEXT_SMALL;
+    /// margins from the edges of the screen [px]
+    const INSETS: Insets = Insets::new(16, 24, 24, 24);
 
     fn new(
         text: TString<'a>,
@@ -201,9 +228,13 @@ impl<'a> Instruction<'a> {
             .map_or(0, |icon| icon.toif.width() + theme::PADDING)
     }
 
+    fn width(&self) -> i16 {
+        self.icon_width() + self.label.max_size().x
+    }
+
     /// Calculates the height needed for the Instruction text to be rendered.
     fn height(&self) -> i16 {
-        let text_area_width = screen().inset(Hint::HINT_INSETS).width() - self.icon_width();
+        let text_area_width = screen().inset(Self::INSETS).width() - self.icon_width();
         let calculated_height = self.label.text_height(text_area_width);
         debug_assert!(calculated_height <= Hint::HEIGHT_MAXIMAL);
         calculated_height
@@ -225,59 +256,94 @@ impl<'a> Instruction<'a> {
 /// as: '1 / 20'.
 #[derive(Clone)]
 struct PageCounter {
+    area: Rect,
     pager: Pager,
+    string_curr: ShortString,
+    string_max: ShortString,
+    base_num_curr: Point,
+    base_foreslash: Point,
+    base_num_max: Point,
+    color_num: Color,
+    color_icon: Color,
 }
 
 impl PageCounter {
+    const FONT: Font = fonts::FONT_SATOSHI_REGULAR_22;
+    /// margins from the edges of the screen [px]
+    const INSETS: Insets = Insets::new(16, 24, 14, 12);
+    /// spacing between foreslash and numbers
+    const OFFSET_X: i16 = 4;
+
     fn new() -> Self {
-        Self {
+        let mut s = Self {
             pager: Pager::single_page(),
-        }
+            area: Rect::zero(),
+            string_curr: ShortString::new(),
+            string_max: ShortString::new(),
+            base_num_curr: Point::zero(),
+            base_foreslash: Point::zero(),
+            base_num_max: Point::zero(),
+            color_num: theme::GREY,
+            color_icon: theme::GREY_DARK,
+        };
+        s.recompute();
+        s
+    }
+
+    fn place(&mut self, area: Rect) -> Rect {
+        self.area = area;
+        self.recompute();
+        self.area
     }
 
     fn update(&mut self, pager: Pager) {
-        self.pager = pager
+        self.pager = pager;
+        self.recompute();
     }
-}
 
-impl PageCounter {
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
-        let font = fonts::FONT_SATOSHI_REGULAR_22;
-        let (color_num, color_icon) = if self.pager.is_last() {
+    fn recompute(&mut self) {
+        (self.color_num, self.color_icon) = if self.pager.is_last() {
             (theme::GREEN_LIGHT, theme::GREEN)
         } else {
             (theme::GREY, theme::GREY_DARK)
         };
 
-        let string_curr = uformat!("{}", self.pager.current() + 1);
-        let string_max = uformat!("{}", self.pager.total());
+        self.string_curr = uformat!("{}", self.pager.current() + 1);
+        self.string_max = uformat!("{}", self.pager.total());
 
-        // the counter is left aligned
-        let offset_x = Offset::x(4); // spacing between foreslash and numbers
-        let width_num_curr = font.text_width(&string_curr);
-        let width_foreslash = theme::ICON_FORESLASH.toif.width();
-        let width_num_max = font.text_width(&string_max);
-        let width_total = width_num_curr + width_foreslash + width_num_max + 2 * offset_x.x;
+        let width_num_curr = Self::FONT.text_width(&self.string_curr);
+        let width_total = self.width();
 
-        let counter_area = area.inset(Hint::HINT_INSETS);
+        let counter_area = self.area.inset(Self::INSETS);
         let counter_start_x = counter_area.bottom_left().x;
-        let counter_y = font.vert_center(counter_area.y0, counter_area.y1, "0");
+        let counter_y = Self::FONT.vert_center(counter_area.y0, counter_area.y1, "0");
         let counter_end_x = counter_start_x + width_total;
-        let base_num_curr = Point::new(counter_start_x, counter_y);
-        let base_foreslash = Point::new(counter_start_x + width_num_curr + offset_x.x, counter_y);
-        let base_num_max = Point::new(counter_end_x, counter_y);
 
-        Text::new(base_num_curr, &string_curr, font)
+        self.base_num_curr = Point::new(counter_start_x, counter_y);
+        self.base_foreslash =
+            Point::new(counter_start_x + width_num_curr + Self::OFFSET_X, counter_y);
+        self.base_num_max = Point::new(counter_end_x, counter_y);
+    }
+
+    fn width(&self) -> i16 {
+        let width_num_curr = Self::FONT.text_width(&self.string_curr);
+        let width_foreslash = theme::ICON_FORESLASH.toif.width();
+        let width_num_max = Self::FONT.text_width(&self.string_max);
+        width_num_curr + width_foreslash + width_num_max + 2 * Self::OFFSET_X
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        Text::new(self.base_num_curr, &self.string_curr, Self::FONT)
             .with_align(Alignment::Start)
-            .with_fg(color_num)
+            .with_fg(self.color_num)
             .render(target);
-        shape::ToifImage::new(base_foreslash, theme::ICON_FORESLASH.toif)
+        shape::ToifImage::new(self.base_foreslash, theme::ICON_FORESLASH.toif)
             .with_align(Alignment2D::BOTTOM_LEFT)
-            .with_fg(color_icon)
+            .with_fg(self.color_icon)
             .render(target);
-        Text::new(base_num_max, &string_max, font)
+        Text::new(self.base_num_max, &self.string_max, Self::FONT)
             .with_align(Alignment::End)
-            .with_fg(color_num)
+            .with_fg(self.color_num)
             .render(target);
     }
 }
@@ -307,7 +373,7 @@ mod tests {
         // FIXME: this test is fine but the `screen()` is not returning the right value
         // for eckhart println!("screen size: {:?}", screen().width());
 
-        let with_padding = |h: i16| h + Hint::HINT_INSETS.top + Hint::HINT_INSETS.bottom;
+        let with_padding = |h: i16| h + Instruction::INSETS.top + Instruction::INSETS.bottom;
         let hint_1line = Hint::new_instruction("Test", None);
         assert_eq!(hint_1line.content.height(), Hint::HEIGHT_MINIMAL);
         assert_eq!(hint_1line.height(), with_padding(Hint::HEIGHT_MINIMAL));

@@ -270,7 +270,6 @@ def print_verbose(text):
 def recursive_dictionary_extraction(directory):
     """handle the central extraction logic"""
     # TODO split this function up into subfunctions
-    global counter_hex_content
     # handle as a set structure to de-duplicate results automatically
     candidate_lines = set()
 

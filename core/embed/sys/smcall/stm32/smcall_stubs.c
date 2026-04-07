@@ -19,6 +19,8 @@
 
 #if defined(KERNEL) && defined(USE_SECMON_LAYOUT)
 
+#include <trezor_rtl.h>
+
 #include "smcall_invoke.h"
 #include "smcall_numbers.h"
 
@@ -36,24 +38,24 @@ void bootargs_get_args(boot_args_t *args) {
   smcall_invoke1((uint32_t)args, SMCALL_BOOTARGS_GET_ARGS);
 }
 // =============================================================================
-// bl_check.h
+// boot_image.h
 // =============================================================================
 
-bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
-                    size_t hash_len) {
-  return (bool)smcall_invoke3((uint32_t)hash_00, (uint32_t)hash_FF,
-                              (uint32_t)hash_len, SMCALL_BL_CHECK_CHECK);
+#include <sec/boot_image.h>
+
+bool boot_image_check(const boot_image_t *image) {
+  return (bool)smcall_invoke1((uint32_t)image, SMCALL_BOOT_IMAGE_CHECK);
 }
 
-void bl_check_replace(const uint8_t *data, size_t len) {
-  smcall_invoke2((uint32_t)data, len, SMCALL_BL_CHECK_REPLACE);
+void boot_image_replace(const boot_image_t *image) {
+  smcall_invoke1((uint32_t)image, SMCALL_BOOT_IMAGE_REPLACE);
 }
 
 // =============================================================================
 // board_capabilities.h
 // =============================================================================
 
-#include <util/board_capabilities.h>
+#include <sec/board_capabilities.h>
 
 uint32_t get_board_name(void) { return smcall_invoke0(SMCALL_GET_BOARD_NAME); }
 
@@ -109,7 +111,7 @@ void reboot_with_rsod(const systask_postmortem_t *pminfo) {
 
 #ifdef USE_SUSPEND
 
-#include <sys/suspend_io.h>
+#include <sec/suspend_io.h>
 
 void suspend_cpu(void) { smcall_invoke0(SMCALL_SUSPEND_CPU); }
 
@@ -127,16 +129,24 @@ void resume_secure_drivers(void) {
 // unit_properties.h
 // =============================================================================
 
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 void unit_properties_get(unit_properties_t *props) {
   smcall_invoke1((uint32_t)props, SMCALL_UNIT_PROPERTIES_GET);
+}
+
+bool unit_properties_get_sn(uint8_t *device_sn, size_t max_device_sn_size,
+                            size_t *device_sn_size) {
+  return (bool)smcall_invoke3((uint32_t)device_sn, max_device_sn_size,
+                              (uint32_t)device_sn_size,
+                              SMCALL_UNIT_PROPERTIES_GET_SN);
 }
 
 // =============================================================================
 // secret.h
 // =============================================================================
 
+#ifdef USE_SECRET
 #ifdef LOCKABLE_BOOTLOADER
 
 #include <sec/secret.h>
@@ -146,6 +156,7 @@ secbool secret_bootloader_locked(void) {
 }
 
 #endif  // LOCKABLE_BOOTLOADER
+#endif
 
 // =============================================================================
 // random_delays.h
@@ -188,9 +199,12 @@ bool optiga_read_sec(uint8_t *sec) {
   return (bool)smcall_invoke1((uint32_t)sec, SMCALL_OPTIGA_READ_SEC);
 }
 
-bool optiga_random_buffer(uint8_t *dest, size_t size) {
-  return (bool)smcall_invoke2((uint32_t)dest, size,
-                              SMCALL_OPTIGA_RANDOM_BUFFER);
+void optiga_close_channel(void) { smcall_invoke0(SMCALL_OPTIGA_CLOSE_CHANNEL); }
+
+void optiga_power_down(void) { smcall_invoke0(SMCALL_OPTIGA_POWER_DOWN); }
+
+void optiga_init_and_configure(void) {
+  smcall_invoke0(SMCALL_OPTIGA_INIT_AND_CONFIGURE);
 }
 
 #if PYOPT == 0
@@ -201,15 +215,28 @@ void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 #endif  // USE_OPTIGA
 
 // =============================================================================
+// secret_keys.h
+// =============================================================================
+
+#ifdef USE_SECRET_KEYS
+#include <sec/secret_keys.h>
+
+secbool secret_key_delegated_identity(uint16_t rotation_index,
+                                      uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  return (secbool)smcall_invoke2(rotation_index, (uint32_t)dest,
+                                 SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
+}
+
+#endif
+
+// =============================================================================
 // storage.h
 // =============================================================================
 
-#include "storage.h"
+#include <sec/storage.h>
 
-void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                  const uint16_t salt_len) {
-  smcall_invoke3((uint32_t)callback, (uint32_t)salt, salt_len,
-                 SMCALL_STORAGE_INIT);
+void storage_setup(PIN_UI_WAIT_CALLBACK callback) {
+  smcall_invoke1((uint32_t)callback, SMCALL_STORAGE_SETUP);
 }
 
 void storage_wipe(void) { smcall_invoke0(SMCALL_STORAGE_WIPE); }
@@ -219,10 +246,10 @@ secbool storage_is_unlocked(void) {
 
 void storage_lock(void) { smcall_invoke0(SMCALL_STORAGE_LOCK); }
 
-secbool storage_unlock(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
-  return (secbool)smcall_invoke3((uint32_t)pin, pin_len, (uint32_t)ext_salt,
-                                 SMCALL_STORAGE_UNLOCK);
+storage_unlock_result_t storage_unlock(const uint8_t *pin, size_t pin_len,
+                                       const uint8_t *ext_salt) {
+  return (storage_unlock_result_t)smcall_invoke3(
+      (uint32_t)pin, pin_len, (uint32_t)ext_salt, SMCALL_STORAGE_UNLOCK);
 }
 
 secbool storage_has_pin(void) {
@@ -236,14 +263,12 @@ uint32_t storage_get_pin_rem(void) {
   return smcall_invoke0(SMCALL_STORAGE_GET_PIN_REM);
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
-                           const uint8_t *new_ext_salt) {
-  return (secbool)smcall_invoke6((uint32_t)oldpin, oldpin_len, (uint32_t)newpin,
-                                 newpin_len, (uint32_t)old_ext_salt,
-                                 (uint32_t)new_ext_salt,
-                                 SMCALL_STORAGE_CHANGE_PIN);
+storage_pin_change_result_t storage_change_pin(const uint8_t *newpin,
+                                               size_t newpin_len,
+                                               const uint8_t *new_ext_salt) {
+  return (storage_pin_change_result_t)smcall_invoke3(
+      (uint32_t)newpin, newpin_len, (uint32_t)new_ext_salt,
+      SMCALL_STORAGE_CHANGE_PIN);
 }
 
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
@@ -291,26 +316,25 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
 }
 
 // =============================================================================
-// entropy.h
-// =============================================================================
-
-void entropy_get(uint8_t *buf) {
-  smcall_invoke1((uint32_t)buf, SMCALL_ENTROPY_GET);
-}
-
-// =============================================================================
 // rng.h
 // =============================================================================
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 
-uint32_t rng_get(void) { return smcall_invoke0(SMCALL_RNG_GET); }
+void rng_fill_buffer(void *buffer, size_t buffer_size) {
+  smcall_invoke2((uint32_t)buffer, buffer_size, SMCALL_RNG_FILL_BUFFER);
+}
+
+bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
+  return (bool)smcall_invoke2((uint32_t)buffer, buffer_size,
+                              SMCALL_RNG_FILL_BUFFER_STRONG);
+}
 
 // =============================================================================
 // fwutils.h
 // =============================================================================
 
-#include <util/fwutils.h>
+#include <sec/fwutils.h>
 
 secbool firmware_get_vendor(char *buff, size_t buff_size) {
   return smcall_invoke2((uint32_t)buff, buff_size, SMCALL_FIRMWARE_GET_VENDOR);
@@ -333,19 +357,20 @@ bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
                               SMCALL_TROPIC_PING);
 }
 
-bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
-  return (bool)smcall_invoke2((uint32_t)buf, buf_size, SMCALL_TROPIC_GET_CERT);
-}
-
 bool tropic_ecc_key_generate(uint16_t slot_index) {
   return (bool)smcall_invoke1((uint32_t)slot_index,
                               SMCALL_TROPIC_ECC_KEY_GENERATE);
 }
 
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
-                     uint16_t dig_len, uint8_t *sig, uint16_t sig_len) {
-  return (bool)smcall_invoke5((uint32_t)key_slot_index, (uint32_t)dig, dig_len,
-                              (uint32_t)sig, sig_len, SMCALL_TROPIC_ECC_SIGN);
+                     uint16_t dig_len, uint8_t *sig) {
+  return (bool)smcall_invoke4((uint32_t)key_slot_index, (uint32_t)dig, dig_len,
+                              (uint32_t)sig, SMCALL_TROPIC_ECC_SIGN);
+}
+
+bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
+  return (bool)smcall_invoke3((uint32_t)udata_slot, (uint32_t)data,
+                              (uint32_t)size, SMCALL_TROPIC_DATA_READ);
 }
 
 #endif
@@ -356,7 +381,7 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
 
 #ifdef USE_BACKUP_RAM
 
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 
 uint16_t backup_ram_search(uint16_t min_key) {
   return (bool)smcall_invoke1(min_key, SMCALL_BACKUP_RAM_SEARCH);
@@ -375,5 +400,44 @@ bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
 }
 
 #endif  // USE_BACKUP_RAM
+
+#ifdef USE_NRF
+
+#include <sec/secret.h>
+
+secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
+                                    const uint8_t *mac, size_t mac_len) {
+  return (secbool)smcall_invoke4((uint32_t)message, msg_len, (uint32_t)mac,
+                                 mac_len, SMCALL_SECRET_VALIDATE_NRF_PAIRING);
+}
+
+#endif
+
+#ifdef USE_TELEMETRY
+
+// =============================================================================
+// telemetry.h
+// =============================================================================
+
+#include <sec/telemetry.h>
+
+void telemetry_update_battery_temp(float temp_c) {
+  smcall_invoke1(float_to_u32(temp_c), SMCALL_TELEMETRY_UPDATE_BATT_TEMP);
+}
+
+void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
+  smcall_invoke1((uint32_t)errors.all, SMCALL_TELEMETRY_UPDATE_BATT_ERRORS);
+}
+
+void telemetry_update_battery_cycles(float battery_cycles_inc) {
+  smcall_invoke1(float_to_u32(battery_cycles_inc),
+                 SMCALL_TELEMETRY_UPDATE_BATT_CYCLES);
+}
+
+bool telemetry_get(telemetry_data_t *out) {
+  return (bool)smcall_invoke1((uint32_t)out, SMCALL_TELEMETRY_GET);
+}
+
+#endif
 
 #endif  // defined(KERNEL) && defined(USE_SECMON_LAYOUT)

@@ -3,7 +3,7 @@
 # Script builds, signs, and/or flashes Nordic board with optional debug or production overlays
 
 # Run this in `nordic/trezor` to sign and mergehex final image with mcuboot
-# This charade serves to differentiate commands run under poetry shell and ncs shell since their pythons are not compatible
+# This charade serves to differentiate commands run under uv shell and ncs shell since their pythons are not compatible
 
 # Update the OPTSTRING to include 'a:'
 OPTSTRING=":b:a:pdsfc"
@@ -21,10 +21,34 @@ fatal() {
     exit 1
 }
 
+# Auto-detect environment and choose appropriate execution method
+detect_environment() {
+    # Check if we're in Docker environment for reproducible build
+    # e.g. Docker/Nix with pre-configured toolchain for reproducible build
+    if [ -n "$GNUARMEMB_TOOLCHAIN_PATH" ] && [ -n "$ZEPHYR_TOOLCHAIN_VARIANT" ]; then
+        return 0  # Use direct execution
+    elif command -v nrfutil > /dev/null 2>&1; then
+        # We have nrfutil available (local development)
+        return 1  # Use nrfutil subshell
+    else
+        # Fallback to direct execution
+        echo "Warning: Neither nrfutil nor pre-configured toolchain detected, using direct execution"
+        return 0
+    fi
+}
+
 run_under_ncs_subshell() {
-    # In the subshell, toolchain environment is sourced then the command is run
-    (source <(nrfutil toolchain-manager env | perl -pe 's/^(\w+)\s*:\s*(.*)/export \1=\2/');  bash -x -c "$@") \
-        || fatal "Error in subshell"
+    detect_environment
+    local use_direct=$?
+
+    if [ $use_direct -eq 0 ]; then
+        # Docker/Nix environment - run directly
+        eval "$@" || fatal "Error in direct command execution"
+    else
+        # Local development environment - use nrfutil
+        (source <(nrfutil toolchain-manager env | perl -pe 's/^(\w+)\s*:\s*(.*)/export \1=\2/'); bash -x -c "$@") \
+            || fatal "Error in nrfutil subshell"
+    fi
 }
 
 usage() {
@@ -104,8 +128,8 @@ VERSION=$(get_version_from_file)
 # Update paths in signing and flashing commands
 if [ "$SIGN" -eq 1 ]; then
     run_under_ncs_subshell \
-        "imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 && \
-         imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.prep.hex --custom-tlv 0x00A2 0x03 && \
+        "imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 0x54335731 && \
+         imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.prep.hex --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 0x54335731  && \
          ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
 
     HASH=$(python ./scripts/extract_hash.py ./build/$APP_DIR/zephyr/dump.txt)

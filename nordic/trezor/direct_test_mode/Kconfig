@@ -96,6 +96,9 @@ config DTM_FAST_RAMP_UP
 	  Do fast ramp up when starting the radio peripheral. This mode will significancy reduce
 	  the ramp up time and makes it almost the same on all supported chips.
 
+config MODEL_IDENTIFIER
+    int "Model identifier"
+
 module = DTM_TRANSPORT
 module-str = "DTM_transport"
 source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"

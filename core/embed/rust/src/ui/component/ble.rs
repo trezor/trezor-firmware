@@ -5,23 +5,34 @@ use crate::ui::{
     shape::Renderer,
 };
 
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::{Effect, LedState};
+
+pub enum BLEHandlerMode {
+    /// Advertising without whitelist started, waiting for some host to respond
+    WaitingForPairingRequest,
+    /// Pairing in progress, Trezor needs to allow/reject
+    WaitingForPairingCancel,
+    /// Pairing in progress, allowed from Trezor side, waiting for BLE module to
+    /// confirm success
+    WaitingForPairingCompletion,
+}
+
 pub struct BLEHandler<T> {
     inner: T,
-    waiting_for_pairing: bool,
+    state: BLEHandlerMode,
 }
 
 pub enum BLEHandlerMsg<TMsg> {
     Content(TMsg),
     PairingCode(u32),
+    PairingCompleted,
     Cancelled,
 }
 
 impl<T> BLEHandler<T> {
-    pub fn new(inner: T, waiting_for_pairing: bool) -> Self {
-        Self {
-            inner,
-            waiting_for_pairing,
-        }
+    pub fn new(inner: T, state: BLEHandlerMode) -> Self {
+        Self { inner, state }
     }
 }
 
@@ -36,20 +47,30 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match (event, self.waiting_for_pairing) {
-            (Event::BLE(BLEEvent::PairingRequest(num)), true) => {
-                return Some(BLEHandlerMsg::PairingCode(num))
-            }
-            (Event::BLE(BLEEvent::PairingCanceled | BLEEvent::Disconnected), _) => {
-                return Some(BLEHandlerMsg::Cancelled)
-            }
+        match (event, &self.state) {
+            (
+                Event::BLE(BLEEvent::PairingRequest(num)),
+                BLEHandlerMode::WaitingForPairingRequest,
+            ) => return Some(BLEHandlerMsg::PairingCode(num)),
+            (
+                Event::BLE(BLEEvent::PairingCompleted),
+                BLEHandlerMode::WaitingForPairingCompletion,
+            ) => return Some(BLEHandlerMsg::PairingCompleted),
+            (
+                Event::BLE(
+                    BLEEvent::PairingCanceled | BLEEvent::Disconnected | BLEEvent::PairingNotNeeded,
+                ),
+                _,
+            ) => return Some(BLEHandlerMsg::Cancelled),
             _ => {}
         }
         self.inner.event(ctx, event).map(BLEHandlerMsg::Content)
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.inner.render(target)
+        self.inner.render(target);
+        #[cfg(feature = "rgb_led")]
+        target.set_led_state(LedState::Effect(Effect::Pairing));
     }
 }
 
@@ -69,7 +90,10 @@ mod micropython {
     use crate::{
         error::Error,
         micropython::obj::Obj,
-        ui::layout::{obj::ComponentMsgObj, result::CANCELLED},
+        ui::layout::{
+            obj::ComponentMsgObj,
+            result::{CANCELLED, CONFIRMED},
+        },
     };
     impl<T> ComponentMsgObj for BLEHandler<T>
     where
@@ -80,6 +104,7 @@ mod micropython {
                 BLEHandlerMsg::Content(msg) => self.inner.msg_try_into_obj(msg),
                 BLEHandlerMsg::PairingCode(num) => num.try_into(),
                 BLEHandlerMsg::Cancelled => Ok(CANCELLED.as_obj()),
+                BLEHandlerMsg::PairingCompleted => Ok(CONFIRMED.as_obj()),
             }
         }
     }

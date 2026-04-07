@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,9 +17,10 @@
 from typing import TYPE_CHECKING
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .client import Session
     from .tools import Address
 
 
@@ -29,14 +30,15 @@ if TYPE_CHECKING:
 # FAKECHAIN = 3
 
 
+@workflow(capability=messages.Capability.Monero)
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     show_display: bool = False,
     network_type: messages.MoneroNetworkType = messages.MoneroNetworkType.MAINNET,
     chunkify: bool = False,
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.MoneroGetAddress(
             address_n=n,
             show_display=show_display,
@@ -47,12 +49,13 @@ def get_address(
     ).address
 
 
+@workflow(capability=messages.Capability.Monero)
 def get_watch_key(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     network_type: messages.MoneroNetworkType = messages.MoneroNetworkType.MAINNET,
 ) -> messages.MoneroWatchKey:
-    return client.call(
+    return session.call(
         messages.MoneroGetWatchKey(address_n=n, network_type=network_type),
         expect=messages.MoneroWatchKey,
     )

@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - 'release/**'
+      - 'secfix/**'
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -23,9 +24,9 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       - name: Block Fixup Commit Merge
-        uses: 13rac1/block-fixup-merge-action@v2.0.0
+        uses: 13rac1/block-fixup-merge-action@bd5504fb9ca0253e109d98eb86b7debc01970cdc  # 13rac1/block-fixup-merge-action@v2.0.0
 
   # Check the code for style correctness and perform some static code analysis.
   # Biggest part is the python one - using `flake8`, `isort`, `black`, `pylint` and `pyright`,
@@ -35,39 +36,39 @@ jobs:
     name: Style check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       - name: Initialize and update ts-tvl
         run: |
           git submodule update --init --recursive vendor/ts-tvl
       - uses: ./.github/actions/environment
       - name: "Run style check"
-        run: nix-shell --run "poetry run make style_check"
+        run: nix-shell --run "uv run make style_check BLACK_FAST=0"
       - name: "Run .editorconfig check"
-        run: nix-shell --run "poetry run make editor_check"
+        run: nix-shell --run "uv run make editor_check"
 
   # Check validity of coin definitions and protobuf files.
   defs_check:
     name: Defs check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
       - uses: ./.github/actions/environment
       - name: "Run defs check"
-        run: nix-shell --run "poetry run make defs_check"
+        run: nix-shell --run "uv run make defs_check"
 
   # Check validity of auto-generated files.
   gen_check:
     name: Gen check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
       - uses: ./.github/actions/environment
       - name: "Run gen check"
-        run: nix-shell --run "poetry run make gen_check"
+        run: nix-shell --run "uv run make gen_check"
 
   # Verifying that all commits changing some functionality have a changelog entry
   # or contain `[no changelog]` in the commit message.
@@ -76,7 +77,7 @@ jobs:
     if: ${{ github.ref != 'main' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
@@ -86,10 +87,10 @@ jobs:
   # Checking the format of release commit messages.
   release_commit_msg_check:
     name: Release commit message check
-    if: ${{ startsWith(github.ref, 'refs/heads/release/') && github.repository == 'trezor/trezor-firmware' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       - uses: ./.github/actions/environment
       - name: "Check release commit message format"
         run: ./ci/check_release_commit_messages.sh
@@ -100,18 +101,18 @@ jobs:
     if: ${{ github.ref != 'main' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Ask git
         run: |
-          git diff --exit-code origin/main -- core/embed/rust/Cargo.lock || echo cargo_modified=1 > $GITHUB_ENV
+          git diff --exit-code origin/${{ github.base_ref }}...HEAD -- core/embed/rust/Cargo.lock || echo cargo_modified=1 > $GITHUB_ENV
           cat $GITHUB_OUTPUT
 
       - name: Find Comment
-        uses: peter-evans/find-comment@v3
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad  # peter-evans/find-comment@v4
         if: ${{ env.cargo_modified == '1' }}
         id: fc
         with:
@@ -120,7 +121,7 @@ jobs:
           body-includes: cargolock-comment-${{ github.workflow }}
 
       - name: Create comment
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # peter-evans/create-or-update-comment@v5
         if: ${{ env.cargo_modified == '1' && steps.fc.outputs.comment-id == '' }}
         with:
           issue-number: ${{ github.event.pull_request.number }}

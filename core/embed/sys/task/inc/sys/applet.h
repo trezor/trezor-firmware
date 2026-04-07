@@ -25,70 +25,78 @@
 
 #include <sys/systask.h>
 
-// Applet entry point
-typedef void (*applet_startup_t)(const char* args, uint32_t random);
+/** Applet structure */
+typedef struct applet applet_t;
 
-// Applet header found at the beginning of the applet binary
-typedef struct {
-  // Stack area
-  mpu_area_t stack;
-  // Applet entry point
-  applet_startup_t startup;
-  // Coreapp specific data
-  struct {
-    // Unprivileged SAES input buffer
-    void* saes_input;
-    // Unprivileged SAES output buffer
-    void* saes_output;
-    // Unprivileged SAES callback
-    void* saes_callback;
-  } coreapp;
-} applet_header_t;
-
-// Applet privileges
+/** Applet privileges */
 typedef struct {
   bool assets_area_access;
 } applet_privileges_t;
 
-typedef struct {
-  // Points to the applet header found at the beginning of the applet binary
-  applet_header_t* header;
-  // Applet memory layout describing the memory areas
-  // the applet is allowed to use
-  applet_layout_t layout;
-  // Applet privileges
+/** Callback called when an applet is unloaded */
+typedef void (*applet_unload_cb_t)(applet_t* applet);
+
+struct applet {
+  /** Applet privileges */
   applet_privileges_t privileges;
 
-  // Applet task
+  /** Task associated with the applet */
   systask_t task;
+  /** Callback called when the applet is unloaded */
+  applet_unload_cb_t unload_cb;
 
-} applet_t;
+#ifdef TREZOR_EMULATOR
+  /** Handle returned by `dlopen()` */
+  void* handle;
+#else
+  /** Applet memory layout describing the memory areas
+   * the applet is allowed to use */
+  applet_layout_t layout;
+#endif
+};
 
-// Initializes the applet structure
-void applet_init(applet_t* applet, applet_header_t* header,
-                 applet_layout_t* layout, applet_privileges_t* privileges);
+/**
+ * @brief Initializes the applet structure
+ *
+ * Does just basic initialization of the applet structure without
+ * initializing the task associated with the applet.
+ *
+ * @param applet Pointer to the applet to initialize.
+ * @param privileges Pointer to the applet privileges.
+ * @param unload_cb Callback called when the applet is unloaded.
+ *
+ */
+void applet_init(applet_t* applet, const applet_privileges_t* privileges,
+                 applet_unload_cb_t unload_cb);
 
-// Resets the applet and prepares it for execution from its entry point.
-//
-// Applet does not start immediately, it needs to be run by
-// `applet_run()` after calling this function.
-//
-// Returns `true` if the applet was successfully reset.
-bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
-                  size_t arg_size);
-
-// Runs the applet and waits until it finishes.
+/**
+ * @brief Runs the applet task first time.
+ *
+ * When calling this function, the applet task must be initialized
+ * and not running. The function does not return until the applet
+ * gives up control (by being rescheduled out or terminated).
+ *
+ * @param applet Pointer to the applet to run.
+ */
 void applet_run(applet_t* applet);
 
-// Release all resources help by the applet
-void applet_stop(applet_t* applet);
+/**
+ * @brief Releases all resources held by the applet
+ * @param applet Pointer to the applet to stop.
+ */
+void applet_unload(applet_t* applet);
 
-// Returns `true` if the applet task is alive.
+/**
+ * @brief Returns `true` if the applet task is alive.
+ * @param applet Pointer to the applet to query.
+ * @return true if the applet task is alive, false otherwise.
+ */
 bool applet_is_alive(applet_t* applet);
 
-// Returns the currently active applet.
-//
-// Returns `NULL` if no applet is currently active.
+/**
+ * @brief Returns the currently active applet.
+ * @return Pointer to the currently active applet, or NULL if none.
+ */
 applet_t* applet_active(void);
 
 #endif  // KERNEL

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import struct
 
 EVENT_TYPE_START = 2
@@ -17,15 +19,15 @@ START_REQ_FMT = "< Q"
 OUTPUT_REQ_FMT = f"< {DATA_MAX}s H B"
 
 
-def pack_event(ev_type, request):
+def pack_event(ev_type: int, request: bytes) -> bytes:
     return ev_type.to_bytes(4, byteorder="little") + request
 
 
-def unpack_event(buf):
+def unpack_event(buf: bytes) -> tuple[int, bytes]:
     return int.from_bytes(buf[:4], byteorder="little"), buf[4:]
 
 
-def parse_event(event):
+def parse_event(event: bytes) -> tuple[int, bytes | list | tuple[bytes]]:
     assert len(event) == EVENT_LENGTH
 
     ev_type, request = unpack_event(event)
@@ -47,8 +49,16 @@ def parse_event(event):
 
 
 def create_create2_event(
-    name, phys, uniq, bus, vendor, product, version, country, rd_data
-):
+    name: bytes,
+    phys: bytes,
+    uniq: bytes,
+    bus: int,
+    vendor: int,
+    product: int,
+    version: int,
+    country: int,
+    rd_data: bytes,
+) -> bytes:
     uhid_create2_req = struct.pack(
         CREATE2_REQ_FMT,
         name,
@@ -67,7 +77,7 @@ def create_create2_event(
     return event
 
 
-def create_input2_event(data):
+def create_input2_event(data: bytes) -> bytes:
     uhid_input2_req = struct.pack(INPUT2_REQ_FMT, len(data), data)
     event = pack_event(EVENT_TYPE_INTPUT2, uhid_input2_req)
     return event

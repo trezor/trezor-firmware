@@ -125,6 +125,18 @@ impl<'a> Component for BldTextScreen<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        match event {
+            Event::Attach(..) | Event::PM(..) => {
+                // propagate events for the fuel gauge
+                self.header.event(ctx, event);
+                if let Some(more_info) = &mut self.more_info {
+                    more_info.header.event(ctx, event);
+                }
+                return None;
+            }
+            _ => {}
+        };
+
         if let Some(more_info) = &mut self.more_info {
             if self.more_info_showing {
                 if let Some(BldHeaderMsg::Cancelled) = more_info.header.event(ctx, event) {
@@ -133,21 +145,23 @@ impl<'a> Component for BldTextScreen<'a> {
                 }
             }
         }
-        match self.header.event(ctx, event) {
-            // FIXME: This is a hack for `screen_install_confirm` which expects `2` for the Menu
-            Some(BldHeaderMsg::Menu) => return Some(BldTextScreenMsg::Cancelled),
-            Some(BldHeaderMsg::Info) => {
-                if !self.more_info_showing {
-                    self.more_info_showing = true;
-                    return None;
+        if !self.more_info_showing {
+            match self.header.event(ctx, event) {
+                // FIXME: This is a hack for `screen_install_confirm` which expects `2` for the Menu
+                Some(BldHeaderMsg::Menu) => return Some(BldTextScreenMsg::Cancelled),
+                Some(BldHeaderMsg::Info) => {
+                    if !self.more_info_showing {
+                        self.more_info_showing = true;
+                        return None;
+                    }
                 }
+                _ => (),
             }
-            _ => (),
-        }
-        if let Some(msg) = self.action_bar.event(ctx, event) {
-            match msg {
-                BldActionBarMsg::Cancelled => return Some(BldTextScreenMsg::Cancelled),
-                BldActionBarMsg::Confirmed => return Some(BldTextScreenMsg::Confirmed),
+            if let Some(msg) = self.action_bar.event(ctx, event) {
+                match msg {
+                    BldActionBarMsg::Cancelled => return Some(BldTextScreenMsg::Cancelled),
+                    BldActionBarMsg::Confirmed => return Some(BldTextScreenMsg::Confirmed),
+                }
             }
         }
         None

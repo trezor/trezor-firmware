@@ -18,7 +18,9 @@ def configure(
     hw_revision = 0
     mcu = "STM32F427xx"
 
-    unix_common_files(env, defines, sources, paths)
+    features_available += unix_common_files(
+        env, features_wanted, defines, sources, paths
+    )
 
     defines += [
         "FRAMEBUFFER",
@@ -40,6 +42,15 @@ def configure(
         ("LOCKABLE_BOOTLOADER", "1"),
     ]
 
+    paths += ["embed/sec/secret/inc"]
+    sources += ["embed/sec/secret/unix/secret.c"]
+    defines += [("USE_SECRET", "1")]
+
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/unix/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
+
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/unix/sbu.c"]
         paths += ["embed/io/sbu/inc"]
@@ -59,6 +70,9 @@ def configure(
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
 
-    sources += ["embed/util/flash/stm32f4/flash_layout.c"]
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/button/button_debug.c"]
+
+    sources += ["embed/sys/flash/stm32f4/flash_layout.c"]
 
     return features_available

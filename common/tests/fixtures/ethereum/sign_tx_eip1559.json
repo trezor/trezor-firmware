@@ -102,6 +102,25 @@
             }
         },
         {
+            "name": "Base",
+            "parameters": {
+                "data": "",
+                "path": "m/44'/8453'/0'/0/100",
+                "to_address": "0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+                "chain_id": 8453,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0xde0b6b3a7640000"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "35d72ca26013ef06645289c26639ecbcfbf89024a49f2f39b2f0f210dcf0dbc4",
+                "sig_s": "2ca43f733707cb7bb67580b72f6b803cf6ab6f7948aba73f5a04c400d6021e86"
+            }
+        },
+        {
             "name": "Ledger Live legacy path",
             "parameters": {
                 "data": "",

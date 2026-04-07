@@ -1,0 +1,691 @@
+use crate::Role;
+use crate::alternating_bit::SyncBits;
+use crate::control_byte::ControlByte;
+use crate::crc32;
+use crate::error::{Error, Result};
+
+use core::marker::PhantomData;
+
+const CHECKSUM_LEN: u16 = crc32::CHECKSUM_LEN as u16;
+pub const NONCE_LEN: u16 = 8;
+const MAX_PAYLOAD_LEN: u16 = 60000;
+
+pub const MIN_CHANNEL_ID: u16 = 0x0001;
+pub const MAX_CHANNEL_ID: u16 = 0xFFEF;
+pub const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
+
+/// Represents packet header, i.e. control byte, channel id and possibly payload length.
+/// Please note that `seq_bit` and `ack_bit` which are also part of the header are handled separately.
+#[cfg_attr(any(test, debug_assertions), derive(Debug))]
+#[derive(Clone, PartialEq, Eq)]
+pub enum Header<R: Role> {
+    Continuation {
+        channel_id: u16,
+    },
+    Ack {
+        channel_id: u16,
+        _phantom: PhantomData<R>,
+    },
+    CodecV1Request {
+        is_continuation: bool,
+    },
+    CodecV1Response,
+    ChannelAllocationRequest,
+    ChannelAllocationResponse {
+        payload_len: u16,
+    },
+    TransportError {
+        channel_id: u16,
+    },
+    Ping,
+    Pong,
+    Handshake {
+        phase: HandshakeMessage,
+        channel_id: u16,
+        payload_len: u16,
+    },
+    Encrypted {
+        channel_id: u16,
+        payload_len: u16,
+    },
+}
+
+#[cfg_attr(any(test, debug_assertions), derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum HandshakeMessage {
+    InitiationRequest,
+    InitiationResponse,
+    CompletionRequest,
+    CompletionResponse,
+}
+
+/// Check whether channel id is valid. Please note this also includes broadcast channel.
+pub const fn channel_id_valid(channel_id: u16) -> bool {
+    (MIN_CHANNEL_ID <= channel_id && channel_id <= MAX_CHANNEL_ID)
+        || channel_id == BROADCAST_CHANNEL_ID
+}
+
+pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
+    let Some((bytes, rest)) = buffer.split_first_chunk::<2>() else {
+        log::error!("Packet too short.");
+        return Err(Error::malformed_data());
+    };
+    Ok((u16::from_be_bytes(*bytes), rest))
+}
+
+pub(crate) fn parse_cb_channel(buffer: &[u8]) -> Result<(ControlByte, u16, &[u8])> {
+    let Some((cb, rest)) = buffer.split_first() else {
+        log::error!("Packet is empty.");
+        return Err(Error::malformed_data());
+    };
+    let (channel_id, rest) = parse_u16(rest)?;
+    Ok((ControlByte::try_from(*cb)?, channel_id, rest))
+}
+
+impl<R: Role> Header<R> {
+    const INIT_LEN: usize = 5;
+    const CONT_LEN: usize = 3;
+
+    /// Parse header from a byte slice. Return remaining subslice on success.
+    /// Note: sync bits are discarded and need to be obtained from input buffer separately.
+    pub fn parse(buffer: &[u8]) -> Result<(Self, &[u8])> {
+        let (cb, channel_id, rest) = parse_cb_channel(buffer)?;
+        if cb.is_codec_v1() {
+            if R::is_host() {
+                return Ok((Header::CodecV1Response, &[]));
+            } else {
+                // v1 initiation packets are prefixed ?##
+                let is_continuation = channel_id != 0x2323;
+                return Ok((Header::CodecV1Request { is_continuation }, &[]));
+            }
+        }
+        if !channel_id_valid(channel_id) {
+            log::error!("Invalid channel id {}.", channel_id);
+            return Err(Error::malformed_data());
+        }
+        if cb.is_continuation() {
+            return Ok((Header::Continuation { channel_id }, rest));
+        }
+        let (payload_len, rest) = parse_u16(rest)?;
+        if payload_len > MAX_PAYLOAD_LEN {
+            log::error!("Payload length exceeds {}.", MAX_PAYLOAD_LEN);
+            return Err(Error::malformed_data());
+        }
+        if payload_len < CHECKSUM_LEN {
+            log::error!("Payload length is less than {}.", CHECKSUM_LEN);
+            return Err(Error::malformed_data());
+        }
+        // strip padding if there is any
+        let without_padding = rest.len().min(payload_len.into());
+        let rest = &rest[..without_padding];
+        // check for single-packet messages, validate length
+        let mut header: Option<_> = Self::parse_single(cb, channel_id, payload_len)?;
+        if channel_id == BROADCAST_CHANNEL_ID {
+            // fragmentable, broadcast-only messages
+            header = header.or_else(|| Self::parse_broadcast(cb, payload_len));
+        } else {
+            // fragmentable, unicast-only messages
+            header = header.or_else(|| Self::parse_unicast(cb, channel_id, payload_len));
+        }
+        if let Some(header) = header {
+            return Ok((header, rest));
+        }
+        log::error!(
+            "Unknown header: ({}, {}, {}).",
+            u8::from(cb),
+            channel_id,
+            payload_len
+        );
+        Err(Error::malformed_data())
+    }
+
+    fn parse_single(cb: ControlByte, channel_id: u16, payload_len: u16) -> Result<Option<Self>> {
+        let res = if cb.is_ack() && channel_id != BROADCAST_CHANNEL_ID {
+            Self::Ack {
+                channel_id,
+                _phantom: PhantomData,
+            }
+        } else if cb.is_error() {
+            Self::TransportError { channel_id }
+        } else if channel_id == BROADCAST_CHANNEL_ID {
+            if cb.is_channel_allocation_request() && !R::is_host() {
+                Header::ChannelAllocationRequest
+            } else if cb.is_ping() && !R::is_host() {
+                Header::Ping
+            } else if cb.is_pong() && R::is_host() {
+                Header::Pong
+            } else {
+                return Ok(None);
+            }
+        } else {
+            return Ok(None);
+        };
+        if res.payload_len() == payload_len {
+            Ok(Some(res))
+        } else {
+            log::error!("Unexpected payload length.");
+            Err(Error::malformed_data())
+        }
+    }
+
+    fn parse_broadcast(cb: ControlByte, payload_len: u16) -> Option<Self> {
+        if R::is_host() && cb.is_channel_allocation_response() {
+            return Some(Self::ChannelAllocationResponse { payload_len });
+        }
+        None
+    }
+
+    fn parse_unicast(cb: ControlByte, channel_id: u16, payload_len: u16) -> Option<Self> {
+        if let Some(phase) = cb.handshake_phase() {
+            if !phase.valid_incoming::<R>() {
+                return None;
+            }
+            return Some(Self::Handshake {
+                phase,
+                channel_id,
+                payload_len,
+            });
+        }
+        if cb.is_encrypted_transport() {
+            return Some(Self::Encrypted {
+                channel_id,
+                payload_len,
+            });
+        }
+        None
+    }
+
+    pub fn control_byte(&self, sync_bits: SyncBits) -> Option<ControlByte> {
+        let mut cb = match self {
+            Self::Continuation { .. } => ControlByte::continuation(),
+            Self::Ack { .. } => ControlByte::ack(),
+            Self::ChannelAllocationRequest if R::is_host() => {
+                ControlByte::channel_allocation_request()
+            }
+            Self::ChannelAllocationResponse { .. } if !R::is_host() => {
+                ControlByte::channel_allocation_response()
+            }
+            Self::TransportError { .. } => ControlByte::error(),
+            Self::Ping if R::is_host() => ControlByte::ping(),
+            Self::Pong if !R::is_host() => ControlByte::pong(),
+            Self::Handshake { phase, .. } if phase.valid_outgoing::<R>() => {
+                ControlByte::handshake(*phase)
+            }
+            Self::Encrypted { .. } => ControlByte::encrypted_transport(),
+            _ => return None,
+        };
+        if self.is_ack() && sync_bits.seq_bit() {
+            // ACK must have seq_bit=0
+            return None;
+        } else if self.is_ack() || self.is_encrypted() || self.is_handshake() {
+            cb = cb.with_sync_bits(sync_bits)
+        }
+        Some(cb)
+    }
+
+    /// Serialize header to a buffer. Returns length of the result on success.
+    pub fn to_bytes(&self, sync_bits: SyncBits, dest: &mut [u8]) -> Option<usize> {
+        if let Self::Continuation { channel_id } = self {
+            return if dest.len() < Self::CONT_LEN {
+                None
+            } else {
+                dest[0] = ControlByte::continuation().into();
+                dest[1..3].copy_from_slice(&channel_id.to_be_bytes());
+                Some(Self::CONT_LEN)
+            };
+        }
+        if dest.len() < Self::INIT_LEN {
+            return None;
+        }
+        let length = self.payload_len();
+        dest[0] = self.control_byte(sync_bits)?.into();
+        dest[1..3].copy_from_slice(&self.channel_id().to_be_bytes());
+        dest[3..5].copy_from_slice(&length.to_be_bytes());
+        Some(Self::INIT_LEN)
+    }
+
+    pub const fn channel_id(&self) -> u16 {
+        match self {
+            Self::Continuation { channel_id } => *channel_id,
+            Self::Ack { channel_id, .. } => *channel_id,
+            Self::TransportError { channel_id, .. } => *channel_id,
+            Self::Handshake {
+                phase: _,
+                channel_id,
+                ..
+            } => *channel_id,
+            Self::Encrypted { channel_id, .. } => *channel_id,
+            _ => BROADCAST_CHANNEL_ID,
+        }
+    }
+
+    /// Payload length including checksum. Messages without checksum return 0.
+    pub const fn payload_len(&self) -> u16 {
+        match self {
+            Self::Continuation { .. } => 0,
+            Self::Ack { .. } => CHECKSUM_LEN,
+            Self::CodecV1Request { .. } | Self::CodecV1Response => 0,
+            Self::ChannelAllocationRequest => NONCE_LEN + CHECKSUM_LEN,
+            Self::ChannelAllocationResponse { payload_len } => *payload_len,
+            Self::TransportError { .. } => 1 + CHECKSUM_LEN,
+            Self::Ping => NONCE_LEN + CHECKSUM_LEN,
+            Self::Pong => NONCE_LEN + CHECKSUM_LEN,
+            Self::Handshake {
+                phase: _,
+                channel_id: _,
+                payload_len,
+            } => *payload_len,
+            Self::Encrypted {
+                channel_id: _,
+                payload_len,
+            } => *payload_len,
+        }
+    }
+
+    pub const fn header_len(&self) -> usize {
+        match self {
+            Self::Continuation { .. } => Self::CONT_LEN,
+            _ => Self::INIT_LEN,
+        }
+    }
+
+    fn validate_len(payload: &[u8]) -> Result<u16> {
+        if let Ok(payload_len) = u16::try_from(payload.len()) {
+            let with_crc = payload_len.saturating_add(CHECKSUM_LEN);
+            if with_crc <= MAX_PAYLOAD_LEN {
+                return Ok(with_crc);
+            }
+        }
+        log::error!("Cannot construct: message too long {}.", payload.len());
+        Err(Error::unexpected_input())
+    }
+
+    fn validate_channel(channel_id: u16) -> Result<u16> {
+        if !channel_id_valid(channel_id) {
+            log::error!("Cannot construct: invalid channel id {}.", channel_id);
+            return Err(Error::unexpected_input());
+        }
+        Ok(channel_id)
+    }
+
+    fn validate_channel_unicast(channel_id: u16) -> Result<u16> {
+        let channel_id = Self::validate_channel(channel_id)?;
+        if channel_id == BROADCAST_CHANNEL_ID {
+            log::error!("Cannot construct: illegal broadcast.");
+            return Err(Error::unexpected_input());
+        }
+        Ok(channel_id)
+    }
+
+    pub fn new_continuation(channel_id: u16) -> Result<Self> {
+        Ok(Self::Continuation {
+            channel_id: Self::validate_channel(channel_id)?,
+        })
+    }
+
+    pub const fn new_channel_request() -> Self {
+        Self::ChannelAllocationRequest
+    }
+
+    pub fn new_channel_response(payload: &[u8]) -> Result<Self> {
+        Ok(Self::ChannelAllocationResponse {
+            payload_len: Self::validate_len(payload)?,
+        })
+    }
+
+    pub fn new_handshake(channel_id: u16, phase: HandshakeMessage, payload: &[u8]) -> Result<Self> {
+        Ok(Self::Handshake {
+            phase,
+            channel_id: Self::validate_channel_unicast(channel_id)?,
+            payload_len: Self::validate_len(payload)?,
+        })
+    }
+
+    pub fn new_encrypted(channel_id: u16, payload: &[u8]) -> Result<Self> {
+        Ok(Self::Encrypted {
+            channel_id: Self::validate_channel_unicast(channel_id)?,
+            payload_len: Self::validate_len(payload)?,
+        })
+    }
+
+    pub fn new_error(channel_id: u16) -> Result<Self> {
+        Ok(Self::TransportError {
+            channel_id: Self::validate_channel(channel_id)?,
+        })
+    }
+
+    pub fn new_ack(channel_id: u16) -> Result<Self> {
+        Ok(Self::Ack {
+            channel_id: Self::validate_channel_unicast(channel_id)?,
+            _phantom: PhantomData,
+        })
+    }
+
+    pub const fn new_ping() -> Self {
+        Self::Ping
+    }
+
+    pub const fn new_pong() -> Self {
+        Self::Pong
+    }
+
+    pub const fn new_codec1_request(is_continuation: bool) -> Self {
+        Self::CodecV1Request { is_continuation }
+    }
+
+    pub const fn new_codec1_response() -> Self {
+        Self::CodecV1Response
+    }
+
+    pub const fn is_continuation(&self) -> bool {
+        matches!(self, Self::Continuation { .. })
+    }
+
+    pub const fn is_ping(&self) -> bool {
+        matches!(self, Self::Ping)
+    }
+
+    pub const fn is_pong(&self) -> bool {
+        matches!(self, Self::Pong)
+    }
+
+    pub const fn is_handshake(&self) -> bool {
+        matches!(self, Self::Handshake { .. })
+    }
+
+    pub const fn is_encrypted(&self) -> bool {
+        matches!(self, Self::Encrypted { .. })
+    }
+
+    pub const fn is_ack(&self) -> bool {
+        matches!(self, Self::Ack { .. })
+    }
+
+    pub const fn is_error(&self) -> bool {
+        matches!(self, Self::TransportError { .. })
+    }
+
+    pub const fn is_channel_allocation_request(&self) -> bool {
+        matches!(self, Self::ChannelAllocationRequest)
+    }
+
+    pub const fn is_channel_allocation_response(&self) -> bool {
+        matches!(self, Self::ChannelAllocationResponse { .. })
+    }
+
+    pub const fn handshake_phase(&self) -> Option<HandshakeMessage> {
+        match self {
+            Self::Handshake { phase, .. } => Some(*phase),
+            _ => None,
+        }
+    }
+}
+
+impl HandshakeMessage {
+    /// True if this is valid outgoing message for a given role.
+    fn valid_outgoing<R: Role>(&self) -> bool {
+        match self {
+            HandshakeMessage::InitiationRequest if R::is_host() => true,
+            HandshakeMessage::InitiationResponse if !R::is_host() => true,
+            HandshakeMessage::CompletionRequest if R::is_host() => true,
+            HandshakeMessage::CompletionResponse if !R::is_host() => true,
+            _ => false,
+        }
+    }
+
+    /// True if this is valid outgoing message for a given role.
+    fn valid_incoming<R: Role>(&self) -> bool {
+        !self.valid_outgoing::<R>()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{Device, Host};
+
+    impl<R: Role> Header<R> {
+        fn transmute<S: Role>(&self) -> Header<S> {
+            let s = self.clone();
+            match s {
+                Self::Continuation { channel_id } => Header::<S>::Continuation { channel_id },
+                Self::Ack { channel_id, .. } => Header::<S>::Ack {
+                    channel_id,
+                    _phantom: PhantomData,
+                },
+                Self::CodecV1Request { is_continuation } => {
+                    Header::<S>::CodecV1Request { is_continuation }
+                }
+                Self::CodecV1Response => Header::<S>::CodecV1Response,
+                Self::ChannelAllocationRequest => Header::<S>::ChannelAllocationRequest,
+                Self::ChannelAllocationResponse { payload_len } => {
+                    Header::<S>::ChannelAllocationResponse { payload_len }
+                }
+                Self::TransportError { channel_id } => Header::<S>::TransportError { channel_id },
+                Self::Ping => Header::<S>::Ping,
+                Self::Pong => Header::<S>::Pong,
+                Self::Handshake {
+                    phase,
+                    channel_id,
+                    payload_len,
+                } => Header::<S>::Handshake {
+                    phase,
+                    channel_id,
+                    payload_len,
+                },
+                Self::Encrypted {
+                    channel_id,
+                    payload_len,
+                } => Header::<S>::Encrypted {
+                    channel_id,
+                    payload_len,
+                },
+            }
+        }
+    }
+
+    const VECTORS_GOOD: &[(&str, Header<Device>)] = &[
+        ("801234", Header::Continuation { channel_id: 0x1234 }),
+        (
+            "80ffff",
+            Header::Continuation {
+                channel_id: BROADCAST_CHANNEL_ID,
+            },
+        ),
+        ("8012345678", Header::Continuation { channel_id: 0x1234 }),
+        (
+            "201337000463061764",
+            Header::Ack {
+                channel_id: 0x1337,
+                _phantom: PhantomData,
+            },
+        ),
+        (
+            "041337000457479ea0",
+            Header::Encrypted {
+                channel_id: 0x1337,
+                payload_len: 4,
+            },
+        ),
+        (
+            "041337000457479ea0041337000457479ea0",
+            Header::Encrypted {
+                channel_id: 0x1337,
+                payload_len: 4,
+            },
+        ),
+        (
+            "42ffff000502744a5ed00000",
+            Header::TransportError {
+                channel_id: BROADCAST_CHANNEL_ID,
+            },
+        ),
+        (
+            "4213370005022a97b2e7",
+            Header::TransportError { channel_id: 0x1337 },
+        ),
+    ];
+
+    #[test]
+    fn test_parse_good() {
+        for (input, expected) in VECTORS_GOOD {
+            let input = hex::decode(input).unwrap();
+            let (header_device, _) = Header::<Device>::parse(&input).expect("parse1");
+            assert_eq!(header_device, *expected);
+            let (header_host, _) = Header::<Host>::parse(&input).expect("parse2");
+            assert_eq!(header_host, expected.transmute());
+        }
+    }
+
+    #[test]
+    fn test_serialize() {
+        for (bytes, header) in VECTORS_GOOD {
+            let bytes = hex::decode(bytes).unwrap();
+            let mut buffer = [0u8; 256];
+            let sb = SyncBits::new();
+            let len = header.to_bytes(sb, &mut buffer).expect("to_bytes1");
+            assert!(len > 0);
+            assert_eq!(&buffer[..len], &bytes[..len]);
+            let len = header
+                .transmute::<Host>()
+                .to_bytes(sb, &mut buffer)
+                .expect("to_bytes2");
+            assert!(len > 0);
+            assert_eq!(&buffer[..len], &bytes[..len]);
+        }
+    }
+
+    #[test]
+    fn test_serialize_sync() {
+        for (bytes, header) in VECTORS_GOOD {
+            if !header.is_encrypted() && !header.is_handshake() {
+                continue; // no sync bits
+            }
+            let bytes = hex::decode(bytes).unwrap();
+            let mut buffer = [0u8; 256];
+            let sb = SyncBits::new().with_seq_bit(true);
+            let len = header.to_bytes(sb, &mut buffer).expect("to_bytes");
+            assert!(len > 0);
+            assert_ne!(&buffer[..len], &bytes[..len]);
+        }
+    }
+
+    const VECTORS_GOOD_DEVICE: &[(&str, Header<Device>)] = &[
+        // ("3f2323", Header::CodecV1Request { is_continuation: false }),
+        // ("3f6666", Header::CodecV1Request { is_continuation: true }),
+        (
+            "40ffff000caaaaaaaaaaaaaaaab67b3b6b",
+            Header::ChannelAllocationRequest,
+        ),
+        ("43ffff000cbaaaaaaaaaaaaaaa770a668e", Header::Ping),
+        (
+            "00000f000cbaaaaaaaaaaaaaaac8978de2",
+            Header::Handshake {
+                phase: HandshakeMessage::InitiationRequest,
+                channel_id: 0x000f,
+                payload_len: 12,
+            },
+        ),
+        (
+            "02000f000cff00ff00aaaaaaaa4cb96673",
+            Header::Handshake {
+                phase: HandshakeMessage::CompletionRequest,
+                channel_id: 0x000f,
+                payload_len: 12,
+            },
+        ),
+    ];
+
+    #[test]
+    fn test_role_device() {
+        for (bytes, header) in VECTORS_GOOD_DEVICE {
+            let bytes = hex::decode(bytes).unwrap();
+            let (parsed_header, _) = Header::<Device>::parse(&bytes).expect("parse");
+            assert_eq!(parsed_header, *header);
+            let res = Header::<Host>::parse(&bytes);
+            assert!(res.is_err());
+
+            let mut buffer = [0u8; 256];
+            let sb = SyncBits::new();
+            let len = header
+                .transmute::<Host>()
+                .to_bytes(sb, &mut buffer)
+                .expect("to_bytes");
+            assert!(len > 0);
+            assert_eq!(&buffer[..len], &bytes[..len]);
+            let res = header.to_bytes(sb, &mut buffer);
+            assert!(res.is_none());
+        }
+    }
+
+    const VECTORS_GOOD_HOST: &[(&str, Header<Host>)] = &[
+        (
+            "41ffff029aaaaaaaaaaaaaaaaab67b3b6b",
+            Header::ChannelAllocationResponse { payload_len: 666 },
+        ),
+        ("44ffff000cbaaaaaaaaaaaaaaa770a668e", Header::Pong),
+        (
+            "01000f000cbaaaaaaaaaaaaaaac8978de2",
+            Header::Handshake {
+                phase: HandshakeMessage::InitiationResponse,
+                channel_id: 0x000f,
+                payload_len: 12,
+            },
+        ),
+        (
+            "03000f000cff00ff00aaaaaaaa4cb96673",
+            Header::Handshake {
+                phase: HandshakeMessage::CompletionResponse,
+                channel_id: 0x000f,
+                payload_len: 12,
+            },
+        ),
+    ];
+
+    #[test]
+    fn test_role_host() {
+        for (bytes, header) in VECTORS_GOOD_HOST {
+            let bytes = hex::decode(bytes).unwrap();
+            let (parsed_header, _) = Header::<Host>::parse(&bytes).expect("parse");
+            assert_eq!(parsed_header, *header);
+            let res = Header::<Device>::parse(&bytes);
+            assert!(res.is_err());
+
+            let mut buffer = [0u8; 256];
+            let sb = SyncBits::new();
+            let len = header
+                .transmute::<Device>()
+                .to_bytes(sb, &mut buffer)
+                .expect("to_bytes");
+            assert!(len > 0);
+            assert_eq!(&buffer[..len], &bytes[..len]);
+            let res = header.to_bytes(sb, &mut buffer);
+            assert!(res.is_none());
+        }
+    }
+
+    const VECTORS_BAD_SHORT: &[&str] = &[
+        "", "00", "04", "80", "39", "0000", "0400", "8000", "4f6f", "040000", "04000000",
+        "42000000", "00000000",
+    ];
+
+    const VECTORS_BAD: &[&str] = &[
+        "7f00000000", // bad control byte
+        "04fff00001", // bad channel id
+        "041111ffee", // invalid length field
+        "80fffe0000", // bad channel id
+        "0400010003", // payload_len < CHECKSUM_LEN
+    ];
+
+    #[test]
+    fn test_parse_bad() {
+        for v in VECTORS_BAD_SHORT.iter().chain(VECTORS_BAD) {
+            let v = hex::decode(v).unwrap();
+            let res = Header::<Device>::parse(&v);
+            assert!(res.is_err());
+            let res = Header::<Host>::parse(&v);
+            assert!(res.is_err());
+        }
+    }
+}

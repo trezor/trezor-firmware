@@ -10,7 +10,7 @@ use crate::{
             text::paragraphs::{
                 Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
             },
-            ComponentExt, EventCtx, PaginateFull as _,
+            ComponentExt, EventCtx, Paginate as _,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -208,13 +208,13 @@ pub fn new_continue_recovery_homepage(
     )
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     let res = if show_instructions {
         let content_menu = Frame::left_aligned(
             TString::empty(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn.into()),
+            VerticalMenu::empty().cancel_item(cancel_btn.into()),
         )
         .with_cancel_button()
         .map(super::util::map_to_choice);
@@ -223,27 +223,7 @@ pub fn new_continue_recovery_homepage(
         res.add_page(&ContinueRecoveryBeforeShares::Main, content_main)?
             .add_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?;
         res
-    } else if pages.is_none() {
-        let content_menu = Frame::left_aligned(
-            TString::empty(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn.into()),
-        )
-        .with_cancel_button()
-        .map(super::util::map_to_choice);
-
-        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;
-        res.add_page(&ContinueRecoveryBetweenShares::Main, content_main)?
-            .add_page(&ContinueRecoveryBetweenShares::Menu, content_menu)?
-            .add_page(
-                &ContinueRecoveryBetweenShares::CancelIntro,
-                content_cancel_intro,
-            )?
-            .add_page(
-                &ContinueRecoveryBetweenShares::CancelConfirm,
-                content_cancel_confirm,
-            )?;
-        res
-    } else {
+    } else if pages.is_some() {
         let content_menu = Frame::left_aligned(
             TString::empty(),
             VerticalMenu::empty()
@@ -251,7 +231,7 @@ pub fn new_continue_recovery_homepage(
                     theme::ICON_CHEVRON_RIGHT,
                     TR::recovery__title_remaining_shares.into(),
                 )
-                .danger(theme::ICON_CANCEL, cancel_btn.into()),
+                .cancel_item(cancel_btn.into()),
         )
         .with_cancel_button()
         .map(super::util::map_to_choice);
@@ -260,7 +240,7 @@ pub fn new_continue_recovery_homepage(
             TR::instructions__tap_to_continue.into(),
             TR::recovery__more_shares_needed.into(),
         );
-        let n_remaining_shares = pages.as_ref().unwrap().len() / 2;
+        let n_remaining_shares = pages.as_ref().unwrap().len() as u16 / 2;
         let content_remaining_shares = Frame::left_aligned(
             TR::recovery__title_remaining_shares.into(),
             SwipeContent::new(SwipePage::vertical(pages.unwrap().into_paragraphs())),
@@ -273,7 +253,7 @@ pub fn new_continue_recovery_homepage(
             TR::instructions__swipe_down.into(),
         )
         .register_footer_update_fn(footer_update_fn)
-        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::Default)
         .with_vertical_pages()
         .map_to_button_msg()
         .repeated_button_request(ButtonRequest::new(
@@ -296,6 +276,26 @@ pub fn new_continue_recovery_homepage(
             .add_page(
                 &ContinueRecoveryBetweenSharesAdvanced::RemainingShares,
                 content_remaining_shares,
+            )?;
+        res
+    } else {
+        let content_menu = Frame::left_aligned(
+            TString::empty(),
+            VerticalMenu::empty().cancel_item(cancel_btn.into()),
+        )
+        .with_cancel_button()
+        .map(super::util::map_to_choice);
+
+        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;
+        res.add_page(&ContinueRecoveryBetweenShares::Main, content_main)?
+            .add_page(&ContinueRecoveryBetweenShares::Menu, content_menu)?
+            .add_page(
+                &ContinueRecoveryBetweenShares::CancelIntro,
+                content_cancel_intro,
+            )?
+            .add_page(
+                &ContinueRecoveryBetweenShares::CancelConfirm,
+                content_cancel_confirm,
             )?;
         res
     };

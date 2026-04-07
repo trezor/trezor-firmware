@@ -4,7 +4,7 @@ import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
 
-from ..common import interact, raise_if_cancelled
+from ..common import interact, raise_if_not_confirmed
 from . import confirm_action, show_success, show_warning
 
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
@@ -77,8 +77,6 @@ async def select_word(
     count: int,
     group_index: int | None = None,
 ) -> str:
-    from trezor.strings import format_ordinal
-
     # It may happen (with a very low probability)
     # that there will be less than three unique words to choose from.
     # In that case, duplicating the last word to make it three.
@@ -86,11 +84,12 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    word_ordinal = format_ordinal(checked_index + 1)
     result = await interact(
         trezorui_api.select_word(
             title="",
-            description=TR.reset__select_word_template.format(word_ordinal),
+            description=TR.reset__select_word_x_of_y_template.format(
+                checked_index + 1, count
+            ),
             words=(words[0].lower(), words[1].lower(), words[2].lower()),
         ),
         None,
@@ -121,7 +120,7 @@ def slip39_show_checklist(
         )
     )
 
-    return raise_if_cancelled(
+    return raise_if_not_confirmed(
         trezorui_api.show_checklist(
             title=TR.reset__slip39_checklist_title,
             button=TR.buttons__continue,
@@ -252,9 +251,8 @@ def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> Awaitable[int]
     )
 
 
-def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable[None]:
-    if single_share:
-        assert num_of_words is not None
+def show_intro_backup(num_of_words: int | None) -> Awaitable[None]:
+    if num_of_words is not None:
         description = TR.backup__info_single_share_backup.format(num_of_words)
     else:
         description = TR.backup__info_multi_share_backup

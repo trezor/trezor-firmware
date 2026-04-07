@@ -1,0 +1,79 @@
+name: Generate UI flows for Crowdin localization work
+
+on:
+  workflow_call:
+    inputs:
+      languages:
+        description: Languages to generate UI flows for (JSON array)
+        required: true
+        type: string
+
+permissions:
+  id-token: write  # for fetching OIDC token for AWS
+
+env:
+  CROWDIN_COMMENT_PATH: ${{ github.workspace }}/tests/core-crowdin-comment.md
+  TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
+
+jobs:
+  core_context_tests:
+    name: Context tests (${{ matrix.model }}, universal, noasan, ${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [T2T1, T3B1, T3T1, T3W1]
+        language: ${{ fromJSON(inputs.languages) }}
+
+    env:
+      TREZOR_PROFILING: 0
+      TREZOR_MODEL: ${{ matrix.model }}
+      ADDRESS_SANITIZER: 0
+      PYTEST_TIMEOUT: 400
+      TEST_LANG: ${{ matrix.language }}
+      TESTOPTS: "@../tests/context_tests.txt --ui=test"
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
+          path: core/build/unix
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make -C core test_emu_multicore"
+      - run: tail -v -n50 tests/trezor*.log || true
+        if: failure()
+      - uses: ./.github/actions/ui-report
+        with:
+          model: ${{ matrix.model }}
+          lang: ${{ matrix.language }}
+          status: ${{ job.status }}
+        if: always()
+        continue-on-error: true
+
+  core_ui_comment:
+    name: Comment with UI flows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - run: sleep 1m  # to avoid GitHub API rate limit
+      - run: |
+          python ci/make_crowdin_comment.py "${{ github.run_id }}" '${{ inputs.languages }}' > ${{ env.CROWDIN_COMMENT_PATH }}
+          cat ${{ env.CROWDIN_COMMENT_PATH }} >> $GITHUB_STEP_SUMMARY
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
+        with:
+          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+          aws-region: eu-west-1
+      - run: python ci/make_summary_htmls.py "index" '${{ inputs.languages }}' "tests/ui_tests/reporting/"
+      - run: python ci/make_summary_htmls.py "diff" '${{ inputs.languages }}' "tests/ui_tests/reporting/"
+      - name: Upload per-language HTML summaries to S3
+        run: |
+          cd tests/ui_tests/reporting/
+          for F in *.html
+          do
+            aws s3 cp $F s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/$F
+          done

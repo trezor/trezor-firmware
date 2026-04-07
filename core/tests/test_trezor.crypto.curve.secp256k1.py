@@ -197,7 +197,7 @@ class TestCryptoSecp256k1(unittest.TestCase):
             self.assertTrue(sk != b"\x00" * 32)
             self.assertTrue(
                 sk
-                < b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE\xBA\xAE\xDC\xE6\xAF\x48\xA0\x3B\xBF\xD2\x5E\x8C\xD0\x36\x41\x41"
+                < b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xba\xae\xdc\xe6\xaf\x48\xa0\x3b\xbf\xd2\x5e\x8c\xd0\x36\x41\x41"
             )
 
     def test_publickey(self):
@@ -258,7 +258,7 @@ class TestCryptoSecp256k1(unittest.TestCase):
             pk2 = secp256k1.publickey(sk2, True)
             self.assertEqual(secp256k1.multiply(sk1, pk2), secp256k1.multiply(sk2, pk1))
 
-        (sk, pk) = self.vectors[0]
+        sk, pk = self.vectors[0]
         sk = hex(sk)[2:]
         if len(sk) < 64:
             sk = "0" * (64 - len(sk)) + sk

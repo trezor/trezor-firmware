@@ -27,7 +27,9 @@ from dominate.util import text
 from ..common import FixturesType, TestCase, TestResult
 from . import download, html
 from .common import (
+    GIF_SCRIPT,
     REPORTS_PATH,
+    SCRIPT,
     document,
     generate_master_diff_report,
     get_diff,
@@ -42,8 +44,10 @@ ALL_SCREENS = "all_screens.html"
 ALL_UNIQUE_SCREENS = "all_unique_screens.html"
 
 
-def _header(test_name: str, expected_hash: str | None, actual_hash: str) -> None:
-    h1(test_name)
+def _header(result: TestResult, dir: str) -> None:
+    expected_hash, actual_hash = result.expected_hash, result.actual_hash
+
+    h1(result.test.id)
     with div():
         if actual_hash == expected_hash:
             p(
@@ -62,6 +66,11 @@ def _header(test_name: str, expected_hash: str | None, actual_hash: str) -> None
             )
         p("Expected: ", expected_hash or "(new test case)")
         p("Actual: ", actual_hash)
+
+    if result.images:
+        first_screen = result.images[0]
+        html.image_link(first_screen, TESTREPORT_PATH / dir, img_id="gif")
+
     hr()
 
 
@@ -91,6 +100,8 @@ def index() -> Path:
 
     title = "UI Test report " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     doc = document(title=title, index=True)
+    with doc.head:
+        script(type="text/javascript", src="testreport.js")
 
     with doc:
         h1("UI Test report")
@@ -111,13 +122,13 @@ def index() -> Path:
             with t.ul():
                 with t.li():
                     t.span("new", style="color: blue")
-                    t.button("clear all", onclick="resetState('all')")
+                    t.button("clear all", id="reset-state-all")
                 with t.li():
                     t.span("marked OK", style="color: grey")
-                    t.button("clear", onclick="resetState('ok')")
+                    t.button("clear", id="reset-state-ok")
                 with t.li():
                     t.span("marked BAD", style="color: darkred")
-                    t.button("clear", onclick="resetState('bad')")
+                    t.button("clear", id="reset-state-bad")
 
         html.report_links(failed_tests, TESTREPORT_PATH, actual_hashes)
 
@@ -127,6 +138,7 @@ def index() -> Path:
         h2("Passed", style="color: green;")
         html.report_links(passed_tests, TESTREPORT_PATH)
 
+    html.write_raw(TESTREPORT_PATH, GIF_SCRIPT + SCRIPT, "testreport.js")
     return html.write(TESTREPORT_PATH, doc, "index.html")
 
 
@@ -222,9 +234,7 @@ def differing_screens() -> None:
     model = recent_ui_failures[0].test.model if recent_ui_failures else None
     doc = document(title="Differing screens", model=model)
     with doc.head:
-        script(
-            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
-        )
+        script(type="text/javascript", src="testreport.js")
     with doc:
         with table(border=1, width=600):
             with tr():
@@ -330,20 +340,24 @@ def failed(result: TestResult) -> Path:
         title=result.test.id, actual_hash=result.actual_hash, model=result.test.model
     )
     with doc.head:
-        script(
-            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
-        )
+        script(type="text/javascript", src="../testreport.js")
 
     with doc:
 
-        _header(result.test.id, result.expected_hash, result.actual_hash)
+        _header(result, "failed")
 
         with div(id="markbox", _class="script-hidden"):
-            p("Click a button to mark the test result as:")
+            p("Mark the test result as:")
             with div(id="buttons"):
-                t.button("OK", id="mark-ok", onclick="markState('ok')")
-                t.button("OK & UPDATE", id="mark-update", onclick="markState('update')")
-                t.button("BAD", id="mark-bad", onclick="markState('bad')")
+                with div(_class="mark"):
+                    t.span("[a]", _class="helper")
+                    t.button("OK", id="mark-ok")
+                with div(_class="mark"):
+                    t.span("[s]", _class="helper")
+                    t.button("OK & UPDATE", id="mark-update")
+                with div(_class="mark"):
+                    t.span("[d]", _class="helper")
+                    t.button("BAD", id="mark-bad")
 
         if download_failed:
             with p():
@@ -379,9 +393,10 @@ def recorded(result: TestResult, header: str = "Recorded", dir: str = "passed") 
     _copy_deduplicated(result.test)
 
     doc = document(title=result.test.id, model=result.test.model)
-
+    with doc.head:
+        script(type="text/javascript", src="../testreport.js")
     with doc:
-        _header(result.test.id, result.actual_hash, result.actual_hash)
+        _header(result, dir)
 
         with table(border=1):
             with tr():
@@ -392,5 +407,4 @@ def recorded(result: TestResult, header: str = "Recorded", dir: str = "passed") 
                 with tr():
                     td(index)
                     html.image_column(screen, TESTREPORT_PATH / dir, img_id=str(index))
-
     return html.write(TESTREPORT_PATH / dir, doc, result.test.id + ".html")

@@ -1,14 +1,16 @@
 use super::{geometry::Rect, CommonUI};
 use theme::backlight;
 
-#[cfg(feature = "ui_debug_overlay")]
+#[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
+use super::{display::Color, geometry::Offset, shape};
+
+#[cfg(feature = "ui_performance_overlay")]
 use super::{
-    display::Color,
-    geometry::{Alignment, Alignment2D, Offset, Point},
-    shape, DebugOverlay,
+    geometry::{Alignment, Alignment2D, Point},
+    PerformanceOverlay,
 };
 
-#[cfg(feature = "ui_debug_overlay")]
+#[cfg(feature = "ui_performance_overlay")]
 use crate::strutil::ShortString;
 
 #[cfg(feature = "bootloader")]
@@ -102,7 +104,23 @@ impl CommonUI for UIEckhart {
     }
 
     #[cfg(feature = "ui_debug_overlay")]
-    fn render_debug_overlay<'s>(target: &mut impl shape::Renderer<'s>, info: DebugOverlay) {
+    fn render_debug_overlay<'s>(target: &mut impl shape::Renderer<'s>) {
+        const RECT_SIZE: i16 = 15;
+        let r = Rect::from_top_left_and_size(
+            Self::SCREEN.top_right() - Offset::new(10 + RECT_SIZE, -10),
+            Offset::new(RECT_SIZE, RECT_SIZE),
+        );
+        shape::Bar::new(r)
+            .with_bg(Color::rgb(0xff, 0, 0))
+            .render(target);
+    }
+
+    #[cfg(feature = "ui_performance_overlay")]
+    fn render_performance_overlay<'s>(
+        target: &mut impl shape::Renderer<'s>,
+        info: PerformanceOverlay,
+    ) {
+        let curve_offset = Offset::new(10, 10);
         let mut text = ShortString::new();
         let t1 = info.render_time.min(99999) as u32;
         let t2 = info.refresh_time.min(99999) as u32;
@@ -114,20 +132,24 @@ impl CommonUI for UIEckhart {
             t2 / 1000,
             (t2 % 1000) / 100
         ));
-        let font = fonts::FONT_SATOSHI_REGULAR_22;
+        let font = fonts::FONT_SATOSHI_MEDIUM_26;
         let size = Offset::new(
             font.visible_text_width("00.0|00.0"),
-            font.visible_text_height("0"),
-        );
+            font.visible_text_height("0|"),
+        ) + curve_offset;
         let pos = Point::new(constant::WIDTH, 0);
         let r = Rect::snap(pos, size, Alignment2D::TOP_RIGHT);
         shape::Bar::new(r)
             .with_alpha(192)
             .with_bg(Color::black())
             .render(target);
-        shape::Text::new(r.bottom_right(), &text, font)
-            .with_align(Alignment::End)
-            .with_fg(Color::rgb(255, 255, 0))
-            .render(target);
+        shape::Text::new(
+            r.bottom_right() - Offset::new(curve_offset.x, font.baseline),
+            &text,
+            font,
+        )
+        .with_align(Alignment::End)
+        .with_fg(Color::rgb(255, 255, 0))
+        .render(target);
     }
 }

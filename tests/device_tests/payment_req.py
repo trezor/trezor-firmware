@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 from hashlib import sha256
 
-from ecdsa import SECP256k1, SigningKey
+from ecdsa import NIST256p, SigningKey
 
 from trezorlib import messages
+from trezorlib.client import Session
 
 from ..common import compact_size
+
+SLIP44_ID_UNDEFINED = 0xFFFF_FFFF
 
 
 @dataclass
@@ -27,7 +30,7 @@ class RefundMemo:
 
 @dataclass
 class CoinPurchaseMemo:
-    amount: int
+    amount: str
     coin_name: str
     slip44: int
     address_n: list[int]
@@ -35,25 +38,26 @@ class CoinPurchaseMemo:
 
 
 payment_req_signer = SigningKey.from_string(
-    b"?S\ti\x8b\xc5o{,\xab\x03\x194\xea\xa8[_:\xeb\xdf\xce\xef\xe50\xf17D\x98`\xb9dj",
-    curve=SECP256k1,
+    b"\x05\x62\x35\xb0\x47\x6f\x05\x7f\x27\x65\x21\x97\x24\xf7\xf1\x80\x7d\x58\x80\x2b\x55\x0e\xd5\xbf\x6f\x73\x05\x0a\xf5\x45\x63\x00",
+    curve=NIST256p,
 )
 
 
-def hash_bytes_prefixed(hasher, data):
+def hash_bytes_prefixed(hasher, data) -> None:
     hasher.update(compact_size(len(data)))
     hasher.update(data)
 
 
 def make_payment_request(
-    client,
+    session: Session,
     recipient_name,
     slip44,
     outputs,
     change_addresses=None,
     memos=None,
     nonce=None,
-):
+    amount_size_bytes=8,
+) -> messages.PaymentRequest:
     h_pr = sha256(b"SL\x00\x24")
 
     if nonce:
@@ -101,8 +105,8 @@ def make_payment_request(
             hash_bytes_prefixed(h_pr, memo.amount.encode())
             hash_bytes_prefixed(h_pr, memo.address_resp.address.encode())
         elif isinstance(memo, TextDetailsMemo):
-            msg_memo = messages.TextDetailsMemo(text=memo.text)
-            msg_memos.append(messages.PaymentRequestMemo(text_memo=msg_memo))
+            msg_memo = messages.TextDetailsMemo(title=memo.title, text=memo.text)
+            msg_memos.append(messages.PaymentRequestMemo(text_details_memo=msg_memo))
             memo_type = 4
             h_pr.update(memo_type.to_bytes(4, "little"))
             hash_bytes_prefixed(h_pr, memo.title.encode())
@@ -110,12 +114,14 @@ def make_payment_request(
         else:
             raise ValueError
 
-    h_pr.update(slip44.to_bytes(4, "little"))
+    h_pr.update(
+        (slip44 if slip44 is not None else SLIP44_ID_UNDEFINED).to_bytes(4, "little")
+    )
 
     change_address = iter(change_addresses or [])
     h_outputs = sha256()
-    for amount, address in outputs:
-        h_outputs.update(amount.to_bytes(8, "little"))
+    for amount, address in outputs or []:
+        h_outputs.update(amount.to_bytes(amount_size_bytes, "little"))
         if not address:
             address = next(change_address)
         h_outputs.update(len(address).to_bytes(1, "little"))
@@ -123,9 +129,17 @@ def make_payment_request(
 
     h_pr.update(h_outputs.digest())
 
+    amount = (
+        sum(amount for amount, address in outputs if address)
+        if outputs is not None
+        else None
+    )
+
     return messages.PaymentRequest(
         recipient_name=recipient_name,
-        amount=sum(amount for amount, address in outputs if address),
+        amount=(
+            amount.to_bytes(amount_size_bytes, "little") if amount is not None else None
+        ),
         memos=msg_memos,
         nonce=nonce,
         signature=payment_req_signer.sign_digest_deterministic(h_pr.digest()),

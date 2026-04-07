@@ -9,7 +9,7 @@ use crate::{
         display::{self, Color},
         geometry::{Insets, Rect},
         shape::Renderer,
-        util::animation_disabled,
+        util::{animation_disabled, Pager},
     },
 };
 
@@ -141,7 +141,7 @@ where
 
         // Change the page in the content, make sure it gets completely repainted and
         // clear the background under it.
-        self.content.change_page(self.scrollbar.active_page);
+        self.content.change_page(self.scrollbar.pager().current());
         self.content.request_complete_repaint(ctx);
         self.pad.clear();
 
@@ -303,11 +303,12 @@ where
         // to make space for a scrollbar if it doesn't fit.
         self.content.place(layout.content_single_page);
         let page_count = {
-            let count = self.content.page_count();
+            let count = self.content.pager().total();
             if count > 1 {
                 self.content.place(layout.content);
-                self.content.page_count() // Make sure to re-count it with the
-                                          // new size.
+                self.content.pager().total() // Make sure to re-count it with
+                                             // the
+                                             // new size.
             } else {
                 count // Content fits on a single page.
             }
@@ -319,7 +320,7 @@ where
 
         // Now that we finally have the page count, we can setup the scrollbar and the
         // swiper.
-        self.scrollbar.set_count_and_active_page(page_count, 0);
+        self.scrollbar.set_pager(Pager::new(page_count));
         self.setup_swipe();
 
         self.loader.place(Self::loader_area());
@@ -327,7 +328,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.scrollbar.page_count);
+        ctx.set_page_count(self.scrollbar.pager().total());
 
         match self.handle_swipe(ctx, event) {
             HandleResult::Return(r) => return Some(r),
@@ -382,7 +383,7 @@ where
             Some(l) if l.is_animating() => self.loader.render(target),
             _ => {
                 self.content.render(target);
-                if self.scrollbar.has_pages() {
+                if !self.scrollbar.pager().is_single() {
                     self.scrollbar.render(target);
                 }
             }
@@ -411,8 +412,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ButtonPage");
-        t.int("active_page", self.scrollbar.active_page as i64);
-        t.int("page_count", self.scrollbar.page_count as i64);
+        t.int("active_page", self.scrollbar.pager().current() as i64);
+        t.int("page_count", self.scrollbar.pager().total() as i64);
         t.bool("hold", self.loader.is_some());
         t.child("content", &self.content);
     }

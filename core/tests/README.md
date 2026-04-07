@@ -30,3 +30,6 @@ class TestSomething(unittest.TestCase):
 ```
 
 Usage of `assert` is discouraged because it is not evaluated in production code (when `PYOPT=1`). Use `self.assertXY` instead, see `unittest.py`.
+
+## Logging
+By default, logging in unittests (using `trezor.log`) is disabled _even_ on debug builds. To enable logging, set `DISABLE_LOG` in `unittest.py` to `False`.

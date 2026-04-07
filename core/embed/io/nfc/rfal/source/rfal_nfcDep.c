@@ -237,7 +237,7 @@
 
 /*******************************************************************************/
 
-// timerPollTimeoutValue is necessary after timerCalculateTimeout so that system will wake up upon timer timeout.
+/* timerPollTimeoutValue is necessary after timerCalculateTimeout so that system will wake up upon timer timeout. */
 #define nfcipTimerStart( timer, time_ms ) do{platformTimerDestroy( timer);  (timer) = platformTimerCreate((uint16_t)(time_ms));} while (0) /*!< Configures and starts the RTOX timer            */
 #define nfcipTimerisExpired( timer )      platformTimerIsExpired( timer )                               /*!< Checks RTOX timer has expired                   */
 #define nfcipTimerDestroy( timer )        platformTimerDestroy( timer )                                 /*!< Destroys RTOX timer                             */
@@ -720,7 +720,7 @@ static ReturnCode nfcipInitiatorHandleDEP( ReturnCode rxRes, uint16_t rxLen, uin
         return RFAL_ERR_IO;
     }
     
-    /* Due to different modes on ST25R391x (with/without CRC) use NFC-DEP LEN instead of bytes retrieved */
+    /* Due to different modes on ST25R (with/without CRC) use NFC-DEP LEN instead of bytes retrieved */
     nfcDepLen = gNfcip.rxBuf[rxMsgIt++];
     
     nfcipLogD( " NFCIP(I) rx OK: %d bytes \r\n", nfcDepLen );
@@ -1029,7 +1029,7 @@ static ReturnCode nfcipTargetHandleRX( ReturnCode rxRes, uint16_t *outActRxLen, 
         return RFAL_ERR_IO;
     }
     
-    /* Due to different modes on ST25R391x (with/without CRC) use NFC-DEP LEN instead of bytes retrieved */
+    /* Due to different modes on ST25R (with/without CRC) use NFC-DEP LEN instead of bytes retrieved */
     nfcDepLen = gNfcip.rxBuf[rxMsgIt++];
         
     nfcipLogD( " NFCIP(T) rx OK: %d bytes \r\n", nfcDepLen );
@@ -2064,7 +2064,7 @@ ReturnCode rfalNfcDepATR( const rfalNfcDepAtrParam* param, rfalNfcDepAtrRes *atr
         return RFAL_ERR_PROTO;
     }
     
-    RFAL_MEMCPY( (uint8_t*)atrRes, (rxBuf + RFAL_NFCDEP_LEN_LEN), rxLen );
+    RFAL_MEMCPY( (uint8_t*)atrRes, &rxBuf[RFAL_NFCDEP_LEN_LEN], rxLen );
     *atrResLen = (uint8_t)rxLen;
     
     return RFAL_ERR_NONE;
@@ -2459,6 +2459,7 @@ ReturnCode rfalNfcDepListenStartActivation( const rfalNfcDepTargetParam *param, 
     
     
     /*******************************************************************************/
+    RFAL_MEMSET( &cfg, 0x00, sizeof(rfalNfcDepConfigs) );
     cfg.did = rxParam.nfcDepDev->activation.Initiator.ATR_REQ.DID;
     cfg.nad = RFAL_NFCDEP_NAD_NO;
     
@@ -2538,12 +2539,12 @@ ReturnCode rfalNfcDepListenGetActivationStatus( void )
             break;
         
         case RFAL_ERR_BUSY:
-            // do nothing
+            /* do nothing */
             break;
             
         case RFAL_ERR_PROTO:
         default:
-            // re-enable receiving of data
+            /* re-enable receiving of data */
             nfcDepReEnableRx( gNfcip.rxBuf, gNfcip.rxBufLen, gNfcip.rxRcvdLen );
             break;
     }

@@ -15,8 +15,9 @@ import time
 from typing import Callable, Generator, Sequence
 
 from trezorlib import messages
-from trezorlib.debuglink import DebugLink, LayoutContent, LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.client import Session
+from trezorlib.debuglink import DebugLink, DebugSession, LayoutContent, LayoutType
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import multipage_content
 
 from . import translations as TR
@@ -36,13 +37,16 @@ B = messages.ButtonRequestType
 
 
 class InputFlowBase:
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
+        if isinstance(client, Session):
+            client = client.test_ctx
         self.client = client
         self.debug: DebugLink = client.debug
         self.PIN = PinFlow(self.client)
         self.REC = RecoveryFlow(self.client)
         self.BAK = BackupFlow(self.client)
         self.ETH = EthereumFlow(self.client)
+        self.layout_type = client.layout_type
 
     def get(self) -> Callable[[], BRGeneratorType]:
         self.client.watch_layout(True)
@@ -50,16 +54,16 @@ class InputFlowBase:
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):
             return getattr(self, "input_flow_common")
-        elif self.client.layout_type is LayoutType.Bolt:
+        if self.layout_type is LayoutType.Bolt:
             return self.input_flow_bolt
-        elif self.client.layout_type is LayoutType.Caesar:
+        if self.layout_type is LayoutType.Caesar:
             return self.input_flow_caesar
-        elif self.client.layout_type is LayoutType.Delizia:
+        if self.layout_type is LayoutType.Delizia:
             return self.input_flow_delizia
-        elif self.client.layout_type is LayoutType.Eckhart:
+        if self.layout_type is LayoutType.Eckhart:
             return self.input_flow_eckhart
-        else:
-            raise ValueError("Unknown model")
+
+        raise ValueError("Unknown model")
 
     def input_flow_bolt(self) -> BRGeneratorType:
         """Special for TT"""
@@ -90,24 +94,68 @@ class InputFlowBase:
         return self.debug.read_layout().title()
 
 
+class InputFlowNewWipeCodeCancel(InputFlowBase):
+    def input_flow_bolt(self) -> BRGeneratorType:
+        br = yield
+        assert br.name == "set_wipe_code"
+        self.debug.press_no()
+
+    def input_flow_caesar(self) -> BRGeneratorType:
+        br = yield
+        assert br.name == "set_wipe_code"
+        self.debug.press_no()
+
+    def input_flow_delizia(self) -> BRGeneratorType:
+        br = yield
+        assert br.name == "set_wipe_code"
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.button_actions.navigate_to_menu_item(0)
+
+        self.debug.read_layout().title == TR.wipe_code__cancel_setup
+        self.debug.swipe_up()
+        self.debug.read_layout()
+        self.debug.synchronize_at("PromptScreen")
+        self.debug.click(self.debug.screen_buttons.tap_to_confirm())
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        br = yield
+        assert br.name == "set_wipe_code"
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.button_actions.navigate_to_menu_item(0)
+
+        self.debug.read_layout().title == TR.wipe_code__cancel_setup
+        self.debug.press_no()
+
+
 class InputFlowNewCodeMismatch(InputFlowBase):
     def __init__(
         self,
-        client: Client,
+        client: Client | DebugSession,
         first_code: str,
         second_code: str,
         what: str,
+        pin: str | None = None,
     ):
         super().__init__(client)
         self.first_code = first_code
         self.second_code = second_code
         self.what = what
+        self.pin = pin
 
     def input_flow_common(self) -> BRGeneratorType:
         assert (yield).name == f"set_{self.what}"
         self.debug.press_yes()
 
-        if self.client.layout_type is LayoutType.Caesar:
+        if self.pin:
+            assert (yield).name == "pin_device"
+            assert "PinKeyboard" in self.debug.read_layout().all_components()
+            self.debug.input(self.pin)
+
+        if self.layout_type is LayoutType.Caesar:
             layout = self.debug.read_layout()
             if "PinKeyboard" not in layout.all_components():
                 yield from swipe_if_necessary(self.debug)  # code info
@@ -134,13 +182,15 @@ class InputFlowNewCodeMismatch(InputFlowBase):
 
 
 class InputFlowCodeChangeFail(InputFlowBase):
+
     def __init__(
-        self, client: Client, current_pin: str, new_pin_1: str, new_pin_2: str
+        self, session: DebugSession, current_pin: str, new_pin_1: str, new_pin_2: str
     ):
-        super().__init__(client)
+        super().__init__(session)
         self.current_pin = current_pin
         self.new_pin_1 = new_pin_1
         self.new_pin_2 = new_pin_2
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield  # do you want to change pin?
@@ -155,11 +205,11 @@ class InputFlowCodeChangeFail(InputFlowBase):
 
         # failed retry
         yield  # enter current pin again
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowWrongPIN(InputFlowBase):
-    def __init__(self, client: Client, wrong_pin: str):
+    def __init__(self, client: Client | DebugSession, wrong_pin: str):
         super().__init__(client)
         self.wrong_pin = wrong_pin
 
@@ -173,7 +223,7 @@ class InputFlowWrongPIN(InputFlowBase):
 
 
 class InputFlowPINBackoff(InputFlowBase):
-    def __init__(self, client: Client, wrong_pin: str, good_pin: str):
+    def __init__(self, client: Client | DebugSession, wrong_pin: str, good_pin: str):
         super().__init__(client)
         self.wrong_pin = wrong_pin
         self.good_pin = good_pin
@@ -190,7 +240,7 @@ class InputFlowPINBackoff(InputFlowBase):
 
 
 class InputFlowSignMessagePagination(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.message_read = ""
 
@@ -280,7 +330,7 @@ class InputFlowSignMessagePagination(InputFlowBase):
 
 
 class InputFlowSignVerifyMessageLong(InputFlowBase):
-    def __init__(self, client: Client, verify=False):
+    def __init__(self, client: Client | DebugSession, verify=False):
         super().__init__(client)
         self.message_read = ""
         self.verify = verify
@@ -348,7 +398,7 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
 
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
 
         br = yield
         self.debug.read_layout()
@@ -383,7 +433,7 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
 
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
 
         br = yield  # confirm address long
         self.debug.read_layout()
@@ -424,10 +474,10 @@ class InputFlowSignMessageInfo(InputFlowBase):
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
         # show address/message info
-        self.client.ui._visit_menu_items()
+        self.client.ui.visit_menu_items()
         # cancel signature
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         # address mismatch? yes!
         self.debug.swipe_up()
         yield
@@ -490,16 +540,16 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address details
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.swipe_up()
         # really cancel
@@ -520,16 +570,16 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address details
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
@@ -575,16 +625,16 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address details
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.swipe_up()
         self.debug.synchronize_at("PromptScreen")
@@ -596,23 +646,25 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address details
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.synchronize_at("TextScreen")
         self.debug.click(self.debug.screen_buttons.ok())
 
 
 class InputFlowShowMultisigXPUBs(InputFlowBase):
-    def __init__(self, client: Client, address: str, xpubs: list[str], index: int):
+    def __init__(
+        self, client: Client | DebugSession, address: str, xpubs: list[str], index: int
+    ):
         super().__init__(client)
         self.address = address
         self.xpubs = xpubs
@@ -707,7 +759,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         yield  # multisig address warning
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
 
         yield  # show address
         layout = self.debug.read_layout()
@@ -717,14 +769,14 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         assert "Qr" in self.all_components()
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
@@ -738,7 +790,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.swipe_up()
         # really cancel
@@ -759,7 +811,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         yield  # multisig address warning
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
 
         yield  # show address
         layout = self.debug.read_layout()
@@ -769,14 +821,14 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         assert "QrScreen" in self.all_components()
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         layout = self.debug.synchronize_at("TextScreen")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
@@ -789,7 +841,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
@@ -798,12 +850,15 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
 
 class InputFlowShowXpubQRCode(InputFlowBase):
-    def __init__(self, client: Client, passphrase: bool = False):
+
+    def __init__(
+        self, client: Client | DebugSession, passphrase_request_expected: bool = False
+    ):
         super().__init__(client)
-        self.passphrase = passphrase
+        self.passphrase_request_expected = passphrase_request_expected
 
     def input_flow_bolt(self) -> BRGeneratorType:
-        if self.passphrase:
+        if self.passphrase_request_expected:
             yield
             self.debug.press_yes()
             yield
@@ -830,7 +885,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
-        if self.passphrase:
+        if self.passphrase_request_expected:
             yield
             self.debug.press_right()
             yield
@@ -857,7 +912,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.press_middle()
 
     def input_flow_delizia(self) -> BRGeneratorType:
-        if self.passphrase:
+        if self.passphrase_request_expected:
             yield
             self.debug.press_yes()
             yield
@@ -875,14 +930,14 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         assert "Qr" in self.all_components()
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert TR.address_details__derivation_path in layout.screen_content()
@@ -890,7 +945,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         layout = self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.swipe_up()
         # really cancel
@@ -908,7 +963,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        if self.passphrase:
+        if self.passphrase_request_expected:
             yield
             self.debug.press_yes()
             yield
@@ -935,14 +990,14 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         assert "QrScreen" in self.all_components()
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         layout = self.debug.synchronize_at("TextScreen")
         # address details
         assert TR.address_details__derivation_path in layout.screen_content()
@@ -950,87 +1005,12 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         layout = self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
         layout = self.debug.synchronize_at("TextScreen")
         self.debug.press_yes()
-
-
-class InputFlowPaymentRequestDetails(InputFlowBase):
-    def __init__(self, client: Client, outputs: list[messages.TxOutputType]):
-        super().__init__(client)
-        self.outputs = outputs
-
-    def input_flow_bolt(self) -> BRGeneratorType:
-        yield  # request to see details
-        self.debug.read_layout()
-        self.debug.press_info()
-
-        yield  # confirm first output
-        assert self.outputs[0].address[:16] in self.text_content()  # type: ignore
-        self.debug.press_yes()
-        yield  # confirm first output
-        self.debug.read_layout()
-        self.debug.press_yes()
-
-        yield  # confirm second output
-        assert self.outputs[1].address[:16] in self.text_content()  # type: ignore
-        self.debug.press_yes()
-        yield  # confirm second output
-        self.debug.read_layout()
-        self.debug.press_yes()
-
-        yield  # confirm transaction
-        self.debug.press_yes()
-        yield  # confirm transaction
-        self.debug.press_yes()
-
-    def input_flow_delizia(self) -> BRGeneratorType:
-        yield  # request to see details
-        self.debug.read_layout()
-        self.debug.press_info()
-
-        yield  # confirm first output
-        assert self.outputs[0].address[:16] in self.text_content()  # type: ignore
-        self.debug.swipe_up()
-        yield  # confirm first output
-        self.debug.read_layout()
-        self.debug.swipe_up()
-
-        yield  # confirm second output
-        assert self.outputs[1].address[:16] in self.text_content()  # type: ignore
-        self.debug.swipe_up()
-        yield  # confirm second output
-        self.debug.read_layout()
-        self.debug.swipe_up()
-
-        yield  # confirm transaction
-        self.debug.swipe_up()
-        self.debug.press_yes()
-
-    def input_flow_eckhart(self) -> BRGeneratorType:
-        yield  # request to see details
-        self.debug.read_layout()
-        self.debug.press_info()
-
-        yield  # confirm first output
-        assert self.outputs[0].address[:16] in self.text_content()  # type: ignore
-        self.debug.click(self.debug.screen_buttons.ok())
-        yield  # confirm first output
-        self.debug.read_layout()
-        self.debug.click(self.debug.screen_buttons.ok())
-
-        yield  # confirm second output
-        assert self.outputs[1].address[:16] in self.text_content()  # type: ignore
-        self.debug.click(self.debug.screen_buttons.ok())
-        yield  # confirm second output
-        self.debug.read_layout()
-        self.debug.click(self.debug.screen_buttons.ok())
-
-        yield  # confirm transaction
-        self.debug.click(self.debug.screen_buttons.ok())
 
 
 class InputFlowSignTxHighFee(InputFlowBase):
@@ -1122,6 +1102,7 @@ def sign_tx_go_to_info_delizia(
 ) -> Generator[None, messages.ButtonRequest, str]:
     yield  # confirm output
     client.debug.read_layout()
+    client.ui.visit_menu_items()
     client.debug.swipe_up()
     yield  # confirm output
     client.debug.read_layout()
@@ -1132,20 +1113,20 @@ def sign_tx_go_to_info_delizia(
         client.debug.read_layout()
         client.debug.click(client.debug.screen_buttons.menu())
         client.debug.synchronize_at("VerticalMenu")
-        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
+        client.debug.button_actions.navigate_to_menu_item(1)
 
     yield  # confirm transaction
     client.debug.read_layout()
     client.debug.click(client.debug.screen_buttons.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
+    client.debug.button_actions.navigate_to_menu_item(0)
 
     layout = client.debug.read_layout()
     content = layout.text_content()
 
     client.debug.click(client.debug.screen_buttons.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
+    client.debug.button_actions.navigate_to_menu_item(1)
 
     layout = client.debug.read_layout()
     content += " " + layout.text_content()
@@ -1161,10 +1142,12 @@ def sign_tx_go_to_info_eckhart(
 ) -> Generator[None, messages.ButtonRequest, str]:
     yield  # confirm output
     client.debug.read_layout()
+    client.ui.visit_menu_items()
     client.debug.click(client.debug.screen_buttons.ok())
 
     yield  # confirm output
     client.debug.read_layout()
+    client.ui.visit_menu_items()
     client.debug.click(client.debug.screen_buttons.ok())
 
     if multi_account:
@@ -1172,20 +1155,20 @@ def sign_tx_go_to_info_eckhart(
         client.debug.read_layout()
         client.debug.click(client.debug.screen_buttons.menu())
         client.debug.synchronize_at("VerticalMenu")
-        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
+        client.debug.button_actions.navigate_to_menu_item(1)
 
     yield  # confirm transaction
     client.debug.read_layout()
     client.debug.click(client.debug.screen_buttons.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
+    client.debug.button_actions.navigate_to_menu_item(0)
 
     layout = client.debug.read_layout()
     content = layout.text_content()
 
     client.debug.click(client.debug.screen_buttons.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
+    client.debug.button_actions.navigate_to_menu_item(1)
 
     layout = client.debug.read_layout()
     content += " " + layout.text_content()
@@ -1228,45 +1211,139 @@ def sign_tx_go_to_info_caesar(
     return "\n".join(screen_texts)
 
 
-class InputFlowSignTxInformation(InputFlowBase):
+class InputFlowSignTxBackFromAmount(InputFlowBase):
+    def __init__(self, client: Client | DebugSession):
+        super().__init__(client)
+
+    def input_flow_delizia(self) -> BRGeneratorType:
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__address in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_up()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__amount in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_down()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__address in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_up()
+
+        yield
+        self.debug.read_layout()
+        self.debug.swipe_up()
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__send in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__amount in layout.text_content()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.click(self.debug.screen_buttons.cancel())
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__send in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+
+class InputFlowSignTxCancelFromAmount(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def assert_content(self, content: str, title_path: str) -> None:
-        assert TR.translate(title_path) in content
+    def input_flow_delizia(self) -> BRGeneratorType:
+        yield  # confirm address
+        layout = self.debug.read_layout()
+        assert TR.words__address in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_up()
+
+        yield  # amount screen
+        layout = self.debug.read_layout()
+        assert TR.words__amount in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.button_actions.navigate_to_menu_item(0)  # click Cancel
+        self.debug.synchronize_at("PromptScreen")
+        self.debug.click(self.debug.screen_buttons.tap_to_confirm())
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield  # confirm address
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield  # amount screen
+        self.debug.read_layout()
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.button_actions.navigate_to_menu_item(1)  # click Cancel
+        self.debug.synchronize_at("TextScreen")
+        self.debug.click(self.debug.screen_buttons.ok())
+
+
+class InputFlowSignTxInformation(InputFlowBase):
+    def __init__(self, client: Client | DebugSession):
+        super().__init__(client)
+
+    def assert_account_details(self, content: str) -> None:
+        assert TR.words__account in content
         assert "Legacy #6" in content
         assert TR.confirm_total__fee_rate in content
         assert "71.56 sat" in content
 
     def input_flow_bolt(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_bolt(self.client)
-        self.assert_content(content, "confirm_total__sending_from_account")
+        self.assert_account_details(content)
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_caesar(self.client)
         print("content", content)
-        self.assert_content(content, "confirm_total__title_sending_from")
+        self.assert_account_details(content)
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_delizia(self.client)
-        self.assert_content(content, "confirm_total__sending_from_account")
+        self.assert_account_details(content)
         self.debug.swipe_up()
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_eckhart(self.client)
-        self.assert_content(content, "words__account")
+        self.assert_account_details(content)
         self.debug.press_yes()
 
 
 class InputFlowSignTxInformationMixed(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
-    def assert_content(self, content: str, title_path: str) -> None:
-        assert TR.translate(title_path) in content
+    def assert_content(self, content: str) -> None:
+        assert TR.words__account in content
         assert TR.bitcoin__multiple_accounts in content
         assert TR.confirm_total__fee_rate in content
         assert "18.33 sat" in content
@@ -1277,7 +1354,7 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         self.debug.press_yes()
 
         content = yield from sign_tx_go_to_info_bolt(self.client)
-        self.assert_content(content, "confirm_total__sending_from_account")
+        self.assert_content(content)
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
@@ -1286,23 +1363,23 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         self.debug.press_yes()
 
         content = yield from sign_tx_go_to_info_caesar(self.client)
-        self.assert_content(content, "confirm_total__title_sending_from")
+        self.assert_content(content)
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_delizia(self.client, multi_account=True)
-        self.assert_content(content, "confirm_total__sending_from_account")
+        self.assert_content(content)
         self.debug.swipe_up()
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_eckhart(self.client, multi_account=True)
-        self.assert_content(content, "words__account")
+        self.assert_content(content)
         self.debug.press_yes()
 
 
 class InputFlowSignTxInformationCancel(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -1316,20 +1393,20 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
     def input_flow_delizia(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_delizia(self.client)
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         self.debug.synchronize_at("PromptScreen")
         self.debug.click(self.debug.screen_buttons.tap_to_confirm())
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_eckhart(self.client)
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         self.debug.synchronize_at("TextScreen")
         self.debug.click(self.debug.screen_buttons.ok())
 
 
 class InputFlowSignTxInformationReplacement(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -1379,7 +1456,7 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
 
         yield  # transaction summary, press info
         self.debug.click(self.client.debug.screen_buttons.menu())
-        self.debug.click(self.client.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         # close menu
         self.debug.click(self.client.debug.screen_buttons.menu())
         self.debug.press_yes()
@@ -1475,7 +1552,10 @@ def lock_time_input_flow_eckhart(
 ) -> BRGeneratorType:
     yield  # confirm output
     debug.read_layout()
-    debug.press_yes()
+    debug.click(debug.screen_buttons.ok())
+    yield  # confirm output
+    debug.read_layout()
+    debug.click(debug.screen_buttons.ok())
 
     br = yield  # confirm locktime
     layout_assert_func(debug, br)
@@ -1486,7 +1566,7 @@ def lock_time_input_flow_eckhart(
 
 
 class InputFlowLockTimeBlockHeight(InputFlowBase):
-    def __init__(self, client: Client, block_height: str):
+    def __init__(self, client: Client | DebugSession, block_height: str):
         super().__init__(client)
         self.block_height = block_height
 
@@ -1513,7 +1593,7 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
 
 
 class InputFlowLockTimeDatetime(InputFlowBase):
-    def __init__(self, client: Client, lock_time_str: str):
+    def __init__(self, client: Client | DebugSession, lock_time_str: str):
         super().__init__(client)
         self.lock_time_str = lock_time_str
 
@@ -1538,19 +1618,19 @@ class InputFlowLockTimeDatetime(InputFlowBase):
 class InputFlowEIP712ShowMore(InputFlowBase):
     SHOW_MORE = (143, 167)
 
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.same_for_all_models = True
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        if self.client.layout_type is LayoutType.Bolt:
+        if self.layout_type is LayoutType.Bolt:
             self.debug.click(self.SHOW_MORE)
-        elif self.client.layout_type is LayoutType.Caesar:
+        elif self.layout_type is LayoutType.Caesar:
             self.debug.press_right()
-        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+        elif self.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.click(self.debug.screen_buttons.menu())
-            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+            self.debug.button_actions.navigate_to_menu_item(0)
         else:
             raise NotImplementedError
 
@@ -1598,7 +1678,7 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
 
 class InputFlowEIP712Cancel(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1611,7 +1691,7 @@ class InputFlowEIP712Cancel(InputFlowBase):
 
 
 class InputFlowEthereumSignTxShowFeeInfo(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1619,57 +1699,80 @@ class InputFlowEthereumSignTxShowFeeInfo(InputFlowBase):
 
 
 class InputFlowEthereumSignTxGoBackFromSummary(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.ETH.confirm_tx(go_back_from_summary=True)
 
 
-class InputFlowEthereumSignTxDataSkip(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
+class InputFlowEthereumSignTxData(InputFlowBase):
+    def __init__(self, client: Client | DebugSession, *, scroll: bool, cancel: bool):
         super().__init__(client)
+        self.scroll = scroll
         self.cancel = cancel
+        self.confirm_tx = self.ETH.confirm_tx()
 
     def input_flow_common(self) -> BRGeneratorType:
-        yield from self.ETH.confirm_data()
-        yield from self.ETH.confirm_tx(cancel=self.cancel)
+        confirm_tx = None  # will be used to confirm tx details
 
+        while True:
+            # first BRs are related to data confirmation
+            br = yield
+            if br.name == "confirm_data":
+                assert br.pages == 1
+                assert confirm_tx is None
 
-class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
-        super().__init__(client)
-        self.cancel = cancel
+                if self.client.layout_type is LayoutType.Eckhart:
+                    TR.regexp("ethereum__title_all_input_data_template").fullmatch(
+                        self.debug.read_layout().title().strip()
+                    )
+                else:
+                    assert (
+                        TR.ethereum__title_input_data
+                        in self.debug.read_layout().title()
+                    )
 
-    def input_flow_common(self) -> BRGeneratorType:
-        # this flow will not test for the cancel case,
-        # because once we enter the "view all data",
-        # the only way to cancel is by going back to the 1st page view
-        # but that case would be covered by InputFlowEthereumSignTxDataGoBack
-        assert not self.cancel
+                if self.scroll:
+                    self._go_to_next_page()
+                    if self.cancel:
+                        self.scroll = False  # stop pagination & cancel on next page
+                else:
+                    if self.cancel:
+                        self._cancel_flow()
+                    else:
+                        self._confirm_all()
+                continue
 
-        yield from self.ETH.confirm_data(info=True)
-        yield from self.ETH.paginate_data()
-        yield from self.ETH.confirm_tx()
+            # data confirmation is over - confirm tx details
+            if confirm_tx is None:
+                confirm_tx = self.confirm_tx
+                next(confirm_tx)
 
+            confirm_tx.send(br)
 
-class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
-        super().__init__(client)
-        self.cancel = cancel
-
-    def input_flow_common(self) -> BRGeneratorType:
-        yield from self.ETH.confirm_data(info=True)
-        yield from self.ETH.paginate_data_go_back()
-        if self.cancel:
-            yield from self.ETH.confirm_data(cancel=True)
+    def _go_to_next_page(self):
+        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
+            self.debug.press_info()  # pagination is a special button
+        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            self.debug.press_yes()  # pagination is a regular button
         else:
-            yield from self.ETH.confirm_data()
-            yield from self.ETH.confirm_tx()
+            raise RuntimeError
+
+    def _cancel_flow(self):
+        self.debug.press_no()
+
+    def _confirm_all(self):
+        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
+            self.debug.press_yes()  # confirmation is a regular button
+        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            self.debug.press_info()  # confirmation is available via menu
+        else:
+            raise RuntimeError
 
 
 class InputFlowEthereumSignTxStaking(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1715,7 +1818,7 @@ class InputFlowBip39Backup(InputFlowBase):
 
 
 class InputFlowBip39ResetBackup(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.mnemonic = None
 
@@ -1764,7 +1867,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
 
 
 class InputFlowBip39ResetPIN(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.mnemonic = None
 
@@ -1805,7 +1908,7 @@ class InputFlowBip39ResetPIN(InputFlowBase):
 
 
 class InputFlowBip39ResetFailedCheck(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.mnemonic = None
 
@@ -1863,7 +1966,9 @@ def load_N_shares(
 
 
 class InputFlowSlip39BasicBackup(InputFlowBase):
-    def __init__(self, client: Client, click_info: bool, repeated: bool = False):
+    def __init__(
+        self, client: Client | DebugSession, click_info: bool, repeated: bool = False
+    ):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
@@ -2000,7 +2105,7 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
 
 
 class InputFlowSlip39BasicResetRecovery(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.mnemonics: list[str] = []
 
@@ -2096,7 +2201,9 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
 
 
 class InputFlowSlip39CustomBackup(InputFlowBase):
-    def __init__(self, client: Client, share_count: int, repeated: bool = False):
+    def __init__(
+        self, client: Client | DebugSession, share_count: int, repeated: bool = False
+    ):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.share_count = share_count
@@ -2210,7 +2317,7 @@ def load_5_groups_5_shares(
 
 
 class InputFlowSlip39AdvancedBackup(InputFlowBase):
-    def __init__(self, client: Client, click_info: bool):
+    def __init__(self, client: Client | DebugSession, click_info: bool):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
@@ -2361,7 +2468,7 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
-    def __init__(self, client: Client, click_info: bool):
+    def __init__(self, client: Client | DebugSession, click_info: bool):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
@@ -2472,7 +2579,9 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
 
 
 class InputFlowBip39RecoveryDryRun(InputFlowBase):
-    def __init__(self, client: Client, mnemonic: list[str], mismatch: bool = False):
+    def __init__(
+        self, client: Client | DebugSession, mnemonic: list[str], mismatch: bool = False
+    ):
         super().__init__(client)
         self.mnemonic = mnemonic
         self.mismatch = mismatch
@@ -2488,9 +2597,11 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
 
 
 class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
-    def __init__(self, client: Client):
-        super().__init__(client)
+
+    def __init__(self, session: DebugSession):
+        super().__init__(session)
         self.invalid_mnemonic = ["stick"] * 12
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_dry_run()
@@ -2499,11 +2610,13 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         yield from self.REC.warning_invalid_recovery_seed()
 
         yield
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowBip39Recovery(InputFlowBase):
-    def __init__(self, client: Client, mnemonic: list[str], pin: str | None = None):
+    def __init__(
+        self, client: Client | DebugSession, mnemonic: list[str], pin: str | None = None
+    ):
         super().__init__(client)
         self.mnemonic = mnemonic
         self.pin = pin
@@ -2518,7 +2631,9 @@ class InputFlowBip39Recovery(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str], mismatch: bool = False):
+    def __init__(
+        self, client: Client | DebugSession, shares: list[str], mismatch: bool = False
+    ):
         super().__init__(client)
         self.shares = shares
         self.mismatch = mismatch
@@ -2535,7 +2650,9 @@ class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecovery(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str], click_info: bool):
+    def __init__(
+        self, client: Client | DebugSession, shares: list[str], click_info: bool
+    ):
         super().__init__(client)
         self.shares = shares
         self.click_info = click_info
@@ -2551,12 +2668,12 @@ class InputFlowSlip39AdvancedRecovery(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2566,14 +2683,14 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str]):
+    def __init__(self, client: Client | DebugSession, shares: list[str]):
         super().__init__(client)
         self.shares = shares
         self.word_count = len(shares[0].split(" "))
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2590,15 +2707,17 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryThresholdReached(InputFlowBase):
+
     def __init__(
         self,
-        client: Client,
+        session: DebugSession,
         first_share: list[str],
         second_share: list[str],
     ):
-        super().__init__(client)
+        super().__init__(session)
         self.first_share = first_share
         self.second_share = second_share
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
@@ -2610,19 +2729,21 @@ class InputFlowSlip39AdvancedRecoveryThresholdReached(InputFlowBase):
         yield from self.REC.warning_group_threshold_reached()
 
         yield
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(InputFlowBase):
+
     def __init__(
         self,
-        client: Client,
+        session: DebugSession,
         first_share: list[str],
         second_share: list[str],
     ):
-        super().__init__(client)
+        super().__init__(session)
         self.first_share = first_share
         self.second_share = second_share
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
@@ -2634,13 +2755,13 @@ class InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(InputFlowBase):
         yield from self.REC.warning_share_already_entered()
 
         yield
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowSlip39BasicRecoveryDryRun(InputFlowBase):
     def __init__(
         self,
-        client: Client,
+        client: Client | DebugSession,
         shares: list[str],
         mismatch: bool = False,
         unlock_repeated_backup=False,
@@ -2665,7 +2786,12 @@ class InputFlowSlip39BasicRecoveryDryRun(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecovery(InputFlowBase):
-    def __init__(self, client: Client, shares: Sequence[str], pin: str | None = None):
+    def __init__(
+        self,
+        client: Client | DebugSession,
+        shares: Sequence[str],
+        pin: str | None = None,
+    ):
         super().__init__(client)
         self.shares = shares
         self.pin = pin
@@ -2681,12 +2807,12 @@ class InputFlowSlip39BasicRecovery(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2695,12 +2821,12 @@ class InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2710,14 +2836,14 @@ class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryAbortBetweenShares(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str]):
+    def __init__(self, client: Client | DebugSession, shares: list[str]):
         super().__init__(client)
         self.first_share = shares[0].split(" ")
         self.word_count = len(self.first_share)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2732,15 +2858,41 @@ class InputFlowSlip39BasicRecoveryAbortBetweenShares(InputFlowBase):
         yield from self.REC.abort_recovery_between_shares()
 
 
-class InputFlowSlip39BasicRecoveryShareInfoBetweenShares(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str]):
+class InputFlowSlip39BasicRecoveryAbortOnMnemonic(InputFlowBase):
+    def __init__(
+        self, client: Client | DebugSession, shares: list[str], cancel_first: bool
+    ):
         super().__init__(client)
         self.first_share = shares[0].split(" ")
         self.word_count = len(self.first_share)
+        self.cancel_first = cancel_first
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield from self.REC.confirm_recovery()
+        yield from self.REC.input_number_of_words(20)
+        yield from self.REC.enter_any_share()
+        if not self.cancel_first:
+            yield from self.REC.input_mnemonic(self.first_share)
+            yield from self.REC.success_more_shares_needed()
+        yield from self.REC.go_back_from_mnemonic_first_word()
+
+        if self.cancel_first:
+            yield from self.REC.abort_recovery_select_number_of_words()
+        else:
+            yield from self.REC.abort_recovery_between_shares()
+
+
+class InputFlowSlip39BasicRecoveryShareInfoBetweenShares(InputFlowBase):
+
+    def __init__(self, session: DebugSession, shares: list[str]):
+        super().__init__(session)
+        self.first_share = shares[0].split(" ")
+        self.word_count = len(self.first_share)
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2755,11 +2907,11 @@ class InputFlowSlip39BasicRecoveryShareInfoBetweenShares(InputFlowBase):
         yield from self.REC.share_info_between_shares()
 
         yield
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str]):
+    def __init__(self, client: Client | DebugSession, shares: list[str]):
         super().__init__(client)
         self.shares = shares
         self.word_count = len(shares[0].split(" "))
@@ -2767,7 +2919,7 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
 
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2785,10 +2937,12 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryInvalidFirstShare(InputFlowBase):
-    def __init__(self, client: Client):
-        super().__init__(client)
+
+    def __init__(self, session: DebugSession):
+        super().__init__(session)
         self.first_invalid = ["slush"] * 20
         self.second_invalid = ["slush"] * 33
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
@@ -2800,16 +2954,18 @@ class InputFlowSlip39BasicRecoveryInvalidFirstShare(InputFlowBase):
         yield from self.REC.warning_invalid_recovery_share()
 
         yield
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowSlip39BasicRecoveryInvalidSecondShare(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str]):
-        super().__init__(client)
+
+    def __init__(self, session: DebugSession, shares: list[str]):
+        super().__init__(session)
         self.shares = shares
         self.first_share = shares[0].split(" ")
         self.invalid_share = self.first_share[:3] + ["slush"] * 17
         self.second_share = shares[1].split(" ")
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
@@ -2822,16 +2978,18 @@ class InputFlowSlip39BasicRecoveryInvalidSecondShare(InputFlowBase):
         yield from self.REC.success_more_shares_needed(1)
 
         yield
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
-    def __init__(self, client: Client, share: list[str], nth_word: int):
-        super().__init__(client)
+
+    def __init__(self, session: DebugSession, share: list[str], nth_word: int):
+        super().__init__(session)
         self.share = share
         self.nth_word = nth_word
         # Invalid share - just enough words to trigger the warning
         self.modified_share = share[:nth_word] + [self.share[-1]]
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
@@ -2842,15 +3000,17 @@ class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
         yield from self.REC.warning_share_from_another_shamir()
 
         yield
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowSlip39BasicRecoverySameShare(InputFlowBase):
-    def __init__(self, client: Client, share: list[str]):
-        super().__init__(client)
+
+    def __init__(self, session: DebugSession, share: list[str]):
+        super().__init__(session)
         self.share = share
         # Second duplicate share - only 4 words are needed to verify it
         self.duplicate_share = self.share[:4]
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
@@ -2861,11 +3021,11 @@ class InputFlowSlip39BasicRecoverySameShare(InputFlowBase):
         yield from self.REC.warning_share_already_entered()
 
         yield
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowResetSkipBackup(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -2895,7 +3055,7 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.swipe_up()
         self.debug.synchronize_at("PromptScreen")
         self.debug.click(self.debug.screen_buttons.tap_to_confirm())
@@ -2908,14 +3068,11 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.press_no()
 
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
-    def __init__(self, client: Client):
-        super().__init__(client)
-
     def input_flow_bolt(self) -> BRGeneratorType:
         return self.client.ui.default_input_flow()
 
@@ -2928,10 +3085,10 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
+                    self.client.ui.visit_menu_items()
                     self.debug.swipe_up()
 
-            # Visit info menus (if exist)
-            layout = self.client.ui._visit_menu_items()
+            layout = self.client.ui.visit_menu_items()
 
             text = layout.footer().lower()
             # hi priority warning
@@ -2943,7 +3100,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(self.debug.screen_buttons.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+                self.debug.button_actions.navigate_to_menu_item(1)
             elif "PromptScreen" in layout.all_components():
                 self.debug.press_yes()
             elif "SwipeContent" in layout.all_components():
@@ -2958,8 +3115,10 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
+                    self.client.ui.visit_menu_items()
                     self.debug.click(self.debug.screen_buttons.ok())
-            layout = self.debug.read_layout()
+
+            layout = self.client.ui.visit_menu_items()
             text = layout.action_bar().lower()
             # hi priority warning
             hi_prio = (
@@ -2970,14 +3129,14 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(self.debug.screen_buttons.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+                self.debug.button_actions.navigate_to_menu_item(1)
             else:
                 self.debug.click(self.debug.screen_buttons.ok())
             br = yield
 
 
 class InputFlowFidoConfirm(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
+    def __init__(self, client: Client | DebugSession, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 

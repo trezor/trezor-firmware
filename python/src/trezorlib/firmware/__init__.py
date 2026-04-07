@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -22,7 +22,6 @@ from hashlib import blake2s
 from typing_extensions import Protocol, TypeGuard
 
 from .. import messages
-from ..tools import session
 from .core import VendorFirmware
 from .legacy import LegacyFirmware, LegacyV2Firmware
 from .models import Model
@@ -42,7 +41,7 @@ if True:
     from .vendor import *  # noqa: F401, F403
 
 if t.TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..client import Session
 
     T = t.TypeVar("T", bound="FirmwareType")
 
@@ -78,41 +77,35 @@ def is_onev2(fw: FirmwareType) -> TypeGuard[LegacyFirmware]:
 # ====== Client functions ====== #
 
 
-@session
 def update(
-    client: TrezorClient,
+    session: Session,
     data: bytes,
     progress_update: t.Callable[[int], t.Any] = lambda _: None,
-):
-    if client.features.bootloader_mode is False:
+) -> None:
+    if session.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
 
-    resp = client.call(messages.FirmwareErase(length=len(data)))
+    resp = session.call(messages.FirmwareErase(length=len(data)))
 
     # TREZORv1 method
     if isinstance(resp, messages.Success):
-        resp = client.call(messages.FirmwareUpload(payload=data))
+        resp = session.call(
+            messages.FirmwareUpload(payload=data), expect=messages.Success
+        )
         progress_update(len(data))
-        if isinstance(resp, messages.Success):
-            return
-        else:
-            raise RuntimeError(f"Unexpected result {resp}")
 
     # TREZORv2 method
     while isinstance(resp, messages.FirmwareRequest):
         length = resp.length
         payload = data[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()
-        resp = client.call(messages.FirmwareUpload(payload=payload, hash=digest))
+        resp = session.call(messages.FirmwareUpload(payload=payload, hash=digest))
         progress_update(length)
 
-    if isinstance(resp, messages.Success):
-        return
-    else:
-        raise RuntimeError(f"Unexpected message {resp}")
+    messages.Success.ensure_isinstance(resp)
 
 
-def get_hash(client: TrezorClient, challenge: bytes | None) -> bytes:
-    return client.call(
+def get_hash(session: Session, challenge: bytes | None) -> bytes:
+    return session.call(
         messages.GetFirmwareHash(challenge=challenge), expect=messages.FirmwareHash
     ).hash

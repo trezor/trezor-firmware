@@ -14,20 +14,32 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
+DISABLE_TROPIC = ARGUMENTS.get('DISABLE_TROPIC', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
+EXTAPP_SUPPORT = ARGUMENTS.get('EXTAPP_SUPPORT', '0') == '1'
 
 STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
 if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
     raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
 if STORAGE_INSECURE_TESTING_MODE:
     DISABLE_OPTIGA = True
+    DISABLE_TROPIC = True
     PYOPT = "0"
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = []
+SOURCE_MOD = []
+SOURCE_MOD_CRYPTO = []
+CPPDEFINES_HAL = []
+SOURCE_HAL = []
+PATH_HAL = []
 
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
-    "SYSTEM_VIEW": False,
     "AES_GCM": True,
 }
 
@@ -39,6 +51,8 @@ FEATURES_WANTED = [
     "dma2d",
     "haptic",
     "input",
+    "ipc",
+    "kernel_mode",
     "optiga",
     "power_manager",
     "rgb_led",
@@ -46,11 +60,31 @@ FEATURES_WANTED = [
     "sd_card",
     "secmon_layout",
     "smp",
+    "storage",
     "suspend",
+    "telemetry",
     "tropic",
     "usb",
-
+    "usb_iface_wire",
     ]
+
+if BITCOIN_ONLY == '0':
+    FEATURES_WANTED += [
+        "usb_iface_webauthn",
+    ]
+
+if PYOPT == '0':
+    DBG_CONSOLE = DBG_CONSOLE or "VCP"
+    FEATURES_WANTED += ["usb_iface_debug"]
+
+if DBG_CONSOLE != "":
+    FEATURES_WANTED += ["dbg_console"]
+
+if not TREZOR_MODEL in ['T3W1', 'D002']:
+    FEATURES_WANTED += ["secure_mode"]
+
+if TREZOR_MODEL in ['T3W1'] and EXTAPP_SUPPORT:
+    FEATURES_WANTED += ["app_loading"]
 
 if DISABLE_OPTIGA:
     # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
@@ -58,26 +92,12 @@ if DISABLE_OPTIGA:
         raise RuntimeError("DISABLE_OPTIGA requires non-production build")
     FEATURES_WANTED.remove("optiga")
 
-CCFLAGS_MOD = ''
-CPPPATH_MOD = []
-CPPDEFINES_MOD = []
-SOURCE_MOD = []
-SOURCE_MOD_CRYPTO = []
-CPPDEFINES_HAL = []
-SOURCE_HAL = []
-PATH_HAL = []
+if DISABLE_TROPIC:
+    if PRODUCTION:
+        raise RuntimeError("DISABLE_TROPIC requires non-production build")
+    FEATURES_WANTED.remove("tropic")
 
 FROZEN = True
-
-# modtrezorconfig
-CPPPATH_MOD += [
-    'embed/upymod/modtrezorconfig',
-    'vendor/trezor-storage',
-    'vendor/micropython/lib/uzlib',
-]
-SOURCE_MOD += [
-    'vendor/trezor-storage/flash_area.c',
-]
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
@@ -85,7 +105,6 @@ CPPPATH_MOD += [
     'vendor/trezor-crypto',
 ]
 CPPDEFINES_MOD += [
-    'KERNEL_MODE',
     'AES_128',
     'AES_192',
     ('USE_BIP32_CACHE', '0'),
@@ -96,9 +115,6 @@ CPPDEFINES_MOD += [
     ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
 ]
-
-if not TREZOR_MODEL in ['T3W1', 'D002']:
-    CPPDEFINES_MOD += ['SECURE_MODE']
 
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/address.c',
@@ -198,24 +214,31 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     ]
 
 SOURCE_MOD += [
-    'embed/gfx/bitblt/gfx_bitblt.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
-    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
-    'embed/gfx/fonts/font_bitmap.c',
-    'embed/gfx/gfx_color.c',
-    'embed/gfx/gfx_draw.c',
-    'embed/gfx/terminal.c',
-    'embed/util/bl_check/bl_check.c',
-    'embed/util/translations/translations.c',
-    'embed/util/image/image.c',
-    'embed/util/rsod/rsod.c',
+    'embed/io/gfx/bitblt/gfx_bitblt.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/io/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/io/gfx/gfx_color.c',
+    'embed/io/gfx/gfx_draw.c',
+    'embed/io/gfx/rsod.c',
+    'embed/io/gfx/terminal/font_bitmap.c',
+    'embed/io/gfx/terminal/terminal.c',
+    'embed/io/translations/translations.c',
     'embed/rtl/error_handling.c',
-    'embed/rtl/mini_printf.c',
-    'embed/upymod/modtrezorcrypto/rand.c',
+    'embed/rtl/strutils.c',
+    'embed/sec/image/boot_image.c',
+    'embed/sec/image/image.c',
+    'embed/sec/rsod/rsod_special.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
+]
+
+if not PRODUCTION:
+    SOURCE_MOD += ['embed/rtl/printf.c']
+
+CPPPATH_MOD += [
+    'vendor/micropython/lib/uzlib',
 ]
 
 CPPDEFINES_MOD += [
@@ -225,23 +248,6 @@ CPPDEFINES_MOD += [
 
 if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']
-
-if FEATURE_FLAGS["SYSTEM_VIEW"]:
-    SOURCE_MOD += [
-        'embed/sys/systemview/stm32/config/SEGGER_SYSVIEW_Config_NoOS.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_SYSVIEW.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_RTT.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_RTT_ASM_ARMv7M.S',
-        'embed/sys/systemview/stm32/segger/Syscalls/SEGGER_RTT_Syscalls_GCC.c',
-        'embed/sys/systemview/systemview.c',
-    ]
-    CPPPATH_MOD += [
-        'embed/sys/systemview/inc',
-        'embed/sys/systemview/stm32/config',
-        'embed/sys/systemview/stm32/segger',
-    ]
-    CPPDEFINES_MOD += ['SYSTEM_VIEW']
-    CCFLAGS_MOD += '-DSYSTEM_VIEW '
 
 TRANSLATION_DATA = [
     "translations/en.json",
@@ -263,19 +269,12 @@ env = Environment(
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
+    DBG_CONSOLE=DBG_CONSOLE,
 )
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 FEATURE_FLAGS["AES_GCM"] = FEATURE_FLAGS["AES_GCM"] or "tropic" in FEATURES_AVAILABLE
-
-if not 'secmon_layout' in FEATURES_AVAILABLE:
-    SOURCE_MOD += [
-        'vendor/trezor-storage/norcow.c',
-        'vendor/trezor-storage/storage.c',
-        'vendor/trezor-storage/storage_utils.c',
-    ]
-
 
 # AES-GCM
 if FEATURE_FLAGS["AES_GCM"]:
@@ -319,12 +318,11 @@ ALLPATHS = [
         'embed/projects/firmware',
         'embed/rtl/inc',
         'embed/models',
-        'embed/gfx/inc',
+        'embed/io/gfx/inc',
+        'embed/io/translations/inc',
+        'embed/sec/image/inc',
+        'embed/sec/rsod/inc',
         'embed/sys/bsp/inc',
-        'embed/util/bl_check/inc',
-        'embed/util/image/inc',
-        'embed/util/rsod/inc',
-        'embed/util/translations/inc',
     ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(
@@ -403,6 +401,7 @@ VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_{vendor}.
 
 if BOOTLOADER_DEVEL:
     if UNSAFE_FW:
+        # the `_DEV` binaries below are built using `make build_secmon BOOTLOADER_DEVEL=1`
         SECMON = f'embed/models/{TREZOR_MODEL}/secmon/secmon_DEV.bin'
         SECMON_API = f'embed/models/{TREZOR_MODEL}/secmon/secmon_api_DEV.o'
     else:
@@ -450,6 +449,7 @@ rust = tools.add_rust_lib(
     all_paths=ALLPATHS,
     build_dir=str(Dir('.').abspath),
 )
+obj_program += [rust]
 
 
 if "secmon_layout" in FEATURES_AVAILABLE:
@@ -466,7 +466,6 @@ program_elf = env.Command(
 )
 
 env.Depends(program_elf, linkerscript_gen)
-env.Depends(program_elf, rust)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
@@ -480,7 +479,7 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 action_bin=[
-    '$OBJCOPY -O binary -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
+    '$OBJCOPY -O binary -j .flash -j .data $SOURCE ${TARGET}',
     '$CP $TARGET ' + BINARY_NAME,
 ]
 

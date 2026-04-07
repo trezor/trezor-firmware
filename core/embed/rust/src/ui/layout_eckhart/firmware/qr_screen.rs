@@ -1,17 +1,18 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Qr},
+        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label, Pad, Qr},
         flow::Swipable,
-        geometry::{Insets, Rect},
-        shape::{self, Renderer},
+        geometry::{Alignment, Insets, Rect},
+        shape::Renderer,
         util::Pager,
     },
 };
 
 use super::super::{
+    component::{Button, ButtonMsg},
     constant::SCREEN,
-    firmware::{theme, ActionBar, Header, HeaderMsg},
+    firmware::{theme, Header},
 };
 
 pub enum QrMsg {
@@ -19,34 +20,23 @@ pub enum QrMsg {
 }
 
 pub struct QrScreen {
-    header: Header,
+    title: Label<'static>,
+    close_button: Button,
     qr: Qr,
-    action_bar: Option<ActionBar>,
-    pad: Rect,
+    pad: Pad,
 }
 
 impl QrScreen {
-    const QR_PADDING: i16 = 8;
-    const QR_HEIGHT: i16 = 300;
-    const QR_PAD_RADIUS: i16 = 12;
-
-    pub fn new(qr: Qr) -> Self {
+    const BUTTON_WIDTH: i16 = 80; // [px]
+    pub fn new(title: TString<'static>, qr: Qr) -> Self {
         Self {
-            header: Header::new(TString::empty()),
+            title: Label::new(title, Alignment::Start, theme::TEXT_SMALL_BLACK)
+                .vertically_centered(),
             qr,
-            action_bar: None,
-            pad: Rect::zero(),
+            pad: Pad::with_background(theme::FG),
+            close_button: Button::with_icon(theme::ICON_CLOSE)
+                .styled(theme::button_header_inverted()),
         }
-    }
-
-    pub fn with_header(mut self, header: Header) -> Self {
-        self.header = header;
-        self
-    }
-
-    pub fn with_action_bar(mut self, action_bar: ActionBar) -> Self {
-        self.action_bar = Some(action_bar);
-        self
     }
 }
 
@@ -58,43 +48,34 @@ impl Component for QrScreen {
         debug_assert_eq!(bounds.height(), SCREEN.height());
         debug_assert_eq!(bounds.width(), SCREEN.width());
 
-        let (header_area, mut rest) = bounds.split_top(Header::HEADER_HEIGHT);
-        if let Some(action_bar) = &mut self.action_bar {
-            let action_bar_area;
-            (rest, action_bar_area) = rest.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
-            action_bar.place(action_bar_area);
-        }
-        let (qr_pad, _) = rest.split_top(Self::QR_HEIGHT + 2 * Self::QR_PADDING);
+        let (header_area, mut qr_area) = bounds.split_top(Header::HEADER_HEIGHT);
+        let (mut title_area, button_area) = header_area.split_right(Self::BUTTON_WIDTH);
+        title_area = title_area.inset(Insets::left(theme::SIDE_INSETS.left));
 
-        let side_padding = (SCREEN.width() - Self::QR_HEIGHT - 2 * Self::QR_PADDING) / 2;
-        let qr_pad = qr_pad.inset(Insets::sides(side_padding));
+        qr_area = qr_area.inset(theme::SIDE_INSETS);
+        qr_area = qr_area.with_height(qr_area.width());
 
-        self.pad = qr_pad;
-
-        self.header.place(header_area);
-        self.qr.place(qr_pad.shrink(Self::QR_PADDING));
+        self.pad.place(bounds);
+        self.title.place(title_area);
+        self.close_button.place(button_area);
+        self.qr.place(qr_area);
 
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(HeaderMsg::Cancelled) = self.header.event(ctx, event) {
+        if let Some(ButtonMsg::Clicked) = self.close_button.event(ctx, event) {
             return Some(QrMsg::Cancelled);
         }
+
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // Render white QR pad
-        shape::Bar::new(self.pad)
-            .with_bg(theme::FG)
-            .with_fg(theme::FG)
-            .with_radius(Self::QR_PAD_RADIUS)
-            .render(target);
-
-        self.header.render(target);
+        self.pad.render(target);
+        self.title.render(target);
+        self.close_button.render(target);
         self.qr.render(target);
-        self.action_bar.render(target);
     }
 }
 
@@ -113,22 +94,5 @@ impl Swipable for QrScreen {
 impl crate::trace::Trace for QrScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("QrScreen");
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{super::super::constant::SCREEN, *};
-
-    #[test]
-    fn test_component_heights_fit_screen() {
-        assert!(
-            QrScreen::QR_HEIGHT
-                + 2 * QrScreen::QR_PADDING
-                + Header::HEADER_HEIGHT
-                + ActionBar::ACTION_BAR_HEIGHT
-                <= SCREEN.height(),
-            "Components overflow the screen height",
-        );
     }
 }

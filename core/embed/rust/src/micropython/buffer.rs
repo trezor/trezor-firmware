@@ -21,6 +21,7 @@ use super::ffi;
 /// substring slices while keeping the head pointer as required by GC.
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[cfg_attr(test, derive(Debug))]
 pub struct StrBuffer {
     ptr: *const u8,
     len: u16,
@@ -102,6 +103,17 @@ impl StrBuffer {
             // given that `off` only advances by as much as `len` decreases, that should not be
             // possible either.
             off: self.off + off,
+        }
+    }
+
+    pub fn prefix(&self, bytes: usize) -> Self {
+        let new_len: u16 = unwrap!(bytes.try_into());
+        assert!(new_len <= self.len);
+        assert!(self.as_ref().is_char_boundary(bytes));
+        Self {
+            ptr: self.ptr,
+            len: new_len,
+            off: self.off,
         }
     }
 }
@@ -269,4 +281,29 @@ pub fn hexlify_bytes(obj: Obj, offset: usize, max_len: usize) -> Result<StrBuffe
     let hex_len = (bin_slice.len() * 2).min(max_len);
     let result = StrBuffer::alloc_with(hex_len, move |buffer| hexlify(bin_slice, buffer))?;
     Ok(result.skip_prefix(hex_off))
+}
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_slicing() {
+        use super::StrBuffer;
+
+        let data = "abcdef";
+        // SAFETY: data is static.
+        let buf = unsafe { StrBuffer::from_ptr_and_len(data.as_ptr(), data.len()) };
+
+        assert_eq!(buf.prefix(0).as_ref(), "");
+        assert_eq!(buf.prefix(3).as_ref(), "abc");
+        assert_eq!(buf.prefix(buf.len()).as_ref(), data);
+
+        assert_eq!(buf.skip_prefix(0).as_ref(), data);
+        assert_eq!(buf.skip_prefix(3).as_ref(), "def");
+        assert_eq!(buf.skip_prefix(1).skip_prefix(2).as_ref(), "def");
+        assert_eq!(buf.skip_prefix(buf.len()).as_ref(), "");
+
+        assert_eq!(buf.skip_prefix(2).prefix(2).as_ref(), "cd");
+        assert_eq!(buf.prefix(4).skip_prefix(2).as_ref(), "cd");
+    }
 }

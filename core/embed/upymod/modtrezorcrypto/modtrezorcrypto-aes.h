@@ -52,8 +52,8 @@ typedef struct _mp_obj_AES_t {
 /// def __init__(
 ///     self,
 ///     mode: int,
-///     key: bytes,
-///     iv: bytes | None = None,
+///     key: AnyBytes,
+///     iv: AnyBytes | None = None,
 /// ) -> None:
 ///     """
 ///     Initialize AES context.
@@ -161,7 +161,7 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 
-/// def encrypt(self, data: bytes) -> bytes:
+/// def encrypt(self, data: AnyBytes) -> bytes:
 ///     """
 ///     Encrypt data and update AES context.
 ///     """
@@ -171,7 +171,7 @@ STATIC mp_obj_t mod_trezorcrypto_AES_encrypt(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_encrypt_obj,
                                  mod_trezorcrypto_AES_encrypt);
 
-/// def decrypt(self, data: bytes) -> bytes:
+/// def decrypt(self, data: AnyBytes) -> bytes:
 ///     """
 ///     Decrypt data and update AES context.
 ///     """

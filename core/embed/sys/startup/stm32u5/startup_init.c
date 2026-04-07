@@ -20,9 +20,9 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <sec/rng.h>
 #include <sys/bootargs.h>
 #include <sys/linker_utils.h>
+#include <sys/rng.h>
 #include <sys/stack_utils.h>
 #include <sys/system.h>
 
@@ -68,6 +68,28 @@ uint32_t SystemCoreClock = DEFAULT_FREQ * 1000000U;
 
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
+
+#ifndef SECURE_MODE
+
+// The following functions replace ST HAL routines from
+// stm32u5xx_hal_rcc.c and stm32u5xx_hal_rcc_ex.c that are not safe to call in
+// non-secure mode (e.g. the kernel running in non-secure mode),
+// because the RCC peripheral is not fully accessible.
+
+// Clocks are fully configured by secure monitor and the kernel can
+// rely on SystemCoreClock variable being set correctly.
+
+uint32_t HAL_RCC_GetHCLKFreq(void) { return SystemCoreClock; }
+
+uint32_t HAL_RCC_GetSysClockFreq(void) { return SystemCoreClock; }
+
+uint32_t HAL_RCCEx_GetPeriphCLKFreq(uint64_t PeriphClk) {
+  ensure(sectrue * (PeriphClk == RCC_PERIPHCLK_USART3),
+         "Only USART3 supported");
+  return SystemCoreClock;
+}
+
+#endif  // SECURE_MODE
 
 // This function replaces calls to universal, but flash-wasting
 //  function HAL_RCC_OscConfig.
@@ -203,6 +225,11 @@ void SystemInit(void) {
   while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_ACTVOSRDY))
     ;
 
+  RCC->CR |= RCC_CR_HSION;
+  // wait until the HSI is on
+  while ((RCC->CR & RCC_CR_HSIRDY) != RCC_CR_HSIRDY)
+    ;
+
 #ifndef HSI_ONLY
   __HAL_RCC_HSE_CONFIG(RCC_HSE_ON);
   while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == 0U)
@@ -210,10 +237,6 @@ void SystemInit(void) {
   __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSE, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
                        DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
 #else
-  RCC->CR |= RCC_CR_HSION;
-  // wait until the HSI is on
-  while ((RCC->CR & RCC_CR_HSION) != RCC_CR_HSION)
-    ;
 
   __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSI, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
                        DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
@@ -283,13 +306,6 @@ void SystemInit(void) {
 #ifndef HSI_ONLY
   // enable clock security system
   RCC->CR |= RCC_CR_CSSON;
-
-  // turn off the HSI as it is now unused (it will be turned on again
-  // automatically if a clock security failure occurs)
-  RCC->CR &= ~RCC_CR_HSION;
-  // wait until the HSI is off
-  while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION)
-    ;
 #endif
 
   // TODO turn off MSI?

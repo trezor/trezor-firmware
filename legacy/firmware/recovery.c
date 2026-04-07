@@ -478,6 +478,15 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
                    uint32_t u2f_counter, bool _dry_run) {
   if (_word_count != 12 && _word_count != 18 && _word_count != 24) return;
 
+  if (_word_count < 24 &&
+      input_method == RecoveryDeviceInputMethod_ScrambledWords &&
+      config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Advanced recovery must be used."));
+    layoutHome();
+    return;
+  }
+
   recovery_mode = RECOVERY_NONE;
   word_pincode = 0;
   word_index = 0;
@@ -529,7 +538,14 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
 static void recovery_scrambledword(const char *word) {
   int index = -1;
   if (enforce_wordlist) {  // check if word is valid
-    index = mnemonic_find_word(word);
+    // mnemonic_find_word requires a buffer of at least 9 bytes
+    char buffer[BIP39_MAX_WORD_LEN + 1] = {0};
+    int word_len = strlen(word);
+    if (word_len <= BIP39_MAX_WORD_LEN) {
+      memcpy(buffer, word, strlen(word));
+      index = mnemonic_find_word(buffer).index;
+      memzero(buffer, sizeof(buffer));
+    }
     if (index < 0) {  // not found
       if (!dry_run) {
         session_clear(true);

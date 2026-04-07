@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
+# pyright: reportAttributeAccessIssue=false, reportGeneralTypeIssues=false
+
+from __future__ import annotations
+
 import json
 import sys
+from typing import Any, Iterator, Optional
+
+from typing_extensions import TypeGuard
 
 if len(sys.argv) < 2:
-    print(
-        """\
+    print("""\
 USAGE: ./analyze-memory-dump.py somefile.json [memorymap.html]
 
 Where "somefile.json" was produced by using `trezor.utils.mem_dump("somefile.json")`
@@ -25,13 +31,12 @@ actually care about.
 Modules are nothing but a link to a globals dict. The dict must be examined separately.
 
 Generators and closures are painful :(
-"""
-    )
+""")
 
 
 with open(sys.argv[1]) as f:
     MEMMAP = iter(json.load(f))
-    (min_ptr, max_ptr, bytes_per_block) = next(MEMMAP)
+    min_ptr, max_ptr, bytes_per_block = next(MEMMAP)
 
 
 # filter out notices and comments
@@ -40,15 +45,15 @@ MEMMAP = [m for m in MEMMAP if isinstance(m, dict)]
 MEMORY = {}
 
 
-def is_ptr(maybe_ptr):
+def is_ptr(maybe_ptr: Any) -> TypeGuard[str]:
     return isinstance(maybe_ptr, str) and maybe_ptr.startswith("0x")
 
 
-def is_gc_ptr(maybe_ptr):
+def is_gc_ptr(maybe_ptr: Any) -> bool:
     return is_ptr(maybe_ptr) and maybe_ptr.startswith("0x7f")
 
 
-def ptr_or_shortval(maybe_ptr):
+def ptr_or_shortval(maybe_ptr: Any) -> str:
     if is_ptr(maybe_ptr):
         return maybe_ptr
     else:
@@ -57,7 +62,7 @@ def ptr_or_shortval(maybe_ptr):
         return maybe_ptr["shortval"]
 
 
-def is_ignored_ptr(ptr):
+def is_ignored_ptr(ptr: Any) -> bool:
     if ptr == "(nil)":
         return True
 
@@ -67,7 +72,7 @@ def is_ignored_ptr(ptr):
     return not min_ptr <= ptr < max_ptr
 
 
-def deref_or_shortval(maybe_ptr):
+def deref_or_shortval(maybe_ptr: Any) -> Any:
     if is_ptr(maybe_ptr) and maybe_ptr in MEMORY:
         return MEMORY[maybe_ptr]
     else:
@@ -75,7 +80,8 @@ def deref_or_shortval(maybe_ptr):
 
 
 class Item:
-    def __init__(self, item):
+
+    def __init__(self, item: Any) -> None:
         self.item = item
         self.backlinks = []
         self.dict = {}
@@ -83,7 +89,7 @@ class Item:
         self.type = item["type"]
         self.ptr = item["ptr"]
 
-    def backlinkify(self):
+    def backlinkify(self) -> None:
         if "children" in self.item:
             for child in self.item["children"]:
                 key_str = ptr_or_shortval(child["key"])
@@ -95,7 +101,7 @@ class Item:
                 continue
             MEMORY[ptr].backlinks.append(self)
 
-    def find_pointers(self):
+    def find_pointers(self) -> Iterator[str]:
         if "children" in self.item:
             for child in self.item["children"]:
                 if is_ptr(child["key"]):
@@ -113,15 +119,15 @@ class Item:
             if is_ptr(v):
                 yield v
 
-    def __getattr__(self, key):
+    def __getattr__(self, key: str) -> Any:
         if key not in self.item:
             raise AttributeError
         return self.item[key]
 
-    def find_modules(self):
+    def find_modules(self) -> list["Item"]:
         return [it for it in self.backlinks if it.type == "module"]
 
-    def name(self):
+    def name(self) -> Optional[str]:
         if "__name__" in self.dict:
             return self.dict["__name__"]
 
@@ -148,7 +154,7 @@ class Item:
 
         return None
 
-    def ptrval(self):
+    def ptrval(self) -> int:
         return int(self.ptr[2:], 16)
 
 
@@ -207,7 +213,7 @@ maxline = ((max_ptr - min_ptr) & ~(bytes_per_line - 1)) + (bytes_per_line * 2)
 pixelmap = [None] * 2 * (maxline // pixelsize)
 
 
-def pixel_index(ptrval):
+def pixel_index(ptrval: int) -> int:
     ptridx = ptrval - min_ptr
     # assert ptridx >= 0
     return ptridx // pixelsize
@@ -259,8 +265,7 @@ import dominate.tags as t
 doc = dominate.document(title="memory map")
 with doc.head:
     t.meta(charset="utf-8")
-    t.style(
-        """\
+    t.style("""\
 span, a {
     font-family: monospace;
     color: black;
@@ -289,8 +294,7 @@ dl { border-left: 1px solid grey; padding-left: 0.4rem; }
 dt { font-weight: bold }
 
 div.
-"""
-    )
+""")
 
 ctr = 0
 newline = True
@@ -314,7 +318,7 @@ for pixel in pixelmap:
     previtem = pixel
 
 
-def text_or_ptr(s):
+def text_or_ptr(s: str) -> Any:
     if s.startswith("0x7"):
         sp = t.span()
         sp.add(t.a(s, href=f"#{s}"))
@@ -326,7 +330,7 @@ def text_or_ptr(s):
         return t.span(s)
 
 
-def dump_single_val(value):
+def dump_single_val(value: Any) -> Any:
     if isinstance(value, str):
         return text_or_ptr(value)
     elif isinstance(value, dict):
@@ -346,7 +350,7 @@ def dump_single_val(value):
         return str(value)
 
 
-def dump_dict(dl, d):
+def dump_dict(dl: Any, d: dict[str, Any]) -> None:
     for key, value in d.items():
         dl.add(t.dt(key))
         dl.add(t.dd(dump_single_val(value)))

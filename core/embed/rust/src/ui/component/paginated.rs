@@ -22,17 +22,8 @@ pub enum PageMsg<T> {
     SwipeRight,
 }
 
-/// TRANSITIONAL paginate trait that only optionally returns the current page.
-/// Use PaginateFull for the new trait that returns a Pager.
-pub trait Paginate {
-    /// How many pages of content are there in total?
-    fn page_count(&self) -> usize;
-    /// Navigate to the given page.
-    fn change_page(&mut self, active_page: usize);
-}
-
 /// Paginate trait allowing the user to see the internal pager state.
-pub trait PaginateFull {
+pub trait Paginate {
     /// What is the internal pager state?
     fn pager(&self) -> Pager;
     /// Navigate to the given page.
@@ -53,19 +44,9 @@ pub trait PaginateFull {
     }
 }
 
-impl<T: PaginateFull> Paginate for T {
-    fn change_page(&mut self, active_page: usize) {
-        self.change_page(active_page as u16);
-    }
-
-    fn page_count(&self) -> usize {
-        self.pager().total() as usize
-    }
-}
-
 pub trait SinglePage {}
 
-impl<T: SinglePage> PaginateFull for T {
+impl<T: SinglePage> Paginate for T {
     fn pager(&self) -> Pager {
         Pager::single_page()
     }

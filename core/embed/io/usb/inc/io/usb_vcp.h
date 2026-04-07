@@ -17,15 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_USB_CLASS_VCP_H
-#define TREZORHAL_USB_CLASS_VCP_H
+#pragma once
 
 #include <trezor_types.h>
+
+#include <sys/sysevent.h>
 
 /* usb_vcp_info_t contains all information for setting up a VCP interface.  All
  * passed pointers need to live at least until the interface is disabled
  * (usb_stop is called). */
 typedef struct {
+  syshandle_t handle;
   uint8_t *tx_packet;  // Buffer for one packet, with length of at least
                        // max_packet_len bytes
   uint8_t *tx_buffer;  // Buffer for IN EP ring buffer, with length of at least
@@ -55,14 +57,3 @@ typedef struct {
 } usb_vcp_info_t;
 
 secbool __wur usb_vcp_add(const usb_vcp_info_t *vcp_info);
-secbool __wur usb_vcp_can_read(uint8_t iface_num);
-secbool __wur usb_vcp_can_write(uint8_t iface_num);
-int __wur usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len);
-int __wur usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len);
-
-int __wur usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                                int timeout);
-int __wur usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf,
-                                 uint32_t len, int timeout);
-
-#endif  // TREZORHAL_USB_CLASS_VCP_H

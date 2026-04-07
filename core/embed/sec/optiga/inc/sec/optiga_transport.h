@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_OPTIGA_TRANSPORT_H
-#define TREZORHAL_OPTIGA_TRANSPORT_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -30,8 +29,10 @@
 // Maximum command and response APDU size supported by OPTIGA.
 #define OPTIGA_MAX_APDU_SIZE 1557
 
-optiga_result optiga_init(void);
-void optiga_deinit(void);
+optiga_result optiga_transport_open_channel(void);
+void optiga_transport_close_channel(void);
+void optiga_transport_power_up(void);
+void optiga_transport_power_down(void);
 
 optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
                                         size_t secret_size);
@@ -46,9 +47,3 @@ optiga_result optiga_soft_reset(void);
 optiga_result optiga_set_data_reg_len(size_t size);
 
 void optiga_set_ui_progress(optiga_ui_progress_t f);
-
-#if !PRODUCTION
-void optiga_transport_set_log_hex(optiga_log_hex_t f);
-#endif
-
-#endif

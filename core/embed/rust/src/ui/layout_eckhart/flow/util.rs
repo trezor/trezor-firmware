@@ -1,15 +1,21 @@
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
+    strutil::TString,
     ui::{
-        component::Component,
+        component::{
+            text::paragraphs::{ParagraphSource, Paragraphs},
+            Component, ComponentExt, MsgMap,
+        },
         flow::{
             base::{Decision, DecisionBuilder},
             FlowController, FlowMsg, Swipable, SwipeFlow,
         },
-        geometry::Direction,
+        geometry::{Direction, LinearPlacement},
     },
 };
+
+use super::super::firmware::{Header, TextScreen, TextScreenMsg};
 
 enum SinglePage {
     Show,
@@ -37,4 +43,22 @@ where
     let mut flow = SwipeFlow::new(&SinglePage::Show)?;
     flow.add_page(&SinglePage::Show, layout)?;
     Ok(flow)
+}
+
+pub fn content_menu_info<'a, P>(
+    title: TString<'static>,
+    subtitle: Option<TString<'static>>,
+    paragraphs: P,
+) -> MsgMap<TextScreen<Paragraphs<P>>, impl Fn(TextScreenMsg) -> Option<FlowMsg>>
+where
+    P: ParagraphSource<'a> + 'a,
+{
+    TextScreen::new(
+        paragraphs
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical()),
+    )
+    .with_header(Header::new(title).with_close_button())
+    .with_subtitle(subtitle.unwrap_or(TString::empty()))
+    .map(|_| Some(FlowMsg::Cancelled))
 }

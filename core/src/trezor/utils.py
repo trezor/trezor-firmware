@@ -9,15 +9,31 @@ from trezorutils import (  # noqa: F401
     MODEL_FULL_NAME,
     MODEL_USB_MANUFACTURER,
     MODEL_USB_PRODUCT,
+    NOTIFY_BOOT,
+    NOTIFY_DISCONNECT,
+    NOTIFY_LOCK,
+    NOTIFY_PIN_CHANGE,
+    NOTIFY_SETTING_CHANGE,
+    NOTIFY_SOFTLOCK,
+    NOTIFY_SOFTUNLOCK,
+    NOTIFY_UNLOCK,
+    NOTIFY_UNPAIR,
+    NOTIFY_WIPE,
     SCM_REVISION,
     UI_LAYOUT,
+    USE_APP_LOADING,
     USE_BACKLIGHT,
     USE_BLE,
     USE_BUTTON,
+    USE_DBG_CONSOLE,
     USE_HAPTIC,
+    USE_NRF,
     USE_OPTIGA,
     USE_POWER_MANAGER,
+    USE_RGB_LED,
     USE_SD_CARD,
+    USE_SERIAL_NUMBER,
+    USE_TELEMETRY,
     USE_THP,
     USE_TOUCH,
     USE_TROPIC,
@@ -29,13 +45,31 @@ from trezorutils import (  # noqa: F401
     firmware_vendor,
     halt,
     memcpy,
+    memzero,
+    notify_send,
     presize_module,
+    reboot,
+    reboot_and_upgrade,
     reboot_to_bootloader,
     sd_hotswap_enabled,
     unit_btconly,
     unit_color,
     unit_packaging,
+    unit_production_date,
 )
+
+if USE_TELEMETRY:
+    from trezorutils import telemetry_get  # noqa: F401
+
+if USE_NRF:
+    from trezorutils import nrf_get_version  # noqa: F401
+
+if USE_DBG_CONSOLE:
+    from trezorutils import set_log_filter  # noqa: F401
+
+if USE_SERIAL_NUMBER:
+    from trezorutils import serial_number  # noqa: F401
+
 from typing import TYPE_CHECKING
 
 if __debug__:
@@ -65,6 +99,7 @@ else:
     LOG_STACK_USAGE = False
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
     from typing import Any, Iterator, Protocol, Sequence, TypeVar
 
     from trezor.protobuf import MessageType
@@ -166,19 +201,19 @@ def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
 if TYPE_CHECKING:
 
     class HashContext(Protocol):
-        def update(self, __buf: bytes) -> None: ...
+        def update(self, __buf: AnyBytes) -> None: ...
 
         def digest(self) -> bytes: ...
 
     class HashContextInitable(HashContext, Protocol):
         def __init__(  # pylint: disable=super-init-not-called
-            self, __data: bytes | None = None
+            self, __data: AnyBytes | None = None
         ) -> None: ...
 
     class Writer(Protocol):
         def append(self, __b: int) -> None: ...
 
-        def extend(self, __buf: bytes) -> None: ...
+        def extend(self, __buf: AnyBytes) -> None: ...
 
 
 if False:  # noqa
@@ -227,24 +262,20 @@ class HashWriter:
         self.buf[0] = b
         self.ctx.update(self.buf)
 
-    def extend(self, buf: bytes) -> None:
-        self.ctx.update(buf)
+    def extend(self, __buf: AnyBytes) -> None:
+        self.ctx.update(__buf)
 
-    def write(self, buf: bytes) -> None:  # alias for extend()
-        self.ctx.update(buf)
+    def write(self, __buf: AnyBytes) -> None:  # alias for extend()
+        self.ctx.update(__buf)
 
     def get_digest(self) -> bytes:
         return self.ctx.digest()
 
 
-if TYPE_CHECKING:
-    BufferType = bytearray | memoryview
-
-
 class BufferReader:
     """Seekable and readable view into a buffer."""
 
-    def __init__(self, buffer: bytes | memoryview) -> None:
+    def __init__(self, buffer: AnyBytes) -> None:
         if isinstance(buffer, memoryview):
             self.buffer = buffer
         else:
@@ -260,7 +291,7 @@ class BufferReader:
         offset = max(offset, 0)
         self.offset = offset
 
-    def readinto(self, dst: BufferType) -> int:
+    def readinto(self, dst: AnyBuffer) -> int:
         """Read exactly `len(dst)` bytes into `dst`, or raise EOFError.
 
         Returns number of bytes read.

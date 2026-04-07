@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -19,11 +19,10 @@ from __future__ import annotations
 import logging
 import socket
 import time
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Tuple
 
 from ..log import DUMP_PACKETS
-from . import Timeout, TransportException
-from .protocol import ProtocolBasedTransport, ProtocolV1
+from . import Timeout, Transport, TransportException
 
 if TYPE_CHECKING:
     from ..models import TrezorModel
@@ -33,12 +32,13 @@ SOCKET_TIMEOUT = 0.1
 LOG = logging.getLogger(__name__)
 
 
-class UdpTransport(ProtocolBasedTransport):
+class UdpTransport(Transport):
 
     DEFAULT_HOST = "127.0.0.1"
     DEFAULT_PORT = 21324
     PATH_PREFIX = "udp"
-    ENABLED: bool = True
+    ENABLED = True
+    CHUNK_SIZE = 64
 
     def __init__(self, device: str | None = None) -> None:
         if not device:
@@ -48,24 +48,17 @@ class UdpTransport(ProtocolBasedTransport):
             devparts = device.split(":")
             host = devparts[0]
             port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
-        self.device = (host, port)
+        self.device: Tuple[str, int] = (host, port)
+
         self.socket: socket.socket | None = None
-
-        super().__init__(protocol=ProtocolV1(self))
-
-    def get_path(self) -> str:
-        return "{}:{}:{}".format(self.PATH_PREFIX, *self.device)
-
-    def find_debug(self) -> "UdpTransport":
-        host, port = self.device
-        return UdpTransport(f"{host}:{port + 1}")
+        super().__init__()
 
     @classmethod
     def _try_path(cls, path: str) -> "UdpTransport":
         d = cls(path)
         try:
             d.open()
-            if d._ping():
+            if d.is_ready():
                 return d
             else:
                 raise TransportException(
@@ -79,7 +72,7 @@ class UdpTransport(ProtocolBasedTransport):
 
     @classmethod
     def enumerate(
-        cls, _models: Iterable["TrezorModel"] | None = None
+        cls, models: Iterable["TrezorModel"] | None = None
     ) -> Iterable["UdpTransport"]:
         default_path = f"{cls.DEFAULT_HOST}:{cls.DEFAULT_PORT}"
         try:
@@ -99,50 +92,27 @@ class UdpTransport(ProtocolBasedTransport):
         assert prefix_search  # otherwise we would have raised above
         return super().find_by_path(path, prefix_search)
 
-    def wait_until_ready(self, timeout: float = 10) -> None:
-        try:
-            self.open()
-            start = time.monotonic()
-            while True:
-                if self._ping():
-                    break
-                elapsed = time.monotonic() - start
-                if elapsed >= timeout:
-                    raise Timeout("Timed out waiting for connection.")
+    def get_path(self) -> str:
+        return "{}:{}:{}".format(self.PATH_PREFIX, *self.device)
 
-                time.sleep(0.05)
-        finally:
-            self.close()
-
-    def open(self) -> None:
+    def _open(self) -> None:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.connect(self.device)
         self.socket.settimeout(SOCKET_TIMEOUT)
 
-    def close(self) -> None:
+    def _close(self) -> None:
         if self.socket is not None:
             self.socket.close()
         self.socket = None
 
-    def _ping(self) -> bool:
-        """Test if the device is listening."""
-        assert self.socket is not None
-        resp = None
-        try:
-            self.socket.sendall(b"PINGPING")
-            resp = self.socket.recv(8)
-        except Exception:
-            pass
-        return resp == b"PONGPONG"
-
-    def write_chunk(self, chunk: bytes) -> None:
+    def write_chunk(self, chunk: bytes, /) -> None:
         assert self.socket is not None
         if len(chunk) != 64:
             raise TransportException("Unexpected data length")
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
         self.socket.sendall(chunk)
 
-    def read_chunk(self, timeout: float | None = None) -> bytes:
+    def read_chunk(self, *, timeout: float | None = None) -> bytes:
         assert self.socket is not None
         start = time.time()
         while True:
@@ -155,4 +125,40 @@ class UdpTransport(ProtocolBasedTransport):
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
-        return bytearray(chunk)
+        return chunk
+
+    def find_debug(self) -> "UdpTransport":
+        host, port = self.device
+        return UdpTransport(f"{host}:{port + 1}")
+
+    def wait_until_ready(self, timeout: float = 10) -> None:
+        with self:
+            start = time.monotonic()
+            while True:
+                if self.is_ready():
+                    break
+                elapsed = time.monotonic() - start
+                if elapsed >= timeout:
+                    raise Timeout("Timed out waiting for connection.")
+
+                time.sleep(0.05)
+
+    def is_open(self) -> bool:
+        return self.socket is not None
+
+    def is_ready(self) -> bool:
+        """Test if the device is listening."""
+        if not self.is_open():
+            return False
+        assert self.socket is not None  # pyright fails otherwise
+        try:
+            LOG.log(DUMP_PACKETS, f"PINGing {self.device}")
+            self.socket.sendall(b"PINGPING")
+            resp = self.socket.recv(8)
+        except TimeoutError:
+            LOG.log(DUMP_PACKETS, f"Ping to {self.device} timed out")
+            return False
+        except Exception as e:
+            LOG.debug(f"Error while PINGing {self.device}: %s", e)
+            return False
+        return resp == b"PONGPONG"

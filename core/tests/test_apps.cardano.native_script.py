@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 from trezor import wire
-from trezor.crypto import cardano
+from trezor.crypto import bip39, cardano
 from trezor.enums import CardanoNativeScriptType
 from trezor.messages import CardanoNativeScript
 
@@ -298,8 +298,9 @@ INVALID_SCRIPTS = [
 class TestCardanoNativeScript(unittest.TestCase):
     def test_get_native_script_hash(self):
         mnemonic = "all all all all all all all all all all all all"
+        binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
         passphrase = ""
-        secret = cardano.derive_icarus(mnemonic, passphrase, False)
+        secret = cardano.derive_icarus(binary_mnemonic, passphrase, False)
         node = cardano.from_secret(secret)
         keychain = Keychain(node)
 

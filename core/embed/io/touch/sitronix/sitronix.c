@@ -3,7 +3,7 @@
 
 #ifdef KERNEL_MODE
 
-#include <io/i2c_bus.h>
+#include <sys/i2c_bus.h>
 #include <sys/irq.h>
 
 /** @addtogroup STM32U5x9J_DISCOVERY

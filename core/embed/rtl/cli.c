@@ -1,7 +1,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <rtl/mini_printf.h>
+#include <rtl/printf.h>
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -11,12 +11,30 @@
 #define ESC_COLOR_GRAY "\e[37m"
 #define ESC_COLOR_RESET "\e[39m"
 
+#define CLI_CRC_PREFIX "checked-"
+#define CLI_CRC_LENGTH 8
+
+#define CRC32_INITIAL 0xFFFFFFFF
+#define CRC32_POLYNOMIAL 0xEDB88320
+
+static uint32_t cli_crc32(uint32_t crc, const void* data, size_t size) {
+  const uint8_t* p = (const uint8_t*)data;
+  while (size--) {
+    crc ^= *p++;
+    for (int i = 0; i < 8; i++) {
+      crc = (crc >> 1) ^ (CRC32_POLYNOMIAL & (-(crc & 1)));
+    }
+  }
+  return crc;
+}
+
 bool cli_init(cli_t* cli, cli_read_cb_t read, cli_write_cb_t write,
               void* callback_context) {
   memset(cli, 0, sizeof(cli_t));
   cli->read = read;
   cli->write = write;
   cli->callback_context = callback_context;
+  cli->response_crc = CRC32_INITIAL;
 
   return true;
 }
@@ -29,8 +47,19 @@ void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,
 
 static void cli_vprintf(cli_t* cli, const char* format, va_list args) {
   char buffer[CLI_LINE_BUFFER_SIZE];
-  mini_vsnprintf(buffer, sizeof(buffer), format, args);
-  cli->write(cli->callback_context, buffer, strlen(buffer));
+  int len = vsnprintf_(buffer, sizeof(buffer), format, args);
+  if (len < 0) return;
+
+  size_t write_len = (size_t)len;
+  if (write_len >= sizeof(buffer)) {
+    write_len = sizeof(buffer) - 1;
+  }
+
+  if (cli->crc_req) {
+    cli->response_crc = cli_crc32(cli->response_crc, buffer, write_len);
+  }
+
+  cli->write(cli->callback_context, buffer, write_len);
 }
 
 static void cli_printf(cli_t* cli, const char* format, ...) {
@@ -38,6 +67,20 @@ static void cli_printf(cli_t* cli, const char* format, ...) {
   va_start(args, format);
   cli_vprintf(cli, format, args);
   va_end(args);
+}
+
+static void cli_printf_newline(cli_t* cli) {
+  if (cli->crc_req) {
+    uint32_t final_crc = ~cli->response_crc;
+    cli->crc_req = false;
+    cli_printf(cli, " %08X", final_crc);
+    cli->crc_req = true;
+  }
+  bool old_crc_req = cli->crc_req;
+  cli->crc_req = false;
+  cli_printf(cli, "\r\n");
+  cli->crc_req = old_crc_req;
+  cli->response_crc = CRC32_INITIAL;
 }
 
 void cli_vtrace(cli_t* cli, const char* format, va_list args) {
@@ -57,7 +100,7 @@ void cli_vtrace(cli_t* cli, const char* format, va_list args) {
     cli_vprintf(cli, format, args);
   }
 
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 }
 
 void cli_trace(cli_t* cli, const char* format, ...) {
@@ -87,7 +130,7 @@ void cli_ok(cli_t* cli, const char* format, ...) {
     cli_vprintf(cli, format, args);
     va_end(args);
   }
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 
   cli->final_status = true;
 }
@@ -110,7 +153,7 @@ void cli_ok_hexdata(cli_t* cli, const void* data, size_t size) {
       cli_printf(cli, "%02X", ((uint8_t*)data)[i]);
     }
   }
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 
   cli->final_status = true;
 }
@@ -136,7 +179,7 @@ static void cli_verror(cli_t* cli, const char* code, const char* format,
     cli_printf(cli, "\"");
   }
 
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 
   cli->final_status = true;
 }
@@ -180,7 +223,7 @@ void cli_progress(cli_t* cli, const char* format, ...) {
     cli_vprintf(cli, format, args);
   }
 
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 
   va_end(args);
 }
@@ -188,6 +231,12 @@ void cli_progress(cli_t* cli, const char* format, ...) {
 void cli_abort(cli_t* cli) { cli->aborted = true; }
 
 bool cli_aborted(cli_t* cli) { return cli->aborted; }
+
+void cli_enable_crc(cli_t* cli) { cli->crc_auto = true; }
+
+void cli_disable_crc(cli_t* cli) { cli->crc_auto = false; }
+
+bool cli_crc_enabled(cli_t* cli) { return cli->crc_auto; }
 
 // Finds a command record by name
 //
@@ -277,7 +326,7 @@ static int cli_readch(cli_t* cli) {
 
   for (;;) {
     char ch;
-    size_t len = cli->read(cli->callback_context, &ch, 1);
+    ssize_t len = cli->read(cli->callback_context, &ch, 1);
 
     if (len != 1) {
       return 0;
@@ -496,6 +545,8 @@ static void cli_clear_line(cli_t* cli) {
   cli->line_cursor = 0;
   cli->hist_idx = 0;
   cli->hist_prefix = 0;
+  cli->response_crc = CRC32_INITIAL;
+  cli->crc_req = cli->crc_auto;
   memset(cli->line_buffer, 0, sizeof(cli->line_buffer));
 }
 
@@ -525,6 +576,12 @@ static bool cli_split_args(cli_t* cli) {
   cli->cmd_name = cstr_token(&buf);
   cli->args_count = 0;
 
+  // Single crc check?
+  if (cstr_starts_with(cli->line_buffer, CLI_CRC_PREFIX)) {
+    cli->cmd_name += strlen(CLI_CRC_PREFIX);
+    cli->crc_req = true;
+  }
+
   while (*buf != '\0' && cli->args_count < CLI_MAX_ARGS) {
     const char* arg = cstr_token(&buf);
     if (*arg != '\0') {
@@ -539,6 +596,7 @@ void cli_process_command(cli_t* cli, const cli_command_t* cmd) {
   cli->current_cmd = cmd;
   cli->final_status = false;
   cli->aborted = false;
+  cli->response_crc = CRC32_INITIAL;
 
   // Call the command handler
   cmd->func(cli);
@@ -551,12 +609,11 @@ void cli_process_command(cli_t* cli, const cli_command_t* cmd) {
       cli_error(cli, CLI_ERROR_FATAL,
                 "Command handler didn't finish properly.");
     }
-  } else {
-    // Finalize the last command with an empty line
-    cli_printf(cli, "\r\n");
   }
 
   if (cli->interactive) {
+    // Finalize the last command with an empty line
+    cli_printf(cli, "\r\n");
     // Print the prompt
     cli_printf(cli, "> ");
   }
@@ -579,6 +636,15 @@ const cli_command_t* cli_process_io(cli_t* cli) {
   }
 
   cli_history_add(cli, cli->line_buffer);
+
+  // Calculate CRC of the command line (excluding the expected CRC suffix)
+  // (we may not use the value if crc is not requested)
+  size_t crc_offset = cstr_starts_with(cli->line_buffer, CLI_CRC_PREFIX)
+                          ? strlen(CLI_CRC_PREFIX)
+                          : 0;
+  uint32_t calculated_crc = ~cli_crc32(
+      CRC32_INITIAL, cli->line_buffer + crc_offset,
+      MAX((int)cli->line_len - (int)crc_offset - CLI_CRC_LENGTH - 1, 0));
 
   // Split command line into arguments
   if (!cli_split_args(cli)) {
@@ -608,6 +674,34 @@ const cli_command_t* cli_process_io(cli_t* cli) {
       cli_trace(cli, "Exiting interactive mode...");
     }
     goto cleanup;
+  }
+
+  if (cli->crc_req) {
+    if (cli->args_count < 1) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "CRC suffix missing");
+      goto cleanup;
+    }
+
+    uint32_t crc = 0;
+
+    const char* crc_str = cli_nth_arg(cli, cli->args_count - 1);
+
+    if (strlen(crc_str) != CLI_CRC_LENGTH ||
+        !cstr_parse_uint32(crc_str, 16, &crc)) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
+      goto cleanup;
+    }
+
+    if (calculated_crc != crc) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Expected %08X, got %08X",
+                calculated_crc, crc);
+      goto cleanup;
+    }
+
+    --cli->args_count;
   }
 
   // Find the command handler
@@ -652,7 +746,7 @@ static int find_arg(const cli_command_t* cmd, const char* name) {
 
     // Extract argument name
     const char* s = p;
-    while (*p != '\0' && (*p != '>' && *p != ']')) {
+    while (*p != '\0' && *p != '>' && *p != ']') {
       p++;
     }
 
@@ -700,7 +794,14 @@ bool cli_nth_arg_uint32(cli_t* cli, int n, uint32_t* result) {
 
 bool cli_arg_uint32(cli_t* cli, const char* name, uint32_t* result) {
   const char* arg = cli_arg(cli, name);
-  return cstr_parse_uint32(arg, 0, result);
+
+  // pick only decimal or hexadecimal
+  int base = 10;
+  if (arg[0] == '0' && (arg[1] == 'x' || arg[1] == 'X')) {
+    base = 16;
+  }
+
+  return cstr_parse_uint32(arg, base, result);
 }
 
 bool cli_arg_hex(cli_t* cli, const char* name, uint8_t* dst, size_t dst_len,

@@ -4,6 +4,6 @@ nrf/
 nrfxlib/
 test/
 tools/
-trezor/**/build/
+trezor/**/build*/
 zephyr/
 .west/

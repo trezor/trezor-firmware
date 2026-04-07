@@ -79,7 +79,7 @@ pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
     )
     .with_subtitle(TR::homescreen__settings_subtitle.into())
     .with_cancel_button()
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipe(Direction::Up, SwipeSettings::Default)
     .with_footer(
         TR::instructions__swipe_horizontally.into(),
         Some(TR::setting__adjust.into()),
@@ -87,7 +87,7 @@ pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
     .register_footer_update_fn(footer_update_fn)
     .map(|msg| match msg {
         NumberInputSliderDialogMsg::Changed(n) => {
-            display::backlight(n as _);
+            display::set_backlight(n as _);
             BRIGHTNESS.store(n as u8, Ordering::Relaxed);
             None
         }

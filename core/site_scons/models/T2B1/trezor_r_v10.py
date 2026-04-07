@@ -27,15 +27,18 @@ def configure(
 
     mcu = "STM32F427xx"
 
-    stm32f4_common_files(env, defines, sources, paths)
+    features_available += stm32f4_common_files(
+        env, features_wanted, defines, sources, paths
+    )
 
-    env.get("ENV")[
-        "CPU_ASFLAGS"
-    ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16"
-    env.get("ENV")[
-        "CPU_CCFLAGS"
-    ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
-    env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
+    ENV = env.get("ENV")
+    assert ENV
+
+    ENV["CPU_ASFLAGS"] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16"
+    ENV["CPU_CCFLAGS"] = (
+        "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
+    )
+    ENV["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
     defines += [
         mcu,
@@ -45,6 +48,15 @@ def configure(
         ("HSE_VALUE", "8000000"),
         ("USE_HSE", "1"),
     ]
+
+    paths += ["embed/sec/secret/inc"]
+    sources += ["embed/sec/secret/stm32f4/secret.c"]
+    defines += [("USE_SECRET", "1")]
+
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/stm32f4/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
 
     if "display" in features_wanted:
         sources += ["embed/io/display/vg-2864/display_driver.c"]
@@ -57,6 +69,9 @@ def configure(
         paths += ["embed/io/button/inc"]
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
+
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/button/button_debug.c"]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
@@ -72,31 +87,15 @@ def configure(
         paths += ["embed/sec/consumption_mask/inc"]
         defines += [("USE_CONSUMPTION_MASK", "1")]
 
-    if "usb" in features_wanted:
-        sources += [
-            "embed/io/usb/stm32/usb_class_hid.c",
-            "embed/io/usb/stm32/usb_class_vcp.c",
-            "embed/io/usb/stm32/usb_class_webusb.c",
-            "embed/io/usb/stm32/usb.c",
-            "embed/io/usb/stm32/usbd_conf.c",
-            "embed/io/usb/stm32/usbd_core.c",
-            "embed/io/usb/stm32/usbd_ctlreq.c",
-            "embed/io/usb/stm32/usbd_ioreq.c",
-            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
-        ]
-        features_available.append("usb")
-        paths += ["embed/io/usb/inc"]
-        defines += [("USE_USB", "1")]
-
     if "optiga" in features_wanted:
-        sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]
+        sources += ["embed/sys/i2c_bus/stm32f4/i2c_bus.c"]
         sources += ["embed/sec/optiga/stm32/optiga_hal.c"]
         sources += ["embed/sec/optiga/optiga.c"]
         sources += ["embed/sec/optiga/optiga_commands.c"]
-        sources += ["embed/sec/optiga/optiga_config.c"]
+        sources += ["embed/sec/optiga/optiga_init.c"]
         sources += ["embed/sec/optiga/optiga_transport.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
-        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/sys/i2c_bus/inc"]
         paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
         defines += [("USE_OPTIGA", "1")]

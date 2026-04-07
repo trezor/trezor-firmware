@@ -12,8 +12,8 @@ use crate::{
         },
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
-        shape,
-        shape::Renderer,
+        notification::Notification,
+        shape::{self, Renderer},
     },
 };
 
@@ -59,7 +59,7 @@ pub struct Homescreen {
     // TODO label should be a Child in theory, but the homescreen image is not, so it is
     // always painted, so we need to always paint the label too
     label: Label<'static>,
-    notification: Option<(TString<'static>, u8)>,
+    notification: Option<Notification>,
     custom_image: Option<BinaryData<'static>>,
     /// Used for HTC functionality to lock device from homescreen
     invisible_buttons: Child<ButtonController>,
@@ -74,7 +74,7 @@ pub struct Homescreen {
 impl Homescreen {
     pub fn new(
         label: TString<'static>,
-        notification: Option<(TString<'static>, u8)>,
+        notification: Option<Notification>,
         loader_description: Option<TString<'static>>,
     ) -> Self {
         // Buttons will not be visible, we only need both left and right to be existing
@@ -118,12 +118,12 @@ impl Homescreen {
                     .with_align(Alignment::Center)
                     .render(target)
             });
-        } else if let Some((notification, _level)) = &self.notification {
+        } else if let Some(notification) = &self.notification {
             shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
                 .with_bg(theme::BG)
                 .render(target);
 
-            notification.map(|c| {
+            notification.text.map(|c| {
                 shape::Text::new(baseline, c, NOTIFICATION_FONT)
                     .with_align(Alignment::Center)
                     .render(target)
@@ -132,7 +132,7 @@ impl Homescreen {
             // Painting warning icons in top corners when the text is short enough not to
             // collide with them
             let icon_width = NOTIFICATION_ICON.toif.width();
-            let text_width = notification.map(|c| NOTIFICATION_FONT.text_width(c));
+            let text_width = notification.text.map(|c| NOTIFICATION_FONT.text_width(c));
             if AREA.width() >= text_width + (icon_width + 1) * 2 {
                 shape::ToifImage::new(AREA.top_left(), NOTIFICATION_ICON.toif)
                     .with_align(Alignment2D::TOP_LEFT)

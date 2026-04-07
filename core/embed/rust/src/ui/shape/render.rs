@@ -1,3 +1,5 @@
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::LedState;
 use crate::ui::{
     display::Color,
     geometry::{Offset, Rect},
@@ -59,6 +61,12 @@ pub trait Renderer<'a> {
         self.set_viewport(original);
     }
 
+    #[cfg(feature = "rgb_led")]
+    fn set_led_state(&mut self, led: LedState);
+
+    #[cfg(feature = "rgb_led")]
+    fn led_state(&self) -> LedState;
+
     #[cfg(feature = "ui_debug")]
     fn raise_overflow_exception(&mut self);
 
@@ -79,6 +87,9 @@ where
     canvas: &'a mut C,
     /// Drawing cache (decompression context, scratch-pad memory)
     cache: &'a DrawingCache<'alloc>,
+
+    #[cfg(feature = "rgb_led")]
+    led_state: Option<LedState>,
 
     #[cfg(feature = "ui_debug")]
     overflow: bool,
@@ -104,6 +115,8 @@ where
         Self {
             canvas,
             cache,
+            #[cfg(feature = "rgb_led")]
+            led_state: None,
             #[cfg(feature = "ui_debug")]
             overflow: false,
         }
@@ -130,6 +143,18 @@ where
             shape.draw(self.canvas, self.cache);
             shape.cleanup(self.cache);
         }
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn set_led_state(&mut self, led_state: LedState) {
+        // LED color should be set once per rendered frame.
+        debug_assert!(self.led_state.is_none_or(|current| current == led_state));
+        self.led_state = Some(led_state);
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn led_state(&self) -> LedState {
+        self.led_state.unwrap_or_default()
     }
 
     #[cfg(feature = "ui_debug")]
@@ -187,6 +212,16 @@ where
         S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         self.renderer.render_shape(shape);
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn set_led_state(&mut self, led_state: LedState) {
+        self.renderer.set_led_state(led_state);
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn led_state(&self) -> LedState {
+        self.renderer.led_state()
     }
 
     #[cfg(feature = "ui_debug")]

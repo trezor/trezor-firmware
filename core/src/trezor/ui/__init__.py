@@ -5,7 +5,7 @@ from trezorui import Display
 from typing import TYPE_CHECKING
 
 from trezor import io, log, loop, utils, wire, workflow
-from trezor.messages import ButtonAck, ButtonRequest
+from trezor.messages import ButtonRequest
 from trezor.wire import context
 from trezor.wire.protocol_common import Context
 from trezorui_api import (
@@ -17,15 +17,16 @@ from trezorui_api import (
 )
 
 if utils.USE_POWER_MANAGER:
-    from apps.management.pm.autodim import autodim_clear
+    from trezor.power_management.autodim import autodim_clear
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
 
+    from trezor.enums import ButtonRequestType
     from trezorui_api import LayoutObj, UiResult  # noqa: F401
 
     T = TypeVar("T", covariant=True)
-
+    ButtonRequestMsg = tuple[ButtonRequestType, str] | None
 else:
     T = 0
     Generic = {T: object}
@@ -49,22 +50,11 @@ _REQUEST_ANIMATION_FRAME = const(1)
 See `trezor::ui::layout::base::EventCtx::ANIM_FRAME_TIMER`.
 """
 
+_UNRESPONSIVE_WARNING_TIMEOUT_MS = const(2000)
+
+
 # allow only one alert at a time to avoid alerts overlapping
 _alert_in_progress = False
-
-# in debug mode, display an indicator in top right corner
-if __debug__:
-
-    def refresh() -> None:
-        from apps.debug import screenshot
-
-        if not screenshot():
-            side = Display.WIDTH // 30
-            display.bar(Display.WIDTH - side, 0, side, side, 0xF800)
-        display.refresh()
-
-else:
-    refresh = display.refresh
 
 
 async def _alert(count: int) -> None:
@@ -92,11 +82,17 @@ def alert(count: int = 3) -> None:
         loop.schedule(_alert(count))
 
 
+async def _waiting_screen() -> None:
+    from trezor import TR
+    from trezor.ui.layouts import show_wait_text
+
+    await loop.sleep(_UNRESPONSIVE_WARNING_TIMEOUT_MS)
+    show_wait_text(TR.words__comm_trouble)
+
+
 class Shutdown(Exception):
     pass
 
-
-SHUTDOWN = Shutdown()
 
 CURRENT_LAYOUT: "Layout | ProgressLayout | None" = None
 
@@ -114,6 +110,15 @@ def set_current_layout(layout: "Layout | ProgressLayout | None") -> None:
     assert (CURRENT_LAYOUT is None) == (layout is not None)
 
     CURRENT_LAYOUT = layout
+
+
+if utils.USE_POWER_MANAGER:
+
+    def _handle_power_button_press() -> None:
+        """Handle power button press event during firmware operation."""
+        from apps.common.lock_manager import notify_suspend
+
+        notify_suspend()
 
 
 class Layout(Generic[T]):
@@ -150,9 +155,10 @@ class Layout(Generic[T]):
         self.layout = layout
         self.tasks: set[loop.Task] = set()
         self.timers: dict[int, loop.Task] = {}
-        self.result_box = loop.mailbox()
-        self.button_request_box = loop.mailbox()
+        self.result_box: loop.mailbox[Any] = loop.mailbox()
         self.button_request_ack_pending: bool = False
+        self.button_request_box: loop.mailbox[ButtonRequest | None] = loop.mailbox()
+        self.button_request_task: loop.Task | None = None
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
         self.context: Context | None = None
@@ -182,8 +188,6 @@ class Layout(Generic[T]):
 
         If the layout is already RUNNING, do nothing. If the layout is FINISHED, fail.
         """
-        global CURRENT_LAYOUT
-
         # do nothing if we are already running
         if self.is_running():
             return
@@ -205,8 +209,11 @@ class Layout(Generic[T]):
         # do not notify debuglink, we will do it when we receive an ATTACHED event
         set_current_layout(self)
 
-        # save context
-        self.context = context.CURRENT_CONTEXT
+        try:
+            # save context (if exists)
+            self.context = context.get_context()
+        except context.NoWireContext:
+            pass
 
         # attach a timer callback and paint self
         self._event(self.layout.attach_timer_fn, self._set_timer, transition_in)
@@ -215,7 +222,7 @@ class Layout(Generic[T]):
         for task in self.create_tasks():
             self._start_task(task)
 
-    def stop(self, _kill_taker: bool = True) -> None:
+    def stop(self, _close_all: bool = True) -> None:
         """Stop the layout, moving out of RUNNING state and unsetting self as the
         current layout.
 
@@ -223,25 +230,30 @@ class Layout(Generic[T]):
         FINISHED.
 
         When called externally, this kills any tasks that wait for the result, assuming
-        that the external `stop()` is a kill. When called internally, `_kill_taker` is
+        that the external `stop()` is a kill. When called internally, `_close_all` is
         set to False to indicate that a result became available and that the taker
         should be allowed to pick it up.
         """
-        global CURRENT_LAYOUT
-
         # stop all running timers and spawned tasks
         for timer in self.timers.values():
             loop.close(timer)
+
+        not_closed = set()
         for task in self.tasks:
+            if not _close_all and task is self.button_request_task:
+                # Keep `ButtonRequest` handler alive.
+                # It will be awaited and closed in `get_result()`.
+                not_closed.add(task)
+                continue
             if task != loop.this_task:
                 loop.close(task)
         self.timers.clear()
-        self.tasks.clear()
+        self.tasks = not_closed
 
         self.transition_out = self.layout.get_transition_out()
 
         # shut down anyone who is waiting for the result
-        if _kill_taker:
+        if _close_all:
             self.result_box.maybe_close()
 
         if CURRENT_LAYOUT is self:
@@ -251,7 +263,12 @@ class Layout(Generic[T]):
             set_current_layout(None)
             if __debug__:
                 if self.button_request_ack_pending:
-                    raise wire.FirmwareError("button request ack pending")
+                    msg = "button request ack pending"
+                    if utils.USE_THP:
+                        # Don't raise to avoid THP desync
+                        log.error(__name__, msg)
+                    else:
+                        raise wire.FirmwareError(msg)
                 self.notify_debuglink(None)
 
     async def get_result(self) -> T:
@@ -259,17 +276,61 @@ class Layout(Generic[T]):
         if self.is_ready():
             self.start()
         # else we are (a) still running or (b) already finished
+        is_done = None
         try:
-            if self.context is not None and self.result_box.is_empty():
-                self._start_task(self._handle_usb_iface())
-            return await self.result_box
+            if (ctx := self.context) is not None and self.result_box.is_empty():
+                is_done = loop.mailbox()  # (see below)
+
+                def _button_request_task() -> Generator[Any, Any, None]:
+                    try:
+                        yield from ctx.button_request_handler.handle(
+                            button_requests=self.button_request_box,
+                            ack_callback=self._button_request_acked,
+                        )
+                    finally:
+                        is_done.put(None)
+
+                self.button_request_task = _button_request_task()
+                self._start_task(self.button_request_task)
+            elif __debug__ and not self.button_request_box.is_empty():
+                log.debug(
+                    __name__,
+                    "ButtonRequest task not started, %s ignored",
+                    self.button_request_box.value,
+                )
+
+            result = await self.result_box
+            assert CURRENT_LAYOUT is None  # the screen is blank now
+
+            if is_done is not None:
+                # Make sure ButtonRequest is ACKed, before the result is returned.
+                # Otherwise, THP channel may become desynced (due to two consecutive writes).
+                self.put_button_request(None)
+                task = loop.spawn(_waiting_screen())
+                try:
+                    await is_done
+                finally:
+                    task.close()
+
+            return result
         finally:
+            # Close all tasks (including ButtonRequest handler)
             self.stop()
 
     def request_complete_repaint(self) -> None:
         """Request a complete repaint of the layout."""
         msg = self.layout.request_complete_repaint()
         assert msg is None
+
+    def repaint(self) -> None:
+        """Repaint the layout. Forces drawing at this moment.
+
+        Useful for recovering from an externally cleared screen, such as on resume
+        from suspend.
+        """
+        self.request_complete_repaint()
+        self.layout.paint()
+        backlight_fade(self.backlight_level)
 
     def _event(self, event_call: Callable[..., LayoutState | None], *args: Any) -> None:
         """Process an event coming out of the Rust layout. Set is as a result and shut
@@ -302,30 +363,36 @@ class Layout(Generic[T]):
 
     def _button_request(self) -> bool:
         """Process a button request coming out of the Rust layout."""
+        res = self.layout.button_request()
+        if res is None:
+            return False
+
+        if self.context is None:
+            if __debug__:
+                log.debug(__name__, "ButtonRequest ignored: %s", res)
+            return False
+
         if __debug__ and not self.button_request_box.is_empty():
             raise wire.FirmwareError(
                 "button request already pending -- "
                 "don't forget to yield your input flow from time to time ^_^"
             )
 
-        res = self.layout.button_request()
-        if res is None:
-            return False
-
-        if self.context is None:
-            return False
-
-        # in production, we don't want this to fail, hence replace=True
-        self.button_request_box.put(res, replace=True)
+        self.put_button_request(res)
         return True
+
+    def put_button_request(self, msg: ButtonRequestMsg | None) -> None:
+        br = msg and ButtonRequest(
+            code=msg[0], name=msg[1], pages=self.layout.page_count()
+        )
+        # in production, we don't want this to fail, hence replace=True
+        self.button_request_box.put(br, replace=True)
 
     def _paint(self) -> None:
         """Paint the layout and ensure that homescreen cache is properly invalidated."""
         import storage.cache as storage_cache
 
         painted = self.layout.paint()
-        if painted:
-            refresh()
         if storage_cache.homescreen_shown is not None and painted:
             storage_cache.homescreen_shown = None
 
@@ -335,12 +402,7 @@ class Layout(Generic[T]):
         This is a separate call in order for homescreens to be able to override and not
         paint when the screen contents are still valid.
         """
-        # Clear the screen of any leftovers.
-        self.request_complete_repaint()
-        self._paint()
-
-        # Turn the brightness on.
-        backlight_fade(self.backlight_level)
+        self.repaint()
 
     def _set_timer(self, token: int, duration_ms: int) -> None:
         """Timer callback for Rust layouts."""
@@ -369,15 +431,16 @@ class Layout(Generic[T]):
         down the layout if appropriate, do nothing otherwise."""
         # when emitting a message, there should not be another one already waiting
         assert self.result_box.is_empty()
-        self.stop(_kill_taker=False)
+        self.stop(_close_all=False)
         self.result_box.put(msg)
-        raise SHUTDOWN
+        raise Shutdown()
 
     def create_tasks(self) -> Iterator[loop.Task]:
         """Set up background tasks for a layout.
 
         Called from `start()`. Creates and yields a list of background tasks, typically
-        event handlers for different interfaces. Event handlers are enabled conditionally based on build options to prevent stale events in the event queue.
+        event handlers for different interfaces. Event handlers are enabled conditionally
+        based on build options to prevent stale events in the event queue.
 
         Override and then `yield from super().create_tasks()` to add more tasks."""
         if utils.USE_BUTTON:
@@ -391,13 +454,18 @@ class Layout(Generic[T]):
 
     if utils.USE_BUTTON:
 
-        def _handle_button_events(self) -> Generator:
+        def _handle_button_events(self) -> Generator[Any, tuple[int, int], None]:
             """Task that is waiting for the user button input."""
             button = loop.wait(io.BUTTON)
             try:
                 while True:
                     # Using `yield` instead of `await` to avoid allocations.
                     event = yield button
+                    if utils.USE_POWER_MANAGER:
+                        event_type, event_button = event
+                        # check for POWER_BUTTON (2), BUTTON_UP (0)
+                        if event_button == 2 and event_type == 0:
+                            _handle_power_button_press()
                     workflow.idle_timer.touch()
                     self._event(self.layout.button_event, *event)
             except Shutdown:
@@ -407,7 +475,7 @@ class Layout(Generic[T]):
 
     if utils.USE_TOUCH:
 
-        def _handle_touch_events(self) -> Generator:
+        def _handle_touch_events(self) -> Generator[Any, tuple[int, int, int], None]:
             """Task that is waiting for the user touch input."""
             touch = loop.wait(io.TOUCH)
             try:
@@ -424,37 +492,12 @@ class Layout(Generic[T]):
             finally:
                 touch.close()
 
-    async def _handle_usb_iface(self) -> None:
-        if self.context is None:
-            return
-        while True:
-            try:
-                br_code, br_name = await loop.race(
-                    self.context.read(()),
-                    self.button_request_box,
-                )
-
-                if __debug__:
-                    log.info(__name__, "ButtonRequest sent: %s", br_name)
-                await self.context.call(
-                    ButtonRequest(
-                        code=br_code, pages=self.layout.page_count(), name=br_name
-                    ),
-                    ButtonAck,
-                )
-                if __debug__:
-                    log.info(__name__, "ButtonRequest acked: %s", br_name)
-
-                if (
-                    self.button_request_ack_pending
-                    and self.state is LayoutState.TRANSITIONING
-                ):
-                    self.button_request_ack_pending = False
-                    self.state = LayoutState.ATTACHED
-                    if __debug__:
-                        self.notify_debuglink(self)
-            except Exception:
-                raise
+    def _button_request_acked(self) -> None:
+        if self.button_request_ack_pending and self.state is LayoutState.TRANSITIONING:
+            self.button_request_ack_pending = False
+            self.state = LayoutState.ATTACHED
+            if __debug__:
+                self.notify_debuglink(self)
 
     if utils.USE_BLE:
 
@@ -478,13 +521,13 @@ class Layout(Generic[T]):
 
     if utils.USE_POWER_MANAGER:
 
-        def _handle_power_manager(self) -> Generator:
+        def _handle_power_manager(self) -> Generator[Any, int, None]:
             pm = loop.wait(io.PM_EVENT)
             try:
                 while True:
                     flags = yield pm
                     if flags & io.pm.EVENT_USB_CONNECTED_CHANGED:
-                        # disconnecting from charger restarts autodim/autosuspend timer
+                        # disconnecting from charger restarts autodim/autolock timer
                         # connecting to charger clears autodim state
                         workflow.idle_timer.touch()
                         autodim_clear()
@@ -566,8 +609,7 @@ class ProgressLayout:
         def do_progress_event(val: int) -> None:
             msg = self.layout.progress_event(val, description or "")
             assert msg is None
-            if self.layout.paint():
-                refresh()
+            self.layout.paint()
 
         # animate the progress bar in a blocking fashion
         step = min(self.progress_step, max(value - self.value, 1))
@@ -580,22 +622,24 @@ class ProgressLayout:
         self.value = value
 
     def start(self) -> None:
-        global CURRENT_LAYOUT
-
         if CURRENT_LAYOUT is not self and CURRENT_LAYOUT is not None:
             CURRENT_LAYOUT.stop()
 
         assert CURRENT_LAYOUT is None
         set_current_layout(self)
 
-        self.layout.request_complete_repaint()
-        painted = self.layout.paint()
-        if painted:
-            refresh()
-        backlight_fade(BacklightLevels.NORMAL)
+        self.repaint()
 
     def stop(self) -> None:
-        global CURRENT_LAYOUT
-
         if CURRENT_LAYOUT is self:
             set_current_layout(None)
+
+    def repaint(self) -> None:
+        """Repaint the layout. Forces drawing at this moment.
+
+        Useful for recovering from an externally cleared screen, such as on resume
+        from suspend.
+        """
+        self.layout.request_complete_repaint()
+        self.layout.paint()
+        backlight_fade(BacklightLevels.NORMAL)

@@ -127,19 +127,21 @@ impl Component for Slip39Input {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
         let style = self.button.style();
+        let y_offset = style.font.visible_text_height("1") / 2;
 
         if let Some(word) = self.final_word {
             // print the final mnemonic
-            Text::new(
-                area.center() + Offset::y(style.font.allcase_text_height() / 2),
-                word,
-                style.font,
-            )
-            .with_fg(style.text_color)
-            .with_align(Alignment::Center)
-            .render(target);
+            Text::new(area.center().ofs(Offset::y(y_offset)), word, style.font)
+                .with_fg(style.text_color)
+                .with_align(Alignment::Center)
+                .render(target);
         } else {
             let input_len = self.textbox.content().len();
+
+            // Skip rendering for empty input
+            if input_len == 0 {
+                return;
+            }
 
             // Get last pending character, if any.
             let last = self
@@ -156,31 +158,28 @@ impl Component for Slip39Input {
                 });
 
             // Initial position for drawing the icons
-            let mut cursor = area.center().ofs(Offset::x(-self.size() / 2));
+            let mut cursor = area.center().ofs(Offset::x(-self.width() / 2));
             let visible_icons = input_len.saturating_sub(last.is_some() as usize);
 
-            if input_len > 0 {
-                for _ in 0..visible_icons {
-                    ToifImage::new(cursor, Self::ICON.toif)
-                        .with_align(Alignment2D::TOP_LEFT)
-                        .with_fg(style.text_color)
-                        .render(target);
-                    cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-                }
+            for _ in 0..visible_icons {
+                ToifImage::new(cursor, Self::ICON.toif)
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .with_fg(style.text_color)
+                    .render(target);
+                cursor.x += Self::ICON_SPACING + Self::ICON_WIDTH;
+            }
 
-                if let Some(last) = last {
-                    // Adapt x and y positions for the character
-                    cursor.y += style.font.allcase_text_height() / 2;
-                    cursor.x -= Self::ICON_WIDTH;
+            if let Some(last) = last {
+                // Adapt y position for the last character
+                cursor.y += y_offset;
 
-                    // Paint the last character
-                    Text::new(cursor, last, style.font)
-                        .with_align(Alignment::Start)
-                        .with_fg(style.text_color)
-                        .render(target);
+                // Paint the last character
+                Text::new(cursor, last, style.font)
+                    .with_align(Alignment::Start)
+                    .with_fg(style.text_color)
+                    .render(target);
 
-                    render_pending_marker(target, cursor, last, style.font, style.text_color);
-                }
+                render_pending_marker(target, cursor, last, style.font, style.text_color);
             }
         }
     }
@@ -189,7 +188,7 @@ impl Component for Slip39Input {
 impl Slip39Input {
     const ICON: Icon = theme::ICON_DASH_VERTICAL;
     const ICON_WIDTH: i16 = Self::ICON.toif.width();
-    const ICON_SPACE: i16 = 12;
+    const ICON_SPACING: i16 = 12;
 
     pub fn new() -> Self {
         Self {
@@ -303,10 +302,11 @@ impl Slip39Input {
         self.textbox.content().parse().ok()
     }
 
-    fn size(&self) -> i16 {
+    fn width(&self) -> i16 {
         let ndots = self.textbox.content().len();
         let mut width = Self::ICON_WIDTH * (ndots as i16);
-        width += Self::ICON_SPACE * (ndots.saturating_sub(1) as i16);
+        // the last character is wider than the icon so we count one extra space as well
+        width += Self::ICON_SPACING * (ndots as i16);
         width
     }
 }

@@ -50,7 +50,7 @@ class Signatures:
         for i in range(len(self.signature_pairs)):
             sigindex_ofs = self.sigindex_offsets[i]
             sig_ofs = self.sig_offsets[i]
-            (sigindex, sig) = self.signature_pairs[i]
+            sigindex, sig = self.signature_pairs[i]
 
             print(f"Patching sigindex {sigindex} at offset {sigindex_ofs}")
             assert 1 <= sigindex <= 5

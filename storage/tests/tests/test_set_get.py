@@ -48,18 +48,18 @@ def test_set_equal(nc_class):
 def test_set_over_ff(nc_class):
     sc, sp = common.init(nc_class, unlock=True)
     for s in (sc, sp):
-        s.set(0xFF01, b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")
+        s.set(0xFF01, b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff")
         s.set(0xFF01, b"0123456789A")
-        s.set(0xFF02, b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")
+        s.set(0xFF02, b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff")
         s.set(0xFF02, b"0123456789AB")
-        s.set(0xFF03, b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")
+        s.set(0xFF03, b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff")
         s.set(0xFF03, b"0123456789ABC")
-        s.set(0xFF04, b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")
+        s.set(0xFF04, b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff")
         s.set(0xFF04, b"0123456789ABCD")
-        s.set(0xFF05, b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")
+        s.set(0xFF05, b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff")
         s.set(0xFF05, b"0123456789ABCDE")
         s.set(
-            0xFF06, b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
+            0xFF06, b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
         )
         s.set(0xFF06, b"0123456789ABCDEF")
 
@@ -83,8 +83,8 @@ def test_set_get(nc_class):
     assert common.memory_equals(sc, sp)
 
     for s in (sc, sp):
-        s.change_pin("", "222")
-        s.change_pin("222", "99")
+        s.change_pin("222")
+        s.change_pin("99")
         s.set(0xAAAA, b"something else")
     assert common.memory_equals(sc, sp)
 

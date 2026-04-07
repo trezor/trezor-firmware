@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import bech32
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
 
 HRP_SEPARATOR = "1"
 
@@ -19,7 +24,7 @@ HRP_DREP_KEY_HASH = "drep"
 HRP_DREP_SCRIPT_HASH = "drep_script"
 
 
-def encode(hrp: str, data: bytes) -> str:
+def encode(hrp: str, data: AnyBytes) -> str:
     converted_bits = bech32.convertbits(data, 8, 5)
     return bech32.bech32_encode(hrp, converted_bits, bech32.Encoding.BECH32)
 

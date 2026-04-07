@@ -1,0 +1,120 @@
+use crate::{
+    trezorhal::usb,
+    ui::{
+        component::{Component, Event, EventCtx},
+        event::USBEvent,
+        geometry::Rect,
+        shape::Renderer,
+    },
+};
+
+#[cfg(feature = "ble")]
+use crate::{trezorhal::ble, ui::event::BLEEvent};
+
+use super::super::cshape::{render_connected_indicator, INDICATOR_OUTER_RADIUS};
+
+pub struct ConnectionIndicator {
+    pub area: Rect,
+    pub connected: bool,
+}
+
+impl ConnectionIndicator {
+    pub const AREA_SIZE_NEEDED: i16 = 2 * INDICATOR_OUTER_RADIUS + 4;
+    pub const fn new() -> Self {
+        Self {
+            area: Rect::zero(),
+            connected: false,
+        }
+    }
+
+    /// Create with current actual connection status polled at construction
+    /// time.
+    pub fn new_polled() -> Self {
+        Self {
+            area: Rect::zero(),
+            connected: is_connected(),
+        }
+    }
+
+    pub fn content_width(&self) -> i16 {
+        if self.connected {
+            Self::AREA_SIZE_NEEDED
+        } else {
+            0
+        }
+    }
+}
+
+impl Component for ConnectionIndicator {
+    type Msg = ();
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        // enforce that the bounds are big enough to fit the indicator + padding
+        debug_assert_eq!(bounds.width(), Self::AREA_SIZE_NEEDED);
+        debug_assert_eq!(bounds.height(), Self::AREA_SIZE_NEEDED);
+        self.area = bounds;
+        self.area
+    }
+
+    /// Return Some(()) when the connection status changes, None otherwise
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let old_connected = self.connected;
+        match event {
+            Event::Attach(_) => {
+                // Only poll on attach
+                self.connected = is_connected();
+            }
+            Event::USB(USBEvent::Configured) => {
+                self.connected = true;
+            }
+            Event::USB(USBEvent::Deconfigured) => {
+                // Only update if BLE is also disconnected
+                #[cfg(feature = "ble")]
+                {
+                    self.connected = ble::is_connected();
+                }
+                #[cfg(not(feature = "ble"))]
+                {
+                    self.connected = false;
+                }
+            }
+            #[cfg(feature = "ble")]
+            Event::BLE(BLEEvent::Connected) => {
+                self.connected = true;
+            }
+            #[cfg(feature = "ble")]
+            Event::BLE(BLEEvent::Disconnected) => {
+                // Only update if USB is also disconnected
+                self.connected = usb::usb_configured();
+            }
+            _ => {}
+        }
+        if self.connected != old_connected {
+            ctx.request_paint();
+            Some(())
+        } else {
+            None
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if self.connected {
+            render_connected_indicator(self.area.center(), target);
+        }
+    }
+}
+
+fn is_connected() -> bool {
+    let connected = usb::usb_configured();
+    #[cfg(feature = "ble")]
+    let connected = connected | ble::is_connected();
+    connected
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ConnectionIndicator {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ConnectionIndicator");
+        t.bool("connected", self.connected);
+    }
+}

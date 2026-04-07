@@ -9,18 +9,18 @@ thread free to interact with the device from the user's perspective.
 
 ## Running the full test suite
 
-_Note: You need Poetry, as mentioned in the core's [documentation](https://docs.trezor.io/trezor-firmware/core/) section._
+_Note: You need `uv`, as mentioned in the core's [documentation](https://docs.trezor.io/trezor-firmware/core/) section._
 
 In the `trezor-firmware` checkout, in the root of the monorepo, install the environment:
 
 ```sh
-poetry install
+uv sync
 ```
 
-Switch to a shell inside the environment:
+Activate the `uv` environment:
 
 ```sh
-poetry shell
+source .venv/bin/activate
 ```
 
 If you want to test against the emulator, run it in a separate terminal:

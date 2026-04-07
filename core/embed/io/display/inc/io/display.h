@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include <gfx/gfx_bitblt.h>
+#include <io/gfx_bitblt.h>
 
 // This is a universal API for controlling different types of display
 // controllers.
@@ -80,14 +80,14 @@ void display_set_unpriv_access(bool unpriv);
 //
 // The default backligt level is 0. Without settings it
 // to some higher value the displayed pixels are not visible.
-// Beware that his also applies to the emulator.
+// Beware that this also applies to the emulator.
 //
-// Returns the set level (usually the same value or the
-// closest value to the `level` argument)
-int display_set_backlight(int level);
+// Returns the boolean value. "True" - successful function execution.
+// "False" - a problem occurred.
+bool display_set_backlight(uint8_t level);
 
 // Gets current display level ranging from 0 (off)..255 (maximum).
-int display_get_backlight(void);
+uint8_t display_get_backlight(void);
 
 // Sets the display orientation.
 //
@@ -157,6 +157,6 @@ void display_copy_mono1p(const gfx_bitblt_t *bb);
 #ifdef TREZOR_EMULATOR
 // Save the screen content to a file.
 // The function is available only on the emulator.
-const char *display_save(const char *prefix);
-void display_clear_save(void);
+void display_save(const char *prefix);
+
 #endif

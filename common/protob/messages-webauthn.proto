@@ -2,8 +2,8 @@ syntax = "proto2";
 package hw.trezor.messages.webauthn;
 
 // Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageWebAuthn";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 /**
  * Request: List resident credentials
@@ -12,6 +12,7 @@ option java_outer_classname = "TrezorMessageWebAuthn";
  * @next Failure
  */
 message WebAuthnListResidentCredentials {
+    optional uint32 batch_size = 1;  // if set, the response will be paginated
 }
 
 /**
@@ -34,10 +35,10 @@ message WebAuthnRemoveResidentCredential {
     optional uint32 index = 1;
 }
 
-
 /**
  * Response: Resident credential list
  * @start
+ * @next WebAuthnCredentialsAck
  * @next end
  */
 message WebAuthnCredentials {
@@ -56,4 +57,13 @@ message WebAuthnCredentials {
         optional sint32 algorithm = 11;
         optional sint32 curve = 12;
     }
+    optional bool is_done = 2 [default = true];  // false = pagination should continue
 }
+
+/**
+ * Request: Send the next batch of credentials
+ * @start
+ * @next WebAuthnCredentials
+ * @next Failure
+ */
+message WebAuthnCredentialsAck {}

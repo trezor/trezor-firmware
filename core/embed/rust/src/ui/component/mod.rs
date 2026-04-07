@@ -35,7 +35,7 @@ pub mod timeout;
 pub use bar::Bar;
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, FlowMsg, Never, Timer};
 #[cfg(feature = "ble")]
-pub use ble::{BLEHandler, BLEHandlerMsg};
+pub use ble::{BLEHandler, BLEHandlerMode, BLEHandlerMsg};
 pub use border::Border;
 pub use button_request::{ButtonRequestExt, SendButtonRequest};
 #[cfg(all(
@@ -52,7 +52,7 @@ pub use map::{MsgMap, PageMap};
 pub use marquee::Marquee;
 pub use maybe::Maybe;
 pub use pad::Pad;
-pub use paginated::{PageMsg, Paginate, PaginateFull};
+pub use paginated::{PageMsg, Paginate};
 pub use placed::{FixedHeightBar, Floating, GridPlaced, Split};
 pub use qr_code::Qr;
 #[cfg(feature = "touch")]

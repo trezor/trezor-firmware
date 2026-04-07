@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import base64
 import json
 from typing import TYPE_CHECKING, Dict, List, Optional, TextIO, Tuple
@@ -22,10 +24,10 @@ import click
 import construct as c
 
 from .. import btc, messages, protobuf, tools
-from . import ChoiceType, with_client
+from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..client import Session
 
 PURPOSE_BIP44 = 44
 PURPOSE_BIP48 = 48
@@ -174,15 +176,15 @@ def cli() -> None:
     help="Sort pubkeys lexicographically using BIP-67",
 )
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     coin: str,
     address: str,
-    script_type: Optional[messages.InputScriptType],
+    script_type: messages.InputScriptType | None,
     show_display: bool,
     multisig_xpub: List[str],
-    multisig_threshold: Optional[int],
+    multisig_threshold: int | None,
     multisig_suffix_length: int,
     multisig_sort_pubkeys: bool,
     chunkify: bool,
@@ -235,7 +237,7 @@ def get_address(
         multisig = None
 
     return btc.get_address(
-        client,
+        session,
         coin,
         address_n,
         show_display,
@@ -252,9 +254,9 @@ def get_address(
 @click.option("-e", "--curve")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS))
 @click.option("-d", "--show-display", is_flag=True)
-@with_client
+@with_session
 def get_public_node(
-    client: "TrezorClient",
+    session: "Session",
     coin: str,
     address: str,
     curve: Optional[str],
@@ -266,7 +268,7 @@ def get_public_node(
     if script_type is None:
         script_type = guess_script_type_from_path(address_n)
     result = btc.get_public_node(
-        client,
+        session,
         address_n,
         ecdsa_curve_name=curve,
         show_display=show_display,
@@ -292,7 +294,7 @@ def _append_descriptor_checksum(desc: str) -> str:
 
 
 def _get_descriptor(
-    client: "TrezorClient",
+    session: "Session",
     coin: Optional[str],
     account: int,
     purpose: Optional[int],
@@ -326,7 +328,7 @@ def _get_descriptor(
 
     n = tools.parse_path(path)
     pub = btc.get_public_node(
-        client,
+        session,
         n,
         show_display=show_display,
         coin_name=coin,
@@ -363,9 +365,9 @@ def _get_descriptor(
 @click.option("-a", "--account-type", type=ChoiceType(ACCOUNT_TYPE_TO_BIP_PURPOSE))
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS))
 @click.option("-d", "--show-display", is_flag=True)
-@with_client
+@with_session
 def get_descriptor(
-    client: "TrezorClient",
+    session: "Session",
     coin: Optional[str],
     account: int,
     account_type: Optional[int],
@@ -375,7 +377,7 @@ def get_descriptor(
     """Get descriptor of given account."""
     try:
         return _get_descriptor(
-            client, coin, account, account_type, script_type, show_display
+            session, coin, account, account_type, script_type, show_display
         )
     except ValueError as e:
         raise click.ClickException(str(e))
@@ -390,8 +392,8 @@ def get_descriptor(
 @click.option("-c", "--coin", is_flag=True, hidden=True, expose_value=False)
 @click.option("-C", "--chunkify", is_flag=True)
 @click.argument("json_file", type=click.File())
-@with_client
-def sign_tx(client: "TrezorClient", json_file: TextIO, chunkify: bool) -> None:
+@with_session
+def sign_tx(session: "Session", json_file: TextIO, chunkify: bool) -> None:
     """Sign transaction.
 
     Transaction data must be provided in a JSON file. See `transaction-format.md` for
@@ -416,7 +418,7 @@ def sign_tx(client: "TrezorClient", json_file: TextIO, chunkify: bool) -> None:
     }
 
     _, serialized_tx = btc.sign_tx(
-        client,
+        session,
         coin,
         inputs,
         outputs,
@@ -447,9 +449,9 @@ def sign_tx(client: "TrezorClient", json_file: TextIO, chunkify: bool) -> None:
 )
 @click.option("-C", "--chunkify", is_flag=True)
 @click.argument("message")
-@with_client
+@with_session
 def sign_message(
-    client: "TrezorClient",
+    session: "Session",
     coin: str,
     address: str,
     message: str,
@@ -462,7 +464,7 @@ def sign_message(
     if script_type is None:
         script_type = guess_script_type_from_path(address_n)
     res = btc.sign_message(
-        client,
+        session,
         coin,
         address_n,
         message,
@@ -483,9 +485,9 @@ def sign_message(
 @click.argument("address")
 @click.argument("signature")
 @click.argument("message")
-@with_client
+@with_session
 def verify_message(
-    client: "TrezorClient",
+    session: "Session",
     coin: str,
     address: str,
     signature: str,
@@ -495,10 +497,5 @@ def verify_message(
     """Verify message."""
     signature_bytes = base64.b64decode(signature)
     return btc.verify_message(
-        client, coin, address, signature_bytes, message, chunkify=chunkify
+        session, coin, address, signature_bytes, message, chunkify=chunkify
     )
-
-
-#
-# deprecated interactive signing
-# ALL BELOW is legacy code and will be dropped

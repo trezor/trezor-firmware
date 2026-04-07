@@ -9,6 +9,7 @@ from trezor.messages import MultisigRedeemScriptType
 from trezor.utils import ensure
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from enum import IntEnum
 
     from trezor.crypto import bip32
@@ -105,12 +106,12 @@ NONSEGWIT_INPUT_SCRIPT_TYPES = (
 )
 
 
-def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
+def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> AnyBytes:
     from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
 
     sig = secp256k1.sign(node.private_key(), digest)
-    sigder = der.encode_seq((sig[1:33], sig[33:65]))
+    sigder = der.encode_signature(sig)
     return sigder
 
 
@@ -120,7 +121,7 @@ def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
     return bip340.sign(output_private_key, digest)
 
 
-def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
+def ecdsa_hash_pubkey(pubkey: AnyBytes, coin: CoinInfo) -> bytes:
     ensure(
         coin.curve_name.startswith("secp256k1")
     )  # The following code makes sense only for Weiersrass curves
@@ -203,7 +204,7 @@ def tagged_hashwriter(tag: bytes) -> HashWriter:
 def format_fee_rate(
     fee_rate: float, coin: CoinInfo, include_shortcut: bool = False
 ) -> str:
-    from trezor.strings import format_amount
+    from trezor.strings import format_amount, format_amount_unit
 
     # Use format_amount to get correct thousands separator -- micropython's built-in
     # formatting doesn't add thousands sep to floating point numbers.
@@ -216,7 +217,9 @@ def format_fee_rate(
     else:
         shortcut = ""
 
-    return f"{fee_rate_formatted} sat{shortcut}/{'v' if coin.segwit else ''}B"
+    return format_amount_unit(
+        fee_rate_formatted, f"sat{shortcut}/{'v' if coin.segwit else ''}B"
+    )
 
 
 # function copied from python/src/trezorlib/tools.py

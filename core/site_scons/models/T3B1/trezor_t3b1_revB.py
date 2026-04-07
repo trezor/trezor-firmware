@@ -29,15 +29,18 @@ def configure(
     linker_script = """embed/sys/linker/stm32u58/{target}.ld"""
     memory_layout = "memory.ld"
 
-    stm32u5_common_files(env, features_wanted, defines, sources, paths)
+    features_available += stm32u5_common_files(
+        env, features_wanted, defines, sources, paths
+    )
 
-    env.get("ENV")[
-        "CPU_ASFLAGS"
-    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 "
-    env.get("ENV")[
-        "CPU_CCFLAGS"
-    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
-    env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
+    ENV = env.get("ENV")
+    assert ENV
+
+    ENV["CPU_ASFLAGS"] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 "
+    ENV["CPU_CCFLAGS"] = (
+        "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
+    )
+    ENV["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
     defines += [
         mcu,
@@ -45,6 +48,15 @@ def configure(
         ("HW_MODEL", str(hw_model)),
         ("HW_REVISION", str(hw_revision)),
     ]
+
+    paths += ["embed/sec/secret/inc"]
+    sources += ["embed/sec/secret/stm32u5/secret.c"]
+    defines += [("USE_SECRET", "1")]
+
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/stm32u5/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
 
     if "display" in features_wanted:
         sources += ["embed/io/display/vg-2864/display_driver.c"]
@@ -58,37 +70,24 @@ def configure(
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
 
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/button/button_debug.c"]
+
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
         paths += ["embed/io/sbu/inc"]
         features_available.append("sbu")
         defines += [("USE_SBU", "1")]
 
-    if "usb" in features_wanted:
-        sources += [
-            "embed/io/usb/stm32/usb_class_hid.c",
-            "embed/io/usb/stm32/usb_class_vcp.c",
-            "embed/io/usb/stm32/usb_class_webusb.c",
-            "embed/io/usb/stm32/usb.c",
-            "embed/io/usb/stm32/usbd_conf.c",
-            "embed/io/usb/stm32/usbd_core.c",
-            "embed/io/usb/stm32/usbd_ctlreq.c",
-            "embed/io/usb/stm32/usbd_ioreq.c",
-            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
-        ]
-        features_available.append("usb")
-        paths += ["embed/io/usb/inc"]
-        defines += [("USE_USB", "1")]
-
     if "optiga" in features_wanted:
-        sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
+        sources += ["embed/sys/i2c_bus/stm32u5/i2c_bus.c"]
         sources += ["embed/sec/optiga/stm32/optiga_hal.c"]
         sources += ["embed/sec/optiga/optiga.c"]
         sources += ["embed/sec/optiga/optiga_commands.c"]
-        sources += ["embed/sec/optiga/optiga_config.c"]
+        sources += ["embed/sec/optiga/optiga_init.c"]
         sources += ["embed/sec/optiga/optiga_transport.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
-        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/sys/i2c_bus/inc"]
         paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
         defines += [
@@ -103,21 +102,20 @@ def configure(
 
     if "hw_revision" in features_wanted:
         defines += [("USE_HW_REVISION", "1")]
-        paths += ["embed/util/hw_revision/inc"]
-        sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
+        paths += ["embed/sec/hw_revision/inc"]
+        sources += ["embed/sec/hw_revision/stm32/hw_revision.c"]
 
     defines += [
         ("USE_HASH_PROCESSOR", "1"),
         ("USE_STORAGE_HWKEY", "1"),
         ("USE_TAMPER", "1"),
-        ("USE_FLASH_BURST", "1"),
         ("USE_OEM_KEYS_CHECK", "1"),
         ("USE_PVD", "1"),
     ]
 
-    env.get("ENV")["TREZOR_BOARD"] = board
-    env.get("ENV")["MCU_TYPE"] = mcu
-    env.get("ENV")["LINKER_SCRIPT"] = linker_script
-    env.get("ENV")["MEMORY_LAYOUT"] = memory_layout
+    ENV["TREZOR_BOARD"] = board
+    ENV["MCU_TYPE"] = mcu
+    ENV["LINKER_SCRIPT"] = linker_script
+    ENV["MEMORY_LAYOUT"] = memory_layout
 
     return features_available

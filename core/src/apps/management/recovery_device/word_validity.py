@@ -1,23 +1,35 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Awaitable, Callable
+
     from trezor.enums import BackupType
 
 
 class WordValidityResult(Exception):
-    pass
+    def __init__(self, show_error: Callable[[], Awaitable[None]]) -> None:
+        self.show_error = show_error
 
 
 class IdentifierMismatch(WordValidityResult):
-    pass
+    def __init__(self) -> None:
+        from .layout import show_identifier_mismatch
+
+        super().__init__(show_identifier_mismatch)
 
 
 class AlreadyAdded(WordValidityResult):
-    pass
+    def __init__(self) -> None:
+        from .layout import show_already_added
+
+        super().__init__(show_already_added)
 
 
 class ThresholdReached(WordValidityResult):
-    pass
+    def __init__(self) -> None:
+        from .layout import show_group_threshold
+
+        super().__init__(show_group_threshold)
 
 
 def check(backup_type: BackupType | None, partial_mnemonic: list[str]) -> None:

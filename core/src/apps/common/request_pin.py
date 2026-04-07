@@ -136,7 +136,7 @@ async def error_pin_invalid() -> NoReturn:
         TR.pin__wrong_pin,  # header
         exc=wire.PinInvalid,
     )
-    assert False
+    raise RuntimeError  # should be unreachable
 
 
 async def error_pin_matches_wipe_code() -> NoReturn:
@@ -146,4 +146,4 @@ async def error_pin_matches_wipe_code() -> NoReturn:
         TR.pin__invalid_pin,  # header
         exc=wire.PinInvalid,
     )
-    assert False
+    raise RuntimeError  # should be unreachable

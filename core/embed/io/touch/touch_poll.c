@@ -22,13 +22,18 @@
 #include <trezor_rtl.h>
 
 #include <io/touch.h>
+#include <sys/logging.h>
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
 #include <sys/systick.h>
 
 #include "touch_poll.h"
 
-// #define TOUCH_TRACE_EVENT
+#ifdef DEBUGLINK
+#include "touch_debug.h"
+#endif
+
+LOG_DECLARE(touch_driver);
 
 typedef struct {
   // Time (in ticks) when the tls was last updated
@@ -42,6 +47,8 @@ typedef struct {
   uint16_t last_x;
   // Previously reported y-coordinate
   uint16_t last_y;
+  // Debug state currently overrides the state
+  bool debug_active;
 } touch_fsm_t;
 
 // Touch state machine for each task
@@ -51,10 +58,20 @@ static touch_fsm_t g_touch_tls[SYSTASK_MAX_TASKS];
 static const syshandle_vmt_t g_touch_handle_vmt;
 
 bool touch_poll_init(void) {
+#ifdef DEBUGLINK
+  touch_debug_init();
+#endif
+
   return syshandle_register(SYSHANDLE_TOUCH, &g_touch_handle_vmt, NULL);
 }
 
-void touch_poll_deinit(void) { syshandle_unregister(SYSHANDLE_TOUCH); }
+void touch_poll_deinit(void) {
+  syshandle_unregister(SYSHANDLE_TOUCH);
+
+#ifdef DEBUGLINK
+  touch_debug_deinit();
+#endif
+}
 
 static void touch_fsm_clear(touch_fsm_t* fsm) {
   memset(fsm, 0, sizeof(touch_fsm_t));
@@ -64,25 +81,6 @@ static void touch_fsm_clear(touch_fsm_t* fsm) {
 bool touch_fsm_event_ready(touch_fsm_t* fsm, uint32_t touch_state) {
   return fsm->state != touch_state;
 }
-
-#ifdef TOUCH_TRACE_EVENT
-void trace_event(uint32_t event) {
-  char event_type = (event & TOUCH_START)  ? 'D'
-                    : (event & TOUCH_MOVE) ? 'M'
-                    : (event & TOUCH_END)  ? 'U'
-                                           : '-';
-
-  uint16_t x = touch_unpack_x(event);
-  uint16_t y = touch_unpack_y(event);
-
-  uint32_t time = hal_ticks_ms() % 10000;
-
-  systask_id_t task_id = systask_id(systask_active());
-
-  printf("%04ld [task=%d, event=%c, x=%3d, y=%3d]\r\n", time, task_id,
-         event_type, x, y);
-}
-#endif
 
 uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
   uint32_t ticks = hal_ticks_ms();
@@ -136,6 +134,10 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
         // This suggests that the previous touch was very short,
         // or/and the driver is not called very frequently.
         event = TOUCH_START | xy;
+
+        // We have to remember "false" touch state to convince
+        // the state machine to signal the TOUCH_END event next.
+        touch_state = event;
       } else {
         // Either the driver is starving or the coordinates
         // have not changed, which would suggest that the TOUCH_END
@@ -160,18 +162,51 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
   return event;
 }
 
+static inline char event_type_char(uint32_t event) {
+  return (event & TOUCH_START)  ? 'D'
+         : (event & TOUCH_MOVE) ? 'M'
+         : (event & TOUCH_END)  ? 'U'
+                                : '-';
+}
+
+static uint32_t touch_poll_get_state(touch_fsm_t* fsm, bool* reinstate) {
+#ifdef DEBUGLINK
+  if (touch_debug_active()) {
+    fsm->debug_active = true;
+    return touch_debug_get_state();
+  }
+
+  if (fsm->debug_active) {
+    fsm->debug_active = false;
+    *reinstate = true;
+    return touch_debug_get_state();
+  }
+#else
+  UNUSED(fsm);
+  UNUSED(reinstate);
+#endif
+
+  return touch_get_state();
+}
+
 uint32_t touch_get_event(void) {
   touch_fsm_t* fsm = &g_touch_tls[systask_id(systask_active())];
 
-  uint32_t touch_state = touch_get_state();
+  bool reinstate_state = false;
+  uint32_t touch_state = touch_poll_get_state(fsm, &reinstate_state);
 
   uint32_t event = touch_fsm_get_event(fsm, touch_state);
 
-#ifdef TOUCH_TRACE_EVENT
-  if (event != 0) {
-    trace_event(event);
+  // when leaving debug state, we force the state so that change from debug to
+  // standard does not produce events
+  if (reinstate_state) {
+    fsm->state = touch_get_state();
   }
-#endif
+
+  if (event != 0) {
+    LOG_DBG("touch_event: ev=%c, x=%d, y=%d", event_type_char(event),
+            touch_unpack_x(event), touch_unpack_y(event));
+  }
 
   return event;
 }
@@ -187,6 +222,17 @@ static void on_event_poll(void* context, bool read_awaited,
 
   if (read_awaited) {
     uint32_t touch_state = touch_get_state();
+
+#ifdef DEBUGLINK
+    touch_debug_next();
+#endif
+
+#ifdef DEBUGLINK
+    if (touch_debug_active()) {
+      touch_state = touch_debug_get_state();
+    }
+#endif
+
     syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
   }
 }

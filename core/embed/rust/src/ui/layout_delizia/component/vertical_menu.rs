@@ -7,7 +7,7 @@ use crate::{
         component::{
             base::{AttachType, Component},
             paginated::SinglePage,
-            Event, EventCtx, PaginateFull,
+            Event, EventCtx, Paginate,
         },
         constant::screen,
         display::{Color, Icon},
@@ -208,7 +208,12 @@ impl VerticalMenu {
         self
     }
 
-    pub fn danger(mut self, icon: Icon, text: TString<'static>) -> Self {
+    pub fn cancel_item(mut self, text: TString<'static>) -> Self {
+        unwrap!(self.buttons.push(VerticalMenuItem::Cancel(text).button()));
+        self
+    }
+
+    pub fn danger_item(mut self, icon: Icon, text: TString<'static>) -> Self {
         unwrap!(self.buttons.push(
             Button::with_icon_and_text(IconText::new(text, icon))
                 .styled(theme::button_warning_high())
@@ -228,15 +233,14 @@ impl Component for VerticalMenu {
         self.n_items = n_items as usize;
 
         let mut remaining = bounds;
-        let n_seps = self.buttons.len() - 1;
         for (i, button) in self.buttons.iter_mut().take(self.n_items).enumerate() {
-            let (area_button, new_remaining) = remaining.split_top(MENU_BUTTON_HEIGHT);
-            button.place(area_button);
-            remaining = new_remaining;
-            if i < n_seps {
+            if i > 0 {
                 let (_area_sep, new_remaining) = remaining.split_top(MENU_SEP_HEIGHT);
                 remaining = new_remaining;
             }
+            let (area_button, new_remaining) = remaining.split_top(MENU_BUTTON_HEIGHT);
+            button.place(area_button);
+            remaining = new_remaining;
         }
         bounds
     }
@@ -334,7 +338,9 @@ impl VerticalMenuItem {
             }
             VerticalMenuItem::Cancel(text) => {
                 let content = IconText::new(*text, theme::ICON_CANCEL);
-                Button::with_icon_and_text(content).styled(theme::button_warning_high())
+                Button::with_icon_and_text(content)
+                    .styled(theme::button_warning_high())
+                    .set_is_cancel()
             }
         }
     }
@@ -481,7 +487,7 @@ impl crate::trace::Trace for ScrolledVerticalMenu {
         let chunks_to_skip = self.pager.current().into();
         let mut chunks = self.items.chunks(self.menu_capacity).skip(chunks_to_skip);
         let current_chunk = unwrap!(chunks.next());
-
+        t.component("ScrolledVerticalMenu");
         t.in_child("menu_items", &|t| {
             t.in_list("current", &|t| {
                 for item in current_chunk {
@@ -516,7 +522,7 @@ impl<F: Fn(u16) -> TString<'static>> PagedVerticalMenu<F> {
     }
 }
 
-impl<F: Fn(u16) -> TString<'static>> PaginateFull for PagedVerticalMenu<F> {
+impl<F: Fn(u16) -> TString<'static>> Paginate for PagedVerticalMenu<F> {
     fn pager(&self) -> Pager {
         let num_pages =
             (self.item_count / self.inner.n_items) + (self.item_count % self.inner.n_items).min(1);
@@ -567,6 +573,9 @@ impl<F: Fn(u16) -> TString<'static>> Component for PagedVerticalMenu<F> {
 #[cfg(feature = "ui_debug")]
 impl<F: Fn(u16) -> TString<'static>> crate::trace::Trace for PagedVerticalMenu<F> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.inner.trace(t)
+        t.component("PagedVerticalMenu");
+        t.child("inner", &self.inner);
+        t.int("page", self.page as _);
+        t.int("item_count", self.item_count as _);
     }
 }

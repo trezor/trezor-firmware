@@ -259,6 +259,28 @@ ReturnCode st25r3916SetBitrate( uint8_t txrate, uint8_t rxrate );
  */
 ReturnCode st25r3916AdjustRegulators( uint16_t* result_mV );
 
+
+/*! 
+ *****************************************************************************
+ *  \brief  Sets supply regulators 
+ *
+ *  Manually sets the regulated voltage setting (rege).
+ *  The regulated voltages will be set to the manual configuratiom.
+ *
+ *  Regulation shall be set according to the desired voltage considering the 
+ *  supplied voltage.
+ *  
+ *  \param [in] regulation : Regulator setting
+ *
+ *  \return RFAL_ERR_IO    : Error during communication with ST25R3916
+ *  \return RFAL_ERR_PARAM : Invalid regulator setting
+ *  \return RFAL_ERR_NONE  : No error
+ *
+ *****************************************************************************
+ */
+ReturnCode st25r3916SetRegulators( uint8_t regulation );
+
+
 /*! 
  *****************************************************************************
  *  \brief  Measure Amplitude

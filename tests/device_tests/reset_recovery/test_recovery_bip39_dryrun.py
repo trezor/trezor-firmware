@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 
 from trezorlib import device, exceptions, messages, models
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
 
 from ...common import MNEMONIC12
 from ...input_flows import (
@@ -28,9 +28,9 @@ from ...input_flows import (
 )
 
 
-def do_recover_legacy(client: Client, mnemonic: list[str]):
+def do_recover_legacy(session: Session, mnemonic: list[str]) -> None:
     def input_callback(_):
-        word, pos = client.debug.read_recovery_word()
+        word, pos = session.debug.read_recovery_word()
         if pos != 0 and pos is not None:
             word = mnemonic[pos - 1]
             mnemonic[pos - 1] = None
@@ -38,70 +38,77 @@ def do_recover_legacy(client: Client, mnemonic: list[str]):
 
         return word
 
-    ret = device.recover(
-        client,
+    word_count = len(mnemonic)
+    if word_count < 24:
+        # `ScrambledWords` is disabled by default for shorter mnemonics.
+        device.apply_settings(
+            session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        )
+
+    device.recover(
+        session,
         type=messages.RecoveryType.DryRun,
-        word_count=len(mnemonic),
+        word_count=word_count,
         input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
         input_callback=input_callback,
     )
     # if the call succeeded, check that all words have been used
     assert all(m is None for m in mnemonic)
-    return ret
 
 
-def do_recover_core(client: Client, mnemonic: list[str], mismatch: bool = False):
-    with client:
+def do_recover_core(
+    session: Session, mnemonic: list[str], mismatch: bool = False
+) -> None:
+    with session.test_ctx as client:
         client.watch_layout()
-        IF = InputFlowBip39RecoveryDryRun(client, mnemonic, mismatch=mismatch)
+        IF = InputFlowBip39RecoveryDryRun(session, mnemonic, mismatch=mismatch)
         client.set_input_flow(IF.get())
-        return device.recover(client, type=messages.RecoveryType.DryRun)
+        return device.recover(session, type=messages.RecoveryType.DryRun)
 
 
-def do_recover(client: Client, mnemonic: list[str], mismatch: bool = False):
-    if client.model is models.T1B1:
-        return do_recover_legacy(client, mnemonic)
+def do_recover(session: Session, mnemonic: list[str], mismatch: bool = False) -> None:
+    if session.model is models.T1B1:
+        return do_recover_legacy(session, mnemonic)
     else:
-        return do_recover_core(client, mnemonic, mismatch)
+        return do_recover_core(session, mnemonic, mismatch)
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_dry_run(client: Client):
-    ret = do_recover(client, MNEMONIC12.split(" "))
-    assert isinstance(ret, messages.Success)
+def test_dry_run(session: Session):
+    do_recover(session, MNEMONIC12.split(" "))
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_seed_mismatch(client: Client):
+def test_seed_mismatch(session: Session):
     with pytest.raises(
         exceptions.TrezorFailure, match="does not match the one in the device"
     ):
-        do_recover(client, ["all"] * 12, mismatch=True)
+        do_recover(session, ["all"] * 12, mismatch=True)
 
 
 @pytest.mark.models("legacy")
-def test_invalid_seed_t1(client: Client):
+def test_invalid_seed_t1(session: Session):
     with pytest.raises(exceptions.TrezorFailure, match="Invalid seed"):
-        do_recover(client, ["stick"] * 12)
+        do_recover(session, ["stick"] * 12)
 
 
 @pytest.mark.models("core")
-def test_invalid_seed_core(client: Client):
-    with client:
+def test_invalid_seed_core(session: Session):
+    with session.test_ctx as client:
         client.watch_layout()
-        IF = InputFlowBip39RecoveryDryRunInvalid(client)
+        IF = InputFlowBip39RecoveryDryRunInvalid(session)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             return device.recover(
-                client,
+                session,
                 type=messages.RecoveryType.DryRun,
             )
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_uninitialized(client: Client):
+def test_uninitialized(session: Session):
     with pytest.raises(exceptions.TrezorFailure, match="not initialized"):
-        do_recover(client, ["all"] * 12)
+        do_recover(session, ["all"] * 12)
 
 
 DRY_RUN_ALLOWED_FIELDS = (
@@ -110,6 +117,7 @@ DRY_RUN_ALLOWED_FIELDS = (
     "enforce_wordlist",
     "input_method",
     "show_tutorial",
+    "backup_method",
 )
 
 
@@ -140,7 +148,7 @@ def _make_bad_params():
 
 
 @pytest.mark.parametrize("field_name, field_value", _make_bad_params())
-def test_bad_parameters(client: Client, field_name: str, field_value: Any):
+def test_bad_parameters(session: Session, field_name: str, field_value: Any):
     msg = messages.RecoveryDevice(
         type=messages.RecoveryType.DryRun,
         word_count=12,
@@ -152,4 +160,45 @@ def test_bad_parameters(client: Client, field_name: str, field_value: Any):
         exceptions.TrezorFailure,
         match="Forbidden field set in dry-run",
     ):
-        client.call(msg)
+        session.call(msg)
+
+
+@pytest.mark.setup_client(no_backup=True)
+@pytest.mark.models("core")
+def test_no_backup_fails(session: Session):
+    session.ensure_unlocked()
+    assert session.features.initialized is True
+    assert session.features.no_backup is True
+    assert (
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+
+    msg = messages.RecoveryDevice(
+        type=messages.RecoveryType.DryRun,
+        word_count=12,
+        enforce_wordlist=True,
+        input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
+    )
+    with pytest.raises(
+        exceptions.TrezorFailure,
+        match="not available for seedless devices",
+    ):
+        session.call(msg)
+
+
+@pytest.mark.setup_client(needs_backup=True)
+@pytest.mark.models("core")
+def test_backup_needed_fails(session: Session):
+    assert session.features.backup_availability == messages.BackupAvailability.Required
+
+    msg = messages.RecoveryDevice(
+        type=messages.RecoveryType.DryRun,
+        word_count=12,
+        enforce_wordlist=True,
+        input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
+    )
+    with pytest.raises(
+        exceptions.TrezorFailure,
+        match="Cannot do dry-run without backed-up seed",
+    ):
+        session.call(msg)

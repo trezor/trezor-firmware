@@ -20,10 +20,9 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/gfx_draw.h>
 #include <io/display.h>
 #include <io/display_utils.h>
-#include <rtl/mini_printf.h>
+#include <io/gfx_draw.h>
 #include "bootui.h"
 #include "icon_done.h"
 #include "icon_fail.h"

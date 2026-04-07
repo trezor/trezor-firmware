@@ -2,7 +2,7 @@
 
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -26,23 +26,22 @@ from urllib.parse import urlparse
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-from trezorlib import misc, ui
-from trezorlib.client import TrezorClient
+from trezorlib import misc
+from trezorlib.client import Session, get_default_client, get_default_session
 from trezorlib.tools import parse_path
-from trezorlib.transport import get_transport
 
 # Return path by BIP-32
 BIP32_PATH = parse_path("10016h/0")
 
 
 # Deriving master key
-def getMasterKey(client: TrezorClient) -> str:
+def getMasterKey(session: Session) -> str:
     bip32_path = BIP32_PATH
     ENC_KEY = "Activate TREZOR Password Manager?"
     ENC_VALUE = bytes.fromhex(
         "2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee"
     )
-    key = misc.encrypt_keyvalue(client, bip32_path, ENC_KEY, ENC_VALUE, True, True)
+    key = misc.encrypt_keyvalue(session, bip32_path, ENC_KEY, ENC_VALUE, True, True)
     return key.hex()
 
 
@@ -101,7 +100,7 @@ def decryptEntryValue(nonce: str, val: bytes) -> dict:
 
 
 # Decrypt give entry nonce
-def getDecryptedNonce(client: TrezorClient, entry: dict) -> str:
+def getDecryptedNonce(session: Session, entry: dict) -> str:
     print()
     print("Waiting for Trezor input ...")
     print()
@@ -117,7 +116,7 @@ def getDecryptedNonce(client: TrezorClient, entry: dict) -> str:
     ENC_KEY = f"Unlock {item} for user {entry['username']}?"
     ENC_VALUE = entry["nonce"]
     decrypted_nonce = misc.decrypt_keyvalue(
-        client, BIP32_PATH, ENC_KEY, bytes.fromhex(ENC_VALUE), False, True
+        session, BIP32_PATH, ENC_KEY, bytes.fromhex(ENC_VALUE), False, True
     )
     return decrypted_nonce.hex()
 
@@ -139,49 +138,49 @@ def printEntries(entries: dict) -> None:
 
 def main() -> None:
     try:
-        transport = get_transport()
+        client = get_default_client("pwd_reader")
+        session = get_default_session(client)
     except Exception as e:
         print(e)
         return
-
-    client = TrezorClient(transport=transport, ui=ui.ClickUI())
 
     print()
     print("Confirm operation on Trezor")
     print()
 
-    masterKey = getMasterKey(client)
-    # print('master key:', masterKey)
+    with session:
+        masterKey = getMasterKey(session)
+        # print('master key:', masterKey)
 
-    fileName = getFileEncKey(masterKey)[0]
-    # print('file name:', fileName)
+        fileName = getFileEncKey(masterKey)[0]
+        # print('file name:', fileName)
 
-    home = os.path.expanduser("~")
-    path = os.path.join(home, "Dropbox", "Apps", "TREZOR Password Manager")
-    # print('path to file:', path)
+        home = os.path.expanduser("~")
+        path = os.path.join(home, "Dropbox", "Apps", "TREZOR Password Manager")
+        # print('path to file:', path)
 
-    encKey = getFileEncKey(masterKey)[2]
-    # print('enckey:', encKey)
+        encKey = getFileEncKey(masterKey)[2]
+        # print('enckey:', encKey)
 
-    full_path = os.path.join(path, fileName)
-    parsed_json = decryptStorage(full_path, encKey)
+        full_path = os.path.join(path, fileName)
+        parsed_json = decryptStorage(full_path, encKey)
 
-    # list entries
-    entries = parsed_json["entries"]
-    printEntries(entries)
+        # list entries
+        entries = parsed_json["entries"]
+        printEntries(entries)
 
-    entry_id = input("Select entry number to decrypt: ")
-    entry_id = str(entry_id)
+        entry_id = input("Select entry number to decrypt: ")
+        entry_id = str(entry_id)
 
-    plain_nonce = getDecryptedNonce(client, entries[entry_id])
+        plain_nonce = getDecryptedNonce(session, entries[entry_id])
 
-    pwdArr = entries[entry_id]["password"]["data"]
-    pwdHex = "".join([hex(x)[2:].zfill(2) for x in pwdArr])
-    print("password: ", decryptEntryValue(plain_nonce, bytes.fromhex(pwdHex)))
+        pwdArr = entries[entry_id]["password"]["data"]
+        pwdHex = "".join([hex(x)[2:].zfill(2) for x in pwdArr])
+        print("password: ", decryptEntryValue(plain_nonce, bytes.fromhex(pwdHex)))
 
-    safeNoteArr = entries[entry_id]["safe_note"]["data"]
-    safeNoteHex = "".join([hex(x)[2:].zfill(2) for x in safeNoteArr])
-    print("safe_note:", decryptEntryValue(plain_nonce, bytes.fromhex(safeNoteHex)))
+        safeNoteArr = entries[entry_id]["safe_note"]["data"]
+        safeNoteHex = "".join([hex(x)[2:].zfill(2) for x in safeNoteArr])
+        print("safe_note:", decryptEntryValue(plain_nonce, bytes.fromhex(safeNoteHex)))
 
 
 if __name__ == "__main__":

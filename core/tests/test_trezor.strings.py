@@ -222,6 +222,27 @@ class TestStrings(unittest.TestCase):
 
         strings.format_timestamp(1616057224)
 
+    def test_trim_str(self):
+        # test ASCII
+        self.assertEqual(strings.trim_str("123", 4), "123")
+        self.assertEqual(strings.trim_str("123", 3), "123")
+        self.assertEqual(strings.trim_str("123", 2), "12")
+        self.assertEqual(strings.trim_str("123", 1), "1")
+        self.assertEqual(strings.trim_str("123", 0), "")
+
+        # test non-ASCII
+        self.assertEqual(strings.trim_str("➀➁➂", 10), "➀➁➂")
+        self.assertEqual(strings.trim_str("➀➁➂", 9), "➀➁➂")
+        self.assertEqual(strings.trim_str("➀➁➂", 8), "➀➁")
+        self.assertEqual(strings.trim_str("➀➁➂", 7), "➀➁")
+        self.assertEqual(strings.trim_str("➀➁➂", 6), "➀➁")
+        self.assertEqual(strings.trim_str("➀➁➂", 5), "➀")
+        self.assertEqual(strings.trim_str("➀➁➂", 4), "➀")
+        self.assertEqual(strings.trim_str("➀➁➂", 3), "➀")
+        self.assertEqual(strings.trim_str("➀➁➂", 2), "")
+        self.assertEqual(strings.trim_str("➀➁➂", 1), "")
+        self.assertEqual(strings.trim_str("➀➁➂", 0), "")
+
 
 if __name__ == "__main__":
     unittest.main()

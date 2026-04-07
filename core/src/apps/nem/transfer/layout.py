@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_amount_unit
 
 from ..helpers import NEM_MOSAIC_AMOUNT_DIVISOR
 from ..layout import require_confirm_final
@@ -43,7 +43,9 @@ async def ask_transfer(
     # require_confirm_transfer
     await confirm_output(
         transfer.recipient,
-        f"{format_amount(_get_xem_amount(transfer), NEM_MAX_DIVISIBILITY)} XEM",
+        format_amount_unit(
+            format_amount(_get_xem_amount(transfer), NEM_MAX_DIVISIBILITY), "XEM"
+        ),
         chunkify=chunkify,
     )
 

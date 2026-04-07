@@ -5,26 +5,25 @@ use crate::{
         display::Color,
         geometry::{Insets, Rect},
         shape::Renderer,
+        util::Pager,
     },
 };
 
 use super::{
-    constant, frame::ScrollableContent, theme, ButtonController, ButtonControllerMsg,
-    ButtonDetails, ButtonLayout, ButtonPos,
+    constant, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos,
 };
 
 pub struct ButtonPage<T>
 where
     T: Component + Paginate,
 {
-    page_count: usize,
-    active_page: usize,
     content: Child<T>,
     pad: Pad,
     cancel_btn_details: Option<ButtonDetails>,
     confirm_btn_details: Option<ButtonDetails>,
     back_btn_details: Option<ButtonDetails>,
     next_btn_details: Option<ButtonDetails>,
+    has_menu: bool,
     buttons: Child<ButtonController>,
 }
 
@@ -34,14 +33,13 @@ where
 {
     pub fn new(content: T, background: Color) -> Self {
         Self {
-            page_count: 0, // will be set in place()
-            active_page: 0,
             content: Child::new(content),
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
+            has_menu: false,
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
@@ -59,6 +57,11 @@ where
         self
     }
 
+    pub fn with_menu(mut self, has_menu: bool) -> Self {
+        self.has_menu = has_menu;
+        self
+    }
+
     pub fn with_back_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.back_btn_details = btn_details;
         self
@@ -69,26 +72,10 @@ where
         self
     }
 
-    pub fn has_next_page(&self) -> bool {
-        self.active_page < self.page_count - 1
-    }
-
-    pub fn has_previous_page(&self) -> bool {
-        self.active_page > 0
-    }
-
-    pub fn go_to_next_page(&mut self) {
-        self.active_page = self.active_page.saturating_add(1).min(self.page_count - 1);
-    }
-
-    pub fn go_to_previous_page(&mut self) {
-        self.active_page = self.active_page.saturating_sub(1);
-    }
-
     /// Basically just determining whether the right button for
     /// initial page should be "NEXT" or "CONFIRM".
     /// Can only be called when we know the final page_count.
-    fn set_buttons_for_initial_page(&mut self, page_count: usize) {
+    fn set_buttons_for_initial_page(&mut self, page_count: u16) {
         let btn_layout = self.get_button_layout(false, page_count > 1);
         self.buttons = Child::new(ButtonController::new(btn_layout));
     }
@@ -97,8 +84,9 @@ where
     /// Change the page in the content, clear the background under it and make
     /// sure it gets completely repainted. Also updating the buttons.
     fn change_page(&mut self, ctx: &mut EventCtx) {
+        let curr_page = self.pager().current();
         self.content.mutate(ctx, |ctx, content| {
-            content.change_page(self.active_page);
+            content.change_page(curr_page);
             content.request_complete_repaint(ctx);
         });
         self.update_buttons(ctx);
@@ -107,44 +95,41 @@ where
 
     /// Reflecting the current page in the buttons.
     fn update_buttons(&mut self, ctx: &mut EventCtx) {
-        let btn_layout = self.get_button_layout(self.has_previous_page(), self.has_next_page());
+        let pager = self.pager();
+        let btn_layout = self.get_button_layout(pager.has_prev(), pager.has_next());
         self.buttons.mutate(ctx, |_ctx, buttons| {
             buttons.set(btn_layout);
         });
     }
 
     fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
-        let btn_left = self.get_left_button_details(!has_prev);
-        let btn_right = self.get_right_button_details(has_next);
-        ButtonLayout::new(btn_left, None, btn_right)
-    }
-
-    fn get_left_button_details(&self, is_first: bool) -> Option<ButtonDetails> {
-        if is_first {
+        let btn_left = if !has_prev {
             self.cancel_btn_details.clone()
         } else {
             self.back_btn_details.clone()
-        }
-    }
-
-    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails> {
-        if has_next_page {
-            self.next_btn_details.clone()
-        } else {
-            self.confirm_btn_details.clone()
-        }
+        };
+        let (btn_middle, btn_right) = match (has_next, self.has_menu) {
+            (true, _) => (None, self.next_btn_details.clone()),
+            (false, false) => (None, self.confirm_btn_details.clone()),
+            (false, true) => (
+                self.confirm_btn_details.clone().map(|b| b.with_arms()),
+                Some(ButtonDetails::info_icon()),
+            ),
+        };
+        ButtonLayout::new(btn_left, btn_middle, btn_right)
     }
 }
 
-impl<T> ScrollableContent for ButtonPage<T>
+impl<T> Paginate for ButtonPage<T>
 where
     T: Component + Paginate,
 {
-    fn page_count(&self) -> usize {
-        self.page_count
+    fn pager(&self) -> Pager {
+        self.content.pager()
     }
-    fn active_page(&self) -> usize {
-        self.active_page
+
+    fn change_page(&mut self, active_page: u16) {
+        self.content.change_page(active_page);
     }
 }
 
@@ -164,20 +149,19 @@ where
             .place(content_area.inset(Insets::top(constant::LINE_SPACE)));
         // Need to be called here, only after content is placed
         // and we can calculate the page count.
-        self.page_count = self.content.page_count();
-        self.set_buttons_for_initial_page(self.page_count);
+        self.set_buttons_for_initial_page(self.content.pager().total());
         self.buttons.place(button_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.page_count());
+        ctx.set_page_count(self.pager().total());
         if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event) {
             match pos {
                 ButtonPos::Left => {
-                    if self.has_previous_page() {
+                    if self.pager().has_prev() {
                         // Clicked BACK. Scroll up.
-                        self.go_to_previous_page();
+                        self.prev_page();
                         self.change_page(ctx);
                     } else if self.cancel_btn_details.is_some() {
                         // Clicked CANCEL. Send result.
@@ -186,17 +170,20 @@ where
                         return None;
                     }
                 }
+                ButtonPos::Middle => {
+                    return Some(PageMsg::Confirmed);
+                }
                 ButtonPos::Right => {
-                    if self.has_next_page() {
+                    if self.pager().has_next() {
                         // Clicked NEXT. Scroll down.
-                        self.go_to_next_page();
+                        self.next_page();
                         self.change_page(ctx);
+                    } else if self.has_menu {
+                        return Some(PageMsg::Info);
                     } else {
-                        // Clicked CONFIRM. Send result.
                         return Some(PageMsg::Confirmed);
                     }
                 }
-                _ => {}
             }
         }
 
@@ -222,9 +209,10 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ButtonPage");
-        t.int("active_page", self.active_page as i64);
-        t.int("page_count", self.page_count as i64);
+        t.int("active_page", self.pager().current() as i64);
+        t.int("page_count", self.pager().total() as i64);
         t.child("buttons", &self.buttons);
         t.child("content", &self.content);
+        t.bool("has_menu", self.has_menu);
     }
 }

@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -14,24 +14,29 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import atexit
 import logging
 import os
+import socket
 import subprocess
 import time
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, TextIO, Union, cast
 
-from ..debuglink import TrezorClientDebugLink
+from ..debuglink import DebugLinkNotFound, TrezorTestContext
+from ..transport import Transport
 from ..transport.udp import UdpTransport
 
 LOG = logging.getLogger(__name__)
 
+TROPIC_MODEL_WAIT_TIME = 10
 EMULATOR_WAIT_TIME = 60
 _RUNNING_PIDS = set()
 
 
-def _cleanup_pids():
+def _cleanup_pids() -> None:
     for process in _RUNNING_PIDS:
         process.kill()
 
@@ -44,6 +49,101 @@ def _rm_f(path: Path) -> None:
         path.unlink()
     except FileNotFoundError:
         pass
+
+
+class TropicModel:
+    def __init__(
+        self,
+        workdir: Path,
+        profile_dir: Path,
+        port: int,
+        configfile: str,
+        logfile: Union[TextIO, str, Path],
+    ) -> None:
+        self.workdir = workdir
+        self.profile_dir = profile_dir
+        self.port = port
+        self.configfile = configfile
+        self.logfile = logfile
+        self.process: Optional[subprocess.Popen] = None
+
+    def start(self) -> None:
+        self.process = self._launch_process()
+        _RUNNING_PIDS.add(self.process)
+        try:
+            self._wait_until_ready()
+        except TimeoutError:
+            # Assuming that after the default, the process is stuck
+            LOG.warning(
+                f"Tropic model did not come up after {TROPIC_MODEL_WAIT_TIME} seconds"
+            )
+            self.process.kill()
+            raise
+
+    def stop(self) -> None:
+        if self.process:
+            LOG.info("Terminating Tropic model...")
+            start = time.monotonic()
+            self.process.terminate()
+            try:
+                self.process.wait(TROPIC_MODEL_WAIT_TIME)
+                end = time.monotonic()
+                LOG.info(f"Tropic model shut down after {end - start:.3f} seconds")
+            except subprocess.TimeoutExpired:
+                LOG.info("Tropic model seems stuck. Sending kill signal.")
+                self.process.kill()
+            _RUNNING_PIDS.remove(self.process)
+
+    def _launch_process(self) -> subprocess.Popen:
+        # Opening the file if it is not already opened
+        if hasattr(self.logfile, "write"):
+            output = self.logfile
+        else:
+            assert isinstance(self.logfile, (str, Path))
+            output = open(self.logfile, "w")
+
+        return subprocess.Popen(
+            [
+                "model_server",
+                "tcp",
+                "-c",
+                self.configfile,
+                "-p",
+                str(self.port),
+                "-o",
+                str(self.profile_dir / "tropic_model_config_output.yml"),
+            ],
+            cwd=self.workdir,
+            stdout=cast(TextIO, output),
+            stderr=subprocess.STDOUT,
+        )
+
+    def _wait_until_ready(self, timeout: float = TROPIC_MODEL_WAIT_TIME) -> None:
+        assert self.process is not None, "Tropic model not started"
+        LOG.info("Waiting for Tropic model to come up...")
+        start = time.monotonic()
+        while True:
+            try:
+                with socket.create_connection(("127.0.0.1", self.port), timeout=1):
+                    # seems that even if the model is listening for connections
+                    # it sometimes needs up to 2 seconds more
+                    # before it actually correctly processes requests
+                    # TODO: https://github.com/trezor/trezor-firmware/pull/6128
+                    time.sleep(2)
+                    break
+            except OSError:
+                pass
+
+            if self.process.poll() is not None:
+                raise RuntimeError("Tropic model process died")
+
+            elapsed = time.monotonic() - start
+            if elapsed >= timeout:
+                raise TimeoutError("Can't connect to Tropic model")
+
+            time.sleep(0.1)
+
+        LOG.info(f"Emulator ready after {time.monotonic() - start:.3f} seconds")
 
 
 class Emulator:
@@ -83,8 +183,8 @@ class Emulator:
             self.logfile = self.profile_dir / "trezor.log"
 
         # Using `client` property instead to assert `not None`
-        self._client: Optional[TrezorClientDebugLink] = None
-        self.process: Optional[subprocess.Popen] = None
+        self._client: TrezorTestContext | None = None
+        self.process: subprocess.Popen | None = None
 
         self.port = 21324
         self.headless = headless
@@ -95,8 +195,14 @@ class Emulator:
         # To save all screenshots properly in one directory between restarts
         self.restart_amount = 0
 
+    def start_tropic_model(self) -> None:
+        pass
+
+    def stop_tropic_model(self) -> None:
+        pass
+
     @property
-    def client(self) -> TrezorClientDebugLink:
+    def client(self) -> TrezorTestContext:
         """So that type-checkers do not see `client` as `Optional`.
 
         (it is not None between `start()` and `stop()` calls)
@@ -114,15 +220,14 @@ class Emulator:
     def _get_transport(self) -> UdpTransport:
         return UdpTransport(f"127.0.0.1:{self.port}")
 
-    def wait_until_ready(self, timeout: float = EMULATOR_WAIT_TIME) -> None:
+    def _wait_until_ready(self, timeout: float = EMULATOR_WAIT_TIME) -> None:
         assert self.process is not None, "Emulator not started"
-        transport = self._get_transport()
-        transport.open()
+        self.transport.open()
         LOG.info("Waiting for emulator to come up...")
         start = time.monotonic()
         try:
             while True:
-                if transport._ping():
+                if self.transport.is_ready():
                     break
                 if self.process.poll() is not None:
                     raise RuntimeError("Emulator process died")
@@ -133,7 +238,7 @@ class Emulator:
 
                 time.sleep(0.1)
         finally:
-            transport.close()
+            self.transport.close()
 
         LOG.info(f"Emulator ready after {time.monotonic() - start:.3f} seconds")
 
@@ -145,7 +250,7 @@ class Emulator:
         self.stop()
         return ret
 
-    def launch_process(self) -> subprocess.Popen:
+    def _launch_process(self) -> subprocess.Popen:
         args = self.make_args()
         env = self.make_env()
 
@@ -164,7 +269,11 @@ class Emulator:
             env=env,
         )
 
-    def start(self) -> None:
+    def start(
+        self,
+        transport: Optional[UdpTransport] = None,
+        debug_transport: Optional[Transport] = None,
+    ) -> None:
         if self.process:
             if self.process.poll() is not None:
                 # process has died, stop and start again
@@ -174,10 +283,13 @@ class Emulator:
                 # process is running, no need to start again
                 return
 
-        self.process = self.launch_process()
+        self.start_tropic_model()
+
+        self.transport = transport or self._get_transport()
+        self.process = self._launch_process()
         _RUNNING_PIDS.add(self.process)
         try:
-            self.wait_until_ready()
+            self._wait_until_ready()
         except TimeoutError:
             # Assuming that after the default 60-second timeout, the process is stuck
             LOG.warning(f"Emulator did not come up after {EMULATOR_WAIT_TIME} seconds")
@@ -187,15 +299,19 @@ class Emulator:
         (self.profile_dir / "trezor.pid").write_text(str(self.process.pid) + "\n")
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
 
-        transport = self._get_transport()
-        self._client = TrezorClientDebugLink(
-            transport, auto_interact=self.auto_interact
-        )
-        self._client.open()
+        try:
+            self._client = TrezorTestContext(
+                transport=self.transport,
+                auto_interact=self.auto_interact,
+                debug_transport=debug_transport,
+            )
+        except DebugLinkNotFound as e:
+            # Don't fail `start()` to allow non-debug emulator sanity test.
+            LOG.warning("DebugLink not found: %s", e)
 
     def stop(self) -> None:
         if self._client:
-            self._client.close()
+            self._client.transport.close()
         self._client = None
 
         if self.process:
@@ -211,6 +327,8 @@ class Emulator:
                 self.process.kill()
             _RUNNING_PIDS.remove(self.process)
 
+        self.stop_tropic_model()
+
         _rm_f(self.profile_dir / "trezor.pid")
         _rm_f(self.profile_dir / "trezor.port")
         self.process = None
@@ -219,8 +337,9 @@ class Emulator:
         # preserving the recording directory between restarts
         self.restart_amount += 1
         prev_screenshot_dir = self.client.debug.screenshot_recording_dir
+        debug_transport = self.client.debug.transport
         self.stop()
-        self.start()
+        self.start(transport=self.transport, debug_transport=debug_transport)
         if prev_screenshot_dir:
             self.client.debug.start_recording(
                 prev_screenshot_dir, refresh_index=self.restart_amount
@@ -242,6 +361,10 @@ class CoreEmulator(Emulator):
     def __init__(
         self,
         *args: Any,
+        launch_tropic_model: bool = False,
+        tropic_model_port: Optional[int] = None,
+        tropic_model_configfile: Optional[str] = None,
+        tropic_model_logfile: Union[TextIO, str, Path, None] = None,
         port: Optional[int] = None,
         main_args: Sequence[str] = ("-m", "main"),
         workdir: Optional[Path] = None,
@@ -258,11 +381,34 @@ class CoreEmulator(Emulator):
         if sdcard is not None:
             self.sdcard.write_bytes(sdcard)
 
+        if launch_tropic_model:
+            assert tropic_model_port
+            assert tropic_model_configfile
+            self.tropic_model = TropicModel(
+                workdir=self.workdir,
+                profile_dir=self.profile_dir,
+                port=tropic_model_port,
+                configfile=tropic_model_configfile,
+                logfile=(
+                    tropic_model_logfile or self.profile_dir / "trezor-tropic-model.log"
+                ),
+            )
+        else:
+            self.tropic_model = None
+
         if port:
             self.port = port
         self.disable_animation = disable_animation
         self.main_args = list(main_args)
         self.heap_size = heap_size
+
+    def start_tropic_model(self) -> None:
+        if self.tropic_model:
+            self.tropic_model.start()
+
+    def stop_tropic_model(self) -> None:
+        if self.tropic_model:
+            self.tropic_model.stop()
 
     def make_env(self) -> Dict[str, str]:
         env = super().make_env()
@@ -276,6 +422,8 @@ class CoreEmulator(Emulator):
         if self.headless or self.disable_animation:
             env["TREZOR_DISABLE_FADE"] = "1"
             env["TREZOR_DISABLE_ANIMATION"] = "1"
+        if self.tropic_model:
+            env["TROPIC_MODEL_PORT"] = str(self.tropic_model.port)
 
         return env
 
@@ -296,3 +444,9 @@ class LegacyEmulator(Emulator):
         if self.headless:
             env["SDL_VIDEODRIVER"] = "dummy"
         return env
+
+    def start_tropic_model(self) -> None:
+        pass
+
+    def stop_tropic_model(self) -> None:
+        pass

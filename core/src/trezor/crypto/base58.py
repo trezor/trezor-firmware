@@ -13,16 +13,21 @@
 # This module adds shiny packaging and support for python3.
 #
 
-from typing import Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+    from typing import Callable
 
 # 58 character alphabet used
 _alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
-def encode(data: bytes, alphabet: str = _alphabet) -> str:
+def encode(data: AnyBytes, alphabet: str = _alphabet) -> str:
     """
     Convert bytes to base58 encoded string.
     """
+    data = bytes(data)
     origlen = len(data)
     data = data.lstrip(b"\0")
     newlen = len(data)
@@ -61,41 +66,44 @@ def decode(string: str, alphabet: str = _alphabet) -> bytes:
     return bytes((b for b in reversed(result + [0] * (origlen - newlen))))
 
 
-def sha256d_32(data: bytes) -> bytes:
+def sha256d_32(data: AnyBytes) -> bytes:
     from .hashlib import sha256
 
     return sha256(sha256(data).digest()).digest()[:4]
 
 
-def groestl512d_32(data: bytes) -> bytes:
+def groestl512d_32(data: AnyBytes) -> bytes:
     from .hashlib import groestl512
 
     return groestl512(groestl512(data).digest()).digest()[:4]
 
 
-def blake256d_32(data: bytes) -> bytes:
+def blake256d_32(data: AnyBytes) -> bytes:
     from .hashlib import blake256
 
     return blake256(blake256(data).digest()).digest()[:4]
 
 
-def keccak_32(data: bytes) -> bytes:
+def keccak_32(data: AnyBytes) -> bytes:
     from .hashlib import sha3_256
 
     return sha3_256(data, keccak=True).digest()[:4]
 
 
-def ripemd160_32(data: bytes) -> bytes:
+def ripemd160_32(data: AnyBytes) -> bytes:
     from .hashlib import ripemd160
 
     return ripemd160(data).digest()[:4]
 
 
-def encode_check(data: bytes, digestfunc: Callable[[bytes], bytes] = sha256d_32) -> str:
+def encode_check(
+    data: AnyBytes, digestfunc: Callable[[AnyBytes], AnyBytes] = sha256d_32
+) -> str:
     """
     Convert bytes to base58 encoded string, append checksum.
     """
-    return encode(data + digestfunc(data))
+    bytes_data = bytes(data)
+    return encode(bytes_data + digestfunc(bytes_data))
 
 
 def decode_check(

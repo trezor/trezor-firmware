@@ -1,5 +1,20 @@
 from typing import *
+from buffer_types import *
 from trezor import utils
+from trezor.enums import ButtonRequestType, RecoveryType
+# Note: `PropertyType` / `StrPropertyType` are very much WIP.
+# Historical context: Initially all we had was
+# `tuple[str, str]`, `tuple[str | None, str | bytes | None, bool | None]`, etc.
+# which we unified under `PropertyType`.
+# We then later introduced `StrPropertyType` for cases where the value
+# cannot be `bytes` and started getting rid of `PropertyType` uses.
+# There are still a few instances where properties use `bytes`,
+# but we should probably get rid of all and drop `PropertyType` completely.
+# The next goal would be to replace the `bool` with something
+# that can encode actual types / rendering strategies.
+# See more details here: https://github.com/trezor/trezor-firmware/issues/5411
+PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
+StrPropertyType = tuple[str | None, str | None, bool | None]
 T = TypeVar("T")
 
 
@@ -57,7 +72,7 @@ class LayoutObj(Generic[T]):
             """Paint bounds of individual components on screen."""
     def page_count(self) -> int:
         """Return the number of pages in the layout object."""
-    def button_request(self) -> tuple[int, str] | None:
+    def button_request(self) -> tuple[ButtonRequestType, str] | None:
         """Return (code, type) of button request made during the last event or timer pass."""
     def get_transition_out(self) -> AttachType:
         """Return the transition type."""
@@ -78,7 +93,7 @@ INFO: UiResult
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def check_homescreen_format(data: bytes) -> bool:
+def check_homescreen_format(data: AnyBytes) -> bool:
     """Check homescreen format and dimensions."""
 
 
@@ -110,6 +125,7 @@ def confirm_action(
     description: str | None,
     subtitle: str | None = None,
     verb: str | None = None,
+    cancel: bool = True,
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,
@@ -125,7 +141,7 @@ def confirm_action(
 def confirm_address(
     *,
     title: str,
-    address: str | bytes,
+    address: StrOrBytes,
     address_label: str | None = None,
     verb: str | None = None,
     info_button: bool = False,
@@ -139,7 +155,7 @@ def confirm_trade(
     *,
     title: str,
     subtitle: str,
-    sell_amount: str,
+    sell_amount: str | None,
     buy_amount: str,
     back_button: bool = False,
 ) -> LayoutObj[UiResult]:
@@ -151,19 +167,20 @@ def confirm_trade(
 def confirm_value(
     *,
     title: str,
-    value: str | bytes,
+    value: StrOrBytes,
     description: str | None,
     is_data: bool = True,
     extra: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    info: bool = True,
+    info: bool = False,
     hold: bool = False,
     chunkify: bool = False,
     page_counter: bool = False,
     prompt_screen: bool = False,
     cancel: bool = False,
+    back_button: bool = False,
     warning_footer: str | None = None,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
@@ -178,7 +195,7 @@ def confirm_value(
 def confirm_value_intro(
     *,
     title: str,
-    value: str | bytes,
+    value: StrOrBytes,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
@@ -217,7 +234,7 @@ def confirm_fido(
     title: str,
     app_name: str,
     icon_name: str | None,
-    accounts: list[str | None],
+    accounts: Sequence[str | None],
 ) -> LayoutObj[int | UiResult]:
     """FIDO confirmation.
     Returns page index in case of confirmation and CANCELLED otherwise.
@@ -237,7 +254,7 @@ def confirm_firmware_update(
 def confirm_homescreen(
     *,
     title: str,
-    image: bytes,
+    image: AnyBytes,
 ) -> LayoutObj[UiResult]:
     """Confirm homescreen."""
 
@@ -271,7 +288,7 @@ def confirm_more(
     button: str,
     button_style_confirm: bool = False,
     hold: bool = False,
-    items: Iterable[tuple[str | bytes, bool]],
+    items: Iterable[tuple[StrOrBytes, bool]],
 ) -> LayoutObj[UiResult]:
     """Confirm long content with the possibility to go back from any page.
     Meant to be used with confirm_with_info on UI Bolt and Caesar."""
@@ -282,9 +299,10 @@ def confirm_properties(
     *,
     title: str,
     subtitle: str | None = None,
-    items: list[tuple[str | None, str | bytes | None, bool | None]],
+    items: Sequence[PropertyType],
     hold: bool = False,
     verb: str | None = None,
+    external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
     the value is to be rendered as binary with monospace font, False otherwise."""
@@ -303,15 +321,21 @@ def confirm_summary(
     fee: str,
     fee_label: str,
     title: str | None = None,
-    account_items: Iterable[tuple[str, str]] | None = None,
+    account_items: Iterable[StrPropertyType] | None = None,
     account_title: str | None = None,
-    extra_items: Iterable[tuple[str, str]] | None = None,
+    extra_items: Iterable[StrPropertyType] | None = None,
     extra_title: str | None = None,
     verb_cancel: str | None = None,
     back_button: bool = False,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
-    """Confirm summary of a transaction."""
+    """Confirm summary of a transaction.
+    account_items and extra_items need to be:
+     * a list (on Eckhart and Caesar)
+     * an iterable (on Delizia)
+     * None / non-None on Bolt
+    TODO: get rid of account_items and extra_items for consistency!
+    """
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -319,7 +343,7 @@ def confirm_with_info(
     *,
     title: str,
     subtitle: str | None = None,
-    items: Iterable[tuple[str | bytes, bool]],
+    items: Iterable[tuple[StrOrBytes, bool]],
     verb: str,
     verb_info: str,
     verb_cancel: str | None = None,
@@ -344,40 +368,11 @@ def continue_recovery_homepage(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def flow_confirm_output(
+def flow_confirm_set_new_code(
     *,
-    title: str | None,
-    subtitle: str | None,
-    message: str,
-    description: str | None,
-    extra: str | None,
-    amount: str | None,
-    chunkify: bool,
-    text_mono: bool,
-    account_title: str,
-    account: str | None,
-    account_path: str | None,
-    br_code: ButtonRequestType,
-    br_name: str,
-    address_item: (str, str) | None,
-    extra_item: (str, str) | None,
-    summary_items: Iterable[tuple[str, str]] | None = None,
-    fee_items: Iterable[tuple[str, str]] | None = None,
-    summary_title: str | None = None,
-    summary_br_code: ButtonRequestType | None = None,
-    summary_br_name: str | None = None,
-    cancel_text: str | None = None,
+    is_wipe_code: bool,
 ) -> LayoutObj[UiResult]:
-    """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
-
-
-# rust/src/ui/api/firmware_micropython.rs
-def flow_confirm_set_new_pin(
-    *,
-    title: str,
-    description: str,
-) -> LayoutObj[UiResult]:
-    """Confirm new PIN setup with an option to cancel action."""
+    """Confirm new PIN/wipe code setup with an option to cancel action."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -393,7 +388,7 @@ def flow_get_address(
     case_sensitive: bool,
     account: str | None,
     path: str | None,
-    xpubs: list[tuple[str, str]],
+    xpubs: Sequence[tuple[str, str]],
     br_code: ButtonRequestType,
     br_name: str,
 ) -> LayoutObj[UiResult]:
@@ -424,7 +419,7 @@ def multiple_pages_texts(
     *,
     title: str,
     verb: str,
-    items: list[str],
+    items: Sequence[str],
 ) -> LayoutObj[UiResult]:
     """Show multiple texts, each on its own page. TR specific."""
 
@@ -484,9 +479,10 @@ def request_duration(
 def request_pin(
     *,
     prompt: str,
-    subprompt: str,
+    attempts: str,
     allow_cancel: bool = True,
     wrong_pin: bool = False,
+    last_attempt: bool = False,
 ) -> LayoutObj[str | UiResult]:
     """Request pin on device."""
 
@@ -495,9 +491,21 @@ def request_pin(
 def request_passphrase(
     *,
     prompt: str,
+    prompt_empty: str,
     max_len: int,
 ) -> LayoutObj[str | UiResult]:
     """Passphrase input keyboard."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def request_string(
+    *,
+    prompt: str,
+    max_len: int,
+    allow_empty: bool,
+    prefill: str | None,
+) -> LayoutObj[str | UiResult]:
+    """Label input keyboard."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -525,7 +533,7 @@ def select_word(
 def select_word_count(
     *,
     recovery_type: RecoveryType,
-) -> LayoutObj[int | str | UIResult]:  # TR returns str
+) -> LayoutObj[int | str | UiResult]:  # TR returns str
     """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
     For unlocking a repeated backup, select between 20 and 33."""
 
@@ -544,7 +552,7 @@ def show_address_details(
     details_title: str,
     account: str | None,
     path: str | None,
-    xpubs: list[tuple[str, str]],
+    xpubs: Sequence[tuple[str, str]],
 ) -> LayoutObj[UiResult]:
     """Show address details - QR code, account, path, cosigner xpubs."""
 
@@ -596,9 +604,8 @@ def show_group_share_success(
 # rust/src/ui/api/firmware_micropython.rs
 def show_homescreen(
     *,
-    label: str | None,
-    notification: str | None,
-    notification_level: int = 0,
+    label: str,
+    notification: tuple[str, int, bool] | None = None,
     lockable: bool,
     skip_first_paint: bool,
 ) -> LayoutObj[UiResult]:
@@ -608,18 +615,30 @@ def show_homescreen(
 # rust/src/ui/api/firmware_micropython.rs
 def show_device_menu(
     *,
-    failed_backup: bool,
-    firmware_version: str,
-    device_name: str,
-    paired_devices: Iterable[str],
-    auto_lock_delay: str,
-) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
-    """Show the device menu."""
+    init_submenu_idx: int | None,
+    backup_failed: bool,
+    backup_needed: bool,
+    ble_enabled: bool,
+    paired_devices: Iterable[tuple[str, tuple[str, str] | None]],
+    connected_idx: int | None,
+    pin_enabled: bool | None,
+    auto_lock: tuple[str, str] | None,
+    wipe_code_enabled: bool | None,
+    backup_check_allowed: bool,
+    device_name: str | None,
+    brightness: str | None,
+    haptics_enabled: bool | None,
+    led_enabled: bool | None,
+    about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
+    production_year: str | None,
+) -> LayoutObj[UiResult | tuple[int, int | None, int]]:
+    """Show the device menu. Result is either CANCELLED or a tuple (action, action_arg, parent_menu_id)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
 def show_pairing_device_name(
     *,
+    description: str,
     device_name: str,
 ) -> LayoutObj[UiResult]:
     """Pairing device: first screen (device name).
@@ -635,6 +654,22 @@ def show_ble_pairing_code(
 ) -> LayoutObj[UiResult]:
     """BLE pairing: second screen (pairing code).
     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def wait_ble_host_confirmation() -> LayoutObj[UiResult]:
+    """Pairing device: third screen (waiting for host confirmation).
+    Returns on BLEEvent::{PairingCanceled, Disconnected}."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def confirm_thp_pairing(
+    *,
+    title: str,
+    description: str,
+    args: Iterable[str],
+) -> LayoutObj[UiResult]:
+    """THP pairing: first screen (host and app names)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -662,7 +697,7 @@ def show_info(
 def show_info_with_cancel(
     *,
     title: str,
-    items: Iterable[tuple[str, str]],
+    items: list[StrPropertyType],
     horizontal: bool = False,
     chunkify: bool = False,
 ) -> LayoutObj[UiResult]:
@@ -714,7 +749,8 @@ def show_progress_coinjoin(
 def show_properties(
     *,
     title: str,
-    value: list[tuple[str, str]] | str,
+    value: Sequence[PropertyType] | str,
+    subtitle: str | None = None,
 ) -> LayoutObj[None]:
     """Show a list of key-value pairs, or a monospace string."""
 
@@ -792,6 +828,12 @@ def show_warning(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def confirm_cancel() -> LayoutObj[UiResult]:
+    """Ask the user to confirm the cancellation (or cancel the cancellation and go back to
+    the previous flow)"""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def tutorial() -> LayoutObj[UiResult]:
     """Show user how to interact with the device."""
 
@@ -817,6 +859,15 @@ class AttachType:
 
 
 # rust/src/ui/api/firmware_micropython.rs
+class NotificationLevel:
+    """Notification level determining the style of notification."""
+    ALERT: ClassVar[int]
+    WARNING: ClassVar[int]
+    INFO: ClassVar[int]
+    SUCCESS: ClassVar[int]
+
+
+# rust/src/ui/api/firmware_micropython.rs
 class LayoutState:
     """Layout state."""
     INITIAL: "ClassVar[LayoutState]"
@@ -828,10 +879,25 @@ class LayoutState:
 # rust/src/ui/api/firmware_micropython.rs
 class DeviceMenuResult:
     """Result of a device menu operation."""
-    BackupFailed: ClassVar[DeviceMenuResult]
-    DevicePair: ClassVar[DeviceMenuResult]
-    DeviceDisconnect: ClassVar[DeviceMenuResult]
-    CheckBackup: ClassVar[DeviceMenuResult]
-    WipeDevice: ClassVar[DeviceMenuResult]
-    ScreenBrightness: ClassVar[DeviceMenuResult]
-    AutoLockDelay: ClassVar[DeviceMenuResult]
+    ReviewFailedBackup: ClassVar[int]
+    DisconnectDevice: ClassVar[int]
+    PairDevice: ClassVar[int]
+    UnpairDevice: ClassVar[int]
+    UnpairAllDevices: ClassVar[int]
+    ToggleBluetooth: ClassVar[int]
+    SetOrChangePin: ClassVar[int]
+    RemovePin: ClassVar[int]
+    SetAutoLockBattery: ClassVar[int]
+    SetAutoLockUSB: ClassVar[int]
+    SetOrChangeWipeCode: ClassVar[int]
+    RemoveWipeCode: ClassVar[int]
+    CheckBackup: ClassVar[int]
+    SetDeviceName: ClassVar[int]
+    SetBrightness: ClassVar[int]
+    ToggleHaptics: ClassVar[int]
+    ToggleLed: ClassVar[int]
+    WipeDevice: ClassVar[int]
+    Reboot: ClassVar[int]
+    RebootToBootloader: ClassVar[int]
+    TurnOff: ClassVar[int]
+    RefreshMenu: ClassVar[int]

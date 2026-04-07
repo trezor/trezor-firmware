@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Awaitable
 
 import trezorui_api
-from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts.common import interact
 from trezor.wire import ActionCancelled
@@ -103,13 +102,13 @@ async def show_menu(
             return
 
 
-async def confirm_with_menu(
-    main: trezorui_api.LayoutObj[trezorui_api.UiResult],
+async def interact_with_menu(
+    main: trezorui_api.LayoutObj[T],
     menu: Menu,
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     raise_on_cancel: ExceptionType = ActionCancelled,
-) -> ui.UiResult:
+) -> T:
     while True:
         result = await interact(main, br_name, br_code, raise_on_cancel)
         br_name = None  # ButtonRequest should be sent once (for the main layout)
@@ -117,3 +116,20 @@ async def confirm_with_menu(
             await show_menu(menu, raise_on_cancel)
         else:
             return result
+
+
+async def confirm_with_menu(
+    main: trezorui_api.LayoutObj[T],
+    menu: Menu,
+    br_name: str | None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    raise_on_cancel: ExceptionType = ActionCancelled,
+) -> None:
+    """
+    Make sure the layout result is CONFIRMED (or raises an exception).
+
+    In order to handle other results (such as BACK), use `interact_with_menu`.
+    """
+    result = await interact_with_menu(main, menu, br_name, br_code, raise_on_cancel)
+    # use this function when the layout may only return CONFIRMED on success (or raise an exception)
+    assert result is trezorui_api.CONFIRMED

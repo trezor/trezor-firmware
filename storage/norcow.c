@@ -23,6 +23,7 @@
 #include "flash_area.h"
 #include "memzero.h"
 #include "norcow.h"
+#include "options.h"
 #include "storage_utils.h"
 
 // NRC2 = 4e524332

@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 from typing_extensions import Self
 # XXX
 # Note that MessageType "subclasses" are not true subclasses, but instead instances
@@ -30,7 +31,7 @@ def type_for_wire(enum_name: str, wire_id: int) -> type[MessageType]:
 
 # rust/src/protobuf/obj.rs
 def decode(
-    buffer: bytes,
+    buffer: AnyBytes,
     msg_type: type[T],
     enable_experimental: bool,
 ) -> T:
@@ -43,6 +44,6 @@ def encoded_length(msg: MessageType) -> int:
 
 
 # rust/src/protobuf/obj.rs
-def encode(buffer: bytearray | memoryview, msg: MessageType) -> int:
+def encode(buffer: AnyBuffer, msg: MessageType) -> int:
     """Encode the message into the specified buffer. Return length of
     encoding."""

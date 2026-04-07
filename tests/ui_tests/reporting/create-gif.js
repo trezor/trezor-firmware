@@ -2,8 +2,8 @@
 
 function createGif() {
     // Finds all the screenshots on the screen, creates a new img
-    // element at the top and switches the src attribute every 200ms
-    // to create a notion of GIF.
+    // element at the top and switches the src attribute periodically
+    // (interval based on defaultDelay) to create a notion of GIF.
     // Adds some controlling possibilities - buttons, input fields
     // and sliders to enable pausing, stepping back and forth, changing
     // the delay, etc.
@@ -28,7 +28,7 @@ function createGif() {
     const delayText = 'Delay (ms):';
     const sliderText = 'Progress:';
 
-    const defaultDelay = 200;
+    const defaultDelay = 1000;
 
     const keyboardShortcutPrev = 'ArrowLeft';
     const keyboardShortcutNext = 'ArrowRight';
@@ -40,8 +40,11 @@ function createGif() {
     const btnClass = 'gifBtn';
 
     // Gif itself
-    const gif = document.createElement('img');
-    gif.id = 'gif';
+    let gif = document.getElementById("gif");
+    if (!gif) {
+        gif = document.createElement('img');
+        gif.id = 'gif';
+    }
 
     // Update the image source and the slider value according to the current index
     // Lazy-loading all the lazy-loaded images
@@ -171,12 +174,16 @@ function createGif() {
     // Insert everything above the <hr> or at the top of the page when missing
     const hr = document.querySelector('hr');
     if (hr) {
-        hr.parentNode.insertBefore(gif, hr);
+        if (!document.contains(gif)) {
+            hr.parentNode.insertBefore(gif, hr);
+        }
         hr.parentNode.insertBefore(buttonContainer, hr);
         hr.parentNode.insertBefore(inputContainer, hr);
         hr.parentNode.insertBefore(sliderContainer, hr);
     } else {
-        document.body.insertBefore(gif, document.body.firstChild);
+        if (!document.contains(gif)) {
+            document.body.insertBefore(gif, document.body.firstChild);
+        }
         document.body.insertBefore(buttonContainer, document.body.firstChild);
         document.body.insertBefore(inputContainer, document.body.firstChild);
         document.body.insertBefore(sliderContainer, document.body.firstChild);

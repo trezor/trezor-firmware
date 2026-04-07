@@ -21,10 +21,11 @@
 
 #include <trezor_types.h>
 
-#include <util/image.h>
+#include <sec/image.h>
 
 #include "pb/messages.pb.h"
 
+#include "fw_check.h"
 #include "wire/codec_v1.h"
 
 typedef struct {
@@ -41,8 +42,7 @@ typedef struct {
 
 secbool send_user_abort(protob_io_t *iface, const char *msg);
 
-secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
-                          const image_header *const hdr);
+secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw);
 
 secbool send_msg_failure(protob_io_t *iface, FailureType type, const char *msg);
 

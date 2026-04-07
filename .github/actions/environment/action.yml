@@ -1,5 +1,5 @@
 name: 'Download dependencies'
-description: 'Nixpkgs and poetry'
+description: 'Nixpkgs and uv'
 inputs:
   full-deps:
     description: 'Pass --arg fullDeps true to nix-shell?'
@@ -9,12 +9,12 @@ runs:
   using: "composite"
   steps:
     - name: Install nix
-      uses: cachix/install-nix-action@v23
+      uses: cachix/install-nix-action@2126ae7fc54c9df00dd18f7f18754393182c73cd  # cachix/install-nix-action@v31.9.1
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Dependencies nixpkgs
-      run: nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
+      run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "echo nixpkgs deps preinstalled" || echo "NIXPKGS PREINSTALL FAILURE"
       shell: sh
-    - name: Dependencies poetry
-      run: nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "poetry install"
+    - name: Dependencies uv
+      run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "uv sync"
       shell: sh

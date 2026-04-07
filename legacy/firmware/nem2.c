@@ -651,11 +651,11 @@ static inline size_t format_amount(const NEMMosaicDefinition *definition,
       -divisor, false, ',', str_out, size);
 }
 
-void nem_canonicalizeMosaics(NEMTransfer *transfer) {
+bool nem_canonicalizeMosaics(NEMTransfer *transfer) {
   size_t old_count = transfer->mosaics_count;
 
   if (old_count <= 1) {
-    return;
+    return true;
   }
 
   NEMMosaic *const mosaics = transfer->mosaics;
@@ -682,6 +682,10 @@ void nem_canonicalizeMosaics(NEMTransfer *transfer) {
 
       if (nem_mosaicCompare(mosaic, new_mosaic) == 0) {
         skip[j] = true;
+        if (mosaic->quantity + new_mosaic->quantity < mosaic->quantity) {
+          // quantity overflow
+          return false;
+        }
         mosaic->quantity += new_mosaic->quantity;
       }
     }
@@ -704,6 +708,7 @@ void nem_canonicalizeMosaics(NEMTransfer *transfer) {
       }
     }
   }
+  return true;
 }
 
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition,

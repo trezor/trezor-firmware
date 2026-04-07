@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 from trezortranslate_keys import TR as TR  # noqa: F401
 """Translation object with attributes."""
 
@@ -34,12 +35,12 @@ def erase() -> None:
 
 
 # rust/src/translations/obj.rs
-def write(data: bytes, offset: int) -> None:
+def write(data: AnyBytes, offset: int) -> None:
     """Write data to the translations blob in flash."""
 
 
 # rust/src/translations/obj.rs
-def verify(data: bytes) -> None:
+def verify(data: AnyBytes) -> None:
     """Verify the translations blob."""
 
 
@@ -49,9 +50,9 @@ class TranslationsHeader:
     language: str
     version: tuple[int, int, int, int]
     data_len: int
-    data_hash: bytes
+    data_hash: AnyBytes
     total_len: int
-    def __init__(self, header_bytes: bytes) -> None:
+    def __init__(self, header_bytes: AnyBytes) -> None:
         """Parse header from bytes.
         The header has variable length.
         """

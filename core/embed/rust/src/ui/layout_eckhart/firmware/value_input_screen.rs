@@ -163,7 +163,7 @@ struct ValueInputDialog<T: ValueInput> {
 impl<T: ValueInput> ValueInputDialog<T> {
     const BUTTON_PADDING: i16 = 10;
     const LABEL_OFFSET: i16 = 21;
-    const BUTTON_SIZE: Offset = Offset::new(138, 130);
+    const BUTTON_SIZE: Offset = Offset::new(130, 130);
     const BORDER_PADDING: i16 = 24;
     const HOLD_TIMEOUT_DURATION: Duration = Duration::from_millis(500);
     const BIG_INCREMENT: u32 = 10;

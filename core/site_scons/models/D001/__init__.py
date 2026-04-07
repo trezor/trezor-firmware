@@ -6,9 +6,9 @@ from .discovery import configure
 
 
 def configure_board(
-    revision: Optional[int | str],
+    revision: Optional[str],
     features_wanted: list[str],
-    env: dict,  # type: ignore
+    env: dict,
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],
@@ -16,6 +16,8 @@ def configure_board(
 
     defines += (("MODEL_HEADER", '"D001/model_D001.h"'),)
     defines += (("VERSIONS_HEADER", '"D001/versions.h"'),)
+    defines += (("OTP_LAYOUT_HEADER", '"D001/otp_layout.h"'),)
+    defines += (("UNIT_PROPERTIES_CONTENT_HEADER", '"D001/unit_properties_content.h"'),)
     return configure(env, features_wanted, defines, sources, paths)
 
 

@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -19,40 +19,50 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Sequence
 
 from . import messages
-from .tools import _return_success
+from .tools import workflow
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .client import Session
 
 
-def list_credentials(client: "TrezorClient") -> Sequence[messages.WebAuthnCredential]:
-    return client.call(
-        messages.WebAuthnListResidentCredentials(), expect=messages.WebAuthnCredentials
-    ).credentials
+@workflow()
+def list_credentials(
+    session: "Session", batch_size: int | None = 10
+) -> Sequence[messages.WebAuthnCredential]:
+    creds = []
+    msg = messages.WebAuthnListResidentCredentials(batch_size=batch_size)
+    while True:
+        resp = session.call(msg, expect=messages.WebAuthnCredentials)
+        creds.extend(resp.credentials)
+        if resp.is_done:
+            return creds
+        msg = messages.WebAuthnCredentialsAck()
 
 
-def add_credential(client: "TrezorClient", credential_id: bytes) -> str | None:
-    ret = client.call(
+@workflow()
+def add_credential(session: "Session", credential_id: bytes) -> None:
+    session.call(
         messages.WebAuthnAddResidentCredential(credential_id=credential_id),
         expect=messages.Success,
     )
-    return _return_success(ret)
 
 
-def remove_credential(client: "TrezorClient", index: int) -> str | None:
-    ret = client.call(
+@workflow()
+def remove_credential(session: "Session", index: int) -> None:
+    session.call(
         messages.WebAuthnRemoveResidentCredential(index=index), expect=messages.Success
     )
-    return _return_success(ret)
 
 
-def set_counter(client: "TrezorClient", u2f_counter: int) -> str | None:
-    ret = client.call(
+@workflow()
+def set_counter(session: "Session", u2f_counter: int) -> None:
+    session.call(
         messages.SetU2FCounter(u2f_counter=u2f_counter), expect=messages.Success
     )
-    return _return_success(ret)
 
 
-def get_next_counter(client: "TrezorClient") -> int:
-    ret = client.call(messages.GetNextU2FCounter(), expect=messages.NextU2FCounter)
-    return ret.u2f_counter
+@workflow()
+def get_next_counter(session: "Session") -> int:
+    return session.call(
+        messages.GetNextU2FCounter(), expect=messages.NextU2FCounter
+    ).u2f_counter

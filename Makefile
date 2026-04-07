@@ -6,13 +6,21 @@ help: ## show this help
 ## style commands:
 
 PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude ) common/protob/pb2py
-PY_FILES_LIMITED = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude | grep -v -f ./tools/style.py.typecheck.exclude ) common/protob/pb2py
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
+PROTO_FILES = $(shell find common core -type f -name '*.proto')
 
+# suppress black's warning - remove when using Python 3.14
+BLACK_FAST ?= 1
 
-style_check: pystyle_check ruststyle_check cstyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
+ifeq ($(BLACK_FAST),1)
+BLACK_FLAGS=--fast
+else
+BLACK_FLAGS=
+endif
 
-style: pystyle ruststyle cstyle changelog_style translations_style ## apply all code styles (C+Rust+Py+Changelog+translation JSON)
+style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
+
+style: pystyle ruststyle cstyle protostyle changelog_style translations_style ## apply all code styles (Python+Rust+C+protobuf+changelog+translation JSON)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -22,44 +30,46 @@ pystyle_check: ## run code style check on application sources and tests
 	pyright --version
 	@echo [TYPECHECK]
 	@make -C core typecheck
+	@echo [TYPECHECK - COMMON and TOOLS]
+	@make typecheck
 	@echo [FLAKE8]
-	@flake8 $(PY_FILES_LIMITED)
-	@echo [FLAKE8 - limited]
-	@flake8 --extend-ignore=ANN $(PY_FILES)
+	@flake8 $(PY_FILES)
 	@echo [ISORT]
 	@isort --check-only $(PY_FILES)
 	@echo [BLACK]
-	@black --check $(PY_FILES)
+	@black --check $(BLACK_FLAGS) $(PY_FILES)
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
-	make -C python style_check
+	make -C python style_check BLACK_FLAGS=$(BLACK_FLAGS)
 
 pystyle_quick_check: ## run the basic style checks, suitable for a quick git hook
 	@isort --check-only $(PY_FILES)
-	@black --check $(PY_FILES)
-	make -C python style_quick_check
+	@black --check $(BLACK_FLAGS) $(PY_FILES)
+	make -C python style_quick_check BLACK_FLAGS=$(BLACK_FLAGS)
 
 pystyle: ## apply code style on application sources and tests
 	@echo [ISORT]
 	@isort $(PY_FILES)
 	@echo [BLACK]
-	@black $(PY_FILES)
+	@black $(BLACK_FLAGS) $(PY_FILES)
 	@echo [TYPECHECK]
 	@make -C core typecheck
+	@echo [TYPECHECK - COMMON and TOOLS]
+	@make typecheck
 	@echo [FLAKE8]
-	@flake8 $(PY_FILES_LIMITED)
-	@echo [FLAKE8 - limited]
-	@flake8 --extend-ignore=ANN $(PY_FILES)
+	@flake8 $(PY_FILES)
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
-	make -C python style
+	make -C python style BLACK_FLAGS=$(BLACK_FLAGS)
 
 changelog_check: ## check changelog format
+	@echo [CHANGELOG-CHECK]
 	./tools/changelog.py check
 
 changelog_style: ## fix changelog format
+	@echo [CHANGELOG-STYLE]
 	./tools/changelog.py style
 
 translations_style: ## Format translation files
@@ -71,9 +81,11 @@ translations_style_check: ## Check that translation files are properly formatted
 	@./core/tools/translations/sort_keys.py check
 
 yaml_check: ## check yaml formatting
+	@echo [YAML-STYLE-CHECK]
 	yamllint .
 
 editor_check: ## check editorconfig formatting
+	@echo [EDITORCONFIG-STYLE-CHECK]
 	editorconfig-checker -exclude '.*\.(so|dat|toif|der)|^crypto/aes/'
 
 cstyle_check: ## run code style check on low-level C code
@@ -85,6 +97,15 @@ cstyle: ## apply code style on low-level C code
 	@echo [CLANG-FORMAT]
 	@clang-format -i $(C_FILES)
 
+protostyle: ## Format protobuf definitions
+	@echo [PROTOBUF-STYLE]
+	@clang-format -i $(PROTO_FILES)
+
+protostyle_check: ## Check that protobuf definitions are properly formatted
+	@echo [PROTOBUF-STYLE-CHECK]
+	clang-format --version
+	@./tools/clang-format-check $(PROTO_FILES)
+
 defs_check: ## check validity of coin definitions and protobuf files
 	jsonlint common/defs/*.json common/defs/*/*.json
 	python3 common/tools/cointool.py check
@@ -95,16 +116,19 @@ defs_check: ## check validity of coin definitions and protobuf files
 ruststyle:
 	@echo [RUSTFMT]
 	@cd core/embed/rust ; cargo fmt
-	@cd rust/trezor-client ; cargo fmt
+	make -C rust style
 
 ruststyle_check:
 	rustfmt --version
 	@echo [RUSTFMT]
 	@cd core/embed/rust ; cargo fmt -- --check
-	@cd rust/trezor-client ; cargo fmt -- --check
+	make -C rust style_check
 
-python_support_check:
-	./tests/test_python_support.py
+
+typecheck: pyright
+
+pyright:
+	python ./tools/pyright_tool.py
 
 ## code generation commands:
 
@@ -163,6 +187,12 @@ lsgen: ## generate linker scripts
 lsgen_check: ## check generated linker scripts
 	lsgen --check
 
-gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen ## regenerate auto-generated files from sources
+tropic_model_config:
+	./core/tools/generate_tropic_model_config.py
 
-gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check ## check validity of auto-generated files
+tropic_model_config_check:
+	./core/tools/generate_tropic_model_config.py --check
+
+gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check ## check validity of auto-generated files

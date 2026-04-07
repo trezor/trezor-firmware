@@ -16,13 +16,13 @@
 
 import pytest
 
-from trezorlib import btc, device, messages
-from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
+from trezorlib import device, messages
+from trezorlib.client import MAX_PIN_LENGTH
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
 
-from ..input_flows import InputFlowNewCodeMismatch
+from ..input_flows import InputFlowNewCodeMismatch, InputFlowNewWipeCodeCancel
 
 PIN4 = "1234"
 WIPE_CODE4 = "4321"
@@ -32,14 +32,14 @@ WIPE_CODE_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 pytestmark = pytest.mark.models("core")
 
 
-def _check_wipe_code(client: Client, pin: str, wipe_code: str):
-    client.init_device()
-    assert client.features.wipe_code_protection is True
+def _check_wipe_code(session: Session, pin: str, wipe_code: str):
+    # session.init_device()
+    assert session.features.wipe_code_protection is True
 
     # Try to change the PIN to the current wipe code value. The operation should fail.
-    with client, pytest.raises(TrezorFailure):
+    with session.test_ctx as client, pytest.raises(TrezorFailure):
         client.use_pin_sequence([pin, wipe_code, wipe_code])
-        if client.layout_type is LayoutType.Caesar:
+        if session.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 5
@@ -47,84 +47,96 @@ def _check_wipe_code(client: Client, pin: str, wipe_code: str):
             [messages.ButtonRequest()] * br_count
             + [messages.Failure(code=messages.FailureType.PinInvalid)]
         )
-        device.change_pin(client)
+        device.change_pin(session)
 
 
-def _ensure_unlocked(client: Client, pin: str):
-    with client:
-        client.use_pin_sequence([pin])
-        btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
+def _ensure_unlocked(session: Session, pin: str):
+    with session.test_ctx:
+        session.test_ctx.use_pin_sequence([pin])
+        session.ensure_unlocked()
 
-    client.init_device()
+    session.refresh_features()
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_set_remove_wipe_code(client: Client):
+def test_set_remove_wipe_code(session: Session):
+
     # Test set wipe code.
-    assert client.features.wipe_code_protection is None
+    assert session.features.wipe_code_protection is None
+    _ensure_unlocked(session, PIN4)
+    assert session.features.wipe_code_protection is False
 
-    _ensure_unlocked(client, PIN4)
-    assert client.features.wipe_code_protection is False
-
-    if client.layout_type is LayoutType.Caesar:
+    if session.layout_type is LayoutType.Caesar:
         br_count = 6
     else:
         br_count = 5
 
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_count
             + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, WIPE_CODE_MAX, WIPE_CODE_MAX])
-        device.change_wipe_code(client)
+        device.change_wipe_code(session)
 
-    client.init_device()
-    assert client.features.wipe_code_protection is True
-    _check_wipe_code(client, PIN4, WIPE_CODE_MAX)
+    # session.init_device()
+    assert session.features.wipe_code_protection is True
+    _check_wipe_code(session, PIN4, WIPE_CODE_MAX)
 
     # Test change wipe code.
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_count
             + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, WIPE_CODE6, WIPE_CODE6])
-        device.change_wipe_code(client)
+        device.change_wipe_code(session)
 
-    client.init_device()
-    assert client.features.wipe_code_protection is True
-    _check_wipe_code(client, PIN4, WIPE_CODE6)
+    # session.init_device()
+    assert session.features.wipe_code_protection is True
+    _check_wipe_code(session, PIN4, WIPE_CODE6)
 
     # Test remove wipe code.
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [messages.ButtonRequest()] * 3 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4])
-        device.change_wipe_code(client, remove=True)
+        device.change_wipe_code(session, remove=True)
 
-    client.init_device()
-    assert client.features.wipe_code_protection is False
-
-
-def test_set_wipe_code_mismatch(client: Client):
-    with client, pytest.raises(TrezorFailure):
-        IF = InputFlowNewCodeMismatch(client, WIPE_CODE4, WIPE_CODE6, what="wipe_code")
-        client.set_input_flow(IF.get())
-
-        device.change_wipe_code(client)
-
-    # Check that there's still no wipe code protection now
-    client.init_device()
-    assert client.features.wipe_code_protection is False
+    # session.init_device()
+    assert session.features.wipe_code_protection is False
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_set_wipe_code_to_pin(client: Client):
-    _ensure_unlocked(client, PIN4)
+def test_set_wipe_code_mismatch(session: Session):
+    _ensure_unlocked(session, PIN4)
 
-    with client:
+    with session.test_ctx as client, pytest.raises(Cancelled):
+        IF = InputFlowNewCodeMismatch(
+            session, WIPE_CODE4, WIPE_CODE6, what="wipe_code", pin=PIN4
+        )
+        client.set_input_flow(IF.get())
+
+        device.change_wipe_code(session)
+
+    # Check that there's still no wipe code protection now
+    # session.init_device()
+    assert session.features.wipe_code_protection is False
+
+
+def test_set_wipe_code_cancel(session: Session):
+    with session.test_ctx as client, pytest.raises(Cancelled):
+        IF = InputFlowNewWipeCodeCancel(session)
+        client.set_input_flow(IF.get())
+        device.change_wipe_code(session)
+
+
+@pytest.mark.setup_client(pin=PIN4)
+def test_set_wipe_code_to_pin(session: Session):
+    _ensure_unlocked(session, PIN4)
+
+    with session.test_ctx as client:
         if client.layout_type is LayoutType.Caesar:
             br_count = 8
         else:
@@ -134,36 +146,40 @@ def test_set_wipe_code_to_pin(client: Client):
             + [messages.Success, messages.Features],
         )
         client.use_pin_sequence([PIN4, PIN4, WIPE_CODE4, WIPE_CODE4])
-        device.change_wipe_code(client)
+        device.change_wipe_code(session)
 
-    client.init_device()
-    assert client.features.wipe_code_protection is True
-    _check_wipe_code(client, PIN4, WIPE_CODE4)
+    # session.init_device()
+    assert session.features.wipe_code_protection is True
+    _check_wipe_code(session, PIN4, WIPE_CODE4)
 
 
-def test_set_pin_to_wipe_code(client: Client):
-    # Set wipe code.
-    with client:
-        if client.layout_type is LayoutType.Caesar:
-            br_count = 5
-        else:
-            br_count = 4
-        client.set_expected_responses(
-            [messages.ButtonRequest()] * br_count
-            + [messages.Success, messages.Features]
-        )
-        client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
-        device.change_wipe_code(client)
+def test_set_wipe_code_without_pin(session: Session):
+    # Make sure that both PIN and wipe code are not set.
+    assert session.features.pin_protection is False
+    assert session.features.wipe_code_protection is False
+    # Expect an error when trying to set the wipe code without a PIN being turned on.
+    with session.test_ctx, pytest.raises(Cancelled):
+        device.change_wipe_code(session)
 
-    # Try to set the PIN to the current wipe code value.
-    with client, pytest.raises(TrezorFailure):
-        if client.layout_type is LayoutType.Caesar:
-            br_count = 6
-        else:
-            br_count = 4
-        client.set_expected_responses(
-            [messages.ButtonRequest()] * br_count
-            + [messages.Failure(code=messages.FailureType.PinInvalid)]
-        )
-        client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
-        device.change_pin(client)
+
+@pytest.mark.setup_client(pin=PIN4)
+def test_set_remove_pin_without_removing_wipe_code(session: Session):
+    _ensure_unlocked(session, PIN4)
+    # Make sure the PIN is set.
+    assert session.features.pin_protection is True
+    # Make sure the wipe code is not set.
+    assert session.features.wipe_code_protection is False
+
+    # Set wipe code
+    with session.test_ctx as client:
+        client.use_pin_sequence([PIN4, WIPE_CODE4, WIPE_CODE4])
+        device.change_wipe_code(session)
+
+    # Make sure the wipe code is set.
+    assert session.features.wipe_code_protection is True
+
+    # Remove PIN without wipe code being turned off.
+    with session.test_ctx:
+        # Expect an error when trying to remove PIN with enabled wipe code.
+        with pytest.raises(Cancelled):
+            device.change_pin(session, remove=True)

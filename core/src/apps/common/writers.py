@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from trezor.utils import ensure
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.utils import Writer
 
 
@@ -40,23 +42,23 @@ def write_uint64_be(w: Writer, n: int) -> int:
     return _write_uint(w, n, 64, True)
 
 
-def write_bytes_unchecked(w: Writer, b: bytes | memoryview) -> int:
+def write_bytes_unchecked(w: Writer, b: AnyBytes) -> int:
     w.extend(b)
     return len(b)
 
 
-def write_bytes_fixed(w: Writer, b: bytes, length: int) -> int:
+def write_bytes_fixed(w: Writer, b: AnyBytes, length: int) -> int:
     ensure(len(b) == length)
     w.extend(b)
     return length
 
 
-def write_bytes_prefixed(w: Writer, b: bytes) -> None:
+def write_bytes_prefixed(w: Writer, b: AnyBytes) -> None:
     write_compact_size(w, len(b))
     write_bytes_unchecked(w, b)
 
 
-def write_bytes_reversed(w: Writer, b: bytes, length: int) -> int:
+def write_bytes_reversed(w: Writer, b: AnyBytes, length: int) -> int:
     ensure(len(b) == length)
     w.extend(bytes(reversed(b)))
     return length

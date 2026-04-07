@@ -1,3 +1,4 @@
+# pyright: reportMissingImports=false
 from __future__ import annotations
 
 import json
@@ -30,6 +31,7 @@ ALTCOINS = [
     "solana",
     "ripple",
     "tezos",
+    "tron",
 ]
 
 SCREEN_TEXT_WIDTHS = {"TT": 240 - 12, "TS3": 128}

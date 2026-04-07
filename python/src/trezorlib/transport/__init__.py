@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,14 +17,18 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Iterable, Sequence, Tuple, TypeVar
+import typing as t
+from abc import ABCMeta, abstractmethod
+
+import typing_extensions as tx
 
 from ..exceptions import TrezorException
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from ..models import TrezorModel
 
-    T = TypeVar("T", bound="Transport")
+    T = t.TypeVar("T", bound="Transport")
+
 
 LOG = logging.getLogger(__name__)
 
@@ -34,7 +38,7 @@ https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules
 """.strip()
 
 
-MessagePayload = Tuple[int, bytes]
+MessagePayload = t.Tuple[int, bytes]
 
 
 class TransportException(TrezorException):
@@ -49,84 +53,133 @@ class Timeout(TransportException):
     pass
 
 
-class Transport:
-    """Raw connection to a Trezor device.
+class Transport(metaclass=ABCMeta):
+    PATH_PREFIX: t.ClassVar[str]
+    CHUNK_SIZE: t.ClassVar[int | None]
+    ENABLED: t.ClassVar[bool]
 
-    Transport subclass represents a kind of communication link: Trezor Bridge, WebUSB
-    or USB-HID connection, or UDP socket of listening emulator(s).
-    It can also enumerate devices available over this communication link, and return
-    them as instances.
-
-    Transport instance is a thing that:
-    - can be identified and requested by a string URI-like path
-    - can open and close sessions, which enclose related operations
-    - can read and write protobuf messages
-
-    You need to implement a new Transport subclass if you invent a new way to connect
-    a Trezor device to a computer.
-    """
-
-    PATH_PREFIX: str
-    ENABLED = False
-
-    def __str__(self) -> str:
-        return self.get_path()
-
-    def get_path(self) -> str:
-        raise NotImplementedError
-
-    def begin_session(self) -> None:
-        raise NotImplementedError
-
-    def end_session(self) -> None:
-        raise NotImplementedError
-
-    def read(self, timeout: float | None = None) -> MessagePayload:
-        raise NotImplementedError
-
-    def write(self, message_type: int, message_data: bytes) -> None:
-        raise NotImplementedError
-
-    def find_debug(self: T) -> T:
-        raise NotImplementedError
+    _opened: int = 0
 
     @classmethod
     def enumerate(
-        cls: type[T], models: Iterable[TrezorModel] | None = None
-    ) -> Iterable[T]:
+        cls, models: t.Iterable[TrezorModel] | None = None
+    ) -> t.Iterable[tx.Self]:
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls: type[T], path: str, prefix_search: bool = False) -> T:
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> tx.Self:
         for device in cls.enumerate():
-            if (
-                path is None
-                or device.get_path() == path
-                or (prefix_search and device.get_path().startswith(path))
-            ):
+
+            if device.get_path() == path:
+                return device
+
+            if prefix_search and device.get_path().startswith(path):
                 return device
 
         raise TransportException(f"{cls.PATH_PREFIX} device not found: {path}")
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.get_path()})"
 
-def all_transports() -> Iterable[type["Transport"]]:
+    @abstractmethod
+    def get_path(self) -> str:
+        raise NotImplementedError
+
+    # find_debug is allowed to return a different type than Self
+    def find_debug(self) -> Transport:
+        raise NotImplementedError
+
+    def open(self, reopen: bool = False) -> None:
+        if self._opened == 0:
+            # the natural case: open a closed transport
+            LOG.info(f"Opening transport: {self}")
+            self._open()
+            self._opened = 1
+            return
+
+        if reopen:
+            # transport is already open, we want to close and reestablish
+            # the connection at the same open-height
+            LOG.info(f"Closing transport and reopening: {self}")
+            self._close()
+            self._open()
+            return
+
+        # finally, someone's calling open() when they're already open
+        # via a context manager.
+        LOG.warning(f"Transport {self} is already open")
+
+    def close(self) -> None:
+        if self._opened > 1:
+            LOG.warning(
+                f"Transport {self} is open via a context manager. Closing unconditionally."
+            )
+        LOG.info(f"Closing transport: {self}")
+        self._close()
+        self._opened = 0
+
+    def __enter__(self) -> Transport:
+        if self._opened == 0:
+            self.open()  # resets self._opened to 1
+        else:
+            self._opened += 1
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        if self._opened > 0:
+            self._opened -= 1
+            if self._opened == 0:
+                self.close()
+
+    @abstractmethod
+    def is_open(self) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def _open(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def _close(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def write_chunk(self, chunk: bytes, /) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def read_chunk(self, *, timeout: float | None = None) -> bytes:
+        raise NotImplementedError
+
+    def is_ready(self) -> bool:
+        return self.is_open()
+
+
+def all_transports() -> t.Iterable[type[Transport]]:
+    from .ble import BleTransport
     from .bridge import BridgeTransport
     from .hid import HidTransport
     from .udp import UdpTransport
     from .webusb import WebUsbTransport
 
-    transports: Tuple[type["Transport"], ...] = (
-        BridgeTransport,
+    transports: tuple[type[Transport], ...] = (
         HidTransport,
         UdpTransport,
         WebUsbTransport,
+        BleTransport,
+        BridgeTransport,
     )
-    return set(t for t in transports if t.ENABLED)
+    return [t for t in transports if t.ENABLED]
 
 
 def enumerate_devices(
-    models: Iterable[TrezorModel] | None = None,
-) -> Sequence[Transport]:
+    models: t.Iterable[TrezorModel] | None = None,
+) -> t.Sequence[Transport]:
     devices: list[Transport] = []
     for transport in all_transports():
         name = transport.__name__

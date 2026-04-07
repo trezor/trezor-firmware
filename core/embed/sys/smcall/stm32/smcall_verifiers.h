@@ -31,12 +31,11 @@ void bootargs_get_args__verified(boot_args_t *args);
 
 // ---------------------------------------------------------------------
 
-#include <util/bl_check.h>
+#include <sec/boot_image.h>
 
-bool bl_check_check__verified(const uint8_t *hash_00, const uint8_t *hash_FF,
-                              size_t hash_len);
+bool boot_image_check__verified(const boot_image_t *image);
 
-void bl_check_replace__verified(const uint8_t *data, size_t len);
+void boot_image_replace__verified(const boot_image_t *image);
 
 // ---------------------------------------------------------------------
 #include <sys/bootutils.h>
@@ -46,9 +45,13 @@ void reboot_and_upgrade__verified(const uint8_t hash[32]);
 void reboot_with_rsod__verified(const systask_postmortem_t *pminfo);
 
 // ---------------------------------------------------------------------
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 void unit_properties_get__verified(unit_properties_t *props);
+
+bool unit_properties_get_sn__verified(uint8_t *device_sn,
+                                      size_t max_device_sn_size,
+                                      size_t *device_sn_size);
 
 // ---------------------------------------------------------------------
 #ifdef USE_OPTIGA
@@ -66,23 +69,29 @@ bool __wur optiga_read_cert__verified(uint8_t index, uint8_t *cert,
 
 bool __wur optiga_read_sec__verified(uint8_t *sec);
 
-bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size);
-
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
-#include "storage.h"
 
-void storage_init__verified(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                            const uint16_t salt_len);
+#ifdef USE_SECRET_KEYS
+#include <sec/secret_keys.h>
 
-secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
-                                 const uint8_t *ext_salt);
+secbool secret_key_delegated_identity__verified(
+    uint16_t rotation_index, uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
-secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
-                                     const uint8_t *newpin, size_t newpin_len,
-                                     const uint8_t *old_ext_salt,
-                                     const uint8_t *new_ext_salt);
+#endif
+// ---------------------------------------------------------------------
+
+#include <sec/storage.h>
+
+void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback);
+
+storage_unlock_result_t storage_unlock__verified(const uint8_t *pin,
+                                                 size_t pin_len,
+                                                 const uint8_t *ext_salt);
+
+storage_pin_change_result_t storage_change_pin__verified(
+    const uint8_t *newpin, size_t newpin_len, const uint8_t *new_ext_salt);
 
 void storage_ensure_not_wipe_code__verified(const uint8_t *pin, size_t pin_len);
 
@@ -100,12 +109,14 @@ secbool storage_set__verified(const uint16_t key, const void *val,
 secbool storage_next_counter__verified(const uint16_t key, uint32_t *count);
 
 // ---------------------------------------------------------------------
-#include <sec/entropy.h>
+#include <sec/rng_strong.h>
 
-void entropy_get__verified(uint8_t *buf);
+void rng_fill_buffer__verified(void *buffer, size_t buffer_size);
+
+bool rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size);
 
 // ---------------------------------------------------------------------
-#include <util/fwutils.h>
+#include <sec/fwutils.h>
 
 int firmware_hash_start__verified(const uint8_t *challenge,
                                   size_t challenge_len);
@@ -120,13 +131,13 @@ secbool firmware_get_vendor__verified(char *buff, size_t buff_size);
 bool tropic_ping__verified(const uint8_t *msg_out, uint8_t *msg_in,
                            uint16_t msg_len);
 
-bool tropic_get_cert__verified(uint8_t *buf, uint16_t buf_size);
-
 bool tropic_ecc_key_generate__verified(uint16_t slot_index);
 
 bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
-                               uint16_t dig_len, uint8_t *sig,
-                               uint16_t sig_len);
+                               uint16_t dig_len, uint8_t *sig);
+
+bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
+                                uint16_t *size);
 
 #endif
 
@@ -134,7 +145,7 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 
 #ifdef USE_BACKUP_RAM
 
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 
 bool backup_ram_read__verified(uint16_t key, void *buffer, size_t buffer_size,
                                size_t *data_size);
@@ -143,5 +154,26 @@ bool backup_ram_write__verified(uint16_t key, backup_ram_item_type_t type,
                                 const void *data, size_t data_size);
 
 #endif  // USE_BACKUP_RAM
+
+#ifdef USE_NRF_AUTH
+
+#include <sec/secret_keys.h>
+
+secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
+                                              size_t msg_len,
+                                              const uint8_t *mac,
+                                              size_t mac_len);
+#endif
+
+#ifdef USE_TELEMETRY
+// ---------------------------------------------------------------------
+// Telemetry
+// ---------------------------------------------------------------------
+
+#include <sec/telemetry.h>
+
+bool telemetry_get__verified(telemetry_data_t *out);
+
+#endif  // USE_TELEMETRY
 
 #endif  // SECMON

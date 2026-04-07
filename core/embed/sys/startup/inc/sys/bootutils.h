@@ -21,6 +21,20 @@
 
 #include <sys/systask.h>
 
+#ifdef STM32F4
+// Offset of the vector table in the bootloader image.
+// This should match IMAGE_HEADER_SIZE in sec/image.h.
+// Duplicated here to avoid circular dependency.
+#define BOOTLOADER_VECTBL_OFFSET 0x400
+#endif
+
+// Wipe information structure
+typedef struct {
+  char title[64];
+  char message[64];
+  char footer[64];
+} bootutils_wipe_info_t;
+
 // Immediately resets the device and initiates the normal boot sequence as if
 // the device was powered on
 void __attribute__((noreturn)) reboot_device(void);
@@ -48,6 +62,11 @@ void __attribute__((noreturn))
 reboot_with_rsod(const systask_postmortem_t *pminfo);
 #endif
 
+// Resets the device and wipes all the user data.
+// RSOD with wipe information is displayed.
+void __attribute__((noreturn))
+reboot_and_wipe(const bootutils_wipe_info_t *info);
+
 // Allows the user to read the displayed error message and then
 // reboots the device or waits for power-off.
 //
@@ -56,6 +75,10 @@ reboot_with_rsod(const systask_postmortem_t *pminfo);
 // 2) If `RSOD_INFINITE_LOOP` is not defined, the function waits for a
 //    specified duration and then resets the device.
 void __attribute__((noreturn)) reboot_or_halt_after_rsod(void);
+
+// Platform dependent alignment for vector table addresses
+#define IMAGE_CODE_ALIGN(addr) \
+  ((((uint32_t)(uintptr_t)addr) + (CODE_ALIGNMENT - 1)) & ~(CODE_ALIGNMENT - 1))
 
 // Jumps to the next booting stage (e.g. bootloader to firmware).
 // `vectbl_address` points to the flash at the vector table of the next stage.

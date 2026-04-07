@@ -58,7 +58,7 @@ where
     }
 
     fn render(&'s self, target: &mut R) {
-        <Self as Component>::render(self, target)
+        <Self as Component>::render(self, target);
     }
 
     #[cfg(feature = "ui_debug")]
@@ -194,7 +194,7 @@ impl SwipeFlow {
 
         let mut attach = false;
 
-        let event = if self.allow_swipe {
+        let mut event = if self.allow_swipe {
             let page = self.current_page();
             let pager = page.get_pager();
             let config = page.get_swipe_config().with_pager(pager);
@@ -232,8 +232,8 @@ impl SwipeFlow {
                 // swipe end.
                 if attach {
                     if let Event::Swipe(SwipeEvent::End(dir)) = event {
-                        self.current_page_mut()
-                            .event(ctx, Event::Attach(AttachType::Swipe(dir)));
+                        event = Event::Attach(AttachType::Swipe(dir));
+                        self.current_page_mut().event(ctx, event);
                     }
                 }
 
@@ -313,6 +313,10 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         let overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
             self.current_page().render(target);
+
+            #[cfg(feature = "rgb_led")]
+            target.led_state().set();
+
             #[cfg(feature = "ui_debug")]
             if target.should_raise_overflow_exception() {
                 overflow = true;

@@ -5,6 +5,8 @@ from storage import common
 from trezor import utils
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.enums import BackupType, DisplayRotation
     from typing_extensions import Literal
 
@@ -41,6 +43,15 @@ if utils.USE_THP:
 # unused from python:
 # _BRIGHTNESS                = const(0x19)  # int
 _DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
+_DISABLE_RGB_LED           = const(0x21)  # bool (0x01 or empty)
+if utils.USE_THP:
+    THP_PAIRED_NAMES       = const(0x22)  # bytes
+if utils.USE_POWER_MANAGER:
+    _AUTOLOCK_DELAY_BATT_MS    = const(0x23)  # int
+_DISABLE_BLUETOOTH        = const(0x24)  # bool (0x01 or empty)
+if not utils.BITCOIN_ONLY:
+    _BINARY_MNEMONIC = const(0x25)  # bytes
+_DELEGATED_IDENTITY_KEY_ROTATION_INDEX = const(0x26)  # int
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -53,12 +64,20 @@ if TYPE_CHECKING:
 LABEL_MAXLENGTH = const(32)
 
 if __debug__:
-    AUTOLOCK_DELAY_MINIMUM = 10 * 1000  # 10 seconds
+    AUTOLOCK_DELAY_USB_MIN_MS = 10 * 1000  # 10 seconds
 else:
-    AUTOLOCK_DELAY_MINIMUM = 60 * 1000  # 1 minute
-AUTOLOCK_DELAY_DEFAULT = const(10 * 60 * 1000)  # 10 minutes
+    AUTOLOCK_DELAY_USB_MIN_MS = 60 * 1000  # 1 minute
+
+AUTOLOCK_DELAY_USB_DEFAULT_MS = const(10 * 60 * 1000)  # 10 minutes
 # autolock intervals larger than AUTOLOCK_DELAY_MAXIMUM cause issues in the scheduler
-AUTOLOCK_DELAY_MAXIMUM = const(0x2000_0000)  # ~6 days
+AUTOLOCK_DELAY_USB_MAX_MS = const(0x2000_0000)  # ~6 days
+
+if utils.USE_POWER_MANAGER:
+    AUTODIM_DELAY_MS = 30 * 1000  # 30 seconds
+    AUTOLOCK_DELAY_BATT_MIN_MS = 30 * 1000  # 30 seconds
+    AUTOLOCK_DELAY_BATT_DEFAULT_MS = const(40 * 1000)  # 40 seconds
+    AUTOLOCK_DELAY_BATT_MAX_MS = const(10 * 60 * 1000)  # 10 minutes
+
 
 # Length of SD salt auth tag.
 # Other SD-salt-related constants are in sd_salt.py
@@ -135,6 +154,67 @@ def get_mnemonic_secret() -> bytes | None:
     return common.get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
+def store_mnemonic_secret(
+    secret: bytes,
+    needs_backup: bool = False,
+    no_backup: bool = False,
+    allow_derivation_fail: bool = False,
+) -> None:
+    set_version(common.STORAGE_VERSION_CURRENT)
+    common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
+    common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
+    common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
+    if not no_backup:
+        common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
+
+    if not utils.BITCOIN_ONLY:
+        store_binary_mnemonic(secret, allow_derivation_fail)
+
+
+if not utils.BITCOIN_ONLY:
+
+    def get_binary_mnemonic() -> bytes | None:
+        """
+        Get the binary representation of mnemonic (including checksum).
+        """
+        return common.get(_NAMESPACE, _BINARY_MNEMONIC)
+
+    def store_binary_mnemonic(
+        secret: bytes,
+        allow_derivation_fail: bool = False,
+    ) -> None:
+        """
+        Store the binary representation of mnemonic (including checksum) for Cardano
+        Icarus derivation. Works only for BIP-39.
+
+        If `allow_derivation_fail` is True, exception during derivation is ignored.
+        """
+        from trezorcrypto import bip39
+
+        from trezor.enums import BackupType
+
+        if get_backup_type() == BackupType.Bip39:
+            try:
+                binary_mnemonic = bip39.mnemonic_to_bits(secret.decode())
+            except ValueError:
+                if __debug__ and allow_derivation_fail:
+                    # There is a possibility to load device with mnemonics that cannot
+                    # be used for Caradno derivation. These mnemonics are not generated
+                    # by Trezor and user must actively choose them. For exmample, see
+                    # `tests/device_tests/test_msg_loaddevice.py::test_load_device_utf`.
+                    # We do not want to raise an exception for them. But we cannot
+                    # derive Cardano secrets either.
+                    return
+                else:
+                    raise
+
+            common.set(
+                _NAMESPACE,
+                _BINARY_MNEMONIC,
+                binary_mnemonic,
+            )
+
+
 def get_backup_type() -> BackupType:
     from trezor.enums import BackupType
 
@@ -169,23 +249,10 @@ def set_passphrase_enabled(enable: bool) -> None:
         set_passphrase_always_on_device(False)
 
 
-def set_homescreen(homescreen: bytes) -> None:
+def set_homescreen(homescreen: AnyBytes) -> None:
     if len(homescreen) > utils.HOMESCREEN_MAXSIZE:
         raise ValueError  # homescreen too large
     common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
-
-
-def store_mnemonic_secret(
-    secret: bytes,
-    needs_backup: bool = False,
-    no_backup: bool = False,
-) -> None:
-    set_version(common.STORAGE_VERSION_CURRENT)
-    common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
-    common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
-    common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
-    if not no_backup:
-        common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
 
 
 def needs_backup() -> bool:
@@ -241,16 +308,20 @@ def set_flags(flags: int) -> None:
         common.set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
 
 
-def _normalize_autolock_delay(delay_ms: int) -> int:
-    delay_ms = max(delay_ms, AUTOLOCK_DELAY_MINIMUM)
-    delay_ms = min(delay_ms, AUTOLOCK_DELAY_MAXIMUM)
+def _normalize_autolock_delay(
+    delay_ms: int,
+    min_ms: int = AUTOLOCK_DELAY_USB_MIN_MS,
+    max_ms: int = AUTOLOCK_DELAY_USB_MAX_MS,
+) -> int:
+    delay_ms = max(delay_ms, min_ms)
+    delay_ms = min(delay_ms, max_ms)
     return delay_ms
 
 
 def get_autolock_delay_ms() -> int:
     b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_MS)
     if b is None:
-        return AUTOLOCK_DELAY_DEFAULT
+        return AUTOLOCK_DELAY_USB_DEFAULT_MS
     else:
         return _normalize_autolock_delay(int.from_bytes(b, "big"))
 
@@ -258,6 +329,33 @@ def get_autolock_delay_ms() -> int:
 def set_autolock_delay_ms(delay_ms: int) -> None:
     delay_ms = _normalize_autolock_delay(delay_ms)
     common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
+
+
+if utils.USE_POWER_MANAGER:
+
+    def get_autolock_delay_battery_ms() -> int:
+        b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_BATT_MS, public=True)
+        if b is None:
+            return AUTOLOCK_DELAY_BATT_DEFAULT_MS
+        else:
+            return _normalize_autolock_delay(
+                int.from_bytes(b, "big"),
+                min_ms=AUTOLOCK_DELAY_BATT_MIN_MS,
+                max_ms=AUTOLOCK_DELAY_BATT_MAX_MS,
+            )
+
+    def set_autolock_delay_battery_ms(delay_ms: int) -> None:
+        delay_ms = _normalize_autolock_delay(
+            delay_ms,
+            min_ms=AUTOLOCK_DELAY_BATT_MIN_MS,
+            max_ms=AUTOLOCK_DELAY_BATT_MAX_MS,
+        )
+        common.set(
+            _NAMESPACE,
+            _AUTOLOCK_DELAY_BATT_MS,
+            delay_ms.to_bytes(4, "big"),
+            public=True,
+        )
 
 
 def next_u2f_counter() -> int:
@@ -393,3 +491,68 @@ def get_haptic_feedback() -> bool:
     Get haptic feedback enable, default to true if not set.
     """
     return not common.get_bool(_NAMESPACE, _DISABLE_HAPTIC_FEEDBACK, True)
+
+
+def set_ble(enable: bool) -> None:
+    """
+    Enable or disable Bluetooth.
+    """
+    common.set_bool(_NAMESPACE, _DISABLE_BLUETOOTH, not enable, True)
+
+
+def get_ble() -> bool:
+    """
+    Get Bluetooth enable, default to true if not set.
+    """
+    return not common.get_bool(_NAMESPACE, _DISABLE_BLUETOOTH, True)
+
+
+def set_rgb_led(enable: bool) -> None:
+    """
+    Enable or disable RGB LED.
+    """
+    common.set_bool(_NAMESPACE, _DISABLE_RGB_LED, not enable, True)
+
+
+def get_rgb_led() -> bool:
+    """
+    Get RGB LED enable, default to true if not set.
+    """
+    return not common.get_bool(_NAMESPACE, _DISABLE_RGB_LED, True)
+
+
+if utils.USE_THP:
+
+    def set_thp_paired_names(blob: AnyBytes) -> None:
+        """
+        Set THP paired entries' cache (using protobuf serialization).
+        """
+        common.set(_NAMESPACE, THP_PAIRED_NAMES, blob)
+
+    def get_thp_paired_names() -> bytes | None:
+        """
+        Get THP paired entries' cache (using protobuf serialization).
+
+        Please note that while THP calls this a cache, it is persisted
+        across reboots, unlike storage.cache.
+        """
+        return common.get(_NAMESPACE, THP_PAIRED_NAMES)
+
+
+def get_delegated_identity_key_rotation_index() -> int | None:
+    """
+    Get the current delegated identity key rotation index.
+    """
+    rotation_index = common.get_uint16(
+        _NAMESPACE, _DELEGATED_IDENTITY_KEY_ROTATION_INDEX
+    )
+    return rotation_index
+
+
+def set_delegated_identity_key_rotation_index(rotation_index: int) -> None:
+    """
+    Set the current delegated identity key rotation index.
+    """
+    common.set_uint16(
+        _NAMESPACE, _DELEGATED_IDENTITY_KEY_ROTATION_INDEX, rotation_index
+    )

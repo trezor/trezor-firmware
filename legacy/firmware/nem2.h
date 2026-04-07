@@ -92,7 +92,7 @@ const NEMMosaicDefinition *nem_mosaicByName(const char *namespace,
                                             const char *mosaic,
                                             uint8_t network);
 
-void nem_canonicalizeMosaics(NEMTransfer *transfer);
+bool nem_canonicalizeMosaics(NEMTransfer *transfer);
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition,
                             uint64_t quantity, const bignum256 *multiplier,
                             char *str_out, size_t size);

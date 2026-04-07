@@ -381,6 +381,13 @@ static bool is_external_input(uint32_t i) {
   return external_inputs[i / 32] & (1 << (i % 32));
 }
 
+static uint32_t interpolate(uint32_t value, uint32_t num, uint32_t den) {
+  if (den == 0) {
+    return value;
+  }
+  return (value * num) / den;
+}
+
 static void report_progress(bool force) {
   static uint32_t update_ctr = 0;
   if (!force && update_ctr < progress_update) {
@@ -392,17 +399,17 @@ static void report_progress(bool force) {
   if (progress_midpoint != 0) {
     if (progress_step < progress_midpoint) {
       // Checking previous transactions.
-      progress =
-          (500 * progress_step + 500 * progress_substep / progress_substeps) /
-          progress_midpoint;
+      progress = (500 * progress_step +
+                  interpolate(500, progress_substep, progress_substeps)) /
+                 progress_midpoint;
     } else {
       // Signing transaction after checking. No substeps.
-      progress = 500 + 500 * (progress_step - progress_midpoint) /
-                           (progress_steps - progress_midpoint);
+      progress = 500 + interpolate(500, progress_step - progress_midpoint,
+                                   progress_steps - progress_midpoint);
     }
   } else {
     // Loading transaction or signing transaction without checking. No substeps.
-    progress = 1000 * progress_step / progress_steps;
+    progress = interpolate(1000, progress_step, progress_steps);
   }
 
   layoutProgress(progress_label, progress);

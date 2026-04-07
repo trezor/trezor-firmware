@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -35,7 +35,7 @@ from . import messages as m
 from . import tools
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .client import Session
 
 PROTOCOL_MAGICS = {
     "mainnet": 764824073,
@@ -105,7 +105,10 @@ AuxiliaryDataSupplement = Dict[str, Union[int, bytes]]
 SignTxResponse = Dict[str, Union[bytes, List[Witness], AuxiliaryDataSupplement]]
 Chunk = TypeVar(
     "Chunk",
-    bound=Union[m.CardanoTxInlineDatumChunk, m.CardanoTxReferenceScriptChunk],
+    bound=Union[
+        m.CardanoTxInlineDatumChunk,
+        m.CardanoTxReferenceScriptChunk,
+    ],
 )
 
 
@@ -321,6 +324,22 @@ def _parse_address_parameters(
         address_parameters.get("certificateIndex"),
         script_payment_hash,
         script_staking_hash,
+    )
+
+
+def parse_optional_address_parameters(
+    address_parameters: Optional[dict],
+) -> Optional[m.CardanoAddressParametersType]:
+    if address_parameters is None:
+        return None
+
+    ADDRESS_PARAMETERS_MISSING_FIELDS_ERROR = (
+        "Address parameters are missing some fields"
+    )
+
+    return _parse_address_parameters(
+        address_parameters,
+        ADDRESS_PARAMETERS_MISSING_FIELDS_ERROR,
     )
 
 
@@ -821,8 +840,9 @@ def get_address(*args: Any, **kwargs: Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def get_authenticated_address(
-    client: "TrezorClient",
+    session: "Session",
     address_parameters: m.CardanoAddressParametersType,
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
@@ -830,7 +850,7 @@ def get_authenticated_address(
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     chunkify: bool = False,
 ) -> m.CardanoAddress:
-    return client.call(
+    return session.call(
         m.CardanoGetAddress(
             address_parameters=address_parameters,
             protocol_magic=protocol_magic,
@@ -843,13 +863,14 @@ def get_authenticated_address(
     )
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def get_public_key(
-    client: "TrezorClient",
+    session: "Session",
     address_n: List[int],
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     show_display: bool = False,
 ) -> m.CardanoPublicKey:
-    return client.call(
+    return session.call(
         m.CardanoGetPublicKey(
             address_n=address_n,
             derivation_type=derivation_type,
@@ -859,13 +880,14 @@ def get_public_key(
     )
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def get_native_script_hash(
-    client: "TrezorClient",
+    session: "Session",
     native_script: m.CardanoNativeScript,
     display_format: m.CardanoNativeScriptHashDisplayFormat = m.CardanoNativeScriptHashDisplayFormat.HIDE,
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
 ) -> m.CardanoNativeScriptHash:
-    return client.call(
+    return session.call(
         m.CardanoGetNativeScriptHash(
             script=native_script,
             display_format=display_format,
@@ -875,8 +897,9 @@ def get_native_script_hash(
     )
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     signing_mode: m.CardanoTxSigningMode,
     inputs: List[InputWithPath],
     outputs: List[OutputWithData],
@@ -900,6 +923,7 @@ def sign_tx(
     include_network_id: bool = False,
     chunkify: bool = False,
     tag_cbor_sets: bool = False,
+    payment_req: Optional[m.PaymentRequest] = None,
 ) -> Dict[str, Any]:
     witness_requests = _get_witness_requests(
         inputs,
@@ -911,7 +935,7 @@ def sign_tx(
         signing_mode,
     )
 
-    response = client.call(
+    response = session.call(
         m.CardanoSignTxInit(
             signing_mode=signing_mode,
             inputs_count=len(inputs),
@@ -936,6 +960,7 @@ def sign_tx(
             include_network_id=include_network_id,
             chunkify=chunkify,
             tag_cbor_sets=tag_cbor_sets,
+            payment_req=payment_req,
         ),
         expect=m.CardanoTxItemAck,
     )
@@ -946,12 +971,12 @@ def sign_tx(
         _get_certificates_items(certificates),
         withdrawals,
     ):
-        response = client.call(tx_item, expect=m.CardanoTxItemAck)
+        response = session.call(tx_item, expect=m.CardanoTxItemAck)
 
     sign_tx_response: Dict[str, Any] = {}
 
     if auxiliary_data is not None:
-        auxiliary_data_supplement = client.call(
+        auxiliary_data_supplement = session.call(
             auxiliary_data, expect=m.CardanoTxAuxiliaryDataSupplement
         )
         if (
@@ -962,25 +987,25 @@ def sign_tx(
                 auxiliary_data_supplement.__dict__
             )
 
-        response = client.call(m.CardanoTxHostAck(), expect=m.CardanoTxItemAck)
+        response = session.call(m.CardanoTxHostAck(), expect=m.CardanoTxItemAck)
 
     for tx_item in chain(
         _get_mint_items(mint),
         _get_collateral_inputs_items(collateral_inputs),
         required_signers,
     ):
-        response = client.call(tx_item, expect=m.CardanoTxItemAck)
+        response = session.call(tx_item, expect=m.CardanoTxItemAck)
 
     if collateral_return is not None:
         for tx_item in _get_output_items(collateral_return):
-            response = client.call(tx_item, expect=m.CardanoTxItemAck)
+            response = session.call(tx_item, expect=m.CardanoTxItemAck)
 
     for reference_input in reference_inputs:
-        response = client.call(reference_input, expect=m.CardanoTxItemAck)
+        response = session.call(reference_input, expect=m.CardanoTxItemAck)
 
     sign_tx_response["witnesses"] = []
     for witness_request in witness_requests:
-        response = client.call(witness_request, expect=m.CardanoTxWitnessResponse)
+        response = session.call(witness_request, expect=m.CardanoTxWitnessResponse)
         sign_tx_response["witnesses"].append(
             {
                 "type": response.type,
@@ -990,9 +1015,48 @@ def sign_tx(
             }
         )
 
-    response = client.call(m.CardanoTxHostAck(), expect=m.CardanoTxBodyHash)
+    response = session.call(m.CardanoTxHostAck(), expect=m.CardanoTxBodyHash)
     sign_tx_response["tx_hash"] = response.tx_hash
 
-    response = client.call(m.CardanoTxHostAck(), expect=m.CardanoSignTxFinished)
+    response = session.call(m.CardanoTxHostAck(), expect=m.CardanoSignTxFinished)
 
     return sign_tx_response
+
+
+@tools.workflow(capability=m.Capability.Cardano)
+def sign_message(
+    session: "Session",
+    signing_path: Path,
+    payload: bytes,
+    prefer_hex_display: bool,
+    address_parameters: Optional[m.CardanoAddressParametersType] = None,
+    derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
+    protocol_magic: Optional[int] = None,
+    network_id: Optional[int] = None,
+) -> m.CardanoMessageSignature:
+    response = session.call(
+        m.CardanoSignMessageInit(
+            signing_path=signing_path,
+            payload_size=len(payload),
+            address_parameters=address_parameters,
+            prefer_hex_display=prefer_hex_display,
+            protocol_magic=protocol_magic,
+            network_id=network_id,
+            derivation_type=derivation_type,
+        ),
+    )
+
+    while isinstance(response, m.CardanoMessageDataRequest):
+        offset = response.offset
+        requested_size = response.length
+
+        if offset + requested_size > len(payload):
+            raise ValueError("Device requested data beyond payload bounds")
+
+        chunk_data = payload[offset : offset + requested_size]
+        response = session.call(m.CardanoMessageDataResponse(data=chunk_data))
+
+    if not isinstance(response, m.CardanoMessageSignature):
+        raise ValueError("Unexpected response")
+
+    return response

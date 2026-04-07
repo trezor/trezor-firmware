@@ -25,12 +25,17 @@
 #define __BIP39_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "options.h"
 
 #define BIP39_WORD_COUNT 2048
 #define BIP39_PBKDF2_ROUNDS 2048
+
+#define BIP39_MAX_WORD_LEN 8
+#define BIP39_MAX_MNEMONIC_LEN (24 * BIP39_MAX_WORD_LEN + 23)
+#define BIP39_BITS_PER_WORD 11
 
 #if USE_BIP39_CACHE
 void bip39_cache_clear(void);
@@ -51,7 +56,12 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
                       void (*progress_callback)(uint32_t current,
                                                 uint32_t total));
 
-int mnemonic_find_word(const char *word);
+typedef struct {
+  int index;
+  size_t length;
+} found_word;
+
+found_word mnemonic_find_word(const char *word);
 const char *mnemonic_complete_word(const char *prefix, int len);
 const char *mnemonic_get_word(int index);
 uint32_t mnemonic_word_completion_mask(const char *prefix, int len);

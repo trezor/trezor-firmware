@@ -1,17 +1,14 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Protocol, TypeVar, Union
+    from typing import Protocol, TypeVar
 
     T = TypeVar("T")
 
     XT = TypeVar("XT", bound="XmrType")
     ST = TypeVar("ST", bound="XmrStructuredType")
 
-    XmrFieldType = Union[
-        tuple[str, XT],
-        tuple[str, ST, XT],
-    ]
+    XmrFieldType = tuple[str, XT] | tuple[str, ST, XT]
 
     XmrFspec = tuple[XmrFieldType, ...]
 

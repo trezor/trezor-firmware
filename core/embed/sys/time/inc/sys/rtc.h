@@ -32,6 +32,13 @@ typedef struct {
 } rtc_datetime_t;
 
 /**
+ * @brief Callback invoked when the RTC wakeup event occurs
+ *
+ * @param context Context pointer passed to rtc_wakeup_timer_start
+ */
+typedef void (*rtc_wakeup_callback_t)(void* context);
+
+/**
  * @brief Initialize the RTC driver
  *
  * Before initialization, the RCC clock for the RTC must be configured to
@@ -52,33 +59,6 @@ bool rtc_init(void);
  * @return true if the timestamp was successfully retrieved, false otherwise
  */
 bool rtc_get_timestamp(uint32_t* timestamp);
-
-/**
- * @brief Callback invoked when the RTC wakeup event occurs
- *
- * @param context Context pointer passed to rtc_wakeup_timer_start
- */
-typedef void (*rtc_wakeup_callback_t)(void* context);
-
-/**
- * @brief Schedule a wakeup event after a specified number of seconds
- *
- * Configures the RTC to wake up the system from STOP mode after the specified
- * number of seconds. After waking up, callback is called if not NULL otherwise
- * the WAKEUP_FLAG_RTC flag is set.
- *
- * @param seconds Number of seconds (1 to 65536) to wait before waking up.
- * @param callback Callback function to be called when the wakeup event occurs.
- * @param context Context pointer to be passed to the callback function.
- * @return true if the wakeup was successfully scheduled, false otherwise
- */
-bool rtc_wakeup_timer_start(uint32_t seconds, rtc_wakeup_callback_t callback,
-                            void* context);
-
-/**
- * @brief Stop the RTC wakeup timer
- */
-void rtc_wakeup_timer_stop(void);
 
 /**
  * @brief Set the RTC using discrete time values
@@ -108,3 +88,23 @@ bool rtc_set(uint16_t year, uint8_t month, uint8_t day, uint8_t hour,
  * @return true if the time was successfully retrieved, false otherwise
  */
 bool rtc_get(rtc_datetime_t* datetime);
+
+/**
+ * @brief Start the RTC wakeup timer
+ *
+ * Configures the RTC to generate an wakeup interrupt at the specified
+ * timestamp. When the event occurs, the provided callback function is called
+ * with the given context pointer.
+ *
+ * @param event_timestamp RTC timestamp to wake up at.
+ * @param callback Callback function to be called when the wakeup event occurs.
+ * @param context Context pointer to be passed to the callback function.
+ * @return true if the wakeup timer was successfully started, false otherwise
+ */
+bool rtc_wakeup_timer_start(uint32_t event_timestamp,
+                            rtc_wakeup_callback_t callback, void* context);
+
+/**
+ * @brief Stop the RTC wakeup timer
+ */
+void rtc_wakeup_timer_stop(void);

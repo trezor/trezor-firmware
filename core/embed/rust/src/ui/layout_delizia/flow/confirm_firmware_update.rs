@@ -77,7 +77,7 @@ pub fn new_confirm_firmware_update(
                 theme::ICON_CHEVRON_RIGHT,
                 TR::firmware_update__title_fingerprint.into(),
             )
-            .danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
+            .cancel_item(TR::buttons__cancel.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);
@@ -97,7 +97,7 @@ pub fn new_confirm_firmware_update(
     )
     .with_menu_button()
     .with_footer(TR::instructions__hold_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?;

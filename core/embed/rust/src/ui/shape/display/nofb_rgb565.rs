@@ -6,6 +6,9 @@ use crate::{
     ui::shape::render::ScopedRenderer,
 };
 
+#[cfg(feature = "ui_debug_overlay")]
+use crate::ui::{CommonUI, ModelUI};
+
 use crate::ui::{
     display::Color,
     geometry::{Offset, Rect},
@@ -51,6 +54,14 @@ where
         ));
 
         func(&mut target);
+
+        #[cfg(feature = "ui_debug_overlay")]
+        {
+            // In debug mode, render the debug overlay.
+            if !display::is_recording() {
+                ModelUI::render_debug_overlay(&mut target);
+            }
+        }
 
         target.into_inner().render(16);
     });

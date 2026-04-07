@@ -1,0 +1,86 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#include <trezor_types.h>
+
+#include "battery_model.h"
+
+/**
+ * @brief Fuel gauge state structure
+ */
+typedef struct {
+  float soc;          ///< State of charge estimate (0.0 to 1.0)
+  float soc_latched;  ///< Latched SOC (the one that gets reported)
+  float P;            ///< Error covariance
+} fuel_gauge_state_t;
+
+/**
+ * @brief Initialize the fuel gauge state
+ *
+ * @param state Pointer to EKF state structure
+ * @param R Measurement noise variance
+ * @param Q Process noise variance
+ * @param R_aggressive Aggressive mode measurement noise variance
+ * @param Q_aggressive Aggressive mode process noise variance
+ * @param P_init Initial error covariance
+ */
+void fuel_gauge_init(fuel_gauge_state_t* state);
+
+/**
+ * @brief Reset the EKF state
+ *
+ * @param state Pointer to EKF state structure
+ */
+void fuel_gauge_reset(fuel_gauge_state_t* state);
+
+/**
+ * @brief Set SOC directly
+ *
+ * @param state Pointer to EKF state structure
+ * @param soc State of charge (0.0 to 1.0)
+ */
+void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P);
+
+/**
+ * @brief Make initial SOC guess based on OCV
+ *
+ * @param state Pointer to EKF state structure
+ * @param voltage_V Current battery voltage (V)
+ * @param current_mA Current battery current (mA), positive for discharge
+ * @param temperature Battery temperature (°C)
+ */
+void fuel_gauge_initial_guess(fuel_gauge_state_t* state,
+                              battery_model_t* battery_model, float voltage_V,
+                              float current_mA, float temperature);
+
+/**
+ * @brief Update the fuel gauge with new measurements
+ *
+ * @param state Pointer to EKF state structure
+ * @param dt_ms Time step in milliseconds
+ * @param voltage_V Current battery voltage (V)
+ * @param current_mA Current battery current (mA), positive for discharge
+ * @param temperature Battery temperature (°C)
+ * @return Updated SOC estimate (0.0 to 1.0)
+ */
+float fuel_gauge_update(fuel_gauge_state_t* state,
+                        battery_model_t* battery_model, uint32_t dt_ms,
+                        float voltage_V, float current_mA, float temperature);

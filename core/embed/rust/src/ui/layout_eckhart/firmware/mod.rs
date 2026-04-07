@@ -12,9 +12,11 @@ mod homescreen;
 mod keyboard;
 mod progress_screen;
 mod qr_screen;
+mod regulatory_screen;
 mod select_word_screen;
 mod share_words;
 mod text_screen;
+mod tutorial_screen;
 mod updatable_info_screen;
 mod value_input_screen;
 mod vertical_menu;
@@ -27,28 +29,34 @@ pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
 pub use fido::{FidoAccountName, FidoCredential};
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
-pub use hold_to_confirm::HoldToConfirmAnim;
+pub use hold_to_confirm::{HoldToConfirmAnim, HoldToConfirmMsg};
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg};
 pub use keyboard::{
     bip39::Bip39Input,
+    label::LabelInput,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
-    passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
+    passphrase::PassphraseInput,
     pin::{PinKeyboard, PinKeyboardMsg},
     slip39::Slip39Input,
+    string::{StringInput, StringInputMsg, StringKeyboard, StringKeyboardMsg},
     word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
 pub use progress_screen::ProgressScreen;
 pub use qr_screen::{QrMsg, QrScreen};
+pub use regulatory_screen::{RegulatoryMsg, RegulatoryScreen};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};
+pub use tutorial_screen::{
+    TutorialPowerScreen, TutorialPowerScreenMsg, TutorialWelcomeScreen, TutorialWelcomeScreenMsg,
+};
 pub use updatable_info_screen::{UpdatableInfoScreen, UpdatableInfoScreenMsg};
 pub use value_input_screen::{
     DurationInput, NumberInput, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
 pub use vertical_menu::{
-    LongMenuGc, MenuItems, ShortMenuVec, VerticalMenu, VerticalMenuMsg, LONG_MENU_ITEMS,
-    SHORT_MENU_ITEMS,
+    LongMenuGc, MediumMenuVec, MenuItems, ShortMenuVec, VerticalMenu, VerticalMenuMsg,
+    LONG_MENU_ITEMS, MEDIUM_MENU_ITEMS, SHORT_MENU_ITEMS,
 };
 pub use vertical_menu_screen::{VerticalMenuScreen, VerticalMenuScreenMsg};
 

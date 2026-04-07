@@ -1,3 +1,19 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 from __future__ import annotations
 
 import json
@@ -52,7 +68,10 @@ def version_from_json(json_str: str) -> VersionTuple:
 
 
 def _normalize(what: str) -> str:
-    return unicodedata.normalize("NFKC", what)
+    normalized = unicodedata.normalize("NFC", what)
+    if normalized != what:
+        raise RuntimeError(f"Invalid string normalization at: '{what}'")
+    return normalized
 
 
 def offsets_seq(data: t.Iterable[bytes]) -> t.Iterator[int]:
@@ -278,26 +297,26 @@ class TranslationsBlob(Struct):
     # fmt: on
 
     @property
-    def header(self):
+    def header(self) -> Header:
         return Header.parse(self.header_bytes)
 
     @property
-    def proof(self):
+    def proof(self) -> Proof:
         return Proof.parse(self.proof_bytes)
 
     @proof.setter
-    def proof(self, proof: Proof):
+    def proof(self, proof: Proof) -> None:
         self.proof_bytes = proof.build()
 
     @property
-    def translation_chunks(self):
+    def translation_chunks(self) -> list[TranslatedStringsChunk]:
         return [
             TranslatedStringsChunk.parse(chunk)
             for chunk in self.payload.translations_chunks_bytes
         ]
 
     @property
-    def fonts(self):
+    def fonts(self) -> FontsTable:
         return FontsTable.parse(self.payload.fonts_bytes)
 
     def build(self) -> bytes:
@@ -316,7 +335,7 @@ ALL_LAYOUTS = frozenset(LayoutType) - {LayoutType.T1}
 ALL_LAYOUT_NAMES = frozenset(layout.name for layout in ALL_LAYOUTS)
 
 
-def check_blob(lang_data: JsonDef):
+def check_blob(lang_data: JsonDef) -> None:
     json_header: JsonHeader = lang_data["header"]
     lang_version = f"{json_header['language']} v{json_header['version']}"
 

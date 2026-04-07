@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -165,7 +165,7 @@ def test_simple_message():
         uvarint=12345678910,
         svarint=-12345678910,
         bool=True,
-        bytes=b"\xDE\xAD\xCA\xFE",
+        bytes=b"\xde\xad\xca\xfe",
         unicode="Příliš žluťoučký kůň úpěl ďábelské ódy 😊",
         enum=SomeEnum.Five,
     )
@@ -177,7 +177,7 @@ def test_simple_message():
     assert retr.uvarint == 12345678910
     assert retr.svarint == -12345678910
     assert retr.bool is True
-    assert retr.bytes == b"\xDE\xAD\xCA\xFE"
+    assert retr.bytes == b"\xde\xad\xca\xfe"
     assert retr.unicode == "Příliš žluťoučký kůň úpěl ďábelské ódy 😊"
     assert retr.enum == SomeEnum.Five
     assert retr.enum == 5

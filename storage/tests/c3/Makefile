@@ -19,6 +19,7 @@ SRC += storage/tests/c3/storage.c
 SRC += storage/tests/c3/norcow.c
 SRC += crypto/pbkdf2.c
 SRC += crypto/rand.c
+SRC += crypto/rand_insecure.c
 SRC += crypto/chacha20poly1305/rfc7539.c
 SRC += crypto/chacha20poly1305/chacha20poly1305.c
 SRC += crypto/chacha20poly1305/poly1305-donna.c
@@ -39,6 +40,10 @@ build/crypto/chacha20poly1305/chacha_merged.o: $(BASE)crypto/chacha20poly1305/ch
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 
 build/%.o: $(BASE)%.c $(BASE)%.h
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+
+build/%.o: $(BASE)%.c
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 

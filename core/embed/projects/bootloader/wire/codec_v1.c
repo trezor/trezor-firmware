@@ -91,7 +91,7 @@ static bool write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count) {
   return true;
 }
 
-static void write_flush(packet_write_state_t *state) {
+static secbool write_flush(packet_write_state_t *state) {
   size_t packet_size = state->iface->tx_packet_size;
 
   // if packet is not filled up completely
@@ -101,7 +101,7 @@ static void write_flush(packet_write_state_t *state) {
   }
   // send packet
   bool ok = state->iface->write(state->buf, packet_size);
-  ensure(sectrue * (ok), NULL);
+  return sectrue * ok;
 }
 
 secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
@@ -144,9 +144,7 @@ secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
     return secfalse;
   }
 
-  write_flush(&state);
-
-  return sectrue;
+  return write_flush(&state);
 }
 
 static void read_retry(wire_iface_t *iface, uint8_t *buf) {

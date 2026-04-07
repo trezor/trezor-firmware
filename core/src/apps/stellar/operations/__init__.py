@@ -4,8 +4,15 @@ if TYPE_CHECKING:
     from consts import StellarMessageType
     from trezor.utils import Writer
 
+    from apps.common.payment_request import PaymentRequestVerifier
 
-async def process_operation(w: Writer, op: StellarMessageType) -> None:
+
+async def process_operation(
+    w: Writer,
+    op: StellarMessageType,
+    output_index: int,
+    payment_request_verifier: PaymentRequestVerifier | None,
+) -> None:
     # Importing the stuff inside (only) function saves around 100 bytes here
     # (probably because the local lookup is more efficient than a global lookup)
 
@@ -19,9 +26,19 @@ async def process_operation(w: Writer, op: StellarMessageType) -> None:
         await layout.confirm_source_account(op.source_account)
     serialize.write_account(w, op.source_account)
     writers.write_uint32(w, consts.get_op_code(op))
+
+    if payment_request_verifier is not None:
+        if messages.StellarPaymentOp.is_type_of(op):
+            # will be confirmed as part of payment request confirmation
+            serialize.write_payment_op(w, op)
+            payment_request_verifier.add_output(op.amount, op.destination_account)
+            return
+        else:
+            raise ValueError("Invalid operation for payment request")
+
     # NOTE: each branch below has 45 bytes (26 the actions, 19 the condition)
     if messages.StellarAccountMergeOp.is_type_of(op):
-        await layout.confirm_account_merge_op(op)
+        await layout.confirm_account_merge_op(op, output_index)
         serialize.write_account_merge_op(w, op)
     elif messages.StellarAllowTrustOp.is_type_of(op):
         await layout.confirm_allow_trust_op(op)
@@ -33,7 +50,7 @@ async def process_operation(w: Writer, op: StellarMessageType) -> None:
         await layout.confirm_change_trust_op(op)
         serialize.write_change_trust_op(w, op)
     elif messages.StellarCreateAccountOp.is_type_of(op):
-        await layout.confirm_create_account_op(op)
+        await layout.confirm_create_account_op(op, output_index)
         serialize.write_create_account_op(w, op)
     elif messages.StellarCreatePassiveSellOfferOp.is_type_of(op):
         await layout.confirm_create_passive_sell_offer_op(op)
@@ -48,13 +65,13 @@ async def process_operation(w: Writer, op: StellarMessageType) -> None:
         await layout.confirm_manage_sell_offer_op(op)
         serialize.write_manage_sell_offer_op(w, op)
     elif messages.StellarPathPaymentStrictReceiveOp.is_type_of(op):
-        await layout.confirm_path_payment_strict_receive_op(op)
+        await layout.confirm_path_payment_strict_receive_op(op, output_index)
         serialize.write_path_payment_strict_receive_op(w, op)
     elif messages.StellarPathPaymentStrictSendOp.is_type_of(op):
-        await layout.confirm_path_payment_strict_send_op(op)
+        await layout.confirm_path_payment_strict_send_op(op, output_index)
         serialize.write_path_payment_strict_send_op(w, op)
     elif messages.StellarPaymentOp.is_type_of(op):
-        await layout.confirm_payment_op(op)
+        await layout.confirm_payment_op(op, output_index)
         serialize.write_payment_op(w, op)
     elif messages.StellarSetOptionsOp.is_type_of(op):
         await layout.confirm_set_options_op(op)

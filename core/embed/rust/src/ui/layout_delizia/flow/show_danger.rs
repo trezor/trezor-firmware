@@ -80,7 +80,7 @@ pub fn new_show_danger(
         "".into(),
         VerticalMenu::empty()
             .item(theme::ICON_CANCEL, verb_cancel)
-            .danger(theme::ICON_CHEVRON_RIGHT, confirm),
+            .danger_item(theme::ICON_CHEVRON_RIGHT, confirm),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);

@@ -38,7 +38,7 @@ void buffer_writer_init(BUFFER_WRITER *writer, uint8_t *data, size_t size) {
   writer->pos = 0;
 }
 
-size_t buffer_remaining(BUFFER_READER *buf) {
+size_t buffer_remaining(const BUFFER_READER *buf) {
   if ((buf->data == NULL) || (buf->pos > buf->size)) {
     return 0;
   }
@@ -46,7 +46,7 @@ size_t buffer_remaining(BUFFER_READER *buf) {
   return buf->size - buf->pos;
 }
 
-bool buffer_ptr(BUFFER_READER *buf, const uint8_t **ptr) {
+bool buffer_ptr(const BUFFER_READER *buf, const uint8_t **ptr) {
   if ((buf->data == NULL) || (buf->pos > buf->size)) {
     return false;
   }
@@ -139,4 +139,4 @@ bool buffer_write_buffer(BUFFER_WRITER *dest, BUFFER_READER *src) {
   return true;
 }
 
-size_t buffer_written_size(BUFFER_WRITER *writer) { return writer->pos; }
+size_t buffer_written_size(const BUFFER_WRITER *writer) { return writer->pos; }

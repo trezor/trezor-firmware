@@ -180,9 +180,16 @@ vector_table:
 
   .section .vector_table, "a"
 vector_table:
+  .word reset_handler
   .word _stack_section_start
   .word _stack_section_size
-  .word reset_handler
+  .word _tls_section_start
+  .word _tls_section_size
+#ifdef USE_APP_LOADING
+  .word coreapp_api_get
+#else
+  .word 0
+#endif
 #if USE_STORAGE_HWKEY
   .word saes_unpriv_input
   .word saes_unpriv_output

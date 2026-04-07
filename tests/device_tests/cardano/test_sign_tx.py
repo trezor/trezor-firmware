@@ -16,13 +16,21 @@
 
 import pytest
 
-from trezorlib import cardano, device, messages
+from trezorlib import btc, cardano, device, messages, misc
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowConfirmAllWarnings
+from ..payment_req import (
+    CoinPurchaseMemo,
+    RefundMemo,
+    TextDetailsMemo,
+    make_payment_request,
+)
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]
 
@@ -39,7 +47,7 @@ def show_details_input_flow(client: Client):
     elif client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
         # Delizia - "Show all" button from context menu
         client.debug.click(client.debug.screen_buttons.menu())
-        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
+        client.debug.button_actions.navigate_to_menu_item(0)
     else:
         raise NotImplementedError
     # reset ui flow to continue "automatically"
@@ -54,18 +62,18 @@ def show_details_input_flow(client: Client):
     "cardano/sign_tx.plutus.json",
     "cardano/sign_tx.slip39.json",
 )
-def test_cardano_sign_tx(client: Client, parameters, result):
+def test_cardano_sign_tx(session: Session, parameters, result):
     response = call_sign_tx(
-        client,
+        session,
         parameters,
-        input_flow=lambda client: InputFlowConfirmAllWarnings(client).get(),
+        input_flow=lambda client: InputFlowConfirmAllWarnings(session).get(),
     )
     assert response == _transform_expected_result(result)
 
 
 @parametrize_using_common_fixtures("cardano/sign_tx.show_details.json")
-def test_cardano_sign_tx_show_details(client: Client, parameters, result):
-    response = call_sign_tx(client, parameters, show_details_input_flow, chunkify=True)
+def test_cardano_sign_tx_show_details(session: Session, parameters, result):
+    response = call_sign_tx(session, parameters, show_details_input_flow, chunkify=True)
     assert response == _transform_expected_result(result)
 
 
@@ -75,13 +83,13 @@ def test_cardano_sign_tx_show_details(client: Client, parameters, result):
     "cardano/sign_tx.multisig.failed.json",
     "cardano/sign_tx.plutus.failed.json",
 )
-def test_cardano_sign_tx_failed(client: Client, parameters, result):
+def test_cardano_sign_tx_failed(session: Session, parameters, result):
     with pytest.raises(TrezorFailure, match=result["error_message"]):
-        call_sign_tx(client, parameters, None)
+        call_sign_tx(session, parameters, None)
 
 
-def call_sign_tx(client: Client, parameters, input_flow=None, chunkify: bool = False):
-    client.init_device(new_session=True, derive_cardano=True)
+def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool = False):
+    # session.init_device(new_session=True, derive_cardano=True)
 
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]
     inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
@@ -112,18 +120,53 @@ def call_sign_tx(client: Client, parameters, input_flow=None, chunkify: bool = F
 
     if parameters.get("security_checks") == "prompt":
         device.apply_settings(
-            client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+            session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
         )
     else:
-        device.apply_settings(client, safety_checks=messages.SafetyCheckLevel.Strict)
+        device.apply_settings(session, safety_checks=messages.SafetyCheckLevel.Strict)
 
-    with client:
+    if parameters.get("payment_req"):
+        # Note: "payment_req" in the JSON is just a boolean,
+        # which makes us generate a payment request here.
+        # It could be changed to encode the payment request in the JSON,
+        # but it feels overkill for now.
+        purchase_memo = CoinPurchaseMemo(
+            amount="0.00001 BTC",
+            coin_name="Bitcoin",
+            slip44=0,
+            address_n=parse_path("m/44h/0h/0h/0/0"),
+        )
+        purchase_memo.address_resp = btc.get_authenticated_address(
+            session, purchase_memo.coin_name, purchase_memo.address_n
+        )
+        refund_memo = RefundMemo(address_n=parse_path("m/44h/1815h/0h/0/2"))
+        refund_memo.address_resp = cardano.get_authenticated_address(
+            session, cardano.create_address_parameters(8, refund_memo.address_n)
+        )
+        text_details_memo = TextDetailsMemo(
+            title="Are you sure...",
+            text="... you want to swap your valuable ADA for some sats?",
+        )
+        memos = [purchase_memo, refund_memo, text_details_memo]
+        nonce = misc.get_nonce(session)
+        payment_request = make_payment_request(
+            session,
+            recipient_name="trezor.io",
+            slip44=1815,
+            outputs=[(o[0].amount, o[0].address) for o in outputs],
+            memos=memos,
+            nonce=nonce,
+        )
+    else:
+        payment_request = None
+
+    with session.test_ctx as client:
         if input_flow is not None:
             client.watch_layout()
             client.set_input_flow(input_flow(client))
 
         return cardano.sign_tx(
-            client=client,
+            session=session,
             signing_mode=signing_mode,
             inputs=inputs,
             outputs=outputs,
@@ -146,6 +189,7 @@ def call_sign_tx(client: Client, parameters, input_flow=None, chunkify: bool = F
             include_network_id=parameters["include_network_id"],
             chunkify=chunkify,
             tag_cbor_sets=parameters["tag_cbor_sets"],
+            payment_req=payment_request,
         )
 
 
@@ -181,3 +225,20 @@ def _transform_expected_result(result):
                 "cvote_registration_signature"
             ] = bytes.fromhex(cvote_registration_signature)
     return transformed_result
+
+
+@pytest.mark.altcoin
+@parametrize_using_common_fixtures(
+    "cardano/sign_tx.slip24.json",
+)
+def test_signtx_payment_req(session: Session, parameters, result):
+    call_sign_tx(session, parameters, None)
+
+
+@pytest.mark.altcoin
+@parametrize_using_common_fixtures(
+    "cardano/sign_tx.slip24.failed.json",
+)
+def test_sign_tx_payment_req_failed(session: Session, parameters, result):
+    with pytest.raises(TrezorFailure, match=result["error_message"]):
+        call_sign_tx(session, parameters, None)

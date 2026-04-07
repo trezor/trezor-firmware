@@ -3,6 +3,7 @@ use crate::ui::{
     geometry::{Alignment2D, Offset, Point, Rect},
     lerp::Lerp,
     shape::{self, Renderer},
+    util::animation_disabled,
 };
 
 use super::{
@@ -14,6 +15,7 @@ use super::{
 /// clock-wise direction. Used in ProgressScreen and Bootloader. `progress` goes
 /// from 0 to 1000.
 pub fn render_loader<'s>(progress: u16, border: &'s ScreenBorder, target: &mut impl Renderer<'s>) {
+    let progress = if animation_disabled() { 0 } else { progress };
     let progress_ratio = progress_to_ratio(progress);
     // Draw the border first
     border.render(u8::MAX, target);
@@ -33,10 +35,14 @@ pub fn render_loader_indeterminate<'s>(
     border: &'s ScreenBorder,
     target: &mut impl Renderer<'s>,
 ) {
+    let progress = if animation_disabled() { 0 } else { progress };
     let progress_ratio = progress_to_ratio(progress);
-    let clip = get_clip_indeterminate(progress_ratio);
+    let (clip, clip_opposite) = get_clips_indeterminate(progress_ratio);
     // Draw the border in clip
     target.in_clip(clip, &|target| {
+        border.render(u8::MAX, target);
+    });
+    target.in_clip(clip_opposite, &|target| {
         border.render(u8::MAX, target);
     });
 }
@@ -46,7 +52,7 @@ fn progress_to_ratio(progress: u16) -> f32 {
     (progress as f32 / 1000.0).clamp(0.0, 1.0)
 }
 
-fn get_clip_indeterminate(progress_ratio: f32) -> Rect {
+fn get_clips_indeterminate(progress_ratio: f32) -> (Rect, Rect) {
     const CLIP_SIZE: i16 = 190;
 
     // Define 8 points (+1 duplicate) for an octagonal path around the display
@@ -102,14 +108,22 @@ fn get_clip_indeterminate(progress_ratio: f32) -> Rect {
     // Fractional part gives us the position within the segment
     let segment_ratio = segment_position - segment as f32;
 
-    // Get the current point and the next point
+    // Current point on the path
     let current = PATH_POINTS[segment];
     let next = PATH_POINTS[segment + 1];
-
-    // Linearly interpolate between the current and next points
     let center = Point::lerp(current, next, segment_ratio);
 
-    Rect::snap(center, Offset::uniform(CLIP_SIZE), Alignment2D::CENTER)
+    // Opposite point on the path: shift by half the number of segments
+    let half = path_length / 2; // assumes even path_length (it is 8 here)
+    let opp_segment = (segment + half) % path_length;
+    let opp_current = PATH_POINTS[opp_segment];
+    let opp_next = PATH_POINTS[opp_segment + 1];
+    let center_opp = Point::lerp(opp_current, opp_next, segment_ratio);
+
+    (
+        Rect::snap(center, Offset::uniform(CLIP_SIZE), Alignment2D::CENTER),
+        Rect::snap(center_opp, Offset::uniform(CLIP_SIZE), Alignment2D::CENTER),
+    )
 }
 
 fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
@@ -130,7 +144,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         // Top-right to bottom-right
         const PROGRESS_PORTION: f32 = 0.3;
         const PROGRESS_START: f32 = 0.11;
-        const FULL_HEIGHT: i16 = 502;
+        const FULL_HEIGHT: i16 = SCREEN.height() - ScreenBorder::TOP_ARC_HEIGHT;
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
         let height = ((1.0 - progress) * FULL_HEIGHT as f32) as i16;
         Rect::snap(
@@ -143,7 +157,8 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         // Bottom-right to bottom-left
         const PROGRESS_PORTION: f32 = 0.18;
         const PROGRESS_START: f32 = 0.41;
-        const FULL_WIDTH: i16 = 298;
+        const FULL_WIDTH: i16 =
+            SCREEN.width() - ICON_BORDER_BL.toif.width() - ICON_BORDER_BR.toif.width();
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
         let width = ((1.0 - progress) * FULL_WIDTH as f32) as i16;
         Rect::snap(
@@ -156,7 +171,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         // Bottom-left to top-left
         const PROGRESS_PORTION: f32 = 0.3;
         const PROGRESS_START: f32 = 0.59;
-        const FULL_HEIGHT: i16 = 502;
+        const FULL_HEIGHT: i16 = SCREEN.height() - ScreenBorder::TOP_ARC_HEIGHT;
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
         let height = ((1.0 - progress) * FULL_HEIGHT as f32) as i16;
         Rect::snap(
