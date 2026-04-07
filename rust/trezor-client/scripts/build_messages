@@ -20,6 +20,7 @@ FEATURES = {
     "Ethereum": "ethereum",
     #
     "Cardano": "cardano",
+    "Cosmos": "cosmos",
     "EOS": "eos",
     "Evolu": "evolu",
     "Monero": "monero",
@@ -36,7 +37,7 @@ MACRO = "trezor_message_impl"
 INDENT = "    "
 
 
-def main():
+def main() -> None:
     blocks = get_blocks()
     features = {}
     defaults = []

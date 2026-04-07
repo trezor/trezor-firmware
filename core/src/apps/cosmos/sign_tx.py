@@ -38,7 +38,6 @@ async def sign_tx(msg: CosmosSignTx, keychain: Keychain) -> CosmosSignedTx:
         CosmosSignedTx,
         CosmosTxBody,
     )
-    from trezor.protobuf import decode
     from trezor.ui.layouts import confirm_value
 
     from apps.common import paths
@@ -47,7 +46,7 @@ async def sign_tx(msg: CosmosSignTx, keychain: Keychain) -> CosmosSignedTx:
 
     await paths.validate_path(keychain, address_n)
 
-    sd = decode(msg.sign_doc, CosmosSignDoc, False)
+    sd = decode_strict_message(msg.sign_doc, CosmosSignDoc, "sign doc")
 
     if sd.chain_id == "":
         raise wire.DataError("Empty chain id")
@@ -57,14 +56,16 @@ async def sign_tx(msg: CosmosSignTx, keychain: Keychain) -> CosmosSignedTx:
     # XXX: should we display this? not very relevant to user, if the account number has a mismatch with the address, the tx won't pass.
     await confirm_value("account number", str(sd.account_number), "", "confirm")
 
-    auth_info = decode(sd.auth_info_bytes, CosmosAuthInfo, False)
+    auth_info = decode_strict_message(
+        sd.auth_info_bytes, CosmosAuthInfo, "auth info"
+    )
 
     node = keychain.derive(address_n)
     pk = node.public_key()
 
     await validate_and_confirm_auth_info(auth_info, pk)
 
-    body = decode(sd.body_bytes, CosmosTxBody, False)
+    body = decode_strict_message(sd.body_bytes, CosmosTxBody, "transaction body")
 
     # TODO: support any message type via requesting protobuf definitions from the outside in a verifiable way (merkle proof or something)
     msg_map = {
@@ -87,7 +88,11 @@ async def sign_tx(msg: CosmosSignTx, keychain: Keychain) -> CosmosSignedTx:
             raise wire.DataError("Message type not supported: " + tx_msg.type_url)
         msg_ctx = msg_map[tx_msg.type_url]
 
-        dmsg = decode(tx_msg.value, msg_ctx["desc"], False)
+        dmsg = decode_strict_message(
+            tx_msg.value,
+            msg_ctx["desc"],
+            tx_msg.type_url + " payload",
+        )
         msg_ctx["validate"](dmsg, pk)
         await msg_ctx["confirm"](dmsg)
 
@@ -101,6 +106,30 @@ async def sign_tx(msg: CosmosSignTx, keychain: Keychain) -> CosmosSignedTx:
     return CosmosSignedTx(
         signature=signature,
     )
+
+
+def decode_strict_message(payload: bytes, msg_type: type, context: str) -> object:
+    """
+    Decode Cosmos transaction data while rejecting unknown protobuf fields.
+
+    Args:
+        payload: Serialized protobuf payload to decode.
+        msg_type: Expected protobuf message type.
+        context: Human-readable context for any decode failure.
+
+    Raises:
+        DataError: If the payload is malformed or contains unsupported fields.
+    """
+    from trezor import wire
+    from trezor.protobuf import decode_strict
+
+    try:
+        return decode_strict(payload, msg_type, False)
+    except (EOFError, ValueError) as exc:
+        detail = str(exc)
+        if detail:
+            raise wire.DataError(f"Invalid {context}: {detail}") from exc
+        raise wire.DataError(f"Invalid {context}") from exc
 
 
 def crypto_sign_doc(sk: bytes, sign_doc: bytes) -> bytes:
@@ -138,7 +167,6 @@ async def validate_and_confirm_auth_info(
     from trezor import wire
     from trezor.enums import CosmosSignMode
     from trezor.messages import CosmosSecp256k1Pubkey
-    from trezor.protobuf import decode
     from trezor.ui.layouts import confirm_value
 
     # TODO: properly support cases where there are multiple signers.
@@ -154,7 +182,11 @@ async def validate_and_confirm_auth_info(
     if pk_type != "/cosmos.crypto.secp256k1.PubKey":
         raise wire.DataError("Invalid pubkey type: " + pk_type)
 
-    signer_pubkey = decode(signer_info.public_key.value, CosmosSecp256k1Pubkey, False)
+    signer_pubkey = decode_strict_message(
+        signer_info.public_key.value,
+        CosmosSecp256k1Pubkey,
+        "signer public key",
+    )
 
     if signer_pubkey.key != pubkey:
         raise wire.DataError("Unexpected signer pubkey")

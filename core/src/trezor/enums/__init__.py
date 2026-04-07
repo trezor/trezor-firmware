@@ -172,6 +172,7 @@ if TYPE_CHECKING:
         SHELLEY_WITNESS = 1
 
     class CosmosSignMode(IntEnum):
+        SIGN_MODE_UNSPECIFIED = 0
         SIGN_MODE_DIRECT = 1
 
     class BackupType(IntEnum):
@@ -645,12 +646,12 @@ if TYPE_CHECKING:
         ThpCreateNewSession = 1000
         ThpCredentialRequest = 1016
         ThpCredentialResponse = 1017
-        CosmosGetAddress = 1100
-        CosmosAddress = 1101
-        CosmosGetPublicKey = 1102
-        CosmosPublicKey = 1103
-        CosmosSignTx = 1104
-        CosmosSignedTx = 1105
+        CosmosGetAddress = 1102
+        CosmosAddress = 1103
+        CosmosGetPublicKey = 1104
+        CosmosPublicKey = 1105
+        CosmosSignTx = 1106
+        CosmosSignedTx = 1107
         NostrGetPubkey = 2001
         NostrPubkey = 2002
         NostrSignEvent = 2003

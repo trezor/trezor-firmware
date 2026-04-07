@@ -117,6 +117,16 @@ class TestProtobuf(unittest.TestCase):
         self.assertEqual(nmsg.message, b"hello")
         self.assertEqual(nmsg.coin_name, "Bitcoin")
 
+    def test_decode_strict_rejects_unknown_fields(self):
+        msg = WebAuthnCredential(index=1)
+        msg_encoded = dump_message(msg) + b"\x98\x06\x01"
+
+        nmsg = load_message(WebAuthnCredential, msg_encoded)
+        self.assertEqual(nmsg.index, 1)
+
+        with self.assertRaisesRegex(ValueError, "Unknown field"):
+            protobuf.decode_strict(msg_encoded, WebAuthnCredential, False)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,7 +16,12 @@ use super::{
     zigzag,
 };
 
-pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
+fn protobuf_decode_impl(
+    buf: Obj,
+    msg_def: Obj,
+    enable_experimental: Obj,
+    reject_unknown_fields: bool,
+) -> Obj {
     let block = || {
         let def = Gc::<MsgDefObj>::try_from(msg_def)?;
         let enable_experimental = bool::try_from(enable_experimental)?;
@@ -36,6 +41,7 @@ pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: O
         let stream = &mut InputStream::new(buf);
         let decoder = Decoder {
             enable_experimental,
+            reject_unknown_fields,
         };
 
         let obj = decoder.message_from_stream(stream, def.msg())?;
@@ -44,8 +50,21 @@ pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: O
     unsafe { util::try_or_raise(block) }
 }
 
+pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
+    protobuf_decode_impl(buf, msg_def, enable_experimental, false)
+}
+
+pub extern "C" fn protobuf_decode_strict(
+    buf: Obj,
+    msg_def: Obj,
+    enable_experimental: Obj,
+) -> Obj {
+    protobuf_decode_impl(buf, msg_def, enable_experimental, true)
+}
+
 pub struct Decoder {
     pub enable_experimental: bool,
+    pub reject_unknown_fields: bool,
 }
 
 impl Decoder {
@@ -126,7 +145,10 @@ impl Decoder {
                     }
                 }
                 None => {
-                    // Unknown field, skip it.
+                    if self.reject_unknown_fields {
+                        return Err(error::unknown_field());
+                    }
+                    // Unknown field, skip it in permissive mode.
                     match prim_type {
                         defs::PRIMITIVE_TYPE_VARINT => {
                             stream.read_uvarint()?;

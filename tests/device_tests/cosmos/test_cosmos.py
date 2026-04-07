@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import cosmos
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -85,7 +86,7 @@ def test_get_public_key(
             show_display=True,
         )
 
-    assert public_key.type == expected_type
+    assert public_key.key_type == expected_type
     assert public_key.value.hex() == expected_value
 
 
@@ -101,3 +102,13 @@ def test_sign_tx(session: Session, parameters, result):
         )
 
     assert response.signature.hex() == result["signature"]
+
+
+def test_get_address_rejects_unsupported_prefix(session: Session) -> None:
+    with pytest.raises(TrezorFailure, match="Unsupported address prefix"):
+        cosmos.get_address(
+            session,
+            parse_path("m/44h/118h/0h/0/0"),
+            "juno",
+            show_display=False,
+        )

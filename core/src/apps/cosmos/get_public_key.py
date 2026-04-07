@@ -41,6 +41,6 @@ async def get_public_key(
         await show_pubkey(b2a_base64(pubkey, newline=False).decode("ASCII"))
 
     return CosmosPublicKey(
-        type="/cosmos.crypto.secp256k1.PubKey",
+        key_type="/cosmos.crypto.secp256k1.PubKey",
         value=pubkey,
     )

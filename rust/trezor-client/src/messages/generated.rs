@@ -99,12 +99,6 @@ trezor_message_impl! {
     ThpCreateNewSession => MessageType_ThpCreateNewSession,
     ThpCredentialRequest => MessageType_ThpCredentialRequest,
     ThpCredentialResponse => MessageType_ThpCredentialResponse,
-    CosmosGetAddress => MessageType_CosmosGetAddress,
-    CosmosAddress => MessageType_CosmosAddress,
-    CosmosGetPublicKey => MessageType_CosmosGetPublicKey,
-    CosmosPublicKey => MessageType_CosmosPublicKey,
-    CosmosSignTx => MessageType_CosmosSignTx,
-    CosmosSignedTx => MessageType_CosmosSignedTx,
     BenchmarkListNames => MessageType_BenchmarkListNames,
     BenchmarkNames => MessageType_BenchmarkNames,
     BenchmarkRun => MessageType_BenchmarkRun,
@@ -167,6 +161,16 @@ trezor_message_impl! {
     CardanoMessageDataRequest => MessageType_CardanoMessageDataRequest,
     CardanoMessageDataResponse => MessageType_CardanoMessageDataResponse,
     CardanoMessageSignature => MessageType_CardanoMessageSignature,
+}
+
+#[cfg(feature = "cosmos")]
+trezor_message_impl! {
+    CosmosGetAddress => MessageType_CosmosGetAddress,
+    CosmosAddress => MessageType_CosmosAddress,
+    CosmosGetPublicKey => MessageType_CosmosGetPublicKey,
+    CosmosPublicKey => MessageType_CosmosPublicKey,
+    CosmosSignTx => MessageType_CosmosSignTx,
+    CosmosSignedTx => MessageType_CosmosSignedTx,
 }
 
 #[cfg(feature = "eos")]

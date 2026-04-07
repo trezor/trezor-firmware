@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import trezorproto
 
 decode = trezorproto.decode
+decode_strict = trezorproto.decode_strict
 encode = trezorproto.encode
 encoded_length = trezorproto.encoded_length
 type_for_name = trezorproto.type_for_name

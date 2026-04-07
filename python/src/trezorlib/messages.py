@@ -194,6 +194,7 @@ class CardanoTxWitnessType(IntEnum):
 
 
 class CosmosSignMode(IntEnum):
+    SIGN_MODE_UNSPECIFIED = 0
     SIGN_MODE_DIRECT = 1
 
 
@@ -702,12 +703,12 @@ class MessageType(IntEnum):
     ThpCreateNewSession = 1000
     ThpCredentialRequest = 1016
     ThpCredentialResponse = 1017
-    CosmosGetAddress = 1100
-    CosmosAddress = 1101
-    CosmosGetPublicKey = 1102
-    CosmosPublicKey = 1103
-    CosmosSignTx = 1104
-    CosmosSignedTx = 1105
+    CosmosGetAddress = 1102
+    CosmosAddress = 1103
+    CosmosGetPublicKey = 1104
+    CosmosPublicKey = 1105
+    CosmosSignTx = 1106
+    CosmosSignedTx = 1107
     NostrGetPubkey = 2001
     NostrPubkey = 2002
     NostrSignEvent = 2003
@@ -3048,7 +3049,7 @@ class CardanoMessageSignature(protobuf.MessageType):
 
 
 class CosmosGetAddress(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 1100
+    MESSAGE_WIRE_TYPE = 1102
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("prefix", "string", repeated=False, required=True),
@@ -3068,7 +3069,7 @@ class CosmosGetAddress(protobuf.MessageType):
 
 
 class CosmosAddress(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 1101
+    MESSAGE_WIRE_TYPE = 1103
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=False, default=None),
     }
@@ -3082,7 +3083,7 @@ class CosmosAddress(protobuf.MessageType):
 
 
 class CosmosGetPublicKey(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 1102
+    MESSAGE_WIRE_TYPE = 1104
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
@@ -3099,24 +3100,24 @@ class CosmosGetPublicKey(protobuf.MessageType):
 
 
 class CosmosPublicKey(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 1103
+    MESSAGE_WIRE_TYPE = 1105
     FIELDS = {
-        1: protobuf.Field("type", "string", repeated=False, required=True),
+        1: protobuf.Field("key_type", "string", repeated=False, required=True),
         2: protobuf.Field("value", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        type: "str",
+        key_type: "str",
         value: "bytes",
     ) -> None:
-        self.type = type
+        self.key_type = key_type
         self.value = value
 
 
 class CosmosSignTx(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 1104
+    MESSAGE_WIRE_TYPE = 1106
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("sign_doc", "bytes", repeated=False, required=True),
@@ -3133,7 +3134,7 @@ class CosmosSignTx(protobuf.MessageType):
 
 
 class CosmosSignedTx(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 1105
+    MESSAGE_WIRE_TYPE = 1107
     FIELDS = {
         1: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }

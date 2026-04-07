@@ -11,6 +11,10 @@ pub const fn unknown_field_type() -> Error {
     value_error!(c"Unknown field type.")
 }
 
+pub const fn unknown_field() -> Error {
+    value_error!(c"Unknown field.")
+}
+
 pub fn missing_required_field(field: Qstr) -> Error {
     Error::ValueErrorParam(c"Missing required field.", field.into())
 }

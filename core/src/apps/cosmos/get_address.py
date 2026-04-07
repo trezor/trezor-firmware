@@ -20,13 +20,18 @@ async def get_address(msg: CosmosGetAddress, keychain: Keychain) -> CosmosAddres
     Returns:
         Cosmos address encoded with the requested bech32 prefix.
     """
+    from trezor import wire
     from trezor.messages import CosmosAddress
 
     from apps.common import paths
 
+    from . import SUPPORTED_ADDRESS_PREFIXES
     from .addr import derive_addr
 
     address_n = msg.address_n
+
+    if msg.prefix not in SUPPORTED_ADDRESS_PREFIXES:
+        raise wire.DataError("Unsupported address prefix")
 
     await paths.validate_path(keychain, address_n)
 

@@ -32,6 +32,7 @@ mod generated {
         "ethereum" => messages_ethereum
         "ethereum" => messages_ethereum_eip712
         "cardano" => messages_cardano
+        "cosmos" => messages_cosmos
         "eos" => messages_eos
         "evolu" => messages_evolu
         "monero" => messages_monero

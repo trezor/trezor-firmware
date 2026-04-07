@@ -64,6 +64,7 @@ ethereum = []
 
 # Just bindings to the Trezor protobufs
 cardano = []
+cosmos = []
 eos = []
 evolu = []
 monero = []

@@ -1914,14 +1914,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CosmosPublicKey(protobuf.MessageType):
-        type: "str"
-        value: "bytes"
+        key_type: "str"
+        value: "AnyBytes"
 
         def __init__(
             self,
             *,
-            type: "str",
-            value: "bytes",
+            key_type: "str",
+            value: "AnyBytes",
         ) -> None:
             pass
 
@@ -1931,12 +1931,12 @@ if TYPE_CHECKING:
 
     class CosmosSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        sign_doc: "bytes"
+        sign_doc: "AnyBytes"
 
         def __init__(
             self,
             *,
-            sign_doc: "bytes",
+            sign_doc: "AnyBytes",
             address_n: "list[int] | None" = None,
         ) -> None:
             pass
@@ -1946,12 +1946,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CosmosSignedTx(protobuf.MessageType):
-        signature: "bytes"
+        signature: "AnyBytes"
 
         def __init__(
             self,
             *,
-            signature: "bytes",
+            signature: "AnyBytes",
         ) -> None:
             pass
 
@@ -1960,16 +1960,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CosmosSignDoc(protobuf.MessageType):
-        body_bytes: "bytes"
-        auth_info_bytes: "bytes"
+        body_bytes: "AnyBytes"
+        auth_info_bytes: "AnyBytes"
         chain_id: "str"
         account_number: "int"
 
         def __init__(
             self,
             *,
-            body_bytes: "bytes",
-            auth_info_bytes: "bytes",
+            body_bytes: "AnyBytes",
+            auth_info_bytes: "AnyBytes",
             chain_id: "str",
             account_number: "int",
         ) -> None:
@@ -2114,12 +2114,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CosmosSecp256k1Pubkey(protobuf.MessageType):
-        key: "bytes"
+        key: "AnyBytes"
 
         def __init__(
             self,
             *,
-            key: "bytes",
+            key: "AnyBytes",
         ) -> None:
             pass
 
@@ -2129,13 +2129,13 @@ if TYPE_CHECKING:
 
     class CosmosAny(protobuf.MessageType):
         type_url: "str"
-        value: "bytes"
+        value: "AnyBytes"
 
         def __init__(
             self,
             *,
             type_url: "str",
-            value: "bytes",
+            value: "AnyBytes",
         ) -> None:
             pass
 

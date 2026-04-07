@@ -108,7 +108,7 @@ def get_public_key(client: "TrezorClient", address: str, show_display: bool) -> 
     res = cosmos.get_public_key(client, address_n, show_display)
     return json.dumps(
         {
-            "@type": res.type,
+            "@type": res.key_type,
             "key": base64.b64encode(res.value).decode("utf-8"),
         }
     )

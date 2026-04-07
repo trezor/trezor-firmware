@@ -2,4 +2,5 @@
 # fmt: off
 # isort:skip_file
 
+SIGN_MODE_UNSPECIFIED = 0
 SIGN_MODE_DIRECT = 1

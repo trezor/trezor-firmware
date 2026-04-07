@@ -17,7 +17,7 @@ use crate::{
 };
 
 use super::{
-    decode::{protobuf_decode, Decoder},
+    decode::{protobuf_decode, protobuf_decode_strict, Decoder},
     defs::{find_name_by_msg_offset, get_msg, MsgDef},
     encode::{protobuf_encode, protobuf_len},
 };
@@ -261,6 +261,7 @@ unsafe extern "C" fn msg_def_obj_call(
         let this = Gc::<MsgDefObj>::try_from(self_in)?;
         let decoder = Decoder {
             enable_experimental: true,
+            reject_unknown_fields: false,
         };
         let obj = decoder.message_from_values(kwargs, this.msg())?;
         Ok(obj)
@@ -354,6 +355,14 @@ pub static mp_module_trezorproto: Module = obj_module! {
     /// ) -> T:
     ///     """Decode data in the buffer into the specified message type."""
     Qstr::MP_QSTR_decode => obj_fn_3!(protobuf_decode).as_obj(),
+
+    /// def decode_strict(
+    ///     buffer: AnyBytes,
+    ///     msg_type: type[T],
+    ///     enable_experimental: bool,
+    /// ) -> T:
+    ///     """Decode data and reject unknown fields in the specified message type."""
+    Qstr::MP_QSTR_decode_strict => obj_fn_3!(protobuf_decode_strict).as_obj(),
 
     /// def encoded_length(msg: MessageType) -> int:
     ///     """Calculate length of encoding of the specified message."""
