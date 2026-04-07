@@ -17,7 +17,7 @@
 import base64
 import json
 import sys
-from typing import TYPE_CHECKING, Any, NoReturn, TextIO
+from typing import TYPE_CHECKING, Any, NoReturn, Protocol, Sequence, TextIO
 
 import click
 
@@ -34,6 +34,11 @@ CHAIN_ID_HELP = "Cosmos chain id, e.g. cosmoshub-4"
 PREFIX_HELP = "Bech32 prefix, e.g. cosmos"
 ACCOUNT_NUMBER_HELP = "Account number"
 SEQUENCE_HELP = "Sequence"
+COSMOS_SIGN_MODE_DIRECT = 1
+
+
+class HasAmount(Protocol):
+    amount: Sequence[proto_messages.CosmosCoin]
 
 
 def _print_cosmos_dependencies_and_die() -> NoReturn:
@@ -68,15 +73,13 @@ def _validate_tx_json(tx_json: Any) -> dict[str, Any]:
 
 
 def _require_single_fee_amount(
-    fee: proto_messages.CosmosFee,
-) -> proto_messages.CosmosCoin:
+    fee: HasAmount,
+) -> None:
     if not fee.amount:
         raise click.ClickException("Transaction must specify exactly one fee amount")
 
     if len(fee.amount) > 1:
         raise click.ClickException("Multiple fee amounts are not supported")
-
-    return fee.amount[0]
 
 
 def _validate_supported_auth_info(auth_info: Any) -> None:
@@ -112,7 +115,10 @@ def _validate_supported_signer_info(
         raise click.ClickException("Signer mode_info is required")
 
     signer_mode_single = getattr(signer_mode_info, "single", None)
-    if signer_mode_single is None or getattr(signer_mode_single, "mode", None) != 1:
+    if (
+        signer_mode_single is None
+        or getattr(signer_mode_single, "mode", None) != COSMOS_SIGN_MODE_DIRECT
+    ):
         raise click.ClickException("Signer mode_info must use SIGN_MODE_DIRECT")
 
     signer_public_key = getattr(signer_info, "public_key", None)
@@ -156,7 +162,7 @@ def _build_supported_auth_info(
     signer_pubkey.value = pubkey_cls(key=public_key).SerializeToString()
 
     signer_info.public_key.CopyFrom(signer_pubkey)
-    signer_info.mode_info.single.mode = 1
+    signer_info.mode_info.single.mode = COSMOS_SIGN_MODE_DIRECT
     signer_info.sequence = sequence
 
     auth_info.fee.CopyFrom(fee)

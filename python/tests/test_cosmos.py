@@ -118,16 +118,15 @@ def test_require_single_fee_amount_rejects_multiple_amounts() -> None:
         )
 
 
-def test_require_single_fee_amount_returns_only_amount() -> None:
-    fee_amount = _require_single_fee_amount(
+def test_require_single_fee_amount_accepts_single_amount() -> None:
+    result = _require_single_fee_amount(
         messages.CosmosFee(
             gas_limit=1,
             amount=[messages.CosmosCoin(amount="42", denom="uatom")],
         )
     )
 
-    assert fee_amount.amount == "42"
-    assert fee_amount.denom == "uatom"
+    assert result is None
 
 
 def test_validate_supported_auth_info_rejects_missing_signer() -> None:
