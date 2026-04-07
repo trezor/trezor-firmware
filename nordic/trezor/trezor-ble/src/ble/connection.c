@@ -48,10 +48,11 @@ static void show_params(struct bt_conn *conn) {
   if (bt_conn_get_info(conn, &info) == 0 && info.type == BT_CONN_TYPE_LE) {
     const struct bt_conn_le_info *le = &info.le;
     /* Bluetooth units: interval = 1.25 ms, timeout = 10 ms */
-    uint32_t interval_ms = le->interval * 125 / 100;  // 1.25 ms units → ms
-    uint32_t timeout_ms = le->timeout * 10;           // 10 ms units  → ms
+    uint32_t interval_ms = le->interval_us / 1000;
+    uint32_t timeout_ms = le->timeout * 10;  // 10 ms units  → ms
     LOG_INF("Conn params: interval=%u.%02u ms, latency=%u, timeout=%u ms",
-            interval_ms, (le->interval * 125) % 100, le->latency, timeout_ms);
+            interval_ms, (le->interval_us % 1000) / 10, le->latency,
+            timeout_ms);
   }
 }
 

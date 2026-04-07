@@ -25,5 +25,4 @@ mcuboot_primary_app:
   size: 0x6be00
 settings_storage:
   address: 0x7a000
-  size: 0x6000
-
+  size: 0x5000

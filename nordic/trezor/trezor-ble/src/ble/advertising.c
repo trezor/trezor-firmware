@@ -184,8 +184,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
     advertising_setup_wl();
     LOG_INF("Advertising with whitelist");
 
-    uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE |
-                       BT_LE_ADV_OPT_FILTER_CONN |
+    uint32_t options = BT_LE_ADV_OPT_CONN | BT_LE_ADV_OPT_FILTER_CONN |
                        BT_LE_ADV_OPT_FILTER_SCAN_REQ;
     if (static_addr) {
       LOG_ERR("Advertising with static ADDR");
@@ -203,7 +202,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
 
     manufacturer_data[2] |= ADV_FLAG_PAIRING;
 
-    uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE;
+    uint32_t options = BT_LE_ADV_OPT_CONN;
     if (static_addr) {
       LOG_ERR("Advertising with static ADDR");
       options |= BT_LE_ADV_OPT_USE_IDENTITY;

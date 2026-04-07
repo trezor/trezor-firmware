@@ -35,7 +35,7 @@
 #define LOG_MODULE_NAME trz_comm_spi
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define MY_SPI_MASTER DT_NODELABEL(spi0)
+#define MY_SPI_MASTER DT_ALIAS(spi_master)
 
 static K_SEM_DEFINE(spi_comm_ok, 0, 1);
 static K_SEM_DEFINE(spi_can_send, 0, 1);
@@ -59,6 +59,7 @@ static const struct spi_config spi_cfg = {
         {
             .gpio = SPI_CS_GPIOS_DT_SPEC_GET(DT_NODELABEL(reg_my_spi_master)),
             .delay = 0,
+            .cs_is_gpio = true
         },
 };
 
@@ -107,10 +108,10 @@ void spi_init(void) {
 
   spi_dev = DEVICE_DT_GET(MY_SPI_MASTER);
   if (!device_is_ready(spi_dev)) {
-    printk("SPI master device not ready!\n");
+    LOG_WRN("SPI master device not ready!\n");
   }
   if (!device_is_ready(spim_cs.gpio.port)) {
-    printk("SPI master chip select device not ready!\n");
+    LOG_WRN("SPI master chip select device not ready!\n");
   }
 
   k_sem_give(&spi_comm_ok);
@@ -118,14 +119,14 @@ void spi_init(void) {
 
 bool spi_send(uint8_t service_id, const uint8_t *data, uint32_t len) {
   if (len > MAX_SPI_DATA_SIZE) {
-    printk("Too big data\n");
+    LOG_WRN("Too big data\n");
     return false;
   }
 
   trz_packet_t *tx = k_malloc(sizeof(*tx));
 
   if (tx == NULL) {
-    printk("Not able to allocate SPI send data buffer\n");
+    LOG_WRN("Not able to allocate SPI send data buffer\n");
     return false;
   }
 
@@ -162,8 +163,20 @@ void spi_thread(void) {
     uint8_t *rx_data = k_malloc(PACKET_DATA_SIZE);
 
     if (rx_data == NULL) {
-      printk("Not able to allocate SPI receive data buffer\n");
-      k_free(buf);
+      LOG_WRN("Not able to allocate SPI receive data buffer\n");
+      /* Re-queue TX data so it is not lost, then back off briefly */
+      if (buf != NULL) {
+        k_fifo_put(&fifo_spi_tx_data, buf);
+      }
+      /* Deassert REQUEST so STM32 doesn't keep retrying */
+      k_mutex_lock(&spi_mutex, K_FOREVER);
+      gpio_pin_set_dt(&spi_request, 0);
+      k_mutex_unlock(&spi_mutex);
+      k_sleep(K_MSEC(10));
+      /* Re-assert REQUEST to retry */
+      k_mutex_lock(&spi_mutex, K_FOREVER);
+      gpio_pin_set_dt(&spi_request, 1);
+      k_mutex_unlock(&spi_mutex);
       continue;
     }
 
@@ -187,7 +200,7 @@ void spi_thread(void) {
     }
 
     if (spi_transceive(spi_dev, &spi_cfg, txp, &rx) != 0) {
-      printk("SPI Data not sent\n");
+      LOG_WRN("SPI Data not sent\n");
     }
 
     spi_packet_t *rx_msg = (spi_packet_t *)rx_data;
@@ -198,7 +211,7 @@ void spi_thread(void) {
       process_rx_msg(rx_msg->service_id & 0xF, rx_msg->data, rx_msg->msg_len);
     } else {
       if (rx_msg->service_id != 0) {
-        printk("SPI RX invalid data\n");
+        LOG_WRN("SPI RX invalid data\n");
       }
     }
 

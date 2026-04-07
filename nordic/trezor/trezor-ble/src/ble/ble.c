@@ -167,7 +167,7 @@ static int ble_configure_tx_power(int8_t tx_power_level, struct bt_conn *conn) {
   struct net_buf *buf, *rsp = NULL;
   int err;
 
-  buf = bt_hci_cmd_create(BT_HCI_OP_VS_WRITE_TX_POWER_LEVEL, sizeof(*cp));
+  buf = bt_hci_cmd_alloc(K_FOREVER);
   if (!buf) {
     LOG_ERR("Unable to allocate command buffer for TX power");
     return -ENOMEM;

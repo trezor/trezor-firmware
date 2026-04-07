@@ -23,8 +23,9 @@
 #define HAVE_EXPLICIT_BZERO 1
 #endif
 
-// Newlib
-#if defined(__NEWLIB__)
+// Newlib (hosted only — embedded Newlib used by Zephyr does not provide
+// explicit_bzero)
+#if defined(__NEWLIB__) && !defined(__ZEPHYR__)
 #define HAVE_EXPLICIT_BZERO 1
 #endif
 

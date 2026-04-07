@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 2025 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/dts-v1/;
+
+#include "nrf54ls05b_cpuapp_common.dtsi"
+
+/ {
+	compatible = "nordic,picodk_nrf54ls05b-cpuapp";
+	model = "Nordic nRF54LS05 DK nRF54LS05B Application MCU";
+
+	chosen {
+		zephyr,code-partition = &slot0_partition;
+		zephyr,sram = &cpuapp_sram;
+		zephyr,bt-hci = &bt_hci_sdc;
+	};
+
+	aliases {
+		mcuboot-button0 = &button0;
+		mcuboot-led0 = &led0;
+	};
+};
+
+&bt_hci_sdc {
+	status = "okay";
+};
+
+&bt_hci_controller {
+	status = "disabled";
+};
+
+&spi21 {
+	compatible = "nordic,nrf-spim";
+	status = "okay";
+	pinctrl-0 = <&spi0_default>;
+	pinctrl-1 = <&spi0_sleep>;
+	pinctrl-names = "default", "sleep";
+	cs-gpios = <&gpio0 0 GPIO_ACTIVE_LOW>;
+	reg_my_spi_master: spi-dev-a@0 {
+		reg = <0>;
+	};
+};

@@ -13,10 +13,10 @@ manifest:
     - name: nrf
       remote: ncs
       repo-path: sdk-nrf
-      revision: 60d0d6c8d42dd9c7bafe544a8fdf1234d6beb916 #v2.9.0
+      revision: b5f643e153d95c909d2f54c98a39f5697101c5e8 #v3.3.0 preview 3
       import: true
     - name: mcuboot
       url: https://github.com/trezor/mcuboot
-      revision: 4f72f4eaa6c204f1193231f9695a5d8c3b253730 # trezor-v2.1.0-ncs3
+      revision: 2daf62da207fd93fd54b15d1ac6b163540c1ebef # 330 test
       path: bootloader/mcuboot
 
