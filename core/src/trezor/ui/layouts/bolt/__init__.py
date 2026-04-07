@@ -717,6 +717,20 @@ async def _confirm_ask_pagination(
     assert False
 
 
+async def confirm_blob_intro(
+    title: str,
+    value: AnyBytes,
+    *,
+    subtitle: str,
+    verb: str,
+    verb_cancel: str,
+    br_name: str,
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+) -> bool:
+    """Not needed for this layout - `confirm_blob_prefix` can skip confirmation."""
+    return False
+
+
 _INFO_DATA_ROWS = const(3)
 _INFO_DATA_WIDTH_BYTES = const(9)
 
