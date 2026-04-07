@@ -100,6 +100,45 @@ def _validate_supported_auth_info(auth_info: Any) -> None:
         )
 
 
+def _validate_supported_signer_info(
+    signer_info: Any,
+    *,
+    expected_sequence: int,
+    expected_public_key: bytes,
+    pubkey_cls: Any,
+) -> None:
+    signer_mode_info = getattr(signer_info, "mode_info", None)
+    if signer_mode_info is None:
+        raise click.ClickException("Signer mode_info is required")
+
+    signer_mode_single = getattr(signer_mode_info, "single", None)
+    if signer_mode_single is None or getattr(signer_mode_single, "mode", None) != 1:
+        raise click.ClickException("Signer mode_info must use SIGN_MODE_DIRECT")
+
+    signer_public_key = getattr(signer_info, "public_key", None)
+    if signer_public_key is None:
+        raise click.ClickException("Signer public_key is required")
+
+    if signer_public_key.type_url != "/cosmos.crypto.secp256k1.PubKey":
+        raise click.ClickException(
+            "Signer public_key must use /cosmos.crypto.secp256k1.PubKey"
+        )
+
+    signer_pubkey = pubkey_cls()
+    try:
+        signer_pubkey.ParseFromString(signer_public_key.value)
+    except Exception as exc:
+        raise click.ClickException("Signer public_key is invalid") from exc
+
+    if signer_pubkey.key != expected_public_key:
+        raise click.ClickException(
+            "Signer public_key does not match the requested address"
+        )
+
+    if signer_info.sequence != expected_sequence:
+        raise click.ClickException("Signer sequence does not match --sequence")
+
+
 def _build_supported_auth_info(
     *,
     auth_info_cls: type,
@@ -213,6 +252,12 @@ def sign_transaction(
     _validate_supported_auth_info(tx_pb.auth_info)
 
     pk = cosmos.get_public_key(client, address_n, False)
+    _validate_supported_signer_info(
+        tx_pb.auth_info.signer_infos[0],
+        expected_sequence=sequence,
+        expected_public_key=pk.value,
+        pubkey_cls=PubKey,
+    )
 
     auth_info = _build_supported_auth_info(
         auth_info_cls=AuthInfo,

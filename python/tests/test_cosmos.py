@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 from click import ClickException
@@ -11,6 +11,7 @@ from trezorlib import messages
 from trezorlib.cli.cosmos import (
     _require_single_fee_amount,
     _validate_supported_auth_info,
+    _validate_supported_signer_info,
     _validate_tx_json,
     sign_transaction,
 )
@@ -28,6 +29,29 @@ class _FakeFee:
 
 
 @dataclass
+class _FakeModeInfoSingle:
+    mode: Optional[int] = None
+
+
+@dataclass
+class _FakeModeInfo:
+    single: Optional[_FakeModeInfoSingle] = None
+
+
+@dataclass
+class _FakePublicKey:
+    type_url: str = ""
+    value: bytes = b""
+
+
+@dataclass
+class _FakeSignerInfo:
+    public_key: Optional[_FakePublicKey] = None
+    mode_info: Optional[_FakeModeInfo] = None
+    sequence: int = 0
+
+
+@dataclass
 class _FakeAuthInfo:
     signer_infos: list[object]
     fee: _FakeFee
@@ -42,6 +66,14 @@ class _FakeAuthInfo:
         for name in self.extra_fields:
             fields.append((_FakeFieldDescriptor(name), object()))
         return fields
+
+
+class _FakeCosmosPubKey:
+    def __init__(self) -> None:
+        self.key = b""
+
+    def ParseFromString(self, payload: bytes) -> None:
+        self.key = payload
 
 
 def test_validate_tx_json_requires_body() -> None:
@@ -139,6 +171,92 @@ def test_validate_supported_auth_info_rejects_tip() -> None:
                 fee=_FakeFee(),
                 extra_fields=["tip"],
             )
+        )
+
+
+def test_validate_supported_signer_info_rejects_missing_mode_info() -> None:
+    with pytest.raises(ClickException, match="Signer mode_info is required"):
+        _validate_supported_signer_info(
+            _FakeSignerInfo(
+                public_key=_FakePublicKey(
+                    type_url="/cosmos.crypto.secp256k1.PubKey",
+                    value=b"pubkey",
+                ),
+                mode_info=None,
+                sequence=7,
+            ),
+            expected_sequence=7,
+            expected_public_key=b"pubkey",
+            pubkey_cls=_FakeCosmosPubKey,
+        )
+
+
+def test_validate_supported_signer_info_rejects_non_direct_mode() -> None:
+    with pytest.raises(
+        ClickException, match="Signer mode_info must use SIGN_MODE_DIRECT"
+    ):
+        _validate_supported_signer_info(
+            _FakeSignerInfo(
+                public_key=_FakePublicKey(
+                    type_url="/cosmos.crypto.secp256k1.PubKey",
+                    value=b"pubkey",
+                ),
+                mode_info=_FakeModeInfo(single=_FakeModeInfoSingle(mode=2)),
+                sequence=7,
+            ),
+            expected_sequence=7,
+            expected_public_key=b"pubkey",
+            pubkey_cls=_FakeCosmosPubKey,
+        )
+
+
+def test_validate_supported_signer_info_rejects_missing_public_key() -> None:
+    with pytest.raises(ClickException, match="Signer public_key is required"):
+        _validate_supported_signer_info(
+            _FakeSignerInfo(
+                public_key=None,
+                mode_info=_FakeModeInfo(single=_FakeModeInfoSingle(mode=1)),
+                sequence=7,
+            ),
+            expected_sequence=7,
+            expected_public_key=b"pubkey",
+            pubkey_cls=_FakeCosmosPubKey,
+        )
+
+
+def test_validate_supported_signer_info_rejects_public_key_mismatch() -> None:
+    with pytest.raises(
+        ClickException, match="Signer public_key does not match the requested address"
+    ):
+        _validate_supported_signer_info(
+            _FakeSignerInfo(
+                public_key=_FakePublicKey(
+                    type_url="/cosmos.crypto.secp256k1.PubKey",
+                    value=b"other-pubkey",
+                ),
+                mode_info=_FakeModeInfo(single=_FakeModeInfoSingle(mode=1)),
+                sequence=7,
+            ),
+            expected_sequence=7,
+            expected_public_key=b"pubkey",
+            pubkey_cls=_FakeCosmosPubKey,
+        )
+
+
+def test_validate_supported_signer_info_rejects_sequence_mismatch() -> None:
+    with pytest.raises(ClickException, match="Signer sequence does not match --sequence"):
+        _validate_supported_signer_info(
+            _FakeSignerInfo(
+                public_key=_FakePublicKey(
+                    type_url="/cosmos.crypto.secp256k1.PubKey",
+                    value=b"pubkey",
+                ),
+                mode_info=_FakeModeInfo(single=_FakeModeInfoSingle(mode=1)),
+                sequence=9,
+            ),
+            expected_sequence=7,
+            expected_public_key=b"pubkey",
+            pubkey_cls=_FakeCosmosPubKey,
         )
 
 

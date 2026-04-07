@@ -81,13 +81,14 @@ async def sign_tx(msg: CosmosSignTx, keychain: Keychain) -> CosmosSignedTx:
     # TODO: allow navigation between all screens instead of cancel for some
 
     for index, tx_msg in enumerate(body.messages):
+        if tx_msg.type_url not in msg_map:
+            raise wire.DataError("Message type not supported: " + tx_msg.type_url)
+
         # XXX: maybe show a pretty name for well known messages? e.g. "Send coins" instead of "/cosmos.bank.v1beta1.MsgSend"
         await confirm_value(
             "message #" + str(index + 1), tx_msg.type_url, "", "confirm"
         )
 
-        if not (tx_msg.type_url in msg_map):
-            raise wire.DataError("Message type not supported: " + tx_msg.type_url)
         msg_ctx = msg_map[tx_msg.type_url]
 
         dmsg = decode_strict_message(
@@ -176,16 +177,28 @@ async def validate_and_confirm_auth_info(
         raise wire.DataError("Multiple signers not supported")
 
     signer_info = auth_info.signer_infos[0]
+    signer_mode_info = signer_info.mode_info
 
-    if signer_info.mode_info.single.mode != CosmosSignMode.SIGN_MODE_DIRECT:
+    if signer_mode_info is None:
+        raise wire.DataError("missing signer mode_info.single")
+
+    signer_mode_single = getattr(signer_mode_info, "single", None)
+    if signer_mode_single is None:
+        raise wire.DataError("missing signer mode_info.single")
+
+    if signer_mode_single.mode != CosmosSignMode.SIGN_MODE_DIRECT:
         raise wire.DataError("Only direct sign mode is supported")
 
-    pk_type = signer_info.public_key.type_url
+    signer_public_key = signer_info.public_key
+    if signer_public_key is None:
+        raise wire.DataError("missing signer public_key")
+
+    pk_type = signer_public_key.type_url
     if pk_type != "/cosmos.crypto.secp256k1.PubKey":
         raise wire.DataError("Invalid pubkey type: " + pk_type)
 
     signer_pubkey = decode_strict_message(
-        signer_info.public_key.value,
+        signer_public_key.value,
         CosmosSecp256k1Pubkey,
         "signer public key",
     )
