@@ -37,6 +37,7 @@ dependencies = [
 
 [project.optional-dependencies]
 hidapi = ["hidapi>=0.7.99.post20"]
+cosmos = ["cosmpy"]
 ethereum = ["web3>=5"]
 qt-widgets = ["PyQt5"]
 extra = ["Pillow>=10"]
@@ -44,6 +45,7 @@ stellar = ["stellar-sdk>=6"]
 ble = ["bleak>=1.1.0"]
 full = [
     "hidapi>=0.7.99.post20",
+    "cosmpy",
     "web3>=5",
     "PyQt5",
     "Pillow>=10",

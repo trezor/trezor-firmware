@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import cosmos
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -27,7 +27,7 @@ from ...input_flows import (
     InputFlowShowXpubQRCode,
 )
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.models("core")]
+pytestmark = [pytest.mark.altcoin, pytest.mark.cosmos, pytest.mark.models("core")]
 
 PUBLIC_KEY_VECTORS = [
     (
@@ -44,9 +44,9 @@ PUBLIC_KEY_VECTORS = [
 
 
 @parametrize_using_common_fixtures("cosmos/get_address.json")
-def test_get_address(client: Client, parameters, result):
+def test_get_address(session: Session, parameters, result):
     address = cosmos.get_address(
-        client,
+        session,
         parse_path(parameters["path"]),
         parameters["prefix"],
         show_display=True,
@@ -55,12 +55,12 @@ def test_get_address(client: Client, parameters, result):
 
 
 @parametrize_using_common_fixtures("cosmos/get_address.json")
-def test_get_address_chunkify_details(client: Client, parameters, result):
-    with client:
-        flow = InputFlowShowAddressQRCode(client)
+def test_get_address_chunkify_details(session: Session, parameters, result):
+    with session.test_ctx as client:
+        flow = InputFlowShowAddressQRCode(session)
         client.set_input_flow(flow.get())
         address = cosmos.get_address(
-            client,
+            session,
             parse_path(parameters["path"]),
             parameters["prefix"],
             show_display=True,
@@ -74,13 +74,13 @@ def test_get_address_chunkify_details(client: Client, parameters, result):
     PUBLIC_KEY_VECTORS,
 )
 def test_get_public_key(
-    client: Client, path: str, expected_type: str, expected_value: str
+    session: Session, path: str, expected_type: str, expected_value: str
 ):
-    with client:
-        flow = InputFlowShowXpubQRCode(client)
+    with session.test_ctx as client:
+        flow = InputFlowShowXpubQRCode(session)
         client.set_input_flow(flow.get())
         public_key = cosmos.get_public_key(
-            client,
+            session,
             parse_path(path),
             show_display=True,
         )
@@ -90,12 +90,12 @@ def test_get_public_key(
 
 
 @parametrize_using_common_fixtures("cosmos/sign_tx.json")
-def test_sign_tx(client: Client, parameters, result):
-    with client:
-        flow = InputFlowConfirmAllWarnings(client)
+def test_sign_tx(session: Session, parameters, result):
+    with session.test_ctx as client:
+        flow = InputFlowConfirmAllWarnings(session)
         client.set_input_flow(flow.get())
         response = cosmos.sign_tx(
-            client,
+            session,
             parse_path(parameters["path"]),
             bytes.fromhex(parameters["sign_doc"]),
         )
