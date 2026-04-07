@@ -1569,7 +1569,19 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-    async def confirm_tron_summary(amount: str | None, fee: str | None, account_details: tuple[str | None, str] | None = None) -> None:
+    async def confirm_tron_summary(
+        amount: str | None,
+        fee: str | None,
+        account_details: tuple[str | None, str] | None = None,
+    ) -> None:
+        account_items = (
+            [
+                (TR.words__account_colon, account_details[0], False),
+                (TR.address_details__derivation_path_colon, account_details[1], False),
+            ]
+            if account_details
+            else None
+        )
         # caesar's confirm_summary always displays the fee row; when there is no
         # fee but there is an amount, pass the amount into the fee slot so it
         # is shown correctly.
@@ -1577,8 +1589,12 @@ if not utils.BITCOIN_ONLY:
             display_amount, display_amount_label = None, None
             display_fee, display_fee_label = amount, TR.words__amount
         else:
-            display_amount, display_amount_label = amount or "", TR.words__amount if amount else ""
-            display_fee, display_fee_label = fee or "", TR.words__fee_limit if fee else ""
+            display_amount, display_amount_label = amount or "", (
+                TR.words__amount if amount else ""
+            )
+            display_fee, display_fee_label = fee or "", (
+                TR.words__fee_limit if fee else ""
+            )
         await raise_if_not_confirmed(
             trezorui_api.confirm_summary(
                 title=TR.words__send,
@@ -1586,12 +1602,36 @@ if not utils.BITCOIN_ONLY:
                 amount_label=display_amount_label,
                 fee=display_fee,
                 fee_label=display_fee_label,
-                account_items=[(TR.words__account_colon, account_details[0], False), (TR.address_details__derivation_path_colon, account_details[1], None)] if account_details else None,
+                account_items=account_items,
                 account_title=TR.address_details__account_info,
             ),
-            br_name="tron/send",
+            br_name="tron/summary",
             br_code=ButtonRequestType.SignTx,
         )
+
+    async def confirm_tron_send(
+        amount: str | None,
+        fee: str | None,
+        account_details: tuple[str | None, str],
+        address: str,
+        chunkify: bool = True,
+    ) -> None:
+        await confirm_address(
+            title=TR.words__send,
+            subtitle=TR.words__recipient,
+            address=address,
+            verb=TR.buttons__continue,
+            footer=TR.address__check_with_source,
+            is_footer_warning=False,
+            chunkify=chunkify,
+            br_name="tron/send",
+            info_items=[
+                (TR.words__account_colon, account_details[0], False),
+                (TR.address_details__derivation_path_colon, account_details[1], False),
+            ],
+            info_title=TR.address_details__account_info,
+        )
+        await confirm_tron_summary(amount, fee, account_details)
 
     async def confirm_tron_approve(
         recipient_addr: str,

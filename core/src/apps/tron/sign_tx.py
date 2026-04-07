@@ -29,40 +29,22 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     from trezor import TR
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
-    from trezor.ui.layouts import confirm_blob, show_continue_in_app
+    from trezor.ui.layouts import show_continue_in_app
     from trezor.wire.context import call_any
 
     from apps.common import paths
 
-    _MAX_DATA_LENGTH = const(256)
-    _MAX_FEE_LIMIT = const(15_000_000_000)  # TRON: Maximum Fee limit in SUN.
-
     await paths.validate_path(keychain, msg.address_n)
+    await _validate_tx_fields(msg)
+
+    contract = await call_any(messages.TronContractRequest(), *consts.CONTRACT_TYPES)
 
     account_details = (
         paths.get_account_name("Tron", msg.address_n, PATTERN, SLIP44_ID),
         paths.address_n_to_str(msg.address_n),
     )
 
-    # It is not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
-    if msg.data and msg.data != b"":
-        if len(msg.data) > _MAX_DATA_LENGTH:
-            raise DataError("Tron: data field too long")
-        await confirm_blob(
-            br_name="tron/note",
-            title=TR.words__note,
-            data=bytes(msg.data).decode("utf-8", "replace"),
-            chunkify=False,
-            verb=TR.buttons__continue,
-        )
-
-    # https://developers.tron.network/docs/set-feelimit
     fee_limit = msg.fee_limit or 0
-    if fee_limit > _MAX_FEE_LIMIT:
-        raise DataError("Tron: fees too high")
-
-    contract = await call_any(messages.TronContractRequest(), *consts.CONTRACT_TYPES)
-
     raw_contract = await process_contract(contract, fee_limit, account_details)
 
     raw_tx = messages.TronRawTransaction(
@@ -89,9 +71,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
 
 async def process_contract(
-    contract: MessageType,
-    fee_limit: int,
-    account_details: tuple[str | None, str]
+    contract: MessageType, fee_limit: int, account_details: tuple[str | None, str]
 ) -> TronRawContract:
 
     # Importing individual enums would de-clutter the code a bit.
@@ -239,6 +219,30 @@ async def process_known_trc20_contract(
         token_symbol,
     )
     return True
+
+
+async def _validate_tx_fields(msg: TronSignTx) -> None:
+    from trezor import TR
+    from trezor.ui.layouts import confirm_blob
+
+    _MAX_DATA_LENGTH = const(256)
+    _MAX_FEE_LIMIT = const(15_000_000_000)  # TRON: Maximum Fee limit in SUN.
+
+    # It is not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
+    if msg.data and msg.data != b"":
+        if len(msg.data) > _MAX_DATA_LENGTH:
+            raise DataError("Tron: data field too long")
+        await confirm_blob(
+            br_name="tron/note",
+            title=TR.words__note,
+            data=bytes(msg.data).decode("utf-8", "replace"),
+            chunkify=False,
+            verb=TR.buttons__continue,
+        )
+
+    # https://developers.tron.network/docs/set-feelimit
+    if msg.fee_limit and msg.fee_limit > _MAX_FEE_LIMIT:
+        raise DataError("Tron: fees too high")
 
 
 def get_token_info(token_address: AnyBytes) -> Tuple[int, str] | None:

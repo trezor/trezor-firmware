@@ -1475,20 +1475,55 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-    async def confirm_tron_summary(amount: str | None, fee: str | None, account_details: tuple[str | None, str] | None = None) -> None:
+    async def confirm_tron_summary(
+        amount: str | None,
+        fee: str | None,
+        account_details: tuple[str | None, str] | None = None,
+    ) -> None:
+        account_items = (
+            [
+                (TR.words__account_colon, account_details[0], False),
+                (TR.address_details__derivation_path_colon, account_details[1], False),
+            ]
+            if account_details
+            else None
+        )
         await _confirm_summary(
             title=TR.words__send,
             amount=amount or "",
             amount_label=TR.words__recipient if amount else "",
             fee=fee or "",
             fee_label=TR.words__fee_limit if fee else "",
-            account_items=[(TR.words__account_colon, account_details[0], False), (TR.address_details__derivation_path_colon, account_details[1], None)] if account_details else None,
+            account_items=account_items,
             account_title=TR.address_details__account_info,
-            br_name="tron/send",
+            br_name="tron/summary",
             br_code=ButtonRequestType.SignTx,
         )
 
-    # TODO: #6364 Consider simplifying with confirm_tron_send like ETH flows.
+    async def confirm_tron_send(
+        amount: str | None,
+        fee: str | None,
+        account_details: tuple[str | None, str],
+        address: str,
+        chunkify: bool = True,
+    ) -> None:
+        await confirm_address(
+            title=TR.words__send,
+            subtitle=TR.words__recipient,
+            address=address,
+            verb=TR.buttons__continue,
+            footer=TR.address__check_with_source,
+            is_footer_warning=False,
+            chunkify=chunkify,
+            br_name="tron/send",
+            info_items=[
+                (TR.words__account_colon, account_details[0], False),
+                (TR.address_details__derivation_path_colon, account_details[1], False),
+            ],
+            info_title=TR.address_details__account_info,
+        )
+        await confirm_tron_summary(amount, fee, account_details)
+
     async def confirm_tron_transfer(
         recipient_addr: str,
         amount_str: str,
