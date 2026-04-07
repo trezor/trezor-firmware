@@ -34,11 +34,11 @@ if TYPE_CHECKING:
 # Maximum chain_id which returns the full signature_v (which must fit into an uint32).
 # chain_ids larger than this will only return one bit and the caller must recalculate
 # the full value: v = 2 * chain_id + 35 + v_bit
-MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
+_MAX_CHAIN_ID = const(0xFFFF_FFFF - 36) // 2
 
 # EIP-7702
 
-EIP_7702_TX_TYPE = const(4)
+_EIP_7702_TX_TYPE = const(4)
 EIP_7702_KNOWN_ADDRESSES = {
     unhexlify("000000009B1D0aF20D8C6d0A44e162d11F9b8f00"): "Uniswap",
     unhexlify("69007702764179f14F51cdce752f4f775d74E139"): "alchemyplatform",
@@ -74,10 +74,10 @@ async def sign_tx(
 
     address_bytes = bytes_from_address(msg.to)
 
-    valid_tx_types = (1, 6, EIP_7702_TX_TYPE, None)
+    valid_tx_types = (1, 6, _EIP_7702_TX_TYPE, None)
     if tx_type not in valid_tx_types:
         raise DataError("tx_type out of bounds")
-    if tx_type == EIP_7702_TX_TYPE:
+    if tx_type == _EIP_7702_TX_TYPE:
         if safety_checks.is_strict():
             raise DataError("EIP-7702 not allowed in strict checks")
         if address_bytes not in EIP_7702_KNOWN_ADDRESSES:
@@ -162,8 +162,8 @@ async def sign_tx(
     return result
 
 
-MAX_DATA_STORED = const(4096)
-DATA_CHUNK_SIZE = const(1024)
+_MAX_DATA_STORED = const(4096)
+_DATA_CHUNK_SIZE = const(1024)
 
 
 async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
@@ -172,7 +172,7 @@ async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
     data_length = msg.data_length
     if data_length > len(msg.data_initial_chunk):
         # pre-allocate memory
-        initial_data = bytearray(min(data_length, MAX_DATA_STORED))
+        initial_data = bytearray(min(data_length, _MAX_DATA_STORED))
 
         chunk = msg.data_initial_chunk
         initial_data[0 : len(chunk)] = chunk
@@ -181,7 +181,7 @@ async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
         sha.extend(chunk)
         data_left = data_length - initial_data_length
         while (
-            data_left > 0 and initial_data_length + DATA_CHUNK_SIZE <= MAX_DATA_STORED
+            data_left > 0 and initial_data_length + _DATA_CHUNK_SIZE <= _MAX_DATA_STORED
         ):
             resp = await send_request_chunk(data_left)
             chunk = resp.data_chunk
@@ -233,7 +233,7 @@ async def confirm_tx_data(
             raise DataError("Payment Requests don't support staking")
         return staking_approver
 
-    if tx_type == EIP_7702_TX_TYPE:
+    if tx_type == _EIP_7702_TX_TYPE:
         # we have already made sure that the address is a known address
         # as part of the initial validation
         await confirm_value(
@@ -299,7 +299,7 @@ async def confirm_tx_data(
             maximum_fee,
             fee_items,
             token,
-            is_send=(data_length == 0 and tx_type != EIP_7702_TX_TYPE),
+            is_send=(data_length == 0 and tx_type != _EIP_7702_TX_TYPE),
             chunkify=bool(msg.chunkify),
         )
     else:
@@ -336,7 +336,7 @@ async def send_request_chunk(data_left: int) -> EthereumTxAck:
     from trezor.wire.context import call
 
     req = EthereumTxRequest()
-    req.data_length = min(data_left, DATA_CHUNK_SIZE)
+    req.data_length = min(data_left, _DATA_CHUNK_SIZE)
     return await call(req, EthereumTxAck)
 
 
@@ -352,7 +352,7 @@ def _sign_digest(
 
     req = EthereumTxRequest()
     req.signature_v = signature[0]
-    if msg.chain_id > MAX_CHAIN_ID:
+    if msg.chain_id > _MAX_CHAIN_ID:
         req.signature_v -= 27
     else:
         req.signature_v += 2 * msg.chain_id + 8
