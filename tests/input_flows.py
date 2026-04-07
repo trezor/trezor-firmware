@@ -1721,32 +1721,39 @@ class InputFlowEthereumSignTxData(InputFlowBase):
     def input_flow_common(self) -> BRGeneratorType:
         confirm_tx = None  # will be used to confirm tx details
 
+        # First blob confirmation layout has different semantic on those models:
+        is_intro = self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart)
+
         while True:
-            # first BRs are related to data confirmation
             br = yield
+
+            # first BRs are related to data confirmation
             if br.name == "confirm_data":
                 assert br.pages == 1
                 assert confirm_tx is None
 
+                layout = self.debug.read_layout()
                 if self.client.layout_type is LayoutType.Eckhart:
                     TR.regexp("ethereum__title_all_input_data_template").fullmatch(
-                        self.debug.read_layout().title().strip()
+                        layout.title().strip()
                     )
                 else:
-                    assert (
-                        TR.ethereum__title_input_data
-                        in self.debug.read_layout().title()
-                    )
+                    assert TR.ethereum__title_input_data in layout.title()
+
+                if is_intro:
+                    # Intro layout should show a prefix of the data, ending with "..."
+                    assert layout.screen_content().endswith("...")
 
                 if self.scroll:
-                    self._go_to_next_page()
+                    self._go_to_next_page(is_intro)
                     if self.cancel:
                         self.scroll = False  # stop pagination & cancel on next page
                 else:
                     if self.cancel:
                         self._cancel_flow()
                     else:
-                        self._confirm_all()
+                        self._confirm_all(is_intro)
+                is_intro = False
                 continue
 
             # data confirmation is over - confirm tx details
@@ -1756,8 +1763,8 @@ class InputFlowEthereumSignTxData(InputFlowBase):
 
             confirm_tx.send(br)
 
-    def _go_to_next_page(self):
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
+    def _go_to_next_page(self, is_intro: bool):
+        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar) or is_intro:
             self.debug.press_info()  # pagination is a special button
         elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.press_yes()  # pagination is a regular button
@@ -1767,8 +1774,8 @@ class InputFlowEthereumSignTxData(InputFlowBase):
     def _cancel_flow(self):
         self.debug.press_no()
 
-    def _confirm_all(self):
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
+    def _confirm_all(self, is_intro: bool):
+        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar) or is_intro:
             self.debug.press_yes()  # confirmation is a regular button
         elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.press_info()  # confirmation is available via menu

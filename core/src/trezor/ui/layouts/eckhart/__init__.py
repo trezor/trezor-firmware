@@ -693,6 +693,37 @@ async def should_show_more(
         raise ActionCancelled
 
 
+async def confirm_blob_intro(
+    title: str,
+    value: AnyBytes,
+    *,
+    subtitle: str,
+    verb: str,
+    verb_cancel: str,
+    br_name: str,
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+) -> bool:
+    """
+    Introduce blob to be confirmed, allowing the user to:
+    - view (returns `False`)
+    - confirm (returns `True`)
+    - cancel (raises `ActionCancelled`)
+    """
+
+    res = await interact(
+        trezorui_api.confirm_value_intro(
+            title=title,
+            value=value,
+            subtitle=subtitle,
+            verb=verb,
+            verb_cancel=verb_cancel,
+        ),
+        br_name=br_name,
+        br_code=br_code,
+    )
+    return res is CONFIRMED
+
+
 async def confirm_blob_prefix(
     title: str,
     data: memoryview,
