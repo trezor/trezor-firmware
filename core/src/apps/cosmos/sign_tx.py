@@ -66,6 +66,8 @@ async def sign_tx(msg: CosmosSignTx, keychain: Keychain) -> CosmosSignedTx:
     await validate_and_confirm_auth_info(auth_info, pk)
 
     body = decode_strict_message(sd.body_bytes, CosmosTxBody, "transaction body")
+    if not body.messages:
+        raise wire.DataError("Transaction body must contain at least one message")
 
     # TODO: support any message type via requesting protobuf definitions from the outside in a verifiable way (merkle proof or something)
     msg_map = {

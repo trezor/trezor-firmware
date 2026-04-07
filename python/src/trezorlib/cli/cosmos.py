@@ -79,6 +79,27 @@ def _require_single_fee_amount(
     return fee.amount[0]
 
 
+def _validate_supported_auth_info(auth_info: Any) -> None:
+    if len(auth_info.signer_infos) != 1:
+        raise click.ClickException("Transaction must specify exactly one signer")
+
+    if auth_info.fee.payer:
+        raise click.ClickException("Fee payer is not supported")
+
+    if auth_info.fee.granter:
+        raise click.ClickException("Fee granter is not supported")
+
+    unsupported_fields = sorted(
+        field.name
+        for field, _ in auth_info.ListFields()
+        if field.name not in {"signer_infos", "fee"}
+    )
+    if unsupported_fields:
+        raise click.ClickException(
+            "Unsupported auth_info fields: " + ", ".join(unsupported_fields)
+        )
+
+
 @click.group(name="cosmos")
 def cli() -> None:
     """Cosmos commands."""
@@ -119,9 +140,19 @@ def get_public_key(client: "TrezorClient", address: str, show_display: bool) -> 
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-c", "--chain-id", required=True, help=CHAIN_ID_HELP)
 @click.option(
-    "-a", "--account-number", required=True, help=ACCOUNT_NUMBER_HELP, type=int
+    "-a",
+    "--account-number",
+    required=True,
+    help=ACCOUNT_NUMBER_HELP,
+    type=click.IntRange(min=0),
 )
-@click.option("-s", "--sequence", required=True, help=SEQUENCE_HELP, type=int)
+@click.option(
+    "-s",
+    "--sequence",
+    required=True,
+    help=SEQUENCE_HELP,
+    type=click.IntRange(min=0),
+)
 @with_client
 def sign_transaction(
     client: "TrezorClient",
@@ -155,6 +186,7 @@ def sign_transaction(
         raise click.ClickException(f"Invalid transaction format: {exc}") from exc
 
     fee_amount = _require_single_fee_amount(tx_pb.auth_info.fee)
+    _validate_supported_auth_info(tx_pb.auth_info)
 
     pk = cosmos.get_public_key(client, address_n, False)
 

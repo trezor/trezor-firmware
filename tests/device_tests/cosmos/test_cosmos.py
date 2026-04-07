@@ -14,9 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from io import BytesIO
+
 import pytest
 
-from trezorlib import cosmos
+from trezorlib import cosmos, messages, protobuf
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -42,6 +44,12 @@ PUBLIC_KEY_VECTORS = [
         "0280b676e9379efabe0302e8eebf28ddbcd1339123b7ae046a396d96dd920f0a3d",
     ),
 ]
+
+
+def dump_message(msg: protobuf.MessageType) -> bytes:
+    writer = BytesIO()
+    protobuf.dump_message(writer, msg)
+    return writer.getvalue()
 
 
 @parametrize_using_common_fixtures("cosmos/get_address.json")
@@ -112,3 +120,56 @@ def test_get_address_rejects_unsupported_prefix(session: Session) -> None:
             "juno",
             show_display=False,
         )
+
+
+def test_sign_tx_rejects_empty_message_list(session: Session) -> None:
+    body_bytes = dump_message(messages.CosmosTxBody(messages=[]))
+    signer_pubkey = dump_message(
+        messages.CosmosSecp256k1Pubkey(
+            key=bytes.fromhex(
+                "02e1b06f14aac6d3f81ec57252aad688065f6fb52bfa029870043e46ef26201c50"
+            )
+        )
+    )
+    auth_info_bytes = dump_message(
+        messages.CosmosAuthInfo(
+            signer_infos=[
+                messages.CosmosSignerInfo(
+                    public_key=messages.CosmosAny(
+                        type_url="/cosmos.crypto.secp256k1.PubKey",
+                        value=signer_pubkey,
+                    ),
+                    mode_info=messages.CosmosModeInfo(
+                        single=messages.CosmosModeInfoSingle(
+                            mode=messages.CosmosSignMode.SIGN_MODE_DIRECT
+                        )
+                    ),
+                    sequence=0,
+                )
+            ],
+            fee=messages.CosmosFee(
+                gas_limit=81000,
+                amount=[messages.CosmosCoin(denom="uatom", amount="1234")],
+            ),
+        )
+    )
+    sign_doc = dump_message(
+        messages.CosmosSignDoc(
+            body_bytes=body_bytes,
+            auth_info_bytes=auth_info_bytes,
+            chain_id="cosmoshub-4",
+            account_number=7,
+        )
+    )
+
+    with session.test_ctx as client:
+        flow = InputFlowConfirmAllWarnings(session)
+        client.set_input_flow(flow.get())
+        with pytest.raises(
+            TrezorFailure, match="Transaction body must contain at least one message"
+        ):
+            cosmos.sign_tx(
+                session,
+                parse_path("m/44h/118h/0h/0/0"),
+                sign_doc,
+            )
