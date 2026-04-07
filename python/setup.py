@@ -27,6 +27,7 @@ install_requires = (CWD / "requirements.txt").read_text().splitlines()
 
 extras_require = {
     "hidapi": ["hidapi>=0.7.99.post20"],
+    "cosmos": ["cosmpy"],
     "ethereum": ["web3>=5"],
     "qt-widgets": ["PyQt5"],
     "extra": ["Pillow>=10"],

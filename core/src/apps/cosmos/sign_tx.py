@@ -3,17 +3,41 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import CosmosSignTx, CosmosSignedTx, CosmosAny, CosmosBankMsgSend, CosmosTxBody, CosmosFee
-    from typing import Any
+    from trezor.messages import (
+        CosmosAuthInfo,
+        CosmosBankMsgSend,
+        CosmosFee,
+        CosmosSignedTx,
+        CosmosSignTx,
+        CosmosTxBody,
+    )
 
     from apps.common.keychain import Keychain
 
+
 @auto_keychain(__name__)
-async def sign_tx(
-    msg: CosmosSignTx, keychain: Keychain
-) -> CosmosSignedTx:
+async def sign_tx(msg: CosmosSignTx, keychain: Keychain) -> CosmosSignedTx:
+    """
+    Sign a Cosmos transaction using SIGN_MODE_DIRECT.
+
+    Supported transactions are intentionally limited to well-understood
+    structures that the device can validate and display clearly.
+
+    Args:
+        msg: Request containing the derivation path and serialized SignDoc.
+        keychain: Keychain used to derive the requested signing key.
+
+    Returns:
+        Cosmos signature for the provided SignDoc.
+    """
     from trezor import wire
-    from trezor.messages import CosmosSignDoc, CosmosSignedTx, CosmosTxBody, CosmosBankMsgSend, CosmosAuthInfo
+    from trezor.messages import (
+        CosmosAuthInfo,
+        CosmosBankMsgSend,
+        CosmosSignDoc,
+        CosmosSignedTx,
+        CosmosTxBody,
+    )
     from trezor.protobuf import decode
     from trezor.ui.layouts import confirm_value
 
@@ -27,9 +51,9 @@ async def sign_tx(
 
     if sd.chain_id == "":
         raise wire.DataError("Empty chain id")
-    
+
     await confirm_value("chain id", sd.chain_id, "", "confirm")
-    
+
     # XXX: should we display this? not very relevant to user, if the account number has a mismatch with the address, the tx won't pass.
     await confirm_value("account number", str(sd.account_number), "", "confirm")
 
@@ -46,8 +70,8 @@ async def sign_tx(
     msg_map = {
         "/cosmos.bank.v1beta1.MsgSend": {
             "desc": CosmosBankMsgSend,
-            "validate": validate_bank_msg_send, # XXX: not possible to make it generic, idea is to have it for well known messages, then for extra messages show a warning
-            "confirm": confirm_bank_msg_send, # XXX: not possible to make it generic, idea is to have it for well known messages, then for extra messages, show the raw fields, like eth does for eip1559
+            "validate": validate_bank_msg_send,  # XXX: not possible to make it generic, idea is to have it for well known messages, then for extra messages show a warning
+            "confirm": confirm_bank_msg_send,  # XXX: not possible to make it generic, idea is to have it for well known messages, then for extra messages, show the raw fields, like eth does for eip1559
         },
     }
 
@@ -55,7 +79,9 @@ async def sign_tx(
 
     for index, tx_msg in enumerate(body.messages):
         # XXX: maybe show a pretty name for well known messages? e.g. "Send coins" instead of "/cosmos.bank.v1beta1.MsgSend"
-        await confirm_value("message #"+str(index+1), tx_msg.type_url, "", "confirm")
+        await confirm_value(
+            "message #" + str(index + 1), tx_msg.type_url, "", "confirm"
+        )
 
         if not (tx_msg.type_url in msg_map):
             raise wire.DataError("Message type not supported: " + tx_msg.type_url)
@@ -76,91 +102,166 @@ async def sign_tx(
         signature=signature,
     )
 
-def crypto_sign_doc(sk: bytes, sign_doc: bytes):
+
+def crypto_sign_doc(sk: bytes, sign_doc: bytes) -> bytes:
+    """
+    Sign a serialized Cosmos SignDoc with secp256k1.
+
+    Args:
+        sk: Raw secp256k1 private key bytes.
+        sign_doc: Serialized SignDoc bytes.
+
+    Returns:
+        64-byte Cosmos signature without the recovery byte.
+    """
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
 
     msg_hash = sha256(sign_doc).digest()
     signature = secp256k1.sign(sk, msg_hash)
-    return signature[1:] # cosmos signatures do not have this heading byte
+    return signature[1:]  # Cosmos signatures do not include the recovery byte.
 
-async def validate_and_confirm_auth_info(auth_info: bytes, pubkey: bytes):
-    from trezor.messages import  CosmosSecp256k1Pubkey
-    from trezor.protobuf import decode
+
+async def validate_and_confirm_auth_info(
+    auth_info: CosmosAuthInfo, pubkey: bytes
+) -> None:
+    """
+    Validate signer metadata and confirm the sequence number.
+
+    Args:
+        auth_info: Decoded Cosmos AuthInfo message.
+        pubkey: Public key derived from the requested path.
+
+    Raises:
+        DataError: If the signer metadata is unsupported or mismatched.
+    """
     from trezor import wire
+    from trezor.enums import CosmosSignMode
+    from trezor.messages import CosmosSecp256k1Pubkey
+    from trezor.protobuf import decode
     from trezor.ui.layouts import confirm_value
 
-    # TODO: properly support cases where there is multiple signers
+    # TODO: properly support cases where there are multiple signers.
     if len(auth_info.signer_infos) != 1:
-        raise wire.DataError("Invalid signer infos")
-    
+        raise wire.DataError("Multiple signers not supported")
+
     signer_info = auth_info.signer_infos[0]
 
-    if signer_info.mode_info.single.mode != 1: # TODO: use constants for sign mode, protobuf enums crash on import it seems
+    if signer_info.mode_info.single.mode != CosmosSignMode.SIGN_MODE_DIRECT:
         raise wire.DataError("Only direct sign mode is supported")
 
     pk_type = signer_info.public_key.type_url
     if pk_type != "/cosmos.crypto.secp256k1.PubKey":
         raise wire.DataError("Invalid pubkey type: " + pk_type)
-    
+
     signer_pubkey = decode(signer_info.public_key.value, CosmosSecp256k1Pubkey, False)
 
     if signer_pubkey.key != pubkey:
         raise wire.DataError("Unexpected signer pubkey")
-    
+
     await confirm_value("sequence", str(signer_info.sequence), "", "confirm")
 
-async def confirm_body_infos(body: CosmosTxBody):
+
+async def confirm_body_infos(body: CosmosTxBody) -> None:
+    """
+    Confirm optional transaction body fields with the user.
+
+    Args:
+        body: Decoded Cosmos transaction body.
+    """
     from trezor.ui.layouts import confirm_value
 
-    if body.memo != None and body.memo != "":
+    if body.memo is not None and body.memo != "":
         await confirm_value("memo", body.memo, "", "confirm")
 
-    if body.timeout_height != None and body.timeout_height != 0:
+    if body.timeout_height is not None and body.timeout_height != 0:
         await confirm_value("timeout height", str(body.timeout_height), "", "confirm")
 
-async def confirm_fee(fee: CosmosFee):
+
+async def confirm_fee(fee: CosmosFee) -> None:
+    """
+    Validate and confirm fee information.
+
+    Args:
+        fee: Decoded Cosmos fee.
+
+    Raises:
+        DataError: If the fee structure uses unsupported fields.
+    """
     from trezor import wire
     from trezor.ui.layouts import confirm_value
 
-    # TODO: support granter and payer, need to properly support multiple signers for that
-    if fee.granter != None and fee.granter != "":
+    # TODO: support granter and payer, which also requires proper multi-signer
+    # handling.
+    if fee.granter is not None and fee.granter != "":
         raise wire.DataError("Fee granter not supported")
-    if fee.payer != None and fee.payer != "":
+    if fee.payer is not None and fee.payer != "":
         raise wire.DataError("Fee payer not supported")
-    
+
     # XXX: should we display gas limit? does not seem relevant to the user since it's an abstract value used by the chain internals, but we're blind-signing it in this case.
     # maybe we should display the gas-cost instead?
     await confirm_value("gas limit", str(fee.gas_limit), "", "confirm")
 
     # TODO: support multiple fee coins, how to do this properly in ui? one screen for each coin, or some kind of list?
     if len(fee.amount) != 1:
-        raise wire.DataError("Invalid number of fee coins, expected 1, got " + str(len(fee.amount)))
+        raise wire.DataError(
+            "Invalid number of fee coins, expected 1, got " + str(len(fee.amount))
+        )
     amount = fee.amount[0].amount + fee.amount[0].denom
     await confirm_value("max fee", amount, "", "confirm")
 
-def validate_bank_msg_send(msg: CosmosBankMsgSend, pk: bytes):
-    from trezor.crypto.bech32 import bech32_decode, bech32_encode, convertbits, Encoding
+
+def validate_bank_msg_send(msg: CosmosBankMsgSend, pk: bytes) -> None:
+    """
+    Validate that the MsgSend sender matches the signing key.
+
+    Args:
+        msg: Decoded MsgSend message.
+        pk: Public key derived from the requested path.
+
+    Raises:
+        DataError: If the sender address is malformed or mismatched.
+    """
     from trezor import wire
+    from trezor.crypto.bech32 import Encoding, bech32_decode, bech32_encode, convertbits
+
     from .addr import derive_addr_bz
 
     # TODO: support list of coins, how to do this properly in ui? one screen for each coin, or some kind of list?
     if len(msg.amount) != 1:
-        raise wire.DataError("Invalid number of coins, expected 1, got " + str(len(msg.amount)))
+        raise wire.DataError(
+            "Invalid number of coins, expected 1, got " + str(len(msg.amount))
+        )
 
     msg_addr = msg.from_address
     hrp, data, _ = bech32_decode(msg_addr)
-    msg_addr_bz = bytes(convertbits(data, 5, 8))
+    if hrp is None or data is None:
+        raise wire.DataError("Invalid sender address")
+
+    converted = convertbits(data, 5, 8)
+    if converted is None:
+        raise wire.DataError("Invalid sender address")
+
+    msg_addr_bz = bytes(converted)
 
     addr_bz = derive_addr_bz(pk)
 
     if addr_bz != msg_addr_bz:
         converted_bits = convertbits(addr_bz, 8, 5)
         addr = bech32_encode(hrp, converted_bits, Encoding.BECH32)
-        raise wire.DataError("Invalid sender expected " + addr + ", got " + msg.from_address)
-    
-async def confirm_bank_msg_send(msg: CosmosBankMsgSend):
-    from trezor.ui.layouts import confirm_output, confirm_address
+        raise wire.DataError(
+            "Invalid sender expected " + addr + ", got " + msg.from_address
+        )
+
+
+async def confirm_bank_msg_send(msg: CosmosBankMsgSend) -> None:
+    """
+    Confirm MsgSend transaction details with the user.
+
+    Args:
+        msg: Decoded MsgSend message.
+    """
+    from trezor.ui.layouts import confirm_address, confirm_output
 
     await confirm_address(
         "sending from",
