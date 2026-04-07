@@ -108,6 +108,8 @@ pub fn new_confirm_summary(
     // Menu with provided info and cancel
     let mut menu = VerticalMenu::empty();
     let mut menu_items = Vec::<usize, 3>::new();
+    menu = menu.cancel_item(verb_cancel.unwrap_or(TR::send__cancel_sign.into()));
+    unwrap!(menu_items.push(MENU_ITEM_CANCEL));
     if content_extra.is_some() {
         menu = menu.item(
             theme::ICON_CHEVRON_RIGHT,
@@ -122,8 +124,6 @@ pub fn new_confirm_summary(
         );
         unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
-    menu = menu.cancel_item(verb_cancel.unwrap_or(TR::send__cancel_sign.into()));
-    unwrap!(menu_items.push(MENU_ITEM_CANCEL));
     let content_menu = Frame::left_aligned(TString::empty(), menu)
         .with_cancel_button()
         .map(move |msg| match msg {
