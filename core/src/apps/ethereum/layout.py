@@ -63,10 +63,10 @@ async def require_confirm_approve(
         await require_confirm_unknown_token(title)
 
     await confirm_ethereum_approve(
-        recipient_addr,
+        addr_pad(recipient_addr, chunkify),
         recipient_str,
         token is tokens.UNKNOWN_TOKEN,
-        token_address_str,
+        addr_pad(token_address_str, chunkify),
         token.symbol,
         network is networks.UNKNOWN_NETWORK,
         chain_id_str,
@@ -117,6 +117,9 @@ async def require_confirm_tx(
             "unknown_token",
             TR.ethereum__unknown_contract_address,
         )
+
+    if recipient is not None:
+        recipient = addr_pad(recipient, chunkify)
 
     await confirm_ethereum_tx(
         recipient,
@@ -217,6 +220,7 @@ async def require_confirm_stake(
 ) -> None:
 
     addr_str = address_from_bytes(addr_bytes, network)
+    addr_str = addr_pad(addr_str, chunkify)
     total_amount = format_ethereum_amount(value, None, network)
     account, account_path = get_account_and_path(address_n)
 
@@ -277,6 +281,7 @@ async def require_confirm_unstake(
 ) -> None:
 
     addr_str = address_from_bytes(addr_bytes, network)
+    addr_str = addr_pad(addr_str, chunkify)
     total_amount = format_ethereum_amount(value, None, network)
     account, account_path = get_account_and_path(address_n)
 
@@ -305,6 +310,7 @@ async def require_confirm_claim(
 ) -> None:
 
     addr_str = address_from_bytes(addr_bytes, network)
+    addr_str = addr_pad(addr_str, chunkify)
     account, account_path = get_account_and_path(address_n)
 
     await confirm_ethereum_staking_tx(
@@ -500,3 +506,12 @@ def limit_str(s: str, limit: int = 16) -> str:
         return s
 
     return ".." + s[-limit:]
+
+
+def addr_pad(addr: str, chunkify: bool) -> str:
+    """Keep "0x" prefix in a separate chunk (#6601)."""
+
+    assert addr.startswith("0x")
+    if chunkify:
+        addr = "  " + addr
+    return addr
