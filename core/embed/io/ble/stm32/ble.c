@@ -1009,13 +1009,15 @@ bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
     return false;
   }
 
+  if (name_len > BLE_ADV_NAME_LEN) {
+    return false;
+  }
+
   irq_key_t key = irq_lock();
 
-  if (name != NULL && name_len > 0 && name_len <= BLE_ADV_NAME_LEN) {
+  if (name != NULL && name_len > 0) {
     memset(drv->adv_name, 0, sizeof(drv->adv_name));
     memcpy(drv->adv_name, name, name_len);
-  } else if (name != NULL && name_len > BLE_ADV_NAME_LEN) {
-    return false;
   }
 
   drv->restart_adv_on_disconnect = true;
