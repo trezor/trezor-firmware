@@ -237,8 +237,8 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-typedef __attribute__((cmse_nonsecure_call))
-PIN_UI_WAIT_CALLBACK ns_storage_callback_t;
+typedef __attribute__((
+    cmse_nonsecure_call)) PIN_UI_WAIT_CALLBACK ns_storage_callback_t;
 
 static ns_storage_callback_t storage_callback = NULL;
 

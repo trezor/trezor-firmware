@@ -52,9 +52,9 @@
 #define FRAME_BUFFER_SIZE \
   ALIGN_UP_CONST(DISPLAY_RESX *DISPLAY_RESY, PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
-static
-    __attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-    uint8_t g_framebuf[FRAME_BUFFER_SIZE];
+static __attribute__((section(".fb1"),
+                      aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    g_framebuf[FRAME_BUFFER_SIZE];
 
 // Display driver context.
 typedef struct {
@@ -148,8 +148,7 @@ static bool display_init_spi(display_driver_t *drv) {
 static void display_send_bytes(display_driver_t *drv, const uint8_t *data,
                                size_t len) {
   volatile int32_t timeout = 1000;
-  for (int i = 0; i < timeout; i++)
-    ;
+  for (int i = 0; i < timeout; i++);
 
   if (HAL_OK != HAL_SPI_Transmit(&drv->spi, (uint8_t *)data, len, 1000)) {
     // TODO: error

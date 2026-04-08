@@ -65,8 +65,8 @@
    FLASH_SR_WRPERR | FLASH_SR_SOP | FLASH_SR_EOP)
 
 static uint32_t flash_wait_and_clear_status_flags(void) {
-  while (FLASH->SR & FLASH_SR_BSY)
-    ;  // wait for all previous flash operations to complete
+  while (FLASH->SR & FLASH_SR_BSY);  // wait for all previous flash
+                                     // operations to complete
   const uint32_t result =
       FLASH->SR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
   FLASH->SR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
@@ -119,8 +119,8 @@ static void flash_unlock_option_bytes(void) {
   // write the special sequence to unlock
   FLASH->OPTKEYR = FLASH_OPT_KEY1;
   FLASH->OPTKEYR = FLASH_OPT_KEY2;
-  while (FLASH->OPTCR & FLASH_OPTCR_OPTLOCK)
-    ;  // wait until the flash option control register is unlocked
+  while (FLASH->OPTCR & FLASH_OPTCR_OPTLOCK);  // wait until the flash option
+                                               // control register is unlocked
 }
 
 static uint32_t flash_set_option_bytes(void) {

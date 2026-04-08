@@ -58,21 +58,21 @@ _Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
 #endif
 
 // Size of the physical frame buffer in bytes
-#define PHYSICAL_FRAME_BUFFER_SIZE               \
-  ALIGN_UP_CONST(DISPLAY_RESX *DISPLAY_RESY * 2, \
+#define PHYSICAL_FRAME_BUFFER_SIZE                \
+  ALIGN_UP_CONST(DISPLAY_RESX * DISPLAY_RESY * 2, \
                  PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
 // Physical frame buffers in internal SRAM memory.
 // Both frame buffers layers in the fixed addresses that
 // are shared between bootloaders and the firmware.
-static
-    __attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-    uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
+static __attribute__((section(".fb1"),
+                      aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 
 #if (FRAME_BUFFER_COUNT > 1)
-static
-    __attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-    uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
+static __attribute__((section(".fb2"),
+                      aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
 
 #ifdef USE_TRUSTZONE

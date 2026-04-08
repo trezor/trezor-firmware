@@ -602,8 +602,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
         } else {
           MP_STATE_VM(mp_optimise_value) = 0;
           for (char *p = argv[a] + 1; *p && *p == 'O';
-               p++, MP_STATE_VM(mp_optimise_value)++)
-            ;
+               p++, MP_STATE_VM(mp_optimise_value)++);
         }
       } else {
         return usage(argv);

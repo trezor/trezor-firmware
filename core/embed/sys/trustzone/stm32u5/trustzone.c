@@ -31,10 +31,10 @@
 
 #define SAU_INIT_CTRL_ENABLE 1
 #define SAU_INIT_CTRL_ALLNS 0
-#define SET_REGION(n, start, size, sec)                     \
-  SAU->RNR = ((n) & SAU_RNR_REGION_Msk);                    \
-  SAU->RBAR = ((start) & SAU_RBAR_BADDR_Msk);               \
-  SAU->RLAR = (((start) + (size)-1) & SAU_RLAR_LADDR_Msk) | \
+#define SET_REGION(n, start, size, sec)                       \
+  SAU->RNR = ((n) & SAU_RNR_REGION_Msk);                      \
+  SAU->RBAR = ((start) & SAU_RBAR_BADDR_Msk);                 \
+  SAU->RLAR = (((start) + (size) - 1) & SAU_RLAR_LADDR_Msk) | \
               (((sec) << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1U
 
 #define DIS_REGION(n)                    \
@@ -57,14 +57,14 @@ static void tz_configure_sau(void) {
 extern uint8_t _sgstubs_section_start;
 extern uint8_t _sgstubs_section_end;
 
-#define SGSTUBS_START ((uint32_t) & _sgstubs_section_start)
-#define SGSTUBS_END ((uint32_t) & _sgstubs_section_end)
+#define SGSTUBS_START ((uint32_t)&_sgstubs_section_start)
+#define SGSTUBS_END ((uint32_t)&_sgstubs_section_end)
 #define SGSTUBS_SIZE (SGSTUBS_END - SGSTUBS_START)
 
 // defined in linker script
 extern uint32_t _secmon_size;
 
-#define SECMON_SIZE ((uint32_t) & _secmon_size)
+#define SECMON_SIZE ((uint32_t)&_secmon_size)
 
 #define NONSECURE_CODE_START (FIRMWARE_START + SECMON_SIZE)
 #define NONSECURE_CODE_SIZE (FIRMWARE_MAXSIZE - SECMON_SIZE)

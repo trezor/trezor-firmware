@@ -58,14 +58,14 @@ void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 #ifdef USE_BOOTARGS_RSOD
 // Resets the device with post-mortem information in bootargs
 // so that the bootloader can display it.
-void __attribute__((noreturn))
-reboot_with_rsod(const systask_postmortem_t *pminfo);
+void __attribute__((noreturn)) reboot_with_rsod(
+    const systask_postmortem_t *pminfo);
 #endif
 
 // Resets the device and wipes all the user data.
 // RSOD with wipe information is displayed.
-void __attribute__((noreturn))
-reboot_and_wipe(const bootutils_wipe_info_t *info);
+void __attribute__((noreturn)) reboot_and_wipe(
+    const bootutils_wipe_info_t *info);
 
 // Allows the user to read the displayed error message and then
 // reboots the device or waits for power-off.

@@ -71,8 +71,9 @@ extern void memset_reg(void *start, void *stop, uint32_t val);
 #define FW_SIGNED 0x5A3CA5C3
 #define FW_UNTRUSTED 0x00000000
 
-static inline void __attribute__((noreturn))
-jump_to_firmware(const vector_table_t *ivt, int trust) {
+static inline void
+    __attribute__((noreturn)) jump_to_firmware(const vector_table_t *ivt,
+                                               int trust) {
   if (FW_SIGNED == trust) {    // trusted signed firmware
     SCB_VTOR = (uint32_t)ivt;  // * relocate vector table
     // Set stack pointer
@@ -92,8 +93,7 @@ jump_to_firmware(const vector_table_t *ivt, int trust) {
 
   // Prevent compiler from generating stack protector code (which causes CPU
   // fault because the stack is moved)
-  for (;;)
-    ;
+  for (;;);
 }
 
 static inline void set_mode_unprivileged(void) {

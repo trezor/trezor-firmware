@@ -720,8 +720,7 @@ static void i2c_bus_head_continue(i2c_bus_t* bus) {
 
       // Guard time between operations STOP and START condition
       if (bus->def->guard_time > 0) {
-        while (systick_us() - bus->stop_time < bus->def->guard_time)
-          ;
+        while (systick_us() - bus->stop_time < bus->def->guard_time);
       }
 
       regs->CR2 = cr2;

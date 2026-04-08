@@ -33,8 +33,8 @@ uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 static HMAC_DRBG_CTX drbg_ctx;
 
-void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line_num) {
+void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
+                                             int line_num) {
   const BITMAP *icon = &bmp_icon_error;
   char line[128] = {0};
   int y = icon->height + 3;
@@ -69,9 +69,10 @@ __fatal_error(const char *msg, const char *file, int line_num) {
   shutdown();
 }
 
-void __attribute__((noreturn))
-error_shutdown(const char *line1, const char *line2, const char *line3,
-               const char *line4) {
+void __attribute__((noreturn)) error_shutdown(const char *line1,
+                                              const char *line2,
+                                              const char *line3,
+                                              const char *line4) {
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, line3, line4,
                "Please unplug", "the device.");
   shutdown();

@@ -21,7 +21,9 @@
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
 #define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
-  { msg_send.FIELD = VALUE; }
+  {                                                  \
+    msg_send.FIELD = VALUE;                          \
+  }
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) \
   {                                         \
     msg_send.has_##FIELD = true;            \

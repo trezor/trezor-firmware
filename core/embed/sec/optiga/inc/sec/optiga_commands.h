@@ -181,14 +181,13 @@ typedef struct {
 // The throttling delay when the security event counter is at its maximum.
 #define OPTIGA_T_MAX_MS 5000
 
-#define OPTIGA_ACCESS_CONDITION(ac_id, oid)           \
-  (const optiga_metadata_item) {                      \
-    (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 \
-  }
+#define OPTIGA_ACCESS_CONDITION(ac_id, oid)                                    \
+  (const optiga_metadata_item){(const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, \
+                               3}
 
 // Single-byte value of optiga_metadata_item.
 #define OPTIGA_META_VALUE(val) \
-  (const optiga_metadata_item) { (const uint8_t[]){val}, 1 }
+  (const optiga_metadata_item){(const uint8_t[]){val}, 1}
 
 // Commonly used data object access conditions.
 extern const optiga_metadata_item OPTIGA_META_LCS_OPERATIONAL;

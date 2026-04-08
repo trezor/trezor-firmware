@@ -65,10 +65,7 @@ bool fb_queue_empty(fb_queue_t* queue) {
 }
 
 // Waits until the queue is not empty
-void fb_queue_wait(fb_queue_t* queue) {
-  while (fb_queue_empty(queue))
-    ;
-}
+void fb_queue_wait(fb_queue_t* queue) { while (fb_queue_empty(queue)); }
 
 // Returns the head of the queue (or -1 if the queue is empty)
 // Set peeked flag if the queue is not empty

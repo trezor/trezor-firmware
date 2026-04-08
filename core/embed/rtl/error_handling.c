@@ -60,20 +60,19 @@ const char *ts_string(ts_t status) {
   }
 }
 
-void __attribute__((noreturn))
-error_shutdown_ex(const char *title, const char *message, const char *footer) {
+void __attribute__((noreturn)) error_shutdown_ex(const char *title,
+                                                 const char *message,
+                                                 const char *footer) {
   system_exit_error(title, message, footer);
-  while (1)
-    ;
+  while (1);
 }
 
 void __attribute__((noreturn)) error_shutdown(const char *message) {
   error_shutdown_ex(NULL, message, NULL);
 }
 
-void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line) {
+void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
+                                             int line) {
   system_exit_fatal(msg, file, line);
-  while (1)
-    ;
+  while (1);
 }

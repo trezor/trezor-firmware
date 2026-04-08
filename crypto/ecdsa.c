@@ -1208,7 +1208,7 @@ int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der) {
   i = 0;
   while (i < 31 && sig[i] == 0) {
     i++;
-  }                      // skip leading zeroes
+  }  // skip leading zeroes
   if (sig[i] >= 0x80) {  // put zero in output if MSB set
     *p = 0x00;
     p++;
@@ -1231,7 +1231,7 @@ int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der) {
   i = 32;
   while (i < 63 && sig[i] == 0) {
     i++;
-  }                      // skip leading zeroes
+  }  // skip leading zeroes
   if (sig[i] >= 0x80) {  // put zero in output if MSB set
     *p = 0x00;
     p++;

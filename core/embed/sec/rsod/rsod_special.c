@@ -42,8 +42,7 @@ void __attribute__((noreturn)) show_wipe_code_screen(void) {
 
   reboot_and_wipe(&info);
 
-  while (1)
-    ;
+  while (1);
 }
 
 void __attribute__((noreturn)) show_pin_too_many_screen(void) {
@@ -56,8 +55,7 @@ void __attribute__((noreturn)) show_pin_too_many_screen(void) {
   strncpy(info.footer, RECONNECT_DEVICE_MESSAGE, sizeof(info.footer) - 1);
 
   reboot_and_wipe(&info);
-  while (1)
-    ;
+  while (1);
 }
 
 void __attribute__((noreturn)) show_install_restricted_screen(void) {
