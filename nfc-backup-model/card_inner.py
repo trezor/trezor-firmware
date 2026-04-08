@@ -52,24 +52,36 @@ class LogRecord:
 
 @dataclass
 class Storage:
-    pin_counter: int = MAX_PIN_ATTEMPTS
-    successful_access_log_record: LogRecord | None = None
-    unsuccessful_access_log_records: list[LogRecord | None] = field(
-        default_factory=lambda: [None] * MAX_PIN_ATTEMPTS
-    )
-    salt: bytes = b""
-    encrypted_data_encryption_key: bytes = b""
-    seed_metadata: bytes = b""
-    encrypted_seed: bytes = b""
-
-    def check_integrity(self) -> bool:
-        return True
-
     @contextmanager
     def atomic_session(self) -> Iterator[None]:
         # This should be implemented so that, in the event of a tear-off,
         # all changes to storage made during the session are rolled back.
         yield
+
+    # The storage is divided into four atomic sections. Some sections may
+    # be merged if this is advantageous from an implementation perspective.
+
+    # First atomic section
+    salt: bytes = b""
+    encrypted_data_encryption_key: bytes = b""
+
+    # Second atomic section
+    pin_counter: int = MAX_PIN_ATTEMPTS
+    # `pin_counter` is reduntant since
+    # `pin_counter = len([r for r in unsuccessful_access_log_records if r is not None])`
+    successful_access_log_record: LogRecord | None = None
+    unsuccessful_access_log_records: list[LogRecord | None] = field(
+        default_factory=lambda: [None] * MAX_PIN_ATTEMPTS
+    )
+
+    # Third atomic section
+    seed_metadata: bytes = b""
+
+    # Forth section
+    encrypted_seed: bytes = b""
+
+    def check_integrity(self) -> bool:
+        return True
 
 
 class CardInner:
@@ -150,20 +162,26 @@ class CardInner:
                 raise NotAuthenticatedError()
 
             with self.storage.atomic_session():
-                # This does not necessarily have to be atomic if `encrypted_seed`
-                # and `stretching_key` are wiped before `pin_counter` is set
-                # to its maximum value
-                self.storage.encrypted_seed = b""
-                self.storage.seed_metadata = b""
-                self.storage.pin_counter = MAX_PIN_ATTEMPTS
-                self.storage.successful_access_log_record = None
-                self.storage.unsuccessful_access_log_records = [None] * MAX_PIN_ATTEMPTS
+                # If `encrypted_data_encryption_key` or `salt` are written in
+                # multiple banks, the old values have to be wiped from all
+                # banks
                 (
                     self.storage.salt,
                     self.storage.encrypted_data_encryption_key,
                 ) = self.wrap_data_encryption_key(
                     DEFAULT_PIN, random_bytes(AEAD_KEY_SIZE_BYTES)
                 )
+
+            with self.storage.atomic_session():
+                self.storage.encrypted_seed = b""
+
+            with self.storage.atomic_session():
+                self.storage.seed_metadata = b""
+
+            with self.storage.atomic_session():
+                self.storage.pin_counter = MAX_PIN_ATTEMPTS
+                self.storage.successful_access_log_record = None
+                self.storage.unsuccessful_access_log_records = [None] * MAX_PIN_ATTEMPTS
 
             self.authenticated = False
 
@@ -215,6 +233,9 @@ class CardInner:
                 raise NotAuthenticatedError()
 
             with self.storage.atomic_session():
+                # If `encrypted_data_encryption_key` or `salt` are written in
+                # multiple banks, the old values have to be wiped from all
+                # banks
                 (
                     self.storage.salt,
                     self.storage.encrypted_data_encryption_key,
@@ -222,8 +243,7 @@ class CardInner:
 
         def read_pin_counter(self) -> int:
             logger.info("CardInner.read_pin_counter()")
-            with self.storage.atomic_session():
-                pin_counter = self.storage.pin_counter
+            pin_counter = self.storage.pin_counter
             logger.debug(f"pin_counter={pin_counter}")
             return pin_counter
 
