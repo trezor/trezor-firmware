@@ -65,6 +65,17 @@ enum States {
 #define T3T_BLOCK_SIZE \
   0x10 /*!< Block size in Type 3 Tag                        */
 /**
+ * T3T minimum fixed-offset accesses:
+ *   [0]     LEN
+ *   [1]     CMD
+ *   [2..9]  NFCID2
+ *   [10]    NoS
+ *   [11..12] Service code
+ *   [13]    NoB
+ *   [14..] Block list + Block data (variable)
+ */
+#define T3T_MIN_CMD_LEN 14
+/**
  * @}
  */
 
@@ -170,6 +181,7 @@ static uint8_t InformationBlock[] = {
  * @brief  Compare 2 commands supplied in parameters
  *
  * @param[in]  cmd : pointer to the received command.
+ * @param[in]  cmdLen : length of the received command.
  * @param[in]  find : pointer to the avalaible command.
  * @param[in]  len : length of the available command.
  *
@@ -199,6 +211,7 @@ static bool cmd_compare(uint8_t *cmd, uint16_t cmdLen, uint8_t *find,
  * @brief  Manage the T4T Select answer to the reader
  *
  * @param[in]  cmdData    : pointer to the received command.
+ * @param[in]  cmdDataLen : length of the received command.
  * @param[out] rspData    : pointer to the answer to send.
  *
  * @return Answer size.
@@ -253,6 +266,7 @@ static uint16_t card_emulation_t4t_select(uint8_t *cmdData, uint16_t cmdDataLen,
  * @brief  Manage the T4T Read answer to the reader
  *
  * @param[in]  cmdData    : pointer to the received command.
+ * @param[in]  cmdDataLen : length of the received command.
  * @param[out] rspData    : pointer to the answer to send.
  * @param[in]  rspDataLen : size of the answer buffer.
  *
@@ -310,8 +324,9 @@ static uint16_t card_emulation_t4t_read(uint8_t *cmdData, uint16_t cmdDataLen,
  *****************************************************************************
  * @brief  Manage the T4T Update answer to the reader
  *
- * @param[in]  cmdData : pointer to the received command.
- * @param[in]  rspData : pointer to the answer to send.
+ * @param[in]  cmdData    : pointer to the received command.
+ * @param[in]  cmdDataLen : length of the received command.
+ * @param[out] rspData    : pointer to the answer to send.
  *
  * @return Answer size.
  *****************************************************************************
@@ -355,9 +370,10 @@ static uint16_t card_emulation_t4t_update(uint8_t *cmdData, uint16_t cmdDataLen,
 
 /**
  *****************************************************************************
- * @brief  Manage the T4T Read answer to the reader
+ * @brief  Manage the T3T Check answer to the reader
  *
  * @param[in]  cmdData    : pointer to the received command.
+ * @param[in]  cmdDataLen : length of the received command.
  * @param[out] rspData    : pointer to the answer to send.
  * @param[in]  rspDataLen : size of the answer buffer.
  *
@@ -377,17 +393,7 @@ static uint16_t card_emulation_t3t_check(uint8_t *cmdData, uint16_t cmdDataLen,
   uint32_t cnt = 0;
   uint32_t nbmax = 0;
 
-  /*
-   * T3T minimum fixed-offset accesses:
-   *   [0]     LEN
-   *   [1]     CMD
-   *   [2..9]  NFCID2  (RFAL_NFCF_LENGTH_LEN + RFAL_NFCF_CMD_LEN = 2, +8)
-   *   [10]    NoS
-   *   [11..12] Service code
-   *   [13]    NoB
-   *   [14..] Block list (variable)
-   */
-  if (cmdDataLen < 14) {
+  if (cmdDataLen < T3T_MIN_CMD_LEN) {
     return 0;
   }
 
@@ -424,7 +430,7 @@ static uint16_t card_emulation_t3t_check(uint8_t *cmdData, uint16_t cmdDataLen,
   rspData[idx++] = cmdData[13];
 
   /* Retrieving block to read */
-  block = &cmdData[14];
+  block = &cmdData[T3T_MIN_CMD_LEN];
   for (cnt = 0; cnt < cmdData[13]; cnt++) {
     /* Bounds check: need at least 1 byte to read the block list element flag */
     if ((block - cmdData) >= cmdDataLen) {
@@ -494,8 +500,9 @@ static uint16_t card_emulation_t3t_check(uint8_t *cmdData, uint16_t cmdDataLen,
  *****************************************************************************
  * @brief  Manage the T3T Update answer to the reader
  *
- * @param[in]  cmdData : pointer to the received command.
- * @param[in]  rspData : pointer to the answer to send.
+ * @param[in]  cmdData    : pointer to the received command.
+ * @param[in]  cmdDataLen : length of the received command.
+ * @param[out] rspData    : pointer to the answer to send.
  *
  * @return Answer size.
  *****************************************************************************
@@ -512,17 +519,7 @@ static uint16_t card_emulation_t3t_update(uint8_t *cmdData, uint16_t cmdDataLen,
   uint32_t cnt = 0;
   uint32_t nbmax = 0;
 
-  /*
-   * T3T minimum fixed-offset accesses:
-   *   [0]     LEN
-   *   [1]     CMD
-   *   [2..9]  NFCID2
-   *   [10]    NoS
-   *   [11..12] Service code
-   *   [13]    NoB
-   *   [14..] Block list + Block data (variable)
-   */
-  if (cmdDataLen < 14) {
+  if (cmdDataLen < T3T_MIN_CMD_LEN) {
     return 0;
   }
 
@@ -551,7 +548,7 @@ static uint16_t card_emulation_t3t_update(uint8_t *cmdData, uint16_t cmdDataLen,
   }
 
   /* Retrieving block list */
-  block = &cmdData[14];
+  block = &cmdData[T3T_MIN_CMD_LEN];
   for (cnt = 0; cnt < cmdData[13]; cnt++) {
     /* Bounds check: need at least 1 byte to read the block list element flag */
     if ((block - cmdData) >= cmdDataLen) {
