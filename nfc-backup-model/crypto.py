@@ -18,25 +18,31 @@ def hmac_hash(key: bytes, data: bytes) -> bytes:
 PrivateKey = NewType("PrivateKey", bytes)
 PublicKey = NewType("PublicKey", bytes)
 
-AES_GCM_NONCE_SIZE = 12
-AES_GCM_TAG_SIZE = 16
+AEAD_NONCE_SIZE = 12
+AEAD_TAG_SIZE = 16
 
 
-def aead_encrypt(key: bytes, plaintext: bytes) -> bytes:
-    nonce = random.randbytes(AES_GCM_NONCE_SIZE)  # TODO
+class DecryptionError(BaseException):
+    pass
+
+
+def aead_encrypt(
+    key: bytes, nonce: bytes, plaintext: bytes, associated_data: bytes = b""
+):
     aesgcm = AESGCM(key)
-    ciphertext = aesgcm.encrypt(nonce, plaintext, None)
-    return nonce + ciphertext
+    ciphertext_with_tag = aesgcm.encrypt(nonce, plaintext, associated_data)
+    return ciphertext_with_tag
 
 
-def aead_decrypt(key: bytes, cryptogram: bytes) -> bytes | None:
+def aead_decrypt(
+    key: bytes, nonce: bytes, ciphertext_with_tag: bytes, associated_data: bytes = b""
+):
     aesgcm = AESGCM(key)
     try:
-        return aesgcm.decrypt(
-            cryptogram[:AES_GCM_NONCE_SIZE], cryptogram[AES_GCM_NONCE_SIZE:], None
-        )
+        plaintext = aesgcm.decrypt(nonce, ciphertext_with_tag, associated_data)
+        return plaintext
     except Exception:
-        return None
+        raise DecryptionError()
 
 
 def generate_private_key() -> PrivateKey:

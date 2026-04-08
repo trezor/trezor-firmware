@@ -10,7 +10,14 @@ from card_inner import (
 )
 from reader import session
 
-from crypto import aead_decrypt, aead_encrypt, generate_keypair, public_key
+from crypto import (
+    AEAD_NONCE_SIZE,
+    aead_decrypt,
+    aead_encrypt,
+    generate_keypair,
+    public_key,
+    random_bytes,
+)
 
 
 def test_card() -> None:
@@ -31,7 +38,8 @@ def test_card() -> None:
         reader.wipe()
         reader.authenticate(empty_pin, note)
         encryption_key = reader.set_pin(pin)
-        reader.write_encrypted_seed(aead_encrypt(encryption_key, seed))
+        nonce = random_bytes(AEAD_NONCE_SIZE)
+        reader.write_encrypted_seed(nonce + aead_encrypt(encryption_key, nonce, seed))
         reader.write_metadata(metadata)
 
     # Healthcheck (without authentication)
@@ -68,7 +76,12 @@ def test_card() -> None:
     # Recovery
     with session(card, reader_private) as reader:
         encryption_key = reader.authenticate(pin, note)
-        decrypted_seed = aead_decrypt(encryption_key, reader.read_encrypted_seed())
+        encrypted_seed = reader.read_encrypted_seed()
+        decrypted_seed = aead_decrypt(
+            encryption_key,
+            encrypted_seed[:AEAD_NONCE_SIZE],
+            encrypted_seed[AEAD_NONCE_SIZE:],
+        )
     assert decrypted_seed == seed
 
     # Healthcheck
@@ -97,7 +110,8 @@ def test_card() -> None:
         reader.wipe()
         reader.authenticate(empty_pin, note)
         encryption_key = reader.set_pin(pin)
-        reader.write_encrypted_seed(aead_encrypt(encryption_key, seed))
+        nonce = random_bytes(AEAD_NONCE_SIZE)
+        reader.write_encrypted_seed(nonce + aead_encrypt(encryption_key, nonce, seed))
         reader.write_metadata(metadata)
 
     # MAX_PIN_ATTEMPTS unsuccessful recovery attempts
