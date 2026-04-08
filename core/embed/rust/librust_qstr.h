@@ -236,7 +236,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__continue;
   MP_QSTR_buttons__details;
   MP_QSTR_buttons__enable;
-  MP_QSTR_buttons__enter;
   MP_QSTR_buttons__enter_share;
   MP_QSTR_buttons__export;
   MP_QSTR_buttons__finish;
@@ -294,7 +293,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_thp_pairing;
   MP_QSTR_confirm_total__fee_rate;
   MP_QSTR_confirm_total__fee_rate_colon;
-  MP_QSTR_confirm_total__sending_from_account;
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
   MP_QSTR_confirm_trade;
@@ -318,8 +316,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
-  MP_QSTR_device_name__changed;
-  MP_QSTR_device_name__continue_with_empty_label;
   MP_QSTR_device_name__enter;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
@@ -594,7 +590,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__dry_run_slip39_valid_match;
   MP_QSTR_recovery__dry_run_slip39_valid_mismatch;
   MP_QSTR_recovery__dry_run_slip39_valid_share;
-  MP_QSTR_recovery__dry_run_verify_remaining_shares;
   MP_QSTR_recovery__enter_any_share;
   MP_QSTR_recovery__enter_backup;
   MP_QSTR_recovery__enter_different_share;
@@ -602,7 +597,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__enter_share_from_diff_group;
   MP_QSTR_recovery__group_num_template;
   MP_QSTR_recovery__group_threshold_reached;
-  MP_QSTR_recovery__info_about_disconnect;
   MP_QSTR_recovery__invalid_share_entered;
   MP_QSTR_recovery__invalid_wallet_backup_entered;
   MP_QSTR_recovery__more_shares_needed;
@@ -894,7 +888,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__did_you_know;
   MP_QSTR_tutorial__exit;
   MP_QSTR_tutorial__first_wallet;
-  MP_QSTR_tutorial__get_started;
   MP_QSTR_tutorial__last_one;
   MP_QSTR_tutorial__lets_begin;
   MP_QSTR_tutorial__menu;
@@ -1007,7 +1000,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__fee_limit;
   MP_QSTR_words__forget;
   MP_QSTR_words__from;
-  MP_QSTR_words__good_to_know;
   MP_QSTR_words__important;
   MP_QSTR_words__instructions;
   MP_QSTR_words__intent;
