@@ -263,11 +263,11 @@ secbool check_secmon_contents(const secmon_header_t *const hdr,
 
 #endif  // USE_SECMON_VERIFICATION
 
-secbool __wur read_vendor_header(const uint8_t *const data, size_t header_size,
+secbool __wur read_vendor_header(const uint8_t *const data, size_t data_size,
                                  vendor_header *const vhdr) {
   // Need at least 23 bytes to safely read all fixed-offset fields through
   // fw_type at offset 22.
-  if (header_size < 23) return secfalse;
+  if (data_size < 23) return secfalse;
 
   memcpy(&vhdr->magic, data, 4);
   if (vhdr->magic != 0x565A5254) return secfalse;  // TRZV
@@ -280,7 +280,7 @@ secbool __wur read_vendor_header(const uint8_t *const data, size_t header_size,
   if (vhdr->hdrlen < IMAGE_SIG_SIZE) return secfalse;
 
   // The full declared header must fit within the provided buffer.
-  if (header_size < vhdr->hdrlen) return secfalse;
+  if (data_size < vhdr->hdrlen) return secfalse;
 
   memcpy(&vhdr->expiry, data + 8, 4);
   if (vhdr->expiry != 0) return secfalse;
