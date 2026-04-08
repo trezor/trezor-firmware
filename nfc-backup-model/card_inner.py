@@ -67,7 +67,8 @@ class CardInner:
 
     @contextmanager
     def powered(self, reader_public_key: PublicKey | None = None):
-        # `reader_public_key` is not `None` if and only if a secure channel has been initiated between the card and a trezor
+        # `reader_public_key` is not `None` if and only if a secure channel has been
+        # initiated between the card and a trezor
         logger.info("CardInner.powered()")
         logger.debug(f"reader_public_key={reader_public_key}")
         yield CardInner.PoweredInnerCard(self.storage, reader_public_key)
@@ -112,7 +113,9 @@ class CardInner:
                 raise NotAuthenticatedError()
 
             with self.storage.atomic_session():
-                # This does not necessarily have to be atomic if `encrypted_seed` and `stretching_key` are wiped before `pin_counter` is set to its maximum value
+                # This does not necessarily have to be atomic if `encrypted_seed`
+                # and `stretching_key` are wiped before `pin_counter` is set
+                # to its maximum value
                 self.storage.encrypted_seed = b""
                 self.storage.stretching_key = random_bytes(STRETCHING_KEY_SIZE_BYTES)
                 self.storage.seed_metadata = b""
@@ -131,13 +134,14 @@ class CardInner:
                 raise NotAuthenticatedError()
 
             if self.storage.pin_counter == 0:
-                # This is not called unless during the previous PIN attempt the card was powered off after verifying the PIN and before wiping the storage
+                # This is not called unless during the previous PIN attempt the card
+                # was powered off after verifying the PIN and before wiping the storage
                 self.wipe()
                 raise PinAttemptsExceededError()
 
-            # The PIN counter is decremented before the PIN is verified so that an attacker
-            # cannot power off the card after PIN verification but before the counter
-            # is decremented, thereby bypassing the attempt limit
+            # The PIN counter is decremented before the PIN is verified so that an
+            # attacker cannot power off the card after PIN verification but before
+            # the counter is decremented, thereby bypassing the attempt limit
             with self.storage.atomic_session():
                 self.storage.pin_counter -= 1
                 self.storage.unsuccessful_access_log_records[

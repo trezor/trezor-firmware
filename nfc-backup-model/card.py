@@ -28,7 +28,8 @@ class UnexpectedRequest(Exception):
     pass
 
 
-# TODO: Decide whether you can switch to another application if the application is already selected
+# TODO: Decide whether you can switch to another application if the application is
+# already selected
 
 
 @dataclass

@@ -5,8 +5,10 @@ from dataclasses import dataclass
 # Case 2E: CLA INS P1 P2 00 LeHi LeLow (1 <= Le <= 65536)
 # Case 3S: CLA INS P1 P2 Lc Data (1 <= Lc <= 255)
 # Case 3E: CLA INS P1 P2 00 LcHi LcLow Data (1 <= Lc <= 65535)
-# Case 4S: CLA INS P1 P2 Lc Data Le (1 <= Lc <= 255, 1 <= Le <= 256, Le = 256 is represented as 0x00)
-# Case 4E: CLA INS P1 P2 00 LcHi LcLow Data LeHi LeLow (1 <= Lc <= 65535, 1 <= Le <= 65536, Le = 65536 is represented as 0x00 0x00)
+# Case 4S: CLA INS P1 P2 Lc Data Le (1 <= Lc <= 255, 1 <= Le <= 256,
+#           Le = 256 is represented as 0x00)
+# Case 4E: CLA INS P1 P2 00 LcHi LcLow Data LeHi LeLow (1 <= Lc <= 65535,
+#           1 <= Le <= 65536, Le = 65536 is represented as 0x00 0x00)
 
 
 EXTENDED_LENGTH_MARKER = bytes([0x00])
@@ -72,7 +74,9 @@ class ApduRequest:
     ins: int
     p1: int
     p2: int
-    data: bytes  # Since APDU commands don't distinguish between no data and data of zero length, no data is always represented as data of zero length
+    # Since APDU commands don't distinguish between no data and data of zero length,
+    # no data is always represented as data of zero length
+    data: bytes
     le: int | None  # None is interpreted as not expecting any response data
 
     @classmethod
@@ -111,7 +115,9 @@ class ApduRequest:
 class ApduResponse:
     sw1: int
     sw2: int
-    response: bytes  # Since APDU commands don't distinguish between no data and data of zero length, no data is always represented as data of zero length
+    # Since APDU commands don't distinguish between no data and data of zero length,
+    # no data is always represented as data of zero length
+    response: bytes
 
     @classmethod
     def from_status(cls, status: ApduStatus, data: bytes = b"") -> "ApduResponse":
