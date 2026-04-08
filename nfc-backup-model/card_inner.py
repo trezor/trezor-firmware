@@ -46,7 +46,9 @@ class LogRecord:
 class Storage:
     pin_counter: int = MAX_PIN_ATTEMPTS
     successful_access_log_record: LogRecord | None = None
-    unsuccessful_access_log_records: list[LogRecord | None] = field(default_factory=lambda: [None] * MAX_PIN_ATTEMPTS)
+    unsuccessful_access_log_records: list[LogRecord | None] = field(
+        default_factory=lambda: [None] * MAX_PIN_ATTEMPTS
+    )
     seed_metadata: bytes = b""
     stretching_key: bytes = b""
     pin_tag: bytes = b""
@@ -141,9 +143,9 @@ class CardInner:
             # is decremented, thereby bypassing the attempt limit
             with self.storage.atomic_session():
                 self.storage.pin_counter -= 1
-                self.storage.unsuccessful_access_log_records[MAX_PIN_ATTEMPTS - self.storage.pin_counter - 1] = (
-                    LogRecord(self.reader_public_key, note)
-                )
+                self.storage.unsuccessful_access_log_records[
+                    MAX_PIN_ATTEMPTS - self.storage.pin_counter - 1
+                ] = LogRecord(self.reader_public_key, note)
 
             tag, stretched_pin = self._stretch_pin(pin)
             if tag != self.storage.pin_tag:
@@ -154,7 +156,9 @@ class CardInner:
                 raise InvalidPinError()
 
             with self.storage.atomic_session():
-                self.storage.successful_access_log_record = LogRecord(self.reader_public_key, note)
+                self.storage.successful_access_log_record = LogRecord(
+                    self.reader_public_key, note
+                )
                 self.storage.unsuccessful_access_log_records = [None] * MAX_PIN_ATTEMPTS
                 self.storage.pin_counter = MAX_PIN_ATTEMPTS
 

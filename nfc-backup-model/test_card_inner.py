@@ -1,8 +1,14 @@
 import pytest
+from card_inner import (
+    MAX_PIN_ATTEMPTS,
+    CardInner,
+    InvalidPinError,
+    LogRecord,
+    NotAuthenticatedError,
+    Pin,
+    PinAttemptsExceededError,
+)
 
-from card_inner import (MAX_PIN_ATTEMPTS, CardInner, InvalidPinError,
-                        LogRecord, NotAuthenticatedError, Pin,
-                        PinAttemptsExceededError)
 from crypto import PublicKey, aead_decrypt, aead_encrypt
 
 
@@ -29,8 +35,13 @@ def test_card_inner():
     with card.powered(reader_public_key) as powered_card:
         assert powered_card.read_metadata() == metadata
         assert powered_card.read_pin_counter() == MAX_PIN_ATTEMPTS
-        assert powered_card.read_successful_access_log_record() == LogRecord(reader_public_key, note)
-        assert powered_card.read_unsuccessful_access_log_records() == [None] * MAX_PIN_ATTEMPTS
+        assert powered_card.read_successful_access_log_record() == LogRecord(
+            reader_public_key, note
+        )
+        assert (
+            powered_card.read_unsuccessful_access_log_records()
+            == [None] * MAX_PIN_ATTEMPTS
+        )
 
     # MAX_PIN_ATTEMPTS - 1 unsuccessful recovery attempts
     attacker_public_key = PublicKey(b"attacker_reader_public_key")
@@ -43,15 +54,19 @@ def test_card_inner():
     with card.powered(reader_public_key) as powered_card:
         assert powered_card.read_metadata() == metadata
         assert powered_card.read_pin_counter() == 1
-        assert powered_card.read_successful_access_log_record() == LogRecord(reader_public_key, note)
-        assert powered_card.read_unsuccessful_access_log_records() == [LogRecord(attacker_public_key, note)] * (
-            MAX_PIN_ATTEMPTS - 1
-        ) + [None]
+        assert powered_card.read_successful_access_log_record() == LogRecord(
+            reader_public_key, note
+        )
+        assert powered_card.read_unsuccessful_access_log_records() == [
+            LogRecord(attacker_public_key, note)
+        ] * (MAX_PIN_ATTEMPTS - 1) + [None]
 
     # Recovery
     with card.powered(reader_public_key) as powered_card:
         encryption_key = powered_card.authenticate(pin, note)
-        decrypted_seed = aead_decrypt(encryption_key, powered_card.read_encrypted_seed())
+        decrypted_seed = aead_decrypt(
+            encryption_key, powered_card.read_encrypted_seed()
+        )
     assert decrypted_seed == seed
 
     # Healthcheck
@@ -60,7 +75,10 @@ def test_card_inner():
         assert record is not None
         assert record.public_key == reader_public_key
         assert record.note == note
-        assert powered_card.read_unsuccessful_access_log_records() == [None] * MAX_PIN_ATTEMPTS
+        assert (
+            powered_card.read_unsuccessful_access_log_records()
+            == [None] * MAX_PIN_ATTEMPTS
+        )
 
     # Operations forbidden without authentication
     with card.powered() as powered_card:

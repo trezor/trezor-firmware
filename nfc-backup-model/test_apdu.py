@@ -1,7 +1,15 @@
 import pytest
-
-from apdu import (ApduRequest, ApduResponse, DataTooShort, InvalidCla,
-                  InvalidIns, InvalidLe, InvalidP1, InvalidP2, TrailingBytes)
+from apdu import (
+    ApduRequest,
+    ApduResponse,
+    DataTooShort,
+    InvalidCla,
+    InvalidIns,
+    InvalidLe,
+    InvalidP1,
+    InvalidP2,
+    TrailingBytes,
+)
 
 H = bytes.fromhex
 
@@ -138,17 +146,33 @@ def test_encode_request(apdu: ApduRequest, expected_raw_apdu: bytes):
 
 
 ENCODE_REQUEST_ERROR_VECTORS = [
-    pytest.param(ApduRequest(0x100, 0xA4, 0x04, 0x00, b"", None), InvalidCla, id="cla-256"),
-    pytest.param(ApduRequest(-1, 0xA4, 0x04, 0x00, b"", None), InvalidCla, id="cla-negative"),
-    pytest.param(ApduRequest(0x00, 256, 0x04, 0x00, b"", None), InvalidIns, id="ins-256"),
-    pytest.param(ApduRequest(0x00, -1, 0x04, 0x00, b"", None), InvalidIns, id="ins-negative"),
+    pytest.param(
+        ApduRequest(0x100, 0xA4, 0x04, 0x00, b"", None), InvalidCla, id="cla-256"
+    ),
+    pytest.param(
+        ApduRequest(-1, 0xA4, 0x04, 0x00, b"", None), InvalidCla, id="cla-negative"
+    ),
+    pytest.param(
+        ApduRequest(0x00, 256, 0x04, 0x00, b"", None), InvalidIns, id="ins-256"
+    ),
+    pytest.param(
+        ApduRequest(0x00, -1, 0x04, 0x00, b"", None), InvalidIns, id="ins-negative"
+    ),
     pytest.param(ApduRequest(0x00, 0xA4, 256, 0x00, b"", None), InvalidP1, id="p1-256"),
-    pytest.param(ApduRequest(0x00, 0xA4, -1, 0x00, b"", None), InvalidP1, id="p1-negative"),
+    pytest.param(
+        ApduRequest(0x00, 0xA4, -1, 0x00, b"", None), InvalidP1, id="p1-negative"
+    ),
     pytest.param(ApduRequest(0x00, 0xA4, 0x04, 256, b"", None), InvalidP2, id="p2-256"),
-    pytest.param(ApduRequest(0x00, 0xA4, 0x04, -1, b"", None), InvalidP2, id="p2-negative"),
+    pytest.param(
+        ApduRequest(0x00, 0xA4, 0x04, -1, b"", None), InvalidP2, id="p2-negative"
+    ),
     pytest.param(ApduRequest(0x00, 0xA4, 0x04, 0x00, b"", 0), InvalidLe, id="le-0"),
-    pytest.param(ApduRequest(0x00, 0xA4, 0x04, 0x00, b"", -1), InvalidLe, id="le-negative"),
-    pytest.param(ApduRequest(0x00, 0xA4, 0x04, 0x00, b"", 65537), InvalidLe, id="le-65537"),
+    pytest.param(
+        ApduRequest(0x00, 0xA4, 0x04, 0x00, b"", -1), InvalidLe, id="le-negative"
+    ),
+    pytest.param(
+        ApduRequest(0x00, 0xA4, 0x04, 0x00, b"", 65537), InvalidLe, id="le-65537"
+    ),
 ]
 
 
@@ -308,8 +332,12 @@ DECODE_REQUEST_ERROR_VECTORS = [
     pytest.param(H("00"), DataTooShort, id="1-byte"),
     pytest.param(H("00A4"), DataTooShort, id="2-bytes"),
     pytest.param(H("00A404"), DataTooShort, id="3-bytes"),
-    pytest.param(H("00D60000 05 0102"), DataTooShort, id="short-lc-5-only-2-data-bytes"),
-    pytest.param(H("00D60000 03 0102"), DataTooShort, id="short-lc-3-only-2-data-bytes"),
+    pytest.param(
+        H("00D60000 05 0102"), DataTooShort, id="short-lc-5-only-2-data-bytes"
+    ),
+    pytest.param(
+        H("00D60000 03 0102"), DataTooShort, id="short-lc-3-only-2-data-bytes"
+    ),
     pytest.param(
         H("00D60000 01 FF AABB"),
         TrailingBytes,
@@ -477,7 +505,9 @@ ROUNDTRIP_REQUEST_VECTORS = [
     pytest.param(ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 1000), id="case2e-le-1000"),
     pytest.param(ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 65535), id="case2e-le-65535"),
     pytest.param(ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 65536), id="case2e-le-65536"),
-    pytest.param(ApduRequest(0x00, 0xD6, 0x00, 0x00, b"\x42", None), id="case3s-1-byte"),
+    pytest.param(
+        ApduRequest(0x00, 0xD6, 0x00, 0x00, b"\x42", None), id="case3s-1-byte"
+    ),
     pytest.param(
         ApduRequest(0x00, 0xD6, 0x00, 0x00, H("DEADBEEF"), None),
         id="case3s-4-bytes",
@@ -566,7 +596,9 @@ def test_response_survives_encode_decode_roundtrip(original_apdu: ApduResponse):
 ENCODE_REQUEST_LENGTH_VECTORS = [
     pytest.param(ApduRequest(0x00, 0xA4, 0x04, 0x00, b"", None), 4, id="case1-len-4"),
     pytest.param(ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 10), 5, id="case2s-len-5"),
-    pytest.param(ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 256), 5, id="case2s-le256-len-5"),
+    pytest.param(
+        ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 256), 5, id="case2s-le256-len-5"
+    ),
     pytest.param(ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 1000), 7, id="case2e-len-7"),
     pytest.param(
         ApduRequest(0x00, 0xD6, 0x00, 0x00, H("AABB"), None),
@@ -592,7 +624,9 @@ ENCODE_REQUEST_LENGTH_VECTORS = [
 
 
 @pytest.mark.parametrize("apdu, expected_length", ENCODE_REQUEST_LENGTH_VECTORS)
-def test_encode_request_produces_correct_length(apdu: ApduRequest, expected_length: int):
+def test_encode_request_produces_correct_length(
+    apdu: ApduRequest, expected_length: int
+):
     assert len(apdu.to_bytes()) == expected_length
 
 
@@ -608,14 +642,22 @@ ENCODE_RESPONSE_LENGTH_VECTORS = [
 
 
 @pytest.mark.parametrize("apdu, expected_length", ENCODE_RESPONSE_LENGTH_VECTORS)
-def test_encode_response_produces_correct_length(apdu: ApduResponse, expected_length: int):
+def test_encode_response_produces_correct_length(
+    apdu: ApduResponse, expected_length: int
+):
     assert len(apdu.to_bytes()) == expected_length
 
 
 HEADER_PREFIX_VECTORS = [
-    pytest.param(ApduRequest(0x00, 0xA4, 0x04, 0x00, b"", None), H("00A40400"), id="case1"),
-    pytest.param(ApduRequest(0x80, 0xCA, 0x01, 0x02, b"", 10), H("80CA0102"), id="case2s"),
-    pytest.param(ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 1000), H("00B00000"), id="case2e"),
+    pytest.param(
+        ApduRequest(0x00, 0xA4, 0x04, 0x00, b"", None), H("00A40400"), id="case1"
+    ),
+    pytest.param(
+        ApduRequest(0x80, 0xCA, 0x01, 0x02, b"", 10), H("80CA0102"), id="case2s"
+    ),
+    pytest.param(
+        ApduRequest(0x00, 0xB0, 0x00, 0x00, b"", 1000), H("00B00000"), id="case2e"
+    ),
     pytest.param(
         ApduRequest(0x00, 0xD6, 0x00, 0x00, H("FF"), None),
         H("00D60000"),
@@ -640,7 +682,9 @@ HEADER_PREFIX_VECTORS = [
 
 
 @pytest.mark.parametrize("apdu, expected_header_prefix", HEADER_PREFIX_VECTORS)
-def test_encoded_request_starts_with_header_bytes(apdu: ApduRequest, expected_header_prefix: bytes):
+def test_encoded_request_starts_with_header_bytes(
+    apdu: ApduRequest, expected_header_prefix: bytes
+):
     assert apdu.to_bytes()[:4] == expected_header_prefix
 
 
@@ -652,5 +696,7 @@ RESPONSE_STATUS_SUFFIX_VECTORS = [
 
 
 @pytest.mark.parametrize("apdu, expected_status_suffix", RESPONSE_STATUS_SUFFIX_VECTORS)
-def test_encoded_response_ends_with_status_bytes(apdu: ApduResponse, expected_status_suffix: bytes):
+def test_encoded_response_ends_with_status_bytes(
+    apdu: ApduResponse, expected_status_suffix: bytes
+):
     assert apdu.to_bytes()[-2:] == expected_status_suffix

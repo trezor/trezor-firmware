@@ -1,14 +1,15 @@
 import hmac
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
-import logging
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from crypto import PrivateKey, PublicKey, generate_keypair, public_key, dh
+from crypto import PrivateKey, PublicKey, dh, generate_keypair, public_key
 
 logger = logging.getLogger(__name__)
+
 
 class InitiatorXXPsk3State(Enum):
     READY_FOR_REQUEST1 = 1
@@ -40,7 +41,9 @@ def hmac_hash(key: bytes, data: bytes) -> bytes:
     return hmac.new(key, data, sha256).digest()
 
 
-def hkdf(chaining_key: bytes, input_key_material: bytes, num_outputs: int) -> tuple[bytes, ...]:
+def hkdf(
+    chaining_key: bytes, input_key_material: bytes, num_outputs: int
+) -> tuple[bytes, ...]:
     temp_key = hmac_hash(chaining_key, input_key_material)
     output1 = hmac_hash(temp_key, b"\x01")
     output2 = hmac_hash(temp_key, output1 + b"\x02")
@@ -82,7 +85,9 @@ class CipherState:
 class SymmetricState:
     def __init__(self, protocol_name: bytes = XX_PROTOCOL_NAME) -> None:
         if len(protocol_name) <= HASHLEN:
-            self.handshake_hash = protocol_name + b"\x00" * (HASHLEN - len(protocol_name))
+            self.handshake_hash = protocol_name + b"\x00" * (
+                HASHLEN - len(protocol_name)
+            )
         else:
             self.handshake_hash = hash(protocol_name)
         self.chaining_key = self.handshake_hash
@@ -96,7 +101,9 @@ class SymmetricState:
         self.cipher_state = CipherState(temp_k[:HASHLEN])
 
     def mix_key_and_hash(self, input_key_material: bytes) -> None:
-        self.chaining_key, temp_h, temp_k = hkdf(self.chaining_key, input_key_material, 3)
+        self.chaining_key, temp_h, temp_k = hkdf(
+            self.chaining_key, input_key_material, 3
+        )
         self.mix_hash(temp_h)
         self.cipher_state = CipherState(temp_k[:HASHLEN])
 
@@ -170,14 +177,20 @@ class InitiatorXXPsk3:
         self.symmetric_state.mix_hash(self.remote_ephemeral_public)
 
         logger.debug("ee")
-        self.symmetric_state.mix_key(dh(self.ephemeral_private, self.remote_ephemeral_public))
+        self.symmetric_state.mix_key(
+            dh(self.ephemeral_private, self.remote_ephemeral_public)
+        )
 
         logger.debug("s")
         encrypted_remote_static_public = message[DHLEN : DHLEN + DHLEN + AEAD_TAG_LEN]
-        self.remote_static_public = self.symmetric_state.decrypt_and_hash(encrypted_remote_static_public)
+        self.remote_static_public = self.symmetric_state.decrypt_and_hash(
+            encrypted_remote_static_public
+        )
 
         logger.debug("es")
-        self.symmetric_state.mix_key(dh(self.ephemeral_private, self.remote_static_public))
+        self.symmetric_state.mix_key(
+            dh(self.ephemeral_private, self.remote_static_public)
+        )
 
         logger.debug("payload")
         encrypted_payload = message[DHLEN + DHLEN + AEAD_TAG_LEN :]
@@ -193,10 +206,14 @@ class InitiatorXXPsk3:
         assert self.remote_ephemeral_public is not None
 
         logger.debug("s")
-        encrypted_static_public = self.symmetric_state.encrypt_and_hash(self.static_public)
+        encrypted_static_public = self.symmetric_state.encrypt_and_hash(
+            self.static_public
+        )
 
         logger.debug("se")
-        self.symmetric_state.mix_key(dh(self.static_private, self.remote_ephemeral_public))
+        self.symmetric_state.mix_key(
+            dh(self.static_private, self.remote_ephemeral_public)
+        )
 
         logger.debug("psk")
         self.symmetric_state.mix_key_and_hash(self.psk)
@@ -206,7 +223,9 @@ class InitiatorXXPsk3:
 
         c1, c2 = self.symmetric_state.split()
         self.transport_state = TransportState(
-            send_cipher_state=c1, receive_cipher_state=c2, handshake_hash=self.symmetric_state.handshake_hash
+            send_cipher_state=c1,
+            receive_cipher_state=c2,
+            handshake_hash=self.symmetric_state.handshake_hash,
         )
         return encrypted_static_public + encrypted_payload
 
@@ -238,7 +257,10 @@ class ResponderXXPsk3:
             raise ValueError()
         self.state = ResponderXXPsk3State.READY_FOR_RESPONSE1
 
-        self.remote_ephemeral_public, encrypted_payload = message[:DHLEN], message[DHLEN:]
+        self.remote_ephemeral_public, encrypted_payload = (
+            message[:DHLEN],
+            message[DHLEN:],
+        )
 
         logger.debug("e")
         self.symmetric_state.mix_hash(self.remote_ephemeral_public)
@@ -260,13 +282,19 @@ class ResponderXXPsk3:
         self.symmetric_state.mix_hash(ephemeral_public)
 
         logger.debug("ee")
-        self.symmetric_state.mix_key(dh(self.ephemeral_private, self.remote_ephemeral_public))
+        self.symmetric_state.mix_key(
+            dh(self.ephemeral_private, self.remote_ephemeral_public)
+        )
 
         logger.debug("s")
-        encrypted_static_public = self.symmetric_state.encrypt_and_hash(self.static_public)
+        encrypted_static_public = self.symmetric_state.encrypt_and_hash(
+            self.static_public
+        )
 
         logger.debug("se")
-        self.symmetric_state.mix_key(dh(self.static_private, self.remote_ephemeral_public))
+        self.symmetric_state.mix_key(
+            dh(self.static_private, self.remote_ephemeral_public)
+        )
 
         logger.debug("payload")
         encrypted_payload = self.symmetric_state.encrypt_and_hash(payload)
@@ -282,10 +310,14 @@ class ResponderXXPsk3:
 
         logger.debug("s")
         encrypted_remote_static_public = message[: DHLEN + AEAD_TAG_LEN]
-        self.remote_static_public = self.symmetric_state.decrypt_and_hash(encrypted_remote_static_public)
+        self.remote_static_public = self.symmetric_state.decrypt_and_hash(
+            encrypted_remote_static_public
+        )
 
         logger.debug("se")
-        self.symmetric_state.mix_key(dh(self.ephemeral_private, self.remote_static_public))
+        self.symmetric_state.mix_key(
+            dh(self.ephemeral_private, self.remote_static_public)
+        )
 
         logger.debug("psk")
         self.symmetric_state.mix_key_and_hash(self.psk)
@@ -296,6 +328,8 @@ class ResponderXXPsk3:
 
         c1, c2 = self.symmetric_state.split()
         self.transport_state = TransportState(
-            send_cipher_state=c2, receive_cipher_state=c1, handshake_hash=self.symmetric_state.handshake_hash
+            send_cipher_state=c2,
+            receive_cipher_state=c1,
+            handshake_hash=self.symmetric_state.handshake_hash,
         )
         return payload

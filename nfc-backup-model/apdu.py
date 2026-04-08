@@ -76,7 +76,9 @@ class ApduRequest:
     le: int | None  # None is interpreted as not expecting any response data
 
     @classmethod
-    def from_header(cls, header: ApduHeader, data: bytes = b"", le: int | None = None) -> "ApduRequest":
+    def from_header(
+        cls, header: ApduHeader, data: bytes = b"", le: int | None = None
+    ) -> "ApduRequest":
         return cls(header.cla, header.ins, header.p1, header.p2, data, le)
 
     @classmethod
@@ -186,7 +188,9 @@ def encode_extended_le(raw: bytearray, le: int):
 
 
 def encode_request(request: ApduRequest) -> bytes:
-    use_extended = len(request.data) > SHORT_LC_MAX or (request.le is not None and request.le > SHORT_LE_MAX)
+    use_extended = len(request.data) > SHORT_LC_MAX or (
+        request.le is not None and request.le > SHORT_LE_MAX
+    )
 
     raw = bytearray()
     encode_header(raw, request)

@@ -1,5 +1,4 @@
 import pytest
-
 from card import Card
 from card_inner import (
     MAX_PIN_ATTEMPTS,
@@ -9,8 +8,9 @@ from card_inner import (
     Pin,
     PinAttemptsExceededError,
 )
-from crypto import aead_decrypt, aead_encrypt, generate_keypair, public_key
 from reader import session
+
+from crypto import aead_decrypt, aead_encrypt, generate_keypair, public_key
 
 
 def test_card():
@@ -38,8 +38,12 @@ def test_card():
     with session(card, reader_private) as reader:
         assert reader.read_metadata() == metadata
         assert reader.read_pin_counter() == MAX_PIN_ATTEMPTS
-        assert reader.read_successful_access_log_record() == LogRecord(reader.static_public, note)
-        assert reader.read_unsuccessful_access_log_records() == [None] * MAX_PIN_ATTEMPTS
+        assert reader.read_successful_access_log_record() == LogRecord(
+            reader.static_public, note
+        )
+        assert (
+            reader.read_unsuccessful_access_log_records() == [None] * MAX_PIN_ATTEMPTS
+        )
 
     # MAX_PIN_ATTEMPTS - 1 unsuccessful recovery attempts
     for _ in range(MAX_PIN_ATTEMPTS - 1):
@@ -54,10 +58,12 @@ def test_card():
     with session(card, reader_private) as reader:
         assert reader.read_metadata() == metadata
         assert reader.read_pin_counter() == 1
-        assert reader.read_successful_access_log_record() == LogRecord(reader_public, note)
-        assert reader.read_unsuccessful_access_log_records() == [LogRecord(attacker_public, note)] * (
-            MAX_PIN_ATTEMPTS - 1
-        ) + [None]
+        assert reader.read_successful_access_log_record() == LogRecord(
+            reader_public, note
+        )
+        assert reader.read_unsuccessful_access_log_records() == [
+            LogRecord(attacker_public, note)
+        ] * (MAX_PIN_ATTEMPTS - 1) + [None]
 
     # Recovery
     with session(card, reader_private) as reader:
@@ -71,7 +77,9 @@ def test_card():
         assert record is not None
         assert record.public_key == reader_public
         assert record.note == note
-        assert reader.read_unsuccessful_access_log_records() == [None] * MAX_PIN_ATTEMPTS
+        assert (
+            reader.read_unsuccessful_access_log_records() == [None] * MAX_PIN_ATTEMPTS
+        )
 
     # Operations forbidden without authentication
     with session(card, reader_private) as reader:

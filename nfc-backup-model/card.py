@@ -8,8 +8,9 @@ import commands
 from apdu import ApduRequest, ApduResponse
 from card_inner import CardInner, Pin
 from commands import OK
-from crypto import PrivateKey, PublicKey, random_bytes
 from noise import ResponderXXPsk3, TransportState
+
+from crypto import PrivateKey, PublicKey, random_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,9 @@ class State:
 
 @dataclass
 class RawState(State):
-    def handle_raw_request(self, card: CardInner, static_key: PrivateKey, raw_request: bytes) -> tuple[bytes, State]:
+    def handle_raw_request(
+        self, card: CardInner, static_key: PrivateKey, raw_request: bytes
+    ) -> tuple[bytes, State]:
         raise NotImplementedError
 
 
@@ -55,7 +58,10 @@ class IdleState(ApduState):
         self, card: CardInner, static_key: bytes, apdu_request: ApduRequest
     ) -> tuple[ApduResponse, State]:
         match apdu_request:
-            case ApduRequest(command=commands.SELECT_APPLICATION, data=commands.TREZOR_APPLICATION_AID):
+            case ApduRequest(
+                command=commands.SELECT_APPLICATION,
+                data=commands.TREZOR_APPLICATION_AID,
+            ):
                 logging.debug("command=SELECT_APPLICATION, data=TREZOR_APPLICATION_AID")
                 return (
                     ApduResponse.from_status(OK),
@@ -67,7 +73,9 @@ class IdleState(ApduState):
 
 @dataclass
 class TrezorNonceState(RawState):
-    def handle_raw_request(self, card: CardInner, static_key: PrivateKey, raw_request: bytes) -> tuple[bytes, State]:
+    def handle_raw_request(
+        self, card: CardInner, static_key: PrivateKey, raw_request: bytes
+    ) -> tuple[bytes, State]:
         remote_psk = raw_request  # TODO: Use error-correcting code in the request
         logging.debug(f'remote_psk=bytes.from_hex("{remote_psk.hex()}")')
         if len(remote_psk) != commands.READER_PSK_LENGTH:
@@ -120,7 +128,9 @@ class TrezorHandshakeState2(ApduState):
                 remote_static_key = PublicKey(self.responder.remote_static_public)
                 transport_state = self.responder.get_transport_state()
                 response = transport_state.send_cipher_state.encrypt_with_ad(b"", b"")
-                powered_card = CardInner.PoweredInnerCard(card.storage, remote_static_key)
+                powered_card = CardInner.PoweredInnerCard(
+                    card.storage, remote_static_key
+                )
                 return (
                     ApduResponse.from_status(OK, response),
                     TrezorSecureChannelState(
@@ -192,13 +202,19 @@ class TrezorSecureChannelState(ApduState):
                     case File.ENCRYPTED_SEED:
                         response_data = self.powered_card.read_encrypted_seed()
                     case File.PIN_COUNTER:
-                        response_data = self.powered_card.read_pin_counter().to_bytes(4, "big")
+                        response_data = self.powered_card.read_pin_counter().to_bytes(
+                            4, "big"
+                        )
                     case File.SUCCESSFUL_LOG:
                         # TODO: Decide how to encode the log record
-                        response_data = pickle.dumps(self.powered_card.read_successful_access_log_record())
+                        response_data = pickle.dumps(
+                            self.powered_card.read_successful_access_log_record()
+                        )
                     case File.UNSUCCESSFUL_LOG:
                         # TODO: Decide how to encode the log records
-                        response_data = pickle.dumps(self.powered_card.read_unsuccessful_access_log_records())
+                        response_data = pickle.dumps(
+                            self.powered_card.read_unsuccessful_access_log_records()
+                        )
                     case _:
                         raise UnexpectedRequest
             case commands.WRITE_BINARY:
@@ -215,7 +231,15 @@ class TrezorSecureChannelState(ApduState):
             case _:
                 raise UnexpectedRequest
 
-        return (ApduResponse.from_status(OK, self.transport_state.send_cipher_state.encrypt_with_ad(b"", response_data)), self)
+        return (
+            ApduResponse.from_status(
+                OK,
+                self.transport_state.send_cipher_state.encrypt_with_ad(
+                    b"", response_data
+                ),
+            ),
+            self,
+        )
 
 
 class Card:
@@ -241,7 +265,9 @@ class Card:
                 case ApduState():
                     apdu = ApduRequest.from_bytes(request)
                     logger.debug(f"apdu={apdu}")
-                    apdu_response, state = self.state.handle_apdu_request(self.card, self.static_key, apdu)
+                    apdu_response, state = self.state.handle_apdu_request(
+                        self.card, self.static_key, apdu
+                    )
                     self.state = state
                     logger.debug(f"state={self.state}")
                     logger.debug(f"apdu_response={apdu_response}")
@@ -249,7 +275,9 @@ class Card:
                     logger.debug(f'response=bytes.fromhex("{response.hex()}")')
                     return response
                 case RawState():
-                    response, state = self.state.handle_raw_request(self.card, self.static_key, request)
+                    response, state = self.state.handle_raw_request(
+                        self.card, self.static_key, request
+                    )
                     logger.debug(f'response=bytes.fromhex("{response.hex()}")')
                     self.state = state
                     logger.debug(f"state={self.state}")
