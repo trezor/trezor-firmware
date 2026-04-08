@@ -167,10 +167,12 @@ class TrezorSecureChannelState(ApduState):
                 logging.debug("command=TREZOR_AUTHENTICATE")
                 # TODO: Decide how to encode PIN and note
                 pin, note = pickle.loads(data)
-                response_data = self.powered_card.authenticate(pin, note)
+                self.powered_card.authenticate(pin, note)
+                response_data = b""
             case commands.TREZOR_SET_PIN:
                 logging.debug("command=TREZOR_SET_PIN")
-                response_data = self.powered_card.set_pin(Pin(data))
+                self.powered_card.set_pin(Pin(data))
+                response_data = b""
             case commands.TREZOR_WIPE:
                 logging.debug("command=TREZOR_WIPE")
                 self.powered_card.wipe()
@@ -202,7 +204,7 @@ class TrezorSecureChannelState(ApduState):
                     case File.METADATA:
                         response_data = self.powered_card.read_metadata()
                     case File.ENCRYPTED_SEED:
-                        response_data = self.powered_card.read_encrypted_seed()
+                        response_data = self.powered_card.read_seed()
                     case File.PIN_COUNTER:
                         response_data = self.powered_card.read_pin_counter().to_bytes(
                             4, "big"
@@ -226,7 +228,7 @@ class TrezorSecureChannelState(ApduState):
                         self.powered_card.write_metadata(data)
                         response_data = b""
                     case File.ENCRYPTED_SEED:
-                        self.powered_card.write_encrypted_seed(data)
+                        self.powered_card.write_seed(data)
                         response_data = b""
                     case _:
                         raise UnexpectedRequest

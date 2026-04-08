@@ -11,12 +11,8 @@ from card_inner import (
 from reader import session
 
 from crypto import (
-    AEAD_NONCE_SIZE,
-    aead_decrypt,
-    aead_encrypt,
     generate_keypair,
     public_key,
-    random_bytes,
 )
 
 
@@ -37,9 +33,8 @@ def test_card() -> None:
     with session(card, reader_private) as reader:
         reader.wipe()
         reader.authenticate(empty_pin, note)
-        encryption_key = reader.set_pin(pin)
-        nonce = random_bytes(AEAD_NONCE_SIZE)
-        reader.write_encrypted_seed(nonce + aead_encrypt(encryption_key, nonce, seed))
+        reader.set_pin(pin)
+        reader.write_seed(seed)
         reader.write_metadata(metadata)
 
     # Healthcheck (without authentication)
@@ -75,14 +70,8 @@ def test_card() -> None:
 
     # Recovery
     with session(card, reader_private) as reader:
-        encryption_key = reader.authenticate(pin, note)
-        encrypted_seed = reader.read_encrypted_seed()
-        decrypted_seed = aead_decrypt(
-            encryption_key,
-            encrypted_seed[:AEAD_NONCE_SIZE],
-            encrypted_seed[AEAD_NONCE_SIZE:],
-        )
-    assert decrypted_seed == seed
+        reader.authenticate(pin, note)
+        assert reader.read_seed() == seed
 
     # Healthcheck
     with session(card, reader_private) as reader:
@@ -99,19 +88,18 @@ def test_card() -> None:
         with pytest.raises(NotAuthenticatedError):
             reader.set_pin(empty_pin)
         with pytest.raises(NotAuthenticatedError):
-            reader.write_encrypted_seed(b"")
+            reader.write_seed(b"")
         with pytest.raises(NotAuthenticatedError):
             reader.write_metadata(metadata)
         with pytest.raises(NotAuthenticatedError):
-            reader.read_encrypted_seed()
+            reader.read_seed()
 
     # Wipe and backup again
     with session(card, reader_private) as reader:
         reader.wipe()
         reader.authenticate(empty_pin, note)
-        encryption_key = reader.set_pin(pin)
-        nonce = random_bytes(AEAD_NONCE_SIZE)
-        reader.write_encrypted_seed(nonce + aead_encrypt(encryption_key, nonce, seed))
+        reader.set_pin(pin)
+        reader.write_seed(seed)
         reader.write_metadata(metadata)
 
     # MAX_PIN_ATTEMPTS unsuccessful recovery attempts

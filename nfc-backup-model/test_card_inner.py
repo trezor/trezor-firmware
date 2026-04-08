@@ -10,11 +10,7 @@ from card_inner import (
 )
 
 from crypto import (
-    AEAD_NONCE_SIZE,
     PublicKey,
-    aead_decrypt,
-    aead_encrypt,
-    random_bytes,
 )
 
 
@@ -33,11 +29,8 @@ def test_card_inner() -> None:
     with card.powered(reader_public_key) as powered_card:
         powered_card.wipe()
         powered_card.authenticate(empty_pin, note)
-        encryption_key = powered_card.set_pin(pin)
-        nonce = random_bytes(AEAD_NONCE_SIZE)
-        powered_card.write_encrypted_seed(
-            nonce + aead_encrypt(encryption_key, nonce, seed)
-        )
+        powered_card.set_pin(pin)
+        powered_card.write_seed(seed)
         powered_card.write_metadata(metadata)
 
     # Healthcheck (without authentication)
@@ -72,14 +65,8 @@ def test_card_inner() -> None:
 
     # Recovery
     with card.powered(reader_public_key) as powered_card:
-        encryption_key = powered_card.authenticate(pin, note)
-        encrypted_seed = powered_card.read_encrypted_seed()
-        decrypted_seed = aead_decrypt(
-            encryption_key,
-            encrypted_seed[:AEAD_NONCE_SIZE],
-            encrypted_seed[AEAD_NONCE_SIZE:],
-        )
-    assert decrypted_seed == seed
+        powered_card.authenticate(pin, note)
+        assert powered_card.read_seed() == seed
 
     # Healthcheck
     with card.powered(reader_public_key) as powered_card:
@@ -100,21 +87,18 @@ def test_card_inner() -> None:
         with pytest.raises(NotAuthenticatedError):
             powered_card.set_pin(empty_pin)
         with pytest.raises(NotAuthenticatedError):
-            powered_card.write_encrypted_seed(b"")
+            powered_card.write_seed(b"")
         with pytest.raises(NotAuthenticatedError):
             powered_card.write_metadata(metadata)
         with pytest.raises(NotAuthenticatedError):
-            powered_card.read_encrypted_seed()
+            powered_card.read_seed()
 
     # Wipe and backup again
     with card.powered(reader_public_key) as powered_card:
         powered_card.wipe()
         powered_card.authenticate(empty_pin, note)
-        encryption_key = powered_card.set_pin(pin)
-        nonce = random_bytes(AEAD_NONCE_SIZE)
-        powered_card.write_encrypted_seed(
-            nonce + aead_encrypt(encryption_key, nonce, seed)
-        )
+        powered_card.set_pin(pin)
+        powered_card.write_seed(seed)
         powered_card.write_metadata(metadata)
 
     # MAX_PIN_ATTEMPTS unsuccessful recovery attempts
@@ -130,4 +114,4 @@ def test_card_inner() -> None:
     # Card is wiped after exceeding pin attempts
     with card.powered(reader_public_key) as powered_card:
         assert powered_card.read_pin_counter() == MAX_PIN_ATTEMPTS
-        assert not powered_card.authenticated
+        assert not powered_card.data_encryption_key

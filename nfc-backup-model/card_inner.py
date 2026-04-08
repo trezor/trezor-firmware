@@ -4,7 +4,15 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import NewType
 
-from crypto import PublicKey, hmac_hash, random_bytes
+from crypto import (
+    AEAD_NONCE_SIZE,
+    DecryptionError,
+    PublicKey,
+    aead_decrypt,
+    aead_encrypt,
+    hmac_hash,
+    random_bytes,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +21,8 @@ Pin = NewType("Pin", bytes)
 MAX_PIN_ATTEMPTS = 10
 DEFAULT_PIN = Pin(b"")
 STRETCHING_KEY_SIZE_BYTES = 16
+SALT_SIZE_BYTES = 16
+AEAD_KEY_SIZE_BYTES = 32
 
 
 class NfcBackupModelError(Exception):
@@ -47,9 +57,9 @@ class Storage:
     unsuccessful_access_log_records: list[LogRecord | None] = field(
         default_factory=lambda: [None] * MAX_PIN_ATTEMPTS
     )
+    salt: bytes = b""
+    encrypted_data_encryption_key: bytes = b""
     seed_metadata: bytes = b""
-    stretching_key: bytes = b""
-    pin_tag: bytes = b""
     encrypted_seed: bytes = b""
 
     def check_integrity(self) -> bool:
@@ -85,7 +95,7 @@ class CardInner:
 
             # This is stored in RAM
             self.reader_public_key = reader_public_key
-            self.authenticated = False
+            self.data_encryption_key: bytes | None = None
 
         # | Method                                | Requires PIN | Requires Trezor |
         # | ------------------------------------- | -----------: | --------------: |
@@ -97,13 +107,35 @@ class CardInner:
         # | read_successful_access_log_record     |           no |              no |
         # | read_unsuccessful_access_log_records  |           no |              no |
         # | read_metadata                         |           no |              no |
-        # | read_encrypted_seed                   |          yes |             yes |
+        # | read_seed                             |          yes |             yes |
         # | write_metadata                        |          yes |             yes |
-        # | write_encrypted_seed                  |          yes |             yes |
+        # | write_seed                            |          yes |             yes |
 
-        def _stretch_pin(self, pin: Pin) -> tuple[bytes, bytes]:
-            stretched = hmac_hash(self.storage.stretching_key, pin)
-            return stretched[:16], stretched[16:]
+        @classmethod
+        def wrap_data_encryption_key(
+            cls, pin: Pin, encryption_key: bytes
+        ) -> tuple[bytes, bytes]:
+            salt = random_bytes(SALT_SIZE_BYTES)
+            # The purpose of the salt is to prevent the use of precomputed tables
+            # to brute-force the PIN if an attacker manages to read `salt` and
+            # `encrypted_data_encryption_key`
+            salted_pin = hmac_hash(pin, salt)
+            # The nonce is intentionally constant because the encryption key
+            # (`salted_pin`) is guaranteed never to be used twice
+            encrypted_data_encryption_key = aead_encrypt(
+                salted_pin, bytes(AEAD_NONCE_SIZE), encryption_key
+            )
+            return salt, encrypted_data_encryption_key
+
+        @classmethod
+        def unwrap_data_encryption_key(
+            cls, pin: Pin, salt: bytes, encrypted_data_encryption_key: bytes
+        ) -> bytes:
+            salted_pin = hmac_hash(pin, salt)
+            data_encryption_key = aead_decrypt(
+                salted_pin, bytes(AEAD_NONCE_SIZE), encrypted_data_encryption_key
+            )
+            return data_encryption_key
 
         def check_integrity(self) -> bool:
             logger.info("CardInner.check_integrity()")
@@ -122,16 +154,20 @@ class CardInner:
                 # and `stretching_key` are wiped before `pin_counter` is set
                 # to its maximum value
                 self.storage.encrypted_seed = b""
-                self.storage.stretching_key = random_bytes(STRETCHING_KEY_SIZE_BYTES)
                 self.storage.seed_metadata = b""
                 self.storage.pin_counter = MAX_PIN_ATTEMPTS
                 self.storage.successful_access_log_record = None
                 self.storage.unsuccessful_access_log_records = [None] * MAX_PIN_ATTEMPTS
-                self.storage.pin_tag, _ = self._stretch_pin(Pin(b""))
+                (
+                    self.storage.salt,
+                    self.storage.encrypted_data_encryption_key,
+                ) = self.wrap_data_encryption_key(
+                    DEFAULT_PIN, random_bytes(AEAD_KEY_SIZE_BYTES)
+                )
 
             self.authenticated = False
 
-        def authenticate(self, pin: Pin, note: bytes) -> bytes:
+        def authenticate(self, pin: Pin, note: bytes) -> None:
             logger.info("CardInner.authenticate()")
             logger.debug(f"pin={pin!r}, note={note!r}")
 
@@ -153,11 +189,14 @@ class CardInner:
                     MAX_PIN_ATTEMPTS - self.storage.pin_counter - 1
                 ] = LogRecord(self.reader_public_key, note)
 
-            tag, stretched_pin = self._stretch_pin(pin)
-            if tag != self.storage.pin_tag:
+            try:
+                self.data_encryption_key = self.unwrap_data_encryption_key(
+                    pin, self.storage.salt, self.storage.encrypted_data_encryption_key
+                )
+            except DecryptionError:
                 if self.storage.pin_counter == 0:
                     self.wipe()
-                    self.authenticated = False
+                    self.data_encryption_key = None
                     raise PinAttemptsExceededError()
                 raise InvalidPinError()
 
@@ -168,22 +207,18 @@ class CardInner:
                 self.storage.unsuccessful_access_log_records = [None] * MAX_PIN_ATTEMPTS
                 self.storage.pin_counter = MAX_PIN_ATTEMPTS
 
-            self.authenticated = True
-            logger.debug(f"stretched_pin={stretched_pin!r}")
-            return stretched_pin
-
-        def set_pin(self, pin: Pin) -> bytes:
+        def set_pin(self, pin: Pin) -> None:
             logger.info("CardInner.set_pin()")
             logger.debug(f"pin={pin!r}")
 
-            if not self.authenticated:
+            if self.data_encryption_key is None:
                 raise NotAuthenticatedError()
 
             with self.storage.atomic_session():
-                self.storage.stretching_key = random_bytes(STRETCHING_KEY_SIZE_BYTES)
-                self.storage.pin_tag, stretched_pin = self._stretch_pin(pin)
-            logger.debug(f"stretched_pin={stretched_pin!r}")
-            return stretched_pin
+                (
+                    self.storage.salt,
+                    self.storage.encrypted_data_encryption_key,
+                ) = self.wrap_data_encryption_key(pin, self.data_encryption_key)
 
         def read_pin_counter(self) -> int:
             logger.info("CardInner.read_pin_counter()")
@@ -210,34 +245,41 @@ class CardInner:
             logger.debug(f"seed_metadata={seed_metadata!r}")
             return seed_metadata
 
-        def read_encrypted_seed(self) -> bytes:
-            logger.info("CardInner.read_encrypted_seed()")
+        def read_seed(self) -> bytes:
+            logger.info("CardInner.read_seed()")
 
-            if not self.authenticated:
+            if self.data_encryption_key is None:
                 raise NotAuthenticatedError()
 
-            encrypted_seed = self.storage.encrypted_seed
-            logger.debug(f"encrypted_seed={encrypted_seed!r}")
-            return encrypted_seed
+            seed = aead_decrypt(
+                self.data_encryption_key,
+                self.storage.encrypted_seed[:AEAD_NONCE_SIZE],
+                self.storage.encrypted_seed[AEAD_NONCE_SIZE:],
+            )
+            logger.debug(f"seed={seed!r}")
+            return seed
 
         def write_metadata(self, seed_metadata: bytes) -> None:
             logger.info("CardInner.write_metadata()")
             logger.debug(f"seed_metadata={seed_metadata!r}")
 
-            if not self.authenticated:
+            if self.data_encryption_key is None:
                 raise NotAuthenticatedError()
 
             with self.storage.atomic_session():
                 self.storage.seed_metadata = seed_metadata
 
-        def write_encrypted_seed(self, encrypted_seed: bytes) -> None:
-            logger.info("CardInner.write_encrypted_seed()")
-            logger.debug(f"encrypted_seed={encrypted_seed!r}")
+        def write_seed(self, seed: bytes) -> None:
+            logger.info("CardInner.write_seed()")
+            logger.debug(f"seed={seed!r}")
 
-            if not self.authenticated:
+            if self.data_encryption_key is None:
                 raise NotAuthenticatedError()
 
+            nonce = random_bytes(AEAD_NONCE_SIZE)
+            encrypted_seed = nonce + aead_encrypt(self.data_encryption_key, nonce, seed)
+
             with self.storage.atomic_session():
-                self.storage.encrypted_seed = bytes(encrypted_seed)
+                self.storage.encrypted_seed = encrypted_seed
 
         # TODO: Add methods for setting and getting NDEF record

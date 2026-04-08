@@ -115,7 +115,7 @@ class Reader:
         result: list[LogRecord | None] = pickle.loads(self._read_binary())
         return result
 
-    def read_encrypted_seed(self) -> bytes:
+    def read_seed(self) -> bytes:
         self._select_file(commands.SEED_FILE)
         return self._read_binary()
 
@@ -123,7 +123,7 @@ class Reader:
         self._select_file(commands.SEED_METADATA_FILE)
         self._write_binary(data)
 
-    def write_encrypted_seed(self, data: bytes) -> None:
+    def write_seed(self, data: bytes) -> None:
         self._select_file(commands.SEED_FILE)
         self._write_binary(data)
 

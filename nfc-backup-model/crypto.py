@@ -28,7 +28,7 @@ class DecryptionError(BaseException):
 
 def aead_encrypt(
     key: bytes, nonce: bytes, plaintext: bytes, associated_data: bytes = b""
-):
+) -> bytes:
     aesgcm = AESGCM(key)
     ciphertext_with_tag = aesgcm.encrypt(nonce, plaintext, associated_data)
     return ciphertext_with_tag
@@ -36,7 +36,7 @@ def aead_encrypt(
 
 def aead_decrypt(
     key: bytes, nonce: bytes, ciphertext_with_tag: bytes, associated_data: bytes = b""
-):
+) -> bytes:
     aesgcm = AESGCM(key)
     try:
         plaintext = aesgcm.decrypt(nonce, ciphertext_with_tag, associated_data)
