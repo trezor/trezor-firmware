@@ -36,7 +36,7 @@ async def pair_new_device() -> None:
     from trezor import TR
 
     label = storage_device.get_label() or _default_ble_name()
-    ble.start_advertising(False, label)
+    label = ble.start_advertising(False, label)
     result = None
     try:
         code = await interact(
@@ -65,4 +65,4 @@ async def pair_new_device() -> None:
     finally:
         if result is not CONFIRMED:
             ble.reject_pairing()
-        ble.set_name(storage_device.get_label())
+        ble.set_name(label)

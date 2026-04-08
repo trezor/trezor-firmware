@@ -55,7 +55,7 @@ def start_comm():
 
 
 # rust/src/trezorhal/ble/micropython.rs
-def start_advertising(whitelist: bool, name: str | None):
+def start_advertising(whitelist: bool, name: str | None) -> str:
     """
     Start advertising.
     Raises exception if BLE driver reports an error.
