@@ -6,7 +6,7 @@ from hashlib import sha256
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from crypto import PrivateKey, PublicKey, dh, generate_keypair, public_key
+from crypto import PrivateKey, dh, generate_keypair, public_key
 
 logger = logging.getLogger(__name__)
 

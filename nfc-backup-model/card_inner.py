@@ -1,9 +1,6 @@
-import dataclasses
 import logging
 from contextlib import contextmanager
-from copy import deepcopy
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import NewType
 
 from crypto import PublicKey, hmac_hash, random_bytes
