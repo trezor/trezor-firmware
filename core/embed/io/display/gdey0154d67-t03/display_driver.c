@@ -805,10 +805,16 @@ void display_ep_demo(void) {
                    DISPLAY_PARTIAL_MODE);
 #else
   display_color_fill(DISPLAY_COLOR_WHITE);
-  display_img_show(gImage_address_p1, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
+  display_img_show(gImage_receive_address, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
                    DISPLAY_SLOW_MODE);
-  systick_delay_ms(5000);
-  display_img_show(gImage_address_p1_inv, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
+  systick_delay_ms(10000);
+  display_img_show(gImage_summary, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
+                   DISPLAY_SLOW_MODE);
+  systick_delay_ms(10000);
+  display_img_show(gImage_receive_address_inv, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
+                   DISPLAY_SLOW_MODE);
+  systick_delay_ms(10000);
+  display_img_show(gImage_summary_inv, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
                    DISPLAY_SLOW_MODE);
 #endif
 
