@@ -12619,7 +12619,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x11entropyCommitment\x12!\n\x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bpr\
     evEntropy\"&\n\nEntropyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\
     \x07entropy\"\x13\n\x11EntropyCheckReady\"5\n\x14EntropyCheckContinue\
-    \x12\x1d\n\x06finish\x18\x01\x20\x01(\x08:\x05falseR\x06finish\"\xe8\x04\
+    \x12\x1d\n\x06finish\x18\x01\x20\x01(\x08:\x05falseR\x06finish\"\xdf\x04\
     \n\x0eRecoveryDevice\x12\x1d\n\nword_count\x18\x01\x20\x01(\rR\twordCoun\
     t\x123\n\x15passphrase_protection\x18\x02\x20\x01(\x08R\x14passphrasePro\
     tection\x12%\n\x0epin_protection\x18\x03\x20\x01(\x08R\rpinProtection\
@@ -12629,44 +12629,43 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\x0e2G.hw.trezor.messages.management.RecoveryDevice.RecoveryDev\
     iceInputMethodR\x0binputMethod\x12\x1f\n\x0bu2f_counter\x18\t\x20\x01(\r\
     R\nu2fCounter\x12O\n\x04type\x18\n\x20\x01(\x0e2+.hw.trezor.messages.man\
-    agement.RecoveryType:\x0eNormalRecoveryR\x04type\x12Y\n\rbackup_method\
-    \x18\x0b\x20\x01(\x0e2+.hw.trezor.messages.management.BackupMethod:\x07D\
-    isplayR\x0cbackupMethod\";\n\x19RecoveryDeviceInputMethod\x12\x12\n\x0eS\
-    crambledWords\x10\0\x12\n\n\x06Matrix\x10\x01J\x04\x08\x07\x10\x08\"\xc5\
-    \x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.me\
-    ssages.management.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWordReque\
-    stType\x12\x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequest\
-    Type_Matrix9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\
-    \n\x07WordAck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2F\
-    Counter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\
-    \x11GetNextU2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\
-    \x18\x01\x20\x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14P\
-    reauthorizedRequest\"\x15\n\x13CancelAuthorization\"\xeb\x01\n\x12Reboot\
-    ToBootloader\x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.mes\
-    sages.management.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bboot\
-    Command\x12'\n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeade\
-    r\"5\n\x0bBootCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTAL\
-    L_UPGRADE\x10\x01J\x04\x08\x03\x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonc\
-    e\x12\x14\n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\
-    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\
-    \x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\
-    \x18\x01\x20\x02(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10U\
-    nlockBootloader\"%\n\rSetBrightness\x12\x14\n\x05value\x18\x01\x20\x01(\
-    \rR\x05value\"\x11\n\x0fGetSerialNumber\"3\n\x0cSerialNumber\x12#\n\rser\
-    ial_number\x18\x01\x20\x02(\tR\x0cserialNumber*\x99\x01\n\nBackupType\
-    \x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fS\
-    lip39_Advanced\x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\
-    \x1b\n\x17Slip39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_E\
-    xtendable\x10\x05*%\n\x0cBackupMethod\x12\x0b\n\x07Display\x10\0\x12\x08\
-    \n\x04N4W1\x10\x01*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\
-    \x10\n\x0cPromptAlways\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\
-    \n\x0fDisplayRotation\x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\
-    \n\n\x05South\x10\xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenF\
-    ormat\x12\x08\n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04T\
-    oiG\x10\x03*H\n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\
-    \n\x06DryRun\x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.s\
-    atoshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\
-    \x01\
+    agement.RecoveryType:\x0eNormalRecoveryR\x04type\x12P\n\rbackup_method\
+    \x18\x0b\x20\x01(\x0e2+.hw.trezor.messages.management.BackupMethodR\x0cb\
+    ackupMethod\";\n\x19RecoveryDeviceInputMethod\x12\x12\n\x0eScrambledWord\
+    s\x10\0\x12\n\n\x06Matrix\x10\x01J\x04\x08\x07\x10\x08\"\xc5\x01\n\x0bWo\
+    rdRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.messages.manag\
+    ement.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWordRequestType\x12\
+    \x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequestType_Matri\
+    x9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\n\x07WordA\
+    ck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2FCounter\x12\
+    \x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNext\
+    U2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\
+    \x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14Preauthorized\
+    Request\"\x15\n\x13CancelAuthorization\"\xeb\x01\n\x12RebootToBootloader\
+    \x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.manage\
+    ment.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\
+    \n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBo\
+    otCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\
+    \x10\x01J\x04\x08\x03\x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\
+    \n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\ta\
+    ddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\
+    \x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\
+    \x20\x02(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBoo\
+    tloader\"%\n\rSetBrightness\x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05va\
+    lue\"\x11\n\x0fGetSerialNumber\"3\n\x0cSerialNumber\x12#\n\rserial_numbe\
+    r\x18\x01\x20\x02(\tR\x0cserialNumber*\x99\x01\n\nBackupType\x12\t\n\x05\
+    Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanc\
+    ed\x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Sl\
+    ip39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\
+    \x10\x05*%\n\x0cBackupMethod\x12\x0b\n\x07Display\x10\0\x12\x08\n\x04N4W\
+    1\x10\x01*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cP\
+    romptAlways\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDispla\
+    yRotation\x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\
+    \x10\xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\
+    \n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\
+    \n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\
+    \x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.satoshilabs.t\
+    rezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

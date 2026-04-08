@@ -3884,7 +3884,7 @@ class RecoveryDevice(protobuf.MessageType):
         8: protobuf.Field("input_method", "RecoveryDeviceInputMethod", repeated=False, required=False, default=None),
         9: protobuf.Field("u2f_counter", "uint32", repeated=False, required=False, default=None),
         10: protobuf.Field("type", "RecoveryType", repeated=False, required=False, default=RecoveryType.NormalRecovery),
-        11: protobuf.Field("backup_method", "BackupMethod", repeated=False, required=False, default=BackupMethod.Display),
+        11: protobuf.Field("backup_method", "BackupMethod", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3899,7 +3899,7 @@ class RecoveryDevice(protobuf.MessageType):
         input_method: Optional["RecoveryDeviceInputMethod"] = None,
         u2f_counter: Optional["int"] = None,
         type: Optional["RecoveryType"] = RecoveryType.NormalRecovery,
-        backup_method: Optional["BackupMethod"] = BackupMethod.Display,
+        backup_method: Optional["BackupMethod"] = None,
     ) -> None:
         self.word_count = word_count
         self.passphrase_protection = passphrase_protection

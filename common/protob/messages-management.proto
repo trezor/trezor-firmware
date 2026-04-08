@@ -528,7 +528,7 @@ message RecoveryDevice {
     optional RecoveryDeviceInputMethod input_method = 8;         // supported recovery input method (T1 only)
     optional uint32 u2f_counter = 9;                             // U2F counter
     optional RecoveryType type = 10 [default = NormalRecovery];  // the type of recovery to perform
-    optional BackupMethod backup_method = 11 [default = Display];  // how the shares should be recovered from backup
+    optional BackupMethod backup_method = 11;                    // how the shares should be recovered from backup
     /**
      * Type of recovery procedure. These should be used as bitmask, e.g.,
      * `RecoveryDeviceInputMethod_ScrambledWords | RecoveryDeviceInputMethod_Matrix`

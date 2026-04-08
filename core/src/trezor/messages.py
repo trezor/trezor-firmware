@@ -2587,7 +2587,7 @@ if TYPE_CHECKING:
         input_method: "RecoveryDeviceInputMethod | None"
         u2f_counter: "int | None"
         type: "RecoveryType"
-        backup_method: "BackupMethod"
+        backup_method: "BackupMethod | None"
 
         def __init__(
             self,
