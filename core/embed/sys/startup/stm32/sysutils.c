@@ -269,8 +269,8 @@ __attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl(
 }
 
 #ifdef SECMON
-__attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl_ns(
-    uint32_t vectbl_addr) {
+__attribute((naked, noreturn,
+             no_stack_protector)) void jump_to_vectbl_ns(uint32_t vectbl_addr) {
   __asm__ volatile(
       "MOV      LR, R0             \n"
 

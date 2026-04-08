@@ -71,38 +71,32 @@ void get_boardloader_version(boardloader_version_t *version) {
 
 void reboot_to_bootloader(void) {
   smcall_invoke0(SMCALL_REBOOT_TO_BOOTLOADER);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_and_upgrade(const uint8_t hash[32]) {
   smcall_invoke1((uint32_t)hash, SMCALL_REBOOT_AND_UPGRADE);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_device(void) {
   smcall_invoke0(SMCALL_REBOOT_DEVICE);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_or_halt_after_rsod(void) {
   smcall_invoke0(SMCALL_REBOOT_DEVICE);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_to_off(void) {
   smcall_invoke0(SMCALL_REBOOT_TO_OFF);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_with_rsod(const systask_postmortem_t *pminfo) {
   smcall_invoke1((uint32_t)pminfo, SMCALL_REBOOT_WITH_RSOD);
-  while (1)
-    ;
+  while (1);
 }
 
 // =============================================================================

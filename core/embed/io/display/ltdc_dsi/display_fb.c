@@ -35,12 +35,14 @@
 // Physical frame buffers in internal SRAM memory.
 // Both frame buffers layers in the fixed addresses that
 // are shared between bootloaders and the firmware.
-__attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-uint8_t physical_frame_buffer_0[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
+__attribute__((section(".fb1"),
+               aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    physical_frame_buffer_0[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
 
 #if (FRAME_BUFFER_COUNT > 1)
-__attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-uint8_t physical_frame_buffer_1[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
+__attribute__((section(".fb2"),
+               aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    physical_frame_buffer_1[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
 
 #ifdef USE_TRUSTZONE

@@ -537,8 +537,8 @@ int32_t SITRONIX_ClearIT(SITRONIX_Object_t *pObj) {
  * @retval Number of active touches detected (can be between 0 and10) or
  * SITRONIX_ERROR in case of error
  */
-__attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
-    SITRONIX_Object_t *pObj) {
+__attribute__((optimize("-O0"))) int32_t
+SITRONIX_DetectTouch(SITRONIX_Object_t *pObj) {
   int32_t ret;
   uint8_t nb_touch = 0;
   static uint8_t first_event = 0;

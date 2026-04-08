@@ -501,8 +501,7 @@ static void fast_copy_init(DMA_HandleTypeDef *hdma, size_t dst_stride) {
 // `dst` is expected to be a pointer to destination bitmap buffer
 static inline void fast_copy_block(DMA_HandleTypeDef *hdma, uint8_t *dst,
                                    uint8_t *src) {
-  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0)
-    ;
+  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0);
 
   hdma->Lock = 0;
   hdma->State = HAL_DMA_STATE_READY;
@@ -512,8 +511,7 @@ static inline void fast_copy_block(DMA_HandleTypeDef *hdma, uint8_t *dst,
 
 // Deinitialize the DMA base copy
 static inline void fast_copy_deinit(DMA_HandleTypeDef *hdma) {
-  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0)
-    ;
+  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0);
 
   hdma->Lock = 0;
   hdma->State = HAL_DMA_STATE_READY;

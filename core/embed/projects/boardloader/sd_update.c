@@ -26,8 +26,8 @@
 #endif
 
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
-__attribute__((section(".buf")))
-uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];
+__attribute__((section(
+    ".buf"))) uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];
 
 static uint32_t check_sdcard(void) {
   if (sectrue != sdcard_power_on()) {

@@ -41,7 +41,7 @@
 
 #ifdef SECMON
 extern uint32_t _codelen;
-#define SECMON_SIZE ((uint32_t) & _codelen)
+#define SECMON_SIZE ((uint32_t)&_codelen)
 #define KERNEL_SECTOR_START \
   ((FIRMWARE_START_S + SECMON_SIZE - FLASH_BASE) / FLASH_PAGE_SIZE)
 

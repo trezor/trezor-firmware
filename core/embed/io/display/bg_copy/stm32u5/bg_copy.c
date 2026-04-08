@@ -31,7 +31,7 @@ void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
                                 : dma_transfer_remaining;
 
     HAL_DMA_Start_IT(hdma,
-                     (uint32_t) & ((uint8_t *)data_src)[dma_data_transferred],
+                     (uint32_t)&((uint8_t *)data_src)[dma_data_transferred],
                      (uint32_t)data_dst, data_to_send);
   }
 }

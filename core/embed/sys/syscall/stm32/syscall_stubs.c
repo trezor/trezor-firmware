@@ -33,8 +33,7 @@
 
 void system_exit(int exit_code) {
   syscall_invoke1(exit_code, SYSCALL_SYSTEM_EXIT);
-  while (1)
-    ;
+  while (1);
 }
 
 void system_exit_error_ex(const char *title, size_t title_len,
@@ -42,16 +41,14 @@ void system_exit_error_ex(const char *title, size_t title_len,
                           const char *footer, size_t footer_len) {
   syscall_invoke6((uint32_t)title, title_len, (uint32_t)message, message_len,
                   (uint32_t)footer, footer_len, SYSCALL_SYSTEM_EXIT_ERROR);
-  while (1)
-    ;
+  while (1);
 }
 
 void system_exit_fatal_ex(const char *message, size_t message_len,
                           const char *file, size_t file_len, int line) {
   syscall_invoke5((uint32_t)message, message_len, (uint32_t)file, file_len,
                   line, SYSCALL_SYSTEM_EXIT_FATAL);
-  while (1)
-    ;
+  while (1);
 }
 
 // =============================================================================
@@ -196,20 +193,17 @@ void boot_image_replace(const boot_image_t *image) {
 
 void reboot_to_bootloader(void) {
   syscall_invoke0(SYSCALL_REBOOT_TO_BOOTLOADER);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_and_upgrade(const uint8_t hash[32]) {
   syscall_invoke1((uint32_t)hash, SYSCALL_REBOOT_AND_UPGRADE);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_device(void) {
   syscall_invoke0(SYSCALL_REBOOT_DEVICE);
-  while (1)
-    ;
+  while (1);
 }
 
 // =============================================================================

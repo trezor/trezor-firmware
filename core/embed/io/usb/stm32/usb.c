@@ -485,7 +485,7 @@ static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed,
 static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed,
                                        uint16_t *length) {
   usb_driver_t *drv = &g_usb_driver;
-
+  // clang-format off
   if (sectrue == drv->usb21_enabled) {
     static uint8_t bos[] = {
         // usb_bos_descriptor {
@@ -506,6 +506,7 @@ static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed,
         USB_WEBUSB_LANDING_PAGE,  // uint8_t  iLandingPage
                                   // }
     };
+    // clang-format on
     bos[28] = (sectrue == drv->usb21_landing) ? USB_WEBUSB_LANDING_PAGE : 0;
     *length = sizeof(bos);
     return UNCONST(bos);
@@ -626,6 +627,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
                  req->bRequest == USB_WINUSB_VENDOR_CODE) {
         if (req->wIndex ==
             USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR) {
+          // clang-format off
           static const uint8_t winusb_wcid[] = {
               // header
               0x28, 0x00, 0x00, 0x00,                    // dwLength
@@ -642,6 +644,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
               0x00,                                // subCompatibleId
               0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
           };
+          // clang-format on
           wait_random();
           USBD_CtlSendData(dev, UNCONST(winusb_wcid),
                            MIN_8bits(req->wLength, sizeof(winusb_wcid)));
@@ -660,6 +663,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
         if (req->wIndex ==
                 USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR &&
             (req->wValue & 0xFF) == 0) {  // reply only if interface is 0
+                                          // clang-format off
           static const uint8_t winusb_guid[] = {
               // header
               0x92, 0x00, 0x00, 0x00,  // dwLength
@@ -683,6 +687,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
               'c', 0x00, 'e', 0x00, 'a', 0x00, '5', 0x00, '0', 0x00, '3', 0x00,
               'd', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00,  // propertyData
           };
+          // clang-format on
           wait_random();
           USBD_CtlSendData(dev, UNCONST(winusb_guid),
                            MIN_8bits(req->wLength, sizeof(winusb_guid)));

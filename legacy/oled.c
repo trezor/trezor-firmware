@@ -118,10 +118,8 @@ static inline void SPISend(uint32_t base, const uint8_t *data, int len) {
   for (int i = 0; i < len; i++) {
     spi_send(base, data[i]);
   }
-  while (!(SPI_SR(base) & SPI_SR_TXE))
-    ;
-  while ((SPI_SR(base) & SPI_SR_BSY))
-    ;
+  while (!(SPI_SR(base) & SPI_SR_TXE));
+  while ((SPI_SR(base) & SPI_SR_BSY));
 }
 
 /*

@@ -81,8 +81,7 @@ static void hash_processor_sha256_calc_dma(const uint8_t *data, uint32_t len,
     __HAL_HASH_SET_MDMAT();
 
     HAL_HASHEx_SHA256_Start_DMA(&hhash, (uint8_t *)data, chunk);
-    while (HAL_HASH_GetState(&hhash) != HAL_HASH_STATE_READY)
-      ;
+    while (HAL_HASH_GetState(&hhash) != HAL_HASH_STATE_READY);
 
     if (last) {
       HASH->STR |= HASH_STR_DCAL;

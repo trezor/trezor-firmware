@@ -53,8 +53,7 @@ static bool display_pll_init(void) {
   /* Start and configure PLL3 */
   __HAL_RCC_PLL3_DISABLE();
 
-  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) != 0U)
-    ;
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) != 0U);
 
   __HAL_RCC_PLL3_CONFIG(RCC_PLLSOURCE_HSE, PLL3_M, PLL3_N, PLL3_P, PLL3_Q,
                         PLL3_R);
@@ -68,8 +67,7 @@ static bool display_pll_init(void) {
   __HAL_RCC_PLL3_ENABLE();
 
   /* Wait till PLL3 is ready */
-  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) == 0U)
-    ;
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) == 0U);
 
   __HAL_RCC_DSI_CONFIG(RCC_DSICLKSOURCE_PLL3);
   __HAL_RCC_LTDC_CONFIG(RCC_LTDCCLKSOURCE_PLL3);

@@ -25,7 +25,7 @@
 // Arbitrary, but must be equivalent to the last character in extra string
 #define WINUSB_MS_VENDOR_CODE '!'
 #define WINUSB_EXTRA_STRING \
-  { 'M', 'S', 'F', 'T', '1', '0', '0', WINUSB_MS_VENDOR_CODE }
+  {'M', 'S', 'F', 'T', '1', '0', '0', WINUSB_MS_VENDOR_CODE}
 
 extern void winusb_setup(usbd_device* usbd_dev, uint8_t interface);
 

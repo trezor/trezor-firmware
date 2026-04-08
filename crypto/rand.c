@@ -25,8 +25,7 @@
 
 uint32_t random_uniform(uint32_t n) {
   uint32_t x = 0, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
-  while ((x = random32()) >= max)
-    ;
+  while ((x = random32()) >= max);
   return x / (max / n);
 }
 

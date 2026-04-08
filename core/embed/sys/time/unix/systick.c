@@ -73,7 +73,7 @@ void systick_deinit(void) {
   drv->initialized = false;
 }
 
-void systick_update_freq(void){};
+void systick_update_freq(void) {};
 
 uint32_t systick_ms() {
   systick_driver_t* drv = &g_systick_driver;
