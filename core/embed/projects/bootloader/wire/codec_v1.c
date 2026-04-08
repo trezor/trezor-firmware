@@ -171,6 +171,10 @@ static bool read(pb_istream_t *stream, uint8_t *buf, size_t count) {
 
   size_t packet_size = state->iface->rx_packet_size;
 
+  if (packet_size <= MSG_HEADER2_LEN) {
+    return false;
+  }
+
   size_t read = 0;
   // while we have data left
   while (read < count) {
@@ -224,6 +228,10 @@ void codec_flush(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf) {
   int remaining_chunks = 0;
 
   size_t packet_size = iface->rx_packet_size;
+
+  if (packet_size <= MSG_HEADER1_LEN) {
+    return;
+  }
 
   if (msg_size > (packet_size - MSG_HEADER1_LEN)) {
     // calculate how many blocks need to be read to drain the message (rounded
