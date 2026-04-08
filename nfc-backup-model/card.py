@@ -7,7 +7,7 @@ from enum import Enum
 
 import commands
 from apdu import ApduRequest, ApduResponse
-from card_inner import CardInner, Pin
+from card_inner import CardInner, Pin, Timestamp
 from commands import OK
 from noise import ResponderXXPsk3, TransportState
 
@@ -23,6 +23,8 @@ class File(Enum):
     PIN_COUNTER = 3
     SUCCESSFUL_LOG = 4
     UNSUCCESSFUL_LOG = 5
+    LAST_REFRESH_TIMESTAMP = 6
+    FLASH_BIT_ERROR_COUNT = 7
 
 
 class UnexpectedRequest(Exception):
@@ -177,6 +179,14 @@ class TrezorSecureChannelState(ApduState):
                 logging.debug("command=TREZOR_WIPE")
                 self.powered_card.wipe()
                 response_data = b""
+            case commands.TREZOR_CHECK_INTEGRITY:
+                logging.debug("command=TREZOR_CHECK_INTEGRITY")
+                result = self.powered_card.check_integrity()
+                response_data = bytes([result])  # TODO: Use APDU status code instead
+            case commands.TREZOR_REFRESH_MEMORY:
+                logging.debug("command=TREZOR_REFRESH_MEMORY")
+                self.powered_card.refresh_memory(Timestamp(data))
+                response_data = b""
             case commands.SELECT_FILE:
                 logging.debug("command=SELECT_FILE")
                 match data:
@@ -195,6 +205,12 @@ class TrezorSecureChannelState(ApduState):
                     case commands.UNSUCCESSFUL_LOG_FILE:
                         logging.debug("selected_file=UNSUCCESSFUL_LOG")
                         self.selected_file = File.UNSUCCESSFUL_LOG
+                    case commands.LAST_REFRESH_TIMESTAMP_FILE:
+                        logging.debug("selected_file=LAST_REFRESH_TIMESTAMP")
+                        self.selected_file = File.LAST_REFRESH_TIMESTAMP
+                    case commands.FLASH_BIT_ERROR_COUNT_FILE:
+                        logging.debug("selected_file=FLASH_BIT_ERROR_COUNT")
+                        self.selected_file = File.FLASH_BIT_ERROR_COUNT
                     case _:
                         raise UnexpectedRequest
                 response_data = b""
@@ -218,6 +234,14 @@ class TrezorSecureChannelState(ApduState):
                         # TODO: Decide how to encode the log records
                         response_data = pickle.dumps(
                             self.powered_card.read_unsuccessful_access_log_records()
+                        )
+                    case File.LAST_REFRESH_TIMESTAMP:
+                        response_data = self.powered_card.read_last_refresh_timestamp()
+                    case File.FLASH_BIT_ERROR_COUNT:
+                        response_data = (
+                            self.powered_card.read_flash_bit_error_count().to_bytes(
+                                4, "big"
+                            )
                         )
                     case _:
                         raise UnexpectedRequest

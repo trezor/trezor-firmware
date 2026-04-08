@@ -17,6 +17,8 @@ SUITE_HANDSHAKE_MESSAGE_1 = ApduHeader(0x80, 0x02, 0x00, 0x00)
 TREZOR_AUTHENTICATE = ApduHeader(0x80, 0x03, 0x00, 0x00)
 TREZOR_SET_PIN = ApduHeader(0x80, 0x04, 0x00, 0x00)
 TREZOR_WIPE = ApduHeader(0x80, 0x05, 0x00, 0x00)
+TREZOR_CHECK_INTEGRITY = ApduHeader(0x80, 0x06, 0x00, 0x00)
+TREZOR_REFRESH_MEMORY = ApduHeader(0x80, 0x07, 0x00, 0x00)
 
 # TODO
 PIN_COUNTER_FILE = bytes.fromhex("00")
@@ -24,6 +26,8 @@ SUCCESSFUL_LOG_FILE = bytes.fromhex("01")
 UNSUCCESSFUL_LOG_FILE = bytes.fromhex("02")
 SEED_METADATA_FILE = bytes.fromhex("03")
 SEED_FILE = bytes.fromhex("04")
+LAST_REFRESH_TIMESTAMP_FILE = bytes.fromhex("05")
+FLASH_BIT_ERROR_COUNT_FILE = bytes.fromhex("06")
 
 NDEF_FILE = bytes.fromhex("E104")
 

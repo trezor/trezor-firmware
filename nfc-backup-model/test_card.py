@@ -7,6 +7,7 @@ from card_inner import (
     NotAuthenticatedError,
     Pin,
     PinAttemptsExceededError,
+    Timestamp,
 )
 from reader import session
 
@@ -28,6 +29,7 @@ def test_card() -> None:
     metadata = b"dummy_metadata"
     pin = Pin(b"1234")
     empty_pin = Pin(b"")
+    timestamp = Timestamp((1775661638).to_bytes(4, "big"))
 
     # Backup
     with session(card, reader_private) as reader:
@@ -47,6 +49,10 @@ def test_card() -> None:
         assert (
             reader.read_unsuccessful_access_log_records() == [None] * MAX_PIN_ATTEMPTS
         )
+        assert reader.read_flash_bit_error_count() == 0
+        assert reader.read_last_refresh_timestamp() == Timestamp(b"")
+        assert reader.check_integrity() is True
+        reader.refresh_memory(timestamp)
 
     # MAX_PIN_ATTEMPTS - 1 unsuccessful recovery attempts
     for _ in range(MAX_PIN_ATTEMPTS - 1):
@@ -67,6 +73,9 @@ def test_card() -> None:
         assert reader.read_unsuccessful_access_log_records() == [
             LogRecord(attacker_public, note)
         ] * (MAX_PIN_ATTEMPTS - 1) + [None]
+        assert reader.read_flash_bit_error_count() == 0
+        assert reader.read_last_refresh_timestamp() == timestamp
+        assert reader.check_integrity() is True
 
     # Recovery
     with session(card, reader_private) as reader:

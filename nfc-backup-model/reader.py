@@ -5,7 +5,7 @@ from contextlib import contextmanager
 import commands
 from apdu import ApduHeader, ApduRequest, ApduResponse
 from card import Card
-from card_inner import LogRecord, Pin
+from card_inner import LogRecord, Pin, Timestamp
 from commands import OK
 from noise import InitiatorXXPsk3, TransportState
 
@@ -122,6 +122,21 @@ class Reader:
     def write_metadata(self, data: bytes) -> None:
         self._select_file(commands.SEED_METADATA_FILE)
         self._write_binary(data)
+
+    def check_integrity(self) -> bool:
+        result = self._transcieve_encrypted(commands.TREZOR_CHECK_INTEGRITY, b"")
+        return bool(result[0])
+
+    def refresh_memory(self, timestamp: Timestamp) -> None:
+        self._transcieve_encrypted(commands.TREZOR_REFRESH_MEMORY, timestamp)
+
+    def read_last_refresh_timestamp(self) -> Timestamp:
+        self._select_file(commands.LAST_REFRESH_TIMESTAMP_FILE)
+        return Timestamp(self._read_binary())
+
+    def read_flash_bit_error_count(self) -> int:
+        self._select_file(commands.FLASH_BIT_ERROR_COUNT_FILE)
+        return int.from_bytes(self._read_binary(), "big")
 
     def write_seed(self, data: bytes) -> None:
         self._select_file(commands.SEED_FILE)

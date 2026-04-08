@@ -17,6 +17,7 @@ from crypto import (
 logger = logging.getLogger(__name__)
 
 Pin = NewType("Pin", bytes)
+Timestamp = NewType("Timestamp", bytes)
 
 MAX_PIN_ATTEMPTS = 10
 DEFAULT_PIN = Pin(b"")
@@ -58,7 +59,7 @@ class Storage:
         # all changes to storage made during the session are rolled back.
         yield
 
-    # The storage is divided into four atomic sections. Some sections may
+    # The storage is divided into six atomic sections. Some sections may
     # be merged if this is advantageous from an implementation perspective.
 
     # First atomic section
@@ -80,8 +81,29 @@ class Storage:
     # Forth section
     encrypted_seed: bytes = b""
 
+    # Fifth section
+    last_refresh_timestamp: Timestamp = Timestamp(b"")
+
+    # Sixth section
+    # This is the part of memory that is written to most often if the user
+    # only performs integrity checks
+    flash_bit_error_count: int = 0
+
+    # This function should be automatically called when a flash error is detected
+    # while reading data or code from flash
+    def increment_flash_bit_error_count(self, count: int = 1) -> None:
+        with self.atomic_session():
+            self.flash_bit_error_count += count
+
     def check_integrity(self) -> bool:
+        # Go through both the data and program in flash, repair any corruption,
+        # and return whether all data is readable after repair
         return True
+
+    def refresh_flash(self) -> None:
+        # Go through all the data and program in flash and refresh them to
+        # improve data retention
+        pass
 
 
 class CardInner:
@@ -112,6 +134,9 @@ class CardInner:
         # | Method                                | Requires PIN | Requires Trezor |
         # | ------------------------------------- | -----------: | --------------: |
         # | check_integrity                       |           no |              no |
+        # | refresh_memory                        |           no |              no |
+        # | read_last_refresh_timestamp           |           no |              no |
+        # | read_flash_bit_error_count            |           no |              no |
         # | wipe                                  |           no |             yes |
         # | authenticate                          |           no |             yes |
         # | set_pin                               |          yes |             yes |
@@ -155,6 +180,25 @@ class CardInner:
             logger.debug(f"integrity_status={result}")
             return result
 
+        def refresh_memory(self, timestamp: Timestamp) -> None:
+            logger.info("CardInner.refresh_memory()")
+            logger.debug(f"timestamp={timestamp!r}")
+            self.storage.refresh_flash()
+            with self.storage.atomic_session():
+                self.storage.last_refresh_timestamp = timestamp
+
+        def read_last_refresh_timestamp(self) -> Timestamp:
+            logger.info("CardInner.read_last_refresh_timestamp()")
+            timestamp = self.storage.last_refresh_timestamp
+            logger.debug(f"timestamp={timestamp!r}")
+            return timestamp
+
+        def read_flash_bit_error_count(self) -> int:
+            logger.info("CardInner.read_flash_bit_error_count()")
+            count = self.storage.flash_bit_error_count
+            logger.debug(f"flash_bit_error_count={count}")
+            return count
+
         def wipe(self) -> None:
             logger.info("CardInner.PoweredInnerCard.wipe()")
 
@@ -182,6 +226,9 @@ class CardInner:
                 self.storage.pin_counter = MAX_PIN_ATTEMPTS
                 self.storage.successful_access_log_record = None
                 self.storage.unsuccessful_access_log_records = [None] * MAX_PIN_ATTEMPTS
+
+            # TODO: Decide whether to reset the flash bit error count and
+            # last refresh timestamp
 
             self.authenticated = False
 

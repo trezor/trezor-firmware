@@ -7,6 +7,7 @@ from card_inner import (
     NotAuthenticatedError,
     Pin,
     PinAttemptsExceededError,
+    Timestamp,
 )
 
 from crypto import (
@@ -24,6 +25,7 @@ def test_card_inner() -> None:
     metadata = b"dummy_metadata"
     pin = Pin(b"1234")
     empty_pin = Pin(b"")
+    timestamp = Timestamp((1775661638).to_bytes(4, "big"))
 
     # Backup
     with card.powered(reader_public_key) as powered_card:
@@ -44,6 +46,10 @@ def test_card_inner() -> None:
             powered_card.read_unsuccessful_access_log_records()
             == [None] * MAX_PIN_ATTEMPTS
         )
+        assert powered_card.read_flash_bit_error_count() == 0
+        assert powered_card.read_last_refresh_timestamp() == Timestamp(b"")
+        assert powered_card.check_integrity() is True
+        powered_card.refresh_memory(timestamp)
 
     # MAX_PIN_ATTEMPTS - 1 unsuccessful recovery attempts
     attacker_public_key = PublicKey(b"attacker_reader_public_key")
@@ -62,6 +68,9 @@ def test_card_inner() -> None:
         assert powered_card.read_unsuccessful_access_log_records() == [
             LogRecord(attacker_public_key, note)
         ] * (MAX_PIN_ATTEMPTS - 1) + [None]
+        assert powered_card.read_flash_bit_error_count() == 0
+        assert powered_card.read_last_refresh_timestamp() == timestamp
+        assert powered_card.check_integrity() is True
 
     # Recovery
     with card.powered(reader_public_key) as powered_card:
