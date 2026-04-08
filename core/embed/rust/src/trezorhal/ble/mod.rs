@@ -84,12 +84,13 @@ fn state() -> ffi::ble_state_t {
 }
 
 pub fn pairing_mode(name: &str) -> Result<(), Error> {
+    let name = prefix_utf8_bytes(name, ADV_NAME_LEN);
     let res = unsafe { ffi::ble_enter_pairing_mode(name.as_ptr(), name.len()) };
     res_to_result(res)
 }
 
 pub fn switch_on(name: &str) -> Result<(), Error> {
-    unsafe { ffi::ble_set_name(name.as_ptr(), name.len()) };
+    set_name(name);
     let res = unsafe { ffi::ble_switch_on() };
     res_to_result(res)
 }
