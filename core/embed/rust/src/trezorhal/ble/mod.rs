@@ -18,12 +18,12 @@ const COMMAND_FAILED: Error = Error::RuntimeError(c"BLE command failed");
 const WRITE_FAILED: Error = Error::RuntimeError(c"BLE write failed");
 
 // NOTE: replace with floor_char_boundary when stable
-fn prefix_utf8_bytes(text: &str, max_len: usize) -> &[u8] {
+fn prefix_utf8_bytes(text: &str, max_len: usize) -> &str {
     let mut i = text.len().min(max_len);
     while !text.is_char_boundary(i) {
         i -= 1;
     }
-    &text.as_bytes()[..i]
+    &text[..i]
 }
 
 pub fn res_to_result(res: bool) -> Result<(), Error> {
@@ -83,16 +83,18 @@ fn state() -> ffi::ble_state_t {
     state
 }
 
-pub fn pairing_mode(name: &str) -> Result<(), Error> {
-    let name = prefix_utf8_bytes(name, ADV_NAME_LEN);
-    let res = unsafe { ffi::ble_enter_pairing_mode(name.as_ptr(), name.len()) };
-    res_to_result(res)
+pub fn pairing_mode(name: &str) -> Result<&str, Error> {
+    let adv_name = prefix_utf8_bytes(name, ADV_NAME_LEN);
+    let res = unsafe { ffi::ble_enter_pairing_mode(adv_name.as_ptr(), adv_name.len()) };
+    res_to_result(res)?;
+    Ok(adv_name)
 }
 
-pub fn switch_on(name: &str) -> Result<(), Error> {
-    set_name(name);
+pub fn switch_on(name: &str) -> Result<&str, Error> {
+    let adv_name = set_name(name);
     let res = unsafe { ffi::ble_switch_on() };
-    res_to_result(res)
+    res_to_result(res)?;
+    Ok(adv_name)
 }
 
 pub fn switch_off() -> Result<(), Error> {
@@ -148,9 +150,10 @@ pub fn disconnect() -> Result<(), Error> {
     res_to_result(res)
 }
 
-pub fn set_name(name: &str) {
-    let bytes = prefix_utf8_bytes(name, ADV_NAME_LEN);
-    unsafe { ffi::ble_set_name(bytes.as_ptr(), bytes.len()) }
+pub fn set_name(name: &str) -> &str {
+    let adv_name = prefix_utf8_bytes(name, ADV_NAME_LEN);
+    unsafe { ffi::ble_set_name(adv_name.as_ptr(), adv_name.len()) }
+    adv_name
 }
 
 pub fn set_high_speed(enable: bool) {

@@ -65,12 +65,12 @@ extern "C" fn py_start_advertising(whitelist: Obj, name: Obj) -> Obj {
         let name = name.try_into_option::<StrBuffer>()?;
         let name = name.as_deref().unwrap_or(model::FULL_NAME);
 
-        if whitelist {
-            switch_on(name)?;
+        let adv_name = if whitelist {
+            switch_on(name)?
         } else {
-            pairing_mode(name)?;
+            pairing_mode(name)?
         };
-        Ok(Obj::const_none())
+        adv_name.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -339,7 +339,7 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_start_comm => obj_fn_0!(py_start_comm).as_obj(),
 
-    /// def start_advertising(whitelist: bool, name: str | None):
+    /// def start_advertising(whitelist: bool, name: str | None) -> str:
     ///     """
     ///     Start advertising.
     ///     Raises exception if BLE driver reports an error.
