@@ -4,9 +4,14 @@ from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
-from crypto import PrivateKey, dh, generate_keypair, public_key
+from crypto import (
+    PrivateKey,
+    aead_decrypt,
+    aead_encrypt,
+    dh,
+    generate_keypair,
+    public_key,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +73,7 @@ class CipherState:
             return plaintext
         if self.nonce == NONCE_LIMIT:
             raise ValueError()
-        ciphertext = AESGCM(self.key).encrypt(self.get_nonce_bytes(), plaintext, ad)
+        ciphertext = aead_encrypt(self.key, self.get_nonce_bytes(), plaintext, ad)
         self.nonce += 1
         return ciphertext
 
@@ -77,7 +82,7 @@ class CipherState:
             return ciphertext
         if self.nonce == NONCE_LIMIT:
             raise ValueError()
-        plaintext = AESGCM(self.key).decrypt(self.get_nonce_bytes(), ciphertext, ad)
+        plaintext = aead_decrypt(self.key, self.get_nonce_bytes(), ciphertext, ad)
         self.nonce += 1
         return plaintext
 
