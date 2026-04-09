@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import NewType
@@ -55,18 +56,20 @@ class Storage:
         return True
 
     @contextmanager
-    def atomic_session(self):
+    def atomic_session(self) -> Iterator[None]:
         # This should be implemented so that, in the event of a tear-off,
         # all changes to storage made during the session are rolled back.
         yield
 
 
 class CardInner:
-    def __init__(self):
+    def __init__(self) -> None:
         self.storage = Storage()
 
     @contextmanager
-    def powered(self, reader_public_key: PublicKey | None = None):
+    def powered(
+        self, reader_public_key: PublicKey | None = None
+    ) -> Iterator["CardInner.PoweredInnerCard"]:
         # `reader_public_key` is not `None` if and only if a secure channel has been
         # initiated between the card and a trezor
         logger.info("CardInner.powered()")
@@ -74,7 +77,9 @@ class CardInner:
         yield CardInner.PoweredInnerCard(self.storage, reader_public_key)
 
     class PoweredInnerCard:
-        def __init__(self, storage: Storage, reader_public_key: PublicKey | None):
+        def __init__(
+            self, storage: Storage, reader_public_key: PublicKey | None
+        ) -> None:
             # This is stored in flash
             self.storage = storage
 
@@ -106,7 +111,7 @@ class CardInner:
             logger.debug(f"integrity_status={result}")
             return result
 
-        def wipe(self):
+        def wipe(self) -> None:
             logger.info("CardInner.PoweredInnerCard.wipe()")
 
             if self.reader_public_key is None:

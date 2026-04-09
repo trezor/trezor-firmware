@@ -3,7 +3,7 @@ from noise import InitiatorXXPsk3, ResponderXXPsk3
 from crypto import generate_private_key
 
 
-def test_handshake_and_transport():
+def test_handshake_and_transport() -> None:
     psk = b"psk"
     prologue = b"prologue"
     initiator_static_public_key = generate_private_key()

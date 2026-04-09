@@ -1,5 +1,6 @@
 import logging
 import pickle
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
@@ -244,16 +245,16 @@ class TrezorSecureChannelState(ApduState):
 
 
 class Card:
-    def __init__(self, static_key: PrivateKey):
+    def __init__(self, static_key: PrivateKey) -> None:
         self.card = CardInner()
         self.static_key = static_key
 
     @contextmanager
-    def powered(self):
+    def powered(self) -> Iterator["Card.PoweredCard"]:
         yield Card.PoweredCard(self.card, self.static_key)
 
     class PoweredCard:
-        def __init__(self, card: CardInner, static_key: PrivateKey):
+        def __init__(self, card: CardInner, static_key: PrivateKey) -> None:
             self.card = card
             self.static_key = static_key
             self.state: State = IdleState()

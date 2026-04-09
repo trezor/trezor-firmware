@@ -13,7 +13,7 @@ from reader import session
 from crypto import aead_decrypt, aead_encrypt, generate_keypair, public_key
 
 
-def test_card():
+def test_card() -> None:
     card_private, _ = generate_keypair()
     card = Card(card_private)
 

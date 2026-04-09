@@ -1,8 +1,9 @@
 import pickle
+from collections.abc import Iterator
 from contextlib import contextmanager
 
 import commands
-from apdu import ApduRequest, ApduResponse
+from apdu import ApduHeader, ApduRequest, ApduResponse
 from card import Card
 from card_inner import LogRecord, Pin
 from commands import OK
@@ -12,13 +13,15 @@ from crypto import PrivateKey, public_key, random_bytes
 
 
 class Reader:
-    def __init__(self, powered_card: Card.PoweredCard, reader_private: PrivateKey):
+    def __init__(
+        self, powered_card: Card.PoweredCard, reader_private: PrivateKey
+    ) -> None:
         self._powered_card = powered_card
         self.static_public = public_key(reader_private)
         self._reader_private = reader_private
         self._transport_state: TransportState | None = None
 
-    def connect(self):
+    def connect(self) -> None:
         select_resp = ApduResponse.from_bytes(
             self._powered_card.handle_request(
                 ApduRequest.from_header(
@@ -58,7 +61,7 @@ class Reader:
             b"", hs2_resp.response
         )
 
-    def _transcieve_encrypted(self, header, plaintext: bytes) -> bytes:
+    def _transcieve_encrypted(self, header: ApduHeader, plaintext: bytes) -> bytes:
         assert self._transport_state is not None
         header_bytes = bytes([header.cla, header.ins, header.p1, header.p2])
         encrypted = self._transport_state.send_cipher_state.encrypt_with_ad(
@@ -74,13 +77,13 @@ class Reader:
             b"", resp.response
         )
 
-    def _select_file(self, file_id: bytes):
+    def _select_file(self, file_id: bytes) -> None:
         self._transcieve_encrypted(commands.SELECT_FILE, file_id)
 
     def _read_binary(self) -> bytes:
         return self._transcieve_encrypted(commands.READ_BINARY, b"")
 
-    def _write_binary(self, data: bytes):
+    def _write_binary(self, data: bytes) -> None:
         self._transcieve_encrypted(commands.WRITE_BINARY, data)
 
     def authenticate(self, pin: Pin, note: bytes) -> bytes:
@@ -91,7 +94,7 @@ class Reader:
     def set_pin(self, pin: Pin) -> bytes:
         return self._transcieve_encrypted(commands.TREZOR_SET_PIN, bytes(pin))
 
-    def wipe(self):
+    def wipe(self) -> None:
         self._transcieve_encrypted(commands.TREZOR_WIPE, b"")
 
     def read_metadata(self) -> bytes:
@@ -104,27 +107,29 @@ class Reader:
 
     def read_successful_access_log_record(self) -> LogRecord | None:
         self._select_file(commands.SUCCESSFUL_LOG_FILE)
-        return pickle.loads(self._read_binary())
+        result: LogRecord | None = pickle.loads(self._read_binary())
+        return result
 
     def read_unsuccessful_access_log_records(self) -> list[LogRecord | None]:
         self._select_file(commands.UNSUCCESSFUL_LOG_FILE)
-        return pickle.loads(self._read_binary())
+        result: list[LogRecord | None] = pickle.loads(self._read_binary())
+        return result
 
     def read_encrypted_seed(self) -> bytes:
         self._select_file(commands.SEED_FILE)
         return self._read_binary()
 
-    def write_metadata(self, data: bytes):
+    def write_metadata(self, data: bytes) -> None:
         self._select_file(commands.SEED_METADATA_FILE)
         self._write_binary(data)
 
-    def write_encrypted_seed(self, data: bytes):
+    def write_encrypted_seed(self, data: bytes) -> None:
         self._select_file(commands.SEED_FILE)
         self._write_binary(data)
 
 
 @contextmanager
-def session(card: Card, reader_private: PrivateKey):
+def session(card: Card, reader_private: PrivateKey) -> Iterator["Reader"]:
     with card.powered() as powered_card:
         reader = Reader(powered_card, reader_private)
         reader.connect()

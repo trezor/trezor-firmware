@@ -12,7 +12,7 @@ from card_inner import (
 from crypto import PublicKey, aead_decrypt, aead_encrypt
 
 
-def test_card_inner():
+def test_card_inner() -> None:
     card = CardInner()
 
     reader_public_key = PublicKey(b"dummy_reader_public_key")

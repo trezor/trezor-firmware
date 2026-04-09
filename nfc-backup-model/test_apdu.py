@@ -141,7 +141,7 @@ ENCODE_REQUEST_VECTORS = [
 
 
 @pytest.mark.parametrize("apdu, expected_raw_apdu", ENCODE_REQUEST_VECTORS)
-def test_encode_request(apdu: ApduRequest, expected_raw_apdu: bytes):
+def test_encode_request(apdu: ApduRequest, expected_raw_apdu: bytes) -> None:
     assert apdu.to_bytes() == expected_raw_apdu
 
 
@@ -177,7 +177,9 @@ ENCODE_REQUEST_ERROR_VECTORS = [
 
 
 @pytest.mark.parametrize("apdu, expected_exception", ENCODE_REQUEST_ERROR_VECTORS)
-def test_encode_request_rejects_invalid_fields(apdu: ApduRequest, expected_exception):
+def test_encode_request_rejects_invalid_fields(
+    apdu: ApduRequest, expected_exception: type[Exception]
+) -> None:
     with pytest.raises(expected_exception):
         apdu.to_bytes()
 
@@ -317,7 +319,7 @@ DECODE_REQUEST_VECTORS = [
 
 
 @pytest.mark.parametrize("raw_apdu, expected_apdu", DECODE_REQUEST_VECTORS)
-def test_decode_request(raw_apdu: bytes, expected_apdu: ApduRequest):
+def test_decode_request(raw_apdu: bytes, expected_apdu: ApduRequest) -> None:
     decoded = ApduRequest.from_bytes(raw_apdu)
     assert decoded.cla == expected_apdu.cla
     assert decoded.ins == expected_apdu.ins
@@ -372,7 +374,9 @@ DECODE_REQUEST_ERROR_VECTORS = [
 
 
 @pytest.mark.parametrize("raw_apdu, expected_exception", DECODE_REQUEST_ERROR_VECTORS)
-def test_decode_request_rejects_malformed_input(raw_apdu: bytes, expected_exception):
+def test_decode_request_rejects_malformed_input(
+    raw_apdu: bytes, expected_exception: type[Exception]
+) -> None:
     with pytest.raises(expected_exception):
         ApduRequest.from_bytes(raw_apdu)
 
@@ -427,7 +431,7 @@ ENCODE_RESPONSE_VECTORS = [
 
 
 @pytest.mark.parametrize("apdu, expected_raw_apdu", ENCODE_RESPONSE_VECTORS)
-def test_encode_response(apdu: ApduResponse, expected_raw_apdu: bytes):
+def test_encode_response(apdu: ApduResponse, expected_raw_apdu: bytes) -> None:
     assert apdu.to_bytes() == expected_raw_apdu
 
 
@@ -476,7 +480,7 @@ DECODE_RESPONSE_VECTORS = [
 
 
 @pytest.mark.parametrize("raw_apdu, expected_apdu", DECODE_RESPONSE_VECTORS)
-def test_decode_response(raw_apdu: bytes, expected_apdu: ApduResponse):
+def test_decode_response(raw_apdu: bytes, expected_apdu: ApduResponse) -> None:
     decoded = ApduResponse.from_bytes(raw_apdu)
     assert decoded.sw1 == expected_apdu.sw1
     assert decoded.sw2 == expected_apdu.sw2
@@ -490,7 +494,9 @@ DECODE_RESPONSE_ERROR_VECTORS = [
 
 
 @pytest.mark.parametrize("raw_apdu, expected_exception", DECODE_RESPONSE_ERROR_VECTORS)
-def test_decode_response_rejects_too_short_input(raw_apdu: bytes, expected_exception):
+def test_decode_response_rejects_too_short_input(
+    raw_apdu: bytes, expected_exception: type[Exception]
+) -> None:
     with pytest.raises(expected_exception):
         ApduResponse.from_bytes(raw_apdu)
 
@@ -564,7 +570,7 @@ ROUNDTRIP_REQUEST_VECTORS = [
 
 
 @pytest.mark.parametrize("original_apdu", ROUNDTRIP_REQUEST_VECTORS)
-def test_request_survives_encode_decode_roundtrip(original_apdu: ApduRequest):
+def test_request_survives_encode_decode_roundtrip(original_apdu: ApduRequest) -> None:
     encoded = original_apdu.to_bytes()
     decoded = ApduRequest.from_bytes(encoded)
     assert decoded == original_apdu
@@ -587,7 +593,7 @@ ROUNDTRIP_RESPONSE_VECTORS = [
 
 
 @pytest.mark.parametrize("original_apdu", ROUNDTRIP_RESPONSE_VECTORS)
-def test_response_survives_encode_decode_roundtrip(original_apdu: ApduResponse):
+def test_response_survives_encode_decode_roundtrip(original_apdu: ApduResponse) -> None:
     encoded = original_apdu.to_bytes()
     decoded = ApduResponse.from_bytes(encoded)
     assert decoded == original_apdu
@@ -626,7 +632,7 @@ ENCODE_REQUEST_LENGTH_VECTORS = [
 @pytest.mark.parametrize("apdu, expected_length", ENCODE_REQUEST_LENGTH_VECTORS)
 def test_encode_request_produces_correct_length(
     apdu: ApduRequest, expected_length: int
-):
+) -> None:
     assert len(apdu.to_bytes()) == expected_length
 
 
@@ -644,7 +650,7 @@ ENCODE_RESPONSE_LENGTH_VECTORS = [
 @pytest.mark.parametrize("apdu, expected_length", ENCODE_RESPONSE_LENGTH_VECTORS)
 def test_encode_response_produces_correct_length(
     apdu: ApduResponse, expected_length: int
-):
+) -> None:
     assert len(apdu.to_bytes()) == expected_length
 
 
@@ -684,7 +690,7 @@ HEADER_PREFIX_VECTORS = [
 @pytest.mark.parametrize("apdu, expected_header_prefix", HEADER_PREFIX_VECTORS)
 def test_encoded_request_starts_with_header_bytes(
     apdu: ApduRequest, expected_header_prefix: bytes
-):
+) -> None:
     assert apdu.to_bytes()[:4] == expected_header_prefix
 
 
@@ -698,5 +704,5 @@ RESPONSE_STATUS_SUFFIX_VECTORS = [
 @pytest.mark.parametrize("apdu, expected_status_suffix", RESPONSE_STATUS_SUFFIX_VECTORS)
 def test_encoded_response_ends_with_status_bytes(
     apdu: ApduResponse, expected_status_suffix: bytes
-):
+) -> None:
     assert apdu.to_bytes()[-2:] == expected_status_suffix

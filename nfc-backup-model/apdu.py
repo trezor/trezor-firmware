@@ -145,7 +145,7 @@ def is_byte(value: int) -> bool:
     return 0 <= value <= 0xFF
 
 
-def encode_header(raw: bytearray, request: ApduRequest):
+def encode_header(raw: bytearray, request: ApduRequest) -> None:
     if not is_byte(request.cla):
         raise InvalidCla
     raw.append(request.cla)
@@ -163,13 +163,13 @@ def encode_header(raw: bytearray, request: ApduRequest):
     raw.append(request.p2)
 
 
-def encode_short_lc(raw: bytearray, lc: int):
+def encode_short_lc(raw: bytearray, lc: int) -> None:
     if not 0 <= lc <= SHORT_LC_MAX:
         raise InvalidLc
     raw.append(lc)
 
 
-def encode_short_le(raw: bytearray, le: int):
+def encode_short_le(raw: bytearray, le: int) -> None:
     if not 1 <= le <= SHORT_LE_MAX:
         raise InvalidLe
     if le == SHORT_LE_MAX:
@@ -178,13 +178,13 @@ def encode_short_le(raw: bytearray, le: int):
         raw.append(le)
 
 
-def encode_extended_lc(raw: bytearray, lc: int):
+def encode_extended_lc(raw: bytearray, lc: int) -> None:
     if not 1 <= lc <= EXTENDED_LC_MAX:
         raise InvalidLc
     raw.extend(lc.to_bytes(2, "big"))
 
 
-def encode_extended_le(raw: bytearray, le: int):
+def encode_extended_le(raw: bytearray, le: int) -> None:
     if not 1 <= le <= EXTENDED_LE_MAX:
         raise InvalidLe
     if le == EXTENDED_LE_MAX:
@@ -262,7 +262,7 @@ def decode_request(raw: bytes) -> ApduRequest:
 
     # Case 2S
     if len(body) == 1:
-        le = decode_short_le(body[0:1])
+        le: int | None = decode_short_le(body[0:1])
         return ApduRequest(cla, ins, p1, p2, data=b"", le=le)
 
     # Cases 2E, 3E, 4E
