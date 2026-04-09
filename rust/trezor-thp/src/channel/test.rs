@@ -84,6 +84,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelIO for WithKey<C, B> {
                 ack_received: false,
                 message_ready: false,
                 pong: false,
+                buffer_size: None,
             };
         }
         pir
@@ -677,13 +678,13 @@ fn test_packet_damage_application() -> Result<()> {
     let (mut h, mut d) = open_channel(DEFAULT_PACKET_LEN)?;
     h.message_in(0, 0, b"the quick brown fox jumps over the lazy dog")?;
     let res = take_turns_mutate(&mut h, &mut d, damage_nth(HostToDevice, 0, 16));
-    assert_eq!(res, Err(Error::InvalidChecksum));
+    assert_eq!(res, Ok(TakeTurnsResult::None));
     h.message_retransmit().unwrap();
     take_turns(&mut h, &mut d)?;
 
     d.message_in(0, 0, b"the quick lazy dog crawls under the brown fox")?;
     let res = take_turns_mutate(&mut h, &mut d, damage_nth(DeviceToHost, 0, 50));
-    assert_eq!(res, Err(Error::InvalidChecksum));
+    assert_eq!(res, Ok(TakeTurnsResult::None));
     d.message_retransmit().unwrap();
     take_turns(&mut h, &mut d)?;
 
@@ -716,7 +717,8 @@ fn test_codec_v1() -> Result<()> {
         PacketInResult::Accepted {
             ack_received: false,
             message_ready: false,
-            pong: false
+            pong: false,
+            buffer_size: None,
         }
     ));
     let response = dm.packet_out().unwrap();
@@ -761,7 +763,8 @@ fn test_ping() -> Result<()> {
         PacketInResult::Accepted {
             ack_received: false,
             message_ready: false,
-            pong: false
+            pong: false,
+            buffer_size: None,
         }
     ));
     let pong_packet = dm.packet_out()?;
@@ -771,7 +774,8 @@ fn test_ping() -> Result<()> {
         PacketInResult::Accepted {
             ack_received: false,
             message_ready: false,
-            pong: true
+            pong: true,
+            buffer_size: None,
         }
     ));
     assert!(pir.got_pong());
