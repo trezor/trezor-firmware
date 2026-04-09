@@ -2379,49 +2379,49 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "¿Permitir que {0} se conecte automáticamente a este Trezor?",
       "Eckhart": "¿Permitir que {0} se conecte automáticamente a este Trezor?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "¿Permitir que {0} en {1} se conecte automáticamente a este Trezor?",
       "Eckhart": "¿Permitir que {0} en {1} se conecte automáticamente a este Trezor?"
     },
     "thp__autoconnect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Credencial de conexión automática",
       "Eckhart": "Credencial de conexión automática"
     },
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Ingresa este código de seguridad de un solo uso en {0}",
       "Eckhart": "Ingresa este código de seguridad de un solo uso en {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Un paso más",
       "Eckhart": "Un paso más"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "¿Permitir que {0} se conecte a este Trezor?",
       "Eckhart": "¿Permitir que {0} se conecte a este Trezor?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "¿Permitir que {0} en {1} se conecte a este Trezor?",
       "Eckhart": "¿Permitir que {0} en {1} se conecte a este Trezor?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Diálogo de conexión",
       "Eckhart": "Diálogo de conexión"
     },
     "thp__nfc_text": {
@@ -2433,37 +2433,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "¿Permitir que {0} se empareje con este Trezor?",
       "Eckhart": "¿Permitir que {0} se empareje con este Trezor?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "¿Permitir que {0} en {1} se empareje con este Trezor?",
       "Eckhart": "¿Permitir que {0} en {1} se empareje con este Trezor?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "{0} es el nombre de tu Trezor.",
       "Eckhart": "{0} es el nombre de tu Trezor."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Vincular nuevo dispositivo",
       "Eckhart": "Vincular nuevo dispositivo"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Antes de continuar",
       "Eckhart": "Antes de continuar"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Escanea el QR para emparejar",
       "Eckhart": "Escanea el QR para emparejar"
     },
     "tutorial__continue": "Continuar con el tutorial",
