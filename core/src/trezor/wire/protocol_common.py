@@ -13,6 +13,7 @@ if TYPE_CHECKING:
         Awaitable,
         Callable,
         Container,
+        Generator,
         Literal,
         NoReturn,
         TypeVar,
@@ -133,30 +134,72 @@ class ButtonRequestHandler:
 
     def __init__(self, ctx: Context) -> None:
         self.ctx = ctx
+        self.box: loop.mailbox[ButtonRequest | None] = loop.mailbox()
+        self.is_done: loop.mailbox[None] | None = None
+        self.pending = False
 
-    async def handle(
+    def put(self, br: ButtonRequest) -> None:
+        if __debug__:
+            if self.pending:
+                from . import FirmwareError
+
+                raise FirmwareError(
+                    "button request already pending -- "
+                    "don't forget to yield your input flow from time to time ^_^"
+                )
+            self.pending = True
+
+        # in production, we don't want this to fail, hence replace=True
+        self.box.put(br, replace=True)
+
+    def create_task(
+        self, ack_callback: Callable[[], None]
+    ) -> Generator[Any, Any, None]:
+        assert self.is_done is None
+        self.is_done = loop.mailbox()
+        try:
+            yield from self._handle(ack_callback)
+        finally:
+            # no pending I/O - mark as done, to unblock `join()`.
+            self.is_done.put(None)
+
+    async def join(self, wait_task: loop.Task[None]) -> None:
+        # `create_task()` must be called before joining.
+        assert self.is_done is not None
+        # notify the handler that no more button requests are expected
+        # in production, we don't want this to fail, hence replace=True
+        self.box.put(None, replace=True)
+
+        task = loop.spawn(wait_task)
+        try:
+            await self.is_done
+        finally:
+            self.is_done = None
+            task.close()
+
+    async def _handle(
         self,
-        button_requests: loop.mailbox[ButtonRequest | None],
-        ack_callback: Callable[[], None] | None,
+        ack_callback: Callable[[], None],
     ) -> None:
         from trezor.messages import ButtonAck
 
         while True:
             # The following task will raise on any incoming message.
             unexpected_read = self.ctx.read(None)
-            br = await loop.race(unexpected_read, button_requests)
+            br = await loop.race(unexpected_read, self.box)
 
             # Exit the loop when the layout is done.
             if br is None:
+                self.pending = False
                 return
 
             if __debug__:
                 log.info(__name__, "ButtonRequest sent: %s", br.name)
             await self.ctx.call(br, ButtonAck)
+            self.pending = False
             if __debug__:
                 log.info(__name__, "ButtonRequest acked: %s", br.name)
-            if ack_callback is not None:
-                ack_callback()
+            ack_callback()
 
 
 class ContinueOnErrors(ButtonRequestHandler):
@@ -167,10 +210,9 @@ class ContinueOnErrors(ButtonRequestHandler):
         self._prev_handler: ButtonRequestHandler | None = None
         self.msg = msg
 
-    async def handle(
+    async def _handle(
         self,
-        button_requests: loop.mailbox[ButtonRequest | None],
-        ack_callback: Callable[[], None] | None,
+        ack_callback: Callable[[], None],
     ) -> None:
         """Unexpected messages will not cause the handler to fail."""
         from .context import UnexpectedMessageException
@@ -178,7 +220,7 @@ class ContinueOnErrors(ButtonRequestHandler):
         while True:
             try:
                 # Exit the loop when the layout is done.
-                return await super().handle(button_requests, ack_callback)
+                return await super()._handle(ack_callback)
             except UnexpectedMessageException as exc:
                 # in case of THP channel preemption, `msg` is not set.
                 # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
