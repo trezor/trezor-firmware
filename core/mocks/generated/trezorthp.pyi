@@ -1,9 +1,10 @@
 from typing import *
 from buffer_types import *
 MESSAGE_READY: object
+MESSAGE_READY_ACK: object
+ACK: object
 KEY_REQUIRED: object
 KEY_REQUIRED_UNLOCK: object
-ACK: object
 FAILED: object
 
 

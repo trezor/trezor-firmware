@@ -229,13 +229,13 @@ class Channel:
             iface_num, self.channel_id, packet_buffer, self.receive_buffer
         )
         self._log(f"packet_in: {result}")
-        if result == trezorthp.MESSAGE_READY:
-            self.incoming_box.put(None)
-            self.expecting_message = False
-        elif result == trezorthp.ACK:
+        if result is trezorthp.ACK or result is trezorthp.MESSAGE_READY_ACK:
             self.ack_box.put(None)
             self.expecting_ack = False
             self.iface_ctx.recompute_timeouts()
+        if result is trezorthp.MESSAGE_READY or result is trezorthp.MESSAGE_READY_ACK:
+            self.incoming_box.put(None)
+            self.expecting_message = False
         elif result == trezorthp.FAILED:
             self.clear()
             raise ThpError

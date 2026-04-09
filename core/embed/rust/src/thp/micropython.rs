@@ -322,12 +322,14 @@ static KEY_REQUIRED_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_KEY_REQUIRED, }
 static KEY_REQUIRED_UNLOCK_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_KEY_REQUIRED_UNLOCK, };
 static MESSAGE_READY_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_MESSAGE_READY, };
 static ACK_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_ACK, };
+static MESSAGE_READY_ACK_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_MESSAGE_READY_ACK, };
 
 pub static FAILED_OBJ: SimpleTypeObj = SimpleTypeObj::new(&FAILED_TYPE);
 pub static KEY_REQUIRED_OBJ: SimpleTypeObj = SimpleTypeObj::new(&KEY_REQUIRED_TYPE);
 pub static KEY_REQUIRED_UNLOCK_OBJ: SimpleTypeObj = SimpleTypeObj::new(&KEY_REQUIRED_UNLOCK_TYPE);
 pub static MESSAGE_READY_OBJ: SimpleTypeObj = SimpleTypeObj::new(&MESSAGE_READY_TYPE);
 pub static ACK_OBJ: SimpleTypeObj = SimpleTypeObj::new(&ACK_TYPE);
+pub static MESSAGE_READY_ACK_OBJ: SimpleTypeObj = SimpleTypeObj::new(&MESSAGE_READY_ACK_TYPE);
 
 impl TryFrom<TrezorInResult> for Obj {
     type Error = Error;
@@ -340,9 +342,10 @@ impl TryFrom<TrezorInResult> for Obj {
             TrezorInResult::KeyRequired(true) => KEY_REQUIRED_UNLOCK_OBJ.as_obj(),
             TrezorInResult::KeyRequired(_) => KEY_REQUIRED_OBJ.as_obj(),
             TrezorInResult::MessageReady => MESSAGE_READY_OBJ.as_obj(),
+            TrezorInResult::MessageReadyAck => MESSAGE_READY_ACK_OBJ.as_obj(),
+            TrezorInResult::Ack => ACK_OBJ.as_obj(),
             // Currently no need to expose to python.
             TrezorInResult::ChannelAllocation => Obj::const_none(),
-            TrezorInResult::Ack => ACK_OBJ.as_obj(),
         })
     }
 }
@@ -355,14 +358,17 @@ pub static mp_module_trezorthp: Module = obj_module! {
     /// MESSAGE_READY: object
     Qstr::MP_QSTR_MESSAGE_READY => MESSAGE_READY_OBJ.as_obj(),
 
+    /// MESSAGE_READY_ACK: object
+    Qstr::MP_QSTR_MESSAGE_READY_ACK => MESSAGE_READY_ACK_OBJ.as_obj(),
+
+    /// ACK: object
+    Qstr::MP_QSTR_ACK => ACK_OBJ.as_obj(),
+
     /// KEY_REQUIRED: object
     Qstr::MP_QSTR_KEY_REQUIRED => KEY_REQUIRED_OBJ.as_obj(),
 
     /// KEY_REQUIRED_UNLOCK: object
     Qstr::MP_QSTR_KEY_REQUIRED_UNLOCK => KEY_REQUIRED_UNLOCK_OBJ.as_obj(),
-
-    /// ACK: object
-    Qstr::MP_QSTR_ACK => ACK_OBJ.as_obj(),
 
     /// FAILED: object
     Qstr::MP_QSTR_FAILED => FAILED_OBJ.as_obj(),

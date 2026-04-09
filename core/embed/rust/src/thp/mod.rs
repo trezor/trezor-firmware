@@ -218,13 +218,18 @@ impl InterfaceContext {
     ) -> Result<TrezorInResult, Error> {
         let channel = self.lookup_channel_mut(channel_id)?;
         let pir = channel.packet_in(packet_buffer, receive_buffer);
+        // log::debug!("pir: {:?}", pir);
         let res = match pir {
             PacketInResult::Accepted {
-                message_ready: true,
+                ack_received,
+                message_ready,
                 ..
-            } => TrezorInResult::MessageReady,
-            PacketInResult::Accepted { .. } => TrezorInResult::None,
-            //PacketInResult::EnlargeBuffer { .. } => c"InEnlargeBuffer".try_into()?,
+            } => match (message_ready, ack_received) {
+                (true, true) => TrezorInResult::MessageReadyAck,
+                (true, false) => TrezorInResult::MessageReady,
+                (false, true) => TrezorInResult::Ack,
+                _ => TrezorInResult::None,
+            },
             PacketInResult::Ignored { .. } => TrezorInResult::None,
             PacketInResult::Failed { .. } | PacketInResult::TransportError { .. } => {
                 self.channel_close(channel_id);
@@ -238,7 +243,6 @@ impl InterfaceContext {
             if let Some(t) = self.timing.get_mut(&channel_id) {
                 t.read_ack(Instant::now());
             }
-            return Ok(TrezorInResult::Ack); // TODO piggybacking
         }
         Ok(res)
     }
@@ -661,8 +665,9 @@ enum TrezorInResult {
     Failed,
     KeyRequired(bool),
     MessageReady,
-    ChannelAllocation,
+    MessageReadyAck,
     Ack,
+    ChannelAllocation,
 }
 
 struct Auxiliary {
