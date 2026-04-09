@@ -2634,13 +2634,13 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Autoriser {0} à se connecter automatiquement à ce Trezor ?",
       "Eckhart": "Autoriser {0} à se connecter automatiquement à ce Trezor ?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Autoriser {0} sur {1} à se connecter automatiquement à ce Trezor ?",
       "Eckhart": "Autoriser {0} sur {1} à se connecter automatiquement à ce Trezor ?"
     },
     "thp__autoconnect_title": {
@@ -2652,31 +2652,31 @@
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Entrez ce code de sécurité à usage unique sur {0}",
       "Eckhart": "Entrez ce code de sécurité à usage unique sur {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Encore une étape",
       "Eckhart": "Encore une étape"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Autoriser {0} à se connecter avec ce Trezor ?",
       "Eckhart": "Autoriser {0} à se connecter avec ce Trezor ?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Autoriser {0} sur {1} à se connecter avec ce Trezor ?",
       "Eckhart": "Autoriser {0} sur {1} à se connecter avec ce Trezor ?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Dialogue de connexion",
       "Eckhart": "Dialogue de connexion"
     },
     "thp__nfc_text": {
@@ -2688,37 +2688,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Autoriser {0} à sʼappairer avec ce Trezor ?",
       "Eckhart": "Autoriser {0} à sʼappairer avec ce Trezor ?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Autoriser {0} sur {1} à s'appairer avec ce Trezor ?",
       "Eckhart": "Autoriser {0} sur {1} à s'appairer avec ce Trezor ?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "{0} est le nom de votre Trezor.",
       "Eckhart": "{0} est le nom de votre Trezor."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Appairer avec un nouvel appareil",
       "Eckhart": "Appairer avec un nouvel appareil"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Avant de continuer",
       "Eckhart": "Avant de continuer"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Scannez le code QR pour appairer",
       "Eckhart": "Scannez le code QR pour appairer"
     },
     "tutorial__continue": "Continuer le tutoriel",
