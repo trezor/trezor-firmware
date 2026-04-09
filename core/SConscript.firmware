@@ -22,7 +22,7 @@ SCM_REVISION = ARGUMENTS.get('SCM_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
 LOG_STACK_USAGE = ARGUMENTS.get('LOG_STACK_USAGE', '0') == '1'
-MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '0')
+MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '0') == '1'
 DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 BLOCK_ON_VCP = ARGUMENTS.get('BLOCK_ON_VCP', '0') == '1'
 UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
@@ -136,7 +136,7 @@ CPPDEFINES_MOD += [
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
     ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
-    ('MICROPY_ENABLE_SOURCE_LINE', MICROPY_ENABLE_SOURCE_LINE),
+    ('MICROPY_ENABLE_SOURCE_LINE', '1' if MICROPY_ENABLE_SOURCE_LINE else '0'),
     ('DISABLE_ANIMATION', '1' if DISABLE_ANIMATION else '0'),
     ('LOG_STACK_USAGE', '1' if LOG_STACK_USAGE else '0'),
     ('BLOCK_ON_VCP', '1' if BLOCK_ON_VCP else '0'),
@@ -858,7 +858,8 @@ if FROZEN:
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
         thp=THP,
         power_manager='power_manager' in FEATURES_AVAILABLE,
-        )
+        include_source_lines=MICROPY_ENABLE_SOURCE_LINE,
+    )
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)

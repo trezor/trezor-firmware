@@ -17,7 +17,7 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 DEBUGLINK = ARGUMENTS.get('DEBUGLINK', '0') == '1'
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
-MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '1')
+MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '1') == '1'
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 EXTAPP_SUPPORT = ARGUMENTS.get('EXTAPP_SUPPORT', '0') == '1'
 
@@ -119,7 +119,7 @@ CPPDEFINES_MOD += [
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
     ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
-    ('MICROPY_ENABLE_SOURCE_LINE', MICROPY_ENABLE_SOURCE_LINE),
+    ('MICROPY_ENABLE_SOURCE_LINE', '1' if MICROPY_ENABLE_SOURCE_LINE else '0'),
 ]
 SOURCE_MOD += [
     'embed/upymod/trezorobj.c',
@@ -877,7 +877,8 @@ if FROZEN:
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
         thp=THP,
         power_manager='power_manager' in FEATURES_AVAILABLE,
-        )
+        include_source_lines=MICROPY_ENABLE_SOURCE_LINE,
+    )
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)

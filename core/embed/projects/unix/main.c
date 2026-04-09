@@ -495,6 +495,11 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   mp_init();
 
+#if MICROPY_ENABLE_COMPILER && MICROPY_ENABLE_SOURCE_LINE
+  // include source lines on non-frozen builds
+  MP_STATE_VM(include_source_lines) = true;
+#endif
+
   char *home = getenv("HOME");
   char *path = getenv("MICROPYPATH");
   if (path == NULL) {
