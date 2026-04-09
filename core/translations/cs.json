@@ -2349,49 +2349,49 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Povolit {0} automatické připojení k tomuto Trezoru?",
       "Eckhart": "Povolit {0} automatické připojení k tomuto Trezoru?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Povolit {0} na {1} se automaticky připojit k tomuto Trezoru?",
       "Eckhart": "Povolit {0} na {1} se automaticky připojit k tomuto Trezoru?"
     },
     "thp__autoconnect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Údaje automatického připojení",
       "Eckhart": "Údaje automatického připojení"
     },
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Zadejte jednorázový bezpečnostní kód na {0}",
       "Eckhart": "Zadejte jednorázový bezpečnostní kód na {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Ještě jeden krok",
       "Eckhart": "Ještě jeden krok"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Povolit {0} připojení k tomuto Trezoru?",
       "Eckhart": "Povolit {0} připojení k tomuto Trezoru?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Povolit {0} na {1} se připojit k tomuto Trezoru?",
       "Eckhart": "Povolit {0} na {1} se připojit k tomuto Trezoru?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Dialog připojení",
       "Eckhart": "Dialog připojení"
     },
     "thp__nfc_text": {
@@ -2403,37 +2403,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Povolit {0} spárování s tímto Trezorem?",
       "Eckhart": "Povolit {0} spárování s tímto Trezorem?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Povolit {0} na {1} spárování s tímto Trezorem?",
       "Eckhart": "Povolit {0} na {1} spárování s tímto Trezorem?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "{0} je název vašeho Trezoru.",
       "Eckhart": "{0} je název vašeho Trezoru."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Spárovat s novým zařízením",
       "Eckhart": "Spárovat s novým zařízením"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Než budete pokračovat",
       "Eckhart": "Než budete pokračovat"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Naskenujte QR kód pro spárování",
       "Eckhart": "Naskenujte QR kód pro spárování"
     },
     "tutorial__continue": "Pokračovat v tutoriálu",
