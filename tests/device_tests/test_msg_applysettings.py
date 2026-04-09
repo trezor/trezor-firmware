@@ -249,7 +249,8 @@ def test_apply_homescreen_jpeg(session: Session):
             device.apply_settings(session, homescreen=b"")
 
 
-@pytest.mark.models(skip=["legacy", "safe3", "eckhart"])
+@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.protocol("v1")
 def test_apply_homescreen_jpeg_single_message(session: Session):
     with open(homescreen_jpeg_path(session.debug.layout_type), "rb") as f:
         img = f.read()
