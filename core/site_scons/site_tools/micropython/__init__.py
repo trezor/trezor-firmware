@@ -62,6 +62,7 @@ def generate(env):
         layout_eckhart = env["ui_layout"] == "UI_LAYOUT_ECKHART"
         thp = env["thp"]
         power_manager = env["power_manager"]
+        include_source_lines = env["include_source_lines"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = [
             rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
@@ -94,7 +95,11 @@ def generate(env):
                 )
             )
 
-        return f"$SED {' '.join(sed_scripts)} {source} > {interim} && $MPY_CROSS -o {target} -s {source_name} {interim}"
+        mpy_cross_flags = f'-X {"" if include_source_lines else "no-"}source-lines'
+        return (
+            f"$SED {' '.join(sed_scripts)} {source} > {interim}"
+            f" && $MPY_CROSS {mpy_cross_flags} -o {target} -s {source_name} {interim}"
+        )
 
     env["BUILDERS"]["FrozenModule"] = SCons.Builder.Builder(
         generator=generate_frozen_module,

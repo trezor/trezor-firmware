@@ -349,8 +349,7 @@ build_unix_debug: templates ## build unix port
 
 build_cross: ## build mpy-cross port
 	INC=-I$(CURDIR)/embed/upymod/mpycross_include/ \
-		$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS) \
-		CFLAGS_EXTRA=-DMICROPY_ENABLE_SOURCE_LINE=$(MICROPY_ENABLE_SOURCE_LINE)
+		$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
 
 ## clean commands:
 
