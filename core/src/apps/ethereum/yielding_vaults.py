@@ -7,28 +7,43 @@ if __debug__:
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 
     # Stablecoin Yielding Vaults
-    # Each entry: (vault_address, owner_name, asset_decimals, asset_identifier, chain_id)
     # Will be a list of tuples for each chain/network.
     KNOWN_VAULT = (
-        b"\xac\x8c\x6e\x87\x79\xdd\xdc\x60\xf5\xce\xf7\x70\x1d\xce\x70\xec\xba\x5e\xf5\x18",  # vault contract address
-        8453,  # chain id (Base)
-        "Trezor Test Vault (Base)",  # owner/protocol name
+        # Test vault: https://etherscan.io/address/0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da
+        b"\xa5\x11\xd6\x18\xcd\x0f\x9d\x7c\xad\x79\x10\x09\xd7\xc5\xe3\xb1\x9c\x95\x68\xda",  # vault contract address
+        1,  # chain id (Ethereum)
+        "Test Steakhouse USDC Prime Vault",  # owner/protocol name
+        # Asset Token
         EthereumTokenInfo(
             symbol="USDC",
             decimals=6,
             address=b"\xa0\xb8\x69\x91\xc6\x21\x8b\x36\xc1\xd1\x9d\x4a\x2e\x9e\xb0\xce\x36\x06\xeb\x48",
-            chain_id=8453,
+            chain_id=1,
             name="USD Coin",
+        ),
+        # Vault token
+        EthereumTokenInfo(
+            symbol="tstSHUSDCp",
+            decimals=18,
+            address=b"\xa5\x11\xd6\x18\xcd\x0f\x9d\x7c\xad\x79\x10\x09\xd7\xc5\xe3\xb1\x9c\x95\x68\xda",  # vault contract address
+            chain_id=1,
+            name="Test Steakhouse USDC Prime",
         ),
     )
 
     def lookup_vault(
-        vault_addr: AnyBytes, network: EthereumNetworkInfo
-    ) -> tuple[str, EthereumTokenInfo]:
+        network: EthereumNetworkInfo, vault_addr: AnyBytes
+    ) -> tuple[bool, str, EthereumTokenInfo, EthereumTokenInfo]:
+        """returns (is_known_vault, vault_name_or_address, asset_token, vault_token)"""
         from .helpers import address_from_bytes
         from .tokens import UNKNOWN_TOKEN
 
-        if vault_addr == KNOWN_VAULT[0] and network.chain_id == KNOWN_VAULT[1]:
-            return KNOWN_VAULT[2], KNOWN_VAULT[3]
+        if network.chain_id == KNOWN_VAULT[1] and vault_addr == KNOWN_VAULT[0]:
+            return True, KNOWN_VAULT[2], KNOWN_VAULT[3], KNOWN_VAULT[4]
         else:
-            return address_from_bytes(vault_addr, network), UNKNOWN_TOKEN
+            return (
+                False,
+                address_from_bytes(vault_addr, network),
+                UNKNOWN_TOKEN,
+                UNKNOWN_TOKEN,
+            )
