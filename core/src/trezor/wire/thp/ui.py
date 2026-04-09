@@ -15,7 +15,7 @@ def confirm_pairing(
     long_text: str,
 ) -> Awaitable[None]:
     from trezor.ui.layouts.common import raise_if_not_confirmed
-    from trezorui_api import confirm_thp_pairing
+    from trezorui_api import confirm_action
 
     if app_name and host_name:
         args = (app_name, host_name)
@@ -23,9 +23,10 @@ def confirm_pairing(
     else:
         args = (app_name or host_name or "(unknown)",)
         description = short_text
+    text = description.format(*args)
 
     return raise_if_not_confirmed(
-        confirm_thp_pairing(title=title, description=description, args=args),
+        confirm_action(title=title, action=None, description=text),
         br_name=br_name,
     )
 
@@ -77,15 +78,15 @@ def show_connection_dialog(
 async def show_code_entry_screen(
     code_entry_str: str, host_name: str | None
 ) -> UiResult:
-    from trezor import TR
     from trezor.ui.layouts.common import interact
-    from trezorui_api import show_thp_pairing_code
+    from trezorui_api import show_simple
 
     return await interact(
-        show_thp_pairing_code(
-            title=TR.thp__code_title,
-            description=TR.thp__code_entry.format(host_name),
-            code=code_entry_str,
+        show_simple(
+            text=f"Enter this one-time security code on {0}".format(host_name)
+            + "\ncode: "
+            + code_entry_str,
+            title="One more step",
         ),
         br_name=None,
     )
