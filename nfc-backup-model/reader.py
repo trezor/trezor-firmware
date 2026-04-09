@@ -1,6 +1,6 @@
 import pickle
-from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import Iterator
 
 import commands
 from apdu import ApduHeader, ApduRequest, ApduResponse
