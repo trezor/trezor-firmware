@@ -125,7 +125,7 @@ impl ControlByte {
     }
 
     pub fn sync_bits(&self) -> SyncBits {
-        SyncBits::from(self.0 & SYNC_MASK)
+        SyncBits::from(self.0)
     }
 
     pub fn with_sync_bits(self, sb: SyncBits) -> Self {
