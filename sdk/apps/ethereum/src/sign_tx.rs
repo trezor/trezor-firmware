@@ -1,36 +1,27 @@
 use crate::{
     common::{
-        EIP_7702_TX_TYPE, SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES,
-        SC_FUNC_APPROVE_REVOKE_AMOUNT, SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_BYTES,
-        SC_FUNC_SIG_TRANSFER, check_common_fields, confirm_tx_data, get_eip_7702_known_address,
-        require_confirm_address, require_confirm_approve, require_confirm_other_data,
-        require_confirm_payment_request, require_confirm_tx, run_staking_approver,
-        send_request_chunk,
+        EIP_7702_TX_TYPE, SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES, check_common_fields,
+        confirm_tx_data, get_eip_7702_known_address, send_request_chunk,
     },
     definitions::Definitions,
-    helpers::{
-        address_from_bytes, bytes_from_address, format_ethereum_amount, get_fee_items_regular,
-    },
+    helpers::{bytes_from_address, format_ethereum_amount, get_fee_items_regular},
     keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
     paths::{Bip32Path, unharden},
     payment_request::PaymentRequestVerifier,
     proto::{
         common::button_request::ButtonRequestType,
-        definitions::EthereumTokenInfo,
         ethereum::{EthereumSignTx, EthereumTxRequest},
     },
     rlp::{self, RLPItem},
-    tokens,
 };
 #[cfg(not(test))]
-use alloc::{string::String, vec, vec::Vec};
+use alloc::{vec, vec::Vec};
 use primitive_types::U256;
 #[cfg(test)]
-use std::{string::String, vec, vec::Vec};
+use std::{vec, vec::Vec};
 use trezor_app_sdk::{
     Error, Result, crypto, info,
     ui::{self, Property},
-    unwrap,
 };
 
 // Compile-time assertion

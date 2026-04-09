@@ -1,37 +1,26 @@
 use crate::{
-    common::{
-        SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES, SC_FUNC_APPROVE_REVOKE_AMOUNT,
-        SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_BYTES, SC_FUNC_SIG_TRANSFER, check_common_fields,
-        confirm_tx_data, require_confirm_address, require_confirm_approve,
-        require_confirm_other_data, require_confirm_payment_request, require_confirm_tx,
-        run_staking_approver, send_request_chunk,
-    },
+    common::{check_common_fields, confirm_tx_data, send_request_chunk},
     definitions::Definitions,
-    helpers::{
-        address_from_bytes, bytes_from_address, format_ethereum_amount, get_fee_items_eip1559,
-    },
+    helpers::{bytes_from_address, format_ethereum_amount, get_fee_items_eip1559},
     keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
     paths::{Bip32Path, unharden},
     payment_request::PaymentRequestVerifier,
     proto::{
         common::button_request::ButtonRequestType,
-        definitions::EthereumTokenInfo,
         ethereum::{
             EthereumSignTxEip1559, EthereumTxRequest, ethereum_sign_tx_eip1559::EthereumAccessList,
         },
     },
     rlp::{self, RLPItem},
-    tokens,
 };
 #[cfg(not(test))]
-use alloc::{string::String, vec, vec::Vec};
+use alloc::{vec, vec::Vec};
 use primitive_types::U256;
 #[cfg(test)]
-use std::{string::String, vec, vec::Vec};
+use std::{vec, vec::Vec};
 use trezor_app_sdk::{
     Error, Result, crypto, info,
     ui::{self, Property},
-    unwrap,
 };
 
 const TX_TYPE: u32 = 2;
