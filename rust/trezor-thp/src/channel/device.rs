@@ -132,7 +132,7 @@ where
 
     // Returns true if allocation request has been received.
     fn handle_broadcast(&mut self, packet: &[u8]) -> Result<bool, Error> {
-        let (header, payload) = Reassembler::<Device>::single_inplace(packet)?;
+        let (header, payload) = Reassembler::<Device>::single(packet)?;
         match header {
             Header::Ping if payload.len() == Nonce::LEN => {
                 let (nonce, _rest) = Nonce::parse(payload)?;
@@ -328,11 +328,18 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     }
 
     fn incoming_internal(&mut self) -> Result<(), Error> {
+        let ChannelState::Receiving { reassembler, .. } = &self.channel.state else {
+            return Err(Error::not_ready());
+        };
+        let sync_bits = reassembler.sync_bits();
+
         let (header, len) = self.channel.raw_out(&self.internal_buffer)?;
         self.internal_buffer.truncate(len);
 
         match (self.state, header.handshake_phase()) {
             (HandshakeState::SendingChannelResponse, Some(HandshakeMessage::InitiationRequest)) => {
+                // enable ACK piggybacking if requested
+                self.enable_ack_piggybacking_if_requested(sync_bits);
                 let try_to_unlock = self.noise.read_initiation_request(&self.internal_buffer)?;
                 self.state = HandshakeState::StaticKeyRequired { try_to_unlock };
             }
@@ -349,6 +356,12 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
             }
         }
         Ok(())
+    }
+
+    fn enable_ack_piggybacking_if_requested(&mut self, sync_bits: SyncBits) {
+        if sync_bits.ack_bit() {
+            self.channel.sync.allow_ack_piggybacking();
+        }
     }
 
     fn send_initiation_response(
@@ -480,18 +493,19 @@ where
         let res = self
             .channel
             .packet_in(packet_buffer, &mut self.internal_buffer);
-        if let PacketInResult::EnlargeBuffer { buffer_size, .. } = res {
+        if let PacketInResult::Accepted {
+            buffer_size: Some(s),
+            ..
+        } = res
+        {
             log::error!(
                 "[{:04x}] Payload length {} exceeds handshake limit.",
                 self.channel_id(),
-                buffer_size
+                s
             );
             // Possibly damaged length field, ignore continuations.
             self.channel.state = ChannelState::Idle;
             return PacketInResult::ignore(Error::malformed_data());
-        }
-        if res.got_ack() {
-            prepare_zeroed(&mut self.internal_buffer);
         }
         if res.got_message() {
             let handled = self.incoming_internal();
@@ -506,6 +520,8 @@ where
             if let HandshakeState::StaticKeyRequired { try_to_unlock } = self.state {
                 return PacketInResult::HandshakeKeyRequired { try_to_unlock };
             }
+        } else if res.got_ack() {
+            prepare_zeroed(&mut self.internal_buffer);
         }
         res
     }
