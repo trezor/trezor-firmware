@@ -13,6 +13,7 @@ if TYPE_CHECKING:
         Awaitable,
         Callable,
         Container,
+        Generator,
         Literal,
         NoReturn,
         TypeVar,
@@ -21,6 +22,8 @@ if TYPE_CHECKING:
 
     from storage.cache_common import DataCache
     from trezor.messages import ButtonRequest
+
+    AckCallback = Callable[[], None]
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
     T = TypeVar("T")
@@ -132,31 +135,78 @@ class ButtonRequestHandler:
     """Handle button requests and unexpected messages from host."""
 
     def __init__(self, ctx: Context) -> None:
-        self.ctx = ctx
+        self.ctx = ctx  # used for communication with the host.
 
-    async def handle(
-        self,
-        button_requests: loop.mailbox[ButtonRequest | None],
-        ack_callback: Callable[[], None] | None,
-    ) -> None:
+        # Receives ButtonRequest notifications from the active layout,
+        # or `None` when the layout is closed.
+        self.box: loop.mailbox[ButtonRequest | None] = loop.mailbox()
+
+        # Allows the layout to block until ButtonRequest handling is over,
+        # using `join()` method.
+        self.is_done: loop.mailbox[None] = loop.mailbox()
+
+        if __debug__:
+            # Is there a pending ButtonRequest (still waiting for an ButtonAck)?
+            # Used for detecting missing ButtonAck in debug builds.
+            self.pending = False
+
+    def put(self, br: ButtonRequest) -> None:
+        if __debug__:
+            if self.pending:
+                from . import FirmwareError
+
+                raise FirmwareError(
+                    "button request already pending -- "
+                    "don't forget to yield your input flow from time to time ^_^"
+                )
+            self.pending = True
+
+        # in production, we don't want this to fail, hence replace=True
+        self.box.put(br, replace=True)
+
+    def br_task(self, ack_callback: AckCallback) -> Generator[Any, Any, None]:
+        assert self.is_done.is_empty()
+        try:
+            yield from self._handle(ack_callback)
+        finally:
+            # no pending I/O - mark as done, to unblock `join()`.
+            self.is_done.put(None)
+
+    async def join(self, wait_task: loop.Task[None]) -> None:
+        # `br_task()` must be scheduled before joining.
+
+        # notify the handler that no more button requests are expected
+        # in production, we don't want this to fail, hence replace=True
+        self.box.put(None, replace=True)
+
+        task = loop.spawn(wait_task)
+        try:
+            await self.is_done
+        finally:
+            assert self.is_done.is_empty()
+            task.close()
+
+    async def _handle(self, ack_callback: AckCallback) -> None:
         from trezor.messages import ButtonAck
 
         while True:
             # The following task will raise on any incoming message.
             unexpected_read = self.ctx.read(None)
-            br = await loop.race(unexpected_read, button_requests)
+            br = await loop.race(unexpected_read, self.box)
 
             # Exit the loop when the layout is done.
             if br is None:
+                if __debug__:
+                    self.pending = False
                 return
 
             if __debug__:
                 log.info(__name__, "ButtonRequest sent: %s", br.name)
             await self.ctx.call(br, ButtonAck)
             if __debug__:
+                self.pending = False
                 log.info(__name__, "ButtonRequest acked: %s", br.name)
-            if ack_callback is not None:
-                ack_callback()
+            ack_callback()
 
 
 class ContinueOnErrors(ButtonRequestHandler):
@@ -167,18 +217,14 @@ class ContinueOnErrors(ButtonRequestHandler):
         self._prev_handler: ButtonRequestHandler | None = None
         self.msg = msg
 
-    async def handle(
-        self,
-        button_requests: loop.mailbox[ButtonRequest | None],
-        ack_callback: Callable[[], None] | None,
-    ) -> None:
+    async def _handle(self, ack_callback: AckCallback) -> None:
         """Unexpected messages will not cause the handler to fail."""
         from .context import UnexpectedMessageException
 
         while True:
             try:
                 # Exit the loop when the layout is done.
-                return await super().handle(button_requests, ack_callback)
+                return await super()._handle(ack_callback)
             except UnexpectedMessageException as exc:
                 # in case of THP channel preemption, `msg` is not set.
                 # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.

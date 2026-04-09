@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from trezor import io, log, loop, utils, wire, workflow
 from trezor.messages import ButtonRequest
 from trezor.wire import context
-from trezor.wire.protocol_common import Context
+from trezor.wire.protocol_common import ButtonRequestHandler, Context
 from trezorui_api import (
     AttachType,
     BacklightLevels,
@@ -146,23 +146,27 @@ class Layout(Generic[T]):
         def __str__(self) -> str:
             return f"{repr(self)}({self._trace(self.layout)[:150]})"
 
+        def is_layout_attached(self) -> bool:
+            return self._is_attached
+
     def __init__(self, layout: LayoutObj[T]) -> None:
         """Set up a layout."""
         self.layout = layout
         self.tasks: set[loop.Task[None]] = set()
         self.timers: dict[int, loop.Task[None]] = {}
         self.result_box: loop.mailbox[Any] = loop.mailbox()
-        self.button_request_ack_pending: bool = False
-        self.button_request_box: loop.mailbox[ButtonRequest | None] = loop.mailbox()
+        self.button_request_handler: ButtonRequestHandler | None = None
         self.button_request_task: loop.Task[None] | None = None
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
         self.context: Context | None = None
-        self.state: LayoutState = LayoutState.INITIAL
 
         # Indicates whether we should use Resume attach style when launching.
         # Homescreen layouts can override this.
         self.should_resume = False
+
+        if __debug__:
+            self._is_attached: bool = False
 
     def is_ready(self) -> bool:
         """True if the layout is in READY state."""
@@ -175,9 +179,6 @@ class Layout(Generic[T]):
     def is_finished(self) -> bool:
         """True if the layout is in FINISHED state."""
         return CURRENT_LAYOUT is not self and not self.result_box.is_empty()
-
-    def is_layout_attached(self) -> bool:
-        return self.state is LayoutState.ATTACHED
 
     def start(self) -> None:
         """Start the layout, stopping any other RUNNING layout.
@@ -206,8 +207,7 @@ class Layout(Generic[T]):
         set_current_layout(self)
 
         try:
-            # save context (if exists)
-            self.context = context.get_context()
+            self.button_request_handler = context.get_context().button_request_handler
         except context.NoWireContext:
             pass
 
@@ -251,6 +251,9 @@ class Layout(Generic[T]):
         # shut down anyone who is waiting for the result
         if _close_all:
             self.result_box.maybe_close()
+            if __debug__ and self.button_request_task is not None:
+                # Don't raise in production to avoid THP desync
+                raise wire.FirmwareError("button request ack pending")
 
         if CURRENT_LAYOUT is self:
             # fade to black -- backlight is off while no layout is running
@@ -258,13 +261,6 @@ class Layout(Generic[T]):
 
             set_current_layout(None)
             if __debug__:
-                if self.button_request_ack_pending:
-                    msg = "button request ack pending"
-                    if utils.USE_THP:
-                        # Don't raise to avoid THP desync
-                        log.error(__name__, msg)
-                    else:
-                        raise wire.FirmwareError(msg)
                 notify_layout_change(None)
 
     async def get_result(self) -> T:
@@ -272,44 +268,27 @@ class Layout(Generic[T]):
         if self.is_ready():
             self.start()
         # else we are (a) still running or (b) already finished
-        is_done = None
         try:
-            if (ctx := self.context) is not None and self.result_box.is_empty():
-                is_done = loop.mailbox()  # (see below)
-
-                def _button_request_task() -> Generator[Any, Any, None]:
-                    try:
-                        yield from ctx.button_request_handler.handle(
-                            button_requests=self.button_request_box,
-                            ack_callback=self._button_request_acked,
-                        )
-                    finally:
-                        is_done.put(None)
-
-                self.button_request_task = _button_request_task()
-                self._start_task(self.button_request_task)
-            elif __debug__ and not self.button_request_box.is_empty():
-                log.debug(
-                    __name__,
-                    "ButtonRequest task not started, %s ignored",
-                    self.button_request_box.value,
-                )
+            br_handler = self.button_request_handler
+            if br_handler is not None:
+                # Keep a reference to ButtonRequest handling task (to avoid prematurely closing it).
+                br_task = br_handler.br_task(self._button_request_acked)
+                self.button_request_task = br_task
+                self._start_task(br_task)
 
             result = await self.result_box
             assert CURRENT_LAYOUT is None  # the screen is blank now
 
-            if is_done is not None:
+            if br_handler is not None:
                 # Make sure ButtonRequest is ACKed, before the result is returned.
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
-                self.put_button_request(None)
-                task = loop.spawn(_waiting_screen())
-                try:
-                    await is_done
-                finally:
-                    task.close()
+                await br_handler.join(_waiting_screen())
 
             return result
         finally:
+            # No more ButtonRequests will be sent
+            self.button_request_handler = None
+            self.button_request_task = None
             # Close all tasks (including ButtonRequest handler)
             self.stop()
 
@@ -340,49 +319,31 @@ class Layout(Generic[T]):
 
         if state is LayoutState.DONE:
             self._emit_message(self.layout.return_value())
-
+            # Shutdown is raised after emitting the return value.
         elif state is LayoutState.ATTACHED:
             first_paint = True
-            self.button_request_ack_pending = self._button_request()
-            if self.button_request_ack_pending:
-                state = LayoutState.TRANSITIONING
-            elif __debug__:
-                notify_layout_change(self)
+            # Process a button request coming out of the Rust layout.
+            has_br = self.put_button_request(self.layout.button_request())
+            if __debug__:
+                self._is_attached = not has_br
+                if self._is_attached:
+                    notify_layout_change(self)
 
-        if state is not None:
-            self.state = state
+        elif __debug__ and state is not None:
+            self._is_attached = False
 
         if first_paint:
             self._first_paint()
         else:
             self._paint()
 
-    def _button_request(self) -> bool:
-        """Process a button request coming out of the Rust layout."""
-        res = self.layout.button_request()
-        if res is None:
+    def put_button_request(self, msg: ButtonRequestMsg | None) -> bool:
+        if self.button_request_handler is None or msg is None:
             return False
 
-        if self.context is None:
-            if __debug__:
-                log.debug(__name__, "ButtonRequest ignored: %s", res)
-            return False
-
-        if __debug__ and not self.button_request_box.is_empty():
-            raise wire.FirmwareError(
-                "button request already pending -- "
-                "don't forget to yield your input flow from time to time ^_^"
-            )
-
-        self.put_button_request(res)
+        br = ButtonRequest(code=msg[0], name=msg[1], pages=self.layout.page_count())
+        self.button_request_handler.put(br)
         return True
-
-    def put_button_request(self, msg: ButtonRequestMsg | None) -> None:
-        br = msg and ButtonRequest(
-            code=msg[0], name=msg[1], pages=self.layout.page_count()
-        )
-        # in production, we don't want this to fail, hence replace=True
-        self.button_request_box.put(br, replace=True)
 
     def _paint(self) -> None:
         """Paint the layout and ensure that homescreen cache is properly invalidated."""
@@ -489,11 +450,9 @@ class Layout(Generic[T]):
                 touch.close()
 
     def _button_request_acked(self) -> None:
-        if self.button_request_ack_pending and self.state is LayoutState.TRANSITIONING:
-            self.button_request_ack_pending = False
-            self.state = LayoutState.ATTACHED
-            if __debug__:
-                notify_layout_change(self)
+        if __debug__:
+            self._is_attached = True
+            notify_layout_change(self)
 
     if utils.USE_BLE:
 
@@ -579,14 +538,16 @@ class ProgressLayout:
     is currently displayed, who needs to redraw and when.
     """
 
+    if __debug__:
+
+        def is_layout_attached(self) -> bool:
+            return True
+
     def __init__(self, layout: LayoutObj[UiResult]) -> None:
         self.layout = layout
         self.transition_out = None
         self.value = 0
         self.progress_step = 20
-
-    def is_layout_attached(self) -> bool:
-        return True
 
     def report(self, value: int, description: str | None = None) -> None:
         """Report a progress step.
