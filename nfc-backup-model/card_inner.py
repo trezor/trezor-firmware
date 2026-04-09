@@ -73,7 +73,7 @@ class CardInner:
         # `reader_public_key` is not `None` if and only if a secure channel has been
         # initiated between the card and a trezor
         logger.info("CardInner.powered()")
-        logger.debug(f"reader_public_key={reader_public_key}")
+        logger.debug(f"reader_public_key={reader_public_key!r}")
         yield CardInner.PoweredInnerCard(self.storage, reader_public_key)
 
     class PoweredInnerCard:
@@ -133,7 +133,7 @@ class CardInner:
 
         def authenticate(self, pin: Pin, note: bytes) -> bytes:
             logger.info("CardInner.authenticate()")
-            logger.debug(f"pin={pin}, note={note}")
+            logger.debug(f"pin={pin!r}, note={note!r}")
 
             if self.reader_public_key is None:
                 raise NotAuthenticatedError()
@@ -169,12 +169,12 @@ class CardInner:
                 self.storage.pin_counter = MAX_PIN_ATTEMPTS
 
             self.authenticated = True
-            logger.debug(f"stretched_pin={stretched_pin}")
+            logger.debug(f"stretched_pin={stretched_pin!r}")
             return stretched_pin
 
         def set_pin(self, pin: Pin) -> bytes:
             logger.info("CardInner.set_pin()")
-            logger.debug(f"pin={pin}")
+            logger.debug(f"pin={pin!r}")
 
             if not self.authenticated:
                 raise NotAuthenticatedError()
@@ -182,7 +182,7 @@ class CardInner:
             with self.storage.atomic_session():
                 self.storage.stretching_key = random_bytes(STRETCHING_KEY_SIZE_BYTES)
                 self.storage.pin_tag, stretched_pin = self._stretch_pin(pin)
-            logger.debug(f"stretched_pin={stretched_pin}")
+            logger.debug(f"stretched_pin={stretched_pin!r}")
             return stretched_pin
 
         def read_pin_counter(self) -> int:
@@ -195,19 +195,19 @@ class CardInner:
         def read_successful_access_log_record(self) -> LogRecord | None:
             logger.info("CardInner.read_successful_access_log_record()")
             record = self.storage.successful_access_log_record
-            logger.debug(f"record={record}")
+            logger.debug(f"record={record!r}")
             return record
 
         def read_unsuccessful_access_log_records(self) -> list[LogRecord | None]:
             logger.info("CardInner.read_unsuccessful_access_log_records()")
             records = list(self.storage.unsuccessful_access_log_records)
-            logger.debug(f"records={records}")
+            logger.debug(f"records={records!r}")
             return records
 
         def read_metadata(self) -> bytes:
             logger.info("CardInner.read_metadata()")
             seed_metadata = self.storage.seed_metadata
-            logger.debug(f"seed_metadata={seed_metadata}")
+            logger.debug(f"seed_metadata={seed_metadata!r}")
             return seed_metadata
 
         def read_encrypted_seed(self) -> bytes:
@@ -217,12 +217,12 @@ class CardInner:
                 raise NotAuthenticatedError()
 
             encrypted_seed = self.storage.encrypted_seed
-            logger.debug(f"encrypted_seed={encrypted_seed}")
+            logger.debug(f"encrypted_seed={encrypted_seed!r}")
             return encrypted_seed
 
         def write_metadata(self, seed_metadata: bytes) -> None:
             logger.info("CardInner.write_metadata()")
-            logger.debug(f"seed_metadata={seed_metadata}")
+            logger.debug(f"seed_metadata={seed_metadata!r}")
 
             if not self.authenticated:
                 raise NotAuthenticatedError()
@@ -232,7 +232,7 @@ class CardInner:
 
         def write_encrypted_seed(self, encrypted_seed: bytes) -> None:
             logger.info("CardInner.write_encrypted_seed()")
-            logger.debug(f"encrypted_seed={encrypted_seed}")
+            logger.debug(f"encrypted_seed={encrypted_seed!r}")
 
             if not self.authenticated:
                 raise NotAuthenticatedError()
