@@ -220,11 +220,11 @@
             "name": "deposit_known_vault",
             "skip_models": ["t1"],
             "parameters": {
-                "comment": "ERC-4626 deposit of 100 USDC into Test Vault (Base)",
+                "comment": "ERC-4626 deposit of 100 USDC into Test Steakhouse USDC Prime Vault",
                 "data": "6e553f650000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
                 "path": "m/44'/60'/0'/0/1",
-                "to_address": "0xAc8C6e8779Dddc60F5cEF7701DcE70eCBa5ef518",
-                "chain_id": 8453,
+                "to_address": "0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da",
+                "chain_id": 1,
                 "nonce": "0x0",
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
@@ -232,9 +232,9 @@
                 "value": "0x0"
             },
             "result": {
-                "sig_v": 16941,
-                "sig_r": "bf889237f23132a5070dec9e66b123e7d21011638a9d35e967125d49087f8d3b",
-                "sig_s": "0e0921051980d873410ef7ab080b9b01858ddc4295f2a57a344d0e28b681fd0c"
+                "sig_v": 38,
+                "sig_r": "90f5a034796717a511582faea55260a0430728b2ab68bebf561da61c229272d4",
+                "sig_s": "74ee424448fd2c188fe555e715cebeb621912db40aa4230c2c330c439167c39e"
             }
         },
         {
@@ -256,6 +256,195 @@
                 "sig_v": 16941,
                 "sig_r": "ed656873aec0bd52de96e444124eb1748193db011dbe4a1fc4bd563898ff1af8",
                 "sig_s": "52dd1b7e32e6ba03403c0829f19b67618e8dd5a6c5557fd040b02cda676ab241"
+            }
+        },
+        {
+            "name": "withdraw_known_vault",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 withdraw of 100 USDC from Test Steakhouse USDC Prime Vault, receiver=owner=sender",
+                "data": "b460af940000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "9b1092d401be94fd3f4b9bbd45bb284c9d8bab4a43bac11acb8f4f3deb4891eb",
+                "sig_s": "49c2e5aebaefee8e53da749c2e83466419ea9a9b36332f624456c4a5a37f5645"
+            }
+        },
+        {
+            "name": "withdraw_unknown_vault",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 withdraw of 100 USDC from unknown vault (fake address), receiver=owner=sender",
+                "data": "b460af940000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "6b6c36c73a24c69e137ebf1bfb461d19e23d33eb2ec59e5e79d2c61186cf3b0b",
+                "sig_s": "1874504fa8546121e757da2eafc0d271c6f8347dabfd0f79a3990a74017cb17b"
+            }
+        },
+        {
+            "name": "redeem_known_vault",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 redeem of 1 tstSHUSDCp from Test Steakhouse USDC Prime Vault, receiver=owner=sender",
+                "data": "ba0876520000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "c7291ba668208b3d71b2242d9688eac19d2d5a0e67268b441e048545c6c43b2e",
+                "sig_s": "4a0cfd30e511c00d00ab640f39c410c017f5688065297a1fd8316db365e666c6"
+            }
+        },
+        {
+            "name": "redeem_unknown_vault",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 redeem of 1 vault token from unknown vault (fake address), receiver=owner=sender",
+                "data": "ba0876520000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "0ef2b314e3fb612caecbb21f23dec81bc37bd823e2a9b05436ecab03cb83fdc9",
+                "sig_s": "2d8ae31f8417a603ceef73a2f45a4956cecfc1ba724b15741de5d3021dd377c2"
+            }
+        },
+        {
+            "name": "redeem_unknown_vault_receiver_mismatch",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 redeem from unknown vault with receiver != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "data": "ba0876520000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "71d08234c841831262b5152401a027a75c44268205d07ae01847e8f89bc0614f",
+                "sig_s": "2d5e9f5fd43ee374380c401dc067570e2fc57e21ba873bf93cd52edb8d16a526"
+            }
+        },
+        {
+            "name": "redeem_unknown_vault_owner_mismatch",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 redeem from unknown vault with owner != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "data": "ba0876520000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac00000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "c42d0a82c65005e267fb7e00973db8572ee9671755ef1d0cd864e2392ff489c6",
+                "sig_s": "57abaa201ad7cf8f58b48f411b4f10ce7a4ca273146ffc8dcc49719c99ca885d"
+            }
+        },
+        {
+            "name": "deposit_unknown_vault_receiver_mismatch",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 deposit into unknown vault with receiver != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "data": "6e553f650000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 8453,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 16942,
+                "sig_r": "d0c298e75668315333a5fa6aa572e7e3119e23a2947e511eedb0aba59701a3e2",
+                "sig_s": "41cdd40524029d146032ded4c29adc98161a6566e8a66f58b000fe63d6e34e1b"
+            }
+        },
+        {
+            "name": "withdraw_unknown_vault_receiver_mismatch",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 withdraw from unknown vault with receiver != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "data": "b460af940000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "78c535abfabff75752ff3e21af9e4354dc36ea3315176fc19cc9a6227e220430",
+                "sig_s": "5807a95dcd2b419129e482526448f9c17f38f335198047954cb5530e38a264db"
+            }
+        },
+        {
+            "name": "withdraw_unknown_vault_owner_mismatch",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 withdraw from unknown vault with owner != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "data": "b460af940000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac00000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "20229b613ec8e857f7a94db85169d22010e44016f41f61f11f4e7b5c1e60a37c",
+                "sig_s": "3f8a9b3d39317d1e8f1a282b165c16a498124589cdd23131eb8f4d87127541ea"
             }
         }
     ]

@@ -1312,7 +1312,8 @@ if not utils.BITCOIN_ONLY:
         intro_question: str,
         verb: str,
         vault_str: str,
-        total_amount: str,
+        amount: str,
+        amount_label: str,
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
@@ -1358,7 +1359,7 @@ if not utils.BITCOIN_ONLY:
             br_name + "/amount",
             title,
             [
-                (TR.ethereum__deposit_amount, total_amount, False),
+                (amount_label, amount, False),
                 (TR.words__chain, chain, False),
             ],
         )
