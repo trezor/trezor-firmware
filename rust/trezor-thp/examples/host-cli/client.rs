@@ -2,7 +2,7 @@ use std::io::ErrorKind;
 use std::net::{SocketAddr, UdpSocket};
 use std::time::Duration;
 
-use trezor_thp::{Backend, ChannelIO, Error, channel::buffered::Buffered, channel::host::Mux};
+use trezor_thp::{Backend, ChannelIO, channel::buffered::Buffered, channel::host::Mux};
 
 use protobuf::{Enum, Message};
 
@@ -130,11 +130,9 @@ impl<C: ChannelIO> Client<C> {
             }
             result = match self.channel.message_out() {
                 Ok(r) => Some(r),
-                Err(Error::InvalidChecksum | Error::MalformedData) => {
-                    log::error!("Received bad message, waiting for retransmission.");
-                    continue;
-                }
                 Err(e) => {
+                    // Since checksum is verified in `packet_in`, there is no recoverable error
+                    // returned by `message_out`. Exit now to avoid getting stuck.
                     log::error!("Cannot read message from channel: {:?}.", e);
                     panic!();
                 }

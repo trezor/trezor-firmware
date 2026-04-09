@@ -43,6 +43,19 @@ where
     let device_properties =
         ThpDeviceProperties::parse_from_bytes(&client.device_properties).unwrap();
     log::debug!("Device properties: {:?}.", device_properties);
+    match (
+        device_properties.protocol_version_major,
+        device_properties.protocol_version_minor,
+    ) {
+        (Some(major), Some(minor)) => {
+            let major: u8 = major.try_into().unwrap();
+            let minor: u8 = minor.try_into().unwrap();
+            client.channel.set_device_protocol_version(major, minor);
+        }
+        _ => {
+            log::warn!("Protocol version missing in device properties.");
+        }
+    }
     // Handshake should finish within 2 request-response cycles.
     client.call(0, &[]);
     client.call(0, &[]);

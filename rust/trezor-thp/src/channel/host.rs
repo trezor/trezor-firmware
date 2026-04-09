@@ -137,7 +137,7 @@ where
         let (header, _rest) = Header::<Host>::parse(packet)?;
         match header {
             Header::Pong => {
-                let (_header, payload) = Reassembler::<Host>::single_inplace(packet)?;
+                let (_header, payload) = Reassembler::<Host>::single(packet)?;
                 let (nonce, _rest) = Nonce::parse(payload)?;
                 if PingState::AwaitingPong(nonce) != self.ping {
                     log::warn!("Ignoring PONG with invalid nonce.");
@@ -320,6 +320,8 @@ where
 
 #[derive(Copy, Clone)]
 enum HandshakeState {
+    /// Before first packet is sent, allowing user to call [`set_device_protocol_version`].
+    Initial,
     /// `HH1`.
     SendingInitiationRequest,
     /// `HH2`.
@@ -363,14 +365,11 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
             try_to_unlock,
             &mut internal_buffer,
         )?;
-        let header = Header::new_handshake(channel_id, HandshakeMessage::InitiationRequest, msg)?;
-        let mut channel = Channel::new(channel_id);
-        channel.raw_in(header, msg)?;
         let len = msg.len();
         internal_buffer.truncate(len);
         let res = Self {
-            channel,
-            state: HandshakeState::SendingInitiationRequest,
+            channel: Channel::new(channel_id),
+            state: HandshakeState::Initial,
             noise: hss,
             internal_buffer,
             device_properties,
@@ -436,8 +435,26 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         PairingState::try_from(payload.as_slice())
     }
 
+    /// Returns device's `ThpDeviceProperties` protobuf structure.
     pub fn device_properties(&self) -> &[u8] {
         self.device_properties.as_slice()
+    }
+
+    /// Set peer's protocol version as indicated in `device_properties`.
+    /// This method must be called before the first call to [`ChannelOpen::packet_out`].
+    /// If it's not called, version 2.0 is assumed, which should be universally compatible.
+    /// The library cannot do it automatically because it doesn't understand protocol buffers.
+    pub fn set_device_protocol_version(&mut self, major: u8, minor: u8) {
+        if !matches!(self.state, HandshakeState::Initial) {
+            log::error!(
+                "[{:04x}] Setting protocol version after handshake started has no effect.",
+                self.channel_id()
+            );
+            return;
+        }
+        if (major, minor) >= (2, 1) {
+            self.channel.sync.allow_ack_piggybacking();
+        }
     }
 
     /// True if handshake finished and [`ChannelOpen::complete()`] can be called.
@@ -490,21 +507,26 @@ where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
+        if matches!(self.state, HandshakeState::Initial) {
+            // Do not accept any packets before we started sending InitiationRequest;
+            return PacketInResult::ignore(Error::malformed_data());
+        }
         let res = self
             .channel
             .packet_in(packet_buffer, &mut self.internal_buffer);
-        if let PacketInResult::EnlargeBuffer { buffer_size, .. } = res {
+        if let PacketInResult::Accepted {
+            buffer_size: Some(s),
+            ..
+        } = res
+        {
             log::error!(
                 "[{:04x}] Payload length {} exceeds handshake limit.",
                 self.channel_id(),
-                buffer_size
+                s
             );
             // Possibly damaged length field, ignore continuations.
             self.channel.state = ChannelState::Idle;
             return PacketInResult::ignore(Error::malformed_data());
-        }
-        if res.got_ack() {
-            prepare_zeroed(&mut self.internal_buffer);
         }
         if res.got_message() {
             let handled = self.incoming_internal();
@@ -516,17 +538,29 @@ where
                     return PacketInResult::fail(e);
                 }
             }
+        } else if res.got_ack() {
+            prepare_zeroed(&mut self.internal_buffer);
         }
         res
     }
 
     fn packet_out(&mut self, packet_buffer: &mut [u8], _send_buffer: &[u8]) -> Result<(), Error> {
+        if matches!(self.state, HandshakeState::Initial) {
+            let header = Header::<Host>::new_handshake(
+                self.channel_id(),
+                HandshakeMessage::InitiationRequest,
+                &self.internal_buffer,
+            )?;
+            self.channel
+                .raw_in_ext(header, &self.internal_buffer, true)?;
+            self.state = HandshakeState::SendingInitiationRequest;
+        }
         self.channel
             .packet_out(packet_buffer, &self.internal_buffer)
     }
 
     fn packet_out_ready(&self) -> bool {
-        self.channel.packet_out_ready()
+        matches!(self.state, HandshakeState::Initial) || self.channel.packet_out_ready()
     }
 
     fn message_in(&mut self, _plaintext_len: usize, _send_buffer: &mut [u8]) -> Result<(), Error> {
