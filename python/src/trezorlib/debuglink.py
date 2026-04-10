@@ -562,6 +562,11 @@ class DebugLink:
         return self.version >= (2, 8, 11)
 
     @property
+    def has_string_collector(self) -> bool:
+        """Supports DebugLinkGetStringLog RPC (emulator debug builds only)."""
+        return self.version >= (2, 8, 11)
+
+    @property
     def responds_to_debuglink_in_usb_tiny(self) -> bool:
         """Whether a Trezor One can respond to DebugLinkGetState while waiting
         for a Button/Pin/Passphrase Ack."""
@@ -955,6 +960,33 @@ class DebugLink:
                 raise AssertionError(msg)
             else:
                 warnings.warn(msg)
+
+    def get_string_log(self, clear: bool = True) -> list[str]:
+        """Retrieve translation keys accessed on the emulator since the last call.
+
+        Returns a sorted list of TR key names (e.g. ``["address__address",
+        "words__confirm"]``) that were resolved via ``TString::map()`` since the
+        last call (or since the emulator started).  The internal log is cleared
+        afterwards by default.
+
+        Returns an empty list when the emulator was not built with the
+        ``ui_string_collector`` feature (i.e. non-debug / physical device builds).
+        """
+        if not self.has_string_collector:
+            return []
+        resp = self._call(
+            messages.DebugLinkGetStringLog(clear=clear),
+            expect=messages.DebugLinkStringLog,
+        )
+        return sorted(resp.strings)
+
+    def clear_string_log(self) -> None:
+        """Discard the accumulated string log without reading it."""
+        if self.has_string_collector:
+            self._call(
+                messages.DebugLinkGetStringLog(clear=True),
+                expect=messages.DebugLinkStringLog,
+            )
 
 
 del _make_input_func

@@ -27,6 +27,7 @@ if __debug__:
             DebugLinkGetGcInfo,
             DebugLinkGetPairingInfo,
             DebugLinkGetState,
+            DebugLinkGetStringLog,
             DebugLinkN4W1Connected,
             DebugLinkOptigaSetSecMax,
             DebugLinkPairingInfo,
@@ -35,6 +36,7 @@ if __debug__:
             DebugLinkSetLogFilter,
             DebugLinkState,
             DebugLinkStop,
+            DebugLinkStringLog,
             WipeDevice,
         )
         from trezor.ui import Layout
@@ -433,6 +435,17 @@ if __debug__:
         else:
             raise wire.UnexpectedMessage("Debug console not supported")
 
+    async def dispatch_DebugLinkGetStringLog(
+        msg: DebugLinkGetStringLog,
+    ) -> DebugLinkStringLog:
+        import trezortranslate
+        from trezor.messages import DebugLinkStringLog
+
+        # get_string_log() is always present; on non-instrumented builds it
+        # returns an empty list (ui_string_collector feature inactive).
+        strings = trezortranslate.get_string_log(msg.clear)
+        return DebugLinkStringLog(strings=list(strings))
+
     async def dispatch_DebugLinkStop(msg: DebugLinkStop) -> NoReturn:
         """Restart the event loop"""
         raise RestartEventLoop
@@ -573,6 +586,7 @@ if __debug__:
         MessageType.DebugLinkResetDebugEvents: _no_op,
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
         MessageType.DebugLinkSetLogFilter: dispatch_DebugLinkSetLogFilter,
+        MessageType.DebugLinkGetStringLog: dispatch_DebugLinkGetStringLog,
         MessageType.DebugLinkStop: dispatch_DebugLinkStop,
         MessageType.WipeDevice: dispatch_WipeDevice,
     }

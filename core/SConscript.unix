@@ -945,6 +945,7 @@ if PYOPT == '0':
     features.append('debuglink')
     features.append('ui_debug')
     features.append('ui_debug_overlay')
+    features.append('ui_string_collector')
 if EVERYTHING:
     features.append('universal_fw')
 if not PRODUCTION:

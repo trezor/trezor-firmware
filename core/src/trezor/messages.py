@@ -3158,6 +3158,34 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN4W1Response"]:
             return isinstance(msg, cls)
 
+    class DebugLinkGetStringLog(protobuf.MessageType):
+        clear: "bool"
+
+        def __init__(
+            self,
+            *,
+            clear: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkGetStringLog"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkStringLog(protobuf.MessageType):
+        strings: "list[str]"
+
+        def __init__(
+            self,
+            *,
+            strings: "list[str] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkStringLog"]:
+            return isinstance(msg, cls)
+
     class DebugLinkGcInfoItem(protobuf.MessageType):
         name: "str"
         value: "int"

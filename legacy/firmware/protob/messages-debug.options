@@ -20,3 +20,5 @@ DebugLinkMemoryWrite.memory             max_size:1024
 # Unused messages.
 DebugLinkLayout                         skip_message:true
 DebugLinkRecordScreen                   skip_message:true
+DebugLinkGetStringLog                   skip_message:true
+DebugLinkStringLog                      skip_message:true

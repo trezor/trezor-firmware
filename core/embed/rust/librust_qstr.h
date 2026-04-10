@@ -350,6 +350,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_get_bonds;
   MP_QSTR_get_enabled;
   MP_QSTR_get_language;
+  MP_QSTR_get_string_log;
   MP_QSTR_get_transition_out;
   MP_QSTR_haptic_feedback__disable;
   MP_QSTR_haptic_feedback__enable;

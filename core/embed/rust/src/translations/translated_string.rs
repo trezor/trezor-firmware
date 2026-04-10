@@ -43,6 +43,8 @@ impl TranslatedString {
     where
         F: for<'a> FnOnce(&'a str) -> T,
     {
+        #[cfg(feature = "ui_string_collector")]
+        super::collector::record(self);
         let translations = unwrap!(super::flash::get());
         fun(self.translate(translations.as_ref()))
     }
