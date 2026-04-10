@@ -31,3 +31,10 @@ test:
 		cd $$D; \
 		cargo test \
 	); done
+
+audit:
+	@set -e; for D in $(CRATES); do ( \
+		echo "[AUDIT $$D]"; \
+		cd $$D; \
+		cargo audit \
+	); done
