@@ -714,11 +714,10 @@ if FROZEN:
             ([
                 SOURCE_PY_DIR + 'storage/cache_codec.py',
                 SOURCE_PY_DIR + 'storage/cache_codec_keys.py'
-            ] if THP and PYOPT != '0' else []) +
-            ([
+            ] if THP else [
                 SOURCE_PY_DIR + 'storage/cache_thp.py',
                 SOURCE_PY_DIR + 'storage/cache_thp_keys.py'
-            ] if not THP else [])
+            ])
         )
     ))
 
