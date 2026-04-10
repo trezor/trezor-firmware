@@ -243,6 +243,7 @@ jobs:
         if: matrix.asan == 'noasan'
       - run: nix-shell --run "uv run make -C core clippy"
       - run: nix-shell --run "uv run make -C core test_rust"
+      - run: nix-shell --run "uv run make -C core audit_rust"
 
   core_rust_client_test:
     name: Rust trezor-client tests
