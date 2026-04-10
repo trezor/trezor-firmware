@@ -1,7 +1,7 @@
 altcoin
-slow
 cardano
 decred
+emulator
 eos
 ethereum
 komodo
@@ -13,6 +13,7 @@ peercoin
 protocol
 ripple
 sd_card
+slow
 solana
 stellar
 tezos
