@@ -78,9 +78,9 @@ def generate(env):
             rf"-e 's/utils\.USE_THP/{thp}/g'",
             rf"-e 's/utils\.USE_POWER_MANAGER/{power_manager}/g'",
             r"-e 's/if TYPE_CHECKING/if False/'",
-            r"-e 's/import typing/# \0/'",
-            r"-e '/from typing import (/,/^\s*)/ {s/^/# /; }'",
-            r"-e 's/from typing import/# \0/'",
+            r"-e 's/import typing/# &/'",
+            r"-e '/from typing import (/,/^[[:space:]]*)/ {s/^/# /; }'",
+            r"-e 's/from typing import/# &/'",
         ]
 
         MODELS = ["T2T1", "T2B1", "T3T1", "T3B1", "T3W1"]
