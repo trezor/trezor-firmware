@@ -335,6 +335,9 @@ def _prepared_test_ctx(
     if _raw_test_ctx.model not in models_filter:
         pytest.skip(f"Skipping test for model {_raw_test_ctx.model.internal_name}")
 
+    if request.node.get_closest_marker("emulator") and not _raw_test_ctx.is_emulator:
+        pytest.skip("Skipping emulator-only test")
+
     is_btc_only = messages.Capability.Bitcoin_like not in _raw_test_ctx.capabilities
     if request.node.get_closest_marker("altcoin") and is_btc_only:
         pytest.skip("Skipping altcoin test")
