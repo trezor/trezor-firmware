@@ -57,10 +57,17 @@ const uint32_t MSIRangeTable[16] = {48000000U, 24000000U, 16000000U, 12000000U,
 #define PLLN_COEF 2U
 #endif
 
+#if defined(TREZOR_MODEL_T3T1)
+#define DEFAULT_FREQ 80U
+#define DEFAULT_PLLR 2U               // division by 2
+#define SYS_FLASH_LATENCY FLASH_ACR_LATENCY_2WS
+#else
 #define DEFAULT_FREQ 160U
+#define DEFAULT_PLLR 1U               // division by 1
+#define SYS_FLASH_LATENCY FLASH_ACR_LATENCY_4WS
+#endif
 #define DEFAULT_PLLM PLLM_COEF
 #define DEFAULT_PLLN (5 * PLLN_COEF)  // mult by x
-#define DEFAULT_PLLR 1U               // division by 1
 #define DEFAULT_PLLQ 1U               // division by 1
 #define DEFAULT_PLLP 5U               // division by 5
 
@@ -244,10 +251,11 @@ void SystemInit(void) {
   while (READ_BIT(RCC->CR, RCC_CR_HSI48RDY) == 0U);
 
   // Initializes the CPU, AHB and APB buses clocks
-  FLASH->ACR = FLASH_ACR_LATENCY_4WS;
+  FLASH->ACR = SYS_FLASH_LATENCY;  // Wait states according to target HCLK.
+
   // wait until the new wait state config takes effect -- per section 3.5.1
   // guidance
-  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_4WS);
+  while ((FLASH->ACR & FLASH_ACR_LATENCY) != SYS_FLASH_LATENCY);
   MODIFY_REG(RCC->CFGR3, RCC_CFGR3_PPRE3, RCC_HCLK_DIV1);
   MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE2, ((RCC_HCLK_DIV1) << 4));
   MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE1, RCC_HCLK_DIV1);

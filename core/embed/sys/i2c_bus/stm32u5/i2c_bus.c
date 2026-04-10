@@ -29,12 +29,12 @@
 #ifdef KERNEL_MODE
 
 // Using calculation from STM32CubeMX
-// PCLKx as source, assumed 160MHz
+// PCLKx as source, assumed 80MHz
 // Fast mode, freq = 400kHz, Rise time = 250ns, Fall time = 100ns
 // Fast mode, freq = 200kHz, Rise time = 250ns, Fall time = 100ns
 // SCLH and SCLL are manually modified to achieve more symmetric clock
-#define I2C_TIMING_400000_Hz 0x30D22728
-#define I2C_TIMING_200000_Hz 0x30D2595A
+#define I2C_TIMING_400000_Hz 0x10D22728
+#define I2C_TIMING_200000_Hz 0x10D2595A
 #define I2C_TIMING I2C_TIMING_200000_Hz
 
 // We expect the I2C bus to be running at ~200kHz
