@@ -1,8 +1,6 @@
 from typing import TYPE_CHECKING, Awaitable, Container
 
-from storage import cache_codec
-from storage.cache_common import DataCache, InvalidSessionError
-from trezor import protobuf
+from trezor import protobuf, utils
 from trezor.wire.codec import codec_v1
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import wrap_protobuf_load
@@ -14,6 +12,8 @@ if __debug__:
 
 if TYPE_CHECKING:
     from typing import TypeVar
+
+    from storage.cache_common import DataCache
 
     from .. import Provider, WireInterface
 
@@ -111,13 +111,22 @@ class CodecContext(Context):
             memoryview(buffer)[:msg_size],
         )
 
-    def release(self) -> None:
-        cache_codec.end_current_session()
+    if not utils.USE_THP:
+        # Note: we use the above CodecContext functionality for DebugLink on PYOPT=0 builds.
+        # The methods below are excluded for THP builds, since cache_codec is not available.
 
-    # ACCESS TO CACHE
-    @property
-    def cache(self) -> DataCache:
-        c = cache_codec.get_active_session()
-        if c is None:
-            raise InvalidSessionError()
-        return c
+        def release(self) -> None:
+            from storage.cache_codec import end_current_session
+
+            end_current_session()
+
+        # ACCESS TO CACHE
+        @property
+        def cache(self) -> DataCache:
+            from storage.cache_codec import get_active_session
+            from storage.cache_common import InvalidSessionError
+
+            c = get_active_session()
+            if c is None:
+                raise InvalidSessionError()
+            return c
