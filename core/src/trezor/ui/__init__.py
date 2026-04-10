@@ -272,9 +272,9 @@ class Layout(Generic[T]):
             br_handler = self.button_request_handler
             if br_handler is not None:
                 # Keep a reference to ButtonRequest handling task (to avoid prematurely closing it).
-                task = br_handler.create_task(self._button_request_acked)
-                self.button_request_task = task
-                self._start_task(task)
+                br_task = br_handler.br_task(self._button_request_acked)
+                self.button_request_task = br_task
+                self._start_task(br_task)
 
             result = await self.result_box
             assert CURRENT_LAYOUT is None  # the screen is blank now

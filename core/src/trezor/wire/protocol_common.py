@@ -23,6 +23,8 @@ if TYPE_CHECKING:
     from storage.cache_common import DataCache
     from trezor.messages import ButtonRequest
 
+    AckCallback = Callable[[], None]
+
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
     T = TypeVar("T")
 
@@ -135,7 +137,7 @@ class ButtonRequestHandler:
     def __init__(self, ctx: Context) -> None:
         self.ctx = ctx
         self.box: loop.mailbox[ButtonRequest | None] = loop.mailbox()
-        self.is_done: loop.mailbox[None] | None = None
+        self.is_done: loop.mailbox[None] = loop.mailbox()
         self.pending = False
 
     def put(self, br: ButtonRequest) -> None:
@@ -152,11 +154,8 @@ class ButtonRequestHandler:
         # in production, we don't want this to fail, hence replace=True
         self.box.put(br, replace=True)
 
-    def create_task(
-        self, ack_callback: Callable[[], None]
-    ) -> Generator[Any, Any, None]:
-        assert self.is_done is None
-        self.is_done = loop.mailbox()
+    def br_task(self, ack_callback: AckCallback) -> Generator[Any, Any, None]:
+        assert self.is_done.is_empty()
         try:
             yield from self._handle(ack_callback)
         finally:
@@ -164,8 +163,8 @@ class ButtonRequestHandler:
             self.is_done.put(None)
 
     async def join(self, wait_task: loop.Task[None]) -> None:
-        # `create_task()` must be called before joining.
-        assert self.is_done is not None
+        # `br_task()` must be scheduled before joining.
+
         # notify the handler that no more button requests are expected
         # in production, we don't want this to fail, hence replace=True
         self.box.put(None, replace=True)
@@ -174,13 +173,10 @@ class ButtonRequestHandler:
         try:
             await self.is_done
         finally:
-            self.is_done = None
+            assert self.is_done.is_empty()
             task.close()
 
-    async def _handle(
-        self,
-        ack_callback: Callable[[], None],
-    ) -> None:
+    async def _handle(self, ack_callback: AckCallback) -> None:
         from trezor.messages import ButtonAck
 
         while True:
@@ -210,10 +206,7 @@ class ContinueOnErrors(ButtonRequestHandler):
         self._prev_handler: ButtonRequestHandler | None = None
         self.msg = msg
 
-    async def _handle(
-        self,
-        ack_callback: Callable[[], None],
-    ) -> None:
+    async def _handle(self, ack_callback: AckCallback) -> None:
         """Unexpected messages will not cause the handler to fail."""
         from .context import UnexpectedMessageException
 
