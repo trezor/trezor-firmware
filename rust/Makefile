@@ -2,7 +2,9 @@
 CRATES_TEST = trezor-thp trezor-tjpgdec
 CRATES = ${CRATES_TEST} trezor-client
 
-check: clippy test
+.PHONY: check audit
+
+check: clippy test audit
 
 style:
 	@for D in $(CRATES); do ( \
@@ -30,4 +32,11 @@ test:
 		echo "[TEST $$D]"; \
 		cd $$D; \
 		cargo test \
+	); done
+
+audit:
+	@set -e; for D in $(CRATES); do ( \
+		echo "[AUDIT $$D]"; \
+		cd $$D; \
+		cargo audit \
 	); done

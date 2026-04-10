@@ -84,6 +84,7 @@ stdenvNoCC.mkDerivation ({
     oldNixpkgs.SDL2_image
     bash
     bloaty  # for binsize
+    cargo-audit
     check
     crowdin-cli  # for translations
     curl  # for connect tests
