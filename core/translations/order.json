@@ -1210,5 +1210,10 @@
   "1208": "cardano__key_path",
   "1209": "backup__type_n4w1",
   "1210": "backup__type_wordlist",
-  "1211": "ethereum__title_token_contract"
+  "1211": "ethereum__title_token_contract",
+  "1212": "ethereum__redeem",
+  "1213": "ethereum__vault_claim_to",
+  "1214": "ethereum__vault_redeem_to",
+  "1215": "ethereum__withdraw_amount",
+  "1216": "ethereum__withdraw_to"
 }

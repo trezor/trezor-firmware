@@ -1592,10 +1592,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__withdraw_from = 1204,  // "Withdraw from"
     #[cfg(feature = "universal_fw")]
-    ethereum__withdraw_intro = 1205,  // "Review details to withdraw from vault."
-    #[cfg(feature = "universal_fw")]
-    ethereum__your_address = 1206,  // "Your address"
-    #[cfg(feature = "universal_fw")]
     cardano__credential_intro_template = 1207,  // {"Bolt": "{0} credential is a {1}", "Caesar": "{0} credential is a {1}", "Delizia": "{0} credential is a {1}:", "Eckhart": "{0} credential is a {1}:"}
     #[cfg(feature = "universal_fw")]
     cardano__key_path = 1208,  // "key path"
@@ -1603,6 +1599,16 @@ pub enum TranslatedString {
     backup__type_wordlist = 1210,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Wordlist backup"}
     #[cfg(feature = "universal_fw")]
     ethereum__title_token_contract = 1211,  // {"Bolt": "Token contract", "Caesar": "Token contract address", "Delizia": "Token contract", "Eckhart": "Token contract address"}
+    #[cfg(feature = "universal_fw")]
+    ethereum__redeem = 1212,  // "Redeem"
+    #[cfg(feature = "universal_fw")]
+    ethereum__vault_claim_to = 1213,  // "Claim to"
+    #[cfg(feature = "universal_fw")]
+    ethereum__vault_redeem_to = 1214,  // "Redeem to"
+    #[cfg(feature = "universal_fw")]
+    ethereum__withdraw_amount = 1215,  // "Withdraw amount"
+    #[cfg(feature = "universal_fw")]
+    ethereum__withdraw_to = 1216,  // "Withdraw to"
 }
 
 impl TranslatedString {
@@ -2815,13 +2821,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}",
                 "key path",
                 "",
                 "",
                 "Token contract",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4032,13 +4043,18 @@ impl TranslatedString {
                 20115,
                 20123,
                 20136,
-                20174,
-                20186,
-                20209,
-                20217,
-                20217,
-                20217,
-                20231,
+                20136,
+                20136,
+                20159,
+                20167,
+                20167,
+                20167,
+                20181,
+                20187,
+                20195,
+                20204,
+                20219,
+                20230,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5248,13 +5264,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}",
                 "key path",
                 "",
                 "",
                 "Token contract",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6465,13 +6486,18 @@ impl TranslatedString {
                 20115,
                 20123,
                 20136,
-                20174,
-                20186,
-                20209,
-                20217,
-                20217,
-                20217,
-                20231,
+                20136,
+                20136,
+                20159,
+                20167,
+                20167,
+                20167,
+                20181,
+                20187,
+                20195,
+                20204,
+                20219,
+                20230,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7681,13 +7707,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}",
                 "key path",
                 "",
                 "",
                 "Token contract",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8898,13 +8929,18 @@ impl TranslatedString {
                 20115,
                 20123,
                 20136,
-                20174,
-                20186,
-                20209,
-                20217,
-                20217,
-                20217,
-                20231,
+                20136,
+                20136,
+                20159,
+                20167,
+                20167,
+                20167,
+                20181,
+                20187,
+                20195,
+                20204,
+                20219,
+                20230,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10114,13 +10150,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}",
                 "key path",
                 "",
                 "",
                 "Token contract",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11331,13 +11372,18 @@ impl TranslatedString {
                 20115,
                 20123,
                 20136,
-                20174,
-                20186,
-                20209,
-                20217,
-                20217,
-                20217,
-                20231,
+                20136,
+                20136,
+                20159,
+                20167,
+                20167,
+                20167,
+                20181,
+                20187,
+                20195,
+                20204,
+                20219,
+                20230,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12548,13 +12594,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}",
                 "key path",
                 "",
                 "",
                 "Token contract address",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13765,13 +13816,18 @@ impl TranslatedString {
                 18132,
                 18140,
                 18153,
-                18191,
-                18203,
-                18226,
-                18234,
-                18234,
-                18234,
-                18256,
+                18153,
+                18153,
+                18176,
+                18184,
+                18184,
+                18184,
+                18206,
+                18212,
+                18220,
+                18229,
+                18244,
+                18255,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14981,13 +15037,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}",
                 "key path",
                 "",
                 "",
                 "Token contract address",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16198,13 +16259,18 @@ impl TranslatedString {
                 18132,
                 18140,
                 18153,
-                18191,
-                18203,
-                18226,
-                18234,
-                18234,
-                18234,
-                18256,
+                18153,
+                18153,
+                18176,
+                18184,
+                18184,
+                18184,
+                18206,
+                18212,
+                18220,
+                18229,
+                18244,
+                18255,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17414,13 +17480,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}",
                 "key path",
                 "",
                 "",
                 "Token contract address",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18631,13 +18702,18 @@ impl TranslatedString {
                 18132,
                 18140,
                 18153,
-                18191,
-                18203,
-                18226,
-                18234,
-                18234,
-                18234,
-                18256,
+                18153,
+                18153,
+                18176,
+                18184,
+                18184,
+                18184,
+                18206,
+                18212,
+                18220,
+                18229,
+                18244,
+                18255,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19847,13 +19923,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}",
                 "key path",
                 "",
                 "",
                 "Token contract address",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21064,13 +21145,18 @@ impl TranslatedString {
                 18132,
                 18140,
                 18153,
-                18191,
-                18203,
-                18226,
-                18234,
-                18234,
-                18234,
-                18256,
+                18153,
+                18153,
+                18176,
+                18184,
+                18184,
+                18184,
+                18206,
+                18212,
+                18220,
+                18229,
+                18244,
+                18255,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22281,13 +22367,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}:",
                 "key path",
                 "",
                 "",
                 "Token contract",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23498,13 +23589,18 @@ impl TranslatedString {
                 19419,
                 19427,
                 19440,
-                19478,
-                19490,
-                19514,
-                19522,
-                19522,
-                19522,
-                19536,
+                19440,
+                19440,
+                19464,
+                19472,
+                19472,
+                19472,
+                19486,
+                19492,
+                19500,
+                19509,
+                19524,
+                19535,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24714,13 +24810,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}:",
                 "key path",
                 "",
                 "",
                 "Token contract",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25931,13 +26032,18 @@ impl TranslatedString {
                 19419,
                 19427,
                 19440,
-                19478,
-                19490,
-                19514,
-                19522,
-                19522,
-                19522,
-                19536,
+                19440,
+                19440,
+                19464,
+                19472,
+                19472,
+                19472,
+                19486,
+                19492,
+                19500,
+                19509,
+                19524,
+                19535,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27147,13 +27253,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}:",
                 "key path",
                 "",
                 "",
                 "Token contract",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28364,13 +28475,18 @@ impl TranslatedString {
                 19419,
                 19427,
                 19440,
-                19478,
-                19490,
-                19514,
-                19522,
-                19522,
-                19522,
-                19536,
+                19440,
+                19440,
+                19464,
+                19472,
+                19472,
+                19472,
+                19486,
+                19492,
+                19500,
+                19509,
+                19524,
+                19535,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29580,13 +29696,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}:",
                 "key path",
                 "",
                 "",
                 "Token contract",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30797,13 +30918,18 @@ impl TranslatedString {
                 19419,
                 19427,
                 19440,
-                19478,
-                19490,
-                19514,
-                19522,
-                19522,
-                19522,
-                19536,
+                19440,
+                19440,
+                19464,
+                19472,
+                19472,
+                19472,
+                19486,
+                19492,
+                19500,
+                19509,
+                19524,
+                19535,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32014,13 +32140,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}:",
                 "key path",
                 "N4W1 backup",
                 "Wordlist backup",
                 "Token contract address",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33231,13 +33362,18 @@ impl TranslatedString {
                 20409,
                 20417,
                 20430,
-                20468,
-                20480,
-                20504,
-                20512,
-                20523,
-                20538,
-                20560,
+                20430,
+                20430,
+                20454,
+                20462,
+                20473,
+                20488,
+                20510,
+                20516,
+                20524,
+                20533,
+                20548,
+                20559,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34447,13 +34583,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}:",
                 "key path",
                 "N4W1 backup",
                 "Wordlist backup",
                 "Token contract address",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35664,13 +35805,18 @@ impl TranslatedString {
                 20409,
                 20417,
                 20430,
-                20468,
-                20480,
-                20504,
-                20512,
-                20523,
-                20538,
-                20560,
+                20430,
+                20430,
+                20454,
+                20462,
+                20473,
+                20488,
+                20510,
+                20516,
+                20524,
+                20533,
+                20548,
+                20559,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -36880,13 +37026,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}:",
                 "key path",
                 "N4W1 backup",
                 "Wordlist backup",
                 "Token contract address",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38097,13 +38248,18 @@ impl TranslatedString {
                 20409,
                 20417,
                 20430,
-                20468,
-                20480,
-                20504,
-                20512,
-                20523,
-                20538,
-                20560,
+                20430,
+                20430,
+                20454,
+                20462,
+                20473,
+                20488,
+                20510,
+                20516,
+                20524,
+                20533,
+                20548,
+                20559,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39313,13 +39469,18 @@ impl TranslatedString {
                 "Review details to withdraw from vault.",
                 "Withdraw",
                 "Withdraw from",
-                "Review details to withdraw from vault.",
-                "Your address",
+                "",
+                "",
                 "{0} credential is a {1}:",
                 "key path",
                 "N4W1 backup",
                 "Wordlist backup",
                 "Token contract address",
+                "Redeem",
+                "Claim to",
+                "Redeem to",
+                "Withdraw amount",
+                "Withdraw to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40530,13 +40691,18 @@ impl TranslatedString {
                 20409,
                 20417,
                 20430,
-                20468,
-                20480,
-                20504,
-                20512,
-                20523,
-                20538,
-                20560,
+                20430,
+                20430,
+                20454,
+                20462,
+                20473,
+                20488,
+                20510,
+                20516,
+                20524,
+                20533,
+                20548,
+                20559,
             ];
 
         }
@@ -41080,6 +41246,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__priority_fee, Self::ethereum__priority_fee),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__redeem, Self::ethereum__redeem),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__redeem_amount, Self::ethereum__redeem_amount),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__redeem_from, Self::ethereum__redeem_from),
@@ -41144,19 +41312,23 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_claim_intro, Self::ethereum__vault_claim_intro),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__vault_claim_to, Self::ethereum__vault_claim_to),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_deposit_intro, Self::ethereum__vault_deposit_intro),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_redeem_intro, Self::ethereum__vault_redeem_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__vault_redeem_to, Self::ethereum__vault_redeem_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_withdraw_intro, Self::ethereum__vault_withdraw_intro),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__withdraw, Self::ethereum__withdraw),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__withdraw_amount, Self::ethereum__withdraw_amount),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__withdraw_from, Self::ethereum__withdraw_from),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_ethereum__withdraw_intro, Self::ethereum__withdraw_intro),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_ethereum__your_address, Self::ethereum__your_address),
+        (Qstr::MP_QSTR_ethereum__withdraw_to, Self::ethereum__withdraw_to),
         (Qstr::MP_QSTR_experimental_mode__enable, Self::experimental_mode__enable),
         (Qstr::MP_QSTR_experimental_mode__only_for_dev, Self::experimental_mode__only_for_dev),
         (Qstr::MP_QSTR_experimental_mode__title, Self::experimental_mode__title),
