@@ -448,7 +448,7 @@ if __debug__:
         finally:
             raise RestartEventLoop
 
-    if utils.INTERNAL_MODEL == "T3W1":  # TODO utils.USE_N4W1
+    if utils.USE_N4W1:
 
         async def dispatch_DebugLinkConnected(msg: DebugLinkN4W1Connected) -> Success:
             """Exchange a sequence of N4W1 messages."""
@@ -577,7 +577,7 @@ if __debug__:
         MessageType.WipeDevice: dispatch_WipeDevice,
     }
 
-    if utils.INTERNAL_MODEL == "T3W1":  # TODO utils.USE_N4W1
+    if utils.USE_N4W1:
         WORKFLOW_HANDLERS[MessageType.DebugLinkN4W1Connected] = (
             dispatch_DebugLinkConnected
         )
