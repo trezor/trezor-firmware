@@ -122,7 +122,7 @@ bool tamper_init(void) {
 
   NVIC_ClearPendingIRQ(TAMP_IRQn);
 
-  // Enable battery and power monitoring (!@# rework it)
+  // Enable battery and power monitoring
   RCC->AHB3ENR |= RCC_AHB3ENR_PWREN;
   // HAL_PWR_EnableBkUpAccess();
   PWR->BDCR1 |= PWR_BDCR1_MONEN;
