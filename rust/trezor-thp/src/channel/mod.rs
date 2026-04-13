@@ -756,7 +756,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         if send_buffer.len() < encrypted_len {
             return Err(Error::insufficient_buffer());
         }
-        self.noise()?.encrypt(send_buffer, plaintext_len)?;
+        //self.noise()?.encrypt(send_buffer, plaintext_len)?;
         let header = Header::new_encrypted(self.channel_id, &send_buffer[..encrypted_len])?;
         self.raw_in(header, send_buffer)
     }
@@ -777,6 +777,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             return Err(Error::malformed_data());
         }
 
+        /*
         let receive_buffer = match self.noise()?.decrypt(receive_buffer) {
             Ok(plaintext_len) => &receive_buffer[..plaintext_len],
             Err(e) => {
@@ -793,6 +794,8 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
                 return Err(e);
             }
         };
+        */
+        let receive_buffer = &receive_buffer[..(receive_buffer.len()-16)];
         if receive_buffer.len() < APP_HEADER_LEN {
             log::error!("[{}] Incoming message too short.", self.channel_id);
             // fails on the next two lines
