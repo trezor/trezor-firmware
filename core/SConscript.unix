@@ -474,6 +474,7 @@ SDCARD = ('sd_card' in FEATURES_AVAILABLE)
 OPTIGA = ('optiga' in FEATURES_AVAILABLE)
 SERIAL_NUMBER = ('serial_number' in FEATURES_AVAILABLE)
 BACKLIGHT = ('backlight' in FEATURES_AVAILABLE)
+TELEMETRY = ('telemetry' in FEATURES_AVAILABLE)
 N4W1 = ('n4w1' in FEATURES_AVAILABLE)
 
 env.Tool('micropython')
@@ -782,7 +783,7 @@ if FROZEN:
         ))
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
-    if 'telemetry' in FEATURES_AVAILABLE:
+    if TELEMETRY:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/telemetry/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*/*.py',
@@ -882,6 +883,7 @@ if FROZEN:
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
         thp=THP,
         power_manager='power_manager' in FEATURES_AVAILABLE,
+        telemetry=TELEMETRY,
         n4w1=N4W1,
         include_source_lines=MICROPY_ENABLE_SOURCE_LINE,
     )
