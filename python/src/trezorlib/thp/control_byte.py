@@ -107,7 +107,7 @@ def get_seq_bit(ctrl_byte: int) -> bool | None:
 
 
 def get_ack_bit(ctrl_byte: int) -> bool | None:
-    if not is_ack(ctrl_byte):
+    if not is_ack(ctrl_byte) and not is_data(ctrl_byte):
         return None
     return bool(ctrl_byte & ACK_SEQ_BIT)
 
