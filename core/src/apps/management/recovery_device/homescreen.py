@@ -154,83 +154,91 @@ class _DisplayHandler:
 
         return show_invalid_mnemonic(self.word_count)
 
+if not utils.USE_N4W1:
 
-class _N4W1Handler:
-    def __init__(
-        self,
-        recovery_type: RecoveryType,
-        slip39_state: recover.Slip39State | None,
-    ) -> None:
-        super().__init__()
-        self.recovery_type = recovery_type
-        # `slip39_state is None` indicates that we are (re)starting the first recovery step.
-        self.backup_type = slip39_state and slip39_state[1]
-        self.word_count = 20  # TODO: improve
+    async def _choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
+        from trezor.enums import BackupMethod
 
-    @classmethod
-    async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
-        return cls(recovery_type, recover.load_slip39_state())
+        if method is not BackupMethod.Display and __debug__:
+            from trezor import log
 
-    async def show_state(self, is_retry: bool) -> None:
-        if is_retry or self.backup_type is None:
-            # don't show recovery state on retries and before the first share is entered
-            return
-        await _request_share_first_screen(self.word_count, self.recovery_type)
+            log.warning(__name__, "Unsupported backup method: %s", method)
 
-    async def request_mnemonic(self) -> str | None:
-        """Return the mnemonic or `None` on cancellation/validation error."""
-        from apps.debug import n4w1_mock
+        return _DisplayHandler
 
-        from .word_validity import WordValidityResult, check
+else:
 
-        with n4w1_mock.ctx as ctx:
-            # returns `None` on cancellation or retriable error.
-            blob = await layout._n4w1_read(
-                ctx, description=TR.n4w1__hold_next, button=TR.n4w1__footer_next
-            )
+    async def _choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
+        if method is None:
+            from .layout import _choose_method
 
-        if blob is None:
-            return None
+            method = await _choose_method()
 
-        # TODO: use protobuf?
-        share = blob.decode()
-        share_words = share.split(" ")
-        try:
-            # Re-verify relevant prefixes
-            # TODO: can it be encapsulated too?
-            for prefix_len in range(1, 5):
-                check(self.backup_type, share_words[:prefix_len])
-            return share
-        except WordValidityResult as exc:
-            # if they were invalid or some checks failed we continue and request them again
-            await exc.show_error()
-            return None
+        return (_DisplayHandler, _N4W1Handler)[method]
 
-    def show_invalid_mnemonic(self) -> Awaitable[None]:
-        from trezor.ui.layouts.recovery import show_invalid_mnemonic
+    class _N4W1Handler:
+        def __init__(
+            self,
+            recovery_type: RecoveryType,
+            slip39_state: recover.Slip39State | None,
+        ) -> None:
+            super().__init__()
+            self.recovery_type = recovery_type
+            # `slip39_state is None` indicates that we are (re)starting the first recovery step.
+            self.backup_type = slip39_state and slip39_state[1]
+            self.word_count = 20  # TODO: improve
 
-        return show_invalid_mnemonic(self.word_count)
+        @classmethod
+        async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
+            return cls(recovery_type, recover.load_slip39_state())
+
+        async def show_state(self, is_retry: bool) -> None:
+            if is_retry or self.backup_type is None:
+                # don't show recovery state on retries and before the first share is entered
+                return
+            await _request_share_first_screen(self.word_count, self.recovery_type)
+
+        async def request_mnemonic(self) -> str | None:
+            """Return the mnemonic or `None` on cancellation/validation error."""
+            from apps.debug import n4w1_mock
+
+            from .word_validity import WordValidityResult, check
+
+            with n4w1_mock.ctx as ctx:
+                # returns `None` on cancellation or retriable error.
+                blob = await layout._n4w1_read(
+                    ctx, description=TR.n4w1__hold_next, button=TR.n4w1__footer_next
+                )
+
+            if blob is None:
+                return None
+
+            # TODO: use protobuf?
+            share = blob.decode()
+            share_words = share.split(" ")
+            try:
+                # Re-verify relevant prefixes
+                # TODO: can it be encapsulated too?
+                for prefix_len in range(1, 5):
+                    check(self.backup_type, share_words[:prefix_len])
+                return share
+            except WordValidityResult as exc:
+                # if they were invalid or some checks failed we continue and request them again
+                await exc.show_error()
+                return None
+
+        def show_invalid_mnemonic(self) -> Awaitable[None]:
+            from trezor.ui.layouts.recovery import show_invalid_mnemonic
+
+            return show_invalid_mnemonic(self.word_count)
 
 
 async def _recover_secret(
     recovery_type: RecoveryType, method: BackupMethod | None
 ) -> tuple[bytes, BackupType]:
-    from trezor.enums import BackupMethod
     from trezor.errors import MnemonicError
 
-    if utils.INTERNAL_MODEL == "T3W1" and __debug__:
-        if method is None:
-            method = await layout._choose_method()
-
-    if method is BackupMethod.Display:
-        handler_type = _DisplayHandler
-    elif method is BackupMethod.N4W1 and utils.INTERNAL_MODEL == "T3W1" and __debug__:
-        handler_type = _N4W1Handler
-    else:
-        from trezor import log
-
-        log.warning(__name__, "Unsupported backup method: %s", method)
-        handler_type = _DisplayHandler
+    handler_type = await _choose_handler(method)
 
     # Show recovery state in the beginning, on some failures, and after a successful share entry.
     is_retry = False
