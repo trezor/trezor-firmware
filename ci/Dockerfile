@@ -14,7 +14,7 @@ RUN apk add --no-cache --update openssl \
 RUN apk update && apk add bash git python3
 
 # Download Nix and install it into the system.
-ARG NIX_VERSION=2.4
+ARG NIX_VERSION=2.31.4
 RUN wget https://nixos.org/releases/nix/nix-${NIX_VERSION}/nix-${NIX_VERSION}-${ALPINE_ARCH}-linux.tar.xz \
   && tar xf nix-${NIX_VERSION}-${ALPINE_ARCH}-linux.tar.xz \
   && addgroup -g 30000 -S nixbld \
@@ -39,7 +39,6 @@ ENV \
 # Trezor specific stuff starts here
 
 COPY shell.nix shell.nix
-COPY pyright/ pyright/
 # add and install git-filter-repo for common sync job
 COPY common_sync/git-filter-repo git-filter-repo
 RUN mv git-filter-repo $(git --exec-path)
