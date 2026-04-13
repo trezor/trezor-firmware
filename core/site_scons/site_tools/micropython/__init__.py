@@ -62,6 +62,7 @@ def generate(env):
         layout_eckhart = env["ui_layout"] == "UI_LAYOUT_ECKHART"
         thp = env["thp"]
         power_manager = env["power_manager"]
+        telemetry = env["telemetry"]
         n4w1 = env["n4w1"]
         include_source_lines = env["include_source_lines"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
@@ -79,6 +80,7 @@ def generate(env):
             rf"-e 's/utils\.USE_TOUCH/{touch}/g'",
             rf"-e 's/utils\.USE_THP/{thp}/g'",
             rf"-e 's/utils\.USE_POWER_MANAGER/{power_manager}/g'",
+            rf"-e 's/utils\.USE_TELEMETRY/{telemetry}/g'",
             rf"-e 's/utils\.USE_N4W1/{n4w1}/g'",
             r"-e 's/if TYPE_CHECKING/if False/'",
             r"-e 's/import typing/# &/'",
