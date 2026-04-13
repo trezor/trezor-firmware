@@ -98,7 +98,6 @@ static display_driver_t g_display_driver = {
     .initialized = false,
 };
 
-//!@# TODO get rid of this...
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 

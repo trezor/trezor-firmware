@@ -59,7 +59,7 @@ typedef struct _mp_obj_IpcMessage_t {
 ///     """
 STATIC mp_obj_t mod_trezorio_IpcMessage_fn(mp_obj_t self) {
   mp_obj_IpcMessage_t *o = MP_OBJ_TO_PTR(self);
-  return MP_OBJ_NEW_SMALL_INT(o->message.fn);  // !@# uint
+  return mp_obj_new_int_from_uint(o->message.fn);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_fn_obj,
                                  mod_trezorio_IpcMessage_fn);

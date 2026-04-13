@@ -85,7 +85,6 @@ STATIC mp_obj_t mod_trezorio_USBIF_write(mp_obj_t self, mp_obj_t msg) {
 
   ssize_t r = syshandle_write(o->handle, buf.buf, buf.len);
 
-  // !@# should we have this test here?
   if (r != buf.len) {
     mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("Write failed"));
   }

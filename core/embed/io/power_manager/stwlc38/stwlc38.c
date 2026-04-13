@@ -314,7 +314,7 @@ static void stwlc38_i2c_callback(void *context, i2c_packet_t *packet) {
     memset(&drv->report, 0, sizeof(stwlc38_report_t));
     // Kill periodic timer
     systimer_unset(drv->timer);
-    // !@# retry on error?????
+    // TODO: consider retry on error
     drv->state = STWLC38_STATE_POWER_DOWN;
     drv->report_readout_requested = false;
 
