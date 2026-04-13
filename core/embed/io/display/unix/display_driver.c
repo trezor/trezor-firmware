@@ -80,6 +80,7 @@ typedef struct {
   SDL_Surface *buffer;
   SDL_Texture *texture;
   SDL_Texture *background;
+  SDL_Texture *foreground;
   SDL_Surface *prev_saved;
 
 #if DISPLAY_MONO
@@ -158,16 +159,42 @@ bool display_init(display_content_mode_t mode) {
   SDL_PumpEvents();
   SDL_SetWindowSize(drv->window, WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
-#ifdef BACKGROUND_FILE
-#include BACKGROUND_FILE
 #define CONCAT_LEN_HELPER(name) name##_len
 #define CONCAT_LEN(name) CONCAT_LEN_HELPER(name)
+#ifdef BACKGROUND_FILE
+#include BACKGROUND_FILE
   drv->background = IMG_LoadTexture_RW(
       drv->renderer,
       SDL_RWFromMem(BACKGROUND_NAME, CONCAT_LEN(BACKGROUND_NAME)), 0);
 #endif
+#ifdef FOREGROUND_FILE
+#include FOREGROUND_FILE
+  drv->foreground = IMG_LoadTexture_RW(
+      drv->renderer,
+      SDL_RWFromMem(FOREGROUND_NAME, CONCAT_LEN(FOREGROUND_NAME)), 0);
+  if (drv->foreground) {
+    SDL_SetTextureBlendMode(drv->foreground, SDL_BLENDMODE_BLEND);
+    // check that foreground dimensions match the window size which is important
+    // for cutouts
+    int fw, fh;
+    if (SDL_QueryTexture(drv->foreground, NULL, NULL, &fw, &fh) == 0) {
+      if (fw != WINDOW_WIDTH || fh != WINDOW_HEIGHT) {
+        LOG_ERR(
+            "Foreground texture size (%dx%d) does not match window size "
+            "(%dx%d)",
+            fw, fh, WINDOW_WIDTH, WINDOW_HEIGHT);
+        error_shutdown("Foreground texture size mismatch");
+      }
+    } else {
+      LOG_ERR("SDL_QueryTexture failed: %s", SDL_GetError());
+      error_shutdown("SDL_QueryTexture error");
+    }
+  }
+#endif
   if (drv->background) {
     SDL_SetTextureBlendMode(drv->background, SDL_BLENDMODE_NONE);
+  }
+  if (drv->background || drv->foreground) {
     sdl_touch_offset_x = TOUCH_OFFSET_X;
     sdl_touch_offset_y = TOUCH_OFFSET_Y;
   } else {
@@ -213,6 +240,9 @@ void display_deinit(display_content_mode_t mode) {
   SDL_FreeSurface(drv->buffer);
   if (drv->background != NULL) {
     SDL_DestroyTexture(drv->background);
+  }
+  if (drv->foreground != NULL) {
+    SDL_DestroyTexture(drv->foreground);
   }
   if (drv->texture != NULL) {
     SDL_DestroyTexture(drv->texture);
@@ -369,10 +399,14 @@ void draw_rgb_led() {
   int center_x = DISPLAY_RESX / 2;
   int center_y = 0;
 
-  // Position based on background
-  if (drv->background) {
+  // Position based on background/foreground
+  if (drv->background || drv->foreground) {
     center_x += TOUCH_OFFSET_X;
-    center_y = TOUCH_OFFSET_Y / 2;
+#ifdef LED_OFFSET_Y
+    center_y = TOUCH_OFFSET_Y + LED_OFFSET_Y;
+#else
+    center_y = TOUCH_OFFSET_Y;
+#endif
   } else {
     center_x += EMULATOR_BORDER;
     center_y = EMULATOR_BORDER / 2;
@@ -393,7 +427,7 @@ void draw_rgb_led() {
 
 static SDL_Rect screen_rect(void) {
   display_driver_t *drv = &g_display_driver;
-  if (drv->background) {
+  if (drv->background || drv->foreground) {
     return (SDL_Rect){TOUCH_OFFSET_X, TOUCH_OFFSET_Y, DISPLAY_RESX,
                       DISPLAY_RESY};
   } else {
@@ -428,6 +462,12 @@ static void display_refresh_internal(void) {
   const SDL_Rect r = screen_rect();
   SDL_RenderCopyEx(drv->renderer, drv->texture, NULL, &r,
                    drv->orientation_angle, NULL, 0);
+
+  if (drv->foreground) {
+    const SDL_Rect fr = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderCopy(drv->renderer, drv->foreground, NULL, &fr);
+  }
+
 #ifdef USE_RGB_LED
   draw_rgb_led();
 #endif
