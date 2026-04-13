@@ -172,6 +172,8 @@ class Channel:
         self.state = channel_state
         self.trezor_public_keys: TrezorPublicKeys | None = None
         self._active_contexts: list[AbstractContextManager] = []
+        # Message processed as ACK but not yet its content (piggybacking only).
+        self._next_message: Message | None = None
 
     @functools.cached_property
     def is_ack_piggybacking_allowed(self) -> bool:
@@ -456,16 +458,27 @@ class Channel:
 
     def _read_ack(self, message: Message) -> None:
         expected_seq_bit = message.seq_bit
+        assert expected_seq_bit is not None
         retries = MAX_RETRANSMISSION_COUNT
         time_start = time.monotonic()
         for _ in range(1 + retries):
             time_elapsed = time.monotonic() - time_start
             message = self._read(timeout=ACK_TIMEOUT - time_elapsed)
-            if not message.is_ack() or len(message.data) > 0:
+            ack_bit_ok = message.ack_bit == expected_seq_bit
+            if message.is_ack() and len(message.data) == 0:
+                pass  # standalone ACK message
+            elif message.is_ack():
+                LOG.warning("Received ACK with non-empty data: %s", message)
+                continue
+            elif self.is_ack_piggybacking_allowed and ack_bit_ok:
+                assert self._next_message is None
+                # process ACK bit, return message in next _read
+                self._next_message = message
+            else:
                 LOG.error("Received message is not a valid ACK: %s", message)
                 # data messages and their acks should have been handled by _read()
                 continue
-            if message.ack_bit != expected_seq_bit:
+            if not ack_bit_ok:
                 LOG.warning("Received ACK with unexpected sequence bit: %s", message)
                 continue
             return
@@ -500,6 +513,11 @@ class Channel:
     def _read(self, timeout: float | None = None) -> Message:
         if timeout is None:
             timeout = client._DEFAULT_READ_TIMEOUT
+
+        if self._next_message:
+            message = self._next_message
+            self._next_message = None
+            return message
 
         while True:
             message = thp_io.read(self.transport, timeout)
