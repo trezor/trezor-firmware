@@ -798,6 +798,8 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the firmware supports loading 3rd-party applications."""
 /// USE_TELEMETRY: bool
 /// """Whether a telemetry is supported."""
+/// USE_N4W1: bool
+/// """Whether N4W1 is supported."""
 /// MODEL: str
 /// """Model name."""
 /// MODEL_FULL_NAME: str
@@ -908,6 +910,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_SERIAL_NUMBER), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_SERIAL_NUMBER), mp_const_false},
+#endif
+#if USE_N4W1
+    {MP_ROM_QSTR(MP_QSTR_USE_N4W1), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_N4W1), mp_const_false},
 #endif
 #if !PYOPT
 #if LOG_STACK_USAGE

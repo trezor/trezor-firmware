@@ -331,6 +331,10 @@ def configure(
         defines += [("USE_SERIAL_NUMBER", "1")]
         features_available.append("serial_number")
 
+    if "n4w1" in features_wanted:
+        defines += [("USE_N4W1", "1")]
+        features_available.append("n4w1")
+
     ENV["LINKER_SCRIPT"] = linker_script
     ENV["MEMORY_LAYOUT"] = memory_layout
 

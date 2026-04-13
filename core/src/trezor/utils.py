@@ -27,6 +27,7 @@ from trezorutils import (  # noqa: F401
     USE_BUTTON,
     USE_DBG_CONSOLE,
     USE_HAPTIC,
+    USE_N4W1,
     USE_NRF,
     USE_OPTIGA,
     USE_POWER_MANAGER,
