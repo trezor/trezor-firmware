@@ -248,17 +248,25 @@ impl Decoder {
             }
             FieldType::Enum(enum_type) => {
                 let enum_val = num.try_into()?;
-                if enum_type.values.contains(&enum_val) {
-                    Ok(enum_val.into())
-                } else {
-                    Err(error::invalid_value(field.name()))
-                }
+                enum_type
+                    .into_obj(enum_val)
+                    .map_err(|_| error::invalid_value(field.name()))
             }
             FieldType::Msg(msg_type) => {
                 let msg_len = num.try_into()?;
                 let sub_stream = &mut stream.read_stream(msg_len)?;
                 self.message_from_stream(sub_stream, &msg_type)
             }
+        }
+    }
+}
+
+impl defs::EnumDef {
+    pub fn into_obj(&self, value: u16) -> Result<Obj, ()> {
+        if self.values.contains(&value) {
+            Ok(value.into())
+        } else {
+            Err(())
         }
     }
 }
