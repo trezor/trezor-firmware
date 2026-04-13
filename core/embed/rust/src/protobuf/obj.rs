@@ -228,7 +228,7 @@ pub extern "C" fn protobuf_debug_msg_def_type() -> &'static Type {
     MsgDef::obj_type()
 }
 
-pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
+pub(crate) extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
     let block = || {
         let name = Qstr::try_from(name)?;
         let def = MsgDef::for_name(name.to_u16()).ok_or_else(|| Error::KeyError(name.into()))?;
@@ -238,7 +238,7 @@ pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-pub extern "C" fn protobuf_type_for_wire(enum_name: Obj, wire_id: Obj) -> Obj {
+pub(crate) extern "C" fn protobuf_type_for_wire(enum_name: Obj, wire_id: Obj) -> Obj {
     let block = || {
         let wire_id = u16::try_from(wire_id)?;
         let enum_name = Qstr::try_from(enum_name)?;

@@ -52,7 +52,7 @@ pub struct Decoder {
 impl Decoder {
     /// Create a new message instance and decode `stream` into it, handling the
     /// default and required fields correctly.
-    pub fn message_from_stream(
+    pub(crate) fn message_from_stream(
         &self,
         stream: &mut InputStream,
         msg: &MsgDef,
@@ -71,7 +71,7 @@ impl Decoder {
 
     /// Create a new message instance and fill it from `values`, handling the
     /// default and required fields correctly.
-    pub fn message_from_values(&self, values: &Map, msg: &MsgDef) -> Result<Obj, Error> {
+    pub(crate) fn message_from_values(&self, values: &Map, msg: &MsgDef) -> Result<Obj, Error> {
         let obj = self.empty_message(msg)?;
         // SAFETY: We assume that `obj` is not aliased here.
         {
@@ -88,7 +88,7 @@ impl Decoder {
 
     /// Allocate the backing message object with enough pre-allocated space for
     /// all fields.
-    pub fn empty_message(&self, msg: &MsgDef) -> Result<GcObject<MsgObj>, Error> {
+    pub(crate) fn empty_message(&self, msg: &MsgDef) -> Result<GcObject<MsgObj>, Error> {
         MsgObj::alloc_with_capacity(msg.fields.len(), msg)
     }
 
@@ -155,7 +155,7 @@ impl Decoder {
     /// Fill in the default values by decoding them from the defaults stream.
     /// Only singular fields are allowed to have a default value, this is
     /// enforced in the blob compilation.
-    fn decode_defaults_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
+    pub(crate) fn decode_defaults_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
         let stream = &mut InputStream::new(msg.defaults);
 
         // The format of the defaults stream is a sequence of records:
@@ -193,7 +193,7 @@ impl Decoder {
 
     /// Walk the fields definitions and make sure that all required fields are
     /// assigned and all optional missing fields are set to `None`.
-    fn assign_required_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
+    pub(crate) fn assign_required_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
         for field in msg.fields {
             if map.contains_key(field.name()) {
                 // Field is assigned, skip.
@@ -215,14 +215,18 @@ impl Decoder {
     }
 
     /// Decode one field value from the input stream.
-    fn decode_field(&self, stream: &mut InputStream, field: &FieldDef) -> Result<Obj, Error> {
+    pub(crate) fn decode_field(
+        &self,
+        stream: &mut InputStream,
+        field: &FieldDef,
+    ) -> Result<Obj, Error> {
         if field.is_experimental() && !self.enable_experimental {
             return Err(error::experimental_not_enabled());
         }
         let num = stream.read_uvarint()?;
         match field.get_type() {
-            FieldType::UVarInt => Ok(num.try_into()?),
-            FieldType::SVarInt => {
+            FieldType::UVarInt | FieldType::UVarInt64 => Ok(num.try_into()?),
+            FieldType::SVarInt | FieldType::SVarInt64 => {
                 let signed_int = zigzag::to_signed(num);
                 Ok(signed_int.try_into()?)
             }

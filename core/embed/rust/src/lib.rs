@@ -32,6 +32,8 @@ mod maybe_trace;
 mod micropython;
 #[cfg(feature = "protobuf")]
 mod protobuf;
+#[cfg(feature = "hashbuffers")]
+mod hashbuffers;
 #[cfg(feature = "storage")]
 mod storage;
 mod strutil;

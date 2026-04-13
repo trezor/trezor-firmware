@@ -68,6 +68,8 @@ impl FieldDef {
             4 => FieldType::String,
             5 => FieldType::Enum(get_enum(self.enum_or_msg_offset)),
             6 => FieldType::Msg(get_msg(self.enum_or_msg_offset)),
+            7 => FieldType::UVarInt64,
+            8 => FieldType::SVarInt64,
             _ => unreachable!(),
         }
     }
@@ -105,6 +107,8 @@ pub enum FieldType {
     String,
     Enum(EnumDef),
     Msg(MsgDef),
+    UVarInt64,
+    SVarInt64,
 }
 
 pub const PRIMITIVE_TYPE_VARINT: u8 = 0;
@@ -113,9 +117,12 @@ pub const PRIMITIVE_TYPE_LENGTH_DELIMITED: u8 = 2;
 impl FieldType {
     pub fn primitive_type(&self) -> u8 {
         match self {
-            FieldType::UVarInt | FieldType::SVarInt | FieldType::Bool | FieldType::Enum(_) => {
-                PRIMITIVE_TYPE_VARINT
-            }
+            FieldType::UVarInt
+            | FieldType::UVarInt64
+            | FieldType::SVarInt
+            | FieldType::SVarInt64
+            | FieldType::Bool
+            | FieldType::Enum(_) => PRIMITIVE_TYPE_VARINT,
             FieldType::Bytes | FieldType::String | FieldType::Msg(_) => {
                 PRIMITIVE_TYPE_LENGTH_DELIMITED
             }

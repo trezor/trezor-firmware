@@ -88,11 +88,11 @@ impl Encoder {
         value: Obj,
     ) -> Result<(), Error> {
         match field.get_type() {
-            FieldType::UVarInt | FieldType::Enum(_) => {
+            FieldType::UVarInt | FieldType::UVarInt64 | FieldType::Enum(_) => {
                 let uint = u64::try_from(value)?;
                 stream.write_uvarint(uint)?;
             }
-            FieldType::SVarInt => {
+            FieldType::SVarInt | FieldType::SVarInt64 => {
                 let sint = i64::try_from(value)?;
                 let uint = zigzag::to_unsigned(sint);
                 stream.write_uvarint(uint)?;

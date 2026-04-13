@@ -43,9 +43,9 @@ TYPE_NAMES = {
 }
 
 FIELD_TYPES_RUST_BLOB = {
-    FieldDescriptor.TYPE_UINT64: 0,
+    FieldDescriptor.TYPE_UINT64: 7,
     FieldDescriptor.TYPE_UINT32: 0,
-    FieldDescriptor.TYPE_SINT64: 1,
+    FieldDescriptor.TYPE_SINT64: 8,
     FieldDescriptor.TYPE_SINT32: 1,
     FieldDescriptor.TYPE_BOOL: 2,
     FieldDescriptor.TYPE_BYTES: 3,

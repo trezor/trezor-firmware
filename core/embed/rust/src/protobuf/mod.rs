@@ -1,6 +1,6 @@
-mod decode;
-mod defs;
+pub(crate) mod decode;
+pub(crate) mod defs;
 mod encode;
-mod error;
-mod obj;
+pub(crate) mod error;
+pub(crate) mod obj;
 mod zigzag;
