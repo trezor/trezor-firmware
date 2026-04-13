@@ -1733,12 +1733,7 @@ class InputFlowEthereumSignTxData(InputFlowBase):
                 assert confirm_tx is None
 
                 layout = self.debug.read_layout()
-                if self.client.layout_type is LayoutType.Eckhart:
-                    TR.regexp("ethereum__title_all_input_data_template").fullmatch(
-                        layout.title().strip()
-                    )
-                else:
-                    assert TR.ethereum__title_input_data in layout.title()
+                assert layout.title().startswith(TR.ethereum__title_input_data)
 
                 if is_intro:
                     # Intro layout should show a prefix of the data, ending with "..."
