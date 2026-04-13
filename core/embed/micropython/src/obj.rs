@@ -416,6 +416,17 @@ impl Obj {
             Err(e) => Err(e.into()),
         }
     }
+
+    pub fn try_from_option<T>(value: Option<T>) -> Result<Obj, Error>
+    where
+        T: TryInto<Obj>,
+        Error: From<<T as TryInto<Obj>>::Error>,
+    {
+        match value {
+            Some(v) => Ok(v.try_into()?),
+            None => Ok(Obj::const_none()),
+        }
+    }
 }
 
 impl Obj {
