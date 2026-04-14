@@ -10,7 +10,7 @@ dependencies = [
     "scons",
     "protobuf",
     "nanopb>=0.4.3,<0.5",
-    "pytest>=8,<9",
+    "pytest>=9.0.3,<10",
     "coverage==5.5",
     "pytest-ordering",
     "pytest-random-order",
