@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import NewType
 
 from crypto import (
-    AEAD_NONCE_SIZE,
+    AEAD_NONCE_SIZE_BYTES,
     DecryptionError,
     PublicKey,
     aead_decrypt,
@@ -160,7 +160,7 @@ class CardInner:
             # The nonce is intentionally constant because the encryption key
             # (`salted_pin`) is guaranteed never to be used twice
             encrypted_data_encryption_key = aead_encrypt(
-                salted_pin, bytes(AEAD_NONCE_SIZE), encryption_key
+                salted_pin, bytes(AEAD_NONCE_SIZE_BYTES), encryption_key
             )
             return salt, encrypted_data_encryption_key
 
@@ -170,7 +170,7 @@ class CardInner:
         ) -> bytes:
             salted_pin = hmac_hash(pin, salt)
             data_encryption_key = aead_decrypt(
-                salted_pin, bytes(AEAD_NONCE_SIZE), encrypted_data_encryption_key
+                salted_pin, bytes(AEAD_NONCE_SIZE_BYTES), encrypted_data_encryption_key
             )
             return data_encryption_key
 
@@ -320,8 +320,8 @@ class CardInner:
 
             seed = aead_decrypt(
                 self.data_encryption_key,
-                self.storage.encrypted_seed[:AEAD_NONCE_SIZE],
-                self.storage.encrypted_seed[AEAD_NONCE_SIZE:],
+                self.storage.encrypted_seed[:AEAD_NONCE_SIZE_BYTES],
+                self.storage.encrypted_seed[AEAD_NONCE_SIZE_BYTES:],
             )
             logger.debug(f"seed={seed!r}")
             return seed
@@ -343,7 +343,7 @@ class CardInner:
             if self.data_encryption_key is None:
                 raise NotAuthenticatedError()
 
-            nonce = random_bytes(AEAD_NONCE_SIZE)
+            nonce = random_bytes(AEAD_NONCE_SIZE_BYTES)
             encrypted_seed = nonce + aead_encrypt(self.data_encryption_key, nonce, seed)
 
             with self.storage.atomic_session():

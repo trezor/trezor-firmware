@@ -18,8 +18,8 @@ def hmac_hash(key: bytes, data: bytes) -> bytes:
 PrivateKey = NewType("PrivateKey", bytes)
 PublicKey = NewType("PublicKey", bytes)
 
-AEAD_NONCE_SIZE = 12
-AEAD_TAG_SIZE = 16
+AEAD_NONCE_SIZE_BYTES = 12
+AEAD_TAG_SIZE_BYTES = 16
 
 
 class DecryptionError(BaseException):
