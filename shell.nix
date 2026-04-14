@@ -5,6 +5,7 @@
 
 let
   # the last commit from master as of 2026-03-16
+  # when updating please also bump rustProfiles below
   rustOverlay = import (builtins.fetchTarball {
     url = "https://github.com/oxalica/rust-overlay/archive/f600ea449c7b5bb596fa1cf21c871cc5b9e31316.tar.gz";
     sha256 = "0x70l5b4v5zljnwkzbv7yi5ld04vb75zb6wk620sfm6vd406166c";
@@ -51,7 +52,7 @@ let
       done
     '';
   # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
-  rustProfiles = nixpkgs.rust-bin.nightly."2025-04-15";
+  rustProfiles = nixpkgs.rust-bin.nightly."2026-03-16";
   rustNightly = rustProfiles.minimal.override {
     targets = [
       "thumbv7em-none-eabihf" # TT
