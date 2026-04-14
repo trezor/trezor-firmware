@@ -21,13 +21,13 @@ TREZOR_CHECK_INTEGRITY = ApduHeader(0x80, 0x06, 0x00, 0x00)
 TREZOR_REFRESH_MEMORY = ApduHeader(0x80, 0x07, 0x00, 0x00)
 
 # TODO
-PIN_COUNTER_FILE = bytes.fromhex("00")
-SUCCESSFUL_LOG_FILE = bytes.fromhex("01")
-UNSUCCESSFUL_LOG_FILE = bytes.fromhex("02")
-SEED_METADATA_FILE = bytes.fromhex("03")
-SEED_FILE = bytes.fromhex("04")
-LAST_REFRESH_TIMESTAMP_FILE = bytes.fromhex("05")
-FLASH_BIT_ERROR_COUNT_FILE = bytes.fromhex("06")
+PIN_COUNTER_FILE = bytes.fromhex("0000")
+SUCCESSFUL_LOG_FILE = bytes.fromhex("0001")
+UNSUCCESSFUL_LOG_FILE = bytes.fromhex("0002")
+SEED_METADATA_FILE = bytes.fromhex("0003")
+SEED_FILE = bytes.fromhex("0004")
+LAST_REFRESH_TIMESTAMP_FILE = bytes.fromhex("0005")
+FLASH_BIT_ERROR_COUNT_FILE = bytes.fromhex("0006")
 
 NDEF_FILE = bytes.fromhex("E104")
 
