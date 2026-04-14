@@ -1737,7 +1737,7 @@ class InputFlowEthereumSignTxData(InputFlowBase):
 
                 # Only intro layout contains "view all" functionality:
                 assert is_intro == (
-                    TR.instructions__view_all_data in layout.screen_content()
+                    TR.instructions__view_all_data in layout.text_content()
                     or TR.buttons__view_all_data in layout.button_contents()
                 )
 
