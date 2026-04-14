@@ -10,6 +10,7 @@
 #![feature(lang_items)]
 #![feature(optimize_attribute)]
 #![feature(trait_alias)]
+#![feature(custom_test_frameworks)]
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
 
