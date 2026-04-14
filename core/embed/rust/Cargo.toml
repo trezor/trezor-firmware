@@ -1,3 +1,5 @@
+cargo-features = ["panic-immediate-abort"]
+
 [package]
 name = "trezor_lib"
 version = "0.1.0"
@@ -93,12 +95,13 @@ universal_fw = []
 crate-type = ["staticlib"]
 
 [profile.dev]
+# Keep panic mechanism on emulator PYOPT=0 builds
 panic = "abort"
 split-debuginfo = "off"
 debug = 2
 
 [profile.release]
-panic = "abort"
+panic = "immediate-abort"
 opt-level = "z"
 lto = true
 codegen-units = 1

@@ -168,11 +168,10 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
             "--no-default-features",
             "--features " + ",".join(lib_features),
         ]
-        if not (build == "unix" and is_debug):
-            # Keep panic mechanism on debug emulator (for `debug_assert!`)
+        if not is_debug:
             cargo_opts += [
+                # Needed by panic=immediate-abort
                 "-Z build-std=core",
-                "-Z build-std-features=panic_immediate_abort",
             ]
 
         build_cmd = "cargo build " + " ".join(cargo_opts)
