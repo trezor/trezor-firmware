@@ -2,7 +2,7 @@
 CRATES_TEST = trezor-thp trezor-tjpgdec
 CRATES = ${CRATES_TEST} trezor-client
 
-check: clippy test
+check: clippy test audit
 
 style:
 	@for D in $(CRATES); do ( \
