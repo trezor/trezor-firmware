@@ -410,7 +410,10 @@ impl PinInput {
         let visible_icons = visible_len - last_digit as usize;
 
         // Jiggle when overflowed.
-        if pin_len > visible_len && pin_len % 2 == 0 && self.display_style != DisplayStyle::Shown {
+        if pin_len > visible_len
+            && pin_len.is_multiple_of(2)
+            && self.display_style != DisplayStyle::Shown
+        {
             cursor.x += Self::TWITCH;
         }
 

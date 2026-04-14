@@ -138,7 +138,11 @@ impl ChangingTextLine {
         // Creating the notion of motion by shifting the text left and right with
         // each new text character.
         // (So that it is apparent for the user that the text is changing.)
-        let x_offset = if self.text.len() % 2 == 0 { 0 } else { 2 };
+        let x_offset = if self.text.len().is_multiple_of(2) {
+            0
+        } else {
+            2
+        };
 
         let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
         shape::Text::new(baseline, &text_to_display, self.font).render(target);

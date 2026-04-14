@@ -225,7 +225,10 @@ pub fn get_msg(msg_offset: u16) -> MsgDef {
     // * FieldDef has the same alignment
     debug_assert!(mem::align_of::<FieldDef>() == mem::align_of::<u16>());
     // * both msg_offset and fields_start added together keep the alignment:
-    debug_assert!(fields_byteslice.as_ptr().addr() % mem::align_of::<FieldDef>() == 0);
+    debug_assert!(fields_byteslice
+        .as_ptr()
+        .addr()
+        .is_multiple_of(mem::align_of::<FieldDef>()));
 
     // SAFETY: FieldDef is a packed struct of ints, so all bit patterns are valid.
     let (_pre, fields, _post) = unsafe { fields_byteslice.align_to::<FieldDef>() };
@@ -263,7 +266,7 @@ fn get_enum(enum_offset: u16) -> EnumDef {
 
     // enum_offset is a raw byte offset, we check that it is also a valid index of
     // an u16
-    assert!(enum_offset % SIZE == 0);
+    assert!(enum_offset.is_multiple_of(SIZE));
     let offset: usize = (enum_offset / SIZE).into();
     let count: usize = enum_defs[offset].into();
     EnumDef {

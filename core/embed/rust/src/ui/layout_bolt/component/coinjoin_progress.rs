@@ -100,10 +100,10 @@ where
                 ctx.request_anim_frame();
                 ctx.request_paint();
             }
-            Event::Progress(new_value, _new_description) => {
-                if mem::replace(&mut self.value, new_value) != new_value {
-                    ctx.request_paint();
-                }
+            Event::Progress(new_value, _new_description)
+                if mem::replace(&mut self.value, new_value) != new_value =>
+            {
+                ctx.request_paint();
             }
             _ => {}
         }

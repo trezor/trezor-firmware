@@ -399,7 +399,7 @@ impl LayoutObj {
         }
     }
 
-    fn inner_mut(&self) -> RefMut<LayoutObjInner> {
+    fn inner_mut(&self) -> RefMut<'_, LayoutObjInner> {
         self.inner.borrow_mut()
     }
 

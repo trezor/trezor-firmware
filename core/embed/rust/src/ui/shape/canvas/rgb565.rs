@@ -88,7 +88,7 @@ impl<'a> CanvasBuilder<'a> for Rgb565Canvas<'a> {
 }
 
 impl<'a> Canvas for Rgb565Canvas<'a> {
-    fn view(&self) -> BitmapView {
+    fn view(&self) -> BitmapView<'_> {
         BitmapView::new(&self.bitmap)
     }
 

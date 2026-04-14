@@ -149,11 +149,9 @@ impl<'a> Component for BldTextScreen<'a> {
             match self.header.event(ctx, event) {
                 // FIXME: This is a hack for `screen_install_confirm` which expects `2` for the Menu
                 Some(BldHeaderMsg::Menu) => return Some(BldTextScreenMsg::Cancelled),
-                Some(BldHeaderMsg::Info) => {
-                    if !self.more_info_showing {
-                        self.more_info_showing = true;
-                        return None;
-                    }
+                Some(BldHeaderMsg::Info) if !self.more_info_showing => {
+                    self.more_info_showing = true;
+                    return None;
                 }
                 _ => (),
             }

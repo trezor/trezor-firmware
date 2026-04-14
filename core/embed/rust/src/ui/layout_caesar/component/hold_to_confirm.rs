@@ -100,10 +100,8 @@ impl Component for HoldToConfirm {
             Event::Button(ButtonEvent::HoldStarted) => {
                 self.loader.start_growing(ctx, Instant::now());
             }
-            Event::Button(ButtonEvent::HoldEnded) => {
-                if self.loader.is_animating() {
-                    self.loader.start_shrinking(ctx, Instant::now());
-                }
+            Event::Button(ButtonEvent::HoldEnded) if self.loader.is_animating() => {
+                self.loader.start_shrinking(ctx, Instant::now());
             }
             Event::Button(ButtonEvent::HoldCanceled) => {
                 self.loader.shrink_completely(ctx, Instant::now());

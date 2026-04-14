@@ -42,7 +42,7 @@ impl Map {
 }
 
 impl Map {
-    pub fn from_fixed(table: &[MapElem]) -> MapRef {
+    pub fn from_fixed(table: &[MapElem]) -> MapRef<'_> {
         let mut map = MaybeUninit::uninit();
         // SAFETY: `mp_map_init_fixed_table` completely initializes all fields of `map`.
         unsafe {

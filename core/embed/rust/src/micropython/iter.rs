@@ -30,7 +30,7 @@ impl IterBuf {
         new
     }
 
-    pub fn try_iterate(&mut self, o: Obj) -> Result<Iter, Error> {
+    pub fn try_iterate(&mut self, o: Obj) -> Result<Iter<'_>, Error> {
         Iter::try_from_obj_with_buf(o, self)
     }
 

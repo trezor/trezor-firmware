@@ -217,23 +217,19 @@ impl Component for HoldToConfirm {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let btn_msg = self.button.event(ctx, event);
         match btn_msg {
-            Some(ButtonMsg::Pressed) => {
-                if !self.anim.is_locked() {
-                    self.anim.start();
-                    ctx.request_anim_frame();
-                    ctx.request_paint();
-                    ctx.disable_swipe();
-                    self.finalizing = false;
-                }
+            Some(ButtonMsg::Pressed) if !self.anim.is_locked() => {
+                self.anim.start();
+                ctx.request_anim_frame();
+                ctx.request_paint();
+                ctx.disable_swipe();
+                self.finalizing = false;
             }
-            Some(ButtonMsg::Released) => {
-                if !self.anim.is_locked() {
-                    self.anim.reset();
-                    ctx.request_anim_frame();
-                    ctx.request_paint();
-                    ctx.enable_swipe();
-                    self.finalizing = false;
-                }
+            Some(ButtonMsg::Released) if !self.anim.is_locked() => {
+                self.anim.reset();
+                ctx.request_anim_frame();
+                ctx.request_paint();
+                ctx.enable_swipe();
+                self.finalizing = false;
             }
             Some(ButtonMsg::Clicked) => {
                 if animation_disabled() {

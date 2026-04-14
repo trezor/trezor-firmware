@@ -87,13 +87,9 @@ impl<'a> Bitmap<'a> {
 
         assert!(stride >= min_stride);
         assert!(buff.as_ptr().align_offset(alignment) == 0);
-        assert!(stride % alignment == 0);
+        assert!(stride.is_multiple_of(alignment));
 
-        let max_height = if stride == 0 {
-            size.y as usize
-        } else {
-            buff.len() / stride
-        };
+        let max_height = buff.len().checked_div(stride).unwrap_or(size.y as usize);
 
         if size.y as usize > max_height {
             if let Some(min_height) = min_height {
@@ -164,7 +160,7 @@ impl<'a> Bitmap<'a> {
         self.format
     }
 
-    pub fn view(&self) -> BitmapView {
+    pub fn view(&self) -> BitmapView<'_> {
         BitmapView::new(self)
     }
 
@@ -178,7 +174,7 @@ impl<'a> Bitmap<'a> {
 
         let offset = row as usize * (self.stride / core::mem::size_of::<T>());
 
-        if offset % core::mem::align_of::<T>() != 0 {
+        if !offset.is_multiple_of(core::mem::align_of::<T>()) {
             return None;
         }
 
@@ -210,7 +206,7 @@ impl<'a> Bitmap<'a> {
 
         let offset = row as usize * (self.stride / core::mem::size_of::<T>());
 
-        if offset % core::mem::align_of::<T>() != 0 {
+        if !offset.is_multiple_of(core::mem::align_of::<T>()) {
             return None;
         }
 
@@ -243,7 +239,7 @@ impl<'a> Bitmap<'a> {
 
         let offset = self.stride * row as usize;
 
-        if offset % core::mem::align_of::<T>() != 0 {
+        if !offset.is_multiple_of(core::mem::align_of::<T>()) {
             return None;
         }
 

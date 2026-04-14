@@ -408,7 +408,7 @@ impl Button {
             self.style().font.line_height()
         } else if break_words {
             if self.stylesheet.normal.font.text_width(text) <= width {
-                return self.style().font.line_height();
+                self.style().font.line_height()
             } else {
                 self.style().font.line_height() * 2 - constant::LINE_SPACE
             }

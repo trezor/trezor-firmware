@@ -222,11 +222,9 @@ impl SwipeContext {
 
         if let Event::Swipe(SwipeEvent::Move(dir, progress)) = event {
             match dir {
-                Direction::Up | Direction::Down => {
-                    if animate {
-                        self.dir = dir;
-                        self.progress = progress;
-                    }
+                Direction::Up | Direction::Down if animate => {
+                    self.dir = dir;
+                    self.progress = progress;
                 }
                 _ => {}
             }

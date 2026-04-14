@@ -159,7 +159,7 @@ impl ParagraphSource<'static> for PropsList {
             let obj: Obj;
             let style: &TextStyle;
 
-            if index % 2 == 0 {
+            if index.is_multiple_of(2) {
                 if !key.is_str() && key != Obj::const_none() {
                     return Err(Error::TypeError);
                 }

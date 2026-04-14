@@ -33,7 +33,7 @@ impl Title {
         self
     }
 
-    pub fn get_text(&self) -> TString {
+    pub fn get_text(&self) -> TString<'_> {
         self.title
     }
 

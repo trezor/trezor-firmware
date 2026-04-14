@@ -797,14 +797,12 @@ impl LockscreenAnim {
                     ctx.request_anim_frame();
                 }
             }
-            Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {
-                if !animation_disabled() {
-                    if !self.timer.is_running() {
-                        self.timer.start();
-                    }
-                    ctx.request_anim_frame();
-                    ctx.request_paint();
+            Event::Timer(EventCtx::ANIM_FRAME_TIMER) if !animation_disabled() => {
+                if !self.timer.is_running() {
+                    self.timer.start();
                 }
+                ctx.request_anim_frame();
+                ctx.request_paint();
             }
             _ => {}
         }

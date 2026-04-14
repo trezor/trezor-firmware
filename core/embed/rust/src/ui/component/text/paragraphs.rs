@@ -142,7 +142,7 @@ where
         }
     }
 
-    fn break_pages_from(&self, offset: Option<PageOffset>) -> PageBreakIterator<T> {
+    fn break_pages_from(&self, offset: Option<PageOffset>) -> PageBreakIterator<'_, T> {
         PageBreakIterator {
             paragraphs: self,
             current: offset,
@@ -152,14 +152,14 @@ where
     /// Break pages from the start of the document.
     ///
     /// The first pagebreak is at the start of the first screen.
-    fn break_pages_from_start(&self) -> PageBreakIterator<T> {
+    fn break_pages_from_start(&self) -> PageBreakIterator<'_, T> {
         self.break_pages_from(None)
     }
 
     /// Break pages, continuing from the current page.
     ///
     /// The first pagebreak is at the start of the next screen.
-    fn break_pages_from_next(&self) -> PageBreakIterator<T> {
+    fn break_pages_from_next(&self) -> PageBreakIterator<'_, T> {
         self.break_pages_from(Some(self.offset))
     }
 

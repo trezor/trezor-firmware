@@ -195,12 +195,11 @@ where
                 self.on_input_change(ctx);
                 return None;
             }
-            Some(KeypadMsg::Back) => {
+            Some(KeypadMsg::Back)
                 // Back button will cause going back to the previous word when allowed.
-                if self.can_go_back {
+                if self.can_go_back => {
                     return Some(MnemonicKeyboardMsg::Previous);
                 }
-            }
             Some(KeypadMsg::EraseShort) => {
                 self.input.on_backspace_click(ctx);
                 self.on_input_change(ctx);
