@@ -8,6 +8,7 @@ use_std = []
 
 [dependencies]
 log = "0.4.29"
+borrowck_sacrifices = "0.1.0"
 
 [dependencies.heapless]
 version = "0.9.2"
