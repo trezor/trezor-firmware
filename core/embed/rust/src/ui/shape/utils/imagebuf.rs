@@ -80,7 +80,7 @@ where
     }
 
     /// Returns the immutable view of the bitmap in the image buffer.
-    pub fn view(&self) -> BitmapView {
+    pub fn view(&self) -> BitmapView<'_> {
         self.canvas.view()
     }
 }

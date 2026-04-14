@@ -653,11 +653,10 @@ impl ShowLabelAnimation {
 
     pub fn process_event(&mut self, ctx: &mut EventCtx, event: Event) {
         match event {
-            Event::Attach(_) => {
-                if !self.hidden {
+            Event::Attach(_)
+                if !self.hidden => {
                     self.timer.start(ctx, Self::HIDE_AFTER);
                 }
-            }
             Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {
                 if self.is_active() {
                     ctx.request_anim_frame();
@@ -685,9 +684,9 @@ impl ShowLabelAnimation {
                     ctx.request_paint();
                 }
             }
-            Event::Touch(TouchEvent::TouchStart(point)) => {
+            Event::Touch(TouchEvent::TouchStart(point))
                 // Only trigger animation at the top of the screen
-                if point.y <= SCREEN.height() / 2 {
+                if point.y <= SCREEN.height() / 2 => {
                     if self.animated {
                         if !self.animating {
                             if self.hidden {
@@ -715,7 +714,6 @@ impl ShowLabelAnimation {
                         }
                     }
                 }
-            }
             _ => {}
         }
     }

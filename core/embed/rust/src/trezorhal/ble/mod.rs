@@ -40,7 +40,7 @@ pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
                 .data
                 .iter()
                 .take(6)
-                .map(|&b| (b - b'0'))
+                .map(|&b| b - b'0')
                 .fold(0, |acc, d| acc * 10 + d as u32);
             BLEEvent::PairingRequest(code)
         }

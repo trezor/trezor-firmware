@@ -182,17 +182,13 @@ impl Component for Marquee {
             }
 
             match self.state {
-                State::Right(_) => {
-                    if self.is_at_right(now) {
-                        self.pause_timer.start(ctx, self.pause);
-                        self.state = State::PauseRight;
-                    }
+                State::Right(_) if self.is_at_right(now) => {
+                    self.pause_timer.start(ctx, self.pause);
+                    self.state = State::PauseRight;
                 }
-                State::Left(_) => {
-                    if self.is_at_left(now) {
-                        self.pause_timer.start(ctx, self.pause);
-                        self.state = State::PauseLeft;
-                    }
+                State::Left(_) if self.is_at_left(now) => {
+                    self.pause_timer.start(ctx, self.pause);
+                    self.state = State::PauseLeft;
                 }
                 _ => {}
             }

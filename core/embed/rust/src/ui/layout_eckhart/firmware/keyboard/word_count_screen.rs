@@ -194,7 +194,7 @@ impl ValueKeypad {
         let vertical_spacing = (self.area.height() - Self::BUTTON_SIZE.y * Self::ROWS as i16)
             / (Self::ROWS as i16 - 1);
 
-        if idx % Self::ROWS == 0 {
+        if idx.is_multiple_of(Self::ROWS) {
             Insets::bottom(vertical_spacing / 2)
         } else if idx % Self::ROWS == Self::ROWS - 1 {
             Insets::top(vertical_spacing / 2)

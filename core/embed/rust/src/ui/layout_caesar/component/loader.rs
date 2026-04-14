@@ -178,7 +178,7 @@ impl Loader {
         let split_point = (((width as i32 + 1) * done) / (display::LOADER_MAX as i32)) as i16;
         let (r_left, r_right) = self.area.split_left(split_point);
         let parts = [(r_left, true), (r_right, false)];
-        parts.map(|(r, invert)| {
+        parts.iter().for_each(|&(r, invert)| {
             target.in_clip(r, &|target| {
                 if invert {
                     shape::Bar::new(self.area)

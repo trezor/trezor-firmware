@@ -67,7 +67,7 @@ fn base64_char_value(c: u8) -> Option<u8> {
 /// Returns the number of bytes written on success.
 pub fn base64_decode(input: &[u8], output: &mut [u8]) -> Result<usize, Base64Error> {
     let len = input.len();
-    if len % 4 != 0 {
+    if !len.is_multiple_of(4) {
         return Err(Base64Error::InvalidLength);
     }
 

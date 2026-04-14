@@ -83,7 +83,7 @@ pub trait CanvasBuilder<'a> {
 
 pub trait Canvas: BasicCanvas {
     /// Returns a non-mutable view of the underlying bitmap.
-    fn view(&self) -> BitmapView;
+    fn view(&self) -> BitmapView<'_>;
 
     /// Draw a pixel at specified coordinates.
     fn draw_pixel(&mut self, pt: Point, color: Color);

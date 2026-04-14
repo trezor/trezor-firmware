@@ -270,11 +270,9 @@ impl Component for PinEntry<'_> {
         });
         match event {
             // Timeout for showing the last digit.
-            Event::Timer(_) if self.timeout_timer.expire(event) => {
-                if self.show_last_digit {
-                    self.show_last_digit = false;
-                    self.update(ctx)
-                }
+            Event::Timer(_) if self.timeout_timer.expire(event) && self.show_last_digit => {
+                self.show_last_digit = false;
+                self.update(ctx)
             }
             // Other timers are ignored.
             Event::Timer(_) => {}

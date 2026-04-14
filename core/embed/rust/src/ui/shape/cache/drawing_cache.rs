@@ -99,19 +99,19 @@ impl<'a> DrawingCache<'a> {
     }
 
     /// Returns an object for decompression of TOIF images
-    pub fn zlib(&self) -> RefMut<ZlibCache<'a>> {
+    pub fn zlib(&self) -> RefMut<'_, ZlibCache<'a>> {
         self.zlib_cache.borrow_mut()
     }
 
     /// Returns an object for decompression of JPEG images
     #[cfg(all(feature = "ui_jpeg", not(feature = "hw_jpeg_decoder")))]
-    pub fn jpeg(&self) -> RefMut<JpegCache<'a>> {
+    pub fn jpeg(&self) -> RefMut<'_, JpegCache<'a>> {
         self.jpeg_cache.borrow_mut()
     }
 
     /// Returns an object providing blurring algorithm
     #[cfg(feature = "ui_blurring")]
-    pub fn blur(&self) -> RefMut<BlurCache<'a>> {
+    pub fn blur(&self) -> RefMut<'_, BlurCache<'a>> {
         self.blur_cache.borrow_mut()
     }
 

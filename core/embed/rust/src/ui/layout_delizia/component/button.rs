@@ -194,10 +194,10 @@ impl Button {
         style: &ButtonStyle,
         alpha: u8,
     ) {
-        if self.radius.is_some() {
+        if let Some(r) = self.radius {
             shape::Bar::new(self.area)
                 .with_bg(style.background_color)
-                .with_radius(self.radius.unwrap() as i16)
+                .with_radius(r.into())
                 .with_thickness(2)
                 .with_fg(style.button_color)
                 .with_alpha(alpha)

@@ -88,7 +88,7 @@ impl<'a> CanvasBuilder<'a> for Mono8Canvas<'a> {
 }
 
 impl<'a> Canvas for Mono8Canvas<'a> {
-    fn view(&self) -> BitmapView {
+    fn view(&self) -> BitmapView<'_> {
         BitmapView::new(&self.bitmap)
     }
 

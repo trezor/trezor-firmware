@@ -121,7 +121,10 @@ impl PassphraseInput {
         let visible_icons = visible_len - last_char as usize;
 
         // Jiggle when overflowed.
-        if pp_len > visible_len && pp_len % 2 == 0 && self.display_style != DisplayStyle::Shown {
+        if pp_len > visible_len
+            && pp_len.is_multiple_of(2)
+            && self.display_style != DisplayStyle::Shown
+        {
             cursor.x += Self::TWITCH;
         }
 

@@ -119,8 +119,7 @@ impl<I: StringInput> StringKeyboard<I> {
         let layout = self.active_layout as usize;
         let styles = Self::key_style(self.active_layout);
 
-        for idx in 0..KEY_COUNT {
-            let text = KEYBOARD[layout][idx];
+        for (idx, text) in KEYBOARD[layout].iter().enumerate() {
             let content = Self::key_content(text);
             self.keypad.set_key_content(idx, content);
             self.keypad

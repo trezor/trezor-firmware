@@ -46,6 +46,7 @@ pub trait ShapeClone<'s> {
     ///
     /// The method is used by `ProgressiveRenderer` to store shape objects for
     /// deferred drawing.
+    #[allow(clippy::mut_from_ref)]
     fn clone_at_bump<T>(self, bump: &'s T) -> Option<&'s mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'s>;

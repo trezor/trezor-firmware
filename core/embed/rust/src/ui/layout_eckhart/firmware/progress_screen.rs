@@ -121,15 +121,15 @@ impl Component for ProgressScreen {
                 ctx.request_anim_frame();
                 ctx.request_paint();
             }
-            Event::Progress(new_value, new_description) => {
-                if mem::replace(&mut self.value, new_value) != new_value {
-                    if !animation_disabled() {
-                        ctx.request_paint();
-                    }
-                    if self.description.text() != &new_description {
-                        self.description.set_text(new_description);
-                        ctx.request_paint();
-                    }
+            Event::Progress(new_value, new_description)
+                if mem::replace(&mut self.value, new_value) != new_value =>
+            {
+                if !animation_disabled() {
+                    ctx.request_paint();
+                }
+                if self.description.text() != &new_description {
+                    self.description.set_text(new_description);
+                    ctx.request_paint();
                 }
             }
             _ => {}

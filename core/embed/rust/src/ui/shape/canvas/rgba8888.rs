@@ -88,7 +88,7 @@ impl<'a> CanvasBuilder<'a> for Rgba8888Canvas<'a> {
 }
 
 impl<'a> Canvas for Rgba8888Canvas<'a> {
-    fn view(&self) -> BitmapView {
+    fn view(&self) -> BitmapView<'_> {
         BitmapView::new(&self.bitmap)
     }
 
