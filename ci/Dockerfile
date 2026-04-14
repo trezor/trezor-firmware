@@ -11,7 +11,7 @@ ADD alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz /
 RUN apk add --no-cache --update openssl \
   && echo hosts: files dns > /etc/nsswitch.conf
 # Add basic packages
-RUN apk update && apk add bash git python3
+RUN apk add --no-cache --update bash coreutils git python3
 
 # Download Nix and install it into the system.
 ARG NIX_VERSION=2.31.4
