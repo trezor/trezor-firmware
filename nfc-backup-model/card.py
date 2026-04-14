@@ -271,6 +271,9 @@ class TrezorSecureChannelState(ApduState):
 class Card:
     def __init__(self, static_key: PrivateKey, certificate: bytes) -> None:
         self.card = CardInner()
+
+        # This is stored in flash. Since it is set only during provisioning,
+        # it can be stored in OTP.
         self.static_key = static_key
         self.certificate = certificate
 

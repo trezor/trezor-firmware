@@ -15,8 +15,8 @@ def hmac_hash(key: bytes, data: bytes) -> bytes:
     return hmac.new(key, data, sha256).digest()
 
 
-PrivateKey = NewType("PrivateKey", bytes)
-PublicKey = NewType("PublicKey", bytes)
+PrivateKey = NewType("PrivateKey", bytes)  # 32 bytes
+PublicKey = NewType("PublicKey", bytes)  # 32 bytes
 
 AEAD_NONCE_SIZE_BYTES = 12
 AEAD_TAG_SIZE_BYTES = 16

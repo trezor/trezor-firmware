@@ -24,6 +24,17 @@ DEFAULT_PIN = Pin(b"")
 STRETCHING_KEY_SIZE_BYTES = 16
 SALT_SIZE_BYTES = 16
 AEAD_KEY_SIZE_BYTES = 32
+# The maximum length of a BIP-39 seed encoded as a string using the English
+# dictionary is 215 bytes. The longest seed has 256 bits of entropy, which are
+# encoded in 24 words; the longest word in the dictionary has 8 characters,
+# with 23 spaces between words.
+# The maximum length of a SLIP-39 share encoded in binary is 330 bits, of
+# which 4 bits are padding, 40 bits are metadata, and 30 bits are a checksum.
+# The maximum lengths of the seed and seed metadata were chosen to be 256
+# bytes so that their lengths can be encoded in a single byte and they fit
+# into a short APDU command.
+SEED_MAX_SIZE_BYTES = 256
+SEED_METADATA_SIZE_BYTES = 256
 
 
 class NfcBackupModelError(Exception):
@@ -54,11 +65,13 @@ class Storage:
     # be merged if this is advantageous from an implementation perspective.
 
     # First atomic section
-    salt: bytes = b""
-    encrypted_data_encryption_key: bytes = b""
+    salt: bytes = b""  # SALT_SIZE_BYTES bytes
+    encrypted_data_encryption_key: bytes = (
+        b""  # AEAD_KEY_SIZE_BYTES + AEAD_TAG_SIZE_BYTES bytes
+    )
 
     # Second atomic section
-    pin_counter: int = MAX_PIN_ATTEMPTS
+    pin_counter: int = MAX_PIN_ATTEMPTS  # 1 byte
     # `pin_counter` is reduntant since
     # `pin_counter = len([r for r in unsuccessful_access_log_records if r is not None])`
     successful_access_log_record: PublicKey | None = None
@@ -67,18 +80,20 @@ class Storage:
     )
 
     # Third atomic section
-    seed_metadata: bytes = b""
+    seed_metadata: bytes = b""  # at most SEED_METADATA_SIZE_BYTES bytes, plus
+    # 1 byte for encoding the length
 
     # Forth section
-    encrypted_seed: bytes = b""
+    encrypted_seed: bytes = b""  # at most SEED_MAX_SIZE_BYTES +
+    # AEAD_TAG_SIZE_BYTES bytes, plus 1 byte for encoding the length
 
     # Fifth section
-    last_refresh_timestamp: Timestamp = Timestamp(b"")
+    last_refresh_timestamp: Timestamp = Timestamp(b"")  # 4 bytes
 
     # Sixth section
     # This is the part of memory that is written to most often if the user
     # only performs integrity checks
-    flash_bit_error_count: int = 0
+    flash_bit_error_count: int = 0  # 4 bytes
 
     # This function should be automatically called when a flash error is detected
     # while reading data or code from flash
@@ -119,8 +134,8 @@ class CardInner:
             self.storage = storage
 
             # This is stored in RAM
-            self.reader_public_key = reader_public_key
-            self.data_encryption_key: bytes | None = None
+            self.reader_public_key = reader_public_key  # AEAD_KEY_SIZE_BYTES
+            self.data_encryption_key: bytes | None = None  # AEAD_KEY_SIZE_BYTES bytes
 
         # | Method                                | Requires PIN | Requires Trezor |
         # | ------------------------------------- | -----------: | --------------: |
