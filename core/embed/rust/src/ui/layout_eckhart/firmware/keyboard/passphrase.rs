@@ -326,11 +326,8 @@ impl Component for PassphraseInput {
                 self.update_shown_area();
                 return Some(StringInputMsg::UpdateKeypad);
             }
-            // Return touch end if the touch end is detected inside the visible area
-            Event::Touch(TouchEvent::TouchEnd(pos))
-                if extended_shown_area.contains(pos)
-                    && self.display_style == DisplayStyle::Shown =>
-            {
+            // Return touch end if the touch end is detected
+            Event::Touch(TouchEvent::TouchEnd(_)) if self.display_style == DisplayStyle::Shown => {
                 self.multi_tap.clear_pending_state(ctx);
                 self.display_style = DisplayStyle::Hidden;
                 return Some(StringInputMsg::UpdateKeypad);

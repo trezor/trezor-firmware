@@ -400,7 +400,7 @@ pub const fn button_keyboard() -> ButtonStyleSheet {
             font: fonts::FONT_DEMIBOLD,
             text_color: GREY_DARK,
             button_color: BG, // so there is no "button" itself, just the text
-            icon_color: GREY_LIGHT,
+            icon_color: GREY_DARK,
             background_color: BG,
         },
     }
