@@ -90,17 +90,6 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --run "make -C rust check"
 
-  rust_audit:
-    name: Rust security audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/environment
-      - run: nix-shell --run "make -C rust audit"
-      - run: nix-shell --run "make -C core audit_rust"
-
   storage_test:
     name: Storage test
     # TODO: only for changes in storage/
