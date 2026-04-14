@@ -268,6 +268,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "357703d41365b4b27c590e3ed91eabb1b663f07c4c084095e60cbed4362dff0d"
 
 [[package]]
+name = "rustsec-example-crate"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2ec2f8f9fb68b5ca851757602ccfee878f01d6cfa1cfa48b394992525f52e75"
+
+[[package]]
 name = "ryu"
 version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -360,6 +366,7 @@ dependencies = [
  "num-traits",
  "pareen",
  "qrcodegen",
+ "rustsec-example-crate",
  "serde_json",
  "spin",
  "static-alloc",

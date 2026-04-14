@@ -180,4 +180,5 @@ version = "0.3.0"
 
 [dev-dependencies]
 hex = "0.4.3"
+rustsec-example-crate = "=0.0.1"  # XXX: temporary, testing cargo-audit CI integration (RUSTSEC-2019-0024)
 serde_json = "1.0.96"
