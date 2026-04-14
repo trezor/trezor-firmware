@@ -1735,9 +1735,11 @@ class InputFlowEthereumSignTxData(InputFlowBase):
                 layout = self.debug.read_layout()
                 assert layout.title().startswith(TR.ethereum__title_input_data)
 
-                if is_intro:
-                    # Intro layout should show a prefix of the data, ending with "..."
-                    assert layout.screen_content().endswith("...")
+                # Only intro layout contains "view all" functionality:
+                assert is_intro == (
+                    TR.instructions__view_all_data in layout.screen_content()
+                    or TR.buttons__view_all_data in layout.button_contents()
+                )
 
                 if self.scroll:
                     self._go_to_next_page(is_intro)
