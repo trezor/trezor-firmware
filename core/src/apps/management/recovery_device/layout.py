@@ -158,7 +158,6 @@ if utils.USE_N4W1:
     async def _n4w1_read(
         ctx: N4W1Context, description: str, button: str
     ) -> bytes | None:
-        from trezor import log
         from trezor.ui import Shutdown
         from trezor.ui.layouts.common import interact
         from trezorui_api import show_info
@@ -181,20 +180,21 @@ if utils.USE_N4W1:
         result = await interact(
             # TODO: disable button & add cancellation
             show_info(
-                title=TR.recovery__title, description=description, button=button
+                title=TR.recovery__title,
+                description=description,
+                button=(button, False),
             ),
             br_name="backup_read",
-            confirm_only=False,
+            confirm_only=True,
             layout_type=_LayoutRead,
         )
 
         # TODO: animate during read?
         # TODO: show empty tag warning
-        if result is not None:
-            if not isinstance(result, bytes):
-                raise RuntimeError
+        if result is None or isinstance(result, bytes):
+            return result
 
-        return result
+        raise RuntimeError
 
     async def _choose_method() -> BackupMethod:
         import trezorui_api

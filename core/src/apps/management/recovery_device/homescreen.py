@@ -154,6 +154,7 @@ class _DisplayHandler:
 
         return show_invalid_mnemonic(self.word_count)
 
+
 if not utils.USE_N4W1:
 
     async def _choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:

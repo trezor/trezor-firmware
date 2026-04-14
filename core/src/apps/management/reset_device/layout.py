@@ -281,7 +281,7 @@ if utils.USE_N4W1:
                 yield from super().create_tasks()
                 yield _write_task()
 
-        # will raise in case of an error
+        # will return "None" on success / raise on error
         await interact(
             # TODO: disable button & add cancellation
             confirm_action(
@@ -293,7 +293,7 @@ if utils.USE_N4W1:
                 external_menu=True,
             ),
             br_name="backup_write",
-            confirm_only=False,
+            confirm_only=True,
             layout_type=_LayoutWrite,
         )
 
