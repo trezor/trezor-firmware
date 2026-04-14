@@ -1071,7 +1071,15 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let button: TString = kwargs.get_or(Qstr::MP_QSTR_button, TString::empty())?;
+        let button = kwargs
+            .get(Qstr::MP_QSTR_button)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option::<Obj>()?
+            .map(|obj| -> Result<(TString<'_>, bool), Error> {
+                let [text, enabled]: [Obj; 2] = util::iter_into_array(obj)?;
+                Ok((text.try_into()?, enabled.try_into()?))
+            })
+            .transpose()?;
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?.try_into()?;
 
         let obj = ModelUI::show_info(title, description, button, time_ms)?;
@@ -2006,7 +2014,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     description: str = "",
-    ///     button: str = "",
+    ///     button: tuple[str, bool] | None = None,
     ///     time_ms: int = 0,
     /// ) -> LayoutObj[UiResult]:
     ///     """Info screen."""

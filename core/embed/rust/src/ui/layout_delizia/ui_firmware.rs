@@ -971,7 +971,7 @@ impl FirmwareUI for UIDelizia {
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
-        _button: TString<'static>,
+        _button: Option<(TString<'static>, bool)>,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));

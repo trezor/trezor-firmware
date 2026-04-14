@@ -316,7 +316,7 @@ async def show_intro_backup(num_of_words: int | None) -> None:
         trezorui_api.show_info(
             title=TR.reset__recovery_wallet_backup_title,
             description=description,
-            button=TR.buttons__continue,
+            button=(TR.buttons__continue, True),
         ),
         "backup_intro",
         ButtonRequestType.ResetDevice,

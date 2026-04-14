@@ -1233,15 +1233,18 @@ impl FirmwareUI for UIEckhart {
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
-        button: TString<'static>,
+        button: Option<(TString<'static>, bool)>,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_REGULAR, description))
             .with_placement(LinearPlacement::vertical());
 
+        let button = button.map_or_else(Button::empty, |(text, enabled)| {
+            Button::with_text(text).initially_enabled(enabled)
+        });
         let screen = TextScreen::new(content)
             .with_header(Header::new(title))
-            .with_action_bar(ActionBar::new_single(Button::with_text(button)));
+            .with_action_bar(ActionBar::new_single(button));
         let obj = LayoutObj::new(screen)?;
         Ok(obj)
     }

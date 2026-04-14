@@ -1173,7 +1173,7 @@ impl FirmwareUI for UICaesar {
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
-        _button: TString<'static>,
+        _button: Option<(TString<'static>, bool)>,
         time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Frame::new(
