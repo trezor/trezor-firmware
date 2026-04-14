@@ -289,7 +289,7 @@ def show_intro_backup(num_of_words: int | None) -> Awaitable[None]:
         trezorui_api.show_info(
             title="",
             description=description,
-            button=TR.buttons__continue,
+            button=(TR.buttons__continue, True),
         ),
         "backup_intro",
         ButtonRequestType.ResetDevice,
@@ -301,7 +301,7 @@ def show_warning_backup() -> Awaitable[trezorui_api.UiResult]:
         trezorui_api.show_info(
             title=TR.reset__never_make_digital_copy,
             description="",
-            button=TR.buttons__ok_i_understand,
+            button=(TR.buttons__ok_i_understand, True),
         ),
         "backup_warning",
         ButtonRequestType.ResetDevice,

@@ -385,7 +385,7 @@ pub trait FirmwareUI {
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
-        button: TString<'static>,
+        button: Option<(TString<'static>, bool)>,
         time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
