@@ -1,6 +1,10 @@
 from common import unittest, utils  # isort:skip
 
-from apps.solana.constants import SOLANA_COMPUTE_UNIT_LIMIT
+from apps.solana.constants import (
+    SOLANA_BUILTIN_COMPUTE_UNIT_LIMIT,
+    SOLANA_COMPUTE_UNIT_LIMIT,
+    SOLANA_COMPUTE_UNIT_LIMIT_CAP,
+)
 from apps.solana.transaction import (
     COMPUTE_BUDGET_PROGRAM_ID,
     COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
@@ -8,7 +12,10 @@ from apps.solana.transaction import (
     ED25519_PROGRAM_ID,
     SECP256K1_PROGRAM_ID,
     SECP256R1_PROGRAM_ID,
+    STAKE_PROGRAM_ID,
+    SYSTEM_PROGRAM_ID,
     Transaction,
+    VOTE_PROGRAM_ID,
 )
 
 
@@ -105,8 +112,8 @@ class TestSolanaTransactionFee(unittest.TestCase):
                     instruction_id=COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
                     lamports=1,
                 ),
-                MockInstruction("11111111111111111111111111111111"),
-                MockInstruction("Stake11111111111111111111111111111111111111"),
+                MockInstruction(SYSTEM_PROGRAM_ID),
+                MockInstruction(STAKE_PROGRAM_ID),
             ],
             required_signers_count=1,
         )
@@ -115,6 +122,88 @@ class TestSolanaTransactionFee(unittest.TestCase):
 
         self.assertIsNotNone(fee)
         self.assertEqual(fee.base, 5_000)
-        self.assertEqual(fee.priority, (2 * SOLANA_COMPUTE_UNIT_LIMIT + 999_999) // 1_000_000)
+        self.assertEqual(
+            fee.priority,
+            (2 * SOLANA_BUILTIN_COMPUTE_UNIT_LIMIT + 999_999) // 1_000_000,
+        )
         self.assertEqual(fee.rent, 0)
         self.assertEqual(fee.total, fee.base + fee.priority)
+
+    def test_calculate_fee_uses_builtin_and_non_builtin_defaults(self):
+        transaction = make_transaction(
+            [
+                MockInstruction(
+                    COMPUTE_BUDGET_PROGRAM_ID,
+                    instruction_id=COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+                    lamports=1_000_000,
+                ),
+                MockInstruction(SYSTEM_PROGRAM_ID),
+                MockInstruction("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            ],
+            required_signers_count=1,
+        )
+
+        fee = transaction.calculate_fee()
+
+        self.assertIsNotNone(fee)
+        self.assertEqual(fee.base, 5_000)
+        self.assertEqual(
+            fee.priority,
+            SOLANA_BUILTIN_COMPUTE_UNIT_LIMIT + SOLANA_COMPUTE_UNIT_LIMIT,
+        )
+        self.assertEqual(fee.rent, 0)
+        self.assertEqual(fee.total, fee.base + fee.priority)
+
+    def test_calculate_fee_caps_default_unit_limit(self):
+        instructions = [
+            MockInstruction(
+                COMPUTE_BUDGET_PROGRAM_ID,
+                instruction_id=COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+                lamports=1_000_000,
+            )
+        ]
+        for _ in range(8):
+            instructions.append(
+                MockInstruction("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+            )
+
+        transaction = make_transaction(
+            instructions,
+            required_signers_count=1,
+        )
+
+        fee = transaction.calculate_fee()
+
+        self.assertIsNotNone(fee)
+        self.assertEqual(fee.base, 5_000)
+        self.assertEqual(fee.priority, SOLANA_COMPUTE_UNIT_LIMIT_CAP)
+        self.assertEqual(fee.rent, 0)
+        self.assertEqual(fee.total, fee.base + fee.priority)
+
+    def test_calculate_fee_prefers_explicit_unit_limit(self):
+        transaction = make_transaction(
+            [
+                MockInstruction(
+                    COMPUTE_BUDGET_PROGRAM_ID,
+                    instruction_id=COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
+                    units=7,
+                ),
+                MockInstruction(
+                    COMPUTE_BUDGET_PROGRAM_ID,
+                    instruction_id=COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+                    lamports=1_000_000,
+                ),
+                MockInstruction(SYSTEM_PROGRAM_ID),
+                MockInstruction(VOTE_PROGRAM_ID),
+                MockInstruction("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            ],
+            required_signers_count=1,
+        )
+
+        fee = transaction.calculate_fee()
+
+        self.assertIsNotNone(fee)
+        self.assertEqual(fee.base, 5_000)
+        self.assertEqual(fee.priority, 7)
+        self.assertEqual(fee.rent, 0)
+        self.assertEqual(fee.total, 5_007)

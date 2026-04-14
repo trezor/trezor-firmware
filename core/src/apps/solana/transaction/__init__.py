@@ -7,7 +7,9 @@ from trezor.wire import DataError
 from ..constants import (
     MICROLAMPORTS_PER_LAMPORT,
     SOLANA_BASE_FEE_LAMPORTS,
+    SOLANA_BUILTIN_COMPUTE_UNIT_LIMIT,
     SOLANA_COMPUTE_UNIT_LIMIT,
+    SOLANA_COMPUTE_UNIT_LIMIT_CAP,
 )
 from ..types import AddressType
 from .instruction import Instruction
@@ -29,6 +31,14 @@ if TYPE_CHECKING:
 ED25519_PROGRAM_ID = "Ed25519SigVerify111111111111111111111111111"
 SECP256K1_PROGRAM_ID = "KeccakSecp256k11111111111111111111111111111"
 SECP256R1_PROGRAM_ID = "Secp256r1SigVerify1111111111111111111111111"
+SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
+STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
+VOTE_PROGRAM_ID = "Vote111111111111111111111111111111111111111"
+SOLANA_BUILTIN_PROGRAM_IDS = (
+    SYSTEM_PROGRAM_ID,
+    STAKE_PROGRAM_ID,
+    VOTE_PROGRAM_ID,
+)
 
 
 class Fee:
@@ -256,7 +266,7 @@ class Transaction:
         is_unit_price_set = False
         unit_limit = 0
         is_unit_limit_set = False
-        num_non_compute_budget_instructions = 0
+        default_unit_limit = 0
 
         for instruction in self.instructions:
             if instruction.program_id == COMPUTE_BUDGET_PROGRAM_ID:
@@ -275,10 +285,13 @@ class Transaction:
                     unit_price = instruction.lamports
                     is_unit_price_set = True
             else:
-                num_non_compute_budget_instructions += 1
+                if instruction.program_id in SOLANA_BUILTIN_PROGRAM_IDS:
+                    default_unit_limit += SOLANA_BUILTIN_COMPUTE_UNIT_LIMIT
+                else:
+                    default_unit_limit += SOLANA_COMPUTE_UNIT_LIMIT
 
         if not is_unit_limit_set:
-            unit_limit = num_non_compute_budget_instructions * SOLANA_COMPUTE_UNIT_LIMIT
+            unit_limit = min(default_unit_limit, SOLANA_COMPUTE_UNIT_LIMIT_CAP)
 
         priority_fee = unit_price * unit_limit  # in microlamports
         rent = self.calculate_rent()
