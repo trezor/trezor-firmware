@@ -8,7 +8,6 @@
 // (when building for TR, a lot of code only used in TT would get marked as unused).
 #![allow(dead_code)]
 #![feature(lang_items)]
-#![feature(optimize_attribute)]
 #![feature(trait_alias)]
 #![feature(custom_test_frameworks)]
 #![no_main]
