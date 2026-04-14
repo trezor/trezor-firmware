@@ -17,13 +17,9 @@ pub const TX_PACKET_SIZE: usize = ffi::BLE_TX_PACKET_SIZE as usize;
 const COMMAND_FAILED: Error = Error::RuntimeError(c"BLE command failed");
 const WRITE_FAILED: Error = Error::RuntimeError(c"BLE write failed");
 
-// NOTE: replace with floor_char_boundary when stable
 fn prefix_utf8_bytes(text: &str, max_len: usize) -> &str {
-    let mut i = text.len().min(max_len);
-    while !text.is_char_boundary(i) {
-        i -= 1;
-    }
-    &text[..i]
+    let boundary = text.floor_char_boundary(max_len);
+    &text[..boundary]
 }
 
 pub fn res_to_result(res: bool) -> Result<(), Error> {
