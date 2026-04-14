@@ -181,7 +181,6 @@ else:
             self.recovery_type = recovery_type
             # `slip39_state is None` indicates that we are (re)starting the first recovery step.
             self.backup_type = slip39_state and slip39_state[1]
-            self.word_count = 20  # TODO: improve
 
         @classmethod
         async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
@@ -221,11 +220,6 @@ else:
                 # if they were invalid or some checks failed we continue and request them again
                 await exc.show_error()
                 return None
-
-        def show_invalid_mnemonic(self) -> Awaitable[None]:
-            from trezor.ui.layouts.recovery import show_invalid_mnemonic
-
-            return show_invalid_mnemonic(self.word_count)
 
 
 async def _recover_secret(
