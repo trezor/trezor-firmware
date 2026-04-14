@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Awaitable, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import storage.device as storage_device
 import storage.recovery as storage_recovery
@@ -98,7 +98,6 @@ if TYPE_CHECKING:
 
         async def show_state(self, is_retry: bool) -> None: ...
         async def request_mnemonic(self) -> str | None: ...
-        def show_invalid_mnemonic(self) -> Awaitable[None]: ...
 
 
 class _DisplayHandler:
@@ -149,17 +148,11 @@ class _DisplayHandler:
             await exc.show_error()
             return None
 
-    def show_invalid_mnemonic(self) -> Awaitable[None]:
-        from trezor.ui.layouts.recovery import show_invalid_mnemonic
-
-        return show_invalid_mnemonic(self.word_count)
-
 
 async def _recover_secret(
     recovery_type: RecoveryType, method: BackupMethod | None
 ) -> tuple[bytes, BackupType]:
     from trezor.enums import BackupMethod
-    from trezor.errors import MnemonicError
 
     if method not in (None, BackupMethod.Display):
         from trezor import log
@@ -185,8 +178,7 @@ async def _recover_secret(
             if (result := await _process_words(words)) is not None:
                 return result
             # If _process_words succeeded, at least one share was entered.
-        except MnemonicError:
-            await handler.show_invalid_mnemonic()
+        except _RetryEntry:
             is_retry = True  # Retry share entry (without showing recovery state)
 
 
@@ -313,15 +305,29 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
     return Success(message="Device recovered")
 
 
+class _RetryEntry(Exception):
+    """Raised after entering an invalid mnemonic."""
+
+    pass
+
+
 async def _process_words(words: str) -> tuple[bytes, BackupType] | None:
+    from trezor.errors import MnemonicError
+
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
     share = None
-    if not is_slip39:  # BIP-39
-        secret: bytes | None = recover.process_bip39(words)
-    else:
-        secret, share = recover.process_slip39(words)
+    try:
+        if not is_slip39:  # BIP-39
+            secret: bytes | None = recover.process_bip39(words)
+        else:
+            secret, share = recover.process_slip39(words)
+    except MnemonicError:
+        from trezor.ui.layouts.recovery import show_invalid_mnemonic
+
+        await show_invalid_mnemonic(word_count)
+        raise _RetryEntry
 
     backup_type = backup_types.infer_backup_type(is_slip39, share)
     if secret is None:  # SLIP-39
