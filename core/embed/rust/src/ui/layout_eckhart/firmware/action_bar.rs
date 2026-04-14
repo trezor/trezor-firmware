@@ -79,7 +79,8 @@ impl ActionBar {
     /// paginated content.
     pub fn new_single(button: Button) -> Self {
         let mut right_button = button.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH);
-        if right_button.stylesheet() == &theme::button_default() {
+        // If the button is disabled, don't override its stylesheet.
+        if right_button.is_enabled() && right_button.stylesheet() == &theme::button_default() {
             right_button = right_button.styled(theme::firmware::button_actionbar_right_default());
         };
         if !right_button.has_gradient() {

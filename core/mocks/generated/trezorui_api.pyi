@@ -691,7 +691,7 @@ def show_info(
     *,
     title: str,
     description: str = "",
-    button: str = "",
+    button: tuple[str, bool] | None = None,
     time_ms: int = 0,
 ) -> LayoutObj[UiResult]:
     """Info screen."""
