@@ -64,9 +64,7 @@ async def sign_registration_request(
     certificates = parse_cert_chain(r)
 
     return EvoluRegistrationRequest(
-        certificate_chain=certificates,
-        signature=signature,
-        public_key_0=public_key_0
+        certificate_chain=certificates, signature=signature, public_key_0=public_key_0
     )
 
 
