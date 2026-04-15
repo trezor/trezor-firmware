@@ -49,7 +49,7 @@ class UsbAwareLayout(ui.Layout):
             event = await usbcheck
             self._event(self.layout.usb_event, event)
 
-    def create_tasks(self) -> Iterator[loop.Task]:
+    def create_tasks(self) -> Iterator[loop.Task[None]]:
         yield from super().create_tasks()
         yield self.usb_checker_task()
 
