@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
-    from common import ExceptionType
+    from .common import ExceptionType
 
     T = TypeVar("T")
 
