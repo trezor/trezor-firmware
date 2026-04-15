@@ -12,7 +12,7 @@ if not utils.BITCOIN_ONLY:
         Atomic,
         DirtyAddress,
         OutOfBounds,
-        Struct,
+        Tuple,
         ValueOverflow,
         parse_address,
         parse_bool,
@@ -127,7 +127,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertEqual(consumed, 32)
 
     def test_static_struct_valid(self):
-        static_struct = Struct(
+        static_struct = Tuple(
             (parse_address, parse_uint160, parse_bool),
             is_dynamic=False,
         )
@@ -148,7 +148,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertEqual(consumed, 96)
 
     def test_static_struct_uint160_overflow(self):
-        static_struct = Struct(
+        static_struct = Tuple(
             (parse_address, parse_uint160, parse_bool),
             is_dynamic=False,
         )
@@ -169,7 +169,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             static_struct.parse(data, len(FIVE_RANDOM_BYTES))
 
     def test_dynamic_struct_valid(self):
-        dynamic_struct = Struct((parse_address, parse_string), is_dynamic=True)
+        dynamic_struct = Tuple((parse_address, parse_string), is_dynamic=True)
 
         addr = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
         # left padded with zeroes
@@ -205,7 +205,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertEqual(consumed, 32)  # only the initial pointer is consumed
 
     def test_dynamic_struct_out_of_bounds(self):
-        dynamic_struct = Struct((parse_uint256,), is_dynamic=True)
+        dynamic_struct = Tuple((parse_uint256,), is_dynamic=True)
 
         # pointer says struct starts at byte 1000, but data is only 32 bytes long
         payload = to_bytes(1000)
@@ -263,7 +263,7 @@ class TestEthereumClearSigning(unittest.TestCase):
 
     def test_array_of_dynamic_structs(self):
         array_parser = Array(
-            Struct(
+            Tuple(
                 (parse_address, parse_string),
                 # Note: dynamic structs that sit inside arrays behave as static structs
                 is_dynamic=False,

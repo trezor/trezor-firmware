@@ -13,8 +13,8 @@ from .clear_signing import (
     DisplayFormat,
     Dynamic,
     FieldDefinition,
-    Struct,
     TokenAmountFormatter,
+    Tuple,
     UnitFormatter,
     parse_address,
     parse_bool,
@@ -142,7 +142,7 @@ ALL_DISPLAY_FORMATS.extend(
                 Atomic(parse_address),  # _receiver
                 Atomic(parse_uint256),  # _minAmountOut
                 Array(
-                    Struct(
+                    Tuple(
                         (
                             parse_address,  # callTo
                             parse_address,  # approveTo
@@ -191,7 +191,7 @@ ALL_DISPLAY_FORMATS.extend(
                 Atomic(parse_address),  # _receiver
                 Atomic(parse_uint256),  # _minAmountOut
                 Array(
-                    Struct(
+                    Tuple(
                         (
                             parse_address,  # callTo
                             parse_address,  # approveTo
@@ -238,7 +238,7 @@ ALL_DISPLAY_FORMATS.extend(
                 Atomic(parse_address),  # _receiver
                 Atomic(parse_uint256),  # _minAmountOut
                 Array(
-                    Struct(
+                    Tuple(
                         (
                             parse_address,  # callTo
                             parse_address,  # approveTo
@@ -284,7 +284,7 @@ ALL_DISPLAY_FORMATS.extend(
                 Dynamic(parse_string),  # _referrer
                 Atomic(parse_address),  # _receiver
                 Atomic(parse_uint256),  # _minAmountOut
-                Struct(
+                Tuple(
                     (
                         parse_address,  # callTo
                         parse_address,  # approveTo
@@ -329,7 +329,7 @@ ALL_DISPLAY_FORMATS.extend(
                 Dynamic(parse_string),  # _referrer
                 Atomic(parse_address),  # _receiver
                 Atomic(parse_uint256),  # _minAmountOut
-                Struct(
+                Tuple(
                     (
                         parse_address,  # callTo
                         parse_address,  # approveTo
@@ -374,7 +374,7 @@ ALL_DISPLAY_FORMATS.extend(
                 Dynamic(parse_string),  # _referrer
                 Atomic(parse_address),  # _receiver
                 Atomic(parse_uint256),  # _minAmountOut
-                Struct(
+                Tuple(
                     (
                         parse_address,  # callTo
                         parse_address,  # approveTo
@@ -420,7 +420,7 @@ ALL_DISPLAY_FORMATS.extend(
                 Atomic(parse_address),  # _receiver
                 Atomic(parse_uint256),  # _minAmount
                 Array(
-                    Struct(
+                    Tuple(
                         (
                             parse_address,  # callTo
                             parse_address,  # approveTo
@@ -482,7 +482,7 @@ ALL_DISPLAY_FORMATS.extend(
             func_sig=unhexlify("b858183f"),  # exactInput(tuple params)
             intent="Swap",
             parameter_definitions=[
-                Struct(
+                Tuple(
                     (
                         parse_bytes,  # path
                         parse_address,  # recipient
@@ -519,7 +519,7 @@ ALL_DISPLAY_FORMATS.extend(
             func_sig=unhexlify("04e45aaf"),  # exactInputSingle(tuple params)
             intent="Swap",
             parameter_definitions=[
-                Struct(
+                Tuple(
                     (
                         parse_address,  # tokenIn
                         parse_address,  # tokenOut
@@ -564,7 +564,7 @@ ALL_DISPLAY_FORMATS.extend(
             func_sig=unhexlify("09b81346"),  # exactOutput(tuple params)
             intent="Swap",
             parameter_definitions=[
-                Struct(
+                Tuple(
                     (
                         parse_bytes,  # path
                         parse_address,  # recipient
@@ -601,7 +601,7 @@ ALL_DISPLAY_FORMATS.extend(
             func_sig=unhexlify("5023b4df"),  # exactOutputSingle(tuple params)
             intent="Swap",
             parameter_definitions=[
-                Struct(
+                Tuple(
                     (
                         parse_address,  # tokenIn
                         parse_address,  # tokenOut

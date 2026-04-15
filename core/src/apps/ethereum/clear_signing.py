@@ -20,9 +20,9 @@ if TYPE_CHECKING:
     # Represents values that have been parsed from the calldata
     # into our internal representation.
     Value = int | bytes | bool | str | None | list["Value"]
-    StructValue = tuple[Value, ...]
-    ListValue = list[StructValue]
-    AnyValue = Value | StructValue | ListValue | list[Value | StructValue | ListValue]
+    TupleValue = tuple[Value, ...]
+    ListValue = list[TupleValue]
+    AnyValue = Value | TupleValue | ListValue | list[Value | TupleValue | ListValue]
 
     Path = tuple[int | tuple[int] | tuple[int, int], ...] | int
     PathWalker = Callable[[Path], Value]
@@ -346,19 +346,19 @@ class Dynamic(ABIValue):
         return self.parser(data), 32
 
 
-class Struct(ABIValue):
-    """Structs (or Tuples, which are essentially the same thing as far as ABI is concerned)
+class Tuple(ABIValue):
+    """Tuples (or Structs, which are essentially the same thing as far as ABI is concerned)
     contain multiple values of different types.
-    A Struct is "dynamic" if at least one of the values is dynamic.
+    A Tuple is "dynamic" if at least one of the values is dynamic.
     However, dynamic structs inside arrays behave as static structs,
-    hence we cannot guess if the Struct is dynamic by looking at just its fields."""
+    hence we cannot guess if the Tuple is dynamic by looking at just its fields."""
 
     def __init__(self, fields: tuple[Parser, ...], is_dynamic: bool) -> None:
         self.fields = fields
         self.is_dynamic = is_dynamic
         self.static_size = len(fields) * 32
 
-    def parse(self, raw_data: memoryview, offset: int) -> tuple[StructValue, int]:
+    def parse(self, raw_data: memoryview, offset: int) -> tuple[TupleValue, int]:
         if not self.is_dynamic:
             base_offset = offset
             consumed = self.static_size
@@ -380,7 +380,7 @@ class Struct(ABIValue):
             if parser not in DYNAMIC_DATA_PARSERS:
                 v = parser(raw_field)
                 if isinstance(v, (tuple, list)):
-                    # Struct or Array inside a Struct
+                    # Tuple or Array inside a Tuple
                     raise NotImplementedError
                 value[i] = v
             else:
@@ -396,7 +396,7 @@ class Struct(ABIValue):
                 raw_field = raw_data[field_pointer + 32 : field_pointer + 32 + length]
                 v = parser(raw_field)
                 if isinstance(v, (tuple, list)):
-                    # Struct or Array inside a Struct
+                    # Tuple or Array inside a Tuple
                     raise NotImplementedError
                 value[i] = v
         return tuple(value), consumed
@@ -536,7 +536,7 @@ class DisplayFormat:
                         p = None
                         break
                     if isinstance(p, (list, tuple, bytes)):
-                        # walk inside Arrays or Structs
+                        # walk inside Arrays or Tuples
                         try:
                             if isinstance(step, int):
                                 p = p[step]
@@ -555,7 +555,7 @@ class DisplayFormat:
                         raise InvalidFormatDefinition
                 if isinstance(p, (list, tuple)):
                     # at the end of the path, we must have arrived somewhere
-                    # ie. not on an Array or Struct
+                    # ie. not on an Array or Tuple
                     raise InvalidFormatDefinition
                 return p
 
