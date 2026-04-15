@@ -665,6 +665,29 @@ def device_handler(
 # Activated by passing --string-log=<file> to pytest.
 # ---------------------------------------------------------------------------
 
+_ORDER_JSON = Path(__file__).parent.parent / "core" / "translations" / "order.json"
+_TR_NAMES: list[str] = []  # index → TR key name, loaded lazily
+
+
+def _bitmap_to_keys(bitmap: bytes) -> list[str]:
+    """Decode a string-collector bitmap into a sorted list of TR key names."""
+    global _TR_NAMES
+    if not _TR_NAMES:
+        order = json.loads(_ORDER_JSON.read_text())
+        size = max(int(k) for k in order) + 1
+        _TR_NAMES = [""] * size
+        for k, v in order.items():
+            _TR_NAMES[int(k)] = v
+    result = []
+    for byte_idx, byte in enumerate(bitmap):
+        for bit in range(8):
+            if byte & (1 << bit):
+                idx = byte_idx * 8 + bit
+                if idx < len(_TR_NAMES) and _TR_NAMES[idx]:
+                    result.append(_TR_NAMES[idx])
+    return sorted(result)
+
+
 _string_log: dict[str, list[str]] = defaultdict(list)
 _string_log_output: Path | None = None
 
@@ -704,6 +727,6 @@ def _string_collector(request: pytest.FixtureRequest) -> t.Generator:
 
     debug.get_string_log(clear=True)  # discard stale entries before the test
     yield
-    strings = debug.get_string_log(clear=True)
-    if strings:
-        _string_log[request.node.nodeid] = strings
+    bitmap = debug.get_string_log(clear=True)
+    if bitmap:
+        _string_log[request.node.nodeid] = _bitmap_to_keys(bitmap)

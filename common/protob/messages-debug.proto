@@ -354,9 +354,13 @@ message DebugLinkGetStringLog {
 }
 
 /**
- * Response: List of translation keys accessed since the last clear.
+ * Response: Raw bitmap of translation keys accessed since the last clear.
+ *
+ * The bitmap is a little-endian byte array encoding a bitset of
+ * TranslatedString discriminant indices.  Name resolution is done on the
+ * host side using order.json.
  * @end
  */
 message DebugLinkStringLog {
-    repeated string strings = 1;  // e.g. ["address__address", "words__confirm", ...]
+    optional bytes bitmap = 1;  // little-endian bitset; bit i set ↔ TR key with index i was accessed
 }

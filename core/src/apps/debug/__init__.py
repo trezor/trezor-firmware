@@ -441,10 +441,11 @@ if __debug__:
         import trezortranslate
         from trezor.messages import DebugLinkStringLog
 
-        # get_string_log() is always present; on non-instrumented builds it
-        # returns an empty list (ui_string_collector feature inactive).
-        strings = trezortranslate.get_string_log(msg.clear)
-        return DebugLinkStringLog(strings=list(strings))
+        # get_string_log() is only present in ui_string_collector builds.
+        fn = getattr(trezortranslate, "get_string_log", None)
+        if fn is None:
+            return DebugLinkStringLog()
+        return DebugLinkStringLog(bitmap=bytes(fn(msg.clear)))
 
     async def dispatch_DebugLinkStop(msg: DebugLinkStop) -> NoReturn:
         """Restart the event loop"""

@@ -3173,12 +3173,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class DebugLinkStringLog(protobuf.MessageType):
-        strings: "list[str]"
+        bitmap: "bytes"
 
         def __init__(
             self,
             *,
-            strings: "list[str] | None" = None,
+            bitmap: "bytes | None" = None,
         ) -> None:
             pass
 

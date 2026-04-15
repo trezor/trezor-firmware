@@ -4535,15 +4535,15 @@ class DebugLinkGetStringLog(protobuf.MessageType):
 class DebugLinkStringLog(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9019
     FIELDS = {
-        1: protobuf.Field("strings", "string", repeated=True, required=False, default=None),
+        1: protobuf.Field("bitmap", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        strings: Optional[Sequence["str"]] = None,
+        bitmap: Optional[bytes] = None,
     ) -> None:
-        self.strings: Sequence["str"] = strings if strings is not None else []
+        self.bitmap: Optional[bytes] = bitmap
 
 
 class DebugLinkGcInfoItem(protobuf.MessageType):

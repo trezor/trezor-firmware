@@ -161,16 +161,17 @@ extern "C" fn verify(data: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-/// Return a MicroPython list of translation-key names that were accessed since
-/// the last call to this function.  When `clear` is truthy the internal log is
-/// reset after the snapshot is taken; when falsy the log is preserved for
-/// subsequent calls.
+/// Return the raw string-access bitmap as a `bytes` object.
+///
+/// The bitmap is a little-endian byte array encoding a bitset of
+/// `TranslatedString` discriminant indices.  Name resolution is done on the
+/// host side using `order.json`.
 ///
 /// Only available when the `ui_string_collector` feature is active (debug
 /// emulator builds).
 #[cfg(feature = "ui_string_collector")]
 extern "C" fn get_string_log(clear: Obj) -> Obj {
-    use crate::micropython::list::List;
+    use super::collector::{WordType, NWORDS};
 
     let block = || {
         let do_clear: bool = clear.try_into()?;
@@ -179,15 +180,14 @@ extern "C" fn get_string_log(clear: Obj) -> Obj {
         } else {
             super::collector::get()
         };
-        let mut list = List::with_capacity(128)?;
-        super::collector::for_each_name(&snapshot, |name| {
-            // Ignore allocation errors for individual names – missing entries
-            // are acceptable in a best-effort instrumentation tool.
-            if let Ok(obj) = name.try_into() {
-                let _ = list.append(obj);
-            }
-        });
-        Ok(list.leak().into())
+        const BYTE_LEN: usize = NWORDS * core::mem::size_of::<WordType>();
+        let mut bytes = [0u8; BYTE_LEN];
+        for (i, &word) in snapshot.iter().enumerate() {
+            let off = i * core::mem::size_of::<WordType>();
+            bytes[off..off + core::mem::size_of::<WordType>()]
+                .copy_from_slice(&word.to_le_bytes());
+        }
+        (&bytes[..]).try_into()
     };
 
     unsafe { util::try_or_raise(block) }

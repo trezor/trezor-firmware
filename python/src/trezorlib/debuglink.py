@@ -961,24 +961,24 @@ class DebugLink:
             else:
                 warnings.warn(msg)
 
-    def get_string_log(self, clear: bool = True) -> list[str]:
-        """Retrieve translation keys accessed on the emulator since the last call.
+    def get_string_log(self, clear: bool = True) -> bytes:
+        """Retrieve the raw string-access bitmap from the emulator.
 
-        Returns a sorted list of TR key names (e.g. ``["address__address",
-        "words__confirm"]``) that were resolved via ``TString::map()`` since the
-        last call (or since the emulator started).  The internal log is cleared
-        afterwards by default.
+        Returns a little-endian byte array encoding a bitset of accessed
+        TranslatedString discriminant indices.  Bit ``i`` is set if the TR key
+        with that index was resolved via ``TString::map()`` since the last call.
+        Name resolution is done by the caller using ``order.json``.
 
-        Returns an empty list when the emulator was not built with the
+        Returns ``b""`` when the emulator was not built with the
         ``ui_string_collector`` feature (i.e. non-debug / physical device builds).
         """
         if not self.has_string_collector:
-            return []
+            return b""
         resp = self._call(
             messages.DebugLinkGetStringLog(clear=clear),
             expect=messages.DebugLinkStringLog,
         )
-        return sorted(resp.strings)
+        return resp.bitmap or b""
 
     def clear_string_log(self) -> None:
         """Discard the accumulated string log without reading it."""
