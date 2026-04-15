@@ -24,7 +24,7 @@ class Definitions:
     def from_encoded(
         cls,
         encoded_network: AnyBytes | None,
-        encoded_token: AnyBytes | None,
+        encoded_tokens: list[AnyBytes],
         chain_id: int | None = None,
         slip44: int | None = None,
     ) -> Self:
@@ -56,12 +56,10 @@ class Definitions:
         if slip44 is not None and network.slip44 != slip44:
             raise DataError("Network definition mismatch")
 
-        # get token definition
-        if encoded_token is not None:
+        # get token definitions
+        for encoded_token in encoded_tokens:
             token = decode_definition(encoded_token, EthereumTokenInfo)
             # Ignore token if it doesn't match the network instead of raising an error.
-            # This might help us in the future if we allow multiple networks/tokens
-            # in the same message.
             if token.chain_id == network.chain_id:
                 tokens[bytes(token.address)] = token
 

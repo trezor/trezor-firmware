@@ -453,7 +453,7 @@ def sign_tx(
 
     defs = EthereumDefinitions(
         encoded_network=encoded_network,
-        encoded_token=encoded_token,
+        encoded_tokens=[encoded_token] if encoded_token is not None else [],
     )
 
     if is_eip1559:

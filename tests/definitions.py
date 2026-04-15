@@ -128,7 +128,7 @@ def make_eth_defs(
 ) -> messages.EthereumDefinitions:
     return messages.EthereumDefinitions(
         encoded_network=network,
-        encoded_token=token,
+        encoded_tokens=[token] if token is not None else [],
     )
 
 
