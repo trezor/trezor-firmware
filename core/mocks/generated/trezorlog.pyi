@@ -20,3 +20,10 @@ def warning(name: str, msg: str, *args: Any, *, iface: WireInterface | None = No
 # rust/src/micropython/logging.rs
 def error(name: str, msg: str, *args: Any, *, iface: WireInterface | None = None) -> None:
     ...
+
+
+# rust/src/micropython/logging.rs
+def init(level: int) -> None:
+    """
+    Initialize Rust logging connector.
+    """

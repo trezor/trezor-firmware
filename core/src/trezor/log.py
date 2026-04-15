@@ -11,11 +11,12 @@ def _no_op(name: str, msg: str, *args: Any, iface: WireInterface | None = None) 
 
 
 if __debug__:
-    from trezorlog import debug, error, info, warning  # noqa: F401
+    from trezorlog import debug, error, info, init, warning  # noqa: F401
 
     _levels = [debug, info, warning, error]
     _min_level = 0  # can be used for manually disabling low-priority logging levels
     debug, info, warning, error = [_no_op] * _min_level + _levels[_min_level:]
+    init(_min_level)  # initialize rust logging connector
 else:
     # logging is disabled in non-debug builds
     debug = warning = info = error = _no_op
