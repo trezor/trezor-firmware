@@ -23,6 +23,21 @@ def signing_buffer(private_key: bytes, challenge: bytes, size: int) -> bytes:
     return b"".join((compact_size(len(comp)) + comp) for comp in components)
 
 
+def signing_buffer_more_indices(
+    private_key: bytes, private_key_0: bytes, challenge: bytes, size: int
+) -> bytes:
+    public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
+    public_key_0: VerifyingKey = SigningKey.from_string(private_key_0, curve=NIST256p).get_verifying_key()  # type: ignore
+    components = [
+        b"EvoluSignRegistrationRequestV1:",
+        public_key_0.to_string("uncompressed"),
+        public_key.to_string("uncompressed"),
+        challenge,
+        size.to_bytes(4, "big"),
+    ]
+    return b"".join((compact_size(len(comp)) + comp) for comp in components)
+
+
 def optiga_unavailable(client: Client) -> bool:
     """Check if Optiga is unavailable from the presence of its security counter."""
     return client.features.optiga_sec is None
@@ -238,7 +253,21 @@ def test_evolu_sign_request_with_different_rotation_indices(
         proof=proof,
     )
 
-    data = signing_buffer(delegated_identity_key, challenge, size)
+    if (rotation_index or 0) == 0:
+        data = signing_buffer(delegated_identity_key, challenge, size)
+    else:
+        delegated_identity_key_0 = get_delegated_identity_key(
+            client, rotation_index=0
+        ).private_key
+        data = signing_buffer_more_indices(
+            delegated_identity_key, delegated_identity_key_0, challenge, size
+        )
+
     check_signature_optiga(
         response.signature, response.certificate_chain, client.model, data
     )
+
+    if (rotation_index or 0) > 0:
+        public_key_0: VerifyingKey = SigningKey.from_string(delegated_identity_key_0, curve=NIST256p).get_verifying_key()  # type: ignore
+        assert response.public_key_0 is not None
+        assert response.public_key_0 == public_key_0.to_string("uncompressed")

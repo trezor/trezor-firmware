@@ -4231,12 +4231,14 @@ if TYPE_CHECKING:
     class EvoluRegistrationRequest(protobuf.MessageType):
         certificate_chain: "list[AnyBytes]"
         signature: "AnyBytes"
+        public_key_0: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             signature: "AnyBytes",
             certificate_chain: "list[AnyBytes] | None" = None,
+            public_key_0: "AnyBytes | None" = None,
         ) -> None:
             pass
 

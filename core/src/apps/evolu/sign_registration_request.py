@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -59,13 +59,12 @@ async def sign_registration_request(
     ):
         raise ValueError("Invalid proof")
 
-    signature = _get_signature(challenge_bytes, size_bytes)
+    signature, public_key_0 = _get_signature(challenge_bytes, size_bytes)
     r = BufferReader(optiga.get_certificate(optiga.DEVICE_CERT_INDEX))
     certificates = parse_cert_chain(r)
 
     return EvoluRegistrationRequest(
-        certificate_chain=certificates,
-        signature=signature,
+        certificate_chain=certificates, signature=signature, public_key_0=public_key_0
     )
 
 
@@ -82,9 +81,9 @@ def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
     return challenge, size_to_acquire_bytes
 
 
-def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
-    from trezorutils import delegated_identity
-
+def _get_signature(
+    challenge_bytes: AnyBytes, size_bytes: bytes
+) -> Tuple[bytes, bytes | None]:
     from storage.device import get_delegated_identity_key_rotation_index
     from trezor import utils, wire
     from trezor.crypto import optiga
@@ -92,18 +91,29 @@ def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
 
     from apps.common.writers import write_compact_size
 
-    from .common import get_public_key_from_private_key
+    from .common import get_public_key
 
-    private_key = delegated_identity(get_delegated_identity_key_rotation_index() or 0)
-    public_key = get_public_key_from_private_key(private_key)
+    rotation_index = get_delegated_identity_key_rotation_index() or 0
+    public_key = get_public_key(rotation_index)
 
     header = b"EvoluSignRegistrationRequestV1:"
-    components = [
-        header,
-        public_key,
-        challenge_bytes,
-        size_bytes,
-    ]
+    if rotation_index == 0:
+        components = [
+            header,
+            public_key,
+            challenge_bytes,
+            size_bytes,
+        ]
+    else:
+        public_key_0 = get_public_key(0)
+        components = [
+            header,
+            public_key_0,
+            public_key,
+            challenge_bytes,
+            size_bytes,
+        ]
+
     hash_writer = utils.HashWriter(sha256())
     for component in components:
         write_compact_size(hash_writer, len(component))
@@ -113,4 +123,8 @@ def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
         signature = optiga.sign(optiga.DEVICE_ECC_KEY_INDEX, hash_writer.get_digest())
     except optiga.SigningInaccessible:
         raise wire.ProcessError("Signing inaccessible.")
-    return signature
+
+    if rotation_index == 0:
+        return signature, None
+    else:
+        return signature, public_key_0
