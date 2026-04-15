@@ -665,30 +665,50 @@ def device_handler(
 # Activated by passing --string-log=<file> to pytest.
 # ---------------------------------------------------------------------------
 
-_ORDER_JSON = Path(__file__).parent.parent / "core" / "translations" / "order.json"
+_TRANSLATIONS_DIR = Path(__file__).parent.parent / "core" / "translations"
 _TR_NAMES: list[str] = []  # index → TR key name, loaded lazily
+_TR_EN_VALUES: dict[str, t.Any] = {}  # key name → English string (or model dict)
+
+StringLogEntry = dict[str, t.Any]  # {"key": str, "value": str | dict[str, str]}
 
 
-def _bitmap_to_keys(bitmap: bytes) -> list[str]:
-    """Decode a string-collector bitmap into a sorted list of TR key names."""
-    global _TR_NAMES
+def _load_tr_tables() -> None:
+    global _TR_NAMES, _TR_EN_VALUES
+    order = json.loads((_TRANSLATIONS_DIR / "order.json").read_text())
+    size = max(int(k) for k in order) + 1
+    _TR_NAMES = [""] * size
+    for k, v in order.items():
+        _TR_NAMES[int(k)] = v
+    en = json.loads((_TRANSLATIONS_DIR / "en.json").read_text())
+    _TR_EN_VALUES = en.get("translations", {})
+
+
+def _bitmap_to_entries(bitmap: bytes, layout_name: str | None) -> list[StringLogEntry]:
+    """Decode a string-collector bitmap into a sorted list of {key, value} entries.
+
+    When ``layout_name`` is provided (e.g. ``"Eckhart"``), model-specific
+    translation values are resolved to the matching variant; otherwise the
+    full model dict is kept as-is.
+    """
     if not _TR_NAMES:
-        order = json.loads(_ORDER_JSON.read_text())
-        size = max(int(k) for k in order) + 1
-        _TR_NAMES = [""] * size
-        for k, v in order.items():
-            _TR_NAMES[int(k)] = v
+        _load_tr_tables()
     result = []
     for byte_idx, byte in enumerate(bitmap):
         for bit in range(8):
             if byte & (1 << bit):
                 idx = byte_idx * 8 + bit
                 if idx < len(_TR_NAMES) and _TR_NAMES[idx]:
-                    result.append(_TR_NAMES[idx])
-    return sorted(result)
+                    key = _TR_NAMES[idx]
+                    raw = _TR_EN_VALUES.get(key, "")
+                    if isinstance(raw, dict) and layout_name is not None:
+                        value = raw.get(layout_name, "")
+                    else:
+                        value = raw
+                    result.append({"key": key, "value": value})
+    return sorted(result, key=lambda e: e["key"])
 
 
-_string_log: dict[str, list[str]] = defaultdict(list)
+_string_log: dict[str, list[StringLogEntry]] = defaultdict(list)
 _string_log_output: Path | None = None
 
 
@@ -725,8 +745,9 @@ def _string_collector(request: pytest.FixtureRequest) -> t.Generator:
         yield
         return
 
+    layout_name = getattr(getattr(debug, "layout_type", None), "name", None)
     debug.get_string_log(clear=True)  # discard stale entries before the test
     yield
     bitmap = debug.get_string_log(clear=True)
     if bitmap:
-        _string_log[request.node.nodeid] = _bitmap_to_keys(bitmap)
+        _string_log[request.node.nodeid] = _bitmap_to_entries(bitmap, layout_name)
