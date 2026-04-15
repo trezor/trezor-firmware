@@ -203,6 +203,8 @@ if utils.USE_N4W1:
     from trezor.ui.layouts.common import interact
 
     if TYPE_CHECKING:
+        from buffer_types import AnyBytes
+
         from apps.debug.n4w1_mock import N4W1Context
 
     class Retry(Exception):
@@ -258,20 +260,25 @@ if utils.USE_N4W1:
                     continue
 
     async def _backup_share(
-        ctx: N4W1Context, description: str, button: str, blob: bytes
+        ctx: N4W1Context, description: str, button: str, blob: AnyBytes
     ) -> None:
         from trezor.ui import Shutdown
         from trezor.ui.layouts.progress import progress
         from trezorui_api import CONFIRMED, show_info
 
         class _LayoutWrite(Layout):
+
+            result: AnyBytes | None | Exception = None
+
             def create_tasks(self) -> Iterator[Task]:
                 """Run N4W1 write operation in the backgroud of this layout."""
 
                 async def _write_task() -> None:
-                    existing = await ctx.read(key="mnemonic")
-                    if existing is not None:
-                        raise Retry("Non-empty N4W1 tag.")
+                    try:
+                        _LayoutWrite.result = await ctx.read(key="mnemonic")
+                    except Exception as exc:
+                        _LayoutWrite.result = exc
+
                     try:
                         # emitting a message raises Shutdown exception
                         self._emit_message(CONFIRMED)
@@ -281,7 +288,6 @@ if utils.USE_N4W1:
                 yield from super().create_tasks()
                 yield _write_task()
 
-        # will return "None" on success, raise on error/cancellation
         await interact(
             show_info(
                 title=TR.backup__title_create_wallet_backup,
@@ -293,6 +299,12 @@ if utils.USE_N4W1:
             confirm_only=True,
             layout_type=_LayoutWrite,
         )
+
+        result = _LayoutWrite.result
+        if isinstance(result, Exception):
+            raise result
+        if result is not None:
+            raise Retry("Non-empty N4W1 tag.")
 
         # continue N4W1 communication (the tag is ready)
         progress_obj = progress(description=TR.n4w1__writing)

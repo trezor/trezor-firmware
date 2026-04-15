@@ -209,7 +209,7 @@ else:
                 return None
 
             # TODO: use protobuf?
-            share = blob.decode()
+            share = bytes(blob).decode()
             share_words = share.split(" ")
 
             # Can be `None` when checking the first share.

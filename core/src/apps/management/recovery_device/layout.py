@@ -16,6 +16,7 @@ from apps.common import backup_types
 from .recover import RecoveryAborted
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Awaitable, Iterator
 
     from trezor.enums import BackupType
@@ -157,21 +158,28 @@ if utils.USE_N4W1:
 
     async def _n4w1_read(
         ctx: N4W1Context, description: str, button: str
-    ) -> bytes | None:
+    ) -> AnyBytes | None:
         from trezor.ui import Shutdown
         from trezor.ui.layouts.common import interact
-        from trezorui_api import show_info
+        from trezorui_api import CONFIRMED, show_info
 
         # will return "None" on success, raise on error/cancellation
         class _LayoutRead(Layout):
+
+            result: AnyBytes | None | Exception = None
+
             def create_tasks(self) -> Iterator[Task]:
                 """Run N4W1 write operation in the backgroud of this layout."""
 
                 async def _read_task() -> None:
-                    res = await ctx.read(key="mnemonic")
+                    try:
+                        _LayoutRead.result = await ctx.read(key="mnemonic")
+                    except Exception as exc:
+                        _LayoutRead.result = exc
+
                     try:
                         # emitting a message raises Shutdown exception
-                        self._emit_message(res)
+                        self._emit_message(CONFIRMED)
                     except Shutdown:
                         pass
 
@@ -193,10 +201,11 @@ if utils.USE_N4W1:
         # TODO: animate during read?
         # TODO: run mnemonic checks during animation
         # TODO: show empty tag warning
-        if result is None or isinstance(result, bytes):
-            return result
+        result = _LayoutRead.result
+        if isinstance(result, Exception):
+            raise result
 
-        raise RuntimeError
+        return result
 
     async def _choose_method() -> BackupMethod:
         import trezorui_api
