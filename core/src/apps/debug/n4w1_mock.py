@@ -28,6 +28,11 @@ class N4W1Context:
         log.debug(__name__, "N4W1 exchange done")
         self.tx.put(None)
 
+    async def connect(self) -> None:
+        """Send a dummy request and wait for N4W1 connection + response."""
+        self.tx.put(DebugLinkN4W1Read())
+        await self.rx
+
     async def read(self, key: str) -> AnyBytes | None:
         """Read a specific entry from N4W1."""
         log.debug(__name__, "N4W1 read: %s", key)

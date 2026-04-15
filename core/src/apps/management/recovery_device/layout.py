@@ -163,20 +163,13 @@ if utils.USE_N4W1:
         from trezor.ui.layouts.common import interact
         from trezorui_api import CONFIRMED, show_info
 
-        # will return "None" on success, raise on error/cancellation
-        class _LayoutRead(Layout):
-
-            result: AnyBytes | None | Exception = None
+        class _Connect(Layout):
 
             def create_tasks(self) -> Iterator[Task]:
                 """Run N4W1 write operation in the backgroud of this layout."""
 
-                async def _read_task() -> None:
-                    try:
-                        _LayoutRead.result = await ctx.read(key="mnemonic")
-                    except Exception as exc:
-                        _LayoutRead.result = exc
-
+                async def _task() -> None:
+                    await ctx.connect()  # blocks until N4W1 is connected.
                     try:
                         # emitting a message raises Shutdown exception
                         self._emit_message(CONFIRMED)
@@ -184,9 +177,9 @@ if utils.USE_N4W1:
                         pass
 
                 yield from super().create_tasks()
-                yield _read_task()
+                yield _task()
 
-        result = await interact(
+        await interact(
             show_info(
                 title=TR.recovery__title,
                 description=description,
@@ -195,17 +188,13 @@ if utils.USE_N4W1:
             ),
             br_name="backup_read",
             confirm_only=False,
-            layout_type=_LayoutRead,
+            layout_type=_Connect,
         )
 
         # TODO: animate during read?
         # TODO: run mnemonic checks during animation
         # TODO: show empty tag warning
-        result = _LayoutRead.result
-        if isinstance(result, Exception):
-            raise result
-
-        return result
+        return await ctx.read(key="mnemonic")
 
     async def _choose_method() -> BackupMethod:
         import trezorui_api

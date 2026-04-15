@@ -266,19 +266,13 @@ if utils.USE_N4W1:
         from trezor.ui.layouts.progress import progress
         from trezorui_api import CONFIRMED, show_info
 
-        class _LayoutWrite(Layout):
-
-            result: AnyBytes | None | Exception = None
+        class _Connect(Layout):
 
             def create_tasks(self) -> Iterator[Task]:
                 """Run N4W1 write operation in the backgroud of this layout."""
 
-                async def _write_task() -> None:
-                    try:
-                        _LayoutWrite.result = await ctx.read(key="mnemonic")
-                    except Exception as exc:
-                        _LayoutWrite.result = exc
-
+                async def _task() -> None:
+                    await ctx.connect()  # blocks until N4W1 is connected.
                     try:
                         # emitting a message raises Shutdown exception
                         self._emit_message(CONFIRMED)
@@ -286,7 +280,7 @@ if utils.USE_N4W1:
                         pass
 
                 yield from super().create_tasks()
-                yield _write_task()
+                yield _task()
 
         await interact(
             show_info(
@@ -297,12 +291,10 @@ if utils.USE_N4W1:
             ),
             br_name="backup_write",
             confirm_only=True,
-            layout_type=_LayoutWrite,
+            layout_type=_Connect,
         )
 
-        result = _LayoutWrite.result
-        if isinstance(result, Exception):
-            raise result
+        result = await ctx.read(key="mnemonic")
         if result is not None:
             raise Retry("Non-empty N4W1 tag.")
 
