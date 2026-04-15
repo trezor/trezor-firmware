@@ -149,12 +149,12 @@ class Layout(Generic[T]):
     def __init__(self, layout: LayoutObj[T]) -> None:
         """Set up a layout."""
         self.layout = layout
-        self.tasks: set[loop.Task] = set()
-        self.timers: dict[int, loop.Task] = {}
+        self.tasks: set[loop.Task[None]] = set()
+        self.timers: dict[int, loop.Task[None]] = {}
         self.result_box: loop.mailbox[Any] = loop.mailbox()
         self.button_request_ack_pending: bool = False
         self.button_request_box: loop.mailbox[ButtonRequest | None] = loop.mailbox()
-        self.button_request_task: loop.Task | None = None
+        self.button_request_task: loop.Task[None] | None = None
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
         self.context: Context | None = None
@@ -431,7 +431,7 @@ class Layout(Generic[T]):
         self.result_box.put(msg)
         raise Shutdown()
 
-    def create_tasks(self) -> Iterator[loop.Task]:
+    def create_tasks(self) -> Iterator[loop.Task[None]]:
         """Set up background tasks for a layout.
 
         Called from `start()`. Creates and yields a list of background tasks, typically
@@ -533,7 +533,7 @@ class Layout(Generic[T]):
             finally:
                 pm.close()
 
-    def _task_finalizer(self, task: loop.Task, value: Any) -> None:
+    def _task_finalizer(self, task: loop.Task[None], value: Any) -> None:
         if value is None:
             # all is good
             if __debug__:
@@ -559,7 +559,7 @@ class Layout(Generic[T]):
         if __debug__:
             log.error(__name__, "UI task returned non-None: %s (%s)", task, value)
 
-    def _start_task(self, task: loop.Task) -> None:
+    def _start_task(self, task: loop.Task[None]) -> None:
         self.tasks.add(task)
         loop.schedule(task, finalizer=self._task_finalizer)
 

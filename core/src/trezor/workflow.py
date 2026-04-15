@@ -49,7 +49,7 @@ tasks: set[loop.spawn] = set()
 default_task: loop.spawn | None = None
 
 # Constructor for the default workflow.  Returns a workflow task.
-default_constructor: Callable[[], loop.Task] | None = None
+default_constructor: Callable[[], loop.Task[None]] | None = None
 
 # Determines whether idle timer firing closes currently running workflow. Storage is locked always.
 autolock_interrupts_workflow: bool = True
@@ -127,7 +127,10 @@ def start_default() -> None:
     autolock_interrupts_workflow = True
 
 
-def set_default(constructor: Callable[[], loop.Task], restart: bool = False) -> None:
+def set_default(
+    constructor: Callable[[], loop.Task[None]],
+    restart: bool = False,
+) -> None:
     """Configure a default workflow, which will be started next time it is needed."""
     global default_constructor
     if __debug__:
@@ -206,7 +209,7 @@ class IdleTimer:
 
     def __init__(self) -> None:
         self.timeouts: dict[IdleCallback, int] = {}
-        self.tasks: dict[IdleCallback, loop.Task] = {}
+        self.tasks: dict[IdleCallback, loop.Task[None]] = {}
 
     async def _timeout_task(self, callback: IdleCallback) -> None:
         # This function is async, so the result of self._timeout_task() is an awaitable,
