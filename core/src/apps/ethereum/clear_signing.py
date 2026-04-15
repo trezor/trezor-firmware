@@ -82,24 +82,46 @@ def _check_padding_zero(
         raise exc
 
 
+def parse_address(raw_data: memoryview) -> Value:
+    _ZERO_PADDING = const(20)
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, _ZERO_PADDING, DirtyAddress)
+    return bytes(raw_data[32 - _ZERO_PADDING :])
+
+
 def parse_uint256(raw_data: memoryview) -> Value:
     if len(raw_data) < 32:
         raise OutOfBounds
     return int.from_bytes(raw_data, "big")
 
 
-def parse_uint160(raw_data: memoryview) -> Value:
-    if len(raw_data) < 32:
-        raise OutOfBounds
-    _check_padding_zero(raw_data, 160 // 8)
-    return parse_uint256(raw_data)
+def _make_uint_parser(bit_width: int) -> "Parser":
+    byte_width = bit_width // 8
+
+    def parser(raw_data: memoryview) -> Value:
+        if len(raw_data) < 32:
+            raise OutOfBounds
+        _check_padding_zero(raw_data, byte_width)
+        return parse_uint256(raw_data)
+
+    return parser
 
 
-def parse_uint24(raw_data: memoryview) -> Value:
-    if len(raw_data) < 32:
-        raise OutOfBounds
-    _check_padding_zero(raw_data, 24 // 8)
-    return parse_uint256(raw_data)
+parse_uint248 = _make_uint_parser(248)
+parse_uint160 = _make_uint_parser(160)
+parse_uint128 = _make_uint_parser(128)
+parse_uint120 = _make_uint_parser(120)
+parse_uint112 = _make_uint_parser(112)
+parse_uint96 = _make_uint_parser(96)
+parse_uint72 = _make_uint_parser(72)
+parse_uint64 = _make_uint_parser(64)
+parse_uint48 = _make_uint_parser(48)
+parse_uint40 = _make_uint_parser(40)
+parse_uint32 = _make_uint_parser(32)
+parse_uint24 = _make_uint_parser(24)
+parse_uint16 = _make_uint_parser(16)
+parse_uint8 = _make_uint_parser(8)
 
 
 def parse_bool(raw_data: memoryview) -> Value:
@@ -109,13 +131,6 @@ def parse_bool(raw_data: memoryview) -> Value:
     if uint_value not in (0, 1):
         raise ValueOverflow
     return uint_value == 1
-
-
-def parse_address(raw_data: memoryview) -> Value:
-    if len(raw_data) < 32:
-        raise OutOfBounds
-    _check_padding_zero(raw_data, 20, DirtyAddress)
-    return bytes(raw_data[32 - 20 :])
 
 
 def parse_bytes(raw_data: memoryview) -> Value:
