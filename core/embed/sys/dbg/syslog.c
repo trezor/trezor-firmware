@@ -153,7 +153,7 @@ bool syslog_start_record(const log_source_t* source, log_level_t level) {
     int name_len = (int)MIN(source->name_len, INT32_MAX);
 
     dbg_console_printf("%s%" PRIu32 ".%03" PRIu32 " " ESC_COLOR_SOURCE
-                       "%*s" ESC_COLOR_NORMAL " %s ",
+                       "%.*s" ESC_COLOR_NORMAL " %s ",
                        eol, seconds, msec, name_len, source->name, level_str);
 
     return true;

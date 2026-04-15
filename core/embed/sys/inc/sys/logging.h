@@ -31,7 +31,8 @@ typedef enum {
 
 /** Information about a source module */
 typedef struct {
-  /** Source module name shown in the logs */
+  /** Source module name shown in the logs (doesn't have to be NULL terminated)
+   */
   const char* name;
   /** Length of the module name in characters */
   size_t name_len;
