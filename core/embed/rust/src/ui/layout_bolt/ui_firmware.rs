@@ -992,7 +992,11 @@ impl FirmwareUI for UIBolt {
         description: TString<'static>,
         button: Option<(TString<'static>, bool)>,
         time_ms: u32,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error> {
+        if external_menu {
+            return Err(Error::NotImplementedError);
+        }
         let button_text = match (button, time_ms) {
             // either button or timeout must be set
             (None, 0) => return Err(Error::NotImplementedError),

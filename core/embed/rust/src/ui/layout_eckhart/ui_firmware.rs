@@ -1235,6 +1235,7 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         button: Option<(TString<'static>, bool)>,
         _time_ms: u32,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_REGULAR, description))
             .with_placement(LinearPlacement::vertical());
@@ -1242,8 +1243,14 @@ impl FirmwareUI for UIEckhart {
         let button = button.map_or_else(Button::empty, |(text, enabled)| {
             Button::with_text(text).initially_enabled(enabled)
         });
+        let header = Header::new(title);
         let screen = TextScreen::new(content)
-            .with_header(Header::new(title))
+            .with_header(if external_menu {
+                header.with_menu_button()
+            } else {
+                header
+            })
+            .with_external_menu(external_menu)
             .with_action_bar(ActionBar::new_single(button));
         let obj = LayoutObj::new(screen)?;
         Ok(obj)

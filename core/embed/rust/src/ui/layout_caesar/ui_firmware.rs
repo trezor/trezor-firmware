@@ -1175,7 +1175,11 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         _button: Option<(TString<'static>, bool)>,
         time_ms: u32,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error> {
+        if external_menu {
+            return Err(Error::NotImplementedError);
+        }
         let content = Frame::new(
             title,
             Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
