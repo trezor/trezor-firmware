@@ -329,6 +329,43 @@ class DefinitionType(IntEnum):
     ETHEREUM_NETWORK = 0
     ETHEREUM_TOKEN = 1
     SOLANA_TOKEN = 2
+    ETHEREUM_ERC7730_DISPLAY_FORMAT = 3
+
+
+class EthereumABIType(IntEnum):
+    ABI_ADDRESS = 0
+    ABI_UINT256 = 1
+    ABI_UINT248 = 2
+    ABI_UINT160 = 3
+    ABI_UINT128 = 4
+    ABI_UINT120 = 5
+    ABI_UINT112 = 6
+    ABI_UINT96 = 7
+    ABI_UINT72 = 8
+    ABI_UINT64 = 9
+    ABI_UINT48 = 10
+    ABI_UINT40 = 11
+    ABI_UINT32 = 12
+    ABI_UINT24 = 13
+    ABI_UINT16 = 14
+    ABI_UINT8 = 15
+    ABI_BOOL = 16
+    ABI_BYTES = 20
+    ABI_STRING = 21
+
+
+class EthereumERC7730FieldFormatterType(IntEnum):
+    FORMATTER_ADDRESS_NAME = 0
+    FORMATTER_AMOUNT = 1
+    FORMATTER_TOKEN_AMOUNT = 2
+    FORMATTER_UNIT = 3
+
+
+class EthereumERC7730ContainerPath(IntEnum):
+    FROM = 1
+    VALUE = 2
+    TO = 3
+    CHAIN_ID = 4
 
 
 class EthereumDataType(IntEnum):
@@ -4642,6 +4679,127 @@ class SolanaTokenInfo(protobuf.MessageType):
         self.name = name
 
 
+class EthereumABITupleInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("fields", "EthereumABIValueInfo", repeated=True, required=False, default=None),
+        2: protobuf.Field("is_dynamic", "bool", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        is_dynamic: "bool",
+        fields: Optional[Sequence["EthereumABIValueInfo"]] = None,
+    ) -> None:
+        self.fields: Sequence["EthereumABIValueInfo"] = fields if fields is not None else []
+        self.is_dynamic = is_dynamic
+
+
+class EthereumABIValueInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("atomic", "EthereumABIType", repeated=False, required=False, default=None),
+        2: protobuf.Field("dynamic", "EthereumABIType", repeated=False, required=False, default=None),
+        3: protobuf.Field("tuple", "EthereumABITupleInfo", repeated=False, required=False, default=None),
+        4: protobuf.Field("array", "EthereumABIValueInfo", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        atomic: Optional["EthereumABIType"] = None,
+        dynamic: Optional["EthereumABIType"] = None,
+        tuple: Optional["EthereumABITupleInfo"] = None,
+        array: Optional["EthereumABIValueInfo"] = None,
+    ) -> None:
+        self.atomic = atomic
+        self.dynamic = dynamic
+        self.tuple = tuple
+        self.array = array
+
+
+class EthereumERC7730Path(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("path", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("container_path", "EthereumERC7730ContainerPath", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        path: Optional[Sequence["int"]] = None,
+        container_path: Optional["EthereumERC7730ContainerPath"] = None,
+    ) -> None:
+        self.path: Sequence["int"] = path if path is not None else []
+        self.container_path = container_path
+
+
+class EthereumERC7730FieldInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("path", "EthereumERC7730Path", repeated=False, required=True),
+        2: protobuf.Field("label", "string", repeated=False, required=True),
+        3: protobuf.Field("formatter", "EthereumERC7730FieldFormatterType", repeated=False, required=True),
+        4: protobuf.Field("token_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
+        5: protobuf.Field("threshold", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("decimals", "uint32", repeated=False, required=False, default=None),
+        7: protobuf.Field("base", "string", repeated=False, required=False, default=None),
+        8: protobuf.Field("prefix", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        path: "EthereumERC7730Path",
+        label: "str",
+        formatter: "EthereumERC7730FieldFormatterType",
+        token_path: Optional["EthereumERC7730Path"] = None,
+        threshold: Optional["bytes"] = None,
+        decimals: Optional["int"] = None,
+        base: Optional["str"] = None,
+        prefix: Optional["bool"] = None,
+    ) -> None:
+        self.path = path
+        self.label = label
+        self.formatter = formatter
+        self.token_path = token_path
+        self.threshold = threshold
+        self.decimals = decimals
+        self.base = base
+        self.prefix = prefix
+
+
+class EthereumERC7730DisplayFormatInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
+        2: protobuf.Field("address", "bytes", repeated=False, required=True),
+        3: protobuf.Field("func_sig", "bytes", repeated=False, required=True),
+        4: protobuf.Field("intent", "string", repeated=False, required=True),
+        5: protobuf.Field("parameter_definitions", "EthereumABIValueInfo", repeated=True, required=False, default=None),
+        6: protobuf.Field("field_definitions", "EthereumERC7730FieldInfo", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        chain_id: "int",
+        address: "bytes",
+        func_sig: "bytes",
+        intent: "str",
+        parameter_definitions: Optional[Sequence["EthereumABIValueInfo"]] = None,
+        field_definitions: Optional[Sequence["EthereumERC7730FieldInfo"]] = None,
+    ) -> None:
+        self.parameter_definitions: Sequence["EthereumABIValueInfo"] = parameter_definitions if parameter_definitions is not None else []
+        self.field_definitions: Sequence["EthereumERC7730FieldInfo"] = field_definitions if field_definitions is not None else []
+        self.chain_id = chain_id
+        self.address = address
+        self.func_sig = func_sig
+        self.intent = intent
+
+
 class EosGetPublicKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 600
     FIELDS = {
@@ -5562,17 +5720,20 @@ class EthereumDefinitions(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("encoded_network", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("encoded_token", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("encoded_tokens", "bytes", repeated=True, required=False, default=None),
+        3: protobuf.Field("encoded_erc7730_display_format", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
+        encoded_tokens: Optional[Sequence["bytes"]] = None,
         encoded_network: Optional["bytes"] = None,
-        encoded_token: Optional["bytes"] = None,
+        encoded_erc7730_display_format: Optional["bytes"] = None,
     ) -> None:
+        self.encoded_tokens: Sequence["bytes"] = encoded_tokens if encoded_tokens is not None else []
         self.encoded_network = encoded_network
-        self.encoded_token = encoded_token
+        self.encoded_erc7730_display_format = encoded_erc7730_display_format
 
 
 class EthereumAccessList(protobuf.MessageType):
