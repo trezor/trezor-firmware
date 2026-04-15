@@ -35,11 +35,7 @@ pub fn record(tr: TranslatedString) {
     // Bounds check (statically should never fail, but avoids UB if order.json
     // grows beyond expectation without updating NWORDS).
     if word < NWORDS {
-        // try_write avoids deadlock if record() is somehow re-entered while the
-        // lock is held (e.g. during get_and_clear()).
-        if let Some(mut log) = STRING_LOG.try_write() {
-            log[word] |= 1 as WordType << bit;
-        }
+        STRING_LOG.write()[word] |= 1 as WordType << bit;
     }
 }
 
