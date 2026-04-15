@@ -4,7 +4,7 @@ from typing import Callable
 
 import pytest
 
-from trezorlib import ethereum
+from trezorlib import ethereum, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -268,3 +268,254 @@ def test_method_external_mismatch(session: Session, method: MethodType) -> None:
     network = definitions.encode_eth_network(slip44=77777)
     with pytest.raises(TrezorFailure, match="Network definition mismatch"):
         method(session, 66666, network)
+
+
+# ERC-7730 clear signing tests
+# These require core models and a transaction that triggers the clear signing path.
+
+# Uniswap V3 SwapRouter02 on Ethereum mainnet
+UNISWAP_V3_ROUTER2 = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
+
+FUNC_SIG_FAKE_STR = "11111111"
+FUNC_SIG_FAKE = bytes.fromhex(FUNC_SIG_FAKE_STR)
+
+# `exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))`
+# Inspired from https://etherscan.io/tx/0xebe95b6b3222b9eacbf40a02947ebbc83761ee526879d0ba99fd46f54217e5db
+# but set `amountOutMinimum` to a non-zero value and using another func_sig.
+UNISWAP_EXACT_INPUT_SINGLE_CALLDATA = bytes.fromhex(
+    FUNC_SIG_FAKE_STR
+    + "000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"  # tokenIn: WETH
+    + "000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7"  # tokenOut: USDT
+    + "0000000000000000000000000000000000000000000000000000000000000bb8"  # fee: 3000
+    + "00000000000000000000000051117eb63623aee74a39b63bd9efa3a728800dbb"  # recipient
+    + "000000000000000000000000000000000000000000000000002386f26fc10000"  # amountIn
+    + "0000000000000000000000000000000000000000000000000000000000000010"  # amountOutMinimum
+    + "0000000000000000000000000000000000000000000000000000000000000000"  # sqrtPriceLimitX96
+)
+
+# WETH on Ethereum mainnet needed by TokenAmountFormatter to display amounts.
+WETH_TOKEN_DEFINITION = {
+    "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    "chain_id": 1,
+    "symbol": "FAKE WETH",
+    "decimals": 18,
+    "name": "FAKE Wrapped Ether",
+}
+
+# USDT on Ethereum mainnet (tokenOut in the Uniswap WETH/USDT swap calldata).
+USDT_TOKEN_DEFINITION = {
+    "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+    "chain_id": 1,
+    "symbol": "FAKE USDT",
+    "decimals": 6,
+    "name": "FAKE Tether USD",
+}
+
+# Fake second WETH variant (tokenOut in the Uniswap WETH/WETH2 swap calldata).
+WETH2_TOKEN_DEFINITION = {
+    "address": "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "chain_id": 1,
+    "symbol": "FAKE WETH2",
+    "decimals": 18,
+    "name": "FAKE Wrapped Ether 2",
+}
+
+UNISWAP_WETH_WETH2_CALLDATA = bytes.fromhex(
+    FUNC_SIG_FAKE_STR
+    + "000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"  # tokenIn: WETH
+    + "000000000000000000000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  # tokenOut: WETH2
+    + "0000000000000000000000000000000000000000000000000000000000000bb8"  # fee: 3000
+    + "00000000000000000000000051117eb63623aee74a39b63bd9efa3a728800dbb"  # recipient
+    + "000000000000000000000000000000000000000000000000002386f26fc10000"  # amountIn
+    + "0000000000000000000000000000000000000000000000000000000000000010"  # amountOutMinimum
+    + "0000000000000000000000000000000000000000000000000000000000000000"  # sqrtPriceLimitX96
+)
+
+
+def get_clear_signing_sign_tx_params(
+    data: bytes = UNISWAP_EXACT_INPUT_SINGLE_CALLDATA,
+) -> dict:
+    return dict(
+        n=parse_path("m/44h/60h/0h/0/1"),
+        nonce=0x0,
+        gas_price=0x14,
+        gas_limit=0x14,
+        to=UNISWAP_V3_ROUTER2,
+        value=0x0,
+        data=data,
+        chain_id=1,
+    )
+
+
+# ERC-7730 display format for Uniswap V3 `exactInputSingle`.
+# `exactInputSingle` takes one struct parameter with 7 fields.
+UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT = definitions.make_eth_erc7730_display_format(
+    chain_id=1,
+    address=UNISWAP_V3_ROUTER2,
+    func_sig=FUNC_SIG_FAKE,
+    parameter_definitions=[
+        messages.EthereumABIValueInfo(
+            tuple=messages.EthereumABITupleInfo(
+                fields=[
+                    messages.EthereumABIValueInfo(
+                        atomic=messages.EthereumABIType.ABI_ADDRESS
+                    ),  # tokenIn
+                    messages.EthereumABIValueInfo(
+                        atomic=messages.EthereumABIType.ABI_ADDRESS
+                    ),  # tokenOut
+                    messages.EthereumABIValueInfo(
+                        atomic=messages.EthereumABIType.ABI_UINT24
+                    ),  # fee
+                    messages.EthereumABIValueInfo(
+                        atomic=messages.EthereumABIType.ABI_ADDRESS
+                    ),  # recipient
+                    messages.EthereumABIValueInfo(
+                        atomic=messages.EthereumABIType.ABI_UINT256
+                    ),  # amountIn
+                    messages.EthereumABIValueInfo(
+                        atomic=messages.EthereumABIType.ABI_UINT256
+                    ),  # amountOutMinimum
+                    messages.EthereumABIValueInfo(
+                        atomic=messages.EthereumABIType.ABI_UINT160
+                    ),  # sqrtPriceLimitX96
+                ],
+                is_dynamic=False,
+            )
+        )
+    ],
+    field_definitions=[
+        messages.EthereumERC7730FieldInfo(
+            path=messages.EthereumERC7730Path(path=[0, 4]),
+            label="FAKE Amount",
+            token_path=messages.EthereumERC7730Path(path=[0, 0]),
+            formatter=messages.EthereumERC7730FieldFormatterType.FORMATTER_TOKEN_AMOUNT,
+        ),
+        messages.EthereumERC7730FieldInfo(
+            path=messages.EthereumERC7730Path(path=[0, 5]),
+            label="FAKE Minimum to Receive",
+            token_path=messages.EthereumERC7730Path(path=[0, 1]),
+            formatter=messages.EthereumERC7730FieldFormatterType.FORMATTER_TOKEN_AMOUNT,
+        ),
+        messages.EthereumERC7730FieldInfo(
+            path=messages.EthereumERC7730Path(path=[0, 2]),
+            label="FAKE fee",
+            formatter=messages.EthereumERC7730FieldFormatterType.FORMATTER_UNIT,
+        ),
+        messages.EthereumERC7730FieldInfo(
+            path=messages.EthereumERC7730Path(path=[0, 3]),
+            label="FAKE recipient",
+            decimals=4,
+            base="%",
+            prefix=False,
+            formatter=messages.EthereumERC7730FieldFormatterType.FORMATTER_ADDRESS_NAME,
+        ),
+    ],
+)
+
+
+def _sign_tx_with_display_format(
+    session: Session,
+    display_format: messages.EthereumERC7730DisplayFormatInfo,
+    tokens: list[dict] | None = None,
+    sign_tx_params: dict | None = None,
+) -> None:
+    if sign_tx_params is None:
+        sign_tx_params = get_clear_signing_sign_tx_params()
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ethereum.sign_tx(
+            session,
+            **sign_tx_params,
+            definitions=messages.EthereumDefinitions(
+                encoded_erc7730_display_format=definitions.encode_eth_erc7730_display_format(
+                    display_format
+                ),
+                encoded_tokens=(
+                    [definitions.encode_eth_token(**t) for t in tokens]
+                    if tokens is not None
+                    else []
+                ),
+            ),
+        )
+
+
+@pytest.mark.models("core")
+def test_clear_signing_with_definition_and_token(session: Session) -> None:
+    # With WETH provided, TokenAmountFormatter can resolve the token symbol.
+    _sign_tx_with_display_format(
+        session,
+        UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
+        tokens=[WETH_TOKEN_DEFINITION],
+    )
+
+
+@pytest.mark.models("core")
+def test_clear_signing_with_definition_and_both_tokens(session: Session) -> None:
+    # With both WETH (tokenIn) and USDT (tokenOut) provided.
+    # Note however that we still render it as "USDT" (built in token)
+    # rather than "FAKE USDT"!
+
+    _sign_tx_with_display_format(
+        session,
+        UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
+        tokens=[WETH_TOKEN_DEFINITION, USDT_TOKEN_DEFINITION],
+    )
+
+
+@pytest.mark.models("core")
+def test_clear_signing_weth_weth2_with_both_tokens(session: Session) -> None:
+    # With both WETH (tokenIn) and WETH2 (tokenOut) provided, both amounts are resolved.
+    _sign_tx_with_display_format(
+        session,
+        UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
+        tokens=[WETH_TOKEN_DEFINITION, WETH2_TOKEN_DEFINITION],
+        sign_tx_params=get_clear_signing_sign_tx_params(UNISWAP_WETH_WETH2_CALLDATA),
+    )
+
+
+@pytest.mark.models("core")
+def test_clear_signing_weth_weth2_without_tokens(session: Session) -> None:
+    # Without token definitions, amounts are shown as UNKNOWN tokens.
+    _sign_tx_with_display_format(
+        session,
+        UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
+        sign_tx_params=get_clear_signing_sign_tx_params(UNISWAP_WETH_WETH2_CALLDATA),
+    )
+
+
+@pytest.mark.models("core")
+def test_clear_signing_with_definition_without_token(session: Session) -> None:
+    # Without a token definition, amounts are shown as UNKNOWN token.
+    _sign_tx_with_display_format(session, UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT)
+
+
+@pytest.mark.models("core")
+def test_clear_signing_with_mismatched_definition(session: Session) -> None:
+    # A definition whose tuple claims an extra field causes the firmware to fail
+    # parsing the calldata and fall back to blind signing.
+    assert (
+        UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.parameter_definitions[0].tuple
+        is not None
+    )
+    bad_tuple = messages.EthereumABITupleInfo(
+        fields=[
+            *UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.parameter_definitions[
+                0
+            ].tuple.fields,
+            # extra field — causes OutOfBounds during clear signing
+            messages.EthereumABIValueInfo(atomic=messages.EthereumABIType.ABI_UINT256),
+        ],
+        is_dynamic=False,
+    )
+    bad_display_format = definitions.make_eth_erc7730_display_format(
+        chain_id=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.chain_id,
+        address=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.address,
+        func_sig=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.func_sig,
+        intent=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.intent,
+        parameter_definitions=[messages.EthereumABIValueInfo(tuple=bad_tuple)],
+        field_definitions=list(
+            UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.field_definitions
+        ),
+    )
+    _sign_tx_with_display_format(session, bad_display_format)
