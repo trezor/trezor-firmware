@@ -186,7 +186,7 @@ if utils.USE_N4W1:
                 external_menu=True,
             ),
             br_name="backup_read",
-            confirm_only=True,
+            confirm_only=False,
             layout_type=_LayoutRead,
         )
 

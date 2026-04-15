@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Awaitable, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import storage.device as storage_device
 import storage.recovery as storage_recovery
@@ -180,17 +180,18 @@ else:
             super().__init__()
             self.recovery_type = recovery_type
             # `slip39_state is None` indicates that we are (re)starting the first recovery step.
-            self.backup_type = slip39_state and slip39_state[1]
+            self.slip39_state = slip39_state
 
         @classmethod
         async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
             return cls(recovery_type, recover.load_slip39_state())
 
         async def show_state(self, is_retry: bool) -> None:
-            if is_retry or self.backup_type is None:
+            if is_retry or self.slip39_state is None:
                 # don't show recovery state on retries and before the first share is entered
                 return
-            await _request_share_first_screen(self.word_count, self.recovery_type)
+            word_count = self.slip39_state[0]
+            await _request_share_first_screen(word_count, self.recovery_type)
 
         async def request_mnemonic(self) -> str | None:
             """Return the mnemonic or `None` on cancellation/validation error."""
@@ -210,11 +211,15 @@ else:
             # TODO: use protobuf?
             share = blob.decode()
             share_words = share.split(" ")
+
+            # Can be `None` when checking the first share.
+            backup_type = self.slip39_state and self.slip39_state[1]
+
             try:
                 # Re-verify relevant prefixes
                 # TODO: can it be encapsulated too?
-                for prefix_len in range(1, 5):
-                    check(self.backup_type, share_words[:prefix_len])
+                for prefix_len in range(1, 1 + len(share_words)):
+                    check(backup_type, partial_mnemonic=share_words[:prefix_len])
                 return share
             except WordValidityResult as exc:
                 # if they were invalid or some checks failed we continue and request them again
@@ -225,8 +230,6 @@ else:
 async def _recover_secret(
     recovery_type: RecoveryType, method: BackupMethod | None
 ) -> tuple[bytes, BackupType]:
-    from trezor.errors import MnemonicError
-
     handler_type = await _choose_handler(method)
 
     # Show recovery state in the beginning, on some failures, and after a successful share entry.
@@ -375,11 +378,13 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
 
 class _RetryEntry(Exception):
     """Raised after entering an invalid mnemonic."""
+
     pass
 
 
 async def _process_words(words: str) -> tuple[bytes, BackupType] | None:
     from trezor.errors import MnemonicError
+
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
