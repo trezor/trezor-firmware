@@ -72,7 +72,7 @@ def sign_registration_request(
     return {
         "certificates": ",".join([cert.hex() for cert in response.certificate_chain]),
         "signature": response.signature.hex(),
-    }
+    } | ({"public_key_0": response.public_key_0.hex()} if response.public_key_0 else {})
 
 
 @click.option("--credential", "-c", type=str)
