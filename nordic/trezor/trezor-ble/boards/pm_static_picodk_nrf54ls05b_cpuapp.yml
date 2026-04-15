@@ -6,10 +6,10 @@ custom_data:
   size: 0x2000
 mcuboot_pad:
   address: 0xe000
-  size: 0x200
+  size: 0x800
 app:
-  address: 0xe200
-  size: 0x6be00
+  address: 0xe800
+  size: 0x6b800
 mcuboot_primary:
   orig_span: &id001
     - mcuboot_pad
@@ -21,8 +21,8 @@ mcuboot_primary_app:
   orig_span: &id002
     - app
   span: *id002
-  address: 0xe200
-  size: 0x6be00
+  address: 0xe800
+  size: 0x6b800
 settings_storage:
   address: 0x7a000
   size: 0x4000
