@@ -1684,21 +1684,14 @@ if not utils.BITCOIN_ONLY:
             br_code=ButtonRequestType.SignTx,
         )
 
-    async def confirm_stellar_output(
-        address: str,
+    async def confirm_stellar_output_amount(
+        title: str,
+        subtitle: str,
         amount: str,
-        output_index: int,
         asset: StellarAsset,
+        description: str | None = None,
     ) -> None:
         from trezor.enums import StellarAssetType
-
-        await confirm_address(
-            f"{TR.words__recipient} #{output_index + 1}",
-            address,
-            None,
-            br_name="confirm_output_address",
-            br_code=ButtonRequestType.ConfirmOutput,
-        )
 
         info_items = []
         if asset.type != StellarAssetType.NATIVE:
@@ -1711,15 +1704,42 @@ if not utils.BITCOIN_ONLY:
             ]
 
         await confirm_value(
-            f"{TR.words__amount} #{output_index + 1}",
+            title,
             amount,
-            None,
+            description,
             br_name="confirm_output_amount",
             br_code=ButtonRequestType.ConfirmOutput,
             info_items=info_items,
             chunkify_info=True,
             chunkify=False,
+            verb=TR.buttons__continue,
         )
+
+    async def confirm_stellar_output(
+        address: str,
+        amount: str | None,
+        output_index: int,
+        asset: StellarAsset | None,
+        address_description: str | None = None,
+        amount_description: str | None = None,
+    ) -> None:
+        await confirm_address(
+            f"{TR.words__recipient} #{output_index + 1}",
+            address,
+            description=address_description,
+            br_name="confirm_output_address",
+            br_code=ButtonRequestType.ConfirmOutput,
+            verb=TR.buttons__continue,
+        )
+
+        if amount is not None and asset is not None:
+            await confirm_stellar_output_amount(
+                title=f"{TR.words__send} #{output_index + 1}",
+                subtitle="",
+                amount=amount,
+                asset=asset,
+                description=amount_description or TR.words__amount,
+            )
 
     async def confirm_tron_summary(
         title: str | None,
