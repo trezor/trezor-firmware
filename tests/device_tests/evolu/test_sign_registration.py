@@ -271,3 +271,5 @@ def test_evolu_sign_request_with_different_rotation_indices(
         public_key_0: VerifyingKey = SigningKey.from_string(delegated_identity_key_0, curve=NIST256p).get_verifying_key()  # type: ignore
         assert response.public_key_0 is not None
         assert response.public_key_0 == public_key_0.to_string("uncompressed")
+    else:
+        assert response.public_key_0 is None

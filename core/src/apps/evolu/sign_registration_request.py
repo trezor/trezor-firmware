@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from typing import Tuple
 
     from trezor.messages import EvoluRegistrationRequest, EvoluSignRegistrationRequest
 
