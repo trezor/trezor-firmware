@@ -24,7 +24,7 @@
 #include "messages-ethereum.pb.h"
 
 typedef EthereumDefinitions_encoded_network_t EncodedNetwork;
-typedef EthereumDefinitions_encoded_token_t EncodedToken;
+typedef EthereumDefinitions_encoded_tokens_t EncodedToken;
 
 typedef struct {
   const EthereumNetworkInfo *network;

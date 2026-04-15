@@ -3,18 +3,23 @@ from typing import TYPE_CHECKING
 
 from trezor import TR
 
+from .definitions import Definitions
 from .helpers import address_from_bytes, format_ethereum_amount, get_account_and_path
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Callable, Iterable
 
-    from trezor.messages import EthereumTokenInfo
+    from trezor.messages import (
+        EthereumABIValueInfo,
+        EthereumERC7730FieldInfo,
+        EthereumTokenInfo,
+    )
     from trezor.ui.layouts import StrPropertyType
+    from typing_extensions import Self
 
     from apps.common.payment_request import PaymentRequestVerifier
 
-    from .definitions import Definitions
     from .keychain import MsgInSignTx
 
     # Represents values that have been parsed from the calldata
@@ -150,6 +155,61 @@ def parse_uint256_array(raw_data: memoryview) -> list[Value]:
 
 DYNAMIC_DATA_PARSERS = [parse_bytes, parse_string, parse_uint256_array]
 
+
+def _get_parser(t: int) -> Parser:
+    """Get a parser for a type we received over the wire protocol."""
+    from trezor.enums import EthereumABIType as T
+
+    if t == T.ABI_ADDRESS:
+        return parse_address
+    elif t == T.ABI_BYTES:
+        return parse_bytes
+    elif t == T.ABI_STRING:
+        return parse_string
+    elif t == T.ABI_UINT256:
+        return parse_uint256
+    elif t == T.ABI_UINT248:
+        return parse_uint248
+    elif t == T.ABI_UINT160:
+        return parse_uint160
+    elif t == T.ABI_UINT128:
+        return parse_uint128
+    elif t == T.ABI_UINT120:
+        return parse_uint120
+    elif t == T.ABI_UINT112:
+        return parse_uint112
+    elif t == T.ABI_UINT96:
+        return parse_uint96
+    elif t == T.ABI_UINT72:
+        return parse_uint72
+    elif t == T.ABI_UINT64:
+        return parse_uint64
+    elif t == T.ABI_UINT48:
+        return parse_uint48
+    elif t == T.ABI_UINT40:
+        return parse_uint40
+    elif t == T.ABI_UINT32:
+        return parse_uint32
+    elif t == T.ABI_UINT24:
+        return parse_uint24
+    elif t == T.ABI_UINT16:
+        return parse_uint16
+    elif t == T.ABI_UINT8:
+        return parse_uint8
+    elif t == T.ABI_BOOL:
+        return parse_bool
+    raise InvalidFormatDefinition
+
+
+def _get_leaf_parser(info: EthereumABIValueInfo) -> Parser:
+    """Get a parser for a leaf (atomic or dynamic) value. Raises for nested structures."""
+    if info.atomic is not None:
+        return _get_parser(info.atomic)
+    elif info.dynamic is not None:
+        return _get_parser(info.dynamic)
+    raise InvalidFormatDefinition
+
+
 # Field formatters: https://eips.ethereum.org/EIPS/eip-7730#field-formats
 
 
@@ -245,11 +305,10 @@ class TokenAmountFormatter(FieldFormatter):
                 if self.native_currency_address is not None:
                     if token_address in self.native_currency_address:
                         is_native_currency = True
-                token = (
-                    definitions.get_token(token_address)
-                    if not is_native_currency
-                    else None
-                )
+                if is_native_currency:
+                    token = None
+                else:
+                    token = definitions.get_token(token_address)
                 return (
                     format_ethereum_amount(amount, token, definitions.network),
                     token,
@@ -325,6 +384,33 @@ class BindingContext:
 class ABIValue:
     def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
         raise NotImplementedError
+
+    @staticmethod
+    def from_proto(info: EthereumABIValueInfo) -> "ABIValue":
+        if info.atomic is not None:
+            return Atomic(_get_parser(info.atomic))
+        elif info.dynamic is not None:
+            return Dynamic(_get_parser(info.dynamic))
+        elif info.tuple is not None:
+            return Tuple(
+                tuple(_get_leaf_parser(f) for f in info.tuple.fields),
+                info.tuple.is_dynamic,
+            )
+        elif info.array is not None:
+            element = info.array
+            if element.atomic is not None:
+                return Array(Atomic(_get_parser(element.atomic)))
+            elif element.dynamic is not None:
+                return Array(Dynamic(_get_parser(element.dynamic)))
+            elif element.tuple is not None:
+                return Array(
+                    Tuple(
+                        tuple(_get_leaf_parser(f) for f in element.tuple.fields),
+                        is_dynamic=False,  # Tuples inside Arrays are always parsed as static!
+                    )
+                )
+            raise InvalidFormatDefinition  # Array of arrays not supported
+        raise InvalidFormatDefinition
 
 
 class Atomic(ABIValue):
@@ -459,6 +545,7 @@ class Array(ABIValue):
 # https://eips.ethereum.org/EIPS/eip-7730#evm-transaction-container
 
 
+# Note: Keep this in sync with `EthereumERC7730ContainerPath` from `messages-definitions.proto`.
 class ContainerPath:
     From = 1
     Value = 2
@@ -476,6 +563,44 @@ class FieldDefinition:
         self.path = path
         self.label = label
         self.formatter = formatter
+
+    @staticmethod
+    def from_proto(info: EthereumERC7730FieldInfo) -> "FieldDefinition":
+        from trezor.enums import EthereumERC7730FieldFormatterType as FT
+        from trezor.messages import EthereumERC7730Path
+
+        def decode_path(p: EthereumERC7730Path) -> Path:
+            if p.container_path is not None:
+                return p.container_path
+            return tuple(p.path)
+
+        path = decode_path(info.path)
+
+        fmt_type = info.formatter
+        if fmt_type == FT.FORMATTER_ADDRESS_NAME:
+            formatter = AddressNameFormatter
+        elif fmt_type == FT.FORMATTER_AMOUNT:
+            formatter = AmountFormatter
+        elif fmt_type == FT.FORMATTER_TOKEN_AMOUNT:
+            formatter_params = {}
+            if info.token_path is not None:
+                formatter_params["token_path"] = decode_path(info.token_path)
+            if info.threshold is not None:
+                formatter_params["threshold"] = int.from_bytes(info.threshold, "big")
+            formatter = TokenAmountFormatter(**formatter_params)
+        elif fmt_type == FT.FORMATTER_UNIT:
+            formatter_params = {}
+            if info.decimals is not None:
+                formatter_params["decimals"] = info.decimals
+            if info.base is not None:
+                formatter_params["base"] = info.base
+            if info.prefix is not None:
+                formatter_params["prefix"] = info.prefix
+            formatter = UnitFormatter(**formatter_params)
+        else:
+            raise InvalidFormatDefinition
+
+        return FieldDefinition(path=path, label=info.label, formatter=formatter)
 
     def get_formatter(self) -> FieldFormatter:
         # instantiate formatters only if needed
@@ -602,6 +727,26 @@ class DisplayFormat:
 
         return parameters, fields
 
+    @classmethod
+    def from_encoded(cls, encoded: AnyBytes) -> Self:
+        from trezor.messages import EthereumERC7730DisplayFormatInfo
+
+        from apps.common.definitions import decode_definition
+
+        proto = decode_definition(encoded, EthereumERC7730DisplayFormatInfo)
+
+        return cls(
+            binding_context=BindingContext([(proto.chain_id, bytes(proto.address))]),
+            func_sig=bytes(proto.func_sig),
+            intent=proto.intent,
+            parameter_definitions=[
+                ABIValue.from_proto(p) for p in proto.parameter_definitions
+            ],
+            field_definitions=[
+                FieldDefinition.from_proto(f) for f in proto.field_definitions
+            ],
+        )
+
 
 async def try_parse(
     data: AnyBytes,
@@ -632,9 +777,16 @@ async def try_parse(
             display_format = f
             break
     else:
-        return False
+        if msg.definitions and msg.definitions.encoded_erc7730_display_format:
+            f = DisplayFormat.from_encoded(
+                msg.definitions.encoded_erc7730_display_format
+            )
+            if f.func_sig == func_sig:
+                display_format = f
 
-    if not display_format.matches_context(msg.chain_id, address_bytes):
+    if display_format is None or not display_format.matches_context(
+        msg.chain_id, address_bytes
+    ):
         return False
 
     calldata = memoryview(data)[SC_FUNC_SIG_BYTES:]

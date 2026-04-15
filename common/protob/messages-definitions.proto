@@ -13,6 +13,7 @@ enum DefinitionType {
     ETHEREUM_NETWORK = 0;
     ETHEREUM_TOKEN = 1;
     SOLANA_TOKEN = 2;
+    ETHEREUM_ERC7730_DISPLAY_FORMAT = 3;
 }
 
 // ****** CROSS-PARSEABILITY NOTE ******
@@ -23,9 +24,12 @@ enum DefinitionType {
 //
 // To achieve that, we vary the wire types of the fields in order:
 //
-// * EthereumNetworkInfo: varint, length-delimited, ...
+// * EthereumNetworkInfo: varint, length-delimited, varint, ...
 // * EthereumTokenInfo: length-delimited, varint, ...
 // * SolanaTokenInfo: length-delimited, length-delimited, ...
+// * EthereumERC7730DisplayFormat: varint, length-delimited, length-delimited, ...
+
+// ****** ETHEREUM_NETWORK ******
 
 /**
  * Ethereum network definition.
@@ -37,6 +41,8 @@ message EthereumNetworkInfo {
     required uint32 slip44 = 3;
     required string name = 4;
 }
+
+// ****** ETHEREUM_TOKEN ******
 
 /**
  * Ethereum token definition.
@@ -50,6 +56,8 @@ message EthereumTokenInfo {
     required string name = 5;
 }
 
+// ****** SOLANA_TOKEN ******
+
 /**
  * Solana token definition.
  * @embed
@@ -58,4 +66,122 @@ message SolanaTokenInfo {
     required bytes mint = 1;  // token mint - unique token id
     required string symbol = 2;
     required string name = 3;
+}
+
+// ****** ETHEREUM_ERC7730_DISPLAY_FORMAT ******
+
+/**
+ * Solidity types.
+ * @embed
+ */
+enum EthereumABIType {
+    ABI_ADDRESS = 0;
+    ABI_UINT256 = 1;
+    ABI_UINT248 = 2;
+    ABI_UINT160 = 3;
+    ABI_UINT128 = 4;
+    ABI_UINT120 = 5;
+    ABI_UINT112 = 6;
+    ABI_UINT96 = 7;
+    ABI_UINT72 = 8;
+    ABI_UINT64 = 9;
+    ABI_UINT48 = 10;
+    ABI_UINT40 = 11;
+    ABI_UINT32 = 12;
+    ABI_UINT24 = 13;
+    ABI_UINT16 = 14;
+    ABI_UINT8 = 15;
+    ABI_BOOL = 16;
+    ABI_BYTES = 20;
+    ABI_STRING = 21;
+}
+
+/**
+ * Solidity struct / tuple.
+ * @embed
+ */
+message EthereumABITupleInfo {
+    repeated EthereumABIValueInfo fields = 1;
+    required bool is_dynamic = 2;
+}
+
+/**
+ * Ethereum ERC-20 function parameter.
+ * @embed
+ */
+message EthereumABIValueInfo {
+    // Exactly one of the following should be set:
+    optional EthereumABIType atomic = 1;      // Atomic(parser)
+    optional EthereumABIType dynamic = 2;     // Dynamic(parser)
+    optional EthereumABITupleInfo tuple = 3;  // Tuple(fields, is_dynamic)
+    optional EthereumABIValueInfo array = 4;  // Array(element_type)
+}
+
+/**
+ * All available ERC-7730 field formatters.
+ * @embed
+ */
+enum EthereumERC7730FieldFormatterType {
+    FORMATTER_ADDRESS_NAME = 0;
+    FORMATTER_AMOUNT = 1;
+    FORMATTER_TOKEN_AMOUNT = 2;
+    FORMATTER_UNIT = 3;
+}
+
+/**
+ * ERC-7730 container path (paths starting with @).
+ * Note: keep this in sync with `ContainerPath` from `clear_signing.py`
+ * @embed
+ */
+enum EthereumERC7730ContainerPath {
+    FROM = 1;
+    VALUE = 2;
+    TO = 3;
+    CHAIN_ID = 4;
+}
+
+/**
+ * Path used in ERC-7730 field definitions to access values.
+ * We currently support two kinds of paths:
+ *  * paths that access function parameters
+ *  * container paths (starting with `@`)
+ * `$` and `#` paths are not supported.
+ * @embed
+ */
+message EthereumERC7730Path {
+    // Exactly one of the following should be set:
+    repeated uint32 path = 1;  // eg. (0,) is encoded as [0], (1, 2) is encoded as [1, 2], etc.
+    optional EthereumERC7730ContainerPath container_path = 2;
+}
+
+/**
+ * Definition of a single field according to ERC-7730.
+ * @embed
+ */
+message EthereumERC7730FieldInfo {
+    required EthereumERC7730Path path = 1;
+    required string label = 2;
+    required EthereumERC7730FieldFormatterType formatter = 3;
+
+    // TokenAmountFormatter params
+    optional EthereumERC7730Path token_path = 4;
+    optional bytes threshold = 5;
+
+    // UnitFormatter params
+    optional uint32 decimals = 6;
+    optional string base = 7;
+    optional bool prefix = 8;
+}
+
+/**
+ * Ethereum ERC-7730 display format - corresponding to `DisplayFormat` in `clear_signing.py`.
+ * @embed
+ */
+message EthereumERC7730DisplayFormatInfo {
+    required uint64 chain_id = 1;
+    required bytes address = 2;
+    required bytes func_sig = 3;
+    required string intent = 4;
+    repeated EthereumABIValueInfo parameter_definitions = 5;
+    repeated EthereumERC7730FieldInfo field_definitions = 6;
 }
