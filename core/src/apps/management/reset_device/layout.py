@@ -262,7 +262,7 @@ if utils.USE_N4W1:
     ) -> None:
         from trezor.ui import Shutdown
         from trezor.ui.layouts.progress import progress
-        from trezorui_api import CONFIRMED, confirm_action
+        from trezorui_api import CONFIRMED, show_info
 
         class _LayoutWrite(Layout):
             def create_tasks(self) -> Iterator[Task]:
@@ -281,15 +281,12 @@ if utils.USE_N4W1:
                 yield from super().create_tasks()
                 yield _write_task()
 
-        # will return "None" on success / raise on error
+        # will return "None" on success, raise on error/cancellation
         await interact(
-            # TODO: disable button & add cancellation
-            confirm_action(
+            show_info(
                 title=TR.backup__title_create_wallet_backup,
-                action=description,
-                description=None,
-                verb=button,
-                cancel=False,
+                description=description,
+                button=(button, False),
                 external_menu=True,
             ),
             br_name="backup_write",

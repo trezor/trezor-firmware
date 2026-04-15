@@ -162,6 +162,7 @@ if utils.USE_N4W1:
         from trezor.ui.layouts.common import interact
         from trezorui_api import show_info
 
+        # will return "None" on success, raise on error/cancellation
         class _LayoutRead(Layout):
             def create_tasks(self) -> Iterator[Task]:
                 """Run N4W1 write operation in the backgroud of this layout."""
@@ -178,11 +179,11 @@ if utils.USE_N4W1:
                 yield _read_task()
 
         result = await interact(
-            # TODO: disable button & add cancellation
             show_info(
                 title=TR.recovery__title,
                 description=description,
                 button=(button, False),
+                external_menu=True,
             ),
             br_name="backup_read",
             confirm_only=True,
@@ -190,6 +191,7 @@ if utils.USE_N4W1:
         )
 
         # TODO: animate during read?
+        # TODO: run mnemonic checks during animation
         # TODO: show empty tag warning
         if result is None or isinstance(result, bytes):
             return result
