@@ -52,11 +52,6 @@ pub fn get_and_clear() -> [WordType; NWORDS] {
     snapshot
 }
 
-/// Clear the log without returning it.
-pub fn clear() {
-    *STRING_LOG.write() = [0; NWORDS];
-}
-
 /// Iterate over the set bits in a snapshot and call `f` with the name of each
 /// hit `TranslatedString`.  Only available when `debug` feature is also active
 /// (required for `uDebug` on the enum).
