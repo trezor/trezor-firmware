@@ -133,6 +133,7 @@ def filter_by_features(values: list[str], keep_debug: bool, keep_altcoin: bool) 
     }
 }
 
+#[cfg(feature = "ui_string_collector")]
 impl TranslatedString {
     /// Total number of discriminant slots (= max discriminant + 1).
     /// The bitmap in `collector.rs` must cover at least this many bits.
