@@ -130,6 +130,11 @@ version = "0.9.2"
 features = ["ufmt"]
 default-features = false
 
+[dependencies.log]
+version = "0.4.29"
+# Disable logging for release profile.
+features = ["max_level_trace", "release_max_level_off"]
+
 [dependencies.num-traits]
 version = "0.2.19"
 default-features = false

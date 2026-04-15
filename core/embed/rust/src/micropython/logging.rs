@@ -5,6 +5,7 @@ use crate::{
     error::Error,
     micropython::{buffer::StrBuffer, util},
     trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel},
+    util::logger::init_rust_logging,
 };
 
 #[cfg(feature = "dbg_console")]
@@ -75,6 +76,20 @@ extern "C" fn py_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
     Obj::const_none()
 }
 
+extern "C" fn py_init(level: Obj) -> Obj {
+    #[cfg(feature = "dbg_console")]
+    {
+        let block = || {
+            init_rust_logging(level.try_into()?);
+            Ok(())
+        };
+        unsafe {
+            util::try_or_raise(block);
+        }
+    }
+    Obj::const_none()
+}
+
 #[no_mangle]
 #[rustfmt::skip]
 pub static mp_module_trezorlog: Module = obj_module! {
@@ -97,4 +112,10 @@ pub static mp_module_trezorlog: Module = obj_module! {
     /// def error(name: str, msg: str, *args: Any, *, iface: WireInterface | None = None) -> None:
     ///     ...
     Qstr::MP_QSTR_error => obj_fn_kw!(2, py_error).as_obj(),
+
+    /// def init(level: int) -> None:
+    ///     """
+    ///     Initialize Rust logging connector.
+    ///     """
+    Qstr::MP_QSTR_init => obj_fn_1!(py_init).as_obj(),
 };
