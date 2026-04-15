@@ -596,9 +596,9 @@ def pytest_configure(config: "Config") -> None:
     IdMaker._idval_from_value = idval_from_value
 
     global _string_log_output
-    raw = config.getoption("--string-log", default=None)
-    if raw:
-        _string_log_output = Path(raw)
+    path = config.getoption("--string-log", default=None)
+    if path:
+        _string_log_output = Path(path)
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
