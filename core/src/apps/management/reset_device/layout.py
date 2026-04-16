@@ -178,17 +178,20 @@ class _DisplayBackup:
 
         # backup all shares
         for share in iter_shares:
-            while True:
-                # display paginated share on the screen
-                await show_share_words(
-                    share_words=share.words,
-                    share_index=share.index,
-                    group_index=share.group_index,
-                )
+            await self._backup_share(share)
 
-                # make the user confirm words from the share
-                if await _share_words_confirmed(share):
-                    break  # this share is confirmed, go to next one
+    async def _backup_share(self, share: ShareInfo) -> None:
+        while True:
+            # display paginated share on the screen
+            await show_share_words(
+                share_words=share.words,
+                share_index=share.index,
+                group_index=share.group_index,
+            )
+
+            # make the user confirm words from the share
+            if await _share_words_confirmed(share):
+                break  # this share is confirmed, go to next one
 
 
 async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
