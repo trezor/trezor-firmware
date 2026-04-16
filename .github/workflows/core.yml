@@ -127,6 +127,7 @@ jobs:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
+      N4W1: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       QUIET_MODE: 1
