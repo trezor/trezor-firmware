@@ -1599,6 +1599,8 @@ pub enum TranslatedString {
     cardano__credential_intro_template = 1207,  // "{0} credential is a {1}"
     #[cfg(feature = "universal_fw")]
     cardano__key_path = 1208,  // "Key path"
+    backup__type_n4w1 = 1209,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "N4W1 backup"}
+    backup__type_wordlist = 1210,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Wordlist backup"}
 }
 
 impl TranslatedString {
@@ -2815,6 +2817,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4029,6 +4033,8 @@ impl TranslatedString {
                 20178,
                 20201,
                 20209,
+                20209,
+                20209,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5242,6 +5248,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6456,6 +6464,8 @@ impl TranslatedString {
                 20178,
                 20201,
                 20209,
+                20209,
+                20209,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7669,6 +7679,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8883,6 +8895,8 @@ impl TranslatedString {
                 20178,
                 20201,
                 20209,
+                20209,
+                20209,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10096,6 +10110,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11309,6 +11325,8 @@ impl TranslatedString {
                 20166,
                 20178,
                 20201,
+                20209,
+                20209,
                 20209,
             ];
 
@@ -12524,6 +12542,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13738,6 +13758,8 @@ impl TranslatedString {
                 18203,
                 18226,
                 18234,
+                18234,
+                18234,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14951,6 +14973,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16165,6 +16189,8 @@ impl TranslatedString {
                 18203,
                 18226,
                 18234,
+                18234,
+                18234,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17378,6 +17404,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18592,6 +18620,8 @@ impl TranslatedString {
                 18203,
                 18226,
                 18234,
+                18234,
+                18234,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19805,6 +19835,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21018,6 +21050,8 @@ impl TranslatedString {
                 18191,
                 18203,
                 18226,
+                18234,
+                18234,
                 18234,
             ];
 
@@ -22233,6 +22267,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23447,6 +23483,8 @@ impl TranslatedString {
                 19480,
                 19503,
                 19511,
+                19511,
+                19511,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24660,6 +24698,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25874,6 +25914,8 @@ impl TranslatedString {
                 19480,
                 19503,
                 19511,
+                19511,
+                19511,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27087,6 +27129,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28301,6 +28345,8 @@ impl TranslatedString {
                 19480,
                 19503,
                 19511,
+                19511,
+                19511,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29514,6 +29560,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30727,6 +30775,8 @@ impl TranslatedString {
                 19468,
                 19480,
                 19503,
+                19511,
+                19511,
                 19511,
             ];
 
@@ -31942,6 +31992,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "N4W1 backup",
+                "Wordlist backup",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33156,6 +33208,8 @@ impl TranslatedString {
                 20479,
                 20502,
                 20510,
+                20521,
+                20536,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34369,6 +34423,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "N4W1 backup",
+                "Wordlist backup",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35583,6 +35639,8 @@ impl TranslatedString {
                 20479,
                 20502,
                 20510,
+                20521,
+                20536,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -36796,6 +36854,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "N4W1 backup",
+                "Wordlist backup",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38010,6 +38070,8 @@ impl TranslatedString {
                 20479,
                 20502,
                 20510,
+                20521,
+                20536,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39223,6 +39285,8 @@ impl TranslatedString {
                 "Your address",
                 "{0} credential is a {1}",
                 "Key path",
+                "N4W1 backup",
+                "Wordlist backup",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40437,6 +40501,8 @@ impl TranslatedString {
                 20479,
                 20502,
                 20510,
+                20521,
+                20536,
             ];
 
         }
@@ -40492,6 +40558,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_backup__title_backup_wallet, Self::backup__title_backup_wallet),
         (Qstr::MP_QSTR_backup__title_create_wallet_backup, Self::backup__title_create_wallet_backup),
         (Qstr::MP_QSTR_backup__title_skip, Self::backup__title_skip),
+        (Qstr::MP_QSTR_backup__type_n4w1, Self::backup__type_n4w1),
+        (Qstr::MP_QSTR_backup__type_wordlist, Self::backup__type_wordlist),
         (Qstr::MP_QSTR_backup__want_to_skip, Self::backup__want_to_skip),
         (Qstr::MP_QSTR_bitcoin__commitment_data, Self::bitcoin__commitment_data),
         (Qstr::MP_QSTR_bitcoin__confirm_locktime, Self::bitcoin__confirm_locktime),
