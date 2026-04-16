@@ -8,9 +8,7 @@ cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(NONE)
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/boards/pm_static_${BOARD}.yml)
-  set(PM_STATIC_YML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/boards/pm_static_${BOARD}.yml)
-endif()
+
 
 add_compile_definitions(__BSD_VISIBLE=1)
 
