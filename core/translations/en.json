@@ -110,6 +110,18 @@
     },
     "backup__title_create_wallet_backup": "Create wallet backup",
     "backup__title_skip": "Skip backup",
+    "backup__type_n4w1": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "N4W1 backup"
+    },
+    "backup__type_wordlist": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Wordlist backup"
+    },
     "backup__want_to_skip": {
       "Bolt": "Are you sure you want to skip the backup?",
       "Caesar": "Are you sure you want to skip the backup?",

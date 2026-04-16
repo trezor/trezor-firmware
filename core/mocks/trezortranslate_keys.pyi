@@ -48,6 +48,8 @@ class TR:
     backup__title_backup_wallet: str = "Back up wallet"
     backup__title_create_wallet_backup: str = "Create wallet backup"
     backup__title_skip: str = "Skip backup"
+    backup__type_n4w1: str = "N4W1 backup"
+    backup__type_wordlist: str = "Wordlist backup"
     backup__want_to_skip: str = "Are you sure you want to skip the backup?"
     bitcoin__commitment_data: str = "Commitment data"
     bitcoin__confirm_locktime: str = "Confirm Locktime"
