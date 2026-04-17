@@ -184,10 +184,12 @@ def _get_port(worker_id: int) -> int:
 
 
 def _get_tropic_model_configfile(tag: str | None) -> Path:
-    if tag is not None and tag.startswith("v") and len(tag.split(".")) == 3:
-        version_tuple = tuple(int(i) for i in tag[1:].split("."))
-        if version_tuple <= TROPIC_OLD_CONFIG_UNTIL_VERSION:
-            return TROPIC_MODEL_CONFIGFILE_OLD
+    if tag is not None and tag.startswith("v"):
+        tag_version = tag[1:].partition("-")[0]
+        if len(tag_version.split(".")) == 3:
+            version_tuple = tuple(int(i) for i in tag_version.split("."))
+            if version_tuple <= TROPIC_OLD_CONFIG_UNTIL_VERSION:
+                return TROPIC_MODEL_CONFIGFILE_OLD
     return TROPIC_MODEL_CONFIGFILE
 
 
