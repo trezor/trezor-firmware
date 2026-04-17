@@ -79,6 +79,10 @@ class ApduRequest:
     data: bytes
     le: int | None  # None is interpreted as not expecting any response data
 
+    @property
+    def lc(self) -> int:
+        return len(self.data)
+
     @classmethod
     def from_header(
         cls, header: ApduHeader, data: bytes = b"", le: int | None = None
@@ -194,7 +198,7 @@ def encode_extended_le(raw: bytearray, le: int) -> None:
 
 
 def encode_request(request: ApduRequest) -> bytes:
-    use_extended = len(request.data) > SHORT_LC_MAX or (
+    use_extended = request.lc > SHORT_LC_MAX or (
         request.le is not None and request.le > SHORT_LE_MAX
     )
 
@@ -202,14 +206,14 @@ def encode_request(request: ApduRequest) -> bytes:
     encode_header(raw, request)
     if use_extended:
         raw.extend(EXTENDED_LENGTH_MARKER)
-        if len(request.data) > 0:
-            encode_extended_lc(raw, len(request.data))
+        if request.lc > 0:
+            encode_extended_lc(raw, request.lc)
             raw.extend(request.data)
         if request.le is not None:
             encode_extended_le(raw, request.le)
     else:
-        if len(request.data) > 0:
-            encode_short_lc(raw, len(request.data))
+        if request.lc > 0:
+            encode_short_lc(raw, request.lc)
             raw.extend(request.data)
         if request.le is not None:
             encode_short_le(raw, request.le)
