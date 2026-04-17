@@ -537,7 +537,13 @@ upload: ## upload firmware using trezorctl
 upload_prodtest: ## upload prodtest using trezorctl
 	trezorctl firmware_update -s -f $(PRODTEST_BUILD_DIR)/prodtest.bin
 
-coverage:  ## generate coverage report
+# Skip the frozen-build rebuild when preprocessed `.i` files are already
+# present (e.g. downloaded as a CI artifact); otherwise build first so local
+# `make coverage` is self-contained.
+COVERAGE_I_SENTINEL := $(UNIX_BUILD_DIR)/src/trezor/utils.i
+COVERAGE_BUILD_DEP  := $(if $(wildcard $(COVERAGE_I_SENTINEL)),,build_unix_frozen)
+
+coverage: $(COVERAGE_BUILD_DEP) ## generate coverage report
 	./tools/coverage-report
 	./tools/coverage-annotate.py $(shell find . -name '.coverage*.json*') > htmlcov/hits.md
 
