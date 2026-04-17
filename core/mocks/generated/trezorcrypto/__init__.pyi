@@ -77,9 +77,10 @@ class aesgcm:
         finish().
         """
 
-    def finish(self) -> bytes:
+    def finish(self, expected_tag: AnyBytes | None = None) -> bytes:
         """
-        Compute GCM authentication tag.
+        Compute GCM authentication tag. The `expected_tag` is required when
+        decrypting.
         """
 
 

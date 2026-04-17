@@ -20,6 +20,7 @@
 #include "py/objstr.h"
 
 #include "aes/aesgcm.h"
+#include "consteq.h"
 #include "memzero.h"
 
 /// package: trezorcrypto.__init__
@@ -53,7 +54,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_make_new(const mp_obj_type_t *type,
   mp_get_buffer_raise(args[1], &iv, MP_BUFFER_READ);
   if (key.len != 16 && key.len != 24 && key.len != 32) {
     mp_raise_ValueError(MP_ERROR_TEXT(
-        "Invalid length of key (has to be 128, 192 or 256 bits)"));
+        "Invalid length of key (has to be 128, 192 or 256 bits)."));
   }
 
   mp_obj_AesGcm_t *o = m_new_obj_with_finaliser(mp_obj_AesGcm_t);
@@ -202,16 +203,24 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_auth(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_auth_obj,
                                  mod_trezorcrypto_AesGcm_auth);
 
-/// def finish(self) -> bytes:
+/// def finish(self, expected_tag: AnyBytes | None = None) -> bytes:
 ///     """
-///     Compute GCM authentication tag.
+///     Compute GCM authentication tag. The `expected_tag` is required when
+///     decrypting.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_AesGcm_finish(mp_obj_t self) {
-  mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
+STATIC mp_obj_t mod_trezorcrypto_AesGcm_finish(size_t n_args,
+                                               const mp_obj_t *args) {
+  mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(args[0]);
   if (o->state != STATE_INIT && o->state != STATE_ENCRYPTING &&
       o->state != STATE_DECRYPTING) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
+  if (n_args == 1 && o->state == STATE_DECRYPTING) {
+    mp_raise_msg(
+        &mp_type_RuntimeError,
+        MP_ERROR_TEXT("Argument `expected_tag` is required when decrypting."));
+  }
+
   o->state = STATE_FINISHED;
   vstr_t tag = {0};
   vstr_init_len(&tag, 16);
@@ -220,10 +229,24 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_finish(mp_obj_t self) {
     o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
+  if (n_args == 2) {
+    mp_buffer_info_t expected_tag = {0};
+    mp_get_buffer_raise(args[1], &expected_tag, MP_BUFFER_READ);
+    if (expected_tag.len != 16) {
+      mp_raise_ValueError(
+          MP_ERROR_TEXT("Invalid length of the tag. It has to be 16 bytes."));
+    }
+    if (!consteq((uint8_t *)tag.buf, tag.len, (uint8_t *)expected_tag.buf,
+                 expected_tag.len)) {
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Authentication failed."));
+    }
+  }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &tag);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_AesGcm_finish_obj,
-                                 mod_trezorcrypto_AesGcm_finish);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_AesGcm_finish_obj,
+                                           1, 2,
+                                           mod_trezorcrypto_AesGcm_finish);
 
 STATIC mp_obj_t mod_trezorcrypto_AesGcm___del__(mp_obj_t self) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
