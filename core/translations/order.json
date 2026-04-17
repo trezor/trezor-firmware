@@ -1215,5 +1215,7 @@
   "1213": "ethereum__vault_claim_to",
   "1214": "ethereum__vault_redeem_to",
   "1215": "ethereum__withdraw_amount",
-  "1216": "ethereum__withdraw_to"
+  "1216": "ethereum__withdraw_to",
+  "1217": "ethereum__subtitle_input_data_bytes",
+  "1218": "ethereum__title_input_data_bytes"
 }

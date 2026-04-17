@@ -832,6 +832,12 @@
       "Eckhart": "Validar datos"
     },
     "ethereum__title_input_data": "Datos de entrada",
+    "ethereum__title_input_data_bytes": {
+      "Bolt": "Datos de entrada:\n{0} / {1} bytes",
+      "Caesar": "Datos de entrada: {0} / {1} bytes",
+      "Delizia": "Datos de entrada",
+      "Eckhart": "Datos de entrada:\n{0} / {1} bytes"
+    },
     "ethereum__title_signing_address": "Dirección firma",
     "ethereum__token_contract": "Contrato de token",
     "ethereum__units_template": "{0} unidades",

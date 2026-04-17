@@ -1269,6 +1269,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__staking_stake_intro;
   MP_QSTR_ethereum__staking_unstake;
   MP_QSTR_ethereum__staking_unstake_intro;
+  MP_QSTR_ethereum__subtitle_input_data_bytes;
   MP_QSTR_ethereum__title_all_input_data_template;
   MP_QSTR_ethereum__title_confirm_domain;
   MP_QSTR_ethereum__title_confirm_message;
@@ -1276,6 +1277,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__title_confirm_struct;
   MP_QSTR_ethereum__title_confirm_typed_data;
   MP_QSTR_ethereum__title_input_data;
+  MP_QSTR_ethereum__title_input_data_bytes;
   MP_QSTR_ethereum__title_signing_address;
   MP_QSTR_ethereum__title_token_contract;
   MP_QSTR_ethereum__token_contract;
