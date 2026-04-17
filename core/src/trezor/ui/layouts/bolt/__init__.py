@@ -1204,7 +1204,7 @@ if not utils.BITCOIN_ONLY:
                 token_address,
                 None,
                 verb=TR.buttons__continue,
-                subtitle=TR.ethereum__token_contract,
+                subtitle=TR.ethereum__title_token_contract,
                 br_name="confirm_ethereum_approve",
                 chunkify=chunkify,
             )
