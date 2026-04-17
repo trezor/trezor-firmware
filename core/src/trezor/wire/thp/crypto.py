@@ -53,8 +53,11 @@ def dec(
     aes_ctx = aesgcm(key, iv)
     aes_ctx.auth(auth_data)
     aes_ctx.decrypt_in_place(buffer)
-    computed_tag = aes_ctx.finish()
-    return utils.consteq(computed_tag, tag)
+    try:
+        aes_ctx.finish(tag)
+    except RuntimeError:
+        return False
+    return True
 
 
 PROTOCOL_NAME = b"Noise_XX_25519_AESGCM_SHA256\x00\x00\x00\x00"
@@ -157,8 +160,9 @@ class Handshake:
         host_static_public_key = memoryview(encrypted_host_static_public_key)[
             :PUBKEY_LENGTH
         ]
-        tag = aes_ctx.finish()
-        if not utils.consteq(tag, encrypted_host_static_public_key[-16:]):
+        try:
+            aes_ctx.finish(encrypted_host_static_public_key[-16:])
+        except RuntimeError:
             raise ThpDecryptionError()
 
         self.ck, self.k = _hkdf(
@@ -175,8 +179,9 @@ class Handshake:
             log.debug(
                 __name__, "th2 - dec (key: %s, nonce: %d)", hexlify_if_bytes(self.k), 0
             )
-        tag = aes_ctx.finish()
-        if not utils.consteq(tag, encrypted_payload[-16:]):
+        try:
+            aes_ctx.finish(encrypted_payload[-16:])
+        except RuntimeError:
             raise ThpDecryptionError()
 
         self.key_receive, self.key_send = _hkdf(self.ck, b"")
