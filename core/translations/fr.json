@@ -1002,6 +1002,12 @@
       "Eckhart": "Conf. données"
     },
     "ethereum__title_input_data": "Données entrées",
+    "ethereum__title_input_data_bytes": {
+      "Bolt": "Données entrées:\n{0} / {1} bytes",
+      "Caesar": "Données entrées: {0} / {1} bytes",
+      "Delizia": "Données entrées",
+      "Eckhart": "Données entrées:\n{0} / {1} bytes"
+    },
     "ethereum__title_signing_address": "Adresse de signature",
     "ethereum__token_contract": {
       "Bolt": "Contrat du jeton",

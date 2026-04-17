@@ -1609,6 +1609,10 @@ pub enum TranslatedString {
     ethereum__withdraw_amount = 1215,  // "Withdraw amount"
     #[cfg(feature = "universal_fw")]
     ethereum__withdraw_to = 1216,  // "Withdraw to"
+    #[cfg(feature = "universal_fw")]
+    ethereum__subtitle_input_data_bytes = 1217,  // {"Bolt": "", "Caesar": "", "Delizia": "{0} / {1} bytes", "Eckhart": ""}
+    #[cfg(feature = "universal_fw")]
+    ethereum__title_input_data_bytes = 1218,  // {"Bolt": "Input data:\n{0} / {1} bytes", "Caesar": "Input data: {0} / {1} bytes", "Delizia": "Input data", "Eckhart": "Input data:\n{0} / {1} bytes"}
 }
 
 impl TranslatedString {
@@ -2833,6 +2837,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data:\n{0} / {1} bytes",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4055,6 +4061,8 @@ impl TranslatedString {
                 20204,
                 20219,
                 20230,
+                20230,
+                20257,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5276,6 +5284,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data:\n{0} / {1} bytes",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6498,6 +6508,8 @@ impl TranslatedString {
                 20204,
                 20219,
                 20230,
+                20230,
+                20257,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7719,6 +7731,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data:\n{0} / {1} bytes",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8941,6 +8955,8 @@ impl TranslatedString {
                 20204,
                 20219,
                 20230,
+                20230,
+                20257,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10162,6 +10178,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data:\n{0} / {1} bytes",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11384,6 +11402,8 @@ impl TranslatedString {
                 20204,
                 20219,
                 20230,
+                20230,
+                20257,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12606,6 +12626,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data: {0} / {1} bytes",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13828,6 +13850,8 @@ impl TranslatedString {
                 18229,
                 18244,
                 18255,
+                18255,
+                18282,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15049,6 +15073,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data: {0} / {1} bytes",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16271,6 +16297,8 @@ impl TranslatedString {
                 18229,
                 18244,
                 18255,
+                18255,
+                18282,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17492,6 +17520,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data: {0} / {1} bytes",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18714,6 +18744,8 @@ impl TranslatedString {
                 18229,
                 18244,
                 18255,
+                18255,
+                18282,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19935,6 +19967,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data: {0} / {1} bytes",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21157,6 +21191,8 @@ impl TranslatedString {
                 18229,
                 18244,
                 18255,
+                18255,
+                18282,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22379,6 +22415,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "{0} / {1} bytes",
+                "Input data",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23601,6 +23639,8 @@ impl TranslatedString {
                 19509,
                 19524,
                 19535,
+                19550,
+                19560,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24822,6 +24862,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "{0} / {1} bytes",
+                "Input data",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26044,6 +26086,8 @@ impl TranslatedString {
                 19509,
                 19524,
                 19535,
+                19550,
+                19560,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27265,6 +27309,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "{0} / {1} bytes",
+                "Input data",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28487,6 +28533,8 @@ impl TranslatedString {
                 19509,
                 19524,
                 19535,
+                19550,
+                19560,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29708,6 +29756,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "{0} / {1} bytes",
+                "Input data",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30930,6 +30980,8 @@ impl TranslatedString {
                 19509,
                 19524,
                 19535,
+                19550,
+                19560,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32152,6 +32204,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data:\n{0} / {1} bytes",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33374,6 +33428,8 @@ impl TranslatedString {
                 20533,
                 20548,
                 20559,
+                20559,
+                20586,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34595,6 +34651,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data:\n{0} / {1} bytes",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35817,6 +35875,8 @@ impl TranslatedString {
                 20533,
                 20548,
                 20559,
+                20559,
+                20586,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37038,6 +37098,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data:\n{0} / {1} bytes",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38260,6 +38322,8 @@ impl TranslatedString {
                 20533,
                 20548,
                 20559,
+                20559,
+                20586,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39481,6 +39545,8 @@ impl TranslatedString {
                 "Redeem to",
                 "Withdraw amount",
                 "Withdraw to",
+                "",
+                "Input data:\n{0} / {1} bytes",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40703,6 +40769,8 @@ impl TranslatedString {
                 20533,
                 20548,
                 20559,
+                20559,
+                20586,
             ];
 
         }
@@ -41282,6 +41350,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__staking_unstake_intro, Self::ethereum__staking_unstake_intro),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__subtitle_input_data_bytes, Self::ethereum__subtitle_input_data_bytes),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_all_input_data_template, Self::ethereum__title_all_input_data_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_confirm_domain, Self::ethereum__title_confirm_domain),
@@ -41295,6 +41365,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__title_confirm_typed_data, Self::ethereum__title_confirm_typed_data),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_input_data, Self::ethereum__title_input_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_input_data_bytes, Self::ethereum__title_input_data_bytes),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_signing_address, Self::ethereum__title_signing_address),
         #[cfg(feature = "universal_fw")]

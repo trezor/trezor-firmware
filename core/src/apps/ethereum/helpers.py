@@ -285,7 +285,6 @@ def get_data_confirmer(total_len: int) -> ConfirmDataFn:
         while True:
             assert 0 <= confirmed_len <= total_len
             prefix_len = await confirm_blob_prefix(
-                title=TR.ethereum__title_input_data,
                 data=chunk,
                 total_len=total_len,
                 confirmed_len=confirmed_len,

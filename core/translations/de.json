@@ -1007,6 +1007,12 @@
     "ethereum__title_confirm_struct": "Struktur bestätigen",
     "ethereum__title_confirm_typed_data": "Daten bestätigen",
     "ethereum__title_input_data": "Eingabe-Daten",
+    "ethereum__title_input_data_bytes": {
+      "Bolt": "Eingabe-Daten:\n{0} / {1} bytes",
+      "Caesar": "Eingabe-Daten: {0} / {1} bytes",
+      "Delizia": "Eingabe-Daten",
+      "Eckhart": "Eingabe-Daten:\n{0} / {1} bytes"
+    },
     "ethereum__title_signing_address": "Signieradresse",
     "ethereum__token_contract": "Tokenvertrag",
     "ethereum__units_template": "{0} Einheiten",

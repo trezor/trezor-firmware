@@ -837,6 +837,12 @@
       "Eckhart": "Conf. dados inseridos"
     },
     "ethereum__title_input_data": "Dados de entrada",
+    "ethereum__title_input_data_bytes": {
+      "Bolt": "Dados de entrada:\n{0} / {1} bytes",
+      "Caesar": "Dados de entrada: {0} / {1} bytes",
+      "Delizia": "Dados de entrada",
+      "Eckhart": "Dados de entrada:\n{0} / {1} bytes"
+    },
     "ethereum__title_signing_address": "End. signatário",
     "ethereum__token_contract": {
       "Bolt": "Contrato de token",

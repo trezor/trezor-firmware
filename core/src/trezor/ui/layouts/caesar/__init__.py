@@ -753,36 +753,6 @@ async def confirm_blob_intro(
     return False
 
 
-async def confirm_blob_prefix(
-    title: str,
-    data: memoryview,
-    *,
-    total_len: int,
-    confirmed_len: int,
-    br_name: str,
-    br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> int | None:
-    """
-    Returns the number of bytes confirmed, or `None` if confirmation should be skipped.
-    """
-    prefix = data[: 4 * 9]  # 4 rows x 18 hex digits
-    confirmed_len += len(prefix)
-
-    button_text = DOWN_ARROW if confirmed_len < total_len else ""
-
-    show_more = await should_show_more(
-        title=f"{title}: {confirmed_len} / {total_len} bytes",
-        para=[(utils.hexlify_if_bytes(prefix), True)],
-        button_text=button_text,  # will return True
-        confirm=TR.words__confirm_all,  # will return False
-        br_name=br_name,
-        br_code=br_code,
-    )
-    if show_more:
-        return len(prefix)
-    return None
-
-
 def confirm_blob(
     br_name: str,
     title: str,
@@ -1100,6 +1070,34 @@ async def confirm_trade(
 
 
 if not utils.BITCOIN_ONLY:
+
+    async def confirm_blob_prefix(
+        data: memoryview,
+        *,
+        total_len: int,
+        confirmed_len: int,
+        br_name: str,
+        br_code: ButtonRequestType = BR_CODE_OTHER,
+    ) -> int | None:
+        """
+        Returns the number of bytes confirmed, or `None` if confirmation should be skipped.
+        """
+        prefix = data[: 4 * 9]  # 4 rows x 18 hex digits
+        confirmed_len += len(prefix)
+
+        button_text = DOWN_ARROW if confirmed_len < total_len else ""
+
+        show_more = await should_show_more(
+            title=TR.ethereum__title_input_data_bytes.format(confirmed_len, total_len),
+            para=[(utils.hexlify_if_bytes(prefix), True)],
+            button_text=button_text,  # will return True
+            confirm=TR.words__confirm_all,  # will return False
+            br_name=br_name,
+            br_code=br_code,
+        )
+        if show_more:
+            return len(prefix)
+        return None
 
     def confirm_ethereum_unknown_contract_warning(
         _title: str | None,
