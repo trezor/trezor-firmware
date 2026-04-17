@@ -2,6 +2,9 @@ import pytest
 from card import Card
 from card_inner import (
     MAX_PIN_ATTEMPTS,
+    SEED_MAX_SIZE_BYTES,
+    SEED_METADATA_SIZE_BYTES,
+    InputTooLongError,
     InvalidPinError,
     NotAuthenticatedError,
     Pin,
@@ -117,3 +120,18 @@ def test_card() -> None:
     # Card is wiped after exceeding pin attempts
     with session(card, reader_private) as reader:
         assert reader.read_pin_counter() == MAX_PIN_ATTEMPTS
+
+    # Test long seed
+    with session(card, reader_private) as reader:
+        reader.wipe()
+        reader.authenticate(empty_pin)
+        with pytest.raises(InputTooLongError):
+            reader.write_seed(b"x" * (SEED_MAX_SIZE_BYTES + 1))
+        reader.write_seed(b"x" * SEED_MAX_SIZE_BYTES)
+
+    # Test long seed metadata
+    with session(card, reader_private) as reader:
+        reader.authenticate(empty_pin)
+        with pytest.raises(InputTooLongError):
+            reader.write_metadata(b"x" * (SEED_METADATA_SIZE_BYTES + 1))
+        reader.write_metadata(b"x" * SEED_METADATA_SIZE_BYTES)

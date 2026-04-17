@@ -53,6 +53,10 @@ class InvalidPinError(NfcBackupModelError):
     pass
 
 
+class InputTooLongError(NfcBackupModelError):
+    pass
+
+
 @dataclass
 class Storage:
     @contextmanager
@@ -337,6 +341,9 @@ class CardInner:
             if self.data_encryption_key is None:
                 raise NotAuthenticatedError()
 
+            if len(seed_metadata) > SEED_METADATA_SIZE_BYTES:
+                raise InputTooLongError()
+
             with self.storage.atomic_session():
                 self.storage.seed_metadata = seed_metadata
 
@@ -346,6 +353,9 @@ class CardInner:
 
             if self.data_encryption_key is None:
                 raise NotAuthenticatedError()
+
+            if len(seed) > SEED_MAX_SIZE_BYTES:
+                raise InputTooLongError()
 
             nonce = random_bytes(AEAD_NONCE_SIZE_BYTES)
             encrypted_seed = nonce + aead_encrypt(self.data_encryption_key, nonce, seed)
