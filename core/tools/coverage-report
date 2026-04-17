@@ -21,8 +21,17 @@ src/apps/common/coininfo.py,\
 src/trezor/messages.py,\
 src/trezor/enums/__init__.py"
 
+RCFILE=".coveragerc"
+if [ -n "${TREZOR_MODEL}" ]; then
+  # Generate model-specific .coveragerc.${TREZOR_MODEL}
+  RCFILE=".coveragerc.${TREZOR_MODEL}"
+  echo "Generating ${RCFILE} for model ${TREZOR_MODEL}"
+  python3 ./tools/generate_coveragerc.py "${TREZOR_MODEL}" || exit 1
+fi
+
 # Uses core/.coveragerc configuration file
 coverage html \
+  --rcfile="${RCFILE}" \
   --omit="$EXCLUDES" \
   --fail-under=${COVERAGE_THRESHOLD}
 
