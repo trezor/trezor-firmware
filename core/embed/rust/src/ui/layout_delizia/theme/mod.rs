@@ -42,6 +42,7 @@ pub const GREEN_LIME: Color = Color::rgb(0x9B, 0xE8, 0x87);
 pub const ORANGE_DARK: Color = Color::rgb(0x18, 0x0C, 0x0A);
 pub const ORANGE_DIMMED: Color = Color::rgb(0x9E, 0x57, 0x42);
 pub const ORANGE_LIGHT: Color = Color::rgb(0xFF, 0x8D, 0x6A); // cancel button
+pub const YELLOW: Color = Color::rgb(0xFF, 0xE4, 0x58); // host_name and app_name emphasis
 
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);

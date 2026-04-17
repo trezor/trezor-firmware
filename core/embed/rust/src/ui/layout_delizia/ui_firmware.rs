@@ -33,6 +33,8 @@ use crate::{
         },
         ModelUI,
     },
+    util::interpolate,
+
 };
 use heapless::Vec;
 
@@ -944,28 +946,55 @@ impl FirmwareUI for UIDelizia {
         description: TString<'static>,
         code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Self::confirm_action(
-            title,
-            Some(code),
-            Some(description),
-            None,
-            None,
-            true,
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-            false,
-        )
+        let style = theme::TEXT_NORMAL;
+        let mut ops = OpTextLayout::new(style);
+        ops.add_alignment(geometry::Alignment::Center)
+            .add_text_with_font(code, fonts::FONT_MONO)
+            .add_alignment(geometry::Alignment::Start)
+            .add_newline()
+            .add_newline()
+            .add_text_with_font(description, style.text_font);
+
+        let flow = flow::new_confirm_action_simple(
+            FormattedText::new(ops).vertically_centered(),
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+            ConfirmActionStrings::new(title, None, None, Some(title)),
+            ConfirmActionOptions::new(),
+        )?;
+        Ok(flow)
     }
 
     fn confirm_thp_pairing(
-        _title: TString<'static>,
-        _description: (StrBuffer, Obj),
+        title: TString<'static>,
+        description: (StrBuffer, Obj),
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+        let (format, args_obj) = description;
+        let args: heapless::Vec<TString<'static>, 2> = util::iter_into_vec(args_obj)?;
+        let style = theme::TEXT_NORMAL;
+        let mut ops = OpTextLayout::new(style);
+        for part in crate::util::interpolate::parse(format) {
+            match part {
+                interpolate::Item::Text(s) => {
+                    ops.add_text_with_font(s, style.text_font);
+                }
+                interpolate::Item::Arg(i) => match args.get(i) {
+                    Some(&s) => {
+                        ops.add_color(theme::YELLOW);
+                        ops.add_text_with_font(s, style.text_font);
+                        ops.add_color(style.text_color);
+                    }
+                    None => return Err(Error::OutOfRange),
+                },
+            };
+        }
+
+        let flow = flow::new_confirm_action_simple(
+            FormattedText::new(ops).vertically_centered(),
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+            ConfirmActionStrings::new(title, None, None, Some(title)),
+            ConfirmActionOptions::new(),
+        )?;
+        Ok(flow)
     }
 
     fn show_info(
