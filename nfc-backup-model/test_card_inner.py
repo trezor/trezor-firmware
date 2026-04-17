@@ -3,7 +3,6 @@ from card_inner import (
     MAX_PIN_ATTEMPTS,
     CardInner,
     InvalidPinError,
-    LogRecord,
     NotAuthenticatedError,
     Pin,
     PinAttemptsExceededError,
@@ -19,8 +18,6 @@ def test_card_inner() -> None:
     card = CardInner()
 
     reader_public_key = PublicKey(b"dummy_reader_public_key")
-    note = b"dummy_note"
-
     seed = b"dummy_seed"
     metadata = b"dummy_metadata"
     pin = Pin(b"1234")
@@ -30,7 +27,7 @@ def test_card_inner() -> None:
     # Backup
     with card.powered(reader_public_key) as powered_card:
         powered_card.wipe()
-        powered_card.authenticate(empty_pin, note)
+        powered_card.authenticate(empty_pin)
         powered_card.set_pin(pin)
         powered_card.write_seed(seed)
         powered_card.write_metadata(metadata)
@@ -39,9 +36,7 @@ def test_card_inner() -> None:
     with card.powered(reader_public_key) as powered_card:
         assert powered_card.read_metadata() == metadata
         assert powered_card.read_pin_counter() == MAX_PIN_ATTEMPTS
-        assert powered_card.read_successful_access_log_record() == LogRecord(
-            reader_public_key, note
-        )
+        assert powered_card.read_successful_access_log_record() == reader_public_key
         assert (
             powered_card.read_unsuccessful_access_log_records()
             == [None] * MAX_PIN_ATTEMPTS
@@ -56,17 +51,15 @@ def test_card_inner() -> None:
     for _ in range(MAX_PIN_ATTEMPTS - 1):
         with card.powered(attacker_public_key) as powered_card:
             with pytest.raises(InvalidPinError):
-                powered_card.authenticate(empty_pin, note)
+                powered_card.authenticate(empty_pin)
 
     # Healthcheck
     with card.powered(reader_public_key) as powered_card:
         assert powered_card.read_metadata() == metadata
         assert powered_card.read_pin_counter() == 1
-        assert powered_card.read_successful_access_log_record() == LogRecord(
-            reader_public_key, note
-        )
+        assert powered_card.read_successful_access_log_record() == reader_public_key
         assert powered_card.read_unsuccessful_access_log_records() == [
-            LogRecord(attacker_public_key, note)
+            attacker_public_key
         ] * (MAX_PIN_ATTEMPTS - 1) + [None]
         assert powered_card.read_flash_bit_error_count() == 0
         assert powered_card.read_last_refresh_timestamp() == timestamp
@@ -74,15 +67,13 @@ def test_card_inner() -> None:
 
     # Recovery
     with card.powered(reader_public_key) as powered_card:
-        powered_card.authenticate(pin, note)
+        powered_card.authenticate(pin)
         assert powered_card.read_seed() == seed
 
     # Healthcheck
     with card.powered(reader_public_key) as powered_card:
         record = powered_card.read_successful_access_log_record()
-        assert record is not None
-        assert record.public_key == reader_public_key
-        assert record.note == note
+        assert record == reader_public_key
         assert (
             powered_card.read_unsuccessful_access_log_records()
             == [None] * MAX_PIN_ATTEMPTS
@@ -91,7 +82,7 @@ def test_card_inner() -> None:
     # Operations forbidden without authentication
     with card.powered() as powered_card:
         with pytest.raises(NotAuthenticatedError):
-            powered_card.authenticate(empty_pin, note)
+            powered_card.authenticate(empty_pin)
     with card.powered(reader_public_key) as powered_card:
         with pytest.raises(NotAuthenticatedError):
             powered_card.set_pin(empty_pin)
@@ -105,7 +96,7 @@ def test_card_inner() -> None:
     # Wipe and backup again
     with card.powered(reader_public_key) as powered_card:
         powered_card.wipe()
-        powered_card.authenticate(empty_pin, note)
+        powered_card.authenticate(empty_pin)
         powered_card.set_pin(pin)
         powered_card.write_seed(seed)
         powered_card.write_metadata(metadata)
@@ -114,11 +105,11 @@ def test_card_inner() -> None:
     for _ in range(MAX_PIN_ATTEMPTS - 1):
         with card.powered(attacker_public_key) as powered_card:
             with pytest.raises(InvalidPinError):
-                powered_card.authenticate(Pin(b""), note)
+                powered_card.authenticate(Pin(b""))
 
     with card.powered(attacker_public_key) as powered_card:
         with pytest.raises(PinAttemptsExceededError):
-            powered_card.authenticate(Pin(b""), note)
+            powered_card.authenticate(Pin(b""))
 
     # Card is wiped after exceeding pin attempts
     with card.powered(reader_public_key) as powered_card:

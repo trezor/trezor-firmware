@@ -167,9 +167,7 @@ class TrezorSecureChannelState(ApduState):
         match apdu_request.header:
             case commands.TREZOR_AUTHENTICATE:
                 logging.debug("command=TREZOR_AUTHENTICATE")
-                # TODO: Decide how to encode PIN and note
-                pin, note = pickle.loads(data)
-                self.powered_card.authenticate(pin, note)
+                self.powered_card.authenticate(Pin(data))
                 response_data = b""
             case commands.TREZOR_SET_PIN:
                 logging.debug("command=TREZOR_SET_PIN")

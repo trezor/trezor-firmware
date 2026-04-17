@@ -43,15 +43,6 @@ class InvalidPinError(NfcBackupModelError):
 
 
 @dataclass
-class LogRecord:
-    public_key: PublicKey
-    note: bytes
-
-    def to_bytes(self) -> bytes:
-        return self.public_key + self.note
-
-
-@dataclass
 class Storage:
     @contextmanager
     def atomic_session(self) -> Iterator[None]:
@@ -70,8 +61,8 @@ class Storage:
     pin_counter: int = MAX_PIN_ATTEMPTS
     # `pin_counter` is reduntant since
     # `pin_counter = len([r for r in unsuccessful_access_log_records if r is not None])`
-    successful_access_log_record: LogRecord | None = None
-    unsuccessful_access_log_records: list[LogRecord | None] = field(
+    successful_access_log_record: PublicKey | None = None
+    unsuccessful_access_log_records: list[PublicKey | None] = field(
         default_factory=lambda: [None] * MAX_PIN_ATTEMPTS
     )
 
@@ -232,9 +223,9 @@ class CardInner:
 
             self.authenticated = False
 
-        def authenticate(self, pin: Pin, note: bytes) -> None:
+        def authenticate(self, pin: Pin) -> None:
             logger.info("CardInner.authenticate()")
-            logger.debug(f"pin={pin!r}, note={note!r}")
+            logger.debug(f"pin={pin!r}")
 
             if self.reader_public_key is None:
                 raise NotAuthenticatedError()
@@ -252,7 +243,7 @@ class CardInner:
                 self.storage.pin_counter -= 1
                 self.storage.unsuccessful_access_log_records[
                     MAX_PIN_ATTEMPTS - self.storage.pin_counter - 1
-                ] = LogRecord(self.reader_public_key, note)
+                ] = self.reader_public_key
 
             try:
                 self.data_encryption_key = self.unwrap_data_encryption_key(
@@ -266,9 +257,7 @@ class CardInner:
                 raise InvalidPinError()
 
             with self.storage.atomic_session():
-                self.storage.successful_access_log_record = LogRecord(
-                    self.reader_public_key, note
-                )
+                self.storage.successful_access_log_record = self.reader_public_key
                 self.storage.unsuccessful_access_log_records = [None] * MAX_PIN_ATTEMPTS
                 self.storage.pin_counter = MAX_PIN_ATTEMPTS
 
@@ -294,13 +283,13 @@ class CardInner:
             logger.debug(f"pin_counter={pin_counter}")
             return pin_counter
 
-        def read_successful_access_log_record(self) -> LogRecord | None:
+        def read_successful_access_log_record(self) -> PublicKey | None:
             logger.info("CardInner.read_successful_access_log_record()")
             record = self.storage.successful_access_log_record
             logger.debug(f"record={record!r}")
             return record
 
-        def read_unsuccessful_access_log_records(self) -> list[LogRecord | None]:
+        def read_unsuccessful_access_log_records(self) -> list[PublicKey | None]:
             logger.info("CardInner.read_unsuccessful_access_log_records()")
             records = list(self.storage.unsuccessful_access_log_records)
             logger.debug(f"records={records!r}")

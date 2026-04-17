@@ -5,11 +5,11 @@ from typing import Iterator
 import commands
 from apdu import ApduHeader, ApduRequest, ApduResponse
 from card import Card
-from card_inner import LogRecord, Pin, Timestamp
+from card_inner import Pin, Timestamp
 from commands import OK
 from noise import InitiatorXXPsk3, TransportState
 
-from crypto import PrivateKey, public_key, random_bytes
+from crypto import PrivateKey, PublicKey, public_key, random_bytes
 
 
 class Reader:
@@ -86,10 +86,8 @@ class Reader:
     def _write_binary(self, data: bytes) -> None:
         self._transcieve_encrypted(commands.WRITE_BINARY, data)
 
-    def authenticate(self, pin: Pin, note: bytes) -> bytes:
-        return self._transcieve_encrypted(
-            commands.TREZOR_AUTHENTICATE, pickle.dumps((pin, note))
-        )
+    def authenticate(self, pin: Pin) -> bytes:
+        return self._transcieve_encrypted(commands.TREZOR_AUTHENTICATE, pin)
 
     def set_pin(self, pin: Pin) -> bytes:
         return self._transcieve_encrypted(commands.TREZOR_SET_PIN, bytes(pin))
@@ -105,14 +103,14 @@ class Reader:
         self._select_file(commands.PIN_COUNTER_FILE)
         return int.from_bytes(self._read_binary(), "big")
 
-    def read_successful_access_log_record(self) -> LogRecord | None:
+    def read_successful_access_log_record(self) -> PublicKey | None:
         self._select_file(commands.SUCCESSFUL_LOG_FILE)
-        result: LogRecord | None = pickle.loads(self._read_binary())
+        result: PublicKey | None = pickle.loads(self._read_binary())
         return result
 
-    def read_unsuccessful_access_log_records(self) -> list[LogRecord | None]:
+    def read_unsuccessful_access_log_records(self) -> list[PublicKey | None]:
         self._select_file(commands.UNSUCCESSFUL_LOG_FILE)
-        result: list[LogRecord | None] = pickle.loads(self._read_binary())
+        result: list[PublicKey | None] = pickle.loads(self._read_binary())
         return result
 
     def read_seed(self) -> bytes:
