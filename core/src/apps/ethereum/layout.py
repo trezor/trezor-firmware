@@ -112,7 +112,7 @@ async def require_confirm_tx(
         await require_confirm_address(
             address_bytes,
             title,
-            TR.ethereum__token_contract,
+            TR.ethereum__title_token_contract,
             TR.buttons__continue,
             "unknown_token",
             TR.ethereum__unknown_contract_address,

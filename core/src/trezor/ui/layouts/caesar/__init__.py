@@ -1175,7 +1175,7 @@ if not utils.BITCOIN_ONLY:
 
         if is_unknown_token:
             await confirm_value(
-                TR.ethereum__token_contract + " | " + TR.words__address,
+                TR.ethereum__title_token_contract,
                 token_address,
                 None,
                 verb=DOWN_ARROW,

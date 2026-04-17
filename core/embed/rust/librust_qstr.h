@@ -1274,6 +1274,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__title_confirm_typed_data;
   MP_QSTR_ethereum__title_input_data;
   MP_QSTR_ethereum__title_signing_address;
+  MP_QSTR_ethereum__title_token_contract;
   MP_QSTR_ethereum__token_contract;
   MP_QSTR_ethereum__units_template;
   MP_QSTR_ethereum__unknown_contract_address;
