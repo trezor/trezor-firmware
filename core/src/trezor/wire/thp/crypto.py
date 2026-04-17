@@ -57,21 +57,6 @@ def dec(
     return utils.consteq(computed_tag, tag)
 
 
-class BusyDecoder:
-
-    def __init__(self, key: bytes, nonce: int, auth_data: bytes = b"") -> None:
-        iv = _get_iv_from_nonce(nonce)
-        self.aes_ctx = aesgcm(key, iv)
-        self.aes_ctx.auth(auth_data)
-
-    def decrypt_part(self, part: AnyBuffer) -> None:
-        self.aes_ctx.decrypt_in_place(part)
-
-    def finish_and_check_tag(self, tag: bytes) -> bool:
-        computed_tag = self.aes_ctx.finish()
-        return utils.consteq(computed_tag, tag)
-
-
 PROTOCOL_NAME = b"Noise_XX_25519_AESGCM_SHA256\x00\x00\x00\x00"
 IV_1 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 IV_2 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
