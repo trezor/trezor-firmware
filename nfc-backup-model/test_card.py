@@ -18,7 +18,8 @@ from crypto import (
 
 def test_card() -> None:
     card_private, _ = generate_keypair()
-    card = Card(card_private)
+    certificate = b"dummy_certificate"
+    card = Card(card_private, certificate)
 
     reader_private, _ = generate_keypair()
     attacker_private, _ = generate_keypair()

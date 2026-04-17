@@ -269,18 +269,22 @@ class TrezorSecureChannelState(ApduState):
 
 
 class Card:
-    def __init__(self, static_key: PrivateKey) -> None:
+    def __init__(self, static_key: PrivateKey, certificate: bytes) -> None:
         self.card = CardInner()
         self.static_key = static_key
+        self.certificate = certificate
 
     @contextmanager
     def powered(self) -> Iterator["Card.PoweredCard"]:
-        yield Card.PoweredCard(self.card, self.static_key)
+        yield Card.PoweredCard(self.card, self.static_key, self.certificate)
 
     class PoweredCard:
-        def __init__(self, card: CardInner, static_key: PrivateKey) -> None:
+        def __init__(
+            self, card: CardInner, static_key: PrivateKey, certificate: bytes
+        ) -> None:
             self.card = card
             self.static_key = static_key
+            self.certificate = certificate
             self.state: State = IdleState()
 
         def handle_request(self, request: bytes) -> bytes:
