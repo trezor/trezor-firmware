@@ -143,7 +143,7 @@ impl<R: Role> Reassembler<R> {
         let (header, after_header) = Header::<R>::parse(input)?;
         if !header.is_continuation() {
             log::error!(
-                "[{}] Unexpected initiation packet.",
+                "[{:04x}] Unexpected initiation packet.",
                 self.header.channel_id()
             );
             return Err(Error::unexpected_input());
@@ -151,7 +151,7 @@ impl<R: Role> Reassembler<R> {
 
         if header.channel_id() != self.header.channel_id() {
             log::error!(
-                "[{}] Unexpected channel id {}.",
+                "[{:04x}] Unexpected channel id {:04x}.",
                 self.header.channel_id(),
                 header.channel_id()
             );

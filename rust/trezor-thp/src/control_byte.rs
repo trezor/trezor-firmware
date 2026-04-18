@@ -149,7 +149,7 @@ impl TryFrom<u8> for ControlByte {
             || cb.is_handshake()
             || cb.is_codec_v1();
         if !valid {
-            log::warn!("Invalid control byte {}.", byte);
+            log::warn!("Invalid control byte 0x{:x}.", byte);
             return Err(Error::malformed_data());
         }
         Ok(cb)

@@ -101,7 +101,7 @@ impl<R: Role> Header<R> {
             }
         }
         if !channel_id_valid(channel_id) {
-            log::error!("Invalid channel id {}.", channel_id);
+            log::error!("Invalid channel id {:04x}.", channel_id);
             return Err(Error::malformed_data());
         }
         if cb.is_continuation() {
@@ -132,7 +132,7 @@ impl<R: Role> Header<R> {
             return Ok((header, rest));
         }
         log::error!(
-            "Unknown header: ({}, {}, {}).",
+            "Unknown header: (0x{:x}, {:04x}, {}).",
             u8::from(cb),
             channel_id,
             payload_len
@@ -303,7 +303,7 @@ impl<R: Role> Header<R> {
 
     fn validate_channel(channel_id: u16) -> Result<u16> {
         if !channel_id_valid(channel_id) {
-            log::error!("Cannot construct: invalid channel id {}.", channel_id);
+            log::error!("Cannot construct: invalid channel id {:04x}.", channel_id);
             return Err(Error::unexpected_input());
         }
         Ok(channel_id)

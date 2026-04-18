@@ -144,7 +144,7 @@ where
             // No Header::TransportError for broadcast.
             _ => {
                 log::debug!(
-                    "Broadcast channel: ignoring packet with control byte {}.",
+                    "Broadcast channel: ignoring packet with control byte 0x{:x}.",
                     packet[0]
                 );
                 Err(Error::malformed_data())
@@ -198,7 +198,7 @@ where
             return self.handle_v1(packet_buffer);
         }
         if !channel_id_valid(channel_id) {
-            log::warn!("Invalid channel id {}.", channel_id);
+            log::warn!("Invalid channel id {:04x}.", channel_id);
             return PacketInResult::ignore(Error::malformed_data());
         }
         if channel_id != BROADCAST_CHANNEL_ID {
@@ -339,7 +339,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
                 self.state = HandshakeState::SendingCompletionResponse { pairing_state };
             }
             _ => {
-                log::error!("[{}] Unexpected handshake state.", self.channel_id());
+                log::error!("[{:04x}] Unexpected handshake state.", self.channel_id());
                 return Err(Error::unexpected_input());
             }
         }
@@ -422,7 +422,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         if !self.handshake_done() {
             return Err(Error::not_ready());
         }
-        log::debug!("Handshake complete.");
+        log::debug!("[{:04x}] Handshake complete.", self.channel_id());
         Ok(match self.state {
             HandshakeState::SendingCompletionResponse { pairing_state } => {
                 self.channel.pairing_state = pairing_state;
@@ -477,7 +477,7 @@ where
             .packet_in(packet_buffer, &mut self.internal_buffer);
         if let PacketInResult::EnlargeBuffer { buffer_size, .. } = res {
             log::error!(
-                "[{}] Payload length {} exceeds handshake limit.",
+                "[{:04x}] Payload length {} exceeds handshake limit.",
                 self.channel_id(),
                 buffer_size
             );
