@@ -276,7 +276,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                 return Ok(());
             }
         }
-        log::warn!("[{}] Unexpected ACK.", self.channel_id);
+        log::warn!("[{:04x}] Unexpected ACK.", self.channel_id);
         Err(Error::malformed_data())
     }
 
@@ -285,14 +285,18 @@ impl<R: Role, B: Backend> Channel<R, B> {
         if let Ok((header, payload)) = Reassembler::<R>::single(packet_buffer, &mut err_buf) {
             if header.is_error() {
                 if let Ok(te) = TransportError::try_from(payload) {
-                    log::error!("[{}] Peer sent an error: {}.", self.channel_id, te as u8);
+                    log::error!(
+                        "[{:04x}] Peer sent an error: {}.",
+                        self.channel_id,
+                        te as u8
+                    );
                     if !te.is_recoverable() {
                         self.state = ChannelState::Failed { error: Some(te) };
                     }
                     return Ok(te);
                 } else {
                     log::error!(
-                        "[{}] Peer sent unknown error {}.",
+                        "[{:04x}] Peer sent unknown error 0x{:x}.",
                         self.channel_id,
                         payload.first().unwrap_or(&0)
                     );
@@ -301,7 +305,10 @@ impl<R: Role, B: Backend> Channel<R, B> {
             self.state = ChannelState::Failed { error: None };
             return Err(Error::malformed_data());
         }
-        log::warn!("[{}] Peer sent an error with invalid CRC.", self.channel_id);
+        log::warn!(
+            "[{:04x}] Peer sent an error with invalid CRC.",
+            self.channel_id
+        );
         Err(Error::malformed_data())
     }
 
@@ -690,7 +697,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
 
         if !header.is_encrypted() {
             log::error!(
-                "[{}] Invalid message type, expecting EncryptedTransport.",
+                "[{:04x}] Invalid message type, expecting EncryptedTransport.",
                 self.channel_id
             );
             return Err(Error::malformed_data());
@@ -713,7 +720,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             }
         };
         if receive_buffer.len() < APP_HEADER_LEN {
-            log::error!("[{}] Incoming message too short.", self.channel_id);
+            log::error!("[{:04x}] Incoming message too short.", self.channel_id);
             // fails on the next two lines
         }
         let (session_id, rest) = receive_buffer
@@ -732,10 +739,10 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
 
     fn message_retransmit(&mut self) -> Result<()> {
         let ChannelState::Sending { fragmenter, retry } = &mut self.state else {
-            log::warn!("[{}] Nothing to retransmit.", self.channel_id);
+            log::warn!("[{:04x}] Nothing to retransmit.", self.channel_id);
             return Ok(());
         };
-        log::debug!("[{}] Retransmitting message.", self.channel_id);
+        log::debug!("[{:04x}] Retransmitting message.", self.channel_id);
         fragmenter.reset();
         *retry = retry.saturating_add(1);
         Ok(())

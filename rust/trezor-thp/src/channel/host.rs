@@ -178,7 +178,7 @@ where
             // No Header::TransportError for broadcast channel.
             _ => {
                 log::debug!(
-                    "Broadcast channel: ignoring packet with control byte {}.",
+                    "Broadcast channel: ignoring packet with control byte 0x{:x}.",
                     packet[0]
                 );
                 Err(Error::malformed_data())
@@ -215,7 +215,7 @@ where
             try_to_unlock: *try_to_unlock,
             channel_id,
         };
-        log::debug!("Got channel id {}.", channel_id);
+        log::debug!("Got channel id {:04x}.", channel_id);
         Ok(PacketInResult::channel_allocation())
     }
 }
@@ -239,7 +239,7 @@ where
             return PacketInResult::ignore(Error::malformed_data());
         };
         if !channel_id_valid(channel_id) {
-            log::warn!("Invalid channel id {}.", channel_id);
+            log::warn!("Invalid channel id {:04x}.", channel_id);
             return PacketInResult::ignore(Error::malformed_data());
         }
         if channel_id != BROADCAST_CHANNEL_ID && !cb.is_codec_v1() {
@@ -460,7 +460,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }
-        log::debug!("Handshake complete.");
+        log::debug!("[{:04x}] Handshake complete.", self.channel_id());
         Ok(match self.state {
             HandshakeState::Finished { pairing_state } => {
                 self.channel.pairing_state = pairing_state;
@@ -490,7 +490,7 @@ where
             .packet_in(packet_buffer, &mut self.internal_buffer);
         if let PacketInResult::EnlargeBuffer { buffer_size, .. } = res {
             log::error!(
-                "[{}] Payload length {} exceeds handshake limit.",
+                "[{:04x}] Payload length {} exceeds handshake limit.",
                 self.channel_id(),
                 buffer_size
             );
