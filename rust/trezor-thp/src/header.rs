@@ -283,6 +283,11 @@ impl<R: Role> Header<R> {
         }
     }
 
+    pub const fn payload_len_nocrc(&self) -> u16 {
+        // Messages either have zero payload or have a checksum.
+        self.payload_len().saturating_sub(CHECKSUM_LEN)
+    }
+
     pub const fn header_len(&self) -> usize {
         match self {
             Self::Continuation { .. } => Self::CONT_LEN,

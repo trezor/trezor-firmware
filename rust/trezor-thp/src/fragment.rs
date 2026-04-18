@@ -28,18 +28,20 @@ impl<R: Role> Fragmenter<R> {
         })
     }
 
-    pub fn next(&mut self, payload: &[u8], dest: &mut [u8]) -> Result<bool> {
+    pub fn next(&mut self, buffer: &[u8], dest: &mut [u8]) -> Result<bool> {
         const MIN_PACKET_SIZE: usize = Header::<crate::Device>::new_ping().header_len() + 1;
         if dest.len() < MIN_PACKET_SIZE {
             return Err(Error::insufficient_buffer());
         }
-        if payload.len() + CHECKSUM_LEN != self.header.payload_len().into() {
+        if buffer.len() + CHECKSUM_LEN < self.header.payload_len().into() {
             // buffer changed since new
             return Err(Error::unexpected_input());
         }
         if self.is_done() {
             return Ok(false);
         }
+        // Buffer is allowed to be larger - ignore trailing bytes.
+        let payload = &buffer[..self.header.payload_len_nocrc().into()];
 
         let header_len = if self.offset == 0 {
             let header_len = self
