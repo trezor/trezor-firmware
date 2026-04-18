@@ -20,6 +20,7 @@
 #include "py/objstr.h"
 
 #include "chacha20poly1305/rfc7539.h"
+#include "consteq.h"
 #include "memzero.h"
 
 /// package: trezorcrypto.__init__
@@ -32,6 +33,12 @@ typedef struct _mp_obj_ChaCha20Poly1305_t {
   mp_obj_base_t base;
   chacha20poly1305_ctx ctx;
   int64_t alen, plen;
+  enum {
+    INIT,
+    ENCRYPTING,
+    DECRYPTING,
+    FINISHED,
+  } state;
 } mp_obj_ChaCha20Poly1305_t;
 
 /// def __init__(self, key: AnyBytes, nonce: AnyBytes) -> None:
@@ -58,6 +65,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
   o->base.type = type;
   o->alen = 0;
   o->plen = 0;
+  o->state = INIT;
   return MP_OBJ_FROM_PTR(o);
 }
 
@@ -69,6 +77,10 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
                                                           mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+  if (o->state != INIT && o->state != ENCRYPTING) {
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
+  }
+  o->state = ENCRYPTING;
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
   vstr_t vstr = {0};
@@ -88,6 +100,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj,
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
                                                           mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+  if (o->state != INIT && o->state != DECRYPTING) {
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
+  }
+  o->state = DECRYPTING;
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
   vstr_t vstr = {0};
@@ -108,6 +124,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj,
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_auth(mp_obj_t self,
                                                        mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+  if (o->state != INIT && o->state != ENCRYPTING && o->state != DECRYPTING) {
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
+  }
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
   rfc7539_auth(&(o->ctx), in.buf, in.len);
@@ -117,19 +136,45 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_auth(mp_obj_t self,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_auth_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_auth);
 
-/// def finish(self) -> bytes:
+/// def finish(self, expected_mac: AnyBytes | None = None) -> bytes:
 ///     """
-///     Compute RFC 7539-style Poly1305 MAC.
+///     Compute RFC 7539-style Poly1305 MAC. The `expected_mac` is required when
+///     decrypting.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_finish(mp_obj_t self) {
-  mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_finish(size_t n_args,
+                                                         const mp_obj_t *args) {
+  mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(args[0]);
+  if (o->state != INIT && o->state != ENCRYPTING && o->state != DECRYPTING) {
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
+  }
+  if (n_args == 1 && o->state == DECRYPTING) {
+    mp_raise_msg(
+        &mp_type_RuntimeError,
+        MP_ERROR_TEXT("Argument `expected_mac` is required when decrypting."));
+  }
+
+  o->state = FINISHED;
   vstr_t mac = {0};
   vstr_init_len(&mac, 16);
   rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
+  if (n_args == 2) {
+    mp_buffer_info_t expected_mac = {0};
+    mp_get_buffer_raise(args[1], &expected_mac, MP_BUFFER_READ);
+    if (expected_mac.len != 16) {
+      mp_raise_ValueError(MP_ERROR_TEXT(
+          "Invalid length of the expected mac. It has to be 16 bytes."));
+    }
+    if (!consteq((uint8_t *)mac.buf, mac.len, (uint8_t *)expected_mac.buf,
+                 expected_mac.len)) {
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Authentication failed."));
+    }
+  }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &mac);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ChaCha20Poly1305_finish_obj,
-                                 mod_trezorcrypto_ChaCha20Poly1305_finish);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_ChaCha20Poly1305_finish_obj, 1, 2,
+    mod_trezorcrypto_ChaCha20Poly1305_finish);
 
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305___del__(mp_obj_t self) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
