@@ -12,7 +12,7 @@ pub use trezor_noise_protocol::{Cipher, DH, Hash, U8Array};
 
 use crate::{
     Device, Error, Host, Role,
-    channel::PairingState,
+    channel::{MAX_CREDENTIAL_LEN, PairingState},
     credential::{CredentialStore, CredentialVerifier},
     util::prepare_zeroed,
 };
@@ -23,7 +23,6 @@ pub const HANDSHAKE_HASH_LEN: usize = 32;
 pub const PRIVKEY_LEN: usize = 32;
 pub const PUBKEY_LEN: usize = 32;
 pub const TAG_LEN: usize = 16;
-pub const MAX_KEY_AND_CREDENTIAL_LEN: usize = 128;
 
 /// Cryptography backend trait.
 ///
@@ -160,11 +159,11 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         cs: &impl CredentialStore,
         re: &DHPubKey<B>,
         rs: &DHPubKey<B>,
-    ) -> Result<(DHPrivKey<B>, heapless::Vec<u8, MAX_KEY_AND_CREDENTIAL_LEN>), Error>
+    ) -> Result<(DHPrivKey<B>, heapless::Vec<u8, MAX_CREDENTIAL_LEN>), Error>
     where
         DHPrivKey<B>: U8Array,
     {
-        let mut buf = heapless::Vec::new();
+        let mut buf = heapless::Vec::<u8, { PRIVKEY_LEN + MAX_CREDENTIAL_LEN }>::new();
         prepare_zeroed(&mut buf);
         let result = cs.lookup(re.as_slice(), rs.as_slice(), buf.as_mut_slice());
         if let Some(found) = result {
@@ -173,9 +172,8 @@ impl<B: Backend> NoiseHandshake<Host, B> {
                 .map_err(|_| Error::insufficient_buffer())?;
             return Ok((found_key, found_credential));
         }
-        buf.clear();
         let new_key = <B::DH as DH>::genkey();
-        Ok((new_key, buf))
+        Ok((new_key, heapless::Vec::new()))
     }
 }
 
@@ -235,7 +233,7 @@ impl<B: Backend> NoiseHandshake<Device, B> {
             return Err(Error::malformed_data());
         }
         let cred_len = incoming.len().saturating_sub(overhead_len);
-        let mut cred = heapless::Vec::<u8, MAX_KEY_AND_CREDENTIAL_LEN>::new();
+        let mut cred = heapless::Vec::<u8, MAX_CREDENTIAL_LEN>::new();
         cred.resize(cred_len, 0u8)
             .map_err(|_| Error::insufficient_buffer())?;
         self.hss.read_message(incoming, &mut cred)?;
