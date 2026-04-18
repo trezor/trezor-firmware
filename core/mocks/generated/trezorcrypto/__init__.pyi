@@ -199,9 +199,10 @@ class chacha20poly1305:
         to encryption or decryption.
         """
 
-    def finish(self) -> bytes:
+    def finish(self, expected_mac: AnyBytes | None = None) -> bytes:
         """
-        Compute RFC 7539-style Poly1305 MAC.
+        Compute RFC 7539-style Poly1305 MAC. The `expected_mac` is required when
+        decrypting.
         """
 
 
