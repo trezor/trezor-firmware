@@ -77,7 +77,7 @@ class TestMoneroProto(unittest.TestCase):
         ciphertext = b"".join(mg_res)
         exp_tag, ciphertext = ciphertext[-16:], ciphertext[:-16]
         plaintext = cipher.decrypt(ciphertext)
-        tag = cipher.finish()
+        tag = cipher.finish(exp_tag)
         self.assertEqual(tag, exp_tag)
         self.assertEqual(plaintext, b"".join(mg_buff_b))
 
