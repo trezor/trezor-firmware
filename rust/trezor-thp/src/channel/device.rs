@@ -330,20 +330,21 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
 
     fn incoming_internal(&mut self, control_byte: u8) -> Result<(), Error> {
         let (header, len) = self.channel.raw_out(&self.internal_buffer)?;
-        self.internal_buffer.truncate(len);
 
         match (self.state, header.handshake_phase()) {
             (HandshakeState::SendingChannelResponse, Some(HandshakeMessage::InitiationRequest)) => {
                 // enable ACK piggybacking if requested
                 self.enable_ack_piggybacking_if_requested(control_byte);
-                let try_to_unlock = self.noise.read_initiation_request(&self.internal_buffer)?;
+                let try_to_unlock = self
+                    .noise
+                    .read_initiation_request(&self.internal_buffer[..len])?;
                 self.state = HandshakeState::StaticKeyRequired { try_to_unlock };
             }
             (
                 HandshakeState::SendingInitiationResponse,
                 Some(HandshakeMessage::CompletionRequest),
             ) => {
-                let pairing_state = self.send_completion_response()?;
+                let pairing_state = self.send_completion_response(len)?;
                 self.state = HandshakeState::SendingCompletionResponse { pairing_state };
             }
             _ => {
@@ -380,16 +381,14 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
             msg,
         )?;
         self.channel.raw_in(header, msg)?;
-        let len = msg.len();
-        self.internal_buffer.truncate(len);
         Ok(())
     }
 
-    fn send_completion_response(&mut self) -> Result<PairingState, Error> {
+    fn send_completion_response(&mut self, payload_len: usize) -> Result<PairingState, Error> {
         let payload = self.internal_buffer.clone();
         prepare_zeroed(&mut self.internal_buffer);
         let (nc, ps, msg) = self.noise.write_completion_response(
-            &payload,
+            &payload[..payload_len],
             &self.cred_verif,
             &mut self.internal_buffer,
         )?;
@@ -400,8 +399,6 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
             msg,
         )?;
         self.channel.raw_in(header, msg)?;
-        let len = msg.len();
-        self.internal_buffer.truncate(len);
         Ok(ps)
     }
 
