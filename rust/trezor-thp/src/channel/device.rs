@@ -4,7 +4,8 @@ use crate::{
     Backend, ChannelIO, Device, Error,
     alternating_bit::SyncBits,
     channel::{
-        ChannelState, Nonce, PRIVKEY_LEN, PacketInResult, PairingState, noise::NoiseHandshake,
+        ChannelState, HANDSHAKE_BUFFER_LEN, Nonce, PRIVKEY_LEN, PacketInResult, PairingState,
+        noise::NoiseHandshake,
     },
     control_byte::ControlByte,
     credential::CredentialVerifier,
@@ -22,11 +23,6 @@ use core::{
     sync::atomic::{AtomicU16, Ordering},
 };
 
-// Must fit any of:
-// - device_properties + overhead
-// - 2 DH keys + 2 AEAD tags (2*32+2*16=96) + overhead
-// - DH key + credential + 2 AEAD tags + overhead
-const INTERNAL_BUFFER_LEN: usize = 192;
 // As long as `packet_out` is called soon after `packet_in` there shouldn't be an accumulation
 // of outgoing messages. However there still can be >1 during normal operation, e.g. when we're
 // responding to PING at the same time the application requests sending an error.
@@ -296,7 +292,7 @@ pub struct ChannelOpen<C: CredentialVerifier, B: Backend> {
     channel: Channel<B>,
     state: HandshakeState,
     noise: NoiseHandshake<Device, B>,
-    internal_buffer: heapless::Vec<u8, INTERNAL_BUFFER_LEN>,
+    internal_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_LEN>,
     cred_verif: C,
 }
 

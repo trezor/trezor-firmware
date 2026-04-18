@@ -3,7 +3,10 @@ use heapless;
 use crate::{
     Backend, ChannelIO, Error, Host,
     alternating_bit::SyncBits,
-    channel::{ChannelState, Nonce, PacketInResult, PairingState, noise::NoiseHandshake},
+    channel::{
+        ChannelState, HANDSHAKE_BUFFER_LEN, MAX_DEVICE_PROPERTIES_LEN, Nonce, PacketInResult,
+        PairingState, noise::NoiseHandshake,
+    },
     credential::CredentialStore,
     fragment::{Fragmenter, Reassembler},
     header::{
@@ -14,13 +17,6 @@ use crate::{
 };
 
 use core::marker::PhantomData;
-
-// Must fit any of:
-// - device_properties + overhead
-// - 2 DH keys + 2 AEAD tags (2*32+2*16=96) + overhead
-// - DH key + credential + 2 AEAD tags + overhead
-const INTERNAL_BUFFER_LEN: usize = 192;
-const MAX_DEVICE_PROPERTIES_LEN: usize = 128;
 
 pub type Channel<B> = super::Channel<Host, B>;
 
@@ -344,7 +340,7 @@ pub struct ChannelOpen<C: CredentialStore, B: Backend> {
     channel: Channel<B>,
     state: HandshakeState,
     noise: NoiseHandshake<Host, B>,
-    internal_buffer: heapless::Vec<u8, INTERNAL_BUFFER_LEN>,
+    internal_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_LEN>,
     device_properties: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
     cred_store: C,
 }
