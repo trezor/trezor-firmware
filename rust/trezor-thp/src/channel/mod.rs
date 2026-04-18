@@ -9,9 +9,11 @@ mod test;
 use crate::{
     Error, Role,
     alternating_bit::{ChannelSync, SyncBits},
+    crc32::CHECKSUM_LEN,
     error::{Result, TransportError},
     fragment::{Fragmenter, Reassembler},
     header::{BROADCAST_CHANNEL_ID, Header, NONCE_LEN, parse_cb_channel, parse_u16},
+    util::max,
 };
 
 use core::num::NonZeroU16;
@@ -20,6 +22,23 @@ use noise::NoiseCiphers;
 pub use noise::{
     Backend, Cipher, DH, HANDSHAKE_HASH_LEN, Hash, PRIVKEY_LEN, PUBKEY_LEN, TAG_LEN, U8Array,
 };
+
+pub const MAX_DEVICE_PROPERTIES_LEN: usize = 64;
+pub const MAX_CREDENTIAL_LEN: usize = 128;
+
+// Size of internal buffer needed when opening a channel: host-to-device direction.
+const HANDSHAKE_BUFFER_HTD_LEN: usize =
+    PUBKEY_LEN + MAX_CREDENTIAL_LEN + 2 * TAG_LEN + CHECKSUM_LEN; // HandshakeCompletionRequest
+
+const MAX_ALLOC_RESPONSE_LEN: usize =
+    (NONCE_LEN as usize) + 2 + MAX_DEVICE_PROPERTIES_LEN + CHECKSUM_LEN;
+// Size of internal buffer needed when opening a channel: device-to-host direction.
+const HANDSHAKE_BUFFER_DTH_LEN: usize = max(
+    MAX_ALLOC_RESPONSE_LEN,                      // ChannelAllocationResponse
+    2 * PUBKEY_LEN + 2 * TAG_LEN + CHECKSUM_LEN, // HandshakeInitiationResponse
+);
+
+const HANDSHAKE_BUFFER_LEN: usize = max(HANDSHAKE_BUFFER_HTD_LEN, HANDSHAKE_BUFFER_DTH_LEN);
 
 const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
