@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Iterator, ParamSpec, Tuple, TypeVar
 
     from trezor import loop
+    from typing_extensions import Self
 
     P = ParamSpec("P")
     R = TypeVar("R")
@@ -57,7 +58,7 @@ class UsbAwareLayout(ui.Layout):
 class HomescreenBase(UsbAwareLayout):
     RENDER_INDICATOR: object | None = None
 
-    def __init__(self, layout: Any) -> None:
+    def __init__(self, layout: trezorui_api.LayoutObj[trezorui_api.UiResult]) -> None:
         super().__init__(layout=layout)
         self.should_resume = self._should_resume()
 
@@ -73,6 +74,14 @@ class HomescreenBase(UsbAwareLayout):
             storage_cache.homescreen_shown = self.RENDER_INDICATOR
         else:
             self._paint()
+
+    def __enter__(self) -> Self:
+        self.layout.__enter__()
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Drop internal Rust root component."""
+        self.layout.__exit__(exc_type, exc_val, exc_tb)
 
 
 class Homescreen(HomescreenBase):
