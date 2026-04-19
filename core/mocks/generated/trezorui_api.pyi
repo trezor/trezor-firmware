@@ -80,6 +80,10 @@ class LayoutObj(Generic[T]):
         """Retrieve the return value of the layout object."""
     def __del__(self) -> None:
         """Calls drop on contents of the root component."""
+    def __enter__(self) -> LayoutObj[T]:
+        """Enters a context manager (checking the root component is not dropped)."""
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Exits a context manager (dropping the root component)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
