@@ -724,17 +724,14 @@ async def should_show_more(
 
     if button_text not in (DOWN_ARROW, ""):
         button_text = INFO_ICON
-    result = await interact(
-        trezorui_api.confirm_with_info(
-            title=title,
-            items=para,
-            verb=confirm or TR.buttons__confirm,
-            verb_cancel=verb_cancel,
-            verb_info=button_text,  # use info icon by default
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.confirm_with_info(
+        title=title,
+        items=para,
+        verb=confirm or TR.buttons__confirm,
+        verb_cancel=verb_cancel,
+        verb_info=button_text,  # use info icon by default
+    ) as layout_obj:
+        result = await interact(layout_obj, br_name, br_code)
 
     if result is CONFIRMED:
         return False

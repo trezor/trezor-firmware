@@ -664,17 +664,14 @@ async def should_show_more(
     """
     button_text = button_text or TR.buttons__show_all  # def_arg
 
-    result = await interact(
-        trezorui_api.confirm_with_info(
-            title=title,
-            subtitle=subtitle,
-            items=para,
-            verb=(TR.buttons__confirm if confirm is None else confirm),
-            verb_info=button_text,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.confirm_with_info(
+        title=title,
+        subtitle=subtitle,
+        items=para,
+        verb=(TR.buttons__confirm if confirm is None else confirm),
+        verb_info=button_text,
+    ) as layout_obj:
+        result = await interact(layout_obj, br_name, br_code)
 
     if result is CONFIRMED:
         return False
