@@ -501,12 +501,20 @@ def test_sanity_checks_eip1559(session: Session):
         )
 
 
-HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd030000056789abcd040000006789abcd050000000789abcd060000000089abcd070000000009abcd080000000000abcd090000000001abcd0a0000000011abcd0b0000000111abcd0c0000001111abcd0d0000011111abcd0e0000111111abcd0f0000000002abcd100000000022abcd110000000222abcd120000002222abcd130000022222abcd140000222222abcd15"
+DATA_FOR_PAGINATION = bytes.fromhex(
+    "0123456789abcd000023456789abcd010003456789abcd020000456789abcd030000056789abcd040000006789abcd050000000789abcd060000000089abcd070000000009abcd080000000000abcd090000000001abcd0a0000000011abcd0b0000000111abcd0c0000001111abcd0d0000011111abcd0e0000111111abcd0f0000000002abcd100000000022abcd110000000222abcd120000002222abcd130000022222abcd140000222222abcd15"
+)
 
 
-@pytest.mark.parametrize("scroll", [True, False])
+@pytest.mark.parametrize(
+    "scroll,size", product([True, False], [len(DATA_FOR_PAGINATION), 10_000])
+)
 @pytest.mark.models("core")
-def test_signtx_data_pagination(session: Session, scroll: bool):
+def test_signtx_data_pagination(session: Session, scroll: bool, size: int):
+    data = DATA_FOR_PAGINATION * (1 + (size // len(DATA_FOR_PAGINATION)))
+    data = data[:size]
+    assert len(data) == size
+
     def _sign_tx_call():
         ethereum.sign_tx(
             session,
@@ -518,7 +526,7 @@ def test_signtx_data_pagination(session: Session, scroll: bool):
             chain_id=1,
             value=0xA,
             tx_type=None,
-            data=bytes.fromhex(HEXDATA),
+            data=data,
         )
 
     # test pagination
