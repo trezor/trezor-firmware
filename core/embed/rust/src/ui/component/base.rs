@@ -478,7 +478,6 @@ pub struct EventCtx {
     root_repaint_requested: bool,
     swipe_disable_req: bool,
     swipe_enable_req: bool,
-    transition_out: Option<AttachType>,
 }
 
 impl EventCtx {
@@ -502,7 +501,6 @@ impl EventCtx {
             root_repaint_requested: false,
             swipe_disable_req: false,
             swipe_enable_req: false,
-            transition_out: None,
         }
     }
 
@@ -606,14 +604,6 @@ impl EventCtx {
             #[cfg(feature = "ui_debug")]
             fatal_error!("Timer queue is full");
         }
-    }
-
-    pub fn set_transition_out(&mut self, attach_type: AttachType) {
-        self.transition_out = Some(attach_type);
-    }
-
-    pub fn get_transition_out(&self) -> Option<AttachType> {
-        self.transition_out
     }
 }
 
