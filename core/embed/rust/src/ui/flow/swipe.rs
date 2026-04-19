@@ -272,7 +272,6 @@ impl SwipeFlow {
                 Some(LayoutState::Attached(ctx.button_request()))
             }
             Decision::Return(msg) => {
-                ctx.set_transition_out(return_transition);
                 self.swipe.reset();
                 self.allow_swipe = true;
                 self.returned_value = Some(msg.try_into());
