@@ -46,12 +46,12 @@ async def request_word(
             prompt=prompt, prefill_word=prefill_word, can_go_back=True
         )
 
-    word: str = await interact(
-        keyboard,
-        "mnemonic" if send_button_request else None,
-        ButtonRequestType.MnemonicInput,
-    )
-    return word
+    with keyboard:
+        return await interact(
+            keyboard,
+            "mnemonic" if send_button_request else None,
+            ButtonRequestType.MnemonicInput,
+        )
 
 
 def format_remaining_shares_info(

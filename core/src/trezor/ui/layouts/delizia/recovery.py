@@ -46,15 +46,12 @@ async def request_word(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 
-    try:
-        word: str = await interact(
+    with keyboard:
+        return await interact(
             keyboard,
             "mnemonic" if send_button_request else None,
             ButtonRequestType.MnemonicInput,
         )
-    finally:
-        keyboard.__del__()
-    return word
 
 
 def format_remaining_shares_info(
