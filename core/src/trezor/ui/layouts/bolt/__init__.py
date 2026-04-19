@@ -645,16 +645,13 @@ async def should_show_more(
     Raises ActionCancelled if the user cancels.
     """
 
-    result = await interact(
-        trezorui_api.confirm_with_info(
-            title=title,
-            items=items,
-            verb=confirm or TR.buttons__confirm,
-            verb_info=button_text,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.confirm_with_info(
+        title=title,
+        items=items,
+        verb=confirm or TR.buttons__confirm,
+        verb_info=button_text,
+    ) as layout_obj:
+        result = await interact(layout_obj, br_name, br_code)
 
     if result is CONFIRMED:
         return False
