@@ -78,6 +78,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_WipeDevice;
   MP_QSTR___del__;
   MP_QSTR___dict__;
+  MP_QSTR___enter__;
+  MP_QSTR___exit__;
   MP_QSTR___name__;
   MP_QSTR_about_items;
   MP_QSTR_account;

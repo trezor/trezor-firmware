@@ -423,6 +423,10 @@ impl LayoutObj {
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
                 Qstr::MP_QSTR_get_transition_out => obj_fn_1!(ui_layout_get_transition_out).as_obj(),
                 Qstr::MP_QSTR_return_value => obj_fn_1!(ui_layout_return_value).as_obj(),
+
+                // Allow using LayoutObj as context manager for explicit deallocation.
+                Qstr::MP_QSTR___enter__ => obj_fn_1!(ui_layout_enter).as_obj(),
+                Qstr::MP_QSTR___exit__ => obj_fn_var!(4, 4, ui_layout_exit).as_obj(),
             }),
         };
         &TYPE
@@ -717,4 +721,29 @@ extern "C" fn ui_layout_delete(this: Obj) -> Obj {
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_enter(this: Obj) -> Obj {
+    let block = || {
+        let obj: Gc<LayoutObj> = this.try_into()?;
+        // Raise an exception if the root layout has been already dropped.
+        obj.inner_mut()
+            .root
+            .as_ref()
+            .ok_or(Error::RuntimeError(c"No root layout on enter"))?;
+        Ok(this)
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_exit(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 4 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+        this.inner_mut().obj_delete();
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
