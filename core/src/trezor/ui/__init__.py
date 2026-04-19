@@ -564,6 +564,7 @@ class Layout(Generic[T]):
         loop.schedule(task, finalizer=self._task_finalizer)
 
     def __del__(self) -> None:
+        # safe to call even if `self.layout` has been already dropped.
         self.layout.__del__()
 
 

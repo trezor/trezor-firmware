@@ -55,9 +55,11 @@ def enforce_welcome_screen_duration() -> None:
 if not utils.USE_POWER_MANAGER:
 
     async def pin_unlock_sequence() -> None:
-        lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
-        await lockscreen.get_result()
-        lockscreen.__del__()
+        with Lockscreen(
+            label=storage.device.get_label(),
+            bootscreen=True,
+        ) as lockscreen:
+            await lockscreen.get_result()
         await verify_user_pin()
 
 else:
@@ -70,9 +72,11 @@ else:
 
     async def pin_unlock_sequence() -> None:
         while True:
-            lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
-            await lockscreen.get_result()
-            lockscreen.__del__()
+            with Lockscreen(
+                label=storage.device.get_label(),
+                bootscreen=True,
+            ) as lockscreen:
+                await lockscreen.get_result()
             res = await loop.race(verify_user_pin(), wait_for_suspend())
             if res is _SUSPEND_MARKER:
                 # make some delay for the suspend

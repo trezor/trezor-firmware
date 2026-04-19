@@ -14,11 +14,8 @@ from apps.common.lock_manager import lock_device
 
 
 async def busyscreen() -> None:
-    obj = Busyscreen(busy_expiry_ms())
-    try:
+    with Busyscreen(busy_expiry_ms()) as obj:
         await obj.get_result()
-    finally:
-        obj.__del__()
 
 
 async def homescreen() -> None:
@@ -69,15 +66,12 @@ async def homescreen() -> None:
             False,
         )
 
-    obj = Homescreen(
+    with Homescreen(
         label=label,
         notification=notification,
         lockable=config.has_pin(),
-    )
-    try:
+    ) as obj:
         res = await obj.get_result()
-    finally:
-        obj.__del__()
 
     if utils.INTERNAL_MODEL == "T3W1":
         if res is trezorui_api.INFO:
@@ -94,14 +88,11 @@ async def _lockscreen(screensaver: bool = False) -> None:
     # Only show the lockscreen UI if the device can in fact be locked, or if it is
     # and OLED device (in which case the lockscreen is a screensaver).
     if can_lock_device() or screensaver:
-        obj = Lockscreen(
+        with Lockscreen(
             label=storage.device.get_label(),
             coinjoin_authorized=is_set_any_session(MessageType.AuthorizeCoinJoin),
-        )
-        try:
+        ) as obj:
             await obj.get_result()
-        finally:
-            obj.__del__()
     # Otherwise proceed directly to unlock() call. If the device is already unlocked,
     # it should be a no-op storage-wise, but it resets the internal configuration
     # to an unlocked state.
