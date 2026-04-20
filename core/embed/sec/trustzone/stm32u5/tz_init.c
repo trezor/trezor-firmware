@@ -44,11 +44,18 @@
 
 #ifndef SECMON
 static void tz_configure_sau(void) {
+  SAU->CTRL = 0;
+  __DSB();
+  __ISB();
+
   SET_REGION(0, 0x0BF90000, 0x00019000, 0);  // OTP etc
 
   SAU->CTRL =
       ((SAU_INIT_CTRL_ENABLE << SAU_CTRL_ENABLE_Pos) & SAU_CTRL_ENABLE_Msk) |
       ((SAU_INIT_CTRL_ALLNS << SAU_CTRL_ALLNS_Pos) & SAU_CTRL_ALLNS_Msk);
+
+  __DSB();
+  __ISB();
 }
 #endif
 
@@ -319,6 +326,9 @@ void tz_init(void) {
   GPDMA1->SECCFGR &= ~0xFFFF;
   GPDMA1->SECCFGR |= (1 << 12);
   GPDMA1->PRIVCFGR |= 0xFFFF;
+
+  // Make GPDMA1 Channel 12 interrupt secure
+  NVIC_ClearTargetState(GPDMA1_Channel12_IRQn);
 
   // Enable all GPIOS and make them non-secure & privileged
 
