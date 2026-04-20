@@ -647,6 +647,9 @@ int bootloader_main(void) {
 #endif
 
     if (fw.header_present == sectrue) {
+      if (true) {
+        result = workflow_unlock_bootloader()
+      }
       if (auto_upgrade == sectrue && fw.firmware_present == sectrue) {
         result = workflow_auto_update(&fw);
       } else {
