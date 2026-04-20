@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import re
-from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, AnyStr, Callable, Dict, List, Optional, Tuple
 
 from . import exceptions, messages
 from .tools import prepare_message_bytes, workflow
@@ -179,6 +179,50 @@ def get_public_node(
     )
 
 
+def _ethereum_sign_loop(
+    session: "Session",
+    msg_type: type,
+    response: Any,
+    data: bytes,
+    chain_id: int,
+    definition_provider: Optional[
+        Callable[[messages.EthereumDefinitionRequest], messages.EthereumDefinitionAck]
+    ],
+) -> Tuple[int, bytes, bytes]:
+    """Shared request/response loop for sign_tx and sign_tx_eip1559."""
+    while True:
+        if isinstance(response, messages.EthereumTxRequest):
+            if (
+                response.signature_v is not None
+                and response.signature_r is not None
+                and response.signature_s is not None
+            ):
+                # We got an EthereumTxRequest containing the signature which means we are done.
+                if msg_type is messages.EthereumSignTx:
+                    # https://github.com/trezor/trezor-core/pull/311
+                    # Only signature bit returned. Recalculate signature_v.
+                    if response.signature_v <= 1:
+                        response.signature_v += 2 * chain_id + 35
+                return response.signature_v, response.signature_r, response.signature_s
+            else:
+                assert response.data_length is not None
+                # We got an EthereumTxRequest asking for more data.
+                data_length = response.data_length
+                data, chunk = data[data_length:], data[:data_length]
+                response = session.call(messages.EthereumTxAck(data_chunk=chunk))
+        elif isinstance(response, messages.EthereumDefinitionRequest):
+            # We are being asked for a function definition.
+            if definition_provider is not None:
+                ack = definition_provider(response)
+            else:
+                ack = messages.EthereumDefinitionAck(
+                    definitions=None, func_definition=None
+                )
+            response = session.call(ack)
+        else:
+            raise AssertionError("Unknown Ethereum request")
+
+
 @workflow(capability=messages.Capability.Ethereum)
 def sign_tx(
     session: "Session",
@@ -194,6 +238,9 @@ def sign_tx(
     definitions: Optional[messages.EthereumDefinitions] = None,
     chunkify: bool = False,
     payment_req: Optional[messages.PaymentRequest] = None,
+    definition_provider: Optional[
+        Callable[[messages.EthereumDefinitionRequest], messages.EthereumDefinitionAck]
+    ] = None,
 ) -> Tuple[int, bytes, bytes]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -220,24 +267,10 @@ def sign_tx(
     msg.data_initial_chunk = chunk
 
     response = session.call(msg)
-    assert isinstance(response, messages.EthereumTxRequest)
 
-    while response.data_length is not None:
-        data_length = response.data_length
-        data, chunk = data[data_length:], data[:data_length]
-        response = session.call(messages.EthereumTxAck(data_chunk=chunk))
-        assert isinstance(response, messages.EthereumTxRequest)
-
-    assert response.signature_v is not None
-    assert response.signature_r is not None
-    assert response.signature_s is not None
-
-    # https://github.com/trezor/trezor-core/pull/311
-    # only signature bit returned. recalculate signature_v
-    if response.signature_v <= 1:
-        response.signature_v += 2 * chain_id + 35
-
-    return response.signature_v, response.signature_r, response.signature_s
+    return _ethereum_sign_loop(
+        session, messages.EthereumSignTx, response, data, chain_id, definition_provider
+    )
 
 
 @workflow(capability=messages.Capability.Ethereum)
@@ -257,6 +290,9 @@ def sign_tx_eip1559(
     definitions: Optional[messages.EthereumDefinitions] = None,
     chunkify: bool = False,
     payment_req: Optional[messages.PaymentRequest] = None,
+    definition_provider: Optional[
+        Callable[[messages.EthereumDefinitionRequest], messages.EthereumDefinitionAck]
+    ] = None,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -278,18 +314,15 @@ def sign_tx_eip1559(
     )
 
     response = session.call(msg)
-    assert isinstance(response, messages.EthereumTxRequest)
 
-    while response.data_length is not None:
-        data_length = response.data_length
-        data, chunk = data[data_length:], data[:data_length]
-        response = session.call(messages.EthereumTxAck(data_chunk=chunk))
-        assert isinstance(response, messages.EthereumTxRequest)
-
-    assert response.signature_v is not None
-    assert response.signature_r is not None
-    assert response.signature_s is not None
-    return response.signature_v, response.signature_r, response.signature_s
+    return _ethereum_sign_loop(
+        session,
+        messages.EthereumSignTxEIP1559,
+        response,
+        data,
+        chain_id,
+        definition_provider,
+    )
 
 
 @workflow(capability=messages.Capability.Ethereum)
