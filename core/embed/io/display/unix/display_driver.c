@@ -19,8 +19,6 @@
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
-#include "SDL_blendmode.h"
-#include "SDL_render.h"
 #endif
 
 #include <trezor_bsp.h>
@@ -32,8 +30,10 @@
 #include <sys/logging.h>
 #include <sys/systask.h>
 
-#include <SDL.h>
-#include <SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_blendmode.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_render.h>
 
 #include "profile.h"
 
