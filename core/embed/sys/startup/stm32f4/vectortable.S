@@ -128,19 +128,6 @@ vector_table:
   add_handler LTDC_ER_IRQHandler
   add_handler DMA2D_IRQHandler
 
-#else
-
-  .section .vector_table, "a"
-vector_table:
-  .word reset_handler
-  .word _stack_section_start
-  .word _stack_section_size
-  .word 0 // TLS start
-  .word 0 // TLS size
-  .word 0 // API interface getter
-  .word 0 // SAES unpriv input
-  .word 0 // SAES unpriv output
-  .word 0 // SAES unpriv callback
 #endif
 
   .end

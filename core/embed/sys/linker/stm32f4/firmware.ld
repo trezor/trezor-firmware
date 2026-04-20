@@ -43,7 +43,7 @@ SECTIONS {
   .flash : ALIGN(512) {
     KEEP(*(.kernel));
     . = ALIGN(COREAPP_ALIGNMENT);
-    KEEP(*(.vector_table));
+    KEEP(*(.coreapp_header));
     . = ALIGN(4);
     *(.text*);
     . = ALIGN(4);
