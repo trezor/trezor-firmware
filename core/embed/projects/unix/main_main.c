@@ -111,8 +111,10 @@ static uintptr_t throw_exit_exception_trampoline(uintptr_t code,
 // Throws MicroPython SystemExit exception in the context of the given task
 static void throw_exit_exception(systask_t *task, int code) {
   // Push call to the task
-  systask_push_call(task, (void *)throw_exit_exception_trampoline,
-                    (uintptr_t)code, 0, 0);
+  if (!systask_push_call(task, (void *)throw_exit_exception_trampoline,
+                         (uintptr_t)code, 0, 0)) {
+    error_shutdown("Cannot throw exit exception");
+  }
   // Yield to the task and throw the exception
   systask_yield_to(task);
   // We are back and the task should be terminated by now
