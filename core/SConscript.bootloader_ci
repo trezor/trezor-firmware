@@ -128,10 +128,20 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader_ci/version_check.c',
 ]
 
-if not "boot_ucb" in FEATURES_AVAILABLE:
+if "boot_ucb" in FEATURES_AVAILABLE:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/header_pq.c',
+    ]
+    env.Replace(
+        HEADERTOOL='headertool_pq',
+    )
+else:
     SOURCE_BOOTLOADER += [
         'embed/projects/bootloader/header.S',
     ]
+    env.Replace(
+        HEADERTOOL='headertool',
+    )
 
 env.Replace(
     CAT='cat',
@@ -187,10 +197,6 @@ env.Replace(
     ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_BOOTLOADER + SOURCE_HAL+ SOURCE_NANOPB, )
 
 env.Replace(
-    HEADERTOOL='headertool',
-)
-
-env.Replace(
     ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_HAL,
     ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
 
@@ -227,7 +233,7 @@ program_elf = env.Command(
     target='bootloader.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc -lm',
 )
 
 env.Depends(program_elf, linkerscript_gen)
