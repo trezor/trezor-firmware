@@ -70,6 +70,12 @@ __attribute__((noreturn)) void reboot_to_bootloader(void) {
   exit(3);
 }
 
+__attribute__((noreturn)) void reboot_and_unlock_bootloader(void) {
+  LOG_WARN("reboot (unlock bootloader)");
+
+  exit(3);
+}
+
 __attribute__((noreturn)) void reboot_and_upgrade(const uint8_t hash[32]) {
   LOG_WARN("reboot (upgrade)");
 
