@@ -28,6 +28,7 @@
 #include <io/usb_config.h>
 #include <rtl/cli.h>
 #include <sec/board_capabilities.h>
+#include <sec/rsod_special.h>
 #include <sec/unit_properties.h>
 #include <sys/flash_otp.h>
 #include <sys/system.h>

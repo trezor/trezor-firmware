@@ -29,6 +29,7 @@
 #include <io/usb_config.h>
 #include <sec/image.h>
 #include <sec/random_delays.h>
+#include <sec/rsod_special.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/flash_otp.h>

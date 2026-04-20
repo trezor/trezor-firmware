@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <sys/systask.h>
+
 #define ALL_DATA_ERASED_MESSAGE "All data has been erased from the device"
 
 /**
@@ -38,3 +40,15 @@ void __attribute__((noreturn)) show_pin_too_many_screen(void);
  * and shuts down the device.
  */
 void __attribute__((noreturn)) show_install_restricted_screen(void);
+
+/**
+ * Universal panic handler that can be passed to `system_init()` function
+ * to show RSOD screen describing the system error and halt the device
+ *
+ * (may be called from interrupt context)
+ *
+ * The function is implemented in 'io/rsod.c'.
+ *
+ * @param pminfo Pointer to the post mortem to display
+ */
+void rsod_panic_handler(const systask_postmortem_t* pminfo);
