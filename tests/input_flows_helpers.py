@@ -1,7 +1,7 @@
 import typing as t
 
 from trezorlib import messages
-from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.debuglink import TrezorTestContext as Client
 
 from . import translations as TR
@@ -350,23 +350,35 @@ class RecoveryFlow:
         if click_ok:
             self.debug.press_yes()
 
-    def input_mnemonic(self, mnemonic: list[str]) -> BRGeneratorType:
+    def input_mnemonic(
+        self,
+        mnemonic: list[str],
+        method: messages.BackupMethod = messages.BackupMethod.Display,
+    ) -> BRGeneratorType:
         br = yield
-        assert br.code == B.MnemonicInput
-        assert br.name == "mnemonic"
-        assert "MnemonicKeyboard" in self.debug.read_layout().all_components()
-        for _, word in enumerate(mnemonic):
-            self.debug.input(word)
+        if method is messages.BackupMethod.Display:
+            assert br.code == B.MnemonicInput
+            assert br.name == "mnemonic"
+            assert "MnemonicKeyboard" in self.debug.read_layout().all_components()
+            for _, word in enumerate(mnemonic):
+                self.debug.input(word)
+        elif method is messages.BackupMethod.N4W1:
+            assert br.code == B.Other
+            assert br.name == "backup_read"
+            n4w1_handle_read(self.debug, " ".join(mnemonic).encode())
+        else:
+            raise RuntimeError
 
     def input_all_slip39_shares(
         self,
         shares: t.Sequence[str],
         has_groups: bool = False,
         click_info: bool = False,
+        method: messages.BackupMethod = messages.BackupMethod.Display,
     ) -> BRGeneratorType:
         for index, share in enumerate(shares):
             mnemonic = share.split(" ")
-            yield from self.input_mnemonic(mnemonic)
+            yield from self.input_mnemonic(mnemonic, method)
 
             # Caesar does not have the info button
             if self.client.layout_type is LayoutType.Caesar:
@@ -727,3 +739,22 @@ class EthereumFlow:
 
         else:
             raise ValueError("Unknown model!")
+
+
+def n4w1_handle_write(debug: DebugLink) -> bytes:
+    assert debug._call(messages.DebugLinkN4W1Connected()) == messages.DebugLinkN4W1Read(
+        key="mnemonic"
+    )
+    write = debug._call(
+        messages.DebugLinkN4W1Response(), expect=messages.DebugLinkN4W1Write
+    )
+    assert write.key == "mnemonic" and write.value is not None
+    assert debug._call(messages.DebugLinkN4W1Response(), expect=messages.Success)
+    return write.value
+
+
+def n4w1_handle_read(debug: DebugLink, value: bytes | None) -> None:
+    assert debug._call(messages.DebugLinkN4W1Connected()) == messages.DebugLinkN4W1Read(
+        key="mnemonic"
+    )
+    debug._call(messages.DebugLinkN4W1Response(value=value), expect=messages.Success)

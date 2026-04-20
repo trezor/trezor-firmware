@@ -56,6 +56,7 @@ def _test_secret(
             pin_protection=False,
             passphrase_protection=False,
             label="label",
+            backup_method=messages.BackupMethod.Display,
         )
 
     assert session.features.initialized is True
@@ -89,7 +90,12 @@ def test_abort(session: Session):
         IF = InputFlowSlip39AdvancedRecoveryAbort(session)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(session, pin_protection=False, label="label")
+            device.recover(
+                session,
+                pin_protection=False,
+                label="label",
+                backup_method=messages.BackupMethod.Display,
+            )
         session.refresh_features()
         assert session.features.initialized is False
 
@@ -100,7 +106,12 @@ def test_noabort(session: Session):
             session, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
         )
         client.set_input_flow(IF.get())
-        device.recover(session, pin_protection=False, label="label")
+        device.recover(
+            session,
+            pin_protection=False,
+            label="label",
+            backup_method=messages.BackupMethod.Display,
+        )
         session.refresh_features()
         assert session.features.initialized is True
 
@@ -118,7 +129,12 @@ def test_same_share(session: Session):
         )
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(session, pin_protection=False, label="label")
+            device.recover(
+                session,
+                pin_protection=False,
+                label="label",
+                backup_method=messages.BackupMethod.Display,
+            )
 
 
 def test_group_threshold_reached(session: Session):
@@ -133,4 +149,9 @@ def test_group_threshold_reached(session: Session):
         )
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(session, pin_protection=False, label="label")
+            device.recover(
+                session,
+                pin_protection=False,
+                label="label",
+                backup_method=messages.BackupMethod.Display,
+            )
