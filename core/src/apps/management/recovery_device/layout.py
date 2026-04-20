@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+import storage.recovery as storage_recovery
+import storage.recovery_shares as storage_recovery_shares
 from trezor import TR
 from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
@@ -13,18 +15,25 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
 
 from apps.common import backup_types
 
-from .recover import RecoveryAborted
+from .recover import RecoveryAborted, load_slip39_state
 
 if TYPE_CHECKING:
-    from typing import Awaitable
+    from typing import Awaitable, Protocol
 
-    from trezor.enums import BackupType
+    from trezor.enums import BackupMethod, BackupType, RecoveryType
 
     # RemainingSharesInfo represents the data structure for remaining shares in SLIP-39 recovery:
     # - Set of tuples, each containing 2 or 3 words identifying a group
     # - List of remaining share counts for each group
     # - Group threshold (minimum number of groups required)
     RemainingSharesInfo = tuple[set[tuple[str, ...]], list[int], int]
+
+    class RecoveryHandler(Protocol):
+        @classmethod
+        async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler": ...
+
+        async def show_state(self, is_retry: bool) -> None: ...
+        async def request_mnemonic(self) -> str | None: ...
 
 
 async def request_mnemonic(
@@ -142,3 +151,139 @@ async def homescreen_dialog(
         remaining_shares_info,
     ):
         raise RecoveryAborted
+
+
+async def _request_share_first_screen(
+    word_count: int, recovery_type: RecoveryType
+) -> None:
+    from trezor.enums import RecoveryType
+
+    if backup_types.is_slip39_word_count(word_count):
+        remaining = storage_recovery.fetch_slip39_remaining_shares()
+        if remaining:
+            group_count = storage_recovery.get_slip39_group_count()
+            if group_count > 1:
+                await enter_share(
+                    remaining_shares_info=_get_remaining_groups_and_shares()
+                )
+            else:
+                entered = len(storage_recovery_shares.fetch_group(0))
+                await enter_share(entered_remaining=(entered, remaining[0]))
+        else:
+            if recovery_type == RecoveryType.UnlockRepeatedBackup:
+                text = TR.recovery__enter_backup
+                button_label = TR.buttons__continue
+            else:
+                text = TR.recovery__enter_any_share
+                button_label = TR.buttons__enter_share
+            await homescreen_dialog(
+                button_label,
+                text,
+                TR.recovery__word_count_template.format(word_count),
+                show_instructions=True,
+            )
+    else:  # BIP-39
+        await homescreen_dialog(
+            TR.buttons__continue,
+            TR.recovery__enter_backup,
+            TR.recovery__word_count_template.format(word_count),
+            show_instructions=True,
+        )
+
+
+def _get_remaining_groups_and_shares() -> "RemainingSharesInfo":
+    """
+    Prepare data for Slip39 Advanced - what shares are to be entered.
+    """
+    from trezor.crypto import slip39
+
+    shares_remaining = storage_recovery.fetch_slip39_remaining_shares()
+    assert shares_remaining  # should be stored at this point
+
+    groups = set()
+    first_entered_index = -1
+    for i, group_count in enumerate(shares_remaining):
+        if group_count < slip39.MAX_SHARE_COUNT:
+            first_entered_index = i
+            break
+
+    share = None
+    for index, remaining in enumerate(shares_remaining):
+        if 0 <= remaining < slip39.MAX_SHARE_COUNT:
+            m = storage_recovery_shares.fetch_group(index)[0]
+            if not share:
+                share = slip39.decode_mnemonic(m)
+            identifier = tuple(m.split(" ")[0:3])
+            groups.add(identifier)
+        elif remaining == slip39.MAX_SHARE_COUNT:  # no shares yet
+            identifier = tuple(
+                storage_recovery_shares.fetch_group(first_entered_index)[0].split(" ")[
+                    0:2
+                ]
+            )
+            groups.add(identifier)
+
+    assert share  # share needs to be set
+    return groups, shares_remaining, share.group_threshold
+
+
+class _DisplayHandler:
+    def __init__(
+        self,
+        recovery_type: RecoveryType,
+        word_count: int,
+        backup_type: BackupType | None,
+    ) -> None:
+        self.recovery_type = recovery_type
+        self.word_count = word_count
+        self.backup_type = backup_type
+
+    @classmethod
+    async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
+        from trezor.wire import ActionCancelled
+
+        # `slip39_state is None` indicates that we are (re)starting the first recovery step,
+        # which includes word count selection.
+        if (slip39_state := load_slip39_state()) is None:
+            # If we are starting recovery, ask for word count first...
+            try:
+                word_count = await request_word_count(recovery_type)
+            except ActionCancelled:
+                raise RecoveryAborted
+            # ...and only then show the starting screen with word count.
+            # Backup type will be deduced from the first share.
+            backup_type = None
+        else:
+            # SLIP-39 recovery is ongoing (at least one share was entered).
+            word_count, backup_type = slip39_state
+
+        return cls(recovery_type, word_count, backup_type)
+
+    async def show_state(self, is_retry: bool) -> None:
+        if is_retry and self.backup_type is not None:
+            # skip showing recovery state on retries (if first share was entered)
+            return
+        await _request_share_first_screen(self.word_count, self.recovery_type)
+
+    async def request_mnemonic(self) -> str | None:
+        """Return the mnemonic or `None` on cancellation/validation error."""
+        from .word_validity import WordValidityResult
+
+        try:
+            # returns `None` on cancellation
+            return await request_mnemonic(self.word_count, self.backup_type)
+        except WordValidityResult as exc:
+            # if they were invalid or some checks failed we continue and request them again
+            await exc.show_error()
+            return None
+
+
+async def choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
+    from trezor.enums import BackupMethod
+
+    if method is not BackupMethod.Display and __debug__:
+        from trezor import log
+
+        log.warning(__name__, "Unsupported backup method: %s", method)
+
+    return _DisplayHandler
