@@ -95,5 +95,15 @@
         "shortcut": "OP",
         "symbol": "ETH",
         "slip44": 614
+    },
+    {
+        "chain": "taiko",
+        "chain_id": 167000,
+        "coingecko_id": "taiko",
+        "is_testnet": false,
+        "name": "Taiko",
+        "shortcut": "TAIKO",
+        "symbol": "ETH",
+        "slip44": 60
     }
 ]

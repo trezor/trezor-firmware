@@ -103,6 +103,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Arbitrum One",  # name
         )
         yield (
+            167000,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Taiko",  # name
+        )
+        yield (
             560048,  # chain_id
             60,  # slip44
             "tHOD",  # symbol
@@ -156,6 +162,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
+        )
+        yield (
+            167000,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Taiko",  # name
         )
         yield (
             560048,  # chain_id
@@ -213,6 +225,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Arbitrum One",  # name
         )
         yield (
+            167000,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Taiko",  # name
+        )
+        yield (
             560048,  # chain_id
             60,  # slip44
             "tHOD",  # symbol
@@ -266,6 +284,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
+        )
+        yield (
+            167000,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Taiko",  # name
         )
         yield (
             560048,  # chain_id
@@ -323,6 +347,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Arbitrum One",  # name
         )
         yield (
+            167000,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Taiko",  # name
+        )
+        yield (
             560048,  # chain_id
             60,  # slip44
             "tHOD",  # symbol
@@ -378,6 +408,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Arbitrum One",  # name
         )
         yield (
+            167000,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Taiko",  # name
+        )
+        yield (
             560048,  # chain_id
             60,  # slip44
             "tHOD",  # symbol
@@ -431,6 +467,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
+        )
+        yield (
+            167000,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Taiko",  # name
         )
         yield (
             560048,  # chain_id
