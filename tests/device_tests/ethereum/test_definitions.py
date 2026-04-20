@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import Any, Callable
 
 import pytest
 
 from trezorlib import ethereum, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutContent
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -412,18 +413,25 @@ UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT = definitions.make_eth_erc7730_display
     ],
 )
 
+UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS = {
+    f.label for f in UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.field_definitions
+}
+
 
 def _sign_tx_with_display_format(
     session: Session,
     display_format: messages.EthereumERC7730DisplayFormatInfo,
     tokens: list[dict] | None = None,
     sign_tx_params: dict | None = None,
+    on_page: Callable[[LayoutContent], None] | None = None,
 ) -> None:
     if sign_tx_params is None:
         sign_tx_params = get_clear_signing_sign_tx_params()
     with session.test_ctx as client:
         if not session.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+            client.set_input_flow(
+                InputFlowConfirmAllWarnings(session, on_page=on_page).get()
+            )
         ethereum.sign_tx(
             session,
             **sign_tx_params,
@@ -440,14 +448,44 @@ def _sign_tx_with_display_format(
         )
 
 
+def _make_label_checker(
+    expected: set[str] | None = None,
+    absent: set[str] | None = None,
+) -> tuple[Callable, Callable[[], None]]:
+    seen: set[str] = set()
+    seen_absent: set[str] = set()
+
+    def on_page(layout: Any) -> None:
+        text = layout.text_content()
+        if expected:
+            seen.update(label for label in expected if label in text)
+        if absent:
+            seen_absent.update(label for label in absent if label in text)
+
+    on_page.seen = seen  # type: ignore[attr-defined]
+
+    def assert_all_seen() -> None:
+        assert seen == (expected or set())
+        if absent:
+            assert not seen_absent, f"Expected absent but found: {seen_absent}"
+
+    return on_page, assert_all_seen
+
+
 @pytest.mark.models("core")
 def test_clear_signing_with_definition_and_token(session: Session) -> None:
     # With WETH provided, TokenAmountFormatter can resolve the token symbol.
+    on_page, assert_all_seen = _make_label_checker(
+        expected=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"FAKE WETH"},
+        absent={"UNKN"},
+    )
     _sign_tx_with_display_format(
         session,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
         tokens=[WETH_TOKEN_DEFINITION],
+        on_page=on_page,
     )
+    assert_all_seen()
 
 
 @pytest.mark.models("core")
@@ -455,39 +493,65 @@ def test_clear_signing_with_definition_and_both_tokens(session: Session) -> None
     # With both WETH (tokenIn) and USDT (tokenOut) provided.
     # Note however that we still render it as "USDT" (built in token)
     # rather than "FAKE USDT"!
-
+    on_page, assert_all_seen = _make_label_checker(
+        expected=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS,
+        absent={"FAKE USDT", "UNKN"},
+    )
     _sign_tx_with_display_format(
         session,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
         tokens=[WETH_TOKEN_DEFINITION, USDT_TOKEN_DEFINITION],
+        on_page=on_page,
     )
+    assert_all_seen()
 
 
 @pytest.mark.models("core")
 def test_clear_signing_weth_weth2_with_both_tokens(session: Session) -> None:
     # With both WETH (tokenIn) and WETH2 (tokenOut) provided, both amounts are resolved.
+    on_page, assert_all_seen = _make_label_checker(
+        expected=(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"WETH2"}),
+        absent={"USDT", "UNKN"},
+    )
     _sign_tx_with_display_format(
         session,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
         tokens=[WETH_TOKEN_DEFINITION, WETH2_TOKEN_DEFINITION],
         sign_tx_params=get_clear_signing_sign_tx_params(UNISWAP_WETH_WETH2_CALLDATA),
+        on_page=on_page,
     )
+    assert_all_seen()
 
 
 @pytest.mark.models("core")
 def test_clear_signing_weth_weth2_without_tokens(session: Session) -> None:
     # Without token definitions, amounts are shown as UNKNOWN tokens.
+    on_page, assert_all_seen = _make_label_checker(
+        expected=(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN"}),
+        absent={"WETH", "USDT"},
+    )
     _sign_tx_with_display_format(
         session,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
         sign_tx_params=get_clear_signing_sign_tx_params(UNISWAP_WETH_WETH2_CALLDATA),
+        on_page=on_page,
     )
+    assert_all_seen()
 
 
 @pytest.mark.models("core")
 def test_clear_signing_with_definition_without_token(session: Session) -> None:
     # Without a token definition, amounts are shown as UNKNOWN token.
-    _sign_tx_with_display_format(session, UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT)
+    on_page, assert_all_seen = _make_label_checker(
+        expected=(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN", "USDT"}),
+        absent={"WETH"},
+    )
+    _sign_tx_with_display_format(
+        session,
+        UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
+        on_page=on_page,
+    )
+    assert_all_seen()
 
 
 @pytest.mark.models("core")
@@ -518,4 +582,10 @@ def test_clear_signing_with_mismatched_definition(session: Session) -> None:
             UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.field_definitions
         ),
     )
-    _sign_tx_with_display_format(session, bad_display_format)
+    on_page, assert_all_seen = _make_label_checker(
+        absent=(
+            UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN", "WETH", "USDT"}
+        )
+    )
+    _sign_tx_with_display_format(session, bad_display_format, on_page=on_page)
+    assert_all_seen()
