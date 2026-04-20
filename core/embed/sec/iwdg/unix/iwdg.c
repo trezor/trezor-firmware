@@ -17,14 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <sec/iwdg.h>
 
-#ifdef KERNEL_MODE
-
-// Initialize the Programmable Voltage Detector (PVD) peripheral.
-//
-// The PVD is used to detect a voltage drop below a certain threshold
-// and trigger an interrupt. This is used to safely shutdown the device.
-void pvd_init(void);
-
-#endif  // KERNEL_MODE
+void iwdg_start(uint32_t time_s) {}

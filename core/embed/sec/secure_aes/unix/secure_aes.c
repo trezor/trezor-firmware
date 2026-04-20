@@ -1,3 +1,4 @@
+
 /*
  * This file is part of the Trezor project, https://trezor.io/
  *
@@ -17,14 +18,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <sec/secure_aes.h>
 
-#ifdef KERNEL_MODE
-
-// Initialize the Programmable Voltage Detector (PVD) peripheral.
-//
-// The PVD is used to detect a voltage drop below a certain threshold
-// and trigger an interrupt. This is used to safely shutdown the device.
-void pvd_init(void);
-
-#endif  // KERNEL_MODE
+secbool secure_aes_init(void) { return sectrue; }

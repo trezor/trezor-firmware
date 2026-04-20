@@ -17,14 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <sec/optiga_transport.h>
 
-#ifdef KERNEL_MODE
+void optiga_transport_power_up(void) {}
 
-// Initialize the Programmable Voltage Detector (PVD) peripheral.
-//
-// The PVD is used to detect a voltage drop below a certain threshold
-// and trigger an interrupt. This is used to safely shutdown the device.
-void pvd_init(void);
-
-#endif  // KERNEL_MODE
+optiga_result optiga_transport_open_channel(void) { return OPTIGA_SUCCESS; }
