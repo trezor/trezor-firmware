@@ -10,6 +10,7 @@ from apps.monero.xmr import crypto, crypto_helpers, monero
 if TYPE_CHECKING:
     from trezor.messages import (
         MoneroAccountPublicAddress,
+        MoneroNetworkType,
         MoneroTransactionData,
         MoneroTransactionDestinationEntry,
         MoneroTransactionInitAck,
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 async def init_transaction(
     state: State,
     address_n: list,
-    network_type: int,
+    network_type: MoneroNetworkType,
     tsx_data: MoneroTransactionData,
     keychain,
     progress: MoneroTransactionProgress,
@@ -46,16 +47,18 @@ async def init_transaction(
 
     state.fee = state.fee if state.fee > 0 else 0
     state.tx_priv = crypto.random_scalar()
+    assert state.tx_priv is not None
     state.tx_pub = crypto.scalarmult_base_into(None, state.tx_priv)
     mem_trace(1)
 
+    assert tsx_data.num_inputs is not None
     state.input_count = tsx_data.num_inputs
     state.output_count = len(outputs)
-    assert state.input_count is not None
     state.progress_total = 4 + 3 * state.input_count + state.output_count
     state.progress_cur = 0
 
     # Ask for confirmation
+    assert state.creds.network_type is not None
     await layout.require_confirm_transaction(
         state,
         tsx_data,
@@ -69,6 +72,7 @@ async def init_transaction(
 
     # Basic transaction parameters
     state.output_change = tsx_data.change_dts
+    assert tsx_data.fee is not None
     state.fee = tsx_data.fee
     state.account_idx = tsx_data.account
     state.last_step = state.STEP_INIT
@@ -85,6 +89,7 @@ async def init_transaction(
     if state.output_count < 2:
         raise signing.NotEnoughOutputsError("At least two outputs are required")
 
+    assert tsx_data.rsig_data is not None
     _check_rsig_data(state, tsx_data.rsig_data)
     _check_subaddresses(state, outputs)
 
@@ -94,6 +99,8 @@ async def init_transaction(
     gc.collect()
 
     # Iterative tx_prefix_hash hash computation
+    assert state.tx_prefix_hasher is not None
+    assert tsx_data.unlock_time is not None
     state.tx_prefix_hasher.uvarint(2)  # current Monero transaction format (RingCT = 2)
     state.tx_prefix_hasher.uvarint(tsx_data.unlock_time)
     state.tx_prefix_hasher.uvarint(state.input_count)  # ContainerType, size

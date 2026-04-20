@@ -12,26 +12,28 @@ from typing import TYPE_CHECKING
 from trezor.crypto import monero as tcry
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
+
     from trezor.crypto.hashlib import sha3_256
 
 
 NULL_KEY_ENC = b"\x00" * 32
 
 
-def get_keccak(data: bytes | None = None) -> sha3_256:
+def get_keccak(data: AnyBytes | None = None) -> sha3_256:
     from trezor.crypto.hashlib import sha3_256
 
     return sha3_256(data=data, keccak=True)
 
 
-def keccak_2hash(inp: bytes, buff: bytes | None = None) -> bytes:
+def keccak_2hash(inp: AnyBytes, buff: AnyBuffer | None = None) -> AnyBuffer:
     buff = buff if buff else bytearray(32)
     tcry.fast_hash_into(buff, inp)
     tcry.fast_hash_into(buff, buff)
     return buff
 
 
-def compute_hmac(key: bytes, msg: bytes) -> bytes:
+def compute_hmac(key: AnyBytes, msg: AnyBytes) -> bytes:
     digestmod = get_keccak
     inner = digestmod()
     block_size = inner.block_size
@@ -59,7 +61,7 @@ def compute_hmac(key: bytes, msg: bytes) -> bytes:
 #
 
 
-def decodepoint(x: bytes) -> tcry.Point:
+def decodepoint(x: AnyBytes) -> tcry.Point:
     return tcry.decodepoint_into(None, x)
 
 
@@ -71,7 +73,7 @@ def encodeint(x: tcry.Scalar, offset: int = 0) -> bytes:
     return tcry.encodeint_into(None, x, offset)
 
 
-def decodeint(x: bytes) -> tcry.Scalar:
+def decodeint(x: AnyBytes) -> tcry.Scalar:
     return tcry.decodeint_into(None, x)
 
 
@@ -126,7 +128,7 @@ def get_subaddress_secret_key(
     return tcry.xmr_get_subaddress_secret_key(None, major, minor, secret_key)
 
 
-def xor8(buff: bytearray, key: bytes) -> bytes:
+def xor8(buff: AnyBuffer, key: AnyBytes) -> AnyBytes:
     for i in range(8):
         buff[i] ^= key[i]
     return buff

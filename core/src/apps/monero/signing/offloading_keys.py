@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr.crypto_helpers import compute_hmac
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
+
     from trezor.messages import (
         MoneroTransactionDestinationEntry,
         MoneroTransactionSourceEntry,
@@ -17,11 +19,11 @@ _BUILD_KEY_BUFFER = bytearray(_SECRET_LENGTH + _DISCRIMINATOR_LENGTH + _INDEX_LE
 
 
 def _build_key(
-    secret: bytes,
-    discriminator: bytes,
+    secret: AnyBytes,
+    discriminator: AnyBytes,
     index: int | None = None,
-    out: bytes | None = None,
-) -> bytes:
+    out: AnyBuffer | None = None,
+) -> AnyBuffer:
     """
     Creates an unique-purpose key
     """
@@ -54,49 +56,49 @@ def _build_key(
     return crypto_helpers.keccak_2hash(key_buff, out)
 
 
-def hmac_key_txin(key_hmac: bytes, idx: int) -> bytes:
+def hmac_key_txin(key_hmac: AnyBytes, idx: int) -> AnyBuffer:
     """
     (TxSourceEntry[i] || tx.vin[i]) hmac key
     """
     return _build_key(key_hmac, b"txin", idx)
 
 
-def hmac_key_txin_comm(key_hmac: bytes, idx: int) -> bytes:
+def hmac_key_txin_comm(key_hmac: AnyBytes, idx: int) -> AnyBuffer:
     """
     pseudo_outputs[i] hmac key. Pedersen commitment for inputs.
     """
     return _build_key(key_hmac, b"txin-comm", idx)
 
 
-def _hmac_key_txdst(key_hmac: bytes, idx: int) -> bytes:
+def _hmac_key_txdst(key_hmac: AnyBytes, idx: int) -> AnyBuffer:
     """
     TxDestinationEntry[i] hmac key
     """
     return _build_key(key_hmac, b"txdest", idx)
 
 
-def _hmac_key_txout(key_hmac: bytes, idx: int) -> bytes:
+def _hmac_key_txout(key_hmac: AnyBytes, idx: int) -> AnyBuffer:
     """
     (TxDestinationEntry[i] || tx.vout[i]) hmac key
     """
     return _build_key(key_hmac, b"txout", idx)
 
 
-def enc_key_txin_alpha(key_enc: bytes, idx: int) -> bytes:
+def enc_key_txin_alpha(key_enc: AnyBytes, idx: int) -> AnyBuffer:
     """
     Chacha20Poly1305 encryption key for alpha[i] used in Pedersen commitment in pseudo_outs[i]
     """
     return _build_key(key_enc, b"txin-alpha", idx)
 
 
-def enc_key_spend(key_enc: bytes, idx: int) -> bytes:
+def enc_key_spend(key_enc: AnyBytes, idx: int) -> AnyBuffer:
     """
     Chacha20Poly1305 encryption key for alpha[i] used in Pedersen commitment in pseudo_outs[i]
     """
     return _build_key(key_enc, b"txin-spend", idx)
 
 
-def key_signature(master: bytes, idx: int, is_iv: bool = False) -> bytes:
+def key_signature(master: AnyBytes, idx: int, is_iv: bool = False) -> AnyBuffer:
     """
     Generates signature offloading related offloading keys
     """
@@ -104,7 +106,7 @@ def key_signature(master: bytes, idx: int, is_iv: bool = False) -> bytes:
 
 
 def gen_hmac_vini(
-    key: bytes, src_entr: MoneroTransactionSourceEntry, vini_bin: bytes, idx: int
+    key: AnyBytes, src_entr: MoneroTransactionSourceEntry, vini_bin: AnyBytes, idx: int
 ) -> bytes:
     """
     Computes hmac (TxSourceEntry[i] || tx.vin[i])
@@ -122,6 +124,10 @@ def gen_hmac_vini(
     kwriter = get_keccak_writer()
     real_outputs = src_entr.outputs
     real_additional = src_entr.real_out_additional_tx_keys
+
+    assert src_entr.real_output is not None
+    assert src_entr.real_output_in_tx_index is not None
+
     src_entr.outputs = [src_entr.outputs[src_entr.real_output]]
     if real_additional and len(real_additional) > 1:
         src_entr.real_out_additional_tx_keys = [
@@ -139,7 +145,10 @@ def gen_hmac_vini(
 
 
 def gen_hmac_vouti(
-    key: bytes, dst_entr: MoneroTransactionDestinationEntry, tx_out_bin: bytes, idx: int
+    key: AnyBytes,
+    dst_entr: MoneroTransactionDestinationEntry,
+    tx_out_bin: AnyBytes,
+    idx: int,
 ) -> bytes:
     """
     Generates HMAC for (TxDestinationEntry[i] || tx.vout[i])
@@ -158,7 +167,7 @@ def gen_hmac_vouti(
 
 
 def gen_hmac_tsxdest(
-    key: bytes, dst_entr: MoneroTransactionDestinationEntry, idx: int
+    key: AnyBytes, dst_entr: MoneroTransactionDestinationEntry, idx: int
 ) -> bytes:
     """
     Generates HMAC for TxDestinationEntry[i]
@@ -175,7 +184,7 @@ def gen_hmac_tsxdest(
     return hmac_tsxdest
 
 
-def get_ki_from_vini(vini_bin: bytes) -> bytes:
+def get_ki_from_vini(vini_bin: AnyBytes) -> bytes:
     """
     Returns key image from the TxinToKey, which is currently
     serialized as the last 32 bytes.
