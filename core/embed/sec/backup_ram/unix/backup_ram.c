@@ -17,14 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <sec/backup_ram.h>
 
-#ifdef KERNEL_MODE
+bool backup_ram_init(void) { return true; }
 
-// Initialize the Programmable Voltage Detector (PVD) peripheral.
-//
-// The PVD is used to detect a voltage drop below a certain threshold
-// and trigger an interrupt. This is used to safely shutdown the device.
-void pvd_init(void);
+void backup_ram_deinit(void) {}
 
-#endif  // KERNEL_MODE
+bool backup_ram_erase(void) { return false; }
+
+bool backup_ram_erase_protected(void) { return false; }
+
+bool backup_ram_erase_item(uint16_t key) { return false; }
+
+uint16_t backup_ram_search(uint16_t min_key) { return BACKUP_RAM_INVALID_KEY; }
+
+bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
+                      const void* data, size_t data_size) {
+  return false;
+}
+
+bool backup_ram_read(uint16_t key, void* buffer, size_t buffer_size,
+                     size_t* data_size) {
+  return false;
+}
+
+bool backup_ram_kernel_accessible(uint16_t key) { return false; }
