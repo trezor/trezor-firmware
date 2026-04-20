@@ -48,6 +48,10 @@
 #include <sec/hash_processor.h>
 #endif
 
+#ifdef USE_TRUSTZONE
+#include <sec/tz_init.h>
+#endif
+
 #define USB_IFACE_NUM SYSHANDLE_USB_WIRE
 
 static void drivers_init(void) {
@@ -167,6 +171,10 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 }
 
 int main(void) {
+#ifdef USE_TRUSTZONE
+  tz_init();
+#endif
+
   system_init(&rsod_panic_handler);
 
   drivers_init();

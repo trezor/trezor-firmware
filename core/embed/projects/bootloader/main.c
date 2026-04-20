@@ -86,6 +86,9 @@
 #ifdef USE_SECRET
 #include <sec/secret.h>
 #endif
+#ifdef USE_TRUSTZONE
+#include <sec/tz_init.h>
+#endif
 
 #ifdef USE_BLE
 #include "wire/wire_iface_ble.h"
@@ -515,6 +518,10 @@ int main(void) {
 int bootloader_main(void) {
 #endif
   secbool touch_initialized = secfalse;
+
+#ifdef USE_TRUSTZONE
+  tz_init();
+#endif
 
   system_init(&rsod_panic_handler);
 

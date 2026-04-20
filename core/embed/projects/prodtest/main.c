@@ -96,6 +96,10 @@
 #include <sec/secure_aes.h>
 #endif
 
+#ifdef USE_TRUSTZONE
+#include <sec/tz_init.h>
+#endif
+
 #ifdef USE_BLE
 #include <io/ble.h>
 #include "cmd/prodtest_ble.h"
@@ -220,6 +224,10 @@ int main(void) {
 #else
 int prodtest_main(void) {
 #endif
+#ifdef USE_TRUSTZONE
+  tz_init();
+#endif
+
   system_init(&rsod_panic_handler);
 
   drivers_init();
