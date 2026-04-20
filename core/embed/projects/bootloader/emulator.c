@@ -24,7 +24,7 @@ LOG_DECLARE(emulator)
 
 #undef FIRMWARE_START
 
-uint8_t *FIRMWARE_START = 0;
+uintptr_t FIRMWARE_START = 0;
 
 int bootloader_main(void);
 
@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
   flash_init();
   flash_otp_init();
 
-  FIRMWARE_START = (uint8_t *)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
+  FIRMWARE_START = (uintptr_t)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
   // simulate non-empty storage so that we know whether it was erased or not
   if (storage_empty(&STORAGE_AREAS[0])) {
