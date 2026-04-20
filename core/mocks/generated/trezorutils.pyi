@@ -183,6 +183,13 @@ if __debug__:
 
 
 # upymod/modtrezorutils/modtrezorutils.c
+def reboot_and_unlock_bootloader() -> None:
+    """
+    Reboots the device and runs bootloader unlock workflow.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
 def reboot_and_upgrade(
     hash : AnyBytes,
 ) -> None:

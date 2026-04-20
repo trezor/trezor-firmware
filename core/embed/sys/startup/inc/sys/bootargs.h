@@ -40,7 +40,10 @@ typedef enum {
   BOOT_COMMAND_REBOOT = 0xA5C3D4E2,
   // Power of the device
   BOOT_COMMAND_POWER_OFF = 0x24EEE8828,
-} boot_command_t;
+  // Unlock bootloader
+  BOOT_COMMAND_UNLOCK_BOOTLOADER = 0x11111111;  // TODO - select proper value
+}
+boot_command_t;
 
 // Maximum size boot_args array
 #define BOOT_ARGS_MAX_SIZE (256 - 8)

@@ -202,6 +202,10 @@ __attribute__((noreturn)) void reboot_to_bootloader(void) {
   reboot_with_args(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
 }
 
+__attribute__((noreturn)) void reboot_and_unlock_bootloader(void) {
+  reboot_with_args(BOOT_COMMAND_UNLOCK_BOOTLOADER, NULL, 0);
+}
+
 __attribute__((noreturn)) void reboot_and_upgrade(const uint8_t hash[32]) {
   reboot_with_args(BOOT_COMMAND_INSTALL_UPGRADE, hash, 32);
 }

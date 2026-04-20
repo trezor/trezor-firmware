@@ -191,7 +191,7 @@ static secbool boot_sequence(void) {
   bool turn_on =
       (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
        cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_WIPE ||
-       cmd == BOOT_COMMAND_STOP_AND_WAIT);
+       cmd == BOOT_COMMAND_STOP_AND_WAIT || BOOT_COMMAND_UNLOCK_BOOTLOADER);
 
   if (cmd != BOOT_COMMAND_POWER_OFF) {
     turn_on = true;
@@ -669,6 +669,9 @@ int bootloader_main(void) {
 #endif
 
     if (fw.header_present == sectrue) {
+      if (true) {
+        result = workflow_unlock_bootloader()
+      }
       if (auto_upgrade == sectrue && fw.firmware_present == sectrue) {
         result = workflow_auto_update(&fw);
       } else {

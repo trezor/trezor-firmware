@@ -48,6 +48,10 @@ void __attribute__((noreturn)) reboot_to_off(void);
 void __attribute__((noreturn)) reboot_to_bootloader(void);
 
 // Resets the device into the bootloader and automatically continues
+// with the bootloader unlock workflow.
+void __attribute__((noreturn)) reboot_and_unlock_bootloader(void);
+
+// Resets the device into the bootloader and automatically continues
 // with the installation of new firmware (also known as an
 // interaction-less upgrade).
 //

@@ -565,6 +565,21 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_check_heap_fragmentation_obj,
                                  mod_trezorutils_check_heap_fragmentation);
 #endif  // !PYOPT
 
+/// def reboot_and_unlock_bootloader() -> None:
+///     """
+///     Reboots the device and runs bootloader unlock workflow.
+///     """
+STATIC mp_obj_t mod_trezorutils_reboot_and_unlock_bootloader(void) {
+  // Reboot and stay in bootloader
+  reboot_and_unlock_bootloader();
+
+  return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(
+    mod_trezorutils_reboot_and_unlock_bootloader_obj,
+    mod_trezorutils_reboot_and_unlock_bootloader);
+
 /// def reboot_and_upgrade(
 ///     hash : AnyBytes,
 /// ) -> None:
@@ -857,6 +872,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_firmware_hash_obj)},
     {MP_ROM_QSTR(MP_QSTR_firmware_vendor),
      MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
+    {MP_ROM_QSTR(MP_QSTR_reboot_and_unlock_bootloader),
+     MP_ROM_PTR(&mod_trezorutils_reboot_and_unlock_bootloader_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot_and_upgrade),
      MP_ROM_PTR(&mod_trezorutils_reboot_and_upgrade_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
