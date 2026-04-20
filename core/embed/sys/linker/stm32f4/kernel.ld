@@ -2,11 +2,11 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
-  MAIN_STACK (wal): ORIGIN = K_MAIN_STACK_START, LENGTH = K_MAIN_STACK_SIZE
-  FB1 (wal)       : ORIGIN = K_FB1_RAM_START, LENGTH = K_FB1_RAM_SIZE
-  MAIN_RAM (wal)  : ORIGIN = K_MAIN_RAM_START, LENGTH = K_MAIN_RAM_SIZE
-  BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
-  DMABUF   (wal)  : ORIGIN = DMABUF_RAM_START, LENGTH = DMABUF_RAM_SIZE
+  MAIN_STACK (rw) : ORIGIN = K_MAIN_STACK_START, LENGTH = K_MAIN_STACK_SIZE
+  FB1 (rw)        : ORIGIN = K_FB1_RAM_START, LENGTH = K_FB1_RAM_SIZE
+  MAIN_RAM (rw)   : ORIGIN = K_MAIN_RAM_START, LENGTH = K_MAIN_RAM_SIZE
+  BOOT_ARGS (rw)  : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
+  DMABUF (rw)     : ORIGIN = DMABUF_RAM_START, LENGTH = DMABUF_RAM_SIZE
 }
 
 _stack_section_start = ADDR(.stack);
@@ -30,7 +30,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .header : ALIGN(4) {
-    . = 1K;
+    . += 1K;
     . = ALIGN(CODE_ALIGNMENT);
   } >FLASH AT>FLASH
 
@@ -44,7 +44,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 8K; /* Exactly 8k allocated for stack. Overflow causes MemManage fault (when using MPU). */
+    . += 8K; /* Exactly 8k allocated for stack. Overflow causes MemManage fault (when using MPU). */
   } >MAIN_STACK
 
   .data : ALIGN(4) {
