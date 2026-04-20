@@ -1,0 +1,126 @@
+name: "[Bot] set project status on PR close"
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+  repository-projects: write
+
+jobs:
+  set-project-status:
+    # run only in 'trezor/trezor-firmware' repository
+    if: github.repository == 'trezor/trezor-firmware'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: trezor-bot-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # actions/create-github-app-token@v2.2.1
+        with:
+          app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
+          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+
+      - name: Set project status based on merge state and no-QA label
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd  # actions/github-script@v8.0.0
+        env:
+          NOQA_LABEL: no-QA
+          PROJECT_ID: PVT_kwDOAD9FD84ABGAM
+          STATUS_FIELD_ID: PVTSSF_lADOAD9FD84ABGAMzgAo8W8
+          NEEDS_QA_OPTION_ID: 5b18ba23
+          DONE_NOQA_OPTION_ID: 0690ad34
+        with:
+          github-token: ${{ steps.trezor-bot-token.outputs.token }}
+          script: |
+            const {
+              NOQA_LABEL,
+              PROJECT_ID,
+              STATUS_FIELD_ID,
+              NEEDS_QA_OPTION_ID,
+              DONE_NOQA_OPTION_ID,
+            } = process.env;
+
+            const pr = context.payload.pull_request;
+            const isMerged = pr.merged;
+
+            // closed without merge → always "Done (no QA)"
+            // merged + no-QA label → "Done (no QA)"
+            // merged without no-QA → "Needs QA"
+            let targetOptionId;
+            let targetName;
+
+            if (!isMerged) {
+              targetOptionId = DONE_NOQA_OPTION_ID;
+              targetName = "Done (no QA)";
+              core.info("PR closed without merge — targeting 'Done (no QA)'.");
+            } else {
+              const hasNoQA = pr.labels.some(l => l.name === NOQA_LABEL);
+              targetOptionId = hasNoQA ? DONE_NOQA_OPTION_ID : NEEDS_QA_OPTION_ID;
+              targetName = hasNoQA ? "Done (no QA)" : "Needs QA";
+            }
+
+            // --- find the project item linked to this PR ---
+            const { node } = (await github.graphql(
+              `query ($contentId: ID!) {
+                node(id: $contentId) {
+                  ... on PullRequest {
+                    projectItems(first: 5) {
+                      nodes {
+                        id
+                        project { id }
+                        fieldValues(first: 20) {
+                          nodes {
+                            ... on ProjectV2ItemFieldSingleSelectValue {
+                              field { ... on ProjectV2SingleSelectField { id } }
+                              optionId
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }`,
+              { contentId: pr.node_id },
+            ));
+
+            const projectItem = node.projectItems.nodes.find(
+              n => n.project.id === PROJECT_ID,
+            );
+
+            if (!projectItem) {
+              core.info("PR is not tracked in the Firmware project — skipping.");
+              return;
+            }
+
+            const currentStatus = projectItem.fieldValues.nodes.find(
+              n => n.field?.id === STATUS_FIELD_ID,
+            )?.optionId;
+
+            if (currentStatus === targetOptionId) {
+              core.info(`Status is already '${targetName}' — skipping.`);
+              return;
+            }
+
+            // --- update the status field ---
+            await github.graphql(
+              `mutation ($project: ID!, $item: ID!, $field: ID!, $value: String!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: $project
+                  itemId: $item
+                  fieldId: $field
+                  value: { singleSelectOptionId: $value }
+                }) {
+                  projectV2Item { id }
+                }
+              }`,
+              {
+                project: PROJECT_ID,
+                item: projectItem.id,
+                field: STATUS_FIELD_ID,
+                value: targetOptionId,
+              },
+            );
+
+            core.info(`Status set to '${targetName}' for PR #${pr.number}`);
