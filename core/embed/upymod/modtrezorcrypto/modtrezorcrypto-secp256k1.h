@@ -21,8 +21,8 @@
 
 #include "py/objstr.h"
 
-#include "vendor/trezor-crypto/ecdsa.h"
-#include "vendor/trezor-crypto/secp256k1.h"
+#include "trezor-crypto/ecdsa.h"
+#include "trezor-crypto/secp256k1.h"
 
 /// package: trezorcrypto.secp256k1
 

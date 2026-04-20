@@ -35,8 +35,8 @@
 #include "py/objtype.h"
 
 #include <io/usb.h>
-#include "embed/rust/librust.h"
-#include "embed/upymod/trezorobj.h"
+#include "../../rust/librust.h"
+#include "../trezorobj.h"
 
 #if !TREZOR_EMULATOR
 #define fopen(path, mode) &mp_plat_print

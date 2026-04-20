@@ -23,7 +23,7 @@
 
 #if MICROPY_PY_TREZORUI
 
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
 #include "modtrezorui-display.h"
 
 STATIC const mp_rom_map_elem_t mp_module_trezorui_globals_table[] = {

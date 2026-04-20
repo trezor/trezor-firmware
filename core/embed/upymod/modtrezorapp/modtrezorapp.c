@@ -30,7 +30,7 @@
 #include <io/app_cache.h>
 #include <io/app_loader.h>
 
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
 
 #include "modtrezorapp-image.h"
 #include "modtrezorapp-task.h"
