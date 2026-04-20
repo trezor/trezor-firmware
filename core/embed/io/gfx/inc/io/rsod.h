@@ -39,16 +39,6 @@ void rsod_gui(const systask_postmortem_t* pminfo);
 #ifdef KERNEL_MODE
 
 /**
- * Universal panic handler that can be passed to `system_init()` function
- * to show RSOD screen describing the system error and halt the device
- *
- * (may be called from interrupt context)
- *
- * @param pminfo Pointer to the post mortem to display
- */
-void rsod_panic_handler(const systask_postmortem_t* pminfo);
-
-/**
  * Shows RSOD screen with "Device wiped" message
  * and shuts down the device.
  */

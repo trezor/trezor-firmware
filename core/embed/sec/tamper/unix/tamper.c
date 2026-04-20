@@ -19,7 +19,7 @@
 
 #include <sec/tamper.h>
 
-bool tamper_init(void) {}
+bool tamper_init(void) { return true; }
 
 uint8_t tamper_external_read(void) { return 0; }
 

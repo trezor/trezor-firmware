@@ -24,6 +24,7 @@
 #include <io/rsod.h>
 #include <sec/board_capabilities.h>
 #include <sec/option_bytes.h>
+#include <sec/rsod_special.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
 #include <sys/flash_utils.h>
