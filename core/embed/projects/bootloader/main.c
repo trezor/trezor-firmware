@@ -32,6 +32,7 @@
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/flash_utils.h>
+#include <sys/startup_args.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/types.h>
@@ -496,9 +497,11 @@ void real_jump_to_firmware(void) {
 
   system_deinit();
 
-  jump_to_next_stage(
+  uint32_t vectbl_addr =
       IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE) +
-      secmon_code_offset);
+      secmon_code_offset;
+
+  jump_to_next_stage(vectbl_addr, startup_args_export());
 }
 
 __attribute__((noreturn)) void reboot_with_fade(void) {

@@ -50,6 +50,8 @@ const char *ts_string(ts_t status) {
     return "EBADMSG";
   } else if (ts_eq(status, TS_EACCES)) {
     return "EACCES";
+  } else if (ts_eq(status, TS_EEXIST)) {
+    return "EEXIST";
     // Trezor-specific error codes
   } else if (ts_eq(status, TS_ENOINIT)) {
     return "ENOINIT";

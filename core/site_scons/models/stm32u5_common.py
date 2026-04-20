@@ -119,6 +119,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/smcall/stm32/smcall_stubs.c",
         "embed/sys/smcall/stm32/smcall_verifiers.c",
         "embed/sys/stack/stm32/stack_utils.c",
+        "embed/sys/startup/startup_args.c",
         "embed/sys/startup/stm32/bootutils.c",
         "embed/sys/startup/stm32/sysutils.c",
         "embed/sys/startup/stm32u5/reset_flags.c",

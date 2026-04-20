@@ -326,7 +326,12 @@ void SystemInit(void) {
   __HAL_RCC_GPIOD_CLK_ENABLE();
 }
 
+#ifdef BOARDLOADER
 __attribute((no_stack_protector)) void reset_handler(void) {
+#else
+__attribute((no_stack_protector)) void reset_handler(startup_args_t* args) {
+#endif
+
   // Set stack pointer limit for checking stack overflow
   __set_MSPLIM((uintptr_t)&_stack_section_start + 128);
 
@@ -374,6 +379,10 @@ __attribute((no_stack_protector)) void reset_handler(void) {
 
 #ifdef BOOTLOADER
   bootargs_init(0);
+#endif
+
+#ifndef BOARDLOADER
+  startup_args_import(args);
 #endif
 
   // Enable interrupts and fault handlers
