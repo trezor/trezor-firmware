@@ -145,7 +145,9 @@ int main(int argc, char **argv) {
 
   // simulate non-empty storage so that we know whether it was erased or not
   if (storage_empty(&STORAGE_AREAS[0])) {
-    secbool ret = flash_area_write_word(&STORAGE_AREAS[0], 16, 0x12345678);
+    uint32_t data = 0x12345678;
+    secbool ret =
+        flash_area_write_data(&STORAGE_AREAS[0], 0, &data, sizeof(data));
     (void)ret;
   }
 
