@@ -3,10 +3,10 @@ ENTRY(reset_handler)
 MEMORY {
   FLASH  (rx)     : ORIGIN = BOARDLOADER_START, LENGTH = BOARDLOADER_MAXSIZE - BOARDCAPS_MAXSIZE
   BOARDCAPS (rx)  : ORIGIN = BOARDCAPS_START, LENGTH = BOARDCAPS_MAXSIZE
-  MAIN_STACK (wal)  : ORIGIN = S_MAIN_STACK_START, LENGTH = S_MAIN_STACK_SIZE
-  MAIN_RAM (wal)  : ORIGIN = S_MAIN_RAM_START, LENGTH = S_MAIN_RAM_SIZE
-  FB1 (wal)       : ORIGIN = S_FB1_RAM_START, LENGTH = S_FB1_RAM_SIZE
-  AUX1_RAM (wal)  : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  MAIN_STACK (rw) : ORIGIN = S_MAIN_STACK_START, LENGTH = S_MAIN_STACK_SIZE
+  MAIN_RAM (rw)   : ORIGIN = S_MAIN_RAM_START, LENGTH = S_MAIN_RAM_SIZE
+  FB1 (rw)        : ORIGIN = S_FB1_RAM_START, LENGTH = S_FB1_RAM_SIZE
+  AUX1_RAM (rw)   : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
 }
 
 _stack_section_start = ADDR(.stack);
@@ -38,7 +38,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 16K; /* this acts as a build time assertion that at least this much memory is available for stack use */
+    . += 16K; /* this acts as a build time assertion that at least this much memory is available for stack use */
   } >MAIN_STACK
 
   .data : ALIGN(4) {

@@ -1,9 +1,9 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
-  AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
-  AUX2_RAM (wal) : ORIGIN = AUX2_RAM_START, LENGTH = AUX2_RAM_SIZE
+  FLASH  (rx)    : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
+  AUX1_RAM (rw)  : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  AUX2_RAM (rw)  : ORIGIN = AUX2_RAM_START, LENGTH = AUX2_RAM_SIZE
 }
 
 _stack_section_start = ADDR(.stack);
@@ -70,7 +70,7 @@ SECTIONS {
   } >AUX1_RAM
 
   .stack : ALIGN(8) {
-    . = 32K; /* Overflow causes UsageFault */
+    . += 32K; /* Overflow causes UsageFault */
   } >AUX2_RAM
 
   .buf : ALIGN(4) {
@@ -79,7 +79,7 @@ SECTIONS {
   } >AUX2_RAM
 
   .heap : ALIGN(4) {
-    . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
+    . += 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
     . = ABSOLUTE(ORIGIN(AUX2_RAM) + LENGTH(AUX2_RAM)); /* this explicitly sets the end of the heap */
   } >AUX2_RAM
 }
