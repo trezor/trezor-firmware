@@ -118,7 +118,7 @@ static void drivers_init(void) {
 
 // Secure monitor panic handler
 // (may be called from interrupt context)
-static void secmon_panic(const systask_postmortem_t *pminfo) {
+static void secmon_panic(const systask_postmortem_t* pminfo) {
   // Since the system state is unreliable, enter emergency mode,
   // store the postmortem info into bootargs and reboot.
   system_emergency_rescue(NULL, pminfo);

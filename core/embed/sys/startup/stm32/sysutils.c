@@ -228,36 +228,71 @@ void ensure_compatible_settings(void) {
 }
 
 __attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl(
-    uint32_t vectbl_addr, uint32_t r11) {
+    uint32_t vectbl_addr, uint32_t r11, void* args, size_t args_size) {
   __asm__ volatile(
       "CPSID    F                  \n"
 
-      "MOV      R11, R1            \n"
-      "MOV      LR, R0             \n"
+      "MOV      R11, R1            \n"  // Save r11
+      "MOV      LR, R0             \n"  // Save vectbl_addr
 
-      "LDR      R0, =0             \n"
-      "MOV      R1, R0             \n"
-      "MOV      R2, R0             \n"
-      "MOV      R3, R0             \n"
-      "MOV      R4, R0             \n"
-      "MOV      R5, R0             \n"
-      "MOV      R6, R0             \n"
-      "MOV      R7, R0             \n"
-      "MOV      R8, R0             \n"
-      "MOV      R9, R0             \n"
-      "MOV      R10, R0            \n"  // R11 is set to r11 argument
-      "MOV      R12, R0            \n"
+      "LDR      R12, [LR]          \n"  // next stack top
+      "LDR      R0, =0             \n"  // default args pointer (legacy)
+      "CMP      R3, #0             \n"
+      "BEQ      9f                 \n"  // No args to move
+
+      "ADD      R5, R3, #7         \n"
+      "BIC      R5, R5, #7         \n"  // ALIGN_UP(args_size, 8)
+      "SUB      R12, R12, R5       \n"  // next stack top
+      "MOV      R0, R12            \n"  // args pointer
+      "MOV      R4, R12            \n"  // dst pointer
+
+      // Decide direction for overlap-safe move
+      "CMP      R4, R2             \n"
+      "BLO      2f                 \n"  // dst < src => forward
+      "BEQ      9f                 \n"  // dst == src => done
+      "ADD      R5, R2, R3         \n"  // src_end
+      "CMP      R4, R5             \n"
+      "BHS      2f                 \n"  // dst >= src_end => forward
+
+      // Backward copy
+      "ADD      R2, R2, R3         \n"  // src_end
+      "ADD      R4, R4, R3         \n"  // dst_end
+      "1:                          \n"
+      "LDRB     R5, [R2, #-1]!     \n"
+      "STRB     R5, [R4, #-1]!     \n"
+      "SUBS     R3, R3, #1         \n"
+      "BNE      1b                 \n"
+      "B        9f                 \n"
+
+      // Forward copy
+      "2:                          \n"
+      "LDRB     R5, [R2], #1       \n"
+      "STRB     R5, [R4], #1       \n"
+      "SUBS     R3, R3, #1         \n"
+      "BNE      2b                 \n"
+
+      "9:                          \n"
+
+      // Clear all registers except R0 (args ptr) and R11.
+      "LDR      R1, =0             \n"
+      "MOV      R2, R1             \n"
+      "MOV      R3, R1             \n"
+      "MOV      R4, R1             \n"
+      "MOV      R5, R1             \n"
+      "MOV      R6, R1             \n"
+      "MOV      R7, R1             \n"
+      "MOV      R8, R1             \n"
+      "MOV      R9, R1             \n"
+      "MOV      R10, R1            \n"  // R11 is set to r11 argument
 
 #if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
       "MSR      MSPLIM, R1         \n"  // Disable MSPLIM
 #endif
-      "LDR      R0, [LR]           \n"  // Initial MSP value
-      "MSR      MSP, R0            \n"  // Set MSP
+      "MSR      MSP, R12           \n"  // Set MSP to initial stack top
+      "MOV      R12, R1            \n"  // Clear R12 as well
 
-      "LDR      R0, =%[_SCB_VTOR]  \n"  // Reset handler
-      "STR      LR, [R0]           \n"  // Set SCB->VTOR = vectb_addr
-
-      "MOV      R0, R1             \n"  // Zero out R0
+      "LDR      R1, =%[_SCB_VTOR]  \n"  // Reset handler
+      "STR      LR, [R1]           \n"  // Set SCB->VTOR = vectb_addr
 
       "LDR      LR, [LR, #4]       \n"  // Reset handler
       "BX       LR                 \n"  // Go to reset handler

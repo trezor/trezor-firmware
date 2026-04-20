@@ -50,6 +50,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/flash/unix/flash_otp.c",
         "embed/sys/mpu/unix/mpu.c",
         "embed/sys/rng/unix/rng.c",
+        "embed/sys/startup/startup_args.c",
         "embed/sys/startup/unix/bootutils.c",
         "embed/sys/task/sysevent.c",
         "embed/sys/task/system.c",

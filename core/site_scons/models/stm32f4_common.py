@@ -86,6 +86,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/pvd/stm32/pvd.c",
         "embed/sys/rng/stm32/rng.c",
         "embed/sys/stack/stm32/stack_utils.c",
+        "embed/sys/startup/startup_args.c",
         "embed/sys/startup/stm32/bootutils.c",
         "embed/sys/startup/stm32/sysutils.c",
         "embed/sys/startup/stm32f4/reset_flags.c",

@@ -229,7 +229,12 @@ void set_core_clock(clock_settings_t settings) {
 }
 #endif
 
+#ifdef BOARDLOADER
 __attribute((no_stack_protector)) void reset_handler(void) {
+#else
+__attribute((no_stack_protector)) void reset_handler(startup_args_t* args) {
+#endif
+
 #ifdef BOOTLOADER
   uint32_t r11_value;
   // Copy the value of R11 to the local variable r11_value
@@ -278,6 +283,12 @@ __attribute((no_stack_protector)) void reset_handler(void) {
 
 #ifdef BOOTLOADER
   bootargs_init(r11_value);
+#endif
+
+#ifndef BOARDLOADER
+  // Arguments passing between stages is not used on legacy models
+  // but may be enabled if needed in the future
+  // startup_args_import(args);
 #endif
 
   // Enable interrupts and fault handlers
