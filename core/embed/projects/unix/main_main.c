@@ -97,11 +97,21 @@ static void drivers_init(void) {
 #endif
 }
 
+static uintptr_t throw_exit_exception_trampoline(uintptr_t code,
+                                                 uintptr_t unused1,
+                                                 uintptr_t unused2) {
+  extern void coreapp_throw_exit_exception(int code);
+  UNUSED(unused1);
+  UNUSED(unused2);
+  coreapp_throw_exit_exception((int)code);
+  return 0;
+}
+
 // Throws MicroPython SystemExit exception in the context of the given task
 static void throw_exit_exception(systask_t *task, int code) {
-  extern void coreapp_throw_exit_exception(int code);
   // Push call to the task
-  systask_push_call(task, (void *)coreapp_throw_exit_exception, code, 0, 0);
+  systask_push_call(task, (void *)throw_exit_exception_trampoline,
+                    (uintptr_t)code, 0, 0);
   // Yield to the task and throw the exception
   systask_yield_to(task);
   // We are back and the task should be terminated by now
