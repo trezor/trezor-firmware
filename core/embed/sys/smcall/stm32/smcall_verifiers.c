@@ -65,6 +65,10 @@ bool boot_image_check__verified(const boot_image_t *image) {
     goto access_violation;
   }
 
+  if (!probe_read_access(image->image_ptr, image->image_size)) {
+    goto access_violation;
+  }
+
   return boot_image_check(image);
 
 access_violation:

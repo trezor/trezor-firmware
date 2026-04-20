@@ -200,7 +200,8 @@ int main(void) {
   // detect whether the device contains a valid firmware
   secbool firmware_present = sectrue;
 
-  if (sectrue != read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
+  if (sectrue != read_vendor_header((const uint8_t *)FIRMWARE_START,
+                                    VENDOR_HEADER_MAX_SIZE, &vhdr)) {
     firmware_present = secfalse;
   }
 
@@ -243,7 +244,8 @@ int main(void) {
     return 1;
   }
 
-  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr),
+  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START,
+                            VENDOR_HEADER_MAX_SIZE, &vhdr),
          "invalid vendor header");
 
   ensure(check_vendor_header_keys(&vhdr), "invalid vendor header signature");
