@@ -35,6 +35,7 @@ def test_tt_pin_passphrase(session: Session):
             pin_protection=True,
             passphrase_protection=True,
             label="hello",
+            backup_method=messages.BackupMethod.Display,
         )
 
     assert session.debug.state().mnemonic_secret.decode() == MNEMONIC12
@@ -55,6 +56,7 @@ def test_tt_nopin_nopassphrase(session: Session):
             pin_protection=False,
             passphrase_protection=False,
             label="hello",
+            backup_method=messages.BackupMethod.Display,
         )
 
     assert session.debug.state().mnemonic_secret.decode() == MNEMONIC12

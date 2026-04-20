@@ -99,7 +99,12 @@ def recover(session: Session, shares: list[str], click_info: bool = False):
     with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedRecovery(client, shares, click_info)
         client.set_input_flow(IF.get())
-        device.recover(session, pin_protection=False, label="label")
+        device.recover(
+            session,
+            pin_protection=False,
+            label="label",
+            backup_method=messages.BackupMethod.Display,
+        )
 
     # Workflow successfully ended
     assert session.features.pin_protection is False

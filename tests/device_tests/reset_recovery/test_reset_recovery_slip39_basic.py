@@ -22,7 +22,7 @@ import pytest
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
-from trezorlib.messages import BackupType
+from trezorlib.messages import BackupMethod, BackupType
 from trezorlib.tools import parse_path
 
 from ...common import MOCK_GET_ENTROPY
@@ -35,8 +35,9 @@ from ...translations import set_language
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_recovery(client: Client):
+def test_reset_recovery(client: Client, backup_method: BackupMethod):
     session = client.get_seedless_session()
+
     mnemonics = reset(session)
     session = client.get_session()
     address_before = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
@@ -48,7 +49,7 @@ def test_reset_recovery(client: Client):
         session = client.get_seedless_session()
         set_language(session, lang[:2])
         selected_mnemonics = share_subset
-        recover(session, selected_mnemonics)
+        recover(session, selected_mnemonics, backup_method)
         session = client.get_session()
         address_after = btc.get_address(
             session, "Bitcoin", parse_path("m/44h/0h/0h/0/0")
@@ -85,11 +86,13 @@ def reset(session: Session, strength: int = 128) -> list[str]:
     return IF.mnemonics
 
 
-def recover(session: Session, shares: t.Sequence[str]):
+def recover(session: Session, shares: t.Sequence[str], method: BackupMethod):
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicRecovery(session, shares)
+        IF = InputFlowSlip39BasicRecovery(session, shares, method=method)
         client.set_input_flow(IF.get())
-        device.recover(session, pin_protection=False, label="label")
+        device.recover(
+            session, pin_protection=False, label="label", backup_method=method
+        )
 
     # Workflow successfully ended
     assert session.features.pin_protection is False

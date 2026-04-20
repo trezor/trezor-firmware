@@ -642,3 +642,30 @@ def device_handler(
     finalized_ok = device_handler.check_finalize()
     if test_res and not finalized_ok:  # type: ignore [rep_call must exist]
         raise RuntimeError("Test did not check result of background task")
+
+
+BACKUP_METHODS = [
+    pytest.param(arg, id=arg.name)
+    for arg in [
+        messages.BackupMethod.Display,
+        messages.BackupMethod.N4W1,
+    ]
+]
+
+
+@pytest.fixture(scope="session", params=BACKUP_METHODS)
+def backup_method(request, _raw_test_ctx: TrezorTestContext) -> messages.BackupMethod:
+    """
+    Return supported backup methods for current device using parametrized fixture.
+
+    See https://docs.pytest.org/en/stable/how-to/fixtures.html#parametrizing-fixtures.
+    """
+    REQUIRED_CAPABILITY = {
+        messages.BackupMethod.N4W1: messages.Capability.N4W1,
+    }
+    method: messages.BackupMethod = request.param
+    if (capability := REQUIRED_CAPABILITY.get(method)) is not None:
+        if capability not in _raw_test_ctx.capabilities:
+            pytest.skip(f"Missing {capability}")
+
+    return method
