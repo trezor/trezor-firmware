@@ -23,7 +23,7 @@ _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data);
+_codelen = _image_flash_end - ADDR(.flash);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {
@@ -62,6 +62,9 @@ SECTIONS {
   /DISCARD/ : {
     *(.ARM.exidx*);
   }
+
+  /* End of code/data in FLASH */
+  _image_flash_end = LOADADDR(.data) + SIZEOF(.data);
 
   .bss : ALIGN(4) {
     *(.bss*);
