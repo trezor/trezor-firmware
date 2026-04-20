@@ -213,7 +213,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       optiga_init_and_configure();
     } break;
 
-#if PYOPT == 0
+#if USE_OPTIGA_TESTING
     case SMCALL_OPTIGA_SET_SEC_MAX: {
       optiga_set_sec_max();
     } break;

@@ -123,7 +123,7 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_get_sec() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_get_sec_obj,
                                  mod_trezorcrypto_optiga_get_sec);
 
-#if PYOPT == 0
+#if USE_OPTIGA_TESTING
 /// def set_sec_max() -> None:
 ///     """
 ///     Set Optiga's security event counter to maximum.
@@ -146,7 +146,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_optiga_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_optiga_sign_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_sec),
      MP_ROM_PTR(&mod_trezorcrypto_optiga_get_sec_obj)},
-#if PYOPT == 0
+#if USE_OPTIGA_TESTING
     {MP_ROM_QSTR(MP_QSTR_set_sec_max),
      MP_ROM_PTR(&mod_trezorcrypto_optiga_set_sec_max_obj)},
 #endif
