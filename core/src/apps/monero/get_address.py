@@ -27,7 +27,7 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
     await paths.validate_path(keychain, address_n)
 
     creds = misc.get_creds(keychain, address_n, msg.network_type)
-    addr = creds.address
+    address = creds.address or ""
 
     have_subaddress = (
         account is not None and minor is not None and (account, minor) != (0, 0)
@@ -44,7 +44,7 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
         assert payment_id is not None
         if len(payment_id) != 8:
             raise ValueError("Invalid payment ID length")
-        addr = addresses.encode_addr(
+        address = addresses.encode_addr(
             net_version(msg.network_type, False, True),
             crypto_helpers.encodepoint(creds.spend_key_public),
             crypto_helpers.encodepoint(creds.view_key_public),
@@ -59,7 +59,7 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
             creds.view_key_private, creds.spend_key_public, account, minor
         )
 
-        addr = addresses.encode_addr(
+        address = addresses.encode_addr(
             net_version(msg.network_type, True, False),
             crypto_helpers.encodepoint(pub_spend),
             crypto_helpers.encodepoint(pub_view),
@@ -70,12 +70,12 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
 
         coin = "XMR"
         await show_address(
-            addr,
+            address,
             subtitle=TR.address__coin_address_template.format(coin),
-            address_qr="monero:" + addr,
+            address_qr="monero:" + address,
             path=paths.address_n_to_str(address_n),
             account=paths.get_account_name(coin, msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
 
-    return MoneroAddress(address=addr.encode())
+    return MoneroAddress(address=address.encode())

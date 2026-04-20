@@ -13,6 +13,8 @@ DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.enums import MoneroNetworkType
     from trezor.messages import MoneroTransactionData, MoneroTransactionDestinationEntry
 
@@ -117,7 +119,7 @@ async def require_confirm_transaction(
     change_idx = get_change_addr_idx(outputs, tsx_data.change_dts)
     payment_id = tsx_data.payment_id  # local_cache_attribute
 
-    if tsx_data.unlock_time != 0:
+    if tsx_data.unlock_time != 0 and tsx_data.unlock_time is not None:
         await _require_confirm_unlock_time(tsx_data.unlock_time)
 
     for idx, dst in enumerate(outputs):
@@ -142,6 +144,7 @@ async def require_confirm_transaction(
     ):
         await _require_confirm_payment_id(payment_id)
 
+    assert tsx_data.fee is not None
     await _require_confirm_fee(tsx_data.fee)
     progress.step(state, 0)
 
@@ -149,7 +152,7 @@ async def require_confirm_transaction(
 async def _require_confirm_output(
     dst: MoneroTransactionDestinationEntry,
     network_type: MoneroNetworkType,
-    payment_id: bytes | None,
+    payment_id: AnyBytes | None,
     chunkify: bool,
 ) -> None:
     """
@@ -160,7 +163,14 @@ async def _require_confirm_output(
     from apps.monero.xmr.addresses import encode_addr
     from apps.monero.xmr.networks import net_version
 
-    version = net_version(network_type, dst.is_subaddress, payment_id is not None)
+    assert dst.addr is not None
+    assert dst.addr.spend_public_key is not None
+    assert dst.addr.view_public_key is not None
+    assert dst.amount is not None
+
+    version = net_version(
+        network_type, dst.is_subaddress or False, payment_id is not None
+    )
     addr = encode_addr(
         version, dst.addr.spend_public_key, dst.addr.view_public_key, payment_id
     )
@@ -173,7 +183,7 @@ async def _require_confirm_output(
     )
 
 
-async def _require_confirm_payment_id(payment_id: bytes) -> None:
+async def _require_confirm_payment_id(payment_id: AnyBytes) -> None:
     from trezor.ui.layouts import confirm_blob
 
     await confirm_blob(

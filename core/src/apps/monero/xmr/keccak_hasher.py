@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr.serialize import int_serialize
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.utils import HashContext, HashWriter
 
 
@@ -13,7 +15,7 @@ class KeccakXmrArchive:
     def get_digest(self) -> bytes:
         return self.kwriter.get_digest()
 
-    def buffer(self, buf: bytes) -> None:
+    def buffer(self, buf: AnyBytes) -> None:
         return self.kwriter.write(buf)
 
     def uvarint(self, i: int) -> None:
