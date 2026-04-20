@@ -24,7 +24,7 @@
 #include <io/unix/sdl_display.h>
 
 #include <SDL.h>
-#include "SDL_events.h"
+#include <SDL2/SDL_events.h>
 
 pm_status_t pm_init(bool inherit_state) { return PM_OK; }
 
