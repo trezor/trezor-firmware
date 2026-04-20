@@ -48,13 +48,13 @@ __attribute((noreturn)) void call_with_new_stack(uint32_t arg1, uint32_t arg2,
 //    error_handler callback that draws an RSOD screen.
 void ensure_thread_mode(void);
 
-// Ensure compatible hardware settings before jumping to
+// Ensure compatible core clock settings before jumping to
 // the different booting stage. This function is used to
 // ensure backward compatibility with older versions of
 // released bootloaders and firmware.
 //
 // Does nothing on almost all platforms.
-void ensure_compatible_settings(void);
+void ensure_compatible_core_clock(void);
 
 // Clears USB peripheral fifo memory
 //

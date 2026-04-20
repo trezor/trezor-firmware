@@ -47,6 +47,7 @@ def configure(
 
     if "display" in features_wanted:
         sources += [
+            "embed/io/display/stm32f4/compatibility.c",
             "embed/io/display/stm32f429i-disc1/display_driver.c",
             "embed/io/display/stm32f429i-disc1/display_ltdc.c",
             "embed/io/display/stm32f429i-disc1/ili9341_spi.c",

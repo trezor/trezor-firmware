@@ -93,3 +93,13 @@ void __attribute__((noreturn)) reboot_or_halt_after_rsod(void);
 // memory and registers that could contain sensitive information.
 void __attribute__((noreturn)) jump_to_next_stage(uint32_t vectbl_address,
                                                   const startup_args_t *args);
+
+// Ensures the device is in a compatible state before jumping to the next stage.
+// This function is used to ensure backward compatibility with older versions of
+// released bootloaders and firmware. Implementation is platform dependand.
+void ensure_compatible_display_settings_for_bootloader(void);
+
+// Ensures the device is in a compatible state before jumping to to kernel.
+// This function is used to ensure backward compatibility with older versions of
+// released bootloaders and firmware. Implementation is platform dependand.
+void ensure_compatible_display_settings(void);
