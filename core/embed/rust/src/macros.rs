@@ -8,6 +8,7 @@ macro_rules! unwrap {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! ensure {
     ($what:expr, $error:expr) => {
         if !($what) {
@@ -25,6 +26,7 @@ macro_rules! fatal_error {
 // from https://docs.rs/ufmt/latest/ufmt/
 // like `std::format!` it returns a `heapless::String` but uses `uwrite!`
 // instead of `write!`
+#[allow(unused_macros)]
 macro_rules! uformat {
     // IMPORTANT use `tt` fragments instead of `expr` fragments (i.e. `$($exprs:expr),*`)
     (@$type:ty, $($tt:tt)*) => {{
