@@ -162,6 +162,10 @@ void drivers_init() {
 
   display_init(DISPLAY_JUMP_BEHAVIOR);
 
+#ifdef USE_TRUSTZONE
+  display_set_unpriv_access(true);
+#endif
+
 #ifdef SECURE_MODE
 #ifdef USE_OEM_KEYS_CHECK
   option_bytes_check_oem_keys();
