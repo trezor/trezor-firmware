@@ -23,4 +23,4 @@
 
 #undef FIRMWARE_START
 
-extern uint8_t *FIRMWARE_START;
+extern uintptr_t FIRMWARE_START;
