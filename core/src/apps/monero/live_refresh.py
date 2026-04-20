@@ -11,7 +11,7 @@ if TYPE_CHECKING:
         MoneroLiveRefreshStepAck,
         MoneroLiveRefreshStepRequest,
     )
-    from trezor.ui.layouts.common import ProgressLayout
+    from trezor.ui import ProgressLayout
 
     from apps.common.keychain import Keychain
 

@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.enums import MoneroNetworkType
 
     from apps.common.keychain import Keychain
@@ -27,12 +29,13 @@ def get_creds(
 
 def compute_tx_key(
     spend_key_private: Scalar,
-    tx_prefix_hash: bytes,
-    salt: bytes,
+    tx_prefix_hash: AnyBytes,
+    salt: AnyBytes,
     rand_mult_num: Scalar,
 ) -> bytes:
     from apps.monero.xmr import crypto, crypto_helpers
 
+    tx_prefix_hash = bytes(tx_prefix_hash)
     rand_inp = crypto.sc_add_into(None, spend_key_private, rand_mult_num)
     passwd = crypto_helpers.keccak_2hash(
         crypto_helpers.encodeint(rand_inp) + tx_prefix_hash
@@ -42,13 +45,14 @@ def compute_tx_key(
 
 
 def compute_enc_key_host(
-    view_key_private: Scalar, tx_prefix_hash: bytes
+    view_key_private: Scalar, tx_prefix_hash: AnyBytes
 ) -> tuple[bytes, bytes]:
     from trezor.crypto import random
 
     from apps.monero.xmr import crypto_helpers
 
     salt = random.bytes(32)
+    tx_prefix_hash = bytes(tx_prefix_hash)
     passwd = crypto_helpers.keccak_2hash(
         crypto_helpers.encodeint(view_key_private) + tx_prefix_hash
     )

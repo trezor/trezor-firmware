@@ -3,12 +3,14 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr import crypto_helpers, monero
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import MoneroTransferDetails
 
     from apps.monero.xmr import crypto
     from apps.monero.xmr.credentials import AccountCreds
 
-    Subaddresses = dict[bytes, tuple[int, int]]
+    Subaddresses = dict[AnyBytes, tuple[int, int]]
     Sig = list[list[crypto.Scalar]]
 
 
@@ -67,7 +69,7 @@ def export_key_image(
 
 
 def generate_ring_signature(
-    prefix_hash: bytes,
+    prefix_hash: AnyBytes,
     image: crypto.Point,
     pubs: list[crypto.Point],
     sec: crypto.Scalar,
