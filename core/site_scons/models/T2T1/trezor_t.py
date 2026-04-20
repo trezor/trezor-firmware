@@ -54,6 +54,7 @@ def configure(
     defines += [("USE_SECRET_KEYS", "1")]
 
     if "display" in features_wanted:
+        sources += ["embed/io/display/stm32f4/compatibility.c"]
         sources += ["embed/io/display/st-7789/display_nofb.c"]
         sources += ["embed/io/display/st-7789/display_driver.c"]
         sources += ["embed/io/display/st-7789/display_io.c"]

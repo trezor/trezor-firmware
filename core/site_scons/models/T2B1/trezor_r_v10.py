@@ -59,7 +59,10 @@ def configure(
     defines += [("USE_SECRET_KEYS", "1")]
 
     if "display" in features_wanted:
-        sources += ["embed/io/display/vg-2864/display_driver.c"]
+        sources += [
+            "embed/io/display/stm32f4/compatibility.c",
+            "embed/io/display/vg-2864/display_driver.c",
+        ]
         paths += ["embed/io/display/inc"]
         defines += [("USE_DISPLAY", "1")]
 

@@ -219,7 +219,7 @@ __attribute((used)) void clear_otg_hs_memory(void) {
 #endif
 }
 
-void ensure_compatible_settings(void) {
+void ensure_compatible_core_clock(void) {
 #ifdef TREZOR_MODEL_T2T1
   // Early version of bootloader on T2T1 expects 168 MHz core clock.
   // So we need to set it here before handover to the bootloader.
