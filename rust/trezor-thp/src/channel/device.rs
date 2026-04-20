@@ -73,6 +73,11 @@ where
         }
     }
 
+    /// Reset everything to initial state - discard outgoing messages and channel allocation.
+    pub fn reset(&mut self) {
+        *self = Self::new()
+    }
+
     /// Create new [`ChannelOpen`] when channel allocation request is pending.
     pub fn channel_alloc<C>(
         &mut self,

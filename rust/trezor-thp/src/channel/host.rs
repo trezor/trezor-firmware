@@ -80,6 +80,11 @@ where
         }
     }
 
+    /// Reset everything to initial state - discard keep-alive and channel allocation.
+    pub fn reset(&mut self) {
+        *self = Self::new()
+    }
+
     /// Enqueue a keep-alive message.
     pub fn ping(&mut self) {
         if !matches!(self.ping, PingState::None) {
