@@ -1,6 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING, Iterable, Protocol, Sequence
 
+from trezor import utils
 from trezor.ui.layouts.reset import (  # noqa: F401
     show_share_words,
     slip39_advanced_prompt_group_threshold,
@@ -195,13 +196,111 @@ class _DisplayBackup:
 
 
 async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
-    # TODO: prompt the user if method is `None`.
-    if __debug__:
-        from trezor.enums import BackupMethod
+    from trezor.enums import BackupMethod
 
-        if method not in (None, BackupMethod.Display):
-            from trezor import log
+    if utils.USE_N4W1:
+        if method is None:
+            from trezor.ui.layouts.recovery import choose_method
 
+            method = await choose_method(
+                TR.backup__title_create_wallet_backup,
+                TR.backup__type_create,
+            )
+
+        if method is BackupMethod.N4W1:
+            return _N4W1Backup()
+
+    if method not in (None, BackupMethod.Display):
+        from trezor import log
+
+        if __debug__:
             log.warning(__name__, "Unsupported backup method: %s", method)
 
     return _DisplayBackup()
+
+
+if utils.USE_N4W1:
+
+    from trezor import TR
+
+    if TYPE_CHECKING:
+        from buffer_types import AnyBytes
+
+        from apps.debug.n4w1_mock import N4W1Context
+
+    class RetryWrite(Exception):
+        def __init__(self, msg: str) -> None:
+            self.msg = msg
+
+    class _N4W1Backup:
+
+        async def intro(self, num_of_words: int | None = None) -> None:
+            # TODO: design/copy
+            pass
+
+        async def backup(self, iter_shares: Iterable[ShareInfo]) -> None:
+            # TODO: warn user about safety
+
+            # backup all shares
+            for share in iter_shares:
+                await self._backup_share(share)
+
+        async def _backup_share(self, share: ShareInfo) -> None:
+            from apps.debug import n4w1_mock
+
+            # TODO: use protobuf?
+            blob = " ".join(share.words).encode()
+
+            if share.index == 0 or share.num_of_shares is None:
+                description, button = TR.n4w1__hold_first, TR.n4w1__footer_first
+            elif share.index == share.num_of_shares - 1:
+                description, button = TR.n4w1__hold_last, TR.n4w1__footer_last
+            else:
+                description, button = TR.n4w1__hold_next, TR.n4w1__footer_next
+
+            while True:
+                try:
+                    with n4w1_mock.ctx as ctx:
+                        return await _backup_share(ctx, description, button, blob)
+                except RetryWrite as exc:
+                    import trezorui_api
+                    from trezor.ui.layouts.common import raise_if_not_confirmed
+
+                    await raise_if_not_confirmed(
+                        trezorui_api.show_warning(
+                            title=TR.words__important,
+                            button=TR.buttons__continue,
+                            description=exc.msg,
+                            danger=True,
+                        ),
+                        br_name="backup_retry",
+                    )
+                    # wait for a new N4W1 tag
+                    continue
+
+    async def _backup_share(
+        ctx: N4W1Context, description: str, button: str, blob: AnyBytes
+    ) -> None:
+        from trezor.ui.layouts.progress import progress
+
+        await ctx.confirm_connect(
+            title=TR.backup__title_create_wallet_backup,
+            description=description,
+            button=button,
+            br_name="backup_write",
+        )
+        # continue N4W1 communication (the tag is connected)
+        result = await ctx.read(key="mnemonic")
+        if result is not None:
+            raise RetryWrite("Non-empty N4W1 tag.")
+
+        progress_obj = progress(description=TR.n4w1__writing)
+        progress_obj.start()
+        progress_obj.report(100)
+        try:
+            await ctx.write(key="mnemonic", value=blob)
+            # TODO: animate during I/O?
+            progress_obj.report(1000)
+        finally:
+            progress_obj.stop()
+            progress_obj = None
