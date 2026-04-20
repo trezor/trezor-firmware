@@ -27,6 +27,12 @@
 
 extern int coreapp_emu(int argc, char** argv);
 
+static uintptr_t coreapp_emu_trampoline(uintptr_t argc, uintptr_t argv,
+                                        uintptr_t unused) {
+  UNUSED(unused);
+  return (uintptr_t)coreapp_emu((int)argc, (char**)argv);
+}
+
 // API getter function implemented in the coreapp
 extern const void* coreapp_api_get(uint32_t version);
 
@@ -39,8 +45,8 @@ bool coreapp_init(applet_t* applet, int argc, char** argv) {
     return false;
   }
 
-  if (!systask_push_call(&applet->task, (void*)coreapp_emu, (uintptr_t)argc,
-                         (uintptr_t)argv, 0)) {
+  if (!systask_push_call(&applet->task, (void*)coreapp_emu_trampoline,
+                         (uintptr_t)argc, (uintptr_t)argv, 0)) {
     return false;
   }
 
