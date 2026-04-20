@@ -109,6 +109,10 @@
 #include <io/touch.h>
 #endif
 
+#if defined(USE_TRUSTZONE) && defined(SECURE_MODE)
+#include <sec/tz_init.h>
+#endif
+
 #ifdef USE_USB
 #include <io/usb.h>
 #include <io/usb_config.h>

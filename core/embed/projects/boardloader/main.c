@@ -66,6 +66,10 @@
 #include "sd_update.h"
 #endif
 
+#ifdef USE_TRUSTZONE
+#include <sec/tz_init.h>
+#endif
+
 static void drivers_init(void) {
 #ifdef USE_PMIC
   pmic_init();
@@ -304,6 +308,10 @@ static inline void ensure_signed_bootloader(
 #endif
 
 int main(void) {
+#ifdef USE_TRUSTZONE
+  tz_init();
+#endif
+
   // Initialize system's core services
   system_init(&rsod_panic_handler);
 
