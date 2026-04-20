@@ -28,12 +28,14 @@ pub enum Error {
     NotImplementedError,
 }
 
+#[allow(unused_macros)]
 macro_rules! value_error {
     ($msg:expr) => {
         $crate::error::Error::ValueError($msg)
     };
 }
 
+#[allow(unused_imports)]
 pub(crate) use value_error;
 
 #[cfg(feature = "micropython")]
