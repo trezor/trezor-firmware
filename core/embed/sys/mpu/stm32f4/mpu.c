@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 // Turning off the stack protector for this file significantly improves
 // the performance of the syscall dispatching and interrupt handling.
 #pragma GCC optimize("no-stack-protector")
@@ -30,8 +32,6 @@
 #include <sys/mpu.h>
 
 #include "stm32f4xx_ll_cortex.h"
-
-#ifdef KERNEL_MODE
 
 // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABDJJGF.html
 #define MPU_RASR_ATTR_FLASH_CODE (MPU_RASR_C_Msk)
