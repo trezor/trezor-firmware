@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -287,3 +289,5 @@ void BSP_LCD_Init(void) {
 
   memset((void *)FRAME_BUFFER_ADDR, 0, FRAME_BUFFER_SIZE);
 }
+
+#endif  // KERNEL_MODE

@@ -7,9 +7,12 @@
 #include <SDL.h>
 
 #include <io/display.h>
-#include <sec/secret.h>
 #include <sys/flash.h>
 #include <sys/flash_otp.h>
+
+#ifdef LOCKABLE_BOOTLOADER
+#include <sec/secret.h>
+#endif
 
 int prodtest_main(void);
 

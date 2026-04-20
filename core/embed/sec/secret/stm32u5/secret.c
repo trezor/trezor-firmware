@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -30,8 +32,6 @@
 #include <sys/mpu.h>
 #include <sys/rng.h>
 #include "memzero.h"
-
-#ifdef SECURE_MODE
 
 #define SECRET_HEADER_MAGIC "TRZS"
 #define SECRET_HEADER_MAGIC_LEN (sizeof(SECRET_HEADER_MAGIC) - 1)

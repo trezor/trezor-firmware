@@ -29,7 +29,7 @@ static uint32_t board_name = 0;
 
 static boardloader_version_t boardloader_version = {0};
 
-const uint32_t get_board_name() { return board_name; }
+uint32_t get_board_name() { return board_name; }
 
 void get_boardloader_version(boardloader_version_t *version) {
   *version = boardloader_version;

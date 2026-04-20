@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #include <sys/cpuid.h>

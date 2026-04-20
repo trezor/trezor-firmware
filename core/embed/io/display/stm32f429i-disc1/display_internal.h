@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_DISPLAY_INTERNAL_H
-#define TREZORHAL_DISPLAY_INTERNAL_H
+#pragma once
 
 #include <trezor_bsp.h>
 #include <trezor_types.h>
@@ -32,5 +31,3 @@
 
 // Initializes LTDC controller and I/O pins
 void BSP_LCD_Init(void);
-
-#endif  // TREZORHAL_DISPLAY_INTERNAL_H

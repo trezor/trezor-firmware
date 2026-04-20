@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
@@ -122,3 +124,5 @@ secbool monoctr_read(monoctr_type_t type, uint8_t* value) {
 
   return sectrue;
 }
+
+#endif  // SECURE_MODE
