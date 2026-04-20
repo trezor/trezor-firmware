@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Awaitable
 
 import trezorui_api
 from trezor.enums import ButtonRequestType
+from trezor.ui import Layout
 from trezor.ui.layouts.common import interact
 from trezor.wire import ActionCancelled
 
@@ -108,9 +109,13 @@ async def interact_with_menu(
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     raise_on_cancel: ExceptionType = ActionCancelled,
+    *,
+    layout_type: type[Layout] = Layout,
 ) -> T:
     while True:
-        result = await interact(main, br_name, br_code, raise_on_cancel)
+        result = await interact(
+            main, br_name, br_code, raise_on_cancel, layout_type=layout_type
+        )
         br_name = None  # ButtonRequest should be sent once (for the main layout)
         if result is trezorui_api.INFO:
             await show_menu(menu, raise_on_cancel)
@@ -124,12 +129,16 @@ async def confirm_with_menu(
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     raise_on_cancel: ExceptionType = ActionCancelled,
+    *,
+    layout_type: type[Layout] = Layout,
 ) -> None:
     """
     Make sure the layout result is CONFIRMED (or raises an exception).
 
     In order to handle other results (such as BACK), use `interact_with_menu`.
     """
-    result = await interact_with_menu(main, menu, br_name, br_code, raise_on_cancel)
+    result = await interact_with_menu(
+        main, menu, br_name, br_code, raise_on_cancel, layout_type=layout_type
+    )
     # use this function when the layout may only return CONFIRMED on success (or raise an exception)
     assert result is trezorui_api.CONFIRMED
