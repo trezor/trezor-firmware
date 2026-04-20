@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import (
         MoneroAccountPublicAddress,
         MoneroTransactionDestinationEntry,
@@ -8,14 +10,14 @@ if TYPE_CHECKING:
 
 
 def encode_addr(
-    version, spend_pub: bytes, view_pub: bytes, payment_id: bytes | None = None
+    version, spend_pub: AnyBytes, view_pub: AnyBytes, payment_id: AnyBytes | None = None
 ) -> str:
     """
     Builds Monero address from public keys
     """
     from trezor.crypto import monero as tcry
 
-    buf = spend_pub + view_pub
+    buf = bytes(spend_pub) + bytes(view_pub)
     if payment_id:
         buf += bytes(payment_id)
     return tcry.xmr_base58_addr_encode_check(ord(version), bytes(buf))
@@ -34,11 +36,14 @@ def classify_subaddresses(
     addr_set = set()
     for tx in tx_dests:
         addr = tx.addr  # local_cache_attribute
+        assert addr is not None
         if change_addr and addr_eq(change_addr, addr):
             continue
         # addr_to_hash
         # Creates hashable address representation
-        addr_hashed = bytes(addr.spend_public_key + addr.view_public_key)
+        addr_hashed = bytes(addr.spend_public_key or b"") + bytes(
+            addr.view_public_key or b""
+        )
         if addr_hashed in addr_set:
             continue
         addr_set.add(addr_hashed)
@@ -67,8 +72,10 @@ def get_change_addr_idx(
     if change_dts is None:
         return None
 
+    assert change_dts.addr is not None
     change_idx = None
     for idx, dst in enumerate(outputs):
+        assert dst.addr is not None
         if (
             change_dts.amount
             and change_dts.amount == dst.amount

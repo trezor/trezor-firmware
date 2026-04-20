@@ -6,6 +6,9 @@ from apps.common.keychain import auto_keychain
 from apps.monero import layout
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
+    from trezor.crypto.hashlib import sha3_256
     from trezor.messages import (
         MoneroKeyImageExportInitAck,
         MoneroKeyImageExportInitRequest,
@@ -13,7 +16,7 @@ if TYPE_CHECKING:
         MoneroKeyImageSyncStepAck,
         MoneroKeyImageSyncStepRequest,
     )
-    from trezor.ui.layouts.common import ProgressLayout
+    from trezor.ui import ProgressLayout
 
     from apps.common.keychain import Keychain
 
@@ -56,13 +59,13 @@ class KeyImageSync:
     def __init__(self):
         from apps.monero.xmr import crypto_helpers
 
-        self.current_output = -1
-        self.num_outputs = 0
-        self.expected_hash = b""
-        self.enc_key = b""
+        self.current_output: int = -1
+        self.num_outputs: int = 0
+        self.expected_hash: AnyBytes = b""
+        self.enc_key: AnyBytes = b""
         self.creds: AccountCreds | None = None
         self.subaddresses = {}
-        self.hasher = crypto_helpers.get_keccak()
+        self.hasher: sha3_256 = crypto_helpers.get_keccak()
 
 
 async def _init_step(
@@ -137,7 +140,7 @@ def _sync_step(
         crypto.encodeint_into(buff_mv[64:], sig[0][1])
 
         # Encrypt with enc_key
-        nonce, ciph, _ = chacha_poly.encrypt(s.enc_key, buff)
+        nonce, ciph = chacha_poly.encrypt(s.enc_key, buff)
 
         kis.append(MoneroExportedKeyImage(iv=nonce, blob=ciph))
 

@@ -23,7 +23,7 @@ class StageNet:
 
 
 def net_version(
-    network_type: MoneroNetworkType = None,
+    network_type: MoneroNetworkType | None = None,
     is_subaddr: bool = False,
     is_integrated: bool = False,
 ) -> bytes:

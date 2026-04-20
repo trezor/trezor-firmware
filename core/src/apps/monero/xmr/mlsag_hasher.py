@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.utils import HashContext
 
     from .serialize_messages.tx_rsig_bulletproof import BulletproofPlus
@@ -58,7 +60,7 @@ class PreMlsagHasher:
         self.rtcsig_hasher = None  # type: ignore
 
     def rsig_val(
-        self, p: bytes | list[bytes] | BulletproofPlus, raw: bool = False
+        self, p: AnyBytes | list[AnyBytes] | BulletproofPlus, raw: bool = False
     ) -> None:
         if self.state == 8:
             raise ValueError("State error")
@@ -73,11 +75,12 @@ class PreMlsagHasher:
                 for x in p:
                     update(x)
             else:
-                assert isinstance(p, bytes)
+                assert isinstance(p, AnyBytes)
                 update(p)
             return
 
         # Hash Bulletproof
+        assert isinstance(p, BulletproofPlus)
         fields = (p.A, p.A1, p.B, p.r1, p.s1, p.d1)
         for fld in fields:
             update(fld)

@@ -1,7 +1,14 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import chacha20poly1305 as ChaCha20Poly1305
 
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
 
-def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
+
+def encrypt(
+    key: AnyBytes, plaintext: AnyBytes, associated_data: AnyBytes | None = None
+) -> tuple[bytes, bytes]:
     """
     Uses ChaCha20Poly1305 for encryption
     """
@@ -13,15 +20,15 @@ def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
         cipher.auth(associated_data)
     ciphertext = cipher.encrypt(plaintext)
     tag = cipher.finish()
-    return nonce, ciphertext + tag, b""
+    return nonce, ciphertext + tag
 
 
 def _decrypt(
-    key: bytes,
-    iv: bytes,
-    ciphertext: bytes,
-    associated_data: bytes | None = None,
-):
+    key: AnyBytes,
+    iv: AnyBytes,
+    ciphertext: AnyBytes,
+    associated_data: AnyBytes | None = None,
+) -> bytes:
     """
     ChaCha20Poly1305 decryption
     """
@@ -39,12 +46,14 @@ def _decrypt(
     return plaintext
 
 
-def encrypt_pack(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
+def encrypt_pack(
+    key: AnyBytes, plaintext: AnyBytes, associated_data: AnyBytes | None = None
+) -> bytes:
     b = encrypt(key, plaintext, associated_data)
     return b[0] + b[1]
 
 
-def decrypt_pack(key: bytes, ciphertext: bytes):
+def decrypt_pack(key: AnyBytes, ciphertext: AnyBytes) -> bytes:
     cp = memoryview(ciphertext)
     return _decrypt(
         key=key,

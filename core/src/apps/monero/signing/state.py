@@ -1,12 +1,13 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import MoneroTransactionDestinationEntry
 
     from apps.monero.xmr.credentials import AccountCreds
-    from apps.monero.xmr.crypto import Point, Scalar
 
-    Subaddresses = dict[bytes, tuple[int, int]]
+    Subaddresses = dict[AnyBytes, tuple[int, int]]
 
 
 class State:
@@ -32,8 +33,8 @@ class State:
         self.creds: AccountCreds | None = None
 
         # HMAC/encryption keys used to protect offloaded data
-        self.key_hmac: bytes | None = None
-        self.key_enc: bytes | None = None
+        self.key_hmac: AnyBytes
+        self.key_enc: AnyBytes | None = None
 
         """
         Transaction keys
@@ -43,8 +44,8 @@ class State:
         - for subaddresses the `r` is commonly denoted as `s`, however it is still just a random number
         - the keys are used to derive the one time address and its keys (P = H(A*r)*G + B)
         """
-        self.tx_priv: Scalar | None = None
-        self.tx_pub: Point | None = None
+        self.tx_priv: crypto.Scalar
+        self.tx_pub: crypto.Point | None = None
 
         """
         In some cases when subaddresses are used we need more tx_keys
@@ -56,21 +57,21 @@ class State:
         self.client_version = 0
         self.hard_fork = 12
 
-        self.input_count: int | None = 0
+        self.input_count: int = 0
         self.output_count = 0
         self.progress_total = 0
         self.progress_cur = 0
 
-        self.output_change: "MoneroTransactionDestinationEntry" | None = None
-        self.fee: int | None = 0
+        self.output_change: MoneroTransactionDestinationEntry | None = None
+        self.fee: int = 0
         self.tx_type = 0
 
         # wallet sub-address major index
         self.account_idx: int | None = 0
 
         # contains additional tx keys if need_additional_tx_keys is True
-        self.additional_tx_private_keys: list[Scalar] = []
-        self.additional_tx_public_keys: list[bytes] | None = []
+        self.additional_tx_private_keys: list[crypto.Scalar] = []
+        self.additional_tx_public_keys: list[AnyBytes] | None = []
 
         # currently processed input/output index
         self.current_input_index = -1
@@ -84,11 +85,11 @@ class State:
         self.summary_outs_money: int | None = 0
 
         # output commitments
-        self.output_pk_commitments: list[bytes] | None = []
+        self.output_pk_commitments: list[AnyBytes] | None = []
 
         self.output_amounts: list[int] | None = []
         # output *range proof* masks. HP10+ makes them deterministic.
-        self.output_masks: list[Scalar] | None = []
+        self.output_masks: list[crypto.Scalar] | None = []
 
         # the range proofs are calculated in batches, this denotes the grouping
         self.rsig_grouping: list[int] | None = []
@@ -96,9 +97,9 @@ class State:
         self.rsig_offload: bool | None = False
 
         # sum of all inputs' pseudo out masks
-        self.sumpouts_alphas: Scalar = crypto.Scalar(0)
+        self.sumpouts_alphas: crypto.Scalar = crypto.Scalar(0)
         # sum of all output' pseudo out masks
-        self.sumout: Scalar = crypto.Scalar(0)
+        self.sumout: crypto.Scalar = crypto.Scalar(0)
 
         self.subaddresses: Subaddresses | None = {}
 
@@ -127,7 +128,7 @@ class State:
         Contains tx_prefix_hash.
         See Monero-Trezor documentation section 3.3 for more details.
         """
-        self.full_message_hasher: PreMlsagHasher | None = PreMlsagHasher()
+        self.full_message_hasher: PreMlsagHasher = PreMlsagHasher()
         self.full_message: bytes | None = None
 
     def mem_trace(self, x=None, collect: bool = False) -> None:

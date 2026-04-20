@@ -3,9 +3,11 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr import crypto, crypto_helpers
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from apps.monero.xmr.credentials import AccountCreds
 
-    Subaddresses = dict[bytes, tuple[int, int]]
+    Subaddresses = dict[AnyBytes, tuple[int, int]]
 
 
 class XmrException(Exception):
@@ -192,7 +194,7 @@ def generate_tx_spend_and_key_image_and_derivation(
     out_key: crypto.Point,
     tx_public_key: crypto.Point,
     additional_tx_public_key: crypto.Point | None,
-    real_output_index: int | None,
+    real_output_index: int,
     sub_addr_major: int | None,
     sub_addr_minor: int | None,
 ) -> tuple[crypto.Scalar, crypto.Point, crypto.Point]:

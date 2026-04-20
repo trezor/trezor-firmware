@@ -69,13 +69,14 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
         from . import PATTERN, SLIP44_ID
 
         coin = "XMR"
+        address = addr or ""
         await show_address(
-            addr,
+            address,
             subtitle=TR.address__coin_address_template.format(coin),
-            address_qr="monero:" + addr,
+            address_qr="monero:" + address,
             path=paths.address_n_to_str(address_n),
             account=paths.get_account_name(coin, msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
 
-    return MoneroAddress(address=addr.encode())
+    return MoneroAddress(address=address.encode())

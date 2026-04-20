@@ -8,6 +8,7 @@ from apps.monero.xmr import crypto, crypto_helpers
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
     from typing import Generic, Iterator, TypeVar
 
     from .serialize_messages.tx_rsig_bulletproof import BulletproofPlus
@@ -86,7 +87,7 @@ def _ensure_dst_key(dst: bytearray | None = None) -> bytearray:
 
 
 def memcpy(
-    dst: bytearray, dst_off: int, src: bytes, src_off: int, len: int
+    dst: bytearray, dst_off: int, src: AnyBytes, src_off: int, len: int
 ) -> bytearray:
     from trezor.utils import memcpy as tmemcpy
 
@@ -111,7 +112,7 @@ def _gc_iter(i: int) -> None:
         gc_collect()
 
 
-def _invert(dst: bytearray | None, x: bytes) -> bytearray:
+def _invert(dst: bytearray | None, x: AnyBytes) -> bytearray:
     dst = _ensure_dst_key(dst)
     decodeint_into_noreduce(_tmp_sc_1, x)
     sc_inv_into(_tmp_sc_2, _tmp_sc_1)
@@ -163,7 +164,7 @@ def _sc_gen(dst: bytearray | None = None) -> bytearray:
     return dst
 
 
-def _sc_add(dst: bytearray | None, a: bytes, b: bytes) -> bytearray:
+def _sc_add(dst: bytearray | None, a: AnyBytes, b: AnyBytes) -> bytearray:
     dst = _ensure_dst_key(dst)
     decodeint_into_noreduce(_tmp_sc_1, a)
     decodeint_into_noreduce(_tmp_sc_2, b)
@@ -174,8 +175,8 @@ def _sc_add(dst: bytearray | None, a: bytes, b: bytes) -> bytearray:
 
 def _sc_sub(
     dst: bytearray | None,
-    a: bytes | Scalar,
-    b: bytes | Scalar,
+    a: AnyBytes | Scalar,
+    b: AnyBytes | Scalar,
 ) -> bytearray:
 
     dst = _ensure_dst_key(dst)
@@ -190,7 +191,7 @@ def _sc_sub(
     return dst
 
 
-def _sc_mul(dst: bytearray | None, a: bytes, b: bytes | Scalar) -> bytearray:
+def _sc_mul(dst: bytearray | None, a: AnyBytes, b: AnyBytes | Scalar) -> bytearray:
 
     dst = _ensure_dst_key(dst)
     decodeint_into_noreduce(_tmp_sc_1, a)
@@ -204,9 +205,9 @@ def _sc_mul(dst: bytearray | None, a: bytes, b: bytes | Scalar) -> bytearray:
 
 def _sc_muladd(
     dst: ScalarDst | None,
-    a: bytes | Scalar,
-    b: bytes | Scalar,
-    c: bytes | Scalar,
+    a: AnyBytes | Scalar,
+    b: AnyBytes | Scalar,
+    c: AnyBytes | Scalar,
 ) -> ScalarDst:
     if isinstance(dst, Scalar):
         dst_sc = dst
@@ -223,12 +224,13 @@ def _sc_muladd(
         c = _tmp_sc_3
     sc_muladd_into(dst_sc, a, b, c)
     if not isinstance(dst, Scalar):
+        assert dst is not None
         dst = _ensure_dst_key(dst)
         encodeint_into(dst, dst_sc)
     return dst
 
 
-def _add_keys(dst: bytearray | None, A: bytes, B: bytes) -> bytearray:
+def _add_keys(dst: bytearray | None, A: AnyBytes, B: AnyBytes) -> bytearray:
     dst = _ensure_dst_key(dst)
     decodepoint_into(_tmp_pt_1, A)
     decodepoint_into(_tmp_pt_2, B)
@@ -237,7 +239,9 @@ def _add_keys(dst: bytearray | None, A: bytes, B: bytes) -> bytearray:
     return dst
 
 
-def _add_keys2(dst: bytearray | None, a: bytes, b: bytes, B: bytes) -> bytearray:
+def _add_keys2(
+    dst: bytearray | None, a: AnyBytes, b: AnyBytes, B: AnyBytes
+) -> bytearray:
     dst = _ensure_dst_key(dst)
     decodeint_into_noreduce(_tmp_sc_1, a)
     decodeint_into_noreduce(_tmp_sc_2, b)
@@ -506,7 +510,7 @@ class KeyV(KeyVBaseType[T]):
             assert isinstance(self.d, TBYTES)
             self.mv = memoryview(self.d)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> AnyBuffer:
         """
         Returns corresponding 32 byte array.
         Creates new memoryview on access.
@@ -517,7 +521,7 @@ class KeyV(KeyVBaseType[T]):
         assert self.mv is not None
         return self.mv[item * 32 : (item + 1) * 32]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: int, value: AnyBytes) -> None:
         if self.chunked:
             self.read(key, value)
         if self.const:
@@ -544,7 +548,7 @@ class KeyV(KeyVBaseType[T]):
             memcpy(buff if buff else self.cur, offset, d, idx << 5, 32)
         return buff if buff else self.cur
 
-    def read(self, idx: int, buff: bytes, offset: int = 0) -> bytes:
+    def read(self, idx: int, buff: AnyBytes, offset: int = 0) -> None:
         d = self.d  # local_cache_attribute
 
         idx = self.idxize(idx)
@@ -629,7 +633,7 @@ class KeyVEval(KeyVBase):
         self.scalar = scalar
         self.buff = _ensure_dst_key() if not raw else (Scalar() if scalar else Point())
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int):
         return self.fnc(self.idxize(item), self.buff)
 
     def to(self, idx, buff: bytearray | None = None, offset: int = 0):
@@ -1056,7 +1060,10 @@ class KeyChallengeCacheVct(KeyVBase):
 
 def _ensure_dst_keyvect(dst=None, size: int | None = None):
     if dst is None:
-        dst = KeyV(elems=size)
+        if size is not None:
+            dst = KeyV(elems=size)
+        else:
+            dst = KeyV()
         return dst
     if size is not None and size != len(dst):
         dst.resize(size)
