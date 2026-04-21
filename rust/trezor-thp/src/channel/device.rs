@@ -12,7 +12,7 @@ use crate::{
     fragment::{Fragmenter, Reassembler},
     header::{
         BROADCAST_CHANNEL_ID, HandshakeMessage, Header, MAX_CHANNEL_ID, MIN_CHANNEL_ID,
-        channel_id_valid, parse_cb_channel,
+        channel_id_valid, parse_cb_channel_length,
     },
     util::prepare_zeroed,
 };
@@ -191,8 +191,8 @@ where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
-        let Ok((cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
-            // parse_cb_channel already writes to log
+        let Ok((cb, channel_id, len)) = parse_cb_channel_length(packet_buffer) else {
+            // parse_cb_channel_length already writes to log
             return PacketInResult::ignore(Error::malformed_data());
         };
         if cb.is_codec_v1() {
@@ -203,7 +203,7 @@ where
             return PacketInResult::ignore(Error::malformed_data());
         }
         if channel_id != BROADCAST_CHANNEL_ID {
-            return PacketInResult::route(channel_id);
+            return PacketInResult::route(channel_id, len);
         }
         PacketInResult::from_result(self.handle_broadcast(packet_buffer).map(|is_allocation| {
             if is_allocation {
