@@ -1,7 +1,7 @@
 use crate::{
     proto::{
         common::{HdNodeType, button_request::ButtonRequestType},
-        ethereum::{EthereumGetPublicKey, EthereumPublicKey},
+        ethereum::{GetPublicKey, PublicKey},
     },
     strutil::hex_encode,
 };
@@ -13,14 +13,14 @@ use trezor_app_sdk::{Error, Result, crypto, ui, util::HdNodeData};
 
 const VERSION: u32 = 0x0488B21E;
 
-pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
-    let mut public_key = EthereumPublicKey::default();
+pub fn get_public_key(msg: GetPublicKey) -> Result<PublicKey> {
+    let mut public_key = PublicKey::default();
 
     let xpub = crypto::get_xpub(&msg.address_n)?;
     public_key.xpub = xpub.as_str().to_string();
 
-    let node_ll =
-        HdNodeData::deserialize_public(xpub.as_str(), VERSION).map_err(|_| Error::DataError)?;
+    let node_ll = HdNodeData::deserialize_public(xpub.as_str(), VERSION)
+        .map_err(|_| Error::DataError("Failed to deserialize public key"))?;
 
     let mut node = HdNodeType::default();
     node.depth = node_ll.depth;
@@ -33,7 +33,7 @@ pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
         let xpub = hex_encode(&node.public_key);
         ui::show_public_key(
             xpub.as_str(),
-            "Public key",
+            tr!("address__public_key"),
             None,
             None,
             None,
@@ -42,9 +42,9 @@ pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
         )?;
 
         ui::show_success(
-            "Done",
-            "Public key confirmed",
-            "Continue in the app",
+            tr!("words__title_done"),
+            tr!("address__public_key_confirmed"),
+            tr!("instructions__continue_in_app"),
             Some(3200),
             None,
             ButtonRequestType::ButtonRequestOther.into(),

@@ -2338,10 +2338,13 @@ dependencies = [
 requires-dist = [
     { name = "bleak", marker = "extra == 'ble'", specifier = ">=1.1.0" },
     { name = "bleak", marker = "extra == 'full'", specifier = ">=1.1.0" },
+    { name = "buffer-types", marker = "extra == 'test'" },
     { name = "click", specifier = ">=8,<9" },
     { name = "construct", specifier = ">=2.9,!=2.10.55" },
     { name = "construct-classes", specifier = ">=0.1.2" },
     { name = "cryptography", specifier = ">=41" },
+    { name = "dominate", marker = "extra == 'test'" },
+    { name = "ecdsa", marker = "extra == 'test'", specifier = ">=0.16,<0.17" },
     { name = "hidapi", marker = "extra == 'full'", specifier = ">=0.7.99.post20" },
     { name = "hidapi", marker = "extra == 'hidapi'", specifier = ">=0.7.99.post20" },
     { name = "keyring", specifier = ">=25.7.0" },
@@ -2353,6 +2356,8 @@ requires-dist = [
     { name = "platformdirs", specifier = ">=4.4.0" },
     { name = "pyqt5", marker = "extra == 'full'" },
     { name = "pyqt5", marker = "extra == 'qt-widgets'" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3.5" },
+    { name = "pytest-random-order", marker = "extra == 'test'", specifier = ">=1.2.0" },
     { name = "requests", specifier = ">=2.4.0" },
     { name = "shamir-mnemonic", specifier = ">=0.3.0" },
     { name = "slip10", specifier = ">=1.0.1" },
@@ -2362,7 +2367,7 @@ requires-dist = [
     { name = "web3", marker = "extra == 'ethereum'", specifier = ">=5" },
     { name = "web3", marker = "extra == 'full'", specifier = ">=5" },
 ]
-provides-extras = ["hidapi", "ethereum", "qt-widgets", "extra", "stellar", "ble", "full"]
+provides-extras = ["hidapi", "ethereum", "qt-widgets", "extra", "stellar", "ble", "test", "full"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -31,7 +31,7 @@ from pathlib import Path
 
 from mnemonic import Mnemonic
 
-from . import client, mapping, messages, models, protobuf, protocol_v1, extapp
+from . import client, extapp, mapping, messages, models, protobuf, protocol_v1
 from .exceptions import DeviceLockedError, TrezorFailure
 from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
@@ -1365,7 +1365,7 @@ class TrezorTestContext:
         self.transport.open(reopen=True)
 
         # debug-specific initialization
-        self.ui: DebugUI = DebugUI(self.debug)
+        self.ui: t.Any = DebugUI(self.debug)
         self.app.pin_callback = self.ui.get_pin
         self.app.button_callback = self.ui.button_request
         self.reset_debug_features()
@@ -1392,8 +1392,8 @@ class TrezorTestContext:
             t.Callable[[protobuf.MessageType], protobuf.MessageType],
         ] = {}
 
-    def reset_resp_filters(self) -> None:
-        self.resp_filters: dict[
+    def reset_resp_mappings(self) -> None:
+        self.resp_mappings: dict[
             type[protobuf.MessageType],
             t.Callable[[protobuf.MessageType], protobuf.MessageType],
         ] = {}
@@ -1598,15 +1598,14 @@ class TrezorTestContext:
         else:
             self.filters[message_type] = callback
 
-    def set_resp_filter(
+    def set_resp_mapping(
         self,
         message_type: t.Type[protobuf.MessageType],
         callback: t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
     ) -> None:
-        """Configure a filter function for a specified message type.
+        """Configure a mapping function for a specified message type.
 
-        The `callback` must be a function that accepts a protobuf message, and returns
-        a (possibly modified) protobuf message of the same type. Whenever a message
+        The `callback` must be a function that accepts and returns a protobuf message of arbitrary type. Whenever a message
         is sent or received that matches `message_type`, `callback` is invoked on the
         message and its result is substituted for the original.
 
@@ -1616,9 +1615,9 @@ class TrezorTestContext:
             raise RuntimeError("Must be called inside 'with' statement")
 
         if callback is None:
-            del self.resp_filters[message_type]
+            del self.resp_mappings[message_type]
         else:
-            self.resp_filters[message_type] = callback
+            self.resp_mappings[message_type] = callback
 
     def _filter_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
         message_type = msg.__class__
@@ -1628,9 +1627,9 @@ class TrezorTestContext:
         else:
             return msg
 
-    def _filter_resp_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
+    def _map_resp_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
         message_type = msg.__class__
-        callback = self.resp_filters.get(message_type)
+        callback = self.resp_mappings.get(message_type)
         if callable(callback):
             return callback(deepcopy(msg))
         else:
@@ -1666,7 +1665,7 @@ class TrezorTestContext:
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
             input_flow.throw(value)
-        self.reset_resp_filters()
+        self.reset_resp_mappings()
         self.actual_responses = []
 
     def _verify_responses(
@@ -1689,13 +1688,13 @@ class TrezorTestContext:
                     )
                 raise AssertionError("\n".join(output))
 
-            act_filtered = self._filter_resp_message(act)
-            if act_filtered is None:
+            act_mapped = self._map_resp_message(act)
+            if act_mapped is None:
                 output = self._expectation_lines(expected, i)
                 output.append("This and the following message was not received.")
                 raise AssertionError("\n".join(output))
 
-            if not exp.match(act_filtered):
+            if not exp.match(act_mapped):
                 output = self._expectation_lines(expected, i)
                 output.append("Actually received:")
                 output.append(textwrap.indent(protobuf.format_message(act), "    "))

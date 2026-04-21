@@ -123,8 +123,10 @@ def test_ripple_sign_invalid_fee(session: Session):
 @pytest.mark.models("core")
 def test_signtx_payment_req(session: Session):
     from trezorlib import ethereum, misc
-
-    from ..payment_req import CoinPurchaseMemo, make_payment_request
+    from trezorlib.testing.device_tests.payment_req import (
+        CoinPurchaseMemo,
+        make_payment_request,
+    )
 
     memo = CoinPurchaseMemo(
         amount="6.36 ETH",

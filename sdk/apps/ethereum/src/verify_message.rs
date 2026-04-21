@@ -3,7 +3,7 @@ use crate::{
     helpers::{address_from_bytes, bytes_from_address},
     proto::{
         common::{Success, button_request::ButtonRequestType},
-        ethereum::EthereumVerifyMessage,
+        ethereum::VerifyMessage,
     },
     sign_message::message_digest,
 };
@@ -11,21 +11,19 @@ use crate::{
 use alloc::{string::ToString, vec::Vec};
 #[cfg(test)]
 use std::{string::ToString, vec::Vec};
-use trezor_app_sdk::{Error, Result, crypto, info, ui};
+use trezor_app_sdk::{Error, Result, crypto, ui};
 
-pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
-    info!("verify message");
+pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
     let digest = message_digest(msg.message.as_slice());
     if msg.signature.len() != 65 {
-        // TODO: proper error type: DataError("Invalid signature")
-        return Err(Error::DataError);
+        return Err(Error::DataError("Invalid signature"));
     }
 
     let signature: [u8; 65] = msg
         .signature
         .as_slice()
         .try_into()
-        .map_err(|_| Error::DataError)?;
+        .map_err(|_| Error::DataError("Invalid signature"))?;
 
     let sig = [signature[64]] // recovery id
         .iter()
@@ -33,21 +31,18 @@ pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
         .cloned()
         .collect::<Vec<u8>>()
         .try_into()
-        .map_err(|_| Error::DataError)?;
+        .map_err(|_| Error::DataError("Invalid signature"))?;
 
-    info!("verifying secp256k1_verify_recover");
-    let (pubkey, len) = crypto::secp256k1_verify_recover(&sig, &digest).ok_or(Error::DataError)?;
+    let (pubkey, len) = crypto::secp256k1_verify_recover(&sig, &digest)
+        .ok_or(Error::DataError("Invalid signature"))?;
 
-    info!("hashing pubkey");
     let pkh_hash = crypto::keccak_256(&pubkey[1..len]);
     let pkh = &pkh_hash[pkh_hash.len() - 20..]; // Last 20 bytes
 
-    info!("getting address");
     let address_bytes = bytes_from_address(&msg.address)?;
 
     if address_bytes != pkh {
-        // TODO: proper error type: DataError("Invalid signature")
-        return Err(Error::DataError);
+        return Err(Error::DataError("Invalid signature"));
     }
 
     let address = address_from_bytes(&address_bytes, None);
@@ -62,7 +57,7 @@ pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
     )?;
 
     ui::show_success(
-        "Done",
+        tr!("words__title_done"),
         "The signature is valid.",
         "Continue",
         None,

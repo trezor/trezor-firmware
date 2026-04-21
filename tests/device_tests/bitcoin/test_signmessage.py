@@ -22,9 +22,9 @@ from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType, message_filters
 from trezorlib.exceptions import Cancelled
+from trezorlib.testing.common import is_core
 from trezorlib.tools import parse_path
 
-from ...common import is_core
 from ...input_flows import (
     InputFlowConfirmAllWarnings,
     InputFlowSignMessageInfo,

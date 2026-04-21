@@ -24,10 +24,10 @@ from trezorlib import btc, device, exceptions, messages
 from trezorlib.client import PassphraseSetting
 from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.protobuf import MessageType
+from trezorlib.testing import common
+from trezorlib.testing import translations as TR
 from trezorlib.tools import parse_path
 
-from .. import common
-from .. import translations as TR
 from ..device_tests.bitcoin.coinjoin_req import make_coinjoin_request
 from ..tx_cache import TxCache
 from . import recovery
@@ -35,8 +35,7 @@ from .common import go_next, unlock_gesture
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import LayoutContent
-
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 TX_CACHE_MAINNET = TxCache("Bitcoin")
 TX_CACHE_TESTNET = TxCache("Testnet")

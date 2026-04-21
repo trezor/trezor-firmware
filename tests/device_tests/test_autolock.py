@@ -21,8 +21,7 @@ import pytest
 from trezorlib import device, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
-
-from ..common import TEST_ADDRESS_N, get_test_address
+from trezorlib.testing.common import TEST_ADDRESS_N, get_test_address
 
 PIN4 = "1234"
 

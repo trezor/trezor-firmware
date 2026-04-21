@@ -1,0 +1,22 @@
+{
+  "actual_hash": "9647bb2c62af271ace0ad2d8c3040f8de6d327a03b4ab3e075c4dc8d54c1e18c",
+  "expected_hash": "f44c1fb42da006f1b1720979c9fc006b85a60d575e825fd77172d392d051941c",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "5a486d6f53fea09e9f4ada8d7020b8677dc45b291bc144d412b64ee8a10dc165",
+    "ee8b92303562cf1d4651425a3077e96c6b1a2935efcfe354e03c92f42c725602",
+    "dfe32f962741d4cf2ec0657c2e4da7108c9a4976df6cec6b9c4b3b3eab91fef5",
+    "89d66cfcc7f16f30d8eaff2db3438ea7ae03ab2f629090c4b1471605821a794d",
+    "5b3484b016ef0116b16f3cdfce3b487380de8a3a31ca90f1c615ce2d4b088e93",
+    "dfe32f962741d4cf2ec0657c2e4da7108c9a4976df6cec6b9c4b3b3eab91fef5",
+    "6fc260bae2d5e1e0db840abf2d26eb40938ff17a12db9e97ee000ce448af4566",
+    "c6a7c66f05028626edcc5907ed9bbf3d4050aa04308b06e548d1b1c76137f44a",
+    "72745cf8386917938ccdfa97ffdd97757561c963ec0a4a5ed3962cff9d6ebf74"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_sign_typed_data.py::test_ethereum_sign_typed_data_bad_show_message_hash"
+  }
+}

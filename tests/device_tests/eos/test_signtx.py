@@ -19,9 +19,8 @@ import pytest
 from trezorlib import eos
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.messages import EosSignedTx
+from trezorlib.testing.common import MNEMONIC12
 from trezorlib.tools import parse_path
-
-from ...common import MNEMONIC12
 
 CHAIN_ID = "cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f"
 ADDRESS_N = parse_path("m/44h/194h/0h/0/0")

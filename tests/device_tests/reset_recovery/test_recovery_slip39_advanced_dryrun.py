@@ -19,8 +19,8 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.testing.common import MNEMONIC_SLIP39_ADVANCED_20
 
-from ...common import MNEMONIC_SLIP39_ADVANCED_20
 from ...input_flows import InputFlowSlip39AdvancedRecoveryDryRun
 
 pytestmark = pytest.mark.models("core")

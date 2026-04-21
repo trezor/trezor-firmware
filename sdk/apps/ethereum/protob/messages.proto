@@ -1,0 +1,57 @@
+syntax = "proto2";
+package hw.trezor.messages;
+
+// import "options.proto";
+
+/**
+ * Messages for Trezor communication
+ */
+
+/**
+ * Mapping between Trezor wire identifier (uint) and a protobuf message
+ */
+enum MessageType {
+  // option (wire_enum) = true;
+
+  // Ethereum
+  MessageType_GetPublicKey           = 0 ;
+  MessageType_PublicKey              = 1 ;
+  MessageType_GetAddress             = 2 ;
+  MessageType_Address                = 3 ;
+  MessageType_SignTx                 = 4 ;
+  MessageType_SignTxEIP1559          = 5 ;
+  MessageType_TxRequest              = 6 ;
+  MessageType_TxAck                  = 7 ;
+  MessageType_SignMessage            = 8 ;
+  MessageType_VerifyMessage          = 9 ;
+  MessageType_MessageSignature       = 10;
+  MessageType_SignTypedData          = 11;
+  MessageType_TypedDataStructRequest = 12;
+  MessageType_TypedDataStructAck     = 13;
+  MessageType_TypedDataValueRequest  = 14;
+  MessageType_TypedDataValueAck      = 15;
+  MessageType_TypedDataSignature     = 16;
+  MessageType_SignTypedHash          = 17;
+  MessageType_Success                        = 18;
+
+}
+
+// [(wire_in) = true]
+// [(wire_out) = true]
+// [(wire_in) = true]
+// [(wire_out) = true]
+// [(wire_in) = true]
+// [(wire_in) = true]
+// [(wire_out) = true]
+// [(wire_in) = true]
+// [(wire_in) = true]
+// [(wire_in) = true]
+//  [(wire_out) = true]
+//  [(wire_in) = true]
+//  [(wire_out) = true]
+//  [(wire_in) = true]
+//  [(wire_out) = true]
+//  [(wire_in) = true]
+//  [(wire_out) = true]
+//  [(wire_in) = true]
+//  [(wire_out) = true]

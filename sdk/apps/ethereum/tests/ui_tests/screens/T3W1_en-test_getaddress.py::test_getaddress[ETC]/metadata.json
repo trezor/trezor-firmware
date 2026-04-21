@@ -1,0 +1,17 @@
+{
+  "actual_hash": "90ff85532ae719fe97b1fef011ad65c4efac456dc310927e5f9e37eb90cc06cc",
+  "expected_hash": "90ff85532ae719fe97b1fef011ad65c4efac456dc310927e5f9e37eb90cc06cc",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "9467dd4efb436f31c3889a0dd1afafac076f6acc459067d11110956e3f14fb44",
+    "32b288fb18fda0239cbc2d5e6571eb8ddcdc696acf141d0189045624faf89d03",
+    "6c2d49a2bbacccdb6aeeb9357f8d1e3e9be05ac281578ac551c56edc2c99839d",
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_getaddress.py::test_getaddress[ETC]"
+  }
+}

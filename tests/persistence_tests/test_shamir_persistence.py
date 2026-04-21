@@ -17,14 +17,17 @@
 import pytest
 
 from trezorlib import device, messages
+from trezorlib._internal.emulator import Emulator
 from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.messages import RecoveryStatus
+from trezorlib.testing import translations as TR
+from trezorlib.testing.common import (
+    MNEMONIC_SLIP39_ADVANCED_20,
+    MNEMONIC_SLIP39_BASIC_20_3of6,
+)
+from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
-from .. import translations as TR
 from ..click_tests import common, recovery
-from ..common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_BASIC_20_3of6
-from ..device_handler import BackgroundDeviceHandler
-from ..emulators import Emulator
 from ..upgrade_tests import core_only
 
 

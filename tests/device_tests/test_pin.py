@@ -21,8 +21,8 @@ import pytest
 from trezorlib import messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import PinException
+from trezorlib.testing.common import check_pin_backoff_time, get_test_address
 
-from ..common import check_pin_backoff_time, get_test_address
 from ..input_flows import InputFlowPINBackoff
 
 PIN4 = "1234"

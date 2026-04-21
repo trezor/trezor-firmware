@@ -20,13 +20,13 @@ import pytest
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
-
-from .. import translations as TR
-from ..common import (
+from trezorlib.testing import translations as TR
+from trezorlib.testing.common import (
     MNEMONIC_SLIP39_SINGLE_EXT_20,
     TEST_ADDRESS_N,
     MNEMONIC_SLIP39_BASIC_20_3of6,
 )
+
 from ..input_flows import InputFlowSlip39BasicBackup, InputFlowSlip39BasicRecoveryDryRun
 
 pytestmark = pytest.mark.models("core")

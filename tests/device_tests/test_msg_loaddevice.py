@@ -20,8 +20,7 @@ from trezorlib import debuglink, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.messages import BackupType
-
-from ..common import (
+from trezorlib.testing.common import (
     MNEMONIC12,
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_BASIC_20_3of6,

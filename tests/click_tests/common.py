@@ -3,15 +3,15 @@ from __future__ import annotations
 import time
 import typing as t
 from enum import Enum
+from typing import Union
 
 from trezorlib.debuglink import LayoutType
-
-from .. import translations as TR
+from trezorlib.testing import translations as TR
 
 if t.TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
 
-    AllActionsType = list[str | tuple[str, ...]]
+    AllActionsType = list[Union[str, tuple[str, ...]]]
 
 
 # Passphrases and addresses for both models
@@ -214,7 +214,7 @@ def go_to_category(
         assert layout == category, f"Layout mismatch: expected {category}, got {layout}"
 
     # Category changed, reset coordinates
-    COORDS_PREV = (0, 0)  # type: ignore
+    COORDS_PREV = (0, 0)
 
 
 def press_char(debug: "DebugLink", char: str) -> None:
@@ -236,7 +236,7 @@ def press_char(debug: "DebugLink", char: str) -> None:
     is_bolt_space = debug.layout_type is LayoutType.Bolt and char == " "
     if coords == COORDS_PREV and not is_bolt_space:
         time.sleep(1.1)
-    COORDS_PREV = coords  # type: ignore
+    COORDS_PREV = coords
     for _ in range(amount):
         debug.click(coords)
 

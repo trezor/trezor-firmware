@@ -1,0 +1,45 @@
+syntax = "proto2";
+package hw.trezor.definitions;
+
+/**
+ * Definitions type enum.
+ * Used to check the encoded EthereumNetworkInfo/EthereumTokenInfo/SolanaTokenInfo message.
+ */
+enum DefinitionType {
+  NETWORK = 0;
+  TOKEN   = 1;
+}
+
+// ****** CROSS-PARSEABILITY NOTE ******
+//
+// Neither definition type should be cross-parseable with any other definition type.
+// That is, any parser shoud *fail to parse* a data blob of, e.g., EthereumNetworkInfo,
+// as a different definition type, e.g., SolanaTokenInfo.
+//
+// To achieve that, we vary the wire types of the fields in order:
+//
+// * NetworkInfo: varint, length-delimited, ...
+// * TokenInfo: length-delimited, varint, ...
+
+/**
+ * Ethereum network definition.
+ * @embed
+ */
+message NetworkInfo {
+  required uint64 chain_id = 1;
+  required string symbol   = 2;
+  required uint32 slip44   = 3;
+  required string name     = 4;
+}
+
+/**
+ * Ethereum token definition.
+ * @embed
+ */
+message TokenInfo {
+  required bytes  address  = 1;
+  required uint64 chain_id = 2;
+  required string symbol   = 3;
+  required uint32 decimals = 4;
+  required string name     = 5;
+}

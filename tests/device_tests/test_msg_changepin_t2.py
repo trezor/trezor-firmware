@@ -21,8 +21,8 @@ from trezorlib.client import MAX_PIN_LENGTH
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.testing.common import get_test_address
 
-from ..common import get_test_address
 from ..input_flows import (
     InputFlowCodeChangeFail,
     InputFlowNewCodeMismatch,

@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ... import translations as TR
+from trezorlib.testing import translations as TR
+
 from ..test_pin import PIN4
 from .common import (
     Menu,
@@ -33,8 +34,7 @@ from .common import (
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
     from trezorlib.messages import Features
-
-    from ...device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 # Trezor Safe 7 only
 pytestmark = [pytest.mark.models("eckhart")]
 

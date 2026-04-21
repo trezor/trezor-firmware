@@ -21,8 +21,7 @@ import pytest
 from _pytest.mark.structures import MarkDecorator
 
 from trezorlib.models import CORE_MODELS, LEGACY_MODELS, T1B1, T2T1, by_internal_name
-
-from ..emulators import ALL_TAGS, LOCAL_BUILD_PATHS, gen_from_model
+from trezorlib.testing.emulators import ALL_TAGS, LOCAL_BUILD_PATHS, gen_from_model
 
 SELECTED_GENS = [
     gen.strip() for gen in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",") if gen

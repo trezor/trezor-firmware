@@ -74,15 +74,44 @@ pub struct Align<T>(
 // Re-export UI archived types
 pub use ui::{ArchivedTrezorUiEnum, ArchivedTrezorUiResult};
 
-#[derive(ufmt::derive::uDebug)]
 pub enum Error {
     ApiError(ApiError),
     ServiceError,
+    DataError(&'static str),
+    Cancelled,
     InvalidFunction,
     InvalidMessage,
     InvalidArgument,
-    DataError,
-    Cancelled,
+    ValueError(&'static str),
+}
+
+impl Error {
+    pub fn code(&self) -> u16 {
+        match self {
+            // Keep API error code space separate from local SDK errors.
+            Self::ApiError(_) => 1,
+            Self::ServiceError => 2,
+            Self::DataError(_) => 3,
+            Self::Cancelled => 4,
+            Self::InvalidFunction => 5,
+            Self::InvalidMessage => 6,
+            Self::InvalidArgument => 7,
+            Self::ValueError(_) => 8,
+        }
+    }
+
+    pub fn message(&self) -> &'static str {
+        match self {
+            Self::ApiError(_) => "api error",
+            Self::ServiceError => "service error",
+            Self::InvalidFunction => "invalid function",
+            Self::InvalidMessage => "invalid message",
+            Self::InvalidArgument => "invalid argument",
+            Self::DataError(msg) => msg,
+            Self::ValueError(msg) => msg,
+            Self::Cancelled => "cancelled",
+        }
+    }
 }
 
 impl From<ApiError> for Error {
@@ -117,24 +146,26 @@ pub unsafe extern "C" fn applet_main(
     // SAFETY: trusting the caller of applet_main to provide us with a valid getter
     unsafe { low_level_api::init(api_get) };
 
-    info!("registering IPC");
     CORE_SERVICE.start();
     core_services::init(&CORE_SERVICE);
     trace!("IPC registered");
 
     // Call the user's app function
     let result = unsafe { app() };
-    info!("Finishing request");
 
     match result {
         Ok(()) => {
-            info!("Application completed successfully");
             _ = low_level_api::system_exit();
         }
         Err(e) => {
             let mut error_buf = [0u8; 256];
             let mut writer = util::SliceWriter::new(&mut error_buf);
-            _ = ufmt::uwrite!(writer, "Application failed with error code: {:?}", e);
+            _ = ufmt::uwrite!(
+                writer,
+                "Application failed with error code: {} and message: {}",
+                e.code(),
+                e.message()
+            );
             error!("{}", writer.as_ref());
             _ = low_level_api::system_exit_error("Error", writer.as_ref(), "");
         }

@@ -1,7 +1,7 @@
 use crate::{
     definitions::unknown_network,
-    proto::definitions::{EthereumNetworkInfo, EthereumTokenInfo},
-    proto::ethereum_eip712::ethereum_typed_data_struct_ack::{EthereumDataType, EthereumFieldType},
+    proto::definitions::{NetworkInfo, TokenInfo},
+    proto::ethereum::typed_data_struct_ack::{DataType, FieldType},
     strutil::{hex_decode, hex_encode},
     uformat,
 };
@@ -24,7 +24,7 @@ const RSKIP60_NETWORKS: [u64; 2] = [30, 31];
 
 /// Converts address in bytes to a checksummed string as defined
 /// in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md
-pub fn address_from_bytes(address_bytes: &[u8], network: Option<&EthereumNetworkInfo>) -> String {
+pub fn address_from_bytes(address_bytes: &[u8], network: Option<&NetworkInfo>) -> String {
     let default = unknown_network();
     let network_info = network.unwrap_or(&default);
     let prefix = if RSKIP60_NETWORKS.contains(&network_info.chain_id) {
@@ -62,30 +62,31 @@ pub fn address_from_bytes(address_bytes: &[u8], network: Option<&EthereumNetwork
 
 pub fn bytes_from_address(address: &str) -> Result<Vec<u8>> {
     if address.len() == 40 {
-        hex_decode(address).map_err(|_| Error::DataError)
+        hex_decode(address).map_err(|_| Error::DataError("Invalid address format"))
     } else if address.len() == 42 {
         if !address.starts_with("0x") && !address.starts_with("0X") {
-            // TODO: proper error type: Ethereum: invalid beginning of an address
-            Err(Error::DataError)
+            Err(Error::DataError("invalid beginning of an address"))
         } else {
-            hex_decode(&address[2..]).map_err(|_| Error::DataError)
+            hex_decode(&address[2..]).map_err(|_| Error::DataError("Invalid address format"))
         }
     } else if address.is_empty() {
         Ok(vec![])
     } else {
-        // TODO: proper error type: Invalid address length
-        Err(Error::DataError)
+        Err(Error::DataError("Invalid address length"))
     }
 }
 
 /// Create a string from type definition (like uint256 or bytes16).
-pub fn get_type_name(field: &EthereumFieldType) -> Result<String> {
+pub fn get_type_name(field: &FieldType) -> Result<String> {
     let data_type = field.data_type;
     let size = field.size;
 
-    if data_type == EthereumDataType::Struct as i32 {
-        return Ok(field.struct_name.clone().ok_or(Error::DataError)?);
-    } else if data_type == EthereumDataType::Array as i32 {
+    if data_type == DataType::Struct as i32 {
+        return Ok(field
+            .struct_name
+            .clone()
+            .ok_or(Error::DataError("Missing struct name"))?);
+    } else if data_type == DataType::Array as i32 {
         let entry_type = field
             .entry_type
             .as_ref()
@@ -95,51 +96,50 @@ pub fn get_type_name(field: &EthereumFieldType) -> Result<String> {
             Some(n) => Ok(uformat!("{}[{}]", inner.as_str(), n)),
             None => Ok(uformat!("{}[]", inner.as_str())),
         };
-    } else if data_type == EthereumDataType::Uint as i32 {
+    } else if data_type == DataType::Uint as i32 {
         let n = size.expect("validate_field_type must ensure size for uint");
         return Ok(uformat!("uint{}", n * 8));
-    } else if data_type == EthereumDataType::Int as i32 {
+    } else if data_type == DataType::Int as i32 {
         let n = size.expect("validate_field_type must ensure size for int");
         return Ok(uformat!("int{}", n * 8));
-    } else if data_type == EthereumDataType::Bytes as i32 {
+    } else if data_type == DataType::Bytes as i32 {
         return match size {
             Some(n) if n != 0 => Ok(uformat!("bytes{}", n)),
             _ => Ok("bytes".to_string()),
         };
-    } else if data_type == EthereumDataType::String as i32 {
+    } else if data_type == DataType::String as i32 {
         return Ok("string".to_string());
-    } else if data_type == EthereumDataType::Bool as i32 {
+    } else if data_type == DataType::Bool as i32 {
         return Ok("bool".to_string());
-    } else if data_type == EthereumDataType::Address as i32 {
+    } else if data_type == DataType::Address as i32 {
         return Ok("address".to_string());
     }
 
-    panic!("Unsupported EthereumDataType: {}", data_type);
+    panic!("Unsupported DataType: {}", data_type);
 }
 
 /// Used by sign_typed_data module to show data to user.
 pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
-    info!("decoding typed data for type: {}", type_name);
     if type_name.starts_with("bytes") {
         return Ok(hex_encode(data));
     } else if type_name == "string" {
         return core::str::from_utf8(data)
             .map(|s| s.to_string())
-            .map_err(|_| Error::InvalidMessage);
+            .map_err(|_| Error::DataError("Invalid UTF-8 string"));
     } else if type_name == "address" {
         return Ok(address_from_bytes(data, None));
     } else if type_name == "bool" {
         return Ok(if data == [0x01] { "true" } else { "false" }.to_string());
     } else if type_name.starts_with("uint") {
         if data.len() > 32 {
-            return Err(Error::InvalidMessage);
+            return Err(Error::DataError("Invalid uint length"));
         }
         // TODO: better implement parsing int value from bytes
         let v = U256::from_big_endian(data);
         return Ok(v.to_string());
     } else if type_name.starts_with("int") {
         if data.len() > 16 {
-            return Err(Error::InvalidMessage);
+            return Err(Error::DataError("Invalid int length"));
         }
         let mut buf = [0u8; 16];
         buf[16 - data.len()..].copy_from_slice(data);
@@ -147,21 +147,22 @@ pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
         return Ok(s.to_string());
     }
 
-    // TODO: proper error type: ValueError  # Unsupported data type for direct field decoding
-    Err(Error::InvalidMessage)
+    Err(Error::ValueError(
+        "Unsupported data type for direct field decoding",
+    ))
 }
 
 pub fn get_fee_items_regular(
     gas_price: U256,
     gas_limit: U256,
-    network: &EthereumNetworkInfo,
+    network: &NetworkInfo,
 ) -> [(String, String, bool); 2] {
     let gas_limit_str = uformat!("{} units", gas_limit.to_string().as_str());
     let gas_price_str = format_ethereum_amount(gas_price, None, network, true);
 
     [
-        ("Gas limit".into(), gas_limit_str, false),
-        ("Gas price".into(), gas_price_str, false),
+        (tr!("ethereum__gas_limit").into(), gas_limit_str, false),
+        (tr!("ethereum__gas_price").into(), gas_price_str, false),
     ]
 }
 
@@ -169,22 +170,30 @@ pub fn get_fee_items_eip1559(
     max_gas_fee: U256,
     max_priority_fee: U256,
     gas_limit: U256,
-    network: &EthereumNetworkInfo,
+    network: &NetworkInfo,
 ) -> [(String, String, bool); 3] {
     let gas_limit_str = uformat!("{} units", gas_limit.to_string().as_str());
     let max_gas_fee_str = format_ethereum_amount(max_gas_fee, None, network, true);
     let max_priority_fee_str = format_ethereum_amount(max_priority_fee, None, network, true);
     [
-        ("Gas limit".into(), gas_limit_str, false),
-        ("Max fee per gas".into(), max_gas_fee_str, false),
-        ("Max priority fee".into(), max_priority_fee_str, false),
+        (tr!("ethereum__gas_limit").into(), gas_limit_str, false),
+        (
+            tr!("ethereum__max_gas_price").into(),
+            max_gas_fee_str,
+            false,
+        ),
+        (
+            tr!("ethereum__priority_fee").into(),
+            max_priority_fee_str,
+            false,
+        ),
     ]
 }
 
 pub fn format_ethereum_amount(
     value: U256,
-    token: Option<&EthereumTokenInfo>,
-    network: &EthereumNetworkInfo,
+    token: Option<&TokenInfo>,
+    network: &NetworkInfo,
     force_unit_gwei: bool,
 ) -> String {
     let (mut suffix, mut decimals) = if let Some(token) = token {
@@ -194,7 +203,6 @@ pub fn format_ethereum_amount(
     };
 
     let digits = value.to_string();
-    info!("digits: {}", digits.as_str());
 
     if force_unit_gwei {
         debug_assert!(token.is_none());
@@ -306,12 +314,12 @@ impl Trade {
     ) -> Result<Self> {
         if let Some(ref sell_amount) = sell_amount {
             if !sell_amount.starts_with('-') {
-                return Err(Error::DataError);
+                return Err(Error::DataError("Invalid sell amount format"));
             }
         }
 
         if !buy_amount.starts_with('+') {
-            return Err(Error::DataError);
+            return Err(Error::DataError("Invalid buy amount format"));
         }
 
         Ok(Self {
@@ -329,7 +337,7 @@ pub fn is_swap(trades: &[Trade]) -> Result<bool> {
     let has_missing_sell_amount = trades.iter().any(|t| t.sell_amount.is_none());
 
     if has_sell_amount && has_missing_sell_amount {
-        return Err(Error::DataError);
+        return Err(Error::DataError("Inconsistent trade data"));
     }
 
     Ok(has_sell_amount)

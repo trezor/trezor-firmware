@@ -22,8 +22,8 @@ pub use rkyv::Archived;
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
-use trezor_structs::{ArchivedUtilEnum, StrSlice, TrezorUiEnum};
-pub use trezor_structs::{Property, StrExt, TrezorProgressEnum, TrezorUiResult};
+use trezor_structs::{ArchivedUtilEnum, TrezorUiEnum};
+pub use trezor_structs::{Property, StrExt, StrSlice, TrezorProgressEnum, TrezorUiResult};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
@@ -31,7 +31,7 @@ use crate::service::{
     CoreIpcService, Error, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler,
 };
 use crate::util::Timeout;
-use crate::{error, info, unwrap};
+use crate::{error, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;
@@ -91,20 +91,15 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
 }
 
 fn ipc_ui_call_ext(value: &TrezorUiEnum, util_handler: &dyn UtilHandler) -> UiResult {
-    info!("serializing message");
     let bytes = to_bytes::<Failure>(value).map_err(|_| Error::FailedToSend)?;
     let message = IpcMessage::new(0, &bytes);
-    info!("sending message with size {} bytes", bytes.len());
     let result =
         services_or_die().call(CoreIpcService::Ui, &message, Timeout::max(), util_handler)?;
     // Safe validation using bytecheck before accessing archived data
-    info!("validating message");
     let archived = unwrap!(rkyv::access::<ArchivedTrezorUiResult, Failure>(
         result.data()
     ));
-    info!("deserializing message");
     let deserialized = unwrap!(deserialize::<TrezorUiResult, Failure>(archived));
-    info!("UI call deserialized successfully");
     Ok(deserialized)
 }
 
@@ -429,7 +424,6 @@ pub fn confirm_value(
         external_menu,
         warning_footer: warning_footer.map(|w| w.into()),
     };
-    info!("confirm_value calling ui call");
     ipc_ui_call(&value)
 }
 
@@ -477,7 +471,7 @@ pub fn confirm_blob(
             |name| {
                 confirm_value_intro(
                     title,
-                    &data[..data.len().min(150)], /* TODO: be precise about the 1 st page */
+                    &data[..data.len().min(170)], /* TODO: be precise about the 1 st page */
                     description,
                     verb,
                     verb_cancel,

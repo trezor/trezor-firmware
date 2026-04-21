@@ -19,9 +19,8 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext
+from trezorlib.testing.common import MNEMONIC12, get_test_address
 from trezorlib.tools import parse_path
-
-from ...common import MNEMONIC12, get_test_address
 
 PIN4 = "1234"
 PIN6 = "789456"

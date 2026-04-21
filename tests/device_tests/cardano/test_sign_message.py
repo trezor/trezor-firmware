@@ -3,8 +3,7 @@ import pytest
 from trezorlib import cardano, messages, tools
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
-
-from ...common import parametrize_using_common_fixtures
+from trezorlib.testing.common import parametrize_using_common_fixtures
 
 pytestmark = [
     pytest.mark.altcoin,

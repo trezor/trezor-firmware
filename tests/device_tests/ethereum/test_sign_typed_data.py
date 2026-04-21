@@ -16,30 +16,25 @@
 
 import pytest
 
-from trezorlib import ethereum_ext, exceptions
+from trezorlib import ethereum, exceptions
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import parametrize_using_common_fixtures
 from trezorlib.tools import parse_path
 
-from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowEIP712Cancel, InputFlowEIP712ShowMore
-
-pytestmark = [pytest.mark.extapp]
 
 
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
-def test_ethereum_sign_typed_data(
-    session: Session, instance_id: int, parameters, result
-):
+def test_ethereum_sign_typed_data(session: Session, parameters, result):
     with session.test_ctx:
         address_n = parse_path(parameters["path"])
-        ret = ethereum_ext.sign_typed_data(
+        ret = ethereum.sign_typed_data(
             session,
-            instance_id,
             address_n,
             parameters["data"],
             metamask_v4_compat=parameters["metamask_v4_compat"],
             show_message_hash=(
-                ethereum_ext.decode_hex(parameters["show_message_hash"])
+                ethereum.decode_hex(parameters["show_message_hash"])
                 if "show_message_hash" in parameters
                 else None
             ),
@@ -82,48 +77,43 @@ DATA = {
 }
 
 
-def test_ethereum_sign_typed_data_show_more_button(session: Session, instance_id: int):
+def test_ethereum_sign_typed_data_show_more_button(session: Session):
     with session.test_ctx as client:
         client.watch_layout()
         IF = InputFlowEIP712ShowMore(client)
         client.set_input_flow(IF.get())
-        ethereum_ext.sign_typed_data(
+        ethereum.sign_typed_data(
             session,
-            instance_id,
             parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
         )
 
 
-def test_ethereum_sign_typed_data_cancel(session: Session, instance_id: int):
+def test_ethereum_sign_typed_data_cancel(session: Session):
     with session.test_ctx as client, pytest.raises(exceptions.Cancelled):
         client.watch_layout()
         IF = InputFlowEIP712Cancel(client)
         client.set_input_flow(IF.get())
-        ethereum_ext.sign_typed_data(
+        ethereum.sign_typed_data(
             session,
-            instance_id,
             parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
         )
 
 
-def test_ethereum_sign_typed_data_bad_show_message_hash(
-    session: Session, instance_id: int
-):
+def test_ethereum_sign_typed_data_bad_show_message_hash(session: Session):
     with (
         session.test_ctx,
         pytest.raises(exceptions.TrezorFailure, match="Message hash mismatch"),
     ):
-        ethereum_ext.sign_typed_data(
+        ethereum.sign_typed_data(
             session,
-            instance_id,
             parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
-            show_message_hash=ethereum_ext.decode_hex(
+            show_message_hash=ethereum.decode_hex(
                 "0xbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb"
             ),
         )

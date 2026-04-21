@@ -19,9 +19,9 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.testing.common import is_core
 from trezorlib.tools import parse_path
 
-from ...common import is_core
 from ..bitcoin.signtx import request_finished, request_input, request_output
 
 B = messages.ButtonRequestType

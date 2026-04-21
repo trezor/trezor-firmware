@@ -19,8 +19,7 @@ import pytest
 import trezorlib.messages as m
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled
-
-from ..common import TEST_ADDRESS_N
+from trezorlib.testing.common import TEST_ADDRESS_N
 
 
 @pytest.mark.parametrize(

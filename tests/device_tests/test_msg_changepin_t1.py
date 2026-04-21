@@ -20,8 +20,7 @@ from trezorlib import device, messages
 from trezorlib.client import MAX_PIN_LENGTH
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
-
-from ..common import get_test_address
+from trezorlib.testing.common import get_test_address
 
 PIN4 = "1234"
 PIN6 = "789456"

@@ -17,8 +17,7 @@
 import pytest
 
 from trezorlib.debuglink import TrezorTestContext as Client
-
-from ..common import (
+from trezorlib.testing.common import (
     MNEMONIC_SLIP39_BASIC_20_3of6,
     MNEMONIC_SLIP39_BASIC_EXT_20_2of3,
     get_test_address,

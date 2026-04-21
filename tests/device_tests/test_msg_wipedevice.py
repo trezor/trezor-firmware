@@ -22,8 +22,7 @@ from trezorlib import device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import load_device
-
-from ..common import MNEMONIC12, get_test_address
+from trezorlib.testing.common import MNEMONIC12, get_test_address
 
 PIN4 = "1234"
 

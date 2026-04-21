@@ -18,9 +18,8 @@ import pytest
 
 from trezorlib import monero
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import MNEMONIC12
 from trezorlib.tools import parse_path
-
-from ...common import MNEMONIC12
 
 
 @pytest.mark.altcoin

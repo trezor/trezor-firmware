@@ -1,0 +1,33 @@
+{
+  "header": {
+    "language": "en-US",
+    "version": "2.11.1"
+  },
+  "translations": {
+    "address__confirmed": "Receive address confirmed",
+    "address__public_key_confirmed": "Public key confirmed",
+    "address__public_key": "Public key",
+    "progress__signing_transaction": "Signing transaction...",
+    "instructions__continue_in_app": "Continue in the app",
+    "send__transaction_signed": "Transaction signed",
+    "words__title_done": "Done",
+    "send__cancel_transaction": "Cancel transaction",
+    "words__cancel_and_exit": "Cancel and exit",
+    "words__send": "Send",
+    "ethereum__staking_stake": "Stake",
+    "ethereum__staking_unstake": "Unstake",
+    "ethereum__staking_claim_address": "Claim address",
+    "ethereum__staking_claim_intro": "Claim ETH from Everstake?",
+    "ethereum__staking_stake_intro": "Stake ETH on Everstake?",
+    "ethereum__staking_claim": "Claim",
+    "ethereum__staking_unstake_intro": "Unstake ETH from Everstake?",
+    "ethereum__staking_stake_address": "Stake address",
+    "ethereum__gas_limit": "Gas limit",
+    "ethereum__gas_price": "Gas price",
+    "ethereum__max_gas_price": "Max fee per gas",
+    "ethereum__priority_fee": "Max priority fee",
+    "ethereum__title_all_input_data_template": "All input data ({0} bytes)",
+    "send__maximum_fee": "Maximum fee",
+    "send__cancel_sign": "Cancel sign"
+  }
+}

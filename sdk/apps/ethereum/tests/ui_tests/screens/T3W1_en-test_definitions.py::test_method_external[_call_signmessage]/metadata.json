@@ -1,0 +1,19 @@
+{
+  "actual_hash": "b6ab02b65c0043cec1b648abe06d58062581b743b35d7476d204cda5bf3cede2",
+  "expected_hash": "438784eee704b1731ab3485d4babd015bc33515c71faa81cab6b499151e1eb13",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "da1ec75ef3e6cd3574135c909f800856e39cb0d4edbc9813da61ba0baf49fb05",
+    "9d87eb291e4151361fe5f811cc12440ace5651250b86498d3b8e04a4c095473c",
+    "a43c81bee482d86aa796d9b7673dd96e7c6237da796b9234afd1af2c3969cb77",
+    "73f0831add0fc60e1f82846addde545bd84a9149b6875ab31452faa3ef732cf0",
+    "55b1e2b390cd7c6182c9ad69f03fc77f10dfceefba9abfcca3e6995a6c101466",
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_definitions.py::test_method_external[_call_signmessage]"
+  }
+}

@@ -1,11 +1,11 @@
-use crate::proto::definitions::EthereumTokenInfo;
+use crate::proto::definitions::TokenInfo;
 #[cfg(not(test))]
 use alloc::vec;
 #[cfg(test)]
 use std::vec;
 
-pub fn unknown_token() -> EthereumTokenInfo {
-    EthereumTokenInfo {
+pub fn unknown_token() -> TokenInfo {
+    TokenInfo {
         symbol: "Wei UNKN".into(),
         decimals: 0,
         address: vec![],
@@ -14,10 +14,10 @@ pub fn unknown_token() -> EthereumTokenInfo {
     }
 }
 
-pub fn token_by_chain_address(chain_id: u64, address: &[u8]) -> Option<EthereumTokenInfo> {
+pub fn token_by_chain_address(chain_id: u64, address: &[u8]) -> Option<TokenInfo> {
     for (addr, symbol, decimal, name) in token_iterator(chain_id) {
         if address == addr {
-            return Some(EthereumTokenInfo {
+            return Some(TokenInfo {
                 symbol: symbol.into(),
                 decimals: decimal.into(),
                 address: addr.to_vec(),

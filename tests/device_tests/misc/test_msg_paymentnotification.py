@@ -23,7 +23,11 @@ from trezorlib.tools import parse_path
 
 @pytest.mark.models("core")
 def test_paymentnotification(session: Session):
-    from ..payment_req import CoinPurchaseMemo, TextMemo, make_payment_request
+    from trezorlib.testing.device_tests.payment_req import (
+        CoinPurchaseMemo,
+        TextMemo,
+        make_payment_request,
+    )
 
     purchase_memo = CoinPurchaseMemo(
         amount="0.0636 BTC",

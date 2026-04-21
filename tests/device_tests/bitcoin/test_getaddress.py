@@ -20,10 +20,10 @@ from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import MultisigPubkeysOrder, SafetyCheckLevel
+from trezorlib.testing.common import is_core
 from trezorlib.tools import parse_path
 
 from ... import bip32
-from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 
 

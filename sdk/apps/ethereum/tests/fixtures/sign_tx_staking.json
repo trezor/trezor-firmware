@@ -1,0 +1,168 @@
+{
+    "setup": {
+        "mnemonic": "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "stake_hoodi",
+            "parameters": {
+                "comment": "Stake transaction - Hoodi testnet",
+                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 1120132,
+                "sig_r": "c2d3df7945281e1eb3147ca4cb1d1cd3d128d4e194f915cad8a94377e9637e3e",
+                "sig_s": "7368c340ca60aca22729c47dfd832e33a5f54cc0664a7be874f0e49f09327383"
+            }
+        },
+        {
+            "name": "stake_source_not_1",
+            "parameters": {
+                "comment": "Stake transaction - Hoodi testnet. Source is not 1.",
+                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000002",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 1120132,
+                "sig_r": "bc62339b60d2d98db518891cf63bd82994088339fb885e7f342cef2bbffe5486",
+                "sig_s": "1889ee1876ea678161211fde29a21f1b067d662ad298a4037be795faffde0a35"
+            }
+        },
+        {
+            "name": "stake_main",
+            "parameters": {
+                "comment": "Stake transaction - Mainnet",
+                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "104ae56ff2ec396a86191fa94b6e79af20efcc28e5d16b39d90fe05c990a2ce6",
+                "sig_s": "504fd80e50890df83a9b004d0ba97db11b93354327e717df5c0874036f616d47"
+            }
+        },
+        {
+            "name": "unstake_hoodi",
+            "parameters": {
+                "comment": "Unstake transaction - Hoodi testnet",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 1120132,
+                "sig_r": "52f130eabe5bf803bb1b8e0ee3da21495bd313310293176e7a431959fe28d7e2",
+                "sig_s": "58eefc8a896265d09f70123065a8a9d2324839aa118218d243ac740e158d4c35"
+            }
+        },
+        {
+            "name": "unstake_source_not_1",
+            "parameters": {
+                "comment": "Unstake transaction - Hoodi testnet. Source is not 1.",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 1120132,
+                "sig_r": "60ac0b26f8583849d3f640b1ce36ed257b65cb70e2fb1ca97eb1168cf6587399",
+                "sig_s": "4e0ee0dee1eccea6c08f8334fe863981e831c5860e2ba8c63a5e7574e63602aa"
+            }
+        },
+        {
+            "name": "unstake_main",
+            "parameters": {
+                "comment": "Unstake transaction - Mainnet",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "09077008477f40468928a94c45bfdb0b0ff473473401cd918740af4c98734bea",
+                "sig_s": "3cad467c41810a2d8901020a803d6836d1d5a39d8198eaba3eec121a48997b18"
+            }
+        },
+        {
+            "name": "hoodi",
+            "parameters": {
+                "comment": "Claim transaction - Hoodi testnet",
+                "data": "33986ffa",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x624087DD1904ab122A32878Ce9e933C7071F53B9",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 1120131,
+                "sig_r": "38eef3f395f3a2020250bb9c7027ea299816cef80d9dd6a9e10c4a8f350d7d81",
+                "sig_s": "072ac2a37378a552e84f5c189e4ad55f02da7898b3c143dc0edea1a94b2a17f6"
+            }
+        },
+        {
+            "name": "claim_mainnet",
+            "parameters": {
+                "comment": "Claim transaction - Mainnet",
+                "data": "33986ffa",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "c477417e2471d94c089d082fe1570fa8ba114e6572211c4b539244e2d40457d1",
+                "sig_s": "0bb029ed5dbe76016f74263c0a8709bcbd89affac62504196a1cf546d7c723a3"
+            }
+        }
+    ]
+}

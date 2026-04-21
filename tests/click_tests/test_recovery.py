@@ -21,16 +21,16 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 
 from trezorlib import device, exceptions, messages
+from trezorlib.debuglink import LayoutType
+from trezorlib.testing.common import MNEMONIC12, MNEMONIC_SLIP39_BASIC_20_3of6
 
-from ..common import MNEMONIC12, LayoutType, MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
 from .common import go_next
 from .test_autolock import PIN4, set_autolock_delay, unlock_dry_run
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
-
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("core")

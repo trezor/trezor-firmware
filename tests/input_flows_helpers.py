@@ -3,10 +3,10 @@ import typing as t
 from trezorlib import messages
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorTestContext as Client
+from trezorlib.testing import translations as TR
+from trezorlib.testing.common import BRGeneratorType, get_text_possible_pagination
 
-from . import translations as TR
 from .click_tests.common import go_next
-from .common import BRGeneratorType, get_text_possible_pagination
 
 B = messages.ButtonRequestType
 

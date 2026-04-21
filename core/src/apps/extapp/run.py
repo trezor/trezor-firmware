@@ -7,17 +7,17 @@ import trezorui_api
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
 from trezor import app, io, loop
-from trezor.messages import ExtAppMessage, ExtAppResponse
+from trezor.enums import FailureType
+from trezor.messages import ExtAppMessage, ExtAppResponse, Failure
 from trezor.ui import ProgressLayout
+from trezor.ui.layouts.common import interact
 from trezor.ui.layouts.progress import progress
-from trezor.ui.layouts.common import with_info, interact
 from trezor.wire import context
 from trezor.wire.errors import DataError
+
 from apps.common import paths
 from apps.common.keychain import get_keychain
 from apps.ethereum.definitions import Definitions
-from trezor.enums import ButtonRequestType
-from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
     from trezorio import IpcMessage
@@ -33,6 +33,7 @@ _SERVICE_WIRE_END = const(4)
 _SERVICE_CRYPTO = const(5)
 _SERVICE_UTIL = const(6)
 _SERVICE_PROGRESS = const(7)
+_SERVICE_WIRE_ERROR = const(8)
 
 _SERVICE_PROGRESS_INIT = const(0)
 _SERVICE_PROGRESS_REPORT = const(1)
@@ -117,21 +118,18 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             trezorui_api.send_ui_result(result=result, ipc_cb=ui_resp_cb)
 
         elif service == _SERVICE_CRYPTO:
-            print("Received crypto message with ID:", message_id)
             try:
                 obj = trezorcrypto_api.deserialize_crypto_message(data=bytes(msg.data))
 
                 if message_id == _SERIVICE_CRYPTO_GET_XPUB:
-                    print("Handling get xpub request")
                     address_n: list[int] = obj
                     try:
                         result = await _get_public_key(address_n)
-                    except:
-                        print("Failed to derive public key")
+                    # TODO: catch specific exception
+                    except:  # noqa: E722
                         result = False
 
                 elif message_id == _SERIVICE_CRYPTO_GET_ETH_XPUB_HASH:
-                    print("Handling get Ethereum pubkey hash request")
                     assert len(obj) == 3
                     address_n: list[int] = obj[0]
                     encoded_network: bytes | None = obj[1]
@@ -140,12 +138,11 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                         result = await _ethereum_pubkeyhash(
                             address_n, encoded_network, encoded_token
                         )
-                    except:
-                        print("Failed to derive Ethereum pubkey hash")
+                    # TODO: catch specific exception
+                    except:  # noqa: E722
                         result = False
 
                 elif message_id == _SERVICE_CRYPTO_SIGN_TYPED_HASH:
-                    print("Handling sign typed hash request")
                     assert len(obj) == 5
                     address_n: list[int] = obj[0]
                     data_hash: bytes = obj[1]
@@ -160,32 +157,28 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                             encoded_token,
                             chain_id,
                         )
-                        print("Successfully signed typed hash", result)
-                    except:
-                        print("Failed to sign typed hash")
+                    # TODO: catch specific exception
+                    except:  # noqa: E722
                         result = False
 
                 elif message_id == _SERVICE_CRYPTO_GET_ADDRESS_MAC:
-                    print("Handling get address MAC request")
                     assert len(obj) == 3
                     address_n: list[int] = obj[0]
                     address_str: str = obj[1]
                     network: bytes | None = obj[2]
                     try:
                         result = await _get_address_mac(address_n, address_str, network)
-                    except:
-                        print("Failed to get address MAC")
+                    # TODO: catch specific exception
+                    except:  # noqa: E722
                         result = False
                 elif message_id == _SERVICE_CRYPTO_VERIFY_NONCE_CACHE:
-                    print("Handling verify nonce cache request")
                     nonce: bytes = obj
                     try:
                         result = await _verify_nonce_cache(bytes(nonce))
-                    except:
-                        print("Failed to verify nonce cache")
+                    # TODO: catch specific exception
+                    except:  # noqa: E722
                         result = False
                 elif message_id == _SERVICE_CRYPTO_CHECK_ADDRESS_MAC:
-                    print("Handling check address MAC request")
                     assert len(obj) == 4
                     address_n: list[int] = obj[0]
                     mac: bytes = obj[1]
@@ -195,11 +188,10 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                         address_n, mac, address_str, network
                     )
                 else:
-                    print("Unknown crypto message ID:", message_id)
                     die(DataError("Unknown crypto operation"))
 
-            except:
-                print("Invalid crypto message format")
+            # TODO: catch specific exception
+            except:  # noqa: E722
                 result = False
 
             # Serialize and send the result back
@@ -207,26 +199,17 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 trezorcrypto_api.send_crypto_result(
                     result=result, ipc_cb=crypto_resp_cb
                 )
-            except Exception as e:
+            except Exception:
                 die(DataError("Failed to serialize or send crypto result"))
 
         elif service == _SERVICE_WIRE_CONTINUE:
-            print("Received wire continue message with ID:", message_id)
             # usb request/ack
             response = ExtAppResponse(
                 message_id=message_id, data=msg.data, finished=False
             )
-            print("Calling context with response data")
             ack = await context.call(response, ExtAppMessage)
-            print(
-                "Context call returned, sending IPC message back to extapp with id:",
-                ack.message_id,
-                "and data length:",
-                len(ack.data),
-            )
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
-            print("Received context response, sending IPC message back to extapp")
             io.ipc_send(
                 _SYSTASK_ID_EXTAPP,
                 fn_id(_SERVICE_WIRE_CONTINUE, ack.message_id),
@@ -242,10 +225,8 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             return response
 
         elif service == _SERVICE_PROGRESS:
-            print("Received progress message with ID:", message_id)
             obj = trezorui_api.deserialize_progress_message(data=bytes(msg.data))
             if message_id == _SERVICE_PROGRESS_INIT:
-                print("Progress init")
                 # Initialize a progress context
                 assert isinstance(obj, tuple)
                 assert len(obj) == 4
@@ -260,7 +241,6 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                     danger=danger,
                 )
             elif message_id == _SERVICE_PROGRESS_REPORT:
-                print("Progress report")
                 if progress_obj is None:
                     die(DataError("Progress not initialized"))
                 # Report progress update
@@ -270,7 +250,6 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 value: int = obj[1]
                 progress_obj.report(value, description=description)
             elif message_id == _SERVICE_PROGRESS_STOP:
-                print("Progress stop")
                 if progress_obj is None:
                     die(DataError("Progress not initialized"))
                 # Stop the progress context
@@ -286,8 +265,25 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                     fn_id(_SERVICE_PROGRESS, message_id),
                     b"",
                 )
-            except Exception as e:
+            except Exception:
                 die(DataError("Failed to send progress result"))
+
+        elif service == _SERVICE_WIRE_ERROR:
+            err_message = (
+                msg.data.decode("utf-8", "replace")
+                if isinstance(msg.data, (bytes, bytearray))
+                else str(msg.data)
+            )
+            code: FailureType = message_id
+            response = Failure(code=code, message=err_message)
+            ack = await context.call(response, ExtAppMessage)
+            if ack.message_id > 0xFFFF:
+                die(DataError("Invalid message ID."))
+            io.ipc_send(
+                _SYSTASK_ID_EXTAPP,
+                fn_id(_SERVICE_WIRE_START, ack.message_id),
+                ack.data,
+            )
 
         else:
             die(RuntimeError("Unknown IPC function"))
@@ -297,11 +293,7 @@ async def _get_public_key(address_n: list[int]) -> str:
     from apps.common import coininfo, paths
     from apps.common.keychain import ForbiddenKeyPath, get_keychain
 
-    # from trezor.messages import HDNodeType
-    # from trezor.enums import InputScriptType
-
     coin = coininfo.by_name("Bitcoin")
-    # script_type = InputScriptType.SPENDADDRESS
 
     if address_n and address_n[0] == paths.SLIP25_PURPOSE:
         # UnlockPath is required to access SLIP25 paths.
@@ -312,26 +304,18 @@ async def _get_public_key(address_n: list[int]) -> str:
     node = keychain.derive(address_n)
     assert coin.xpub_magic is not None
     node_xpub = node.serialize_public(coin.xpub_magic)
-    # pubkey = node.public_key()
-    # node_type = HDNodeType(
-    #     depth=node.depth(),
-    #     child_num=node.child_num(),
-    #     fingerprint=node.fingerprint(),
-    #     chain_code=node.chain_code(),
-    #     public_key=pubkey,
-    # )
     return node_xpub
 
 
 async def _ethereum_pubkeyhash(
     address_n: list[int], encoded_network: bytes | None, encoded_token: bytes | None
 ) -> bytes:
+    from apps.ethereum.definitions import Definitions
     from apps.ethereum.keychain import (
         PATTERNS_ADDRESS,
-        _slip44_from_address_n,
         _schemas_from_network,
+        _slip44_from_address_n,
     )
-    from apps.ethereum.definitions import Definitions
 
     slip44 = _slip44_from_address_n(address_n)
     defs = Definitions.from_encoded(encoded_network, encoded_token, slip44=slip44)
@@ -349,8 +333,8 @@ async def _get_address_mac(
     from apps.common.address_mac import get_address_mac
     from apps.ethereum.keychain import (
         PATTERNS_ADDRESS,
-        _slip44_from_address_n,
         _schemas_from_network,
+        _slip44_from_address_n,
     )
 
     slip44 = _slip44_from_address_n(address_n)
@@ -370,8 +354,8 @@ async def _check_address_mac(
     from apps.common.address_mac import check_address_mac
     from apps.ethereum.keychain import (
         PATTERNS_ADDRESS,
-        _slip44_from_address_n,
         _schemas_from_network,
+        _slip44_from_address_n,
     )
 
     slip44 = _slip44_from_address_n(address_n)
@@ -400,19 +384,18 @@ async def _sign_typed_hash(
     from trezor import TR
     from trezor.crypto.curve import secp256k1
     from trezor.ui.layouts.progress import progress
+
     from apps.ethereum.keychain import (
         PATTERNS_ADDRESS,
-        _slip44_from_address_n,
         _schemas_from_network,
+        _slip44_from_address_n,
     )
 
     if chain_id is not None:
-        print("Using chain_id to determine definitions")
         defs = Definitions.from_encoded(
             encoded_network, encoded_token, chain_id=chain_id
         )
     else:
-        print("Using address_n to determine definitions")
         slip44 = _slip44_from_address_n(address_n)
         defs = Definitions.from_encoded(encoded_network, encoded_token, slip44=slip44)
     schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
@@ -428,7 +411,6 @@ async def _sign_typed_hash(
         False,
         secp256k1.CANONICAL_SIG_ETHEREUM,
     )
-    print("signing done")
     progress_obj.stop()
     return signature
 

@@ -15,9 +15,7 @@ const MEMO_TYPE_TEXT_DETAILS: u32 = 4;
 
 pub fn parse_amount(amount: &[u8]) -> Result<U256> {
     if amount.len() != PaymentRequestVerifier::AMOUNT_SIZE_BYTES {
-        // TODO: proper error type: DataError("Amount must be exactly AMOUNT_SIZE_BYTES bytes long.")
-        info!("Amount must be exactly AMOUNT_SIZE_BYTES bytes long");
-        return Err(Error::DataError);
+        return Err(Error::DataError("amount must be exactly 32 bytes"));
     }
 
     let amount = U256::from_little_endian(&amount);
@@ -33,16 +31,15 @@ pub fn sanitize_payment_request(payment_request: &PaymentRequest) -> Result<()> 
             memo.coin_purchase_memo.is_some(),
         ];
 
-        info!("memo types {:?}", memo_types);
-
         if memo_types
             .iter()
             .map(|present| u8::from(*present))
             .sum::<u8>()
             != 1
         {
-            // TODO: proper error type: DataError("Exactly one memo type must be specified in each PaymentRequestMemo.")
-            return Err(Error::DataError);
+            return Err(Error::DataError(
+                "Exactly one memo type must be specified in each PaymentRequestMemo.",
+            ));
         }
     }
     Ok(())
@@ -53,12 +50,10 @@ pub fn sanitize_payment_request(payment_request: &PaymentRequest) -> Result<()> 
 //         .memos
 //         .iter()
 //         .any(|memo| memo.coin_purchase_memo.is_some());
-//     info!("has coin purchase memo: {}", has_coin_purchase);
 //     let has_refund = payment_request
 //         .memos
 //         .iter()
 //         .any(|memo| memo.refund_memo.is_some());
-//     info!("has refund memo: {}", has_refund);
 
 //     has_coin_purchase && has_refund
 // }
@@ -67,13 +62,11 @@ pub fn sanitize_payment_request(payment_request: &PaymentRequest) -> Result<()> 
 pub fn verify_payment_request_is_supported(payment_request: &PaymentRequest) -> Result<()> {
     // if payment_request.memos.is_empty() {
     //     // TODO: proper error type: DataError("Payment request must contain at least one memo.")
-    //     info!("payment request must contain at least one memo");
     //     return Err(Error::DataError);
     // }
 
     // if !is_coin_swap(payment_request) {
     //     // TODO: proper error type: DataError("Only coin swap payment requests are supported.")
-    //     info!("only coin swap payment requests are supported");
     //     return Err(Error::DataError);
     // }
 
@@ -106,17 +99,13 @@ pub struct PaymentRequestVerifier {
 impl PaymentRequestVerifier {
     const AMOUNT_SIZE_BYTES: usize = 32;
     pub fn new(payment_request: &PaymentRequest, slip44_id: u32) -> Result<Self> {
-        info!("sanitizing payment request");
         sanitize_payment_request(&payment_request)?;
-        info!("verifying payment request is supported");
-
         verify_payment_request_is_supported(&payment_request)?;
 
         let h_outputs = crypto::Sha256::new(None);
         let mut h_pr = crypto::Sha256::new(None);
 
         let expected_amount = if let Some(amount) = payment_request.amount.as_deref() {
-            info!("parsing expected amount from payment request");
             Some(parse_amount(&amount)?)
         } else {
             None
@@ -127,15 +116,11 @@ impl PaymentRequestVerifier {
 
         if !nonce.is_empty() {
             if !crypto::verify_nonce_cache(nonce)? {
-                // TODO: proper error type: DataError("Invalid nonce in payment request.")
-                info!("invalid nonce in payment request");
-                return Err(Error::DataError);
+                return Err(Error::DataError("Invalid nonce in payment request."));
             }
         } else {
             if !payment_request.memos.is_empty() {
-                // TODO: proper error type: DataError("Missing nonce in payment request.")
-                info!("missing nonce in payment request");
-                return Err(Error::DataError);
+                return Err(Error::DataError("Missing nonce in payment request."));
             }
         };
 
@@ -152,8 +137,6 @@ impl PaymentRequestVerifier {
 
         let memos_count_bytes = write_compact_size(payment_request.memos.len() as _);
         h_pr.update(&memos_count_bytes);
-
-        info!("processing memos in payment request");
 
         for memo in &payment_request.memos {
             if let Some(text_memo) = &memo.text_memo {
@@ -178,15 +161,12 @@ impl PaymentRequestVerifier {
                 if slip44_id == SLIP44_ID_UNDEFINED {
                     // Trezor can not hold coins of type SLIP44_ID_UNDEFINED,
                     // so a refund for a payment request with that coin type makes no sense
-                    // TODO: proper error type: DataError("Cannot process refund memo.")
-                    info!("cannot process refund memo for undefined coin type");
-                    return Err(Error::DataError);
+                    return Err(Error::DataError("Cannot process refund memo."));
                 }
                 // Unlike in a coin purchase memo, the coin type is implied by the payment request.
-                info!("getting mac");
                 let mac: &[u8; 32] = refund_memo.mac.as_slice().try_into().map_err(|_| {
                     // TODO: proper error type
-                    Error::DataError
+                    Error::DataError("Invalid MAC in refund memo")
                 })?;
                 if !crypto::check_address_mac(
                     &refund_memo.address_n,
@@ -195,8 +175,7 @@ impl PaymentRequestVerifier {
                     None,
                 )? {
                     // TODO: proper error type
-                    info!("invalid MAC in refund memo");
-                    return Err(Error::DataError);
+                    return Err(Error::DataError("Invalid MAC in refund memo"));
                 }
 
                 h_pr.update(&u32::from(MEMO_TYPE_REFUND).to_le_bytes());
@@ -205,20 +184,18 @@ impl PaymentRequestVerifier {
                 h_pr.update(&address_prefix);
                 h_pr.update(address);
             } else if let Some(coin_purchase_memo) = &memo.coin_purchase_memo {
-                let mac: &[u8; 32] =
-                    coin_purchase_memo.mac.as_slice().try_into().map_err(|_| {
-                        // TODO: proper error type
-                        Error::DataError
-                    })?;
+                let mac: &[u8; 32] = coin_purchase_memo
+                    .mac
+                    .as_slice()
+                    .try_into()
+                    .map_err(|_| Error::DataError("Invalid MAC in coin purchase memo"))?;
                 if !crypto::check_address_mac(
                     &coin_purchase_memo.address_n,
                     mac,
                     &coin_purchase_memo.address,
                     None,
                 )? {
-                    // TODO: proper error type
-                    info!("invalid MAC in coin purchase memo");
-                    return Err(Error::DataError);
+                    return Err(Error::DataError("Invalid MAC in coin purchase memo"));
                 }
                 h_pr.update(&u32::from(MEMO_TYPE_COIN_PURCHASE).to_le_bytes());
                 h_pr.update(&u32::from(coin_purchase_memo.coin_type).to_le_bytes());
@@ -233,11 +210,11 @@ impl PaymentRequestVerifier {
                 h_pr.update(&address_prefix);
                 h_pr.update(address);
             } else {
-                // TODO: proper error type: DataError("Unrecognized memo type in payment request.")
-                return Err(Error::DataError);
+                return Err(Error::DataError(
+                    "Unrecognized memo type in payment request",
+                ));
             }
         }
-        info!("last hash update");
         h_pr.update(&u32::from(slip44_id).to_le_bytes());
 
         Ok(PaymentRequestVerifier {
@@ -252,30 +229,17 @@ impl PaymentRequestVerifier {
     pub fn verify(&mut self) -> Result<()> {
         if let Some(expected_amount) = self.expected_amount {
             if self.amount != expected_amount {
-                // TODO: proper error type: DataError("Invalid amount in payment request.")
-                info!(
-                    "not similar amount in payment request {}, expected {}",
-                    self.amount.to_string().as_str(),
-                    expected_amount.to_string().as_str()
-                );
-                return Err(Error::DataError);
+                return Err(Error::DataError("Invalid amount in payment request"));
             }
         }
-
-        info!("finalizing hash of outputs and verifying signature in payment request");
 
         let hash_outputs = self.h_outputs.digest();
         self.h_pr.update(&hash_outputs);
 
-        info!("nist");
         // TODO: differentiate debug and release config
         if !crypto::nist256p1_verify(&DEBUG_PUBLIC_KEY, &self.signature, &self.h_pr.digest()) {
-            // TODO: proper error type: raise DataError("Invalid signature in payment request.")
-            info!("invalid signature in payment request");
-            return Err(Error::DataError);
+            return Err(Error::DataError("Invalid signature in payment request"));
         }
-
-        info!("payment request verified successfully");
 
         Ok(())
     }

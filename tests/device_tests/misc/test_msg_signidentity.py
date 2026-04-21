@@ -18,8 +18,7 @@ import pytest
 
 from trezorlib import messages, misc
 from trezorlib.debuglink import DebugSession as Session
-
-from ...common import MNEMONIC12
+from trezorlib.testing.common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)

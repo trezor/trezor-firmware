@@ -20,9 +20,8 @@ from trezorlib import btc, cardano, exceptions, messages, models, protocol_v1
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.exceptions import InvalidSessionError, TrezorFailure
+from trezorlib.testing.common import get_test_address
 from trezorlib.tools import parse_path
-
-from ..common import get_test_address
 
 ADDRESS_N = parse_path("m/44h/0h/0h")
 XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"

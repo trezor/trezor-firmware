@@ -1,0 +1,16 @@
+{
+  "actual_hash": "d749d5692e2f25116fdd98f238b14a1419e38cad7e09aa8dbde71981c465da3c",
+  "expected_hash": "d749d5692e2f25116fdd98f238b14a1419e38cad7e09aa8dbde71981c465da3c",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "616d01193993eaf3b75914d68308a1adea2744efa683e856bccb83356d6d39e9",
+    "b49f145b64c677cbc3eaf9add57053d6ca7aa75f492d1850ca3a008cb0599709",
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_signtx.py::test_signtx_error[EIP-7702 - unknown address - safety checks disabled but s-e5d98803"
+  }
+}

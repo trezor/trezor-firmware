@@ -30,7 +30,13 @@ from trezorlib.tools import parse_path
 if t.TYPE_CHECKING:
     from trezorlib.debuglink import ExpectedResponse
 
-from ..common import MNEMONIC12, MOCK_GET_ENTROPY, TEST_ADDRESS_N, is_core
+from trezorlib.testing.common import (
+    MNEMONIC12,
+    MOCK_GET_ENTROPY,
+    TEST_ADDRESS_N,
+    is_core,
+)
+
 from ..tx_cache import TxCache
 from .bitcoin.signtx import (
     request_finished,

@@ -49,37 +49,9 @@ def load(session: "Session", app_path: Path) -> None:
         trezorctl extapp load ./sdk/apps/funnycoin-rust/target/debug/libfunnycoin_rust.so
     """
     try:
-        app_hash = extapp.load(session, app_path)
-        click.echo(f"Loaded app hash: {app_hash.hex()}")
-    except Exception as e:
-        click.echo(f"Error: {e}", err=True)
-        sys.exit(1)
-
-
-@cli.command()
-@click.argument("app_hash", type=str)
-@click.argument("fn_id", type=int)
-@click.argument("data", type=str, default="")
-@with_session()
-def run(session: "Session", app_hash: str, fn_id: int, data: str) -> None:
-    """Run an external application - starts IPC responder on device.
-
-    APP_HASH: Hash of the loaded app (hex string)
-    FN_ID: Function ID to invoke (integer)
-    DATA: Function arguments as hex string
-
-    Example:
-        trezorctl extapp run abc123... 0 0102030405
-    """
-    try:
-        hash_bytes = bytes.fromhex(app_hash)
-        data_bytes = bytes.fromhex(data) if data else b""
-        result = extapp.run(session, hash_bytes, fn_id, data_bytes)
-        msg = getattr(result, "message", None) or ""
-        result_data = getattr(result, "data", None)
-        click.echo(f"Result: {msg}")
-        if result_data:
-            click.echo(f"Data: {result_data.hex()}")
+        app_bytes = app_path.read_bytes()
+        app_hash = extapp.load(session, app_bytes)
+        click.echo(f"Loaded app hash: {app_hash:064x}")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)

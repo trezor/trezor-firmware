@@ -7,9 +7,12 @@ from trezorlib import messages, protobuf, tron
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.testing.common import (
+    common_fixtures_dir,
+    parametrize_using_common_fixtures,
+)
 from trezorlib.tools import parse_path
 
-from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
 from ...input_flows import InputFlowConfirmAllWarnings
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.tron, pytest.mark.models("core")]
@@ -117,7 +120,7 @@ def make_contract(contract):
 
 
 def build_from_fixture(name: str):
-    fixtures = json.loads((COMMON_FIXTURES_DIR / "tron" / "sign_tx.json").read_text())
+    fixtures = json.loads((common_fixtures_dir() / "tron" / "sign_tx.json").read_text())
     entry = next(t for t in fixtures["tests"] if t.get("name") == name)
     params = entry["parameters"]
     address_n = parse_path(params["address_n"])

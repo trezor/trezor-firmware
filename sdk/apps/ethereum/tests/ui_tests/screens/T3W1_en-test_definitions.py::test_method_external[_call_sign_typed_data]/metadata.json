@@ -1,0 +1,26 @@
+{
+  "actual_hash": "be1ca67df5d0496f568406603e90a4df9d6dd6367eb1e7eb76715a9f3b086d68",
+  "expected_hash": "be1ca67df5d0496f568406603e90a4df9d6dd6367eb1e7eb76715a9f3b086d68",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "831995b0c09de1804b7ba1ac49fbcb1a54b6acb07a69bb92052aaafeb6f27fdd",
+    "14c33d6899f6eadc16f6dede635a5caf2db9bb73682cf255a433709bd1ef05f8",
+    "dfe32f962741d4cf2ec0657c2e4da7108c9a4976df6cec6b9c4b3b3eab91fef5",
+    "89d66cfcc7f16f30d8eaff2db3438ea7ae03ab2f629090c4b1471605821a794d",
+    "5b3484b016ef0116b16f3cdfce3b487380de8a3a31ca90f1c615ce2d4b088e93",
+    "dfe32f962741d4cf2ec0657c2e4da7108c9a4976df6cec6b9c4b3b3eab91fef5",
+    "6fc260bae2d5e1e0db840abf2d26eb40938ff17a12db9e97ee000ce448af4566",
+    "c6a7c66f05028626edcc5907ed9bbf3d4050aa04308b06e548d1b1c76137f44a",
+    "72745cf8386917938ccdfa97ffdd97757561c963ec0a4a5ed3962cff9d6ebf74",
+    "7c45031dcf89b16e31893e929493bfa4657ebaae4e02c21d9489a546367b3b09",
+    "4a00ab73035252b19695845273dfa3b969828e2a5c86d8beda5309fc8e3863da",
+    "55b1e2b390cd7c6182c9ad69f03fc77f10dfceefba9abfcca3e6995a6c101466",
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_definitions.py::test_method_external[_call_sign_typed_data]"
+  }
+}

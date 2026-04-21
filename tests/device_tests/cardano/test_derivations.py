@@ -20,9 +20,8 @@ from trezorlib.cardano import get_public_key
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import CardanoDerivationType as D
+from trezorlib.testing.common import MNEMONIC_SLIP39_BASIC_20_3of6
 from trezorlib.tools import parse_path
-
-from ...common import MNEMONIC_SLIP39_BASIC_20_3of6
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.models("core")]
 

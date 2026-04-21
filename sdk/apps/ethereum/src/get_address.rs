@@ -6,19 +6,19 @@ use crate::{
     paths::Bip32Path,
     proto::{
         common::button_request::ButtonRequestType,
-        ethereum::{EthereumAddress, EthereumGetAddress},
+        ethereum::{Address, GetAddress},
     },
     uformat,
 };
 use trezor_app_sdk::{Result, crypto, ui};
 
 /// Ethereum uses Bitcoin xpub format
-pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
+pub fn get_address(msg: GetAddress) -> Result<Address> {
     let dp: Bip32Path = Bip32Path::from_slice(&msg.address_n);
 
     let slip44 = dp.slip44();
     let encoded_network = msg.encoded_network.as_ref().map(|buf| buf.as_ref());
-    let definitions = Definitions::from_encoded(encoded_network, None, None, slip44).unwrap();
+    let definitions = Definitions::from_encoded(encoded_network, None, None, slip44)?;
     let schemas = schemas_from_network(&PATTERNS_ADDRESS, definitions.slip44())?;
     let keychain = Keychain::new(schemas);
 
@@ -30,6 +30,7 @@ pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
     let mac = crypto::get_address_mac(dp.as_ref(), &address, encoded_network)?;
 
     if let Some(true) = msg.show_display {
+        // TODO: template translation
         let subtitle = uformat!("{} address", COIN);
         let account_name = dp
             .get_account_name(COIN, &PATTERNS_ADDRESS, *slip44_id)
@@ -46,16 +47,16 @@ pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
         )?;
 
         ui::show_success(
-            "Done",
-            "Receive address confirmed",
-            "Continue in the app",
+            tr!("words__title_done"),
+            tr!("address__confirmed"),
+            tr!("instructions__continue_in_app"),
             Some(3200),
             None,
             ButtonRequestType::ButtonRequestOther.into(),
         )?;
     }
 
-    let mut res = EthereumAddress::default();
+    let mut res = Address::default();
     res.address = Some(address);
     res.mac = Some(mac.to_vec());
 

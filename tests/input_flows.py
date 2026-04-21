@@ -19,9 +19,8 @@ from trezorlib.client import Session
 from trezorlib.debuglink import DebugLink, DebugSession, LayoutContent, LayoutType
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import multipage_content
-
-from . import translations as TR
-from .common import (
+from trezorlib.testing import translations as TR
+from trezorlib.testing.common import (
     BRGeneratorType,
     check_pin_backoff_time,
     click_info_button_bolt,
@@ -31,6 +30,7 @@ from .common import (
     read_and_confirm_mnemonic,
     swipe_if_necessary,
 )
+
 from .input_flows_helpers import BackupFlow, EthereumFlow, PinFlow, RecoveryFlow
 
 B = messages.ButtonRequestType

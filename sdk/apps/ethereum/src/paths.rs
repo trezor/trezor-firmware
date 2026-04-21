@@ -1,4 +1,6 @@
-use crate::{common::COIN, keychain::PATTERNS_ADDRESS, proto::common::button_request::ButtonRequestType};
+use crate::{
+    common::COIN, keychain::PATTERNS_ADDRESS, proto::common::button_request::ButtonRequestType,
+};
 
 #[cfg(not(test))]
 use alloc::{
@@ -208,7 +210,7 @@ impl PathSchema {
     pub fn parse(pattern: &str, slip44: &[u32]) -> Result<Self> {
         // TODO: implement
         if !pattern.starts_with("m/") {
-            return Err(Error::DataError);
+            return Err(Error::DataError("Path must start with 'm/'"));
         }
 
         let components: Vec<&str> = pattern[2..].split('/').collect();
@@ -219,7 +221,7 @@ impl PathSchema {
             // wildcard ranges must be last
             if let Some(range) = Self::wildcard_range(component) {
                 if idx != components.len() - 1 {
-                    return Err(Error::DataError);
+                    return Err(Error::DataError("Wildcard range must be last"));
                 }
                 trailing_components = Some(range);
                 break;
@@ -241,8 +243,14 @@ impl PathSchema {
 
             let parsed = if component.contains('-') {
                 let mut it = component.splitn(2, '-');
-                let a = Self::parse_component(it.next().ok_or(Error::DataError)?, hardened)?;
-                let b = Self::parse_component(it.next().ok_or(Error::DataError)?, hardened)?;
+                let a = Self::parse_component(
+                    it.next().ok_or(Error::DataError("Invalid range start"))?,
+                    hardened,
+                )?;
+                let b = Self::parse_component(
+                    it.next().ok_or(Error::DataError("Invalid range end"))?,
+                    hardened,
+                )?;
                 PathComponent::Interval(Interval { min: a, max: b })
             } else if component.contains(',') {
                 let mut values = Vec::new();
@@ -267,7 +275,9 @@ impl PathSchema {
     }
 
     fn parse_component(s: &str, hardened: bool) -> Result<u32> {
-        let v: u32 = s.parse().map_err(|_| Error::DataError)?;
+        let v: u32 = s
+            .parse()
+            .map_err(|_| Error::DataError("Invalid component"))?;
         Ok(if hardened { v | HARDENED } else { v })
     }
 

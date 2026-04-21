@@ -19,8 +19,8 @@ import pytest
 from trezorlib import btc, messages, tools
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.testing.common import is_core
 
-from ...common import is_core
 from ...input_flows import (
     InputFlowConfirmAllWarnings,
     InputFlowShowAddressQRCode,

@@ -20,8 +20,7 @@ from trezorlib import device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SdProtectOperationType as Op
-
-from .. import translations as TR
+from trezorlib.testing import translations as TR
 
 PIN = "1234"
 

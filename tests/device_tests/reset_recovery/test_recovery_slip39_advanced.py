@@ -18,8 +18,11 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import (
+    MNEMONIC_SLIP39_ADVANCED_20,
+    MNEMONIC_SLIP39_ADVANCED_33,
+)
 
-from ...common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_ADVANCED_33
 from ...input_flows import (
     InputFlowSlip39AdvancedRecovery,
     InputFlowSlip39AdvancedRecoveryAbort,

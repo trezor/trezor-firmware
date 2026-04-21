@@ -57,16 +57,16 @@ import pytest
 from trezorlib import btc, messages, misc, protobuf, stellar
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.tools import parse_path
-
-from ...common import parametrize_using_common_fixtures
-from ...input_flows import InputFlowShowAddressQRCode
-from ..payment_req import (
+from trezorlib.testing.common import parametrize_using_common_fixtures
+from trezorlib.testing.device_tests.payment_req import (
     CoinPurchaseMemo,
     RefundMemo,
     TextDetailsMemo,
     make_payment_request,
 )
+from trezorlib.tools import parse_path
+
+from ...input_flows import InputFlowShowAddressQRCode
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.stellar]
 

@@ -20,10 +20,9 @@ from trezorlib import debuglink, device, messages, misc
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.testing.common import MNEMONIC12
 from trezorlib.tools import parse_path
 from trezorlib.transport import udp
-
-from ..common import MNEMONIC12
 
 
 @pytest.mark.models("legacy")

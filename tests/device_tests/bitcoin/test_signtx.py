@@ -21,9 +21,9 @@ import pytest
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.testing.common import is_core
 from trezorlib.tools import H_, parse_path
 
-from ...common import is_core
 from ...input_flows import (
     InputFlowLockTimeBlockHeight,
     InputFlowLockTimeDatetime,

@@ -5,8 +5,7 @@ import typing as t
 from hashlib import sha256
 
 from trezorlib import cosi, definitions, messages, protobuf
-
-from .common import PRIVATE_KEYS_DEV
+from trezorlib.testing.common import PRIVATE_KEYS_DEV
 
 
 def make_eth_network(

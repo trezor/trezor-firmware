@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 from trezorlib.debuglink import LayoutType
+from trezorlib.testing import translations as TR
 
-from .. import translations as TR
 from .common import go_next
 
 if TYPE_CHECKING:

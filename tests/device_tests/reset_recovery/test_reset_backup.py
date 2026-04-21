@@ -21,8 +21,8 @@ from shamir_mnemonic import shamir
 from trezorlib import device
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.messages import BackupAvailability, BackupType
+from trezorlib.testing.common import MOCK_GET_ENTROPY
 
-from ...common import MOCK_GET_ENTROPY
 from ...input_flows import (
     InputFlowBip39Backup,
     InputFlowResetSkipBackup,

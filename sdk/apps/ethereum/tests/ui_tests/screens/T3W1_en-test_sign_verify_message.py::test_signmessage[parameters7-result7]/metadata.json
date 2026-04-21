@@ -1,0 +1,19 @@
+{
+  "actual_hash": "9a3f9247ad6ce43529a7c14164d2e18343840523bc43ba1786ba78398505580e",
+  "expected_hash": "ca640218a2eb1bb2342b947d318d018dfa070f062816fe2bb2fd810abcdeef55",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "11629d7ed138a8a311a4ce3e0bc978e1ca9eb7985b3af244dfeb55cf0a6ee3ad",
+    "a7cacd847da6df8a9dfa88f4594d8c5a374164027839f17c2841fa61298b18e3",
+    "49ceb872d801d03da2e07704642aca0f5d464c1bdee052238ff6952043640aa9",
+    "8290e991eb3d2d1f267ddf9d81fa919bbd93f8a50d8e3493ffb63fee718ebe42",
+    "55b1e2b390cd7c6182c9ad69f03fc77f10dfceefba9abfcca3e6995a6c101466",
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_sign_verify_message.py::test_signmessage[parameters7-result7]"
+  }
+}

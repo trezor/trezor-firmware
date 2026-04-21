@@ -3,9 +3,9 @@ import pytest
 from trezorlib import tron
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.testing.common import parametrize_using_common_fixtures
 from trezorlib.tools import parse_path
 
-from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowShowAddressQRCode
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.tron, pytest.mark.models("core")]

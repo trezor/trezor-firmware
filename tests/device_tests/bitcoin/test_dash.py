@@ -18,9 +18,9 @@ import pytest
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import is_core
 from trezorlib.tools import parse_path
 
-from ...common import is_core
 from ...tx_cache import TxCache
 from .signtx import (
     request_extra_data,

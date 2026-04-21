@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 from shamir_mnemonic import shamir  # type: ignore
 
 from trezorlib.debuglink import LayoutType
-
-from .. import translations as TR
+from trezorlib.testing import translations as TR
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink

@@ -1,0 +1,56 @@
+{
+    "setup": {
+        "mnemonic": "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "parameters": {
+                "path": "m/44'/60'/0'"
+            },
+            "result": {
+                "fingerprint": 3238854618,
+                "child_num": 2147483648,
+                "chain_code": "813d9feda6421f97a6472ff36679aa9e211ff88f6bdee51093af313ce628087e",
+                "public_key": "0318c22dedce01caca32354f98428e3af06a452f3fa84e6af8f1b6aa362affa641",
+                "xpub": "xpub6D54vV8eUYHMVBZCnz4SLjuiQngXURVCGKKGoJrWUDRegdMByLTJKfRs64q3UKiQCsSHJPtCQehTvERczdghS7gb8oedWSyNDtBU1zYDJtb"
+            }
+        },
+        {
+            "parameters": {
+                "path": "m/44'/60'/0'/0"
+            },
+            "result": {
+                "fingerprint": 2566851101,
+                "child_num": 0,
+                "chain_code": "ebccb5cbd84caa898472fc50a511b8653e234c3f2dd7bd4a5ec53f7073cc8c4f",
+                "public_key": "02d50ff29b89327b2ebce52cb751a11d074ab01394cb9e49f99ddc51da2146d212",
+                "xpub": "xpub6Ef8Pj4PmrkTkobADTAMrh9pejCJ3uQUBbBmCemKACT84p8SvsnkcwXb6pgeuYEseAwGkk7xuPmZt6oYnSFLrxvaBpCxjY4Jsg3zU1nuS41"
+            }
+        },
+        {
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0"
+            },
+            "result": {
+                "fingerprint": 1762312360,
+                "child_num": 0,
+                "chain_code": "37526224b33a226749bd78e8e907e54cc46f7937362d34df7ebbfd06bc40a55c",
+                "public_key": "0327ceefada0c89b5ed12d163d5e3dc3b8f326321503a9bdbf6414367f3780b192",
+                "xpub": "xpub6GBpXvAiKQnvjHgC5qSoM3mJs4BGaRHeq8AYUf3bTyEyNx1fwhrDaX17wSwTzyjrbz2N85RLeJZqVsEJtGhsXZNJT7yMZ4mEs5T41jhg8U7"
+            }
+        },
+        {
+            "name": "Ledger Live legacy path",
+            "parameters": {
+                "path": "m/44'/60'/0'/1"
+            },
+            "result": {
+                "fingerprint": 2566851101,
+                "child_num": 1,
+                "chain_code": "ded4dad64a99243f1040d7994f9ac1e2bd7f404f14308084744f4f4efac4cd17",
+                "public_key": "02d9e22cf1119a98b17c7c82d55d33d3b6dcd15c1220a1918a81dcfcb37a49e912",
+                "xpub": "xpub6Ef8Pj4PmrkToDvoWvVTSkPAgmiGXEKEs4TLZWibTXxjLFj6rNhAZmE4KUWkyZ3qzaL2vGosbohmRZnfHvhji3MqMys9vM8tcEhbFxaBwi8"
+            }
+        }    ]
+}

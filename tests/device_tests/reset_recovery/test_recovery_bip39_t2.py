@@ -18,8 +18,8 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import MNEMONIC12
 
-from ...common import MNEMONIC12
 from ...input_flows import InputFlowBip39Recovery
 
 pytestmark = pytest.mark.models("core")

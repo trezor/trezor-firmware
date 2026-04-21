@@ -22,8 +22,8 @@ import pytest
 from trezorlib import exceptions, messages
 from trezorlib.client import PassphraseSetting
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import TEST_ADDRESS_N
 
-from ..common import TEST_ADDRESS_N
 from .common import (
     CommonPass,
     KeyboardCategory,
@@ -33,8 +33,7 @@ from .common import (
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
-
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("safe3")

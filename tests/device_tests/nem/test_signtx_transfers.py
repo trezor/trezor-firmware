@@ -18,9 +18,8 @@ import pytest
 
 from trezorlib import messages, nem
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import MNEMONIC12, is_core
 from trezorlib.tools import parse_path
-
-from ...common import MNEMONIC12, is_core
 
 pytestmark = [
     pytest.mark.altcoin,

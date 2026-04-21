@@ -20,17 +20,17 @@ from trezorlib import btc, messages, misc
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.solana import get_authenticated_address, sign_tx
-from trezorlib.tools import b58decode, parse_path
-
-from ...common import parametrize_using_common_fixtures
-from ...definitions import encode_solana_token
-from ...input_flows import InputFlowConfirmAllWarnings
-from ..payment_req import (
+from trezorlib.testing.common import parametrize_using_common_fixtures
+from trezorlib.testing.device_tests.payment_req import (
     CoinPurchaseMemo,
     RefundMemo,
     TextDetailsMemo,
     make_payment_request,
 )
+from trezorlib.tools import b58decode, parse_path
+
+from ...definitions import encode_solana_token
+from ...input_flows import InputFlowConfirmAllWarnings
 from .construct.instructions import PROGRAMS, UnknownInstruction
 from .construct.transaction import Message, RawInstruction
 

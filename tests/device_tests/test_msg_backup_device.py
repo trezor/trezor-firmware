@@ -20,20 +20,20 @@ import typing as t
 import pytest
 import shamir_mnemonic as shamir
 
-from tests.common import BRGeneratorType
 from trezorlib import device, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import Cancelled, TrezorFailure
-
-from ..common import (
+from trezorlib.testing.common import (
     MNEMONIC12,
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_CUSTOM_SECRET,
     MNEMONIC_SLIP39_SINGLE_EXT_20,
+    BRGeneratorType,
     MNEMONIC_SLIP39_BASIC_20_3of6,
     MNEMONIC_SLIP39_CUSTOM_1of1,
 )
+
 from ..input_flows import (
     InputFlowBip39Backup,
     InputFlowSlip39AdvancedBackup,

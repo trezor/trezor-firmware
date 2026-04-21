@@ -13,10 +13,14 @@ use trezor_app_sdk::{
     CORE_SERVICE, Error, IpcMessage, Result, error,
     service::{self, CoreIpcService, NoUtilHandler},
     trace,
+    unwrap,
     util::Timeout,
 };
-// Include generated protobuf code
+// Include generated code
 pub(crate) mod proto;
+
+#[macro_use]
+pub(crate) mod translations;
 
 mod common;
 mod definitions;
@@ -36,38 +40,12 @@ mod strutil;
 mod tokens;
 mod verify_message;
 
-use proto::ethereum::{
-    EthereumGetAddress, EthereumGetPublicKey, EthereumSignMessage, EthereumSignTx,
-    EthereumSignTxEip1559, EthereumVerifyMessage,
+use proto::{
+    ethereum::{
+        GetAddress, GetPublicKey, SignMessage, SignTx, SignTxEip1559, SignTypedData, VerifyMessage,
+    },
+    messages::MessageType,
 };
-use proto::ethereum_eip712::EthereumSignTypedData;
-use ufmt::derive::uDebug;
-
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, num_enum::FromPrimitive, num_enum::IntoPrimitive)]
-#[repr(u16)]
-pub(crate) enum EthereumMessages {
-    GetPublicKey = 0,
-    PublicKey = 1,
-    GetAddress = 2,
-    Address = 3,
-    SignMessage = 4,
-    MessageSignature = 5,
-    SignTx = 6,
-    TxRequest = 7,
-    TxAck = 8,
-    SignTypedData = 9,
-    TypedDataSignature = 10,
-    TypedDataStructRequest = 11,
-    TypedDataStructAck = 12,
-    TypedDataValueRequest = 13,
-    TypedDataValueAck = 14,
-    VerifyMessage = 15,
-    Success = 16,
-    SignTxEIP1559 = 17,
-
-    #[num_enum(catch_all)]
-    Unknown(u16),
-}
 
 // TODO: decrease size and use long string confirmation instead of blob
 #[cfg(not(test))]
@@ -81,23 +59,43 @@ macro_rules! wire_handler {
             let request =
                 <$request_type>::decode(request_data).map_err(|_| Error::InvalidMessage)?;
 
-            let response = $handler_fn(request)?;
+            let response = $handler_fn(request);
 
-            let response_bytes = response.encode_to_vec();
-            let message = IpcMessage::new($response_msg.into(), &response_bytes);
-            message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?;
+            match response {
+                Ok(resp) => {
+                    let response_bytes = resp.encode_to_vec();
+                    let message = IpcMessage::new(
+                        ($response_msg as i32)
+                            .try_into()
+                            .map_err(|_| Error::InvalidMessage)?,
+                        &response_bytes,
+                    );
+                    message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?;
+                }
+                Err(e) => {
+                    let message = IpcMessage::new(
+                        e.code(),
+                        e.message().as_bytes(),
+                    );
+                    message.send(
+                        service::CORE_SERVICE_REMOTE,
+                        CoreIpcService::WireError.into(),
+                    )?;
+                }
+            }
+
             Ok(())
         }
     };
 }
 
-pub(crate) fn wire_request<Req, Resp>(req: &Req, id: EthereumMessages) -> Result<Resp>
+pub(crate) fn wire_request<Req, Resp>(req: &Req, id: MessageType) -> Result<Resp>
 where
     Req: Message,
     Resp: Message + Default,
 {
     let req_bytes = req.encode_to_vec();
-    let message = IpcMessage::new(id.into(), &req_bytes);
+    let message = IpcMessage::new(unwrap!((id as u32).try_into()), &req_bytes);
     let result = CORE_SERVICE.call(
         CoreIpcService::WireContinue,
         &message,
@@ -110,44 +108,44 @@ where
 // Generate all handler functions
 wire_handler!(
     handle_get_public_key,
-    EthereumGetPublicKey,
-    EthereumMessages::PublicKey,
+    GetPublicKey,
+    MessageType::PublicKey,
     get_public_key::get_public_key
 );
 wire_handler!(
     handle_get_address,
-    EthereumGetAddress,
-    EthereumMessages::Address,
+    GetAddress,
+    MessageType::Address,
     get_address::get_address
 );
 wire_handler!(
     handle_sign_message,
-    EthereumSignMessage,
-    EthereumMessages::MessageSignature,
+    SignMessage,
+    MessageType::MessageSignature,
     sign_message::sign_message
 );
 wire_handler!(
     handle_sign_tx,
-    EthereumSignTx,
-    EthereumMessages::TxRequest,
+    SignTx,
+    MessageType::TxRequest,
     sign_tx::sign_tx
 );
 wire_handler!(
     handle_sign_tx_eip1559,
-    EthereumSignTxEip1559,
-    EthereumMessages::TxRequest,
+    SignTxEip1559,
+    MessageType::TxRequest,
     sign_tx_eip1559::sign_tx_eip1559
 );
 wire_handler!(
     handle_sign_typed_data,
-    EthereumSignTypedData,
-    EthereumMessages::TypedDataSignature,
+    SignTypedData,
+    MessageType::TypedDataSignature,
     sign_typed_data::sign_typed_data
 );
 wire_handler!(
     handle_verify_message,
-    EthereumVerifyMessage,
-    EthereumMessages::Success,
+    VerifyMessage,
+    MessageType::Success,
     verify_message::verify_message
 );
 
@@ -177,17 +175,20 @@ pub fn app() -> Result<()> {
 /// data: serialized protobuf request
 /// Returns: serialized protobuf response
 pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
-    trace!("handling wire message");
-    match message.id().into() {
-        EthereumMessages::GetPublicKey => handle_get_public_key(message.data()),
-        EthereumMessages::GetAddress => handle_get_address(message.data()),
-        EthereumMessages::SignMessage => handle_sign_message(message.data()),
-        EthereumMessages::SignTx => handle_sign_tx(message.data()),
-        EthereumMessages::SignTxEIP1559 => handle_sign_tx_eip1559(message.data()),
-        EthereumMessages::SignTypedData => handle_sign_typed_data(message.data()),
-        EthereumMessages::VerifyMessage => handle_verify_message(message.data()),
-        _ => {
+    match (message.id() as i32).try_into() {
+        Ok(MessageType::GetPublicKey) => handle_get_public_key(message.data()),
+        Ok(MessageType::GetAddress) => handle_get_address(message.data()),
+        Ok(MessageType::SignMessage) => handle_sign_message(message.data()),
+        Ok(MessageType::SignTx) => handle_sign_tx(message.data()),
+        Ok(MessageType::SignTxEip1559) => handle_sign_tx_eip1559(message.data()),
+        Ok(MessageType::SignTypedData) => handle_sign_typed_data(message.data()),
+        Ok(MessageType::VerifyMessage) => handle_verify_message(message.data()),
+        Ok(_) => {
             error!("Invalid function: {:?}", message.id());
+            Err(Error::InvalidFunction)
+        }
+        Err(_) => {
+            error!("Non existing message type: {:?}", message.id());
             Err(Error::InvalidFunction)
         }
     }

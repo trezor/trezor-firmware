@@ -1,5 +1,4 @@
 use crate::{
-    EthereumMessages,
     definitions::{self, Definitions},
     helpers::{Refund, Trade, address_from_bytes, format_ethereum_amount, is_swap},
     paths::Bip32Path,
@@ -7,8 +6,9 @@ use crate::{
     payment_request::parse_amount,
     proto::{
         common::{PaymentRequest, button_request::ButtonRequestType},
-        definitions::{EthereumNetworkInfo, EthereumTokenInfo},
-        ethereum::{EthereumTxAck, EthereumTxRequest},
+        definitions::{NetworkInfo, TokenInfo},
+        ethereum::{TxAck, TxRequest},
+        messages::MessageType,
     },
     strutil::hex_encode,
     tokens, uformat, wire_request,
@@ -344,8 +344,8 @@ pub fn require_confirm_approve<'a>(
     maximum_fee: &'a str,
     fee_info_items: &[Property<'a>],
     chain_id: u64,
-    network: &'a EthereumNetworkInfo,
-    token: &'a EthereumTokenInfo,
+    network: &'a NetworkInfo,
+    token: &'a TokenInfo,
     token_address: &'a [u8],
     chunkify: bool,
 ) -> Result<()> {
@@ -362,10 +362,6 @@ pub fn require_confirm_approve<'a>(
 
     let is_unknown_token = token == &tokens::unknown_token();
     let is_unknown_network = network == &definitions::unknown_network();
-
-    // info!("value is {}", value);
-    info!("recipient address is {}", recipient_addr.as_str());
-    info!("to bytes len is {}", to_bytes.len());
 
     confirm_ethereum_approve(
         &recipient_addr,
@@ -404,7 +400,6 @@ fn confirm_ethereum_approve<'a>(
 ) -> Result<()> {
     let br_name = "confirm_ethereum_approve";
     let br_code = ButtonRequestType::ButtonRequestOther.into();
-    info!("is revoke is {}", is_revoke);
     let (title, action) = if is_revoke {
         (
             "Token revocation",
@@ -433,7 +428,6 @@ fn confirm_ethereum_approve<'a>(
     };
 
     if let Some(recipient_str) = recipient_str {
-        info!("recipient str is {}", recipient_str);
         ui::interact_with_info_flow(
             |name| {
                 ui::confirm_with_info(
@@ -460,7 +454,6 @@ fn confirm_ethereum_approve<'a>(
             None,
         )?;
     } else {
-        info!("recipient str is None, showing address {}", recipient_addr);
         ui::error_if_not_confirmed(ui::confirm_value(
             title,
             recipient_addr,
@@ -564,7 +557,7 @@ fn confirm_ethereum_approve<'a>(
         None,
         None,
         maximum_fee,
-        "Maximum fee",
+        tr!("send__maximum_fee"),
         None,
         account_item.as_ref().map(|a| a.as_slice()),
         Some("Fee info"),
@@ -582,21 +575,21 @@ pub fn require_confirm_claim<'a>(
     dp: &'a Bip32Path,
     maximum_fee: &'a str,
     fee_info_items: &'a [Property<'a>],
-    network: &'a EthereumNetworkInfo,
+    network: &'a NetworkInfo,
 ) -> Result<()> {
     let addr_str = address_from_bytes(address_bytes, Some(network));
     let (account, account_path) = dp.account_and_path();
 
     confirm_ethereum_staking_tx(
-        "Claim",
-        "Claim ETH from Everstake?",
-        "Claim",
+        tr!("ethereum__staking_claim"),
+        tr!("ethereum__staking_claim_intro"),
+        tr!("ethereum__staking_claim"),
         "",
         account.as_deref(),
         account_path.as_deref(),
         maximum_fee,
         &addr_str,
-        "Claim address",
+        tr!("ethereum__staking_claim_address"),
         fee_info_items,
         None,
         None,
@@ -619,7 +612,11 @@ fn confirm_ethereum_staking_tx<'a>(
     br_name: Option<&'a str>,
     br_code: Option<i32>,
 ) -> Result<()> {
-    assert!(verb == "Stake" || verb == "Unstake" || verb == "Claim");
+    assert!(
+        verb == tr!("ethereum__staking_stake")
+            || verb == tr!("ethereum__staking_unstake")
+            || verb == tr!("ethereum__staking_claim")
+    );
 
     let br_name = br_name.unwrap_or("confirm_ethereum_staking_tx");
     let br_code = br_code.unwrap_or(ButtonRequestType::ButtonRequestSignTx.into());
@@ -645,7 +642,7 @@ fn confirm_ethereum_staking_tx<'a>(
         ));
     };
 
-    let amount_label = if verb == "Claim" {
+    let amount_label = if verb == tr!("ethereum__staking_claim") {
         None
     } else {
         Some("Amount")
@@ -685,7 +682,7 @@ fn confirm_ethereum_staking_tx<'a>(
                 Some(total_amount),
                 amount_label,
                 maximum_fee,
-                "Maximum fee",
+                tr!("send__maximum_fee"),
                 None,
                 None,
                 Some("Fee info"),
@@ -708,18 +705,16 @@ pub fn require_confirm_payment_request<'a>(
     maximum_fee: &'a str,
     fee_info_items: &'a [Property<'a>],
     chain_id: u64,
-    network: &'a EthereumNetworkInfo,
-    token: Option<&'a EthereumTokenInfo>,
+    network: &'a NetworkInfo,
+    token: Option<&'a TokenInfo>,
     token_address: &'a str,
 ) -> Result<()> {
-    info!("formatting total amount for display");
     let total_amount = format_ethereum_amount(
         parse_amount(unwrap!(verified_payment_req.amount.as_deref()))?,
         token,
         network,
         false,
     );
-    info!("total amount is {}", total_amount.as_str());
 
     let mut texts = Vec::new();
     let mut refunds = Vec::new();
@@ -750,12 +745,11 @@ pub fn require_confirm_payment_request<'a>(
                 coin_purchase_account_path.as_deref(),
             )?);
         } else {
-            // TODO: proper error type: DataError("Unrecognized memo type in payment request.")
-            return Err(Error::DataError);
+            return Err(Error::DataError(
+                "Unrecognized memo type in payment request.",
+            ));
         }
     }
-
-    info!("memos finished");
 
     let (account, account_path) = dp.account_and_path();
     let mut account_items = Vec::with_capacity(3);
@@ -773,7 +767,6 @@ pub fn require_confirm_payment_request<'a>(
     if chain_id != 0 {
         account_items.push(Property::new("Chain ID", chain_id_str.as_str(), true));
     }
-    info!("confirming payment request");
 
     confirm_payment_request(
         verified_payment_req.recipient_name.as_str(),
@@ -808,7 +801,6 @@ fn confirm_payment_request<'a>(
     };
 
     for (text_title, text) in texts {
-        info!("confirming text: {}", text);
         ui::error_if_not_confirmed(ui::confirm_value(
             text_title.unwrap_or(title),
             text,
@@ -981,12 +973,6 @@ pub fn require_confirm_other_data(data: &[u8], data_total: u32) -> Result<()> {
     let description = uformat!("Size: {} bytes", data_total);
     let subtitle = uformat!("All input data ({} bytes)", data_total);
     let data_str = hex_encode(data);
-    info!(
-        "confirming other data with description {}, subtitle {}, and data_str {}",
-        description.as_str(),
-        subtitle.as_str(),
-        data_str.as_str()
-    );
     ui::error_if_not_confirmed(ui::confirm_blob(
         "Input data",
         &data_str,
@@ -1010,22 +996,22 @@ pub fn require_confirm_stake<'a>(
     dp: &'a Bip32Path,
     maximum_fee: &'a str,
     fee_info_items: &'a [Property<'a>],
-    network: &'a EthereumNetworkInfo,
+    network: &'a NetworkInfo,
 ) -> Result<()> {
     let address_str = address_from_bytes(address_bytes, Some(network));
     let total_amount = format_ethereum_amount(value, None, network, false);
     let (account, account_path) = dp.account_and_path();
 
     confirm_ethereum_staking_tx(
-        "Stake",
-        "Stake ETH on Everstake?",
-        "Stake",
+        tr!("ethereum__staking_stake"),
+        tr!("ethereum__staking_stake_intro"),
+        tr!("ethereum__staking_stake"),
         &total_amount,
         account.as_deref(),
         account_path.as_deref(),
         maximum_fee,
         &address_str,
-        "Stake address",
+        tr!("ethereum__staking_stake_address"),
         fee_info_items,
         None,
         None,
@@ -1040,8 +1026,8 @@ pub fn require_confirm_tx<'a>(
     dp: &'a Bip32Path,
     maximum_fee: &'a str,
     fee_info_items: &'a [Property<'a>],
-    network: &'a EthereumNetworkInfo,
-    token: Option<&'a EthereumTokenInfo>,
+    network: &'a NetworkInfo,
+    token: Option<&'a TokenInfo>,
     is_send: bool,
     chunkify: bool,
 ) -> Result<()> {
@@ -1130,7 +1116,7 @@ fn confirm_ethereum_tx<'a>(
                 Some(total_amount),
                 Some("Amount"),
                 maximum_fee,
-                "Maximum fee",
+                tr!("send__maximum_fee"),
                 None,
                 None,
                 Some("Fee info"),
@@ -1153,22 +1139,22 @@ pub fn require_confirm_unstake<'a>(
     dp: &'a Bip32Path,
     maximum_fee: &'a str,
     fee_info_items: &'a [Property<'a>],
-    network: &'a EthereumNetworkInfo,
+    network: &'a NetworkInfo,
 ) -> Result<()> {
     let address_str = address_from_bytes(address_bytes, Some(network));
     let total_amount = format_ethereum_amount(value, None, network, false);
     let (account, account_path) = dp.account_and_path();
 
     confirm_ethereum_staking_tx(
-        "Unstake",
-        "Unstake ETH from Everstake?",
-        "Unstake",
+        tr!("ethereum__staking_unstake"),
+        tr!("ethereum__staking_unstake_intro"),
+        tr!("ethereum__staking_unstake"),
         &total_amount,
         account.as_deref(),
         account_path.as_deref(),
         maximum_fee,
         &address_str,
-        "Stake address",
+        tr!("ethereum__staking_stake_address"),
         fee_info_items,
         None,
         None,
@@ -1244,18 +1230,11 @@ fn trade_flow(
     )
 }
 
-pub fn send_request_chunk(data_left: u32) -> Result<EthereumTxAck> {
+pub fn send_request_chunk(data_left: u32) -> Result<TxAck> {
     let req_size = core::cmp::min(data_left, 1024);
-    info!(
-        "requesting data chunk with {} bytes left with {} bytes",
-        data_left, req_size
-    );
-
-    let mut req = EthereumTxRequest::default();
+    let mut req = TxRequest::default();
     req.data_length = Some(core::cmp::min(data_left, 1024) as u32);
-
-    let resp: EthereumTxAck = wire_request(&req, EthereumMessages::TxRequest)?;
-    info!("received data chunk response");
+    let resp: TxAck = wire_request(&req, MessageType::TxRequest)?;
 
     Ok(resp)
 }
@@ -1266,12 +1245,14 @@ pub fn handle_staking_tx_claim<'a>(
     staking_address: &'a [u8],
     maximum_fee: &'a str,
     fee_items: &'a [Property<'a>],
-    network: &'a EthereumNetworkInfo,
+    network: &'a NetworkInfo,
 ) -> Result<()> {
     // claim has no args
 
     if data.len() != 0 {
-        return Err(Error::DataError);
+        return Err(Error::DataError(
+            "Claim transaction should have no arguments",
+        ));
     }
 
     require_confirm_claim(staking_address, dp, maximum_fee, fee_items, network)?;
@@ -1283,7 +1264,7 @@ pub fn handle_staking_tx_stake<'a>(
     data: &'a [u8],
     dp: &'a Bip32Path,
     value: &'a [u8],
-    network: &'a EthereumNetworkInfo,
+    network: &'a NetworkInfo,
     address_bytes: &'a [u8],
     maximum_fee: &'a str,
     fee_items: &'a [Property<'a>],
@@ -1292,8 +1273,7 @@ pub fn handle_staking_tx_stake<'a>(
     // - arg0: uint64, source (1 for Trezor)
 
     if data.len() != SC_ARGUMENT_BYTES {
-        // TODO: proper error type: ValueError: wrong number of arguments for stake (should be 1)
-        return Err(Error::DataError);
+        return Err(Error::DataError("Invalid staking transaction call"));
     }
 
     assert!(value.len() <= 32);
@@ -1307,7 +1287,7 @@ pub fn handle_staking_tx_stake<'a>(
 pub fn handle_staking_tx_unstake<'a>(
     data: &'a [u8],
     dp: &'a Bip32Path,
-    network: &'a EthereumNetworkInfo,
+    network: &'a NetworkInfo,
     address_bytes: &'a [u8],
     maximum_fee: &'a str,
     fee_items: &'a [Property<'a>],
@@ -1318,8 +1298,7 @@ pub fn handle_staking_tx_unstake<'a>(
     // - arg2: uint64, source (1 for Trezor)
 
     if data.len() != 3 * SC_ARGUMENT_BYTES {
-        // TODO: proper error type: ValueError: wrong number of arguments for unstake (should be 3)
-        return Err(Error::DataError);
+        return Err(Error::DataError("Invalid staking transaction call"));
     }
 
     // parse arg0: uint256, value (only lower 16 bytes fit in u128)
@@ -1338,7 +1317,7 @@ pub fn run_staking_approver<'a>(
     dp: &'a Bip32Path,
     data_initial_chunk: &'a [u8],
     value: &'a [u8],
-    network: &'a EthereumNetworkInfo,
+    network: &'a NetworkInfo,
     address_bytes: &'a [u8],
     maximum_fee: &'a str,
     fee_items: &'a [Property<'a>],
@@ -1389,47 +1368,35 @@ pub fn check_common_fields(
     to: &str,
     chain_id: u64,
 ) -> Result<()> {
-    info!("checking data length and initial chunk");
     if data_length > 0 {
-        // TODO: proper error type: DataError("Data length provided, but no initial chunk")
         if data_initial_chunk.is_empty() {
-            info!("Data length provided, but no initial chunk");
-            return Err(Error::DataError);
+            return Err(Error::DataError(
+                "Data length provided, but no initial chunk",
+            ));
         }
 
         // Our encoding only supports transactions up to 2^24 bytes. To
         // prevent exceeding the limit we use a stricter limit on data length.
         if data_length > 16_000_000 {
-            // TODO: proper error type: DataError("Data length exceeds limit")
-            info!("Data length exceeds limit");
-            return Err(Error::DataError);
+            return Err(Error::DataError("Data length exceeds limit"));
         }
 
         if data_initial_chunk.len() > data_length as usize {
-            // TODO: proper error type: DataError("Invalid size of initial chunk")
-            info!("Invalid size of initial chunk");
-            return Err(Error::DataError);
+            return Err(Error::DataError("Invalid size of initial chunk"));
         }
     }
 
     if !matches!(to.len(), 0 | 40 | 42) {
-        // TODO: proper error type: DataError("Invalid recipient address")
-        info!("Invalid recipient address");
-        return Err(Error::DataError);
+        return Err(Error::DataError("Invalid recipient address"));
     }
 
     if to.is_empty() && data_length == 0 {
         // sending transaction to address 0 (contract creation) without a data field
-        // TODO: proper error type: DataError("Contract creation without data")
-        info!("Contract creation without data");
-        return Err(Error::DataError);
+        return Err(Error::DataError("Contract creation without data"));
     }
 
-    info!("checking chain id");
     if chain_id == 0 {
-        // TODO: proper error type: DataError("Chain ID out of bounds")
-        info!("Chain ID out of bounds");
-        return Err(Error::DataError);
+        return Err(Error::DataError("Chain ID out of bounds"));
     }
 
     Ok(())
@@ -1465,12 +1432,9 @@ pub fn confirm_tx_data<'a>(
         return Ok(());
     }
 
-    info!("checking if transaction is a known contract call");
     if matches!(tx_type, Some(EIP_7702_TX_TYPE)) {
         // we have already made sure that the address is a known address
         // as part of the initial validation
-
-        info!("authorizing smart account");
 
         ui::error_if_not_confirmed(ui::confirm_value(
             "Smart accounts",
@@ -1491,7 +1455,6 @@ pub fn confirm_tx_data<'a>(
         )?)?;
     }
 
-    info!("handling known contract calls");
     let (token, token_address, func_sig, recipient, value) = handle_known_contract_calls(
         data_initial_chunk,
         data_length,
@@ -1501,12 +1464,6 @@ pub fn confirm_tx_data<'a>(
         address_bytes,
     )?;
 
-    info!("recipient len is {}", recipient.len());
-
-    info!(
-        "func sig len is {}",
-        func_sig.as_ref().map(|s| s.len()).unwrap_or(0)
-    );
     let is_approve = func_sig.as_deref() == Some(SC_FUNC_SIG_APPROVE.as_slice());
     let is_unknown_token = &token == &Some(tokens::unknown_token());
 
@@ -1520,11 +1477,6 @@ pub fn confirm_tx_data<'a>(
         } else {
             "Send"
         });
-
-        info!(
-            "unknown token contract address: showing warning with title {}",
-            title.as_str()
-        );
 
         ui::error_if_not_confirmed(ui::show_danger(
             "Important",
@@ -1551,21 +1503,14 @@ pub fn confirm_tx_data<'a>(
     }
 
     if is_approve {
-        info!("handling approve flow");
-
         if token.is_none() || token_address.is_none() {
-            // TODO: proper error type
-            return Err(Error::DataError);
+            return Err(Error::DataError("Invalid token or token address"));
         }
 
-        info!(
-            "token address len is {:?}",
-            token_address.as_deref().map(|a| a.len())
-        );
-
         if payment_req_verifier.is_some() {
-            // TODO: proper error type: DataError("Payment Requests not supported for the APPROVE call")
-            return Err(Error::DataError);
+            return Err(Error::DataError(
+                "Payment Requests not supported for the APPROVE call",
+            ));
         }
 
         require_confirm_approve(
@@ -1581,37 +1526,28 @@ pub fn confirm_tx_data<'a>(
             chunkify.unwrap_or(false),
         )?;
     } else {
-        info!("handling regular transaction flow");
         assert!(value.is_some());
 
         let recipient_str = if !recipient.is_empty() {
-            info!("recipient is not empty, treating as regular transaction");
             Some(address_from_bytes(&recipient, Some(definitions.network())))
         } else {
-            info!("recipient is empty, treating as contract creation");
             None
         };
         let token_address_str = address_from_bytes(address_bytes, Some(definitions.network()));
         let is_contract_interaction = token.is_none() && data_length > 0;
 
-        info!("is contract interaction: {}", is_contract_interaction);
-        info!("data_length: {}", data_length);
-
         if let Some(mut payment_req_verifier) = payment_req_verifier {
-            info!("handling payment request flow");
             if is_contract_interaction {
-                // TODO: proper error type: DataError("Payment Requests don't support contract interactions")
-                info!("payment requests don't support contract interactions");
-                return Err(Error::DataError);
+                return Err(Error::DataError(
+                    "Payment Requests don't support contract interactions",
+                ));
             }
 
             // If a payment_req_verifier is provided, then msg.payment_req must have been set.
             if payment_req.is_none() || recipient_str.is_none() {
-                // TODO: proper error type
-                info!(
-                    "invalid payment request: recipient must be empty and payment_req must be provided"
-                );
-                return Err(Error::DataError);
+                return Err(Error::DataError(
+                    "Invalid payment request: recipient must be empty and payment_req must be provided",
+                ));
             }
 
             payment_req_verifier.add_output(
@@ -1619,7 +1555,6 @@ pub fn confirm_tx_data<'a>(
                 unwrap!(recipient_str.as_deref()),
                 None,
             )?;
-            info!("verifying payment request");
             payment_req_verifier.verify()?;
 
             require_confirm_payment_request(
@@ -1663,7 +1598,7 @@ fn handle_known_contract_calls(
     definitions: &Definitions,
     address_bytes: &[u8],
 ) -> Result<(
-    Option<EthereumTokenInfo>,
+    Option<TokenInfo>,
     Option<Vec<u8>>,
     Option<Vec<u8>>,
     Vec<u8>,
@@ -1681,7 +1616,6 @@ fn handle_known_contract_calls(
     let mut remaining = data_initial_chunk.len();
 
     if remaining < SC_FUNC_SIG_BYTES {
-        info!("data too short");
         return Ok((token, token_address, None, recipient, value));
     }
 
@@ -1723,12 +1657,10 @@ fn handle_known_contract_calls(
             // "Unlimited" approval (all bits set) is a special case
             // which we encode as value=None internally.
             value = None;
-            info!("Detected unlimited approval, treating value as None");
         } else {
             // TODO: better implement parsing int value from bytes
             assert!(arg1.len() <= 32);
             value = Some(U256::from_big_endian(arg1));
-            // info!("Parsed value from function arguments: {}", value);
         }
 
         token = Some(definitions.get_token(address_bytes));
@@ -1739,9 +1671,6 @@ fn handle_known_contract_calls(
         // See the approve_avantis test case and ERC-8021.
 
         func_sig = None;
-        info!(
-            "Function signature not recognized or data length mismatch, treating as unknown function"
-        );
     };
 
     Ok((token, token_address, func_sig, recipient, value))

@@ -1,0 +1,144 @@
+syntax = "proto2";
+package hw.trezor.common;
+
+/**
+ * Response: Success of the previous request
+ * @end
+ */
+message Success {
+  optional string message = 1 [default = ""];  // human readable description of action or request-specific payload
+}
+
+/**
+ * Response: Failure of the previous request
+ * @end
+ */
+message Failure {
+    optional FailureType code = 1;  // computer-readable definition of the error state
+    optional string message = 2;    // human-readable message of the error state
+    enum FailureType {
+        Failure_UnexpectedMessage = 1;
+        Failure_ButtonExpected = 2;
+        Failure_DataError = 3;
+        Failure_ActionCancelled = 4;
+        Failure_PinExpected = 5;
+        Failure_PinCancelled = 6;
+        Failure_PinInvalid = 7;
+        Failure_InvalidSignature = 8;
+        Failure_ProcessError = 9;
+        Failure_NotEnoughFunds = 10;
+        Failure_NotInitialized = 11;
+        Failure_PinMismatch = 12;
+        Failure_WipeCodeMismatch = 13;
+        Failure_InvalidSession = 14;
+        Failure_Busy = 15;
+        Failure_ThpUnallocatedSession = 16;
+        Failure_InvalidProtocol = 17;
+        reserved 18;
+        Failure_InProgress = 19;
+        Failure_FirmwareError = 99;
+    }
+}
+
+/**
+ * Response: Device is waiting for HW button press.
+ * @auxstart
+ * @next ButtonAck
+ */
+message ButtonRequest {
+  optional ButtonRequestType code  = 1;  // enum identifier of the screen (deprecated)
+  optional uint32            pages = 2;            // if the screen is paginated, number of pages
+
+    // this existed briefly:
+    // https://github.com/trezor/trezor-firmware/commit/1012ee8497b241e8ca559e386d936fa549bc0357
+  reserved 3;
+
+  optional string name = 4;  // name of the screen
+
+  /**
+   * Type of button request
+   */
+  enum ButtonRequestType {
+    ButtonRequest_Other                      = 1;
+    ButtonRequest_FeeOverThreshold           = 2;
+    ButtonRequest_ConfirmOutput              = 3;
+    ButtonRequest_ResetDevice                = 4;
+    ButtonRequest_ConfirmWord                = 5;
+    ButtonRequest_WipeDevice                 = 6;
+    ButtonRequest_ProtectCall                = 7;
+    ButtonRequest_SignTx                     = 8;
+    ButtonRequest_FirmwareCheck              = 9;
+    ButtonRequest_Address                    = 10;
+    ButtonRequest_PublicKey                  = 11;
+    ButtonRequest_MnemonicWordCount          = 12;
+    ButtonRequest_MnemonicInput              = 13;
+    _Deprecated_ButtonRequest_PassphraseType = 14 [deprecated = true];
+    ButtonRequest_UnknownDerivationPath      = 15;
+    ButtonRequest_RecoveryHomepage           = 16;
+    ButtonRequest_Success                    = 17;
+    ButtonRequest_Warning                    = 18;
+    ButtonRequest_PassphraseEntry            = 19;
+    ButtonRequest_PinEntry                   = 20;
+  }
+}
+
+/**
+ * Structure representing BIP32 (hierarchical deterministic) node
+ * Used for imports of private key into the device and exporting public key out of device
+ * @embed
+ */
+message HDNodeType {
+  required uint32 depth       = 1;
+  required uint32 fingerprint = 2;
+  required uint32 child_num   = 3;
+  required bytes  chain_code  = 4;
+  optional bytes  private_key = 5;
+  required bytes  public_key  = 6;
+}
+
+/**
+ * Structure representing a SLIP-0024 payment request.
+ * @embed
+ */
+message PaymentRequest {
+  optional bytes              nonce          = 1;               // the nonce used in the signature computation
+  required string             recipient_name = 2; // merchant's name
+  repeated PaymentRequestMemo memos          = 3; // any memos that were signed as part of the request
+  reserved 4;                             // this existed briefly. obsoleted by this change:
+                 // https://github.com/satoshilabs/slips/commit/08d36aa61722275a21617ac6a713e31ec23fdec4
+  optional bytes amount = 6;  // the sum of the external output amounts requested, encoded in little endian on either
+                                // 8 or 32 bytes required for non-CoinJoin transactions; do not set this for fiat
+                                // amounts (BUY crypto with fiat)
+  required bytes signature = 5; // the trusted party's signature of the paymentRequestDigest
+
+  message PaymentRequestMemo {
+    optional TextMemo         text_memo          = 1;
+    optional RefundMemo       refund_memo        = 2;
+    optional CoinPurchaseMemo coin_purchase_memo = 3;
+    optional TextDetailsMemo  text_details_memo  = 4;
+  }
+
+  message TextMemo {
+    required string text = 1; // plain-text note explaining the purpose of the payment request
+  }
+
+  message TextDetailsMemo {
+    required string title = 1; // plain-text heading
+    required string text  = 2; // plain-text note containing additional details about the payment
+  }
+
+  message RefundMemo {
+    required string address   = 1; // the address where the payment should be refunded if necessary
+    repeated uint32 address_n = 2; // BIP-32 path to derive the key from the master node
+    required bytes  mac       = 3; // the MAC returned by GetAddress
+  }
+
+  message CoinPurchaseMemo {
+    required uint32 coin_type = 1; // the SLIP-0044 coin type of the address
+    required string amount    = 2; // the amount the address will receive as a human-readable
+                                        // string including units, e.g. "0.025 BTC"
+    required string address   = 3; // the address where the coin purchase will be delivered
+    repeated uint32 address_n = 4; // BIP-32 path to derive the key from the master node
+    required bytes  mac       = 5; // the MAC returned by GetAddress
+  }
+}

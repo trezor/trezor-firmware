@@ -23,14 +23,14 @@ from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.messages import BackupType
+from trezorlib.testing.common import MOCK_GET_ENTROPY
+from trezorlib.testing.translations import set_language
 from trezorlib.tools import parse_path
 
-from ...common import MOCK_GET_ENTROPY
 from ...input_flows import (
     InputFlowSlip39BasicRecovery,
     InputFlowSlip39BasicResetRecovery,
 )
-from ...translations import set_language
 
 
 @pytest.mark.models("core")

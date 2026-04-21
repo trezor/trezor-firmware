@@ -5,13 +5,16 @@ description = "Python library for communicating with Trezor Hardware Wallet"
 readme = "README.md"
 license = "LGPL-3.0-only"
 license-files = ["COPYING"]
-authors = [
-    {name = "Trezor", email = "info@trezor.io"}
+authors = [{ name = "Trezor", email = "info@trezor.io" }]
+maintainers = [{ name = "matejcik", email = "jan.matejek@satoshilabs.com" }]
+keywords = [
+    "trezor",
+    "hardware",
+    "wallet",
+    "cryptocurrency",
+    "bitcoin",
+    "ethereum",
 ]
-maintainers = [
-    {name = "matejcik", email = "jan.matejek@satoshilabs.com"}
-]
-keywords = ["trezor", "hardware", "wallet", "cryptocurrency", "bitcoin", "ethereum"]
 classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
@@ -42,6 +45,13 @@ qt-widgets = ["PyQt5"]
 extra = ["Pillow>=10"]
 stellar = ["stellar-sdk>=6"]
 ble = ["bleak>=1.1.0"]
+test = [
+    "pytest>=8.3.5",
+    "pytest-random-order>=1.2.0",
+    "dominate",
+    "ecdsa>=0.16,<0.17",
+    "buffer_types",
+]
 full = [
     "hidapi>=0.7.99.post20",
     "web3>=5",

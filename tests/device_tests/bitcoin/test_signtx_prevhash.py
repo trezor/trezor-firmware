@@ -7,8 +7,8 @@ import pytest
 from trezorlib import btc, messages, models, tools
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.testing.common import is_core
 
-from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 from .signtx import forge_prevtx
 

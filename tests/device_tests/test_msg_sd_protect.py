@@ -21,8 +21,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SdProtectOperationType as Op
-
-from ..common import MNEMONIC12
+from trezorlib.testing.common import MNEMONIC12
 
 pytestmark = [
     pytest.mark.models("core", skip=["safe3", "eckhart"]),

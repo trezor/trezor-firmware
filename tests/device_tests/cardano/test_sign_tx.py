@@ -21,16 +21,16 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.tools import parse_path
-
-from ...common import parametrize_using_common_fixtures
-from ...input_flows import InputFlowConfirmAllWarnings
-from ..payment_req import (
+from trezorlib.testing.common import parametrize_using_common_fixtures
+from trezorlib.testing.device_tests.payment_req import (
     CoinPurchaseMemo,
     RefundMemo,
     TextDetailsMemo,
     make_payment_request,
 )
+from trezorlib.tools import parse_path
+
+from ...input_flows import InputFlowConfirmAllWarnings
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]
 

@@ -19,8 +19,7 @@ import pytest
 from trezorlib import messages
 from trezorlib.cardano import get_native_script_hash, parse_native_script
 from trezorlib.debuglink import DebugSession as Session
-
-from ...common import parametrize_using_common_fixtures
+from trezorlib.testing.common import parametrize_using_common_fixtures
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]
 

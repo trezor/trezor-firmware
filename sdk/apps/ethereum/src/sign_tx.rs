@@ -10,7 +10,7 @@ use crate::{
     payment_request::PaymentRequestVerifier,
     proto::{
         common::button_request::ButtonRequestType,
-        ethereum::{EthereumSignTx, EthereumTxRequest},
+        ethereum::{SignTx, TxRequest},
     },
     rlp::{self, RLPItem},
 };
@@ -32,7 +32,7 @@ const _: () = assert!(SC_ARGUMENT_ADDRESS_BYTES <= SC_ARGUMENT_BYTES);
 // the full value: v = 2 * chain_id + 35 + v_bit
 const MAX_CHAIN_ID: u64 = (0xFFFF_FFFF - 36) / 2;
 
-pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
+pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
     msg.nonce.get_or_insert_default();
     msg.to.get_or_insert_default();
     msg.value.get_or_insert_default();
@@ -45,17 +45,27 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     assert!(msg.data_initial_chunk.is_some());
     assert!(msg.data_length.is_some());
 
-    let nonce = msg.nonce.as_deref().ok_or(Error::DataError)?;
-    let to = msg.to.as_deref().ok_or(Error::DataError)?;
-    let value = msg.value.as_deref().ok_or(Error::DataError)?;
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-    let data_total = msg.data_length.ok_or(Error::DataError)?;
+    let nonce = msg
+        .nonce
+        .as_deref()
+        .ok_or(Error::DataError("Missing nonce"))?;
+    let to = msg
+        .to
+        .as_deref()
+        .ok_or(Error::DataError("Missing to address"))?;
+    let value = msg
+        .value
+        .as_deref()
+        .ok_or(Error::DataError("Missing value"))?;
+    let data_initial_chunk = msg
+        .data_initial_chunk
+        .as_deref()
+        .ok_or(Error::DataError("Missing data initial chunk"))?;
+    let data_total = msg
+        .data_length
+        .ok_or(Error::DataError("Missing data length"))?;
 
-    info!("Signing transaction");
     let dp = Bip32Path::from_slice(&msg.address_n);
-
-    info!("encoding definitions");
-
     let definitions = Definitions::from_encoded(
         msg.definitions
             .as_ref()
@@ -65,31 +75,20 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
             .and_then(|d| d.encoded_token.as_ref().map(|v| v.as_slice())),
         Some(msg.chain_id),
         None,
-    )
-    .map_err(|_| Error::DataError)?;
-
-    info!("setting up schemas");
+    )?;
 
     let schemas = schemas_from_network(&PATTERNS_ADDRESS, definitions.slip44())?;
-    info!("setting up keychain");
     let keychain = Keychain::new(schemas);
-
-    info!("checking common fields");
 
     check_common_fields(data_total, data_initial_chunk, to, msg.chain_id)?;
 
-    info!("getting bytes from address");
-
     let address_bytes = bytes_from_address(to)?;
-
-    info!("checking transaction type");
 
     if !matches!(
         msg.tx_type,
         Some(1) | Some(6) | Some(EIP_7702_TX_TYPE) | None
     ) {
-        info!("unsupported transaction type");
-        return Err(Error::DataError);
+        return Err(Error::DataError("Unsupported transaction type"));
     }
 
     if matches!(msg.tx_type, Some(EIP_7702_TX_TYPE)) {
@@ -98,36 +97,25 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         // raise DataError("EIP-7702 not allowed in strict checks")
 
         if get_eip_7702_known_address(&address_bytes).is_none() {
-            // TODO: proper error type: DataError("Unknown EIP-7702 address")
-            info!("Unknown EIP-7702 address");
-            return Err(Error::DataError);
+            return Err(Error::DataError("Unknown EIP-7702 address"));
         }
     }
 
     if msg.gas_price.len() + msg.gas_limit.len() > 30 {
-        // TODO: proper error type: DataError("Fee overflow")
-        info!("Fee overflow");
-        return Err(Error::DataError);
+        return Err(Error::DataError("Fee overflow"));
     }
 
-    info!("validating path");
     // have the user confirm signing
     dp.validate(&keychain)?;
-
-    info!("parsing fee information");
-
-    info!("gas price");
 
     // TODO: better implement parsing int value from bytes
     assert!(msg.gas_price.len() <= 32);
     let gas_price = U256::from_big_endian(&msg.gas_price);
 
-    info!("gas limit");
     // TODO: better implement parsing int value from bytes
     assert!(msg.gas_limit.len() <= 32);
     let gas_limit = U256::from_big_endian(&msg.gas_limit);
 
-    info!("max fee");
     let maximum_fee =
         format_ethereum_amount(gas_price * gas_limit, None, &definitions.network(), false);
     let fee_items = get_fee_items_regular(gas_price, gas_limit, &definitions.network());
@@ -137,20 +125,12 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         .map(|(k, v, mono)| Property::new(k, v, *mono))
         .collect();
 
-    info!("payment request verifier");
     let payment_req_verifier = if let Some(req) = &msg.payment_req {
-        info!("slip 44 id");
         let slip44_id = unharden(msg.address_n[1]);
-        info!(
-            "creating payment request verifier with slip44 id {}",
-            slip44_id
-        );
         Some(PaymentRequestVerifier::new(req, slip44_id)?)
     } else {
         None
     };
-
-    info!("confirming transaction data");
 
     confirm_tx_data(
         &dp,
@@ -169,7 +149,12 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         payment_req_verifier,
     )?;
 
-    ui::init_progress(None, Some("Signing transaction..."), false, false)?;
+    ui::init_progress(
+        None,
+        Some(tr!("progress__signing_transaction")),
+        false,
+        false,
+    )?;
     ui::update_progress(None, 100)?;
 
     // sign
@@ -179,14 +164,8 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 
     // Calculate total RLP length
     let total_length = get_total_length(&msg, data_total)?;
-    info!("total RLP length: {}", total_length);
-
     let mut rlp_buffer = Vec::new();
-
-    info!("writing RLP header");
     rlp::write_header(&mut rlp_buffer, total_length, rlp::LIST_HEADER_BYTE, None);
-
-    info!("current len of RLP buffer: {}", rlp_buffer.len());
 
     if let Some(tx_type) = msg.tx_type {
         rlp::write(&mut rlp_buffer, &RLPItem::Int(tx_type.into()));
@@ -207,10 +186,8 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 
     // Write data field
     if data_left == 0 {
-        info!("writing RLP data field");
         rlp::write(&mut rlp_buffer, &RLPItem::Bytes(&data));
     } else {
-        info!("writing RLP data header");
         rlp::write_header(
             &mut rlp_buffer,
             data_total,
@@ -224,44 +201,29 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 
     // Request remaining data chunks
     let initial_data_left = data_left;
-    info!("requesting remaining data chunks");
     while data_left > 0 {
-        info!("requesting data chunk, {} bytes left", data_left);
         let resp = send_request_chunk(data_left)?;
-        info!("chunk received");
 
         data_left -= resp.data_chunk.len() as u32;
         rlp_buffer.extend_from_slice(&resp.data_chunk);
 
-        info!("updating progress");
         ui::update_progress(
             None,
             500 + ((initial_data_left - data_left) / initial_data_left * 400),
         )?;
-        info!("progress updated");
     }
 
-    info!("all data chunks received, finalizing RLP encoding");
     // EIP-155 replay protection
     rlp::write(&mut rlp_buffer, &RLPItem::Int(msg.chain_id.into()));
     rlp::write(&mut rlp_buffer, &RLPItem::Int(0.into()));
     rlp::write(&mut rlp_buffer, &RLPItem::Int(0.into()));
-    info!("RLP encoding finalized, total length: {}", rlp_buffer.len());
-
-    info!("calculating transaction digest");
     let digest = crypto::keccak_256(&rlp_buffer);
-    info!("transaction digest: {:?}", digest);
-
     let res = sign_digest(&msg, &digest)?;
-
-    info!("transaction signed");
-
     ui::end_progress()?;
-
     ui::show_success(
-        "Done",
-        "Transaction signed",
-        "Continue in the app",
+        tr!("words__title_done"),
+        tr!("send__transaction_signed"),
+        tr!("instructions__continue_in_app"),
         Some(3200),
         None,
         ButtonRequestType::ButtonRequestOther.into(),
@@ -270,7 +232,7 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     Ok(res)
 }
 
-fn sign_digest(msg: &EthereumSignTx, digest: &[u8; 32]) -> Result<EthereumTxRequest> {
+fn sign_digest(msg: &SignTx, digest: &[u8; 32]) -> Result<TxRequest> {
     let (encoded_network, encoded_token) = match &msg.definitions {
         Some(def) => (
             def.encoded_network.as_ref().map(|d| d.as_ref()),
@@ -278,7 +240,6 @@ fn sign_digest(msg: &EthereumSignTx, digest: &[u8; 32]) -> Result<EthereumTxRequ
         ),
         None => (None, None),
     };
-    info!("signing typed hash");
 
     let signature = crypto::sign_typed_hash(
         &msg.address_n,
@@ -288,8 +249,7 @@ fn sign_digest(msg: &EthereumSignTx, digest: &[u8; 32]) -> Result<EthereumTxRequ
         Some(msg.chain_id),
     )?;
 
-    info!("signing typed hash completed, processing signature");
-    let mut req = EthereumTxRequest::default();
+    let mut req = TxRequest::default();
     let mut signature_v: u32 = signature[0].into();
 
     if msg.chain_id > MAX_CHAIN_ID {
@@ -305,25 +265,31 @@ fn sign_digest(msg: &EthereumSignTx, digest: &[u8; 32]) -> Result<EthereumTxRequ
     Ok(req)
 }
 
-pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> Result<u32> {
+pub fn get_total_length(msg: &SignTx, data_total: u32) -> Result<u32> {
     let mut length = 0;
 
     if let Some(tx_type) = msg.tx_type {
         length += rlp::length(&RLPItem::Int(tx_type.into()));
-        info!(
-            "tx_type length: {:?}",
-            rlp::length(&RLPItem::Int(tx_type.into()))
-        );
     }
 
-    let nonce = msg.nonce.as_deref().ok_or(Error::DataError)?;
-    let value = msg.value.as_deref().ok_or(Error::DataError)?;
-    let to_str = msg.to.as_deref().ok_or(Error::DataError)?;
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+    let nonce = msg
+        .nonce
+        .as_deref()
+        .ok_or(Error::DataError("Missing nonce"))?;
+    let value = msg
+        .value
+        .as_deref()
+        .ok_or(Error::DataError("Missing value"))?;
+    let to_str = msg
+        .to
+        .as_deref()
+        .ok_or(Error::DataError("Missing to address"))?;
+    let data_initial_chunk = msg
+        .data_initial_chunk
+        .as_deref()
+        .ok_or(Error::DataError("Missing data initial chunk"))?;
 
     let to_bytes = bytes_from_address(to_str)?;
-
-    info!("to bytes length: {}", to_bytes.len());
 
     let fields: Vec<RLPItem> = vec![
         RLPItem::Bytes(nonce),
@@ -338,7 +304,6 @@ pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> Result<u32> {
 
     for field in &fields {
         length += rlp::length(field);
-        info!("field length: {}", rlp::length(field));
     }
 
     length += rlp::header_length(data_total, Some(data_initial_chunk));

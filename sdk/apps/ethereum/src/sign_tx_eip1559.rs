@@ -7,9 +7,7 @@ use crate::{
     payment_request::PaymentRequestVerifier,
     proto::{
         common::button_request::ButtonRequestType,
-        ethereum::{
-            EthereumSignTxEip1559, EthereumTxRequest, ethereum_sign_tx_eip1559::EthereumAccessList,
-        },
+        ethereum::{SignTxEip1559, TxRequest, sign_tx_eip1559::AccessList},
     },
     rlp::{self, RLPItem},
 };
@@ -25,20 +23,23 @@ use trezor_app_sdk::{
 
 const TX_TYPE: u32 = 2;
 
-pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxRequest> {
+pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
     msg.to.get_or_insert_default();
     msg.data_initial_chunk.get_or_insert_default();
 
     assert!(msg.to.is_some());
     assert!(msg.data_initial_chunk.is_some());
 
-    let to = msg.to.as_deref().ok_or(Error::DataError)?;
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+    let to = msg
+        .to
+        .as_deref()
+        .ok_or(Error::DataError("Missing 'to' field"))?;
+    let data_initial_chunk = msg
+        .data_initial_chunk
+        .as_deref()
+        .ok_or(Error::DataError("Missing 'data_initial_chunk' field"))?;
 
-    info!("Signing transaction");
     let dp = Bip32Path::from_slice(&msg.address_n);
-
-    info!("encoding definitions");
 
     let definitions = Definitions::from_encoded(
         msg.definitions
@@ -49,26 +50,19 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
             .and_then(|d| d.encoded_token.as_ref().map(|v| v.as_slice())),
         Some(msg.chain_id),
         None,
-    )
-    .map_err(|_| Error::DataError)?;
-
-    info!("setting up schemas");
+    )?;
 
     let schemas = schemas_from_network(&PATTERNS_ADDRESS, definitions.slip44())?;
-    info!("setting up keychain");
     let keychain = Keychain::new(schemas);
 
     // check
     if msg.max_gas_fee.len() + msg.gas_limit.len() > 30 {
-        // TODO: proper error handling: fee overflow
-        return Err(Error::DataError);
+        return Err(Error::DataError("Fee overflow"));
     }
     if msg.max_priority_fee.len() + msg.gas_limit.len() > 30 {
-        // TODO: proper error handling: fee overflow
-        return Err(Error::DataError);
+        return Err(Error::DataError("Fee overflow"));
     }
 
-    info!("checking common fields");
     check_common_fields(msg.data_length, data_initial_chunk, to, msg.chain_id)?;
 
     // have a user confirm signing
@@ -101,20 +95,12 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
         .map(|(k, v, mono)| Property::new(k, v, *mono))
         .collect();
 
-    info!("payment request verifier");
     let payment_req_verifier = if let Some(req) = &msg.payment_req {
-        info!("slip 44 id");
         let slip44_id = unharden(msg.address_n[1]);
-        info!(
-            "creating payment request verifier with slip44 id {}",
-            slip44_id
-        );
         Some(PaymentRequestVerifier::new(req, slip44_id)?)
     } else {
         None
     };
-
-    info!("confirming transaction data");
 
     confirm_tx_data(
         &dp,
@@ -133,7 +119,12 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
         payment_req_verifier,
     )?;
 
-    ui::init_progress(None, Some("Signing transaction..."), false, false)?;
+    ui::init_progress(
+        None,
+        Some(tr!("progress__signing_transaction")),
+        false,
+        false,
+    )?;
     ui::update_progress(None, 100)?;
 
     // sign
@@ -143,13 +134,11 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
 
     // Calculate total RLP length
     let total_length = get_total_length(&msg, msg.data_length)?;
-    info!("total RLP length: {}", total_length);
 
     let mut rlp_buffer = Vec::new();
 
     rlp::write(&mut rlp_buffer, &RLPItem::Int(TX_TYPE.into()));
 
-    info!("writing RLP header");
     rlp::write_header(&mut rlp_buffer, total_length, rlp::LIST_HEADER_BYTE, None);
 
     // Write transaction fields
@@ -169,10 +158,8 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
 
     // Write data field
     if data_left == 0 {
-        info!("writing RLP data field");
         rlp::write(&mut rlp_buffer, &RLPItem::Bytes(&data));
     } else {
-        info!("writing RLP data header");
         rlp::write_header(
             &mut rlp_buffer,
             msg.data_length,
@@ -186,76 +173,55 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
 
     // Request remaining data chunks
     let initial_data_left = data_left;
-    info!("requesting remaining data chunks");
     while data_left > 0 {
-        info!("requesting data chunk, {} bytes left", data_left);
         let resp = send_request_chunk(data_left)?;
-        info!("chunk received");
 
         data_left -= resp.data_chunk.len() as u32;
         rlp_buffer.extend_from_slice(&resp.data_chunk);
 
-        info!("updating progress");
         ui::update_progress(
             None,
             500 + ((initial_data_left - data_left) / initial_data_left * 400),
         )?;
-        info!("progress updated");
     }
-
-    info!("all data chunks received");
 
     // write_access_list
     let payload_length: u32 = msg.access_list.iter().try_fold(0u32, |acc, item| {
         Ok::<u32, Error>(acc + access_list_item_length(item)?)
     })?;
-    info!("writing RLP access list header");
     rlp::write_header(&mut rlp_buffer, payload_length, rlp::LIST_HEADER_BYTE, None);
 
-    info!("writing RLP access list items");
     for item in &msg.access_list {
-        info!("bytes from address");
         let address_bytes = bytes_from_address(&item.address)?;
-        info!("calculating address length");
         let address_length = rlp::length(&&RLPItem::Bytes(address_bytes.as_slice()));
-
         let storage_key_items: Vec<RLPItem<'_>> = item
             .storage_keys
             .iter()
             .map(|k| RLPItem::Bytes(k.as_slice()))
             .collect();
-        info!("calculating storage keys length");
         let keys_length = rlp::length(&RLPItem::List(storage_key_items.as_slice()));
-        info!("writing RLP access list item header");
         rlp::write_header(
             &mut rlp_buffer,
             address_length + keys_length,
             rlp::LIST_HEADER_BYTE,
             None,
         );
-        info!("writing RLP address");
         rlp::write(&mut rlp_buffer, &RLPItem::Bytes(address_bytes.as_slice()));
-        info!("writing RLP storage keys");
         rlp::write(
             &mut rlp_buffer,
             &RLPItem::List(storage_key_items.as_slice()),
         );
     }
 
-    info!("calculating transaction digest");
     let digest = crypto::keccak_256(&rlp_buffer);
-    info!("transaction digest: {:?}", digest);
-
     let res = sign_digest(&msg, &digest)?;
-
-    info!("transaction signed");
 
     ui::end_progress()?;
 
     ui::show_success(
-        "Done",
-        "Transaction signed",
-        "Continue in the app",
+        tr!("words__title_done"),
+        tr!("send__transaction_signed"),
+        tr!("instructions__continue_in_app"),
         Some(3200),
         None,
         ButtonRequestType::ButtonRequestOther.into(),
@@ -264,15 +230,19 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
     Ok(res)
 }
 
-pub fn get_total_length(msg: &EthereumSignTxEip1559, data_total: u32) -> Result<u32> {
+pub fn get_total_length(msg: &SignTxEip1559, data_total: u32) -> Result<u32> {
     let mut length = 0;
 
-    let to = msg.to.as_deref().ok_or(Error::DataError)?;
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+    let to = msg
+        .to
+        .as_deref()
+        .ok_or(Error::DataError("Missing 'to' field"))?;
+    let data_initial_chunk = msg
+        .data_initial_chunk
+        .as_deref()
+        .ok_or(Error::DataError("Missing 'data_initial_chunk' field"))?;
 
     let to_bytes = bytes_from_address(to)?;
-
-    info!("to bytes length: {}", to_bytes.len());
 
     let fields: Vec<RLPItem> = vec![
         RLPItem::Bytes(&msg.nonce),
@@ -286,7 +256,6 @@ pub fn get_total_length(msg: &EthereumSignTxEip1559, data_total: u32) -> Result<
 
     for field in &fields {
         length += rlp::length(field);
-        info!("field length: {}", rlp::length(field));
     }
 
     length += rlp::header_length(data_total, Some(data_initial_chunk));
@@ -302,7 +271,7 @@ pub fn get_total_length(msg: &EthereumSignTxEip1559, data_total: u32) -> Result<
     Ok(length)
 }
 
-fn access_list_item_length(item: &EthereumAccessList) -> Result<u32> {
+fn access_list_item_length(item: &AccessList) -> Result<u32> {
     let address_bytes = bytes_from_address(&item.address)?;
     let address_length = rlp::length(&RLPItem::Bytes(&address_bytes));
 
@@ -317,12 +286,11 @@ fn access_list_item_length(item: &EthereumAccessList) -> Result<u32> {
     Ok(rlp::header_length(address_length + keys_length, None) + address_length + keys_length)
 }
 
-fn sign_digest(msg: &EthereumSignTxEip1559, digest: &[u8; 32]) -> Result<EthereumTxRequest> {
+fn sign_digest(msg: &SignTxEip1559, digest: &[u8; 32]) -> Result<TxRequest> {
     let signature =
         crypto::sign_typed_hash(&msg.address_n, digest, None, None, Some(msg.chain_id))?;
 
-    info!("signing typed hash completed, processing signature");
-    let mut req = EthereumTxRequest::default();
+    let mut req = TxRequest::default();
     req.signature_v = Some(signature[0] as u32 - 27);
     req.signature_r = Some(signature[1..33].to_vec());
     req.signature_s = Some(signature[33..].to_vec());

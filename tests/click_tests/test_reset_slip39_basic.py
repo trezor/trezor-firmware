@@ -19,13 +19,18 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.debuglink import LayoutType
+from trezorlib.testing import translations as TR
+from trezorlib.testing.common import (
+    EXTERNAL_ENTROPY,
+    MOCK_GET_ENTROPY,
+    generate_entropy,
+)
 
-from .. import translations as TR
-from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, LayoutType, generate_entropy
 from . import reset
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("core")

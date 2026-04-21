@@ -19,8 +19,8 @@ import pytest
 from trezorlib import fido
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.testing.common import MNEMONIC12
 
-from ...common import MNEMONIC12
 from ...input_flows import InputFlowFidoConfirm
 from .data_webauthn import CRED1, CRED2, CRED3, CREDS
 

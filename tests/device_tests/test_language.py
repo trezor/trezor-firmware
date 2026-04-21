@@ -26,8 +26,7 @@ from trezorlib._internal import translations
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import message_filters
-
-from ..translations import (
+from trezorlib.testing.translations import (
     LANGUAGES,
     build_and_sign_blob,
     get_lang_json,

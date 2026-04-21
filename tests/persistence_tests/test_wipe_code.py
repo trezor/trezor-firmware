@@ -1,9 +1,9 @@
 from trezorlib import debuglink, device, messages
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import message_filters
+from trezorlib.testing.common import MNEMONIC12
+from trezorlib.testing.emulators import Emulator, EmulatorWrapper
 
-from ..common import MNEMONIC12
-from ..emulators import Emulator, EmulatorWrapper
 from ..upgrade_tests import core_only, legacy_only
 
 PIN = "1234"

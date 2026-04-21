@@ -20,9 +20,9 @@ import pytest
 
 from trezorlib import btc, device, mapping, messages, models, protobuf
 from trezorlib._internal.emulator import Emulator
+from trezorlib.testing.emulators import EmulatorWrapper
 from trezorlib.tools import parse_path
 
-from ..emulators import EmulatorWrapper
 from . import for_all
 
 SOURCE_ASK = 0

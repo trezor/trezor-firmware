@@ -21,8 +21,12 @@ from trezorlib import device
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupAvailability, BackupType
+from trezorlib.testing.common import (
+    EXTERNAL_ENTROPY,
+    MOCK_GET_ENTROPY,
+    generate_entropy,
+)
 
-from ...common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from ...input_flows import InputFlowSlip39AdvancedResetRecovery
 
 pytestmark = pytest.mark.models("core")

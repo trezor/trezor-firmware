@@ -20,10 +20,10 @@ import pytest
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import MNEMONIC12, is_core
 from trezorlib.tools import H_, parse_path
 
 from ... import bip32
-from ...common import MNEMONIC12, is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 from .signtx import (
     forge_prevtx,

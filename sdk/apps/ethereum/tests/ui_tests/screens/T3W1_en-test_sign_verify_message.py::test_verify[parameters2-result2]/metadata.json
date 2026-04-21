@@ -1,0 +1,20 @@
+{
+  "actual_hash": "027df010efcc03b1e33dc5f4f07996dea4bc8df7c2cc0772df7a76ce4b0b3c71",
+  "expected_hash": "027df010efcc03b1e33dc5f4f07996dea4bc8df7c2cc0772df7a76ce4b0b3c71",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "a2d437f3538ab9184332420e65f7fbeced7c14ff55a6596e7a69c2a50780a94c",
+    "5298ee8924f5e218adaef439694800a61810c6baaf57f87315793ce7aa007e22",
+    "f444b23a6c0f9cf00d37fd3145767f08a42f65921c0e1ab9ac0e883077304d4d",
+    "50b171eb13705c0fd5d2e91729efa7949ecb583a2b0aa36da0d7d89643ce759e",
+    "884ec3e7dca6fb37468073c9f85cf08f90bed5e38a725597bdbdcdd53fb50185",
+    "a6b09ea2d8a476ab3fc23ea2ce9a17bba7fe8bbec03a01adf2afae10e6ef36da",
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_sign_verify_message.py::test_verify[parameters2-result2]"
+  }
+}

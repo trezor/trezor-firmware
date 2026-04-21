@@ -8,7 +8,6 @@ from unittest.mock import patch
 import pytest
 import typing_extensions as tx
 
-from tests.common import get_test_address
 from trezorlib import exceptions, protobuf
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.messages import (
@@ -29,6 +28,7 @@ from trezorlib.messages import (
     ThpSelectMethod,
 )
 from trezorlib.models import T2T1
+from trezorlib.testing.common import get_test_address
 from trezorlib.thp import channel, curve25519, pairing
 from trezorlib.thp.credentials import StaticCredential
 

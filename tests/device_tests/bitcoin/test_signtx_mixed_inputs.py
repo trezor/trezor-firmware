@@ -16,9 +16,9 @@
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import is_core
 from trezorlib.tools import parse_path
 
-from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import assert_tx_matches

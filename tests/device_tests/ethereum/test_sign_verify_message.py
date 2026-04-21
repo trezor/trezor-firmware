@@ -14,23 +14,20 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import pytest
 
-from trezorlib import ethereum_ext
+from trezorlib import ethereum
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import parametrize_using_common_fixtures
 from trezorlib.tools import parse_path
 
-from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowSignVerifyMessageLong
-
-pytestmark = [pytest.mark.extapp]
 
 
 @parametrize_using_common_fixtures("ethereum/signmessage.json")
-def test_signmessage(session: Session, instance_id: int, parameters, result):
+def test_signmessage(session: Session, parameters, result):
     if not parameters["is_long"]:
-        res = ethereum_ext.sign_message(
-            session, instance_id, parse_path(parameters["path"]), parameters["msg"]
+        res = ethereum.sign_message(
+            session, parse_path(parameters["path"]), parameters["msg"]
         )
         assert res.address == result["address"]
         assert res.signature.hex() == result["sig"]
@@ -38,19 +35,18 @@ def test_signmessage(session: Session, instance_id: int, parameters, result):
         with session.test_ctx as client:
             IF = InputFlowSignVerifyMessageLong(session)
             client.set_input_flow(IF.get())
-            res = ethereum_ext.sign_message(
-                session, instance_id, parse_path(parameters["path"]), parameters["msg"]
+            res = ethereum.sign_message(
+                session, parse_path(parameters["path"]), parameters["msg"]
             )
             assert res.address == result["address"]
             assert res.signature.hex() == result["sig"]
 
 
 @parametrize_using_common_fixtures("ethereum/verifymessage.json")
-def test_verify(session: Session, instance_id: int, parameters, result):
+def test_verify(session: Session, parameters, result):
     if not parameters["is_long"]:
-        res = ethereum_ext.verify_message(
+        res = ethereum.verify_message(
             session,
-            instance_id,
             parameters["address"],
             bytes.fromhex(parameters["sig"]),
             parameters["msg"],
@@ -60,9 +56,8 @@ def test_verify(session: Session, instance_id: int, parameters, result):
         with session.test_ctx as client:
             IF = InputFlowSignVerifyMessageLong(session, verify=True)
             client.set_input_flow(IF.get())
-            res = ethereum_ext.verify_message(
+            res = ethereum.verify_message(
                 session,
-                instance_id,
                 parameters["address"],
                 bytes.fromhex(parameters["sig"]),
                 parameters["msg"],
@@ -70,7 +65,7 @@ def test_verify(session: Session, instance_id: int, parameters, result):
             assert res is True
 
 
-def test_verify_invalid(session: Session, instance_id: int):
+def test_verify_invalid(session: Session):
     # First vector from the verifymessage JSON fixture
     msg = "This is an example of a signed message."
     address = "0xEa53AF85525B1779eE99ece1a5560C0b78537C3b"
@@ -78,9 +73,8 @@ def test_verify_invalid(session: Session, instance_id: int):
         "9bacd833b51fde010bab53bafd9d832eadd3b175d2af2e629bb2944fcc987dce7ff68bb3571ed25a720c220f2f9538bc8d04f582bee002c9af086590a49805901c"
     )
 
-    res = ethereum_ext.verify_message(
+    res = ethereum.verify_message(
         session,
-        instance_id,
         address,
         sig,
         msg,
@@ -88,9 +82,8 @@ def test_verify_invalid(session: Session, instance_id: int):
     assert res is True
 
     # Changing the signature, expecting failure
-    res = ethereum_ext.verify_message(
+    res = ethereum.verify_message(
         session,
-        instance_id,
         address,
         sig[:-1] + b"\x00",
         msg,
@@ -98,9 +91,8 @@ def test_verify_invalid(session: Session, instance_id: int):
     assert res is False
 
     # Changing the message, expecting failure
-    res = ethereum_ext.verify_message(
+    res = ethereum.verify_message(
         session,
-        instance_id,
         address,
         sig,
         msg + "abc",
@@ -108,9 +100,8 @@ def test_verify_invalid(session: Session, instance_id: int):
     assert res is False
 
     # Changing the address, expecting failure
-    res = ethereum_ext.verify_message(
+    res = ethereum.verify_message(
         session,
-        instance_id,
         address[:-1] + "a",
         sig,
         msg,

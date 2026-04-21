@@ -18,9 +18,9 @@ import pytest
 
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.eos import get_public_key
+from trezorlib.testing.common import MNEMONIC12
 from trezorlib.tools import parse_path
 
-from ...common import MNEMONIC12
 from ...input_flows import InputFlowShowXpubQRCode
 
 

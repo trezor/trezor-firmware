@@ -1,0 +1,17 @@
+{
+  "actual_hash": "23f830fd84f5d6602050d4d7ad43856d053e2eac4e94ff5545597cb7ba02181d",
+  "expected_hash": "23f830fd84f5d6602050d4d7ad43856d053e2eac4e94ff5545597cb7ba02181d",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "f96d4be5d5a4b0cc8b06b3df15adfcebbe6c747a550611a7d29c47a43d166f1b",
+    "a921f2742d6d7737a3df6ee8619e4680d1076e95b361fd7cf54f569883a8e392",
+    "6c2d49a2bbacccdb6aeeb9357f8d1e3e9be05ac281578ac551c56edc2c99839d",
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_getaddress.py::test_getaddress[Ledger Live legacy path]"
+  }
+}

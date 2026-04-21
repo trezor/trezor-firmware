@@ -1,10 +1,10 @@
 import pytest
 
 from trezorlib import debuglink, device
+from trezorlib._internal.emulator import Emulator
 from trezorlib.messages import SafetyCheckLevel
+from trezorlib.testing.common import MNEMONIC12
 
-from ..common import MNEMONIC12
-from ..emulators import Emulator
 from ..upgrade_tests import core_only
 
 

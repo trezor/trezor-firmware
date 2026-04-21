@@ -22,15 +22,15 @@ import pytest
 from trezorlib import btc, ethereum, messages, misc
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.tools import parse_path
-
-from ..payment_req import (
+from trezorlib.testing.device_tests.payment_req import (
     CoinPurchaseMemo,
     RefundMemo,
     TextDetailsMemo,
     TextMemo,
     make_payment_request,
 )
+from trezorlib.tools import parse_path
+
 from .signtx import forge_prevtx
 
 # address at seed "all all all..." path m/84h/1h/0h/0/0

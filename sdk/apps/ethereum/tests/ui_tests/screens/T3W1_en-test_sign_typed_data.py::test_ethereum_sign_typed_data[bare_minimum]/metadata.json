@@ -1,0 +1,23 @@
+{
+  "actual_hash": "2c7f6b83a93f9a1854dd4c4114b3a8f47936ff8ca3d123dfbac12a046e14df42",
+  "expected_hash": "2c7f6b83a93f9a1854dd4c4114b3a8f47936ff8ca3d123dfbac12a046e14df42",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+    "5a486d6f53fea09e9f4ada8d7020b8677dc45b291bc144d412b64ee8a10dc165",
+    "ee8b92303562cf1d4651425a3077e96c6b1a2935efcfe354e03c92f42c725602",
+    "443441cf4316b979eb56beeceb4ca853b3aedea1f2c3077120bc7a97a739bb00",
+    "68d263f33f008b6fba5a25ba7517e650e06d0ea9c3c27b07a59b0186aac21ad6",
+    "cae5d10e7ed30389e93b2aff521a54632faa935a35d2457e9b2669c40692db68",
+    "7cde81a36981f26f76a19e1fd40ef68520923fc8291bbca23ac75170aae5c0b4",
+    "7c45031dcf89b16e31893e929493bfa4657ebaae4e02c21d9489a546367b3b09",
+    "4a00ab73035252b19695845273dfa3b969828e2a5c86d8beda5309fc8e3863da",
+    "55b1e2b390cd7c6182c9ad69f03fc77f10dfceefba9abfcca3e6995a6c101466",
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_sign_typed_data.py::test_ethereum_sign_typed_data[bare_minimum]"
+  }
+}

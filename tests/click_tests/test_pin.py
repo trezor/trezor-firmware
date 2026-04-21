@@ -23,14 +23,13 @@ import pytest
 
 from trezorlib import device, exceptions
 from trezorlib.debuglink import DisplayStyle, LayoutType
+from trezorlib.testing import translations as TR
 
-from .. import translations as TR
 from .common import go_next, navigate_to_action_and_press
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
-
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("core")

@@ -32,6 +32,7 @@ from trezorlib import client as client_module
 from trezorlib import debuglink, log, messages, models
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.device import apply_settings
+from trezorlib.testing import translations
 from trezorlib.transport import Timeout, enumerate_devices, get_transport
 from trezorlib.transport.ble import BleTransport
 
@@ -39,9 +40,10 @@ from trezorlib.transport.ble import BleTransport
 # so that we see details of failed asserts from this module
 pytest.register_assert_rewrite("tests.common")
 
-from . import translations, ui_tests
-from .device_handler import BackgroundDeviceHandler
-from .emulators import EmulatorWrapper
+from trezorlib.testing.device_handler import BackgroundDeviceHandler
+from trezorlib.testing.emulators import EmulatorWrapper
+
+from . import ui_tests
 
 if t.TYPE_CHECKING:
     from _pytest.config import Config
@@ -259,9 +261,6 @@ class SetupParams:
     unfinished_backup: bool | None = None
     experimental: bool = False
     label: str = "test"
-    extapp: bool = False
-    extapp_path: str | None = None
-    extapp_instance_id: int | None = None
 
     @classmethod
     def from_request(cls, request: pytest.FixtureRequest) -> SetupParams:
@@ -271,8 +270,6 @@ class SetupParams:
             default_params.update(marker.kwargs)
         if request.node.get_closest_marker("experimental"):
             default_params["experimental"] = True
-        if request.node.get_closest_marker("extapp"):
-            default_params["extapp"] = True
         return cls(**default_params)
 
     @property
@@ -301,35 +298,11 @@ class SetupParams:
             if self.experimental:
                 apply_settings(session, experimental_features=True)
 
-        if self.extapp:
-            if not self.extapp_path:
-                raise ValueError(
-                    "--extapp option must be provided when using @pytest.mark.extapp"
-                )
-            path = Path(self.extapp_path)
-            if not path.exists():
-                raise FileNotFoundError(f"External app not found: {path}")
-            self.extapp_instance_id = debuglink.load_extapp(session, path)
-
 
 @pytest.fixture(scope="function")
 def setup_params(request: pytest.FixtureRequest) -> SetupParams:
     params = SetupParams.from_request(request)
-    if params.extapp:
-        params.extapp_path = request.config.getoption("extapp")
     return params
-
-
-@pytest.fixture(scope="function")
-def instance_id(
-    setup_params: SetupParams, _prepared_test_ctx: TrezorTestContext
-) -> int:
-    """Returns instance_id of the loaded external app."""
-    if not setup_params.extapp:
-        pytest.skip("This test requires @pytest.mark.extapp")
-    if setup_params.extapp_instance_id is None:
-        raise RuntimeError("External app was not loaded during test setup")
-    return setup_params.extapp_instance_id
 
 
 @pytest.fixture(scope="function")
@@ -360,10 +333,6 @@ def _prepared_test_ctx(
     To enable experimental features:
 
     @pytest.mark.experimental
-
-    To enable external applications:
-
-    @pytest.mark.extapp
     """
     models_filter = ModelsFilter(request.node)
     if _raw_test_ctx.model not in models_filter:
@@ -573,11 +542,6 @@ def pytest_addoption(parser: "Parser") -> None:
         default=False,
         help="Issue a warning when GC leak detected (otherwise, fail the test)",
     )
-    parser.addoption(
-        "--extapp",
-        action="store",
-        help="Path to the external application to load",
-    )
 
 
 def pytest_configure(config: "Config") -> None:
@@ -592,9 +556,6 @@ def pytest_configure(config: "Config") -> None:
     )
     config.addinivalue_line(
         "markers", "experimental: enable experimental features on Trezor"
-    )
-    config.addinivalue_line(
-        "markers", "extapp: enable external application features on Trezor"
     )
     config.addinivalue_line(
         "markers",

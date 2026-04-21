@@ -4,7 +4,7 @@ use crate::{
     helpers::address_from_bytes,
     keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
     paths::Bip32Path,
-    proto::ethereum::{EthereumMessageSignature, EthereumSignMessage},
+    proto::ethereum::{MessageSignature, SignMessage},
     uformat,
 };
 #[cfg(not(test))]
@@ -14,7 +14,7 @@ use std::vec::Vec;
 use trezor_app_sdk::{Result, crypto};
 
 /// Ethereum uses Bitcoin xpub format
-pub fn sign_message(msg: EthereumSignMessage) -> Result<EthereumMessageSignature> {
+pub fn sign_message(msg: SignMessage) -> Result<MessageSignature> {
     let dp = Bip32Path::from_slice(&msg.address_n);
 
     let slip44 = dp.slip44();
@@ -23,8 +23,7 @@ pub fn sign_message(msg: EthereumSignMessage) -> Result<EthereumMessageSignature
         None,
         None,
         slip44,
-    )
-    .unwrap();
+    )?;
 
     let schemas = schemas_from_network(&PATTERNS_ADDRESS, definitions.slip44())?;
     let keychain = Keychain::new(schemas);
@@ -48,7 +47,7 @@ pub fn sign_message(msg: EthereumSignMessage) -> Result<EthereumMessageSignature
     let mut sig = signature[1..].to_vec();
     sig.push(signature[0]);
 
-    let mut res = EthereumMessageSignature::default();
+    let mut res = MessageSignature::default();
     res.address = address;
     res.signature = sig;
 

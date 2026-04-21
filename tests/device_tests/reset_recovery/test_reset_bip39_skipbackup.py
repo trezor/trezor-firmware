@@ -19,8 +19,7 @@ from mnemonic import Mnemonic
 
 from trezorlib import messages
 from trezorlib.debuglink import DebugSession as Session
-
-from ...common import EXTERNAL_ENTROPY, generate_entropy
+from trezorlib.testing.common import EXTERNAL_ENTROPY, generate_entropy
 
 pytestmark = pytest.mark.models("legacy")
 

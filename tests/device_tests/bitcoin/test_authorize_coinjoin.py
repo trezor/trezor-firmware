@@ -22,9 +22,9 @@ from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.testing.common import is_core
 from trezorlib.tools import parse_path
 
-from ...common import is_core
 from ...tx_cache import TxCache
 from .coinjoin_req import make_coinjoin_request
 from .signtx import (

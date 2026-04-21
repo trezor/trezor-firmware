@@ -14,38 +14,30 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import pytest
 
-from trezorlib import ethereum_ext
+from trezorlib import ethereum
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import parametrize_using_common_fixtures
 from trezorlib.tools import parse_path
 
-from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowShowAddressQRCode
-
-pytestmark = [pytest.mark.extapp]
 
 
 @parametrize_using_common_fixtures("ethereum/getaddress.json")
-def test_getaddress(session: Session, instance_id: int, parameters, result):
+def test_getaddress(session: Session, parameters, result):
     address_n = parse_path(parameters["path"])
     assert (
-        ethereum_ext.get_address(session, instance_id, address_n, show_display=True)
-        == result["address"]
+        ethereum.get_address(session, address_n, show_display=True) == result["address"]
     )
 
 
 @parametrize_using_common_fixtures("ethereum/getaddress.json")
-def test_getaddress_chunkify_details(
-    session: Session, instance_id: int, parameters, result
-):
+def test_getaddress_chunkify_details(session: Session, parameters, result):
     with session.test_ctx as client:
         IF = InputFlowShowAddressQRCode(session)
         client.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
         assert (
-            ethereum_ext.get_address(
-                session, instance_id, address_n, show_display=True, chunkify=True
-            )
+            ethereum.get_address(session, address_n, show_display=True, chunkify=True)
             == result["address"]
         )

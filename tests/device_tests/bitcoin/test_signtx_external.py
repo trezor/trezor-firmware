@@ -20,9 +20,9 @@ from trezorlib import btc, device, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SafetyCheckLevel
+from trezorlib.testing.common import is_core
 from trezorlib.tools import parse_path
 
-from ...common import is_core
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,

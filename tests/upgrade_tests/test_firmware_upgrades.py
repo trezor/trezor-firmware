@@ -32,12 +32,15 @@ from trezorlib.messages import (
     RecoveryStatus,
     Success,
 )
+from trezorlib.testing.common import (
+    MNEMONIC_SLIP39_BASIC_20_3of6,
+    MNEMONIC_SLIP39_BASIC_20_3of6_SECRET,
+)
+from trezorlib.testing.device_handler import BackgroundDeviceHandler
+from trezorlib.testing.emulators import ALL_TAGS, EmulatorWrapper
 from trezorlib.tools import H_, parse_path
 
 from ..click_tests import recovery
-from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of6_SECRET
-from ..device_handler import BackgroundDeviceHandler
-from ..emulators import ALL_TAGS, EmulatorWrapper
 from ..input_flows import InputFlowSlip39BasicBackup
 from . import for_all, for_tags, recovery_old, version_from_tag
 
@@ -89,8 +92,7 @@ def _get_session(client: "Client", passphrase: str | object = "") -> "Session":
         return client.get_session(passphrase=passphrase)
 
     from trezorlib.client import SessionV1
-
-    from ..common import TEST_ADDRESS_N
+    from trezorlib.testing.common import TEST_ADDRESS_N
 
     session = SessionV1.new(client)
     resp = session.call_raw(

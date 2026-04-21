@@ -1,0 +1,13 @@
+{
+  "actual_hash": "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+  "expected_hash": "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1",
+  "images": [
+    "931d9afceb0ba1e4faae891775819277242d889644d5c0c5863fc8c9fcf859b1"
+  ],
+  "passed": true,
+  "test": {
+    "language": "en",
+    "model": "T3W1",
+    "name": "test_getpublickey.py::test_slip25_disallowed"
+  }
+}

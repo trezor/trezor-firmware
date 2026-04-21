@@ -64,6 +64,7 @@ pub enum CoreIpcService {
     Crypto = 5,
     Util = 6,
     Progress = 7,
+    WireError = 8,
     #[num_enum(catch_all)]
     Unknown(u16),
 }

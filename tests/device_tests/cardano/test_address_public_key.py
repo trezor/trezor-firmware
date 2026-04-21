@@ -24,9 +24,9 @@ from trezorlib.cardano import (
 )
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.messages import CardanoAddressType, CardanoDerivationType
+from trezorlib.testing.common import parametrize_using_common_fixtures
 from trezorlib.tools import parse_path
 
-from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowShowXpubQRCode
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]

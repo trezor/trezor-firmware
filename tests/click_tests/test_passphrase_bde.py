@@ -24,8 +24,8 @@ from trezorlib import messages
 from trezorlib.client import PassphraseSetting
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
+from trezorlib.testing.common import TEST_ADDRESS_N
 
-from ..common import TEST_ADDRESS_N
 from .common import (  # KEYBOARD_CATEGORY,
     CommonPass,
     KeyboardCategory,
@@ -36,8 +36,7 @@ from .common import (  # KEYBOARD_CATEGORY,
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
-
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("t2t1", "delizia", "eckhart")
