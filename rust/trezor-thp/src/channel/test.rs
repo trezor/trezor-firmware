@@ -42,6 +42,11 @@ const DEFAULT_PACKET_LEN: usize = 64;
 static SETUP: Once = Once::new();
 const DEVICE_KEY: &[u8; PRIVKEY_LEN] = &[0u8; PRIVKEY_LEN];
 
+// internal_model: Some("T2W1"), model_variant: Some(0), protocol_version_major: Some(2),
+// protocol_version_minor: Some(0), pairing_methods: [CodeEntry, SkipPairing]
+const DEVICE_PROPERTIES: &[u8] =
+    b"\x0a\x04\x54\x32\x57\x31\x10\x00\x18\x02\x20\x00\x28\x02\x28\x01";
+
 fn setup() {
     SETUP.call_once(|| {
         env_logger::init_from_env(env_logger::Env::default().filter_or("RUST_LOG", "info"));
@@ -55,12 +60,6 @@ pub struct TestCredentialVerifier;
 impl CredentialVerifier for TestCredentialVerifier {
     fn verify(&self, _remote_static_pubkey: &[u8], _credential: &[u8]) -> PairingState {
         PairingState::Unpaired
-    }
-
-    fn device_properties(&self) -> &[u8] {
-        // internal_model: Some("T2W1"), model_variant: Some(0), protocol_version_major: Some(2),
-        // protocol_version_minor: Some(0), pairing_methods: [CodeEntry, SkipPairing]
-        b"\x0a\x04\x54\x32\x57\x31\x10\x00\x18\x02\x20\x00\x28\x02\x28\x01"
     }
 }
 
@@ -536,7 +535,9 @@ fn create_mux() -> (
 ) {
     let mut hm = host::Mux::<RustCrypto>::new().into_buffered();
     hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<RustCrypto>::new().into_buffered();
+    let mut dm = device::Mux::<RustCrypto>::new(DEVICE_PROPERTIES)
+        .unwrap()
+        .into_buffered();
     dm.set_packet_len(DEFAULT_PACKET_LEN);
     let cids = device::ChannelIdAllocator::new_random::<RustCrypto>();
     (hm, dm, cids)
@@ -623,7 +624,7 @@ fn test_packet_length(packet_len: usize, ack_piggybacking: bool) -> Result<()> {
 fn test_one_device_multiple_hosts() -> Result<()> {
     const NHOSTS: usize = 4;
     setup();
-    let mut dm = device::Mux::<RustCrypto>::new().into_buffered();
+    let mut dm = device::Mux::<RustCrypto>::new(DEVICE_PROPERTIES)?.into_buffered();
     dm.set_packet_len(DEFAULT_PACKET_LEN);
     let cids = device::ChannelIdAllocator::new_from(42);
 
