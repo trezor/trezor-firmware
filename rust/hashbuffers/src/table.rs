@@ -12,9 +12,9 @@
 
 use bytemuck::AnyBitPattern;
 
-use crate::hashbuffers::codec::{Params, Size};
-
-use super::{try_from_bytes_prefix, BlockData, BlockType, CodecError, Link, Tagged16};
+use crate::{
+    BlockData, BlockType, CodecError, Link, Params, Size, Tagged16, try_from_bytes_prefix,
+};
 
 /// Type tag for a vtable entry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -195,6 +195,10 @@ impl<'a> TableBlock<'a> {
         self.vtable.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.vtable.is_empty()
+    }
+
     /// Get the vtable entry at `index`, or NULL if `index >= entry_count`.
     pub fn get_entry(&self, index: usize) -> VTableEntry {
         match self.vtable.get(index) {
@@ -210,7 +214,7 @@ impl<'a> TableBlock<'a> {
 
     fn get_primitive_from_direct<T: AnyBitPattern>(&self, offset: usize) -> Result<&T, CodecError> {
         let heap_data = self.get_heap_data(offset);
-        Ok(try_from_bytes_prefix::<T>(heap_data)?)
+        try_from_bytes_prefix::<T>(heap_data)
     }
 
     fn match_uinline(&self, index: usize) -> Result<Option<u16>, VTableEntry> {
@@ -382,10 +386,9 @@ pub enum BlockOrLink<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        super::{tests::*, *},
-        *,
-    };
+    use super::super::tests::*;
+    use super::super::*;
+    use super::*;
 
     impl BlockBuilder {
         pub fn push_vtable_entry(

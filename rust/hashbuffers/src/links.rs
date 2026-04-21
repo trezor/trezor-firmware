@@ -8,7 +8,7 @@
 //! After validation, the links region is cast to `&[RawLink]` for
 //! direct indexed access.
 
-use super::{BlockData, BlockType, CodecError, Link, LINK_ALIGN, LINK_SIZE};
+use crate::{BlockData, BlockType, CodecError, LINK_ALIGN, Link};
 
 /// A parsed LINKS block, borrowing from the input data.
 ///
@@ -54,7 +54,7 @@ impl<'a> LinksBlock<'a> {
         // Validate limits are strictly increasing and non-zero.
         let mut prev_limit: u32 = 0;
         for link in links {
-            if link.limit == 0  || link.limit <= prev_limit {
+            if link.limit == 0 || link.limit <= prev_limit {
                 return Err(CodecError::InvalidValue);
             }
             prev_limit = link.limit;
@@ -66,6 +66,10 @@ impl<'a> LinksBlock<'a> {
     /// Number of links in this block.
     pub fn len(&self) -> usize {
         self.links.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.links.is_empty()
     }
 
     pub fn links(&self) -> &[Link] {
@@ -106,7 +110,11 @@ impl<'a> LinksBlock<'a> {
             // target_index is greater than the content length
             return None;
         }
-        let prev_limit = if index == 0 { 0 } else { self.links[index - 1].limit };
+        let prev_limit = if index == 0 {
+            0
+        } else {
+            self.links[index - 1].limit
+        };
         let limit = self.links[index].limit;
         let stated_content_length = limit - prev_limit;
         let local_index = target_index - prev_limit;
@@ -118,6 +126,7 @@ impl<'a> LinksBlock<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::LINK_SIZE;
 
     fn encode_block_header(block_type: u8, size: u16) -> [u8; 2] {
         let parameters = block_type << 1;

@@ -23,6 +23,8 @@
 //! - [`SlotsBlock`] -- array of variable-size byte strings
 //! - [`LinksBlock`] -- array of 36-byte links (link tree inner node)
 
+#![cfg_attr(not(test), no_std)]
+
 // Require little-endian. The wire format is LE and we rely on aligned reads
 // being correct without byte-swapping.
 #[cfg(not(target_endian = "little"))]
@@ -34,7 +36,6 @@ pub mod slots;
 pub mod table;
 
 use bytemuck::{AnyBitPattern, NoUninit, PodCastError};
-
 pub use data::DataBlock;
 pub use links::LinksBlock;
 pub use slots::SlotsBlock;
@@ -63,6 +64,7 @@ macro_rules! unwrap_unreachable {
         }
     };
 }
+#[allow(clippy::needless_pub_self, unused)]
 pub(self) use unwrap_unreachable;
 
 impl From<PodCastError> for CodecError {
@@ -87,7 +89,7 @@ pub struct Params(u8);
 
 impl Params {
     pub const fn new(value: u8) -> Result<Self, CodecError> {
-        if value & 0b000 != 0 {
+        if value & !0b111 != 0 {
             return Err(CodecError::ValueOverflow);
         }
         Ok(Self(value))
@@ -118,10 +120,10 @@ impl From<Params> for u8 {
 pub struct Size(usize);
 
 impl Size {
-    pub const MAX: Self = Self(SIZE_MAX as usize);
+    pub const MAX: Self = Self(SIZE_MAX);
 
     pub const fn new(value: usize) -> Result<Self, CodecError> {
-        if value > SIZE_MAX as usize {
+        if value > SIZE_MAX {
             return Err(CodecError::ValueOverflow);
         }
         Ok(Self(value))
@@ -151,7 +153,7 @@ impl TryFrom<usize> for Size {
 
 impl From<Size> for usize {
     fn from(value: Size) -> Self {
-        value.0 as usize
+        value.0
     }
 }
 
@@ -208,6 +210,7 @@ impl Tagged16 {
     }
 }
 
+#[cfg(feature = "debug")]
 impl ufmt::uDebug for Tagged16 {
     fn fmt<W>(&self, w: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
     where
@@ -270,12 +273,17 @@ impl<'a> BlockData<'a> {
 
     #[inline]
     pub fn is_aligned_to(&self, align: usize) -> bool {
-        self.0.as_ptr() as usize % align == 0
+        (self.0.as_ptr() as usize).is_multiple_of(align)
     }
 
     #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }
 
@@ -372,7 +380,7 @@ const _: () = {
 };
 
 impl Link {
-    pub fn new_from_prefix<'a>(data: &'a [u8]) -> Result<&'a Self, CodecError> {
+    pub fn new_from_prefix(data: &[u8]) -> Result<&Self, CodecError> {
         let link = try_from_bytes_prefix::<Self>(data)?;
         if link.limit == 0 {
             return Err(CodecError::InvalidValue);

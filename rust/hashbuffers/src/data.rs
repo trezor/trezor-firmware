@@ -5,7 +5,7 @@
 //! Elements are of uniform size and alignment. Padding ensures proper alignment
 //! after the 2-byte header and between elements.
 
-use super::{align_up, BlockData, BlockType, CodecError};
+use crate::{BlockData, BlockType, CodecError, align_up};
 
 /// A parsed DATA block, borrowing from the input data.
 ///
@@ -41,7 +41,7 @@ impl<'a> DataBlock<'a> {
         };
         let padded_elem_size = align_up(elem_size, elem_align);
         let start_offset = new.start_offset();
-        if (data.len() - start_offset) % padded_elem_size != 0 {
+        if !(data.len() - start_offset).is_multiple_of(padded_elem_size) {
             return Err(CodecError::OutOfBounds);
         }
         Ok(new)
@@ -76,10 +76,9 @@ impl<'a> DataBlock<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        super::{tests::BlockBuilder, *},
-        *,
-    };
+    use super::super::tests::BlockBuilder;
+    use super::super::*;
+    use super::*;
 
     impl BlockBuilder {
         pub fn push_elem_params(&mut self, elem_size: usize, elem_align: usize) -> &mut Self {

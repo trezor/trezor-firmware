@@ -9,7 +9,7 @@
 //! After validation, the offset array is cast to `&[u16]` for direct
 //! indexed access.
 
-use super::{BlockData, BlockType, CodecError, Tagged16};
+use crate::{BlockData, BlockType, CodecError, Tagged16};
 
 /// A parsed SLOTS block, borrowing from the input data.
 ///
@@ -39,7 +39,7 @@ impl<'a> SlotsBlock<'a> {
         if heap_start < 4 || heap_start > block_data.len() {
             return Err(CodecError::OutOfBounds);
         }
-        if heap_start % 2 != 0 {
+        if !heap_start.is_multiple_of(2) {
             return Err(CodecError::InvalidValue);
         }
         let offsets_count = (heap_start - 2) / 2;
@@ -67,6 +67,10 @@ impl<'a> SlotsBlock<'a> {
     /// Total block size in bytes.
     pub fn len(&self) -> usize {
         self.offsets.len() - 1
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.offsets.is_empty()
     }
 
     /// Get the byte string at element `index`.

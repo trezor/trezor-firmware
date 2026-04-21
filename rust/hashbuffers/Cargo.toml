@@ -1,0 +1,19 @@
+[package]
+name = "hashbuffers"
+version = "0.0.1"
+authors = ["matejcik <ja@matejcik.cz"]
+edition = "2024"
+license = "MIT"
+description = "Hashbuffers implementation for Trezor Firmware"
+homepage = "https://github.com/trezor/trezor-firmware/tree/main/rust/hashbuffers"
+# documentation = "https://docs.rs/hashbuffers"
+repository = "https://github.com/trezor/trezor-firmware"
+keywords = ["hashbuffers", "trezor", "firmware"]
+readme = "README.md"
+
+[features]
+debug = ["ufmt"]
+
+[dependencies]
+bytemuck = { version = "1.25.0", default-features = false, features = ["derive"] }
+ufmt = { version = "0.2.0", default-features = false, optional = true }
