@@ -23,9 +23,9 @@ import click
 from mnemonic import Mnemonic
 
 from .. import device, messages
-from .client import MAX_PIN_LENGTH
-from .exceptions import Cancelled
-from .messages import PinMatrixRequestType, WordRequestType
+from ..client import MAX_PIN_LENGTH
+from ..exceptions import Cancelled
+from ..messages import PinMatrixRequestType, WordRequestType
 
 PIN_MATRIX_DESCRIPTION = """
 Use the numeric keypad or lowercase letters to describe number positions.
