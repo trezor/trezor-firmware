@@ -21,14 +21,20 @@ import typing as t
 from types import ModuleType
 
 from typing_extensions import Self
+from hashbuffers.store import BlockStore
 
-from . import messages, protobuf
+from . import messages, protobuf, hashbuffers
 
 T = t.TypeVar("T")
 MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 
-class ProtobufMapping:
+class Mapping(t.Protocol):
+    def encode(self, msg: protobuf.MessageType) -> tuple[int, bytes]: ...
+    def decode(self, msg_wire_type: int, msg_bytes: bytes) -> protobuf.MessageType: ...
+
+
+class ProtobufMapping(Mapping):
     """Mapping of protobuf classes to Python classes"""
 
     def __init__(self) -> None:
@@ -105,4 +111,66 @@ class ProtobufMapping:
         return mapping
 
 
-DEFAULT_MAPPING = ProtobufMapping.from_module(messages)
+class HashbufMapping(ProtobufMapping):
+    def __init__(self, mapping: ProtobufMapping) -> None:
+        self.mapping = mapping
+        self.store = BlockStore(b"test")
+        self.record: t.Callable[..., None] = self.null_record
+
+    def null_record(
+        self,
+        direction: str,
+        message_type: str,
+        protobuf_size: int,
+        store: BlockStore,
+        message: protobuf.MessageType,
+        hashbuf_bytes: bytes,
+        protobuf_bytes: bytes,
+    ) -> None:
+        pass
+
+    def encode(self, msg: protobuf.MessageType) -> tuple[int, bytes]:
+        self.store.blocks.clear()
+        wire_type, msg_bytes = self.mapping.encode(msg)
+        block_bytes = hashbuffers.serialize(msg, self.store)
+        _ = self.store.store_bytes(block_bytes)
+        self.record(
+            direction="encode",
+            message_type=type(msg).__name__,
+            protobuf_size=len(msg_bytes),
+            store=self.store,
+            message=msg,
+            hashbuf_bytes=block_bytes,
+            protobuf_bytes=msg_bytes,
+        )
+        return wire_type, block_bytes
+
+    def decode(self, msg_wire_type: int, msg_bytes: bytes) -> protobuf.MessageType:
+        msg = self.mapping.decode(msg_wire_type, msg_bytes)
+        try:
+            block_bytes = hashbuffers.serialize(msg, self.store)
+        except Exception as e:
+            print(f"Error serializing message {type(msg).__name__}: {msg} ({e})")
+            raise
+        self.store.blocks.clear()
+        _ = self.store.store_bytes(block_bytes)
+        self.record(
+            direction="decode",
+            message_type=type(msg).__name__,
+            protobuf_size=len(msg_bytes),
+            store=self.store,
+            message=msg,
+            hashbuf_bytes=block_bytes,
+            protobuf_bytes=msg_bytes,
+        )
+        return msg
+
+
+DEFAULT_PROTO_MAPPING = ProtobufMapping.from_module(messages)
+
+import os
+
+if int(os.environ.get("TREZOR_SEND_HASHBUFFERS", "0")):
+    DEFAULT_MAPPING = HashbufMapping(DEFAULT_PROTO_MAPPING)
+else:
+    DEFAULT_MAPPING = DEFAULT_PROTO_MAPPING
