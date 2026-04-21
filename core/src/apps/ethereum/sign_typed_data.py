@@ -47,6 +47,7 @@ async def sign_typed_data(
 
     # Display address so user can validate it
     await require_confirm_address(address_bytes)
+
     data_hash = await _generate_typed_data_hash(
         msg.primary_type, msg.metamask_v4_compat, msg.show_message_hash
     )
@@ -95,6 +96,7 @@ async def _generate_typed_data_hash(
 
     name, version = await _get_name_and_version_for_domain(typed_data_envelope)
     show_domain = await should_show_domain(name, version)
+
     domain_separator = await typed_data_envelope.hash_struct(
         "EIP712Domain",
         [0],
@@ -161,6 +163,7 @@ class TypedDataEnvelope:
     ) -> None:
         self.primary_type = primary_type
         self.metamask_v4_compat = metamask_v4_compat
+        self.prefetched_eip712_values: dict[tuple[int, ...], AnyBytes] = {}
         self.types: dict[str, EthereumTypedDataStructAck] = {}
 
     async def collect_types(
@@ -387,7 +390,14 @@ class TypedDataEnvelope:
                             )
                 w.extend(arr_w.get_digest())
             else:
-                value = await get_value(field_type, member_value_path)
+                path_key = tuple(member_value_path)
+                if (
+                    primary_type == "EIP712Domain"
+                    and path_key in self.prefetched_eip712_values
+                ):
+                    value = self.prefetched_eip712_values[path_key]
+                else:
+                    value = await get_value(field_type, member_value_path)
                 encode_field(w, field_type, value)
                 if show_data:
                     await confirm_typed_value(
@@ -576,9 +586,12 @@ async def _get_name_and_version_for_domain(
     member_value_path = [0, 0]
     for member_index, member in enumerate(domain_members):
         member_value_path[-1] = member_index
-        if member.name == "name":
-            domain_name = await get_value(member.type, member_value_path)
-        elif member.name == "version":
-            domain_version = await get_value(member.type, member_value_path)
-
+        if member.name in ("name", "version"):
+            value = await get_value(member.type, member_value_path)
+            path_key = tuple(member_value_path)
+            typed_data_envelope.prefetched_eip712_values[path_key] = value
+            if member.name == "name":
+                domain_name = value
+            elif member.name == "version":
+                domain_version = value
     return domain_name, domain_version
