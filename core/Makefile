@@ -130,7 +130,7 @@ TREZOR_FIDO2_UDP_PORT = 21326
 RUST_TARGET=$(shell rustc -vV | sed -n 's/host: //p')
 
 MULTICORE ?= "auto"
-RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
+RANDOM ?= $(shell python -c 'import random; print(random.randint(0, 1000000))')
 
 SCONS_VARS = \
 	BENCHMARK="$(BENCHMARK)" \
