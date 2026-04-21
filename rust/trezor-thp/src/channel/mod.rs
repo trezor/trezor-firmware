@@ -122,9 +122,7 @@ enum ChannelState<R: Role> {
     /// an assembled message.
     Receiving { reassembler: Reassembler<R> },
     /// Channel is inoperable.
-    /// None: local failure
-    /// Some: error message received from other side
-    Failed { error: Option<TransportError> },
+    Failed,
 }
 
 /// THP channel with established secure layer.
@@ -177,7 +175,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
     }
 
     pub fn is_failed(&self) -> bool {
-        matches!(self.state, ChannelState::Failed { .. })
+        matches!(self.state, ChannelState::Failed)
     }
 
     /// Return the retransmission attempt number (the first transmission returns 0),
@@ -313,10 +311,10 @@ impl<R: Role, B: Backend> Channel<R, B> {
                     log::error!(
                         "[{:04x}] Peer sent an error: {}.",
                         self.channel_id,
-                        te as u8
+                        te.as_str()
                     );
                     if !te.is_recoverable() {
-                        self.state = ChannelState::Failed { error: Some(te) };
+                        self.state = ChannelState::Failed;
                     }
                     return Ok(te);
                 } else {
@@ -327,7 +325,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                     );
                 }
             }
-            self.state = ChannelState::Failed { error: None };
+            self.state = ChannelState::Failed;
             return Err(Error::malformed_data());
         }
         log::warn!(
@@ -716,7 +714,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         }
         let res = PacketInResult::from_result(self.handle_packet(packet_buffer, receive_buffer));
         if let PacketInResult::Failed { .. } = res {
-            self.state = ChannelState::Failed { error: None };
+            self.state = ChannelState::Failed;
         }
         res
     }
@@ -734,7 +732,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             if error.is_recoverable() {
                 self.state = ChannelState::Idle;
             } else {
-                self.state = ChannelState::Failed { error: None };
+                self.state = ChannelState::Failed;
             }
             return Ok(());
         }
@@ -803,7 +801,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             Err(e) => {
                 if R::is_host() {
                     log::error!("[{:04x}] Decryption failed.", self.channel_id);
-                    self.state = ChannelState::Failed { error: None };
+                    self.state = ChannelState::Failed;
                 } else {
                     log::error!(
                         "[{:04x}] Decryption failed, sending DECRYPTION_FAILED.",
