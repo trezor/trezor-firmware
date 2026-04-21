@@ -5620,6 +5620,269 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkN4W1Response {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkGetStringLog)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkGetStringLog {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkGetStringLog.clear)
+    pub clear: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkGetStringLog.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkGetStringLog {
+    fn default() -> &'a DebugLinkGetStringLog {
+        <DebugLinkGetStringLog as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkGetStringLog {
+    pub fn new() -> DebugLinkGetStringLog {
+        ::std::default::Default::default()
+    }
+
+    // optional bool clear = 1;
+
+    pub fn clear(&self) -> bool {
+        self.clear.unwrap_or(true)
+    }
+
+    pub fn clear_clear(&mut self) {
+        self.clear = ::std::option::Option::None;
+    }
+
+    pub fn has_clear(&self) -> bool {
+        self.clear.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_clear(&mut self, v: bool) {
+        self.clear = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "clear",
+            |m: &DebugLinkGetStringLog| { &m.clear },
+            |m: &mut DebugLinkGetStringLog| { &mut m.clear },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkGetStringLog>(
+            "DebugLinkGetStringLog",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkGetStringLog {
+    const NAME: &'static str = "DebugLinkGetStringLog";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.clear = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.clear {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.clear {
+            os.write_bool(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkGetStringLog {
+        DebugLinkGetStringLog::new()
+    }
+
+    fn clear(&mut self) {
+        self.clear = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkGetStringLog {
+        static instance: DebugLinkGetStringLog = DebugLinkGetStringLog {
+            clear: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkGetStringLog {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkGetStringLog").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkGetStringLog {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkGetStringLog {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkStringLog)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkStringLog {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkStringLog.strings)
+    pub strings: ::std::vec::Vec<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkStringLog.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkStringLog {
+    fn default() -> &'a DebugLinkStringLog {
+        <DebugLinkStringLog as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkStringLog {
+    pub fn new() -> DebugLinkStringLog {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "strings",
+            |m: &DebugLinkStringLog| { &m.strings },
+            |m: &mut DebugLinkStringLog| { &mut m.strings },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkStringLog>(
+            "DebugLinkStringLog",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkStringLog {
+    const NAME: &'static str = "DebugLinkStringLog";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.strings.push(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.strings {
+            my_size += ::protobuf::rt::string_size(1, &value);
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.strings {
+            os.write_string(1, &v)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkStringLog {
+        DebugLinkStringLog::new()
+    }
+
+    fn clear(&mut self) {
+        self.strings.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkStringLog {
+        static instance: DebugLinkStringLog = DebugLinkStringLog {
+            strings: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkStringLog {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkStringLog").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkStringLog {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkStringLog {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x14messages-debug.proto\x12\x18hw.trezor.messages.debug\x1a\x15messag\
     es-common.proto\x1a\x19messages-management.proto\x1a\roptions.proto\"\
@@ -5693,9 +5956,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     4W1Connected\"<\n\x12DebugLinkN4W1Write\x12\x10\n\x03key\x18\x01\x20\x01\
     (\tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\x0cR\x05value\"%\n\x11De\
     bugLinkN4W1Read\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\"-\n\x15Debu\
-    gLinkN4W1Response\x12\x14\n\x05value\x18\x01\x20\x01(\x0cR\x05valueB=\n#\
-    com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\
-    \x01\
+    gLinkN4W1Response\x12\x14\n\x05value\x18\x01\x20\x01(\x0cR\x05value\"3\n\
+    \x15DebugLinkGetStringLog\x12\x1a\n\x05clear\x18\x01\x20\x01(\x08:\x04tr\
+    ueR\x05clear\".\n\x12DebugLinkStringLog\x12\x18\n\x07strings\x18\x01\x20\
+    \x03(\tR\x07stringsB=\n#com.satoshilabs.trezor.lib.protobufB\x12TrezorMe\
+    ssageDebug\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -5716,7 +5981,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(26);
+            let mut messages = ::std::vec::Vec::with_capacity(28);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());
             messages.push(DebugLinkReseedRandom::generated_message_descriptor_data());
@@ -5742,6 +6007,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkN4W1Write::generated_message_descriptor_data());
             messages.push(DebugLinkN4W1Read::generated_message_descriptor_data());
             messages.push(DebugLinkN4W1Response::generated_message_descriptor_data());
+            messages.push(DebugLinkGetStringLog::generated_message_descriptor_data());
+            messages.push(DebugLinkStringLog::generated_message_descriptor_data());
             messages.push(debug_link_gc_info::DebugLinkGcInfoItem::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(5);
             enums.push(debug_link_decision::DebugSwipeDirection::generated_enum_descriptor_data());

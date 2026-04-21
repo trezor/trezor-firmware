@@ -63,6 +63,7 @@ n4w1 = []
 translations = ["crypto"]
 secmon_layout = []
 dbg_console = []
+ui_string_collector = ["debug"]
 app_loading = []
 test = [
     "backlight",

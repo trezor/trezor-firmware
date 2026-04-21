@@ -1,4 +1,6 @@
 mod blob;
+#[cfg(feature = "ui_string_collector")]
+mod collector;
 pub mod flash;
 mod generated;
 #[cfg(feature = "micropython")]

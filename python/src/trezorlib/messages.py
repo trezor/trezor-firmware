@@ -556,6 +556,8 @@ class MessageType(IntEnum):
     DebugLinkN4W1Write = 9015
     DebugLinkN4W1Read = 9016
     DebugLinkN4W1Response = 9017
+    DebugLinkGetStringLog = 9018
+    DebugLinkStringLog = 9019
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4514,6 +4516,34 @@ class DebugLinkN4W1Response(protobuf.MessageType):
         value: Optional["bytes"] = None,
     ) -> None:
         self.value = value
+
+
+class DebugLinkGetStringLog(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9018
+    FIELDS = {
+        1: protobuf.Field("clear", "bool", repeated=False, required=False, default=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        clear: Optional["bool"] = True,
+    ) -> None:
+        self.clear = clear
+
+
+class DebugLinkStringLog(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9019
+    FIELDS = {
+        1: protobuf.Field("bitmap", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        bitmap: Optional[bytes] = None,
+    ) -> None:
+        self.bitmap: Optional[bytes] = bitmap
 
 
 class DebugLinkGcInfoItem(protobuf.MessageType):

@@ -161,64 +161,120 @@ extern "C" fn verify(data: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+/// Return the raw string-access bitmap as a `bytes` object.
+///
+/// The bitmap is a little-endian byte array encoding a bitset of
+/// `TranslatedString` discriminant indices.  Name resolution is done on the
+/// host side using `order.json`.
+///
+/// Only available when the `ui_string_collector` feature is active (debug
+/// emulator builds).
+#[cfg(feature = "ui_string_collector")]
+extern "C" fn get_string_log(clear: Obj) -> Obj {
+    use super::collector::{WordType, NWORDS};
+
+    let block = || {
+        let do_clear: bool = clear.try_into()?;
+        let snapshot = if do_clear {
+            super::collector::get_and_clear()
+        } else {
+            super::collector::get()
+        };
+        const BYTE_LEN: usize = NWORDS * core::mem::size_of::<WordType>();
+        let mut bytes = [0u8; BYTE_LEN];
+        for (i, &word) in snapshot.iter().enumerate() {
+            let off = i * core::mem::size_of::<WordType>();
+            bytes[off..off + core::mem::size_of::<WordType>()]
+                .copy_from_slice(&word.to_le_bytes());
+        }
+        (&bytes[..]).try_into()
+    };
+
+    unsafe { util::try_or_raise(block) }
+}
+
+macro_rules! mp_module_trezortranslate_impl {
+    ($($extra:tt)*) => {
+        obj_module! {
+            /// from trezortranslate_keys import TR as TR  # noqa: F401
+            /// """Translation object with attributes."""
+            Qstr::MP_QSTR_TR => TR_OBJ.as_obj(),
+
+            /// def area_bytesize() -> int:
+            ///     """Maximum size of the translation blob that can be stored."""
+            Qstr::MP_QSTR_area_bytesize => obj_fn_0!(area_bytesize).as_obj(),
+
+            /// def get_language() -> str:
+            ///     """Get the current language."""
+            Qstr::MP_QSTR_get_language => obj_fn_0!(get_language).as_obj(),
+
+            /// def init() -> None:
+            ///     """Initialize the translations system.
+            ///
+            ///     Loads and verifies translation data from flash. If the verification passes,
+            ///     Trezor UI is translated from that point forward.
+            ///     """
+            Qstr::MP_QSTR_init => obj_fn_0!(init).as_obj(),
+
+            /// def deinit() -> None:
+            ///     """Deinitialize the translations system.
+            ///
+            ///     Translations must be deinitialized before erasing or writing to flash.
+            ///     """
+            Qstr::MP_QSTR_deinit => obj_fn_0!(deinit).as_obj(),
+
+            /// def erase() -> None:
+            ///     """Erase the translations blob from flash."""
+            Qstr::MP_QSTR_erase => obj_fn_0!(erase).as_obj(),
+
+            /// def write(data: AnyBytes, offset: int) -> None:
+            ///     """Write data to the translations blob in flash."""
+            Qstr::MP_QSTR_write => obj_fn_2!(write).as_obj(),
+
+            /// def verify(data: AnyBytes) -> None:
+            ///     """Verify the translations blob."""
+            Qstr::MP_QSTR_verify => obj_fn_1!(verify).as_obj(),
+
+            /// class TranslationsHeader:
+            ///     """Metadata about the translations blob."""
+            ///
+            ///     language: str
+            ///     version: tuple[int, int, int, int]
+            ///     data_len: int
+            ///     data_hash: AnyBytes
+            ///     total_len: int
+            ///
+            ///     def __init__(self, header_bytes: AnyBytes) -> None:
+            ///         """Parse header from bytes.
+            ///         The header has variable length.
+            ///         """
+            ///
+            ///     @staticmethod
+            ///     def load_from_flash() -> TranslationsHeader | None:
+            ///         """Load translations from flash."""
+            Qstr::MP_QSTR_TranslationsHeader => TRANSLATIONS_HEADER_OBJ.as_obj(),
+
+            $($extra)*
+        }
+    };
+}
+
+#[cfg(not(feature = "ui_string_collector"))]
 #[no_mangle]
 #[rustfmt::skip]
-pub static mp_module_trezortranslate: Module = obj_module! {
-    /// from trezortranslate_keys import TR as TR  # noqa: F401
-    /// """Translation object with attributes."""
-    Qstr::MP_QSTR_TR => TR_OBJ.as_obj(),
+pub static mp_module_trezortranslate: Module = mp_module_trezortranslate_impl!();
 
-    /// def area_bytesize() -> int:
-    ///     """Maximum size of the translation blob that can be stored."""
-    Qstr::MP_QSTR_area_bytesize => obj_fn_0!(area_bytesize).as_obj(),
-
-    /// def get_language() -> str:
-    ///     """Get the current language."""
-    Qstr::MP_QSTR_get_language => obj_fn_0!(get_language).as_obj(),
-
-    /// def init() -> None:
-    ///     """Initialize the translations system.
+#[cfg(feature = "ui_string_collector")]
+#[no_mangle]
+#[rustfmt::skip]
+pub static mp_module_trezortranslate: Module = mp_module_trezortranslate_impl!(
+    /// def get_string_log(clear: bool) -> list[str]:
+    ///     """Return translation keys accessed since last call.
     ///
-    ///     Loads and verifies translation data from flash. If the verification passes,
-    ///     Trezor UI is translated from that point forward.
+    ///     When ``clear`` is True the internal log is reset after the snapshot
+    ///     is taken; when False the log is preserved for subsequent calls.
+    ///     Returns a list of TR key names (e.g. ``["address__address"]``) that
+    ///     were resolved since the last call.
     ///     """
-    Qstr::MP_QSTR_init => obj_fn_0!(init).as_obj(),
-
-    /// def deinit() -> None:
-    ///     """Deinitialize the translations system.
-    ///
-    ///     Translations must be deinitialized before erasing or writing to flash.
-    ///     """
-    Qstr::MP_QSTR_deinit => obj_fn_0!(deinit).as_obj(),
-
-    /// def erase() -> None:
-    ///     """Erase the translations blob from flash."""
-    Qstr::MP_QSTR_erase => obj_fn_0!(erase).as_obj(),
-
-    /// def write(data: AnyBytes, offset: int) -> None:
-    ///     """Write data to the translations blob in flash."""
-    Qstr::MP_QSTR_write => obj_fn_2!(write).as_obj(),
-
-    /// def verify(data: AnyBytes) -> None:
-    ///     """Verify the translations blob."""
-    Qstr::MP_QSTR_verify => obj_fn_1!(verify).as_obj(),
-
-    /// class TranslationsHeader:
-    ///     """Metadata about the translations blob."""
-    ///
-    ///     language: str
-    ///     version: tuple[int, int, int, int]
-    ///     data_len: int
-    ///     data_hash: AnyBytes
-    ///     total_len: int
-    ///
-    ///     def __init__(self, header_bytes: AnyBytes) -> None:
-    ///         """Parse header from bytes.
-    ///         The header has variable length.
-    ///         """
-    ///
-    ///     @staticmethod
-    ///     def load_from_flash() -> TranslationsHeader | None:
-    ///         """Load translations from flash."""
-    Qstr::MP_QSTR_TranslationsHeader => TRANSLATIONS_HEADER_OBJ.as_obj(),
-};
+    Qstr::MP_QSTR_get_string_log => obj_fn_1!(get_string_log).as_obj(),
+);

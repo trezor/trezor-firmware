@@ -336,3 +336,31 @@ message DebugLinkN4W1Read {
 message DebugLinkN4W1Response {
     optional bytes value = 1;  // existing value is returned on write/delete, `None` if key is missing
 }
+
+/**
+ * Request: Retrieve (and optionally clear) the translation-string access log.
+ *
+ * The emulator records every TR.* string that is accessed via TString::map()
+ * in an in-memory bitset.  This message fetches those records so that tests
+ * can build a report of which UI strings were actually displayed during a test
+ * run.
+ *
+ * Only supported when the emulator is built with PYOPT=0 (debug build).
+ * @start
+ * @next DebugLinkStringLog
+ */
+message DebugLinkGetStringLog {
+    optional bool clear = 1 [default = true];  // clear the log after reading
+}
+
+/**
+ * Response: Raw bitmap of translation keys accessed since the last clear.
+ *
+ * The bitmap is a little-endian byte array encoding a bitset of
+ * TranslatedString discriminant indices.  Name resolution is done on the
+ * host side using order.json.
+ * @end
+ */
+message DebugLinkStringLog {
+    optional bytes bitmap = 1;  // little-endian bitset; bit i set ↔ TR key with index i was accessed
+}

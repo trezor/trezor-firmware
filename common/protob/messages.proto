@@ -151,6 +151,8 @@ enum MessageType {
     MessageType_DebugLinkN4W1Write = 9015 [(bitcoin_only) = true, (wire_debug_out) = true];
     MessageType_DebugLinkN4W1Read = 9016 [(bitcoin_only) = true, (wire_debug_out) = true];
     MessageType_DebugLinkN4W1Response = 9017 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkGetStringLog = 9018 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkStringLog = 9019 [(bitcoin_only) = true, (wire_debug_out) = true];
 
     // Ethereum
     MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];

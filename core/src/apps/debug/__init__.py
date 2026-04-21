@@ -27,6 +27,7 @@ if __debug__:
             DebugLinkGetGcInfo,
             DebugLinkGetPairingInfo,
             DebugLinkGetState,
+            DebugLinkGetStringLog,
             DebugLinkN4W1Connected,
             DebugLinkOptigaSetSecMax,
             DebugLinkPairingInfo,
@@ -35,6 +36,7 @@ if __debug__:
             DebugLinkSetLogFilter,
             DebugLinkState,
             DebugLinkStop,
+            DebugLinkStringLog,
             WipeDevice,
         )
         from trezor.ui import Layout
@@ -433,6 +435,18 @@ if __debug__:
         else:
             raise wire.UnexpectedMessage("Debug console not supported")
 
+    async def dispatch_DebugLinkGetStringLog(
+        msg: DebugLinkGetStringLog,
+    ) -> DebugLinkStringLog:
+        import trezortranslate
+        from trezor.messages import DebugLinkStringLog
+
+        # get_string_log() is only present in ui_string_collector builds.
+        fn = getattr(trezortranslate, "get_string_log", None)
+        if fn is None:
+            return DebugLinkStringLog()
+        return DebugLinkStringLog(bitmap=bytes(fn(msg.clear)))
+
     async def dispatch_DebugLinkStop(msg: DebugLinkStop) -> NoReturn:
         """Restart the event loop"""
         raise RestartEventLoop
@@ -573,6 +587,7 @@ if __debug__:
         MessageType.DebugLinkResetDebugEvents: _no_op,
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
         MessageType.DebugLinkSetLogFilter: dispatch_DebugLinkSetLogFilter,
+        MessageType.DebugLinkGetStringLog: dispatch_DebugLinkGetStringLog,
         MessageType.DebugLinkStop: dispatch_DebugLinkStop,
         MessageType.WipeDevice: dispatch_WipeDevice,
     }

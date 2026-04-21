@@ -126,6 +126,8 @@ if __debug__:
     DebugLinkN4W1Write = 9015
     DebugLinkN4W1Read = 9016
     DebugLinkN4W1Response = 9017
+    DebugLinkGetStringLog = 9018
+    DebugLinkStringLog = 9019
 if utils.USE_THP:
     ThpCreateNewSession = 1000
     ThpCredentialRequest = 1016

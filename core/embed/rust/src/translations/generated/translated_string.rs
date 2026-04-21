@@ -40543,6 +40543,13 @@ impl TranslatedString {
     }
 }
 
+#[cfg(feature = "ui_string_collector")]
+impl TranslatedString {
+    /// Total number of discriminant slots (= max discriminant + 1).
+    /// The bitmap in `collector.rs` must cover at least this many bits.
+    pub const COUNT: usize = 1209;
+}
+
 #[cfg(feature = "micropython")]
 impl TranslatedString {
     pub const QSTR_MAP: &'static [(Qstr, Self)] = &[

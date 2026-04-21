@@ -45,6 +45,17 @@ def verify(data: AnyBytes) -> None:
 
 
 # rust/src/translations/obj.rs
+def get_string_log(clear: bool) -> list[str]:
+    """Return translation keys accessed since last call.
+    When ``clear`` is True the internal log is reset after the snapshot
+    is taken; when False the log is preserved for subsequent calls.
+    Returns a list of TR key names (e.g. ``["address__address"]``) that
+    were resolved since the last call.  Always returns an empty list on
+    release builds (``ui_string_collector`` feature not active).
+    """
+
+
+# rust/src/translations/obj.rs
 class TranslationsHeader:
     """Metadata about the translations blob."""
     language: str

@@ -16,9 +16,11 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import typing as t
+from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import IntEnum
 from pathlib import Path
@@ -462,6 +464,12 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
             bool(session.config.getoption("do_master_diff")),
         )
 
+    if _string_log_output is not None and _string_log and _is_main_runner(session):
+        report = {nid: strings for nid, strings in sorted(_string_log.items())}
+        _string_log_output.parent.mkdir(parents=True, exist_ok=True)
+        _string_log_output.write_text(json.dumps(report, indent=2, sort_keys=True))
+        print(f"\nString log written to {_string_log_output}  ({len(report)} tests)")
+
 
 def pytest_terminal_summary(
     terminalreporter: "TerminalReporter", exitstatus: pytest.ExitCode, config: "Config"
@@ -539,6 +547,12 @@ def pytest_addoption(parser: "Parser") -> None:
         default=False,
         help="Issue a warning when GC leak detected (otherwise, fail the test)",
     )
+    parser.addoption(
+        "--string-log",
+        metavar="FILE",
+        default=None,
+        help="Write a per-test TR string report to FILE (JSON).",
+    )
 
 
 def pytest_configure(config: "Config") -> None:
@@ -580,6 +594,11 @@ def pytest_configure(config: "Config") -> None:
         return idval_orig(self, val)
 
     IdMaker._idval_from_value = idval_from_value
+
+    global _string_log_output
+    path = config.getoption("--string-log", default=None)
+    if path:
+        _string_log_output = Path(path)
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
@@ -639,3 +658,96 @@ def device_handler(
     finalized_ok = device_handler.check_finalize()
     if test_res and not finalized_ok:  # type: ignore [rep_call must exist]
         raise RuntimeError("Test did not check result of background task")
+
+
+# ---------------------------------------------------------------------------
+# String collector: records TR.* translation keys displayed during each test.
+# Activated by passing --string-log=<file> to pytest.
+# ---------------------------------------------------------------------------
+
+_TRANSLATIONS_DIR = Path(__file__).parent.parent / "core" / "translations"
+_TR_NAMES: list[str] = []  # index → TR key name, loaded lazily
+_TR_EN_VALUES: dict[str, t.Any] = {}  # key name → English string (or model dict)
+
+StringLogEntry = dict[str, t.Any]  # {"key": str, "value": str | dict[str, str]}
+
+
+def _load_tr_tables() -> None:
+    global _TR_NAMES, _TR_EN_VALUES
+    order = json.loads((_TRANSLATIONS_DIR / "order.json").read_text())
+    size = max(int(k) for k in order) + 1
+    _TR_NAMES = [""] * size
+    for k, v in order.items():
+        _TR_NAMES[int(k)] = v
+    en = json.loads((_TRANSLATIONS_DIR / "en.json").read_text())
+    _TR_EN_VALUES = en.get("translations", {})
+
+
+def _bitmap_to_entries(bitmap: bytes, layout_name: str | None) -> list[StringLogEntry]:
+    """Decode a string-collector bitmap into a sorted list of {key, value} entries.
+
+    When ``layout_name`` is provided (e.g. ``"Eckhart"``), model-specific
+    translation values are resolved to the matching variant; otherwise the
+    full model dict is kept as-is.
+    """
+    if not _TR_NAMES:
+        _load_tr_tables()
+    result = []
+    for byte_idx, byte in enumerate(bitmap):
+        for bit in range(8):
+            if byte & (1 << bit):
+                idx = byte_idx * 8 + bit
+                if idx < len(_TR_NAMES) and _TR_NAMES[idx]:
+                    key = _TR_NAMES[idx]
+                    raw = _TR_EN_VALUES.get(key, "")
+                    if isinstance(raw, dict) and layout_name is not None:
+                        value = raw.get(layout_name, "")
+                    else:
+                        value = raw
+                    result.append({"key": key, "value": value})
+    return sorted(result, key=lambda e: e["key"])
+
+
+_string_log: dict[str, list[StringLogEntry]] = defaultdict(list)
+_string_log_output: Path | None = None
+
+
+@pytest.fixture(autouse=True)
+def _string_collector(request: pytest.FixtureRequest) -> t.Generator:
+    """Clear the emulator string log before each test, collect after."""
+    if _string_log_output is None:
+        yield
+        return
+
+    debug = None
+    # Try fixtures that give us a DebugLink without unwanted side-effects.
+    # "session" and "_raw_test_ctx" do not call lock(); "client" is kept as
+    # a last resort because requesting it triggers test_ctx → lock().
+    for fixture_name in ("session", "_raw_test_ctx", "client"):
+        try:
+            obj = request.getfixturevalue(fixture_name)
+            dl = getattr(obj, "debug", None) or getattr(obj, "_debug", None)
+            if dl is not None and hasattr(dl, "get_string_log"):
+                debug = dl
+                break
+            if hasattr(obj, "get_string_log"):
+                debug = obj
+                break
+        except Exception as exc:
+            logging.getLogger(__name__).debug(
+                "Could not resolve fixture %r for string collector: %s",
+                fixture_name,
+                exc,
+                exc_info=True,
+            )
+
+    if debug is None:
+        yield
+        return
+
+    layout_name = getattr(getattr(debug, "layout_type", None), "name", None)
+    debug.get_string_log(clear=True)  # discard stale entries before the test
+    yield
+    bitmap = debug.get_string_log(clear=True)
+    if bitmap:
+        _string_log[request.node.nodeid] = _bitmap_to_entries(bitmap, layout_name)
