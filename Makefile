@@ -193,6 +193,12 @@ tropic_model_config:
 tropic_model_config_check:
 	./core/tools/generate_tropic_model_config.py --check
 
-gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config ## regenerate auto-generated files from sources
+hsm_keys:
+	./core/tools/generate_hsm_keys.py
 
-gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check ## check validity of auto-generated files
+hsm_keys_check:
+	./core/tools/generate_hsm_keys.py --check
+
+gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config hsm_keys ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check hsm_keys_check ## check validity of auto-generated files
