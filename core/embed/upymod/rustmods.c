@@ -26,6 +26,7 @@ MP_REGISTER_MODULE(MP_QSTR_trezorui_api, mp_module_trezorui_api);
 
 #if MICROPY_PY_TREZORPROTO
 MP_REGISTER_MODULE(MP_QSTR_trezorproto, mp_module_trezorproto);
+MP_REGISTER_MODULE(MP_QSTR_trezorhashbuffers, mp_module_trezorhashbuffers);
 #endif
 
 #if MICROPY_PY_TREZORTRANSLATE

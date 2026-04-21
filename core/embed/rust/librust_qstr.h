@@ -891,6 +891,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_touch_event;
   MP_QSTR_trace;
   MP_QSTR_trezorble;
+  MP_QSTR_trezorhashbuffers;
   MP_QSTR_trezorlog;
   MP_QSTR_trezorproto;
   MP_QSTR_trezorui_api;
