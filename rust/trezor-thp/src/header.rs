@@ -74,13 +74,48 @@ pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
     Ok((u16::from_be_bytes(*bytes), rest))
 }
 
-pub(crate) fn parse_cb_channel(buffer: &[u8]) -> Result<(ControlByte, u16, &[u8])> {
-    let Some((cb, rest)) = buffer.split_first() else {
+pub(crate) fn parse_cb_channel(packet_buffer: &[u8]) -> Result<(ControlByte, u16, &[u8])> {
+    let (cb, rest) = ControlByte::parse(packet_buffer)?;
+    let (channel_id, rest) = parse_u16(rest)?;
+    Ok((cb, channel_id, rest))
+}
+
+fn parse_length(packet_buffer: &[u8]) -> Result<(u16, &[u8])> {
+    let (payload_len, rest) = parse_u16(packet_buffer)?;
+    if payload_len > MAX_PAYLOAD_LEN {
+        log::error!("Payload length exceeds {}.", MAX_PAYLOAD_LEN);
+        return Err(Error::malformed_data());
+    }
+    if payload_len < CHECKSUM_LEN {
+        log::error!("Payload length is less than {}.", CHECKSUM_LEN);
+        return Err(Error::malformed_data());
+    }
+    Ok((payload_len, rest))
+}
+
+// To be used by `Mux::packet_in` to determine whether to process this packet or route it
+// to unicast channel.
+// - channel id is validated (can be unicast or broadcast), even for codec_v1
+// - only unicast encrypted transport and handshakes have Some length
+pub(crate) fn parse_channel_length(
+    cb: ControlByte,
+    packet_buffer: &[u8],
+) -> Result<(u16, Option<u16>)> {
+    let Some((_cb, rest)) = packet_buffer.split_first() else {
         log::error!("Packet is empty.");
         return Err(Error::malformed_data());
     };
     let (channel_id, rest) = parse_u16(rest)?;
-    Ok((ControlByte::try_from(*cb)?, channel_id, rest))
+    if !channel_id_valid(channel_id) {
+        log::error!("Invalid channel id {:04x}.", channel_id);
+        return Err(Error::malformed_data());
+    }
+    if channel_id != BROADCAST_CHANNEL_ID && (cb.is_encrypted_transport() || cb.is_handshake()) {
+        let (payload_len, _rest) = parse_length(rest)?;
+        Ok((channel_id, Some(payload_len)))
+    } else {
+        Ok((channel_id, None))
+    }
 }
 
 impl<R: Role> Header<R> {
@@ -107,15 +142,7 @@ impl<R: Role> Header<R> {
         if cb.is_continuation() {
             return Ok((Header::Continuation { channel_id }, rest));
         }
-        let (payload_len, rest) = parse_u16(rest)?;
-        if payload_len > MAX_PAYLOAD_LEN {
-            log::error!("Payload length exceeds {}.", MAX_PAYLOAD_LEN);
-            return Err(Error::malformed_data());
-        }
-        if payload_len < CHECKSUM_LEN {
-            log::error!("Payload length is less than {}.", CHECKSUM_LEN);
-            return Err(Error::malformed_data());
-        }
+        let (payload_len, rest) = parse_length(rest)?;
         // strip padding if there is any
         let without_padding = rest.len().min(payload_len.into());
         let rest = &rest[..without_padding];

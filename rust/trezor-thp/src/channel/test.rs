@@ -1114,9 +1114,21 @@ fn test_invalid_channel_id() -> Result<()> {
     let (mut hm, mut dm, _cids) = create_mux();
     // muxes return Route(cid) for valid non-broadcast channel
     let pir = dm.packet_in(&make_packet(66));
-    assert_eq!(pir, PacketInResult::Route { channel_id: 66 });
+    assert_eq!(
+        pir,
+        PacketInResult::Route {
+            channel_id: 66,
+            buffer_size: 16.try_into().ok(),
+        }
+    );
     let pir = hm.packet_in(&make_packet(66));
-    assert_eq!(pir, PacketInResult::Route { channel_id: 66 });
+    assert_eq!(
+        pir,
+        PacketInResult::Route {
+            channel_id: 66,
+            buffer_size: 16.try_into().ok(),
+        }
+    );
 
     // muxes return error for invalid channel ids
     for channel_id in INVALID {
