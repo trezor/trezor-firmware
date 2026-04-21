@@ -476,6 +476,15 @@ pub enum PacketInResult {
     Route {
         /// Channel id of the destination. Never a broadcast.
         channel_id: u16,
+        /// If Some, initiation packet was received for message with the given payload length.
+        /// Make sure you're calling [`ChannelIO::packet_in`] with receive buffer at least as large.
+        /// Please note the size is returned before checksum verification and can be unusually
+        /// large in presence of bit errors.
+        /// In particular, this is `None` for ACK messages, continuations and transport errors.
+        // NOTE: would be neat to get PacketInResult to fit in 32bit word but how? Buffer size can
+        // be e.g. 12 bit integer denoting 16-byte blocks but not sure how to pack it. The buffer
+        // size in `Accepted` is not very important and can probably be turned into a bool.
+        buffer_size: Option<NonZeroU16>,
     },
     /// Channel allocation request/response was received. Event loop should call
     /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and [`host::Mux`]
@@ -516,8 +525,18 @@ impl PacketInResult {
         Self::TransportError { error: e }
     }
 
-    const fn route(channel_id: u16) -> Self {
-        Self::Route { channel_id }
+    const fn route(channel_id: u16, payload_len: Option<u16>) -> Self {
+        let buffer_size = match payload_len {
+            // Using larger buffer should be safe. Empty messages are valid on the transport
+            // layer but they will fail the minimum app header length check anyway.
+            Some(0) => Some(NonZeroU16::new(1).unwrap()),
+            Some(n) => Some(NonZeroU16::new(n).unwrap()),
+            None => None,
+        };
+        Self::Route {
+            channel_id,
+            buffer_size,
+        }
     }
 
     const fn fail(error: Error) -> Self {
@@ -827,7 +846,11 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             log::warn!("[{:04x}] Nothing to retransmit.", self.channel_id);
             return Ok(());
         };
-        log::debug!("[{:04x}] Retransmitting message.", self.channel_id);
+        log::debug!(
+            "[{:04x}] Retransmitting message, retry {}.",
+            self.channel_id,
+            retry
+        );
         fragmenter.reset();
         *retry = retry.saturating_add(1);
         Ok(())
