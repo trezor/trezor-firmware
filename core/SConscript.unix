@@ -879,6 +879,8 @@ if FROZEN:
         tropic='tropic' in FEATURES_AVAILABLE,
         use_ble='ble' in FEATURES_AVAILABLE,
         use_button='button' in FEATURES_AVAILABLE,
+        use_haptic='haptic' in FEATURES_AVAILABLE,
+        use_rgb_led='rgb_led' in FEATURES_AVAILABLE,
         use_touch='touch' in FEATURES_AVAILABLE,
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
         thp=THP,
