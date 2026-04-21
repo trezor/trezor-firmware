@@ -8,12 +8,10 @@ use crate::{
         MAX_DEVICE_PROPERTIES_LEN, Nonce, PacketInResult, PairingState, ReceiveState,
         noise::NoiseHandshake,
     },
+    control_byte::ControlByte,
     credential::CredentialStore,
     fragment::{Fragmenter, Reassembler},
-    header::{
-        BROADCAST_CHANNEL_ID, HandshakeMessage, Header, channel_id_valid, parse_cb_channel,
-        parse_u16,
-    },
+    header::{BROADCAST_CHANNEL_ID, HandshakeMessage, Header, parse_channel_length, parse_u16},
     util::prepare_zeroed,
 };
 
@@ -236,16 +234,16 @@ where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
-        let Ok((cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
-            // parse_cb_channel already writes to log
+        let Ok((cb, _)) = ControlByte::parse(packet_buffer) else {
+            // ControlByte::parse already writes to log
             return PacketInResult::ignore(Error::malformed_data());
         };
-        if !channel_id_valid(channel_id) {
-            log::warn!("Invalid channel id {:04x}.", channel_id);
+        let Ok((channel_id, length)) = parse_channel_length(cb, packet_buffer) else {
+            // parse_channel_length already writes to log
             return PacketInResult::ignore(Error::malformed_data());
-        }
-        if channel_id != BROADCAST_CHANNEL_ID && !cb.is_codec_v1() {
-            return PacketInResult::route(channel_id);
+        };
+        if !cb.is_codec_v1() && channel_id != BROADCAST_CHANNEL_ID {
+            return PacketInResult::route(channel_id, length);
         }
         PacketInResult::from_result(self.handle_broadcast(packet_buffer))
     }
