@@ -11,7 +11,7 @@ dependencies = [
     "protobuf==6.32",  # minor needs to be >= than version in shell.nix
     "nanopb>=0.4.3,<0.5",
     "pytest>=9.0.3,<10",
-    "coverage==5.5",
+    "coverage==7.13.5",
     "pytest-ordering",
     "pytest-random-order",
     "pytest-timeout",
