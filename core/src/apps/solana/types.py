@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import SolanaTxAdditionalInfo, SolanaTxTokenAccountInfo
     from trezor.utils import BufferReader
-    from typing_extensions import Self
+    from typing_extensions import Self, TypeIs
 
     Address = tuple[bytes, "AddressType"]
     AddressReference = tuple[bytes, int, "AddressType"]
@@ -35,6 +35,18 @@ class AddressType(IntEnum):
     AddressSigReadOnly = 1
     AddressReadOnly = 2
     AddressRw = 3
+
+
+def is_address_reference(account: Account) -> TypeIs[AddressReference]:
+    account_len = len(account)
+    if account_len == 2:
+        # Account included in the transaction directly.
+        return False
+    elif account_len == 3:
+        # Lookup table address reference.
+        return True
+    else:
+        raise ValueError(f"Invalid account length: {account_len}")
 
 
 class PropertyTemplate(Generic[T]):

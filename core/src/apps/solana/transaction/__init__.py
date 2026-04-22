@@ -9,7 +9,7 @@ from ..constants import (
     SOLANA_BASE_FEE_LAMPORTS,
     SOLANA_COMPUTE_UNIT_LIMIT,
 )
-from ..types import AddressType
+from ..types import AddressType, is_address_reference
 from .instruction import Instruction
 from .instructions import (
     COMPUTE_BUDGET_PROGRAM_ID,
@@ -225,7 +225,8 @@ class Transaction:
     def calculate_fee(self) -> Fee | None:
         number_of_signers = 0
         for address in self.addresses:
-            if address[1] == AddressType.AddressSig:
+            # Writable or ReadOnly signers.
+            if address[1] in (AddressType.AddressSig, AddressType.AddressSigReadOnly):
                 number_of_signers += 1
 
         base_fee = SOLANA_BASE_FEE_LAMPORTS * number_of_signers
@@ -264,7 +265,7 @@ class Transaction:
         )
 
     def get_account_address(self, account: Account) -> bytes | None:
-        if len(account) == 2:
+        if not is_address_reference(account):
             return account[0]
         else:
             # AddressReference points to an Address Lookup Table account, whose contents are unavailable here:
