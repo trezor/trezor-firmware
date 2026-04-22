@@ -80,6 +80,17 @@ class TestEthereumDefinitions(unittest.TestCase):
         self.assertKnown(defs.network)
         self.assertEqual(defs.get_token(b"\x00" * 20), token)
 
+        token_a = make_eth_token(chain_id=42, address=b"\xaa" * 20)
+        token_b = make_eth_token(chain_id=42, address=b"\xbb" * 20)
+        defs = Definitions.from_encoded(
+            encode_eth_network(network),
+            [encode_eth_token(token_a), encode_eth_token(token_b)],
+            chain_id=42,
+        )
+        self.assertEqual(defs.network, network)
+        self.assertEqual(defs.get_token(b"\xaa" * 20), token_a)
+        self.assertEqual(defs.get_token(b"\xbb" * 20), token_b)
+
     def test_external_token_mismatch(self) -> None:
         network = make_eth_network(chain_id=42)
         token = make_eth_token(chain_id=43, address=b"\x00" * 20)
