@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from typing import Iterable
 
 from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 
@@ -47,3 +48,7 @@ def lookup_vault(
             UNKNOWN_TOKEN,
             UNKNOWN_TOKEN,
         )
+
+
+def _known_vaults() -> Iterable[tuple[bytes, str]]:
+    return ((KNOWN_VAULT[0], KNOWN_VAULT[2]),)

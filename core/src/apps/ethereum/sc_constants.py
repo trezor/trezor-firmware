@@ -1,6 +1,6 @@
 from ubinascii import unhexlify
 
-from .yielding_vaults import KNOWN_VAULT
+from .yielding_vaults import _known_vaults
 
 KNOWN_ADDRESSES = {
     # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV6.json#L9
@@ -13,5 +13,7 @@ KNOWN_ADDRESSES = {
     unhexlify("68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"): "Uniswap V3 Router",
     # https://etherscan.io/address/0xe592427a0aece92de3edee1f18e0157c05861564
     unhexlify("e592427a0aece92de3edee1f18e0157c05861564"): "Uniswap V3 Router",
-    KNOWN_VAULT[0]: KNOWN_VAULT[2],
 }
+
+# Extend with known vault address
+KNOWN_ADDRESSES.update(_known_vaults())
