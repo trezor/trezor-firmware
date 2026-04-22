@@ -472,15 +472,13 @@ async def confirm_payment_request(
     )
 
     for t, text in texts:
-        await raise_if_not_confirmed(
-            trezorui_api.confirm_value(
-                title=t or title,
-                value=text,
-                description=None,
-                verb=TR.buttons__confirm,
-            ),
-            "confirm_payment_request",
-        )
+        with trezorui_api.confirm_value(
+            title=t or title,
+            value=text,
+            description=None,
+            verb=TR.buttons__confirm,
+        ) as obj:
+            await raise_if_not_confirmed(obj, "confirm_payment_request")
 
     main_layout = trezorui_api.confirm_value(
         title=title,
