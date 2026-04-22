@@ -236,14 +236,13 @@ async def confirm_tx_data(
             raise DataError("Payment Requests don't support staking")
         return staking_approver
 
-    if __debug__:
-        yielding_approver = yielding.get_approver(
-            msg, network, address_bytes, maximum_fee, fee_items, sender_bytes
-        )
-        if yielding_approver is not None:
-            if payment_request_verifier is not None:
-                raise DataError("Payment Requests don't support yielding")
-            return yielding_approver
+    yielding_approver = yielding.get_approver(
+        msg, network, address_bytes, maximum_fee, fee_items, sender_bytes
+    )
+    if yielding_approver is not None:
+        if payment_request_verifier is not None:
+            raise DataError("Payment Requests don't support yielding")
+        return yielding_approver
 
     if tx_type == _EIP_7702_TX_TYPE:
         # we have already made sure that the address is a known address
