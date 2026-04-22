@@ -40,18 +40,20 @@ class Menu:
 
 
 class Details:
-    def __init__(self, name: str, factory: Callable[[], Awaitable[T]]) -> None:
+    def __init__(self, name: str, interact: Callable[[], Awaitable[T]]) -> None:
         self.name = name
-        self.factory = factory
+        self._interact = interact
 
     @classmethod
     def from_layout(
         cls, name: str, layout_factory: Callable[[], trezorui_api.LayoutObj[T]]
     ) -> Self:
-        return cls(
-            name,
-            lambda: interact(layout_factory(), br_name=None, raise_on_cancel=None),
-        )
+        async def _interact() -> T:
+            with layout_factory() as obj:
+                # details' layout is de-allocated after interact() returns.
+                return await interact(obj, br_name=None, raise_on_cancel=None)
+
+        return cls(name, _interact)
 
 
 class Cancel(Details):
@@ -79,7 +81,7 @@ async def show_menu(
 
             if choice is trezorui_api.CANCELLED:
                 if menu.cancel:
-                    result = await menu.cancel.factory()
+                    result = await menu.cancel._interact()
                     assert result in (trezorui_api.CONFIRMED, trezorui_api.CANCELLED)
                     if result is trezorui_api.CONFIRMED:
                         # cancellation is confirmed - raise an exception
@@ -94,7 +96,7 @@ async def show_menu(
         else:
             assert isinstance(menu, Details)
             # Details' layout is created on-demand (saving memory)
-            await menu.factory()  # the result is ignored
+            await menu._interact()  # the result is ignored
 
         # go one level up, or exit the menu
         if menu_path:
