@@ -12,6 +12,7 @@ from .transaction.instructions import (
     Token2022ProgramTransferCheckedInstruction,
     TokenProgramTransferCheckedInstruction,
 )
+from .types import is_address_reference
 
 if TYPE_CHECKING:
     from typing import Type
@@ -306,6 +307,11 @@ async def try_confirm_staking_transaction(
         if stake_account != delegate.initialized_stake_account[0]:
             return False
 
+        if is_address_reference(delegate.vote_account) or is_address_reference(
+            delegate.initialized_stake_account
+        ):
+            return False
+
         await confirm_stake_transaction(
             fee=fee,
             signer_path=signer_path,
@@ -333,6 +339,8 @@ async def try_confirm_staking_transaction(
         total_amount = 0
         for withdraw in instructions:
             if signer_public_key != withdraw.withdrawal_authority[0]:
+                return False
+            if is_address_reference(withdraw.recipient_account):
                 return False
             if signer_public_key != withdraw.recipient_account[0]:
                 await confirm_claim_recipient(withdraw.recipient_account[0])
