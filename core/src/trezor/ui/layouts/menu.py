@@ -70,12 +70,13 @@ async def show_menu(
             menu = menu.children[i]
 
         if isinstance(menu, Menu):
-            layout = trezorui_api.select_menu(
+            with trezorui_api.select_menu(
                 items=[child.name for child in menu.children],
                 current=current_item,
                 cancel=menu.cancel and menu.cancel.name,
-            )
-            choice = await interact(layout, br_name=None, raise_on_cancel=None)
+            ) as layout:
+                choice = await interact(layout, br_name=None, raise_on_cancel=None)
+
             if choice is trezorui_api.CANCELLED:
                 if menu.cancel:
                     result = await menu.cancel.factory()
