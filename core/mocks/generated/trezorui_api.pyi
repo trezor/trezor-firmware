@@ -406,7 +406,7 @@ def flow_get_address(
     xpubs: Sequence[tuple[str, str]],
     br_code: ButtonRequestType,
     br_name: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Get address / receive funds."""
 
 

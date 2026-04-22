@@ -1763,7 +1763,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     xpubs: Sequence[tuple[str, str]],
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Get address / receive funds."""
     Qstr::MP_QSTR_flow_get_address => obj_fn_kw!(0, new_flow_get_address).as_obj(),
 
