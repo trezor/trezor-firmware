@@ -549,8 +549,6 @@ class Array(ABIValue):
 class ContainerPath:
     From = 1
     Value = 2
-    To = 3
-    ChainID = 4
 
 
 class FieldDefinition:
