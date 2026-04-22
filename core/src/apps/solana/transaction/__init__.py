@@ -89,27 +89,20 @@ class Transaction:
     def _parse_addresses(self, serialized_tx_reader: BufferReader) -> None:
         num_of_addresses = parse_var_int(serialized_tx_reader)
 
+        # Read-only signers are always just a subset of all signers.
+        assert self.num_signature_read_only_addresses <= self.required_signers_count
         assert (
             num_of_addresses
-            >= self.required_signers_count
-            + self.num_signature_read_only_addresses
-            + self.num_read_only_addresses
+            >= self.required_signers_count + self.num_read_only_addresses
         )
 
         addresses: list[Address] = []
         for i in range(num_of_addresses):
-            if i < self.required_signers_count:
+            if i < self.required_signers_count - self.num_signature_read_only_addresses:
                 type = AddressType.AddressSig
-            elif (
-                i < self.required_signers_count + self.num_signature_read_only_addresses
-            ):
+            elif i < self.required_signers_count:
                 type = AddressType.AddressSigReadOnly
-            elif (
-                i
-                < self.required_signers_count
-                + self.num_signature_read_only_addresses
-                + self.num_read_only_addresses
-            ):
+            elif i < num_of_addresses - self.num_read_only_addresses:
                 type = AddressType.AddressRw
             else:
                 type = AddressType.AddressReadOnly
