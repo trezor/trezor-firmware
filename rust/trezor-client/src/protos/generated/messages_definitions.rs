@@ -2635,10 +2635,6 @@ pub enum EthereumERC7730ContainerPath {
     FROM = 1,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730ContainerPath.VALUE)
     VALUE = 2,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730ContainerPath.TO)
-    TO = 3,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730ContainerPath.CHAIN_ID)
-    CHAIN_ID = 4,
 }
 
 impl ::protobuf::Enum for EthereumERC7730ContainerPath {
@@ -2652,8 +2648,6 @@ impl ::protobuf::Enum for EthereumERC7730ContainerPath {
         match value {
             1 => ::std::option::Option::Some(EthereumERC7730ContainerPath::FROM),
             2 => ::std::option::Option::Some(EthereumERC7730ContainerPath::VALUE),
-            3 => ::std::option::Option::Some(EthereumERC7730ContainerPath::TO),
-            4 => ::std::option::Option::Some(EthereumERC7730ContainerPath::CHAIN_ID),
             _ => ::std::option::Option::None
         }
     }
@@ -2662,8 +2656,6 @@ impl ::protobuf::Enum for EthereumERC7730ContainerPath {
         match str {
             "FROM" => ::std::option::Option::Some(EthereumERC7730ContainerPath::FROM),
             "VALUE" => ::std::option::Option::Some(EthereumERC7730ContainerPath::VALUE),
-            "TO" => ::std::option::Option::Some(EthereumERC7730ContainerPath::TO),
-            "CHAIN_ID" => ::std::option::Option::Some(EthereumERC7730ContainerPath::CHAIN_ID),
             _ => ::std::option::Option::None
         }
     }
@@ -2671,8 +2663,6 @@ impl ::protobuf::Enum for EthereumERC7730ContainerPath {
     const VALUES: &'static [EthereumERC7730ContainerPath] = &[
         EthereumERC7730ContainerPath::FROM,
         EthereumERC7730ContainerPath::VALUE,
-        EthereumERC7730ContainerPath::TO,
-        EthereumERC7730ContainerPath::CHAIN_ID,
     ];
 }
 
@@ -2686,8 +2676,6 @@ impl ::protobuf::EnumFull for EthereumERC7730ContainerPath {
         let index = match self {
             EthereumERC7730ContainerPath::FROM => 0,
             EthereumERC7730ContainerPath::VALUE => 1,
-            EthereumERC7730ContainerPath::TO => 2,
-            EthereumERC7730ContainerPath::CHAIN_ID => 3,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -2759,10 +2747,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12\x0e\n\nABI_STRING\x10\x15*\x85\x01\n!EthereumERC7730FieldFormatterT\
     ype\x12\x1a\n\x16FORMATTER_ADDRESS_NAME\x10\0\x12\x14\n\x10FORMATTER_AMO\
     UNT\x10\x01\x12\x1a\n\x16FORMATTER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFOR\
-    MATTER_UNIT\x10\x03*I\n\x1cEthereumERC7730ContainerPath\x12\x08\n\x04FRO\
-    M\x10\x01\x12\t\n\x05VALUE\x10\x02\x12\x06\n\x02TO\x10\x03\x12\x0c\n\x08\
-    CHAIN_ID\x10\x04B?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessa\
-    geDefinitions\
+    MATTER_UNIT\x10\x03*3\n\x1cEthereumERC7730ContainerPath\x12\x08\n\x04FRO\
+    M\x10\x01\x12\t\n\x05VALUE\x10\x02B?\n#com.satoshilabs.trezor.lib.protob\
+    ufB\x18TrezorMessageDefinitions\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

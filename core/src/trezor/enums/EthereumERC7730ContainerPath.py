@@ -4,5 +4,3 @@
 
 FROM = 1
 VALUE = 2
-TO = 3
-CHAIN_ID = 4

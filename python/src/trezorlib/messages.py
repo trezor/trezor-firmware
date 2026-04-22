@@ -364,8 +364,6 @@ class EthereumERC7730FieldFormatterType(IntEnum):
 class EthereumERC7730ContainerPath(IntEnum):
     FROM = 1
     VALUE = 2
-    TO = 3
-    CHAIN_ID = 4
 
 
 class EthereumDataType(IntEnum):
