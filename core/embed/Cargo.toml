@@ -88,7 +88,7 @@ trezor-tjpgdec = { version = "0.1.0", path = "../../rust/trezor-tjpgdec" }
 ufmt = "0.2.0"
 unsize = "1.1.0"
 without-alloc = "0.2.2"
-zeroize = { version = "1.8.2", default-features = false }
+zeroize = { version = "1.8.2", default-features = false, features = ["zeroize_derive"] }
 
 models = { path = "models" }
 rtl = { path = "rtl" }
