@@ -7,7 +7,7 @@ build = "build.rs"
 
 [features]
 default = ["layout_bolt"]
-crypto = ["zeroize"]
+crypto = ["dep:zeroize"]
 layout_bolt = []
 layout_caesar = []
 layout_delizia = []
@@ -114,10 +114,10 @@ trezor-tjpgdec.workspace = true
 ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
-zeroize = { workspace = true, optional = true }
 
 io = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }
+zeroize = { workspace = true, optional = true }
 
 [build-dependencies]
 bindgen.workspace = true
