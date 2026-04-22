@@ -266,18 +266,24 @@ async def confirm_tx_data(
 
     value = int.from_bytes(msg.value, "big")
 
-    try:
-        clear_signed = await clear_signing.try_parse(
-            initial_data,
-            address_bytes,
-            msg,
-            defs,
-            maximum_fee,
-            fee_items,
-            payment_request_verifier,
-        )
-    except clear_signing.ClearSigningFailed:
+    if len(initial_data) < data_length:
+        # Don't even attempt to clear sign if we have a calldata larger than `MAX_DATA_STORED`.
+        # this is because clear signing doesn't currently support fetching additional data,
+        # which is because if it did, we would not be able to fall back to blind signing anymore.
         clear_signed = False
+    else:
+        try:
+            clear_signed = await clear_signing.try_parse(
+                initial_data,
+                address_bytes,
+                msg,
+                defs,
+                maximum_fee,
+                fee_items,
+                payment_request_verifier,
+            )
+        except clear_signing.ClearSigningFailed:
+            clear_signed = False
 
     recipient_str = (
         address_from_bytes(address_bytes, network) if address_bytes else None
