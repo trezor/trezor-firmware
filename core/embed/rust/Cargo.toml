@@ -123,7 +123,6 @@ spin = { version = "0.9.8", features = ["rwlock", "spin_mutex", "lazy"], default
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 trezor-thp = { path = "../../../rust/trezor-thp", optional = true }
 ufmt = "0.2.0"
-zeroize = { version = "1.8.2", default-features = false, optional = true }
 
 # Runtime dependencies
 
@@ -134,6 +133,12 @@ version = "0.2.2"
 version = "0.9.2"
 features = ["ufmt"]
 default-features = false
+
+[dependencies.zeroize]
+version = "1.8.2"
+default-features = false
+optional = true
+features = ["zeroize_derive"]
 
 [dependencies.log]
 version = "0.4.29"

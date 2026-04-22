@@ -5,11 +5,12 @@ use super::{
     memory::{init_ctx, Memory},
 };
 
-use zeroize::Zeroize as _;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Sha512<'a> {
     ctx: Pin<&'a mut Memory<ffi::SHA512_CTX>>,
 }
@@ -35,12 +36,6 @@ impl<'a> Sha512<'a> {
     pub fn finalize_into(mut self, out: &mut Digest) {
         // SAFETY: ffi
         unsafe { ffi::sha512_Final(self.ctx.inner(), out.as_mut_ptr()) };
-    }
-}
-
-impl Drop for Sha512<'_> {
-    fn drop(&mut self) {
-        self.ctx.zeroize();
     }
 }
 

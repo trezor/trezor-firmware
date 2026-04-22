@@ -1,6 +1,6 @@
 use core::{mem::MaybeUninit, pin::Pin};
 
-use zeroize::Zeroize as _;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::{
     ffi,
@@ -10,6 +10,7 @@ use super::{
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Sha256<'a> {
     ctx: Pin<&'a mut Memory<ffi::SHA256_CTX>>,
 }
@@ -34,12 +35,6 @@ impl<'a> Sha256<'a> {
     pub fn finalize_into(mut self, out: &mut Digest) {
         // SAFETY: safe
         unsafe { ffi::sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
-    }
-}
-
-impl Drop for Sha256<'_> {
-    fn drop(&mut self) {
-        self.ctx.zeroize();
     }
 }
 

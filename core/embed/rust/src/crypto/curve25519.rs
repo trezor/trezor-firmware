@@ -1,15 +1,10 @@
-use zeroize::Zeroize;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::ffi;
 
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Point {
     bytes: [u8; 32],
-}
-
-impl Drop for Point {
-    fn drop(&mut self) {
-        self.bytes.zeroize()
-    }
 }
 
 #[cfg(feature = "thp")]
@@ -41,14 +36,9 @@ impl trezor_thp::channel::U8Array for Point {
     }
 }
 
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Scalar {
     bytes: [u8; 32],
-}
-
-impl Drop for Scalar {
-    fn drop(&mut self) {
-        self.bytes.zeroize()
-    }
 }
 
 #[cfg(feature = "thp")]
