@@ -37,17 +37,17 @@ async def request_word(
     can_go_back = word_index > 0
 
     if is_slip39:
-        keyboard = trezorui_api.request_slip39(
+        ctx = trezorui_api.request_slip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
     else:
-        keyboard = trezorui_api.request_bip39(
+        ctx = trezorui_api.request_bip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 
-    with keyboard:
+    with ctx as obj:
         return await interact(
-            keyboard,
+            obj,
             "mnemonic" if send_button_request else None,
             ButtonRequestType.MnemonicInput,
         )

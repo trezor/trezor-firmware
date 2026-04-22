@@ -1447,8 +1447,19 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     def return_value(self) -> T:
     ///         """Retrieve the return value of the layout object."""
     ///
+    ///     # TODO: remove after https://github.com/trezor/trezor-firmware/issues/6811 is resolved.
     ///     def __del__(self) -> None:
     ///         """Calls drop on contents of the root component."""
+    ///
+    ///     # TODO: remove after https://github.com/trezor/trezor-firmware/issues/6811 is resolved.
+    ///     def __enter__(self) -> LayoutObj[T]:
+    ///         """Enters a context manager (checking the root component is not dropped)."""
+    ///
+    ///     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    ///         """Exits a context manager (dropping the root component)."""
+    ///
+    /// class LayoutContext(Generic[T]):
+    ///     """Scopes the lifetime of a Rust-based layout object."""
     ///
     ///     def __enter__(self) -> LayoutObj[T]:
     ///         """Enters a context manager (checking the root component is not dropped)."""
@@ -1792,7 +1803,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     prompt: str,
     ///     prefill_word: str,
     ///     can_go_back: bool,
-    /// ) -> LayoutObj[str]:
+    /// ) -> LayoutContext[str]:
     ///     """BIP39 word input keyboard."""
     Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
 
@@ -1801,7 +1812,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     prompt: str,
     ///     prefill_word: str,
     ///     can_go_back: bool,
-    /// ) -> LayoutObj[str]:
+    /// ) -> LayoutContext[str]:
     ///     """SLIP39 word input keyboard."""
     Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
 
@@ -1864,7 +1875,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     items: Iterable[str],
     ///     current: int,
     ///     cancel: str | None = None
-    /// ) -> LayoutObj[int]:
+    /// ) -> LayoutContext[int]:
     ///     """Select an item from a menu. Returns index in range `0..len(items)`."""
     Qstr::MP_QSTR_select_menu => obj_fn_kw!(0, new_select_menu).as_obj(),
 
