@@ -88,7 +88,7 @@ uint8_t pmic_restart_cause(void);
 
 // Switches the device to ship mode.
 //
-// In tge ship mode, the CPU is powered off, and only the VBAT domain remains
+// In the ship mode, the CPU is powered off, and only the VBAT domain remains
 // active. The device can be woken by pressing the power button, triggering
 // a full boot sequence.
 //
@@ -110,10 +110,10 @@ bool pmic_enter_shipmode(void);
 //
 // The function returns `false` if the measurement cannot be started
 // (e.g. because the previous measurement is still in progress or
-// the the driver is not initialized).
+// the driver is not initialized).
 bool pmic_measure(pmic_report_callback_t callback, void* context);
 
-// Synchroneous version of the `pmic_measure` function.
+// Synchronous version of the `pmic_measure` function.
 //
 // Use only for testing purposes, as it blocks the execution until
 // the measurement is done.
