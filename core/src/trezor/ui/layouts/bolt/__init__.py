@@ -503,15 +503,13 @@ async def confirm_payment_request(
     title = TR.words__swap if is_swap(trades) else TR.words__confirm
 
     for t, text in texts:
-        await raise_if_not_confirmed(
-            trezorui_api.confirm_value(
-                title=t or title,
-                value=text,
-                is_data=False,
-                description=None,
-            ),
-            "confirm_payment_request",
-        )
+        with trezorui_api.confirm_value(
+            title=t or title,
+            value=text,
+            is_data=False,
+            description=None,
+        ) as obj:
+            await raise_if_not_confirmed(obj, "confirm_payment_request")
 
     menu_items: list[StrPropertyType] = []
     if recipient_address is not None:
