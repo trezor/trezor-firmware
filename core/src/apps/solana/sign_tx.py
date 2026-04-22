@@ -7,7 +7,7 @@ from apps.common.keychain import with_slip44_keychain
 
 from . import CURVE, PATTERNS, SLIP44_ID
 from .transaction import Transaction
-from .types import AdditionalTxInfo
+from .types import AdditionalTxInfo, is_address_reference
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaSignTx, SolanaTxSignature
@@ -82,6 +82,10 @@ async def sign_tx(
         transfer_instructions = get_native_transfer_instructions(visible_instructions)
         if transfer_instructions:
             for transfer_instruction in transfer_instructions:
+                if is_address_reference(transfer_instruction.recipient_account):
+                    raise DataError(
+                        "Payment request cannot be used with ALT-referenced accounts"
+                    )
                 verifier.add_output(
                     transfer_instruction.lamports,
                     base58.encode(transfer_instruction.recipient_account[0]),
@@ -91,6 +95,10 @@ async def sign_tx(
                 visible_instructions
             )
             for transfer_token_instruction in token_transfer_instructions:
+                if is_address_reference(transfer_token_instruction.destination_account):
+                    raise DataError(
+                        "Payment request cannot be used with ALT-referenced accounts"
+                    )
                 verifier.add_output(
                     transfer_token_instruction.amount,
                     base58.encode(transfer_token_instruction.destination_account[0]),

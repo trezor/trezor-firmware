@@ -16,7 +16,7 @@ from trezor.ui.layouts import (
 
 from apps.common.paths import address_n_to_str
 
-from .types import AddressType
+from .types import AddressType, is_address_reference
 
 if TYPE_CHECKING:
     from typing import Sequence
@@ -140,8 +140,7 @@ async def confirm_instruction(
                 continue
 
             account_data: list[PropertyType] = []
-            # account included in the transaction directly
-            if len(account_value) == 2:
+            if not is_address_reference(account_value):
                 account_description = f"{base58.encode(account_value[0])}"
                 token = definitions.get_token(account_value[0])
                 if token is not None:
@@ -152,14 +151,11 @@ async def confirm_instruction(
                 account_data.append(
                     (ui_property.display_name, account_description, True)
                 )
-            # lookup table address reference
-            elif len(account_value) == 3:
+            else:
                 account_data += _get_address_reference_props(
                     account_value,
                     ui_property.display_name,
                 )
-            else:
-                raise ValueError  # Invalid account value
 
             await confirm_properties(
                 "confirm_instruction",
@@ -173,19 +169,22 @@ async def confirm_instruction(
     if instruction.multisig_signers:
         signers: list[PropertyType] = []
         for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
-            multisig_signer_public_key = multisig_signer[0]
-
-            path_str = ""
-            if multisig_signer_public_key == signer_public_key:
-                path_str = f" ({address_n_to_str(signer_path)})"
-
-            signers.append(
-                (
-                    f"{TR.words__signer} {i}{path_str}",
-                    base58.encode(multisig_signer[0]),
-                    True,
+            if not is_address_reference(multisig_signer):
+                multisig_signer_public_key = multisig_signer[0]
+                path_str = ""
+                if multisig_signer_public_key == signer_public_key:
+                    path_str = f" ({address_n_to_str(signer_path)})"
+                signers.append(
+                    (
+                        f"{TR.words__signer} {i}{path_str}",
+                        base58.encode(multisig_signer_public_key),
+                        True,
+                    )
                 )
-            )
+            else:
+                signers += _get_address_reference_props(
+                    multisig_signer, f"{TR.words__signer} {i}"
+                )
 
         await confirm_properties(
             "confirm_instruction",
@@ -244,7 +243,7 @@ async def confirm_unsupported_instruction_details(
 
         for i, account in enumerate(instruction.accounts, 1):
             accounts: list[PropertyType] = []
-            if len(account) == 2:
+            if not is_address_reference(account):
                 account_public_key = account[0]
                 address_type = get_address_type(account[1])
 
@@ -259,13 +258,11 @@ async def confirm_unsupported_instruction_details(
                         True,
                     )
                 )
-            elif len(account) == 3:
+            else:
                 address_type = get_address_type(account[2])
                 accounts += _get_address_reference_props(
                     account, f"{TR.words__account} {i} {address_type}"
                 )
-            else:
-                raise ValueError  # Invalid account value
 
             await confirm_properties(
                 "accounts",
@@ -312,9 +309,14 @@ async def confirm_system_transfer(
     blockhash: bytes,
     verified_payment_request: PaymentRequest | None,
 ) -> None:
+    recipient_account = transfer_instruction.recipient_account
     if verified_payment_request:
+        if is_address_reference(recipient_account):
+            raise wire.DataError(
+                "ALT account reference not supported in payment request"
+            )
         await confirm_payment_request(
-            provider_address=base58.encode(transfer_instruction.recipient_account[0]),
+            provider_address=base58.encode(recipient_account[0]),
             address_n=signer_path,
             amount=transfer_instruction.lamports,
             decimals=9,
@@ -323,11 +325,18 @@ async def confirm_system_transfer(
             verified_payment_request=verified_payment_request,
         )
     else:
-        await confirm_solana_recipient(
-            recipient=base58.encode(transfer_instruction.recipient_account[0]),
-            title=TR.words__recipient,
-            items=[(TR.words__blockhash, base58.encode(blockhash), True)],
-        )
+        if not is_address_reference(recipient_account):
+            await confirm_solana_recipient(
+                recipient=base58.encode(recipient_account[0]),
+                title=TR.words__recipient,
+                items=[(TR.words__blockhash, base58.encode(blockhash), True)],
+            )
+        else:
+            await confirm_properties(
+                "confirm_recipient",
+                TR.words__recipient,
+                _get_address_reference_props(recipient_account, TR.words__recipient),
+            )
 
         await confirm_custom_transaction(transfer_instruction.lamports, 9, "SOL", fee)
 
