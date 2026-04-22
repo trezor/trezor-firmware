@@ -60,6 +60,17 @@ def _fails_erc7730_display_format(
         )
 
 
+def _make_token_payload(
+    timestamp: int = 0xFFFF_FFFF,
+    message: messages.EthereumTokenInfo | bytes = make_eth_token(),
+) -> bytes:
+    return make_payload(
+        data_type=DefinitionType.ETHEREUM_TOKEN,
+        message=message,
+        timestamp=timestamp,
+    )
+
+
 def _make_erc7730_payload(
     timestamp: int = 0xFFFF_FFFF,
     message: messages.EthereumERC7730DisplayFormatInfo | bytes | None = None,
@@ -74,7 +85,10 @@ def _make_erc7730_payload(
 
 
 def _cases(session: Session) -> list[tuple]:
-    cases: list[tuple] = [(make_payload, _fails_network)]
+    cases: list[tuple] = [
+        (make_payload, _fails_network),
+        (_make_token_payload, _fails_token),
+    ]
     if session.model in models.CORE_MODELS:
         cases.append((_make_erc7730_payload, _fails_erc7730_display_format))
     return cases
