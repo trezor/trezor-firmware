@@ -298,24 +298,22 @@ async def show_address(
 
     if warning is None and multisig_index is not None:
         warning = TR.send__receiving_to_multisig
-    await raise_if_not_confirmed(
-        trezorui_api.flow_get_address(
-            address=address,
-            title=title or TR.words__receive,
-            subtitle=subtitle,
-            description=network or "",
-            hint=warning,
-            chunkify=chunkify,
-            address_qr=address if address_qr is None else address_qr,
-            case_sensitive=case_sensitive,
-            account=account,
-            path=path,
-            xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-            br_name=br_name,
-            br_code=br_code,
-        ),
-        None,
-    )
+    with trezorui_api.flow_get_address(
+        address=address,
+        title=title or TR.words__receive,
+        subtitle=subtitle,
+        description=network or "",
+        hint=warning,
+        chunkify=chunkify,
+        address_qr=address if address_qr is None else address_qr,
+        case_sensitive=case_sensitive,
+        account=account,
+        path=path,
+        xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
+        br_name=br_name,
+        br_code=br_code,
+    ) as obj:
+        await raise_if_not_confirmed(obj, br_name=None)
 
     show_continue_in_app(TR.address__confirmed)
 
