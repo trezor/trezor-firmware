@@ -7,7 +7,6 @@
 /dts-v1/;
 #include <nordic/nrf52832_ciaa.dtsi>
 #include "t3w1_revA_nrf52832-pinctrl.dtsi"
-#include <zephyr/dt-bindings/input/input-event-codes.h>
 
 / {
 	model = "T3W1 REVA NRF52832";
@@ -22,52 +21,33 @@
 		zephyr,code-partition = &slot0_partition;
 	};
 
-	leds {
+	outputs {
 		compatible = "gpio-leds";
-
-		led0: led_0 {
+		output_0: output_0 {
 			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
-			label = "Reserved";
 		};
-
-	};
-
-	buttons {
-		compatible = "gpio-keys";
-
-		button0: button_0 {
-			gpios = <&gpio0 14 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
-			label = "Stay in bootloader";
-			zephyr,code = <INPUT_KEY_0>;
-		};
-	};
-
-	spi_sync_in
-	{
-		compatible = "gpio-keys";
-		spi_ready: spi_ready {
-		gpios = <&gpio0 12 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
-		label = "Trezor has data ready";
-		};
-	};
-	spi_sync_out
-	{
-		compatible = "gpio-leds";
-		spi_request: spi_request {
+		output_1: output_1 {
 			gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH)>;
-			label = "NRF is requesting to send data to trezor";
 		};
 	};
 
-	/* These aliases are provided for compatibility with samples */
+	inputs {
+		compatible = "gpio-keys";
+		input_0: input_0 {
+			gpios = <&gpio0 14 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+		};
+		input_1: input_1 {
+			gpios = <&gpio0 12 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+		};
+	};
+
 	aliases {
-		led0 = &led0;
-		sw0 = &button0;
-		bootloader-botton0 = &button0;
-		mcuboot-button0 = &button0;
+		mcuboot-button0 = &input_0;
 		watchdog0 = &wdt0;
-		spi-ready = &spi_ready;
-		spi-request = &spi_request;
+		spi-ready = &input_1;
+		spi-request = &output_1;
+		stay-in-bootloader = &input_0;
+		reserved-output = &output_0;
 	};
 };
 
@@ -106,7 +86,7 @@
 	pinctrl-1 = <&spi0_sleep>;
 	pinctrl-names = "default", "sleep";
 	cs-gpios = <&gpio0 0 GPIO_ACTIVE_LOW>;
-	reg_my_spi_master: spi-dev-a@0 {
+	trezor_spi_dev: spi-dev-a@0 {
 		reg = <0>;
 	};
 };
