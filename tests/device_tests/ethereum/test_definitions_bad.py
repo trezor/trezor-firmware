@@ -43,7 +43,7 @@ def _fails_token(session: Session, token: bytes, match: str) -> None:
         ethereum.sign_tx(
             session,
             **params,
-            definitions=messages.EthereumDefinitions(encoded_tokens=[token]),
+            definitions=messages.EthereumDefinitions(encoded_token=token),
         )
 
 

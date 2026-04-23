@@ -80,19 +80,19 @@ def _defs_from_message(
     msg: Any, chain_id: int | None = None, slip44: int | None = None
 ) -> definitions.Definitions:
     encoded_network = None
-    encoded_tokens: list = []
+    encoded_token = None
 
     # try to get both from msg.definitions
     if hasattr(msg, "definitions"):
         if msg.definitions is not None:
             encoded_network = msg.definitions.encoded_network
-            encoded_tokens = list(msg.definitions.encoded_tokens)
+            encoded_token = msg.definitions.encoded_token
 
     elif hasattr(msg, "encoded_network"):
         encoded_network = msg.encoded_network
 
     return definitions.Definitions.from_encoded(
-        encoded_network, encoded_tokens, chain_id, slip44
+        encoded_network, encoded_token, chain_id, slip44
     )
 
 

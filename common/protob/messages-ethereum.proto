@@ -187,11 +187,11 @@ message EthereumTypedDataSignature {
 }
 
 /**
- * Contains encoded network, tokens and ERC-7730 display format definitions. See external-definitions.md for details.
+ * Contains encoded network, token and ERC-7730 display format definitions. See external-definitions.md for details.
  * @embed
  */
 message EthereumDefinitions {
     optional bytes encoded_network = 1;                 // encoded ethereum network
-    repeated bytes encoded_tokens = 2;                  // encoded ethereum tokens
+    optional bytes encoded_token = 2;                   // encoded ethereum token
     optional bytes encoded_erc7730_display_format = 3;  // encoded ERC-7730 display format
 }
