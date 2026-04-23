@@ -237,7 +237,7 @@ async def confirm_tx_data(
         return staking_approver
 
     yielding_approver = yielding.get_approver(
-        msg, network, address_bytes, maximum_fee, fee_items, sender_bytes
+        msg, initial_data, network, address_bytes, maximum_fee, fee_items, sender_bytes
     )
     if yielding_approver is not None:
         if payment_request_verifier is not None:

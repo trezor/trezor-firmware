@@ -333,6 +333,7 @@ class TR:
     ethereum__approve_revoke_from: str = "Revoke from"
     ethereum__approve_to: str = "Approve to"
     ethereum__approve_unlimited_template: str = "Approving unlimited amount of {0}"
+    ethereum__calldata_suffix: str = "Calldata suffix"
     ethereum__confirm_contract: str = "Confirm contract"
     ethereum__contract_address: str = "Provider contract address"
     ethereum__data_size_template: str = "Size: {0} bytes"
