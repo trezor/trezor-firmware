@@ -446,6 +446,69 @@
                 "sig_r": "20229b613ec8e857f7a94db85169d22010e44016f41f61f11f4e7b5c1e60a37c",
                 "sig_s": "3f8a9b3d39317d1e8f1a282b165c16a498124589cdd23131eb8f4d87127541ea"
             }
+        },
+        {
+            "name": "vault_deposit_trailing_bytes",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 deposit - extra trailing bytes after the two ABI-encoded arguments",
+                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660acdeadfeed",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "40528c6e70a33fb737147d86a61427e6de942f3e50d62c0289c0aa1bb4e9d1ac",
+                "sig_s": "737477b5a874a73fe5ee705c40262486c85255df61fed2b4094e1246e60ef9c5"
+            }
+        },
+        {
+            "name": "vault_redeem_trailing_bytes",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 redeem - extra trailing bytes after the three ABI-encoded arguments",
+                "data": "ba08765200000000000000000000000000000000000000000000000000000000000f42400000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660acdeadfeed",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "29889b25f7e8197bddd13afc7d32100b58086666771f2bcaa8925ca1e96112a3",
+                "sig_s": "1a312779756d2fa62e4e4779815080980a0f86773b8582aff9ca4e74b925e54f"
+            }
+        },
+        {
+            "name": "vault_withdraw_trailing_bytes",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 withdraw - extra trailing bytes after the three ABI-encoded arguments",
+                "data": "b460af9400000000000000000000000000000000000000000000000000000000000f42400000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660acdeadfeed",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "de16620898c6fe3cc5b7d3c5ff6581c2a7845a69bd22f37559f610d6253cfd2f",
+                "sig_s": "58e928b596c930f2f302386025e1eb2a74b342dd9005ae84a161df16a5a295bf"
+            }
         }
     ]
 }

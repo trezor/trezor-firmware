@@ -1342,6 +1342,7 @@ if not utils.BITCOIN_ONLY:
         chain: str,
         br_name: str = "ethereum/vault",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
+        extra_data: str | None = None,
     ) -> None:
 
         account_properties: list[StrPropertyType] = []
@@ -1356,7 +1357,7 @@ if not utils.BITCOIN_ONLY:
             title=title,
             value=intro_question,
             description="",
-            br_name=br_name + "/intro",
+            br_name=f"{br_name}/intro",
             br_code=br_code,
             verb=TR.buttons__continue,
             is_data=False,
@@ -1367,19 +1368,82 @@ if not utils.BITCOIN_ONLY:
         await confirm_value(
             title=title,
             value=vault_str,
-            description="",
-            br_name=br_name + "/vault",
+            description=verb,
+            br_name=f"{br_name}/vault",
             br_code=br_code,
             verb=TR.buttons__continue,
         )
 
         await confirm_properties(
-            br_name=br_name + "/amount",
+            br_name=f"{br_name}/amount",
             title=title,
             props=[
                 (amount_label, amount, False),
                 (TR.words__chain, chain, False),
             ],
+            br_code=br_code,
+        )
+
+        if extra_data is not None:
+            await confirm_value(
+                title=title,
+                value=extra_data,
+                description=TR.ethereum__calldata_suffix,
+                br_name=f"{br_name}/extra_data",
+                br_code=br_code,
+                verb=TR.buttons__continue,
+                is_data=True,
+                cancel=True,
+            )
+
+        await _confirm_summary(
+            amount=None,
+            amount_label=None,
+            fee=maximum_fee,
+            fee_label=TR.send__maximum_fee,
+            title=title,
+            extra_items=info_items,
+            extra_title=TR.confirm_total__title_fee,
+            br_name=f"{br_name}/summary",
+            br_code=br_code,
+        )
+
+    async def confirm_ethereum_vault_claim(
+        title: str,
+        intro_question: str,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        info_items: Iterable[StrPropertyType],
+        token_list: str,
+        br_name: str,
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> None:
+
+        account_properties: list[StrPropertyType] = []
+        if account:
+            account_properties.append((TR.words__account, account, None))
+        if account_path:
+            account_properties.append(
+                (TR.address_details__derivation_path, account_path, None)
+            )
+
+        await confirm_value(
+            title=title,
+            value=intro_question,
+            description="",
+            br_name=f"{br_name}/intro",
+            br_code=br_code,
+            verb=TR.buttons__continue,
+            is_data=False,
+            info_items=account_properties if account_properties else None,
+            info_title=TR.address_details__account_info,
+        )
+
+        await confirm_properties(
+            br_name=f"{br_name}/tokens",
+            title=title,
+            props=[(TR.ethereum__reward_tokens, token_list, False)],
             br_code=br_code,
         )
 
@@ -1391,7 +1455,7 @@ if not utils.BITCOIN_ONLY:
             title=title,
             extra_items=info_items,
             extra_title=TR.confirm_total__title_fee,
-            br_name=br_name + "/summary",
+            br_name=f"{br_name}/summary",
             br_code=br_code,
         )
 

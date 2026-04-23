@@ -1613,6 +1613,8 @@ pub enum TranslatedString {
     ethereum__subtitle_input_data_bytes = 1217,  // {"Bolt": "", "Caesar": "", "Delizia": "{0} / {1} bytes", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
     ethereum__title_input_data_bytes = 1218,  // {"Bolt": "Data:\n{0} / {1} bytes", "Caesar": "Data: {0} / {1} bytes", "Delizia": "Data", "Eckhart": "Data:\n{0} / {1} bytes"}
+    #[cfg(feature = "universal_fw")]
+    ethereum__calldata_suffix = 1219,  // "Calldata suffix"
 }
 
 impl TranslatedString {
@@ -2839,6 +2841,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4063,6 +4066,7 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20260,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5286,6 +5290,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6510,6 +6515,7 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20260,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7733,6 +7739,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8957,6 +8964,7 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20260,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10180,6 +10188,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11404,6 +11413,7 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20260,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12628,6 +12638,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data: {0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13852,6 +13863,7 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18285,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15075,6 +15087,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data: {0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16299,6 +16312,7 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18285,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17522,6 +17536,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data: {0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18746,6 +18761,7 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18285,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19969,6 +19985,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data: {0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21193,6 +21210,7 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18285,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22417,6 +22435,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "{0} / {1} bytes",
                 "Data",
+                "Calldata suffix",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23641,6 +23660,7 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19506,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24864,6 +24884,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "{0} / {1} bytes",
                 "Data",
+                "Calldata suffix",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26088,6 +26109,7 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19506,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27311,6 +27333,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "{0} / {1} bytes",
                 "Data",
+                "Calldata suffix",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28535,6 +28558,7 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19506,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29758,6 +29782,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "{0} / {1} bytes",
                 "Data",
+                "Calldata suffix",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30982,6 +31007,7 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19506,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32206,6 +32232,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33430,6 +33457,7 @@ impl TranslatedString {
                 20554,
                 20554,
                 20575,
+                20590,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34653,6 +34681,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35877,6 +35906,7 @@ impl TranslatedString {
                 20554,
                 20554,
                 20575,
+                20590,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37100,6 +37130,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38324,6 +38355,7 @@ impl TranslatedString {
                 20554,
                 20554,
                 20575,
+                20590,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39547,6 +39579,7 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Calldata suffix",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40771,6 +40804,7 @@ impl TranslatedString {
                 20554,
                 20554,
                 20575,
+                20590,
             ];
 
         }
@@ -41283,6 +41317,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__approve_to, Self::ethereum__approve_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__approve_unlimited_template, Self::ethereum__approve_unlimited_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__calldata_suffix, Self::ethereum__calldata_suffix),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__confirm_contract, Self::ethereum__confirm_contract),
         #[cfg(feature = "universal_fw")]
