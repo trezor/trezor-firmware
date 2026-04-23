@@ -46,18 +46,13 @@ const struct device *spi_dev;
 static struct k_poll_signal spi_done_sig =
     K_POLL_SIGNAL_INITIALIZER(spi_done_sig);
 
-struct spi_cs_control spim_cs = {
-    .gpio = SPI_CS_GPIOS_DT_SPEC_GET(DT_NODELABEL(reg_my_spi_master)),
-    .delay = 0,
-};
-
 static const struct spi_config spi_cfg = {
     .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB,
     .frequency = 8000000,
     .slave = 0,
     .cs =
         {
-            .gpio = SPI_CS_GPIOS_DT_SPEC_GET(DT_NODELABEL(reg_my_spi_master)),
+            .gpio = SPI_CS_GPIOS_DT_SPEC_GET(DT_NODELABEL(trezor_spi_dev)),
             .delay = 0,
         },
 };
@@ -109,7 +104,7 @@ void spi_init(void) {
   if (!device_is_ready(spi_dev)) {
     LOG_WRN("SPI master device not ready!");
   }
-  if (!device_is_ready(spim_cs.gpio.port)) {
+  if (!device_is_ready(spi_cfg.cs.gpio.port)) {
     LOG_WRN("SPI master chip select device not ready!");
   }
 

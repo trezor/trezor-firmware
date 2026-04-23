@@ -32,8 +32,6 @@
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
 
-#include <dk_buttons_and_leds.h>
-
 #include <zephyr/settings/settings.h>
 
 #include <zephyr/logging/log.h>
