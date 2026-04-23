@@ -421,7 +421,7 @@ UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS = {
 def _sign_tx_with_display_format(
     session: Session,
     display_format: messages.EthereumERC7730DisplayFormatInfo,
-    tokens: list[dict] | None = None,
+    token: dict | None = None,
     sign_tx_params: dict | None = None,
     on_page: Callable[[LayoutContent], None] | None = None,
 ) -> None:
@@ -439,10 +439,8 @@ def _sign_tx_with_display_format(
                 encoded_erc7730_display_format=definitions.encode_eth_erc7730_display_format(
                     display_format
                 ),
-                encoded_tokens=(
-                    [definitions.encode_eth_token(**t) for t in tokens]
-                    if tokens is not None
-                    else []
+                encoded_token=(
+                    definitions.encode_eth_token(**token) if token is not None else None
                 ),
             ),
         )
@@ -482,49 +480,32 @@ def test_clear_signing_with_definition_and_token(session: Session) -> None:
     _sign_tx_with_display_format(
         session,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
-        tokens=[WETH_TOKEN_DEFINITION],
+        token=WETH_TOKEN_DEFINITION,
         on_page=on_page,
     )
     assert_all_seen()
 
 
 @pytest.mark.models("core")
-def test_clear_signing_with_definition_and_both_tokens(session: Session) -> None:
-    # With both WETH (tokenIn) and USDT (tokenOut) provided.
+def test_clear_signing_builtin_token_no_override(session: Session) -> None:
+    # With USDT (tokenOut) provided as encoded_token.
     # Note however that we still render it as "USDT" (built in token)
     # rather than "FAKE USDT"!
     on_page, assert_all_seen = _make_label_checker(
-        expected=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS,
-        absent={"FAKE USDT", "UNKN"},
+        expected=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN"},
+        absent={"FAKE USDT"},
     )
     _sign_tx_with_display_format(
         session,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
-        tokens=[WETH_TOKEN_DEFINITION, USDT_TOKEN_DEFINITION],
+        token=USDT_TOKEN_DEFINITION,
         on_page=on_page,
     )
     assert_all_seen()
 
 
 @pytest.mark.models("core")
-def test_clear_signing_weth_weth2_with_both_tokens(session: Session) -> None:
-    # With both WETH (tokenIn) and WETH2 (tokenOut) provided, both amounts are resolved.
-    on_page, assert_all_seen = _make_label_checker(
-        expected=(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"WETH2"}),
-        absent={"USDT", "UNKN"},
-    )
-    _sign_tx_with_display_format(
-        session,
-        UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
-        tokens=[WETH_TOKEN_DEFINITION, WETH2_TOKEN_DEFINITION],
-        sign_tx_params=get_clear_signing_sign_tx_params(UNISWAP_WETH_WETH2_CALLDATA),
-        on_page=on_page,
-    )
-    assert_all_seen()
-
-
-@pytest.mark.models("core")
-def test_clear_signing_weth_weth2_without_tokens(session: Session) -> None:
+def test_clear_signing_without_token(session: Session) -> None:
     # Without token definitions, amounts are shown as UNKNOWN tokens.
     on_page, assert_all_seen = _make_label_checker(
         expected=(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN"}),
@@ -541,7 +522,8 @@ def test_clear_signing_weth_weth2_without_tokens(session: Session) -> None:
 
 @pytest.mark.models("core")
 def test_clear_signing_with_definition_without_token(session: Session) -> None:
-    # Without a token definition, amounts are shown as UNKNOWN token.
+    # Without a token definition, amounts are shown as UNKNOWN token
+    # (but builtin USDT is resolved).
     on_page, assert_all_seen = _make_label_checker(
         expected=(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN", "USDT"}),
         absent={"WETH"},

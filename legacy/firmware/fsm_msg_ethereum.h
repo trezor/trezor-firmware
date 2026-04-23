@@ -41,8 +41,8 @@ static const EthereumDefinitionsDecoded *get_definitions(
     if (definitions->has_encoded_network) {
       encoded_network = &definitions->encoded_network;
     }
-    if (definitions->encoded_tokens_count > 0) {
-      encoded_token = &definitions->encoded_tokens[0];
+    if (definitions->has_encoded_token) {
+      encoded_token = &definitions->encoded_token;
     }
   }
 
