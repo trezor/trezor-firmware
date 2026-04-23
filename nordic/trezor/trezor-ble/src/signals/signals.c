@@ -16,57 +16,52 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/settings/settings.h>
-#include <zephyr/types.h>
 
 #include <signals/signals.h>
-
-#include <dk_buttons_and_leds.h>
 
 #define LOG_MODULE_NAME signals
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define OUT_RESERVED DK_LED1
-
-#define IN_STAY_IN_BOOTLOADER DK_BTN1_MSK
+static const struct gpio_dt_spec stay_in_bootloader_btn =
+    GPIO_DT_SPEC_GET(DT_ALIAS(stay_in_bootloader), gpios);
+static const struct gpio_dt_spec reserved_output =
+    GPIO_DT_SPEC_GET(DT_ALIAS(reserved_output), gpios);
 
 static K_SEM_DEFINE(signals_ok, 0, 1);
 
 static bool out_reserved = false;
 
-void button_changed(uint32_t button_state, uint32_t has_changed) {}
-
-static void configure_gpio(void) {
+bool signals_init(void) {
   int err;
 
-  err = dk_buttons_init(button_changed);
+  err = gpio_pin_configure_dt(&stay_in_bootloader_btn, GPIO_INPUT);
   if (err) {
-    LOG_ERR("Cannot init INPUT (err: %d)", err);
+    LOG_ERR("Cannot configure bootloader button (err: %d)", err);
+    return false;
   }
 
-  err = dk_leds_init();
+  err = gpio_pin_configure_dt(&reserved_output, GPIO_OUTPUT_INACTIVE);
   if (err) {
-    LOG_ERR("Cannot init OUTPUT (err: %d)", err);
+    LOG_ERR("Cannot configure reserved output (err: %d)", err);
+    return false;
   }
-}
-
-bool signals_is_stay_in_bootloader(void) {
-  return (dk_get_buttons() & IN_STAY_IN_BOOTLOADER) != 0;
-}
-
-bool signals_init(void) {
-  configure_gpio();
 
   k_sem_give(&signals_ok);
 
   return true;
 }
 
+bool signals_is_stay_in_bootloader(void) {
+  return gpio_pin_get_dt(&stay_in_bootloader_btn) > 0;
+}
+
 void signals_set_reserved(bool set) {
   out_reserved = set;
-  dk_set_led(OUT_RESERVED, set);
+  gpio_pin_set_dt(&reserved_output, set);
 }
 
 bool signals_out_get_reserved(void) { return out_reserved; }
