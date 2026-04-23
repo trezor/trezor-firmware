@@ -2351,7 +2351,7 @@ requires-dist = [
     { name = "nanopb", specifier = ">=0.4.3,<0.5" },
     { name = "noiseprotocol", specifier = ">=0.3.1,<0.4" },
     { name = "pillow", specifier = ">=11" },
-    { name = "protobuf", specifier = "==6.32" },
+    { name = "protobuf", specifier = "==6.33.5" },
     { name = "pyasn1" },
     { name = "pyelftools", specifier = ">=0.32,<0.33" },
     { name = "pylint", specifier = "~=2.11" },
