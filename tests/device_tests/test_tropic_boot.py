@@ -22,8 +22,11 @@ import pytest
 
 from ..emulators import EmulatorWrapper, stop_shared_tropic_model
 
-TROPIC_BOOT_CONFIGS_DIR = Path(__file__).resolve().parent.parent / "tropic_model" / "tropic_boot_configs"
+TROPIC_BOOT_CONFIGS_DIR = (
+    Path(__file__).resolve().parent.parent / "tropic_model" / "tropic_boot_configs"
+)
 TROPIC_MODEL_DIR = TROPIC_BOOT_CONFIGS_DIR.parent
+
 
 @pytest.mark.models("T3W1")
 @pytest.mark.parametrize(

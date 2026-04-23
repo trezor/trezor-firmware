@@ -67,7 +67,6 @@ void tropic01_reset(void);
 
 void tropic_deinit(void);
 
-
 #ifdef TREZOR_PRODTEST
 #include "libtropic.h"
 lt_handle_t* tropic_get_handle(void);
@@ -100,9 +99,9 @@ lt_ret_t lt_read_whole_R_config_retry(lt_handle_t* tropic_handle,
 lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t* tropic_handle,
                                            const struct lt_config_t* config);
 
-#endif // TREZOR_PRODTEST
+#endif  // TREZOR_PRODTEST
 
-#endif // KERNEL_MODE
+#endif  // KERNEL_MODE
 
 secbool tropic_ensure_configuration(void);
 

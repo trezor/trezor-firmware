@@ -370,8 +370,6 @@ void tropic_session_start_time(uint32_t *time_ms) {
   }
 }
 
-
-
 // clang-format off
 // Address table for all 27 I/R-config objects, ordered to match lt_config_t.obj[].
 // Using a local const table (flash/.rodata) instead of cfg_desc_table from
@@ -406,8 +404,6 @@ static const enum lt_config_obj_addr_t TROPIC_CONFIG_ADDRS[LT_CONFIG_OBJ_CNT] = 
     TR01_CFG_UAP_MAC_AND_DESTROY_ADDR,
 };
 // clang-format on
-
-
 
 lt_ret_t lt_ecc_key_erase_retry(lt_handle_t *tropic_handle,
                                 const lt_ecc_slot_t ecc_slot) {
