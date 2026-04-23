@@ -195,9 +195,6 @@ static bool cmd_compare(uint8_t *cmd, uint16_t cmdLen, uint8_t *find,
     return false;
   }
   uint16_t limit = (uint16_t)(cmdLen - len);
-  if (limit > 19) {
-    limit = 19;
-  }
   for (uint16_t i = 0; i <= limit; i++) {
     if (!memcmp(&cmd[i], find, len)) {
       return true;
