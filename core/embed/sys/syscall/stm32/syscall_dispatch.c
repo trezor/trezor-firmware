@@ -940,6 +940,10 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint16_t *size = (uint16_t *)args[2];
       args[0] = tropic_data_read__verified(udata_slot, data, size);
     } break;
+
+    case SYSCALL_TROPIC_ENSURE_CFG: {
+      args[0] = tropic_ensure_configuration__verified();
+    } break;
 #endif
 
 #ifdef USE_APP_LOADING

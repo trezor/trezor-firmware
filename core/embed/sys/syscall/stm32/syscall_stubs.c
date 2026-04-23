@@ -930,6 +930,10 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
                                (uint32_t)size, SYSCALL_TROPIC_DATA_READ);
 }
 
+secbool tropic_ensure_configuration(void) {
+  return (secbool)syscall_invoke0(SYSCALL_TROPIC_ENSURE_CFG);
+}
+
 #endif
 
 #ifdef USE_APP_LOADING
