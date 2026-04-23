@@ -294,6 +294,6 @@ void uart_power_down(void) {
   /* Power down the UART device */
   err = pm_device_action_run(uart, PM_DEVICE_ACTION_SUSPEND);
   if (err) {
-    printk("pm_device_action_run() failed (%d)\n", err);
+    LOG_ERR("pm_device_action_run() failed (%d)", err);
   }
 }

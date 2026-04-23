@@ -107,10 +107,10 @@ void spi_init(void) {
 
   spi_dev = DEVICE_DT_GET(MY_SPI_MASTER);
   if (!device_is_ready(spi_dev)) {
-    printk("SPI master device not ready!\n");
+    LOG_WRN("SPI master device not ready!");
   }
   if (!device_is_ready(spim_cs.gpio.port)) {
-    printk("SPI master chip select device not ready!\n");
+    LOG_WRN("SPI master chip select device not ready!");
   }
 
   k_sem_give(&spi_comm_ok);
@@ -118,14 +118,14 @@ void spi_init(void) {
 
 bool spi_send(uint8_t service_id, const uint8_t *data, uint32_t len) {
   if (len > MAX_SPI_DATA_SIZE) {
-    printk("Too big data\n");
+    LOG_WRN("Too big data");
     return false;
   }
 
   trz_packet_t *tx = k_malloc(sizeof(*tx));
 
   if (tx == NULL) {
-    printk("Not able to allocate SPI send data buffer\n");
+    LOG_WRN("Not able to allocate SPI send data buffer");
     return false;
   }
 
@@ -162,7 +162,7 @@ void spi_thread(void) {
     uint8_t *rx_data = k_malloc(PACKET_DATA_SIZE);
 
     if (rx_data == NULL) {
-      printk("Not able to allocate SPI receive data buffer\n");
+      LOG_WRN("Not able to allocate SPI receive data buffer");
       k_free(buf);
       continue;
     }
@@ -187,7 +187,7 @@ void spi_thread(void) {
     }
 
     if (spi_transceive(spi_dev, &spi_cfg, txp, &rx) != 0) {
-      printk("SPI Data not sent\n");
+      LOG_WRN("SPI Data not sent");
     }
 
     spi_packet_t *rx_msg = (spi_packet_t *)rx_data;
@@ -198,7 +198,7 @@ void spi_thread(void) {
       process_rx_msg(rx_msg->service_id & 0xF, rx_msg->data, rx_msg->msg_len);
     } else {
       if (rx_msg->service_id != 0) {
-        printk("SPI RX invalid data\n");
+        LOG_WRN("SPI RX invalid data");
       }
     }
 
