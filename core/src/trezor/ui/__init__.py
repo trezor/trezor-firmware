@@ -52,9 +52,6 @@ _REQUEST_ANIMATION_FRAME = const(1)
 See `trezor::ui::layout::base::EventCtx::ANIM_FRAME_TIMER`.
 """
 
-_UNRESPONSIVE_WARNING_TIMEOUT_MS = const(2000)
-
-
 # allow only one alert at a time to avoid alerts overlapping
 _alert_in_progress = False
 
@@ -82,14 +79,6 @@ def alert(count: int = 3) -> None:
 
         _alert_in_progress = True
         loop.schedule(_alert(count))
-
-
-async def _waiting_screen() -> None:
-    from trezor import TR
-    from trezor.ui.layouts import show_wait_text
-
-    await loop.sleep(_UNRESPONSIVE_WARNING_TIMEOUT_MS)
-    show_wait_text(TR.words__comm_trouble)
 
 
 class Shutdown(Exception):
@@ -282,7 +271,7 @@ class Layout(Generic[T]):
             if br_handler is not None:
                 # Make sure ButtonRequest is ACKed, before the result is returned.
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
-                await br_handler.join(_waiting_screen())
+                await br_handler.join()
 
             return result
         finally:
@@ -342,8 +331,7 @@ class Layout(Generic[T]):
             return False
 
         br = ButtonRequest(code=msg[0], name=msg[1], pages=self.layout.page_count())
-        self.button_request_handler.put(br)
-        return True
+        return self.button_request_handler.put(br)
 
     def _paint(self) -> None:
         """Paint the layout and ensure that homescreen cache is properly invalidated."""
