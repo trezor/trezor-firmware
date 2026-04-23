@@ -15,6 +15,8 @@ FLASH=0
 PRISTINE=
 DEBUG=
 PRODUCTION=
+HEADER_SIZE=0x200
+SLOT_ADDR=0xe000
 
 fatal() {
     echo "$@"
@@ -127,9 +129,16 @@ VERSION=$(get_version_from_file)
 
 # Update paths in signing and flashing commands
 if [ "$SIGN" -eq 1 ]; then
+    # zephyr.bin already contains a HEADER_SIZE-byte zero placeholder at offset 0
+    # (emitted by Zephyr linker via CONFIG_ROM_START_OFFSET). Strip it so that
+    # --pad-header does not prepend a second copy, which would push the vector
+    # table to slot_addr+2*HEADER_SIZE and cause an immediate hardfault on jump.
+    dd if="build/$APP_DIR/zephyr/zephyr.bin" bs=1 skip="$((HEADER_SIZE))" \
+        of="build/$APP_DIR/zephyr/zephyr_nohdr.bin" \
+        || { rm -f "build/$APP_DIR/zephyr/zephyr_nohdr.bin"; fatal "dd failed to strip header from zephyr.bin"; }
+
     run_under_ncs_subshell \
-        "imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 0x54335731 && \
-         imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.prep.hex --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 0x54335731  && \
+        "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 0x54335731 && \
          ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
 
     HASH=$(python ./scripts/extract_hash.py ./build/$APP_DIR/zephyr/dump.txt)
@@ -138,12 +147,12 @@ if [ "$SIGN" -eq 1 ]; then
     echo "Signed hash $HASH, signature0 $SIGNATURE0, signature1 $SIGNATURE1"
 
     run_under_ncs_subshell \
-        "python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.hex $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.hex && \
-         python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.bin $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.bin && \
+        "python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.bin $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.bin && \
+         python -c \"from intelhex import IntelHex; ih = IntelHex(); ih.loadbin('build/$APP_DIR/zephyr/zephyr.signed_trz.bin', offset=$SLOT_ADDR); ih.tofile('build/$APP_DIR/zephyr/zephyr.signed_trz.hex', format='hex')\" && \
          python ../zephyr/scripts/build/mergehex.py build/mcuboot/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.signed_trz.hex -o build/zephyr.merged.signed_trz.hex"
 fi
 
 if [ "$FLASH" -eq 1 ]; then
     run_under_ncs_subshell \
-        'west flash --hex-file ./build/zephyr.merged.signed_trz.hex'
+        "west flash --domain \"$APP_DIR\" --hex-file ./build/zephyr.merged.signed_trz.hex"
 fi
