@@ -74,25 +74,25 @@ static const struct lt_config_t g_irreversible_configuration = {
         // # CFG_SENSORS (0x08)
         // | Setting                         | Value                |
         // |---------------------------------|----------------------|
-        // | PTRNG0_TEST_DIS (bit 0)         | 1 (NO_ACTION)        |
-        // | PTRNG1_TEST_DIS (bit 1)         | 1 (NO_ACTION)        |
-        // | OSCILLATOR_MON_DIS (bit 2)      | 1 (NO_ACTION)        |
-        // | SHIELD_DIS (bit 3)              | 1 (NO_ACTION)        |
-        // | VOLTAGE_MON_DIS (bit 4)         | 1 (NO_ACTION)        |
-        // | GLITCH_DET_DIS (bit 5)          | 1 (NO_ACTION)        |
-        // | TEMP_SENS_DIS (bit 6)           | 1 (NO_ACTION)        |
-        // | LASER_DET_DIS (bit 7)           | 1 (NO_ACTION)        |
-        // | EM_PULSE_DET_DIS (bit 8)        | 1 (NO_ACTION)        |
-        // | CPU_ALERT_DIS (bit 9)           | 1 (NO_ACTION)        |
-        // | PIN_VERIF_BIT_FLIP_DIS (bit 10) | 1 (NO_ACTION)        |
-        // | SCB_BIT_FLIP_DIS (bit 11)       | 1 (NO_ACTION)        |
-        // | CPB_BIT_FLIP_DIS (bit 12)       | 1 (NO_ACTION)        |
-        // | ECC_BIT_FLIP_DIS (bit 13)       | 1 (NO_ACTION)        |
-        // | R_MEM_BIT_FLIP_DIS (bit 14)     | 1 (NO_ACTION)        |
-        // | EKDB_BIT_FLIP_DIS (bit 15)      | 1 (NO_ACTION)        |
-        // | I_MEM_BIT_FLIP_DIS (bit 16)     | 1 (NO_ACTION)        |
-        // | PLATFORM_BIT_FLIP_DIS (bit 17)  | 1 (NO_ACTION)        |
-        ~0U,
+        // | PTRNG0_TEST_DIS (bit 0)         | 0 (ENTER_ALARM_MODE) |
+        // | PTRNG1_TEST_DIS (bit 1)         | 0 (ENTER_ALARM_MODE) |
+        // | OSCILLATOR_MON_DIS (bit 2)      | 0 (ENTER_ALARM_MODE) |
+        // | SHIELD_DIS (bit 3)              | 0 (ENTER_ALARM_MODE) |
+        // | VOLTAGE_MON_DIS (bit 4)         | 0 (ENTER_ALARM_MODE) |
+        // | GLITCH_DET_DIS (bit 5)          | 0 (ENTER_ALARM_MODE) |
+        // | TEMP_SENS_DIS (bit 6)           | 0 (ENTER_ALARM_MODE) |
+        // | LASER_DET_DIS (bit 7)           | 0 (ENTER_ALARM_MODE) |
+        // | EM_PULSE_DET_DIS (bit 8)        | 0 (ENTER_ALARM_MODE) |
+        // | CPU_ALERT_DIS (bit 9)           | 0 (ENTER_ALARM_MODE) |
+        // | PIN_VERIF_BIT_FLIP_DIS (bit 10) | 0 (ENTER_ALARM_MODE) |
+        // | SCB_BIT_FLIP_DIS (bit 11)       | 0 (ENTER_ALARM_MODE) |
+        // | CPB_BIT_FLIP_DIS (bit 12)       | 0 (ENTER_ALARM_MODE) |
+        // | ECC_BIT_FLIP_DIS (bit 13)       | 0 (ENTER_ALARM_MODE) |
+        // | R_MEM_BIT_FLIP_DIS (bit 14)     | 0 (ENTER_ALARM_MODE) |
+        // | EKDB_BIT_FLIP_DIS (bit 15)      | 0 (ENTER_ALARM_MODE) |
+        // | I_MEM_BIT_FLIP_DIS (bit 16)     | 0 (ENTER_ALARM_MODE) |
+        // | PLATFORM_BIT_FLIP_DIS (bit 17)  | 0 (ENTER_ALARM_MODE) |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(2) & ~BIT(3) & ~BIT(4) & ~BIT(5) & ~BIT(6) & ~BIT(7) & ~BIT(8) & ~BIT(9) & ~BIT(10) & ~BIT(11) & ~BIT(12) & ~BIT(13) & ~BIT(14) & ~BIT(15) & ~BIT(16) & ~BIT(17),
         // # CFG_DEBUG (0x10)
         // | Setting           | Value |
         // |-------------------|-------|
@@ -641,6 +641,28 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     cli_trace(cli,
               "The irreversible configuration read does not match the expected "
               "irreversible configuration.");
+    return TROPIC_LOCKED_FALSE;
+  }
+
+  uint8_t read_value = 0;
+  uint16_t read_length = 0;
+  ret = lt_r_mem_data_read(tropic_get_handle(), TROPIC_CONFIG_VERSION_SLOT,
+                           &read_value, sizeof(read_value), &read_length);
+  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+    cli_trace(cli, "Config version slot is empty.");
+    return TROPIC_LOCKED_FALSE;
+  }
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_r_mem_data_read()` failed with error %s",
+              lt_ret_verbose(ret));
+    return TROPIC_LOCKED_ERROR;
+  }
+
+  uint8_t config_version = TROPIC_CONFIG_VERSION;
+  if (read_length != sizeof(config_version) || read_value != config_version) {
+    cli_trace(cli, CLI_ERROR,
+              "Config version mismatch after write. Expected %d, got %d.",
+              config_version, read_value);
     return TROPIC_LOCKED_FALSE;
   }
 
@@ -1236,6 +1258,32 @@ static void prodtest_tropic_lock(cli_t* cli) {
              sizeof(g_irreversible_configuration)) != 0) {
     cli_error(cli, CLI_ERROR,
               "Irreversible configuration mismatch after write.");
+    return;
+  }
+
+  uint8_t config_version = TROPIC_CONFIG_VERSION;
+  ret = lt_r_mem_data_write(tropic_get_handle(), TROPIC_CONFIG_VERSION_SLOT,
+                            &config_version, sizeof(config_version));
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_r_mem_data_write()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  uint8_t read_value = 0;
+  uint16_t read_length = 0;
+  ret = lt_r_mem_data_read(tropic_get_handle(), TROPIC_CONFIG_VERSION_SLOT,
+                           &read_value, sizeof(read_value), &read_length);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_r_mem_data_read()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  if (read_length != sizeof(config_version) || read_value != config_version) {
+    cli_error(cli, CLI_ERROR,
+              "Config version mismatch after write. Expected %d, got %d.",
+              config_version, read_value);
     return;
   }
 

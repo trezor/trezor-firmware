@@ -62,6 +62,8 @@
 #define TROPIC_CHANGE_COUNTER_SLOT TR01_MCOUNTER_INDEX_4
 #define TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE 0xfffffffe
 
+static const uint8_t TROPIC_WRONG_BATCH[] = {0x19, 0x07, 0x1F, 0x0A, 0x04};
+
 #ifdef TREZOR_EMULATOR
 #define TROPIC_RETRY_COMMAND(command) command
 #else
@@ -340,11 +342,11 @@ bool tropic_session_start(void) {
     return true;
   }
 
-#ifndef TREZOR_EMULATOR
   if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
   }
+#ifndef TREZOR_EMULATOR
   if (tropic_custom_session_start(NULL, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
@@ -365,6 +367,41 @@ void tropic_session_start_time(uint32_t *time_ms) {
     *time_ms += 210;
   }
 }
+
+// clang-format off
+// Address table for all 27 I/R-config objects, ordered to match lt_config_t.obj[].
+// Using a local const table (flash/.rodata) instead of cfg_desc_table from
+// libtropic which is a non-const global (RAM/.data).
+static const enum lt_config_obj_addr_t TROPIC_CONFIG_ADDRS[LT_CONFIG_OBJ_CNT] = {
+    TR01_CFG_START_UP_ADDR,
+    TR01_CFG_SENSORS_ADDR,
+    TR01_CFG_DEBUG_ADDR,
+    TR01_CFG_GPO_ADDR,
+    TR01_CFG_SLEEP_MODE_ADDR,
+    TR01_CFG_UAP_PAIRING_KEY_WRITE_ADDR,
+    TR01_CFG_UAP_PAIRING_KEY_READ_ADDR,
+    TR01_CFG_UAP_PAIRING_KEY_INVALIDATE_ADDR,
+    TR01_CFG_UAP_R_CONFIG_WRITE_ERASE_ADDR,
+    TR01_CFG_UAP_R_CONFIG_READ_ADDR,
+    TR01_CFG_UAP_I_CONFIG_WRITE_ADDR,
+    TR01_CFG_UAP_I_CONFIG_READ_ADDR,
+    TR01_CFG_UAP_PING_ADDR,
+    TR01_CFG_UAP_R_MEM_DATA_WRITE_ADDR,
+    TR01_CFG_UAP_R_MEM_DATA_READ_ADDR,
+    TR01_CFG_UAP_R_MEM_DATA_ERASE_ADDR,
+    TR01_CFG_UAP_RANDOM_VALUE_GET_ADDR,
+    TR01_CFG_UAP_ECC_KEY_GENERATE_ADDR,
+    TR01_CFG_UAP_ECC_KEY_STORE_ADDR,
+    TR01_CFG_UAP_ECC_KEY_READ_ADDR,
+    TR01_CFG_UAP_ECC_KEY_ERASE_ADDR,
+    TR01_CFG_UAP_ECDSA_SIGN_ADDR,
+    TR01_CFG_UAP_EDDSA_SIGN_ADDR,
+    TR01_CFG_UAP_MCOUNTER_INIT_ADDR,
+    TR01_CFG_UAP_MCOUNTER_GET_ADDR,
+    TR01_CFG_UAP_MCOUNTER_UPDATE_ADDR,
+    TR01_CFG_UAP_MAC_AND_DESTROY_ADDR,
+};
+// clang-format on
 
 lt_ret_t lt_ecc_key_erase_retry(lt_handle_t *tropic_handle,
                                 const lt_ecc_slot_t ecc_slot) {
@@ -397,11 +434,11 @@ static lt_ret_t lt_erase_and_write_R_config(lt_handle_t *tropic_handle,
 
   for (uint8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
     ret = TROPIC_RETRY_COMMAND(lt_r_config_write(
-        tropic_handle, cfg_desc_table[i].addr, config->obj[i]));
+        tropic_handle, TROPIC_CONFIG_ADDRS[i], config->obj[i]));
     if (ret != LT_OK) {
       uint32_t obj = 0;
       lt_ret_t inside_ret = TROPIC_RETRY_COMMAND(
-          lt_r_config_read(tropic_handle, cfg_desc_table[i].addr, &obj));
+          lt_r_config_read(tropic_handle, TROPIC_CONFIG_ADDRS[i], &obj));
       if (inside_ret != LT_OK) {
         return inside_ret;
       }
@@ -418,6 +455,141 @@ lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t *tropic_handle,
                                            const struct lt_config_t *config) {
   return TROPIC_RETRY_COMMAND(
       lt_erase_and_write_R_config(tropic_handle, config));
+}
+
+#include <sec/tropic_config.h>
+
+static secbool tropic_ensure_i_config(void) {
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  lt_config_obj_addr_t cfg_to_check[] = {
+      TR01_CFG_SENSORS_IDX,
+  };
+
+  for (int8_t i = 0; i < sizeof(cfg_to_check) / sizeof(cfg_to_check[0]); i++) {
+    uint32_t expected = TROPIC_I_CONFIG.obj[cfg_to_check[i]];
+    uint32_t current = 0;
+    if (TROPIC_RETRY_COMMAND(lt_i_config_read(
+            &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], &current)) !=
+        LT_OK) {
+      return secfalse;
+    }
+
+    // Bits that are expected to be 1 but are already 0: cannot recover.
+    uint32_t irrecoverable = expected & ~current;
+    if (irrecoverable != 0) {
+      return secfalse;
+    }
+
+    // Bits that are currently 1 but are expected to be 0: flip them.
+    uint32_t to_flip = ~expected & current;
+    for (uint8_t j = 0; j < BITS_PER_LONG; j++) {
+      if (to_flip & BIT(j)) {
+        if (TROPIC_RETRY_COMMAND(lt_i_config_write(
+                &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], j)) !=
+            LT_OK) {
+          return secfalse;
+        }
+      }
+    }
+  }
+
+  return sectrue;
+}
+
+static secbool tropic_ensure_r_config(void) {
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  lt_config_obj_addr_t cfg_to_check[] = {
+      TR01_CFG_START_UP_IDX,
+      TR01_CFG_SENSORS_IDX,
+  };
+
+  uint32_t current = {0};
+  uint32_t diff = {0};
+  for (int8_t i = 0; i < sizeof(cfg_to_check) / sizeof(cfg_to_check[0]); i++) {
+    if (TROPIC_RETRY_COMMAND(lt_r_config_read(
+            &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], &current)) !=
+        LT_OK) {
+      return secfalse;
+    }
+    diff |= current ^ TROPIC_R_CONFIG.obj[cfg_to_check[i]];
+  }
+
+  if (diff == 0) {
+    return sectrue;
+  }
+
+  return lt_erase_and_write_R_config_retry(&drv->handle, &TROPIC_R_CONFIG) ==
+                 LT_OK
+             ? sectrue
+             : secfalse;
+}
+
+static bool tropic_get_batch_id(uint8_t *batch_id) {
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  lt_chip_id_t chip_id = {0};
+  if (lt_get_info_chip_id(&drv->handle, &chip_id) != LT_OK) {
+    return false;
+  }
+
+  memcpy(batch_id, chip_id.batch_id, sizeof(chip_id.batch_id));
+  return true;
+}
+
+secbool tropic_ensure_configuration(void) {
+  if (!tropic_session_start()) {
+    return secfalse;
+  }
+
+  // TODO: remove this if we have a byte version?
+  uint8_t batch_id[sizeof(TROPIC_WRONG_BATCH)] = {0};
+  if (!tropic_get_batch_id(batch_id)) {
+    return secfalse;
+  }
+  if (memcmp(batch_id, TROPIC_WRONG_BATCH, sizeof(TROPIC_WRONG_BATCH)) != 0) {
+    // we do not set the configuration on new batches
+    return sectrue;
+  }
+
+  uint8_t config_version = 0;
+  uint16_t data_read_size = 0;
+  lt_ret_t ret = lt_r_mem_data_read(&g_tropic_driver.handle,
+                                    TROPIC_CONFIG_VERSION_SLOT, &config_version,
+                                    sizeof(config_version), &data_read_size);
+  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+    config_version = 0;
+  } else if (ret != LT_OK) {
+    return secfalse;
+  }
+
+  if (config_version == TROPIC_CONFIG_VERSION) {
+    return sectrue;
+  }
+
+  if (tropic_ensure_i_config() != sectrue) {
+    return secfalse;
+  }
+
+  if (tropic_ensure_r_config() != sectrue) {
+    return secfalse;
+  }
+
+  ret =
+      lt_r_mem_data_erase(&g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT);
+  if (ret != LT_OK) {
+    return secfalse;
+  }
+
+  config_version = TROPIC_CONFIG_VERSION;
+  ret = lt_r_mem_data_write(&g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT,
+                            &config_version, sizeof(uint8_t));
+  if (ret != LT_OK) {
+    return secfalse;
+  }
+
+  return sectrue;
 }
 
 #ifdef TREZOR_EMULATOR

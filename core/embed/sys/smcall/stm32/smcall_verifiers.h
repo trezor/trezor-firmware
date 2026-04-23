@@ -151,6 +151,8 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
                                 uint16_t *size);
 
+secbool tropic_ensure_configuration__verified(void);
+
 #endif
 
 // ---------------------------------------------------------------------
