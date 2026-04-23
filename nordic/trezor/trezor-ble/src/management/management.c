@@ -155,7 +155,7 @@ static void send_info(void) {
   data[7] = 0;
   data[8] = signals_out_get_reserved();
 
-  read_image_sha256(FLASH_AREA_ID(image_0), &data[9]);
+  read_image_sha256(FIXED_PARTITION_ID(slot0_partition), &data[9]);
 
   trz_comm_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data));
 }
