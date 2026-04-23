@@ -205,27 +205,65 @@ class ContinueOnErrors(ButtonRequestHandler):
         super().__init__(ctx)
         self._prev_handler: ButtonRequestHandler | None = None
         self.msg = msg
+        self.ignore = False
+
+    def put(self, br: ButtonRequest) -> None:
+        if self.ignore:
+            return
+
+        super().put(br)
+
+    async def join(self, wait_task: loop.Task[None]) -> None:
+        if self.ignore:
+            return
+
+        join_task = super().join(wait_task)
+        await loop.race(join_task, loop.sleep(5000))
+
+    def br_task(self, ack_callback: AckCallback) -> Generator[Any, Any, None]:
+        if self.ignore:
+            return None
+
+        return (yield from super().br_task(ack_callback))
 
     async def _handle(self, ack_callback: AckCallback) -> None:
         """Unexpected messages will not cause the handler to fail."""
         from .context import UnexpectedMessageException
 
-        while True:
-            try:
-                # Exit the loop when the layout is done.
-                return await super()._handle(ack_callback)
-            except UnexpectedMessageException as exc:
-                # in case of THP channel preemption, `msg` is not set.
-                # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
-                if exc.msg:
-                    from trezor.enums import FailureType
-                    from trezor.messages import Failure
+        if self.ignore:
+            # Stop handling ButtonRequests in case of unexpected error.
+            return
 
-                    # notify the host that the device cannot be preempted
-                    await self.ctx.write(
-                        Failure(code=FailureType.InProgress, message=self.msg)
-                    )
-                # continue receiving messages
+        ignore = True
+        try:
+            while True:
+                try:
+                    # Exit the loop when the layout is done.
+                    await super()._handle(ack_callback)
+                    ignore = False  # continue handling ButtonRequests
+                    return
+                except UnexpectedMessageException as exc:
+                    # in case of THP channel preemption, `msg` is not set.
+                    # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
+                    if exc.msg:
+                        from trezor.enums import FailureType
+                        from trezor.messages import Failure
+
+                        # notify the host that the device cannot be preempted
+                        await self.ctx.write(
+                            Failure(code=FailureType.InProgress, message=self.msg)
+                        )
+                    # continue receiving messages
+                except Exception as exc:
+                    if __debug__:
+                        log.error(__name__, "ButtonRequest: ignored %s", exc)
+                        log.exception(__name__, exc)
+                    # NOTE: GeneratorExit (e.g. due to timeout) must propagate.
+                    # Stop handling ButtonRequests in case of unexpected error (without failing the flow)
+                    assert ignore
+                    return
+        finally:
+            self.ignore = ignore
 
     def __enter__(self) -> None:
         assert self._prev_handler is None
