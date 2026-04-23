@@ -4173,14 +4173,14 @@ if TYPE_CHECKING:
 
     class EthereumDefinitions(protobuf.MessageType):
         encoded_network: "AnyBytes | None"
-        encoded_tokens: "list[AnyBytes]"
+        encoded_token: "AnyBytes | None"
         encoded_erc7730_display_format: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            encoded_tokens: "list[AnyBytes] | None" = None,
             encoded_network: "AnyBytes | None" = None,
+            encoded_token: "AnyBytes | None" = None,
             encoded_erc7730_display_format: "AnyBytes | None" = None,
         ) -> None:
             pass

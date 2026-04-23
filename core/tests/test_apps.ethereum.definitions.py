@@ -38,25 +38,25 @@ class TestEthereumDefinitions(unittest.TestCase):
 
     def test_empty(self) -> None:
         # no slip44 nor chain_id -- should short-circuit and always be unknown
-        defs = Definitions.from_encoded(None, [])
+        defs = Definitions.from_encoded(None, None)
         self.assertUnknown(defs.network)
         self.assertFalse(defs._tokens)
         self.assertUnknown(defs.get_token(TETHER_ADDRESS))
 
         # chain_id provided, no definition
-        defs = Definitions.from_encoded(None, [], chain_id=100_000)
+        defs = Definitions.from_encoded(None, None, chain_id=100_000)
         self.assertUnknown(defs.network)
         self.assertFalse(defs._tokens)
         self.assertUnknown(defs.get_token(TETHER_ADDRESS))
 
     def test_builtin(self) -> None:
-        defs = Definitions.from_encoded(None, [], chain_id=1)
+        defs = Definitions.from_encoded(None, None, chain_id=1)
         self.assertKnown(defs.network)
         self.assertFalse(defs._tokens)
         self.assertKnown(defs.get_token(TETHER_ADDRESS))
         self.assertUnknown(defs.get_token(b"\x00" * 20))
 
-        defs = Definitions.from_encoded(None, [], slip44=60)
+        defs = Definitions.from_encoded(None, None, slip44=60)
         self.assertKnown(defs.network)
         self.assertFalse(defs._tokens)
         self.assertKnown(defs.get_token(TETHER_ADDRESS))
@@ -64,38 +64,27 @@ class TestEthereumDefinitions(unittest.TestCase):
 
     def test_external(self) -> None:
         network = make_eth_network(chain_id=42)
-        defs = Definitions.from_encoded(encode_eth_network(network), [], chain_id=42)
+        defs = Definitions.from_encoded(encode_eth_network(network), None, chain_id=42)
         self.assertEqual(defs.network, network)
         self.assertUnknown(defs.get_token(b"\x00" * 20))
 
         token = make_eth_token(chain_id=42, address=b"\x00" * 20)
         defs = Definitions.from_encoded(
-            encode_eth_network(network), [encode_eth_token(token)], chain_id=42
+            encode_eth_network(network), encode_eth_token(token), chain_id=42
         )
         self.assertEqual(defs.network, network)
         self.assertEqual(defs.get_token(b"\x00" * 20), token)
 
         token = make_eth_token(chain_id=1, address=b"\x00" * 20)
-        defs = Definitions.from_encoded(None, [encode_eth_token(token)], chain_id=1)
+        defs = Definitions.from_encoded(None, encode_eth_token(token), chain_id=1)
         self.assertKnown(defs.network)
         self.assertEqual(defs.get_token(b"\x00" * 20), token)
-
-        token_a = make_eth_token(chain_id=42, address=b"\xaa" * 20)
-        token_b = make_eth_token(chain_id=42, address=b"\xbb" * 20)
-        defs = Definitions.from_encoded(
-            encode_eth_network(network),
-            [encode_eth_token(token_a), encode_eth_token(token_b)],
-            chain_id=42,
-        )
-        self.assertEqual(defs.network, network)
-        self.assertEqual(defs.get_token(b"\xaa" * 20), token_a)
-        self.assertEqual(defs.get_token(b"\xbb" * 20), token_b)
 
     def test_external_token_mismatch(self) -> None:
         network = make_eth_network(chain_id=42)
         token = make_eth_token(chain_id=43, address=b"\x00" * 20)
         defs = Definitions.from_encoded(
-            encode_eth_network(network), [encode_eth_token(token)]
+            encode_eth_network(network), encode_eth_token(token)
         )
         self.assertUnknown(defs.get_token(b"\x00" * 20))
 
@@ -103,50 +92,50 @@ class TestEthereumDefinitions(unittest.TestCase):
         network = make_eth_network(chain_id=42)
         token = make_eth_token(chain_id=42, address=b"\x00" * 20)
         defs = Definitions.from_encoded(
-            encode_eth_network(network), [encode_eth_token(token)], chain_id=42
+            encode_eth_network(network), encode_eth_token(token), chain_id=42
         )
         self.assertEqual(defs.network, network)
         self.assertEqual(defs.get_token(b"\x00" * 20), token)
 
         with self.assertRaises(wire.DataError):
             Definitions.from_encoded(
-                encode_eth_network(network), [encode_eth_token(token)], chain_id=333
+                encode_eth_network(network), encode_eth_token(token), chain_id=333
             )
 
     def test_external_slip44_mismatch(self) -> None:
         network = make_eth_network(chain_id=42, slip44=1999)
         token = make_eth_token(chain_id=42, address=b"\x00" * 20)
         defs = Definitions.from_encoded(
-            encode_eth_network(network), [encode_eth_token(token)], slip44=1999
+            encode_eth_network(network), encode_eth_token(token), slip44=1999
         )
         self.assertEqual(defs.network, network)
         self.assertEqual(defs.get_token(b"\x00" * 20), token)
 
         with self.assertRaises(wire.DataError):
             Definitions.from_encoded(
-                encode_eth_network(network), [encode_eth_token(token)], slip44=333
+                encode_eth_network(network), encode_eth_token(token), slip44=333
             )
 
     def test_ignore_encoded_network(self) -> None:
         # when network is builtin, ignore the encoded one
         network = encode_eth_network(chain_id=1, symbol="BAD")
-        defs = Definitions.from_encoded(network, [], chain_id=1)
+        defs = Definitions.from_encoded(network, None, chain_id=1)
         self.assertNotEqual(defs.network, network)
 
     def test_ignore_encoded_token(self) -> None:
         # when token is builtin, ignore the encoded one
         token = encode_eth_token(chain_id=1, address=TETHER_ADDRESS, symbol="BAD")
-        defs = Definitions.from_encoded(None, [token], chain_id=1)
+        defs = Definitions.from_encoded(None, token, chain_id=1)
         self.assertNotEqual(defs.get_token(TETHER_ADDRESS), token)
 
     def test_ignore_with_no_match(self) -> None:
         network = encode_eth_network(chain_id=100_000, symbol="BAD")
         # smoke test: definition is accepted
-        defs = Definitions.from_encoded(network, [], chain_id=100_000)
+        defs = Definitions.from_encoded(network, None, chain_id=100_000)
         self.assertKnown(defs.network)
 
         # same definition but nothing to match it to
-        defs = Definitions.from_encoded(network, [])
+        defs = Definitions.from_encoded(network, None)
         self.assertUnknown(defs.network)
 
 

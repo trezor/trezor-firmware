@@ -4200,8 +4200,8 @@ pub struct EthereumDefinitions {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumDefinitions.encoded_network)
     pub encoded_network: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumDefinitions.encoded_tokens)
-    pub encoded_tokens: ::std::vec::Vec<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumDefinitions.encoded_token)
+    pub encoded_token: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumDefinitions.encoded_erc7730_display_format)
     pub encoded_erc7730_display_format: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
@@ -4256,6 +4256,42 @@ impl EthereumDefinitions {
         self.encoded_network.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes encoded_token = 2;
+
+    pub fn encoded_token(&self) -> &[u8] {
+        match self.encoded_token.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_encoded_token(&mut self) {
+        self.encoded_token = ::std::option::Option::None;
+    }
+
+    pub fn has_encoded_token(&self) -> bool {
+        self.encoded_token.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_encoded_token(&mut self, v: ::std::vec::Vec<u8>) {
+        self.encoded_token = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_encoded_token(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.encoded_token.is_none() {
+            self.encoded_token = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.encoded_token.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_encoded_token(&mut self) -> ::std::vec::Vec<u8> {
+        self.encoded_token.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     // optional bytes encoded_erc7730_display_format = 3;
 
     pub fn encoded_erc7730_display_format(&self) -> &[u8] {
@@ -4300,10 +4336,10 @@ impl EthereumDefinitions {
             |m: &EthereumDefinitions| { &m.encoded_network },
             |m: &mut EthereumDefinitions| { &mut m.encoded_network },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
-            "encoded_tokens",
-            |m: &EthereumDefinitions| { &m.encoded_tokens },
-            |m: &mut EthereumDefinitions| { &mut m.encoded_tokens },
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "encoded_token",
+            |m: &EthereumDefinitions| { &m.encoded_token },
+            |m: &mut EthereumDefinitions| { &mut m.encoded_token },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "encoded_erc7730_display_format",
@@ -4332,7 +4368,7 @@ impl ::protobuf::Message for EthereumDefinitions {
                     self.encoded_network = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 18 => {
-                    self.encoded_tokens.push(is.read_bytes()?);
+                    self.encoded_token = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 26 => {
                     self.encoded_erc7730_display_format = ::std::option::Option::Some(is.read_bytes()?);
@@ -4352,9 +4388,9 @@ impl ::protobuf::Message for EthereumDefinitions {
         if let Some(v) = self.encoded_network.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
-        for value in &self.encoded_tokens {
-            my_size += ::protobuf::rt::bytes_size(2, &value);
-        };
+        if let Some(v) = self.encoded_token.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         if let Some(v) = self.encoded_erc7730_display_format.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
@@ -4367,9 +4403,9 @@ impl ::protobuf::Message for EthereumDefinitions {
         if let Some(v) = self.encoded_network.as_ref() {
             os.write_bytes(1, v)?;
         }
-        for v in &self.encoded_tokens {
-            os.write_bytes(2, &v)?;
-        };
+        if let Some(v) = self.encoded_token.as_ref() {
+            os.write_bytes(2, v)?;
+        }
         if let Some(v) = self.encoded_erc7730_display_format.as_ref() {
             os.write_bytes(3, v)?;
         }
@@ -4391,7 +4427,7 @@ impl ::protobuf::Message for EthereumDefinitions {
 
     fn clear(&mut self) {
         self.encoded_network = ::std::option::Option::None;
-        self.encoded_tokens.clear();
+        self.encoded_token = ::std::option::Option::None;
         self.encoded_erc7730_display_format = ::std::option::Option::None;
         self.special_fields.clear();
     }
@@ -4399,7 +4435,7 @@ impl ::protobuf::Message for EthereumDefinitions {
     fn default_instance() -> &'static EthereumDefinitions {
         static instance: EthereumDefinitions = EthereumDefinitions {
             encoded_network: ::std::option::Option::None,
-            encoded_tokens: ::std::vec::Vec::new(),
+            encoded_token: ::std::option::Option::None,
             encoded_erc7730_display_format: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -4484,9 +4520,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12!\n\x0cmessage_hash\x18\x03\x20\x01(\x0cR\x0bmessageHash\x12'\n\x0fe\
     ncoded_network\x18\x04\x20\x01(\x0cR\x0eencodedNetwork\"T\n\x1aEthereumT\
     ypedDataSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
-    \x12\x18\n\x07address\x18\x02\x20\x02(\tR\x07address\"\xaa\x01\n\x13Ethe\
+    \x12\x18\n\x07address\x18\x02\x20\x02(\tR\x07address\"\xa8\x01\n\x13Ethe\
     reumDefinitions\x12'\n\x0fencoded_network\x18\x01\x20\x01(\x0cR\x0eencod\
-    edNetwork\x12%\n\x0eencoded_tokens\x18\x02\x20\x03(\x0cR\rencodedTokens\
+    edNetwork\x12#\n\rencoded_token\x18\x02\x20\x01(\x0cR\x0cencodedToken\
     \x12C\n\x1eencoded_erc7730_display_format\x18\x03\x20\x01(\x0cR\x1bencod\
     edErc7730DisplayFormatB<\n#com.satoshilabs.trezor.lib.protobufB\x15Trezo\
     rMessageEthereum\

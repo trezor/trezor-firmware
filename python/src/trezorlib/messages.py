@@ -5718,19 +5718,19 @@ class EthereumDefinitions(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("encoded_network", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("encoded_tokens", "bytes", repeated=True, required=False, default=None),
+        2: protobuf.Field("encoded_token", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("encoded_erc7730_display_format", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        encoded_tokens: Optional[Sequence["bytes"]] = None,
         encoded_network: Optional["bytes"] = None,
+        encoded_token: Optional["bytes"] = None,
         encoded_erc7730_display_format: Optional["bytes"] = None,
     ) -> None:
-        self.encoded_tokens: Sequence["bytes"] = encoded_tokens if encoded_tokens is not None else []
         self.encoded_network = encoded_network
+        self.encoded_token = encoded_token
         self.encoded_erc7730_display_format = encoded_erc7730_display_format
 
 
