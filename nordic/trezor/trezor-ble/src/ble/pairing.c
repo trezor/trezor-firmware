@@ -143,13 +143,13 @@ void pairing_reset(void) {
 bool pairing_init(void) {
   int err = bt_conn_auth_cb_register(&conn_auth_callbacks);
   if (err) {
-    printk("Failed to register authorization callbacks.\n");
+    LOG_ERR("Failed to register authorization callbacks.");
     return false;
   }
 
   err = bt_conn_auth_info_cb_register(&conn_auth_info_callbacks);
   if (err) {
-    printk("Failed to register authorization info callbacks.\n");
+    LOG_ERR("Failed to register authorization info callbacks.");
     return false;
   }
 
