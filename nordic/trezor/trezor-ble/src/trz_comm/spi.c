@@ -35,7 +35,7 @@
 #define LOG_MODULE_NAME trz_comm_spi
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define MY_SPI_MASTER DT_NODELABEL(spi0)
+#define MY_SPI_MASTER DT_ALIAS(spi_master)
 
 static K_SEM_DEFINE(spi_comm_ok, 0, 1);
 static K_SEM_DEFINE(spi_can_send, 0, 1);
