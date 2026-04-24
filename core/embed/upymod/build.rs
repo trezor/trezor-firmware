@@ -877,6 +877,7 @@ impl<'a> MpyBuilder<'a> {
         let button = py_bool(cfg!(feature = "button"));
         let emulator = py_bool(cfg!(feature = "emulator"));
         let haptic = py_bool(cfg!(feature = "haptic"));
+        let mcu_attestation = py_bool(cfg!(feature = "mcu_attestation"));
         let n4w1 = py_bool(cfg!(feature = "n4w1"));
         let optiga = py_bool(cfg!(feature = "optiga"));
         let power_manager = py_bool(cfg!(feature = "power_manager"));
@@ -900,6 +901,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_BUTTON/{button}/g"),
             format!(r"s/utils\.USE_HAPTIC/{haptic}/g"),
             format!(r"s/utils\.USE_N4W1/{n4w1}/g"),
+            format!(r"s/utils\.USE_MCU_ATTESTATION/{mcu_attestation}/g"),
             format!(r"s/utils\.USE_OPTIGA/{optiga}/g"),
             format!(r"s/utils\.USE_POWER_MANAGER/{power_manager}/g"),
             format!(r"s/utils\.USE_RGB_LED/{rgb_led}/g"),

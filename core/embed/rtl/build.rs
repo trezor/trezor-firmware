@@ -275,17 +275,22 @@ fn add_crypto(lib: &mut xbuild::CLibrary) -> Result<()> {
 
         lib.add_include(mldsa_path);
 
+        lib.add_defines([
+            ("MLD_CONFIG_NAMESPACE_PREFIX", Some("mldsa")),
+            ("MLD_CONFIG_NO_RANDOMIZED_API", Some("1")),
+        ]);
+
         lib.add_sources_from_folder_with_attrs(
             mldsa_path,
             [
-                "fips202/fips202.c",
-                "fips202/fips202x4.c",
-                "fips202/keccakf1600.c",
-                "ntt.c",
-                "packing.c",
-                "poly.c",
-                "polyvec.c",
-                "sign.c",
+                "src/fips202/fips202.c",
+                "src/fips202/fips202x4.c",
+                "src/fips202/keccakf1600.c",
+                "src/packing.c",
+                "src/poly.c",
+                "src/poly_kl.c",
+                "src/polyvec.c",
+                "src/sign.c",
             ],
             Some(crypto_attrs.clone()),
         );

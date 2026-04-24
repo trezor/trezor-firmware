@@ -13,6 +13,7 @@ fn main() -> Result<()> {
                 fwutils,
                 hash_processor if cfg!(feature = "hash_processor"),
                 hw_revision if cfg!(feature = "hw_revision"),
+                mcu_attestation if cfg!(feature = "mcu_attestation"),
                 monoctr,
                 option_bytes,
                 image,

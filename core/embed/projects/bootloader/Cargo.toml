@@ -115,6 +115,7 @@ model_t3w1 = [
     "hash_processor",
     "iwdg",
     "lockable_bootloader",
+    "mcu_attestation",
     "power_manager",
     "rgb_led",
     "rtc",
@@ -187,6 +188,7 @@ haptic = ["io/haptic", "trezor_lib/haptic"]
 hash_processor = ["sec/hash_processor"]
 iwdg = ["sec/iwdg"]
 lockable_bootloader = ["io/lockable_bootloader"]
+mcu_attestation = ["sec/mcu_attestation"]
 power_manager = ["io/power_manager", "trezor_lib/power_manager", "trezor_lib/pmic"]
 pvd = ["sys/pvd"]
 rgb_led = ["io/rgb_led", "trezor_lib/rgb_led"]

@@ -91,6 +91,7 @@ model_t3w1 = [
     "hash_processor",
     "iwdg",
     "lockable_bootloader",
+    "mcu_attestation",
     # "optiga", # selected from xtask
     "power_manager",
     "secret",
@@ -177,6 +178,7 @@ haptic = ["io/haptic", "upymod/haptic", "trezor_lib/haptic"]
 hash_processor = ["sec/hash_processor"]
 iwdg = ["sec/iwdg"]
 lockable_bootloader = ["io/lockable_bootloader"]
+mcu_attestation = ["sec/mcu_attestation", "upymod/mcu_attestation"]
 nrf = ["io/nrf", "trezor_lib/nrf"]
 nrf_auth = ["io/nrf_auth"]
 optiga = ["sec/optiga", "upymod/optiga", "trezor_lib/optiga"]

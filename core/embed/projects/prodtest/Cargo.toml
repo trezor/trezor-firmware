@@ -116,6 +116,7 @@ model_t3w1 = [
     "hw_revision",
     "iwdg",
     "lockable_bootloader",
+    "mcu_attestation",    
     "nfc",
     # "optiga", # selected from xtask
     "power_manager",
@@ -192,6 +193,7 @@ hash_processor = ["sec/hash_processor"]
 hw_revision = ["sec/hw_revision"]
 iwdg = ["sec/iwdg"]
 lockable_bootloader = ["io/lockable_bootloader"]
+mcu_attestation = ["sec/mcu_attestation"]
 nfc = ["io/nfc"]
 nrf = ["io/nrf", "trezor_lib/nrf"]
 nrf_auth = ["io/nrf_auth"]
