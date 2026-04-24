@@ -17,7 +17,7 @@ use super::super::{
     },
 };
 
-const LEFT_BUTTON_TEXT: &str = "Initiate connection";
+const LEFT_BUTTON_TEXT: &str = "CONNECT";
 const RIGHT_BUTTON_TEXT: &str = "MENU";
 
 #[repr(u32)]
