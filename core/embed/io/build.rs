@@ -15,6 +15,7 @@ fn main() -> Result<()> {
                 gfx,
                 haptic if cfg!(feature = "haptic"),
                 notify,
+                nfc if cfg!(feature = "nfc"),
                 nrf if cfg!(feature = "nrf"),
                 power_manager if cfg!(any(feature = "power_manager", feature = "pmic")),
                 rgb_led if cfg!(feature = "rgb_led"),

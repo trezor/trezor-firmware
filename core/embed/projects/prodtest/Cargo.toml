@@ -116,6 +116,7 @@ model_t3w1 = [
     "hw_revision",
     "iwdg",
     "lockable_bootloader",
+    "nfc",
     # "optiga", # selected from xtask
     "power_manager",
     "rgb_led",
@@ -191,6 +192,7 @@ hash_processor = ["sec/hash_processor"]
 hw_revision = ["sec/hw_revision"]
 iwdg = ["sec/iwdg"]
 lockable_bootloader = ["io/lockable_bootloader"]
+nfc = ["io/nfc"]
 nrf = ["io/nrf", "trezor_lib/nrf"]
 nrf_auth = ["io/nrf_auth"]
 optiga = ["sec/optiga", "trezor_lib/optiga", "sec/storage"] # TODO: optiga depends on storage

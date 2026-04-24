@@ -41,6 +41,19 @@ impl CompileAttrs {
         self
     }
 
+    /// Appends an include path and returns the modified `CompileAttrs` for chaining.
+    ///
+    /// # Parameters
+    /// - `path`: The include path to add.
+    ///
+    /// # Returns
+    ///
+    /// The modified `CompileAttrs` with the new include path added.
+    pub fn with_include(mut self, path: impl AsRef<Path>) -> Self {
+        self.add_include(path);
+        self
+    }
+
     /// Adds a compiler flag.
     ///
     /// # Parameters
