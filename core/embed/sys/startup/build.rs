@@ -3,6 +3,8 @@ use xbuild::{CLibrary, Result, bail_unsupported};
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("startup/inc");
 
+    lib.add_source("startup/startup_args.c");
+
     if cfg!(feature = "emulator") {
         lib.add_source("startup/unix/bootutils.c");
     } else {
