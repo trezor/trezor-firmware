@@ -15,8 +15,10 @@ FLASH=0
 PRISTINE=
 DEBUG=
 PRODUCTION=
-HEADER_SIZE=0x200
-SLOT_ADDR=0xe000
+HEADER_SIZE=
+SLOT_ADDR=
+SLOT_SIZE=
+MODEL_IDENTIFIER=
 
 fatal() {
     echo "$@"
@@ -67,6 +69,36 @@ usage() {
 
     Each of build/sign/flash can be done in one run or separately, but the sequence must follow to make sense.
 END
+}
+
+parse_partition_info() {
+    local dts_file="build/$APP_DIR/zephyr/zephyr.dts"
+    local config_file="build/$APP_DIR/zephyr/.config"
+
+    [ -f "$dts_file" ]    || fatal "DTS not found: $dts_file (run a build first)"
+    [ -f "$config_file" ] || fatal "Kconfig not found: $config_file (run a build first)"
+
+    local reg_line
+    reg_line=$(awk '/slot0_partition:/{f=1} f && /reg[[:space:]]*=/{print; f=0}' "$dts_file")
+    [ -n "$reg_line" ] || fatal "slot0_partition node not found in $dts_file"
+
+    SLOT_ADDR=$(echo "$reg_line" | grep -oE '0x[0-9a-fA-F]+' | sed -n '1p')
+    SLOT_SIZE=$(echo "$reg_line" | grep -oE '0x[0-9a-fA-F]+' | sed -n '2p')
+    [ -n "$SLOT_ADDR" ] || fatal "Could not parse slot address from slot0_partition in $dts_file"
+    [ -n "$SLOT_SIZE" ] || fatal "Could not parse slot size from slot0_partition in $dts_file"
+
+    HEADER_SIZE=$(grep "^CONFIG_ROM_START_OFFSET=" "$config_file" | cut -d'=' -f2)
+    [ -n "$HEADER_SIZE" ] || fatal "CONFIG_ROM_START_OFFSET not found in $config_file"
+
+    # CONFIG_MODEL_IDENTIFIER stores the 4-char ASCII tag as a little-endian uint32
+    # (e.g. "T3W1" → 0x31573354). imgtool --custom-tlv needs the big-endian form,
+    # so byte-swap the 8 hex digits.
+    local model_id_dec
+    model_id_dec=$(grep "^CONFIG_MODEL_IDENTIFIER=" "$config_file" | cut -d'=' -f2)
+    [ -n "$model_id_dec" ] || fatal "CONFIG_MODEL_IDENTIFIER not found in $config_file"
+    local hex
+    hex=$(printf '%08x' "$model_id_dec")
+    MODEL_IDENTIFIER="0x${hex:6:2}${hex:4:2}${hex:2:2}${hex:0:2}"
 }
 
 while getopts ${OPTSTRING} opt; do
@@ -129,6 +161,8 @@ VERSION=$(get_version_from_file)
 
 # Update paths in signing and flashing commands
 if [ "$SIGN" -eq 1 ]; then
+    parse_partition_info
+
     # zephyr.bin already contains a HEADER_SIZE-byte zero placeholder at offset 0
     # (emitted by Zephyr linker via CONFIG_ROM_START_OFFSET). Strip it so that
     # --pad-header does not prepend a second copy, which would push the vector
@@ -138,7 +172,7 @@ if [ "$SIGN" -eq 1 ]; then
         || { rm -f "build/$APP_DIR/zephyr/zephyr_nohdr.bin"; fatal "dd failed to strip header from zephyr.bin"; }
 
     run_under_ncs_subshell \
-        "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 0x54335731 && \
+        "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S $SLOT_SIZE --pad-header build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 $MODEL_IDENTIFIER && \
          ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
 
     HASH=$(python ./scripts/extract_hash.py ./build/$APP_DIR/zephyr/dump.txt)
