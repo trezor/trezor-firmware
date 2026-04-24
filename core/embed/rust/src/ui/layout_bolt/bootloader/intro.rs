@@ -42,7 +42,7 @@ impl<'a> Intro<'a> {
             menu: Button::with_icon(Icon::new(MENU32))
                 .styled(button_bld_menu())
                 .with_expanded_touch_area(Insets::uniform(13)),
-            host: Button::with_text("Initiate connection".into()).styled(button_bld()),
+            host: Button::with_text("INITIATE CONNECTION".into()).styled(button_bld()),
             text: Label::left_aligned(content, TEXT_NORMAL).vertically_centered(),
             warn: (!fw_ok).then_some(
                 Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_WARNING)
