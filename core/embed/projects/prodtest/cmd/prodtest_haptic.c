@@ -24,6 +24,8 @@
 #include <io/haptic.h>
 #include <rtl/cli.h>
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_haptic_test(cli_t* cli) {
   uint32_t duration_ms = 0;  // ms
   uint32_t amplitude = 100;  // default amplitude
@@ -49,7 +51,7 @@ static void prodtest_haptic_test(cli_t* cli) {
 
   status = haptic_init();
   if (ts_error(status)) {
-    cli_error(cli, CLI_ERROR, "Haptic driver initialization failed.");
+    cli_error(cli, PRODTEST_ERR_HAPTIC_INIT, "Haptic driver initialization failed.");
     return;
   }
 
@@ -58,7 +60,7 @@ static void prodtest_haptic_test(cli_t* cli) {
 
   status = haptic_play_custom(amplitude, duration_ms);
   if (ts_error(status)) {
-    cli_error(cli, CLI_ERROR, "Haptic feedback test failed.");
+    cli_error(cli, PRODTEST_ERR_HAPTIC_TEST, "Haptic feedback test failed.");
     return;
   }
 

@@ -219,7 +219,7 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
                                      const uint8_t** authority_key_digest) {
   DER_ITEM extensions = {0};
   if (!get_cert_extensions(tbs_cert, &extensions)) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_COMMON_CERT_EXTENSIONS,
               "get_authority_key_digest, extensions not found.");
     return false;
   }
@@ -229,7 +229,7 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
   if (!get_extension_value(OID_AUTHORITY_KEY_IDENTIFIER,
                            sizeof(OID_AUTHORITY_KEY_IDENTIFIER), &extensions,
                            &extension_value)) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_COMMON_CERT_AUTH_KEY_NOT_FOUND,
               "get_authority_key_digest, authority key identifier extension "
               "not found.");
     return false;
@@ -239,7 +239,7 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
   DER_ITEM auth_key_id = {0};
   if (!der_read_item_expected(&extension_value.buf, DER_SEQUENCE,
                               &auth_key_id)) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_COMMON_CERT_AUTH_KEY_EXTNVALUE,
               "get_authority_key_digest, failed to open authority key "
               "identifier extnValue.");
     return false;
@@ -249,7 +249,7 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
   DER_ITEM key_id = {0};
   if (!der_read_item_expected(&auth_key_id.buf, DER_X509_KEY_IDENTIFIER,
                               &key_id)) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_COMMON_CERT_AUTH_KEY_FIELD,
               "get_authority_key_digest, failed to find keyIdentifier field.");
     return false;
   }
@@ -257,7 +257,7 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
   // Return the pointer to the keyIdentifier data.
   if (buffer_remaining(&key_id.buf) != SHA1_DIGEST_LENGTH ||
       !buffer_ptr(&key_id.buf, authority_key_digest)) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_COMMON_CERT_AUTH_KEY_LEN,
               "get_authority_key_digest, invalid length of keyIdentifier.");
     return false;
   }
@@ -433,7 +433,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     cert_count += 1;
     DER_ITEM cert = {0};
     if (!der_read_item_expected(&chain_reader, DER_SEQUENCE, &cert)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_READ_1,
                 "check_device_cert_chain, der_read_item 1, cert %d.",
                 cert_count);
       return false;
@@ -442,7 +442,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // Read the tbsCertificate.
     DER_ITEM tbs_cert = {0};
     if (!der_read_item_expected(&cert.buf, DER_SEQUENCE, &tbs_cert)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_READ_2,
                 "check_device_cert_chain, der_read_item 2, cert %d.",
                 cert_count);
       return false;
@@ -452,7 +452,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     DER_ITEM der_item = {0};
     for (int i = 0; i < 5; ++i) {
       if (!der_read_item(&tbs_cert.buf, &der_item)) {
-        cli_error(cli, CLI_ERROR,
+        cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_READ_3,
                   "check_device_cert_chain, der_read_item 3, cert %d.",
                   cert_count);
         return false;
@@ -462,7 +462,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // Read the subject.
     DER_ITEM subject = {0};
     if (!der_read_item_expected(&tbs_cert.buf, DER_SEQUENCE, &subject)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_READ_4,
                 "check_device_cert_chain, der_read_item 4, cert %d.",
                 cert_count);
       return false;
@@ -478,7 +478,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
           common_name_size != sizeof(SUBJECT_COMMON_NAME) ||
           memcmp(common_name, SUBJECT_COMMON_NAME,
                  sizeof(SUBJECT_COMMON_NAME)) != 0) {
-        cli_error(cli, CLI_ERROR,
+        cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_COMMON_NAME,
                   "check_device_cert_chain, invalid common name.");
         return false;
       }
@@ -490,7 +490,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       if (!unit_properties_get_sn(device_sn, sizeof(device_sn),
                                   &device_sn_size) ||
           device_sn_size == 0) {
-        cli_error(cli, CLI_ERROR,
+        cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_DEVICE_SN,
                   "check_device_cert_chain, device_sn not set.");
       }
 
@@ -499,13 +499,13 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       if (!get_name_attribute(&subject, OID_SERIAL_NUMBER,
                               sizeof(OID_SERIAL_NUMBER), &subject_sn,
                               &subject_sn_size)) {
-        cli_error(cli, CLI_ERROR,
+        cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_SERIAL_NUM,
                   "check_device_cert_chain, serialNumber not set.");
       }
 
       if (subject_sn_size != device_sn_size ||
           memcmp(subject_sn, device_sn, device_sn_size) != 0) {
-        cli_error(cli, CLI_ERROR,
+        cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_SN_MISMATCH,
                   "check_device_cert_chain, serial number mismatch.");
         return false;
       }
@@ -515,7 +515,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // Read the Subject Public Key Info.
     DER_ITEM pub_key_info = {0};
     if (!der_read_item_expected(&tbs_cert.buf, DER_SEQUENCE, &pub_key_info)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_READ_5,
                 "check_device_cert_chain, der_read_item 5, cert %d.",
                 cert_count);
       return false;
@@ -525,7 +525,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     DER_ITEM alg = {0};
     if (!der_read_item_expected(&pub_key_info.buf, DER_SEQUENCE, &alg) ||
         !get_algorithm(&alg, &alg_id)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_ALGORITHM,
                 "check_device_cert_chain, reading algorithm, cert %d.",
                 cert_count);
       return false;
@@ -536,7 +536,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     uint8_t unused_bits = 0;
     if (!der_read_item_expected(&pub_key_info.buf, DER_BIT_STRING,
                                 &pub_key_val)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_READ_6,
                 "check_device_cert_chain, der_read_item 6, cert %d.",
                 cert_count);
       return false;
@@ -544,7 +544,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     if (!buffer_get(&pub_key_val.buf, &unused_bits) ||
         !buffer_ptr(&pub_key_val.buf, &pub_key)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_PUBKEY,
                 "check_device_cert_chain, reading public key, cert %d.",
                 cert_count);
       return false;
@@ -554,7 +554,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // Verify the previous signature.
     if (!verify_signature(alg_id, pub_key, pub_key_size, sig, sig_size, message,
                           message_size)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_VERIFY_SIG,
                 "check_device_cert_chain, verify_signature, cert %d.",
                 cert_count);
       return false;
@@ -574,7 +574,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // skip the signatureAlgorithm
     DER_ITEM sig_alg = {0};
     if (!der_read_item_expected(&cert.buf, DER_SEQUENCE, &sig_alg)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_READ_7,
                 "check_device_cert_chain, der_read_item 7, cert %d.", "%d.",
                 cert_count);
       return false;
@@ -585,7 +585,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     if (!der_read_item_expected(&cert.buf, DER_BIT_STRING, &sig_val) ||
         !buffer_get(&sig_val.buf, &unused_bits) || unused_bits != 0 ||
         !buffer_ptr(&sig_val.buf, &sig)) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_SIG_VALUE,
                 "check_device_cert_chain, reading signatureValue, cert %d.",
                 cert_count);
       return false;
@@ -603,7 +603,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     uint8_t decoded_sig[64] = {0};
     if (ecdsa_sig_from_der(sig, sig_size, decoded_sig) != 0) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_ECDSA_DER,
                 "check_device_cert_chain, ecdsa_sig_from_der root.");
       return false;
     }
@@ -623,7 +623,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       }
     }
     if (!matches) {
-      cli_error(cli, CLI_ERROR,
+      cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_ECDSA_ROOT,
                 "check_device_cert_chain, ecdsa_verify_digest root.");
       return false;
     }
@@ -634,7 +634,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     const char msg[] =
         "check_device_cert_chain, failed to get root public key.";
 #if PRODUCTION
-    cli_error(cli, CLI_ERROR, msg);
+    cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_ROOT_KEY, msg);
     return false;
 #else
     // In non-production mode we succeed and write the certificate even if the
@@ -647,7 +647,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
   // Verify the last signature.
   if (!verify_signature(alg_id, pub_key, pub_key_size, sig, sig_size, message,
                         message_size)) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_ROOT_SIG,
               "check_device_cert_chain, verify_signature, cert %d.",
               cert_count);
     return false;
@@ -699,7 +699,7 @@ void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len)) {
     }
 
     if (!binary_update_in_progress) {
-      cli_error(cli, CLI_ERROR, "Update not started. Use 'begin' first.");
+      cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_NOT_STARTED, "Update not started. Use 'begin' first.");
       goto cleanup;
     }
 
@@ -723,13 +723,13 @@ void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len)) {
     }
 
     if (binary_len == 0) {
-      cli_error(cli, CLI_ERROR, "No data received");
+      cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_NO_DATA, "No data received");
       goto cleanup;
     }
 
     if (!finalize(binary_buffer, binary_len)) {
       binary_len = 0;
-      cli_error(cli, CLI_ERROR, "Error while finalizing the update");
+      cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_FINALIZE, "Error while finalizing the update");
       goto cleanup;
     }
 
@@ -741,7 +741,7 @@ void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len)) {
     binary_update_in_progress = false;
 
   } else {
-    cli_error(cli, CLI_ERROR, "Unknown phase '%s' (begin|chunk|end)", phase);
+    cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_UNKNOWN_PHASE, "Unknown phase '%s' (begin|chunk|end)", phase);
     goto cleanup;
   }
 

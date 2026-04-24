@@ -24,6 +24,8 @@
 #include <rtl/cli.h>
 #include <sys/rtc.h>
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_rtc_timestamp(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -32,7 +34,7 @@ static void prodtest_rtc_timestamp(cli_t* cli) {
 
   uint32_t timestamp;
   if (!rtc_get_timestamp(&timestamp)) {
-    cli_error(cli, CLI_ERROR, "Failed to get RTC timestamp");
+    cli_error(cli, PRODTEST_ERR_RTC_TIMESTAMP_GET, "Failed to get RTC timestamp");
     return;
   }
   cli_ok(cli, "%u", timestamp);
@@ -56,7 +58,7 @@ static void prodtest_rtc_set(cli_t* cli) {
   }
 
   if (!rtc_set(year, month, day, hour, minute, second)) {
-    cli_error(cli, CLI_ERROR, "Failed to set RTC time");
+    cli_error(cli, PRODTEST_ERR_RTC_TIME_SET, "Failed to set RTC time");
     return;
   }
   cli_ok(cli, "");
@@ -70,7 +72,7 @@ static void prodtest_rtc_get(cli_t* cli) {
 
   rtc_datetime_t datetime;
   if (!rtc_get(&datetime)) {
-    cli_error(cli, CLI_ERROR, "Failed to get RTC time");
+    cli_error(cli, PRODTEST_ERR_RTC_TIME_GET, "Failed to get RTC time");
     return;
   }
 

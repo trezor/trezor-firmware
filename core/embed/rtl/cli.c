@@ -158,7 +158,7 @@ void cli_ok_hexdata(cli_t* cli, const void* data, size_t size) {
   cli->final_status = true;
 }
 
-static void cli_verror(cli_t* cli, const char* code, const char* format,
+static void cli_verror(cli_t* cli, int code, const char* format,
                        va_list args) {
   if (cli->interactive) {
     cli_printf(cli, ESC_COLOR_RED);
@@ -170,7 +170,7 @@ static void cli_verror(cli_t* cli, const char* code, const char* format,
     cli_printf(cli, ESC_COLOR_RESET);
   }
 
-  cli_printf(cli, " %s", code);
+  cli_printf(cli, " %d", code);
 
   if (format != NULL && format[0] != '\0') {
     cli_printf(cli, " \"");
@@ -184,7 +184,7 @@ static void cli_verror(cli_t* cli, const char* code, const char* format,
   cli->final_status = true;
 }
 
-void cli_error(cli_t* cli, const char* code, const char* format, ...) {
+void cli_error(cli_t* cli, int code, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cli_verror(cli, code, format, args);

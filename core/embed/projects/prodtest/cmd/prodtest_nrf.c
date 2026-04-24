@@ -31,31 +31,31 @@
 static void prodtest_nrf_communication(cli_t* cli) {
   cli_trace(cli, "Testing SPI communication...");
   if (!nrf_test_spi_comm()) {
-    cli_error(cli, CLI_ERROR, "SPI communication failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_SPI_COMM, "SPI communication failed.");
     return;
   }
 
   cli_trace(cli, "Testing UART communication...");
   if (!nrf_test_uart_comm()) {
-    cli_error(cli, CLI_ERROR, "UART communication failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_UART_COMM, "UART communication failed.");
     return;
   }
 
   cli_trace(cli, "Testing reset..");
   if (!nrf_test_reset()) {
-    cli_error(cli, CLI_ERROR, "Reset failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_RESET, "Reset failed.");
     return;
   }
 
   cli_trace(cli, "Testing GPIO stay in bootloader...");
   if (!nrf_test_gpio_stay_in_bld()) {
-    cli_error(cli, CLI_ERROR, "Stay in bootloader GPIO failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_BOOTLOADER_GPIO, "Stay in bootloader GPIO failed.");
     return;
   }
 
   cli_trace(cli, "Testing GPIO reserved...");
   if (!nrf_test_gpio_reserved()) {
-    cli_error(cli, CLI_ERROR, "Reserved GPIO failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_RESERVED_GPIO, "Reserved GPIO failed.");
     return;
   }
 
@@ -65,7 +65,7 @@ static void prodtest_nrf_communication(cli_t* cli) {
 static void prodtest_nrf_version(cli_t* cli) {
   nrf_info_t info = {0};
   if (!nrf_get_info(&info)) {
-    cli_error(cli, CLI_ERROR, "Could not read version.");
+    cli_error(cli, PRODTEST_ERR_NRF_VERSION_READ, "Could not read version.");
     return;
   }
 
@@ -94,7 +94,7 @@ static void prodtest_nrf_pair(cli_t* cli) {
       return;
     }
 
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_NRF_PAIR_SECRETS_LOCKED,
               "Secrets sector is locked. Pairing is not allowed.");
     return;
   }
@@ -102,7 +102,7 @@ static void prodtest_nrf_pair(cli_t* cli) {
   if (nrf_test_pair()) {
     cli_ok(cli, "");
   } else {
-    cli_error(cli, CLI_ERROR, "Pairing failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_PAIR_FAILED, "Pairing failed.");
   }
 }
 
@@ -115,7 +115,7 @@ static void prodtest_nrf_verify_pairing(cli_t* cli) {
   if (nrf_authenticate()) {
     cli_ok(cli, "");
   } else {
-    cli_error(cli, CLI_ERROR, "Pairing verification failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_PAIR_VERIFY, "Pairing verification failed.");
   }
 }
 

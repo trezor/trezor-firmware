@@ -24,6 +24,8 @@
 #include <rtl/cli.h>
 #include <rtl/unit_test.h>
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_unit_test_list(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -68,7 +70,7 @@ static void prodtest_unit_test_run(cli_t* cli) {
   if (ut_passed) {
     cli_ok(cli, "");
   } else {
-    cli_error(cli, CLI_ERROR, "Some of the unit test failed");
+    cli_error(cli, PRODTEST_ERR_UNIT_TEST_FAILED, "Some of the unit test failed");
   }
 }
 

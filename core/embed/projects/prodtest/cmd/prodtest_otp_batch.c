@@ -23,6 +23,8 @@
 #include <rtl/cli.h>
 #include <sys/flash_otp.h>
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_otp_read(cli_t* cli, uint8_t block_num) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -34,14 +36,14 @@ static void prodtest_otp_read(cli_t* cli, uint8_t block_num) {
   cli_trace(cli, "Reading device OTP memory...");
 
   if (sectrue != flash_otp_read(block_num, 0, block, sizeof(block))) {
-    cli_error(cli, CLI_ERROR, "Failed to read OTP memory.");
+    cli_error(cli, PRODTEST_ERR_OTP_READ, "Failed to read OTP memory.");
     return;
   }
 
   char block_hex[FLASH_OTP_BLOCK_SIZE * 2 + 1];
 
   if (!cstr_encode_hex(block_hex, sizeof(block_hex), block, sizeof(block))) {
-    cli_error(cli, CLI_ERROR_FATAL, "Buffer too small.");
+    cli_error(cli, PRODTEST_ERR_OTP_HEX_ENCODE, "Buffer too small.");
     return;
   }
 
@@ -59,7 +61,7 @@ static void prodtest_otp_read(cli_t* cli, uint8_t block_num) {
   if (strlen(block_text) > 0) {
     cli_ok(cli, "%s", block_text);
   } else {
-    cli_error(cli, CLI_ERROR_NODATA, "OTP block is empty.");
+    cli_error(cli, PRODTEST_ERR_OTP_EMPTY, "OTP block is empty.");
   }
 }
 
@@ -106,12 +108,12 @@ static void prodtest_otp_write(cli_t* cli, uint8_t block_num) {
 
   char block_hex[FLASH_OTP_BLOCK_SIZE * 2 + 1];
   if (!cstr_encode_hex(block_hex, sizeof(block_hex), block, sizeof(block))) {
-    cli_error(cli, CLI_ERROR_FATAL, "Buffer too small.");
+    cli_error(cli, PRODTEST_ERR_OTP_WRITE_HEX_ENCODE, "Buffer too small.");
     return;
   }
 
   if (sectrue == flash_otp_is_locked(block_num)) {
-    cli_error(cli, CLI_ERROR_LOCKED,
+    cli_error(cli, PRODTEST_ERR_OTP_LOCKED,
               "OTP block is locked and cannot be written again.");
     return;
   }
@@ -121,7 +123,7 @@ static void prodtest_otp_write(cli_t* cli, uint8_t block_num) {
 
   if (!dry_run) {
     if (sectrue != flash_otp_write(block_num, 0, block, sizeof(block))) {
-      cli_error(cli, CLI_ERROR, "Failed to write OTP block.");
+      cli_error(cli, PRODTEST_ERR_OTP_WRITE, "Failed to write OTP block.");
       return;
     }
   }
@@ -130,7 +132,7 @@ static void prodtest_otp_write(cli_t* cli, uint8_t block_num) {
 
   if (!dry_run) {
     if (sectrue != flash_otp_lock(block_num)) {
-      cli_error(cli, CLI_ERROR, "Failed to lock the OTP block.");
+      cli_error(cli, PRODTEST_ERR_OTP_LOCK, "Failed to lock the OTP block.");
       return;
     }
   }

@@ -24,6 +24,8 @@
 #include <rtl/cli.h>
 #include <sec/tamper.h>
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_tamper_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -33,7 +35,7 @@ static void prodtest_tamper_read(cli_t* cli) {
   bool init_ok = tamper_init();
 
   if (!init_ok) {
-    cli_error(cli, CLI_ERROR, "Cannot initialize tamper driver.");
+    cli_error(cli, PRODTEST_ERR_TAMPER_INIT, "Cannot initialize tamper driver.");
     return;
   }
 

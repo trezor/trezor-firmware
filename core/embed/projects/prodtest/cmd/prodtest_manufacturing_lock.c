@@ -25,6 +25,8 @@
 #include <sec/unit_properties.h>
 #include <sys/flash_otp.h>
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_manufacturing_lock_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -64,7 +66,7 @@ static void prodtest_manufacturing_lock_write(cli_t* cli) {
   }
 
   if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_MANUFACTURING_LOCK)) {
-    cli_error(cli, CLI_ERROR_LOCKED, "Manufacturing lock is already set.");
+    cli_error(cli, PRODTEST_ERR_MANUF_LOCK_ALREADY_SET, "Manufacturing lock is already set.");
     return;
   }
 
@@ -85,14 +87,14 @@ static void prodtest_manufacturing_lock_write(cli_t* cli) {
   if (!dry_run) {
     if (sectrue != flash_otp_write(FLASH_OTP_BLOCK_MANUFACTURING_LOCK, 0, block,
                                    sizeof(block))) {
-      cli_error(cli, CLI_ERROR, "Failed to write OTP block.");
+      cli_error(cli, PRODTEST_ERR_MANUF_LOCK_OTP_WRITE, "Failed to write OTP block.");
       return;
     }
 
     cli_trace(cli, "Locking OTP block...");
 
     if (sectrue != flash_otp_lock(FLASH_OTP_BLOCK_MANUFACTURING_LOCK)) {
-      cli_error(cli, CLI_ERROR, "Failed to lock the OTP block.");
+      cli_error(cli, PRODTEST_ERR_MANUF_LOCK_OTP_LOCK, "Failed to lock the OTP block.");
       return;
     }
   }
