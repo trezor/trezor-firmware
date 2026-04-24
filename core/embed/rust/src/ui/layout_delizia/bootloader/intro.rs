@@ -45,7 +45,7 @@ impl<'a> Intro<'a> {
                     .with_expanded_touch_area(Insets::uniform(13)),
             ),
             host: Child::new(
-                Button::with_text("INSTALL FIRMWARE".into())
+                Button::with_text("INITIATE CONNECTION".into())
                     .styled(button_bld())
                     .with_text_align(Alignment::Center),
             ),
