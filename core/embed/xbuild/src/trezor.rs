@@ -141,7 +141,6 @@ impl CLibrary {
             }
 
             println!("cargo:rustc-link-lib=c");
-            println!("cargo:rustc-link-lib=gcc");
             println!("cargo:rustc-link-lib=m");
             println!("cargo:rustc-link-lib=dl");
             println!("cargo:rustc-link-lib=pthread");
