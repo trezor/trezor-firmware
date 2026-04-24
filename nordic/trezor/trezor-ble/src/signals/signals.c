@@ -60,8 +60,12 @@ bool signals_is_stay_in_bootloader(void) {
 }
 
 void signals_set_reserved(bool set) {
+  int rc = gpio_pin_set_dt(&reserved_output, set);
+  if (rc < 0) {
+    LOG_ERR("Failed to set reserved output: %d", rc);
+    return;
+  }
   out_reserved = set;
-  gpio_pin_set_dt(&reserved_output, set);
 }
 
 bool signals_out_get_reserved(void) { return out_reserved; }
