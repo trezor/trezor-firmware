@@ -85,7 +85,8 @@ static void prodtest_ble_adv_start(cli_t* cli) {
 
   ble_set_static_mac(true);
   if (!ble_enter_pairing_mode((const uint8_t*)name, name_len)) {
-    cli_error(cli, PRODTEST_ERR_BLE_ADV_START_1, "Could not start advertising.");
+    cli_error(cli, PRODTEST_ERR_BLE_ADV_START_1,
+              "Could not start advertising.");
     return;
   }
 
@@ -103,7 +104,8 @@ static void prodtest_ble_adv_start(cli_t* cli) {
   }
 
   if (!result) {
-    cli_error(cli, PRODTEST_ERR_BLE_ADV_START_2, "Could not start advertising.");
+    cli_error(cli, PRODTEST_ERR_BLE_ADV_START_2,
+              "Could not start advertising.");
     return;
   }
 

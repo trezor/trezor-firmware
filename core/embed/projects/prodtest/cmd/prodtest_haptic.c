@@ -51,7 +51,8 @@ static void prodtest_haptic_test(cli_t* cli) {
 
   status = haptic_init();
   if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_HAPTIC_INIT, "Haptic driver initialization failed.");
+    cli_error(cli, PRODTEST_ERR_HAPTIC_INIT,
+              "Haptic driver initialization failed.");
     return;
   }
 

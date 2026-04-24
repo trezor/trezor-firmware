@@ -36,7 +36,8 @@ static void prodtest_telemetry(cli_t* cli) {
   telemetry_data_t data;
 
   if (!telemetry_get(&data)) {
-    cli_error(cli, PRODTEST_ERR_TELEMETRY_NOT_AVAILABLE, "Telemetry data not available");
+    cli_error(cli, PRODTEST_ERR_TELEMETRY_NOT_AVAILABLE,
+              "Telemetry data not available");
     return;
   }
 
@@ -58,7 +59,8 @@ static void prodtest_telemetry_reset(cli_t* cli) {
   unit_properties_t props = {0};
   unit_properties_get(&props);
   if (props.locked) {
-    cli_error(cli, PRODTEST_ERR_TELEMETRY_NOT_MANUFACTURING, "Device is not in manufacturing mode.");
+    cli_error(cli, PRODTEST_ERR_TELEMETRY_NOT_MANUFACTURING,
+              "Device is not in manufacturing mode.");
     return;
   }
 #endif

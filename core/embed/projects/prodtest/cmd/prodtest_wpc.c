@@ -98,7 +98,8 @@ cleanup:
   // initlize power manager again
   status_pm = pm_init(true);
   if (status_pm != PM_OK) {
-    cli_error(cli, PRODTEST_ERR_WPC_POWER_MGR_REINIT_1, "Failed to reinitialize power manager.");
+    cli_error(cli, PRODTEST_ERR_WPC_POWER_MGR_REINIT_1,
+              "Failed to reinitialize power manager.");
     return;
   }
 }
@@ -132,7 +133,8 @@ static void prodtest_wpc_update(cli_t* cli) {
   } else if (chip_info.chip_rev == STWLC38_CUT_1_3) {
     cli_trace(cli, "STWLC38 chip revision 1.3");
   } else {
-    cli_error(cli, PRODTEST_ERR_WPC_UNKNOWN_CHIP_REVISION, "Unknown chip revision, update aborted.");
+    cli_error(cli, PRODTEST_ERR_WPC_UNKNOWN_CHIP_REVISION,
+              "Unknown chip revision, update aborted.");
     goto cleanup;
   }
 
@@ -157,7 +159,8 @@ cleanup:
   // initlize power manager again
   status_pm = pm_init(true);
   if (status_pm != PM_OK) {
-    cli_error(cli, PRODTEST_ERR_WPC_POWER_MGR_REINIT_2, "Failed to reinitialize power manager.");
+    cli_error(cli, PRODTEST_ERR_WPC_POWER_MGR_REINIT_2,
+              "Failed to reinitialize power manager.");
     return;
   }
 }

@@ -34,7 +34,8 @@ static void prodtest_rtc_timestamp(cli_t* cli) {
 
   uint32_t timestamp;
   if (!rtc_get_timestamp(&timestamp)) {
-    cli_error(cli, PRODTEST_ERR_RTC_TIMESTAMP_GET, "Failed to get RTC timestamp");
+    cli_error(cli, PRODTEST_ERR_RTC_TIMESTAMP_GET,
+              "Failed to get RTC timestamp");
     return;
   }
   cli_ok(cli, "%u", timestamp);

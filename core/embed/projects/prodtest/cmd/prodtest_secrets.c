@@ -97,7 +97,8 @@ static void prodtest_secrets_init(cli_t* cli) {
   // Make sure that the secrets sector isn't locked so that we don't overwrite
   // the MCU's nRF pairing secret.
   if (secfalse != secret_is_locked()) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_SECTOR_ALREADY_LOCKED, "Secret sector is already locked");
+    cli_error(cli, PRODTEST_ERR_SECRETS_SECTOR_ALREADY_LOCKED,
+              "Secret sector is already locked");
     return;
   }
 #endif
@@ -108,7 +109,8 @@ static void prodtest_secrets_init(cli_t* cli) {
   optiga_locked_status optiga_status = get_optiga_locked_status(cli);
 
   if (optiga_status == OPTIGA_LOCKED_TRUE) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_OPTIGA_ALREADY_LOCKED, "Optiga is already locked");
+    cli_error(cli, PRODTEST_ERR_SECRETS_OPTIGA_ALREADY_LOCKED,
+              "Optiga is already locked");
     return;
   }
 
@@ -123,7 +125,8 @@ static void prodtest_secrets_init(cli_t* cli) {
   // MCU's pairing secrets.
   curve25519_key tropic_public = {0};
   if (secret_key_tropic_public(tropic_public) == sectrue) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_TROPIC_PAIRING_STARTED, "Tropic pairing has already started.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_TROPIC_PAIRING_STARTED,
+              "Tropic pairing has already started.");
     return;
   }
 
@@ -132,7 +135,8 @@ static void prodtest_secrets_init(cli_t* cli) {
   // provisioning the factory pairing key should still be valid.
   if (tropic_custom_session_start(cli, TROPIC_FACTORY_PAIRING_KEY_SLOT) !=
       LT_OK) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_TROPIC_SESSION, "`tropic_custom_session_start()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_TROPIC_SESSION,
+              "`tropic_custom_session_start()` failed.");
     return;
   }
 #endif
@@ -178,14 +182,16 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
 
   uint8_t seed[MLDSA_SEEDBYTES] = {0};
   if (secret_key_mcu_device_auth(seed) != sectrue) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_MCU_DEVICE_AUTH_1, "`secret_key_mcu_device_auth()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_MCU_DEVICE_AUTH_1,
+              "`secret_key_mcu_device_auth()` failed.");
     goto cleanup;
   }
 
   uint8_t mcu_public[CRYPTO_PUBLICKEYBYTES] = {0};
   uint8_t mcu_private[CRYPTO_SECRETKEYBYTES] = {0};
   if (crypto_sign_keypair_internal(mcu_public, mcu_private, seed) != 0) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_SIGN_KEYPAIR_1, "`crypto_sign_keypair_internal()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_SIGN_KEYPAIR_1,
+              "`crypto_sign_keypair_internal()` failed.");
     goto cleanup;
   }
 
@@ -193,7 +199,8 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
   if (!secure_channel_encrypt(mcu_public, sizeof(mcu_public), NULL, 0,
                               output)) {
     // `secure_channel_handshake_2()` might not have been called
-    cli_error(cli, PRODTEST_ERR_SECRETS_ENCRYPT_1, "`secure_channel_encrypt()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_ENCRYPT_1,
+              "`secure_channel_encrypt()` failed.");
     goto cleanup;
   }
 
@@ -211,14 +218,16 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
 
   uint8_t seed[MLDSA_SEEDBYTES] = {0};
   if (secret_key_mcu_device_auth(seed) != sectrue) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_MCU_DEVICE_AUTH_2, "`secret_key_mcu_device_auth()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_MCU_DEVICE_AUTH_2,
+              "`secret_key_mcu_device_auth()` failed.");
     goto cleanup;
   }
 
   uint8_t mcu_public[CRYPTO_PUBLICKEYBYTES] = {0};
   uint8_t mcu_private[CRYPTO_SECRETKEYBYTES] = {0};
   if (crypto_sign_keypair_internal(mcu_public, mcu_private, seed) != 0) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_SIGN_KEYPAIR_2, "`crypto_sign_keypair_internal()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_SIGN_KEYPAIR_2,
+              "`crypto_sign_keypair_internal()` failed.");
     goto cleanup;
   }
 
@@ -234,7 +243,8 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
           signature, &siglen, challenge, sizeof(challenge),
           ENCODED_EMPTY_CONTEXT_STRING, sizeof(ENCODED_EMPTY_CONTEXT_STRING),
           rnd, mcu_private, 0) != 0) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_SIGN_SIGNATURE, "`crypto_sign_signature()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_SIGN_SIGNATURE,
+              "`crypto_sign_signature()` failed.");
     goto cleanup;
   }
 
@@ -260,7 +270,8 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
   }
 
 #ifdef TREZOR_EMULATOR
-  cli_error(cli, PRODTEST_ERR_SECRETS_CERTDEV_WRITE_NOT_IMPL, "Not implemented");
+  cli_error(cli, PRODTEST_ERR_SECRETS_CERTDEV_WRITE_NOT_IMPL,
+            "Not implemented");
 #else
   const size_t prefix_length = 2;
   size_t certificate_length = 0;
@@ -269,9 +280,11 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
                    sizeof(prefixed_certificate) - prefix_length,
                    &certificate_length)) {
     if (certificate_length == sizeof(prefixed_certificate) - prefix_length) {
-      cli_error(cli, PRODTEST_ERR_SECRETS_CERT_TOO_LONG, "Certificate too long.");
+      cli_error(cli, PRODTEST_ERR_SECRETS_CERT_TOO_LONG,
+                "Certificate too long.");
     } else {
-      cli_error(cli, PRODTEST_ERR_SECRETS_CERT_HEX_DECODE, "Hexadecimal decoding error.");
+      cli_error(cli, PRODTEST_ERR_SECRETS_CERT_HEX_DECODE,
+                "Hexadecimal decoding error.");
     }
     return;
   }
@@ -319,7 +332,8 @@ static void prodtest_secrets_certdev_read(cli_t* cli) {
       prefixed_certificate[0] << 8 | prefixed_certificate[1];
 
   if (certificate_length > sizeof(prefixed_certificate) - prefix_length) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_INVALID_CERT, "Invalid certificate data.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_INVALID_CERT,
+              "Invalid certificate data.");
     return;
   }
   cli_ok_hexdata(cli, prefixed_certificate + prefix_length, certificate_length);
@@ -341,7 +355,8 @@ static void prodtest_secrets_lock(cli_t* cli) {
   }
 
   if (sectrue != secret_lock()) {
-    cli_error(cli, PRODTEST_ERR_SECRETS_SECTOR_LOCK, "Failed to lock secret sector");
+    cli_error(cli, PRODTEST_ERR_SECRETS_SECTOR_LOCK,
+              "Failed to lock secret sector");
     return;
   }
 

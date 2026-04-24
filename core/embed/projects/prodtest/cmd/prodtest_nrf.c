@@ -49,7 +49,8 @@ static void prodtest_nrf_communication(cli_t* cli) {
 
   cli_trace(cli, "Testing GPIO stay in bootloader...");
   if (!nrf_test_gpio_stay_in_bld()) {
-    cli_error(cli, PRODTEST_ERR_NRF_BOOTLOADER_GPIO, "Stay in bootloader GPIO failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_BOOTLOADER_GPIO,
+              "Stay in bootloader GPIO failed.");
     return;
   }
 
@@ -115,7 +116,8 @@ static void prodtest_nrf_verify_pairing(cli_t* cli) {
   if (nrf_authenticate()) {
     cli_ok(cli, "");
   } else {
-    cli_error(cli, PRODTEST_ERR_NRF_PAIR_VERIFY, "Pairing verification failed.");
+    cli_error(cli, PRODTEST_ERR_NRF_PAIR_VERIFY,
+              "Pairing verification failed.");
   }
 }
 

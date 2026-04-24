@@ -79,8 +79,8 @@ static bool set_metadata(cli_t* cli, uint16_t oid,
       optiga_get_data_object(oid, true, serialized, sizeof(serialized), &size);
   if (OPTIGA_SUCCESS != ret) {
     if (report_error) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_SET_META_GET, "optiga_get_metadata error %d for OID 0x%04x.",
-                ret, oid);
+      cli_error(cli, PRODTEST_ERR_OPTIGA_SET_META_GET,
+                "optiga_get_metadata error %d for OID 0x%04x.", ret, oid);
     }
     return false;
   }
@@ -89,14 +89,16 @@ static bool set_metadata(cli_t* cli, uint16_t oid,
   ret = optiga_parse_metadata(serialized, size, &metadata_stored);
   if (OPTIGA_SUCCESS != ret) {
     if (report_error) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_SET_META_PARSE, "optiga_parse_metadata error %d.", ret);
+      cli_error(cli, PRODTEST_ERR_OPTIGA_SET_META_PARSE,
+                "optiga_parse_metadata error %d.", ret);
     }
     return false;
   }
 
   if (!optiga_compare_metadata(metadata, &metadata_stored)) {
     if (report_error) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_SET_META_COMPARE, "optiga_compare_metadata failed.");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_SET_META_COMPARE,
+                "optiga_compare_metadata failed.");
     }
     return false;
   }
@@ -138,14 +140,16 @@ void prodtest_optiga_pair(cli_t* cli) {
     if (OPTIGA_SUCCESS != optiga_set_data_object(OID_KEY_PAIRING, false,
                                                  pairing_secret,
                                                  sizeof(pairing_secret))) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_PAIR_SET_DATA, "`optiga_set_data_object` failed.");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_PAIR_SET_DATA,
+                "`optiga_set_data_object` failed.");
       goto cleanup;
     }
 
     // Execute the handshake to verify that the secret is stored in Optiga.
     if (OPTIGA_SUCCESS !=
         optiga_sec_chan_handshake(pairing_secret, sizeof(pairing_secret))) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_PAIR_HANDSHAKE, "`optiga_sec_chan_handshake` failed.");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_PAIR_HANDSHAKE,
+                "`optiga_sec_chan_handshake` failed.");
       goto cleanup;
     }
   }
@@ -181,8 +185,8 @@ static void prodtest_optiga_lock(cli_t* cli) {
   optiga_result ret =
       optiga_set_data_object(OID_TRUST_ANCHOR, false, (const uint8_t*)"\0", 1);
   if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_LOCK_TRUST_ANCHOR, "optiga_set_data error %d for 0x%04x.", ret,
-              OID_TRUST_ANCHOR);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_LOCK_TRUST_ANCHOR,
+              "optiga_set_data error %d for 0x%04x.", ret, OID_TRUST_ANCHOR);
     return;
   }
 
@@ -258,8 +262,8 @@ optiga_locked_status get_optiga_locked_status(cli_t* cli) {
         optiga_get_data_object(oids[i], true, metadata_buffer,
                                sizeof(metadata_buffer), &metadata_size);
     if (OPTIGA_SUCCESS != ret) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_STATUS_SERIALIZE, "optiga_get_metadata error %d for OID 0x%04x.",
-                ret, oids[i]);
+      cli_error(cli, PRODTEST_ERR_OPTIGA_STATUS_SERIALIZE,
+                "optiga_get_metadata error %d for OID 0x%04x.", ret, oids[i]);
       return OPTIGA_LOCKED_ERROR;
     }
 
@@ -267,7 +271,8 @@ optiga_locked_status get_optiga_locked_status(cli_t* cli) {
     ret =
         optiga_parse_metadata(metadata_buffer, metadata_size, &stored_metadata);
     if (OPTIGA_SUCCESS != ret) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_STATUS_PARSE, "optiga_parse_metadata error %d.", ret);
+      cli_error(cli, PRODTEST_ERR_OPTIGA_STATUS_PARSE,
+                "optiga_parse_metadata error %d.", ret);
       return OPTIGA_LOCKED_ERROR;
     }
 
@@ -311,8 +316,9 @@ static void prodtest_optiga_id_read(cli_t* cli) {
       optiga_get_data_object(OPTIGA_OID_COPROC_UID, false, optiga_id,
                              sizeof(optiga_id), &optiga_id_size);
   if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_ID_READ, "optiga_get_data_object error %d for 0x%04x.",
-              ret, OPTIGA_OID_COPROC_UID);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_ID_READ,
+              "optiga_get_data_object error %d for 0x%04x.", ret,
+              OPTIGA_OID_COPROC_UID);
     return;
   }
 
@@ -330,8 +336,8 @@ static void cert_read(cli_t* cli, uint16_t oid) {
   optiga_result ret =
       optiga_get_data_object(oid, false, cert, sizeof(cert), &cert_size);
   if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_READ_GET, "optiga_get_data_object error %d for 0x%04x.",
-              ret, oid);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_READ_GET,
+              "optiga_get_data_object error %d for 0x%04x.", ret, oid);
     return;
   }
 
@@ -364,7 +370,8 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   size_t der_sig_size = 0;
   if (optiga_calc_sign(OID_KEY_DEV, digest, sizeof(digest), &der_sig[2],
                        sizeof(der_sig) - 2, &der_sig_size) != OPTIGA_SUCCESS) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_READ_SIGN, "check_device_cert_chain, optiga_calc_sign.");
+    cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_READ_SIGN,
+              "check_device_cert_chain, optiga_calc_sign.");
     return false;
   }
   der_sig[1] = der_sig_size;
@@ -388,9 +395,11 @@ static void cert_write(cli_t* cli, uint16_t oid) {
 
   if (!cli_arg_hex(cli, "hex-data", data_bytes, sizeof(data_bytes), &len)) {
     if (len == sizeof(data_bytes)) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_WRITE_TOO_LONG, "Certificate too long.");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_WRITE_TOO_LONG,
+                "Certificate too long.");
     } else {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_WRITE_HEX_DECODE, "Hexadecimal decoding error.");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_WRITE_HEX_DECODE,
+                "Hexadecimal decoding error.");
     }
     return;
   }
@@ -407,7 +416,8 @@ static void cert_write(cli_t* cli, uint16_t oid) {
 
   optiga_result ret = optiga_set_data_object(oid, false, data_bytes, len);
   if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_WRITE_SET, "optiga_set_data error %d for 0x%04x.", ret, oid);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_WRITE_SET,
+              "optiga_set_data error %d for 0x%04x.", ret, oid);
     return;
   }
 
@@ -417,8 +427,8 @@ static void cert_write(cli_t* cli, uint16_t oid) {
   ret = optiga_get_data_object(oid, false, cert, sizeof(cert), &cert_size);
   if (OPTIGA_SUCCESS != ret || cert_size != len ||
       memcmp(data_bytes, cert, len) != 0) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_WRITE_VERIFY, "optiga_get_data_object error %d for 0x%04x.",
-              ret, oid);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_CERT_WRITE_VERIFY,
+              "optiga_get_data_object error %d for 0x%04x.", ret, oid);
     return;
   }
 
@@ -456,7 +466,8 @@ static void pubkey_read(cli_t* cli, uint16_t oid,
       optiga_calc_ssec(OPTIGA_CURVE_P256, oid, BASE_POINT, sizeof(BASE_POINT),
                        public_key_x, sizeof(public_key_x), &public_key_x_size);
   if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_PUBKEY_CALC_SSEC, "optiga_calc_ssec error %d.", ret);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_PUBKEY_CALC_SSEC,
+              "optiga_calc_ssec error %d.", ret);
     return;
   }
 
@@ -470,7 +481,8 @@ static void pubkey_read(cli_t* cli, uint16_t oid,
     // for the y-coordinate here.
     uint8_t masked_public_key[ECDSA_PUBLIC_KEY_COMPRESSED_SIZE] = {0x02};
     if (public_key_x_size != sizeof(public_key_x)) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_PUBKEY_SIZE, "unexpected public key size");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_PUBKEY_SIZE,
+                "unexpected public key size");
       return;
     }
     memcpy(&masked_public_key[1], public_key_x, sizeof(public_key_x));
@@ -510,9 +522,11 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
 
   if (!cli_arg_hex(cli, "hex-data", data_bytes, sizeof(data_bytes), &len)) {
     if (len == sizeof(data_bytes)) {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_KEY_LONG, "Key too long.");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_KEY_LONG,
+                "Key too long.");
     } else {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_HEX, "Hexadecimal decoding error.");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_HEX,
+                "Hexadecimal decoding error.");
     }
     return;
   }
@@ -523,14 +537,16 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
   }
 
   if (len != EXPECTED_SIZE) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_LEN, "Unexpected input length.");
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_LEN,
+              "Unexpected input length.");
     return;
   }
 
   // Expand sender's ephemeral public key.
   uint8_t public_key[3 + 65] = {0x03, 0x42, 0x00};
   if (ecdsa_uncompress_pubkey(&nist256p1, data_bytes, &public_key[3]) != 1) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_DECODE, "Failed to decode public key.");
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_DECODE,
+              "Failed to decode public key.");
     return;
   }
 
@@ -542,7 +558,8 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
                                        sizeof(secret), &secret_size);
   if (OPTIGA_SUCCESS != ret) {
     memzero(secret, sizeof(secret));
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_SSEC, "optiga_calc_ssec error %d.", ret);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_SSEC,
+              "optiga_calc_ssec error %d.", ret);
     return;
   }
 
@@ -551,7 +568,8 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
   aes_decrypt_ctx ctx = {0};
   AES_RETURN aes_ret = aes_decrypt_key256(secret, &ctx);
   if (EXIT_SUCCESS != aes_ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_AES_KEY, "aes_decrypt_key256 error.");
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_AES_KEY,
+              "aes_decrypt_key256 error.");
     memzero(&ctx, sizeof(ctx));
     memzero(secret, sizeof(secret));
     return;
@@ -569,7 +587,8 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
   memzero(secret, sizeof(secret));
   if (EXIT_SUCCESS != aes_ret) {
     memzero(fido_key, sizeof(fido_key));
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_AES_DEC, "aes_cbc_decrypt error.");
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_AES_DEC,
+              "aes_cbc_decrypt error.");
     return;
   }
 
@@ -585,7 +604,8 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
   ret = optiga_set_trust_anchor();
   if (OPTIGA_SUCCESS != ret) {
     memzero(fido_key, sizeof(fido_key));
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_ANCHOR, "optiga_set_trust_anchor error %d.", ret);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_ANCHOR,
+              "optiga_set_trust_anchor error %d.", ret);
     return;
   }
 
@@ -604,7 +624,8 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
   if (secret_key_optiga_masking(masking_key) != sectrue ||
       ecdsa_mask_scalar(&nist256p1, masking_key, fido_key, fido_key) != 0) {
     memzero(fido_key, sizeof(fido_key));
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_MASK, "key masking error.");
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_MASK,
+              "key masking error.");
     return;
   }
 #endif  // SECRET_KEY_MASKING
@@ -613,7 +634,8 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
   ret = optiga_set_priv_key(OID_KEY_FIDO, fido_key);
   memzero(fido_key, sizeof(fido_key));
   if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_PRIV, "optiga_set_priv_key error %d.", ret);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_PRIV,
+              "optiga_set_priv_key error %d.", ret);
     return;
   }
 
@@ -632,8 +654,9 @@ static void prodtest_optiga_counter_read(cli_t* cli) {
   optiga_result ret =
       optiga_get_data_object(OPTIGA_OID_SEC, false, &sec, sizeof(sec), &size);
   if (OPTIGA_SUCCESS != ret || sizeof(sec) != size) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_COUNTER_READ, "optiga_get_data_object error %d for 0x%04x.",
-              ret, OPTIGA_OID_SEC);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_COUNTER_READ,
+              "optiga_get_data_object error %d for 0x%04x.", ret,
+              OPTIGA_OID_SEC);
     return;
   }
 
@@ -664,7 +687,8 @@ static void prodtest_optiga_keyfido_read(cli_t* cli) {
 #ifdef SECRET_KEY_MASKING
   uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
   if (secret_key_optiga_masking(masking_key) != sectrue) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_READ_MASK, "masking key not available");
+    cli_error(cli, PRODTEST_ERR_OPTIGA_KEYFIDO_READ_MASK,
+              "masking key not available");
     return;
   }
   pubkey_read(cli, OID_KEY_FIDO, masking_key);
@@ -921,7 +945,8 @@ static void prodtest_optiga_metadata_read(cli_t* cli) {
       cli_error(cli, PRODTEST_ERR_OPTIGA_META_READ_OID_LONG,
                 "OID too long. Four hexadecimal digits expected.");
     } else {
-      cli_error(cli, PRODTEST_ERR_OPTIGA_META_READ_HEX, "Hexadecimal decoding error.");
+      cli_error(cli, PRODTEST_ERR_OPTIGA_META_READ_HEX,
+                "Hexadecimal decoding error.");
     }
     return;
   }
@@ -944,15 +969,16 @@ static void prodtest_optiga_metadata_read(cli_t* cli) {
   optiga_result ret =
       optiga_get_data_object(oid, true, serialized, sizeof(serialized), &size);
   if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_META_READ_GET, "optiga_get_metadata error %d for OID 0x%04x.",
-              ret, oid);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_META_READ_GET,
+              "optiga_get_metadata error %d for OID 0x%04x.", ret, oid);
     return;
   }
 
   optiga_metadata metadata = {0};
   ret = optiga_parse_metadata(serialized, size, &metadata);
   if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, PRODTEST_ERR_OPTIGA_META_READ_PARSE, "optiga_parse_metadata error %d.", ret);
+    cli_error(cli, PRODTEST_ERR_OPTIGA_META_READ_PARSE,
+              "optiga_parse_metadata error %d.", ret);
     return;
   }
 

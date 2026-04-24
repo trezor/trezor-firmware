@@ -35,7 +35,8 @@ static void prodtest_tamper_read(cli_t* cli) {
   bool init_ok = tamper_init();
 
   if (!init_ok) {
-    cli_error(cli, PRODTEST_ERR_TAMPER_INIT, "Cannot initialize tamper driver.");
+    cli_error(cli, PRODTEST_ERR_TAMPER_INIT,
+              "Cannot initialize tamper driver.");
     return;
   }
 

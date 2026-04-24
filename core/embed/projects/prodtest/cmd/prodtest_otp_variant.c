@@ -24,8 +24,8 @@
 #include <rtl/cli.h>
 #include <rtl/printf.h>
 #include <sec/unit_properties.h>
-#include <sys/flash_otp.h>
 #include <stdlib.h>
+#include <sys/flash_otp.h>
 
 #include "prodtest_error_codes.h"
 #include "prodtest_optiga.h"
@@ -51,13 +51,15 @@ static void prodtest_otp_variant_read(cli_t* cli) {
 
   if (sectrue !=
       flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, block, sizeof(block))) {
-    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_READ_1, "Failed to read OTP memory.");
+    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_READ_1,
+              "Failed to read OTP memory.");
     return;
   }
 
   if (sectrue != flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT_REWORK, 0,
                                 block_rework, sizeof(block_rework))) {
-    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_READ_2, "Failed to read OTP memory.");
+    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_READ_2,
+              "Failed to read OTP memory.");
     return;
   }
 
@@ -144,7 +146,8 @@ static void prodtest_otp_variant_write(cli_t* cli) {
 
 #ifdef SECRET_LOCK_SLOT_OFFSET
   if (sectrue != secret_is_locked()) {
-    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_SECRETS_NOT_LOCKED, "Secrets not locked");
+    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_SECRETS_NOT_LOCKED,
+              "Secrets not locked");
     return;
   }
 #endif
@@ -153,7 +156,8 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   optiga_locked_status optiga_status = get_optiga_locked_status(cli);
 
   if (optiga_status == OPTIGA_LOCKED_FALSE) {
-    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_OPTIGA_NOT_LOCKED, "Optiga not locked");
+    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_OPTIGA_NOT_LOCKED,
+              "Optiga not locked");
     return;
   }
 
@@ -167,7 +171,8 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   tropic_locked_status tropic_status = get_tropic_locked_status(cli);
 
   if (tropic_status == TROPIC_LOCKED_FALSE) {
-    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_TROPIC_NOT_LOCKED, "Tropic not locked");
+    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_TROPIC_NOT_LOCKED,
+              "Tropic not locked");
     return;
   }
 
@@ -197,11 +202,13 @@ static void prodtest_otp_variant_write(cli_t* cli) {
     uint8_t block_read[FLASH_OTP_BLOCK_SIZE] = {0};
     if (sectrue != flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, block_read,
                                   sizeof(block_read))) {
-      cli_error(cli, PRODTEST_ERR_OTP_VARIANT_REWORK_READ, "Failed to read OTP memory.");
+      cli_error(cli, PRODTEST_ERR_OTP_VARIANT_REWORK_READ,
+                "Failed to read OTP memory.");
       return;
     }
     if (memcmp(block_read, block, sizeof(block_read)) == 0) {
-      cli_error(cli, PRODTEST_ERR_OTP_VARIANT_REWORK_NOT_NEEDED, "Rework not needed, already up to date.");
+      cli_error(cli, PRODTEST_ERR_OTP_VARIANT_REWORK_NOT_NEEDED,
+                "Rework not needed, already up to date.");
       return;
     }
   }
@@ -214,7 +221,8 @@ static void prodtest_otp_variant_write(cli_t* cli) {
 
   char block_hex[FLASH_OTP_BLOCK_SIZE * 2 + 1];
   if (!cstr_encode_hex(block_hex, sizeof(block_hex), block, sizeof(block))) {
-    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_WRITE_HEX_ENCODE, "Buffer too small.");
+    cli_error(cli, PRODTEST_ERR_OTP_VARIANT_WRITE_HEX_ENCODE,
+              "Buffer too small.");
     return;
   }
 
@@ -223,7 +231,8 @@ static void prodtest_otp_variant_write(cli_t* cli) {
 
   if (!dry_run) {
     if (sectrue != flash_otp_write(block_num, 0, block, sizeof(block))) {
-      cli_error(cli, PRODTEST_ERR_OTP_VARIANT_WRITE, "Failed to write OTP block.");
+      cli_error(cli, PRODTEST_ERR_OTP_VARIANT_WRITE,
+                "Failed to write OTP block.");
       return;
     }
   }
@@ -232,7 +241,8 @@ static void prodtest_otp_variant_write(cli_t* cli) {
 
   if (!dry_run) {
     if (sectrue != flash_otp_lock(block_num)) {
-      cli_error(cli, PRODTEST_ERR_OTP_VARIANT_LOCK, "Failed to lock the OTP block.");
+      cli_error(cli, PRODTEST_ERR_OTP_VARIANT_LOCK,
+                "Failed to lock the OTP block.");
       return;
     }
   }

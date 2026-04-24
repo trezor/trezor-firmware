@@ -257,7 +257,8 @@ static void prodtest_nfc_write_card(cli_t* cli) {
       nfc_dev_read_info(&dev_info);
 
       if (dev_info.type != NFC_DEV_TYPE_A) {
-        cli_error(cli, PRODTEST_ERR_NFC_TYPE_A_ONLY, "Only NFC type A cards supported");
+        cli_error(cli, PRODTEST_ERR_NFC_TYPE_A_ONLY,
+                  "Only NFC type A cards supported");
         goto cleanup;
       }
 

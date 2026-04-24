@@ -34,7 +34,8 @@
 static bool ensure_touch_init(cli_t* cli) {
   cli_trace(cli, "Initializing the touch controller...");
   if (sectrue != touch_init()) {
-    cli_error(cli, PRODTEST_ERR_TOUCH_INIT, "Cannot initialize touch controller.");
+    cli_error(cli, PRODTEST_ERR_TOUCH_INIT,
+              "Cannot initialize touch controller.");
     return false;
   }
   return true;
@@ -254,7 +255,8 @@ static void prodtest_touch_test_idle(cli_t* cli) {
   }
 
   if (activity) {
-    cli_error(cli, PRODTEST_ERR_TOUCH_UNEXPECTED_ACTIVITY, "Unexpected activity detected.");
+    cli_error(cli, PRODTEST_ERR_TOUCH_UNEXPECTED_ACTIVITY,
+              "Unexpected activity detected.");
     goto cleanup;
   }
 

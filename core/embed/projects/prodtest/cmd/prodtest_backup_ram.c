@@ -35,7 +35,8 @@ static void prodtest_backup_ram_list(cli_t* cli) {
   }
 
   if (!backup_ram_init()) {
-    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_LIST_INIT, "Failed to initialize backup RAM");
+    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_LIST_INIT,
+              "Failed to initialize backup RAM");
     return;
   }
 
@@ -47,7 +48,8 @@ static void prodtest_backup_ram_list(cli_t* cli) {
     if (backup_ram_read(key, NULL, 0, &data_size)) {
       cli_trace(cli, "Key #%d: %d bytes", key, data_size);
     } else {
-      cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_INFO_READ, "Failed to read key #%d info", key);
+      cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_INFO_READ,
+                "Failed to read key #%d info", key);
       return;
     }
     key++;
@@ -70,7 +72,8 @@ static void prodtest_backup_ram_erase(cli_t* cli) {
   }
 
   if (!backup_ram_init()) {
-    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_ERASE_INIT, "Failed to initialize backup RAM");
+    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_ERASE_INIT,
+              "Failed to initialize backup RAM");
     return;
   }
 
@@ -92,19 +95,22 @@ static void prodtest_backup_ram_read(cli_t* cli) {
   }
 
   if (!backup_ram_init()) {
-    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_READ_INIT, "Failed to initialize backup RAM");
+    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_READ_INIT,
+              "Failed to initialize backup RAM");
     return;
   }
 
   if (!backup_ram_read(key, NULL, 0, NULL)) {
-    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_NOT_FOUND, "Key #%d not found", key);
+    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_NOT_FOUND, "Key #%d not found",
+              key);
     return;
   }
 
   uint8_t data[BACKUP_RAM_MAX_KEY_DATA_SIZE];
   size_t data_size = 0;
   if (!backup_ram_read(key, data, sizeof(data), &data_size)) {
-    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_READ, "Failed to read the key #%d", key);
+    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_READ,
+              "Failed to read the key #%d", key);
     return;
   }
 
@@ -153,19 +159,22 @@ static void prodtest_backup_ram_write(cli_t* cli) {
       if (len == sizeof(data)) {
         cli_error(cli, PRODTEST_ERR_BACKUP_RAM_DATA_TOO_LONG, "Data too long.");
       } else {
-        cli_error(cli, PRODTEST_ERR_BACKUP_RAM_HEX_DECODE, "Hexadecimal decoding error.");
+        cli_error(cli, PRODTEST_ERR_BACKUP_RAM_HEX_DECODE,
+                  "Hexadecimal decoding error.");
       }
       return;
     }
   }
 
   if (!backup_ram_init()) {
-    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_WRITE_INIT, "Failed to initialize backup RAM");
+    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_WRITE_INIT,
+              "Failed to initialize backup RAM");
     return;
   }
 
   if (!backup_ram_write(key, type, data, len)) {
-    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_WRITE, "Failed to write key #%d", key);
+    cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_WRITE, "Failed to write key #%d",
+              key);
     return;
   }
 

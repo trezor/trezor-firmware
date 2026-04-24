@@ -169,7 +169,8 @@ typedef enum {
   PRODTEST_ERR_OPTIGA_META_READ_GET = 9035,
   PRODTEST_ERR_OPTIGA_META_READ_PARSE = 9036,
 
-  // === otp — otp-batch and otp-device-sn share prodtest_otp_read/write (10000–10999) ===
+  // === otp — otp-batch and otp-device-sn share prodtest_otp_read/write
+  // (10000–10999) ===
   PRODTEST_ERR_OTP_READ = 10000,
   PRODTEST_ERR_OTP_HEX_ENCODE = 10001,
   PRODTEST_ERR_OTP_EMPTY = 10002,

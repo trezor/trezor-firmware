@@ -49,7 +49,8 @@ void prodtest_pm_hibernate(cli_t* cli) {
   status = pm_get_state(&state);
 
   if (status != PM_OK) {
-    cli_error(cli, PRODTEST_ERR_PM_STATE_GET, "Failed to get power manager state");
+    cli_error(cli, PRODTEST_ERR_PM_STATE_GET,
+              "Failed to get power manager state");
     return;
   }
 
@@ -121,7 +122,8 @@ void prodtest_pm_charge_disable(cli_t* cli) {
 
   pm_status_t status = pm_charging_disable();
   if (status != PM_OK) {
-    cli_error(cli, PRODTEST_ERR_PM_CHARGE_DISABLE, "Failed to enable battery charging");
+    cli_error(cli, PRODTEST_ERR_PM_CHARGE_DISABLE,
+              "Failed to enable battery charging");
     return;
   }
 
@@ -138,7 +140,8 @@ void prodtest_pm_charge_enable(cli_t* cli) {
 
   pm_status_t status = pm_charging_enable();
   if (status != PM_OK) {
-    cli_error(cli, PRODTEST_ERR_PM_CHARGE_ENABLE, "Failed to enable battery charging");
+    cli_error(cli, PRODTEST_ERR_PM_CHARGE_ENABLE,
+              "Failed to enable battery charging");
     return;
   }
 
@@ -157,7 +160,8 @@ void prodtest_pm_fuel_gauge_monitor(cli_t* cli) {
     pm_report_t report;
     pm_status_t status = pm_get_report(&report);
     if (status != PM_OK) {
-      cli_error(cli, PRODTEST_ERR_PM_REPORT_GET_1, "Failed to get power manager report");
+      cli_error(cli, PRODTEST_ERR_PM_REPORT_GET_1,
+                "Failed to get power manager report");
       return;
     }
 
@@ -203,7 +207,8 @@ void prodtest_pm_report(cli_t* cli) {
   pm_report_t report;
   pm_status_t status = pm_get_report(&report);
   if (status != PM_OK) {
-    cli_error(cli, PRODTEST_ERR_PM_REPORT_GET_2, "Failed to get power manager report");
+    cli_error(cli, PRODTEST_ERR_PM_REPORT_GET_2,
+              "Failed to get power manager report");
     return;
   }
   cli_trace(cli, "Power manager report:");
@@ -303,7 +308,8 @@ void prodtest_pm_event_monitor(cli_t* cli) {
     }
 
     if (!pm_get_events(&event_flag)) {
-      cli_error(cli, PRODTEST_ERR_PM_EVENTS_GET, "Failed to get power manager events");
+      cli_error(cli, PRODTEST_ERR_PM_EVENTS_GET,
+                "Failed to get power manager events");
       continue;
     }
 
@@ -418,7 +424,8 @@ void prodtest_pm_battery_test(cli_t* cli) {
     pm_report_t report;
     pm_status_t status = pm_get_report(&report);
     if (status != PM_OK) {
-      cli_error(cli, PRODTEST_ERR_PM_REPORT_GET_3, "Failed to get power manager report.");
+      cli_error(cli, PRODTEST_ERR_PM_REPORT_GET_3,
+                "Failed to get power manager report.");
       goto cleanup;
     }
 

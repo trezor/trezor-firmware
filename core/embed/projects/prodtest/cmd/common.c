@@ -699,7 +699,8 @@ void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len)) {
     }
 
     if (!binary_update_in_progress) {
-      cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_NOT_STARTED, "Update not started. Use 'begin' first.");
+      cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_NOT_STARTED,
+                "Update not started. Use 'begin' first.");
       goto cleanup;
     }
 
@@ -729,7 +730,8 @@ void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len)) {
 
     if (!finalize(binary_buffer, binary_len)) {
       binary_len = 0;
-      cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_FINALIZE, "Error while finalizing the update");
+      cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_FINALIZE,
+                "Error while finalizing the update");
       goto cleanup;
     }
 
@@ -741,7 +743,8 @@ void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len)) {
     binary_update_in_progress = false;
 
   } else {
-    cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_UNKNOWN_PHASE, "Unknown phase '%s' (begin|chunk|end)", phase);
+    cli_error(cli, PRODTEST_ERR_COMMON_UPDATE_UNKNOWN_PHASE,
+              "Unknown phase '%s' (begin|chunk|end)", phase);
     goto cleanup;
   }
 

@@ -52,14 +52,16 @@ static void prodtest_sdcard_test(cli_t* cli) {
   cli_trace(cli, "Powering on the SD card...");
 
   if (sectrue != sdcard_power_on_unchecked(low_speed)) {
-    cli_error(cli, PRODTEST_ERR_SDCARD_POWER_ON, "SD card power on sequence failed.");
+    cli_error(cli, PRODTEST_ERR_SDCARD_POWER_ON,
+              "SD card power on sequence failed.");
     return;
   }
 
   cli_trace(cli, "Reading data from the SD card...");
 
   if (sectrue != sdcard_read_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-    cli_error(cli, PRODTEST_ERR_SDCARD_READ_1, "Failed to read data from SD card.");
+    cli_error(cli, PRODTEST_ERR_SDCARD_READ_1,
+              "Failed to read data from SD card.");
     goto power_off;
   }
 
@@ -72,7 +74,8 @@ static void prodtest_sdcard_test(cli_t* cli) {
 
     if (sectrue !=
         sdcard_write_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-      cli_error(cli, PRODTEST_ERR_SDCARD_WRITE, "Failed to write data from the SD card.");
+      cli_error(cli, PRODTEST_ERR_SDCARD_WRITE,
+                "Failed to write data from the SD card.");
       goto power_off;
     }
 
@@ -80,12 +83,14 @@ static void prodtest_sdcard_test(cli_t* cli) {
 
     if (sectrue !=
         sdcard_read_blocks(buf2, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-      cli_error(cli, PRODTEST_ERR_SDCARD_READ_2, "Failed to read data from SD card.");
+      cli_error(cli, PRODTEST_ERR_SDCARD_READ_2,
+                "Failed to read data from SD card.");
       goto power_off;
     }
 
     if (0 != memcmp(buf1, buf2, sizeof(buf1))) {
-      cli_error(cli, PRODTEST_ERR_SDCARD_DATA_MISMATCH, "Data mismatch after writing to SD card.");
+      cli_error(cli, PRODTEST_ERR_SDCARD_DATA_MISMATCH,
+                "Data mismatch after writing to SD card.");
       goto power_off;
     }
   }

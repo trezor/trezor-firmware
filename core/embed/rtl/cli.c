@@ -158,8 +158,7 @@ void cli_ok_hexdata(cli_t* cli, const void* data, size_t size) {
   cli->final_status = true;
 }
 
-static void cli_verror(cli_t* cli, int code, const char* format,
-                       va_list args) {
+static void cli_verror(cli_t* cli, int code, const char* format, va_list args) {
   if (cli->interactive) {
     cli_printf(cli, ESC_COLOR_RED);
   }

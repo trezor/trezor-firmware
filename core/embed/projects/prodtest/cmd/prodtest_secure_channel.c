@@ -31,7 +31,8 @@ static void prodtest_secure_channel_handshake_1(cli_t* cli) {
   uint8_t output[SECURE_CHANNEL_OUTPUT_SIZE] = {0};
 
   if (!secure_channel_handshake_1(output)) {
-    cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_HANDSHAKE1, "`secure_channel_handshake_1()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_HANDSHAKE1,
+              "`secure_channel_handshake_1()` failed.");
     return;
   }
 
@@ -48,21 +49,25 @@ static void prodtest_secure_channel_handshake_2(cli_t* cli) {
   size_t input_length = 0;
   if (!cli_arg_hex(cli, "hex-data", input, sizeof(input), &input_length)) {
     if (input_length == sizeof(input)) {
-      cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_INPUT_TOO_LONG, "Input too long.");
+      cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_INPUT_TOO_LONG,
+                "Input too long.");
     } else {
-      cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_HEX_DECODE, "Hexadecimal decoding error.");
+      cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_HEX_DECODE,
+                "Hexadecimal decoding error.");
     }
     return;
   }
   if (input_length != SECURE_CHANNEL_INPUT_SIZE) {
-    cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_INPUT_LEN, "Unexpected input length. Expecting %d bytes.",
+    cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_INPUT_LEN,
+              "Unexpected input length. Expecting %d bytes.",
               (int)SECURE_CHANNEL_INPUT_SIZE);
   }
 
   if (!secure_channel_handshake_2(input)) {
     // Either `secure_channel_handshake_1()` has not been called or the keys do
     // not match.
-    cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_HANDSHAKE2, "`secure_channel_handshake_2()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_HANDSHAKE2,
+              "`secure_channel_handshake_2()` failed.");
   }
 
   cli_ok(cli, "");
