@@ -17,7 +17,7 @@ use super::super::{
     },
 };
 
-const LEFT_BUTTON_TEXT: &str = "INSTALL FW";
+const LEFT_BUTTON_TEXT: &str = "Init connection";
 const RIGHT_BUTTON_TEXT: &str = "MENU";
 
 #[repr(u32)]
