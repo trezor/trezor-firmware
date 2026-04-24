@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <io/display.h>
 #include <sys/flash.h>
@@ -28,26 +28,26 @@ void usage(void) {
   printf("  -h  show this help\n");
 }
 
-static int sdl_event_filter(void *userdata, SDL_Event *event) {
+static bool sdl_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
-    case SDL_QUIT:
+    case SDL_EVENT_QUIT:
       exit(3);
-      return 0;
-    case SDL_KEYUP:
+      return false;
+    case SDL_EVENT_KEY_UP:
       if (event->key.repeat) {
-        return 0;
+        return false;
       }
-      switch (event->key.keysym.sym) {
+      switch (event->key.key) {
         case SDLK_ESCAPE:
           exit(3);
-          return 0;
-        case SDLK_s:
+          return false;
+        case SDLK_S:
           display_save("emu");
-          return 0;
+          return false;
       }
       break;
   }
-  return 1;
+  return true;
 }
 
 int main(int argc, char **argv) {
