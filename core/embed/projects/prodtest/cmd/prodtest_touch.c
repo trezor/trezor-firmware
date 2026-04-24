@@ -27,12 +27,15 @@
 #include <rtl/cli.h>
 #include <sys/systick.h>
 
+#include "prodtest_error_codes.h"
+
 #include "../prodtest.h"
 
 static bool ensure_touch_init(cli_t* cli) {
   cli_trace(cli, "Initializing the touch controller...");
   if (sectrue != touch_init()) {
-    cli_error(cli, CLI_ERROR, "Cannot initialize touch controller.");
+    cli_error(cli, PRODTEST_ERR_TOUCH_INIT,
+              "Cannot initialize touch controller.");
     return false;
   }
   return true;
@@ -128,7 +131,7 @@ static void prodtest_touch_test(cli_t* cli) {
     cli_ok(cli, "%d %d", x, y);
   } else {
     if (!cli_aborted(cli)) {
-      cli_error(cli, CLI_ERROR_TIMEOUT, "");
+      cli_error(cli, PRODTEST_ERR_TOUCH_QUADRANT_TIMEOUT, "");
     }
   }
 
@@ -187,7 +190,7 @@ static void prodtest_touch_test_custom(cli_t* cli) {
 
   while (true) {
     if (ticks_expired(expire_time)) {
-      cli_error(cli, CLI_ERROR_TIMEOUT, "");
+      cli_error(cli, PRODTEST_ERR_TOUCH_CUSTOM_TIMEOUT, "");
       break;
     }
 
@@ -252,7 +255,8 @@ static void prodtest_touch_test_idle(cli_t* cli) {
   }
 
   if (activity) {
-    cli_error(cli, CLI_ERROR, "Unexpected activity detected.");
+    cli_error(cli, PRODTEST_ERR_TOUCH_UNEXPECTED_ACTIVITY,
+              "Unexpected activity detected.");
     goto cleanup;
   }
 

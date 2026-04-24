@@ -24,6 +24,8 @@
 #include <rtl/cli.h>
 #include <sec/fwutils.h>
 
+#include "prodtest_error_codes.h"
+
 #ifdef USE_BLE
 #include "prodtest_ble.h"
 #endif
@@ -64,7 +66,8 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
 #ifdef USE_BLE
   cli_trace(cli, "Erasing BLE bonds...");
   if (!prodtest_ble_erase_bonds(cli)) {
-    cli_error(cli, CLI_ERROR, "Failed to erase BLE bonds.");
+    cli_error(cli, PRODTEST_ERR_PRODTEST_BLE_BONDS_ERASE,
+              "Failed to erase BLE bonds.");
     return;
   }
 #endif
