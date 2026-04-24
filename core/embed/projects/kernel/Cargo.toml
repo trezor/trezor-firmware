@@ -1,0 +1,202 @@
+[package]
+name = "kernel"
+version = "0.0.0"
+edition = "2024"
+links = "kernel"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+io.workspace = true
+sec.workspace = true
+sys.workspace = true
+rtl.workspace = true
+models.workspace = true
+trezor_lib.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = [
+    "io/model_d001",
+    "mcu_stm32f429",
+    "dma2d",
+    "sdram",
+    "secure_mode",
+    "touch",
+]
+
+model_d002 = [
+    "io/model_d002",
+    "mcu_stm32u5g",
+    "backlight",
+    "boot_ucb",
+    "button",
+    "dma2d",
+    "hash_processor",
+    "lockable_bootloader",
+    "secmon_layout",
+    "secret",
+    "touch",
+]
+
+model_t2t1 = [
+    "io/model_t2t1",
+    "mcu_stm32f427",
+    "backlight",
+    "dma2d",
+    "pvd",
+    "sd_card",
+    "secure_mode",
+    "touch",
+    ]
+
+model_t2b1 = [
+    "io/model_t2b1",
+    "mcu_stm32f427",
+    "button",
+    "consumption_mask",
+    "lockable_bootloader",
+    # "optiga", # selected from xtask
+    "pvd",
+    "secret",
+    "secure_mode",
+    ]
+
+model_t3b1 = [
+    "io/model_t3b1",
+    "mcu_stm32u58",
+    "button",
+    "consumption_mask",
+    "hash_processor",
+    "lockable_bootloader",
+    # "optiga", # selected from xtask
+    "pvd",
+    "secret",
+    "secure_aes",
+    "secure_mode",
+    "tamper",
+    ]
+
+model_t3t1 = [
+    "io/model_t3t1",
+    "mcu_stm32u58",
+    "backlight",
+    "dma2d",
+    "haptic",
+    "hash_processor",
+    "lockable_bootloader",
+    # "optiga", # selected from xtask
+    "pvd",
+    "sd_card",
+    "secret",
+    "secure_aes",
+    "secure_mode",
+    "tamper",
+    "touch",
+    ]
+
+model_t3w1 = [
+    "io/model_t3w1",
+    "mcu_stm32u5g",
+    "backlight",
+    "backup_ram",
+    "boot_ucb",
+    "ble",
+    "button",
+    "dma2d",
+    "haptic",
+    "hash_processor",
+    "lockable_bootloader",
+    # "optiga", # selected from xtask
+    "power_manager",
+    "rgb_led",
+    "rtc",
+    "secmon_layout",
+    "secret",
+    "suspend",
+    "smp",
+    "tamper",
+    "telemetry",
+    "touch",
+    # "tropic", # selected from xtask
+    ]
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+
+app_loading = ["io/app_loading", "io/ipc"]
+bootloader_devel = []
+bootloader_qa = []
+clippy = []
+emulator = ["io/emulator"]
+block_on_vcp = ["sys/block_on_vcp"]
+dbg_console_swo = ["dbg_console", "sys/dbg_console_swo"]
+dbg_console_vcp = ["dbg_console", "sys/dbg_console_vcp", "io/usb_iface_vcp"]
+dbg_console_system_view = ["dbg_console", "sys/dbg_console_system_view"]
+optiga_testing = ["sec/optiga_testing"]
+production = ["sys/production"]
+storage_insecure_testing_mode = ["sec/storage_insecure_testing_mode"]
+universal_fw = ["io/usb_iface_webauthn"]
+unsafe_fw = []
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "sys/applets",
+    "io/display",
+    "io/kernel_mode",
+    "io/usb_iface_wire",
+    "sec/rdi",
+    "sec/storage",
+    "models/kernel",
+    "rtl/aes_gcm",
+    "trezor_lib/with_new_crates", # only for transitional period
+    ]
+
+mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]
+mcu_stm32f429 = ["io/mcu_stm32f429", "mcu_stm32f4"]
+mcu_stm32f4 = []
+mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_stm32u5 = ["sec/trustzone"]
+
+secure_mode = ["io/secure_mode"]
+
+backlight = ["io/backlight"]
+backup_ram = ["sec/backup_ram"]
+boot_ucb = ["sec/boot_ucb"]
+ble = ["io/ble", "nrf", "nrf_auth"]
+button = ["io/button"]
+consumption_mask = ["sec/consumption_mask"]
+dbg_console = ["sys/dbg_console"]
+dma2d = ["io/dma2d"]
+haptic = ["io/haptic"]
+hash_processor = ["sec/hash_processor"]
+lockable_bootloader = ["io/lockable_bootloader"]
+nrf = ["io/nrf"]
+nrf_auth = ["io/nrf_auth"]
+optiga = ["sec/optiga"]
+power_manager = ["io/power_manager"]
+pvd = ["sys/pvd"]
+rgb_led = ["io/rgb_led"]
+rtc = ["sys/rtc"]
+sd_card = ["io/sd_card"]
+sdram = ["sys/sdram"]
+secmon_layout = ["models/secmon_layout"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+smp = ["io/smp", "trezor_lib/smp", "trezor_lib/nrf"]
+suspend = ["io/suspend"]
+tamper = ["sec/tamper"]
+telemetry = ["sec/telemetry"]
+touch = ["io/touch"]
+tropic = ["sec/tropic"]

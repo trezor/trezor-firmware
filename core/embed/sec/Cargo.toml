@@ -1,0 +1,84 @@
+[package]
+name = "sec"
+version = "0.0.0"
+edition = "2024"
+links = "sec"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+sys.workspace = true
+rtl.workspace = true
+models.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = ["sys/model_d001"]
+model_d002 = ["sys/model_d002"]
+model_t2t1 = ["sys/model_t2t1"]
+model_t2b1 = ["sys/model_t2b1"]
+model_t3b1 = ["sys/model_t3b1"]
+model_t3t1 = ["sys/model_t3t1"]
+model_t3w1 = ["sys/model_t3w1"]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f427 = ["sys/mcu_stm32f427", "mcu_stm32f4"]
+mcu_stm32f429 = ["sys/mcu_stm32f429", "mcu_stm32f4"]
+mcu_stm32u58 = ["sys/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["sys/mcu_stm32u5g", "mcu_stm32u5"]
+
+# --------------------------------------------------------------------------
+# Privilege mode features
+# --------------------------------------------------------------------------
+
+kernel_mode = ["sys/kernel_mode"]
+secure_mode = ["sys/secure_mode"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+backup_ram = []
+boot_ucb = ["sys/boot_ucb", "rtl/sphincsplus"]
+consumption_mask = []
+emulator = ["sys/emulator"]
+hash_processor = []
+hw_revision = []
+iwdg = []
+lockable_bootloader = ["sys/lockable_bootloader"]
+nrf_auth = []
+optiga = ["sys/i2c_bus", "time_estimate"]
+optiga_testing = []
+production = ["sys/production"]
+rdi = []
+secmon_verification = []
+secret = []
+secure_aes = []
+storage = ["time_estimate"]
+storage_hw_key = ["sys/storage_hw_key"]
+storage_insecure_testing_mode = []
+suspend = []
+tamper = []
+telemetry = ["backup_ram"]
+time_estimate = []
+tropic = []
+trustzone = ["sys/trustzone"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32f4 = ["mcu_stm32"]
+mcu_stm32 = []
+
+

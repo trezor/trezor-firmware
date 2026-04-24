@@ -1,0 +1,103 @@
+[package]
+name = "io"
+version = "0.0.0"
+edition = "2024"
+links = "io"
+
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+sec.workspace = true
+sys.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = ["sec/model_d001", "touch_stmpe811"]
+model_d002 = ["sec/model_d002", "backlight_pin", "touch_sitronix"]
+model_t2t1 = ["sec/model_t2t1", "backlight_tps61043", "touch_ft6x36_t2t1"]
+model_t2b1 = ["sec/model_t2b1"]
+model_t3b1 = ["sec/model_t3b1"]
+model_t3t1 = ["sec/model_t3t1", "backlight_tps61043", "touch_ft6x36_t3t1"]
+model_t3w1 = ["sec/model_t3w1", "backlight_tps61062", "touch_ft3168"]
+
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f427 = ["sec/mcu_stm32f427", "mcu_stm32f4"]
+mcu_stm32f429 = ["sec/mcu_stm32f429", "mcu_stm32f4"]
+mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
+
+# --------------------------------------------------------------------------
+# Privilege mode features
+# --------------------------------------------------------------------------
+
+kernel_mode = ["sec/kernel_mode"]
+secure_mode = ["sec/secure_mode"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+app_loading = ["sys/app_loading"]
+backlight = []
+ble = ["nrf"]
+button = []
+display = []
+dma2d = []
+emulator = ["sec/emulator"]
+fancy_fatal_error = []
+haptic = ["sys/i2c_bus"]
+ipc = ["sys/ipc"]
+nrf = []
+nrf_auth = ["sec/nrf_auth"]
+hw_jpeg_decoder = []
+lockable_bootloader = ["sec/lockable_bootloader"]
+pmic = ["sys/i2c_bus"]
+power_manager = ["pmic", "sys/i2c_bus"]
+production = ["sec/production"]
+raspi_emulator = []
+rgb_led = []
+sbu = []
+sd_card = []
+smp = []
+suspend = ["sec/suspend"]
+touch = ["sys/i2c_bus"]
+usb_iface_debug = ["usb"]
+usb_iface_vcp = ["usb"]
+usb_iface_webauthn = ["usb"]
+usb_iface_wire = ["usb"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32f4 = ["mcu_stm32"]
+mcu_stm32 = []
+usb = []
+
+# Features for selecting driver implementations
+
+backlight_tps61043 = []
+backlight_tps61062 = []
+backlight_pin = []
+
+touch_ft6x36_t2t1 = []
+touch_ft6x36_t3t1 = []
+touch_ft3168 = []
+touch_stmpe811 = []
+touch_sitronix = []
+
+
+
+
