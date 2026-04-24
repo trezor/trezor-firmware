@@ -78,6 +78,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_WipeDevice;
   MP_QSTR___del__;
   MP_QSTR___dict__;
+  MP_QSTR___enter__;
+  MP_QSTR___exit__;
   MP_QSTR___name__;
   MP_QSTR_about_items;
   MP_QSTR_account;
@@ -153,6 +155,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__title_backup_wallet;
   MP_QSTR_backup__title_create_wallet_backup;
   MP_QSTR_backup__title_skip;
+  MP_QSTR_backup__type_n4w1;
+  MP_QSTR_backup__type_wordlist;
   MP_QSTR_backup__want_to_skip;
   MP_QSTR_backup_check_allowed;
   MP_QSTR_backup_failed;
@@ -236,7 +240,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__continue;
   MP_QSTR_buttons__details;
   MP_QSTR_buttons__enable;
-  MP_QSTR_buttons__enter;
   MP_QSTR_buttons__enter_share;
   MP_QSTR_buttons__export;
   MP_QSTR_buttons__finish;
@@ -294,7 +297,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_thp_pairing;
   MP_QSTR_confirm_total__fee_rate;
   MP_QSTR_confirm_total__fee_rate_colon;
-  MP_QSTR_confirm_total__sending_from_account;
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
   MP_QSTR_confirm_trade;
@@ -318,8 +320,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
-  MP_QSTR_device_name__changed;
-  MP_QSTR_device_name__continue_with_empty_label;
   MP_QSTR_device_name__enter;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
@@ -421,7 +421,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_is_connectable;
   MP_QSTR_is_connected;
   MP_QSTR_is_data;
-  MP_QSTR_is_footer_warning;
   MP_QSTR_is_pairing;
   MP_QSTR_is_pairing_requested;
   MP_QSTR_is_started;
@@ -596,7 +595,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__dry_run_slip39_valid_match;
   MP_QSTR_recovery__dry_run_slip39_valid_mismatch;
   MP_QSTR_recovery__dry_run_slip39_valid_share;
-  MP_QSTR_recovery__dry_run_verify_remaining_shares;
   MP_QSTR_recovery__enter_any_share;
   MP_QSTR_recovery__enter_backup;
   MP_QSTR_recovery__enter_different_share;
@@ -604,7 +602,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__enter_share_from_diff_group;
   MP_QSTR_recovery__group_num_template;
   MP_QSTR_recovery__group_threshold_reached;
-  MP_QSTR_recovery__info_about_disconnect;
   MP_QSTR_recovery__invalid_share_entered;
   MP_QSTR_recovery__invalid_wallet_backup_entered;
   MP_QSTR_recovery__more_shares_needed;
@@ -896,7 +893,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__did_you_know;
   MP_QSTR_tutorial__exit;
   MP_QSTR_tutorial__first_wallet;
-  MP_QSTR_tutorial__get_started;
   MP_QSTR_tutorial__last_one;
   MP_QSTR_tutorial__lets_begin;
   MP_QSTR_tutorial__menu;
@@ -942,7 +938,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_version;
   MP_QSTR_wait_ble_host_confirmation;
   MP_QSTR_warning;
-  MP_QSTR_warning_footer;
   MP_QSTR_wipe__info;
   MP_QSTR_wipe__start_again;
   MP_QSTR_wipe__title;
@@ -1009,7 +1004,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__fee_limit;
   MP_QSTR_words__forget;
   MP_QSTR_words__from;
-  MP_QSTR_words__good_to_know;
   MP_QSTR_words__important;
   MP_QSTR_words__instructions;
   MP_QSTR_words__intent;
@@ -1257,6 +1251,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__new_contract;
   MP_QSTR_ethereum__no_message_field;
   MP_QSTR_ethereum__priority_fee;
+  MP_QSTR_ethereum__redeem;
   MP_QSTR_ethereum__redeem_amount;
   MP_QSTR_ethereum__redeem_from;
   MP_QSTR_ethereum__reward_tokens;
@@ -1282,19 +1277,22 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__title_confirm_typed_data;
   MP_QSTR_ethereum__title_input_data;
   MP_QSTR_ethereum__title_signing_address;
+  MP_QSTR_ethereum__title_token_contract;
   MP_QSTR_ethereum__token_contract;
   MP_QSTR_ethereum__units_template;
   MP_QSTR_ethereum__unknown_contract_address;
   MP_QSTR_ethereum__unknown_token;
   MP_QSTR_ethereum__valid_signature;
   MP_QSTR_ethereum__vault_claim_intro;
+  MP_QSTR_ethereum__vault_claim_to;
   MP_QSTR_ethereum__vault_deposit_intro;
   MP_QSTR_ethereum__vault_redeem_intro;
+  MP_QSTR_ethereum__vault_redeem_to;
   MP_QSTR_ethereum__vault_withdraw_intro;
   MP_QSTR_ethereum__withdraw;
+  MP_QSTR_ethereum__withdraw_amount;
   MP_QSTR_ethereum__withdraw_from;
-  MP_QSTR_ethereum__withdraw_intro;
-  MP_QSTR_ethereum__your_address;
+  MP_QSTR_ethereum__withdraw_to;
   MP_QSTR_fido__already_registered;
   MP_QSTR_fido__device_already_registered;
   MP_QSTR_fido__device_already_registered_with_template;

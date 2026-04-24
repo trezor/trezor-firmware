@@ -80,6 +80,10 @@ class LayoutObj(Generic[T]):
         """Retrieve the return value of the layout object."""
     def __del__(self) -> None:
         """Calls drop on contents of the root component."""
+    def __enter__(self) -> LayoutObj[T]:
+        """Enters a context manager (checking the root component is not dropped)."""
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Exits a context manager (dropping the root component)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -181,8 +185,7 @@ def confirm_value(
     prompt_screen: bool = False,
     cancel: bool = False,
     back_button: bool = False,
-    footer: str | None = None,
-    is_footer_warning: bool = True,
+    footer: tuple[str, bool] | None = None,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm a generic piece of information on the screen.
@@ -346,7 +349,7 @@ def confirm_with_info(
     subtitle: str | None = None,
     items: Iterable[tuple[StrOrBytes, bool]],
     verb: str,
-    verb_info: str,
+    verb_info: str | None = None,
     verb_cancel: str | None = None,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
@@ -688,8 +691,9 @@ def show_info(
     *,
     title: str,
     description: str = "",
-    button: str = "",
+    button: tuple[str, bool] | None = None,
     time_ms: int = 0,
+    external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
     """Info screen."""
 

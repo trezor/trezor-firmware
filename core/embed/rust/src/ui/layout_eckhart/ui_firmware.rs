@@ -464,8 +464,7 @@ impl FirmwareUI for UIEckhart {
         _prompt_screen: bool,
         cancel: bool,
         back_button: bool,
-        footer: Option<TString<'static>>,
-        is_footer_warning: bool,
+        footer: Option<(TString<'static>, bool)>, // true implies warning style
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         if info && external_menu {
@@ -513,7 +512,7 @@ impl FirmwareUI for UIEckhart {
         } else {
             Button::with_text(TR::buttons__confirm.into()).styled(button_confirm())
         };
-        if footer.is_some() && is_footer_warning {
+        if matches!(footer, Some((_, true))) {
             right_button = right_button
                 .styled(theme::button_actionbar_danger())
                 .with_gradient(Gradient::Alert);
@@ -543,11 +542,11 @@ impl FirmwareUI for UIEckhart {
             .with_external_menu(external_menu);
         if page_counter {
             screen = screen.with_hint(Hint::new_page_counter())
-        } else if let Some(footer) = footer {
-            screen = screen.with_hint(if is_footer_warning {
-                Hint::new_warning_caution(footer)
+        } else if let Some((footer_text, is_warning)) = footer {
+            screen = screen.with_hint(if is_warning {
+                Hint::new_warning_caution(footer_text)
             } else {
-                Hint::new_instruction(footer, Some(theme::ICON_INFO))
+                Hint::new_instruction(footer_text, Some(theme::ICON_INFO))
             });
         }
         let screen = screen.map(move |msg| match msg {
@@ -591,7 +590,7 @@ impl FirmwareUI for UIEckhart {
         subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
-        verb_info: TString<'static>,
+        verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -622,7 +621,7 @@ impl FirmwareUI for UIEckhart {
             None,
             Some(verb),
             false,
-            Some(verb_info),
+            verb_info,
             None,
         )?;
         LayoutObj::new_root(flow)
@@ -1234,15 +1233,25 @@ impl FirmwareUI for UIEckhart {
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
-        button: TString<'static>,
+        button: Option<(TString<'static>, bool)>,
         _time_ms: u32,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_REGULAR, description))
             .with_placement(LinearPlacement::vertical());
 
+        let button = button.map_or_else(Button::empty, |(text, enabled)| {
+            Button::with_text(text).initially_enabled(enabled)
+        });
+        let header = Header::new(title);
         let screen = TextScreen::new(content)
-            .with_header(Header::new(title))
-            .with_action_bar(ActionBar::new_single(Button::with_text(button)));
+            .with_header(if external_menu {
+                header.with_menu_button()
+            } else {
+                header
+            })
+            .with_external_menu(external_menu)
+            .with_action_bar(ActionBar::new_single(button));
         let obj = LayoutObj::new(screen)?;
         Ok(obj)
     }

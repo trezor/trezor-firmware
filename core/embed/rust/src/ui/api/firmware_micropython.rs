@@ -169,12 +169,15 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, false)?;
         let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, false)?;
         let back_button: bool = kwargs.get_or(Qstr::MP_QSTR_back_button, false)?;
-        let footer: Option<TString> = kwargs
+        let footer_obj: Obj = kwargs
             .get(Qstr::MP_QSTR_footer)
-            .or_else(|_| kwargs.get(Qstr::MP_QSTR_warning_footer))
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-        let is_footer_warning: bool = kwargs.get_or(Qstr::MP_QSTR_is_footer_warning, true)?;
+            .unwrap_or_else(|_| Obj::const_none());
+        let footer: Option<(TString, bool)> = if footer_obj == Obj::const_none() {
+            None
+        } else {
+            let [text_obj, is_warning_obj]: [Obj; 2] = util::iter_into_array(footer_obj)?;
+            Some((text_obj.try_into()?, is_warning_obj.try_into()?))
+        };
         let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
         let layout = ModelUI::confirm_value(
@@ -194,7 +197,6 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             cancel,
             back_button,
             footer,
-            is_footer_warning,
             external_menu,
         )?;
 
@@ -474,7 +476,10 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             .try_into_option()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let verb: TString = kwargs.get(Qstr::MP_QSTR_verb)?.try_into()?;
-        let verb_info: TString = kwargs.get(Qstr::MP_QSTR_verb_info)?.try_into()?;
+        let verb_info: Option<TString<'static>> = kwargs
+            .get(Qstr::MP_QSTR_verb_info)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb_cancel: Option<TString<'static>> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -1066,10 +1071,19 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let button: TString = kwargs.get_or(Qstr::MP_QSTR_button, TString::empty())?;
+        let button = kwargs
+            .get(Qstr::MP_QSTR_button)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option::<Obj>()?
+            .map(|obj| -> Result<(TString<'_>, bool), Error> {
+                let [text, enabled]: [Obj; 2] = util::iter_into_array(obj)?;
+                Ok((text.try_into()?, enabled.try_into()?))
+            })
+            .transpose()?;
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?.try_into()?;
+        let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
-        let obj = ModelUI::show_info(title, description, button, time_ms)?;
+        let obj = ModelUI::show_info(title, description, button, time_ms, external_menu)?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1436,6 +1450,12 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     def __del__(self) -> None:
     ///         """Calls drop on contents of the root component."""
     ///
+    ///     def __enter__(self) -> LayoutObj[T]:
+    ///         """Enters a context manager (checking the root component is not dropped)."""
+    ///
+    ///     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    ///         """Exits a context manager (dropping the root component)."""
+    ///
     /// class UiResult:
     ///     """Result of a UI operation."""
     ///     pass
@@ -1535,8 +1555,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     prompt_screen: bool = False,
     ///     cancel: bool = False,
     ///     back_button: bool = False,
-    ///     footer: str | None = None,
-    ///     is_footer_warning: bool = True,
+    ///     footer: tuple[str, bool] | None = None,
     ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm a generic piece of information on the screen.
@@ -1690,7 +1709,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     subtitle: str | None = None,
     ///     items: Iterable[tuple[StrOrBytes, bool]],
     ///     verb: str,
-    ///     verb_info: str,
+    ///     verb_info: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
@@ -2002,8 +2021,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     description: str = "",
-    ///     button: str = "",
+    ///     button: tuple[str, bool] | None = None,
     ///     time_ms: int = 0,
+    ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Info screen."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),

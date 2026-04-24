@@ -5,6 +5,7 @@ from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (
     confirm_blob,
     confirm_ethereum_staking_tx,
+    confirm_ethereum_vault_tx,
     confirm_text,
     should_show_more,
 )
@@ -62,10 +63,10 @@ async def require_confirm_approve(
         await require_confirm_unknown_token(title)
 
     await confirm_ethereum_approve(
-        recipient_addr,
+        addr_pad(recipient_addr, chunkify),
         recipient_str,
         token is tokens.UNKNOWN_TOKEN,
-        token_address_str,
+        addr_pad(token_address_str, chunkify),
         token.symbol,
         network is networks.UNKNOWN_NETWORK,
         chain_id_str,
@@ -111,11 +112,14 @@ async def require_confirm_tx(
         await require_confirm_address(
             address_bytes,
             title,
-            TR.ethereum__token_contract,
+            TR.ethereum__title_token_contract,
             TR.buttons__continue,
             "unknown_token",
             TR.ethereum__unknown_contract_address,
         )
+
+    if recipient is not None:
+        recipient = addr_pad(recipient, chunkify)
 
     await confirm_ethereum_tx(
         recipient,
@@ -216,6 +220,7 @@ async def require_confirm_stake(
 ) -> None:
 
     addr_str = address_from_bytes(addr_bytes, network)
+    addr_str = addr_pad(addr_str, chunkify)
     total_amount = format_ethereum_amount(value, None, network)
     account, account_path = get_account_and_path(address_n)
 
@@ -227,10 +232,62 @@ async def require_confirm_stake(
         account,
         account_path,
         maximum_fee,
-        addr_str,  # address
+        addr_str,
         TR.ethereum__staking_stake_address,  # address_title
         fee_info_items,  # info_items
         chunkify=chunkify,
+    )
+
+
+async def require_confirm_vault_tx(
+    value: int,
+    address_n: list[int],
+    maximum_fee: str,
+    fee_info_items: Iterable[StrPropertyType],
+    network: EthereumNetworkInfo,
+    vault_str: str,
+    token: EthereumTokenInfo,
+    func_sig: AnyBytes,
+) -> None:
+    from .yielding import FUNC_SIG_DEPOSIT, FUNC_SIG_REDEEM, FUNC_SIG_WITHDRAW
+
+    if func_sig == FUNC_SIG_DEPOSIT:
+        title = TR.words__deposit
+        intro_question = TR.ethereum__vault_deposit_intro
+        verb = TR.ethereum__deposit_to
+        amount_label = TR.ethereum__deposit_amount
+        br_name = "ethereum/vault/deposit"
+    elif func_sig == FUNC_SIG_REDEEM:
+        title = TR.ethereum__redeem
+        intro_question = TR.ethereum__vault_redeem_intro
+        verb = TR.ethereum__redeem_from
+        amount_label = TR.ethereum__redeem_amount
+        br_name = "ethereum/vault/redeem"
+    elif func_sig == FUNC_SIG_WITHDRAW:
+        title = TR.ethereum__withdraw
+        intro_question = TR.ethereum__vault_withdraw_intro
+        verb = TR.ethereum__withdraw_from
+        amount_label = TR.ethereum__withdraw_amount
+        br_name = "ethereum/vault/withdraw"
+    else:
+        raise ValueError("Unknown vault function signature")
+
+    amount = format_ethereum_amount(value, token, network)
+    account, account_path = get_account_and_path(address_n)
+
+    await confirm_ethereum_vault_tx(
+        title=title,
+        intro_question=intro_question,
+        verb=verb,
+        vault_str=vault_str,
+        amount=amount,
+        amount_label=amount_label,
+        account=account,
+        account_path=account_path,
+        maximum_fee=maximum_fee,
+        info_items=fee_info_items,
+        chain=network.name,
+        br_name=br_name,
     )
 
 
@@ -245,6 +302,7 @@ async def require_confirm_unstake(
 ) -> None:
 
     addr_str = address_from_bytes(addr_bytes, network)
+    addr_str = addr_pad(addr_str, chunkify)
     total_amount = format_ethereum_amount(value, None, network)
     account, account_path = get_account_and_path(address_n)
 
@@ -273,6 +331,7 @@ async def require_confirm_claim(
 ) -> None:
 
     addr_str = address_from_bytes(addr_bytes, network)
+    addr_str = addr_pad(addr_str, chunkify)
     account, account_path = get_account_and_path(address_n)
 
     await confirm_ethereum_staking_tx(
@@ -314,8 +373,7 @@ def require_confirm_address(
         address_hex,
         subtitle=subtitle,
         verb=verb,
-        footer=footer,
-        is_footer_warning=True,
+        footer=(footer, True) if footer is not None else None,
         br_name=br_name,
         br_code=ButtonRequestType.SignTx,
     )
@@ -468,3 +526,12 @@ def limit_str(s: str, limit: int = 16) -> str:
         return s
 
     return ".." + s[-limit:]
+
+
+def addr_pad(addr: str, chunkify: bool) -> str:
+    """Keep "0x" prefix in a separate chunk (#6601)."""
+
+    assert addr.startswith("0x")
+    if chunkify:
+        addr = "  " + addr
+    return addr

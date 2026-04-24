@@ -125,8 +125,7 @@ impl FirmwareUI for UIDelizia {
         prompt_screen: bool,
         cancel: bool,
         back_button: bool,
-        _footer: Option<TString<'static>>,
-        _is_footer_warning: bool,
+        _footer: Option<(TString<'static>, bool)>,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         if info && external_menu {
@@ -468,7 +467,7 @@ impl FirmwareUI for UIDelizia {
         subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
-        verb_info: TString<'static>,
+        verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -496,9 +495,7 @@ impl FirmwareUI for UIDelizia {
         }
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new().with_verb_info(Some(verb_info)),
-            ),
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_info(verb_info)),
             strings,
             ConfirmActionOptions::new(),
         )?;
@@ -974,9 +971,13 @@ impl FirmwareUI for UIDelizia {
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
-        _button: TString<'static>,
+        _button: Option<(TString<'static>, bool)>,
         _time_ms: u32,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error> {
+        if external_menu {
+            return Err(Error::NotImplementedError);
+        }
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, SwipeContent::new(content)).with_swipeup_footer(None),

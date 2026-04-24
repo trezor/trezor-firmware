@@ -71,8 +71,7 @@ pub trait FirmwareUI {
         prompt_screen: bool,
         cancel: bool,
         back_button: bool,
-        footer: Option<TString<'static>>,
-        is_footer_warning: bool,
+        footer: Option<(TString<'static>, bool)>,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
@@ -168,7 +167,7 @@ pub trait FirmwareUI {
         subtitle: Option<TString<'static>>,
         items: Obj, // TODO: replace Obj
         verb: TString<'static>,
-        verb_info: TString<'static>,
+        verb_info: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error>;
@@ -386,8 +385,9 @@ pub trait FirmwareUI {
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
-        button: TString<'static>,
+        button: Option<(TString<'static>, bool)>,
         time_ms: u32,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn show_info_with_cancel(
