@@ -28,14 +28,13 @@
 #include <io/display.h>
 #include <io/unix/sdl_display.h>
 #include <sys/logging.h>
+#include <sys/profile.h>
 #include <sys/systask.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_blendmode.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_render.h>
-
-#include "profile.h"
 
 #ifdef USE_POWER_MANAGER
 #include "suspend_overlay.h"

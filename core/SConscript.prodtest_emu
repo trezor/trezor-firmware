@@ -188,10 +188,6 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/emulator.c',
 ]
 
-SOURCE_HAL += [
-    'embed/projects/unix/profile.c',
-]
-
 env.Replace(
     CAT='cat',
     CP='cp',

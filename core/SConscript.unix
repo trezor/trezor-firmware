@@ -431,7 +431,6 @@ SOURCE_MICROPYTHON = [
 SOURCE_UNIX = [
     'embed/projects/unix/main_main.c',
     'embed/projects/unix/main.c',
-    'embed/projects/unix/profile.c',
     'embed/projects/unix/rust_c_setup.c',
     'vendor/micropython/ports/unix/alloc.c',
     'vendor/micropython/ports/unix/gccollect.c',

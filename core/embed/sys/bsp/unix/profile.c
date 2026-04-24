@@ -23,9 +23,9 @@
 
 #include <trezor_rtl.h>
 
-#include <stdlib.h>
+#include <sys/profile.h>
 
-#include "profile.h"
+#include <stdlib.h>
 
 #define SVAR(varname)   \
   static char *varname; \
