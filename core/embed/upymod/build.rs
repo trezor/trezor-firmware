@@ -906,9 +906,9 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_N4W1/{n4w1}/g"),
             format!(r"s/utils\.SCM_REVISION_XOR2/{scm_revision_xor2}/g"),
             r"s/if TYPE_CHECKING/if False/".to_string(),
-            r"s/import typing/# \0/".to_string(),
-            r"/from typing import (/,/^\s*)/ {{s/^/# /; }}".to_string(),
-            r"s/from typing import/# \0/".to_string(),
+            r"s/import typing/# &/".to_string(),
+            r"/from typing import (/,/^[[:space:]]*)/ {{s/^/# /; }}".to_string(),
+            r"s/from typing import/# &/".to_string(),
         ];
 
         for model in ["T2T1", "T2B1", "T3T1", "T3B1", "T3W1"] {
