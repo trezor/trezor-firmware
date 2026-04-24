@@ -871,40 +871,47 @@ impl<'a> MpyBuilder<'a> {
     fn create_sed_scripts(&self) -> Result<Vec<String>> {
         let py_bool = |cond: bool| if cond { "True" } else { "False" };
 
-        let btc_only = py_bool(cfg!(not(feature = "universal_fw")));
         let backlight = py_bool(cfg!(feature = "backlight"));
+        let ble = py_bool(cfg!(feature = "ble"));
+        let btc_only = py_bool(cfg!(not(feature = "universal_fw")));
+        let button = py_bool(cfg!(feature = "button"));
+        let emulator = py_bool(cfg!(feature = "emulator"));
+        let haptic = py_bool(cfg!(feature = "haptic"));
+        let n4w1 = py_bool(cfg!(feature = "n4w1"));
         let optiga = py_bool(cfg!(feature = "optiga"));
+        let power_manager = py_bool(cfg!(feature = "power_manager"));
+        let rgb_led = py_bool(cfg!(feature = "rgb_led"));
+        let telemetry = py_bool(cfg!(feature = "telemetry"));
+        let thp = py_bool(cfg!(feature = "thp"));
+        let touch = py_bool(cfg!(feature = "touch"));
         let tropic = py_bool(cfg!(feature = "tropic"));
+        let scm_revision_xor2 = self.scm_revision_xor2;
+
         let layout_bolt = py_bool(cfg!(feature = "layout_bolt"));
         let layout_caesar = py_bool(cfg!(feature = "layout_caesar"));
         let layout_delizia = py_bool(cfg!(feature = "layout_delizia"));
         let layout_eckhart = py_bool(cfg!(feature = "layout_eckhart"));
-        let ble = py_bool(cfg!(feature = "ble"));
-        let button = py_bool(cfg!(feature = "button"));
-        let touch = py_bool(cfg!(feature = "touch"));
-        let thp = py_bool(cfg!(feature = "thp"));
-        let power_manager = py_bool(cfg!(feature = "power_manager"));
-        let telemetry = py_bool(cfg!(feature = "telemetry"));
-        let n4w1 = py_bool(cfg!(feature = "n4w1"));
-        let scm_revision_xor2 = self.scm_revision_xor2;
 
         let mut exprs: Vec<String> = vec![
             format!(r"s/utils\.BITCOIN_ONLY/{btc_only}/g"),
+            format!(r"s/utils\.EMULATOR/{emulator}/g"),
             format!(r"s/utils\.USE_BACKLIGHT/{backlight}/g"),
+            format!(r"s/utils\.USE_BLE/{ble}/g"),
+            format!(r"s/utils\.USE_BUTTON/{button}/g"),
+            format!(r"s/utils\.USE_HAPTIC/{haptic}/g"),
+            format!(r"s/utils\.USE_N4W1/{n4w1}/g"),
             format!(r"s/utils\.USE_OPTIGA/{optiga}/g"),
+            format!(r"s/utils\.USE_POWER_MANAGER/{power_manager}/g"),
+            format!(r"s/utils\.USE_RGB_LED/{rgb_led}/g"),
+            format!(r"s/utils\.USE_TELEMETRY/{telemetry}/g"),
+            format!(r"s/utils\.USE_THP/{thp}/g"),
+            format!(r"s/utils\.USE_TOUCH/{touch}/g"),
             format!(r"s/utils\.USE_TROPIC/{tropic}/g"),
+            format!(r"s/utils\.SCM_REVISION_XOR2/{scm_revision_xor2}/g"),
             format!(r#"s/utils\.UI_LAYOUT == "BOLT"/{layout_bolt}/g"#),
             format!(r#"s/utils\.UI_LAYOUT == "CAESAR"/{layout_caesar}/g"#),
             format!(r#"s/utils\.UI_LAYOUT == "DELIZIA"/{layout_delizia}/g"#),
             format!(r#"s/utils\.UI_LAYOUT == "ECKHART"/{layout_eckhart}/g"#),
-            format!(r"s/utils\.USE_BLE/{ble}/g"),
-            format!(r"s/utils\.USE_BUTTON/{button}/g"),
-            format!(r"s/utils\.USE_TOUCH/{touch}/g"),
-            format!(r"s/utils\.USE_THP/{thp}/g"),
-            format!(r"s/utils\.USE_POWER_MANAGER/{power_manager}/g"),
-            format!(r"s/utils\.USE_TELEMETRY/{telemetry}/g"),
-            format!(r"s/utils\.USE_N4W1/{n4w1}/g"),
-            format!(r"s/utils\.SCM_REVISION_XOR2/{scm_revision_xor2}/g"),
             r"s/if TYPE_CHECKING/if False/".to_string(),
             r"s/import typing/# &/".to_string(),
             r"/from typing import (/,/^[[:space:]]*)/ {{s/^/# /; }}".to_string(),
