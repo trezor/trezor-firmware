@@ -194,6 +194,8 @@ trezor_message_impl! {
     EthereumTypedDataValueAck => MessageType_EthereumTypedDataValueAck,
     EthereumTypedDataSignature => MessageType_EthereumTypedDataSignature,
     EthereumSignTypedHash => MessageType_EthereumSignTypedHash,
+    EthereumDefinitionRequest => MessageType_EthereumDefinitionRequest,
+    EthereumDefinitionAck => MessageType_EthereumDefinitionAck,
 }
 
 #[cfg(feature = "evolu")]

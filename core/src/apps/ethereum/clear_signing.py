@@ -214,9 +214,10 @@ def _get_leaf_parser(info: EthereumABIValueInfo) -> Parser:
 
 
 class FieldFormatter:
-    def format(
+    async def format(
         self,
         value: AnyValue,
+        chain_id: int,
         definitions: Definitions,
         token: EthereumTokenInfo,
         path_walker: PathWalker,
@@ -231,9 +232,10 @@ class FieldFormatter:
 
 
 class AddressNameFormatter(FieldFormatter):
-    def format(
+    async def format(
         self,
         address: AnyValue,
+        _chain_id: int,
         definitions: Definitions,
         _token: EthereumTokenInfo,
         _path_walker: PathWalker,
@@ -249,9 +251,10 @@ class AddressNameFormatter(FieldFormatter):
 
 
 class AmountFormatter(FieldFormatter):
-    def format(
+    async def format(
         self,
         amount: AnyValue,
+        _chain_id: int,
         definitions: Definitions,
         _token: EthereumTokenInfo,
         _path_Walker: PathWalker,
@@ -279,13 +282,16 @@ class TokenAmountFormatter(FieldFormatter):
         self.native_currency_address = native_currency_address
         self.threshold = threshold
 
-    def format(
+    async def format(
         self,
         amount: AnyValue,
+        chain_id: int,
         definitions: Definitions,
         token: EthereumTokenInfo | None,
         path_walker: PathWalker,
     ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
+        from .tokens import UNKNOWN_TOKEN
+
         if amount is None:
             return None, None, None
         else:
@@ -309,6 +315,12 @@ class TokenAmountFormatter(FieldFormatter):
                     token = None
                 else:
                     token = definitions.get_token(token_address)
+                    if token is UNKNOWN_TOKEN:
+                        received_definitions, _ = await _request_definitions(
+                            chain_id, token_address, func_sig=None
+                        )
+                        if received_definitions is not None:
+                            token = received_definitions.get_token(token_address)
                 return (
                     format_ethereum_amount(amount, token, definitions.network),
                     token,
@@ -327,9 +339,10 @@ class UnitFormatter(FieldFormatter):
         self.base = base
         self.prefix = prefix
 
-    def format(
+    async def format(
         self,
         value: AnyValue,
+        _chain_id: int,
         _definitions: Definitions,
         _token: EthereumTokenInfo,
         _path_walker: PathWalker,
@@ -633,10 +646,11 @@ class DisplayFormat:
 
         return self.binding_context.matches(chain_id, address)
 
-    def parse(
+    async def parse(
         self,
         calldata: memoryview,
         address_n: list[int],
+        chain_id: int,
         tx_value: AnyBytes,
         definitions: Definitions,
         token: EthereumTokenInfo,
@@ -705,8 +719,9 @@ class DisplayFormat:
                 formatted_value,
                 actual_token,
                 actual_token_address,
-            ) = field_definition.get_formatter().format(
+            ) = await field_definition.get_formatter().format(
                 get_value_for_path(field_definition.path),
+                chain_id,
                 definitions,
                 token,
                 get_value_for_path,
@@ -746,6 +761,40 @@ class DisplayFormat:
         )
 
 
+async def _request_definitions(
+    chain_id: int, token_address: AnyBytes, func_sig: AnyBytes | None
+) -> tuple[Definitions | None, DisplayFormat | None]:
+    from trezor.messages import EthereumDefinitionAck, EthereumDefinitionRequest
+    from trezor.wire.context import call
+
+    req = EthereumDefinitionRequest(
+        chain_id=chain_id,
+        token_address=token_address,
+        func_sig=func_sig,
+    )
+    res = await call(req, EthereumDefinitionAck)
+
+    if res.definitions is None:
+        return None, None
+
+    received_definitions = Definitions.from_encoded(
+        res.definitions.encoded_network, res.definitions.encoded_token, chain_id
+    )
+
+    if res.definitions.encoded_erc7730_display_format is None:
+        display_format = None
+    else:
+        display_format = DisplayFormat.from_encoded(
+            res.definitions.encoded_erc7730_display_format
+        )
+        if display_format.func_sig != func_sig:
+            # We got something, but not what we asked for
+            # => ignore what we got!
+            display_format = None
+
+    return received_definitions, display_format
+
+
 async def try_parse(
     data: AnyBytes,
     address_bytes: bytes,
@@ -771,16 +820,23 @@ async def try_parse(
 
     display_format = None
     for f in ALL_DISPLAY_FORMATS:
+        # Start by trying built-in definitions...
         if f.func_sig == func_sig:
             display_format = f
             break
     else:
         if msg.definitions and msg.definitions.encoded_erc7730_display_format:
+            # ... look at definitions provided in the initial request...
             f = DisplayFormat.from_encoded(
                 msg.definitions.encoded_erc7730_display_format
             )
             if f.func_sig == func_sig:
                 display_format = f
+        if display_format is None:
+            # ... finally request the display format via another call!
+            _, display_format = await _request_definitions(
+                msg.chain_id, address_bytes, func_sig
+            )
 
     if display_format is None or not display_format.matches_context(
         msg.chain_id, address_bytes
@@ -841,8 +897,8 @@ async def _handle_approve(
     from .layout import require_confirm_approve
     from .sc_constants import KNOWN_ADDRESSES
 
-    args, fields = display_format.parse(
-        calldata, msg.address_n, msg.value, definitions, token
+    args, fields = await display_format.parse(
+        calldata, msg.address_n, msg.chain_id, msg.value, definitions, token
     )
 
     assert len(args) == 2
@@ -892,8 +948,8 @@ async def _handle_transfer(
 ) -> None:
     from .layout import require_confirm_payment_request, require_confirm_tx
 
-    args, fields = display_format.parse(
-        calldata, msg.address_n, msg.value, definitions, token
+    args, fields = await display_format.parse(
+        calldata, msg.address_n, msg.chain_id, msg.value, definitions, token
     )
 
     assert len(args) == 2
@@ -954,8 +1010,8 @@ async def _handle_generic_ui(
     from .layout import require_confirm_clear_signing
     from .sc_constants import KNOWN_ADDRESSES
 
-    _, fields = display_format.parse(
-        calldata, msg.address_n, msg.value, definitions, token
+    _, fields = await display_format.parse(
+        calldata, msg.address_n, msg.chain_id, msg.value, definitions, token
     )
 
     properties_to_confirm = []
