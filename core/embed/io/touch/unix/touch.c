@@ -79,7 +79,7 @@ static void handle_mouse_events(touch_driver_t* drv, SDL_Event* event) {
   bool inside_display = is_inside_display(event->button.x, event->button.y);
 
   switch (event->type) {
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
       if (inside_display) {
         int x = event->button.x - sdl_touch_offset_x;
         int y = event->button.y - sdl_touch_offset_y;
@@ -88,7 +88,7 @@ static void handle_mouse_events(touch_driver_t* drv, SDL_Event* event) {
       }
       break;
 
-    case SDL_MOUSEBUTTONUP:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
       if (drv->state != IDLE) {
         int x = inside_display ? event->button.x - sdl_touch_offset_x
                                : touch_unpack_x(drv->last_event);
@@ -100,7 +100,7 @@ static void handle_mouse_events(touch_driver_t* drv, SDL_Event* event) {
       }
       break;
 
-    case SDL_MOUSEMOTION:
+    case SDL_EVENT_MOUSE_MOTION:
       if (drv->state != IDLE) {
         if (inside_display) {
           int x = event->motion.x - sdl_touch_offset_x;
@@ -129,9 +129,9 @@ static void handle_mouse_events(touch_driver_t* drv, SDL_Event* event) {
 static void handle_button_events(touch_driver_t* drv, SDL_Event* event) {
   // Handle arrow buttons to trigger a scroll movement by set length in the
   // direction of the button
-  if (event->type == SDL_KEYDOWN && !event->key.repeat) {
+  if (event->type == SDL_EVENT_KEY_DOWN && !event->key.repeat) {
     if (drv->state != BUTTON_SWIPE_INITIATED) {
-      switch (event->key.keysym.sym) {
+      switch (event->key.key) {
         case SDLK_LEFT:
           drv->swipe_start_x = _btn_swipe_begin;
           drv->swipe_start_y = sdl_display_res_y / 2;
@@ -163,14 +163,14 @@ static void handle_button_events(touch_driver_t* drv, SDL_Event* event) {
       }
 
       if (drv->state == BUTTON_SWIPE_INITIATED) {
-        drv->swipe_key = event->key.keysym.sym;
+        drv->swipe_key = event->key.key;
         drv->swipe_time = systick_ms();
         drv->last_event =
             TOUCH_START | touch_pack_xy(drv->swipe_start_x, drv->swipe_start_y);
       }
     }
-  } else if (event->type == SDL_KEYUP &&
-             event->key.keysym.sym == drv->swipe_key) {
+  } else if (event->type == SDL_EVENT_KEY_UP &&
+             event->key.key == drv->swipe_key) {
     if (drv->state == BUTTON_SWIPE_INITIATED) {
       drv->last_event =
           TOUCH_END | touch_pack_xy(drv->swipe_end_x, drv->swipe_end_y);

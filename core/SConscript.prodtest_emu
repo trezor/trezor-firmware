@@ -243,9 +243,9 @@ except OSError:
     print("libjpeg not installed, Emulator build is not possible")
 
 try:
-    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
+    env.ParseConfig('pkg-config --cflags --libs sdl3 sdl3-image')
 except OSError:
-    print("SDL2 not installed, Emulator build is not possible")
+    print("SDL3 not installed, Emulator build is not possible")
 
 
 env.Replace(

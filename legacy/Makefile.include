@@ -116,8 +116,8 @@ LDFLAGS  += -L$(TOP_DIR)emulator
 LDLIBS   += -ltrezor -lemulator
 LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
 
-CFLAGS   += $(shell pkg-config --cflags sdl2 SDL2_image)
-LDLIBS   += $(shell pkg-config --libs sdl2 SDL2_image)
+CFLAGS   += $(shell pkg-config --cflags sdl3)
+LDLIBS   += $(shell pkg-config --libs sdl3)
 
 else
 ifdef APPVER

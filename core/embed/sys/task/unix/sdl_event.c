@@ -73,7 +73,7 @@ void sdl_events_poll(void) {
     SDL_Event sdl_event;
 
     // Process all pending events
-    while (SDL_PollEvent(&sdl_event) > 0) {
+    while (SDL_PollEvent(&sdl_event)) {
       for (int index = 0; index < ARRAY_LENGTH(dispatcher->filter); index++) {
         sdl_event_filter_t* filter = &dispatcher->filter[index];
         if (filter->callback != NULL) {
