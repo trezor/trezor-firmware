@@ -25,6 +25,8 @@
 #include <rtl/cli.h>
 #include <sys/systick.h>
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_sdcard_test(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -40,7 +42,7 @@ static void prodtest_sdcard_test(cli_t* cli) {
 #ifndef TREZOR_MODEL_T3T1
   if (sectrue != sdcard_is_present()) {
     cli_trace(cli, "The inserted SD card is required.");
-    cli_error(cli, "no-card", "");
+    cli_error(cli, PRODTEST_ERR_SDCARD_NO_CARD, "");
     return;
   }
 #else
@@ -50,14 +52,16 @@ static void prodtest_sdcard_test(cli_t* cli) {
   cli_trace(cli, "Powering on the SD card...");
 
   if (sectrue != sdcard_power_on_unchecked(low_speed)) {
-    cli_error(cli, CLI_ERROR, "SD card power on sequence failed.");
+    cli_error(cli, PRODTEST_ERR_SDCARD_POWER_ON,
+              "SD card power on sequence failed.");
     return;
   }
 
   cli_trace(cli, "Reading data from the SD card...");
 
   if (sectrue != sdcard_read_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-    cli_error(cli, CLI_ERROR, "Failed to read data from SD card.");
+    cli_error(cli, PRODTEST_ERR_SDCARD_READ_INITIAL,
+              "Failed to read data from SD card.");
     goto power_off;
   }
 
@@ -70,7 +74,8 @@ static void prodtest_sdcard_test(cli_t* cli) {
 
     if (sectrue !=
         sdcard_write_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-      cli_error(cli, CLI_ERROR, "Failed to write data from the SD card.");
+      cli_error(cli, PRODTEST_ERR_SDCARD_WRITE,
+                "Failed to write data from the SD card.");
       goto power_off;
     }
 
@@ -78,12 +83,14 @@ static void prodtest_sdcard_test(cli_t* cli) {
 
     if (sectrue !=
         sdcard_read_blocks(buf2, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-      cli_error(cli, CLI_ERROR, "Failed to read data from SD card.");
+      cli_error(cli, PRODTEST_ERR_SDCARD_READ_VERIFY,
+                "Failed to read data from SD card.");
       goto power_off;
     }
 
     if (0 != memcmp(buf1, buf2, sizeof(buf1))) {
-      cli_error(cli, CLI_ERROR, "Data mismatch after writing to SD card.");
+      cli_error(cli, PRODTEST_ERR_SDCARD_DATA_MISMATCH,
+                "Data mismatch after writing to SD card.");
       goto power_off;
     }
   }

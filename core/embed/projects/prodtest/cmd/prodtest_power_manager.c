@@ -34,6 +34,7 @@
 #include <sys/systick.h>
 
 #include "prodtest.h"
+#include "prodtest_error_codes.h"
 
 void prodtest_pm_hibernate(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -48,12 +49,13 @@ void prodtest_pm_hibernate(cli_t* cli) {
   status = pm_get_state(&state);
 
   if (status != PM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to get power manager state");
+    cli_error(cli, PRODTEST_ERR_PM_STATE_GET,
+              "Failed to get power manager state");
     return;
   }
 
   if (!pm_hibernate()) {
-    cli_error(cli, CLI_ERROR, "Failed to hibernate.");
+    cli_error(cli, PRODTEST_ERR_PM_HIBERNATE, "Failed to hibernate.");
     return;
   }
 }
@@ -120,7 +122,8 @@ void prodtest_pm_charge_disable(cli_t* cli) {
 
   pm_status_t status = pm_charging_disable();
   if (status != PM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to enable battery charging");
+    cli_error(cli, PRODTEST_ERR_PM_CHARGE_DISABLE,
+              "Failed to enable battery charging");
     return;
   }
 
@@ -137,7 +140,8 @@ void prodtest_pm_charge_enable(cli_t* cli) {
 
   pm_status_t status = pm_charging_enable();
   if (status != PM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to enable battery charging");
+    cli_error(cli, PRODTEST_ERR_PM_CHARGE_ENABLE,
+              "Failed to enable battery charging");
     return;
   }
 
@@ -156,7 +160,8 @@ void prodtest_pm_fuel_gauge_monitor(cli_t* cli) {
     pm_report_t report;
     pm_status_t status = pm_get_report(&report);
     if (status != PM_OK) {
-      cli_error(cli, CLI_ERROR, "Failed to get power manager report");
+      cli_error(cli, PRODTEST_ERR_PM_FUEL_GAUGE_REPORT_GET,
+                "Failed to get power manager report");
       return;
     }
 
@@ -202,7 +207,8 @@ void prodtest_pm_report(cli_t* cli) {
   pm_report_t report;
   pm_status_t status = pm_get_report(&report);
   if (status != PM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to get power manager report");
+    cli_error(cli, PRODTEST_ERR_PM_REPORT_GET,
+              "Failed to get power manager report");
     return;
   }
   cli_trace(cli, "Power manager report:");
@@ -302,7 +308,8 @@ void prodtest_pm_event_monitor(cli_t* cli) {
     }
 
     if (!pm_get_events(&event_flag)) {
-      cli_error(cli, CLI_ERROR, "Failed to get power manager events");
+      cli_error(cli, PRODTEST_ERR_PM_EVENTS_GET,
+                "Failed to get power manager events");
       continue;
     }
 
@@ -376,7 +383,7 @@ void prodtest_pm_new_soc_estimate(cli_t* cli) {
   backup_ram_erase_item(BACKUP_RAM_KEY_PM_RECOVERY);
   reboot_device();
 
-  cli_error(cli, CLI_ERROR, "failed to reboot");
+  cli_error(cli, PRODTEST_ERR_PM_REBOOT, "failed to reboot");
 }
 
 void prodtest_pm_battery_test(cli_t* cli) {
@@ -410,14 +417,15 @@ void prodtest_pm_battery_test(cli_t* cli) {
    */
   for (uint8_t i = 0; i < tested_samples; i++) {
     if (cli_aborted(cli)) {
-      cli_error(cli, CLI_ERROR, "Aborted.");
+      cli_error(cli, PRODTEST_ERR_PM_BATTERY_TEST_ABORTED, "Aborted.");
       goto cleanup;
     }
 
     pm_report_t report;
     pm_status_t status = pm_get_report(&report);
     if (status != PM_OK) {
-      cli_error(cli, CLI_ERROR, "Failed to get power manager report.");
+      cli_error(cli, PRODTEST_ERR_PM_BATTERY_TEST_REPORT_GET,
+                "Failed to get power manager report.");
       goto cleanup;
     }
 
@@ -441,7 +449,7 @@ void prodtest_pm_battery_test(cli_t* cli) {
   if (passed) {
     cli_ok(cli, "Battery test passed.");
   } else {
-    cli_error(cli, CLI_ERROR, "Battery test failed.");
+    cli_error(cli, PRODTEST_ERR_PM_BATTERY_TEST, "Battery test failed.");
   }
 
 cleanup:

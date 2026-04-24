@@ -38,22 +38,28 @@ Example:
 OK 2.1.7
 ```
 
-An `ERROR` response includes an error code and an optional error description enclosed in quotation marks.
+An `ERROR` response includes a numeric error code and an optional error description enclosed in quotation marks.
 
 Example:
 ```
-ERROR invalid-arg "Expecting x-coordinate."
+ERROR 11 "Expecting x-coordinate."
 ```
 
-#### Predefined Error Codes:
+#### Error Codes:
 
-While commands may define custom error codes as needed, the following are predefined:
+Error codes are non-negative integers split into two groups:
 
-* `error` - Unspecified error; additional details may be provided in the error description.
-* `invalid-cmd` - The command name is invalid.
-* `invalid-arg` - Invalid command argument.
-* `abort` - Operation aborted by the user (e.g., pressing CTRL+C).
-* `timeout` - The command execution timed out.
+* **Framework codes** are emitted by the CLI engine itself:
+
+  | Code | Name | Meaning |
+  |------|------|---------|
+  | 10 | `CLI_ERROR_INVALID_CMD` | The command name is invalid. |
+  | 11 | `CLI_ERROR_INVALID_ARG` | Invalid command argument. |
+  | 12 | `CLI_ERROR_ABORT` | Operation aborted by the user (e.g., pressing CTRL+C). |
+  | 13 | `CLI_ERROR_FATAL` | Unspecified fatal error; additional details may be provided in the description. |
+  | 14 | `CLI_ERROR_INVALID_CRC` | The CRC checksum of the command is missing or invalid. |
+
+* **Command-specific codes** (≥ 1000) are returned by individual command handlers, with each module owning a numeric range. The authoritative list of codes, their symbolic names, and owning modules is maintained in [`error_codes.json`](error_codes.json).
 
 ### Progress response
 
@@ -276,7 +282,7 @@ The `button-test` command tests the functionality of the device's hardware butto
 * `button` specifies the expected button or combination of buttons, with possible values: `left`, `right`, `left+right`, `power`.
 * `timeout` specifies the timeout duration in milliseconds
 
-If the specified button or button combination is not detected within the timeout, the command will respond with `timeout` error.
+If the specified button or button combination is not detected within the timeout, the command will respond with a timeout error (`4010` `PRODTEST_ERR_BUTTON_PRESS_TIMEOUT`).
 
 Example (to wait for 5 seconds for the left button):
 ```
@@ -447,7 +453,7 @@ Starts a drawing canvas, where user can draw with finger on pen. Canvas is exite
 touch-draw
 # Starting drawing canvas...
 # Press CTRL+C for exit.
-ERROR abort
+ERROR 12
 ```
 
 ### touch-test
@@ -458,7 +464,7 @@ Tests the functionality of the display's touch screen. It draws a filled rectang
 * `quadrant` - A value between 0 and 3, determining the quadrant where the rectangle will be drawn.
 * `timeout` - The timeout duration in milliseconds.
 
-If the display is not touched within the specified timeout, the command will return a `timeout` error.
+If the display is not touched within the specified timeout, the command will return a timeout error (`19011` `PRODTEST_ERR_TOUCH_QUADRANT_TIMEOUT`).
 
 The command does not check whether the touch point lies within the quadrant or not. It only returns the x and y coordinate of the touch point.
 
@@ -481,7 +487,7 @@ Tests the functionality of the display's touch screen by drawing a filled rectan
 * `height` - The height of the rectangle.
 * `timeout` - The timeout duration in milliseconds.
 
-If the display is not touched within the specified timeout, the command returns a `timeout` error.
+If the display is not touched within the specified timeout, the command returns a timeout error (`19012` `PRODTEST_ERR_TOUCH_CUSTOM_TIMEOUT`).
 
 The device reports touch events, including coordinates and timestamps (in milliseconds). The correctness of the touch point is not validated and is left to the test equipment.
 
@@ -507,7 +513,7 @@ Tests the functionality of the display's touch screen by verifying that no touch
 
 * `timeout` - The duration to wait, in milliseconds, during which no touch input should be detected.
 
-If any touch activity is detected within the specified timeout, the command returns an error.
+If any touch activity is detected within the specified timeout, the command returns an error (`19013` `PRODTEST_ERR_TOUCH_UNEXPECTED_ACTIVITY`).
 
 Example (wait 10 seconds to ensure no touch input is detected):
 ```
@@ -549,7 +555,7 @@ touch-test-sensitivity 12
 # Setting touch controller sensitivity to 12...
 # Running touch controller test...
 # Press CTRL+C for exit.
-ERROR abort
+ERROR 12
 ```
 
 ### touch-version
@@ -568,8 +574,8 @@ Initiates a basic test of the SD card by writing a few blocks of data, reading t
 
 Possible error return codes are:
 
-- `no-card` - Indicates that no SD card is present
-- `error` - An I/O error occured (with additional details provided in the description field)
+- `14010` (`PRODTEST_ERR_SDCARD_NO_CARD`) - Indicates that no SD card is present
+- `14011`–`14015` - An I/O error occurred (with additional details provided in the description field)
 
 Example:
 ```
@@ -627,14 +633,14 @@ OK
 ### otp-batch-read
 Retrieves the batch string from the device's OTP memory. The batch string identifies the model and production batch of the device.
 
-If the OTP memory has not been written yet, it returns error code `no-data`.
+If the OTP memory has not been written yet, it returns error code `10012` (`PRODTEST_ERR_OTP_EMPTY`).
 
 Example:
 ```
 otp-batch-read
 # Reading device OTP memory...
 # Bytes read: <hexadecimal string>
-ERROR no-data "OTP block is empty."
+ERROR 10012 "OTP block is empty."
 ```
 
 ### otp-batch-write
@@ -661,14 +667,14 @@ otp-batch-write T2B1-231231 --dry-run
 Retrieves the device's serial number from the device's OTP memory. The device serial number is unique for each device.
 A QR code with the serial number is displayed on the prodtest screen and printed on the packaging.
 
-If the OTP memory has not been written yet, it returns error code `no-data`.
+If the OTP memory has not been written yet, it returns error code `10012` (`PRODTEST_ERR_OTP_EMPTY`).
 
 Example:
 ```
 otp-device-sn-read
 # Reading device OTP memory...
 # Bytes read: <hexadecimal string>
-ERROR no-data "OTP block is empty."
+ERROR 10012 "OTP block is empty."
 ```
 
 ### otp-device-sn-write
@@ -1129,7 +1135,7 @@ the following criteria to pass the test
  - Every sample NTC temperature is within range <-10, 65> °C
 
 In case any sample fails the test, the line is marked with `!` and test
-ends up with `ERROR error "Battery test failed."`.
+ends up with `ERROR 12020 "Battery test failed."` (`PRODTEST_ERR_PM_BATTERY_TEST`).
 
 Example:
 ```
