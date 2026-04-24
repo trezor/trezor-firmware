@@ -294,7 +294,7 @@ options:
     name: Insecure Storage Testing
     description: Enables insecure storage test mode.
     group: Testing
-    when: component(firmware)
+    when: all(component(firmware), not(target(emulator)))
     type: checkbox
 
   - id: production

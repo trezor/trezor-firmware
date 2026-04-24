@@ -466,6 +466,12 @@ impl BuildArgs {
             }
         }
 
+        if matches!(self.component, Component::Kernel) {
+            if self.debug_link.unwrap_or(self.emulator) {
+                features.push("debuglink");
+            }
+        }
+
         if matches!(
             self.component,
             Component::Firmware | Component::Kernel | Component::Secmon | Component::Prodtest

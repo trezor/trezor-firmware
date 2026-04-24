@@ -11,6 +11,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     if cfg!(feature = "usb_iface_debug") {
         lib.add_define("USE_USB_IFACE_DEBUG", Some("1"));
+        lib.add_define("DEBUGLINK", Some("1"));
     }
 
     if cfg!(feature = "usb_iface_webauthn") {
