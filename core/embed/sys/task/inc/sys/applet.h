@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
 
 #include <sys/systask.h>
 
@@ -99,4 +99,4 @@ bool applet_is_alive(applet_t* applet);
  */
 applet_t* applet_active(void);
 
-#endif  // KERNEL
+#endif  // USE_APPLETS

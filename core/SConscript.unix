@@ -32,7 +32,7 @@ if BENCHMARK and PYOPT != '0':
   exit(1)
 
 FEATURES_WANTED = [
-    "applet",
+    "applets",
     "ble",
     "display",
     "dma2d",

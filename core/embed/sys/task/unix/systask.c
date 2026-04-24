@@ -84,6 +84,10 @@ systask_t* systask_kernel(void) {
 
 systask_id_t systask_id(const systask_t* task) { return task->id; }
 
+#ifdef USE_APPLETS
+void systask_set_mpu(systask_t* task) {}
+#endif
+
 static uint32_t invoke_pushed_fn_call(systask_t* task) {
   systask_fn_call_t call = task->pushed_fn_call;
 
