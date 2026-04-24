@@ -6,7 +6,7 @@
 #define TOUCH_OFFSET_X 107
 #define TOUCH_OFFSET_Y 53
 
-#define BTN_POWER_KEY SDLK_p
+#define BTN_POWER_KEY SDLK_P
 
 #define ORIENTATION_NS 1
 

@@ -615,8 +615,8 @@ fn link_core_objects() {
     // Compile all the objects into a static library and link it in automatically.
     cc.compile("core_lib");
 
-    println!("cargo:rustc-link-lib=SDL2");
-    println!("cargo:rustc-link-lib=SDL2_image");
+    println!("cargo:rustc-link-lib=SDL3");
+    println!("cargo:rustc-link-lib=SDL3_image");
 
     #[cfg(any(feature = "ui_jpeg", feature = "hw_jpeg_decoder"))]
     println!("cargo:rustc-link-lib=jpeg");
