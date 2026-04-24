@@ -25,6 +25,8 @@
 #include <sec/telemetry.h>
 #include <sec/unit_properties.h>
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_telemetry(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -34,7 +36,8 @@ static void prodtest_telemetry(cli_t* cli) {
   telemetry_data_t data;
 
   if (!telemetry_get(&data)) {
-    cli_error(cli, CLI_ERROR_NODATA, "Telemetry data not available");
+    cli_error(cli, PRODTEST_ERR_TELEMETRY_NOT_AVAILABLE,
+              "Telemetry data not available");
     return;
   }
 
@@ -56,7 +59,8 @@ static void prodtest_telemetry_reset(cli_t* cli) {
   unit_properties_t props = {0};
   unit_properties_get(&props);
   if (props.locked) {
-    cli_error(cli, CLI_ERROR, "Device is not in manufacturing mode.");
+    cli_error(cli, PRODTEST_ERR_TELEMETRY_NOT_MANUFACTURING,
+              "Device is not in manufacturing mode.");
     return;
   }
 #endif
