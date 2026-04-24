@@ -155,7 +155,11 @@ static void send_info(void) {
   data[7] = 0;
   data[8] = signals_out_get_reserved();
 
-  read_image_sha256(FIXED_PARTITION_ID(slot0_partition), &data[9]);
+  int rc = read_image_sha256(FIXED_PARTITION_ID(slot0_partition), &data[9]);
+  if (rc < 0) {
+    LOG_ERR("Failed to read image SHA-256: %d", rc);
+    return;
+  }
 
   trz_comm_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data));
 }
