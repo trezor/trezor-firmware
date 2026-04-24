@@ -266,9 +266,11 @@ fn prepare_bindings() -> bindgen::Builder {
 fn prepare_bindings() -> bindgen::Builder {
     let mut attrs = xbuild::CompileAttrs::new();
 
-    attrs
-        .import_cc_compiler_includes()
-        .expect("Failed to import C compiler includes");
+    if is_firmware() {
+        attrs
+            .import_cc_compiler_includes()
+            .expect("Failed to import C compiler includes");
+    }
 
     attrs
         .import_library_metadata("io")
@@ -673,7 +675,6 @@ fn generate_crypto_bindings() {
         .unwrap();
 }
 
-#[cfg(any(feature = "micropython", not(feature = "with_new_crates")))]
 fn is_firmware() -> bool {
     let target = env::var("TARGET").unwrap();
     target.starts_with("thumbv7") || target.starts_with("thumbv8")
