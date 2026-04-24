@@ -38,16 +38,17 @@ typedef struct cli cli_t;
 /** Depth of the history buffer */
 #define CLI_HISTORY_DEPTH 5
 
-/** Error codes */
-#define CLI_ERROR "error" /**< unspecified error */
-#define CLI_ERROR_INVALID_CMD "invalid-cmd"
-#define CLI_ERROR_INVALID_ARG "invalid-arg"
-#define CLI_ERROR_ABORT "abort"
-#define CLI_ERROR_FATAL "fatal"
-#define CLI_ERROR_TIMEOUT "timeout"
-#define CLI_ERROR_LOCKED "locked"
-#define CLI_ERROR_NODATA "no-data"
-#define CLI_ERROR_INVALID_CRC "invalid-crc"
+/** Framework-level error codes used internally by the CLI engine.
+ *  Command handlers must use prodtest_error_t codes from
+ *  prodtest_error_codes.h instead of these. */
+#define CLI_ERROR_INVALID_CMD 1
+#define CLI_ERROR_INVALID_ARG 2
+#define CLI_ERROR_ABORT 3
+#define CLI_ERROR_FATAL 4
+#define CLI_ERROR_TIMEOUT 5
+#define CLI_ERROR_LOCKED 6
+#define CLI_ERROR_NODATA 7
+#define CLI_ERROR_INVALID_CRC 8
 
 /** CLI command handler routine prototype */
 typedef void (*cli_cmd_handler_t)(cli_t* cli);
@@ -232,7 +233,7 @@ void cli_progress(cli_t* cli, const char* format, ...);
  * automatically prefixed with the "ERROR" string and terminated with CR/LF
  * characters.
  */
-void cli_error(cli_t* cli, const char* code, const char* format, ...);
+void cli_error(cli_t* cli, int code, const char* format, ...);
 
 /**
  * Writes an invalid argument error message to the console

@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include "../stwlc38/stwlc38.h"
 
+#include "prodtest_error_codes.h"
+
 static void prodtest_wpc_info(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -41,13 +43,13 @@ static void prodtest_wpc_info(cli_t* cli) {
   pm_deinit();
 
   if (!stwlc38_init()) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize STWLC38.");
+    cli_error(cli, PRODTEST_ERR_WPC_INIT_1, "Failed to initialize STWLC38.");
     return;
   }
 
   cli_trace(cli, "Reading STWLC38 info...");
   if (!stwlc38_read_chip_info(&chip_info)) {
-    cli_error(cli, CLI_ERROR, "Cannot read STWLC38 info.");
+    cli_error(cli, PRODTEST_ERR_WPC_INFO_READ_1, "Cannot read STWLC38 info.");
     goto cleanup;
   }
 
@@ -55,7 +57,7 @@ static void prodtest_wpc_info(cli_t* cli) {
 
   if (!cstr_encode_hex(device_id, sizeof(device_id), chip_info.device_id,
                        sizeof(chip_info.device_id))) {
-    cli_error(cli, CLI_ERROR_FATAL, "Buffer too small.");
+    cli_error(cli, PRODTEST_ERR_WPC_BUF_SMALL, "Buffer too small.");
     goto cleanup;
   }
 
@@ -96,7 +98,8 @@ cleanup:
   // initlize power manager again
   status_pm = pm_init(true);
   if (status_pm != PM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
+    cli_error(cli, PRODTEST_ERR_WPC_POWER_MGR_REINIT_1,
+              "Failed to reinitialize power manager.");
     return;
   }
 }
@@ -113,7 +116,7 @@ static void prodtest_wpc_update(cli_t* cli) {
   pm_deinit();
 
   if (!stwlc38_init()) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize STWLC38.");
+    cli_error(cli, PRODTEST_ERR_WPC_INIT_2, "Failed to initialize STWLC38.");
     return;
   }
 
@@ -121,7 +124,7 @@ static void prodtest_wpc_update(cli_t* cli) {
 
   stwlc38_chip_info_t chip_info;
   if (!stwlc38_read_chip_info(&chip_info)) {
-    cli_error(cli, CLI_ERROR, "Cannot read STWLC38 info.");
+    cli_error(cli, PRODTEST_ERR_WPC_INFO_READ_2, "Cannot read STWLC38 info.");
     goto cleanup;
   }
 
@@ -130,7 +133,8 @@ static void prodtest_wpc_update(cli_t* cli) {
   } else if (chip_info.chip_rev == STWLC38_CUT_1_3) {
     cli_trace(cli, "STWLC38 chip revision 1.3");
   } else {
-    cli_error(cli, CLI_ERROR, "Unknown chip revision, update aborted.");
+    cli_error(cli, PRODTEST_ERR_WPC_UNKNOWN_CHIP_REVISION,
+              "Unknown chip revision, update aborted.");
     goto cleanup;
   }
 
@@ -140,7 +144,7 @@ static void prodtest_wpc_update(cli_t* cli) {
   update_time = systick_ms() - update_time;
 
   if (status == false) {
-    cli_error(cli, CLI_ERROR, "Failed to update STWLC38.");
+    cli_error(cli, PRODTEST_ERR_WPC_UPDATE, "Failed to update STWLC38.");
     goto cleanup;
   }
 
@@ -155,7 +159,8 @@ cleanup:
   // initlize power manager again
   status_pm = pm_init(true);
   if (status_pm != PM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
+    cli_error(cli, PRODTEST_ERR_WPC_POWER_MGR_REINIT_2,
+              "Failed to reinitialize power manager.");
     return;
   }
 }

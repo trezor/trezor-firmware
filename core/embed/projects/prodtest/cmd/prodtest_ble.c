@@ -30,6 +30,8 @@
 #include <sys/systick.h>
 #include <sys/systimer.h>
 
+#include "prodtest_error_codes.h"
+
 void ble_timer_cb(void* context) {
   ble_event_t e = {0};
 
@@ -48,7 +50,7 @@ void ble_timer_cb(void* context) {
 static bool ensure_ble_init(cli_t* cli) {
   cli_trace(cli, "Initializing the BLE...");
   if (!ble_init()) {
-    cli_error(cli, CLI_ERROR, "Cannot initialize BLE.");
+    cli_error(cli, PRODTEST_ERR_BLE_INIT, "Cannot initialize BLE.");
     return false;
   }
 
@@ -57,7 +59,7 @@ static bool ensure_ble_init(cli_t* cli) {
   if (timer == NULL) {
     timer = systimer_create(ble_timer_cb, NULL);
     if (timer == NULL) {
-      cli_error(cli, CLI_ERROR, "Cannot create timer.");
+      cli_error(cli, PRODTEST_ERR_BLE_TIMER_CREATE, "Cannot create timer.");
       return false;
     }
     systimer_set_periodic(timer, 10);
@@ -83,7 +85,8 @@ static void prodtest_ble_adv_start(cli_t* cli) {
 
   ble_set_static_mac(true);
   if (!ble_enter_pairing_mode((const uint8_t*)name, name_len)) {
-    cli_error(cli, CLI_ERROR, "Could not start advertising.");
+    cli_error(cli, PRODTEST_ERR_BLE_ADV_START_1,
+              "Could not start advertising.");
     return;
   }
 
@@ -101,7 +104,8 @@ static void prodtest_ble_adv_start(cli_t* cli) {
   }
 
   if (!result) {
-    cli_error(cli, CLI_ERROR, "Could not start advertising.");
+    cli_error(cli, PRODTEST_ERR_BLE_ADV_START_2,
+              "Could not start advertising.");
     return;
   }
 
@@ -120,7 +124,7 @@ static void prodtest_ble_adv_stop(cli_t* cli) {
   }
 
   if (!ble_switch_off()) {
-    cli_error(cli, CLI_ERROR, "Could not stop advertising.");
+    cli_error(cli, PRODTEST_ERR_BLE_ADV_STOP_1, "Could not stop advertising.");
     return;
   }
 
@@ -138,7 +142,7 @@ static void prodtest_ble_adv_stop(cli_t* cli) {
   }
 
   if (!result) {
-    cli_error(cli, CLI_ERROR, "Could not stop advertising.");
+    cli_error(cli, PRODTEST_ERR_BLE_ADV_STOP_2, "Could not stop advertising.");
     return;
   }
 
@@ -159,7 +163,7 @@ static void prodtest_ble_info(cli_t* cli) {
   bt_le_addr_t mac = {0};
 
   if (!ble_get_mac(&mac)) {
-    cli_error(cli, CLI_ERROR, "Could not read MAC.");
+    cli_error(cli, PRODTEST_ERR_BLE_MAC_READ, "Could not read MAC.");
     return;
   }
 
@@ -199,7 +203,7 @@ static void prodtest_ble_erase_bonds_cmd(cli_t* cli) {
   ble_get_state(&state);
 
   if (!state.state_known) {
-    cli_error(cli, CLI_ERROR, "BLE state unknown.");
+    cli_error(cli, PRODTEST_ERR_BLE_STATE_UNKNOWN, "BLE state unknown.");
   }
 
   if (state.peer_count == 0) {
@@ -208,7 +212,7 @@ static void prodtest_ble_erase_bonds_cmd(cli_t* cli) {
   }
 
   if (!prodtest_ble_erase_bonds(cli)) {
-    cli_error(cli, CLI_ERROR, "Could not erase bonds.");
+    cli_error(cli, PRODTEST_ERR_BLE_BONDS_ERASE, "Could not erase bonds.");
   }
 
   cli_trace(cli, "Erased %d bonds.", state.peer_count);
@@ -249,7 +253,7 @@ static void prodtest_ble_unpair(cli_t* cli) {
   uint32_t index;
 
   if (!cli_arg_uint32(cli, "index", &index)) {
-    cli_error(cli, CLI_ERROR, "Invalid index.");
+    cli_error(cli, PRODTEST_ERR_BLE_UNPAIR_INVALID_INDEX_1, "Invalid index.");
     return;
   }
 
@@ -261,13 +265,13 @@ static void prodtest_ble_unpair(cli_t* cli) {
   uint8_t cnt = ble_get_bond_list(bonds, BLE_MAX_BONDS);
 
   if (index > cnt || index < 1) {
-    cli_error(cli, CLI_ERROR, "Invalid index.");
+    cli_error(cli, PRODTEST_ERR_BLE_UNPAIR_INVALID_INDEX_2, "Invalid index.");
     return;
   }
 
   bt_le_addr_t* addr = &bonds[index - 1];
   if (!ble_unpair(addr)) {
-    cli_error(cli, CLI_ERROR, "Could not unpair.");
+    cli_error(cli, PRODTEST_ERR_BLE_UNPAIR, "Could not unpair.");
     return;
   }
 
@@ -332,7 +336,7 @@ static void prodtest_ble_radio_test_cmd(cli_t* cli) {
 
   // Initialize UART
   if (HAL_UART_Init(&huart) != HAL_OK) {
-    cli_error(cli, CLI_ERROR, "Could not initialize UART.");
+    cli_error(cli, PRODTEST_ERR_BLE_UART_INIT, "Could not initialize UART.");
     return;
   }
 
