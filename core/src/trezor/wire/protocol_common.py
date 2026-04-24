@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from micropython import const
 from trezor import loop, protobuf
 
 if __debug__:
@@ -131,6 +132,19 @@ class Context:
         ...
 
 
+_UNRESPONSIVE_WARNING_TIMEOUT_MS = const(2000)
+_UNRESPONSIVE_ERROR_TIMEOUT_MS = const(5000)
+
+
+def _waiting_screen() -> Generator[Any, Any, None]:
+    from trezor import TR
+    from trezor.ui.layouts import show_wait_text
+
+    yield from loop.sleep(_UNRESPONSIVE_WARNING_TIMEOUT_MS)
+    show_wait_text(TR.words__comm_trouble)
+    yield from loop.sleep(_UNRESPONSIVE_ERROR_TIMEOUT_MS)
+
+
 class ButtonRequestHandler:
     """Handle button requests and unexpected messages from host."""
 
@@ -162,19 +176,15 @@ class ButtonRequestHandler:
             # no pending I/O - mark as done, to unblock `join()`.
             self.is_done.put(None)
 
-    async def join(self, wait_task: loop.Task[None]) -> None:
+    async def join(self) -> None:
         # `br_task()` must be scheduled before joining.
 
         # notify the handler that no more button requests are expected
         # in production, we don't want this to fail, hence replace=True
         self.box.put(None, replace=True)
 
-        task = loop.spawn(wait_task)
-        try:
-            await self.is_done
-        finally:
-            assert self.is_done.is_empty()
-            task.close()
+        # Wait for the ButtonRequest handler to finish (or timeout)
+        await loop.race(self.is_done, _waiting_screen())
 
     async def _handle(self, ack_callback: AckCallback) -> None:
         from trezor.messages import ButtonAck
@@ -205,27 +215,62 @@ class ContinueOnErrors(ButtonRequestHandler):
         super().__init__(ctx)
         self._prev_handler: ButtonRequestHandler | None = None
         self.msg = msg
+        self.ignore = False
+
+    def put(self, br: ButtonRequest) -> None:
+        if self.ignore:
+            # Stop handling ButtonRequests in case of unexpected error.
+            return
+
+        super().put(br)
+
+    async def join(self) -> None:
+        if self.ignore:
+            # Stop handling ButtonRequests in case of unexpected error.
+            return
+
+        await super().join()
+
+    def br_task(self, ack_callback: AckCallback) -> Generator[Any, Any, None]:
+        if self.ignore:
+            # Stop handling ButtonRequests in case of unexpected error.
+            return None
+
+        return (yield from super().br_task(ack_callback))
 
     async def _handle(self, ack_callback: AckCallback) -> None:
         """Unexpected messages will not cause the handler to fail."""
         from .context import UnexpectedMessageException
 
-        while True:
-            try:
-                # Exit the loop when the layout is done.
-                return await super()._handle(ack_callback)
-            except UnexpectedMessageException as exc:
-                # in case of THP channel preemption, `msg` is not set.
-                # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
-                if exc.msg:
-                    from trezor.enums import FailureType
-                    from trezor.messages import Failure
+        ignore = True
+        try:
+            while True:
+                try:
+                    # Exit the loop when the layout is done.
+                    await super()._handle(ack_callback)
+                    ignore = False  # continue handling ButtonRequests
+                    return
+                except UnexpectedMessageException as exc:
+                    # in case of THP channel preemption, `msg` is not set.
+                    # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
+                    if exc.msg:
+                        from trezor.enums import FailureType
+                        from trezor.messages import Failure
 
-                    # notify the host that the device cannot be preempted
-                    await self.ctx.write(
-                        Failure(code=FailureType.InProgress, message=self.msg)
-                    )
-                # continue receiving messages
+                        # notify the host that the device cannot be preempted
+                        await self.ctx.write(
+                            Failure(code=FailureType.InProgress, message=self.msg)
+                        )
+                    # continue receiving messages
+                except Exception as exc:
+                    if __debug__:
+                        log.error(__name__, "ButtonRequest: ignored %s", exc)
+                        log.exception(__name__, exc)
+                    # Stop handling ButtonRequests in case of unexpected error (without failing the flow)
+                    return
+        finally:
+            # Handle GeneratorExit as well (e.g. in case of timeout).
+            self.ignore = ignore
 
     def __enter__(self) -> None:
         assert self._prev_handler is None
