@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from micropython import const
 from trezor import loop, protobuf
 
 if __debug__:
@@ -131,6 +132,19 @@ class Context:
         ...
 
 
+_UNRESPONSIVE_WARNING_TIMEOUT_MS = const(2000)
+_UNRESPONSIVE_ERROR_TIMEOUT_MS = const(5000)
+
+
+def _waiting_screen() -> Generator[Any, Any, None]:
+    from trezor import TR
+    from trezor.ui.layouts import show_wait_text
+
+    yield from loop.sleep(_UNRESPONSIVE_WARNING_TIMEOUT_MS)
+    show_wait_text(TR.words__comm_trouble)
+    yield from loop.sleep(_UNRESPONSIVE_ERROR_TIMEOUT_MS)
+
+
 class ButtonRequestHandler:
     """Handle button requests and unexpected messages from host."""
 
@@ -162,19 +176,15 @@ class ButtonRequestHandler:
             # no pending I/O - mark as done, to unblock `join()`.
             self.is_done.put(None)
 
-    async def join(self, wait_task: loop.Task[None]) -> None:
+    async def join(self) -> None:
         # `br_task()` must be scheduled before joining.
 
         # notify the handler that no more button requests are expected
         # in production, we don't want this to fail, hence replace=True
         self.box.put(None, replace=True)
 
-        task = loop.spawn(wait_task)
-        try:
-            await self.is_done
-        finally:
-            assert self.is_done.is_empty()
-            task.close()
+        # Wait for the ButtonRequest handler to finish (or timeout)
+        await loop.race(self.is_done, _waiting_screen())
 
     async def _handle(self, ack_callback: AckCallback) -> None:
         from trezor.messages import ButtonAck
@@ -214,13 +224,12 @@ class ContinueOnErrors(ButtonRequestHandler):
 
         super().put(br)
 
-    async def join(self, wait_task: loop.Task[None]) -> None:
+    async def join(self) -> None:
         if self.ignore:
             # Stop handling ButtonRequests in case of unexpected error.
             return
 
-        join_task = super().join(wait_task)
-        await loop.race(join_task, loop.sleep(5000))
+        await super().join()
 
     def br_task(self, ack_callback: AckCallback) -> Generator[Any, Any, None]:
         if self.ignore:
@@ -258,7 +267,6 @@ class ContinueOnErrors(ButtonRequestHandler):
                         log.error(__name__, "ButtonRequest: ignored %s", exc)
                         log.exception(__name__, exc)
                     # Stop handling ButtonRequests in case of unexpected error (without failing the flow)
-                    assert ignore
                     return
         finally:
             # Handle GeneratorExit as well (e.g. in case of timeout).
