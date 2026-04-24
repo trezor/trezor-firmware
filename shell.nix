@@ -76,6 +76,7 @@ in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
   name = "trezor-firmware-env";
+  nativeBuildInputs = [ autoPatchelfHook ];
   buildInputs = lib.optionals fullDeps [
     bitcoind
   ] ++ [
@@ -83,6 +84,8 @@ stdenvNoCC.mkDerivation ({
     # crash with SDL_CreateRenderer error.
     oldNixpkgs.SDL2
     oldNixpkgs.SDL2_image
+    sdl3
+    sdl3-image
     bash
     bloaty  # for binsize
     cargo-audit
@@ -114,7 +117,6 @@ stdenvNoCC.mkDerivation ({
     zlib
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
-    autoPatchelfHook
     procps
     valgrind
   ] ++ lib.optionals (stdenv.isDarwin) [
@@ -137,7 +139,12 @@ stdenvNoCC.mkDerivation ({
     nrfutil
     nrfconnect
   ];
-  LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
+  LD_LIBRARY_PATH = lib.makeLibraryPath [
+    libffi
+    libjpeg
+    libusb1
+    libressl
+  ];
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
 

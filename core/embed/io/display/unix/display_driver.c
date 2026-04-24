@@ -30,10 +30,11 @@
 #include <sys/logging.h>
 #include <sys/systask.h>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_blendmode.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_render.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_blendmode.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3_image/SDL_image.h>
+#include <stdlib.h>
 
 #include "profile.h"
 
@@ -66,6 +67,14 @@ LOG_DECLARE(display_driver)
 #define PIXEL_SIZE 2
 
 #endif
+
+SDL_Surface *SDL_CreateRGBSurface(Uint32 flags, int width, int height,
+                                  int depth, Uint32 Rmask, Uint32 Gmask,
+                                  Uint32 Bmask, Uint32 Amask) {
+  return SDL_CreateSurface(
+      width, height,
+      SDL_GetPixelFormatForMasks(depth, Rmask, Gmask, Bmask, Amask));
+}
 
 typedef struct {
   // Set if the driver is initialized
@@ -109,7 +118,7 @@ bool display_init(display_content_mode_t mode) {
     return true;
   }
 
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_HAPTIC | SDL_INIT_EVENTS)) {
     LOG_ERR("%s", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
@@ -123,21 +132,19 @@ bool display_init(display_content_mode_t mode) {
     window_title_alloc = NULL;
   }
 
-  drv->window =
-      SDL_CreateWindow(window_title, SDL_WINDOWPOS_UNDEFINED,
-                       SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT,
+  drv->window = SDL_CreateWindow(window_title, WINDOW_WIDTH, WINDOW_HEIGHT,
 #ifdef TREZOR_EMULATOR_RASPI
-                       SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN
+                                 SDL_WINDOW_FULLSCREEN
 #else
-                       SDL_WINDOW_SHOWN
+                                 0  // windows are visible by default in SDL3
 #endif
-      );
+  );
   free(window_title_alloc);
   if (!drv->window) {
     LOG_ERR("%s", SDL_GetError());
     error_shutdown("SDL_CreateWindow error");
   }
-  drv->renderer = SDL_CreateRenderer(drv->window, -1, SDL_RENDERER_SOFTWARE);
+  drv->renderer = SDL_CreateRenderer(drv->window, NULL);
   if (!drv->renderer) {
     LOG_ERR("%s", SDL_GetError());
     SDL_DestroyWindow(drv->window);
@@ -162,31 +169,31 @@ bool display_init(display_content_mode_t mode) {
 #define CONCAT_LEN(name) CONCAT_LEN_HELPER(name)
 #ifdef BACKGROUND_FILE
 #include BACKGROUND_FILE
-  drv->background = IMG_LoadTexture_RW(
+  drv->background = IMG_LoadTexture_IO(
       drv->renderer,
-      SDL_RWFromMem(BACKGROUND_NAME, CONCAT_LEN(BACKGROUND_NAME)), 0);
+      SDL_IOFromMem(BACKGROUND_NAME, CONCAT_LEN(BACKGROUND_NAME)), 0);
 #endif
 #ifdef FOREGROUND_FILE
 #include FOREGROUND_FILE
-  drv->foreground = IMG_LoadTexture_RW(
+  drv->foreground = IMG_LoadTexture_IO(
       drv->renderer,
-      SDL_RWFromMem(FOREGROUND_NAME, CONCAT_LEN(FOREGROUND_NAME)), 0);
+      SDL_IOFromMem(FOREGROUND_NAME, CONCAT_LEN(FOREGROUND_NAME)), 0);
   if (drv->foreground) {
     SDL_SetTextureBlendMode(drv->foreground, SDL_BLENDMODE_BLEND);
     // check that foreground dimensions match the window size which is important
     // for cutouts
-    int fw, fh;
-    if (SDL_QueryTexture(drv->foreground, NULL, NULL, &fw, &fh) == 0) {
-      if (fw != WINDOW_WIDTH || fh != WINDOW_HEIGHT) {
+    float fw, fh;
+    if (SDL_GetTextureSize(drv->foreground, &fw, &fh)) {
+      if ((int)fw != WINDOW_WIDTH || (int)fh != WINDOW_HEIGHT) {
         LOG_ERR(
             "Foreground texture size (%dx%d) does not match window size "
             "(%dx%d)",
-            fw, fh, WINDOW_WIDTH, WINDOW_HEIGHT);
+            (int)fw, (int)fh, WINDOW_WIDTH, WINDOW_HEIGHT);
         error_shutdown("Foreground texture size mismatch");
       }
     } else {
-      LOG_ERR("SDL_QueryTexture failed: %s", SDL_GetError());
-      error_shutdown("SDL_QueryTexture error");
+      LOG_ERR("SDL_GetTextureSize failed: %s", SDL_GetError());
+      error_shutdown("SDL_GetTextureSize error");
     }
   }
 #endif
@@ -235,8 +242,8 @@ void display_deinit(display_content_mode_t mode) {
 
   gfx_bitblt_deinit();
 
-  SDL_FreeSurface(drv->prev_saved);
-  SDL_FreeSurface(drv->buffer);
+  SDL_DestroySurface(drv->prev_saved);
+  SDL_DestroySurface(drv->buffer);
   if (drv->background != NULL) {
     SDL_DestroyTexture(drv->background);
   }
@@ -416,7 +423,7 @@ void draw_rgb_led() {
   for (int y = -radius; y <= radius; y++) {
     for (int x = -radius; x <= radius; x++) {
       if (x * x + y * y <= radius * radius) {
-        SDL_RenderDrawPoint(drv->renderer, center_x + x, center_y + y);
+        SDL_RenderPoint(drv->renderer, center_x + x, center_y + y);
       }
     }
   }
@@ -424,14 +431,14 @@ void draw_rgb_led() {
 }
 #endif  // USE_RGB_LED
 
-static SDL_Rect screen_rect(void) {
+static SDL_FRect screen_rect(void) {
   display_driver_t *drv = &g_display_driver;
   if (drv->background || drv->foreground) {
-    return (SDL_Rect){TOUCH_OFFSET_X, TOUCH_OFFSET_Y, DISPLAY_RESX,
-                      DISPLAY_RESY};
+    return (SDL_FRect){TOUCH_OFFSET_X, TOUCH_OFFSET_Y, DISPLAY_RESX,
+                       DISPLAY_RESY};
   } else {
-    return (SDL_Rect){EMULATOR_BORDER, EMULATOR_BORDER, DISPLAY_RESX,
-                      DISPLAY_RESY};
+    return (SDL_FRect){EMULATOR_BORDER, EMULATOR_BORDER, DISPLAY_RESX,
+                       DISPLAY_RESY};
   }
 }
 
@@ -447,8 +454,8 @@ static void display_refresh_internal(void) {
 #endif
 
   if (drv->background) {
-    const SDL_Rect r = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
-    SDL_RenderCopy(drv->renderer, drv->background, NULL, &r);
+    const SDL_FRect r = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderTexture(drv->renderer, drv->background, NULL, &r);
   } else {
     SDL_RenderClear(drv->renderer);
   }
@@ -458,13 +465,13 @@ static void display_refresh_internal(void) {
 #define BACKLIGHT_NORMAL 150
   SDL_SetTextureAlphaMod(
       drv->texture, MIN(255, 255 * drv->backlight_level / BACKLIGHT_NORMAL));
-  const SDL_Rect r = screen_rect();
-  SDL_RenderCopyEx(drv->renderer, drv->texture, NULL, &r,
-                   drv->orientation_angle, NULL, 0);
+  const SDL_FRect r = screen_rect();
+  SDL_RenderTextureRotated(drv->renderer, drv->texture, NULL, &r,
+                           drv->orientation_angle, NULL, 0);
 
   if (drv->foreground) {
-    const SDL_Rect fr = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
-    SDL_RenderCopy(drv->renderer, drv->foreground, NULL, &fr);
+    const SDL_FRect fr = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderTexture(drv->renderer, drv->foreground, NULL, &fr);
   }
 
 #ifdef USE_RGB_LED
@@ -597,19 +604,16 @@ void display_save(const char *prefix) {
   static char filename[256];
   // take a cropped view of the screen contents
   const SDL_Rect rect = {0, 0, DISPLAY_RESX, DISPLAY_RESY};
-  SDL_Surface *crop = SDL_CreateRGBSurface(
-      drv->buffer->flags, rect.w, rect.h, drv->buffer->format->BitsPerPixel,
-      drv->buffer->format->Rmask, drv->buffer->format->Gmask,
-      drv->buffer->format->Bmask, drv->buffer->format->Amask);
+  SDL_Surface *crop = SDL_CreateSurface(rect.w, rect.h, drv->buffer->format);
   SDL_BlitSurface(drv->buffer, &rect, crop, NULL);
   // compare with previous screen, skip if equal
   if (drv->prev_saved != NULL) {
     if (memcmp(drv->prev_saved->pixels, crop->pixels, crop->pitch * crop->h) ==
         0) {
-      SDL_FreeSurface(crop);
+      SDL_DestroySurface(crop);
       return;
     }
-    SDL_FreeSurface(drv->prev_saved);
+    SDL_DestroySurface(drv->prev_saved);
   }
   // save to png
   snprintf(filename, sizeof(filename), "%s%08d.png", prefix, count++);
@@ -624,7 +628,7 @@ void display_clear_save(void) {
     return;
   }
 
-  SDL_FreeSurface(drv->prev_saved);
+  SDL_DestroySurface(drv->prev_saved);
   drv->prev_saved = NULL;
 }
 
@@ -636,7 +640,7 @@ static void display_draw_suspend_overlay_internal(void) {
     return;
   }
 
-  SDL_Rect screen = screen_rect();
+  SDL_FRect screen = screen_rect();
   // create a blue texture
   SDL_Texture *overlay =
       SDL_CreateTexture(drv->renderer, SDL_PIXELFORMAT_RGBA8888,
@@ -649,19 +653,19 @@ static void display_draw_suspend_overlay_internal(void) {
   SDL_RenderClear(drv->renderer);
 
   // draw the suspend overlay png in the middle of the texture
-  SDL_Texture *suspend_text = IMG_LoadTexture_RW(
+  SDL_Texture *suspend_text = IMG_LoadTexture_IO(
       drv->renderer,
-      SDL_RWFromMem(_suspend_overlay_text_data, _suspend_overlay_text_len), 0);
-  int text_width, text_height;
-  SDL_QueryTexture(suspend_text, NULL, NULL, &text_width, &text_height);
-  SDL_Rect middle = {(screen.w - text_width) / 2, (screen.h - text_height) / 2,
-                     text_width, text_height};
-  SDL_RenderCopy(drv->renderer, suspend_text, NULL, &middle);
+      SDL_IOFromMem(_suspend_overlay_text_data, _suspend_overlay_text_len), 0);
+  float text_width, text_height;
+  SDL_GetTextureSize(suspend_text, &text_width, &text_height);
+  SDL_FRect middle = {(screen.w - text_width) / 2, (screen.h - text_height) / 2,
+                      text_width, text_height};
+  SDL_RenderTexture(drv->renderer, suspend_text, NULL, &middle);
   SDL_RenderPresent(drv->renderer);
 
   // render to the screen
   SDL_SetRenderTarget(drv->renderer, NULL);
-  SDL_RenderCopy(drv->renderer, overlay, NULL, &screen);
+  SDL_RenderTexture(drv->renderer, overlay, NULL, &screen);
   SDL_RenderPresent(drv->renderer);
 
   // cleanup

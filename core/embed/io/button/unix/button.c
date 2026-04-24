@@ -79,7 +79,8 @@ void button_deinit(void) {
 static void button_sdl_event_filter(void* context, SDL_Event* sdl_event) {
   button_driver_t* drv = &g_button_driver;
 
-  if (sdl_event->type != SDL_KEYDOWN && sdl_event->type != SDL_KEYUP) {
+  if (sdl_event->type != SDL_EVENT_KEY_DOWN &&
+      sdl_event->type != SDL_EVENT_KEY_UP) {
     return;
   }
 
@@ -89,7 +90,7 @@ static void button_sdl_event_filter(void* context, SDL_Event* sdl_event) {
 
   button_t button;
 
-  switch (sdl_event->key.keysym.sym) {
+  switch (sdl_event->key.key) {
 #ifdef BTN_LEFT_KEY
     case BTN_LEFT_KEY:
       button = BTN_LEFT;
@@ -109,7 +110,7 @@ static void button_sdl_event_filter(void* context, SDL_Event* sdl_event) {
       return;
   }
 
-  if (sdl_event->type == SDL_KEYDOWN) {
+  if (sdl_event->type == SDL_EVENT_KEY_DOWN) {
     drv->state |= (1 << button);
   } else {
     drv->state &= ~(1 << button);
