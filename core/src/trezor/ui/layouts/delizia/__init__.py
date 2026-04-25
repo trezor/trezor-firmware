@@ -1410,6 +1410,7 @@ if not utils.BITCOIN_ONLY:
         items: Iterable[StrPropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+        chunkify: bool = False,
     ) -> Awaitable[ui.UiResult]:
         return confirm_value(
             title=title,
@@ -1419,6 +1420,7 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
             verb=TR.buttons__continue,
             info_items=[(k or "", v or "", None) for k, v, _ in items],
+            chunkify=chunkify,
         )
 
     def confirm_solana_tx(
@@ -1456,6 +1458,7 @@ if not utils.BITCOIN_ONLY:
         fee_item: StrPropertyType,
         fee_details: Iterable[StrPropertyType],
         blockhash_item: StrPropertyType,
+        chunkify: bool,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
@@ -1475,7 +1478,7 @@ if not utils.BITCOIN_ONLY:
                 br_code=br_code,
                 description=extra or description,
                 is_data=False,
-                chunkify=True,
+                chunkify=chunkify,
                 cancel_text=TR.buttons__cancel,
                 info_items=info_items,
             ),
