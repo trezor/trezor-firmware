@@ -319,6 +319,7 @@ async def confirm_system_transfer(
     signer_path: list[int],
     blockhash: bytes,
     verified_payment_request: PaymentRequest | None,
+    chunkify: bool,
 ) -> None:
     recipient_account = transfer_instruction.recipient_account
     if verified_payment_request:
@@ -341,6 +342,7 @@ async def confirm_system_transfer(
                 recipient=base58.encode(recipient_account[0]),
                 title=TR.words__recipient,
                 items=[(TR.words__blockhash, base58.encode(blockhash), True)],
+                chunkify=chunkify,
             )
         else:
             await confirm_properties(
@@ -361,6 +363,7 @@ async def confirm_token_transfer(
     decimals: int,
     fee: Fee,
     blockhash: bytes,
+    chunkify: bool,
 ) -> None:
     items: list[StrPropertyType] = []
     if token_account != destination_account:
@@ -373,6 +376,7 @@ async def confirm_token_transfer(
         recipient=base58.encode(destination_account),
         title=TR.words__recipient,
         items=items,
+        chunkify=chunkify,
     )
 
     if is_unknown:
@@ -384,6 +388,7 @@ async def confirm_token_transfer(
             subtitle=TR.solana__unknown_token,
             address=base58.encode(token.mint),
             verb=TR.buttons__continue,
+            chunkify=chunkify,
             br_name="confirm_token_address",
             br_code=ButtonRequestType.ConfirmOutput,
         )
@@ -427,7 +432,7 @@ async def confirm_custom_transaction(
     )
 
 
-async def confirm_stake_withdrawer(withdrawer_account: bytes) -> None:
+async def confirm_stake_withdrawer(withdrawer_account: bytes, chunkify: bool) -> None:
     await show_danger(
         title=TR.words__important,
         content=TR.solana__stake_withdrawal_warning,
@@ -438,10 +443,11 @@ async def confirm_stake_withdrawer(withdrawer_account: bytes) -> None:
         title=TR.solana__stake_withdrawal_warning_title,
         address=base58.encode(withdrawer_account),
         br_name="confirm_stake_warning_address",
+        chunkify=chunkify,
     )
 
 
-async def confirm_claim_recipient(recipient_account: bytes) -> None:
+async def confirm_claim_recipient(recipient_account: bytes, chunkify: bool) -> None:
     await show_warning(
         content=TR.solana__claim_recipient_warning,
         br_name="confirm_claim_warning",
@@ -450,6 +456,7 @@ async def confirm_claim_recipient(recipient_account: bytes) -> None:
         title=TR.address_details__title_receive_address,
         address=base58.encode(recipient_account),
         br_name="confirm_claim_warning_address",
+        chunkify=chunkify,
     )
 
 
@@ -459,6 +466,7 @@ async def confirm_stake_transaction(
     blockhash: bytes,
     create: Instruction,
     delegate: Instruction,
+    chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
@@ -495,6 +503,7 @@ async def confirm_stake_transaction(
         fee_item=(fee_title, fee_str, True),
         fee_details=fee_items,
         blockhash_item=(TR.words__blockhash, base58.encode(blockhash), True),
+        chunkify=chunkify,
     )
 
 
@@ -502,6 +511,7 @@ async def confirm_unstake_transaction(
     fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
+    chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
@@ -518,6 +528,7 @@ async def confirm_unstake_transaction(
         fee_item=(fee_title, fee_str, True),
         fee_details=fee_items,
         blockhash_item=(TR.words__blockhash, base58.encode(blockhash), True),
+        chunkify=chunkify,
     )
 
 
@@ -526,6 +537,7 @@ async def confirm_claim_transaction(
     signer_path: list[int],
     blockhash: bytes,
     total_amount: int,
+    chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
@@ -545,6 +557,7 @@ async def confirm_claim_transaction(
         fee_item=(fee_title, fee_str, True),
         fee_details=fee_items,
         blockhash_item=(TR.words__blockhash, base58.encode(blockhash), True),
+        chunkify=chunkify,
     )
 
 

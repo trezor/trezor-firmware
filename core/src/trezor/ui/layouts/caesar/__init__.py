@@ -985,13 +985,23 @@ async def confirm_value(
 
     from trezor.ui.layouts.menu import Details, Menu, confirm_with_menu
 
-    main_ctx = trezorui_api.confirm_with_info(
-        title=title,
-        items=((value, False),),
-        verb=verb or TR.buttons__confirm,
-        verb_info=INFO_ICON,
-        external_menu=True,
-    )
+    if chunkify:
+        main_ctx = trezorui_api.confirm_address(
+            title=title,
+            address=value,
+            address_label=None,
+            verb=verb or TR.buttons__confirm,
+            info_button=True,
+            chunkify=chunkify,
+        )
+    else:
+        main_ctx = trezorui_api.confirm_with_info(
+            title=title,
+            items=((value, False),),
+            verb=verb or TR.buttons__confirm,
+            verb_info=INFO_ICON,
+            external_menu=True,
+        )
 
     def item_factory(
         info_title: str, info_value: str
@@ -1482,6 +1492,7 @@ if not utils.BITCOIN_ONLY:
         items: Iterable[StrPropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+        chunkify: bool = False,
     ) -> Awaitable[None]:
         return confirm_value(
             title=title,
@@ -1491,6 +1502,7 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
             verb=TR.buttons__continue,
             info_items=items,
+            chunkify=chunkify,
         )
 
     async def confirm_solana_tx(
@@ -1533,6 +1545,7 @@ if not utils.BITCOIN_ONLY:
         fee_item: StrPropertyType,
         fee_details: Iterable[StrPropertyType],
         blockhash_item: StrPropertyType,
+        chunkify: bool,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:

@@ -50,6 +50,7 @@
       "description": "Authorize",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
+        "chunkify": true,
         "construct": {
           "version": null,
           "header": {
@@ -90,6 +91,7 @@
     {
       "description": "Delegate",
       "parameters": {
+        "chunkify": false,
         "address": "m/44'/501'/0'/0'",
         "construct": {
           "version": null,
