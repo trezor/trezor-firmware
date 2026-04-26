@@ -278,7 +278,7 @@ class TR:
     debug__loading_seed: str = "Loading seed"
     debug__loading_seed_not_recommended: str = "Loading private seed is not recommended."
     device_name__change_template: str = "Change device name to {0}?"
-    device_name__enter: str = "Enter device name"
+    device_name__enter: str = "Enter device name\n(Up to {0} characters)"
     device_name__title: str = "Device name"
     entropy__send: str = "Do you really want to send entropy?"
     entropy__title_confirm: str = "Confirm entropy"

@@ -186,13 +186,10 @@ def test_apply_homescreen_tr_toif_with_long_label(session: Session):
         _set_expected_responses(client, homescreen=TR_HOMESCREEN)
         device.apply_settings(session, homescreen=TR_HOMESCREEN)
 
-    # Showing longer label
+    # Showing longest label
+    LONGEST_LABEL = "_" * 16
     with session.test_ctx:
-        device.apply_settings(session, label="My long label")
-
-    # Showing label that will not fit on the line
-    with session.test_ctx:
-        device.apply_settings(session, label="My even longer label")
+        device.apply_settings(session, label=LONGEST_LABEL)
 
 
 @pytest.mark.models("safe3")
@@ -485,14 +482,14 @@ def test_experimental_features(session: Session):
 def test_label_too_long(session: Session):
     with pytest.raises(exceptions.TrezorFailure), session.test_ctx as client:
         client.set_expected_responses([messages.Failure])
-        device.apply_settings(session, label="A" * 33)
+        device.apply_settings(session, label="A" * 17)
 
 
 @pytest.mark.setup_client(pin=None)
 @pytest.mark.parametrize(
     "label",
-    ["", "A" * 32],
-    ids=["empty", "max_len"],
+    ["", "A" * 16, "á" * 16],
+    ids=["empty", "max_len", "max_len_non_ascii"],
 )
 def test_set_label(session: Session, label: str):
     with session.test_ctx:
