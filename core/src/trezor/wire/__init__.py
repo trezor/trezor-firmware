@@ -109,15 +109,16 @@ if utils.USE_THP:
     THP_BUFFERS_PROVIDER = Provider((ThpBuffer(), ThpBuffer()))
 
     if __debug__:
-        _THP_CHANNELS = []
+        _THP_IFACES = []
 
         def find_thp_channel(channel_id: AnyBytes) -> Channel | None:
             """Used by `DebugLinkGetPairingInfo` (only for tests)."""
-            key = int.from_bytes(channel_id, "big")
-            for channels in _THP_CHANNELS:
-                result = channels.get(key)
-                if result is not None:
-                    return result
+            for ifctx in _THP_IFACES:
+                if (
+                    ifctx.active_channel
+                    and ifctx.active_channel.channel_id_bytes() == channel_id
+                ):
+                    return ifctx.active_channel
             return None
 
     def setup(*ifaces: WireInterface) -> None:
@@ -127,7 +128,7 @@ if utils.USE_THP:
     async def handle_session_thp(*ifaces: WireInterface) -> None:
         ctx = ThpContext(*ifaces)
         if __debug__:
-            _THP_CHANNELS.extend(iface_ctx._channels for iface_ctx in ctx._iface_ctxs)
+            _THP_IFACES.extend(ctx._iface_ctxs)
 
         try:
             # wait until channel activity (on any interface)

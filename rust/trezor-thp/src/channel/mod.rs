@@ -24,7 +24,7 @@ pub use noise::{
 };
 
 pub const MAX_DEVICE_PROPERTIES_LEN: usize = 128; // TODO currently fits 32
-pub const MAX_CREDENTIAL_LEN: usize = 128; // TODO consider making this smaller, currently fits 96
+pub const MAX_CREDENTIAL_LEN: usize = 128; // TODO consider making this smaller, currently fits 96 ~ 42 + len(host_name) + len(app_name)
 
 // Size of internal buffer used when opening a channel.
 const HANDSHAKE_BUFFER_LEN: usize = CHECKSUM_LEN

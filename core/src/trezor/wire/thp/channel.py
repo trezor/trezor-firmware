@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 import trezorthp
 from storage.cache_thp import clear_sessions_with_channel_id, migrate_sessions
 from trezor import loop, protobuf, utils, workflow
-from trezor.loop import Timeout, sleep
 
 from apps.thp.credential_manager import decode_credential, unwrap_credential
 
@@ -26,14 +25,6 @@ if TYPE_CHECKING:
     from .pairing_context import PairingContext
     from .session_context import GenericSessionContext
 
-
-_MAX_RETRANSMISSION_COUNT = const(50)
-_MIN_RETRANSMISSION_COUNT = const(2)
-
-# Stop retransmission if writes are blocked - e.g. due to USB flow control.
-# It allows restarting the event loop to handle other THP channels.
-_WRITE_TIMEOUT_MS = const(5_000)
-_WRITE_TIMEOUT = sleep(_WRITE_TIMEOUT_MS)
 
 _TRACE = const(False)
 
@@ -99,11 +90,15 @@ class Channel:
     def iface(self) -> WireInterface:
         return self.iface_ctx._iface
 
-    def clear(self) -> None:
+    def clear(self, exc: Exception | None = None) -> None:
+        self._log(f"Closing channel (exception: {exc is not None})")
         clear_sessions_with_channel_id(self.channel_id_bytes())
         trezorthp.channel_close(self.iface.iface_num(), self.channel_id)
         self.expecting_message = False
         self.expecting_ack = False
+        if exc is not None:
+            self.incoming_box.put(exc, replace=True)
+            self.ack_box.put(exc, replace=True)
 
     # ACCESS TO CHANNEL_DATA
 
@@ -205,17 +200,11 @@ class Channel:
         trezorthp.message_in(
             self.iface.iface_num(), self.channel_id, noise_payload_len, self.send_buffer
         )
-
         self.iface_ctx.request_write()
-        # self.iface_ctx.recompute_timeouts()
 
         try:
+            # Might raise Timeout or ChannelPreemptedException.
             await self.ack_box
-        except Timeout:
-            if __debug__:
-                self._log("Exceeded retransmission limit")
-            self.clear()
-            raise Timeout("THP retransmission timeout")
         finally:
             self.send_buffer = None
 
@@ -228,17 +217,17 @@ class Channel:
         result = trezorthp.packet_in_channel(
             iface_num, self.channel_id, packet_buffer, self.receive_buffer
         )
-        self._log(f"packet_in: {result}")
+        if __debug__ and _TRACE and result is not None:
+            self._log(f"packet_in: {result}")
         if result is trezorthp.ACK or result is trezorthp.MESSAGE_READY_ACK:
-            self.ack_box.put(None)
+            self.ack_box.put(None, replace=True)
             self.expecting_ack = False
             self.iface_ctx.recompute_timeouts()
         if result is trezorthp.MESSAGE_READY or result is trezorthp.MESSAGE_READY_ACK:
-            self.incoming_box.put(None)
+            self.incoming_box.put(None, replace=True)
             self.expecting_message = False
         elif result == trezorthp.FAILED:
-            self.clear()
-            raise ThpError
+            self.clear(exc=ThpError())
 
     def write_packet(self, packet: AnyBuffer) -> bool:
         try:
@@ -252,7 +241,7 @@ class Channel:
             return res
         except Exception as e:
             log.exception(__name__, e)
-            self.clear()
+            self.clear(exc=e)
             return False
 
     if __debug__:

@@ -138,7 +138,7 @@ def channel_close(iface_num: int, channel_id: int) -> None:
 # rust/src/thp/micropython.rs
 def channel_close_all(exclude_channel_id: int | None) -> None:
     """
-    Closes all channel on all interfaces. If `exclude_channel_id` is not None, it
+    Closes all channels on all interfaces. If `exclude_channel_id` is not None, it
     will be left as the only channel.
     Please note the closed channels are not returned by `channel_get_closed()`.
     Caller is responsible for deleting all relevant sessions manually.
