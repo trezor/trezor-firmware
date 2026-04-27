@@ -41,20 +41,34 @@ void nrf_spi_init(nrf_driver_t *drv) {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   __HAL_RCC_GPDMA1_CLK_ENABLE();
-  __HAL_RCC_SPI1_CLK_ENABLE();
+  NRF_SPI_CLK_EN();
+  NRF_SPI_SCK_CLK_EN();
+  NRF_SPI_NSS_CLK_EN();
+  NRF_SPI_MISO_CLK_EN();
+  NRF_SPI_MOSI_CLK_EN();
 
   // SPI pins
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Alternate = GPIO_AF5_SPI1;
+  GPIO_InitStructure.Alternate = NRF_SPI_PIN_AF;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_MEDIUM;
-  GPIO_InitStructure.Pin = GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_6 | GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = NRF_SPI_SCK_PIN;
+  HAL_GPIO_Init(NRF_SPI_SCK_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = NRF_SPI_NSS_PIN;
+  HAL_GPIO_Init(NRF_SPI_NSS_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = NRF_SPI_MISO_PIN;
+  HAL_GPIO_Init(NRF_SPI_MISO_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = NRF_SPI_MOSI_PIN;
+  HAL_GPIO_Init(NRF_SPI_MOSI_PORT, &GPIO_InitStructure);
 
   drv->spi_rx_dma.Instance = GPDMA1_Channel2;
   drv->spi_rx_dma.Init.Direction = DMA_PERIPH_TO_MEMORY;
   drv->spi_rx_dma.Init.Mode = DMA_NORMAL;
-  drv->spi_rx_dma.Init.Request = GPDMA1_REQUEST_SPI1_RX;
+  drv->spi_rx_dma.Init.Request = NRF_SPI_DMA_RX_REQUEST;
   drv->spi_rx_dma.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
   drv->spi_rx_dma.Init.SrcInc = DMA_SINC_FIXED;
   drv->spi_rx_dma.Init.DestInc = DMA_DINC_INCREMENTED;
@@ -76,7 +90,7 @@ void nrf_spi_init(nrf_driver_t *drv) {
   drv->spi_tx_dma.Init.Direction = DMA_MEMORY_TO_PERIPH;
   drv->spi_tx_dma.Init.Mode = DMA_NORMAL;
   drv->spi_tx_dma.Instance = GPDMA1_Channel1;
-  drv->spi_tx_dma.Init.Request = GPDMA1_REQUEST_SPI1_TX;
+  drv->spi_tx_dma.Init.Request = NRF_SPI_DMA_TX_REQUEST;
   drv->spi_tx_dma.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
   drv->spi_tx_dma.Init.SrcInc = DMA_SINC_INCREMENTED;
   drv->spi_tx_dma.Init.DestInc = DMA_DINC_FIXED;
@@ -94,7 +108,7 @@ void nrf_spi_init(nrf_driver_t *drv) {
       &drv->spi_tx_dma, DMA_CHANNEL_PRIV | DMA_CHANNEL_SEC |
                             DMA_CHANNEL_SRC_SEC | DMA_CHANNEL_DEST_SEC);
 
-  drv->spi.Instance = SPI1;
+  drv->spi.Instance = NRF_SPI_INSTANCE;
   drv->spi.Init.Mode = SPI_MODE_SLAVE;
   drv->spi.Init.Direction = SPI_DIRECTION_2LINES;
   drv->spi.Init.DataSize = SPI_DATASIZE_8BIT;
@@ -113,13 +127,13 @@ void nrf_spi_init(nrf_driver_t *drv) {
 }
 
 void nrf_spi_deinit(void) {
-  __HAL_RCC_SPI1_FORCE_RESET();
-  __HAL_RCC_SPI1_RELEASE_RESET();
+  NRF_SPI_FORCE_RESET();
+  NRF_SPI_RELEASE_RESET();
 
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_6);
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_7);
+  HAL_GPIO_DeInit(NRF_SPI_SCK_PORT, NRF_SPI_SCK_PIN);
+  HAL_GPIO_DeInit(NRF_SPI_NSS_PORT, NRF_SPI_NSS_PIN);
+  HAL_GPIO_DeInit(NRF_SPI_MISO_PORT, NRF_SPI_MISO_PIN);
+  HAL_GPIO_DeInit(NRF_SPI_MOSI_PORT, NRF_SPI_MOSI_PIN);
 }
 
 int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
@@ -236,7 +250,7 @@ void GPDMA1_Channel2_IRQHandler(void) {
   IRQ_LOG_EXIT();
 }
 
-void SPI1_IRQHandler(void) {
+void NRF_SPI_INTERRUPT_HANDLER(void) {
   IRQ_LOG_ENTER();
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);

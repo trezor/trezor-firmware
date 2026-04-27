@@ -32,25 +32,32 @@
 extern nrf_driver_t g_nrf_driver;
 
 static void nrf_uart_init_peripherals(nrf_driver_t *drv, uint32_t baudrate) {
-  __HAL_RCC_USART3_FORCE_RESET();
-  __HAL_RCC_USART3_RELEASE_RESET();
-  __HAL_RCC_USART3_CLK_ENABLE();
+  NRF_UART_FORCE_RESET();
+  NRF_UART_RELEASE_RESET();
+  NRF_UART_CLK_EN();
+
+  NRF_UART_TX_CLK_EN();
+  NRF_UART_RX_CLK_EN();
+  NRF_UART_RTS_CLK_EN();
+  NRF_UART_CTS_CLK_EN();
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
   // UART PINS
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Alternate = GPIO_AF7_USART3;
+  GPIO_InitStructure.Alternate = NRF_UART_PIN_AF;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
-  GPIO_InitStructure.Pin = GPIO_PIN_10 | GPIO_PIN_1;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_UART_TX_PIN;
+  HAL_GPIO_Init(NRF_UART_TX_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_UART_RTS_PIN;
+  HAL_GPIO_Init(NRF_UART_RTS_PORT, &GPIO_InitStructure);
 
   GPIO_InitStructure.Pull = GPIO_PULLUP;
-  GPIO_InitStructure.Pin = GPIO_PIN_11;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = GPIO_PIN_5;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_UART_CTS_PIN;
+  HAL_GPIO_Init(NRF_UART_CTS_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_UART_RX_PIN;
+  HAL_GPIO_Init(NRF_UART_RX_PORT, &GPIO_InitStructure);
 
   drv->urt.Init.Mode = UART_MODE_TX_RX;
   drv->urt.Init.BaudRate = baudrate;
@@ -59,7 +66,7 @@ static void nrf_uart_init_peripherals(nrf_driver_t *drv, uint32_t baudrate) {
   drv->urt.Init.Parity = UART_PARITY_NONE;
   drv->urt.Init.StopBits = UART_STOPBITS_1;
   drv->urt.Init.WordLength = UART_WORDLENGTH_8B;
-  drv->urt.Instance = USART3;
+  drv->urt.Instance = NRF_UART_INSTANCE;
   HAL_UART_Init(&drv->urt);
 }
 
@@ -68,12 +75,12 @@ void nrf_uart_init(nrf_driver_t *drv) {
 }
 
 void nrf_uart_deinit(void) {
-  __HAL_RCC_USART3_FORCE_RESET();
-  __HAL_RCC_USART3_RELEASE_RESET();
-  HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10);
-  HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1);
-  HAL_GPIO_DeInit(GPIOD, GPIO_PIN_11);
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5);
+  NRF_UART_FORCE_RESET();
+  NRF_UART_RELEASE_RESET();
+  HAL_GPIO_DeInit(NRF_UART_TX_PORT, NRF_UART_TX_PIN);
+  HAL_GPIO_DeInit(NRF_UART_RX_PORT, NRF_UART_RX_PIN);
+  HAL_GPIO_DeInit(NRF_UART_RTS_PORT, NRF_UART_RTS_PIN);
+  HAL_GPIO_DeInit(NRF_UART_CTS_PORT, NRF_UART_CTS_PIN);
 }
 
 void nrf_uart_send(uint8_t data) {
@@ -144,7 +151,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
   }
 }
 
-void USART3_IRQHandler(void) {
+void NRF_UART_INTERRUPT_HANDLER(void) {
   IRQ_LOG_ENTER();
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
