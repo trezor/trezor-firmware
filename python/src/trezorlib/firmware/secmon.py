@@ -21,7 +21,7 @@ from copy import copy
 import construct as c
 from construct_classes import Struct, subcon
 
-from ..tools import EnumAdapter, TupleAdapter
+from ..construct_helpers import EnumAdapter, TupleAdapter
 from . import util
 from .models import Model
 
