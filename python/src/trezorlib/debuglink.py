@@ -1067,13 +1067,15 @@ class DebugUI:
         self.input_flow: InputFlowType | object = self.default_input_flow()
         next(self.input_flow)  # start default input flow generator
 
-    def default_input_flow(self) -> InputFlowType:
+    def default_input_flow(
+        self, on_page: t.Callable[["LayoutContent"], None] | None = None
+    ) -> InputFlowType:
         while True:
             br = yield
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
             else:
-                self._paginate_and_confirm(br.pages)
+                self._paginate_and_confirm(br.pages, on_page=on_page)
 
     def _visit_vertical_menu(
         self, menu_layout: LayoutContent, gen: t.Generator[None, t.Any, None] | None
@@ -1179,19 +1181,28 @@ class DebugUI:
             self.debuglink.click(self.debuglink.screen_buttons.menu())
         return layout
 
-    def _paginate_and_confirm(self, pages: int | None) -> None:
+    def _paginate_and_confirm(
+        self,
+        pages: int | None,
+        on_page: t.Callable[["LayoutContent"], None] | None = None,
+    ) -> None:
         if pages is None:
             pages = self.debuglink.read_layout().page_count()
 
         # Paginating (going as further as possible)
         for _ in range(pages - 1):
-            self.visit_menu_items()
+            layout = self.visit_menu_items()
+            if on_page is not None:
+                on_page(layout)
             if self.debuglink.model is models.T3W1:
                 self.debuglink.click(self.debuglink.screen_buttons.ok())
             else:
                 self.debuglink.swipe_up()
 
         layout = self.visit_menu_items()
+
+        if on_page is not None:
+            on_page(layout)
 
         # Confirm current layout
         if self.debuglink.model is models.T3T1:

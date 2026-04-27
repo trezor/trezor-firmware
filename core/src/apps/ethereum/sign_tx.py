@@ -132,23 +132,9 @@ async def sign_tx(
         sender_bytes,
     )
 
-    # `confirm_data_chunk` and `confirm_summary` can be `None`
-    # if we clear signed so there is nothing more to confirm
-
-    if confirm_data_chunk is not None:
-        await confirm_data_chunk(initial_data)
-
-        data_left = data_length - len(initial_data)
-        while data_left > 0:
-            resp = await send_request_chunk(data_left)
-            chunk = resp.data_chunk
-            await confirm_data_chunk(chunk)
-            data_left -= len(chunk)
-            sha.extend(chunk)
-
-    if confirm_summary is not None:
-        # blind signer's summary
-        await confirm_summary
+    await confirm_data_and_summary(
+        confirm_data_chunk, confirm_summary, initial_data, data_length, sha
+    )
 
     # eip 155 replay protection
     rlp.write(sha, msg.chain_id)
@@ -162,6 +148,32 @@ async def sign_tx(
 
     show_continue_in_app(TR.send__transaction_signed)
     return result
+
+
+async def confirm_data_and_summary(
+    confirm_data_chunk: ConfirmDataFn | None,
+    confirm_summary: Coroutine[Any, Any, None] | None,
+    initial_data: AnyBytes,
+    data_length: int,
+    sha: HashWriter,
+) -> None:
+    # `confirm_data_chunk` and `confirm_summary` can be `None`
+    # if we clear signed so there is nothing more to confirm
+
+    if confirm_data_chunk is not None:
+        await confirm_data_chunk(initial_data)
+
+        data_left = data_length - len(initial_data)
+        while data_left > 0:
+            resp = await _send_request_chunk(data_left)
+            chunk = resp.data_chunk
+            await confirm_data_chunk(chunk)
+            data_left -= len(chunk)
+            sha.extend(chunk)
+
+    if confirm_summary is not None:
+        # blind signer's summary
+        await confirm_summary
 
 
 _MAX_DATA_STORED = const(4096)
@@ -185,11 +197,9 @@ async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
         while (
             data_left > 0 and initial_data_length + _DATA_CHUNK_SIZE <= _MAX_DATA_STORED
         ):
-            resp = await send_request_chunk(data_left)
+            resp = await _send_request_chunk(data_left)
             chunk = resp.data_chunk
-            initial_data[
-                initial_data_length : initial_data_length + len(resp.data_chunk)
-            ] = chunk
+            initial_data[initial_data_length : initial_data_length + len(chunk)] = chunk
             data_left -= len(chunk)
             initial_data_length += len(chunk)
             sha.extend(chunk)
@@ -256,18 +266,24 @@ async def confirm_tx_data(
 
     value = int.from_bytes(msg.value, "big")
 
-    try:
-        clear_signed = await clear_signing.try_parse(
-            initial_data,
-            address_bytes,
-            msg,
-            defs,
-            maximum_fee,
-            fee_items,
-            payment_request_verifier,
-        )
-    except clear_signing.ClearSigningFailed:
+    if len(initial_data) < data_length:
+        # Don't even attempt to clear sign if we have a calldata larger than `MAX_DATA_STORED`.
+        # this is because clear signing doesn't currently support fetching additional data,
+        # which is because if it did, we would not be able to fall back to blind signing anymore.
         clear_signed = False
+    else:
+        try:
+            clear_signed = await clear_signing.try_parse(
+                initial_data,
+                address_bytes,
+                msg,
+                defs,
+                maximum_fee,
+                fee_items,
+                payment_request_verifier,
+            )
+        except clear_signing.ClearSigningFailed:
+            clear_signed = False
 
     recipient_str = (
         address_from_bytes(address_bytes, network) if address_bytes else None
@@ -342,7 +358,7 @@ def _get_digest_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def send_request_chunk(data_left: int) -> EthereumTxAck:
+async def _send_request_chunk(data_left: int) -> EthereumTxAck:
     from trezor.messages import EthereumTxAck
     from trezor.wire.context import call
 

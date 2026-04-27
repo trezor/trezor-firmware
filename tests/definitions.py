@@ -46,6 +46,7 @@ def make_payload(
         messages.EthereumNetworkInfo
         | messages.EthereumTokenInfo
         | messages.SolanaTokenInfo
+        | messages.EthereumERC7730DisplayFormatInfo
         | bytes
     ) = make_eth_network(),
 ) -> bytes:
@@ -154,6 +155,41 @@ def encode_solana_token(
         token = make_solana_token(symbol, mint, name)
     payload = make_payload(
         data_type=messages.DefinitionType.SOLANA_TOKEN, message=token
+    )
+    proof, signature = sign_payload(payload, [])
+    return payload + proof + signature
+
+
+def make_eth_erc7730_display_format(
+    chain_id: int = 0,
+    address: t.AnyStr = b"",
+    func_sig: bytes = b"",
+    intent: str = "Fake intent",
+    parameter_definitions: list[messages.EthereumABIValueInfo] | None = None,
+    field_definitions: list[messages.EthereumERC7730FieldInfo] | None = None,
+) -> messages.EthereumERC7730DisplayFormatInfo:
+    if isinstance(address, str):
+        if address.startswith("0x"):
+            address = address[2:]
+        address_bytes = bytes.fromhex(address)
+    else:
+        address_bytes = address
+    return messages.EthereumERC7730DisplayFormatInfo(
+        chain_id=chain_id,
+        address=address_bytes,
+        func_sig=func_sig,
+        intent=intent,
+        parameter_definitions=parameter_definitions or [],
+        field_definitions=field_definitions or [],
+    )
+
+
+def encode_eth_erc7730_display_format(
+    display_format: messages.EthereumERC7730DisplayFormatInfo,
+) -> bytes:
+    payload = make_payload(
+        data_type=messages.DefinitionType.ETHEREUM_ERC7730_DISPLAY_FORMAT,
+        message=display_format,
     )
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature

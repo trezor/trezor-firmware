@@ -3082,11 +3082,19 @@ class InputFlowResetSkipBackup(InputFlowBase):
 
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
+    def __init__(
+        self,
+        client: Client | DebugSession,
+        on_page: Callable[["LayoutContent"], None] | None = None,
+    ) -> None:
+        super().__init__(client)
+        self.on_page = on_page
+
     def input_flow_bolt(self) -> BRGeneratorType:
-        return self.client.ui.default_input_flow()
+        return self.client.ui.default_input_flow(on_page=self.on_page)
 
     def input_flow_caesar(self) -> BRGeneratorType:
-        return self.client.ui.default_input_flow()
+        return self.client.ui.default_input_flow(on_page=self.on_page)
 
     def input_flow_delizia(self) -> BRGeneratorType:
         br = yield
@@ -3094,10 +3102,15 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
-                    self.client.ui.visit_menu_items()
+                    layout = self.client.ui.visit_menu_items()
+                    if self.on_page is not None:
+                        self.on_page(layout)
                     self.debug.swipe_up()
 
             layout = self.client.ui.visit_menu_items()
+
+            if self.on_page is not None:
+                self.on_page(layout)
 
             text = layout.footer().lower()
             # hi priority warning
@@ -3124,10 +3137,16 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
-                    self.client.ui.visit_menu_items()
+                    layout = self.client.ui.visit_menu_items()
+                    if self.on_page is not None:
+                        self.on_page(layout)
                     self.debug.click(self.debug.screen_buttons.ok())
 
             layout = self.client.ui.visit_menu_items()
+
+            if self.on_page is not None:
+                self.on_page(layout)
+
             text = layout.action_bar().lower()
             # hi priority warning
             hi_prio = (

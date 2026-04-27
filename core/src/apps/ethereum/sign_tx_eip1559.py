@@ -46,9 +46,9 @@ async def sign_tx_eip1559(
     from .helpers import format_ethereum_amount, get_fee_items_eip1559
     from .sign_tx import (
         check_common_fields,
+        confirm_data_and_summary,
         confirm_tx_data,
         request_initial_data,
-        send_request_chunk,
     )
 
     gas_limit = msg.gas_limit  # local_cache_attribute
@@ -117,20 +117,9 @@ async def sign_tx_eip1559(
         sender_bytes,
     )
 
-    if confirm_data_chunk is not None:
-        await confirm_data_chunk(initial_data)
-
-        data_left = data_length - len(initial_data)
-        while data_left > 0:
-            resp = await send_request_chunk(data_left)
-            chunk = resp.data_chunk
-            await confirm_data_chunk(chunk)
-            data_left -= len(chunk)
-            sha.extend(chunk)
-
-    if confirm_summary is not None:
-        # blind signer's summary
-        await confirm_summary
+    await confirm_data_and_summary(
+        confirm_data_chunk, confirm_summary, initial_data, data_length, sha
+    )
 
     # write_access_list
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)
