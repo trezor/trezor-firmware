@@ -17,7 +17,7 @@ def get_new_session_context(
     session_id: int,
 ) -> SessionContext:
     session_cache = cache_thp.create_or_replace_session(
-        channel=channel_ctx.channel_cache,
+        channel_id=channel_ctx.channel_id_bytes(),
         session_id=session_id.to_bytes(1, "big"),
     )
     return SessionContext(channel_ctx, session_cache)
@@ -31,7 +31,7 @@ def get_session_from_cache(
     """
     session_id_bytes = session_id.to_bytes(1, "big")
     session_cache = cache_thp.get_allocated_session(
-        channel_ctx.channel_id, session_id_bytes
+        channel_ctx.channel_id.to_bytes(2, "big"), session_id_bytes
     )
     if session_cache is None:
         return None

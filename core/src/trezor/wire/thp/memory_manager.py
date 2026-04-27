@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING
 from storage.cache_thp import SESSION_ID_LENGTH
 from trezor import protobuf, utils
 
-from .writer import MESSAGE_TYPE_LENGTH
-
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer
+
+MESSAGE_TYPE_LENGTH = const(2)
+TAG_LENGTH = const(16)
 
 # Reserve 8.5 kB. AuthenticityProof requires about 8500 bytes.
 _PROTOBUF_BUFFER_SIZE = const(8704)
@@ -31,6 +32,15 @@ class ThpBuffer:
                 )
             return None
         return self.buf[:length]
+
+
+def buffer_size(msg: protobuf.MessageType) -> int:
+    return (
+        SESSION_ID_LENGTH
+        + MESSAGE_TYPE_LENGTH
+        + protobuf.encoded_length(msg)
+        + TAG_LENGTH
+    )
 
 
 def encode_into_buffer(

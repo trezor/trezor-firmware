@@ -22,6 +22,15 @@ impl TransportError {
     pub fn is_recoverable(&self) -> bool {
         matches!(self, TransportError::TransportBusy)
     }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            TransportError::TransportBusy => "TRANSPORT_BUSY",
+            TransportError::UnallocatedChannel => "UNALLOCATED_CHANNEL",
+            TransportError::DecryptionFailed => "DECRYPTION_FAILED",
+            TransportError::DeviceLocked => "DEVICE_LOCKED",
+        }
+    }
 }
 
 impl From<TransportError> for u8 {

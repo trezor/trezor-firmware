@@ -83,6 +83,17 @@ pub(crate) fn parse_cb_channel(buffer: &[u8]) -> Result<(ControlByte, u16, &[u8]
     Ok((ControlByte::try_from(*cb)?, channel_id, rest))
 }
 
+// For use with PacketInResult::Route. Caller must check that cb is not codec_v1
+// and that channel_id is not broadcast.
+pub(crate) fn parse_cb_channel_length(buffer: &[u8]) -> Result<(ControlByte, u16, Option<u16>)> {
+    let (cb, channel_id, rest) = parse_cb_channel(buffer)?;
+    if cb.is_continuation() || cb.is_ack() || cb.is_error() {
+        return Ok((cb, channel_id, None));
+    }
+    let (payload_len, _rest) = parse_u16(rest)?;
+    Ok((cb, channel_id, Some(payload_len)))
+}
+
 impl<R: Role> Header<R> {
     const INIT_LEN: usize = 5;
     const CONT_LEN: usize = 3;
@@ -281,6 +292,11 @@ impl<R: Role> Header<R> {
                 payload_len,
             } => *payload_len,
         }
+    }
+
+    pub const fn payload_len_nocrc(&self) -> u16 {
+        // Messages either have zero payload or have a checksum.
+        self.payload_len().saturating_sub(CHECKSUM_LEN)
     }
 
     pub const fn header_len(&self) -> usize {

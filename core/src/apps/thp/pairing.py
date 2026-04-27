@@ -404,13 +404,10 @@ async def _handle_credential_request(
         # Cannot ask for autoconnect=True credential directly after pairing
         if ctx.channel_ctx.credential is None:
             raise DataError("Cannot ask for autoconnect credential after pairing")
-        from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY
 
         from .credential_manager import validate_credential
 
-        host_static_public_key = ctx.channel_ctx.channel_cache.get(
-            CHANNEL_HOST_STATIC_PUBKEY
-        )
+        host_static_public_key = ctx.channel_ctx.get_host_static_public_key()
 
         if not host_static_public_key or not validate_credential(
             credential=ctx.channel_ctx.credential,
@@ -454,7 +451,7 @@ async def _handle_end_request(
 
 
 async def _end_pairing(ctx: PairingContext) -> ThpEndResponse:
-    ctx.channel_ctx.replace_old_channels_with_the_same_host_public_key()
+    ctx.channel_ctx.end_pairing_and_replace()
     ctx.channel_ctx.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
     return ThpEndResponse()
 

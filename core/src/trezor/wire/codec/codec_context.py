@@ -89,7 +89,6 @@ class CodecContext(Context):
 
         # cannot write message without wire type
         assert msg.MESSAGE_WIRE_TYPE is not None
-
         msg_size = protobuf.encoded_length(msg)
 
         buffer = self._get_buffer()

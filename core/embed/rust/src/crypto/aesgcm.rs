@@ -193,8 +193,8 @@ mod test {
         }
     }
 
-    // first 10 vectors from https://github.com/BrianGladman/modes/blob/master/testvals/gcm.1
     const AES_GCM_VECTORS: &[Vector] = &[
+        // first 10 vectors from https://github.com/BrianGladman/modes/blob/master/testvals/gcm.1
         Vector {
             key: "00000000000000000000000000000000",
             iv: "000000000000000000000000",
@@ -274,6 +274,39 @@ mod test {
             plaintext: "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
 			ciphertext: "3980ca0b3c00e841eb06fac4872a2757859e1ceaa6efd984628593b40ca1e19c7d773d00c144c525ac619d18c84a3f4718e2448b2fe324d9ccda2710",
 			tag: "2519498e80f1478f37ba55bd6d27618c",
+        },
+        // test vectors from test_trezor.wire.thp.crypto.py
+        Vector {
+            key: "0001020304050607000102030405060700010203040506070001020304050607",
+            iv: "000000000000000000000000",
+            aad: "5564",
+            plaintext: "00010203040506070809",
+            ciphertext: "e2c9dd152fbee5821ea7",
+            tag: "10625812de81b14a46b9f1e5100a6d0c",
+        },
+        Vector {
+            key: "0001020304050607000102030405060700010203040506070001020304050607",
+            iv: "000000000000000000000001",
+            aad: "5564",
+            plaintext: "00010203040506070809",
+            ciphertext: "79811619ddb07c2b99f8",
+            tag: "71c6b872cdc499a7e9a3c7441f053214",
+        },
+        Vector {
+            key: "0001020304050607000102030405060700010203040506070001020304050607",
+            iv: "000000000000000000000171",
+            aad: "5564",
+            plaintext: "000102030405060708090a0b0c0d0e0f",
+            ciphertext: "03bd030390f2dfe815a61c2b157a064f",
+            tag: "c1200f8a7ae9a6d32cef0fff878d55c2",
+        },
+        Vector {
+            key: "0001020304050607000102030405060700010203040506070001020304050607",
+            iv: "000000000000000000000171",
+            aad: "5564738291",
+            plaintext: "000102030405060708090a0b0c0d0e0f",
+            ciphertext: "03bd030390f2dfe815a61c2b157a064f",
+            tag: "693ac160cd93a20f7fc255f049d808d0",
         },
     ];
 
