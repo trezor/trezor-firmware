@@ -222,9 +222,9 @@ def slip39_prompt_threshold(
     def info(count: int) -> str:
         return (
             TR.reset__slip39_checklist_more_info_threshold
-            + "\n"
+            + " "
             + TR.reset__slip39_checklist_more_info_threshold_example_template.format(
-                count, num_of_shares, count
+                count, num_of_shares
             )
         )
 

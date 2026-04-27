@@ -2328,8 +2328,8 @@
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Wenn du {0} von {1} Shares festlegst, sind {2} Backup-Shares zur Wallet-Wiederherstellung nötig.",
-      "Eckhart": "Wenn du {0} von {1} Shares festlegst, sind {2} Backup-Shares zur Wallet-Wiederherstellung nötig."
+      "Delizia": "Wenn du {0} von {1} Shares festlegst, sind {0} Backup-Shares zur Wallet-Wiederherstellung nötig.",
+      "Eckhart": "Wenn du {0} von {1} Shares festlegst, sind {0} Backup-Shares zur Wallet-Wiederherstellung nötig."
     },
     "reset__slip39_checklist_num_groups": "Anzahl der Gruppen",
     "reset__slip39_checklist_num_groups_x_template": "Anzahl der Gruppen: {0}",
