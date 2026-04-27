@@ -1613,6 +1613,9 @@ pub enum TranslatedString {
     ethereum__subtitle_input_data_bytes = 1217,  // {"Bolt": "", "Caesar": "", "Delizia": "{0} / {1} bytes", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
     ethereum__title_input_data_bytes = 1218,  // {"Bolt": "Data:\n{0} / {1} bytes", "Caesar": "Data: {0} / {1} bytes", "Delizia": "Data", "Eckhart": "Data:\n{0} / {1} bytes"}
+    backup__type_create = 1219,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Select the type of wallet backup you want to create."}
+    backup__type_have = 1220,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Which type of wallet backup do you have?"}
+    n4w1__reading = 1221,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Reading tag..."}
 }
 
 impl TranslatedString {
@@ -2839,6 +2842,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4063,6 +4069,9 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20245,
+                20245,
+                20245,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5286,6 +5295,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6510,6 +6522,9 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20245,
+                20245,
+                20245,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7733,6 +7748,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8957,6 +8975,9 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20245,
+                20245,
+                20245,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10180,6 +10201,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11403,6 +11427,9 @@ impl TranslatedString {
                 20213,
                 20224,
                 20224,
+                20245,
+                20245,
+                20245,
                 20245,
             ];
 
@@ -12628,6 +12655,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data: {0} / {1} bytes",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13852,6 +13882,9 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18270,
+                18270,
+                18270,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15075,6 +15108,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data: {0} / {1} bytes",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16299,6 +16335,9 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18270,
+                18270,
+                18270,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17522,6 +17561,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data: {0} / {1} bytes",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18746,6 +18788,9 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18270,
+                18270,
+                18270,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19969,6 +20014,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data: {0} / {1} bytes",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21192,6 +21240,9 @@ impl TranslatedString {
                 18238,
                 18249,
                 18249,
+                18270,
+                18270,
+                18270,
                 18270,
             ];
 
@@ -22417,6 +22468,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "{0} / {1} bytes",
                 "Data",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23641,6 +23695,9 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19491,
+                19491,
+                19491,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24864,6 +24921,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "{0} / {1} bytes",
                 "Data",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26088,6 +26148,9 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19491,
+                19491,
+                19491,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27311,6 +27374,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "{0} / {1} bytes",
                 "Data",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28535,6 +28601,9 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19491,
+                19491,
+                19491,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29758,6 +29827,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "{0} / {1} bytes",
                 "Data",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30981,6 +31053,9 @@ impl TranslatedString {
                 19461,
                 19472,
                 19487,
+                19491,
+                19491,
+                19491,
                 19491,
             ];
 
@@ -32206,6 +32281,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Select the type of wallet backup you want to create.",
+                "Which type of wallet backup do you have?",
+                "Reading tag...",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33430,6 +33508,9 @@ impl TranslatedString {
                 20554,
                 20554,
                 20575,
+                20627,
+                20667,
+                20681,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34653,6 +34734,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Select the type of wallet backup you want to create.",
+                "Which type of wallet backup do you have?",
+                "Reading tag...",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35877,6 +35961,9 @@ impl TranslatedString {
                 20554,
                 20554,
                 20575,
+                20627,
+                20667,
+                20681,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37100,6 +37187,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Select the type of wallet backup you want to create.",
+                "Which type of wallet backup do you have?",
+                "Reading tag...",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38324,6 +38414,9 @@ impl TranslatedString {
                 20554,
                 20554,
                 20575,
+                20627,
+                20667,
+                20681,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39547,6 +39640,9 @@ impl TranslatedString {
                 "Withdraw to",
                 "",
                 "Data:\n{0} / {1} bytes",
+                "Select the type of wallet backup you want to create.",
+                "Which type of wallet backup do you have?",
+                "Reading tag...",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40771,6 +40867,9 @@ impl TranslatedString {
                 20554,
                 20554,
                 20575,
+                20627,
+                20667,
+                20681,
             ];
 
         }
@@ -40826,6 +40925,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_backup__title_backup_wallet, Self::backup__title_backup_wallet),
         (Qstr::MP_QSTR_backup__title_create_wallet_backup, Self::backup__title_create_wallet_backup),
         (Qstr::MP_QSTR_backup__title_skip, Self::backup__title_skip),
+        (Qstr::MP_QSTR_backup__type_create, Self::backup__type_create),
+        (Qstr::MP_QSTR_backup__type_have, Self::backup__type_have),
         (Qstr::MP_QSTR_backup__type_n4w1, Self::backup__type_n4w1),
         (Qstr::MP_QSTR_backup__type_wordlist, Self::backup__type_wordlist),
         (Qstr::MP_QSTR_backup__want_to_skip, Self::backup__want_to_skip),
@@ -41577,6 +41678,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_n4w1__hold_first, Self::n4w1__hold_first),
         (Qstr::MP_QSTR_n4w1__hold_last, Self::n4w1__hold_last),
         (Qstr::MP_QSTR_n4w1__hold_next, Self::n4w1__hold_next),
+        (Qstr::MP_QSTR_n4w1__reading, Self::n4w1__reading),
         (Qstr::MP_QSTR_n4w1__writing, Self::n4w1__writing),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_nem__absolute, Self::nem__absolute),
