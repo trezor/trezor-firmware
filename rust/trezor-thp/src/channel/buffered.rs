@@ -37,17 +37,22 @@ impl<C: ChannelIO> Buffered<C> {
         let res = self
             .channel
             .packet_in(packet_buffer, self.receive_buffer.as_mut_slice());
-        if let PacketInResult::EnlargeBuffer {
+        if let PacketInResult::Accepted {
             ack_received,
-            buffer_size,
+            message_ready,
+            pong,
+            buffer_size: Some(s),
+            ..
         } = res
         {
-            log::debug!("Resizing receive buffer to {}.", buffer_size);
-            self.receive_buffer.resize(buffer_size.into(), 0u8);
+            let new_size: u16 = s.into();
+            log::debug!("Resizing receive buffer to {}.", new_size);
+            self.receive_buffer.resize(new_size.into(), 0u8);
             return PacketInResult::Accepted {
                 ack_received,
-                message_ready: false,
-                pong: false,
+                message_ready,
+                pong,
+                buffer_size: None,
             };
         }
         res
