@@ -140,10 +140,10 @@ impl ChannelSync {
         SyncBits::new().with_ack_bit(self.get_ack_bit())
     }
 
+    // Returns previous value of the receive bit. We increment the bit after successfully
+    // receiving the message, an ACK is sent afterwards so it has to use the previous value.
     fn get_ack_bit(&self) -> bool {
-        let mut previous_recv = self.sync_receive;
-        previous_recv.increment();
-        previous_recv
+        self.sync_receive.previous()
     }
 
     pub fn allow_ack_piggybacking(&mut self) {
@@ -194,12 +194,20 @@ impl Default for ChannelSync {
 }
 
 trait BoolExt {
+    /// Increments the value.
     fn increment(&mut self);
+
+    /// Copies the value and decrements it.
+    fn previous(&self) -> Self;
 }
 
 impl BoolExt for bool {
     fn increment(&mut self) {
         *self = !*self;
+    }
+
+    fn previous(&self) -> Self {
+        !self
     }
 }
 

@@ -67,8 +67,7 @@ impl<C: ChannelIO> Client<C> {
                 None
             }
             Err(e) => {
-                log::error!("Cannot read from UDP socket: {}.", e);
-                panic!();
+                panic!("Cannot read from UDP socket: {}.", e);
             }
         }
     }
@@ -120,8 +119,7 @@ impl<C: ChannelIO> Client<C> {
             let mut done = false;
             while !done {
                 let Some(packet) = self.recv_from(READ_TIMEOUT) else {
-                    log::error!("Timed out waiting for response for {:?}.", READ_TIMEOUT);
-                    panic!();
+                    panic!("Timed out waiting for response for {:?}.", READ_TIMEOUT);
                 };
                 let pir = self.channel.packet_in(&packet).check_failed().unwrap();
                 assert!(!pir.got_transport_error());
@@ -133,8 +131,7 @@ impl<C: ChannelIO> Client<C> {
                 Err(e) => {
                     // Since checksum is verified in `packet_in`, there is no recoverable error
                     // returned by `message_out`. Exit now to avoid getting stuck.
-                    log::error!("Cannot read message from channel: {:?}.", e);
-                    panic!();
+                    panic!("Cannot read message from channel: {:?}.", e);
                 }
             };
         }
