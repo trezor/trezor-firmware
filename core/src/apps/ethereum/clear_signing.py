@@ -95,10 +95,31 @@ def parse_uint160(raw_data: memoryview) -> Value:
     return parse_uint256(raw_data)
 
 
+def parse_uint128(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, 128 // 8)
+    return parse_uint256(raw_data)
+
+
 def parse_uint24(raw_data: memoryview) -> Value:
     if len(raw_data) < 32:
         raise OutOfBounds
     _check_padding_zero(raw_data, 24 // 8)
+    return parse_uint256(raw_data)
+
+
+def parse_uint16(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, 16 // 8)
+    return parse_uint256(raw_data)
+
+
+def parse_uint8(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, 8 // 8)
     return parse_uint256(raw_data)
 
 
@@ -152,6 +173,17 @@ class FieldFormatter:
         if formatting this value implied dealing with a new token
         (like getting a token from parameters using `token_path`).
         """
+        raise NotImplementedError
+
+
+class TODOFormatter(FieldFormatter):
+    def format(
+        self,
+        value: AnyValue,
+        definitions: Definitions,
+        token: EthereumTokenInfo,
+        path_walker: PathWalker,
+    ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
         raise NotImplementedError
 
 
@@ -449,6 +481,7 @@ class ContainerPath:
     Value = 2
     To = 3
     ChainID = 4
+    TODO = 5
 
 
 class FieldDefinition:
@@ -598,9 +631,10 @@ async def try_parse(
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> bool:
     from .clear_signing_definitions import (
-        ALL_DISPLAY_FORMATS,
         APPROVE_DISPLAY_FORMAT,
+        COMMON_DISPLAY_FORMATS,
         TRANSFER_DISPLAY_FORMAT,
+        iterate_all_display_formats,
     )
 
     if not address_bytes:
@@ -612,11 +646,15 @@ async def try_parse(
     func_sig = data[0:SC_FUNC_SIG_BYTES]
 
     display_format = None
-    for f in ALL_DISPLAY_FORMATS:
+    for f in COMMON_DISPLAY_FORMATS:
         if f.func_sig == func_sig:
             display_format = f
             break
     else:
+        for f in iterate_all_display_formats():
+            if f.func_sig == func_sig:
+                display_format = f
+                break
         return False
 
     if not display_format.matches_context(msg.chain_id, address_bytes):

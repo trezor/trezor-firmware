@@ -1,27 +1,14 @@
 from micropython import const
-from ubinascii import unhexlify
 
 from trezor.crypto import base58
 
-from .clear_signing import (
+from apps.ethereum.clear_signing import (
     AddressNameFormatter,
-    AmountFormatter,
-    Array,
     Atomic,
-    BindingContext,
-    ContainerPath,
     DisplayFormat,
-    Dynamic,
     FieldDefinition,
-    Struct,
     TokenAmountFormatter,
-    UnitFormatter,
     parse_address,
-    parse_bool,
-    parse_bytes,
-    parse_string,
-    parse_uint24,
-    parse_uint160,
     parse_uint256,
 )
 
@@ -62,584 +49,892 @@ TRANSFER_DISPLAY_FORMAT = DisplayFormat(
     ],
 )
 
-ALL_DISPLAY_FORMATS = [APPROVE_DISPLAY_FORMAT, TRANSFER_DISPLAY_FORMAT]
+COMMON_DISPLAY_FORMATS = [APPROVE_DISPLAY_FORMAT, TRANSFER_DISPLAY_FORMAT]
 
 
-# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV6.json#L9
-ONEINCH_ADDRESS = unhexlify("111111125421cA6dc452d289314280a0f8842A65")
-ONEINCH_CHAINS = [
-    1,
-    10,
-    56,
-    100,
-    137,
-    146,
-    250,
-    8217,
-    8453,
-    42161,
-    43114,
-    59144,
-    1313161554,
-]
+def iterate_all_display_formats():
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Morpho_Gauntlet_Core import (
+        DISPLAY_FORMATS,
+    )
 
-# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/lifi/calldata-LIFIDiamond.json
-LIFI_ADDRESS = unhexlify("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE")
-LIFI_CHAINS = [
-    1,
-    10,
-    25,
-    56,
-    100,
-    106,
-    122,
-    137,
-    204,
-    250,
-    252,
-    288,
-    324,
-    1088,
-    1284,
-    1285,
-    5000,
-    8453,
-    9001,
-    34443,
-    42161,
-    42170,
-    42220,
-    43114,
-    59144,
-    81457,
-    167004,
-    534352,
-    1313161554,
-    1666600000,
-]
+    for d in DISPLAY_FORMATS:
+        yield d
 
-LIFI_CONTEXT = BindingContext(
-    [(chain, LIFI_ADDRESS) for chain in LIFI_CHAINS],
-)
+    from .clear_signing_registry.kiln.calldata_Vault_WBTC_Morpho_Gauntlet_Core import (
+        DISPLAY_FORMATS,
+    )
 
-LIFI_NATIVE_CURRENCY_ADDRESSES = [
-    unhexlify("EeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"),
-    unhexlify("0000000000000000000000000000000000000000"),
-]
+    for d in DISPLAY_FORMATS:
+        yield d
 
-ALL_DISPLAY_FORMATS.extend(
-    [
-        DisplayFormat(
-            binding_context=LIFI_CONTEXT,
-            func_sig=unhexlify(
-                "5fd9ae2e"
-            ),  # swapTokensMultipleV3ERC20ToERC20(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple[] _swapData)
-            intent="Swap",
-            parameter_definitions=[
-                Atomic(parse_bytes),  # _transactionId
-                Dynamic(parse_string),  # _integrator
-                Dynamic(parse_string),  # _referrer
-                Atomic(parse_address),  # _receiver
-                Atomic(parse_uint256),  # _minAmountOut
-                Array(
-                    Struct(
-                        (
-                            parse_address,  # callTo
-                            parse_address,  # approveTo
-                            parse_address,  # sendingAssetId
-                            parse_address,  # receivingAssetId
-                            parse_uint256,  # fromAmount
-                            parse_bytes,  # callData
-                            parse_bool,  # requiresDeposit
-                        ),
-                        is_dynamic=False,
-                    )
-                ),  # _swapData
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (5, 0, 4),  # _swapData.[0].fromAmount
-                    "Amount to Send",
-                    TokenAmountFormatter(
-                        token_path=(5, 0, 2),  # _swapData.[0].sendingAssetId
-                    ),
-                ),
-                FieldDefinition(
-                    (4,),  # _minAmountOut
-                    "Minimum to Receive",
-                    TokenAmountFormatter(
-                        token_path=(5, -1, 3),  # _swapData.[-1].receivingAssetId
-                    ),
-                ),
-                FieldDefinition(
-                    (3,),  # _receiver
-                    "Recipient",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=LIFI_CONTEXT,
-            func_sig=unhexlify(
-                "2c57e884"
-            ),  # swapTokensMultipleV3ERC20ToNative(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple[] _swapData)
-            intent="Swap",
-            parameter_definitions=[
-                Atomic(parse_bytes),  # _transactionId
-                Dynamic(parse_string),  # _integrator
-                Dynamic(parse_string),  # _referrer
-                Atomic(parse_address),  # _receiver
-                Atomic(parse_uint256),  # _minAmountOut
-                Array(
-                    Struct(
-                        (
-                            parse_address,  # callTo
-                            parse_address,  # approveTo
-                            parse_address,  # sendingAssetId
-                            parse_address,  # receivingAssetId
-                            parse_uint256,  # fromAmount
-                            parse_bytes,  # callData
-                            parse_bool,  # requiresDeposit
-                        ),
-                        is_dynamic=False,
-                    )
-                ),  # _swapData
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (5, 0, 4),  # _swapData.[0].fromAmount
-                    "Amount to Send",
-                    TokenAmountFormatter(
-                        token_path=(5, 0, 2),  # _swapData.[0].sendingAssetId
-                    ),
-                ),
-                FieldDefinition(
-                    (4,),  # _minAmountOut
-                    "Minimum Amount to receive",
-                    AmountFormatter,
-                ),
-                FieldDefinition(
-                    (3,),  # _receiver
-                    "Recipient",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=LIFI_CONTEXT,
-            func_sig=unhexlify(
-                "736eac0b"
-            ),  # swapTokensMultipleV3NativeToERC20(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple[] _swapData)
-            intent="Swap",
-            parameter_definitions=[
-                Atomic(parse_bytes),  # _transactionId
-                Dynamic(parse_string),  # _integrator
-                Dynamic(parse_string),  # _referrer
-                Atomic(parse_address),  # _receiver
-                Atomic(parse_uint256),  # _minAmountOut
-                Array(
-                    Struct(
-                        (
-                            parse_address,  # callTo
-                            parse_address,  # approveTo
-                            parse_address,  # sendingAssetId
-                            parse_address,  # receivingAssetId
-                            parse_uint256,  # fromAmount
-                            parse_bytes,  # callData
-                            parse_bool,  # requiresDeposit
-                        ),
-                        is_dynamic=False,
-                    )
-                ),  # _swapData
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    ContainerPath.Value,  # @.value
-                    "Amount to Send",
-                    AmountFormatter,
-                ),
-                FieldDefinition(
-                    (4,),  # _minAmountOut
-                    "Minimum to Receive",
-                    TokenAmountFormatter(
-                        token_path=(5, -1, 3),  # _swapData.[-1].receivingAssetId
-                    ),
-                ),
-                FieldDefinition(
-                    (3,),  # _receiver
-                    "Recipient",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=LIFI_CONTEXT,
-            func_sig=unhexlify(
-                "4666fc80"
-            ),  # swapTokensSingleV3ERC20ToERC20(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple _swapData)
-            intent="Swap",
-            parameter_definitions=[
-                Atomic(parse_bytes),  # _transactionId
-                Dynamic(parse_string),  # _integrator
-                Dynamic(parse_string),  # _referrer
-                Atomic(parse_address),  # _receiver
-                Atomic(parse_uint256),  # _minAmountOut
-                Struct(
-                    (
-                        parse_address,  # callTo
-                        parse_address,  # approveTo
-                        parse_address,  # sendingAssetId
-                        parse_address,  # receivingAssetId
-                        parse_uint256,  # fromAmount
-                        parse_bytes,  # callData
-                        parse_bool,  # requiresDeposit
-                    ),
-                    is_dynamic=True,
-                ),  # _swapData
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (5, 4),  # _swapData.fromAmount
-                    "Amount to Send",
-                    TokenAmountFormatter(token_path=(5, 2)),  # _swapData.sendingAssetId
-                ),
-                FieldDefinition(
-                    (4,),  # _minAmountOut
-                    "Minimum to receive",
-                    TokenAmountFormatter(
-                        token_path=(5, 3)  # _swapData.receivingAssetId
-                    ),
-                ),
-                FieldDefinition(
-                    (3,),  # _receiver
-                    "Recipient",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=LIFI_CONTEXT,
-            func_sig=unhexlify(
-                "733214a3"
-            ),  # swapTokensSingleV3ERC20ToNative(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple _swapData)
-            intent="Swap",
-            parameter_definitions=[
-                Atomic(parse_bytes),  # _transactionId
-                Dynamic(parse_string),  # _integrator
-                Dynamic(parse_string),  # _referrer
-                Atomic(parse_address),  # _receiver
-                Atomic(parse_uint256),  # _minAmountOut
-                Struct(
-                    (
-                        parse_address,  # callTo
-                        parse_address,  # approveTo
-                        parse_address,  # sendingAssetId
-                        parse_address,  # receivingAssetId
-                        parse_uint256,  # fromAmount
-                        parse_bytes,  # callData
-                        parse_bool,  # requiresDeposit
-                    ),
-                    is_dynamic=True,
-                ),  # _swapData
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (5, 4),  # _swapData.fromAmount
-                    "Amount to Send",
-                    TokenAmountFormatter(
-                        token_path=(5, 2),  # _swapData.sendingAssetId
-                    ),
-                ),
-                FieldDefinition(
-                    (4,),  # _minAmountOut
-                    "Minimum Amount to receive",
-                    AmountFormatter,
-                ),
-                FieldDefinition(
-                    (3,),  # _receiver
-                    "Recipient",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=LIFI_CONTEXT,
-            func_sig=unhexlify(
-                "af7060fd"
-            ),  # swapTokensSingleV3NativeToERC20(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple _swapData)
-            intent="Swap",
-            parameter_definitions=[
-                Atomic(parse_bytes),  # _transactionId
-                Dynamic(parse_string),  # _integrator
-                Dynamic(parse_string),  # _referrer
-                Atomic(parse_address),  # _receiver
-                Atomic(parse_uint256),  # _minAmountOut
-                Struct(
-                    (
-                        parse_address,  # callTo
-                        parse_address,  # approveTo
-                        parse_address,  # sendingAssetId
-                        parse_address,  # receivingAssetId
-                        parse_uint256,  # fromAmount
-                        parse_bytes,  # callData
-                        parse_bool,  # requiresDeposit
-                    ),
-                    is_dynamic=True,
-                ),  # _swapData
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    ContainerPath.Value,  # @.value
-                    "Amount to send",
-                    AmountFormatter,
-                ),
-                FieldDefinition(
-                    (4,),  # _minAmountOut
-                    "Minimum to Receive",
-                    TokenAmountFormatter(
-                        token_path=(5, 3),  # _swapData.receivingAssetId
-                    ),
-                ),
-                FieldDefinition(
-                    (3,),  # _receiver
-                    "Recipient",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=LIFI_CONTEXT,
-            func_sig=unhexlify(
-                "4630a0d8"
-            ),  # swapTokensGeneric(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmount,tuple[] _swapData)
-            intent="Swap",
-            parameter_definitions=[
-                Atomic(parse_bytes),  # _transactionId
-                Dynamic(parse_string),  # _integrator
-                Dynamic(parse_string),  # _referrer
-                Atomic(parse_address),  # _receiver
-                Atomic(parse_uint256),  # _minAmount
-                Array(
-                    Struct(
-                        (
-                            parse_address,  # callTo
-                            parse_address,  # approveTo
-                            parse_address,  # sendingAssetId
-                            parse_address,  # receivingAssetId
-                            parse_uint256,  # fromAmount
-                            parse_bytes,  # callData
-                            parse_bool,  # requiresDeposit
-                        ),
-                        is_dynamic=False,
-                    )
-                ),  # _swapData
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (
-                        5,
-                        0,
-                        4,
-                    ),  # _swapData.[0].fromAmount
-                    "Amount info",
-                    TokenAmountFormatter(
-                        token_path=(5, 0, 2),  # _swapData.[0].sendingAssetId
-                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
-                    ),
-                ),
-                FieldDefinition(
-                    (4,),  # _minAmount,
-                    "Minimum Amount to receive",
-                    TokenAmountFormatter(
-                        token_path=(5, -1, 3),  # # _swapData.[-1].receivingAssetId
-                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
-                    ),
-                ),
-                FieldDefinition(
-                    (3,),  # receiver
-                    "Recipient",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-    ]
-)
+    from .clear_signing_registry.kiln.calldata_Vault_WETH_Aave_v3 import DISPLAY_FORMATS
 
-# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json#L6
-UNISWAP_V3_ROUTER_ADDRESS = unhexlify("68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
-UNISWAP_V3_ROUTER_CHAINS = [1]
+    for d in DISPLAY_FORMATS:
+        yield d
 
-# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json
+    from .clear_signing_registry.kiln.calldata_Vault_USDT_Aave_v3 import DISPLAY_FORMATS
 
-UNISWAP_CONTEXT = BindingContext(
-    [(chain, UNISWAP_V3_ROUTER_ADDRESS) for chain in UNISWAP_V3_ROUTER_CHAINS],
-)
+    for d in DISPLAY_FORMATS:
+        yield d
 
-ALL_DISPLAY_FORMATS.extend(
-    [
-        DisplayFormat(
-            binding_context=UNISWAP_CONTEXT,
-            func_sig=unhexlify("b858183f"),  # exactInput(tuple params)
-            intent="Swap",
-            parameter_definitions=[
-                Struct(
-                    (
-                        parse_bytes,  # path
-                        parse_address,  # recipient
-                        parse_uint256,  # amountIn
-                        parse_uint256,  # amountOutMinimum
-                    ),
-                    is_dynamic=True,
-                ),  # params
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (0, 2),  # params.amountIn
-                    "Amount to Send",
-                    TokenAmountFormatter(
-                        token_path=(0, 0, (0, 20)),  # params.path.[0:20]
-                    ),
-                ),
-                FieldDefinition(
-                    (0, 3),  # params.amountOutMinimum
-                    "Minimum to Receive",
-                    TokenAmountFormatter(
-                        token_path=(0, 0, (-20,)),  # params.path.[-20:]
-                    ),
-                ),
-                FieldDefinition(
-                    (0, 1),  # params.recipient
-                    "Beneficiary",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=UNISWAP_CONTEXT,
-            func_sig=unhexlify("04e45aaf"),  # exactInputSingle(tuple params)
-            intent="Swap",
-            parameter_definitions=[
-                Struct(
-                    (
-                        parse_address,  # tokenIn
-                        parse_address,  # tokenOut
-                        parse_uint24,  # fee
-                        parse_address,  # recipient
-                        parse_uint256,  # amountIn
-                        parse_uint256,  # amountOutMinimum
-                        parse_uint160,  # sqrtPriceLimitX96
-                    ),
-                    is_dynamic=False,
-                ),  # params
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (0, 4),  # amountIn
-                    "Send",
-                    TokenAmountFormatter(
-                        token_path=(0, 0),  # params.tokenIn
-                    ),
-                ),
-                FieldDefinition(
-                    (0, 5),  # amountOutMinimum
-                    "Minimum to Receive",
-                    TokenAmountFormatter(
-                        token_path=(0, 1),  # params.tokenOut
-                    ),
-                ),
-                FieldDefinition(
-                    (0, 2),  # fee
-                    "Uniswap fee",
-                    UnitFormatter(decimals=4, base="%", prefix=False),
-                ),
-                FieldDefinition(
-                    (0, 3),  # recipient
-                    "Beneficiary",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=UNISWAP_CONTEXT,
-            func_sig=unhexlify("09b81346"),  # exactOutput(tuple params)
-            intent="Swap",
-            parameter_definitions=[
-                Struct(
-                    (
-                        parse_bytes,  # path
-                        parse_address,  # recipient
-                        parse_uint256,  # amountOut
-                        parse_uint256,  # amountInMaximum
-                    ),
-                    is_dynamic=True,
-                ),  # params
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (0, 3),  # params.amountInMaximum
-                    "Maximum Amount In",
-                    TokenAmountFormatter(
-                        token_path=(0, 0, (-20,)),  # params.path.[-20:]
-                    ),
-                ),
-                FieldDefinition(
-                    (0, 2),  # params.amountOut
-                    "Amount to Receive",
-                    TokenAmountFormatter(
-                        token_path=(0, 0, (0, 20)),  # params.path.[0:20]
-                    ),
-                ),
-                FieldDefinition(
-                    (0, 1),  # params.recipient
-                    "Beneficiary",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-        DisplayFormat(
-            binding_context=UNISWAP_CONTEXT,
-            func_sig=unhexlify("5023b4df"),  # exactOutputSingle(tuple params)
-            intent="Swap",
-            parameter_definitions=[
-                Struct(
-                    (
-                        parse_address,  # tokenIn
-                        parse_address,  # tokenOut
-                        parse_uint24,  # fee
-                        parse_address,  # recipient
-                        parse_uint256,  # amountOut
-                        parse_uint256,  # amountInMaximum
-                        parse_uint160,  # sqrtPriceLimitX96
-                    ),
-                    is_dynamic=False,
-                ),  # params
-            ],
-            field_definitions=[
-                FieldDefinition(
-                    (0, 5),  # amountInMaximum
-                    "Maximum Amount In",
-                    TokenAmountFormatter(
-                        token_path=(0, 0),  # params.tokenIn
-                    ),
-                ),
-                FieldDefinition(
-                    (0, 4),  # amountOut
-                    "Amount to Receive",
-                    TokenAmountFormatter(
-                        token_path=(0, 1),  # params.tokenOut
-                    ),
-                ),
-                FieldDefinition(
-                    (0, 2),  # fee
-                    "Uniswap fee",
-                    UnitFormatter(decimals=4, base="%", prefix=False),
-                ),
-                FieldDefinition(
-                    (0, 3),  # recipient
-                    "Beneficiary",
-                    AddressNameFormatter,
-                ),
-            ],
-        ),
-    ]
-)
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_AAVE_Arbitrum import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_WETH_Morpho_Gauntlet_Core import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDT_Morpho_Gauntlet_USDT_Prime import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Aave_v3 import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_EURC_Morpho_Gauntlet_Core import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_cbBTC_Morpho_Gauntlet_Core import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDT_Morpho_Steakhouse_USDT_multisig import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDT_Euler_Yield import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Morpho_MEV_Capital import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_WETH_Morpho_MEV_Capital import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDT_Morpho_Smokehouse_USDT_multisig import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_RLUSD_Euler_Yield import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Morpho_Gauntlet_USDC_Core_multisig import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDT_Morpho_Gauntlet_USDT_Core_multisig import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDe_Euler_Yield_USDE import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDT_Morpho_Gauntlet_Prime import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Morpho_Steakhouse_USDC_multisig import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Euler_Yield import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Morpho_Smokehouse_USDC_multisig import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Morpho_Gauntlet_Prime import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Morpho_Re7_Base import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDT_Compound_v3 import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.kiln.calldata_Vault_USDC_Morpho_Gauntlet_USDC_Core_Base_multisig import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7FRAX import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_block_analitica_bbUSDT import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_csUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtUSDCp import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_smcbBTC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7WBTC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtUSDC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_block_analitica_mwcbBTC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtusdcf import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_b_protocol_reUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_mev_capital_pWBTC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_mev_capital_MCwBTC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_9summits_9SUSDCcore import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_midasUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7cbBTC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakRUSD import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtUSDCc import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakUSDCrwa import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakUSDR import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_9summits_9SUSR import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7WETH import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_ionicUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtmsUSDc import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_block_analitica_mwETH import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_smWETH import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakEURC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_mMAI import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_bbqWSTETH import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_llamarisk_llama_crvUSD import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_b_protocol_reGOLD import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtAUSDc import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakUSDM import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakPAXG import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_block_analitica_mwEURC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtWETHc import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_sbMorphoUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakPYUSD import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_9summits_9SETHc import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtcbBTCc import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_uUSDC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_block_analitica_mwUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gteUSDc import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_9summits_9SUSDC11Core import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtUSDCmkr import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakUSDA import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_ionicWETH import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_elixirUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_hakutora_hUSDC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtEURCc import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_fence_ERY import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7wstETH import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7USDA import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_9summits_9SETHcore import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_sbMorphotBTC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_msolvbtcbbn import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_block_analitica_bbUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_bbqUSDT import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtUSDT import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7USDC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakUSDT import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakETH import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakUSDQ import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_leadblock_USDC_RWA import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakWBTC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_b_protocol_recbBTC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_csUSDL import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakEURA import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtUSDCcore import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtUSDAcore import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakSUSDS import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_mev_capital_MCcbBTC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_steakUSDTlite import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtWETHe import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtDAIcore import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtWETH import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtWBTCc import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_smUSDC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtmsETHc import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_apostro_aprUSDC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtLRTcore import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_bbqUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_b_protocol_reETH import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_gtLBTCc import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7RWA import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_fxUSDC import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_mhyETH import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_steakhouse_financial_bbqDAI import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_sparkdao_spDAI import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_mev_capital_MCwETH import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_degenUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_mDEGEN import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_meUSD import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_gauntlet_resolvUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_apostro_aprUSR import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_re7_labs_Re7USDT import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_sparkdao_sparkUSDC import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.morpho.calldata_block_analitica_bbETH import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.yieldxyz.calldata_yieldxyz_usde_vault import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.corestake.calldata_corestake import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.corestake.calldata_stakehub import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.corestake.calldata_coreagent import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.aave.calldata_lpv3 import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.aave.calldata_WrappedTokenGatewayV3 import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.walletconnect.calldata_wct import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.safe.calldata_BatchExecutor import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.tether.calldata_usdt import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.lido.calldata_wstETH_referral_staker import (
+        DISPLAY_FORMATS,
+    )
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.p2p.calldata_EigenPodManager import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.celo.calldata_celo_governance import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.celo.calldata_celo_validators import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.celo.calldata_locked_celo import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.celo.calldata_celo_accounts import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.celo.calldata_celo_election import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
+
+    from .clear_signing_registry.lifi.calldata_LIFIDiamond import DISPLAY_FORMATS
+
+    for d in DISPLAY_FORMATS:
+        yield d
