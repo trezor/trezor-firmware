@@ -88,7 +88,7 @@
 
 // RAM layout - kernel
 #define K_MAIN_STACK_START 0x10000000
-#define K_MAIN_STACK_SIZE (8 * 1024)
+#define K_MAIN_STACK_SIZE (10 * 1024)
 
 #define K_FB1_RAM_START 0x1000C000
 #define K_FB1_RAM_SIZE (0)
@@ -106,8 +106,8 @@
 #define AUX1_RAM_START (0x20000400)
 #define AUX1_RAM_SIZE (191 * 1024)
 
-#define AUX2_RAM_START 0x10002000
-#define AUX2_RAM_SIZE (40 * 1024)
+#define AUX2_RAM_START 0x10002800
+#define AUX2_RAM_SIZE (38 * 1024)
 
 // misc
 #define CODE_ALIGNMENT 0x200
