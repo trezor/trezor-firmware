@@ -394,10 +394,11 @@ async def handle_SetDeviceName() -> None:
 
     utils.ensure(storage_device.is_initialized())
 
+    max_len = storage_device.LABEL_MAXLENGTH
     label = await interact(
         trezorui_api.request_string(
-            prompt=TR.device_name__enter,
-            max_len=storage_device.LABEL_MAXLENGTH,
+            prompt=TR.device_name__enter.format(max_len),
+            max_len=max_len,
             allow_empty=True,
             prefill=storage_device.get_label(),
         ),

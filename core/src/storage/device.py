@@ -61,7 +61,7 @@ if TYPE_CHECKING:
     StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 
-LABEL_MAXLENGTH = const(32)
+LABEL_MAXLENGTH = const(16)  # in characters
 
 if __debug__:
     AUTOLOCK_DELAY_USB_MIN_MS = 10 * 1000  # 10 seconds

@@ -39,9 +39,9 @@ pytestmark = [pytest.mark.models("eckhart")]
 KEYBOARD_CATEGORY = KeyboardCategory.LettersLower
 
 LABEL10 = "NewLabel0#"
-LABEL31 = "dadadadadadadadadadadadadadadad"
-LABEL32 = LABEL31 + "a"
-LABEL33 = LABEL32 + "d"
+LABEL15 = "dadadadadadadad"
+LABEL16 = LABEL15 + "a"
+LABEL17 = LABEL16 + "d"
 
 
 def input_label(debug: "DebugLink", label: str, check: bool = True) -> None:
@@ -192,7 +192,7 @@ def test_label_empty(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(pin=None)
-def test_label_over_32_chars(device_handler: "BackgroundDeviceHandler"):
+def test_label_over_16_chars(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
 
     features = device_handler.features()
@@ -205,8 +205,8 @@ def test_label_over_32_chars(device_handler: "BackgroundDeviceHandler"):
 
     # Input new label
     erase_label(debug)
-    input_label(debug, LABEL33, check=False)
-    assert debug.read_layout().label() == LABEL32
+    input_label(debug, LABEL17, check=False)
+    assert debug.read_layout().label() == LABEL16
     enter_label(debug)
     confirm_label(debug)
     assert_device_screen(debug, Menu.DEVICE)
@@ -216,7 +216,7 @@ def test_label_over_32_chars(device_handler: "BackgroundDeviceHandler"):
     assert features.initialized is True
     assert features.pin_protection is False
     assert features.unfinished_backup is not True
-    assert features.label == LABEL32
+    assert features.label == LABEL16
 
 
 @pytest.mark.setup_client(pin=None)
@@ -306,7 +306,7 @@ def test_label_cycle_through_last_character(device_handler: "BackgroundDeviceHan
     # Input new label
     erase_label(debug)
 
-    label = LABEL31 + "i"  # for i we need to cycle through "ghi" three times
+    label = LABEL15 + "i"  # for i we need to cycle through "ghi" three times
     input_label(debug, label)
     assert debug.read_layout().label() == label
     enter_label(debug)
