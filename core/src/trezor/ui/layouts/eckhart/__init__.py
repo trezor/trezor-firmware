@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
     from typing import Any, Awaitable, Coroutine, Iterable, NoReturn, Sequence, TypeVar
 
-    from trezor.messages import StellarAsset
+    from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo, StellarAsset
     from trezor.ui.layouts.menu import Details
 
     from ..common import ExceptionType, PropertyType, StrPropertyType
@@ -904,7 +904,7 @@ def confirm_properties(
 
 
 def confirm_total(
-    total_amount: str | None,
+    total_amount: str,
     fee_amount: str,
     title: str | None = None,
     total_label: str | None = None,
@@ -1068,17 +1068,21 @@ if not utils.BITCOIN_ONLY:
 
     async def confirm_ethereum_tx(
         recipient: str | None,
-        total_amount: str,
+        tx_value: int,
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[StrPropertyType],
+        network: EthereumNetworkInfo,
+        token: EthereumTokenInfo | None,
         is_send: bool,
         br_name: str = "confirm_total",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
         from trezor.ui.layouts.menu import Menu, interact_with_menu
+
+        from apps.ethereum.helpers import format_ethereum_amount
 
         subtitle = (
             None
@@ -1100,6 +1104,8 @@ if not utils.BITCOIN_ONLY:
         else:
             menu_items = []
 
+        amount_str = format_ethereum_amount(tx_value, token, network)
+
         await confirm_linear_flow(
             lambda: interact_with_menu(
                 trezorui_api.confirm_value(
@@ -1120,7 +1126,7 @@ if not utils.BITCOIN_ONLY:
             ),
             lambda: interact(
                 trezorui_api.confirm_summary(
-                    amount=total_amount,
+                    amount=amount_str,
                     amount_label=TR.words__amount,
                     fee=maximum_fee,
                     fee_label=TR.send__maximum_fee,

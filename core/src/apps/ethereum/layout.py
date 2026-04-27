@@ -42,6 +42,7 @@ async def require_confirm_approve(
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo,
     token_address: AnyBytes,
+    tx_value: AnyBytes,
     is_revoke: bool,
     chunkify: bool,
 ) -> None:
@@ -91,11 +92,12 @@ async def require_confirm_clear_signing(
 
 async def require_confirm_tx(
     recipient: str | None,
-    total_amount: str,
+    tx_value: int,
     address_bytes: bytes,
     address_n: list[int],
     maximum_fee: str,
     fee_info_items: Iterable[StrPropertyType],
+    network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
     is_send: bool,
     chunkify: bool,
@@ -123,11 +125,13 @@ async def require_confirm_tx(
 
     await confirm_ethereum_tx(
         recipient,
-        total_amount,
+        tx_value,
         account,
         account_path,
         maximum_fee,
         fee_info_items,
+        network,
+        token,
         is_send,
         chunkify=chunkify,
     )

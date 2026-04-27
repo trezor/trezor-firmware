@@ -709,6 +709,7 @@ async def _handle_approve(
         definitions.network,
         token,
         address_bytes,
+        msg.value,
         is_revoke,
         bool(msg.chunkify),
     )
@@ -765,11 +766,12 @@ async def _handle_transfer(
     else:
         await require_confirm_tx(
             recipient_addr,
-            value,
+            arg1_raw_value,
             address_bytes,
             msg.address_n,
             maximum_fee,
             fee_items,
+            definitions.network,
             token,
             is_send=True,
             chunkify=bool(msg.chunkify),
