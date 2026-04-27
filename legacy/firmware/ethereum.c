@@ -318,7 +318,7 @@ static void send_signature(void) {
 
 struct ethereum_amount {
   char value[64];
-  char unit[16];
+  char unit[15];
 };
 
 /* Format a 256 bit number (amount in wei) into a human readable format
@@ -393,8 +393,9 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
 
     ethereum_address_checksum(to, to_str, rskip60, chain_id);
 
-    const size_t prefix_size = snprintf(_to1, sizeof(_to1), "%s%sto ",
-                                        amount.unit, *amount.unit ? " " : "");
+    snprintf(_to1, sizeof(_to1), "%s%sto ", amount.unit,
+             *amount.unit ? " " : "");
+    size_t prefix_size = strlen(_to1);
 
     // copy only the part that should fit into `_to1`
     strlcpy(_to1 + prefix_size, to_str, sizeof(_to1) - prefix_size);
