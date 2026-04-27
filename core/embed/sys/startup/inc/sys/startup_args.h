@@ -62,8 +62,61 @@ typedef enum {
  * @return TS_OK on success, or an error code on failure:
  *         TS_ENOMEM if the output buffer does not have enough space
  *         TS_EEXIST if an entry with the same type already exists in the buffer
+ *         TS_EBUSY if there is a pending reservation
  */
 ts_t startup_args_add(startup_args_type_t type, const void* value, size_t size);
+
+/*
+ * @brief Reserves space for an argument in the output buffer to be passed to
+ * the next stage of the boot process, and returns a pointer to the reserved
+ * space where the caller can write the argument value directly.
+ *
+ * This function allows the caller to write the argument value directly into the
+ * output buffer without needing to copy it from a separate location. The caller
+ * must call `startup_args_commit()` after writing the value to finalize the
+ * addition of the argument to the output buffer. If the caller decides not to
+ * add the argument after reserving space, it must call `startup_args_discard()`
+ *
+ * @param type Argument type (defined by the caller)
+ * @param size Size of the argument value in bytes
+ * @param buffer Output pointer to store the address of the reserved space for
+ * the argument value. The caller can write the value directly to this address.
+ *
+ * @return TS_OK on success, or an error code on failure:
+ *         TS_ENOMEM if the output buffer does not have enough space
+ *         TS_EEXIST if an entry with the same type already exists in the buffer
+ *         TS_EBUSY if there is already a pending reservation
+ */
+ts_t startup_args_reserve(startup_args_type_t type, size_t size, void** buffer);
+
+/*
+ * @brief Commits the previously reserved argument in the output buffer.
+ *
+ * This function must be called after `startup_args_reserve()` to finalize the
+ * addition of the argument to the output buffer. It updates the size of the
+ * reserved entry to the actual size of the argument value written by the
+ * caller, and advances the buffer size to account for the new entry. If this
+ * function fails, the reservation remains pending and the caller must either
+ * retry with valid arguments or call `startup_args_discard()`.
+ *
+ * @param size Size of the argument value in bytes (must match or be less than
+ * the size used in the previous call to `startup_args_reserve()`)
+ *
+ * @return TS_OK on success, or an error code on failure:
+ *         TS_EINVAL if there is no pending reservation, or if the size is
+ *         greater than the size reserved in the previous call to
+ *         `startup_args_reserve()`
+ */
+ts_t startup_args_commit(size_t size);
+
+/*
+ * @brief Discards the previously reserved argument in the output buffer.
+ *
+ * This function must be called if the caller decides not to add the reserved
+ * argument to the output buffer. It resets the reservation state, allowing
+ * subsequent calls to `startup_args_reserve()` to succeed.
+ */
+void startup_args_discard(void);
 
 /*
  * @brief Retrieves the pointer to the output arguments structure that can

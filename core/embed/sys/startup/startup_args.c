@@ -58,7 +58,11 @@ static struct {
 // call to `startup_args_add()`. If `startup_args_add()` is not called at all,
 // this will remain NULL and the output buffer and `g_args_buffer`
 // will be optimized out by the linker.
-startup_args_t* g_args_out_ptr;
+static startup_args_t* g_args_out_ptr;
+
+// Flag indicating whether there is a pending reservation that has not
+// been committed yet.
+static bool g_reservation_pending = false;
 
 // Input arguments passed from the previous stage, initialized with
 // `startup_args_import()` and accessed with `startup_args_get()`.
@@ -80,6 +84,34 @@ ts_t startup_args_add(startup_args_type_t type, const void* value,
                       size_t size) {
   TSH_DECLARE;
 
+  void* dest = NULL;
+
+  TSH_CHECK_ARG(size == 0 || value != NULL);
+
+  ts_t status = startup_args_reserve(type, size, &dest);
+  TSH_CHECK_OK(status);
+
+  if (size > 0) {
+    memcpy(dest, value, size);
+  }
+
+  startup_args_commit(size);
+
+cleanup:
+  TSH_RETURN;
+}
+
+ts_t startup_args_reserve(startup_args_type_t type, size_t size,
+                          void** buffer) {
+  TSH_DECLARE;
+
+  *buffer = NULL;
+
+  TSH_CHECK_ARG(size <= UINT16_MAX);
+  TSH_CHECK_ARG(type != STARTUP_ARGS_TYPE_INVALID);
+
+  TSH_CHECK(!g_reservation_pending, TS_EBUSY);
+
   startup_args_t* args = g_args_out_ptr;
 
   if (args == NULL) {
@@ -90,10 +122,6 @@ ts_t startup_args_add(startup_args_type_t type, const void* value,
     g_args_out_ptr = args;
   }
 
-  TSH_CHECK_ARG(size <= UINT16_MAX);
-  TSH_CHECK_ARG(type != STARTUP_ARGS_TYPE_INVALID);
-  TSH_CHECK_ARG(size == 0 || value != NULL);
-
   TSH_CHECK(find_entry(args, type) == NULL, TS_EEXIST);
 
   uint32_t entry_size = ARG_ENTRY_SIZE(size);
@@ -102,15 +130,42 @@ ts_t startup_args_add(startup_args_type_t type, const void* value,
   arg_entry_t* entry = (arg_entry_t*)(args->data + args->size);
   entry->type = type;
   entry->size = size;
+
   if (size > 0) {
-    memcpy(entry->value, value, size);
+    // Zero out the reserved space for the argument value
+    memset(entry->value, 0, size);
   }
 
-  args->size += entry_size;
+  *buffer = entry->value;
+
+  g_reservation_pending = true;
 
 cleanup:
   TSH_RETURN;
 }
+
+ts_t startup_args_commit(size_t size) {
+  TSH_DECLARE;
+
+  startup_args_t* args = g_args_out_ptr;
+
+  TSH_CHECK(g_reservation_pending, TS_EINVAL);
+  TSH_CHECK(args != NULL, TS_EINVAL);
+
+  arg_entry_t* entry = (arg_entry_t*)(args->data + args->size);
+
+  TSH_CHECK(entry->size >= size, TS_EINVAL);
+
+  entry->size = size;
+  args->size += ARG_ENTRY_SIZE(size);
+
+  g_reservation_pending = false;
+
+cleanup:
+  TSH_RETURN;
+}
+
+void startup_args_discard(void) { g_reservation_pending = false; }
 
 const startup_args_t* startup_args_export(void) { return g_args_out_ptr; }
 
