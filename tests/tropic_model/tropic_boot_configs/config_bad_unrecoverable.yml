@@ -5,33 +5,33 @@
 debug_random_value: !!binary |
   AMD/7g==
 i_config:
-  cfg_debug: 4294967295
-  cfg_gpo: 4294967295
-  cfg_sensors: 4294967295
-  cfg_sleep_mode: 4294967295
-  cfg_start_up: 4294967295
-  cfg_uap_ecc_key_erase: 4294967295
-  cfg_uap_ecc_key_generate: 4294967295
-  cfg_uap_ecc_key_read: 4294967295
-  cfg_uap_ecc_key_store: 4294967295
-  cfg_uap_ecdsa_sign: 4294967295
-  cfg_uap_eddsa_sign: 4294967295
-  cfg_uap_i_config_read: 4294967295
-  cfg_uap_i_config_write: 4294967295
-  cfg_uap_mac_and_destroy: 4294967295
-  cfg_uap_mcounter_get: 4294967295
-  cfg_uap_mcounter_init: 4294967295
-  cfg_uap_mcounter_update: 4294967295
-  cfg_uap_pairing_key_invalidate: 4294967295
-  cfg_uap_pairing_key_read: 4294967295
-  cfg_uap_pairing_key_write: 4294967295
-  cfg_uap_ping: 4294967295
-  cfg_uap_r_config_read: 4294967295
-  cfg_uap_r_config_write_erase: 4294967295
-  cfg_uap_r_mem_data_erase: 4294967295
-  cfg_uap_r_mem_data_read: 4294967295
-  cfg_uap_r_mem_data_write: 4294967295
-  cfg_uap_random_value_get: 4294967295
+  cfg_debug: 0 # unrecoverable
+  cfg_gpo: 0 # unrecoverable
+  cfg_sensors: 0 # unrecoverable
+  cfg_sleep_mode: 0 # unrecoverable
+  cfg_start_up: 0 # unrecoverable
+  cfg_uap_ecc_key_erase: 0 # unrecoverable
+  cfg_uap_ecc_key_generate: 0 # unrecoverable
+  cfg_uap_ecc_key_read: 0 # unrecoverable
+  cfg_uap_ecc_key_store: 0 # unrecoverable
+  cfg_uap_ecdsa_sign: 0 # unrecoverable
+  cfg_uap_eddsa_sign: 0 # unrecoverable
+  cfg_uap_i_config_read: 0 # unrecoverable
+  cfg_uap_i_config_write: 0 # unrecoverable
+  cfg_uap_mac_and_destroy: 0 # unrecoverable
+  cfg_uap_mcounter_get: 0 # unrecoverable
+  cfg_uap_mcounter_init: 0 # unrecoverable
+  cfg_uap_mcounter_update: 0 # unrecoverable
+  cfg_uap_pairing_key_invalidate: 0 # unrecoverable
+  cfg_uap_pairing_key_read: 0 # unrecoverable
+  cfg_uap_pairing_key_write: 0 # unrecoverable
+  cfg_uap_ping: 0 # unrecoverable
+  cfg_uap_r_config_read: 0 # unrecoverable
+  cfg_uap_r_config_write_erase: 0 # unrecoverable
+  cfg_uap_r_mem_data_erase: 0 # unrecoverable
+  cfg_uap_r_mem_data_read: 0 # unrecoverable
+  cfg_uap_r_mem_data_write: 0 # unrecoverable
+  cfg_uap_random_value_get: 0 # unrecoverable
 i_pairing_keys:
   0:
     state: invalid
