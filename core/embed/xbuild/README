@@ -1,0 +1,83 @@
+## xbuild
+
+`xbuild` is a **Cargo build-script helper library** for compiling C code within the Trezor firmware's Rust build system. It wraps the `cc` crate with higher-level abstractions tailored to this embedded firmware project — parallel compilation, incremental rebuild tracking, inter-crate metadata propagation, and binary embedding.
+
+## Usage
+
+Build scripts use one of two entry points:
+
+```rust
+// Library crates — compile a static .a archive:
+xbuild::build(|lib| {
+    lib.add_sources_from_folder(&src, ["driver.c"]);
+    lib.add_include(&src.join("include"));
+    Ok(())
+})
+
+// Project (top-level) crates — compile and link a binary:
+xbuild::build_and_link("firmware", |lib| {
+    lib.import_lib("io");
+    lib.add_sources_from_folder(&src, ["main.c"]);
+    Ok(())
+})
+```
+
+`build()` creates a `CLibrary`, passes it to the closure, then calls `compile()`.
+`build_and_link()` does the same and additionally calls `link_as(target)` to emit linker directives.
+Only one `CLibrary` exists per crate — the closure-based API enforces this.
+
+## Architecture
+
+```
+xbuild/src/
+├── lib.rs              — Public API: build(), build_and_link(), re-exports
+├── helpers.rs          — Path utilities, feature detection, model ID
+├── attrs.rs            — CompileAttrs: flags, defines, includes
+├── input_files.rs      — Glob-based source file collection
+├── dep_tracking.rs     — Incremental build / command tracking
+└── clibrary/
+    ├── mod.rs          — CLibrary struct and configuration API
+    ├── compile.rs      — Parallel compilation engine
+    ├── link.rs         — Final binary linking
+    └── embed.rs        — Binary blob embedding
+```
+
+The central type is **`CLibrary`** — it models a single C static library with its sources, object files, and compile attributes.
+
+### clibrary/mod.rs — Configuration API
+The builder-pattern API for assembling a library: adding sources (with optional per-file overrides), includes, defines, flags. Key design choice: **public vs. private** attributes. Public ones propagate to downstream Cargo crates via `cargo::metadata=...` lines, private ones don't. `import_lib()` reads another crate's exported metadata (`DEP_<NAME>_PUBLIC_C_*` env vars) to pull in its public includes/defines/flags — this is how the build system chains C libraries across crate boundaries.
+
+### clibrary/compile.rs — Parallel Compilation
+`compile()` builds and archives the library. It:
+1. Builds `CompileUnit` structs for each source (input path, output `.o` path, optional `.d` dep file path)
+2. Spawns N worker threads (from `CBUILD_JOBS`, `NUM_JOBS`, or CPU count) with a shared `mpsc` work queue
+3. Each worker calls `cc::Tool::to_command()` with the merged attributes, runs the compiler, emits a `CompileArtifact`
+4. Collects artifacts, re-sorts by index (to get deterministic archive order), then calls `ar rcs` to produce the static `.a`
+5. Exports metadata for downstream crates
+
+There's also `build_upydef()` which reuses the same parallel pipeline but runs the preprocessor (`-E`) to produce `.upydef` files for MicroPython binding generation.
+
+### clibrary/embed.rs — Binary Embedding
+Converts raw binary blobs into linkable `.o` files via `arm-none-eabi-objcopy`, creating `_start`/`_end`/`_size` symbols under a named section. Also supports **compressed** embedding (deflate via `zlib-rs` before objcopy). Used concretely for vendor headers — `embed_vendor_header()` picks the right `.bin` file based on the model ID and feature flags (production, dev, QA, btconly, universal).
+
+### clibrary/link.rs — Final Linking
+`link_as(binary_type)` emits `cargo:rustc-link-*` directives for the top-level crate. Two paths:
+- **Emulator**: standard `-l` linking against libc/libm/libpthread
+- **Hardware**: `--whole-archive` for all C libs (needed for unreferenced-but-required symbols like image headers), MCU-specific linker scripts (`stm32u5g`, `stm32u58`, `stm32f4`), model-specific memory layout `.ld`, map file generation, `--gc-sections`, `nostdlib`. For `secmon`, it also generates a CMSE import library (`secmon_api.o`) for the kernel to call into the secure monitor.
+
+## Supporting Modules
+
+- **dep_tracking.rs** — The incremental build engine. Skips execution when inputs haven't changed, outputs exist, and the serialized command args (stored in `.dep` files) match. It also parses GCC-style `.d` dependency files so header changes trigger recompilation. All functions emit `cargo:rerun-if-changed` for proper Cargo integration. Public API: `run_command()`, `run_command_to_file()`, `run_if_changed()`, `needs_rebuild()`.
+
+- **attrs.rs** — `CompileAttrs` value type holding `flags`, `defines`, and `includes`. Handles merging, deduplication, serialization to compiler args (`to_compiler_args()`), and the metadata export/import protocol. Also has `import_cc_compiler_includes()` to probe the system compiler's default include search path.
+
+- **input_files.rs** — Glob-based source file collector. `InputFiles::add(base, "subdir/*.c")` walks directories matching each path component's glob pattern, collects matching files, deduplicates and sorts. `remove()` filters them back out.
+
+- **helpers.rs** — Path arithmetic (`relative_to_manifest`, `normalize_path`, `derive_output_path` for mapping source paths to output paths including an `__oot/` prefix for out-of-tree files), feature detection (`has_feature` checks `CARGO_FEATURE_*`), model ID discovery, timing utilities.
+
+## Key Design Decisions
+
+1. **Closure-based entry points** (`build()` / `build_and_link()`) enforce a single `CLibrary` per crate and ensure `compile()` and `link_as()` are always called correctly. Build scripts only configure the library; the framework handles the rest.
+2. **Public/private attribute split** mirrors CMake's `PUBLIC`/`PRIVATE` target properties — it enables composable C libraries across Cargo crate boundaries using Cargo's `links` + `DEP_*` metadata mechanism.
+3. **Custom incremental build** on top of Cargo's `rerun-if-changed` — the `.dep` file tracks both file timestamps *and* command arguments, so changing a compiler flag triggers rebuild even if sources didn't change.
+4. **Parallel compilation is hand-rolled** (mpsc channel + thread pool) rather than using `cc::Build`'s built-in parallelism, giving control over error propagation and artifact ordering.

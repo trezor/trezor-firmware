@@ -1,0 +1,38 @@
+[package]
+name = "rtl"
+version = "0.0.0"
+edition = "2024"
+links = "rtl"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+models.workspace = true
+
+
+[features]
+
+model_t2t1 = []
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+
+emulator = ["insecure_prng"]
+
+aes_gcm = []
+ed25519_no_precomp = []
+insecure_prng = []
+mldsa = []
+noise = ["aes_gcm"]
+production = ["models/production"]
+secp256k1_zkp = []
+sphincsplus = []
+universal_fw = []
+
+
+
+
+

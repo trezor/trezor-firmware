@@ -104,8 +104,11 @@ STORAGE_2_OFFSET := $(shell expr $(STORAGE_2_START) - $(FLASH_START))
 
 OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f $(OPENOCD_TARGET)
 
-SCM_REVISION = '$(shell git rev-parse HEAD)'
-CFLAGS += -DSCM_REVISION_INIT='{$(shell echo ${SCM_REVISION} | sed 's:\(..\):0x\1,:g')}'
+SCM_REVISION := $(shell git rev-parse HEAD)
+CFLAGS += -DSCM_REVISION_SHORT_INIT='{$(shell echo $(SCM_REVISION) | cut -c1-8 | sed 's:\(..\):0x\1,:g')}'
+CFLAGS += -DSCM_REVISION_LONG_INIT='{$(shell echo $(SCM_REVISION) | cut -c9-40 | sed 's:\(..\):0x\1,:g')}'
+CFLAGS += -DSCM_REVISION_XOR1=0
+CFLAGS += -DSCM_REVISION_XOR2=0
 
 TESTPATH = $(CURDIR)/../tests
 
@@ -269,7 +272,7 @@ pyright:
 
 clippy:
 	export BUILD_DIR=$(abspath $(UNIX_BUILD_DIR)) ; \
-	cd embed/rust ; cargo clippy $(TESTOPTS) --all-features --target=$(RUST_TARGET)
+	cd embed/rust-staticlib ; cargo clippy $(TESTOPTS) --all-features --target=$(RUST_TARGET)
 
 audit_rust: ## run cargo audit on rust dependencies
 	cd embed/rust ; cargo audit

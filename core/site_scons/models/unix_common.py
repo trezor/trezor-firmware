@@ -47,6 +47,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/time_estimate/unix/time_estimate.c",
         "embed/sec/trustzone/unix/tz_init.c",
         "embed/sec/unit_properties/unix/unit_properties.c",
+        "embed/sys/bsp/unix/profile.c",
         "embed/sys/cpuid/unix/cpuid.c",
         "embed/sys/flash/unix/flash.c",
         "embed/sys/flash/unix/flash_otp.c",
@@ -99,9 +100,10 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         defines += [("USE_IPC", "1")]
         paths += ["embed/sys/ipc/inc"]
 
-    if "applet" in features_wanted:
+    if "applets" in features_wanted:
         sources += ["embed/sys/task/applet.c"]
         sources += ["embed/sys/task/unix/coreapp.c"]
+        defines += [("USE_APPLETS", "1")]
 
     if "app_loading" in features_wanted:
         sources += ["embed/io/app_loader/unix/elf_loader.c"]
