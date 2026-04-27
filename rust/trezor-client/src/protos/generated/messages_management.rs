@@ -3054,6 +3054,8 @@ pub mod features {
         Capability_NFC = 23,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Tron)
         Capability_Tron = 24,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_N4W1)
+        Capability_N4W1 = 25,
     }
 
     impl ::protobuf::Enum for Capability {
@@ -3089,6 +3091,7 @@ pub mod features {
                 22 => ::std::option::Option::Some(Capability::Capability_BLE),
                 23 => ::std::option::Option::Some(Capability::Capability_NFC),
                 24 => ::std::option::Option::Some(Capability::Capability_Tron),
+                25 => ::std::option::Option::Some(Capability::Capability_N4W1),
                 _ => ::std::option::Option::None
             }
         }
@@ -3119,6 +3122,7 @@ pub mod features {
                 "Capability_BLE" => ::std::option::Option::Some(Capability::Capability_BLE),
                 "Capability_NFC" => ::std::option::Option::Some(Capability::Capability_NFC),
                 "Capability_Tron" => ::std::option::Option::Some(Capability::Capability_Tron),
+                "Capability_N4W1" => ::std::option::Option::Some(Capability::Capability_N4W1),
                 _ => ::std::option::Option::None
             }
         }
@@ -3148,6 +3152,7 @@ pub mod features {
             Capability::Capability_BLE,
             Capability::Capability_NFC,
             Capability::Capability_Tron,
+            Capability::Capability_N4W1,
         ];
     }
 
@@ -3183,6 +3188,7 @@ pub mod features {
                 Capability::Capability_BLE => 21,
                 Capability::Capability_NFC => 22,
                 Capability::Capability_Tron => 23,
+                Capability::Capability_N4W1 => 24,
             };
             Self::enum_descriptor().value_by_index(index)
         }
@@ -12542,7 +12548,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xf2\x1a\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\x8d\x1b\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -12602,7 +12608,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     less_connected\x18<\x20\x01(\x08R\x11wirelessConnected\"C\n\x12BackupAva\
     ilability\x12\x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\
     \x12\r\n\tAvailable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\
-    \x10\0\x12\x0c\n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\x8b\x05\
+    \x10\0\x12\x0c\n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\xa6\x05\
     \n\nCapability\x12\x1c\n\x12Capability_Bitcoin\x10\x01\x1a\x04\x80\xa6\
     \x1d\x01\x12\x1b\n\x17Capability_Bitcoin_like\x10\x02\x12\x16\n\x12Capab\
     ility_Binance\x10\x03\x12\x16\n\x12Capability_Cardano\x10\x04\x12\x1b\n\
@@ -12620,18 +12626,19 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x11Capability_Haptic\x10\x15\x1a\x04\x80\xa6\x1d\x01\x12\x18\n\x0eCap\
     ability_BLE\x10\x16\x1a\x04\x80\xa6\x1d\x01\x12\x18\n\x0eCapability_NFC\
     \x10\x17\x1a\x04\x80\xa6\x1d\x01\x12\x13\n\x0fCapability_Tron\x10\x18\
-    \x1a\x04\xc8\xf3\x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\t\
-    expiry_ms\x18\x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\xdd\x05\
-    \n\rApplySettings\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\
-    \x02\x18\x01\x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0eu\
-    se_passphrase\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\
-    \x18\x04\x20\x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\x18\x05\
-    \x20\x01(\rR\x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_lock_delay_\
-    ms\x18\x06\x20\x01(\rR\x0fautoLockDelayMs\x12Y\n\x10display_rotation\x18\
-    \x07\x20\x01(\x0e2..hw.trezor.messages.management.DisplayRotationR\x0fdi\
-    splayRotation\x12=\n\x1bpassphrase_always_on_device\x18\x08\x20\x01(\x08\
-    R\x18passphraseAlwaysOnDevice\x12T\n\rsafety_checks\x18\t\x20\x01(\x0e2/\
-    .hw.trezor.messages.management.SafetyCheckLevelR\x0csafetyChecks\x123\n\
+    \x12\x19\n\x0fCapability_N4W1\x10\x19\x1a\x04\x80\xa6\x1d\x01\x1a\x04\
+    \xc8\xf3\x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpiry_m\
+    s\x18\x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\xdd\x05\n\rApply\
+    Settings\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\x02\x18\
+    \x01\x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0euse_passp\
+    hrase\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\x18\x04\
+    \x20\x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\x18\x05\x20\x01(\
+    \rR\x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_lock_delay_ms\x18\
+    \x06\x20\x01(\rR\x0fautoLockDelayMs\x12Y\n\x10display_rotation\x18\x07\
+    \x20\x01(\x0e2..hw.trezor.messages.management.DisplayRotationR\x0fdispla\
+    yRotation\x12=\n\x1bpassphrase_always_on_device\x18\x08\x20\x01(\x08R\
+    \x18passphraseAlwaysOnDevice\x12T\n\rsafety_checks\x18\t\x20\x01(\x0e2/.\
+    hw.trezor.messages.management.SafetyCheckLevelR\x0csafetyChecks\x123\n\
     \x15experimental_features\x18\n\x20\x01(\x08R\x14experimentalFeatures\
     \x129\n\x19hide_passphrase_from_host\x18\x0b\x20\x01(\x08R\x16hidePassph\
     raseFromHost\x12'\n\x0fhaptic_feedback\x18\r\x20\x01(\x08R\x0ehapticFeed\

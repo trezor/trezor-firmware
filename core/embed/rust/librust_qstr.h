@@ -155,6 +155,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__title_backup_wallet;
   MP_QSTR_backup__title_create_wallet_backup;
   MP_QSTR_backup__title_skip;
+  MP_QSTR_backup__type_create;
+  MP_QSTR_backup__type_have;
   MP_QSTR_backup__type_n4w1;
   MP_QSTR_backup__type_wordlist;
   MP_QSTR_backup__want_to_skip;
@@ -480,6 +482,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_n4w1__hold_first;
   MP_QSTR_n4w1__hold_last;
   MP_QSTR_n4w1__hold_next;
+  MP_QSTR_n4w1__reading;
   MP_QSTR_n4w1__writing;
   MP_QSTR_notification;
   MP_QSTR_page_count;

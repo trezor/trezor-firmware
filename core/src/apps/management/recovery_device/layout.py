@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
-from trezor import TR
+from trezor import TR, utils
 from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
     show_already_added,
@@ -278,12 +278,138 @@ class _DisplayHandler:
             return None
 
 
-async def choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
-    from trezor.enums import BackupMethod
+if not utils.USE_N4W1:
 
-    if method is not BackupMethod.Display and __debug__:
-        from trezor import log
+    async def choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
+        from trezor.enums import BackupMethod
 
-        log.warning(__name__, "Unsupported backup method: %s", method)
+        if method is not BackupMethod.Display and __debug__:
+            from trezor import log
 
-    return _DisplayHandler
+            log.warning(__name__, "Unsupported backup method: %s", method)
+
+        return _DisplayHandler
+
+else:
+
+    if TYPE_CHECKING:
+        from trezor.messages import BackupMethod
+
+        from .recover import Slip39State
+
+    async def choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
+        from trezor.enums import BackupMethod
+
+        if method is None:
+            from trezor.ui.layouts.recovery import choose_method
+
+            method = await choose_method(TR.recovery__title, TR.backup__type_have)
+
+        if method is BackupMethod.N4W1:
+            return _N4W1Handler
+
+        if method not in (None, BackupMethod.Display):
+            from trezor import log
+
+            if __debug__:
+                log.warning(__name__, "Unsupported backup method: %s", method)
+
+        return _DisplayHandler
+
+    class RetryRead(Exception):
+        def __init__(self, msg: str) -> None:
+            self.msg = msg
+
+    async def _read_share() -> bytes:
+        from apps.debug import n4w1_mock
+
+        with n4w1_mock.ctx as ctx:
+            # returns `None` on cancellation or retriable error.
+            await ctx.confirm_connect(
+                title=TR.recovery__title,
+                description=TR.n4w1__hold_next,
+                button=TR.n4w1__footer_next,
+                br_name="backup_read",
+            )
+            # continue N4W1 communication (the tag is connected)
+
+            # TODO: animate during read?
+            if (blob := await ctx.read(key="mnemonic")) is None:
+                raise RetryRead("This tag is empty. Continue to scan a different tag.")
+
+            return bytes(blob)
+
+    class _N4W1Handler:
+        def __init__(
+            self,
+            recovery_type: RecoveryType,
+            slip39_state: Slip39State | None,
+        ) -> None:
+            super().__init__()
+            self.recovery_type = recovery_type
+            # `slip39_state is None` indicates that we are (re)starting the first recovery step.
+            self.slip39_state = slip39_state
+
+        @classmethod
+        async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
+            return cls(recovery_type, load_slip39_state())
+
+        async def show_state(self, is_retry: bool) -> None:
+            if is_retry or self.slip39_state is None:
+                # don't show recovery state on retries and before the first share is entered
+                return
+            word_count = self.slip39_state[0]
+            await _request_share_first_screen(word_count, self.recovery_type)
+
+        async def request_mnemonic(self) -> str | None:
+            """Return the mnemonic or `None` on cancellation/validation error."""
+            import trezorui_api
+            from trezor.ui.layouts.common import raise_if_not_confirmed
+
+            while True:
+                try:
+                    blob = await _read_share()
+                    break
+                except RetryRead as exc:
+                    await raise_if_not_confirmed(
+                        trezorui_api.show_warning(
+                            title=TR.words__important,
+                            button=TR.buttons__continue,
+                            description=exc.msg,
+                            danger=True,
+                        ),
+                        br_name="recovery_retry",
+                    )
+                    # wait for a new N4W1 tag
+                    continue
+
+            # TODO: use protobuf?
+            share = blob.decode()
+            return await self.check_words(share)
+
+        async def check_words(self, share: str) -> str | None:
+            from trezor.ui.layouts.progress import progress
+
+            from .word_validity import WordValidityResult, check
+
+            # Can be `None` when checking the first share.
+            backup_type = self.slip39_state and self.slip39_state[1]
+            share_words = share.split(" ")
+
+            progress_obj = progress(description=TR.n4w1__reading)
+            progress_obj.start()
+
+            try:
+                # Re-verify mnemonic prefixes:
+                steps = len(share_words)
+                for prefix_len in range(1, 1 + steps):
+                    progress_obj.report((1000 * prefix_len) // steps)
+                    check(backup_type, partial_mnemonic=share_words[:prefix_len])
+
+                return share
+            except WordValidityResult as exc:
+                # if they were invalid or some checks failed we continue and request them again
+                await exc.show_error()
+                return None
+            finally:
+                progress_obj.stop()
