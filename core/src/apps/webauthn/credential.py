@@ -204,7 +204,9 @@ class Fido2Credential(Credential):
         ctx = chacha20poly1305(key, iv)
         ctx.auth(rp_id_hash)
         data = ctx.decrypt(ciphertext)
-        if not utils.consteq(ctx.finish(), tag):
+        try:
+            ctx.finish(tag)
+        except RuntimeError:
             raise ValueError  # inauthentic ciphertext
 
         try:
