@@ -7,7 +7,6 @@ use crate::{
         ChannelState, HANDSHAKE_BUFFER_LEN, Nonce, PRIVKEY_LEN, PacketInResult, PairingState,
         noise::NoiseHandshake,
     },
-    control_byte::ControlByte,
     credential::CredentialVerifier,
     error::TransportError,
     fragment::{Fragmenter, Reassembler},
@@ -324,13 +323,18 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         })
     }
 
-    fn incoming_internal(&mut self, control_byte: u8) -> Result<(), Error> {
+    fn incoming_internal(&mut self) -> Result<(), Error> {
+        let ChannelState::Receiving { reassembler, .. } = &self.channel.state else {
+            return Err(Error::not_ready());
+        };
+        let sync_bits = reassembler.sync_bits();
+
         let (header, len) = self.channel.raw_out(&self.internal_buffer)?;
 
         match (self.state, header.handshake_phase()) {
             (HandshakeState::SendingChannelResponse, Some(HandshakeMessage::InitiationRequest)) => {
                 // enable ACK piggybacking if requested
-                self.enable_ack_piggybacking_if_requested(control_byte);
+                self.enable_ack_piggybacking_if_requested(sync_bits);
                 let try_to_unlock = self
                     .noise
                     .read_initiation_request(&self.internal_buffer[..len])?;
@@ -351,14 +355,8 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         Ok(())
     }
 
-    fn enable_ack_piggybacking_if_requested(&mut self, control_byte: u8) {
-        let Ok(cb) = ControlByte::try_from(control_byte) else {
-            return;
-        };
-        if !cb.is_continuation()
-            && cb.handshake_phase() == Some(HandshakeMessage::InitiationRequest)
-            && cb.sync_bits().ack_bit()
-        {
+    fn enable_ack_piggybacking_if_requested(&mut self, sync_bits: SyncBits) {
+        if sync_bits.ack_bit() {
             self.channel.sync.allow_ack_piggybacking();
         }
     }
@@ -503,7 +501,7 @@ where
             return PacketInResult::ignore(Error::malformed_data());
         }
         if res.got_message() {
-            let handled = self.incoming_internal(*packet_buffer.first().unwrap_or(&0u8));
+            let handled = self.incoming_internal();
             if let Err(e) = handled {
                 if e == Error::InvalidChecksum {
                     return PacketInResult::ignore(e);
