@@ -1218,5 +1218,8 @@
   "1216": "ethereum__withdraw_to",
   "1217": "ethereum__subtitle_input_data_bytes",
   "1218": "ethereum__title_input_data_bytes",
-  "1219": "ethereum__calldata_suffix"
+  "1219": "ethereum__calldata_suffix",
+  "1220": "backup__type_create",
+  "1221": "backup__type_have",
+  "1222": "n4w1__reading"
 }
