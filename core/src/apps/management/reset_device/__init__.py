@@ -9,6 +9,7 @@ from trezor.ui.layouts import confirm_action
 from trezor.wire import ProcessError
 
 from apps.common import backup_types
+from apps.common.lock_manager import with_prolonged_suspend_time
 
 from . import layout
 
@@ -354,6 +355,7 @@ def _compute_secret_from_entropy(
     return secret
 
 
+@with_prolonged_suspend_time
 async def backup_seed(
     handler: layout.BackupHandler,
     backup_type: BackupType,

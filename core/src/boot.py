@@ -96,6 +96,7 @@ async def bootscreen() -> None:
     """
     if utils.USE_POWER_MANAGER:
         lock_manager.configure_autodim()
+        lock_manager.configure_autolock()
 
     while True:
         try:
