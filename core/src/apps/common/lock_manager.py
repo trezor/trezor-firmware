@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from micropython import const
 
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
@@ -41,8 +42,6 @@ else:
     _SHOULD_SUSPEND = False
     _notify_power_button: loop.mailbox[None] = loop.mailbox()
     notify_bootscreen: loop.mailbox[None] = loop.mailbox()
-
-    PROLONGED_SUSPEND_TIME_MS = 2 * 60 * 1000
 
     def _schedule_suspend_after_workflow() -> None:
         """Signal that the device should be suspended by the default task after the
@@ -112,10 +111,13 @@ else:
             lock_device_if_unlocked()
 
     def configure_autodim() -> None:
-        """Configure the autodim setting via idle timer."""
+        """Configure the autodim setting via idle timer (battery-specific)."""
         workflow.idle_timer.set(storage_device.AUTODIM_DELAY_MS, autodim_display)
+
+    def configure_autolock(min_delay_ms: int = 0) -> None:
+        """Configure the autolock setting via idle timer (battery-specific)."""
         workflow.idle_timer.set(
-            storage_device.get_autolock_delay_battery_ms(),
+            max(min_delay_ms, storage_device.get_autolock_delay_battery_ms()),
             lock_device_if_unlocked_on_battery,
         )
 
@@ -126,33 +128,15 @@ else:
             from trezor import log
 
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> AsyncFunc:
-            original_suspend_time_ms = storage_device.get_autolock_delay_battery_ms()
-            if original_suspend_time_ms < PROLONGED_SUSPEND_TIME_MS:
-                if __debug__:
-                    log.debug(
-                        __name__,
-                        "Prolonging suspend time for the duration of %s",
-                        func,
-                    )
-                workflow.idle_timer.set(
-                    PROLONGED_SUSPEND_TIME_MS,
-                    lock_device_if_unlocked_on_battery,
-                )
-                try:
-                    return await func(*args, **kwargs)
-                finally:
-                    if __debug__:
-                        log.debug(
-                            __name__,
-                            "Restoring original suspend time: %d ms",
-                            original_suspend_time_ms,
-                        )
-                    workflow.idle_timer.set(
-                        original_suspend_time_ms,
-                        lock_device_if_unlocked_on_battery,
-                    )
-            else:
+
+            _PROLONGED_SUSPEND_TIME_MS = const(2 * 60 * 1000)
+
+            configure_autolock(min_delay_ms=_PROLONGED_SUSPEND_TIME_MS)
+            try:
                 return await func(*args, **kwargs)
+            finally:
+                configure_autolock(min_delay_ms=0)
+
 
         return wrapper
 
@@ -272,6 +256,7 @@ def reload_settings_from_storage() -> None:
 
     if utils.USE_POWER_MANAGER:
         configure_autodim()
+        configure_autolock()
 
     if utils.USE_HAPTIC:
         io.haptic.haptic_set_enabled(storage_device.get_haptic_feedback())
