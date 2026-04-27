@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
     from typing import Awaitable, Callable, Iterable, NoReturn, Sequence
 
-    from trezor.messages import StellarAsset
+    from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo, StellarAsset
 
     from ..common import ExceptionType, PropertyType, StrPropertyType
     from ..menu import Details
@@ -1525,20 +1525,26 @@ if not utils.BITCOIN_ONLY:
 
     async def confirm_ethereum_tx(
         recipient: str | None,
-        total_amount: str,
+        tx_value: int,
         _account: str | None,
         _account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[StrPropertyType],
+        network: EthereumNetworkInfo,
+        token: EthereumTokenInfo | None,
         is_send: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
+        from apps.ethereum.helpers import format_ethereum_amount
+
         from ..properties import with_colon
 
+        amount_str = format_ethereum_amount(tx_value, token, network)
+
         summary_layout = trezorui_api.confirm_summary(
-            amount=total_amount,
+            amount=amount_str,
             amount_label=with_colon(TR.words__amount),
             fee=maximum_fee,
             fee_label=with_colon(TR.send__maximum_fee),

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
     from typing import Any, Awaitable, Coroutine, Iterable, NoReturn, Sequence, TypeVar
 
-    from trezor.messages import StellarAsset
+    from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo, StellarAsset
 
     from ..common import ExceptionType, PropertyType, StrPropertyType
     from ..menu import Details
@@ -1071,16 +1071,22 @@ if not utils.BITCOIN_ONLY:
 
     async def confirm_ethereum_tx(
         recipient: str | None,
-        total_amount: str,
+        tx_value: int,
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[StrPropertyType],
+        network: EthereumNetworkInfo,
+        token: EthereumTokenInfo | None,
         is_send: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
+        from apps.ethereum.helpers import format_ethereum_amount
+
+        amount_str = format_ethereum_amount(tx_value, token, network)
+
         await confirm_linear_flow(
             lambda: confirm_value(
                 TR.words__address,
@@ -1099,14 +1105,19 @@ if not utils.BITCOIN_ONLY:
                     account, account_path, TR.send__send_from
                 ),
             ),
-            lambda: confirm_total(
-                total_amount,
-                maximum_fee,
-                title=None,
-                total_label=TR.words__amount,
-                fee_label=TR.send__maximum_fee,
-                fee_items=fee_info_items,
-                back_button=True,
+            lambda: interact(
+                trezorui_api.confirm_summary(
+                    amount=amount_str,
+                    amount_label=TR.words__amount,
+                    fee=maximum_fee,
+                    fee_label=TR.send__maximum_fee,
+                    title=TR.words__title_summary,
+                    extra_items=fee_info_items,
+                    extra_title=TR.confirm_total__title_fee,
+                    back_button=True,
+                ),
+                br_name,
+                br_code,
             ),
         )
 

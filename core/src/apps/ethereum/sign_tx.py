@@ -221,7 +221,6 @@ async def confirm_tx_data(
     from trezor.ui.layouts import confirm_value
 
     from . import clear_signing, staking, yielding
-    from .helpers import format_ethereum_amount
     from .layout import require_confirm_payment_request, require_confirm_tx
 
     # local_cache_attribute
@@ -304,11 +303,12 @@ async def confirm_tx_data(
 
         return confirm_data_chunk, require_confirm_tx(
             recipient_str,
-            format_ethereum_amount(value, token, network),
+            value,
             address_bytes,
             msg.address_n,
             maximum_fee,
             fee_items,
+            network,
             token,
             is_send=(data_length == 0 and tx_type != _EIP_7702_TX_TYPE),
             chunkify=bool(msg.chunkify),
