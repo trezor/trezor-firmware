@@ -106,6 +106,7 @@ async def sign_tx(
         transaction.blockhash,
         additional_tx_info,
         msg.payment_req,
+        bool(msg.chunkify),
     ):
         await confirm_instructions(
             address_n, signer_public_key, transaction, additional_tx_info
