@@ -2138,8 +2138,8 @@
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {2} fragments de sauvegarde pour récupérer votre portefeuille.",
-      "Eckhart": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {2} fragments de sauvegarde pour récupérer votre portefeuille."
+      "Delizia": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {0} fragments de sauvegarde pour récupérer votre portefeuille.",
+      "Eckhart": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {0} fragments de sauvegarde pour récupérer votre portefeuille."
     },
     "reset__slip39_checklist_num_groups": "Nombre de groupes",
     "reset__slip39_checklist_num_groups_x_template": "Nombre de groupes : {0}",

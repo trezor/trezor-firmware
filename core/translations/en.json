@@ -24,7 +24,12 @@
     },
     "address__check_with_source": "Check the address with source.",
     "address__coin_address_template": "{0} address",
-    "address__confirmed": "Receive address confirmed",
+    "address__confirmed": {
+      "Bolt": "Receive address confirmed",
+      "Caesar": "Receive address confirmed",
+      "Delizia": "Receive address confirmed.",
+      "Eckhart": "Receive address confirmed."
+    },
     "address__public_key": "Public key",
     "address__public_key_confirmed": "Public key confirmed",
     "address__qr_code": "QR code",
@@ -195,7 +200,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "All connections removed."
+      "Eckhart": "All devices removed."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -213,7 +218,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Connection removed."
+      "Eckhart": "Device removed."
     },
     "ble__host_info": {
       "Bolt": "",
@@ -805,12 +810,12 @@
     "ethereum__title_confirm_message_hash": "Confirm message hash",
     "ethereum__title_confirm_struct": "Confirm struct",
     "ethereum__title_confirm_typed_data": "Confirm typed data",
-    "ethereum__title_input_data": "Input data",
+    "ethereum__title_input_data": "Data",
     "ethereum__title_input_data_bytes": {
-      "Bolt": "Input data:\n{0} / {1} bytes",
-      "Caesar": "Input data: {0} / {1} bytes",
-      "Delizia": "Input data",
-      "Eckhart": "Input data:\n{0} / {1} bytes"
+      "Bolt": "Data:\n{0} / {1} bytes",
+      "Caesar": "Data: {0} / {1} bytes",
+      "Delizia": "Data",
+      "Eckhart": "Data:\n{0} / {1} bytes"
     },
     "ethereum__title_signing_address": "Signing address",
     "ethereum__title_token_contract": {
@@ -1099,39 +1104,39 @@
     "modify_amount__decrease_amount": {
       "Bolt": "Decrease amount by:",
       "Caesar": "Decrease amount by:",
-      "Delizia": "Decrease amount by:",
+      "Delizia": "Decrease amount by",
       "Eckhart": "Decrease amount by"
     },
     "modify_amount__increase_amount": {
       "Bolt": "Increase amount by:",
       "Caesar": "Increase amount by:",
-      "Delizia": "Increase amount by:",
+      "Delizia": "Increase amount by",
       "Eckhart": "Increase amount by"
     },
     "modify_amount__new_amount": {
       "Bolt": "New amount:",
       "Caesar": "New amount:",
-      "Delizia": "New amount:",
+      "Delizia": "New amount",
       "Eckhart": "New amount"
     },
     "modify_amount__title": "Modify amount",
     "modify_fee__decrease_fee": {
       "Bolt": "Decrease fee by:",
       "Caesar": "Decrease fee by:",
-      "Delizia": "Decrease fee by:",
+      "Delizia": "Decrease fee by",
       "Eckhart": "Decrease fee by"
     },
     "modify_fee__fee_rate": "Fee rate:",
     "modify_fee__increase_fee": {
       "Bolt": "Increase fee by:",
       "Caesar": "Increase fee by:",
-      "Delizia": "Increase fee by:",
+      "Delizia": "Increase fee by",
       "Eckhart": "Increase fee by"
     },
     "modify_fee__new_transaction_fee": {
       "Bolt": "New transaction fee:",
       "Caesar": "",
-      "Delizia": "New transaction fee:",
+      "Delizia": "New transaction fee",
       "Eckhart": "New transaction fee"
     },
     "modify_fee__no_change": {
@@ -1144,7 +1149,7 @@
     "modify_fee__transaction_fee": {
       "Bolt": "Transaction fee:",
       "Caesar": "Transaction fee:",
-      "Delizia": "Transaction fee:",
+      "Delizia": "Transaction fee",
       "Eckhart": "Transaction fee"
     },
     "monero__confirm_export": "Confirm export",
@@ -1514,8 +1519,8 @@
       "Eckhart": ""
     },
     "nostr__event_kind_template": "Event kind: {0}",
-    "passphrase__access_hidden_wallet": "Access passphrase wallet",
-    "passphrase__access_wallet": "Access passphrase wallet?",
+    "passphrase__access_hidden_wallet": "Access Passphrase wallet",
+    "passphrase__access_wallet": "Access Passphrase wallet?",
     "passphrase__always_on_device": "Always enter your passphrase on Trezor?",
     "passphrase__continue_with_empty_passphrase": "Continue with empty passphrase?",
     "passphrase__from_host_not_shown": "Passphrase provided by connected app will be used but will not be displayed due to the device settings.",
@@ -1864,7 +1869,12 @@
       "Eckhart": ""
     },
     "reset__create_x_of_y_multi_share_backup_template": "Do you want to create a {0} of {1} multi-share backup?",
-    "reset__finished_verifying_group_template": "You have finished verifying your recovery shares for group {0}.",
+    "reset__finished_verifying_group_template": {
+      "Bolt": "You have finished verifying your recovery shares for group {0}.",
+      "Caesar": "You have finished verifying your recovery shares for group {0}.",
+      "Delizia": "Group {0} verified",
+      "Eckhart": "You have finished verifying your recovery shares for group {0}."
+    },
     "reset__finished_verifying_shares": {
       "Bolt": "You have finished verifying your recovery shares.",
       "Caesar": "You have finished verifying your recovery shares.",
@@ -1889,7 +1899,12 @@
       "Delizia": "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.",
       "Eckhart": "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds."
     },
-    "reset__group_share_checked_successfully_template": "Group {0} - Share {1} checked successfully.",
+    "reset__group_share_checked_successfully_template": {
+      "Bolt": "Group {0} - Share {1} checked successfully.",
+      "Caesar": "Group {0} - Share {1} checked successfully.",
+      "Delizia": "Group {0} - Share {1} verified",
+      "Eckhart": "Group {0} - Share {1} checked successfully."
+    },
     "reset__group_share_title_template": {
       "Bolt": "Group {0} - Share {1}",
       "Caesar": "Group {0} - Share {1}",
@@ -2011,7 +2026,7 @@
     "reset__select_word_x_of_y_template": {
       "Bolt": "Select word {0} of {1}:",
       "Caesar": "Select word {0} of {1}:",
-      "Delizia": "Select word {0} of {1}:",
+      "Delizia": "Select word {0} of {1}",
       "Eckhart": ""
     },
     "reset__set_it_to_count_template": {
@@ -2037,14 +2052,14 @@
     "reset__slip39_checklist_more_info_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "The threshold sets the minimum number of shares needed to recover your wallet.",
-      "Eckhart": "The threshold sets the minimum number of shares needed to recover your wallet."
+      "Delizia": "Threshold sets minimum number of shares needed to recover your wallet.",
+      "Eckhart": "Threshold sets minimum number of shares needed to recover your wallet."
     },
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.",
-      "Eckhart": "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."
+      "Delizia": "If you set it to {0} out of {1} shares, the number of shares needed to recover your wallet will be {0}.",
+      "Eckhart": "If you set it to {0} out of {1} shares, the number of shares needed to recover your wallet will be {0}."
     },
     "reset__slip39_checklist_num_groups": "Number of groups",
     "reset__slip39_checklist_num_groups_x_template": "Number of groups: {0}",

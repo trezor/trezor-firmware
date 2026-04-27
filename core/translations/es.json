@@ -1888,8 +1888,8 @@
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Si fijas {0} de {1} fragmentos, necesitarás {2} fragmentos de la c. seg. para recuperar tu billetera.",
-      "Eckhart": "Si fijas {0} de {1} fragmentos, necesitarás {2} fragmentos de la c. seg. para recuperar tu billetera."
+      "Delizia": "Si fijas {0} de {1} fragmentos, necesitarás {0} fragmentos de la c. seg. para recuperar tu billetera.",
+      "Eckhart": "Si fijas {0} de {1} fragmentos, necesitarás {0} fragmentos de la c. seg. para recuperar tu billetera."
     },
     "reset__slip39_checklist_num_groups": "Número de grupos",
     "reset__slip39_checklist_num_groups_x_template": "Número de grupos: {0}",

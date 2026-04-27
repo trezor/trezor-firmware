@@ -1868,8 +1868,8 @@
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Když nastavíte {0} z {1} podílů, budete k obnovení peněženky potřebovat {2} podíly.",
-      "Eckhart": "Když nastavíte {0} z {1} podílů, budete k obnovení peněženky potřebovat {2} podíly."
+      "Delizia": "Když nastavíte {0} z {1} podílů, budete k obnovení peněženky potřebovat {0} podíly.",
+      "Eckhart": "Když nastavíte {0} z {1} podílů, budete k obnovení peněženky potřebovat {0} podíly."
     },
     "reset__slip39_checklist_num_groups": "Počet skupin",
     "reset__slip39_checklist_num_groups_x_template": "Počet skupin: {0}",

@@ -2003,8 +2003,8 @@
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Se você definir como {0} de {1} cotas, precisará de {2} shares do backup para recuperar sua carteira.",
-      "Eckhart": "Se você definir como {0} de {1} cotas, precisará de {2} shares do backup para recuperar sua carteira."
+      "Delizia": "Se você definir como {0} de {1} cotas, precisará de {0} shares do backup para recuperar sua carteira.",
+      "Eckhart": "Se você definir como {0} de {1} cotas, precisará de {0} shares do backup para recuperar sua carteira."
     },
     "reset__slip39_checklist_num_groups": "Número de grupos",
     "reset__slip39_checklist_num_groups_x_template": "Número de grupos: {0}",
