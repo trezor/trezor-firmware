@@ -17,11 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCM_REVISION_H
-#define SCM_REVISION_H
+#pragma once
 
 #include <trezor_types.h>
 
-extern const uint8_t SCM_REVISION[sizeof((const uint8_t[])SCM_REVISION_INIT)];
-
-#endif
+extern const uint8_t
+    SCM_REVISION_SHORT[sizeof((const uint8_t[])SCM_REVISION_SHORT_INIT)];
