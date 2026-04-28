@@ -53,6 +53,9 @@ macro_rules! bail_unsupported {
 /// Usage:
 /// ```ignore
 /// use xbuild::build_mods;
+/// #[path = "module1/build.rs"] mod module1;
+/// #[path = "module2/build.rs"] mod module2;
+/// #[path = "module3/build.rs"] mod module3;
 ///
 /// build_mods!(lib, [
 ///    module1,
@@ -63,10 +66,6 @@ macro_rules! bail_unsupported {
 macro_rules! build_mods {
     ($lib:expr, [ $( $name:ident $(if $cond:expr)? ),* $(,)? ]) => {
         $(
-            mod $name {
-                include!(concat!(stringify!($name), "/build.rs"));
-            }
-
             if true $(&& $cond)? {
                 $name::def_module($lib)?;
             }

@@ -1,5 +1,40 @@
 use xbuild::{Result, build_mods};
 
+#[path = "bsp/build.rs"]
+mod bsp;
+#[path = "cpuid/build.rs"]
+mod cpuid;
+#[path = "dbg/build.rs"]
+mod dbg;
+#[path = "flash/build.rs"]
+mod flash;
+#[path = "i2c_bus/build.rs"]
+mod i2c_bus;
+#[path = "ipc/build.rs"]
+mod ipc;
+#[path = "irq/build.rs"]
+mod irq;
+#[path = "linker/build.rs"]
+mod linker;
+#[path = "mpu/build.rs"]
+mod mpu;
+#[path = "pvd/build.rs"]
+mod pvd;
+#[path = "rng/build.rs"]
+mod rng;
+#[path = "sdram/build.rs"]
+mod sdram;
+#[path = "stack/build.rs"]
+mod stack;
+#[path = "startup/build.rs"]
+mod startup;
+#[path = "task/build.rs"]
+mod task;
+#[path = "time/build.rs"]
+mod time;
+#[path = "trustzone/build.rs"]
+mod trustzone;
+
 fn main() -> Result<()> {
     xbuild::build(|lib| {
         lib.import_lib("rtl")?;

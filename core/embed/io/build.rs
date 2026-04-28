@@ -1,5 +1,44 @@
 use xbuild::{Result, build_mods};
 
+#[path = "app_loader/build.rs"]
+mod app_loader;
+#[path = "backlight/build.rs"]
+mod backlight;
+#[path = "ble/build.rs"]
+mod ble;
+#[path = "button/build.rs"]
+mod button;
+#[path = "display/build.rs"]
+mod display;
+#[path = "gfx/build.rs"]
+mod gfx;
+#[path = "haptic/build.rs"]
+mod haptic;
+#[path = "nfc/build.rs"]
+mod nfc;
+#[path = "notify/build.rs"]
+mod notify;
+#[path = "nrf/build.rs"]
+mod nrf;
+#[path = "power_manager/build.rs"]
+mod power_manager;
+#[path = "rgb_led/build.rs"]
+mod rgb_led;
+#[path = "sbu/build.rs"]
+mod sbu;
+#[path = "sdcard/build.rs"]
+mod sdcard;
+#[path = "suspend/build.rs"]
+mod suspend;
+#[path = "touch/build.rs"]
+mod touch;
+#[path = "translations/build.rs"]
+mod translations;
+#[path = "tsqueue/build.rs"]
+mod tsqueue;
+#[path = "usb/build.rs"]
+mod usb;
+
 fn main() -> Result<()> {
     xbuild::build(|lib| {
         lib.import_lib("sec")?;
