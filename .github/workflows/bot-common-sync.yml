@@ -21,9 +21,9 @@ jobs:
           fetch-depth: 0
       - name: Generate GitHub App token
         id: trezor-bot-token
-        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # actions/create-github-app-token@v2.2.1
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # actions/create-github-app-token@v2.2.1
         with:
-          app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
+          client-id: ${{ secrets.TREZOR_BOT_APP_ID }}
           private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: |
