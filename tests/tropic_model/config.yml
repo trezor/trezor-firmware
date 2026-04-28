@@ -30,8 +30,8 @@ r_user_data:
       AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
       AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
       AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-riscv_fw_version: !!binary |
-  AAAAAQ==
+riscv_fw_version: 1.0.0
 s_t_priv: tropic01_ese_private_key_1.pem
 s_t_pub: tropic01_ese_public_key_1.pem
+spect_fw_version: 1.0.0
 x509_certificate: tropic01_ese_certificate_1.pem
