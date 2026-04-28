@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.11.2] (21st May 2026)
+
+### Added
+- Added UI flows for some ERC-4626 vault interactions.  [#6435]
+- Prolong minimal auto-suspend time during backup and recovery to 2 minutes.  [#6567]
+- Introduced font kerning.  [#6620]
+- Added MCU device attestation with ML-DSA-44.  [#6807]
+
+### Changed
+- Improve EVM address chunking.  [#6601]
+- Consistent cancel option across screens.  [#6707]
+
+### Fixed
+- Updated translations in Cardano flow.  [#5723]
+- Re-introduce initial blob confirmation layout for Ethereum.  [#6597]
+- Truncate device name on BLE pairing.  [#6710]
+- Fix out-of-memory failure when confirming large input data.  [#6780]
+
+### Security
+- Cache confirmed EIP-712 domain.  [#246]
+- Fixed Solana ALT recipient account parsing.  [#248]
+- Fixed bug in Solana account type identification.  [#249]
+
 ## [2.11.1] (22nd April 2026)
 
 ### Added
@@ -114,7 +137,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Exit pairing screen when already paired host connects.  [#5897]
 
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
+[#246]: https://github.com/trezor/trezor-firmware/pull/246
+[#248]: https://github.com/trezor/trezor-firmware/pull/248
+[#249]: https://github.com/trezor/trezor-firmware/pull/249
 [#5358]: https://github.com/trezor/trezor-firmware/pull/5358
+[#5723]: https://github.com/trezor/trezor-firmware/pull/5723
 [#5845]: https://github.com/trezor/trezor-firmware/pull/5845
 [#5867]: https://github.com/trezor/trezor-firmware/pull/5867
 [#5870]: https://github.com/trezor/trezor-firmware/pull/5870
@@ -160,10 +187,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6349]: https://github.com/trezor/trezor-firmware/pull/6349
 [#6358]: https://github.com/trezor/trezor-firmware/pull/6358
 [#6394]: https://github.com/trezor/trezor-firmware/pull/6394
+[#6435]: https://github.com/trezor/trezor-firmware/pull/6435
 [#6448]: https://github.com/trezor/trezor-firmware/pull/6448
 [#6483]: https://github.com/trezor/trezor-firmware/pull/6483
 [#6501]: https://github.com/trezor/trezor-firmware/pull/6501
 [#6506]: https://github.com/trezor/trezor-firmware/pull/6506
 [#6524]: https://github.com/trezor/trezor-firmware/pull/6524
 [#6551]: https://github.com/trezor/trezor-firmware/pull/6551
+[#6567]: https://github.com/trezor/trezor-firmware/pull/6567
 [#6589]: https://github.com/trezor/trezor-firmware/pull/6589
+[#6597]: https://github.com/trezor/trezor-firmware/pull/6597
+[#6601]: https://github.com/trezor/trezor-firmware/pull/6601
+[#6620]: https://github.com/trezor/trezor-firmware/pull/6620
+[#6707]: https://github.com/trezor/trezor-firmware/pull/6707
+[#6710]: https://github.com/trezor/trezor-firmware/pull/6710
+[#6780]: https://github.com/trezor/trezor-firmware/pull/6780
+[#6807]: https://github.com/trezor/trezor-firmware/pull/6807

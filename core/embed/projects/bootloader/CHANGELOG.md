@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.17 [21st May 2026]
+
+### Added
+- [T3W1] Add the MCU device certificate to startup_args.  [#6807]
+
 ## 2.1.16 [18th March 2026]
 
 ### Added
@@ -243,3 +248,4 @@ Internal only release for Model R prototypes.
 [#6244]: https://github.com/trezor/trezor-firmware/pull/6244
 [#6245]: https://github.com/trezor/trezor-firmware/pull/6245
 [#6307]: https://github.com/trezor/trezor-firmware/pull/6307
+[#6807]: https://github.com/trezor/trezor-firmware/pull/6807
