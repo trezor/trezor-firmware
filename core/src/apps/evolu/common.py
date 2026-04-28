@@ -55,3 +55,15 @@ def get_public_key_from_private_key(private_key: AnyBytes) -> bytes:
 
     public_key = nist256p1.publickey(private_key, False)
     return public_key
+
+
+def get_public_key(rotation_index: int | None = None) -> bytes:
+    from trezorutils import delegated_identity
+
+    from storage.device import get_delegated_identity_key_rotation_index
+
+    if rotation_index is None:
+        rotation_index = get_delegated_identity_key_rotation_index() or 0
+    private_key = delegated_identity(rotation_index)
+
+    return get_public_key_from_private_key(private_key)
