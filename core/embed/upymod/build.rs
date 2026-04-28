@@ -916,7 +916,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r#"s/utils\.UI_LAYOUT == "ECKHART"/{layout_eckhart}/g"#),
             r"s/if TYPE_CHECKING/if False/".to_string(),
             r"s/import typing/# &/".to_string(),
-            r"/from typing import (/,/^[[:space:]]*)/ {{s/^/# /; }}".to_string(),
+            r"/from typing import (/,/^[[:space:]]*)/ {s/^/# /; }".to_string(),
             r"s/from typing import/# &/".to_string(),
         ];
 
