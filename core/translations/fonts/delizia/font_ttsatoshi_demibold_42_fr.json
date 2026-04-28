@@ -1,5 +1,6 @@
 {
   "glyphs": {
+    "°": "0d0d10021e0040dabe07000000f9ffffcf020080ffffffff0c00f2ff7ec6ff6f00f6ff0200fdbf00f9bf0000f6ef00fabf0000f5ff00f7ef0000facf00f3ff2b71ff8f00b0ffffffff1e0010feffffff050000a0ffff2c000000003014000000",
     "À": "1e261e002600000000f5ffef01000000000000000000000070ffff0a000000000000000000000000faff4f000000000000000000000000c0ffef01000000000000000000000010feff0a000000000000000000000000f3ff4f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d0ffffff7f00000000000000000000f3ffffffcf00000000000000000000f9ffffffff02000000000000000000feffffffff08000000000000000040ffffffffff0e0000000000000000a0ffffdfffff3f0000000000000000f0ffff0affff9f0000000000000000f6ffff04fbffef0000000000000000fbffff00f5ffff0500000000000010ffff9f00f0ffff0a00000000000070ffff4f00a0ffff1f000000000000d0ffff0e0050ffff6f000000000000f2ffff090000ffffcf000000000000f8ffff030000faffff020000000000feffef000000f4ffff070000000040ffff8f000000e0ffff0d00000000a0ffff3f00000090ffff3f00000000f0ffff0d00000040ffff9f00000000f5ffffffffffffffffffef00000000fbffffffffffffffffffff04000010ffffffffffffffffffffff0a000060ffffffffffffffffffffff0f0000c0ffffefddddddddddedffff5f0000f2ffff0c000000000030ffffbf0000f8ffff06000000000000fdffff0100fdffff01000000000000f7ffff0730ffffbf00000000000000f1ffff0d90ffff5f00000000000000b0ffff2fe0ffff0f0000000000000060ffff8f",
     "Â": "1e261e0026000000000000f7ffef010000000000000000000040ffffff0d00000000000000000000f2ffffffbf00000000000000000010fdff3bffff080000000000000000c0ffef01f5ff5f0000000000000000f9ff3f0080ffff030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d0ffffff7f00000000000000000000f3ffffffcf00000000000000000000f9ffffffff02000000000000000000feffffffff08000000000000000040ffffffffff0e0000000000000000a0ffffdfffff3f0000000000000000f0ffff0affff9f0000000000000000f6ffff04fbffef0000000000000000fbffff00f5ffff0500000000000010ffff9f00f0ffff0a00000000000070ffff4f00a0ffff1f000000000000d0ffff0e0050ffff6f000000000000f2ffff090000ffffcf000000000000f8ffff030000faffff020000000000feffef000000f4ffff070000000040ffff8f000000e0ffff0d00000000a0ffff3f00000090ffff3f00000000f0ffff0d00000040ffff9f00000000f5ffffffffffffffffffef00000000fbffffffffffffffffffff04000010ffffffffffffffffffffff0a000060ffffffffffffffffffffff0f0000c0ffffefddddddddddedffff5f0000f2ffff0c000000000030ffffbf0000f8ffff06000000000000fdffff0100fdffff01000000000000f7ffff0730ffffbf00000000000000f1ffff0d90ffff5f00000000000000b0ffff2fe0ffff0f0000000000000060ffff8f",
     "Æ": "271d29001d000000000000f1ffffffffffffffffffffffff0b000000000000f8ffffffffffffffffffffffff0b000000000000feffffffffffffffffffffffff0b000000000060ffffffffffffffffffffffffff0b0000000000d0ffffffffffffffffffffffffff0b0000000000f4ffff07f0ffff07000000000000000000000000fbffff00f0ffff07000000000000000000000030ffff9f00f0ffff070000000000000000000000a0ffff2f00f0ffff070000000000000000000000f1ffff0b00f0ffff070000000000000000000000f8ffff0400f0ffff070000000000000000000000feffdf0000f0ffff070000000000000000000060ffff7f0000f0ffffffffffffffffdf00000000d0ffff1f0000f0ffffffffffffffffdf00000000f4ffff090000f0ffffffffffffffffdf00000000fbffff020000f0ffffffffffffffffdf00000020ffffbf000000f0ffffdeddddddddddcd00000090ffff5f000000f0ffff07000000000000000000f1ffffffffffffffffff07000000000000000000f7ffffffffffffffffff07000000000000000000feffffffffffffffffff07000000000000000060ffffffffffffffffffff070000000000000000d0ffffefddddddddfdffff070000000000000000f4ffff0c00000000f0ffff070000000000000000fbffff0500000000f0ffffffffffffffffff0b20ffffdf0000000000f0ffffffffffffffffff0b90ffff6f0000000000f0ffffffffffffffffff0bf1ffff0e0000000000f0ffffffffffffffffff0bf7ffff070000000000f0ffffffffffffffffff0b",
@@ -34,6 +35,146 @@
     "œ": "261728011600000050daefac0400000060dbefad05000000000060feffffffdf030080ffffffffdf0400000000faffffffffff6f10fcffffffffff8f000000a0ffffffffffffffc5ffffffffffffff070000f7ffffffedffffffffffff8d65f9ffff4f0010ffffff1900b2ffffffff9f000020fdffcf0080ffff7f000000f9ffffff0b000000f2ffff04d0ffff0c000000e0ffffff0100000080ffff08f1ffff0400000060ffffcf0000000040ffff0df4ffff0000000020ffffcf6666666666ffff0ef6ffdf0000000000ffffffffffffffffffff0ff6ffcf0000000000fdffffffffffffffffff0ff5ffef0000000000ffffffffffffffffffff0ef4ffff0000000020ffffaf0000000000000000f1ffff0500000070ffffdf0000000000000000c0ffff0d000000e0ffffff030000000000000070ffff8f000000faffffff0c000000e1ffff0300feffff2a00b2ffffffffaf000010fcffcf0000f6ffffffeeffffffffffff8d55e8ffff4f0000a0ffffffffffffffc6ffffffffffffff08000000f9ffffffffff7f10fcffffffffffaf0000000060feffffffdf030080ffffffffdf04000000000050daefac0400000060daffad06000000"
   },
   "kernings": [
+    [
+      "°",
+      "À",
+      -3
+    ],
+    [
+      "°",
+      "Â",
+      -3
+    ],
+    [
+      "°",
+      "Æ",
+      -3
+    ],
+    [
+      "°",
+      "î",
+      1
+    ],
+    [
+      "°",
+      "ï",
+      1
+    ],
+    [
+      "°",
+      "ÿ",
+      1
+    ],
+    [
+      "°",
+      "1",
+      2
+    ],
+    [
+      "°",
+      "4",
+      -2
+    ],
+    [
+      "°",
+      "6",
+      -1
+    ],
+    [
+      "°",
+      "7",
+      2
+    ],
+    [
+      "°",
+      "A",
+      -3
+    ],
+    [
+      "°",
+      "J",
+      -3
+    ],
+    [
+      "°",
+      "T",
+      1
+    ],
+    [
+      "°",
+      "V",
+      1
+    ],
+    [
+      "°",
+      "W",
+      1
+    ],
+    [
+      "°",
+      "b",
+      1
+    ],
+    [
+      "°",
+      "f",
+      1
+    ],
+    [
+      "°",
+      "h",
+      1
+    ],
+    [
+      "°",
+      "i",
+      1
+    ],
+    [
+      "°",
+      "j",
+      1
+    ],
+    [
+      "°",
+      "k",
+      1
+    ],
+    [
+      "°",
+      "l",
+      1
+    ],
+    [
+      "°",
+      "t",
+      2
+    ],
+    [
+      "°",
+      "v",
+      1
+    ],
+    [
+      "°",
+      "w",
+      1
+    ],
+    [
+      "°",
+      "y",
+      1
+    ],
+    [
+      "°",
+      "z",
+      1
+    ],
+    [
+      "À",
+      "°",
+      -3
+    ],
     [
       "À",
       "Ç",
@@ -163,6 +304,11 @@
       "À",
       "y",
       -1
+    ],
+    [
+      "Â",
+      "°",
+      -3
     ],
     [
       "Â",
@@ -836,6 +982,11 @@
     ],
     [
       "î",
+      "°",
+      1
+    ],
+    [
+      "î",
       "î",
       3
     ],
@@ -877,6 +1028,11 @@
     [
       "î",
       "}",
+      1
+    ],
+    [
+      "ï",
+      "°",
       1
     ],
     [
@@ -928,6 +1084,11 @@
       "ô",
       "x",
       -1
+    ],
+    [
+      "ÿ",
+      "°",
+      1
     ],
     [
       "ÿ",
@@ -1125,6 +1286,26 @@
       -2
     ],
     [
+      "1",
+      "°",
+      1
+    ],
+    [
+      "6",
+      "°",
+      -2
+    ],
+    [
+      "7",
+      "°",
+      2
+    ],
+    [
+      "A",
+      "°",
+      -3
+    ],
+    [
       "A",
       "Ç",
       -1
@@ -1238,6 +1419,11 @@
       "D",
       "Ÿ",
       -1
+    ],
+    [
+      "F",
+      "°",
+      1
     ],
     [
       "F",
@@ -1346,6 +1532,11 @@
     ],
     [
       "L",
+      "°",
+      -3
+    ],
+    [
+      "L",
       "Ç",
       -2
     ],
@@ -1456,6 +1647,11 @@
     ],
     [
       "P",
+      "°",
+      1
+    ],
+    [
+      "P",
       "À",
       -3
     ],
@@ -1558,6 +1754,11 @@
       "Q",
       "Ÿ",
       -1
+    ],
+    [
+      "R",
+      "°",
+      1
     ],
     [
       "R",
@@ -1653,6 +1854,11 @@
       "S",
       "ÿ",
       -1
+    ],
+    [
+      "T",
+      "°",
+      1
     ],
     [
       "T",
@@ -1771,6 +1977,11 @@
     ],
     [
       "V",
+      "°",
+      1
+    ],
+    [
+      "V",
       "À",
       -2
     ],
@@ -1868,6 +2079,11 @@
       "V",
       "œ",
       -2
+    ],
+    [
+      "W",
+      "°",
+      1
     ],
     [
       "W",
@@ -2265,6 +2481,16 @@
       1
     ],
     [
+      "d",
+      "°",
+      1
+    ],
+    [
+      "f",
+      "°",
+      2
+    ],
+    [
       "f",
       "à",
       -1
@@ -2315,6 +2541,36 @@
       -1
     ],
     [
+      "g",
+      "°",
+      1
+    ],
+    [
+      "i",
+      "°",
+      1
+    ],
+    [
+      "j",
+      "°",
+      1
+    ],
+    [
+      "l",
+      "°",
+      1
+    ],
+    [
+      "r",
+      "°",
+      1
+    ],
+    [
+      "t",
+      "°",
+      1
+    ],
+    [
       "t",
       "à",
       -1
@@ -2365,6 +2621,16 @@
       -1
     ],
     [
+      "v",
+      "°",
+      1
+    ],
+    [
+      "w",
+      "°",
+      1
+    ],
+    [
       "x",
       "ç",
       -1
@@ -2398,6 +2664,16 @@
       "x",
       "œ",
       -1
+    ],
+    [
+      "y",
+      "°",
+      1
+    ],
+    [
+      "z",
+      "°",
+      1
     ],
     [
       "{",
