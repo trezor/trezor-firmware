@@ -69,10 +69,10 @@ void system_init(systask_error_handler_t error_handler) {
   systask_scheduler_init(error_handler);
   systick_init();
   systimer_init();
-#ifdef KERNEL
 #ifdef USE_IPC
   ipc_init();
 #endif
+#ifdef USE_APPLETS
   syscall_ipc_init();
 #endif
 #ifdef USE_DBG_CONSOLE

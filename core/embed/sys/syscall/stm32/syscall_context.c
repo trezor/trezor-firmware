@@ -19,7 +19,7 @@
 
 #include "syscall_context.h"
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
 
 applet_t* g_syscall_context;
 
@@ -27,4 +27,4 @@ void syscall_set_context(applet_t* applet) { g_syscall_context = applet; }
 
 applet_t* syscall_get_context(void) { return g_syscall_context; }
 
-#endif  // KERNEL
+#endif  // USE_APPLETS

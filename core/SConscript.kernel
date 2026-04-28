@@ -44,7 +44,7 @@ FEATURE_FLAGS = {
 }
 
 FEATURES_WANTED = [
-    "applet",
+    "applets",
     "ble",
     "consumption_mask",
     "display",

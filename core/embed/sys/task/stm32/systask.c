@@ -190,14 +190,14 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
 
 systask_id_t systask_id(const systask_t* task) { return task->id; }
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
 void systask_set_mpu(systask_t* task) {
   if (task->applet != NULL) {
     applet_t* applet = (applet_t*)task->applet;
     mpu_set_active_applet(&applet->layout);
   }
 }
-#endif  // KERNEL
+#endif  // USE_APPLETS
 
 uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {
   if (task->sp < task->sp_lim) {
@@ -227,7 +227,7 @@ void systask_pop_data(systask_t* task, size_t size) { task->sp += size; }
 
 bool systask_push_call(systask_t* task, void* entrypoint, uintptr_t arg1,
                        uintptr_t arg2, uintptr_t arg3) {
-#ifdef KERNEL
+#ifdef USE_APPLETS
   systask_set_mpu(task);
 #endif
 
@@ -321,7 +321,7 @@ void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1) {
     stack += 8;   // Skip R4-R11
   }
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
   systask_set_mpu(task);
 #endif
 
@@ -583,7 +583,7 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   prev_task->mpu_mode = mpu_get_mode();
 
   if (prev_task->tls_size != 0) {
-#ifdef KERNEL
+#ifdef USE_APPLETS
     systask_set_mpu(prev_task);
 #endif
 
@@ -609,7 +609,7 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   // Setup the MPU for the new task
   mpu_reconfig(next_task->mpu_mode);
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
   systask_set_mpu(next_task);
 
   if (next_task->tls_size != 0) {
@@ -726,7 +726,7 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
       // Yield to the waiting task
       systask_yield();
       break;
-#ifdef KERNEL
+#ifdef USE_APPLETS
     case SVC_SYSCALL:
       uint32_t args[6] = {stack[0], stack[1], stack[2], stack[3], r4, r5};
       if ((r6 & SYSCALL_THREAD_MODE) != 0) {
