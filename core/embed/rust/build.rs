@@ -112,6 +112,12 @@ fn generate_qstr_bindings() {
 
     let dest_file = PathBuf::from(out_path).join("qstr.rs");
 
+    let enum_size = if is_firmware() {
+        "-fshort-enums"
+    } else {
+        "-fno-short-enums"
+    };
+
     bindgen::Builder::default()
         .header("qstr.h")
         // Build the Qstr enum as a newtype so we can define method on it.
@@ -121,6 +127,7 @@ fn generate_qstr_bindings() {
         })
         // Pass in correct include paths.
         .clang_args(&["-I", &build_dir()])
+        .clang_arg(enum_size)
         // Customize the standard types.
         .use_core()
         .ctypes_prefix("cty")
@@ -135,10 +142,14 @@ fn generate_qstr_bindings() {
 
     // rewrite the file to change internal representation of the qstr newtype
     let qstr_generated = std::fs::read_to_string(&dest_file).unwrap();
+
+    let qstr_enum_type = if is_firmware() { "c_ushort" } else { "c_uint" };
+
     let qstr_modified = qstr_generated.replace(
-        "pub struct Qstr(pub cty::c_uint);",
+        &format!("pub struct Qstr(pub cty::{});", qstr_enum_type),
         "pub struct Qstr(pub usize);",
     );
+
     assert_ne!(qstr_generated, qstr_modified, "Failed to rewrite type of Qstr in qstr.rs file.\nThis indicates that the generated file has changed. Please update the rewriting code.");
     std::fs::write(&dest_file, qstr_modified).unwrap();
 }
