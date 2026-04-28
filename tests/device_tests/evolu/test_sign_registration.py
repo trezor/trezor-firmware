@@ -12,14 +12,18 @@ from .common import get_delegated_identity_key, get_invalid_proof, get_proof
 pytestmark = pytest.mark.models("core")
 
 
-def signing_buffer(private_key: bytes, challenge: bytes, size: int) -> bytes:
+def signing_buffer(
+    private_key: bytes, challenge: bytes, size: int, rotation_index: int | None = None
+) -> bytes:
     public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
     components = [
-        b"EvoluSignRegistrationRequestV1:",
+        b"EvoluSignRegistrationRequestV2:",
         public_key.to_string("uncompressed"),
         challenge,
         size.to_bytes(4, "big"),
     ]
+    if rotation_index is not None:
+        components.append(rotation_index.to_bytes(4, "big"))
     return b"".join((compact_size(len(comp)) + comp) for comp in components)
 
 
@@ -68,7 +72,9 @@ def test_evolu_sign_request(client: Client):
         proof=proposed_value,
     )
 
-    data = signing_buffer(delegated_identity_key, challenge, size)
+    data = signing_buffer(
+        delegated_identity_key, challenge, size, rotation_index=response.rotation_index
+    )
     check_signature_optiga(
         response.signature, response.certificate_chain, client.model, data
     )
@@ -206,7 +212,9 @@ def test_evolu_sign_request_data_higher_bound(client: Client):
         proof=proof,
     )
 
-    data = signing_buffer(delegated_identity_key, challenge, size)
+    data = signing_buffer(
+        delegated_identity_key, challenge, size, rotation_index=response.rotation_index
+    )
     check_signature_optiga(
         response.signature, response.certificate_chain, client.model, data
     )
@@ -238,7 +246,15 @@ def test_evolu_sign_request_with_different_rotation_indices(
         proof=proof,
     )
 
-    data = signing_buffer(delegated_identity_key, challenge, size)
+    data = signing_buffer(
+        delegated_identity_key, challenge, size, rotation_index=response.rotation_index
+    )
     check_signature_optiga(
         response.signature, response.certificate_chain, client.model, data
     )
+
+    assert response.rotation_index is not None
+    if rotation_index is None:
+        assert response.rotation_index == 0
+    else:
+        assert response.rotation_index == rotation_index
