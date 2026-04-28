@@ -1,0 +1,40 @@
+[build]
+target-dir = "../build-xtask"
+#rustc-wrapper = "sccache"
+
+[alias]
+xtask = "run -p xtask --"
+
+[target.x86_64-unknown-linux-gnu]
+
+[target.aarch64-apple-darwin]
+
+[target.thumbv7em-none-eabihf]
+linker = "arm-none-eabi-gcc"
+rustflags = [
+    "-C",
+    "target-cpu=cortex-m4",
+    "-C",
+    "link-arg=-mthumb",
+    "-C",
+    "link-arg=-mcpu=cortex-m4",
+    "-C",
+    "link-arg=-mfloat-abi=hard",
+    "-C",
+    "link-arg=-mfpu=fpv4-sp-d16",
+]
+
+[target.thumbv8m.main-none-eabihf]
+linker = "arm-none-eabi-gcc"
+rustflags = [
+    "-C",
+    "target-cpu=cortex-m33",
+    "-C",
+    "link-arg=-mthumb",
+    "-C",
+    "link-arg=-mcpu=cortex-m33",
+    "-C",
+    "link-arg=-mfloat-abi=hard",
+    "-C",
+    "link-arg=-mfpu=fpv5-sp-d16",
+]
