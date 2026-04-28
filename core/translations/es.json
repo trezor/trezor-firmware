@@ -47,7 +47,12 @@
     "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": "Ruta de derivación incorrecta para la cuenta.",
     "addr_mismatch__xpub_mismatch": "¿La XPUB no coincide?",
-    "address__cancel_contact_support": "Si la dirección de destino no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
+    "address__cancel_contact_support": {
+      "Bolt": "Si la dirección de destino no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
+      "Caesar": "Si la dirección de destino no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
+      "Delizia": "Si la dirección de destino no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
+      "Eckhart": "Si la dirección no coincide, contacta al soporte de Trezor en trezor.io/support."
+    },
     "address__cancel_receive": {
       "Bolt": "",
       "Caesar": "",
@@ -56,7 +61,12 @@
     },
     "address__check_with_source": "Revisa dirección con la fuente.",
     "address__coin_address_template": "Dirección {0}",
-    "address__confirmed": "Dirección de destino confirmada",
+    "address__confirmed": {
+      "Bolt": "Dirección de destino confirmada",
+      "Caesar": "Dirección de destino confirmada",
+      "Delizia": "Dirección de destino confirmada.",
+      "Eckhart": "Dirección de destino confirmada."
+    },
     "address__public_key": "Clave pública",
     "address__public_key_confirmed": "Clave pública confirmada",
     "address__qr_code": "Código QR",
@@ -426,7 +436,12 @@
     "cardano__confirming_pool_registration": "Confirmar el registro del pool como propietario.",
     "cardano__confirming_transaction": "Confirmando una transacción.",
     "cardano__cost": "Costo",
-    "cardano__credential_intro_template": "",
+    "cardano__credential_intro_template": {
+      "Bolt": "La credencial de {0} es un(a) {1}",
+      "Caesar": "La credencial de {0} es un(a) {1}",
+      "Delizia": "La credencial de {0} es un(a) {1}:",
+      "Eckhart": "La credencial de {0} es un(a) {1}:"
+    },
     "cardano__credential_mismatch": "Las credenciales no coinciden con las de pago.",
     "cardano__datum_hash": "Hash de datum",
     "cardano__delegating_to": "Delegando a",
@@ -444,7 +459,7 @@
     "cardano__intro_text_owned_by_device": "La siguiente dirección es propiedad de este dispositivo. Su",
     "cardano__intro_text_registration_payment": "La dirección de pago del registro de la clave de voto es propiedad de este dispositivo. Su",
     "cardano__key_hash": "hash de clave",
-    "cardano__key_path": "",
+    "cardano__key_path": "camino de clave",
     "cardano__margin": "Margen",
     "cardano__message_hex": "Hex del mensaje",
     "cardano__message_text": "Texto del mensaje",
@@ -800,8 +815,8 @@
     "ethereum__confirm_contract": "Confirmar contrato",
     "ethereum__contract_address": "Dir. del contrato del proveedor",
     "ethereum__data_size_template": "Tamaño: {0} bytes",
-    "ethereum__deposit_amount": "",
-    "ethereum__deposit_to": "",
+    "ethereum__deposit_amount": "Importe del depósito",
+    "ethereum__deposit_to": "Depositar a",
     "ethereum__eip_7702": {
       "Bolt": "Autorizar el siguiente contrato como un EIP-7702 en tu cuenta",
       "Caesar": "Autorizar el siguiente contrato como un EIP-7702 en tu cuenta",
@@ -822,10 +837,11 @@
     "ethereum__new_contract": "Se desplegará un nuevo contrato",
     "ethereum__no_message_field": "Sin campo de mensaje.",
     "ethereum__priority_fee": "Comisión máx. de prioridad",
-    "ethereum__redeem_amount": "",
-    "ethereum__redeem_from": "",
-    "ethereum__reward_tokens": "",
-    "ethereum__rewards_claim": "",
+    "ethereum__redeem": "",
+    "ethereum__redeem_amount": "Redimir importe",
+    "ethereum__redeem_from": "Redimir de",
+    "ethereum__reward_tokens": "Tokens de recompensa",
+    "ethereum__rewards_claim": "Reclamar recompensas",
     "ethereum__show_full_array": "Ver matriz entera",
     "ethereum__show_full_domain": "Ver dominio entero",
     "ethereum__show_full_message": "Ver mensaje entero",
@@ -844,6 +860,12 @@
     "ethereum__staking_stake_intro": "¿Hacer stake de ETH en Everstake?",
     "ethereum__staking_unstake": "Retirar stake",
     "ethereum__staking_unstake_intro": "¿Retirar ETH de Everstake?",
+    "ethereum__subtitle_input_data_bytes": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "{0} / {1} bytes",
+      "Eckhart": ""
+    },
     "ethereum__title_all_input_data_template": "Todos los datos de entrada ({0} bytes)",
     "ethereum__title_confirm_domain": "Confirmar dominio",
     "ethereum__title_confirm_message": "Confirmar mensaje",
@@ -855,16 +877,26 @@
       "Delizia": "Confirmar datos ingr.",
       "Eckhart": "Validar datos"
     },
-    "ethereum__title_input_data": "Datos de entrada",
+    "ethereum__title_input_data": "Datos",
     "ethereum__title_input_data_bytes": {
-      "Bolt": "Datos de entrada:\n{0} / {1} bytes",
-      "Caesar": "Datos de entrada: {0} / {1} bytes",
-      "Delizia": "Datos de entrada",
-      "Eckhart": "Datos de entrada:\n{0} / {1} bytes"
+      "Bolt": "Datos:\n{0} / {1} bytes",
+      "Caesar": "Datos: {0} / {1} bytes",
+      "Delizia": "Datos",
+      "Eckhart": "Datos:\n{0} / {1} bytes"
     },
     "ethereum__title_signing_address": "Dirección firma",
-    "ethereum__title_token_contract": "",
-    "ethereum__token_contract": "Contrato de token",
+    "ethereum__title_token_contract": {
+      "Bolt": "Contrato del token",
+      "Caesar": "Dirección del contrato del token",
+      "Delizia": "Contrato del token",
+      "Eckhart": "Dirección del contrato del token"
+    },
+    "ethereum__token_contract": {
+      "Bolt": "Dirección del contrato del token",
+      "Caesar": "Contrato de token",
+      "Delizia": "Dirección del contrato del token",
+      "Eckhart": "Contrato de token"
+    },
     "ethereum__units_template": "{0} unidades",
     "ethereum__unknown_contract_address": {
       "Bolt": "Dirección de contrato desconocida",
@@ -874,14 +906,16 @@
     },
     "ethereum__unknown_token": "Token desconocido",
     "ethereum__valid_signature": "La firma es válida.",
-    "ethereum__vault_claim_intro": "",
-    "ethereum__vault_deposit_intro": "",
-    "ethereum__vault_redeem_intro": "",
-    "ethereum__vault_withdraw_intro": "",
-    "ethereum__withdraw": "",
-    "ethereum__withdraw_from": "",
-    "ethereum__withdraw_intro": "",
-    "ethereum__your_address": "",
+    "ethereum__vault_claim_intro": "Verifica los detalles para reclamar las recompensas.",
+    "ethereum__vault_claim_to": "",
+    "ethereum__vault_deposit_intro": "Verifica los detalles para depositar en la bóveda.",
+    "ethereum__vault_redeem_intro": "Verifica los detalles para redimir de la bóveda.",
+    "ethereum__vault_redeem_to": "",
+    "ethereum__vault_withdraw_intro": "Verifica los detalles para retirar de la bóveda.",
+    "ethereum__withdraw": "Retirar",
+    "ethereum__withdraw_amount": "",
+    "ethereum__withdraw_from": "Retirar de",
+    "ethereum__withdraw_to": "",
     "experimental_mode__enable": "¿Activar funciones experimentales?",
     "experimental_mode__only_for_dev": "Solo para desarrollo y pruebas beta.",
     "experimental_mode__title": "Modo experimental",
@@ -1137,39 +1171,39 @@
     "modify_amount__decrease_amount": {
       "Bolt": "Reducir el importe en:",
       "Caesar": "Reducir el importe en:",
-      "Delizia": "Reducir el importe en:",
+      "Delizia": "Reducir el importe en",
       "Eckhart": "Reducir el importe en"
     },
     "modify_amount__increase_amount": {
       "Bolt": "Aumentar importe en:",
       "Caesar": "Aumentar importe en:",
-      "Delizia": "Aumentar importe en:",
+      "Delizia": "Aumentar importe en",
       "Eckhart": "Aumentar importe en"
     },
     "modify_amount__new_amount": {
       "Bolt": "Nuevo importe:",
       "Caesar": "Nuevo importe:",
-      "Delizia": "Nuevo importe:",
+      "Delizia": "Nuevo importe",
       "Eckhart": "Nuevo importe"
     },
     "modify_amount__title": "Modificar importe",
     "modify_fee__decrease_fee": {
       "Bolt": "Reducir comisión en:",
       "Caesar": "Reducir comisión en:",
-      "Delizia": "Reducir comisión en:",
+      "Delizia": "Reducir comisión en",
       "Eckhart": "Reducir comisión en"
     },
     "modify_fee__fee_rate": "Comisión:",
     "modify_fee__increase_fee": {
       "Bolt": "Aumentar comisión en:",
       "Caesar": "Aumentar comisión en:",
-      "Delizia": "Aumentar comisión en:",
+      "Delizia": "Aumentar comisión en",
       "Eckhart": "Aumentar comisión en"
     },
     "modify_fee__new_transaction_fee": {
       "Bolt": "Nueva comisión de transacción:",
       "Caesar": "",
-      "Delizia": "Nueva comisión de transacción:",
+      "Delizia": "Nueva comisión de transacción",
       "Eckhart": "Nueva comisión de transacción"
     },
     "modify_fee__no_change": "Comisión no alterada.",
@@ -1177,7 +1211,7 @@
     "modify_fee__transaction_fee": {
       "Bolt": "Comisión de la transacción:",
       "Caesar": "Comisión de la transacción:",
-      "Delizia": "Comisión de la transacción:",
+      "Delizia": "Comisión de la transacción",
       "Eckhart": "Comisión de la transacción"
     },
     "monero__confirm_export": "Confirmar exportación",
@@ -1994,7 +2028,7 @@
     "reset__select_word_x_of_y_template": {
       "Bolt": "Palabra {0} de {1}:",
       "Caesar": "Palabra {0} de {1}:",
-      "Delizia": "Palabra {0} de {1}:",
+      "Delizia": "Selec. palabra {0} de {1}",
       "Eckhart": ""
     },
     "reset__set_it_to_count_template": {
@@ -2528,7 +2562,7 @@
     "suite_sync__delegated_identity_key_no_thp": "¿Permitir que Trezor Suite use Suite Sync con este Trezor?",
     "suite_sync__delegated_identity_key_thp": "¿Permitir que {0} en {1} use Suite Sync con este Trezor?",
     "suite_sync__header": "Suite Sync",
-    "suite_sync__rotate_key": "",
+    "suite_sync__rotate_key": "Estás a punto de rotar la clave de identidad delegada usada por Suite Sync. Esto invalidará las claves anteriores. ¿Quieres proceder?",
     "tezos__baker_address": "Dirección del Baker",
     "tezos__balance": "Saldo",
     "tezos__ballot": "Voto",
