@@ -93,7 +93,6 @@ fn add_stm32u5_bsp(lib: &mut CLibrary) -> Result<()> {
 }
 
 fn add_stm32f4_bsp(lib: &mut CLibrary) -> Result<()> {
-
     if cfg!(feature = "mcu_stm32f427") {
         lib.add_define("STM32F427xx", None);
     } else if cfg!(feature = "mcu_stm32f429") {

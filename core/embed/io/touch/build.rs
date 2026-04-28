@@ -24,15 +24,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     } else if cfg!(feature = "touch_ft6x36_t2t1") {
         lib.add_source("touch/ft6x36/ft6x36.c");
     } else if cfg!(feature = "touch_stmpe811") {
-        lib.add_sources([
-            "touch/stmpe811/stmpe811.c",
-            "touch/stmpe811/touch.c"
-        ]);
+        lib.add_sources(["touch/stmpe811/stmpe811.c", "touch/stmpe811/touch.c"]);
     } else if cfg!(feature = "touch_sitronix") {
-        lib.add_sources([
-            "touch/sitronix/touch.c",
-            "touch/sitronix/sitronix.c",
-        ]);
+        lib.add_sources(["touch/sitronix/touch.c", "touch/sitronix/sitronix.c"]);
     } else {
         bail_unsupported!();
     }

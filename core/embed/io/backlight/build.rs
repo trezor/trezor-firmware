@@ -25,9 +25,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         } else {
             bail_unsupported!();
         }
-    }
-
-    else {
+    } else {
         bail_unsupported!();
     }
 

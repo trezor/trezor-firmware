@@ -63,7 +63,6 @@ fn define_display_t3w1(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-
 fn define_display_t3t1(lib: &mut CLibrary) -> Result<()> {
     lib.add_defines([
         ("FRAMEBUFFER", Some("1")),
@@ -91,7 +90,7 @@ fn define_display_t3t1(lib: &mut CLibrary) -> Result<()> {
 }
 
 fn define_display_t2t1(lib: &mut CLibrary) -> Result<()> {
-        lib.add_defines([
+    lib.add_defines([
         ("USE_RGB_COLORS", Some("1")),
         ("DISPLAY_RESX", Some("240")),
         ("DISPLAY_RESY", Some("240")),
