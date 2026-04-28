@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZOR_PROFILE_H__
-#define __TREZOR_PROFILE_H__
+#pragma once
 
 // Environment variables meaning:
 // TREZOR_PROFILE_NAME sets the title of the emulator window.
@@ -34,5 +33,3 @@ const char *profile_dir(void);
 const char *profile_flash_path(void);
 const char *profile_sdcard_path(void);
 const char *profile_usb_disconnect_path(void);
-
-#endif  // __TREZOR_PROFILE_H__
