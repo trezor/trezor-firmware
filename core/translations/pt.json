@@ -446,7 +446,12 @@
     "cardano__confirming_pool_registration": "Confirmando o registro da pool como proprietário.",
     "cardano__confirming_transaction": "Confirmando uma transação.",
     "cardano__cost": "Custo",
-    "cardano__credential_intro_template": "cuja credencial de {0} é do tipo {1}:",
+    "cardano__credential_intro_template": {
+      "Bolt": "cuja credencial de {0} é do tipo {1}",
+      "Caesar": "cuja credencial de {0} é do tipo {1}",
+      "Delizia": "cuja credencial de {0} é do tipo {1}:",
+      "Eckhart": "cuja credencial de {0} é do tipo {1}:"
+    },
     "cardano__credential_mismatch": "A credencial não coincide com a credencial de pagamento.",
     "cardano__datum_hash": "Hash do datum",
     "cardano__delegating_to": "Delegando a",
@@ -460,7 +465,7 @@
     "cardano__inline_datum": "Datum inline",
     "cardano__input_id": "ID de entrada",
     "cardano__input_index": "Índice de entrada",
-    "cardano__intro_text_change": "O endereço a seguir é um endereço de troco, ",
+    "cardano__intro_text_change": "O endereço a seguir é um endereço de troco,",
     "cardano__intro_text_owned_by_device": "Pertence a este dispositivo o seguinte endereço, ",
     "cardano__intro_text_registration_payment": "Pertence a este dispositivo o endereço de pagamento de registro de chave de voto, ",
     "cardano__key_hash": "hash de chave",
@@ -836,12 +841,7 @@
     "ethereum__redeem_amount": "Quantia para resgate",
     "ethereum__redeem_from": "Resgatar de",
     "ethereum__reward_tokens": "Tokens de recompensa",
-    "ethereum__rewards_claim": {
-      "Bolt": "Resgate de recompensa",
-      "Caesar": "Resgate de recompensa",
-      "Delizia": "Reivindicação de recompensa",
-      "Eckhart": "Resgate de recompensa"
-    },
+    "ethereum__rewards_claim": "Resgate de recompensa",
     "ethereum__show_full_array": {
       "Bolt": "Exibir arranjo",
       "Caesar": "Exibir arranjo completo",
@@ -924,12 +924,7 @@
     "ethereum__vault_claim_intro": "Revise os detalhes para resgate de recompensas.",
     "ethereum__vault_claim_to": "",
     "ethereum__vault_deposit_intro": "Revise os detalhes para depósito no cofre.",
-    "ethereum__vault_redeem_intro": {
-      "Bolt": "Revise os detalhes para retirar do cofre.",
-      "Caesar": "Revise os detalhes para resgatar do cofre.",
-      "Delizia": "Revise os detalhes para resgatar do cofre.",
-      "Eckhart": "Revise os detalhes para resgatar do cofre."
-    },
+    "ethereum__vault_redeem_intro": "Revise os detalhes para resgatar do cofre.",
     "ethereum__vault_redeem_to": "",
     "ethereum__vault_withdraw_intro": "Revise os detalhes para retirar do cofre.",
     "ethereum__withdraw": "Retirada",
@@ -2918,7 +2913,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Use o Trezor pressionando os botões esquerdo e direito.\n\rSiga à direita.",
+      "Caesar": "Use o Trezor pressionando os botões esquerdo e direito.\n\nSiga à direita.",
       "Delizia": "",
       "Eckhart": ""
     },

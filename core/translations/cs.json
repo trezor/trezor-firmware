@@ -1909,7 +1909,7 @@
     "reset__group_share_checked_successfully_template": {
       "Bolt": "Podíl {1} ze skupiny {0} je v pořádku.",
       "Caesar": "Podíl {1} ze skupiny {0} je v pořádku.",
-      "Delizia": "Podíl {1} ze sk. {0} je správně",
+      "Delizia": "Podíl {1} ze skupiny {0} ověřen",
       "Eckhart": "Podíl {1} ze skupiny {0} byl úspěšně zkontrolován."
     },
     "reset__group_share_title_template": {
@@ -2778,7 +2778,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Trezor se ovládá\nstisky levého a pravého tlačítka.\n\rPokračujte vpravo.",
+      "Caesar": "Trezor se ovládá\nstisky levého a pravého tlačítka.\n\nPokračujte vpravo.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2967,8 +2967,8 @@
     "words__outputs": "výstupy",
     "words__pay_attention": "Pozor",
     "words__please_check_again": {
-      "Bolt": "Zkontrolujte to znovu",
-      "Caesar": "Zkontrolujte to znovu",
+      "Bolt": "Prosím, zkontrolujte zálohu znovu",
+      "Caesar": "Prosím, zkontrolujte zálohu znovu",
       "Delizia": "",
       "Eckhart": ""
     },
