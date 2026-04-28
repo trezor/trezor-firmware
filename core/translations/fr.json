@@ -2173,10 +2173,10 @@
       "Eckhart": "Groupe {0} - Fragment {1} vérifié avec succès."
     },
     "reset__group_share_title_template": {
-      "Bolt": "Groupe {0} - fragment {1}",
+      "Bolt": "Groupe {0} - Fragment {1}",
       "Caesar": "Groupe {0} - Fragm. {1}",
       "Delizia": "Groupe {0} - Fragment {1}",
-      "Eckhart": "Groupe n°{0} - Fragment n°{1}"
+      "Eckhart": "Groupe {0} - Fragment {1}"
     },
     "reset__incorrect_word_selected": "Mauvais mot sélectionné",
     "reset__more_at": "Plus d'infos sur",
