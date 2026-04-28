@@ -35,11 +35,13 @@ pub mod links;
 pub mod slots;
 pub mod table;
 
-use bytemuck::{AnyBitPattern, NoUninit, PodCastError};
 pub use data::DataBlock;
 pub use links::LinksBlock;
 pub use slots::SlotsBlock;
 pub use table::{TableBlock, VTableEntry, VTableEntryType};
+
+// re-export bytemuck things
+pub use bytemuck::{AnyBitPattern, NoUninit, PodCastError};
 
 /// Maximum block size (13-bit number field).
 pub const SIZE_MAX: usize = 0x1FFF; // 8191
@@ -235,7 +237,7 @@ impl<'a> BlockData<'a> {
         // validate block header (try_from_bytes_prefix checks size & alignment)
         let header = try_from_bytes_prefix::<Tagged16>(data)?;
         let block_header = BlockHeader::from_tagged16(*header)?;
-        if block_header.size() > data.len() {
+        if block_header.size() < 2 || block_header.size() > data.len() {
             return Err(CodecError::OutOfBounds);
         }
         Ok(Self(&data[..block_header.size()]))

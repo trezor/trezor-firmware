@@ -41,6 +41,9 @@ impl<'a> DataBlock<'a> {
         };
         let padded_elem_size = align_up(elem_size, elem_align);
         let start_offset = new.start_offset();
+        if start_offset > data.len() {
+            return Err(CodecError::OutOfBounds);
+        }
         if !(data.len() - start_offset).is_multiple_of(padded_elem_size) {
             return Err(CodecError::OutOfBounds);
         }

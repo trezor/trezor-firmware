@@ -99,7 +99,7 @@ impl VTableEntry {
             | VTableEntryType::Block
             | VTableEntryType::Link => {
                 let offset = self.value();
-                offset >= heap_start && offset < heap_start + block_size
+                offset >= heap_start && offset < block_size
             }
             VTableEntryType::Reserved => false,
         }

@@ -1,0 +1,46 @@
+[package]
+name = "hashbuffers-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+bytemuck = { version = "1.25.0", default-features = false, features = ["derive"] }
+
+[dependencies.hashbuffers]
+path = ".."
+
+[workspace]
+members = ["."]
+
+# Prevent this from interfering with workspaces
+[patch.crates-io]
+
+[[bin]]
+name = "fuzz_block"
+path = "fuzz_targets/fuzz_block.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_table"
+path = "fuzz_targets/fuzz_table.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_data"
+path = "fuzz_targets/fuzz_data.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_slots"
+path = "fuzz_targets/fuzz_slots.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_links"
+path = "fuzz_targets/fuzz_links.rs"
+doc = false
