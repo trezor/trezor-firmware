@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .discovery3 import configure
+from .discovery3_200 import configure
 
 
 def configure_board(

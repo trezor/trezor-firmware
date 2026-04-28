@@ -12,7 +12,7 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "D003/boards/nucleo.h"
+    board = "D003/boards/nucleo_210.h"
     hw_model = get_hw_model_as_number("D003")
     hw_revision = 0
 
@@ -84,28 +84,29 @@ def configure(
         sources += ["embed/io/nfc/st25/nfc.c"]
         sources += ["embed/io/nfc/st25/ndef.c"]
         sources += ["embed/io/nfc/st25/card_emulation.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/st25r200/rfal_rfst25r200.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_analogConfig.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfc.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfca.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfcb.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfcf.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfcv.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_isoDep.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfcDep.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_st25tb.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_t1t.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_t2t.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_iso15693_2.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/rfal_crc.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/st25r200/st25r200.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/st25r200/st25r200_com.c"]
-        sources += ["embed/io/nfc/st25/rfal004/source/st25r200/st25r200_irq.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/st25r500/rfal_rfst25r500.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_analogConfig.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_dpo.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_nfc.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_nfca.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_nfcb.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_nfcf.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_nfcv.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_isoDep.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_nfcDep.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_st25tb.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_t1t.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_t2t.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_iso15693_2.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/rfal_crc.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/st25r500/st25r500.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/st25r500/st25r500_com.c"]
+        sources += ["embed/io/nfc/st25/rfal005/source/st25r500/st25r500_irq.c"]
         paths += ["embed/io/nfc/inc/"]
         paths += ["embed/io/nfc/st25/"]
-        paths += ["embed/io/nfc/st25/rfal004/source"]
-        paths += ["embed/io/nfc/st25/rfal004/source/st25r200"]
-        paths += ["embed/io/nfc/st25/rfal004/include/"]
+        paths += ["embed/io/nfc/st25/rfal005/source"]
+        paths += ["embed/io/nfc/st25/rfal005/source/st25r500"]
+        paths += ["embed/io/nfc/st25/rfal005/include/"]
         defines += [("USE_NFC", "1")]
 
     defines += [
