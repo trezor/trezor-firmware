@@ -262,7 +262,9 @@ void nfc_deinit(void) {
     drv->rfal_initialized = false;
   }
 
-  HAL_SPI_DeInit(&drv->hspi);
+  if (drv->hspi.Instance != NULL) {
+    HAL_SPI_DeInit(&drv->hspi);
+  }
 
   HAL_GPIO_DeInit(NFC_SPI_MISO_PORT, NFC_SPI_MISO_PIN);
   HAL_GPIO_DeInit(NFC_SPI_MOSI_PORT, NFC_SPI_MOSI_PIN);
