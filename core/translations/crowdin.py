@@ -52,9 +52,9 @@ def merge() -> None:
 
     def clean_translation(text: str) -> str:
         """Remove or replace non-printable characters in translation strings."""
-        # Replace non-breaking spaces with regular spaces, EXCEPT before ? and !
+        # Replace non-breaking spaces with regular spaces, EXCEPT before ? ! and :
         # Use negative lookahead to avoid replacing before French punctuation
-        text = re.sub(r'\u00A0(?![?!])', ' ', text)
+        text = re.sub(r'\u00A0(?![?!:])', ' ', text)
         return text
 
     for lang in sorted(tdir.all_languages()):
