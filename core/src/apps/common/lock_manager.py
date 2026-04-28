@@ -20,9 +20,8 @@ if TYPE_CHECKING:
     from trezor import protobuf
     from trezor.wire import Handler, Msg
 
-    MsgOut = TypeVar("MsgOut")
-    AsyncFunc = Callable[..., Awaitable[MsgOut]]
     P = ParamSpec("P")
+    R = TypeVar("R")
 
 _SCREENSAVER_IS_ON = False
 
@@ -31,9 +30,6 @@ if not utils.USE_POWER_MANAGER:
 
     def notify_suspend() -> None:
         pass
-
-    def with_prolonged_suspend_time(func: AsyncFunc) -> AsyncFunc:
-        return func
 
 else:
     from micropython import const
@@ -123,10 +119,15 @@ else:
             lock_device_if_unlocked_on_battery,
         )
 
-    def with_prolonged_suspend_time(func: AsyncFunc) -> AsyncFunc:
-        """Decorator to prolong the suspend time to at least 2 minutes while executing the decorated function."""
 
-        async def wrapper(*args: "P.args", **kwargs: "P.kwargs") -> object:
+def with_prolonged_suspend_time(
+    func: Callable[P, Awaitable[R]],
+) -> Callable[P, Awaitable[R]]:
+    """Decorator to prolong the suspend time to at least 2 minutes while executing the decorated function."""
+
+    if utils.USE_POWER_MANAGER:
+
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             _PROLONGED_SUSPEND_TIME_MS = const(2 * 60 * 1000)
             configure_autolock(min_delay_ms=_PROLONGED_SUSPEND_TIME_MS)
             try:
@@ -135,6 +136,8 @@ else:
                 configure_autolock(min_delay_ms=0)
 
         return wrapper
+    else:
+        return func
 
 
 def set_homescreen() -> None:
