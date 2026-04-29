@@ -34,8 +34,6 @@ impl<T> Zeroize for Memory<T> {
     }
 }
 
-type PinnedMemory<'a, T> = Pin<&'a mut Memory<T>>;
-
 impl<T> Memory<T> {
     // SAFETY:
     // The caller must ensure that the return value is handled according to the
