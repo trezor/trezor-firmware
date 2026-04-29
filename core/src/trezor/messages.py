@@ -3347,7 +3347,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumERC7730FieldInfo"]:
             return isinstance(msg, cls)
 
-    class EthereumERC7730DisplayFormatInfo(protobuf.MessageType):
+    class EthereumDisplayFormatInfo(protobuf.MessageType):
         chain_id: "int"
         address: "AnyBytes"
         func_sig: "AnyBytes"
@@ -3368,7 +3368,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumERC7730DisplayFormatInfo"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDisplayFormatInfo"]:
             return isinstance(msg, cls)
 
     class EosGetPublicKey(protobuf.MessageType):

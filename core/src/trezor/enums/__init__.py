@@ -289,7 +289,7 @@ if TYPE_CHECKING:
         ETHEREUM_NETWORK = 0
         ETHEREUM_TOKEN = 1
         SOLANA_TOKEN = 2
-        ETHEREUM_ERC7730_DISPLAY_FORMAT = 3
+        ETHEREUM_DISPLAY_FORMAT = 3
 
     class EthereumABIType(IntEnum):
         ABI_ADDRESS = 0

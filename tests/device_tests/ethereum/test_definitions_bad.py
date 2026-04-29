@@ -71,14 +71,14 @@ def _make_token_payload(
     )
 
 
-def _make_erc7730_payload(
+def _make_display_format_payload(
     timestamp: int = 0xFFFF_FFFF,
-    message: messages.EthereumERC7730DisplayFormatInfo | bytes | None = None,
+    message: messages.EthereumDisplayFormatInfo | bytes | None = None,
 ) -> bytes:
     if message is None:
         message = make_eth_erc7730_display_format()
     return make_payload(
-        data_type=DefinitionType.ETHEREUM_ERC7730_DISPLAY_FORMAT,
+        data_type=DefinitionType.ETHEREUM_DISPLAY_FORMAT,
         message=message,
         timestamp=timestamp,
     )
@@ -90,7 +90,7 @@ def _cases(session: Session) -> list[tuple]:
         (_make_token_payload, _fails_token),
     ]
     if session.model in models.CORE_MODELS:
-        cases.append((_make_erc7730_payload, _fails_erc7730_display_format))
+        cases.append((_make_display_format_payload, _fails_erc7730_display_format))
     return cases
 
 
@@ -169,12 +169,12 @@ def test_bad_type(session: Session) -> None:
     if session.model in models.CORE_MODELS:
         cases += [
             (
-                DefinitionType.ETHEREUM_ERC7730_DISPLAY_FORMAT,
+                DefinitionType.ETHEREUM_DISPLAY_FORMAT,
                 make_eth_erc7730_display_format(),
                 _fails_network,
             ),
             (
-                DefinitionType.ETHEREUM_ERC7730_DISPLAY_FORMAT,
+                DefinitionType.ETHEREUM_DISPLAY_FORMAT,
                 make_eth_erc7730_display_format(),
                 _fails_token,
             ),
@@ -227,12 +227,12 @@ def test_protobuf_mismatch(session: Session) -> None:
                 _fails_token,
             ),
             (
-                DefinitionType.ETHEREUM_ERC7730_DISPLAY_FORMAT,
+                DefinitionType.ETHEREUM_DISPLAY_FORMAT,
                 make_eth_token(),
                 _fails_erc7730_display_format,
             ),
             (
-                DefinitionType.ETHEREUM_ERC7730_DISPLAY_FORMAT,
+                DefinitionType.ETHEREUM_DISPLAY_FORMAT,
                 make_eth_network(),
                 _fails_erc7730_display_format,
             ),

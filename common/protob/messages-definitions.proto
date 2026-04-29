@@ -13,7 +13,7 @@ enum DefinitionType {
     ETHEREUM_NETWORK = 0;
     ETHEREUM_TOKEN = 1;
     SOLANA_TOKEN = 2;
-    ETHEREUM_ERC7730_DISPLAY_FORMAT = 3;
+    ETHEREUM_DISPLAY_FORMAT = 3;
 }
 
 // ****** CROSS-PARSEABILITY NOTE ******
@@ -27,7 +27,7 @@ enum DefinitionType {
 // * EthereumNetworkInfo: varint, length-delimited, varint, ...
 // * EthereumTokenInfo: length-delimited, varint, ...
 // * SolanaTokenInfo: length-delimited, length-delimited, ...
-// * EthereumERC7730DisplayFormat: varint, length-delimited, length-delimited, ...
+// * EthereumDisplayFormat: varint, length-delimited, length-delimited, ...
 
 // ****** ETHEREUM_NETWORK ******
 
@@ -68,7 +68,7 @@ message SolanaTokenInfo {
     required string name = 3;
 }
 
-// ****** ETHEREUM_ERC7730_DISPLAY_FORMAT ******
+// ****** ETHEREUM_DISPLAY_FORMAT ******
 
 /**
  * Solidity types.
@@ -172,10 +172,10 @@ message EthereumERC7730FieldInfo {
 }
 
 /**
- * Ethereum ERC-7730 display format - corresponding to `DisplayFormat` in `clear_signing.py`.
+ * Ethereum display format - corresponding to `DisplayFormat` in `clear_signing.py`.
  * @embed
  */
-message EthereumERC7730DisplayFormatInfo {
+message EthereumDisplayFormatInfo {
     required uint64 chain_id = 1;
     required bytes address = 2;
     required bytes func_sig = 3;
