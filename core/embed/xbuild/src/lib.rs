@@ -27,6 +27,7 @@ pub use parallel::run_parallel;
 pub use trezor::build;
 pub use trezor::build_and_link;
 pub use trezor::current_model_id;
+pub use trezor::model_ids;
 pub use trezor::vendor_header_path;
 
 // Re-exports from color_eyre

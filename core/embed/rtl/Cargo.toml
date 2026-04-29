@@ -15,42 +15,16 @@ models.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = ["models/model_d001"]
-model_d002 = ["models/model_d002"]
-model_t2t1 = ["models/model_t2t1"]
-model_t2b1 = ["models/model_t2b1"]
-model_t3b1 = ["models/model_t3b1"]
-model_t3t1 = ["models/model_t3t1"]
-model_t3w1 = ["models/model_t3w1"]
-
-# --------------------------------------------------------------------------
-# MCU features
-# --------------------------------------------------------------------------
-
-mcu_stm32f427 = ["models/mcu_stm32f427"]
-mcu_stm32f429 = ["models/mcu_stm32f429"]
-mcu_stm32u58 = ["models/mcu_stm32u58"]
-mcu_stm32u5g = ["models/mcu_stm32u5g"]
-
-# --------------------------------------------------------------------------
-# Privilege mode features
-# --------------------------------------------------------------------------
-
-kernel_mode = ["models/kernel_mode"]
-secure_mode = ["models/secure_mode"]
-
-# --------------------------------------------------------------------------
 # Selectable features
 # --------------------------------------------------------------------------
 
 aes_gcm = []
 ed25519_no_precomp = []
 emulator = ["insecure_prng", "models/emulator"]
+eos = []
 insecure_prng = []
 mldsa = []
+nem = []
 noise = ["aes_gcm"]
 production = ["models/production"]
 secp256k1_zkp = []
@@ -59,9 +33,9 @@ sprintf = []
 universal_fw = []
 
 test = [
-    "mcu_stm32u5g",
-    "model_t3w1",
+    "models/model_t3w1",
     "emulator",
-    "kernel_mode",
-    "secure_mode",
 ]
+
+
+

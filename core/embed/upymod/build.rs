@@ -7,7 +7,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use xbuild::{CLibrary, InputFiles, Result, WrapErr, bail, bail_unsupported, ensure};
+use xbuild::{
+    CLibrary, InputFiles, Result, WrapErr, bail, bail_unsupported, current_model_id, ensure,
+    model_ids,
+};
 
 fn main() -> Result<()> {
     xbuild::build(|lib| {
@@ -402,6 +405,7 @@ struct MpyBuilder<'a> {
     genhdr_dir: PathBuf,
     py_src_dir: PathBuf,
     scm_revision_xor2: u8,
+    current_model: String,
 }
 
 impl<'a> MpyBuilder<'a> {
@@ -411,6 +415,7 @@ impl<'a> MpyBuilder<'a> {
         let py_src_dir = crate_dir.join("../../src");
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
         let genhdr_dir = out_dir.join("genhdr");
+        let current_model = current_model_id()?;
 
         Self {
             lib,
@@ -420,6 +425,7 @@ impl<'a> MpyBuilder<'a> {
             genhdr_dir,
             py_src_dir,
             scm_revision_xor2,
+            current_model,
         }
     }
 
@@ -962,17 +968,9 @@ impl<'a> MpyBuilder<'a> {
             r"s/from typing import/# &/".to_string(),
         ];
 
-        for model in ["T2T1", "T2B1", "T3T1", "T3B1", "T3W1"] {
-            let model_matches = match model {
-                "D001" => cfg!(feature = "model_d001"),
-                "D002" => cfg!(feature = "model_d002"),
-                "T2T1" => cfg!(feature = "model_t2t1"),
-                "T2B1" => cfg!(feature = "model_t2b1"),
-                "T3T1" => cfg!(feature = "model_t3t1"),
-                "T3B1" => cfg!(feature = "model_t3b1"),
-                "T3W1" => cfg!(feature = "model_t3w1"),
-                _ => bail_unsupported!(),
-            };
+        let models_dir = self.crate_dir.join("../models");
+        for model in model_ids(&models_dir)? {
+            let model_matches = model == self.current_model;
 
             let model_cond = py_bool(model_matches);
             let not_model_cond = py_bool(!model_matches);
@@ -995,6 +993,7 @@ impl<'a> MpyBuilder<'a> {
         let mut files = InputFiles::new();
 
         let src = &self.py_src_dir;
+        let current_model = &self.current_model;
 
         files.add(src, "*.py")?;
 
@@ -1110,14 +1109,14 @@ impl<'a> MpyBuilder<'a> {
         if cfg!(not(feature = "pyopt")) {
             files.add(src, "apps/debug/*.py")?;
 
-            if cfg!(not(feature = "model_t3w1")) {
+            if current_model != "T3W1" {
                 files.remove(src, "apps/debug/n4w1_mock.py");
             }
         }
 
         files.add(src, "apps/homescreen/*.py")?;
 
-        if cfg!(not(feature = "model_t3w1")) {
+        if current_model != "T3W1" {
             files.remove(src, "apps/homescreen/device_menu.py");
         }
 
@@ -1181,7 +1180,7 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "apps/cardano/*/*.py")?;
             files.add(src, "trezor/enums/Cardano*.py")?;
 
-            if cfg!(feature = "model_t2t1") {
+            if cfg!(feature = "eos") {
                 files.add(src, "apps/eos/*.py")?;
                 files.add(src, "apps/eos/*/*.py")?;
                 files.add(src, "trezor/enums/Eos*.py")?;
@@ -1196,7 +1195,7 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "trezor/enums/DebugMonero*.py")?;
             files.add(src, "trezor/enums/Monero*.py")?;
 
-            if cfg!(feature = "model_t2t1") {
+            if cfg!(feature = "nem") {
                 files.add(src, "apps/nem/*.py")?;
                 files.add(src, "apps/nem/*/*.py")?;
                 files.add(src, "trezor/enums/NEM*.py")?;
@@ -1229,7 +1228,7 @@ impl<'a> MpyBuilder<'a> {
 
             files.add(src, "apps/webauthn/*.py")?;
 
-            if cfg!(feature = "model_t2t1") {
+            if cfg!(feature = "decred") {
                 files.add(src, "apps/bitcoin/sign_tx/decred.py")?;
             }
 

@@ -6,11 +6,14 @@
 //! them together.
 
 use std::{
-    env,
+    env, fs,
     path::{Path, PathBuf},
 };
 
-use color_eyre::{Result, eyre::bail};
+use color_eyre::{
+    Result,
+    eyre::{WrapErr, bail},
+};
 
 use crate::CLibrary;
 use crate::helpers::{is_rust_analyzer, links_name};
@@ -21,10 +24,36 @@ fn package_name() -> Result<String> {
 
 /// Returns the current model id (T2T1, ..) from the DEP_MODELS_MODEL
 /// environment variable emitted by the `models` crate's build script.
+///
+/// The variable is empty when no model feature is selected; that is treated as
+/// an error since callers need a concrete model.
 pub fn current_model_id() -> Result<String> {
-    env::var("DEP_MODELS_MODEL").map_err(|_| {
-        color_eyre::eyre::eyre!("DEP_MODELS_MODEL not set — is `models` a direct dependency?")
-    })
+    let model = env::var("DEP_MODELS_MODEL").unwrap_or_default();
+    if model.is_empty() {
+        bail!(
+            "DEP_MODELS_MODEL is unset or empty — is `models` a direct dependency with a model feature selected?"
+        );
+    }
+    Ok(model)
+}
+
+/// Returns the sorted list of model ids found in `models_dir` — the names of
+/// subdirectories that contain a `model.toml`. Emits `rerun-if-changed` for the
+/// directory and each `model.toml` so callers rebuild when the model set changes.
+pub fn model_ids(models_dir: &Path) -> Result<Vec<String>> {
+    println!("cargo::rerun-if-changed={}", models_dir.display());
+    let mut models = Vec::new();
+    for entry in fs::read_dir(models_dir).context("Failed to read models directory")? {
+        let entry = entry?;
+        let model_toml = entry.path().join("model.toml");
+        if !model_toml.exists() {
+            continue;
+        }
+        println!("cargo::rerun-if-changed={}", model_toml.display());
+        models.push(entry.file_name().to_string_lossy().into_owned());
+    }
+    models.sort();
+    Ok(models)
 }
 
 /// Returns the path to the vendor header binary for the given build target.
