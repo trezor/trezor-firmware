@@ -16,18 +16,6 @@ models.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = ["sys/model_d001"]
-model_d002 = ["sys/model_d002"]
-model_t2t1 = ["sys/model_t2t1"]
-model_t2b1 = ["sys/model_t2b1"]
-model_t3b1 = ["sys/model_t3b1"]
-model_t3t1 = ["sys/model_t3t1"]
-model_t3w1 = ["sys/model_t3w1"]
-
-# --------------------------------------------------------------------------
 # MCU features
 # --------------------------------------------------------------------------
 
@@ -77,7 +65,7 @@ trustzone = ["sys/trustzone"]
 
 test = [
     "mcu_stm32u5g",
-    "model_t3w1",
+    "models/model_t3w1",
     "emulator",
     "kernel_mode",
     "secure_mode",

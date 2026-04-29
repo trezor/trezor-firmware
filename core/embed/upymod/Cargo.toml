@@ -17,18 +17,6 @@ io.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = ["io/model_d001"]
-model_d002 = ["io/model_d002"]
-model_t2t1 = ["io/model_t2t1"]
-model_t2b1 = ["io/model_t2b1"]
-model_t3b1 = ["io/model_t3b1"]
-model_t3t1 = ["io/model_t3t1"]
-model_t3w1 = ["io/model_t3w1"]
-
-# --------------------------------------------------------------------------
 # MCU features
 # --------------------------------------------------------------------------
 
@@ -46,9 +34,11 @@ backlight = ["io/backlight"]
 benchmark = []
 ble = ["io/ble"]
 button = ["io/button"]
+decred = []
 disable_animation = []
 enable_source_lines = []
 emulator = ["io/emulator"]
+eos = []
 frozen = []
 haptic = ["io/haptic"]
 layout_bolt = []
@@ -59,6 +49,7 @@ log_stack_usage = []
 mcu_attestation = ["sec/mcu_attestation"]
 memperf = []
 n4w1 = []
+nem = []
 optiga = ["sec/optiga"]
 power_manager = ["io/power_manager"]
 pyopt = []
