@@ -640,35 +640,6 @@ START_TEST(test_xmr_fast_hash) {
 }
 END_TEST
 
-START_TEST(test_xmr_hasher) {
-  Hasher hasher;
-  uint8_t hash[32];
-
-  static const struct {
-    char *chunk[3];
-    char *hash;
-  } tests[] = {
-      {{"00", "01", "02"},
-       "f84a97f1f0a956e738abd85c2e0a5026f8874e3ec09c8f012159dfeeaab2b156"},
-      {{"001122334455667788", "00", ""},
-       "72a228ee8d0d01c815f112ce315cfc215a0594abcec24162304ae0ffda139d9e"},
-      {{"001000a93e0e6937b4feaf079e418a028ca85459aa39ac3871b94076f88ca608", "",
-        "00112233445566"},
-       "c3deafd96ff10cc190c6024548c344f6401cfe5151ab2fcd40df7cc501147e01"},
-  };
-
-  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
-    xmr_hasher_init(&hasher);
-    for (int j = 0; j < 3; j++) {
-      xmr_hasher_update(&hasher, fromhex(tests[i].chunk[j]),
-                        strlen(tests[i].chunk[j]) / 2);
-    }
-    xmr_hasher_final(&hasher, hash);
-    ck_assert_mem_eq(hash, fromhex(tests[i].hash), 32);
-  }
-}
-END_TEST
-
 START_TEST(test_xmr_hash_to_scalar) {
   bignum256modm a1;
   unsigned char out[32];

@@ -25,29 +25,6 @@ class Scalar:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
-class Hasher:
-    """
-    XMR hasher
-    """
-    def __init__(self, x: AnyBytes | None = None):
-        """
-        Constructor
-        """
-    def update(self, buffer: AnyBytes) -> None:
-        """
-        Update hasher
-        """
-    def digest(self) -> bytes:
-        """
-        Computes digest
-        """
-    def copy(self) -> Hasher:
-        """
-        Creates copy of the hasher, preserving the state
-        """
-
-
-# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_copy(
     dst: Scalar | None, val: int | bytes | Scalar
 ) -> Scalar:
