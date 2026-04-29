@@ -37,3 +37,5 @@ uses = [
     "touch_wakeup",
     "ui_empty_lock",
 ]
+
+elf_sections = [".header", ".flash", ".data"]
