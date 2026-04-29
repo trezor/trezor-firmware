@@ -9,8 +9,8 @@ fn main() {
     #[cfg(feature = "micropython")]
     generate_micropython_bindings();
     generate_trezorhal_bindings();
-    #[cfg(feature = "crypto")]
-    generate_crypto_bindings();
+    // #[cfg(feature = "crypto")]
+    // generate_crypto_bindings();
     #[cfg(feature = "test")]
     link_core_objects();
 }

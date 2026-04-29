@@ -22,8 +22,6 @@ mod macros;
 mod align;
 #[cfg(feature = "debug")]
 mod coverage;
-#[cfg(feature = "crypto")]
-mod crypto;
 #[cfg(feature = "debug")]
 mod debug;
 mod error;
@@ -68,9 +66,9 @@ fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
     // TODO: find out how to display message from panic_info.message()
     let msg = panic_info.message().as_str().unwrap_or("rs");
     if let Some(location) = panic_info.location() {
-        trezorhal::fatal_error::__fatal_error(msg, location.file(), location.line());
+        trezorhal::fatal_error::__fatal_error_rust(msg, location.file(), location.line());
     } else {
-        trezorhal::fatal_error::__fatal_error(msg, "", 0);
+        trezorhal::fatal_error::__fatal_error_rust(msg, "", 0);
     }
 }
 

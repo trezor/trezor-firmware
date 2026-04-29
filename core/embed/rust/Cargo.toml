@@ -9,7 +9,7 @@ build = "build.rs"
 
 [features]
 default = ["layout_bolt"]
-crypto = ["zeroize"]
+crypto = ["zeroize", "trezor-crypto"]
 layout_bolt = []
 layout_caesar = []
 layout_delizia = []
@@ -122,6 +122,7 @@ spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 ufmt = "0.2.0"
 zeroize = { version = "1.8.2", default-features = false, optional = true }
+trezor-crypto = { version = "0.1.0", path = "crates/trezor-crypto", optional = true }
 
 # Runtime dependencies
 

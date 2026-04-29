@@ -12,14 +12,14 @@ macro_rules! unwrap {
 macro_rules! ensure {
     ($what:expr, $error:expr) => {
         if !($what) {
-            $crate::trezorhal::fatal_error::__fatal_error($error, file!(), line!());
+            $crate::trezorhal::fatal_error::__fatal_error_rust($error, file!(), line!());
         }
     };
 }
 
 macro_rules! fatal_error {
     ($msg:expr) => {{
-        $crate::trezorhal::fatal_error::__fatal_error($msg, file!(), line!());
+        $crate::trezorhal::fatal_error::__fatal_error_rust($msg, file!(), line!());
     }};
 }
 

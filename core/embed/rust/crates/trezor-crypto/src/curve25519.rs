@@ -31,13 +31,6 @@ impl Scalar {
         res.bytes[31] |= 64;
         res
     }
-
-    #[cfg(feature = "test")]
-    pub fn generate() -> Self {
-        let mut bytes = [0u8; 32];
-        crate::trezorhal::random::bytes(&mut bytes);
-        Self::from_bytes(bytes)
-    }
 }
 
 impl Point {
@@ -84,12 +77,29 @@ impl Point {
 
 #[cfg(test)]
 mod test {
+    use rand::prelude::*;
+    use rand::rngs::SmallRng;
+
     use super::*;
+
+    fn insecure_rng() -> SmallRng {
+        let time_seed = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos() as u64;
+        SmallRng::seed_from_u64(time_seed)
+    }
+
+    fn generate_scalar() -> Scalar {
+        let mut bytes = [0u8; 32];
+        insecure_rng().fill_bytes(&mut bytes);
+        Scalar::from_bytes(bytes)
+    }
 
     #[test]
     fn test_generate() {
         for _ in 0..100 {
-            let bytes = Scalar::generate().bytes;
+            let bytes = generate_scalar().bytes;
             assert!(bytes[0] & 7 == 0 && bytes[31] & 128 == 0 && bytes[31] & 64 == 64)
         }
     }
@@ -120,8 +130,8 @@ mod test {
     #[test]
     fn test_multiply_random() {
         for _ in 0..100 {
-            let sk1 = Scalar::generate();
-            let sk2 = Scalar::generate();
+            let sk1 = generate_scalar();
+            let sk2 = generate_scalar();
             let pk1 = Point::from_secret(&sk1);
             let pk2 = Point::from_secret(&sk2);
             let session1 = pk2.multiply(&sk1);
@@ -133,7 +143,7 @@ mod test {
     #[test]
     fn test_clamping() {
         let mut bytes1 = [0u8; 32];
-        crate::trezorhal::random::bytes(&mut bytes1);
+        insecure_rng().fill_bytes(&mut bytes1);
 
         let mut bytes2 = bytes1;
         // flipping the bits affected by clamping should not change the results
@@ -148,14 +158,13 @@ mod test {
         let pk2 = Point::from_secret(&sk2);
         assert_eq!(pk1.to_bytes(), pk2.to_bytes());
 
-        let sk3 = Scalar::generate();
+        let sk3 = generate_scalar();
         let pk3 = Point::from_secret(&sk3);
         let res1 = pk3.multiply(&sk1);
         let res2 = pk3.multiply(&sk2);
         assert_eq!(res1.to_bytes(), res2.to_bytes());
     }
 
-    #[cfg(feature = "layout_eckhart")] // TODO replace with feature = "thp"
     #[test]
     fn test_elligator2() {
         // https://elligator.org/vectors/curve25519_direct.vec
