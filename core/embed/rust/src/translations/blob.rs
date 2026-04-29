@@ -1,9 +1,9 @@
 use core::{mem, str};
 
+use crypto::{cosi, ed25519, merkle::merkle_root, sha256};
 use heapless::Vec;
 
 use crate::{
-    crypto::{cosi, ed25519, merkle::merkle_root, sha256},
     error::{value_error, Error},
     io::InputStream,
 };

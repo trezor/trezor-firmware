@@ -1,0 +1,24 @@
+[package]
+name = "crypto"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+test = []
+
+[dependencies]
+cty = { workspace = true }
+heapless = { workspace = true }
+rtl = { workspace = true }
+zeroize = { workspace = true, features = ["derive"] }
+
+[build-dependencies]
+bindgen = { workspace = true }
+cc = { workspace = true }
+glob = { workspace = true }
+xbuild = { workspace = true }
+
+[dev-dependencies]
+hex = "0.4.3"
+rand = { version = "0.10.1", default-features = false }
+crypto = { path = ".", features = ["test"] }

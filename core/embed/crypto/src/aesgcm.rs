@@ -40,7 +40,7 @@ impl<'a> AesGcm<'a> {
         // SAFETY: ffi
         let res =
             unsafe { ffi::gcm_init_and_key(key.as_ptr(), key.len() as cty::c_ulong, ctx.inner()) };
-        ensure!(res == RETURN_GOOD, "gcm_init_and_key");
+        debug_assert!(res == RETURN_GOOD, "gcm_init_and_key should never fail");
         let mut aesgcm = Self {
             ctx,
             state: State::Init,
@@ -54,7 +54,7 @@ impl<'a> AesGcm<'a> {
         let res = unsafe {
             ffi::gcm_init_message(iv.as_ptr(), iv.len() as cty::c_ulong, self.ctx.inner())
         };
-        ensure!(res == RETURN_GOOD, "gcm_init_message");
+        debug_assert!(res == RETURN_GOOD, "gcm_init_message should never fail");
         self.state = State::Init;
     }
 
@@ -87,7 +87,7 @@ impl<'a> AesGcm<'a> {
                 self.ctx.inner(),
             )
         };
-        ensure!(res == RETURN_GOOD, "gcm_encrypt");
+        debug_assert!(res == RETURN_GOOD, "gcm_encrypt should never fail");
         Ok(())
     }
 
@@ -116,7 +116,7 @@ impl<'a> AesGcm<'a> {
                 self.ctx.inner(),
             )
         };
-        ensure!(res == RETURN_GOOD, "gcm_decrypt");
+        debug_assert!(res == RETURN_GOOD, "gcm_decrypt should never fail");
         Ok(())
     }
 
@@ -127,7 +127,7 @@ impl<'a> AesGcm<'a> {
         let res = unsafe {
             ffi::gcm_auth_header(data.as_ptr(), data.len() as cty::c_ulong, self.ctx.inner())
         };
-        ensure!(res == RETURN_GOOD, "gcm_auth_header");
+        debug_assert!(res == RETURN_GOOD, "gcm_auth_header should never fail");
         Ok(())
     }
 
