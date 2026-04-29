@@ -15,18 +15,6 @@ models.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = ["models/model_d001"]
-model_d002 = ["models/model_d002"]
-model_t2t1 = ["rtl/model_t2t1", "models/model_t2t1"]
-model_t2b1 = ["models/model_t2b1"]
-model_t3b1 = ["models/model_t3b1"]
-model_t3t1 = ["models/model_t3t1"]
-model_t3w1 = ["models/model_t3w1"]
-
-# --------------------------------------------------------------------------
 # MCU features
 # --------------------------------------------------------------------------
 
@@ -62,6 +50,7 @@ dbg_console_swo = ["dbg_console"]
 dbg_console_vcp = ["dbg_console"]
 dbg_console_system_view = ["dbg_console", "system_view"]
 sdram = []
+sdram_stm32f429i_disc1 = []
 storage_hw_key = []
 system_view = []
 production = ["rtl/production"]
