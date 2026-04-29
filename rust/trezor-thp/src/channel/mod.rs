@@ -38,8 +38,6 @@ const HANDSHAKE_BUFFER_DTH_LEN: usize = max(
     2 * PUBKEY_LEN + 2 * TAG_LEN + CHECKSUM_LEN, // HandshakeInitiationResponse
 );
 
-const HANDSHAKE_BUFFER_LEN: usize = max(HANDSHAKE_BUFFER_HTD_LEN, HANDSHAKE_BUFFER_DTH_LEN);
-
 const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
 /// Used during channel allocation on broadcast channel.

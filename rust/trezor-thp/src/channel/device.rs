@@ -4,8 +4,8 @@ use crate::{
     Backend, ChannelIO, Device, Error,
     alternating_bit::SyncBits,
     channel::{
-        ChannelState, HANDSHAKE_BUFFER_LEN, Nonce, PRIVKEY_LEN, PacketInResult, PairingState,
-        noise::NoiseHandshake,
+        ChannelState, HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, Nonce, PRIVKEY_LEN,
+        PacketInResult, PairingState, noise::NoiseHandshake,
     },
     credential::CredentialVerifier,
     error::TransportError,
@@ -291,34 +291,35 @@ pub struct ChannelOpen<C: CredentialVerifier, B: Backend> {
     channel: Channel<B>,
     state: HandshakeState,
     noise: NoiseHandshake<Device, B>,
-    internal_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_LEN>,
+    send_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_DTH_LEN>,
+    receive_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_HTD_LEN>,
     cred_verif: C,
 }
 
 impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     fn new(channel_id: u16, nonce: Nonce, cred_verif: C) -> Result<Self, Error> {
-        let mut internal_buffer = heapless::Vec::new();
-        internal_buffer
+        let mut send_buffer = heapless::Vec::new();
+        send_buffer
             .extend_from_slice(nonce.as_slice())
             .map_err(|_| Error::insufficient_buffer())?;
-        internal_buffer
+        send_buffer
             .extend_from_slice(&channel_id.to_be_bytes())
             .map_err(|_| Error::insufficient_buffer())?;
-        internal_buffer
+        send_buffer
             .extend_from_slice(cred_verif.device_properties())
             .map_err(|_| Error::insufficient_buffer())?;
+        let mut receive_buffer = heapless::Vec::new();
+        prepare_zeroed(&mut receive_buffer);
 
         // Sending `channel_allocation_response` on broadcast channel.
         let mut channel = Channel::new(channel_id);
-        channel.raw_in(
-            Header::new_channel_response(&internal_buffer)?,
-            &internal_buffer,
-        )?;
+        channel.raw_in(Header::new_channel_response(&send_buffer)?, &send_buffer)?;
         Ok(Self {
             channel,
             state: HandshakeState::SendingChannelResponse,
             noise: NoiseHandshake::prepare_responder(cred_verif.device_properties()),
-            internal_buffer,
+            send_buffer,
+            receive_buffer,
             cred_verif,
         })
     }
@@ -329,14 +330,14 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         };
         let sync_bits = reassembler.sync_bits();
 
-        let (header, len) = self.channel.raw_out(&self.internal_buffer)?;
-        self.internal_buffer.truncate(len);
+        let (header, len) = self.channel.raw_out(&self.receive_buffer)?;
+        self.receive_buffer.truncate(len);
 
         match (self.state, header.handshake_phase()) {
             (HandshakeState::SendingChannelResponse, Some(HandshakeMessage::InitiationRequest)) => {
                 // enable ACK piggybacking if requested
                 self.enable_ack_piggybacking_if_requested(sync_bits);
-                let try_to_unlock = self.noise.read_initiation_request(&self.internal_buffer)?;
+                let try_to_unlock = self.noise.read_initiation_request(&self.receive_buffer)?;
                 self.state = HandshakeState::StaticKeyRequired { try_to_unlock };
             }
             (
@@ -351,6 +352,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
                 return Err(Error::unexpected_input());
             }
         }
+        prepare_zeroed(&mut self.receive_buffer);
         Ok(())
     }
 
@@ -364,38 +366,35 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         &mut self,
         static_privkey: &[u8; PRIVKEY_LEN],
     ) -> Result<(), Error> {
-        prepare_zeroed(&mut self.internal_buffer);
-        let msg = self
+        prepare_zeroed(&mut self.send_buffer);
+        let len = self
             .noise
-            .write_initiation_response(static_privkey, &mut self.internal_buffer)?;
+            .write_initiation_response(static_privkey, &mut self.send_buffer)?;
+        self.send_buffer.truncate(len);
         let header = Header::new_handshake(
             self.channel.channel_id,
             HandshakeMessage::InitiationResponse,
-            msg,
+            &self.send_buffer,
         )?;
-        self.channel.raw_in(header, msg)?;
-        let len = msg.len();
-        self.internal_buffer.truncate(len);
+        self.channel.raw_in(header, &self.send_buffer)?;
         Ok(())
     }
 
     fn send_completion_response(&mut self) -> Result<PairingState, Error> {
-        let payload = self.internal_buffer.clone();
-        prepare_zeroed(&mut self.internal_buffer);
-        let (nc, ps, msg) = self.noise.write_completion_response(
-            &payload,
+        prepare_zeroed(&mut self.send_buffer);
+        let (nc, ps, len) = self.noise.write_completion_response(
+            &self.receive_buffer,
             &self.cred_verif,
-            &mut self.internal_buffer,
+            &mut self.send_buffer,
         )?;
+        self.send_buffer.truncate(len);
         self.channel.noise = Some(nc);
         let header = Header::new_handshake(
             self.channel.channel_id,
             HandshakeMessage::CompletionResponse,
-            msg,
+            &self.send_buffer,
         )?;
-        self.channel.raw_in(header, msg)?;
-        let len = msg.len();
-        self.internal_buffer.truncate(len);
+        self.channel.raw_in(header, &self.send_buffer)?;
         Ok(ps)
     }
 
@@ -488,7 +487,7 @@ where
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
         let res = self
             .channel
-            .packet_in(packet_buffer, &mut self.internal_buffer);
+            .packet_in(packet_buffer, &mut self.receive_buffer);
         if let PacketInResult::Accepted {
             buffer_size: Some(s),
             ..
@@ -516,22 +515,12 @@ where
             if let HandshakeState::StaticKeyRequired { try_to_unlock } = self.state {
                 return PacketInResult::HandshakeKeyRequired { try_to_unlock };
             }
-        } else if res.got_ack() {
-            prepare_zeroed(&mut self.internal_buffer);
         }
         res
     }
 
     fn packet_out(&mut self, packet_buffer: &mut [u8], _send_buffer: &[u8]) -> Result<(), Error> {
-        self.channel
-            .packet_out(packet_buffer, &self.internal_buffer)?;
-        // Do not wait for ack - `channel_allocation_response` is sent over broadcast channel.
-        if matches!(self.state, HandshakeState::SendingChannelResponse)
-            && matches!(self.channel.state, ChannelState::Idle)
-        {
-            prepare_zeroed(&mut self.internal_buffer);
-        }
-        Ok(())
+        self.channel.packet_out(packet_buffer, &self.send_buffer)
     }
 
     fn packet_out_ready(&self) -> bool {
