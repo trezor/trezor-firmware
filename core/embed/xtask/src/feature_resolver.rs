@@ -151,9 +151,9 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
             .clone()
             .unwrap_or_else(|| model_config.default_board.clone())
     };
-    let mut board_feat =
-        config::resolve_board_features(args.model.model_id(), &model_config, &board_id, args.component)?
-            .features;
+    let board_features =
+        config::resolve_board_features(args.model.model_id(), &model_config, &board_id, args.component)?;
+    let mut board_feat = board_features.features;
     if args.disable_optiga {
         board_feat.retain(|f| f != "optiga");
     }
@@ -168,7 +168,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
         Some(model_config.target_triple()?)
     };
 
-    Ok(ResolvedBuild { features, target_triple })
+    Ok(ResolvedBuild { features, target_triple, board_header: board_features.board_header })
 }
 
 /// Configures a cargo command with the appropriate arguments and features.
@@ -177,6 +177,7 @@ pub fn configure_cargo(args: &BuildArgs, cmd: &mut process::Command) -> Result<(
 
     cmd.args(["--package", args.component.package_name(args.emulator)]);
     cmd.args(["--features", &resolved.features.join(",")]);
+    cmd.env("TREZOR_BOARD_HEADER", &resolved.board_header);
 
     if !args.debug.unwrap_or(args.emulator) {
         cmd.arg("-Zbuild-std=core");

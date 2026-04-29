@@ -12,6 +12,13 @@ fn main() -> Result<()> {
         else { "" };
     println!("cargo:model={model_id}");
 
+    // Board header is resolved by xtask from the selected board's TOML and
+    // passed here so the correct revision header is used regardless of which
+    // board revision is active.
+    println!("cargo:rerun-if-env-changed=TREZOR_BOARD_HEADER");
+    let board_header_path = std::env::var("TREZOR_BOARD_HEADER")?;
+    let board_header = format!("\"{}\"", board_header_path);
+
     xbuild::build(|lib| {
         lib.add_include(".");
 
@@ -102,19 +109,19 @@ fn main() -> Result<()> {
         }
 
         if cfg!(feature = "model_t2t1") {
-            define_model_t2t1(lib)?;
+            define_model_t2t1(lib, &board_header)?;
         } else if cfg!(feature = "model_t2b1") {
-            define_model_t2b1(lib)?;
+            define_model_t2b1(lib, &board_header)?;
         } else if cfg!(feature = "model_t3b1") {
-            define_model_t3b1(lib)?;
+            define_model_t3b1(lib, &board_header)?;
         } else if cfg!(feature = "model_t3t1") {
-            define_model_t3t1(lib)?;
+            define_model_t3t1(lib, &board_header)?;
         } else if cfg!(feature = "model_t3w1") {
-            define_model_t3w1(lib)?;
+            define_model_t3w1(lib, &board_header)?;
         } else if cfg!(feature = "model_d001") {
-            define_model_d001(lib)?;
+            define_model_d001(lib, &board_header)?;
         } else if cfg!(feature = "model_d002") {
-            define_model_d002(lib)?;
+            define_model_d002(lib, &board_header)?;
         } else {
             bail_unsupported!();
         }
@@ -135,13 +142,7 @@ fn model_to_num(model: &str) -> u32 {
         | (model_bytes[0] as u32)
 }
 
-fn define_model_t3w1(lib: &mut CLibrary) -> Result<()> {
-    let board_header = if cfg!(feature = "emulator") {
-        "\"T3W1/boards/t3w1-unix.h\""
-    } else {
-        "\"T3W1/boards/trezor_t3w1_revC.h\""
-    };
-
+fn define_model_t3w1(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     lib.add_defines([
         ("TREZOR_MODEL_T3W1", None),
         ("TREZOR_BOARD", Some(board_header)),
@@ -166,13 +167,7 @@ fn define_model_t3w1(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-fn define_model_t3t1(lib: &mut CLibrary) -> Result<()> {
-    let board_header = if cfg!(feature = "emulator") {
-        "\"T3T1/boards/t3t1-unix.h\""
-    } else {
-        "\"T3T1/boards/trezor_t3t1_revE.h\""
-    };
-
+fn define_model_t3t1(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     lib.add_defines([
         ("TREZOR_MODEL_T3T1", None),
         ("TREZOR_BOARD", Some(board_header)),
@@ -191,13 +186,7 @@ fn define_model_t3t1(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-fn define_model_t3b1(lib: &mut CLibrary) -> Result<()> {
-    let board_header = if cfg!(feature = "emulator") {
-        "\"T3B1/boards/t3b1-unix.h\""
-    } else {
-        "\"T3B1/boards/trezor_t3b1_revB.h\""
-    };
-
+fn define_model_t3b1(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     lib.add_defines([
         ("TREZOR_MODEL_T3B1", None),
         ("TREZOR_BOARD", Some(board_header)),
@@ -216,13 +205,7 @@ fn define_model_t3b1(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-fn define_model_t2t1(lib: &mut CLibrary) -> Result<()> {
-    let board_header = if cfg!(feature = "emulator") {
-        "\"T2T1/boards/t2t1-unix.h\""
-    } else {
-        "\"T2T1/boards/trezor_t.h\""
-    };
-
+fn define_model_t2t1(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     lib.add_defines([
         ("TREZOR_MODEL_T2T1", None),
         ("TREZOR_BOARD", Some(board_header)),
@@ -242,13 +225,7 @@ fn define_model_t2t1(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-fn define_model_t2b1(lib: &mut CLibrary) -> Result<()> {
-    let board_header = if cfg!(feature = "emulator") {
-        "\"T2B1/boards/t2b1-unix.h\""
-    } else {
-        "\"T2B1/boards/trezor_r_v10.h\""
-    };
-
+fn define_model_t2b1(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     lib.add_defines([
         ("TREZOR_MODEL_T2B1", None),
         ("TREZOR_BOARD", Some(board_header)),
@@ -268,13 +245,7 @@ fn define_model_t2b1(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-fn define_model_d001(lib: &mut CLibrary) -> Result<()> {
-    let board_header = if cfg!(feature = "emulator") {
-        bail_unsupported!();
-    } else {
-        "\"D001/boards/stm32f429i-disc1.h\""
-    };
-
+fn define_model_d001(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     lib.add_defines([
         ("TREZOR_MODEL_D001", None),
         ("TREZOR_BOARD", Some(board_header)),
@@ -294,13 +265,7 @@ fn define_model_d001(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-fn define_model_d002(lib: &mut CLibrary) -> Result<()> {
-    let board_header = if cfg!(feature = "emulator") {
-        bail_unsupported!()
-    } else {
-        "\"D002/boards/stm32u5g9j-dk.h\""
-    };
-
+fn define_model_d002(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     lib.add_defines([
         ("TREZOR_MODEL_D002", None),
         ("TREZOR_BOARD", Some(board_header)),
