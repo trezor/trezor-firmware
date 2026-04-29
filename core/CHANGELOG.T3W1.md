@@ -8,22 +8,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Added UI flows for some ERC-4626 vault interactions.  [#6435]
-- Prolong minimal auto-suspend time during backup and recovery to 2 minutes.  [#6567]
+- Prolonged minimal auto-suspend time during backup and recovery to 2 minutes.  [#6567]
 - Introduced font kerning.  [#6620]
 - Added MCU device attestation with ML-DSA-44.  [#6807]
 
 ### Changed
-- Improve EVM address chunking.  [#6601]
-- Consistent cancel option across screens.  [#6707]
+- Improved EVM address chunking.  [#6601]
+- Made cancel option consistent across screens.  [#6707]
 
 ### Fixed
 - Updated translations in Cardano flow.  [#5723]
-- Re-introduce initial blob confirmation layout for Ethereum.  [#6597]
-- Truncate device name on BLE pairing.  [#6710]
-- Fix out-of-memory failure when confirming large input data.  [#6780]
+- Re-introduced initial blob confirmation layout for Ethereum.  [#6597]
+- Truncated device name on BLE pairing.  [#6710]
+- Fixed out-of-memory failure when confirming large input data.  [#6780]
 
 ### Security
-- Cache confirmed EIP-712 domain.  [#246]
+- Cached confirmed EIP-712 domain.  [#246]
 - Fixed Solana ALT recipient account parsing.  [#248]
 - Fixed bug in Solana account type identification.  [#249]
 
