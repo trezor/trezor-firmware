@@ -163,9 +163,6 @@ jobs:
         coins: [universal]
         type: [debuglink]
         asan: [noasan]
-        exclude:
-          - type: normal
-            asan: asan
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
