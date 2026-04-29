@@ -1618,6 +1618,9 @@ pub enum TranslatedString {
     backup__type_create = 1220,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Select the type of wallet backup you want to create."}
     backup__type_have = 1221,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Which type of wallet backup do you have?"}
     n4w1__reading = 1222,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Reading tag..."}
+    n4w1__err_empty = 1223,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is empty. Continue to scan a different tag."}
+    n4w1__err_nonempty = 1224,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Non-empty N4W1 tag."}
+    n4w1__err_damaged = 1225,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is damaged. Continue to try again or scan the next tag."}
 }
 
 impl TranslatedString {
@@ -2848,6 +2851,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4076,6 +4082,9 @@ impl TranslatedString {
                 20260,
                 20260,
                 20260,
+                20260,
+                20260,
+                20260,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5303,6 +5312,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6527,6 +6539,9 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20260,
+                20260,
+                20260,
                 20260,
                 20260,
                 20260,
@@ -7758,6 +7773,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8982,6 +9000,9 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20260,
+                20260,
+                20260,
                 20260,
                 20260,
                 20260,
@@ -10213,6 +10234,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11437,6 +11461,9 @@ impl TranslatedString {
                 20224,
                 20224,
                 20245,
+                20260,
+                20260,
+                20260,
                 20260,
                 20260,
                 20260,
@@ -12669,6 +12696,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13897,6 +13927,9 @@ impl TranslatedString {
                 18285,
                 18285,
                 18285,
+                18285,
+                18285,
+                18285,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15124,6 +15157,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16348,6 +16384,9 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18285,
+                18285,
+                18285,
                 18285,
                 18285,
                 18285,
@@ -17579,6 +17618,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18803,6 +18845,9 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18285,
+                18285,
+                18285,
                 18285,
                 18285,
                 18285,
@@ -20034,6 +20079,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21258,6 +21306,9 @@ impl TranslatedString {
                 18249,
                 18249,
                 18270,
+                18285,
+                18285,
+                18285,
                 18285,
                 18285,
                 18285,
@@ -22490,6 +22541,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23718,6 +23772,9 @@ impl TranslatedString {
                 19506,
                 19506,
                 19506,
+                19506,
+                19506,
+                19506,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24945,6 +25002,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26169,6 +26229,9 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19506,
+                19506,
+                19506,
                 19506,
                 19506,
                 19506,
@@ -27400,6 +27463,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28624,6 +28690,9 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19506,
+                19506,
+                19506,
                 19506,
                 19506,
                 19506,
@@ -29855,6 +29924,9 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31079,6 +31151,9 @@ impl TranslatedString {
                 19472,
                 19487,
                 19491,
+                19506,
+                19506,
+                19506,
                 19506,
                 19506,
                 19506,
@@ -32311,6 +32386,9 @@ impl TranslatedString {
                 "Select the type of wallet backup you want to create.",
                 "Which type of wallet backup do you have?",
                 "Reading tag...",
+                "This tag is empty. Continue to scan a different tag.",
+                "Non-empty N4W1 tag.",
+                "This tag is damaged. Continue to try again or scan the next tag.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33539,6 +33617,9 @@ impl TranslatedString {
                 20642,
                 20682,
                 20696,
+                20748,
+                20767,
+                20831,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34766,6 +34847,9 @@ impl TranslatedString {
                 "Select the type of wallet backup you want to create.",
                 "Which type of wallet backup do you have?",
                 "Reading tag...",
+                "This tag is empty. Continue to scan a different tag.",
+                "Non-empty N4W1 tag.",
+                "This tag is damaged. Continue to try again or scan the next tag.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35994,6 +36078,9 @@ impl TranslatedString {
                 20642,
                 20682,
                 20696,
+                20748,
+                20767,
+                20831,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37221,6 +37308,9 @@ impl TranslatedString {
                 "Select the type of wallet backup you want to create.",
                 "Which type of wallet backup do you have?",
                 "Reading tag...",
+                "This tag is empty. Continue to scan a different tag.",
+                "Non-empty N4W1 tag.",
+                "This tag is damaged. Continue to try again or scan the next tag.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38449,6 +38539,9 @@ impl TranslatedString {
                 20642,
                 20682,
                 20696,
+                20748,
+                20767,
+                20831,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39676,6 +39769,9 @@ impl TranslatedString {
                 "Select the type of wallet backup you want to create.",
                 "Which type of wallet backup do you have?",
                 "Reading tag...",
+                "This tag is empty. Continue to scan a different tag.",
+                "Non-empty N4W1 tag.",
+                "This tag is damaged. Continue to try again or scan the next tag.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40904,6 +41000,9 @@ impl TranslatedString {
                 20642,
                 20682,
                 20696,
+                20748,
+                20767,
+                20831,
             ];
 
         }
@@ -41708,6 +41807,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_monero__wanna_start_refresh, Self::monero__wanna_start_refresh),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_monero__wanna_sync_key_images, Self::monero__wanna_sync_key_images),
+        (Qstr::MP_QSTR_n4w1__err_damaged, Self::n4w1__err_damaged),
+        (Qstr::MP_QSTR_n4w1__err_empty, Self::n4w1__err_empty),
+        (Qstr::MP_QSTR_n4w1__err_nonempty, Self::n4w1__err_nonempty),
         (Qstr::MP_QSTR_n4w1__footer_first, Self::n4w1__footer_first),
         (Qstr::MP_QSTR_n4w1__footer_last, Self::n4w1__footer_last),
         (Qstr::MP_QSTR_n4w1__footer_next, Self::n4w1__footer_next),
