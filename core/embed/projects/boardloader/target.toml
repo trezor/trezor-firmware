@@ -1,0 +1,14 @@
+uses = [
+    "backlight",
+    "boot_ucb",
+    "display",
+    "framebuffer",
+    "hash_processor",
+    "power_manager",
+    "pvd",
+    "sd_card",
+    "sdram",
+    "secret",
+    "secure_aes",
+    "tamper",
+]

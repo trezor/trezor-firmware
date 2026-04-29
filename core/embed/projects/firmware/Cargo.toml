@@ -20,117 +20,6 @@ upymod.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = [
-    "upymod/model_d001",
-    "mcu_stm32f429",
-    "dma2d",
-    "touch",
-    "layout_bolt_d001",
-]
-
-model_d002 = [
-    "upymod/model_d002",
-    "mcu_stm32u5g",
-    "backlight",
-    "boot_ucb",
-    "button",
-    "dma2d",
-    "hash_processor",
-    "lockable_bootloader",
-    "secmon_layout",
-    "secret",
-    "serial_number",
-    "tamper",
-    "thp",
-    "touch",
-    "layout_bolt_d002",
-]
-
-model_t2t1 = [
-    "upymod/model_t2t1",
-    "mcu_stm32f427",
-    "backlight",
-    "dma2d",
-    "touch",
-    "layout_bolt",
-    "sd_card",
-]
-
-model_t2b1 = [
-    "upymod/model_t2b1",
-    "mcu_stm32f427",
-    "button",
-    "consumption_mask",
-    "lockable_bootloader",
-    #"optiga", # selected from xtask
-    "secret",
-    "layout_caesar",
-]
-
-model_t3b1 = [
-    "upymod/model_t3b1",
-    "mcu_stm32u58",
-    "button",
-    "consumption_mask",
-    "hash_processor",
-    "lockable_bootloader",
-    # "optiga", # selected from xtask
-    "secret",
-    "secure_aes",
-    "tamper",
-    "layout_caesar",
-]
-
-model_t3t1 = [
-    "upymod/model_t3t1",
-    "mcu_stm32u58",
-    "backlight",
-    "dma2d",
-    "haptic",
-    "hash_processor",
-    "lockable_bootloader",
-    "sd_card",
-    # "optiga", # selected from xtask
-    "secret",
-    "secure_aes",
-    "tamper",
-    "touch",
-    "layout_delizia",
-]
-
-model_t3w1 = [
-    "upymod/model_t3w1",
-    "mcu_stm32u5g",
-    "backlight",
-    "ble",
-    "backup_ram",
-    "boot_ucb",
-    "button",
-    "dma2d",
-    "haptic",
-    "hash_processor",
-    "iwdg",
-    "lockable_bootloader",
-    "mcu_attestation",
-    # "optiga", # selected from xtask
-    "power_manager",
-    "secmon_layout",
-    "secret",
-    "serial_number",
-    "suspend",
-    "tamper",
-    "telemetry",
-    "thp",
-    "touch",
-    # "tropic", # selected from xtask
-    "layout_eckhart",
-    "rgb_led",
-]
-
-# --------------------------------------------------------------------------
 # Selectable features
 # --------------------------------------------------------------------------
 
@@ -197,7 +86,9 @@ ble = ["io/ble", "upymod/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
 boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
 button = ["io/button", "upymod/button", "trezor_lib/button"]
 consumption_mask = ["sec/consumption_mask"]
+display = ["io/display"]
 dma2d = ["io/dma2d", "trezor_lib/dma2d"]
+framebuffer = ["io/framebuffer"]
 haptic = ["io/haptic", "upymod/haptic", "trezor_lib/haptic"]
 hash_processor = ["sec/hash_processor"]
 iwdg = ["sec/iwdg"]
@@ -220,6 +111,11 @@ tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry", "upymod/telemetry", "trezor_lib/telemetry"]
 touch = ["io/touch", "upymod/touch", "trezor_lib/touch"]
 tropic = ["sec/tropic", "upymod/tropic","trezor_lib/tropic"]
+
+# Legacy coin support (T2T1 only)
+decred = ["upymod/decred"]
+eos = ["rtl/eos", "upymod/eos"]
+nem = ["rtl/nem", "upymod/nem"]
 
 layout_bolt_d001 = [
     "trezor_lib/layout_bolt",

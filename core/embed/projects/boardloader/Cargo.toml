@@ -25,76 +25,6 @@ models.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = [
-    "io/model_d001",
-    "mcu_stm32f429",
-    "pvd",
-    "sdram",
-    ]
-
-model_d002 = [
-    "io/model_d002",
-    "mcu_stm32u5g",
-    "backlight",
-    "boot_ucb",
-    "hash_processor",
-    "secret",
-    "secure_aes",
-    "tamper",
-    ]
-
-model_t2t1 = [
-    "io/model_t2t1",
-    "mcu_stm32f427",
-    "backlight",
-    "pvd",
-    ]
-
-model_t2b1 = [
-    "io/model_t2b1",
-    "mcu_stm32f427",
-    "pvd",
-    "secret",
-    ]
-
-model_t3b1 = [
-    "io/model_t3b1",
-    "mcu_stm32u58",
-    "hash_processor",
-    "pvd",
-    "secret",
-    "secure_aes",
-    "tamper",
-    ]
-
-model_t3t1 = [
-    "io/model_t3t1",
-    "mcu_stm32u58",
-    "backlight",
-    "hash_processor",
-    "pvd",
-    "sd_card_update",
-    "secret",
-    "secure_aes",
-    "tamper",
-    ]
-
-model_t3w1 = [
-    "io/model_t3w1",
-    "mcu_stm32u5g",
-    "backlight",
-    "boot_ucb",
-    "hash_processor",
-    "pmic",
-    "secret",
-    "secure_aes",
-    "tamper",
-    ]
-
-# --------------------------------------------------------------------------
 # Selectable features
 # --------------------------------------------------------------------------
 
@@ -124,10 +54,14 @@ mcu_stm32u5 = ["sec/trustzone"]
 
 backlight = ["io/backlight"]
 boot_ucb = ["sec/boot_ucb"]
+display = ["io/display"]
+framebuffer = ["io/framebuffer"]
+power_manager = ["pmic"]
 dbg_console = ["sys/dbg_console"]
 hash_processor = ["sec/hash_processor"]
 pmic = ["io/pmic"]
 pvd = ["sys/pvd"]
+sd_card = ["sd_card_update"]
 sd_card_update = ["io/sd_card"]
 sdram = ["sys/sdram"]
 secret = ["sec/secret"]

@@ -1,0 +1,16 @@
+uses = [
+    "backup_ram",
+    "boot_ucb",
+    "consumption_mask",
+    "hash_processor",
+    "lockable_bootloader",
+    "nrf_auth",
+    "optiga",
+    "secret",
+    "secure_aes",
+    "storage_hw_key",
+    "suspend",
+    "tamper",
+    "telemetry",
+    "tropic",
+]

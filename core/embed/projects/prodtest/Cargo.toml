@@ -18,125 +18,6 @@ models.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = [
-    "io/model_d001",
-    "mcu_stm32f429",
-    "touch",
-    "sdram",
-    "layout_bolt_d001",
-]
-
-model_d002 = [
-    "io/model_d002",
-    "mcu_stm32u5g",
-    "backlight",
-    "boot_ucb",
-    "hash_processor",
-    "lockable_bootloader",
-    "rtc",
-    "secret",
-    "secure_aes",
-    "storage_hw_key",
-    "tamper",
-    "touch",
-    "layout_bolt_d002",
-]
-
-model_t2t1 = [
-    "io/model_t2t1",
-    "mcu_stm32f427",
-    "backlight",
-    "touch",
-    "sbu",
-    "sd_card",
-    "layout_bolt",
-]
-
-model_t2b1 = [
-    "io/model_t2b1",
-    "mcu_stm32f427",
-    "button",
-    "consumption_mask",
-    "lockable_bootloader",
-    # "optiga", # selected from xtask
-    "sbu",
-    "secret",
-    "layout_caesar",
-]
-
-model_t3b1 = [
-    "io/model_t3b1",
-    "mcu_stm32u58",
-    "button",
-    "consumption_mask",
-    "hash_processor",
-    "hw_revision",
-    "lockable_bootloader",
-    # "optiga", # selected from xtask
-    "sbu",
-    "secret",
-    "secure_aes",
-    "storage_hw_key",
-    "tamper",
-    "layout_caesar",
-]
-
-model_t3t1 = [
-    "io/model_t3t1",
-    "mcu_stm32u58",
-    "backlight",
-    "haptic",
-    "hash_processor",
-    "hw_revision",
-    "lockable_bootloader",
-    # "optiga", # selected from xtask
-    "sbu",
-    "sd_card",
-    "secret",
-    "secure_aes",
-    "storage_hw_key",
-    "tamper",
-    "touch",
-    "layout_delizia",
-]
-
-model_t3w1 = [
-    "io/model_t3w1",
-    "mcu_stm32u5g",
-    "backlight",
-    "backup_ram",
-    "ble",
-    "boot_ucb",
-    "button",
-    "haptic",
-    "hash_processor",
-    "hw_revision",
-    "iwdg",
-    "lockable_bootloader",
-    "mcu_attestation",    
-    "nfc",
-    # "optiga", # selected from xtask
-    "power_manager",
-    "rgb_led",
-    "rtc",
-    "sbu",
-    "secmon_header",
-    "secret",
-    "secure_aes",
-    "smp",
-    "storage_hw_key",
-    "suspend",
-    "tamper",
-    "telemetry",
-    "touch",
-    # "tropic", # selected from xtask
-    "layout_eckhart",
-]
-
-# --------------------------------------------------------------------------
 #  Selectable features
 # --------------------------------------------------------------------------
 
@@ -188,6 +69,8 @@ boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
 button = ["io/button", "trezor_lib/button"]
 consumption_mask = ["sec/consumption_mask"]
 dbg_console = ["sys/dbg_console", "trezor_lib/dbg_console"]
+display = ["io/display"]
+framebuffer = ["io/framebuffer"]
 haptic = ["io/haptic", "trezor_lib/haptic"]
 hash_processor = ["sec/hash_processor"]
 hw_revision = ["sec/hw_revision"]
