@@ -1,0 +1,30 @@
+mcu = "stm32u5g"
+default_board = "revC"
+emulator_board = "unix"
+secmon = true
+
+features = [
+    "backup_ram",
+    "boot_ucb",
+    "dma2d",
+    "hash_processor",
+    "hw_revision",
+    "iwdg",
+    "lockable_bootloader",
+    "mcu_attestation",
+    "rtc",
+    "secmon_header",
+    "secmon_layout",
+    "secmon_verification",
+    "secret",
+    "secure_aes",
+    "serial_number",
+    "smp",
+    "storage_hw_key",
+    "framebuffer",
+    "suspend",
+    "tamper",
+    "telemetry",
+    "thp",
+    "layout_eckhart",
+]

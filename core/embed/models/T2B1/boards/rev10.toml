@@ -1,0 +1,11 @@
+header = "T2B1/boards/trezor_r_v10.h"
+
+[display]
+driver = "display_vg2864"
+panel = "display_panel_vg2864"
+
+[button]
+
+[optiga]
+
+[sbu]

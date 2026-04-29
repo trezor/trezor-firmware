@@ -1,6 +1,17 @@
 use xbuild::{CLibrary, Result, bail_unsupported};
 
 fn main() -> Result<()> {
+    // Emit model identity for dependent build scripts (readable as DEP_MODELS_MODEL).
+    let model_id = if cfg!(feature = "model_t2t1") { "T2T1" }
+        else if cfg!(feature = "model_t2b1") { "T2B1" }
+        else if cfg!(feature = "model_t3b1") { "T3B1" }
+        else if cfg!(feature = "model_t3t1") { "T3T1" }
+        else if cfg!(feature = "model_t3w1") { "T3W1" }
+        else if cfg!(feature = "model_d001") { "D001" }
+        else if cfg!(feature = "model_d002") { "D002" }
+        else { "" };
+    println!("cargo:model={model_id}");
+
     xbuild::build(|lib| {
         lib.add_include(".");
 

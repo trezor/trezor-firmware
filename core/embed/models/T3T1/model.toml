@@ -1,0 +1,21 @@
+mcu = "stm32u58"
+default_board = "revE"
+emulator_board = "unix"
+
+features = [
+    "dma2d",
+    "hash_processor",
+    "hw_revision",
+    "lockable_bootloader",
+    "pvd",
+    "secret",
+    "secure_aes",
+    "framebuffer",
+    "secure_mode",
+    "storage_hw_key",
+    "tamper",
+    "layout_delizia",
+]
+
+[targets.bootloader]
+exclude = ["haptic"]

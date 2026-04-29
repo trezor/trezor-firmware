@@ -1,0 +1,19 @@
+header = "T3T1/boards/trezor_t3t1_revE.h"
+
+[display]
+driver = "display_st7789"
+panel = "display_panel_lx154a2482"
+
+[backlight]
+driver = "backlight_tps61043"
+
+[touch]
+driver = "touch_ft6x36_t3t1"
+
+[haptic]
+
+[sd_card]
+
+[optiga]
+
+[sbu]

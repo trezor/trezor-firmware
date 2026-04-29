@@ -1,0 +1,11 @@
+header = "T2B1/boards/t2b1-unix.h"
+
+[display]
+driver = "display_unix"
+panel = "display_panel_vg2864"
+
+[button]
+
+[optiga]
+
+[sbu]

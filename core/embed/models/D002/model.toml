@@ -1,0 +1,21 @@
+mcu = "stm32u5g"
+default_board = "dk"
+secmon = true
+
+features = [
+    "boot_ucb",
+    "dma2d",
+    "hash_processor",
+    "lockable_bootloader",
+    "rtc",
+    "secmon_layout",
+    "secmon_verification",
+    "secret",
+    "secure_aes",
+    "serial_number",
+    "storage_hw_key",
+    "framebuffer",
+    "tamper",
+    "thp",
+    "layout_bolt_d002",
+]

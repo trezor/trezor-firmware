@@ -1,0 +1,13 @@
+header = "D002/boards/stm32u5g9j-dk.h"
+
+[display]
+driver = "display_ltdc_dsi"
+panel = "display_panel_stm32u5a9j_dk"
+
+[backlight]
+driver = "backlight_pin"
+
+[touch]
+driver = "touch_sitronix"
+
+[button]

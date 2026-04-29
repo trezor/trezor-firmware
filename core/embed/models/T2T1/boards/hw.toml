@@ -1,0 +1,15 @@
+header = "T2T1/boards/trezor_t.h"
+
+[display]
+driver = "display_st7789"
+panel = "display_panel_t2t1"
+
+[backlight]
+driver = "backlight_tps61043"
+
+[touch]
+driver = "touch_ft6x36_t2t1"
+
+[sd_card]
+
+[sbu]

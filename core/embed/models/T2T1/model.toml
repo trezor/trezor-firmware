@@ -1,0 +1,15 @@
+mcu = "stm32f427"
+default_board = "hw"
+emulator_board = "unix"
+
+features = [
+    "dma2d",
+    "pvd",
+    "secure_mode",
+    "layout_bolt",
+
+    # Legacy coin support
+    "decred",
+    "eos",
+    "nem",
+]

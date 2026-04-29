@@ -1,0 +1,33 @@
+header = "T3W1/boards/trezor_t3w1_revB.h"
+
+[display]
+driver = "display_ltdc_dsi"
+panel = "display_panel_lx250a2401a"
+
+[backlight]
+driver = "backlight_tps61062"
+
+[touch]
+driver = "touch_ft3168"
+
+[button]
+
+[haptic]
+
+[ble]
+
+[nrf]
+
+[nrf_auth]
+
+[rgb_led]
+
+[power_manager]
+
+[nfc]
+
+[optiga]
+
+[tropic]
+
+[sbu]
