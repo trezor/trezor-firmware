@@ -7,7 +7,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     if cfg!(feature = "emulator") {
         // No implementation
-    } else if cfg!(feature = "model_d001") {
+    } else if cfg!(feature = "sdram_stm32f429i_disc1") {
         lib.add_source("sdram/stm32f429i-disc1/sdram_bsp.c");
     } else {
         bail_unsupported!();
