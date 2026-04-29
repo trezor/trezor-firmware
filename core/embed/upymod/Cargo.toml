@@ -17,18 +17,6 @@ io.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = ["io/model_d001"]
-model_d002 = ["io/model_d002"]
-model_t2t1 = ["io/model_t2t1"]
-model_t2b1 = ["io/model_t2b1"]
-model_t3b1 = ["io/model_t3b1"]
-model_t3t1 = ["io/model_t3t1"]
-model_t3w1 = ["io/model_t3w1"]
-
-# --------------------------------------------------------------------------
 # MCU features
 # --------------------------------------------------------------------------
 
@@ -70,6 +58,11 @@ thp = []
 touch = ["io/touch"]
 tropic = ["sec/tropic"]
 universal_fw = ["rtl/universal_fw"]
+
+# Legacy coin support
+decred = []
+eos = []
+nem = []
 
 # --------------------------------------------------------------------------
 # Automatically derived features (do not enable from outside)

@@ -14,8 +14,6 @@ models.workspace = true
 
 [features]
 
-model_t2t1 = []
-
 # --------------------------------------------------------------------------
 # Selectable features
 # --------------------------------------------------------------------------
@@ -31,6 +29,10 @@ production = ["models/production"]
 secp256k1_zkp = []
 sphincsplus = []
 universal_fw = []
+
+# Legacy coin support
+eos = []
+nem = []
 
 
 
