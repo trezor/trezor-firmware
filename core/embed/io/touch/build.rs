@@ -18,7 +18,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_define("USE_TOUCH_WAKEUP", Some("1"));
     }
 
-    if cfg!(feature = "emulator") {
+    if cfg!(feature = "touch_unix") {
         lib.add_source("touch/unix/touch.c");
     } else if cfg!(feature = "touch_ft3168") {
         lib.add_define("TOUCH_WAKEUP_ENABLED", Some("0"));
