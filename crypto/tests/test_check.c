@@ -12045,7 +12045,6 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_xmr_check_point);
   tcase_add_test(tc, test_xmr_h);
   tcase_add_test(tc, test_xmr_fast_hash);
-  tcase_add_test(tc, test_xmr_hasher);
   tcase_add_test(tc, test_xmr_hash_to_scalar);
   tcase_add_test(tc, test_xmr_hash_to_ec);
   tcase_add_test(tc, test_xmr_derivation_to_scalar);

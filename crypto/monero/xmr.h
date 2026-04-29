@@ -26,12 +26,6 @@ void xmr_random_scalar(bignum256modm m);
 /* cn_fast_hash */
 void xmr_fast_hash(uint8_t *hash, const void *data, size_t length);
 
-/* incremental hashing wrappers */
-void xmr_hasher_init(Hasher *hasher);
-void xmr_hasher_update(Hasher *hasher, const void *data, size_t length);
-void xmr_hasher_final(Hasher *hasher, uint8_t *hash);
-void xmr_hasher_copy(Hasher *dst, const Hasher *src);
-
 /* H_s(buffer) */
 void xmr_hash_to_scalar(bignum256modm r, const void *data, size_t length);
 

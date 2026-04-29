@@ -30,20 +30,6 @@ void xmr_fast_hash(uint8_t *hash, const void *data, size_t length) {
   hasher_Raw(HASHER_SHA3K, data, length, hash);
 }
 
-void xmr_hasher_init(Hasher *hasher) { hasher_Init(hasher, HASHER_SHA3K); }
-
-void xmr_hasher_update(Hasher *hasher, const void *data, size_t length) {
-  hasher_Update(hasher, data, length);
-}
-
-void xmr_hasher_final(Hasher *hasher, uint8_t *hash) {
-  hasher_Final(hasher, hash);
-}
-
-void xmr_hasher_copy(Hasher *dst, const Hasher *src) {
-  memcpy(dst, src, sizeof(Hasher));
-}
-
 void xmr_hash_to_scalar(bignum256modm r, const void *data, size_t length) {
   uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
   hasher_Raw(HASHER_SHA3K, data, length, hash);
