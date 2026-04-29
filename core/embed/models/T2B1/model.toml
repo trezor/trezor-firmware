@@ -1,0 +1,14 @@
+mcu = "stm32f427"
+default_board = "rev10"
+emulator_board = "unix"
+
+features = [
+    "consumption_mask",
+    "lockable_bootloader",
+    "pvd",
+    "secret",
+    "framebuffer",
+    "secure_mode",
+    "ui_empty_lock",
+    "layout_caesar",
+]

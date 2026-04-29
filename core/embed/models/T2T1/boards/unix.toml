@@ -1,0 +1,14 @@
+header = "T2T1/boards/t2t1-unix.h"
+
+[display]
+driver = "display_unix"
+panel = "display_panel_t2t1"
+
+[backlight]
+
+[touch]
+driver = "touch_unix"
+
+[sd_card]
+
+[sbu]

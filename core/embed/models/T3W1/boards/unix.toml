@@ -1,0 +1,32 @@
+header = "T3W1/boards/t3w1-unix.h"
+
+[display]
+driver = "display_unix"
+panel = "display_panel_lx250a2401a"
+
+[backlight]
+
+[touch]
+driver = "touch_unix"
+
+[button]
+
+[haptic]
+
+[ble]
+
+[nrf]
+
+[nrf_auth]
+
+[rgb_led]
+
+[power_manager]
+
+[nfc]
+
+[optiga]
+
+[tropic]
+
+[sbu]

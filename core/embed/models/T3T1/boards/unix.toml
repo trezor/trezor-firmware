@@ -1,0 +1,18 @@
+header = "T3T1/boards/t3t1-unix.h"
+
+[display]
+driver = "display_unix"
+panel = "display_panel_lx154a2482"
+
+[backlight]
+
+[touch]
+driver = "touch_unix"
+
+[haptic]
+
+[sd_card]
+
+[optiga]
+
+[sbu]
