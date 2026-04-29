@@ -16,19 +16,6 @@ sys.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Model features
-# --------------------------------------------------------------------------
-
-model_d001 = ["sec/model_d001", "touch_stmpe811"]
-model_d002 = ["sec/model_d002", "backlight_pin", "touch_sitronix"]
-model_t2t1 = ["sec/model_t2t1", "backlight_tps61043", "touch_ft6x36_t2t1"]
-model_t2b1 = ["sec/model_t2b1"]
-model_t3b1 = ["sec/model_t3b1"]
-model_t3t1 = ["sec/model_t3t1", "backlight_tps61043", "touch_ft6x36_t3t1"]
-model_t3w1 = ["sec/model_t3w1", "backlight_tps61062", "touch_ft3168"]
-
-
-# --------------------------------------------------------------------------
 # MCU features
 # --------------------------------------------------------------------------
 
@@ -98,6 +85,22 @@ touch_ft6x36_t3t1 = []
 touch_ft3168 = []
 touch_stmpe811 = []
 touch_sitronix = []
+
+framebuffer = []
+
+display_unix = []
+display_ltdc_dsi = []
+display_st7789 = []
+display_vg2864 = []
+display_stm32f429i_disc1 = []
+
+display_panel_lx250a2401a = []
+display_panel_stm32u5a9j_dk = []
+display_panel_t2t1 = []
+display_panel_lx154a2482 = []
+display_panel_vg2864 = []
+
+touch_unix = []
 
 
 

@@ -61,10 +61,9 @@ bool display_init(display_content_mode_t mode) {
 #endif
 
   if (mode == DISPLAY_RESET_CONTENT) {
-#if defined TREZOR_MODEL_T2T1 && !defined BOARDLOADER
-    // This is required for the model T to work correctly.
-    // Boardloader does this by constant in binary, other stages need to read
-    // this from the display
+#if defined(DISPLAY_PANEL_T2T1) && !defined(BOARDLOADER)
+    // Boardloader sets DISPLAY_ST7789V_INVERT_COLORS2 as a const in binary;
+    // other stages must read the current state from the display before reset.
     display_panel_preserve_inversion();
 #endif
     display_io_init_gpio();
@@ -119,9 +118,9 @@ void display_deinit(display_content_mode_t mode) {
   backlight_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET
                                                  : BACKLIGHT_RETAIN);
 
-#ifdef TREZOR_MODEL_T2T1
-  // This ensures backward compatibility with legacy bootloader/firmware
-  // that relies on this hardware settings from the previous boot stage
+#ifdef DISPLAY_PANEL_T2T1
+  // Ensures backward compatibility with legacy bootloader/firmware
+  // that relies on these hardware settings from the previous boot stage.
   if (mode == DISPLAY_RESET_CONTENT) {
     display_set_orientation(0);
   }

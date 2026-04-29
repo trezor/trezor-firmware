@@ -17,24 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// using const volatile instead of #define results in binaries that change
-// only in 1-byte when the flag changes.
-// using #define leads compiler to over-optimize the code leading to bigger
-// differencies in the resulting binaries.
-
 #include "display_panel.h"
 #include "display_io.h"
 
-#ifdef TREZOR_MODEL_T2T1
-#include "panels/154a.h"
-#include "panels/lx154a2411.h"
-#include "panels/lx154a2422.h"
-#include "panels/tf15411a.h"
-#else
-#ifdef DISPLAY_PANEL_LX154A2482
+#ifdef DISPLAY_PANEL_T2T1
+#include "panels/t2t1.h"
+#define PANEL_INIT_SEQ t2t1_init_seq
+#define PANEL_ROTATE t2t1_rotate
+#define PANEL_REINIT t2t1_reinit
+#elif defined(DISPLAY_PANEL_LX154A2482)
 #include "panels/lx154a2482.h"
 #define PANEL_INIT_SEQ lx154a2482_init_seq
 #define PANEL_ROTATE lx154a2482_rotate
+#define PANEL_REINIT lx154a2482_init_seq
 #elif defined(DISPLAY_PANEL_LHS200KB_IF21)
 #include "panels/lhs200kb-if21.h"
 #define PANEL_INIT_SEQ lhs200kb_if21_init_seq
@@ -43,27 +38,7 @@
 #error "No display panel defined"
 #endif
 
-#endif
-
 #ifdef KERNEL_MODE
-
-#ifdef TREZOR_MODEL_T2T1
-#ifdef BOARDLOADER
-// using const volatile instead of #define results in binaries that change
-// only in 1-byte when the flag changes.
-// using #define leads compiler to over-optimize the code leading to bigger
-// differences in the resulting binaries.
-const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS2 = 1;
-
-#else
-
-volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS2 = 0;
-
-void display_panel_preserve_inversion(void) {
-  DISPLAY_ST7789V_INVERT_COLORS2 = display_panel_is_inverted();
-}
-#endif
-#endif
 
 // Window padding (correction) when using 90dg or 270dg orientation
 // (internally the display is 240x320, but we use only 240x240)
@@ -210,6 +185,10 @@ void display_panel_set_big_endian(void) {
   }
 }
 
+#if defined(DISPLAY_PANEL_T2T1) && !defined(BOARDLOADER)
+void display_panel_preserve_inversion(void) { t2t1_preserve_inversion(); }
+#endif
+
 void display_panel_init(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
   // wait 10 milliseconds. only needs to be low for 10 microseconds.
@@ -222,23 +201,7 @@ void display_panel_init(void) {
   // (experienced display flakiness using only 5ms wait before sending commands)
   HAL_Delay(120);
 
-  // identify the controller we will communicate with
-#ifdef TREZOR_MODEL_T2T1
-  uint32_t id = display_panel_identify();
-  if (id == DISPLAY_ID_GC9307) {
-    tf15411a_init_seq();
-  } else if (id == DISPLAY_ID_ST7789V) {
-    if (DISPLAY_ST7789V_INVERT_COLORS2) {
-      lx154a2422_init_seq();
-    } else {
-      lx154a2411_init_seq();
-    }
-  } else if (id == DISPLAY_ID_ILI9341V) {
-    _154a_init_seq();
-  }
-#else
   PANEL_INIT_SEQ();
-#endif
 
   display_panel_unsleep();
 }
@@ -246,32 +209,11 @@ void display_panel_init(void) {
 void display_panel_reinit(void) {
   // reinitialization is needed due to original sequence is unchangeable in
   // boardloader
-#ifdef TREZOR_MODEL_T2T1
-  // model TT has new gamma settings
-  uint32_t id = display_panel_identify();
-  if (id == DISPLAY_ID_ST7789V && display_panel_is_inverted()) {
-    // newest TT display - set proper gamma
-    lx154a2422_gamma();
-  } else if (id == DISPLAY_ID_ST7789V) {
-    lx154a2411_gamma();
-  }
-#elif defined TREZOR_MODEL_T3T1
-  // reduced touch-display interference in T3T1
-  lx154a2482_init_seq();
+#ifdef PANEL_REINIT
+  PANEL_REINIT();
 #endif
 }
 
-void display_panel_rotate(int angle) {
-#ifdef TREZOR_MODEL_T2T1
-  uint32_t id = display_panel_identify();
-  if (id == DISPLAY_ID_GC9307) {
-    tf15411a_rotate(angle, &g_window_padding);
-  } else {
-    lx154a2422_rotate(angle, &g_window_padding);
-  }
-#else
-  PANEL_ROTATE(angle, &g_window_padding);
-#endif
-}
+void display_panel_rotate(int angle) { PANEL_ROTATE(angle, &g_window_padding); }
 
 #endif  // KERNEL_MODE
