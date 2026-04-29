@@ -329,7 +329,7 @@ class DefinitionType(IntEnum):
     ETHEREUM_NETWORK = 0
     ETHEREUM_TOKEN = 1
     SOLANA_TOKEN = 2
-    ETHEREUM_ERC7730_DISPLAY_FORMAT = 3
+    ETHEREUM_DISPLAY_FORMAT = 3
 
 
 class EthereumABIType(IntEnum):
@@ -4769,7 +4769,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         self.prefix = prefix
 
 
-class EthereumERC7730DisplayFormatInfo(protobuf.MessageType):
+class EthereumDisplayFormatInfo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("chain_id", "uint64", repeated=False, required=True),

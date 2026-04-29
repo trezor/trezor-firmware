@@ -727,11 +727,11 @@ class DisplayFormat:
 
     @classmethod
     def from_encoded(cls, encoded: AnyBytes) -> Self:
-        from trezor.messages import EthereumERC7730DisplayFormatInfo
+        from trezor.messages import EthereumDisplayFormatInfo
 
         from apps.common.definitions import decode_definition
 
-        proto = decode_definition(encoded, EthereumERC7730DisplayFormatInfo)
+        proto = decode_definition(encoded, EthereumDisplayFormatInfo)
 
         return cls(
             binding_context=BindingContext([(proto.chain_id, bytes(proto.address))]),

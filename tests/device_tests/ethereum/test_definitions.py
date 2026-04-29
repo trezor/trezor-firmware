@@ -420,7 +420,7 @@ UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS = {
 
 def _sign_tx_with_display_format(
     session: Session,
-    display_format: messages.EthereumERC7730DisplayFormatInfo,
+    display_format: messages.EthereumDisplayFormatInfo,
     token: dict | None = None,
     sign_tx_params: dict | None = None,
     on_page: Callable[[LayoutContent], None] | None = None,
