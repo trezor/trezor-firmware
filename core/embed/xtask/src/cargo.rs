@@ -7,7 +7,7 @@ use crate::{
 };
 
 pub fn build(args: BuildArgs) -> Result<()> {
-    build_impl(args, false)?;
+    build_impl(args.clone(), false)?;
 
     if args.storage_insecure_testing_mode {
         println!("\x1b[1;33m");
@@ -64,7 +64,7 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
             build_impl(
                 BuildArgs {
                     component: dependency,
-                    ..args
+                    ..args.clone()
                 },
                 true,
             )?;

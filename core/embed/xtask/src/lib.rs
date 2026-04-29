@@ -1,9 +1,11 @@
 pub mod args;
 pub mod artifacts;
 pub mod cargo;
+pub mod config;
 pub mod flash;
 pub mod helpers;
 pub mod memusage;
+pub mod model;
 pub mod postbuild;
 pub mod prebuild;
 pub mod upload;

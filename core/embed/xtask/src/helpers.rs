@@ -6,6 +6,7 @@ use std::{
 };
 
 use crate::args::{BuildArgs, Model};
+use crate::config;
 
 /// Returns the path to the built ELF file for the given build arguments.
 pub fn elf_path(args: &BuildArgs) -> Result<PathBuf> {
@@ -17,7 +18,8 @@ pub fn elf_path(args: &BuildArgs) -> Result<PathBuf> {
 pub fn profile_dir(args: &BuildArgs) -> Result<PathBuf> {
     let mut path = build_dir()?;
     if !args.emulator {
-        path = path.join(args.model.target_triple());
+        let model_config = config::ModelConfig::load(args.model.model_id())?;
+        path = path.join(model_config.target_triple()?);
     }
 
     let is_release = !args.debug.unwrap_or(args.emulator);

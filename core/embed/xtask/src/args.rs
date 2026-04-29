@@ -1,95 +1,14 @@
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Result, anyhow, bail};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::process;
 
-use crate::helpers;
+use crate::config;
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Model {
-    #[value(name = "d001")]
-    D001,
-    #[value(name = "d002")]
-    D002,
-    #[value(name = "t2t1")]
-    T2T1,
-    #[value(name = "t2b1")]
-    T2B1,
-    #[value(name = "t3b1")]
-    T3B1,
-    #[value(name = "t3t1")]
-    T3T1,
-    #[value(name = "t3w1")]
-    T3W1,
-}
+pub use crate::model::Model;
 
-impl Model {
-    /// Returns feature name corresponding to the model
-    pub fn feature_name(self) -> &'static str {
-        match self {
-            Model::D001 => "model_d001",
-            Model::D002 => "model_d002",
-            Model::T2T1 => "model_t2t1",
-            Model::T2B1 => "model_t2b1",
-            Model::T3B1 => "model_t3b1",
-            Model::T3T1 => "model_t3t1",
-            Model::T3W1 => "model_t3w1",
-        }
-    }
-
-    /// Returns the Rust target triple for the building firmware for hardware target
-    pub fn target_triple(self) -> &'static str {
-        match self {
-            Model::D001 | Model::T2T1 | Model::T2B1 => "thumbv7em-none-eabihf",
-            Model::D002 | Model::T3B1 | Model::T3T1 | Model::T3W1 => "thumbv8m.main-none-eabihf",
-        }
-    }
-
-    /// Returns the model ID used in artifact naming
-    pub fn model_id(self) -> &'static str {
-        match self {
-            Model::D001 => "D001",
-            Model::D002 => "D002",
-            Model::T2T1 => "T2T1",
-            Model::T2B1 => "T2B1",
-            Model::T3B1 => "T3B1",
-            Model::T3T1 => "T3T1",
-            Model::T3W1 => "T3W1",
-        }
-    }
-
-    /// Returns whether the model has a secure monitor
-    pub fn has_secmon(self) -> bool {
-        matches!(self, Model::D002 | Model::T3W1)
-    }
-
-    /// Returns whether the model has OPTIGA support
-    pub fn has_optiga(self) -> bool {
-        matches!(self, Model::T2B1 | Model::T3B1 | Model::T3T1 | Model::T3W1)
-    }
-
-    /// Returns whether the model has TROPIC support
-    pub fn has_tropic(self) -> bool {
-        matches!(self, Model::T3W1)
-    }
-
-    /// Returns the OpenOCD target configuration file for the model
-    pub fn openocd_target(self) -> &'static str {
-        match self {
-            Model::D001 | Model::T2T1 | Model::T2B1 => "target/stm32f4x.cfg",
-            Model::D002 | Model::T3B1 | Model::T3T1 | Model::T3W1 => "target/stm32u5x.cfg",
-        }
-    }
-
-    /// Returns the path to the model-specific memory.ld file
-    pub fn model_memory_ld(self) -> Result<std::path::PathBuf> {
-        let mem_ld = helpers::workspace_dir()?
-            .join("models")
-            .join(self.model_id())
-            .join("memory.ld")
-            .canonicalize()
-            .with_context(|| format!("Failed to locate memory.ld for model {}", self.model_id()))?;
-        Ok(mem_ld)
-    }
+pub struct ResolvedBuild {
+    pub features: Vec<String>,
+    pub target_triple: Option<&'static str>,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
@@ -165,7 +84,12 @@ impl Component {
     pub fn dependency(self, model: Model) -> Option<Component> {
         match self {
             Component::Firmware => Some(Component::Kernel),
-            Component::Kernel if model.has_secmon() => Some(Component::Secmon),
+            Component::Kernel => {
+                let has_secmon = config::ModelConfig::load(model.model_id())
+                    .map(|c| c.secmon)
+                    .unwrap_or(false);
+                if has_secmon { Some(Component::Secmon) } else { None }
+            }
             _ => None,
         }
     }
@@ -228,7 +152,7 @@ pub enum Cmd {
     Upload(UploadArgs),
 }
 
-#[derive(Args, Debug, Copy, Clone)]
+#[derive(Args, Debug, Clone)]
 #[command(override_usage = "xtask build <COMPONENT> --model <MODEL> [OPTIONS]")]
 pub struct BuildArgs {
     pub component: Component,
@@ -325,6 +249,10 @@ pub struct BuildArgs {
     #[arg(long)]
     pub disable_optiga: bool,
 
+    /// Board revision to build for (defaults to model's default_board)
+    #[arg(long, short = 'b')]
+    pub board: Option<String>,
+
     /// Disable TROPIC support
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     pub disable_tropic: Option<bool>,
@@ -347,37 +275,37 @@ pub struct BuildArgs {
 }
 
 impl BuildArgs {
-    /// Resolves the list of cargo features to enable based on the provided cli arguments
-    pub fn resolve_features(&self) -> Result<Vec<&'static str>> {
-        let mut features = vec![self.model.feature_name()];
+    /// Resolves cargo features and target triple from the provided cli arguments.
+    pub fn resolve_features(&self) -> Result<ResolvedBuild> {
+        let mut features: Vec<String> = vec![self.model.feature_name()];
 
         if self.emulator {
-            features.push("emulator");
+            features.push("emulator".into());
         }
 
         if self.production {
-            features.push("production");
+            features.push("production".into());
         }
 
         if self.bootloader_devel {
-            features.push("bootloader_devel");
+            features.push("bootloader_devel".into());
         }
 
         if self.bootloader_qa {
-            features.push("bootloader_qa");
+            features.push("bootloader_qa".into());
         }
 
         if self.emulator {
-            features.push("dbg_console");
+            features.push("dbg_console".into());
         } else {
             match (self.component, self.dbg_console) {
-                (Component::Firmware, Some(_)) => features.push("dbg_console"),
+                (Component::Firmware, Some(_)) => features.push("dbg_console".into()),
                 (Component::Secmon, Some(ConsoleType::Vcp)) => (),
                 (Component::Boardloader, Some(ConsoleType::Vcp)) => (),
                 (Component::Prodtest, Some(ConsoleType::Vcp)) => (),
-                (_, Some(ConsoleType::Vcp)) => features.push("dbg_console_vcp"),
-                (_, Some(ConsoleType::Swo)) => features.push("dbg_console_swo"),
-                (_, Some(ConsoleType::SystemView)) => features.push("dbg_console_sysview"),
+                (_, Some(ConsoleType::Vcp)) => features.push("dbg_console_vcp".into()),
+                (_, Some(ConsoleType::Swo)) => features.push("dbg_console_swo".into()),
+                (_, Some(ConsoleType::SystemView)) => features.push("dbg_console_sysview".into()),
                 (_, None) => (),
             }
         }
@@ -386,41 +314,41 @@ impl BuildArgs {
 
         if self.component == Component::Firmware {
             if pyopt {
-                features.push("pyopt");
+                features.push("pyopt".into());
             } else {
-                features.push("debug");
+                features.push("debug".into());
             }
 
             if self.source_lines.unwrap_or(self.emulator) {
-                features.push("micropy_enable_source_lines");
+                features.push("micropy_enable_source_lines".into());
             }
 
             if self.benchmark {
-                features.push("benchmark");
+                features.push("benchmark".into());
             }
 
             if self.log_stack_usage {
-                features.push("log_stack_usage");
+                features.push("log_stack_usage".into());
             }
 
             if self.block_on_vcp {
-                features.push("block_on_vcp");
+                features.push("block_on_vcp".into());
             }
 
             if self.apps {
-                features.push("app_loading");
+                features.push("app_loading".into());
             }
 
             if self.mem_perf {
-                features.push("memperf");
+                features.push("memperf".into());
             }
 
             if !self.production {
-                features.push("dev_keys");
+                features.push("dev_keys".into());
             }
 
             if self.n4w1 {
-                features.push("n4w1");
+                features.push("n4w1".into());
             }
         }
 
@@ -429,22 +357,22 @@ impl BuildArgs {
             Component::Secmon | Component::Kernel | Component::Firmware
         ) {
             if !self.btc_only {
-                features.push("universal_fw");
+                features.push("universal_fw".into());
             }
 
             if !pyopt {
-                features.push("optiga_testing");
+                features.push("optiga_testing".into());
             }
 
             if self.unsafe_fw {
-                features.push("unsafe_fw");
+                features.push("unsafe_fw".into());
             }
 
             if self.storage_insecure_testing_mode {
                 if self.production {
                     bail!("storage_insecure_testing_mode cannot be enabled in production builds");
                 }
-                features.push("storage_insecure_testing_mode");
+                features.push("storage_insecure_testing_mode".into());
             }
         }
 
@@ -453,35 +381,22 @@ impl BuildArgs {
             Component::Firmware | Component::Bootloader | Component::Prodtest
         ) {
             if self.perf_overlay {
-                features.push("ui_performance_overlay");
+                features.push("ui_performance_overlay".into());
             }
 
             if self.debug_link.unwrap_or(self.emulator) {
-                features.push("debuglink");
-                features.push("ui_debug");
+                features.push("debuglink".into());
+                features.push("ui_debug".into());
             }
 
             if self.disable_animation {
-                features.push("disable_animation");
+                features.push("disable_animation".into());
             }
         }
 
         if matches!(self.component, Component::Kernel) {
             if self.debug_link.unwrap_or(self.emulator) {
-                features.push("debuglink");
-            }
-        }
-
-        if matches!(
-            self.component,
-            Component::Firmware | Component::Kernel | Component::Secmon | Component::Prodtest
-        ) {
-            if self.model.has_optiga() && !self.disable_optiga {
-                features.push("optiga");
-            }
-
-            if self.model.has_tropic() && !self.disable_tropic.unwrap_or(self.emulator) {
-                features.push("tropic");
+                features.push("debuglink".into());
             }
         }
 
@@ -490,26 +405,56 @@ impl BuildArgs {
             .frozen
             .unwrap_or(self.component.frozen_default(self.emulator))
         {
-            features.push("frozen");
+            features.push("frozen".into());
         }
 
-        Ok(features)
+        // Board and model-intrinsic features from TOML config
+        let model_config = config::ModelConfig::load(self.model.model_id())?;
+        let board_id = if self.emulator {
+            model_config
+                .emulator_board
+                .as_deref()
+                .ok_or_else(|| anyhow!("Model {} has no emulator board", self.model.model_id()))?
+                .to_string()
+        } else {
+            self.board
+                .clone()
+                .unwrap_or_else(|| model_config.default_board.clone())
+        };
+        let mut board_feat =
+            config::resolve_board_features(self.model.model_id(), &model_config, &board_id, self.component)?
+                .features;
+        if self.disable_optiga {
+            board_feat.retain(|f| f != "optiga");
+        }
+        if self.disable_tropic.unwrap_or(self.emulator) {
+            board_feat.retain(|f| f != "tropic");
+        }
+        features.extend(board_feat);
+
+        let target_triple = if self.emulator {
+            None
+        } else {
+            Some(model_config.target_triple()?)
+        };
+
+        Ok(ResolvedBuild { features, target_triple })
     }
 
     // Configures the cargo command with the appropriate arguments and features
     // based on the provided cli arguments
     pub fn configure_cargo(&self, cmd: &mut process::Command) -> Result<()> {
-        let features = self.resolve_features()?;
+        let resolved = self.resolve_features()?;
 
         cmd.args(["--package", self.component.package_name(self.emulator)]);
-        cmd.args(["--features", &features.join(",")]);
+        cmd.args(["--features", &resolved.features.join(",")]);
 
         if !self.debug.unwrap_or(self.emulator) {
             cmd.arg("-Zbuild-std=core");
         }
 
-        if !self.emulator {
-            cmd.args(["--target", self.model.target_triple()]);
+        if let Some(triple) = resolved.target_triple {
+            cmd.args(["--target", triple]);
         }
 
         if self.emit_memory_analysis {

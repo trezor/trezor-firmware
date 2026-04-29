@@ -15,16 +15,11 @@ use color_eyre::{Result, eyre::bail};
 use crate::CLibrary;
 use crate::helpers::{links_name, rust_analyser_is_running};
 
-/// Returns the current model id (T2T1, ..) based on the enabled feature.
+/// Returns the current model id (T2T1, ..) from the DEP_MODELS_MODEL
+/// environment variable emitted by the `models` crate's build script.
 pub fn current_model_id() -> Result<String> {
-    for (key, value) in env::vars() {
-        if let Some(model) = key.strip_prefix("CARGO_FEATURE_MODEL_")
-            && value == "1"
-        {
-            return Ok(model.to_string());
-        }
-    }
-    bail!("No model feature enabled")
+    env::var("DEP_MODELS_MODEL")
+        .map_err(|_| color_eyre::eyre::eyre!("DEP_MODELS_MODEL not set — is `models` a direct dependency?"))
 }
 
 /// Returns the path to the vendor header binary for the given build target.
@@ -60,7 +55,7 @@ fn get_firmware_vendor() -> &'static str {
         }
     } else if !has_feature("production") {
         "unsafe_signed_prod"
-    } else if has_feature("model_t2t1") {
+    } else if env::var("DEP_MODELS_MODEL").as_deref() == Ok("T2T1") {
         "satoshilabs_signed_prod"
     } else if has_feature("bitcoin_only") {
         "trezor_btconly_signed_prod"

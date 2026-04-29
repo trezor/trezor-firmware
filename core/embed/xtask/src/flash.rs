@@ -6,6 +6,7 @@ use std::{
 
 use crate::{
     args::{FlashArgs, FlashEraseArgs, FlashSection},
+    config,
     helpers,
 };
 
@@ -35,11 +36,12 @@ pub fn flash(args: FlashArgs) -> Result<()> {
     );
 
     let flash_instruction = build_flash_write_instruction(&binary, address);
+    let model_config = config::ModelConfig::load(args.model.model_id())?;
 
     let status = process::Command::new("openocd")
         .args(["-f", "interface/stlink.cfg"])
         .args(["-c", "transport select hla_swd"])
-        .args(["-f", args.model.openocd_target()])
+        .args(["-f", model_config.openocd_target()?])
         .arg("-c")
         .arg(flash_instruction)
         .status()
@@ -57,11 +59,12 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
     let content = fs::read_to_string(&mem_ld)
         .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
     let instr = build_flash_erase_instruction(&content, args.section)?;
+    let model_config = config::ModelConfig::load(args.model.model_id())?;
 
     let status = process::Command::new("openocd")
         .args(["-f", "interface/stlink.cfg"])
         .args(["-c", "transport select hla_swd"])
-        .args(["-f", args.model.openocd_target()])
+        .args(["-f", model_config.openocd_target()?])
         .arg("-c")
         .arg(instr)
         .status()
