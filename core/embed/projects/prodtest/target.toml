@@ -39,3 +39,8 @@ uses = [
     "touch",
     "tropic",
 ]
+
+elf_sections = [".vendorheader", ".header", ".flash", ".data"]
+
+secmon_body_sections   = [".secmon_header", ".flash", ".data"]
+secmon_header_sections = [".vendorheader", ".header"]

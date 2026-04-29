@@ -31,3 +31,5 @@ uses = [
     "touch",
     "tropic",
 ]
+
+elf_sections = [".flash", ".data"]

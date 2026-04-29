@@ -1,6 +1,7 @@
 mcu = "stm32u5g"
 default_board = "dk"
 secmon = true
+bootloader_header_tool = "headertool_pq"
 
 features = [
     "boot_ucb",

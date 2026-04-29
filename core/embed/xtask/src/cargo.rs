@@ -3,7 +3,7 @@ use std::process;
 
 use crate::{
     args::{BuildArgs, Component, TestArgs},
-    artifacts, helpers, memusage, postbuild, prebuild,
+    artifacts, config, helpers, memusage, postbuild, prebuild,
 };
 
 pub fn build(args: BuildArgs) -> Result<()> {
@@ -83,13 +83,15 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
     let elf = helpers::elf_path(&args)?;
 
     if !args.emulator {
+        let model_config = config::ModelConfig::load(args.model.model_id())?;
+
         // For hardware targets, we need to convert the ELF file into a raw
         // binary before signing it.
-        let bin = postbuild::elf_to_bin(&elf, args.component, args.model, args.production)?;
+        let bin = postbuild::elf_to_bin(&elf, args.component, &model_config, args.production)?;
 
         // Sign the binary except for those that don't have headers
         if !matches!(args.component, Component::Boardloader | Component::Kernel) {
-            postbuild::sign_binary(&bin, args.component, args.model, args.production)?;
+            postbuild::sign_binary(&bin, args.component, &model_config, args.production)?;
         }
 
         if args.component == Component::Firmware {

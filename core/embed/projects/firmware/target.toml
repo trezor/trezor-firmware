@@ -39,3 +39,9 @@ uses = [
     "eos",
     "nem",
 ]
+
+elf_sections = [".vendorheader", ".header", ".flash", ".data"]
+
+# STM32F4: firmware spans two non-contiguous flash banks (bank2 starts at 0x08100000)
+split_pad_to         = "0x08100000"
+split_part2_sections = [".flash2"]

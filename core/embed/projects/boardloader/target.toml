@@ -12,3 +12,5 @@ uses = [
     "secure_aes",
     "tamper",
 ]
+
+elf_sections = [".vector_table", ".text", ".data", ".rodata", ".capabilities"]

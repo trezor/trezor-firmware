@@ -14,3 +14,5 @@ uses = [
     "telemetry",
     "tropic",
 ]
+
+elf_sections = [".secmon_header", ".flash", ".data", ".gnu.sgstubs"]

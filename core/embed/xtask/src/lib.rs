@@ -2,6 +2,7 @@ pub mod args;
 pub mod artifacts;
 pub mod cargo;
 pub mod config;
+pub mod feature_resolver;
 pub mod flash;
 pub mod helpers;
 pub mod memusage;
