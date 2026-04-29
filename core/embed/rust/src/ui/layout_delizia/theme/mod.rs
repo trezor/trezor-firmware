@@ -826,17 +826,6 @@ pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
     FixedHeightBar::bottom(inner, BUTTON_HEIGHT)
 }
 
-/// +----------+
-/// |     6    |
-/// |  +----+  |
-/// | 6|    | 6|
-/// |  +----+  |
-/// |     6    |
-/// +----------+
-pub const fn borders() -> Insets {
-    Insets::new(0, 0, 0, 0)
-}
-
 pub const fn borders_notification() -> Insets {
     Insets::new(42, 0, 0, 0)
 }

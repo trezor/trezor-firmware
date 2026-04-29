@@ -30,7 +30,7 @@ pub struct Progress {
 }
 
 impl Progress {
-    const AREA: Rect = constant::screen().inset(theme::borders());
+    const AREA: Rect = constant::screen();
 
     pub fn new(
         title: TString<'static>,
