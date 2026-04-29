@@ -4,8 +4,8 @@ use crate::{
     Backend, ChannelIO, Error, Host,
     alternating_bit::SyncBits,
     channel::{
-        ChannelState, HANDSHAKE_BUFFER_LEN, MAX_ALLOC_RESPONSE_LEN, MAX_DEVICE_PROPERTIES_LEN,
-        Nonce, PacketInResult, PairingState, noise::NoiseHandshake,
+        ChannelState, HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, MAX_ALLOC_RESPONSE_LEN,
+        MAX_DEVICE_PROPERTIES_LEN, Nonce, PacketInResult, PairingState, noise::NoiseHandshake,
     },
     credential::CredentialStore,
     fragment::{Fragmenter, Reassembler},
@@ -339,7 +339,8 @@ pub struct ChannelOpen<C: CredentialStore, B: Backend> {
     channel: Channel<B>,
     state: HandshakeState,
     noise: NoiseHandshake<Host, B>,
-    internal_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_LEN>,
+    send_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_HTD_LEN>,
+    receive_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_DTH_LEN>,
     device_properties: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
     cred_store: C,
 }
@@ -354,20 +355,22 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         let device_properties = heapless::Vec::from_slice(device_properties)
             .map_err(|_| Error::insufficient_buffer())?;
 
-        let mut internal_buffer = heapless::Vec::new();
-        prepare_zeroed(&mut internal_buffer);
-        let (hss, msg) = NoiseHandshake::write_initiation_request(
+        let mut send_buffer = heapless::Vec::new();
+        prepare_zeroed(&mut send_buffer);
+        let (hss, len) = NoiseHandshake::write_initiation_request(
             &device_properties,
             try_to_unlock,
-            &mut internal_buffer,
+            &mut send_buffer,
         )?;
-        let len = msg.len();
-        internal_buffer.truncate(len);
+        send_buffer.truncate(len);
+        let mut receive_buffer = heapless::Vec::new();
+        prepare_zeroed(&mut receive_buffer);
         let res = Self {
             channel: Channel::new(channel_id),
             state: HandshakeState::Initial,
             noise: hss,
-            internal_buffer,
+            send_buffer,
+            receive_buffer,
             device_properties,
             cred_store,
         };
@@ -375,8 +378,8 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     }
 
     fn incoming_internal(&mut self) -> Result<(), Error> {
-        let (header, len) = self.channel.raw_out(&self.internal_buffer)?;
-        self.internal_buffer.truncate(len);
+        let (header, len) = self.channel.raw_out(&self.receive_buffer)?;
+        self.receive_buffer.truncate(len);
 
         match (self.state, header.handshake_phase()) {
             (
@@ -398,37 +401,32 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
                 return Err(Error::unexpected_input());
             }
         }
+        prepare_zeroed(&mut self.receive_buffer);
         Ok(())
     }
 
     fn continue_handshake(&mut self) -> Result<(), Error> {
-        let payload_len = self.internal_buffer.len();
-        // Buffer used both for input and output - pad with zeros.
-        self.internal_buffer
-            .resize(self.internal_buffer.capacity(), 0u8)
-            .unwrap();
-        let (nc, msg) = self.noise.write_completion_request(
+        prepare_zeroed(&mut self.send_buffer);
+        let (nc, len) = self.noise.write_completion_request(
             &mut self.cred_store,
-            &mut self.internal_buffer,
-            payload_len,
+            &self.receive_buffer,
+            &mut self.send_buffer,
         )?;
+        self.send_buffer.truncate(len);
         self.channel.noise = Some(nc);
         let header = Header::new_handshake(
             self.channel.channel_id,
             HandshakeMessage::CompletionRequest,
-            msg,
+            &self.send_buffer,
         )?;
-        self.channel.raw_in(header, msg)?;
-        let len = msg.len();
-        self.internal_buffer.truncate(len);
+        self.channel.raw_in(header, &self.send_buffer)?;
         Ok(())
     }
 
     fn finish_handshake(&mut self) -> Result<PairingState, Error> {
-        let payload = &mut self.internal_buffer;
-        let len = self.channel.noise()?.decrypt(payload.as_mut_slice())?;
-        payload.truncate(len); // assumes tag at the end
-        PairingState::try_from(payload.as_slice())
+        let len = self.channel.noise()?.decrypt(&mut self.receive_buffer)?;
+        let payload = &self.receive_buffer[..len]; // assumes tag at the end
+        PairingState::try_from(payload)
     }
 
     /// Returns device's `ThpDeviceProperties` protobuf structure.
@@ -509,7 +507,7 @@ where
         }
         let res = self
             .channel
-            .packet_in(packet_buffer, &mut self.internal_buffer);
+            .packet_in(packet_buffer, &mut self.receive_buffer);
         if let PacketInResult::Accepted {
             buffer_size: Some(s),
             ..
@@ -534,25 +532,21 @@ where
                     return PacketInResult::fail(e);
                 }
             }
-        } else if res.got_ack() {
-            prepare_zeroed(&mut self.internal_buffer);
         }
         res
     }
 
     fn packet_out(&mut self, packet_buffer: &mut [u8], _send_buffer: &[u8]) -> Result<(), Error> {
-        if matches!(self.state, HandshakeState::Initial) {
+        if let HandshakeState::Initial = self.state {
             let header = Header::<Host>::new_handshake(
                 self.channel_id(),
                 HandshakeMessage::InitiationRequest,
-                &self.internal_buffer,
+                &self.send_buffer,
             )?;
-            self.channel
-                .raw_in_ext(header, &self.internal_buffer, true)?;
+            self.channel.raw_in_ext(header, &self.send_buffer, true)?;
             self.state = HandshakeState::SendingInitiationRequest;
         }
-        self.channel
-            .packet_out(packet_buffer, &self.internal_buffer)
+        self.channel.packet_out(packet_buffer, &self.send_buffer)
     }
 
     fn packet_out_ready(&self) -> bool {
