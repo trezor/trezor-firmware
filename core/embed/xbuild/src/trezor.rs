@@ -19,16 +19,12 @@ fn package_name() -> Result<String> {
     Ok(env::var("CARGO_PKG_NAME")?)
 }
 
-/// Returns the current model id (T2T1, ..) based on the enabled feature.
+/// Returns the current model id (T2T1, ..) from the DEP_MODELS_MODEL
+/// environment variable emitted by the `models` crate's build script.
 pub fn current_model_id() -> Result<String> {
-    for (key, value) in env::vars() {
-        if let Some(model) = key.strip_prefix("CARGO_FEATURE_MODEL_")
-            && value == "1"
-        {
-            return Ok(model.to_string());
-        }
-    }
-    bail!("No model feature enabled")
+    env::var("DEP_MODELS_MODEL").map_err(|_| {
+        color_eyre::eyre::eyre!("DEP_MODELS_MODEL not set — is `models` a direct dependency?")
+    })
 }
 
 /// Returns the path to the vendor header binary for the given build target.
@@ -44,10 +40,10 @@ pub fn vendor_header_path(models_dir: impl AsRef<Path>, target: &str) -> Result<
     }
 
     let vendor = if target == "prodtest" {
-        get_prodtest_vendor()
+        get_prodtest_vendor()?
     } else {
         // firmware, secmon and kernel all must use the same vendor header
-        get_firmware_vendor()
+        get_firmware_vendor()?
     };
 
     Ok(models_dir
@@ -57,8 +53,8 @@ pub fn vendor_header_path(models_dir: impl AsRef<Path>, target: &str) -> Result<
         .join(format!("vendorheader_{}.bin", vendor)))
 }
 
-fn get_firmware_vendor() -> &'static str {
-    if has_feature("bootloader_devel") {
+fn get_firmware_vendor() -> Result<&'static str> {
+    Ok(if has_feature("bootloader_devel") {
         if has_feature("unsafe_fw") {
             "unsafe_signed_dev"
         } else {
@@ -66,23 +62,23 @@ fn get_firmware_vendor() -> &'static str {
         }
     } else if !has_feature("production") {
         "unsafe_signed_prod"
-    } else if has_feature("model_t2t1") {
+    } else if current_model_id()? == "T2T1" {
         "satoshilabs_signed_prod"
     } else if has_feature("bitcoin_only") {
         "trezor_btconly_signed_prod"
     } else {
         "trezor_signed_prod"
-    }
+    })
 }
 
-fn get_prodtest_vendor() -> &'static str {
-    if has_feature("bootloader_devel") {
+fn get_prodtest_vendor() -> Result<&'static str> {
+    Ok(if has_feature("bootloader_devel") {
         "prodtest_DO_NOT_SIGN_signed_dev"
     } else if has_feature("production") {
         "prodtest_signed_prod"
     } else {
         "unsafe_signed_prod"
-    }
+    })
 }
 
 /// Entry point for build scripts that compile C libraries.
