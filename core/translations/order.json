@@ -1221,5 +1221,8 @@
   "1219": "ethereum__calldata_suffix",
   "1220": "backup__type_create",
   "1221": "backup__type_have",
-  "1222": "n4w1__reading"
+  "1222": "n4w1__reading",
+  "1223": "n4w1__err_empty",
+  "1224": "n4w1__err_nonempty",
+  "1225": "n4w1__err_damaged"
 }
