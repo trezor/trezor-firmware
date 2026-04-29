@@ -21,3 +21,5 @@ uses = [
     "telemetry",
     "touch",
 ]
+
+elf_sections = [".header", ".flash", ".data"]

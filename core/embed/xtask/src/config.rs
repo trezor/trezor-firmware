@@ -19,6 +19,9 @@ pub struct ModelConfig {
     pub secmon: bool,
     #[serde(default)]
     pub targets: HashMap<String, ModelTargetOverride>,
+    /// Signing tool for bootloader/bootloader_ci. Defaults to "headertool".
+    #[serde(default)]
+    pub bootloader_header_tool: Option<String>,
 }
 
 impl ModelConfig {
@@ -33,6 +36,10 @@ impl ModelConfig {
             .with_context(|| format!("Failed to parse model config: {}", path.display()))?;
         config.model_id = model_id.to_string();
         Ok(config)
+    }
+
+    pub fn is_stm32f4(&self) -> bool {
+        matches!(self.mcu.as_str(), "stm32f427" | "stm32f429")
     }
 
     pub fn mcu_feature(&self) -> String {
@@ -121,6 +128,19 @@ impl BoardConfig {
 #[derive(Deserialize)]
 pub struct TargetProfile {
     pub uses: Vec<String>,
+    pub elf_sections: Vec<String>,
+    /// Body sections used when the model has secmon and the binary needs a
+    /// separately-signed body concatenated with a plain header.
+    #[serde(default)]
+    pub secmon_body_sections: Option<Vec<String>>,
+    #[serde(default)]
+    pub secmon_header_sections: Option<Vec<String>>,
+    /// STM32F4 only: pad address and second-bank sections for split firmware.
+    /// Part1 reuses `elf_sections`; only the bank2 extension is F4-specific.
+    #[serde(default)]
+    pub split_pad_to: Option<String>,
+    #[serde(default)]
+    pub split_part2_sections: Option<Vec<String>>,
 }
 
 impl TargetProfile {

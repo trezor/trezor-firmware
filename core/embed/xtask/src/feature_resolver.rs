@@ -1,0 +1,246 @@
+use anyhow::{Result, anyhow, bail};
+use std::process;
+
+use crate::{
+    args::{BuildArgs, Component, ConsoleType, ResolvedBuild},
+    config, helpers,
+};
+
+/// Resolves cargo features and target triple from the provided CLI arguments.
+pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
+    let mut features: Vec<String> = vec![args.model.feature_name()];
+
+    if args.emulator {
+        features.push("emulator".into());
+    }
+
+    if args.production {
+        features.push("production".into());
+    }
+
+    if args.bootloader_devel {
+        features.push("bootloader_devel".into());
+    }
+
+    if args.force_bootloader_upgrade {
+        features.push("force_bootloader_upgrade".into());
+    }
+
+    if args.emulator {
+        features.push("dbg_console".into());
+
+        if args.asan {
+            features.push("asan".into());
+        }
+    } else {
+        match (args.component, args.dbg_console) {
+            (Component::Firmware, Some(_)) => features.push("dbg_console".into()),
+            (Component::Secmon, Some(ConsoleType::Vcp)) => (),
+            (Component::Boardloader, Some(ConsoleType::Vcp)) => (),
+            (Component::Prodtest, Some(ConsoleType::Vcp)) => (),
+            (_, Some(ConsoleType::Vcp)) => features.push("dbg_console_vcp".into()),
+            (_, Some(ConsoleType::Swo)) => features.push("dbg_console_swo".into()),
+            (_, Some(ConsoleType::SystemView)) => features.push("dbg_console_sysview".into()),
+            (_, None) => (),
+        }
+    }
+
+    let pyopt = args.pyopt.unwrap_or(true);
+
+    if args.component == Component::Firmware {
+        if pyopt {
+            features.push("pyopt".into());
+        } else {
+            features.push("debug".into());
+        }
+
+        if args.source_lines.unwrap_or(args.emulator) {
+            features.push("micropy_enable_source_lines".into());
+        }
+
+        if args.benchmark {
+            features.push("benchmark".into());
+        }
+
+        if args.log_stack_usage {
+            features.push("log_stack_usage".into());
+        }
+
+        if args.block_on_vcp {
+            features.push("block_on_vcp".into());
+        }
+
+        if args.apps {
+            features.push("app_loading".into());
+        }
+
+        if args.mem_perf {
+            features.push("memperf".into());
+        }
+
+        if !args.production {
+            features.push("dev_keys".into());
+        }
+
+        if args.n4w1 {
+            features.push("n4w1".into());
+        }
+    }
+
+    if matches!(
+        args.component,
+        Component::Secmon | Component::Kernel | Component::Firmware
+    ) {
+        if !args.btc_only {
+            features.push("universal_fw".into());
+        }
+
+        if !pyopt {
+            features.push("optiga_testing".into());
+        }
+
+        if args.unsafe_fw {
+            features.push("unsafe_fw".into());
+        }
+
+        if args.storage_insecure_testing_mode {
+            if args.production {
+                bail!("storage_insecure_testing_mode cannot be enabled in production builds");
+            }
+            features.push("storage_insecure_testing_mode".into());
+        }
+    }
+
+    if matches!(
+        args.component,
+        Component::Firmware | Component::Bootloader | Component::Prodtest
+    ) {
+        if args.perf_overlay {
+            features.push("ui_performance_overlay".into());
+        }
+
+        if args.debug_link.unwrap_or(!pyopt) {
+            features.push("debuglink".into());
+            features.push("ui_debug".into());
+        }
+
+        if args.disable_animation {
+            features.push("disable_animation".into());
+        }
+    }
+
+    if matches!(args.component, Component::Kernel) {
+        if args.debug_link.unwrap_or(!pyopt) {
+            features.push("debuglink".into());
+        }
+    }
+
+    if args.component == Component::Firmware && (args.frozen || !args.emulator) {
+        features.push("frozen".into());
+    }
+
+    // Board and model-intrinsic features from TOML config
+    let model_config = config::ModelConfig::load(args.model.model_id())?;
+    let board_id = if args.emulator {
+        model_config
+            .emulator_board
+            .as_deref()
+            .ok_or_else(|| anyhow!("Model {} has no emulator board", args.model.model_id()))?
+            .to_string()
+    } else {
+        args.board
+            .clone()
+            .unwrap_or_else(|| model_config.default_board.clone())
+    };
+    let board_features = config::resolve_board_features(
+        args.model.model_id(),
+        &model_config,
+        &board_id,
+        args.component,
+    )?;
+    let mut board_feat = board_features.features;
+    if args.disable_optiga {
+        board_feat.retain(|f| f != "optiga");
+    }
+    if args.disable_tropic.unwrap_or(args.emulator) {
+        board_feat.retain(|f| f != "tropic");
+    }
+    features.extend(board_feat);
+
+    let target_triple = if args.emulator {
+        None
+    } else {
+        Some(model_config.target_triple()?)
+    };
+
+    Ok(ResolvedBuild {
+        features,
+        target_triple,
+    })
+}
+
+/// Configures a cargo command with the appropriate arguments and features.
+pub fn configure_cargo(args: &BuildArgs, cmd: &mut process::Command) -> Result<()> {
+    let resolved = resolve_features(args)?;
+    let mut rebuild_std = false;
+
+    cmd.args(["--package", args.component.package_name(args.emulator)]);
+    cmd.args(["--features", &resolved.features.join(",")]);
+    cmd.args(["--profile", args.profile_name()]);
+
+    if args.profile_name() == "release" {
+        // Required by panic-immediate-abort in the release profile
+        rebuild_std = true;
+    }
+
+    if let Some(triple) = resolved.target_triple {
+        cmd.args(["--target", triple]);
+    }
+
+    if args.emit_memory_analysis {
+        // See https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
+        // Also adds an ELF section with Rust functions' stack sizes. See:
+        // - https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/emit-stack-sizes.html
+        // - https://blog.japaric.io/stack-analysis/
+        // - https://github.com/japaric/stack-sizes/
+        //
+        // Use --config instead of RUSTFLAGS env so that rustflags in .cargo/config.toml are
+        // not overridden (RUSTFLAGS env has higher precedence and replaces them entirely).
+        cmd.args([
+            "--config",
+            "build.rustflags=[\"-Zprint-type-sizes\", \"-Zemit-stack-sizes\"]",
+        ]);
+    }
+
+    if args.emulator && args.asan {
+        // -Zsanitizer=address is a rustc flag passed via RUSTFLAGS.
+        //
+        // Without an explicit --target, cargo compiles proc-macros and the firmware in the
+        // same pass and RUSTFLAGS leaks into proc-macro crates, causing "can't find crate"
+        // errors. Passing --target explicitly (even the same triple as the host) makes cargo
+        // separate the host (proc-macros / build scripts) and target (firmware) compilation
+        // units, so RUSTFLAGS only reaches the firmware crates.
+        cmd.args(["--target", &helpers::host_triple()?]);
+        cmd.args([
+            "--config",
+            "build.rustflags=[\"-Zsanitizer=address\", \"-Clink-arg=-lgcc_s\"]",
+        ]);
+
+        // Rebuild standard library to be compiled with sanitizer instrumentation
+        rebuild_std = true;
+    }
+
+    if args.timings {
+        cmd.arg("--timings");
+    }
+
+    if args.verbose {
+        cmd.arg("--verbose");
+    }
+
+    if rebuild_std {
+        cmd.arg("-Zbuild-std=core");
+    }
+
+    Ok(())
+}
