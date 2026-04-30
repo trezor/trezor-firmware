@@ -4,6 +4,7 @@ use core::num::TryFromIntError;
 
 use super::exception::{builtin, Exception};
 use super::obj::Obj;
+use super::qstr::Attribute;
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
 #[derive(Debug)]
@@ -15,7 +16,7 @@ pub enum Error {
     EOFError,
     IndexError,
     KeyError(Obj),
-    AttributeError(Obj),
+    AttributeError(Attribute),
     ValueError(&'static CStr),
     ValueErrorParam(&'static CStr, Obj),
     RuntimeError(&'static CStr),

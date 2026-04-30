@@ -6,7 +6,7 @@ use super::error::Error;
 use super::iter::IterBuf;
 use super::map::{Map, MapElem};
 use super::obj::Obj;
-use super::qstr::Qstr;
+use super::qstr::{Attribute, Qstr};
 use super::runtime::catch_exception;
 use super::{exception, ffi};
 
@@ -92,7 +92,7 @@ pub unsafe fn try_with_args_and_kwargs_inline(
 ///     // ...
 /// }
 /// ```
-pub fn new_attrtuple(field_qstrs: &'static [Qstr], values: &[Obj]) -> Result<Obj, Error> {
+pub fn new_attrtuple(field_qstrs: &'static [Attribute], values: &[Obj]) -> Result<Obj, Error> {
     if field_qstrs.len() != values.len() {
         return Err(Error::TypeError);
     }
@@ -101,8 +101,8 @@ pub fn new_attrtuple(field_qstrs: &'static [Qstr], values: &[Obj]) -> Result<Obj
     //   pointer in the last tuple item. Hence the requirement that `fields` is
     //   'static. See objattrtuple.c:79
     // * we cast `field_qstrs` to the required type `qstr`, which is internally
-    //   usize. (py/qstr.h:48). This is valid for as long as Qstr is
-    //   repr(transparent) and the only field is a usize. Check generated qstr.rs.
+    //   usize. (py/qstr.h:48). This is valid for as long as Attribute is
+    //   repr(transparent) over the ffi::qstr type.
     // EXCEPTION: Raises if allocation fails, does not return NULL.
     catch_exception!(unsafe { ffi::mp_obj_new_attrtuple } => { field_qstrs.as_ptr() as *const _, values.len(), values.as_ptr() })
 }

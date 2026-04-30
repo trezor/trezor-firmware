@@ -335,6 +335,7 @@ fn generate_qstr_bindings(lib: &mut CLibrary) -> Result<()> {
     lib.add_rust_bindings_ex("qstr", |builder| {
         Ok(builder
             .header("qstr.h")
+            .allowlist_type("Qstr")
             // Build the Qstr enum as a newtype so we can define method on it.
             .default_enum_style(bindgen::EnumVariation::NewType {
                 is_bitfield: false,

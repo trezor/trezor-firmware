@@ -3,7 +3,7 @@
 use super::ffi;
 use super::gc::Gc;
 use super::obj::Obj;
-use super::qstr::Qstr;
+use super::qstr::QstrValue;
 use super::tuple::Tuple;
 use super::typ::{EmptyType, Type};
 
@@ -44,7 +44,7 @@ unsafe impl Send for ExceptionType {}
 
 impl ExceptionType {
     /// Construct a new exception type as a child of an existing exception type.
-    pub const fn new(parent: &'static ExceptionType, name: Qstr) -> Self {
+    pub const fn new(parent: &'static ExceptionType, name: impl const QstrValue) -> Self {
         Self {
             head: unsafe {
                 // SAFETY: we have four slots so maximum slot_index 4 is valid

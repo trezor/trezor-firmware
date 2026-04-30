@@ -6,7 +6,6 @@ use super::zigzag;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
-use crate::micropython::qstr::Qstr;
 use crate::micropython::{buffer, util, Error, Obj};
 
 pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
@@ -48,10 +47,8 @@ impl Encoder {
         obj: &MsgObj,
     ) -> Result<(), Error> {
         for field in msg.fields {
-            let field_name = Qstr::from(field.name);
-
             // Lookup the field by name. If not set or None, skip.
-            let field_value = match obj.map().get(field_name) {
+            let field_value = match obj.map().get(field.name()) {
                 Ok(value) => value,
                 Err(_) => continue,
             };

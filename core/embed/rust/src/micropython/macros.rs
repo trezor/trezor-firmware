@@ -84,7 +84,7 @@ macro_rules! obj_fn_kw {
 macro_rules! obj_map {
     ($($key:expr => $val:expr),*) => ({
         $crate::micropython::map::Map::from_fixed_static(const {
-            &[ $($crate::micropython::map::Map::at($key, $val),)* ]
+            &[ $($crate::micropython::map::Map::at($crate::micropython::qstr::Attribute::from_qstr_value($key), $val),)* ]
         })
     });
     ($($key:expr => $val:expr),* ,) => ({
@@ -124,7 +124,7 @@ macro_rules! obj_type {
     ) => {{
         use $crate::micropython::ffi;
 
-        let name = $name.to_u16();
+        let name = $crate::micropython::qstr::qstr_value_to_u16($name);
 
         #[allow(unused_mut)]
         #[allow(unused_assignments)]
@@ -226,7 +226,7 @@ macro_rules! obj_module {
         #[allow(unused_unsafe)]
         #[allow(unused_doc_comments)]
         unsafe {
-            use $crate::micropython::{ffi, map::Map};
+            use $crate::micropython::{ffi, map::Map, qstr::Attribute};
 
             static DICT: ffi::mp_obj_dict_t = ffi::mp_obj_dict_t {
                 base: ffi::mp_obj_base_t {
@@ -234,7 +234,7 @@ macro_rules! obj_module {
                     type_: unsafe { &ffi::mp_type_dict },
                 },
                 map: Map::from_fixed_static(const {
-                    &[ $( Map::at($key, $val), )* ]
+                    &[ $( Map::at(Attribute::from_qstr_value($key), $val), )* ]
                 })
             };
             ffi::mp_obj_module_t {
@@ -263,7 +263,7 @@ macro_rules! attr_tuple {
     ) => {
         attr_tuple! {
             @append
-            fields: [$($fields,)* $field,],
+            fields: [$($fields,)* Attribute::from_qstr_value($field),],
             values: [$($values,)* $val,],
             rest: {$($rest)*}
         }
@@ -272,9 +272,11 @@ macro_rules! attr_tuple {
         fields: [$($fields:expr,)*],
         values: [$($values:expr,)*],
         rest: {}
-    ) => {
-        $crate::micropython::util::new_attrtuple(&[$($fields,)*], &[$($values,)*])
-    };
+    ) => {{
+        use $crate::micropython::qstr::Attribute;
+        static ATTRIBUTES: &[Attribute] = &[$($fields,)*];
+        $crate::micropython::util::new_attrtuple(ATTRIBUTES, &[$($values,)*])
+    }};
     // version without trailing comma
     ($($key:expr => $val:expr),*) => ({
         attr_tuple!(@append fields: [], values: [], rest: { $($key => $val,)* })
