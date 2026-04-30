@@ -7,9 +7,12 @@
 // Allowing dead code not to cause a lot of warnings when building for a specific target
 // (when building for TR, a lot of code only used in TT would get marked as unused).
 #![allow(dead_code)]
+
+#![feature(const_trait_impl)]
+#![feature(custom_test_frameworks)]
 #![feature(lang_items)]
 #![feature(trait_alias)]
-#![feature(custom_test_frameworks)]
+
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
 

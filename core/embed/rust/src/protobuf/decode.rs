@@ -100,11 +100,11 @@ impl Decoder {
 
             match msg.field(field_tag) {
                 Some(field) if field.get_type().primitive_type() != prim_type => {
-                    return Err(error::invalid_value(field.name.into()));
+                    return Err(error::invalid_value(field.name()));
                 }
                 Some(field) => {
                     let field_value = self.decode_field(stream, field)?;
-                    let field_name = Qstr::from(field.name);
+                    let field_name = Qstr::from(field.name());
                     if field.is_repeated() {
                         // Repeated field, values are stored in a list. First, look up the list
                         // object. If it exists, append to it. If it doesn't, create a new list with
@@ -160,7 +160,7 @@ impl Decoder {
             let field = msg
                 .field(field_tag)
                 .ok_or_else(|| Error::KeyError(field_tag.into()))?;
-            let field_name = Qstr::from(field.name);
+            let field_name = Qstr::from(field.name());
             if map.contains_key(field_name) {
                 // Field already has a value assigned, skip it.
                 match field.get_type().primitive_type() {
@@ -189,14 +189,14 @@ impl Decoder {
     /// assigned and all optional missing fields are set to `None`.
     fn assign_required_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
         for field in msg.fields {
-            let field_name = Qstr::from(field.name);
+            let field_name = Qstr::from(field.name());
             if map.contains_key(field_name) {
                 // Field is assigned, skip.
                 continue;
             }
             if field.is_required() {
                 // Required field is missing, abort.
-                return Err(error::missing_required_field(field_name));
+                return Err(error::missing_required_field(field.name()));
             }
             if field.is_repeated() {
                 // Optional repeated field, set to a new empty list.
@@ -234,7 +234,7 @@ impl Decoder {
                 let buf_len = num.try_into()?;
                 let buf = stream.read(buf_len)?;
                 let unicode =
-                    str::from_utf8(buf).map_err(|_| error::invalid_value(field.name.into()))?;
+                    str::from_utf8(buf).map_err(|_| error::invalid_value(field.name()))?;
                 unicode.try_into()
             }
             FieldType::Enum(enum_type) => {
@@ -242,7 +242,7 @@ impl Decoder {
                 if enum_type.values.contains(&enum_val) {
                     Ok(enum_val.into())
                 } else {
-                    Err(error::invalid_value(field.name.into()))
+                    Err(error::invalid_value(field.name()))
                 }
             }
             FieldType::Msg(msg_type) => {

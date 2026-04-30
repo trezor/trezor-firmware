@@ -4,7 +4,7 @@ use super::blob::{Translations, ENGLISH_CHUNK};
 pub use super::generated::translated_string::TranslatedString;
 
 #[cfg(feature = "micropython")]
-use crate::micropython::qstr::Qstr;
+use crate::micropython::qstr::{Attribute, Qstr};
 
 impl TranslatedString {
     fn untranslated(self) -> &'static str {
@@ -18,12 +18,22 @@ impl TranslatedString {
     }
 
     #[cfg(feature = "micropython")]
-    pub(super) fn from_qstr(qstr: Qstr) -> Option<Self> {
+    fn from_u16_id(id: u16) -> Option<Self> {
         // QSTR_MAP must be sorted by its first element
-        match Self::QSTR_MAP.binary_search_by(|(key, _)| key.to_u16().cmp(&qstr.to_u16())) {
+        match Self::QSTR_MAP.binary_search_by(|(key, _)| key.to_u16().cmp(&id)) {
             Ok(index) => Some(Self::QSTR_MAP[index].1),
             Err(_) => None,
         }
+    }
+
+    #[cfg(feature = "micropython")]
+    pub(super) fn from_qstr(qstr: Qstr) -> Option<Self> {
+        Self::from_u16_id(qstr.to_u16())
+    }
+
+    #[cfg(feature = "micropython")]
+    pub(super) fn from_attribute(attribute: Attribute) -> Option<Self> {
+        Self::from_u16_id(attribute.into_raw() as _)
     }
 
     /// Maps the translated string to a value using a closure.

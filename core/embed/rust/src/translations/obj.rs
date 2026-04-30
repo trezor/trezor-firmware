@@ -10,7 +10,7 @@ use crate::{
         map::Map,
         module::Module,
         obj::Obj,
-        qstr::Qstr,
+        qstr::{Attribute, Qstr},
         simple_type::SimpleTypeObj,
         typ::Type,
         util,
@@ -50,13 +50,13 @@ unsafe extern "C" fn tr_attr_fn(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) 
             // Null destination would mean a `setattr`.
             return Err(Error::TypeError);
         }
-        let attr = Qstr::from_u16(attr as u16);
-        let result = if let Some(translation) = TranslatedString::from_qstr(attr) {
+        let attr = Attribute::from_raw(attr);
+        let result = if let Some(translation) = TranslatedString::from_attribute(attr) {
             translation.map_translated(|t| t.try_into())?
             // TODO fall back to English (which is static and can be converted
             // infallibly) if the allocation fails?
         } else {
-            return Err(Error::AttributeError(attr.into()));
+            return Err(Error::AttributeError(attr));
         };
         unsafe { dest.write(result) };
         Ok(())

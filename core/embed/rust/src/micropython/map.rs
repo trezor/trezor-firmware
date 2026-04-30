@@ -1,6 +1,6 @@
 use core::{marker::PhantomData, mem::MaybeUninit, ops::Deref, ptr, slice};
 
-use super::{error::Error, ffi, obj::Obj, qstr::Qstr, runtime::catch_exception};
+use super::{error::Error, ffi, obj::Obj, qstr::Attribute, runtime::catch_exception};
 
 pub type Map = ffi::mp_map_t;
 pub type MapElem = ffi::mp_map_elem_t;
@@ -26,7 +26,7 @@ impl Map {
         }
     }
 
-    pub const fn at(key: Qstr, value: Obj) -> MapElem {
+    pub const fn at(key: Attribute, value: Obj) -> MapElem {
         MapElem {
             key: key.to_obj(),
             value,

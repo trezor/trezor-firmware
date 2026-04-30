@@ -8,7 +8,7 @@ use super::{
     iter::IterBuf,
     map::{Map, MapElem},
     obj::Obj,
-    qstr::Qstr,
+    qstr::Attribute,
     runtime::{catch_exception, raise_exception},
 };
 
@@ -103,7 +103,7 @@ pub fn new_tuple(args: &[Obj]) -> Result<Obj, Error> {
 ///     // ...
 /// }
 /// ```
-pub fn new_attrtuple(field_qstrs: &'static [Qstr], values: &[Obj]) -> Result<Obj, Error> {
+pub fn new_attrtuple(field_qstrs: &'static [Attribute], values: &[Obj]) -> Result<Obj, Error> {
     if field_qstrs.len() != values.len() {
         return Err(Error::TypeError);
     }

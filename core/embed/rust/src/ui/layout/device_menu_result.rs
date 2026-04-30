@@ -1,5 +1,10 @@
 use crate::micropython::{
-    ffi, macros::obj_type, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util, Error, Obj,
+    ffi,
+    macros::obj_type,
+    qstr::{Attribute, Qstr},
+    simple_type::SimpleTypeObj,
+    typ::Type,
+    util, Error, Obj,
 };
 
 use num_traits::ToPrimitive;
@@ -67,8 +72,8 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             // Null destination would mean a `setattr`.
             return Err(Error::TypeError);
         }
-        let attr = Qstr::from_u16(attr as _);
-        let value = match attr {
+        let attr = Attribute::from_raw(attr);
+        let value = match attr.into() {
             Qstr::MP_QSTR_ReviewFailedBackup => DeviceMenuMsg::ReviewFailedBackup.as_obj(),
             Qstr::MP_QSTR_PairDevice => DeviceMenuMsg::PairDevice.as_obj(),
             Qstr::MP_QSTR_DisconnectDevice => DeviceMenuMsg::DisconnectDevice.as_obj(),
@@ -92,7 +97,7 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             Qstr::MP_QSTR_Reboot => DeviceMenuMsg::Reboot.as_obj(),
             Qstr::MP_QSTR_RebootToBootloader => DeviceMenuMsg::RebootToBootloader.as_obj(),
             Qstr::MP_QSTR_RefreshMenu => DeviceMenuMsg::RefreshMenu.as_obj(),
-            _ => return Err(Error::AttributeError(attr.into())),
+            _ => return Err(Error::AttributeError(attr)),
         };
         unsafe { dest.write(value) };
         Ok(())
