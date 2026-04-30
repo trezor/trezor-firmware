@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import aesgcm
+from trezor.crypto import aesgcm_decrypt, aesgcm_encrypt
 
 
 class TestCryptoAes(unittest.TestCase):
@@ -49,18 +49,18 @@ class TestCryptoAes(unittest.TestCase):
             key, iv, pt, aad, ct, tag = map(unhexlify, vector)
 
             # Test encryption.
-            ctx = aesgcm(key, iv)
+            ctx = aesgcm_encrypt(key, iv)
             if aad:
                 ctx.auth(aad)
             self.assertEqual(ctx.encrypt(pt), ct)
             self.assertEqual(ctx.finish(), tag)
 
             # Test decryption.
-            ctx.reset(iv)
+            ctx = aesgcm_decrypt(key, iv)
             if aad:
                 ctx.auth(aad)
             self.assertEqual(ctx.decrypt(ct), pt)
-            self.assertEqual(ctx.finish(tag), tag)
+            self.assertIsNone(ctx.finish(tag))
 
     def test_gcm_in_place(self):
         for vector in self.vectors:
@@ -68,7 +68,7 @@ class TestCryptoAes(unittest.TestCase):
             buffer = bytearray(pt)
 
             # Test encryption.
-            ctx = aesgcm(key, iv)
+            ctx = aesgcm_encrypt(key, iv)
             if aad:
                 ctx.auth(aad)
             returned = ctx.encrypt_in_place(buffer)
@@ -77,13 +77,13 @@ class TestCryptoAes(unittest.TestCase):
             self.assertEqual(ctx.finish(), tag)
 
             # Test decryption.
-            ctx.reset(iv)
+            ctx = aesgcm_decrypt(key, iv)
             if aad:
                 ctx.auth(aad)
             returned = ctx.decrypt_in_place(buffer)
             self.assertEqual(buffer, pt)
             self.assertEqual(returned, len(buffer))
-            self.assertEqual(ctx.finish(tag), tag)
+            self.assertIsNone(ctx.finish(tag))
 
     def test_gcm_chunks(self):
         for vector in self.vectors:
@@ -92,20 +92,20 @@ class TestCryptoAes(unittest.TestCase):
             chunk1 = len(pt) // 3
 
             # Decrypt by chunks and add authenticated data by chunks.
-            ctx = aesgcm(key, iv)
+            ctx = aesgcm_decrypt(key, iv)
             self.assertEqual(ctx.decrypt(ct[:chunk1]), pt[:chunk1])
             ctx.auth(aad[:17])
             self.assertEqual(ctx.decrypt(ct[chunk1:]), pt[chunk1:])
             ctx.auth(aad[17:])
-            self.assertEqual(ctx.finish(tag), tag)
+            self.assertIsNone(ctx.finish(tag))
 
             # Encrypt by chunks and add authenticated data by chunks.
-            ctx.reset(iv)
+            ctx = aesgcm_encrypt(key, iv)
             ctx.auth(aad[:7])
             self.assertEqual(ctx.encrypt(pt[:chunk1]), ct[:chunk1])
             ctx.auth(aad[7:])
             self.assertEqual(ctx.encrypt(pt[chunk1:]), ct[chunk1:])
-            self.assertEqual(ctx.finish(tag), tag)
+            self.assertEqual(ctx.finish(), tag)
 
     def test_gcm_chunks_in_place(self):
         for vector in self.vectors:
@@ -115,7 +115,7 @@ class TestCryptoAes(unittest.TestCase):
             chunk2_length = len(pt) - chunk1_length
 
             # Decrypt by chunks and add authenticated data by chunks.
-            ctx = aesgcm(key, iv)
+            ctx = aesgcm_decrypt(key, iv)
             returned = ctx.decrypt_in_place(memoryview(buffer)[:chunk1_length])
             self.assertEqual(returned, chunk1_length)
             ctx.auth(aad[:17])
@@ -123,10 +123,10 @@ class TestCryptoAes(unittest.TestCase):
             ctx.auth(aad[17:])
             self.assertEqual(returned, chunk2_length)
             self.assertEqual(buffer, pt)
-            self.assertEqual(ctx.finish(tag), tag)
+            self.assertIsNone(ctx.finish(tag))
 
             # Encrypt by chunks and add authenticated data by chunks.
-            ctx.reset(iv)
+            ctx = aesgcm_encrypt(key, iv)
             ctx.auth(aad[:7])
             returned = ctx.encrypt_in_place(memoryview(buffer)[:chunk1_length])
             self.assertEqual(returned, chunk1_length)
@@ -134,23 +134,7 @@ class TestCryptoAes(unittest.TestCase):
             returned = ctx.encrypt_in_place(memoryview(buffer)[chunk1_length:])
             self.assertEqual(returned, chunk2_length)
             self.assertEqual(buffer, ct)
-            self.assertEqual(ctx.finish(tag), tag)
-
-    def test_gcm_missing_expected_tag(self):
-        for vector in self.vectors:
-            key, iv, pt, aad, ct, _ = map(unhexlify, vector)
-
-            ctx = aesgcm(key, iv)
-            if aad:
-                ctx.auth(aad)
-            self.assertEqual(ctx.decrypt(ct), pt)
-
-            # Try finishing the decryption with expected_tag missing
-            with self.assertRaises(RuntimeError) as e:
-                ctx.finish()
-            self.assertEqual(
-                e.value.value, "Argument `expected_tag` is required when decrypting."
-            )
+            self.assertEqual(ctx.finish(), tag)
 
     def test_gcm_invalid_tag_len(self):
         for vector in self.vectors:
@@ -164,12 +148,12 @@ class TestCryptoAes(unittest.TestCase):
             ]
 
             for tag in invalid_tags:
-                ctx = aesgcm(key, iv)
+                ctx = aesgcm_decrypt(key, iv)
                 if aad:
                     ctx.auth(aad)
                 self.assertEqual(ctx.decrypt(ct), pt)
 
-                # Try finishing the decryption with invalid-length tag
+                # Try finishing the decryption with an invalid-length tag
                 with self.assertRaises(ValueError) as e:
                     ctx.finish(tag)
                 self.assertEqual(
@@ -181,12 +165,12 @@ class TestCryptoAes(unittest.TestCase):
         invalid_tag = b"\xab" * 16
         for vector in self.vectors:
             key, iv, pt, aad, ct, _ = map(unhexlify, vector)
-            ctx = aesgcm(key, iv)
+            ctx = aesgcm_decrypt(key, iv)
             if aad:
                 ctx.auth(aad)
             self.assertEqual(ctx.decrypt(ct), pt)
 
-            # Try finishing the decryption with invalid tag
+            # Try finishing the decryption with an invalid tag
             with self.assertRaises(RuntimeError) as e:
                 ctx.finish(invalid_tag)
             self.assertEqual(
