@@ -3,7 +3,7 @@ use core::mem::MaybeUninit;
 use core::ops::Deref;
 use core::{ptr, slice};
 
-use crate::qstr::Qstr;
+use crate::qstr::Attribute;
 use crate::runtime::catch_exception;
 use crate::{Error, Obj, ffi};
 
@@ -31,7 +31,7 @@ impl Map {
         }
     }
 
-    pub const fn at(key: Qstr, value: Obj) -> MapElem {
+    pub const fn at(key: Attribute, value: Obj) -> MapElem {
         MapElem {
             key: key.to_obj(),
             value,

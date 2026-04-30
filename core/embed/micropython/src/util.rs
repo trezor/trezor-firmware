@@ -1,7 +1,7 @@
 use core::slice;
 
 use crate::map::{Map, MapElem};
-use crate::qstr::Qstr;
+use crate::qstr::Attribute;
 use crate::runtime::{catch_exception, raise_exception};
 use crate::{Error, Obj, ffi};
 
@@ -96,7 +96,7 @@ pub fn new_tuple(args: &[Obj]) -> Result<Obj, Error> {
 ///     // ...
 /// }
 /// ```
-pub fn new_attrtuple(field_qstrs: &'static [Qstr], values: &[Obj]) -> Result<Obj, Error> {
+pub fn new_attrtuple(field_qstrs: &'static [Attribute], values: &[Obj]) -> Result<Obj, Error> {
     if field_qstrs.len() != values.len() {
         return Err(Error::TypeError);
     }

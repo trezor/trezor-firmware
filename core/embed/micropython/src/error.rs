@@ -2,6 +2,7 @@ use core::convert::{Infallible, TryInto};
 use core::ffi::CStr;
 use core::num::TryFromIntError;
 
+use crate::qstr::Attribute;
 use crate::{Obj, ffi};
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
@@ -15,7 +16,7 @@ pub enum Error {
     IndexError,
     CaughtException(Obj),
     KeyError(Obj),
-    AttributeError(Obj),
+    AttributeError(Attribute),
     ValueError(&'static CStr),
     ValueErrorParam(&'static CStr, Obj),
     RuntimeError(&'static CStr),

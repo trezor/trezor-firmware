@@ -90,7 +90,7 @@ macro_rules! obj_map {
     ($($key:expr => $val:expr),*) => ({
         $crate::map::Map::from_fixed_static(&[
             $(
-                $crate::map::Map::at($key, $val),
+                $crate::map::Map::at($crate::qstr::Attribute::from_qstr_value($key), $val),
             )*
         ])
     });
@@ -131,7 +131,7 @@ macro_rules! obj_type {
         unsafe {
             use $crate::ffi;
 
-            let name = $name.to_u16();
+            let name = $crate::qstr::qstr_value_to_u16($name);
 
             #[allow(unused_mut)]
             #[allow(unused_assignments)]
@@ -192,7 +192,7 @@ macro_rules! obj_module {
         #[allow(unused_unsafe)]
         #[allow(unused_doc_comments)]
         unsafe {
-            use $crate::{ffi, map::Map};
+            use $crate::{ffi, map::Map, qstr::Attribute};
 
             static DICT: ffi::mp_obj_dict_t = ffi::mp_obj_dict_t {
                 base: ffi::mp_obj_base_t {
@@ -201,7 +201,7 @@ macro_rules! obj_module {
                 },
                 map: Map::from_fixed_static(&[
                     $(
-                        Map::at($key, $val),
+                        Map::at(Attribute::from_qstr_value($key), $val),
                     )*
                 ])
             };
@@ -232,7 +232,7 @@ macro_rules! attr_tuple {
     ) => {
         attr_tuple! {
             @append
-            fields: [$($fields,)* $field.into_raw(),],
+            fields: [$($fields,)* Attribute::from_qstr_value($field),],
             values: [$($values,)* $val,],
             rest: {$($rest)*}
         }
@@ -241,9 +241,11 @@ macro_rules! attr_tuple {
         fields: [$($fields:expr,)*],
         values: [$($values:expr,)*],
         rest: {}
-    ) => {
-        $crate::util::new_attrtuple(&[$($fields,)*], &[$($values,)*])
-    };
+    ) => {{
+        use $crate::qstr::Attribute;
+        static ATTRIBUTES: &[Attribute] = &[$($fields,)*];
+        $crate::util::new_attrtuple(ATTRIBUTES, &[$($values,)*])
+    }};
     // version without trailing comma
     ($($key:expr => $val:expr),*) => ({
         attr_tuple!(@append fields: [], values: [], rest: { $($key => $val,)* })

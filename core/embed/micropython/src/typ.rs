@@ -1,5 +1,6 @@
 use crate::ffi;
 use crate::obj::{Obj, ObjBase};
+use crate::qstr::Attribute;
 
 pub type Type = ffi::mp_obj_type_t;
 
@@ -23,11 +24,8 @@ impl Type {
         unsafe { Obj::from_ptr(self as *const _ as *mut _) }
     }
 
-    #[cfg(feature = "debug")]
     pub fn name(&self) -> &'static str {
-        use super::qstr::Qstr;
-
-        Qstr::from(self.name).as_str()
+        Attribute::from_u16(self.name).as_str()
     }
 }
 

@@ -20,8 +20,7 @@ use crate::{Error, Obj, ffi};
 /// The `off` field represents offset from the `ptr` and allows us to do
 /// substring slices while keeping the head pointer as required by GC.
 #[repr(C)]
-#[derive(Copy, Clone)]
-#[cfg_attr(test, derive(Debug))]
+#[derive(Debug, Copy, Clone)]
 pub struct StrBuffer {
     ptr: *const u8,
     len: u16,

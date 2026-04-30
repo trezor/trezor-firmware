@@ -1,4 +1,5 @@
 #![cfg_attr(not(test), no_std)]
+#![feature(const_trait_impl)]
 
 #[macro_use]
 mod error_util;
