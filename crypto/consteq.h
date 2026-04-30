@@ -11,5 +11,5 @@
  * thus preventing timing attacks.
  * @return `true` if the memory areas are equal, `false` otherwise.
  */
-bool consteq(const void *s1, const void *s2, size_t n)
+bool consteq(const void *s1, const void *s2, size_t n);
 #endif

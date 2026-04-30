@@ -43,7 +43,6 @@
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include "blake2s.h"
-#include "consteq.h"
 #include "memzero.h"
 
 #ifdef USE_SECRET
@@ -109,9 +108,14 @@ STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
   mp_buffer_info_t pubbuf = {0};
   mp_get_buffer_raise(pub, &pubbuf, MP_BUFFER_READ);
 
-  bool is_equal = consteq(secbuf.buf, secbuf.len, pubbuf.buf, pubbuf.len);
+  size_t diff = secbuf.len - pubbuf.len;
+  for (size_t i = 0; i < pubbuf.len; i++) {
+    const uint8_t *s = (uint8_t *)secbuf.buf;
+    const uint8_t *p = (uint8_t *)pubbuf.buf;
+    diff |= s[i] - p[i];
+  }
 
-  if (is_equal) {
+  if (diff == 0) {
     return mp_const_true;
   } else {
     return mp_const_false;
