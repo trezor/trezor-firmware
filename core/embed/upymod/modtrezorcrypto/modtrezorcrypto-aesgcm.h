@@ -258,6 +258,12 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt_finish(mp_obj_t self,
   }
 
   o->state = STATE_FINISHED;
+  mp_buffer_info_t exp_tag = {0};
+  mp_get_buffer_raise(expected_tag, &exp_tag, MP_BUFFER_READ);
+  if (exp_tag.len != 16) {
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("Invalid length of the tag. It has to be 16 bytes."));
+  }
   vstr_t tag = {0};
   vstr_init_len(&tag, 16);
   if (gcm_compute_tag((unsigned char *)tag.buf, tag.len, &(o->ctx)) !=
@@ -265,14 +271,8 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt_finish(mp_obj_t self,
     o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
-  mp_buffer_info_t exp_tag = {0};
-  mp_get_buffer_raise(expected_tag, &exp_tag, MP_BUFFER_READ);
-  if (exp_tag.len != 16) {
-    mp_raise_ValueError(
-        MP_ERROR_TEXT("Invalid length of the tag. It has to be 16 bytes."));
-  }
-  if (!consteq((uint8_t *)tag.buf, tag.len, (uint8_t *)exp_tag.buf,
-               exp_tag.len)) {
+
+  if (!consteq(tag.buf, exp_tag.buf, exp_tag.len)) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Authentication failed."));
   }
