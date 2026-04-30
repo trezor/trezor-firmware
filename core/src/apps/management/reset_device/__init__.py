@@ -124,9 +124,10 @@ async def reset_device(msg: ResetDevice) -> Success:
     if perform_backup:
         perform_backup = await prompt_backup()
 
-    # generate and display backup information for the master secret
-    if perform_backup:
-        with continue_on_errors("Backup in progress"):
+    # avoid failing backup process due to I/O-related errors
+    with continue_on_errors("Backup in progress"):
+        # generate and display backup information for the master secret
+        if perform_backup:
             # choose backup handler (prompt the user if method is `None`)
             handler = await layout.choose_backup_handler(msg.backup_method)
             await backup_seed(
@@ -135,19 +136,19 @@ async def reset_device(msg: ResetDevice) -> Success:
                 mnemonic_secret=secret,
             )
 
-    # write settings and master secret into storage
-    if msg.label is not None:
-        storage_device.set_label(msg.label)
-    storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
-    storage_device.store_mnemonic_secret(
-        secret=secret,  # for SLIP-39, this is the EMS
-        needs_backup=not perform_backup,
-        no_backup=bool(msg.no_backup),
-    )
+        # write settings and master secret into storage
+        if msg.label is not None:
+            storage_device.set_label(msg.label)
+        storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
+        storage_device.store_mnemonic_secret(
+            secret=secret,  # for SLIP-39, this is the EMS
+            needs_backup=not perform_backup,
+            no_backup=bool(msg.no_backup),
+        )
 
-    # if we backed up the wallet, show success message
-    if perform_backup:
-        await layout.show_backup_success()
+        # if we backed up the wallet, show success message
+        if perform_backup:
+            await layout.show_backup_success()
 
     return Success(message="Initialized")  # TODO: Why "Initialized?"
 
