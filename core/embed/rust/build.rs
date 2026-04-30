@@ -6,8 +6,6 @@ fn main() {
     println!("cargo:rustc-env=BUILD_DIR={}", build_dir());
     #[cfg(feature = "micropython")]
     generate_qstr_bindings();
-    #[cfg(feature = "micropython")]
-    generate_micropython_bindings();
     generate_trezorhal_bindings();
     #[cfg(feature = "crypto")]
     generate_crypto_bindings();
@@ -218,118 +216,6 @@ fn prepare_bindings() -> bindgen::Builder {
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files change.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-}
-
-#[cfg(feature = "micropython")]
-fn generate_micropython_bindings() {
-    let out_path = env::var("OUT_DIR").unwrap();
-
-    // Tell cargo to invalidate the built crate whenever the header changes.
-    println!("cargo:rerun-if-changed=micropython.h");
-
-    let bindings = prepare_bindings()
-        .header("micropython.h")
-        // obj
-        .new_type_alias("mp_obj_t")
-        .allowlist_type("mp_obj_type_t")
-        .allowlist_type("mp_obj_base_t")
-        .allowlist_function("mp_obj_new_int")
-        .allowlist_function("mp_obj_new_int_from_ll")
-        .allowlist_function("mp_obj_new_int_from_ull")
-        .allowlist_function("mp_obj_new_int_from_uint")
-        .allowlist_function("mp_obj_new_bytes")
-        .allowlist_function("mp_obj_new_str")
-        .allowlist_function("mp_obj_new_tuple")
-        .allowlist_function("mp_obj_new_attrtuple")
-        .allowlist_function("mp_obj_get_int_maybe")
-        .allowlist_function("mp_obj_is_true")
-        .allowlist_function("mp_obj_get_type_str")
-        .allowlist_function("mp_call_function_n_kw")
-        .allowlist_function("trezor_obj_get_ll_checked")
-        .allowlist_function("trezor_obj_str_from_rom_text")
-        // buffer
-        .allowlist_function("mp_get_buffer")
-        .allowlist_var("MP_BUFFER_READ")
-        .allowlist_var("MP_BUFFER_WRITE")
-        .allowlist_var("mp_type_str")
-        .allowlist_var("mp_type_bytes")
-        .allowlist_var("mp_type_bytearray")
-        .allowlist_var("mp_type_memoryview")
-        // dict
-        .allowlist_type("mp_obj_dict_t")
-        .allowlist_function("mp_obj_new_dict")
-        .allowlist_var("mp_type_dict")
-        // fun
-        .allowlist_type("mp_obj_fun_builtin_fixed_t")
-        .allowlist_var("mp_type_fun_builtin_0")
-        .allowlist_var("mp_type_fun_builtin_1")
-        .allowlist_var("mp_type_fun_builtin_2")
-        .allowlist_var("mp_type_fun_builtin_3")
-        .allowlist_type("mp_obj_fun_builtin_var_t")
-        .allowlist_var("mp_type_fun_builtin_var")
-        // gc
-        .allowlist_function("gc_alloc")
-        .allowlist_function("gc_free")
-        .allowlist_var("GC_ALLOC_FLAG_HAS_FINALISER")
-        // iter
-        .allowlist_type("mp_obj_iter_buf_t")
-        .allowlist_function("mp_getiter")
-        .allowlist_function("mp_iternext")
-        // list
-        .allowlist_type("mp_obj_list_t")
-        .allowlist_function("mp_obj_new_list")
-        .allowlist_function("mp_obj_list_append")
-        .allowlist_function("mp_obj_list_get")
-        .allowlist_function("mp_obj_list_set_len")
-        .allowlist_var("mp_type_list")
-        // map
-        .allowlist_type("mp_map_elem_t")
-        .allowlist_function("mp_map_init")
-        .allowlist_function("mp_map_init_fixed_table")
-        .allowlist_function("mp_map_lookup")
-        // exceptions
-        .allowlist_function("nlr_jump")
-        .allowlist_function("mp_obj_new_exception")
-        .allowlist_function("mp_obj_new_exception_args")
-        .allowlist_function("trezor_obj_call_protected")
-        .allowlist_var("mp_type_AttributeError")
-        .allowlist_var("mp_type_EOFError")
-        .allowlist_var("mp_type_IndexError")
-        .allowlist_var("mp_type_KeyError")
-        .allowlist_var("mp_type_MemoryError")
-        .allowlist_var("mp_type_OverflowError")
-        .allowlist_var("mp_type_ValueError")
-        .allowlist_var("mp_type_TypeError")
-        .allowlist_var("mp_type_RuntimeError")
-        .allowlist_var("mp_type_NotImplementedError")
-        // time
-        .allowlist_function("mp_hal_ticks_ms")
-        .allowlist_function("mp_hal_delay_ms")
-        // debug
-        .allowlist_function("mp_print_strn")
-        .allowlist_function("str_modulo_format")
-        .allowlist_var("mp_plat_print")
-        // typ
-        .allowlist_var("mp_type_type")
-        // module
-        .allowlist_type("mp_obj_module_t")
-        .allowlist_var("mp_type_module")
-        // qstr
-        .allowlist_function("qstr_data")
-        // tuple
-        .allowlist_type("mp_obj_tuple_t")
-        // `ffi::mp_map_t` type is not allowed to be `Clone` or `Copy` because we tie it
-        // to the data lifetimes with the `MapRef` type, see `src/micropython/map.rs`.
-        // TODO: We should disable `Clone` and `Copy` for all types and only allow-list
-        // the specific cases we require.
-        .no_copy("_mp_map_t");
-
-    // Write the bindings to a file in the OUR_DIR.
-    bindings
-        .generate()
-        .expect("Unable to generate bindings")
-        .write_to_file(PathBuf::from(out_path).join("micropython.rs"))
-        .unwrap();
 }
 
 fn generate_trezorhal_bindings() {
