@@ -1,11 +1,11 @@
-use core::{marker::PhantomData, mem::MaybeUninit, ops::Deref, ptr, slice};
+use core::marker::PhantomData;
+use core::mem::MaybeUninit;
+use core::ops::Deref;
+use core::{ptr, slice};
 
-use crate::{
-    error::Error,
-    micropython::{obj::Obj, qstr::Qstr},
-};
-
-use super::{ffi, runtime::catch_exception};
+use crate::qstr::Qstr;
+use crate::runtime::catch_exception;
+use crate::{Error, Obj, ffi};
 
 pub type Map = ffi::mp_map_t;
 pub type MapElem = ffi::mp_map_elem_t;
@@ -131,14 +131,16 @@ impl Map {
         unsafe {
             let map = self as *mut Self;
             // EXCEPTION: Will raise if allocation fails.
-            let elem = unwrap!(catch_exception(|| {
-                ffi::mp_map_lookup(
-                    map,
-                    index,
-                    ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
-                )
-            })?
-            .as_mut()); // `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` should always return a non-null pointer.
+            let elem = unwrap!(
+                catch_exception(|| {
+                    ffi::mp_map_lookup(
+                        map,
+                        index,
+                        ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
+                    )
+                })?
+                .as_mut()
+            ); // `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` should always return a non-null pointer.
             elem.value = value;
         }
         Ok(())

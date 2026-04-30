@@ -1,12 +1,13 @@
+#[macro_export]
 macro_rules! _obj_fn_make_fixed {
     ($type:ident, $member:ident, $f:expr) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            use $crate::micropython::ffi;
+            use $crate::ffi;
 
             ffi::mp_obj_fun_builtin_fixed_t {
                 base: ffi::mp_obj_base_t {
-                    type_: &$crate::micropython::ffi::$type,
+                    type_: &$crate::ffi::$type,
                 },
                 fun: ffi::_mp_obj_fun_builtin_fixed_t__bindgen_ty_1 { $member: Some($f) },
             }
@@ -15,38 +16,43 @@ macro_rules! _obj_fn_make_fixed {
 }
 
 /// Create an object for an exported function taking no arguments.
+#[macro_export]
 macro_rules! obj_fn_0 {
     ($f:expr) => {
-        crate::micropython::macros::_obj_fn_make_fixed!(mp_type_fun_builtin_0, _0, $f)
+        $crate::macros::_obj_fn_make_fixed!(mp_type_fun_builtin_0, _0, $f)
     };
 }
 
 /// Create an object for an exported function taking 1 arg.
+#[macro_export]
 macro_rules! obj_fn_1 {
     ($f:expr) => {
-        crate::micropython::macros::_obj_fn_make_fixed!(mp_type_fun_builtin_1, _1, $f)
+        $crate::macros::_obj_fn_make_fixed!(mp_type_fun_builtin_1, _1, $f)
     };
 }
 
 /// Create an object for an exported function taking 2 args.
+#[macro_export]
 macro_rules! obj_fn_2 {
     ($f:expr) => {
-        crate::micropython::macros::_obj_fn_make_fixed!(mp_type_fun_builtin_2, _2, $f)
+        $crate::macros::_obj_fn_make_fixed!(mp_type_fun_builtin_2, _2, $f)
     };
 }
 
 /// Create an object for an exported function taking 3 args.
+#[macro_export]
 macro_rules! obj_fn_3 {
     ($f:expr) => {
-        crate::micropython::macros::_obj_fn_make_fixed!(mp_type_fun_builtin_3, _3, $f)
+        $crate::macros::_obj_fn_make_fixed!(mp_type_fun_builtin_3, _3, $f)
     };
 }
 
+#[macro_export]
 macro_rules! _obj_fn_make_var {
     ($min:expr, $max:expr, takes_kw: $takes_kw:expr, $var_or_kw:ident: $f:expr) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            use $crate::micropython::ffi;
+            use $crate::ffi;
 
             ffi::mp_obj_fun_builtin_var_t {
                 base: ffi::mp_obj_base_t {
@@ -63,25 +69,28 @@ macro_rules! _obj_fn_make_var {
 
 /// Create an object for an exported function taking a variable number of args
 /// between min and max
+#[macro_export]
 macro_rules! obj_fn_var {
     ($min:expr, $max:expr, $f:expr) => {
-        crate::micropython::macros::_obj_fn_make_var!($min, $max, takes_kw:0, var:$f)
+        $crate::macros::_obj_fn_make_var!($min, $max, takes_kw:0, var:$f)
     };
 }
 
 /// Create an object for an exported function taking key-value args.
+#[macro_export]
 macro_rules! obj_fn_kw {
     ($min:expr, $f:expr) => {
-        crate::micropython::macros::_obj_fn_make_var!($min, 0xffff, takes_kw:1, kw:$f)
+        $crate::macros::_obj_fn_make_var!($min, 0xffff, takes_kw:1, kw:$f)
     };
 }
 
 /// Construct fixed static const `Map` from `key` => `val` pairs.
+#[macro_export]
 macro_rules! obj_map {
     ($($key:expr => $val:expr),*) => ({
-        $crate::micropython::map::Map::from_fixed_static(&[
+        $crate::map::Map::from_fixed_static(&[
             $(
-                $crate::micropython::map::Map::at($key, $val),
+                $crate::map::Map::at($key, $val),
             )*
         ])
     });
@@ -91,11 +100,12 @@ macro_rules! obj_map {
 }
 
 /// Construct a `Dict` from the backing `Map`. See `obj_map` above.
+#[macro_export]
 macro_rules! obj_dict {
     ($map:expr) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            use $crate::micropython::ffi;
+            use $crate::ffi;
 
             ffi::mp_obj_dict_t {
                 base: ffi::mp_obj_base_t {
@@ -108,6 +118,7 @@ macro_rules! obj_dict {
 }
 
 /// Compose a `Type` object definition.
+#[macro_export]
 macro_rules! obj_type {
     (name: $name:expr,
      $(base: $base:expr,)?
@@ -118,7 +129,7 @@ macro_rules! obj_type {
     ) => {{
         #[allow(unused_unsafe)]
         unsafe {
-            use $crate::micropython::ffi;
+            use $crate::ffi;
 
             let name = $name.to_u16();
 
@@ -175,12 +186,13 @@ macro_rules! obj_type {
 }
 
 /// Construct an upymod definition.
+#[macro_export]
 macro_rules! obj_module {
     ($($key:expr => $val:expr),*) => ({
         #[allow(unused_unsafe)]
         #[allow(unused_doc_comments)]
         unsafe {
-            use $crate::micropython::{ffi, map::Map};
+            use $crate::{ffi, map::Map};
 
             static DICT: ffi::mp_obj_dict_t = ffi::mp_obj_dict_t {
                 base: ffi::mp_obj_base_t {
@@ -208,6 +220,7 @@ macro_rules! obj_module {
     });
 }
 
+#[macro_export]
 macro_rules! attr_tuple {
     (@append
         fields: [$($fields:expr,)*],
@@ -219,7 +232,7 @@ macro_rules! attr_tuple {
     ) => {
         attr_tuple! {
             @append
-            fields: [$($fields,)* $field,],
+            fields: [$($fields,)* $field.into_raw(),],
             values: [$($values,)* $val,],
             rest: {$($rest)*}
         }
@@ -229,7 +242,7 @@ macro_rules! attr_tuple {
         values: [$($values:expr,)*],
         rest: {}
     ) => {
-        $crate::micropython::util::new_attrtuple(&[$($fields,)*], &[$($values,)*])
+        $crate::util::new_attrtuple(&[$($fields,)*], &[$($values,)*])
     };
     // version without trailing comma
     ($($key:expr => $val:expr),*) => ({
@@ -242,17 +255,17 @@ macro_rules! attr_tuple {
 }
 
 // required because they are used in expansion of macros below
-pub(crate) use _obj_fn_make_fixed;
-pub(crate) use _obj_fn_make_var;
+pub use _obj_fn_make_fixed;
+pub use _obj_fn_make_var;
 
-pub(crate) use attr_tuple;
-pub(crate) use obj_dict;
-pub(crate) use obj_fn_0;
-pub(crate) use obj_fn_1;
-pub(crate) use obj_fn_2;
-pub(crate) use obj_fn_3;
-pub(crate) use obj_fn_kw;
-pub(crate) use obj_fn_var;
-pub(crate) use obj_map;
-pub(crate) use obj_module;
-pub(crate) use obj_type;
+pub use attr_tuple;
+pub use obj_dict;
+pub use obj_fn_0;
+pub use obj_fn_1;
+pub use obj_fn_2;
+pub use obj_fn_3;
+pub use obj_fn_kw;
+pub use obj_fn_var;
+pub use obj_map;
+pub use obj_module;
+pub use obj_type;

@@ -1,1 +1,1 @@
-../../../projects/unix/mpconfigport.h
+../projects/firmware/mpconfigport.h

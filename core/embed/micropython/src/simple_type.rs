@@ -1,4 +1,4 @@
-use super::{
+use crate::{
     obj::{Obj, ObjBase},
     typ::Type,
 };

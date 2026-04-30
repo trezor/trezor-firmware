@@ -1,4 +1,4 @@
-use super::ffi;
+use crate::ffi;
 
 /// Print a slice into emulator console.
 /// Is being '\0' terminated automatically.

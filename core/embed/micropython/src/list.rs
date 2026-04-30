@@ -1,13 +1,9 @@
-use core::{convert::TryFrom, ptr};
+use core::convert::TryFrom;
+use core::ptr;
 
-use crate::error::Error;
-
-use super::{
-    ffi,
-    gc::{Gc, GcBox},
-    obj::Obj,
-    runtime::catch_exception,
-};
+use crate::gc::{Gc, GcBox};
+use crate::runtime::catch_exception;
+use crate::{Error, Obj, ffi};
 
 pub type List = ffi::mp_obj_list_t;
 
@@ -149,25 +145,24 @@ impl TryFrom<Obj> for Gc<List> {
 
 #[cfg(test)]
 mod tests {
-    use crate::micropython::{iter::IterBuf, testutil::mpy_init};
-
     use super::*;
-    use heapless::Vec;
+    use crate::iter::IterBuf;
+    use crate::testutil::mpy_init;
 
     #[test]
     fn list_from_iter() {
         unsafe { mpy_init() };
 
         // create an upy list of 5 elements
-        let vec: Vec<u8, 10> = (0..5).collect();
+        let vec: Vec<u8> = (0..5).collect();
         let list: Obj = List::from_iter(vec.iter().copied()).unwrap().leak().into();
 
         // collect the elements into a Vec of maximum length 10, through an iterator
-        let retrieved_vec: Vec<u8, 10> = IterBuf::new()
+        let retrieved_vec: Vec<u8> = IterBuf::new()
             .try_iterate(list)
             .unwrap()
             .map(TryInto::try_into)
-            .collect::<Result<Vec<u8, 10>, Error>>()
+            .collect::<Result<Vec<u8>, Error>>()
             .unwrap();
         assert_eq!(vec, retrieved_vec);
     }
@@ -176,7 +171,7 @@ mod tests {
     fn list_len() {
         unsafe { mpy_init() };
 
-        let vec: Vec<u16, 17> = (0..17).collect();
+        let vec: Vec<u16> = (0..17).collect();
         let list = List::from_iter(vec.iter().copied()).unwrap();
         assert_eq!(list.len(), vec.len());
     }
@@ -185,7 +180,7 @@ mod tests {
     fn list_get_set() {
         unsafe { mpy_init() };
 
-        let vec: Vec<u16, 17> = (0..17).collect();
+        let vec: Vec<u16> = (0..17).collect();
         let mut list = List::from_iter(vec.iter().copied()).unwrap();
 
         for (i, value) in vec.iter().copied().enumerate() {
@@ -200,11 +195,11 @@ mod tests {
             );
         }
 
-        let retrieved_vec: Vec<u16, 17> = IterBuf::new()
+        let retrieved_vec: Vec<u16> = IterBuf::new()
             .try_iterate(list.leak().into())
             .unwrap()
             .map(TryInto::try_into)
-            .collect::<Result<Vec<u16, 17>, Error>>()
+            .collect::<Result<Vec<u16>, Error>>()
             .unwrap();
 
         for i in 0..retrieved_vec.len() {
@@ -216,7 +211,7 @@ mod tests {
     fn list_as_slice() {
         unsafe { mpy_init() };
 
-        let vec: Vec<u16, 17> = (13..13 + 17).collect();
+        let vec: Vec<u16> = (13..13 + 17).collect();
         let list = List::from_iter(vec.iter().copied()).unwrap();
 
         let slice = unsafe { list.as_slice() };
@@ -230,7 +225,7 @@ mod tests {
     fn list_as_mut_slice() {
         unsafe { mpy_init() };
 
-        let vec: Vec<u16, 5> = (0..5).collect();
+        let vec: Vec<u16> = (0..5).collect();
         let mut list = List::from_iter(vec.iter().copied()).unwrap();
 
         let slice = unsafe { list.as_mut_slice() };
@@ -241,11 +236,11 @@ mod tests {
             slice[i] = ((i + 10) as u16).into();
         }
 
-        let retrieved_vec: Vec<u16, 5> = IterBuf::new()
+        let retrieved_vec: Vec<u16> = IterBuf::new()
             .try_iterate(list.leak().into())
             .unwrap()
             .map(TryInto::try_into)
-            .collect::<Result<Vec<u16, 5>, Error>>()
+            .collect::<Result<Vec<u16>, Error>>()
             .unwrap();
 
         for i in 0..retrieved_vec.len() {

@@ -1,8 +1,8 @@
-use core::{convert::TryFrom, ops::Deref, ptr, slice, str};
+use core::convert::TryFrom;
+use core::ops::Deref;
+use core::{ptr, slice, str};
 
-use crate::{error::Error, micropython::obj::Obj, strutil::hexlify};
-
-use super::ffi;
+use crate::{Error, Obj, ffi};
 
 /// Represents an immutable UTF-8 string managed by MicroPython GC.
 /// This either means static data, or a valid GC object.
@@ -259,28 +259,6 @@ pub unsafe fn get_buffer_mut<'a>(obj: Obj) -> Result<&'a mut [u8], Error> {
         //  - the buffer is not mutated outside of Rust's control.
         Ok(unsafe { slice::from_raw_parts_mut(bufinfo.buf as _, bufinfo.len) })
     }
-}
-
-pub fn hexlify_bytes(obj: Obj, offset: usize, max_len: usize) -> Result<StrBuffer, Error> {
-    if !obj.is_bytes() {
-        return Err(Error::TypeError);
-    }
-
-    // Convert offset to byte representation, handle case where it points in the
-    // middle of a byte.
-    let bin_off = offset / 2;
-    let hex_off = offset % 2;
-
-    // SAFETY:
-    // (a) only immutable references are taken
-    // (b) reference is discarded before returning to micropython
-    let bin_slice = unsafe { get_buffer(obj)? };
-    let bin_slice = &bin_slice[bin_off..];
-
-    let max_len = max_len & !1;
-    let hex_len = (bin_slice.len() * 2).min(max_len);
-    let result = StrBuffer::alloc_with(hex_len, move |buffer| hexlify(bin_slice, buffer))?;
-    Ok(result.skip_prefix(hex_off))
 }
 
 #[cfg(test)]

@@ -1,11 +1,8 @@
-use core::{
-    convert::{TryFrom, TryInto},
-    ffi::CStr,
-};
+use core::convert::{TryFrom, TryInto};
+use core::ffi::CStr;
 
-use crate::error::Error;
-
-use super::{ffi, runtime::catch_exception};
+use crate::runtime::catch_exception;
+use crate::{Error, ffi};
 
 pub type Obj = ffi::mp_obj_t;
 pub type ObjBase = ffi::mp_obj_base_t;

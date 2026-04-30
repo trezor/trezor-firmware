@@ -1,9 +1,15 @@
+#![cfg_attr(not(test), no_std)]
+
+#[macro_use]
+mod error_util;
+
 #[macro_use]
 #[allow(unused_macros)]
 pub mod macros;
 
 pub mod buffer;
 pub mod dict;
+pub mod error;
 pub mod ffi;
 pub mod func;
 pub mod gc;
@@ -21,3 +27,6 @@ pub mod util;
 
 #[cfg(test)]
 pub mod testutil;
+
+pub use obj::Obj;
+pub use error::Error;

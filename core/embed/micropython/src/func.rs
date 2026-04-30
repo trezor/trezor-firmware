@@ -1,4 +1,4 @@
-use super::{ffi, obj::Obj};
+use crate::{Obj, ffi};
 
 pub type Func = ffi::mp_obj_fun_builtin_fixed_t;
 

@@ -1,12 +1,8 @@
-use core::{
-    alloc::Layout,
-    ops::{Deref, DerefMut},
-    ptr::{self, NonNull},
-};
+use core::alloc::Layout;
+use core::ops::{Deref, DerefMut};
+use core::ptr::{self, NonNull};
 
-use crate::error::Error;
-
-use super::ffi;
+use crate::{Error, ffi};
 
 /// A pointer type for values on the garbage-collected heap.
 pub struct Gc<T: ?Sized>(NonNull<T>);
@@ -252,6 +248,7 @@ impl<T: ?Sized> GcBox<T> {
 }
 
 /// Type-cast GcBox contents to a `dyn Trait` object.
+#[macro_export]
 macro_rules! coerce {
     ($t:path, $v:expr) => {
         // SAFETY: we are just re-wrapping the pointer, so all safety requirements
@@ -262,7 +259,7 @@ macro_rules! coerce {
     };
 }
 
-pub(crate) use coerce;
+pub use coerce;
 
 impl<T: ?Sized> Deref for GcBox<T> {
     type Target = T;
@@ -296,9 +293,8 @@ impl<T: ?Sized> Drop for GcBox<T> {
 mod test {
     use core::cell::Cell;
 
-    use crate::micropython::testutil::mpy_init;
-
     use super::*;
+    use crate::testutil::mpy_init;
 
     struct SignalDrop<'a>(&'a Cell<bool>);
 

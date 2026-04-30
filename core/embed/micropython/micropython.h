@@ -5,4 +5,4 @@
 #include "py/objstr.h"
 #include "py/runtime.h"
 
-#include "../../../upymod/trezorobj.h"
+#include "../upymod/trezorobj.h"

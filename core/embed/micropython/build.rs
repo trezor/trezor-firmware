@@ -12,7 +12,7 @@ fn main() {
 }
 
 fn build_dir() -> String {
-    let build_dir_str = env::var("BUILD_DIR").unwrap_or(String::from("../../../../build/unix"));
+    let build_dir_str = env::var("BUILD_DIR").unwrap_or(String::from("../../build/unix"));
     PathBuf::from(build_dir_str)
         .canonicalize()
         .unwrap()
@@ -80,9 +80,6 @@ fn prepare_bindings() -> bindgen::Builder {
 
 fn generate_micropython_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
-
-    // Tell cargo to invalidate the built crate whenever the header changes.
-    println!("cargo:rerun-if-changed=micropython.h");
 
     let bindings = prepare_bindings()
         .header("micropython.h")
@@ -192,7 +189,7 @@ fn generate_micropython_bindings() {
 #[cfg(feature = "test")]
 fn link_core_objects() {
     let crate_path = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let build_path = format!("{}/../../../../build/unix", crate_path);
+    let build_path = format!("{}/../../build/unix", crate_path);
 
     // List of object filenames to ignore in the `embed` directory
     let embed_blocklist = [OsStr::new("main_main.o")];
