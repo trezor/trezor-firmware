@@ -106,7 +106,7 @@ impl PassphraseInput {
         debug_assert_ne!(self.display_style, DisplayStyle::Shown);
 
         let hidden_area: Rect = self.area.inset(KEYBOARD_INPUT_INSETS);
-        let pp_len = self.content().len();
+        let pp_len = self.textbox.count();
         let last_char = self.display_style != DisplayStyle::Hidden;
 
         let mut cursor = hidden_area.left_center().ofs(Offset::x(12));
@@ -154,27 +154,26 @@ impl PassphraseInput {
         }
 
         if last_char {
-            // This should not fail because pp_len > 0
-            let last = &self.content()[(pp_len - 1)..pp_len];
+            if let Some(last) = self.textbox.last_char_str() {
+                // Adapt x and y positions for the character
+                cursor.y += Self::STYLE.text_font.visible_text_height("1") / 2;
 
-            // Adapt x and y positions for the character
-            cursor.y += Self::STYLE.text_font.visible_text_height("1") / 2;
+                // Paint the last character
+                Text::new(cursor, last, Self::STYLE.text_font)
+                    .with_align(Alignment::Start)
+                    .with_fg(Self::STYLE.text_color)
+                    .render(target);
 
-            // Paint the last character
-            Text::new(cursor, last, Self::STYLE.text_font)
-                .with_align(Alignment::Start)
-                .with_fg(Self::STYLE.text_color)
-                .render(target);
-
-            // Paint the pending marker.
-            if self.display_style == DisplayStyle::LastWithMarker {
-                render_pending_marker(
-                    target,
-                    cursor,
-                    last,
-                    Self::STYLE.text_font,
-                    Self::STYLE.text_color,
-                );
+                // Paint the pending marker.
+                if self.display_style == DisplayStyle::LastWithMarker {
+                    render_pending_marker(
+                        target,
+                        cursor,
+                        last,
+                        Self::STYLE.text_font,
+                        Self::STYLE.text_color,
+                    );
+                }
             }
         }
     }

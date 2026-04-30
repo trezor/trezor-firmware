@@ -36,12 +36,28 @@ impl TextBox {
         &self.text
     }
 
+    /// Length of the content in *bytes* (matches `std::String::len`). Use
+    /// `count()` for the number of characters.
     pub fn len(&self) -> usize {
         self.text.len()
     }
 
+    /// Number of *characters* in the content. O(n) in the byte length.
+    pub fn count(&self) -> usize {
+        self.text.chars().count()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.text.is_empty()
+    }
+
+    /// Returns the last character of the content as a string slice, if any.
+    /// Safe to use without knowing the byte width of the last UTF-8 sequence.
+    pub fn last_char_str(&self) -> Option<&str> {
+        self.text
+            .char_indices()
+            .next_back()
+            .map(|(i, _)| &self.text[i..])
     }
 
     /// Delete the last character of content, if any.
