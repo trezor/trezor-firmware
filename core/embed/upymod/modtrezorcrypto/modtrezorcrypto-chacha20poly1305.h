@@ -187,17 +187,17 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish(
   }
 
   o->state = FINISHED;
-  vstr_t mac = {0};
-  vstr_init_len(&mac, 16);
-  rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
   mp_buffer_info_t exp_mac = {0};
   mp_get_buffer_raise(expected_mac, &exp_mac, MP_BUFFER_READ);
   if (exp_mac.len != 16) {
     mp_raise_ValueError(MP_ERROR_TEXT(
         "Invalid length of the expected mac. It has to be 16 bytes."));
   }
-  if (!consteq((uint8_t *)mac.buf, mac.len, (uint8_t *)exp_mac.buf,
-               exp_mac.len)) {
+  vstr_t mac = {0};
+  vstr_init_len(&mac, 16);
+  rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
+
+  if (!consteq(mac.buf, exp_mac.buf, exp_mac.len)) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Authentication failed."));
   }
