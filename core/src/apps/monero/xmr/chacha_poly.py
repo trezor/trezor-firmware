@@ -1,4 +1,4 @@
-from trezor.crypto import chacha20poly1305 as ChaCha20Poly1305
+from trezor.crypto import chacha20poly1305_decrypt, chacha20poly1305_encrypt
 
 
 def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
@@ -8,7 +8,7 @@ def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
     from trezor.crypto import random
 
     nonce = random.bytes(12)
-    cipher = ChaCha20Poly1305(key, nonce)
+    cipher = chacha20poly1305_encrypt(key, nonce)
     if associated_data:
         cipher.auth(associated_data)
     ciphertext = cipher.encrypt(plaintext)
@@ -26,7 +26,7 @@ def _decrypt(
     ChaCha20Poly1305 decryption
     """
 
-    cipher = ChaCha20Poly1305(key, iv)
+    cipher = chacha20poly1305_decrypt(key, iv)
     if associated_data:
         cipher.auth(associated_data)
     exp_tag, ciphertext = ciphertext[-16:], ciphertext[:-16]

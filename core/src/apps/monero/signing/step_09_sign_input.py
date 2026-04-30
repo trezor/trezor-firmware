@@ -220,7 +220,7 @@ def _protect_signature(state: State, mg_buffer: list[bytes]) -> list[bytes]:
     After protocol finishes without error, opening_key is sent to the
     host.
     """
-    from trezor.crypto import chacha20poly1305, random
+    from trezor.crypto import chacha20poly1305_encrypt, random
 
     from apps.monero.signing import offloading_keys
 
@@ -235,7 +235,7 @@ def _protect_signature(state: State, mg_buffer: list[bytes]) -> list[bytes]:
         state.opening_key, state.current_input_index, False
     )
 
-    cipher = chacha20poly1305(key, nonce)
+    cipher = chacha20poly1305_encrypt(key, nonce)
 
     # cipher.update() input has to be 512 bit long (besides the last block).
     # Thus we go over mg_buffer and buffer 512 bit input blocks before

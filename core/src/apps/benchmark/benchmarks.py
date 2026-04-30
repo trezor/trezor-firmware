@@ -1,4 +1,10 @@
-from trezor.crypto import aes, aesgcm_decrypt, aesgcm_encrypt, chacha20poly1305
+from trezor.crypto import (
+    aes,
+    aesgcm_decrypt,
+    aesgcm_encrypt,
+    chacha20poly1305_decrypt,
+    chacha20poly1305_encrypt,
+)
 from trezor.crypto.curve import curve25519, ed25519, nist256p1, secp256k1
 from trezor.crypto.hashlib import (
     blake2b,
@@ -75,10 +81,10 @@ benchmarks = {
         lambda: aesgcm_decrypt(random_bytes(32), random_bytes(16)), 16
     ),
     "crypto/cipher/chacha20poly1305/encrypt": EncryptBenchmark(
-        lambda: chacha20poly1305(random_bytes(32), random_bytes(12)), 64
+        lambda: chacha20poly1305_encrypt(random_bytes(32), random_bytes(12)), 64
     ),
     "crypto/cipher/chacha20poly1305/decrypt": DecryptBenchmark(
-        lambda: chacha20poly1305(random_bytes(32), random_bytes(12)), 64
+        lambda: chacha20poly1305_decrypt(random_bytes(32), random_bytes(12)), 64
     ),
     "crypto/curve/secp256k1/sign": SignBenchmark(secp256k1),
     "crypto/curve/secp256k1/verify": VerifyBenchmark(secp256k1),
