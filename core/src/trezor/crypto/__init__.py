@@ -10,7 +10,7 @@ from trezorcrypto import (  # noqa: F401
 )
 
 try:
-    from trezorcrypto import aesgcm  # noqa: F401
+    from trezorcrypto import aesgcm_decrypt, aesgcm_encrypt  # noqa: F401
 except Exception:
     pass
 

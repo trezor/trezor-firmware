@@ -1,6 +1,6 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
-from trezorcrypto import aesgcm, curve25519
+from trezorcrypto import aesgcm_encrypt, curve25519
 
 import storage
 
@@ -118,7 +118,7 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
 
         host_static_private_key = curve25519.generate_secret()
         host_static_public_key = curve25519.publickey(host_static_private_key)
-        aes_ctx = aesgcm(handshake.k, IV_2)
+        aes_ctx = aesgcm_encrypt(handshake.k, IV_2)
         aes_ctx.auth(handshake.h)
         encrypted_host_static_public_key = bytearray(
             aes_ctx.encrypt(host_static_public_key) + aes_ctx.finish()
@@ -136,7 +136,7 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
                 handshake.trezor_ephemeral_private_key, host_static_public_key
             ),
         )
-        aes_ctx = aesgcm(temp_k, IV_1)
+        aes_ctx = aesgcm_encrypt(temp_k, IV_1)
         aes_ctx.encrypt_in_place(protomsg)
         aes_ctx.auth(temp_h)
         tag = aes_ctx.finish()

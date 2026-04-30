@@ -82,7 +82,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto)},
     {MP_ROM_QSTR(MP_QSTR_aes), MP_ROM_PTR(&mod_trezorcrypto_AES_type)},
 #if USE_AES_GCM
-    {MP_ROM_QSTR(MP_QSTR_aesgcm), MP_ROM_PTR(&mod_trezorcrypto_AesGcm_type)},
+    {MP_ROM_QSTR(MP_QSTR_aesgcm_decrypt),
+     MP_ROM_PTR(&mod_trezorcrypto_AesGcmDecrypt_type)},
+    {MP_ROM_QSTR(MP_QSTR_aesgcm_encrypt),
+     MP_ROM_PTR(&mod_trezorcrypto_AesGcmEncrypt_type)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_bech32), MP_ROM_PTR(&mod_trezorcrypto_bech32_module)},
     {MP_ROM_QSTR(MP_QSTR_bip32), MP_ROM_PTR(&mod_trezorcrypto_bip32_module)},

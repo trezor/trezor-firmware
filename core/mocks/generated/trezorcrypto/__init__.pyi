@@ -35,19 +35,26 @@ class aes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-aesgcm.h
-class aesgcm:
+class aesgcm_encrypt:
     """
-    AES-GCM context.
+    AES-GCM context for encryption.
     """
 
     def __init__(self, key: AnyBytes, iv: AnyBytes) -> None:
         """
-        Initialize the AES-GCM context for encryption or decryption.
+        Initialize the AES-GCM context for encryption.
+        """
+
+    def auth(self, data: AnyBytes) -> None:
+        """
+        Include authenticated data chunk in the GCM authentication tag. This can
+        be called repeatedly to add authenticated data at any point before
+        finish().
         """
 
     def reset(self, iv: AnyBytes) -> None:
         """
-        Reset the IV for encryption or decryption.
+        Reset the IV for encryption.
         """
 
     def encrypt(self, data: AnyBytes) -> bytes:
@@ -60,6 +67,35 @@ class aesgcm:
         Encrypt data chunk in place. Returns the length of the encrypted data.
         """
 
+    def finish(self) -> bytes:
+        """
+        Compute the GCM authentication tag.
+        """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-aesgcm.h
+class aesgcm_decrypt:
+    """
+    AES-GCM context for decryption.
+    """
+
+    def __init__(self, key: AnyBytes, iv: AnyBytes) -> None:
+        """
+        Initialize the AES-GCM context for decryption.
+        """
+
+    def auth(self, data: AnyBytes) -> None:
+        """
+        Include authenticated data chunk in the GCM authentication tag. This can
+        be called repeatedly to add authenticated data at any point before
+        finish().
+        """
+
+    def reset(self, iv: AnyBytes) -> None:
+        """
+        Reset the IV for decryption.
+        """
+
     def decrypt(self, data: AnyBytes) -> bytes:
         """
         Decrypt data chunk.
@@ -70,17 +106,9 @@ class aesgcm:
         Decrypt data chunk in place. Returns the length of the decrypted data.
         """
 
-    def auth(self, data: AnyBytes) -> None:
+    def finish(self, expected_tag: AnyBytes) -> None:
         """
-        Include authenticated data chunk in the GCM authentication tag. This can
-        be called repeatedly to add authenticated data at any point before
-        finish().
-        """
-
-    def finish(self, expected_tag: AnyBytes | None = None) -> bytes:
-        """
-        Compute GCM authentication tag. The `expected_tag` is required when
-        decrypting.
+        Verify the GCM authentication tag.
         """
 
 
