@@ -46,7 +46,6 @@ impl PassphraseInput {
     const TWITCH: i16 = 4;
     const STYLE: TextStyle =
         theme::TEXT_REGULAR.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
-    const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(200);
     const ICON: Icon = theme::ICON_DASH_VERTICAL;
     const ICON_WIDTH: i16 = Self::ICON.toif.width();
     const ICON_SPACE: i16 = 12;
@@ -298,13 +297,6 @@ impl Component for PassphraseInput {
             return None;
         }
 
-        // Extend the passphrase area downward to allow touch input without the finger
-        // covering the passphrase
-        let extended_shown_area = self
-            .shown_area
-            .outset(Self::SHOWN_TOUCH_OUTSET)
-            .clamp(SCREEN);
-
         match event {
             Event::Timer(_) if self.multi_tap.timeout_event(event) => {
                 self.multi_tap.clear_pending_state(ctx);
@@ -316,7 +308,7 @@ impl Component for PassphraseInput {
                 }
                 return None;
             }
-            // Return touch start if the touch is detected inside the touchable area
+            // Reveal on touch start within the input area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
                 self.multi_tap.clear_pending_state(ctx);
                 // Stop the last char timer
@@ -326,17 +318,8 @@ impl Component for PassphraseInput {
                 self.update_shown_area();
                 return Some(StringInputMsg::UpdateKeypad);
             }
-            // Return touch end if the touch end is detected
+            // Hide on touch end anywhere on the screen
             Event::Touch(TouchEvent::TouchEnd(_)) if self.display_style == DisplayStyle::Shown => {
-                self.multi_tap.clear_pending_state(ctx);
-                self.display_style = DisplayStyle::Hidden;
-                return Some(StringInputMsg::UpdateKeypad);
-            }
-            // Return touch end if the touch moves out of the visible area
-            Event::Touch(TouchEvent::TouchMove(pos))
-                if !extended_shown_area.contains(pos)
-                    && self.display_style == DisplayStyle::Shown =>
-            {
                 self.multi_tap.clear_pending_state(ctx);
                 self.display_style = DisplayStyle::Hidden;
                 return Some(StringInputMsg::UpdateKeypad);

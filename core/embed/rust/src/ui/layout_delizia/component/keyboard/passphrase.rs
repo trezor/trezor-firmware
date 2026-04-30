@@ -477,7 +477,6 @@ impl Input {
     const STYLE: TextStyle =
         theme::label_keyboard().with_line_breaking(LineBreaking::BreakWordsNoHyphen);
     const SHOWN_INSETS: Insets = Insets::new(8, 10, 8, 10);
-    const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(80);
 
     fn new(max_len: usize) -> Self {
         Self {
@@ -626,12 +625,8 @@ impl Component for Input {
             return None;
         }
 
-        let extended_shown_area = self
-            .shown_area
-            .outset(Self::SHOWN_TOUCH_OUTSET)
-            .clamp(SCREEN);
-
         match event {
+            // Reveal on touch start within the input area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
                 self.multi_tap.clear_pending_state(ctx);
                 self.last_char_timer.stop();
@@ -640,15 +635,8 @@ impl Component for Input {
                 self.pad.clear();
                 ctx.request_paint();
             }
+            // Hide on touch end anywhere on the screen
             Event::Touch(TouchEvent::TouchEnd(_)) if self.display_style == DisplayStyle::Shown => {
-                self.display_style = DisplayStyle::Hidden;
-                self.pad.clear();
-                ctx.request_paint();
-            }
-            Event::Touch(TouchEvent::TouchMove(pos))
-                if !extended_shown_area.contains(pos)
-                    && self.display_style == DisplayStyle::Shown =>
-            {
                 self.display_style = DisplayStyle::Hidden;
                 self.pad.clear();
                 ctx.request_paint();
