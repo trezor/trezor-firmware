@@ -1,4 +1,4 @@
-use crate::micropython::buffer::StrBuffer;
+use micropython::buffer::StrBuffer;
 
 /// Parse interpolation format string.
 pub fn parse(format: impl Into<StrBuffer>) -> impl Iterator<Item = Item> {

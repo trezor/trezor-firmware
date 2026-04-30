@@ -1,10 +1,11 @@
 use crate::{error::Error, strutil::TString};
 
 #[cfg(feature = "micropython")]
-use crate::micropython::{
+use crate::micropython::qstr::Qstr;
+#[cfg(feature = "micropython")]
+use micropython::{
     macros::{obj_dict, obj_map, obj_type},
     obj::Obj,
-    qstr::Qstr,
     simple_type::SimpleTypeObj,
     typ::Type,
 };

@@ -1,9 +1,11 @@
 use core::cmp::Ordering;
 
+use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util};
+
 use crate::{
     error::{value_error, Error},
     io::BinaryData,
-    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::util::iter_into_array,
     storage,
     strutil::TString,
     translations::TR,
@@ -209,7 +211,7 @@ impl FirmwareUI for UIBolt {
             if item.is_str() {
                 ops.add_text_with_font(TString::try_from(item)?, fonts::FONT_NORMAL);
             } else {
-                let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
+                let [emphasis, text]: [Obj; 2] = iter_into_array(item)?;
                 let text: TString = text.try_into()?;
                 if emphasis.try_into()? {
                     ops.add_text_with_font(text, fonts::FONT_DEMIBOLD);
@@ -359,7 +361,7 @@ impl FirmwareUI for UIBolt {
         let mut paragraphs = ParagraphVecLong::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
+            let [text, is_data]: [Obj; 2] = iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
                 &theme::TEXT_MONO_DATA
@@ -500,7 +502,7 @@ impl FirmwareUI for UIBolt {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
+            let [text, is_data]: [Obj; 2] = iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
                 &theme::TEXT_MONO_WITH_CLASSIC_ELLIPSIS
@@ -809,7 +811,7 @@ impl FirmwareUI for UIBolt {
         )?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
+            let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
 
@@ -1034,7 +1036,7 @@ impl FirmwareUI for UIBolt {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [key, value, _]: [Obj; 3] = util::iter_into_array(para)?;
+            let [key, value, _]: [Obj; 3] = iter_into_array(para)?;
             let key: TString = key.try_into()?;
             let value: TString = value.try_into()?;
             paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, key).no_break());
@@ -1180,9 +1182,8 @@ impl FirmwareUI for UIBolt {
 
     fn show_remaining_shares(pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
-        for page in crate::micropython::iter::IterBuf::new().try_iterate(pages_iterable)? {
-            let [title, description]: [TString; 2] =
-                crate::micropython::util::iter_into_array(page)?;
+        for page in IterBuf::new().try_iterate(pages_iterable)? {
+            let [title, description]: [TString; 2] = iter_into_array(page)?;
             paragraphs
                 .add(Paragraph::new(&theme::TEXT_DEMIBOLD, title))
                 .add(Paragraph::new(&theme::TEXT_NORMAL, description).break_after());

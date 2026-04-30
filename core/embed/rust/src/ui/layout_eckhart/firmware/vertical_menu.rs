@@ -1,7 +1,6 @@
 use core::ops::DerefMut;
 
 use crate::{
-    micropython::gc::GcBox,
     ui::{
         component::{Component, Event, EventCtx},
         event::TouchEvent,
@@ -15,6 +14,7 @@ use super::{
     super::component::{Button, ButtonMsg, HapticMode},
     theme,
 };
+use micropython::gc::GcBox;
 use heapless::Vec;
 
 /// Number of buttons.
@@ -27,10 +27,8 @@ pub type LongMenuGc = GcBox<Vec<Button, LONG_MENU_ITEMS>>;
 pub type ShortMenuVec = Vec<Button, SHORT_MENU_ITEMS>;
 pub type MediumMenuVec = Vec<Button, MEDIUM_MENU_ITEMS>;
 
-pub trait MenuItems: Default {
-    fn empty() -> Self {
-        Self::default()
-    }
+pub trait MenuItems {
+    fn empty() -> Self;
     fn push(&mut self, button: Button);
     fn iter(&self) -> core::slice::Iter<'_, Button>;
     fn iter_mut(&mut self) -> core::slice::IterMut<'_, Button>;
@@ -39,6 +37,10 @@ pub trait MenuItems: Default {
 }
 
 impl<const N: usize> MenuItems for Vec<Button, N> {
+    fn empty() -> Self {
+        Self::new()
+    }
+
     fn push(&mut self, button: Button) {
         unwrap!(self.push(button));
     }
@@ -60,13 +62,11 @@ impl<const N: usize> MenuItems for Vec<Button, N> {
     }
 }
 
-impl Default for LongMenuGc {
-    fn default() -> Self {
-        unwrap!(GcBox::new(Vec::new()))
-    }
-}
-
 impl MenuItems for LongMenuGc {
+    fn empty() -> Self {
+        unwrap!(Self::new(Vec::new()))
+    }
+
     fn push(&mut self, button: Button) {
         unwrap!(self.deref_mut().push(button));
     }
@@ -131,7 +131,7 @@ impl<T: MenuItems> VerticalMenu<T> {
     }
 
     pub fn empty() -> Self {
-        Self::new(T::default())
+        Self::new(T::empty())
     }
 
     pub fn with_item(mut self, button: Button) -> Self {

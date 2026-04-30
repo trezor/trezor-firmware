@@ -1,6 +1,7 @@
+use micropython::{gc::Gc, list::List};
+
 use crate::{
     error,
-    micropython::{gc::Gc, list::List},
     strutil::TString,
     translations::TR,
     ui::{

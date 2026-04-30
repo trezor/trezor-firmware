@@ -7,12 +7,12 @@ use crate::ui::component::{
 };
 use crate::{
     error::Error,
-    micropython::{obj::Obj, util::new_tuple},
     ui::layout::{
         obj::ComponentMsgObj,
         result::{CANCELLED, CONFIRMED, INFO},
     },
 };
+use micropython::{obj::Obj, util::new_tuple};
 
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,

@@ -765,7 +765,8 @@ impl<'a, T: ParagraphSource<'a>> crate::trace::Trace for Checklist<T> {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    use crate::{error::Error, ui::layout::obj::ComponentMsgObj};
+    use ::micropython::Obj;
     impl<'a, T: super::ParagraphSource<'a>> ComponentMsgObj for super::Checklist<T> {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
             unreachable!();

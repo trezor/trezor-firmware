@@ -1,6 +1,5 @@
 use crate::{
     error,
-    micropython::obj::Obj,
     strutil::TString,
     translations::TR,
     ui::{
@@ -16,6 +15,7 @@ use crate::{
         layout::util::StrOrBytes,
     },
 };
+use micropython::obj::Obj;
 
 use super::super::{
     component::Button,

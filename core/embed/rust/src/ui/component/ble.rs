@@ -87,9 +87,9 @@ where
 #[cfg(feature = "micropython")]
 mod micropython {
     use super::*;
+    use ::micropython::Obj;
     use crate::{
         error::Error,
-        micropython::obj::Obj,
         ui::layout::{
             obj::ComponentMsgObj,
             result::{CANCELLED, CONFIRMED},

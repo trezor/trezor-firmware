@@ -624,10 +624,10 @@ pub enum FlowMsg {
 }
 
 #[cfg(feature = "micropython")]
-impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
-    type Error = crate::error::Error;
+impl TryFrom<FlowMsg> for micropython::obj::Obj {
+    type Error = Error;
 
-    fn try_from(val: FlowMsg) -> Result<crate::micropython::obj::Obj, Self::Error> {
+    fn try_from(val: FlowMsg) -> Result<micropython::obj::Obj, Self::Error> {
         use crate::ui::layout::result;
 
         match val {

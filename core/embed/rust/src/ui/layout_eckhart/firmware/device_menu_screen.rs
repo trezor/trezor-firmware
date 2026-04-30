@@ -3,7 +3,6 @@ use core::ops::{Deref, DerefMut};
 pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
 use crate::{
     error::Error,
-    micropython::{gc::GcBox, obj::Obj},
     strutil::TString,
     translations::TR,
     trezorhal::usb,
@@ -21,6 +20,7 @@ use crate::{
         ui_firmware::MAX_PAIRED_DEVICES,
     },
 };
+use micropython::{gc::GcBox, obj::Obj};
 
 #[cfg(feature = "ble")]
 use crate::{trezorhal::ble, ui::event::BLEEvent};

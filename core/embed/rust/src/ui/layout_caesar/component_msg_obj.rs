@@ -1,5 +1,7 @@
 use core::convert::TryInto;
 
+use micropython::Obj;
+
 use super::component::{
     AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress,
     ConfirmHomescreen, Flow, Frame, Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry,
@@ -7,7 +9,6 @@ use super::component::{
 };
 use crate::{
     error::Error,
-    micropython::obj::Obj,
     ui::{
         component::{
             base::Component,

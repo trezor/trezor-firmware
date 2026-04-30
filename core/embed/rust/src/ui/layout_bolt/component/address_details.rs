@@ -1,8 +1,8 @@
 use heapless::Vec;
+use micropython::buffer::StrBuffer;
 
 use crate::{
     error::Error,
-    micropython::buffer::StrBuffer,
     strutil::TString,
     translations::TR,
     ui::{

@@ -1,6 +1,8 @@
+use micropython::{buffer::StrBuffer, obj::Obj};
+
 use crate::{
     error,
-    micropython::{buffer::StrBuffer, obj::Obj, util},
+    micropython::util,
     strutil::TString,
     translations::TR,
     ui::{

@@ -4,7 +4,7 @@ use heapless::String;
 use crate::error::Error;
 
 #[cfg(feature = "micropython")]
-use crate::micropython::{buffer::StrBuffer, obj::Obj};
+use micropython::{buffer::StrBuffer, obj::Obj};
 
 #[cfg(feature = "translations")]
 use crate::translations::TR;
@@ -288,7 +288,7 @@ impl ufmt::uDebug for TString<'_> {
             #[cfg(feature = "micropython")]
             TString::Allocated(buf) => {
                 f.write_str("Allocated(")?;
-                buf.fmt(f)?;
+                f.write_str(buf)?;
                 f.write_str(")")?;
             }
             #[cfg(feature = "translations")]

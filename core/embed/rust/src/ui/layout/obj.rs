@@ -6,6 +6,17 @@ use core::{
 };
 use num_traits::FromPrimitive;
 
+use micropython::{
+    buffer::StrBuffer,
+    gc::{self, Gc, GcBox},
+    macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
+    map::Map,
+    obj::{Obj, ObjBase},
+    simple_type::SimpleTypeObj,
+    typ::Type,
+    util,
+};
+
 #[cfg(feature = "touch")]
 use crate::ui::{event::TouchEvent, geometry::Direction};
 #[cfg(feature = "touch")]
@@ -27,17 +38,7 @@ use super::base::{Layout, LayoutState};
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
-    micropython::{
-        buffer::StrBuffer,
-        gc::{self, Gc, GcBox},
-        macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
-        map::Map,
-        obj::{Obj, ObjBase},
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
+    micropython::qstr::Qstr,
     time::Duration,
     ui::{
         button_request::ButtonRequest,

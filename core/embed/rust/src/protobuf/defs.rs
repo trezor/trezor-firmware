@@ -1,5 +1,7 @@
 use core::mem;
 
+use micropython::qstr::Attribute;
+
 use crate::align::include_aligned;
 
 macro_rules! proto_def_path {
@@ -40,7 +42,7 @@ pub struct FieldDef {
     pub tag: u8,
     flags_and_type: u8,
     enum_or_msg_offset: u16,
-    pub name: u16,
+    name: u16,
 }
 
 const STATIC_ASSERT_FIELD_DEF_ALIGNMENT: () = {
@@ -70,24 +72,28 @@ impl FieldDef {
         }
     }
 
-    pub fn is_required(&self) -> bool {
+    pub const fn is_required(&self) -> bool {
         self.flags() & 0b_1000_0000 != 0
     }
 
-    pub fn is_repeated(&self) -> bool {
+    pub const fn is_repeated(&self) -> bool {
         self.flags() & 0b_0100_0000 != 0
     }
 
-    pub fn is_experimental(&self) -> bool {
+    pub const fn is_experimental(&self) -> bool {
         self.flags() & 0b_0010_0000 != 0
     }
 
-    fn flags(&self) -> u8 {
+    const fn flags(&self) -> u8 {
         self.flags_and_type & 0xF0
     }
 
-    fn ftype(&self) -> u8 {
+    const fn ftype(&self) -> u8 {
         self.flags_and_type & 0x0F
+    }
+
+    pub const fn name(&self) -> Attribute {
+        Attribute::from_u16(self.name)
     }
 }
 
@@ -276,6 +282,8 @@ fn get_enum(enum_offset: u16) -> EnumDef {
 
 #[cfg(test)]
 mod tests {
+    use micropython::qstr::QstrValue as _;
+
     use super::*;
     use crate::micropython::qstr::Qstr;
 

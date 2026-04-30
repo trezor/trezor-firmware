@@ -1,7 +1,7 @@
 use crate::error::Error;
 
 #[cfg(feature = "micropython")]
-use crate::micropython::{buffer::get_buffer, gc::Gc, obj::Obj};
+use micropython::{buffer::get_buffer, gc::Gc, obj::Obj};
 
 pub struct InputStream<'a> {
     buf: &'a [u8],

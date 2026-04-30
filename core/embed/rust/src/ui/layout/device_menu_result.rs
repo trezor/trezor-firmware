@@ -1,11 +1,9 @@
-use crate::{
-    error::Error,
-    micropython::{
-        ffi, macros::obj_type, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util,
-    },
+use micropython::{
+    ffi, macros::obj_type, obj::Obj, qstr::Attribute, simple_type::SimpleTypeObj, typ::Type, util,
 };
-
 use num_traits::ToPrimitive;
+
+use crate::{error::Error, micropython::qstr::Qstr};
 
 #[repr(u8)]
 #[derive(Copy, Clone, ToPrimitive)]
@@ -69,8 +67,8 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             // Null destination would mean a `setattr`.
             return Err(Error::TypeError);
         }
-        let attr = Qstr::from_u16(attr as _);
-        let value = match attr {
+        let attr = Attribute::from_raw(attr);
+        let value = match attr.into() {
             Qstr::MP_QSTR_ReviewFailedBackup => DeviceMenuMsg::ReviewFailedBackup.as_obj(),
             Qstr::MP_QSTR_PairDevice => DeviceMenuMsg::PairDevice.as_obj(),
             Qstr::MP_QSTR_DisconnectDevice => DeviceMenuMsg::DisconnectDevice.as_obj(),

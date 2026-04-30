@@ -1,6 +1,6 @@
 use crate::{
     error,
-    micropython::{obj::Obj, util},
+    micropython::util,
     strutil::TString,
     translations::TR,
     ui::{
@@ -20,6 +20,7 @@ use crate::{
     },
 };
 use heapless::Vec;
+use micropython::obj::Obj;
 
 use super::super::{
     component::Button,

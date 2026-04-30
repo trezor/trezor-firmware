@@ -1,9 +1,11 @@
 use core::cmp::Ordering;
 
+use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util};
+
 use crate::{
     error::{value_error, Error},
     io::BinaryData,
-    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::util::iter_into_array,
     storage,
     strutil::TString,
     translations::TR,
@@ -260,7 +262,7 @@ impl FirmwareUI for UIDelizia {
             if item.is_str() {
                 ops.add_text_with_font(TString::try_from(item)?, fonts::FONT_DEMIBOLD);
             } else {
-                let [_emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
+                let [_emphasis, text]: [Obj; 2] = iter_into_array(item)?;
                 let text: TString = text.try_into()?;
                 // emphasis not implemented on Delizia
                 ops.add_text_with_font(text, fonts::FONT_DEMIBOLD);
@@ -412,7 +414,7 @@ impl FirmwareUI for UIDelizia {
             let account_title = account_title.unwrap_or(TR::send__send_from.into());
             let mut account_params = ShowInfoParams::new(account_title).with_cancel_button();
             for pair in IterBuf::new().try_iterate(items)? {
-                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
+                let [key, value, _is_data]: [Obj; 3] = iter_into_array(pair)?;
                 account_params = unwrap!(account_params.add(key.try_into()?, value.try_into()?));
             }
             Some(account_params)
@@ -423,7 +425,7 @@ impl FirmwareUI for UIDelizia {
             let extra_title = extra_title.unwrap_or(TR::buttons__more_info.into());
             let mut extra_params = ShowInfoParams::new(extra_title).with_cancel_button();
             for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
+                let [label, value, _is_data]: [Obj; 3] = iter_into_array(pair)?;
                 extra_params = unwrap!(extra_params.add(label.try_into()?, value.try_into()?));
             }
             Some(extra_params)
@@ -474,7 +476,7 @@ impl FirmwareUI for UIDelizia {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
+            let [text, is_data]: [Obj; 2] = iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
                 &theme::TEXT_MONO_DATA
@@ -517,7 +519,7 @@ impl FirmwareUI for UIDelizia {
         let pages_vec = if let Some(pages_obj) = remaining_shares {
             let mut vec = ParagraphVecLong::new();
             for page in IterBuf::new().try_iterate(pages_obj)? {
-                let [title, description]: [TString; 2] = util::iter_into_array(page)?;
+                let [title, description]: [TString; 2] = iter_into_array(page)?;
                 vec.add(Paragraph::new(&theme::TEXT_SUB_GREY, title))
                     .add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, description).break_after());
             }
@@ -994,7 +996,7 @@ impl FirmwareUI for UIDelizia {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [key, value, _]: [Obj; 3] = util::iter_into_array(para)?;
+            let [key, value, _]: [Obj; 3] = iter_into_array(para)?;
             let key: TString = key.try_into()?;
             let value: TString = value.try_into()?;
             paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, key).no_break());
@@ -1091,7 +1093,7 @@ impl FirmwareUI for UIDelizia {
 
         let mut items: Vec<(TString<'static>, TString<'static>, bool), 4> = Vec::new();
         for property in IterBuf::new().try_iterate(value)? {
-            let [header, text, is_data]: [Obj; 3] = util::iter_into_array(property)?;
+            let [header, text, is_data]: [Obj; 3] = iter_into_array(property)?;
             let header = header
                 .try_into_option::<TString>()?
                 .unwrap_or_else(TString::empty);

@@ -22,13 +22,13 @@ pub trait Layout<T> {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::micropython::{
+    use ::micropython::{
         macros::{obj_dict, obj_map, obj_type},
         obj::Obj,
-        qstr::Qstr,
         simple_type::SimpleTypeObj,
         typ::Type,
     };
+    use crate::micropython::qstr::Qstr;
 
     use super::LayoutState;
 

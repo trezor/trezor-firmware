@@ -1,18 +1,19 @@
+use ::micropython::{
+    buffer::{get_buffer, get_buffer_mut, StrBuffer},
+    list::List,
+    macros::*,
+    map::Map,
+    module::Module,
+    obj::Obj,
+    simple_type::SimpleTypeObj,
+    typ::Type,
+    util,
+};
+
 use super::{super::model, *};
 use crate::{
     error::Error,
-    micropython::{
-        buffer::{get_buffer, get_buffer_mut, StrBuffer},
-        list::List,
-        macros::*,
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
+    micropython::{qstr::Qstr, util::iter_into_array},
 };
 
 extern "C" fn py_erase_bonds() -> Obj {
@@ -28,7 +29,7 @@ extern "C" fn py_unpair(obj: Obj) -> Obj {
     let addr_bytes_opt = if obj == Obj::const_none() {
         None
     } else {
-        let bytes: [u8; 6] = unwrap!(util::iter_into_array(obj));
+        let bytes: [u8; 6] = unwrap!(iter_into_array(obj));
         Some(bytes)
     };
 

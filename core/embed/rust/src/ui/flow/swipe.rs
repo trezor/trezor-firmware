@@ -1,10 +1,11 @@
+use micropython::{
+    gc::{self, GcBox},
+    Obj,
+};
+
 use crate::{
     error::{self, Error},
     maybe_trace::MaybeTrace,
-    micropython::{
-        gc::{self, GcBox},
-        obj::Obj,
-    },
     ui::{
         component::{
             base::AttachType::{self, Swipe},

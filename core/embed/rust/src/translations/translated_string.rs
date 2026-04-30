@@ -5,6 +5,8 @@ pub use super::generated::translated_string::TranslatedString;
 
 #[cfg(feature = "micropython")]
 use crate::micropython::qstr::Qstr;
+#[cfg(feature = "micropython")]
+use micropython::qstr::{Attribute, QstrValue as _};
 
 impl TranslatedString {
     fn untranslated(self) -> &'static str {
@@ -21,6 +23,16 @@ impl TranslatedString {
     pub(super) fn from_qstr(qstr: Qstr) -> Option<Self> {
         // QSTR_MAP must be sorted by its first element
         match Self::QSTR_MAP.binary_search_by(|(key, _)| key.to_u16().cmp(&qstr.to_u16())) {
+            Ok(index) => Some(Self::QSTR_MAP[index].1),
+            Err(_) => None,
+        }
+    }
+
+    #[cfg(feature = "micropython")]
+    pub(super) fn from_attribute(attr: Attribute) -> Option<Self> {
+        // QSTR_MAP must be sorted by its first element
+        match Self::QSTR_MAP.binary_search_by(|(key, _)| key.to_u16().cmp(&(attr.into_raw() as _)))
+        {
             Ok(index) => Some(Self::QSTR_MAP[index].1),
             Err(_) => None,
         }

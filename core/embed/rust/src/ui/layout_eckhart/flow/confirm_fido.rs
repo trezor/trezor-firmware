@@ -1,6 +1,5 @@
 use crate::{
     error,
-    micropython::{gc::Gc, list::List},
     strutil::TString,
     translations::TR,
     ui::{
@@ -15,6 +14,7 @@ use crate::{
         geometry::{Direction, LinearPlacement},
     },
 };
+use micropython::{gc::Gc, list::List};
 
 use super::super::{
     component::Button,

@@ -3,7 +3,7 @@ use core::{mem, str};
 use heapless::Vec;
 
 use crate::{
-    error::{value_error, Error},
+    error::{value_error, Error, IntoError},
     io::InputStream,
 };
 use trezor_crypto::{cosi, ed25519, merkle::merkle_root, sha256};
@@ -637,12 +637,13 @@ impl<'a> TranslationsHeader<'a> {
 
     fn verify_with_keys(&self, public_keys: &[ed25519::PublicKey]) -> Result<(), Error> {
         let merkle_root = merkle_root(self.header_bytes, self.merkle_proof);
-        Ok(cosi::verify(
+        cosi::verify(
             SIGNATURE_THRESHOLD,
             &merkle_root,
             public_keys,
             &self.signature,
-        )?)
+        )
+        .map_err(IntoError::into_error)
     }
 
     pub fn verify(&self) -> Result<(), Error> {

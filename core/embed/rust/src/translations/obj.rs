@@ -1,22 +1,17 @@
-use crate::{
-    error::Error,
-    io::InputStream,
-    micropython::{
-        buffer::get_buffer,
-        ffi,
-        macros::{
-            attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type,
-        },
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
-    trezorhal::translations,
+use micropython::{
+    buffer::get_buffer,
+    ffi,
+    macros::{attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type},
+    map::Map,
+    module::Module,
+    obj::Obj,
+    qstr::Attribute,
+    simple_type::SimpleTypeObj,
+    typ::Type,
+    util,
 };
+
+use crate::{error::Error, io::InputStream, micropython::qstr::Qstr, trezorhal::translations};
 
 use super::translated_string::TranslatedString;
 
@@ -29,8 +24,8 @@ unsafe extern "C" fn tr_attr_fn(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) 
             // Null destination would mean a `setattr`.
             return Err(Error::TypeError);
         }
-        let attr = Qstr::from_u16(attr as u16);
-        let result = if let Some(translation) = TranslatedString::from_qstr(attr) {
+        let attr = Attribute::from_raw(attr);
+        let result = if let Some(translation) = TranslatedString::from_attribute(attr) {
             translation.map_translated(|t| t.try_into())?
             // TODO fall back to English (which is static and can be converted
             // infallibly) if the allocation fails?

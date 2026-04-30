@@ -1,5 +1,7 @@
 use core::convert::TryInto;
 
+use micropython::{gc::GcBox, obj::Obj};
+
 use super::component::{
     AddressDetails, CoinJoinProgress, Frame, FrameMsg, Homescreen, HomescreenMsg, Lockscreen,
     MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
@@ -8,7 +10,6 @@ use super::component::{
 };
 use crate::{
     error::Error,
-    micropython::{gc::GcBox, obj::Obj},
     ui::{
         component::{paginated::Paginate, Component, Never},
         flow::Swipable,

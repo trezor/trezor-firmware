@@ -62,7 +62,8 @@ impl Component for Connect {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    use crate::{error::Error, ui::layout::obj::ComponentMsgObj};
+    use micropython::Obj;
 
     use super::Connect;
 
