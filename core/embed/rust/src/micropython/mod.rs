@@ -22,6 +22,8 @@ pub mod tuple;
 pub mod typ;
 pub mod util;
 
+mod qstr_generated;
+
 pub use error::Error;
 pub use obj::Obj;
 

@@ -9,7 +9,7 @@ use crate::micropython::macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_t
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::obj::{Obj, ObjBase};
-use crate::micropython::qstr::Qstr;
+use crate::micropython::qstr::{Attribute, Qstr};
 use crate::micropython::typ::{FullType, Type};
 use crate::micropython::{ffi, util, Error};
 
@@ -53,14 +53,14 @@ impl MsgObj {
 }
 
 impl MsgObj {
-    fn getattr(&self, attr: Qstr) -> Result<Obj, Error> {
+    fn getattr(&self, attr: Attribute) -> Result<Obj, Error> {
         if let Ok(obj) = self.map.get(attr) {
             // Message field was found, return its value.
             return Ok(obj);
         }
 
         // Built-in attribute.
-        match attr {
+        match attr.into() {
             Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
                 // Return the wire ID of this message def, or None if not set.
                 Ok(self.msg_wire_id.map_or_else(Obj::const_none, Into::into))
@@ -79,11 +79,11 @@ impl MsgObj {
                 // we're returning a mutable dict.
                 Ok(Gc::new(Dict::with_map(self.map.try_clone()?))?.into())
             }
-            _ => Err(Error::AttributeError(attr.into())),
+            _ => Err(Error::AttributeError(attr)),
         }
     }
 
-    fn setattr(&mut self, attr: Qstr, value: Obj) -> Result<(), Error> {
+    fn setattr(&mut self, attr: Attribute, value: Obj) -> Result<(), Error> {
         if value.is_null() {
             // Null value means a delattr operation, reject.
             return Err(Error::TypeError);
@@ -93,7 +93,7 @@ impl MsgObj {
             self.map.set(attr, value)?;
             Ok(())
         } else {
-            Err(Error::AttributeError(attr.into()))
+            Err(Error::AttributeError(attr))
         }
     }
 }
@@ -126,7 +126,7 @@ impl TryFrom<Obj> for Gc<MsgObj> {
 unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
     let block = || {
         let mut this = Gc::<MsgObj>::try_from(self_in)?;
-        let attr = Qstr::from_u16(attr as _);
+        let attr = Attribute::from_raw(attr);
 
         unsafe {
             if dest.read().is_null() {
@@ -201,7 +201,7 @@ impl TryFrom<Obj> for Gc<MsgDefObj> {
 unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
     let block = || {
         let this = Gc::<MsgDefObj>::try_from(self_in)?;
-        let attr = Qstr::from_u16(attr as _);
+        let attr = Attribute::from_raw(attr);
 
         let arg = unsafe { dest.read() };
         if !arg.is_null() {
@@ -209,7 +209,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
             return Err(Error::TypeError);
         }
 
-        match attr {
+        match attr.into() {
             Qstr::MP_QSTR_MESSAGE_NAME => {
                 // Return the QSTR name of this message def.
                 let name = Qstr::from_u16(unwrap!(find_name_by_msg_offset(this.def.offset)));
@@ -234,7 +234,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
                 }
             }
             _ => {
-                return Err(Error::AttributeError(attr.into()));
+                return Err(Error::AttributeError(attr));
             }
         }
         Ok(())

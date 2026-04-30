@@ -6,7 +6,7 @@ use core::{ptr, slice};
 use super::error::Error;
 use super::ffi;
 use super::obj::Obj;
-use super::qstr::Qstr;
+use super::qstr::Attribute;
 use super::runtime::catch_exception;
 
 pub type Map = ffi::mp_map_t;
@@ -33,7 +33,7 @@ impl Map {
         }
     }
 
-    pub const fn at(key: Qstr, value: Obj) -> MapElem {
+    pub const fn at(key: Attribute, value: Obj) -> MapElem {
         MapElem {
             key: key.to_obj(),
             value,

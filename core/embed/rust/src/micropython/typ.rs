@@ -2,7 +2,7 @@ use core::ops::Deref;
 
 use super::ffi;
 use super::obj::{Obj, ObjBase};
-use super::qstr::Qstr;
+use super::qstr::{Attribute, QstrValue};
 
 pub type Type = ffi::mp_obj_type_t;
 
@@ -58,7 +58,7 @@ impl EmptyType {
     ///
     /// This is useful as a first item in a `repr(C)` struct
     /// extending to a custom number of slots.
-    pub const fn new(name: Qstr) -> Self {
+    pub const fn new(name: impl const QstrValue) -> Self {
         Self(ffi::mp_obj_empty_type_t {
             base: TYPE_BASE.as_base(),
             flags: 0,
@@ -118,11 +118,8 @@ impl Type {
         unsafe { Obj::from_ptr(self as *const _ as *mut _) }
     }
 
-    #[cfg(any(feature = "debug", feature = "dbg_console"))]
     pub fn name(&self) -> &'static str {
-        use super::qstr::Qstr;
-
-        Qstr::from(self.name).as_str()
+        Attribute::from_u16(self.name).to_str()
     }
 }
 
