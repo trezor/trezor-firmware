@@ -5,7 +5,14 @@ from ubinascii import hexlify
 
 import storage.device as storage_device
 from trezor import utils
-from trezor.crypto import chacha20poly1305, der, hashlib, hmac, random
+from trezor.crypto import (
+    chacha20poly1305_decrypt,
+    chacha20poly1305_encrypt,
+    der,
+    hashlib,
+    hmac,
+    random,
+)
 from trezor.crypto.curve import ed25519, nist256p1
 
 from apps.common import cbor, seed
@@ -169,7 +176,7 @@ class Fido2Credential(Credential):
             [b"SLIP-0022", _CRED_ID_VERSION, b"Encryption key"]
         ).key()
         iv = random.bytes(12)
-        ctx = chacha20poly1305(key, iv)
+        ctx = chacha20poly1305_encrypt(key, iv)
         ctx.auth(self.rp_id_hash)
         ciphertext = ctx.encrypt(cbor.encode(data))
         tag = ctx.finish()
@@ -193,7 +200,7 @@ class Fido2Credential(Credential):
         tag = cred_id[-16:]
 
         if rp_id_hash is None:
-            ctx = chacha20poly1305(key, iv)
+            ctx = chacha20poly1305_decrypt(key, iv)
             data = ctx.decrypt(ciphertext)
             try:
                 rp_id = cbor.decode(data)[_CRED_ID_RP_ID]
@@ -201,7 +208,7 @@ class Fido2Credential(Credential):
                 raise ValueError from e  # CBOR decoding failed
             rp_id_hash = hashlib.sha256(rp_id).digest()
 
-        ctx = chacha20poly1305(key, iv)
+        ctx = chacha20poly1305_decrypt(key, iv)
         ctx.auth(rp_id_hash)
         data = ctx.decrypt(ciphertext)
         try:

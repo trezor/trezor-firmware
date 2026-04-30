@@ -98,8 +98,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_cardano),
      MP_ROM_PTR(&mod_trezorcrypto_cardano_module)},
 #endif
-    {MP_ROM_QSTR(MP_QSTR_chacha20poly1305),
-     MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305_type)},
+    {MP_ROM_QSTR(MP_QSTR_chacha20poly1305_decrypt),
+     MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305Decrypt_type)},
+    {MP_ROM_QSTR(MP_QSTR_chacha20poly1305_encrypt),
+     MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305Encrypt_type)},
     {MP_ROM_QSTR(MP_QSTR_crc), MP_ROM_PTR(&mod_trezorcrypto_crc_module)},
     {MP_ROM_QSTR(MP_QSTR_curve25519),
      MP_ROM_PTR(&mod_trezorcrypto_curve25519_module)},

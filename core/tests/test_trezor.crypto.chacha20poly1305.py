@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import chacha20poly1305
+from trezor.crypto import chacha20poly1305_decrypt, chacha20poly1305_encrypt
 
 
 class TestCryptoChaCha20Poly1305(unittest.TestCase):
@@ -31,14 +31,14 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
         for vector in self.vectors:
             plaintext, _, key, nonce, ciphertext, _ = map(unhexlify, vector)
 
-            ctx = chacha20poly1305(key, nonce)
+            ctx = chacha20poly1305_encrypt(key, nonce)
             out = ctx.encrypt(plaintext)
             self.assertEqual(out, ciphertext)
 
     def test_chacha20_decrypt(self):
         for vector in self.vectors:
             plaintext, _, key, nonce, ciphertext, _ = map(unhexlify, vector)
-            ctx = chacha20poly1305(key, nonce)
+            ctx = chacha20poly1305_decrypt(key, nonce)
             out = ctx.decrypt(ciphertext)
             self.assertEqual(out, plaintext)
 
@@ -46,7 +46,7 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
         for vector in self.vectors:
             plaintext, aad, key, nonce, ciphertext, tag = map(unhexlify, vector)
 
-            ctx = chacha20poly1305(key, nonce)
+            ctx = chacha20poly1305_encrypt(key, nonce)
             ctx.auth(aad)
             out = ctx.encrypt(plaintext)
             self.assertEqual(out, ciphertext)
@@ -57,25 +57,11 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
         for vector in self.vectors:
             plaintext, aad, key, nonce, ciphertext, tag = map(unhexlify, vector)
 
-            ctx = chacha20poly1305(key, nonce)
+            ctx = chacha20poly1305_decrypt(key, nonce)
             ctx.auth(aad)
             out = ctx.decrypt(ciphertext)
             self.assertEqual(out, plaintext)
-            out = ctx.finish(tag)
-            self.assertEqual(out, tag)
-
-    def test_chacha20poly1305_missing_expected_mac(self):
-        for vector in self.vectors:
-            _, aad, key, nonce, ciphertext, _ = map(unhexlify, vector)
-
-            ctx = chacha20poly1305(key, nonce)
-            ctx.auth(aad)
-            ctx.decrypt(ciphertext)
-            with self.assertRaises(RuntimeError) as e:
-                ctx.finish()
-            self.assertEqual(
-                e.value.value, "Argument `expected_mac` is required when decrypting."
-            )
+            self.assertIsNone(ctx.finish(tag))
 
     def test_chacha20poly1305_invalid_mac_len(self):
         for vector in self.vectors:
@@ -88,7 +74,7 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
                 _mac + _mac,
             ]
             for mac in invalid_macs:
-                ctx = chacha20poly1305(key, nonce)
+                ctx = chacha20poly1305_decrypt(key, nonce)
                 ctx.auth(aad)
                 ctx.decrypt(ciphertext)
                 with self.assertRaises(ValueError) as e:
@@ -103,7 +89,7 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
         for vector in self.vectors:
             _, aad, key, nonce, ciphertext, _ = map(unhexlify, vector)
 
-            ctx = chacha20poly1305(key, nonce)
+            ctx = chacha20poly1305_decrypt(key, nonce)
             ctx.auth(aad)
             ctx.decrypt(ciphertext)
             with self.assertRaises(RuntimeError) as e:

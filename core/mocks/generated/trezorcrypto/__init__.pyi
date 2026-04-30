@@ -197,15 +197,22 @@ class blake2s:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-chacha20poly1305.h
-class chacha20poly1305:
+class chacha20poly1305_encrypt:
     """
-    ChaCha20Poly1305 context.
+    ChaCha20Poly1305 context for encryption.
     """
 
     def __init__(self, key: AnyBytes, nonce: AnyBytes) -> None:
         """
-        Initialize the ChaCha20 + Poly1305 context for encryption or decryption
+        Initialize the ChaCha20 + Poly1305 context for encryption
         using a 32 byte key and 12 byte nonce as in the RFC 7539 style.
+        """
+
+    def auth(self, data: AnyBytes) -> None:
+        """
+        Include authenticated data in the Poly1305 MAC using the RFC 7539
+        style with 16 byte padding. This must only be called once and prior
+        to encryption.
         """
 
     def encrypt(self, data: AnyBytes) -> bytes:
@@ -214,23 +221,40 @@ class chacha20poly1305:
         final value).
         """
 
-    def decrypt(self, data: AnyBytes) -> bytes:
+    def finish(self) -> bytes:
         """
-        Decrypt data (length of data must be divisible by 64 except for the
-        final value).
+        Compute RFC 7539-style Poly1305 MAC.
+        """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-chacha20poly1305.h
+class chacha20poly1305_decrypt:
+    """
+    ChaCha20Poly1305 context for decryption.
+    """
+
+    def __init__(self, key: AnyBytes, nonce: AnyBytes) -> None:
+        """
+        Initialize the ChaCha20 + Poly1305 context for decryption
+        using a 32 byte key and 12 byte nonce as in the RFC 7539 style.
         """
 
     def auth(self, data: AnyBytes) -> None:
         """
         Include authenticated data in the Poly1305 MAC using the RFC 7539
         style with 16 byte padding. This must only be called once and prior
-        to encryption or decryption.
+        to decryption.
         """
 
-    def finish(self, expected_mac: AnyBytes | None = None) -> bytes:
+    def decrypt(self, data: AnyBytes) -> bytes:
         """
-        Compute RFC 7539-style Poly1305 MAC. The `expected_mac` is required when
-        decrypting.
+        Decrypt data (length of data must be divisible by 64 except for the
+        final value).
+        """
+
+    def finish(self, expected_mac: AnyBytes) -> None:
+        """
+        Verify RFC 7539-style Poly1305 MAC.
         """
 
 
