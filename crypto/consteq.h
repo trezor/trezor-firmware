@@ -5,6 +5,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-bool consteq(const uint8_t *sec, size_t seclen, const uint8_t *pub,
-             size_t publen);
+/**
+ * @brief Constant-time memory comparison.
+ * Compares 'n' bytes, but unlike memcmp, it does not short-circuit,
+ * thus preventing timing attacks.
+ * @return `true` if the memory areas are equal, `false` otherwise.
+ */
+bool consteq(const void *s1, const void *s2, size_t n)
 #endif
