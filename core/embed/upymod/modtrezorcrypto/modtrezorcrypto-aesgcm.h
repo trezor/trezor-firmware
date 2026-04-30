@@ -300,7 +300,6 @@ STATIC const mp_rom_map_elem_t
          MP_ROM_PTR(&mod_trezorcrypto_AesGcm_encrypt_obj)},
         {MP_ROM_QSTR(MP_QSTR_encrypt_in_place),
          MP_ROM_PTR(&mod_trezorcrypto_AesGcm_encrypt_in_place_obj)},
-
         {MP_ROM_QSTR(MP_QSTR_finish),
          MP_ROM_PTR(&mod_trezorcrypto_AesGcm_encrypt_finish_obj)},
         {MP_ROM_QSTR(MP_QSTR___del__),
