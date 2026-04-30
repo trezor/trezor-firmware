@@ -22,7 +22,7 @@ import typing as t
 import click
 from mnemonic import Mnemonic
 
-from . import device, messages
+from .. import device, messages
 from .client import MAX_PIN_LENGTH
 from .exceptions import Cancelled
 from .messages import PinMatrixRequestType, WordRequestType
