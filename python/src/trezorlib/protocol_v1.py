@@ -29,6 +29,7 @@ from . import client, exceptions, mapping, messages
 from .log import DUMP_BYTES
 from .thp import pairing
 from .tools import enter_context
+from .transport import Timeout
 
 if t.TYPE_CHECKING:
     from .mapping import ProtobufMapping
@@ -347,9 +348,19 @@ class TrezorClientV1(client.TrezorClient[SessionV1]):
 
 @enter_context
 def probe(
-    transport: Transport, *, mapping: ProtobufMapping = mapping.DEFAULT_MAPPING
+    transport: Transport,
+    *,
+    mapping: ProtobufMapping = mapping.DEFAULT_MAPPING,
+    retries: int = 10,
 ) -> bool:
     """Probe the transport to see if it supports protocol v1."""
+    for _ in range(retries):
+        try:
+            # skip stale responses (to prevent the device from blocking during sending)
+            resp = read(transport, _ignore_bad_magic=True, timeout=0.1)
+            LOG.debug("stale response: %s", resp)
+        except Timeout:
+            break
     cancel_msg = messages.Cancel()
     cancel_msg_type, cancel_msg_bytes = mapping.encode(cancel_msg)
     write(transport, cancel_msg_type, cancel_msg_bytes)
