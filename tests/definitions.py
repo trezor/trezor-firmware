@@ -160,7 +160,7 @@ def encode_solana_token(
     return payload + proof + signature
 
 
-def make_eth_erc7730_display_format(
+def make_eth_display_format(
     chain_id: int = 0,
     address: t.AnyStr = b"",
     func_sig: bytes = b"",
@@ -184,7 +184,7 @@ def make_eth_erc7730_display_format(
     )
 
 
-def encode_eth_erc7730_display_format(
+def encode_eth_display_format(
     display_format: messages.EthereumDisplayFormatInfo,
 ) -> bytes:
     payload = make_payload(

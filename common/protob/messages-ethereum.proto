@@ -133,8 +133,10 @@ message EthereumTxAck {
 }
 
 /**
- * Structure representing a request for network / token definitions
- * and optionally also for an ERC-7730 display format.
+ * Structure representing a request for extra Ethereum definitions.
+ * `token_address` carries the token address for token-definition lookups, or
+ * the target contract address when `func_sig` is set and a display format is
+ * being requested.
  * @next EthereumDefinitionAck
  */
 message EthereumDefinitionRequest {
@@ -145,6 +147,7 @@ message EthereumDefinitionRequest {
 
 /**
  * Request: Definitions payload data.
+ * `definitions` can be missing if the host did not find matching definitions.
  * @next EthereumTxRequest
  * @next EthereumDefinitionRequest
  */
