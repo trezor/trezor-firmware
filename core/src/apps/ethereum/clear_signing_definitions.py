@@ -41,7 +41,8 @@ APPROVE_DISPLAY_FORMAT = DisplayFormat(
             (1,),
             "Amount",
             TokenAmountFormatter(
-                threshold=0x8000000000000000000000000000000000000000000000000000000000000000
+                token_path=ContainerPath.To,
+                threshold=0x8000000000000000000000000000000000000000000000000000000000000000,
             ),
         ),
     ],
@@ -58,7 +59,9 @@ TRANSFER_DISPLAY_FORMAT = DisplayFormat(
     ],
     field_definitions=[
         FieldDefinition((0,), "To", AddressNameFormatter),
-        FieldDefinition((1,), "Amount", TokenAmountFormatter),
+        FieldDefinition(
+            (1,), "Amount", TokenAmountFormatter(token_path=ContainerPath.To)
+        ),
     ],
 )
 

@@ -321,6 +321,7 @@ if TYPE_CHECKING:
     class EthereumERC7730ContainerPath(IntEnum):
         FROM = 1
         VALUE = 2
+        TO = 3
 
     class EthereumDataType(IntEnum):
         UINT = 1

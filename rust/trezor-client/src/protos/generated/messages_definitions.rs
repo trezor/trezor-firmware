@@ -2635,6 +2635,8 @@ pub enum EthereumERC7730ContainerPath {
     FROM = 1,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730ContainerPath.VALUE)
     VALUE = 2,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730ContainerPath.TO)
+    TO = 3,
 }
 
 impl ::protobuf::Enum for EthereumERC7730ContainerPath {
@@ -2648,6 +2650,7 @@ impl ::protobuf::Enum for EthereumERC7730ContainerPath {
         match value {
             1 => ::std::option::Option::Some(EthereumERC7730ContainerPath::FROM),
             2 => ::std::option::Option::Some(EthereumERC7730ContainerPath::VALUE),
+            3 => ::std::option::Option::Some(EthereumERC7730ContainerPath::TO),
             _ => ::std::option::Option::None
         }
     }
@@ -2656,6 +2659,7 @@ impl ::protobuf::Enum for EthereumERC7730ContainerPath {
         match str {
             "FROM" => ::std::option::Option::Some(EthereumERC7730ContainerPath::FROM),
             "VALUE" => ::std::option::Option::Some(EthereumERC7730ContainerPath::VALUE),
+            "TO" => ::std::option::Option::Some(EthereumERC7730ContainerPath::TO),
             _ => ::std::option::Option::None
         }
     }
@@ -2663,6 +2667,7 @@ impl ::protobuf::Enum for EthereumERC7730ContainerPath {
     const VALUES: &'static [EthereumERC7730ContainerPath] = &[
         EthereumERC7730ContainerPath::FROM,
         EthereumERC7730ContainerPath::VALUE,
+        EthereumERC7730ContainerPath::TO,
     ];
 }
 
@@ -2676,6 +2681,7 @@ impl ::protobuf::EnumFull for EthereumERC7730ContainerPath {
         let index = match self {
             EthereumERC7730ContainerPath::FROM => 0,
             EthereumERC7730ContainerPath::VALUE => 1,
+            EthereumERC7730ContainerPath::TO => 2,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -2747,9 +2753,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     _STRING\x10\x15*\x85\x01\n!EthereumERC7730FieldFormatterType\x12\x1a\n\
     \x16FORMATTER_ADDRESS_NAME\x10\0\x12\x14\n\x10FORMATTER_AMOUNT\x10\x01\
     \x12\x1a\n\x16FORMATTER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFORMATTER_UNIT\
-    \x10\x03*3\n\x1cEthereumERC7730ContainerPath\x12\x08\n\x04FROM\x10\x01\
-    \x12\t\n\x05VALUE\x10\x02B?\n#com.satoshilabs.trezor.lib.protobufB\x18Tr\
-    ezorMessageDefinitions\
+    \x10\x03*;\n\x1cEthereumERC7730ContainerPath\x12\x08\n\x04FROM\x10\x01\
+    \x12\t\n\x05VALUE\x10\x02\x12\x06\n\x02TO\x10\x03B?\n#com.satoshilabs.tr\
+    ezor.lib.protobufB\x18TrezorMessageDefinitions\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

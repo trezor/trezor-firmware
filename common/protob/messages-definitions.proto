@@ -136,6 +136,7 @@ enum EthereumERC7730FieldFormatterType {
 enum EthereumERC7730ContainerPath {
     FROM = 1;
     VALUE = 2;
+    TO = 3;
 }
 
 /**
