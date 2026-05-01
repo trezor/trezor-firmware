@@ -271,7 +271,7 @@ class AmountFormatter(FieldFormatter):
 class TokenAmountFormatter(FieldFormatter):
     def __init__(
         self,
-        token_path: Path | None = None,
+        token_path: Path,
         native_currency_address: list[bytes] | None = None,
         threshold: int | None = None,
     ) -> None:
@@ -549,6 +549,7 @@ class Array(ABIValue):
 class ContainerPath:
     From = 1
     Value = 2
+    To = 3
 
 
 class FieldDefinition:
@@ -633,13 +634,11 @@ class DisplayFormat:
 
         return self.binding_context.matches(chain_id, address)
 
-    def parse(
+    async def parse_calldata(
         self,
         calldata: memoryview,
-        address_n: list[int],
-        tx_value: AnyBytes,
-        definitions: Definitions,
-        token: EthereumTokenInfo,
+        msg: MsgInSignTx,
+        defs: Definitions,
     ) -> tuple[
         list[AnyValue],
         list[tuple[StrPropertyType, EthereumTokenInfo | None, AnyBytes | None]],
@@ -656,10 +655,12 @@ class DisplayFormat:
             if isinstance(path, int):  # ContainerPath
                 # standard container paths like @.from, @.value...
                 if path == ContainerPath.From:
-                    account, _ = get_account_and_path(address_n)
+                    account, _ = get_account_and_path(msg.address_n)
                     return account
                 elif path == ContainerPath.Value:
-                    return int.from_bytes(tx_value, "big")
+                    return int.from_bytes(msg.value, "big")
+                elif path == ContainerPath.To:
+                    return bytes_from_address(msg.to)
                 else:
                     raise NotImplementedError  # TODO
             else:
@@ -701,25 +702,17 @@ class DisplayFormat:
             tuple[StrPropertyType, EthereumTokenInfo | None, AnyBytes | None]
         ] = []
         for field_definition in self.field_definitions:
-            (
-                formatted_value,
-                actual_token,
-                actual_token_address,
-            ) = field_definition.get_formatter().format(
-                get_value_for_path(field_definition.path),
-                definitions,
-                token,
-                get_value_for_path,
+            value = get_value_for_path(field_definition.path)
+            formatter = field_definition.get_formatter()
+
+            formatted, token, token_address = await formatter.format(
+                value, msg, defs, get_value_for_path
             )
             fields.append(
                 (
-                    (
-                        field_definition.label,
-                        formatted_value,
-                        None,
-                    ),
-                    actual_token,
-                    actual_token_address,
+                    (field_definition.label, formatted, None),
+                    token,
+                    token_address,
                 )
             )
 
@@ -788,7 +781,6 @@ async def try_parse(
         return False
 
     calldata = memoryview(data)[SC_FUNC_SIG_BYTES:]
-    token = definitions.get_token(address_bytes)
 
     # custom treatment of certain functions (APPROVE, TRANSFER)
     if display_format.func_sig == APPROVE_DISPLAY_FORMAT.func_sig:
@@ -797,8 +789,7 @@ async def try_parse(
             display_format,
             address_bytes,
             msg,
-            definitions,
-            token,
+            defs,
             maximum_fee,
             fee_items,
         )
@@ -808,8 +799,7 @@ async def try_parse(
             display_format,
             address_bytes,
             msg,
-            definitions,
-            token,
+            defs,
             maximum_fee,
             fee_items,
             payment_request_verifier,
@@ -820,8 +810,7 @@ async def try_parse(
             calldata,
             display_format,
             msg,
-            definitions,
-            token,
+            defs,
             maximum_fee,
         )
     return True
@@ -832,8 +821,7 @@ async def _handle_approve(
     display_format: DisplayFormat,
     address_bytes: bytes,
     msg: MsgInSignTx,
-    definitions: Definitions,
-    token: EthereumTokenInfo,
+    defs: Definitions,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
 ) -> None:
@@ -842,9 +830,7 @@ async def _handle_approve(
     from .sc_constants import KNOWN_ADDRESSES
     from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
-    args, fields = display_format.parse(
-        calldata, msg.address_n, msg.value, definitions, token
-    )
+    args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
     assert len(args) == 2
     assert len(fields) == 2
@@ -862,7 +848,7 @@ async def _handle_approve(
 
     recipient_str = KNOWN_ADDRESSES.get(arg0_raw_value)
     if recipient_str is None:
-        vault = lookup_vault(definitions.network, arg0_raw_value)
+        vault = lookup_vault(defs.network, arg0_raw_value)
         if vault is not UNKNOWN_VAULT:
             recipient_str = vault.name
 
@@ -876,8 +862,8 @@ async def _handle_approve(
         maximum_fee,
         fee_items,
         msg.chain_id,
-        definitions.network,
-        token,
+        defs.network,
+        defs.get_token(address_bytes),
         address_bytes,
         is_revoke,
         bool(msg.chunkify),
@@ -889,17 +875,14 @@ async def _handle_transfer(
     display_format: DisplayFormat,
     address_bytes: bytes,
     msg: MsgInSignTx,
-    definitions: Definitions,
-    token: EthereumTokenInfo,
+    defs: Definitions,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> None:
     from .layout import require_confirm_payment_request, require_confirm_tx
 
-    args, fields = display_format.parse(
-        calldata, msg.address_n, msg.value, definitions, token
-    )
+    args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
     assert len(args) == 2
     assert len(fields) == 2
@@ -928,9 +911,9 @@ async def _handle_transfer(
             maximum_fee,
             fee_items,
             msg.chain_id,
-            definitions.network,
-            token,
-            address_from_bytes(address_bytes, definitions.network),
+            defs.network,
+            defs.get_token(address_bytes),
+            address_from_bytes(address_bytes, defs.network),
         )
     else:
         await require_confirm_tx(
@@ -940,7 +923,7 @@ async def _handle_transfer(
             msg.address_n,
             maximum_fee,
             fee_items,
-            token,
+            defs.get_token(address_bytes),
             is_send=True,
             chunkify=bool(msg.chunkify),
         )
@@ -950,8 +933,7 @@ async def _handle_generic_ui(
     calldata: memoryview,
     display_format: DisplayFormat,
     msg: MsgInSignTx,
-    definitions: Definitions,
-    token: EthereumTokenInfo,
+    defs: Definitions,
     maximum_fee: str,
 ) -> None:
     from . import tokens
@@ -959,9 +941,7 @@ async def _handle_generic_ui(
     from .layout import require_confirm_clear_signing
     from .sc_constants import KNOWN_ADDRESSES
 
-    _, fields = display_format.parse(
-        calldata, msg.address_n, msg.value, definitions, token
-    )
+    _, fields = await display_format.parse_calldata(calldata, msg, defs)
 
     properties_to_confirm = []
 
@@ -969,9 +949,7 @@ async def _handle_generic_ui(
         properties_to_confirm.append(field)
         if actual_token is tokens.UNKNOWN_TOKEN:
             assert actual_token_address is not None
-            token_address_str = address_from_bytes(
-                actual_token_address, definitions.network
-            )
+            token_address_str = address_from_bytes(actual_token_address, defs.network)
             token_address_property: StrPropertyType = (
                 TR.ethereum__token_contract,
                 token_address_str,
