@@ -10,6 +10,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	DebugLinkOptigaSetSecMax DebugLinkSetLogFilter \
 	GetNonce TxAckInput TxAckOutput TxAckPrev PaymentRequest \
 	EthereumABITupleInfo EthereumABIValueInfo EthereumERC7730FieldInfo EthereumDisplayFormatInfo EthereumERC7730Path \
+	EthereumDefinitionRequest EthereumDefinitionAck \
 	EthereumSignTypedData EthereumTypedDataStructRequest EthereumTypedDataStructAck \
 	EthereumTypedDataValueRequest EthereumTypedDataValueAck ShowDeviceTutorial \
 	UnlockBootloader AuthenticateDevice AuthenticityProof \

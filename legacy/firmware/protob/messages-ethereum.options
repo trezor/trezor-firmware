@@ -55,6 +55,6 @@ EthereumAddress.address                 max_size:43
 EthereumAddress.mac                     type:FT_IGNORE
 EthereumPublicKey.xpub                  max_size:113
 
-EthereumDefinitions.encoded_network                max_size:1024
-EthereumDefinitions.encoded_token                  max_size:1024
-EthereumDefinitions.encoded_erc7730_display_format type:FT_IGNORE
+EthereumDefinitions.encoded_network        max_size:1024
+EthereumDefinitions.encoded_token          max_size:1024
+EthereumDefinitions.encoded_display_format type:FT_IGNORE
