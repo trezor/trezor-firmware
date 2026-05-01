@@ -4,7 +4,12 @@ from typing import TYPE_CHECKING
 from trezor import TR
 
 from .definitions import Definitions
-from .helpers import address_from_bytes, format_ethereum_amount, get_account_and_path
+from .helpers import (
+    address_from_bytes,
+    bytes_from_address,
+    format_ethereum_amount,
+    get_account_and_path,
+)
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -214,11 +219,11 @@ def _get_leaf_parser(info: EthereumABIValueInfo) -> Parser:
 
 
 class FieldFormatter:
-    def format(
+    async def format(
         self,
         value: AnyValue,
-        definitions: Definitions,
-        token: EthereumTokenInfo,
+        msg: MsgInSignTx,
+        defs: Definitions,
         path_walker: PathWalker,
     ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
         """
@@ -231,11 +236,11 @@ class FieldFormatter:
 
 
 class AddressNameFormatter(FieldFormatter):
-    def format(
+    async def format(
         self,
         address: AnyValue,
-        definitions: Definitions,
-        _token: EthereumTokenInfo,
+        _msg: MsgInSignTx,
+        defs: Definitions,
         _path_walker: PathWalker,
     ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
         if address is None:
@@ -245,16 +250,16 @@ class AddressNameFormatter(FieldFormatter):
         else:
             if not isinstance(address, bytes):
                 raise InvalidFormatDefinition
-            return address_from_bytes(address, definitions.network), None, None
+            return address_from_bytes(address, defs.network), None, None
 
 
 class AmountFormatter(FieldFormatter):
-    def format(
+    async def format(
         self,
         amount: AnyValue,
-        definitions: Definitions,
-        _token: EthereumTokenInfo,
-        _path_Walker: PathWalker,
+        _msg: MsgInSignTx,
+        defs: Definitions,
+        _path_walker: PathWalker,
     ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
         if amount is None:
             return None, None, None
@@ -265,10 +270,15 @@ class AmountFormatter(FieldFormatter):
             # Note: we are passing None rather than `_token`
             # to `format_ethereum_amount` because this formatter
             # is meant to be used with native ETH amounts
-            return format_ethereum_amount(amount, None, definitions.network), None, None
+            return format_ethereum_amount(amount, None, defs.network), None, None
 
 
 class TokenAmountFormatter(FieldFormatter):
+    # TODO: figure out a way for the formatter to signal that the amount was above the threshold.
+    # For now we return None and `confirm_ethereum_approve` shows the "Unlimited amount" warning,
+    # but the `tokenAmount` spec allows this message to be customized in which case
+    # being above the threshold could mean something else, not just "Unlimited".
+
     def __init__(
         self,
         token_path: Path,
@@ -279,45 +289,54 @@ class TokenAmountFormatter(FieldFormatter):
         self.native_currency_address = native_currency_address
         self.threshold = threshold
 
-    def format(
+    async def format(
         self,
         amount: AnyValue,
-        definitions: Definitions,
-        token: EthereumTokenInfo | None,
+        msg: MsgInSignTx,
+        defs: Definitions,
         path_walker: PathWalker,
     ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
+        from .tokens import UNKNOWN_TOKEN
+
         if amount is None:
             return None, None, None
-        else:
-            if not isinstance(amount, int):
-                raise InvalidFormatDefinition
-            if self.threshold is not None and amount > self.threshold:
-                # TODO: figure out a way for the formatter to signal that the amount was above the threshold.
-                # For now we return None and `confirm_ethereum_approve` shows the "Unlimited amount" warning,
-                # but the `tokenAmount` spec allows this message to be customized in which case
-                # being above the threshold could mean something else, not just "Unlimited".
-                return None, None, None
-            if self.token_path is not None:
-                token_address = path_walker(self.token_path)
-                if not isinstance(token_address, bytes):
-                    raise InvalidFormatDefinition
-                is_native_currency = False
-                if self.native_currency_address is not None:
-                    if token_address in self.native_currency_address:
-                        is_native_currency = True
-                if is_native_currency:
-                    token = None
+
+        if not isinstance(amount, int):
+            raise InvalidFormatDefinition
+
+        token_address = path_walker(self.token_path)
+        if not isinstance(token_address, bytes):
+            raise InvalidFormatDefinition
+
+        if self.native_currency_address is not None:
+            if token_address in self.native_currency_address:
+                if self.threshold is not None and amount > self.threshold:
+                    return None, None, None
                 else:
-                    token = definitions.get_token(token_address)
-                return (
-                    format_ethereum_amount(amount, token, definitions.network),
-                    token,
-                    token_address if not is_native_currency else None,
+                    return (
+                        format_ethereum_amount(amount, None, defs.network),
+                        None,
+                        None,
+                    )
+
+        # Non-native currency - dealing with tokens
+
+        token = defs.get_token(token_address)
+        if token is UNKNOWN_TOKEN:
+            if msg.supports_definition_request:
+                received_definitions, _ = await _request_definitions(
+                    msg.chain_id, token_address, func_sig=None
                 )
+                if received_definitions is not None:
+                    token = received_definitions.get_token(token_address)
+
+        if self.threshold is not None and amount > self.threshold:
+            return None, token, token_address
+        else:
             return (
-                format_ethereum_amount(amount, token, definitions.network),
+                format_ethereum_amount(amount, token, defs.network),
                 token,
-                token.address if token else None,
+                token_address,
             )
 
 
@@ -327,11 +346,11 @@ class UnitFormatter(FieldFormatter):
         self.base = base
         self.prefix = prefix
 
-    def format(
+    async def format(
         self,
         value: AnyValue,
+        _msg: MsgInSignTx,
         _definitions: Definitions,
-        _token: EthereumTokenInfo,
         _path_walker: PathWalker,
     ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
         if value is None:
@@ -708,6 +727,7 @@ class DisplayFormat:
             formatted, token, token_address = await formatter.format(
                 value, msg, defs, get_value_for_path
             )
+
             fields.append(
                 (
                     (field_definition.label, formatted, None),
@@ -739,11 +759,40 @@ class DisplayFormat:
         )
 
 
-async def try_parse(
+async def _request_definitions(
+    chain_id: int, token_address: bytes, func_sig: bytes | None
+) -> tuple[Definitions | None, DisplayFormat | None]:
+    from trezor.messages import EthereumDefinitionAck, EthereumDefinitionRequest
+    from trezor.wire.context import call
+
+    req = EthereumDefinitionRequest(
+        chain_id=chain_id,
+        token_address=token_address,
+        func_sig=func_sig,
+    )
+    res = await call(req, EthereumDefinitionAck)
+
+    if res.definitions is None:
+        return None, None
+
+    definitions = Definitions.from_encoded(
+        res.definitions.encoded_network, res.definitions.encoded_token, chain_id
+    )
+
+    display_format = (
+        DisplayFormat.from_encoded(res.definitions.encoded_display_format)
+        if res.definitions.encoded_display_format is not None
+        else None
+    )
+
+    return definitions, display_format
+
+
+async def try_confirm(
     data: AnyBytes,
     address_bytes: bytes,
     msg: MsgInSignTx,
-    definitions: Definitions,
+    defs: Definitions,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
@@ -760,24 +809,33 @@ async def try_parse(
     if len(data) < SC_FUNC_SIG_BYTES:
         return False
 
-    func_sig = data[0:SC_FUNC_SIG_BYTES]
+    func_sig = bytes(data[0:SC_FUNC_SIG_BYTES])
 
     display_format = None
     for f in ALL_DISPLAY_FORMATS:
-        if f.func_sig == func_sig:
+        # Start by trying built-in definitions...
+        if f.func_sig == func_sig and f.matches_context(msg.chain_id, address_bytes):
             display_format = f
             break
     else:
-        if msg.definitions and msg.definitions.encoded_erc7730_display_format:
-            f = DisplayFormat.from_encoded(
-                msg.definitions.encoded_erc7730_display_format
-            )
-            if f.func_sig == func_sig:
+        if msg.definitions and msg.definitions.encoded_display_format:
+            # ... look at definitions provided in the initial request...
+            f = DisplayFormat.from_encoded(msg.definitions.encoded_display_format)
+            if f.func_sig == func_sig and f.matches_context(
+                msg.chain_id, address_bytes
+            ):
                 display_format = f
+        if display_format is None:
+            # ... finally request the display format via another call!
+            if msg.supports_definition_request:
+                _, f = await _request_definitions(msg.chain_id, address_bytes, func_sig)
+                if f:
+                    if f.func_sig == func_sig and f.matches_context(
+                        msg.chain_id, address_bytes
+                    ):
+                        display_format = f
 
-    if display_format is None or not display_format.matches_context(
-        msg.chain_id, address_bytes
-    ):
+    if display_format is None:
         return False
 
     calldata = memoryview(data)[SC_FUNC_SIG_BYTES:]

@@ -273,7 +273,7 @@ async def confirm_tx_data(
         clear_signed = False
     else:
         try:
-            clear_signed = await clear_signing.try_parse(
+            clear_signed = await clear_signing.try_confirm(
                 initial_data,
                 address_bytes,
                 msg,

@@ -3981,6 +3981,7 @@ if TYPE_CHECKING:
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
         payment_req: "PaymentRequest | None"
+        supports_definition_request: "bool | None"
 
         def __init__(
             self,
@@ -3998,6 +3999,7 @@ if TYPE_CHECKING:
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
             payment_req: "PaymentRequest | None" = None,
+            supports_definition_request: "bool | None" = None,
         ) -> None:
             pass
 
@@ -4020,6 +4022,7 @@ if TYPE_CHECKING:
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
         payment_req: "PaymentRequest | None"
+        supports_definition_request: "bool | None"
 
         def __init__(
             self,
@@ -4038,6 +4041,7 @@ if TYPE_CHECKING:
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
             payment_req: "PaymentRequest | None" = None,
+            supports_definition_request: "bool | None" = None,
         ) -> None:
             pass
 
@@ -4077,6 +4081,38 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumTxAck"]:
+            return isinstance(msg, cls)
+
+    class EthereumDefinitionRequest(protobuf.MessageType):
+        chain_id: "int"
+        token_address: "AnyBytes"
+        func_sig: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            chain_id: "int",
+            token_address: "AnyBytes",
+            func_sig: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDefinitionRequest"]:
+            return isinstance(msg, cls)
+
+    class EthereumDefinitionAck(protobuf.MessageType):
+        definitions: "EthereumDefinitions | None"
+
+        def __init__(
+            self,
+            *,
+            definitions: "EthereumDefinitions | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDefinitionAck"]:
             return isinstance(msg, cls)
 
     class EthereumSignMessage(protobuf.MessageType):
@@ -4174,14 +4210,14 @@ if TYPE_CHECKING:
     class EthereumDefinitions(protobuf.MessageType):
         encoded_network: "AnyBytes | None"
         encoded_token: "AnyBytes | None"
-        encoded_erc7730_display_format: "AnyBytes | None"
+        encoded_display_format: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             encoded_network: "AnyBytes | None" = None,
             encoded_token: "AnyBytes | None" = None,
-            encoded_erc7730_display_format: "AnyBytes | None" = None,
+            encoded_display_format: "AnyBytes | None" = None,
         ) -> None:
             pass
 

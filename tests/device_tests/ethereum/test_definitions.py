@@ -436,7 +436,7 @@ def _sign_tx_with_display_format(
             session,
             **sign_tx_params,
             definitions=messages.EthereumDefinitions(
-                encoded_erc7730_display_format=definitions.encode_eth_erc7730_display_format(
+                encoded_display_format=definitions.encode_eth_display_format(
                     display_format
                 ),
                 encoded_token=(
