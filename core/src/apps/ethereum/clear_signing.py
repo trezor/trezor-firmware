@@ -900,7 +900,7 @@ async def _handle_approve(
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
-    (field1_name, value, _), _, _ = fields[1]
+    (field1_name, value, _), actual_token, _ = fields[1]
     assert field1_name == "Amount"
     assert isinstance(arg1_raw_value, int)
 
@@ -921,7 +921,7 @@ async def _handle_approve(
         fee_items,
         msg.chain_id,
         defs.network,
-        defs.get_token(address_bytes),
+        actual_token or defs.get_token(address_bytes),
         address_bytes,
         is_revoke,
         bool(msg.chunkify),
@@ -951,7 +951,7 @@ async def _handle_transfer(
 
     arg1_raw_value = args[1]
     assert isinstance(arg1_raw_value, int)
-    (arg1_name, value, _), _, _ = fields[1]
+    (arg1_name, value, _), actual_token, _ = fields[1]
     assert arg1_name == "Amount"
     assert isinstance(value, str)
 
@@ -970,7 +970,7 @@ async def _handle_transfer(
             fee_items,
             msg.chain_id,
             defs.network,
-            defs.get_token(address_bytes),
+            actual_token or defs.get_token(address_bytes),
             address_from_bytes(address_bytes, defs.network),
         )
     else:
@@ -981,7 +981,7 @@ async def _handle_transfer(
             msg.address_n,
             maximum_fee,
             fee_items,
-            defs.get_token(address_bytes),
+            actual_token or defs.get_token(address_bytes),
             is_send=True,
             chunkify=bool(msg.chunkify),
         )

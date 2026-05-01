@@ -11,7 +11,7 @@ from trezorlib.messages import DefinitionType
 from trezorlib.tools import parse_path
 
 from ...definitions import (
-    make_eth_erc7730_display_format,
+    make_eth_display_format,
     make_eth_network,
     make_eth_token,
     make_payload,
@@ -47,17 +47,42 @@ def _fails_token(session: Session, token: bytes, match: str) -> None:
         )
 
 
-def _fails_erc7730_display_format(
-    session: Session, erc7730_display_format: bytes, match: str
-) -> None:
+def _fails_display_format(session: Session, display_format: bytes, match: str) -> None:
     with pytest.raises(TrezorFailure, match=match):
         ethereum.sign_tx(
             session,
             **get_clear_signing_sign_tx_params(),
             definitions=messages.EthereumDefinitions(
-                encoded_erc7730_display_format=erc7730_display_format,
+                encoded_display_format=display_format,
             ),
         )
+
+
+def _fails_display_format_via_request(
+    session: Session, display_format: bytes, match: str
+) -> None:
+    calls: list[messages.EthereumDefinitionRequest] = []
+
+    def provider(
+        req: messages.EthereumDefinitionRequest,
+    ) -> messages.EthereumDefinitionAck:
+        calls.append(req)
+        return messages.EthereumDefinitionAck(
+            definitions=messages.EthereumDefinitions(
+                encoded_display_format=display_format,
+            )
+        )
+
+    with pytest.raises(TrezorFailure, match=match):
+        ethereum.sign_tx(
+            session,
+            **get_clear_signing_sign_tx_params(supports_definition_request=True),
+            definition_provider=provider,
+        )
+
+    # Firmware requests the display format once then fails validation. No token requests follow.
+    assert len(calls) == 1
+    assert calls[0].func_sig is not None
 
 
 def _make_token_payload(
@@ -76,7 +101,7 @@ def _make_display_format_payload(
     message: messages.EthereumDisplayFormatInfo | bytes | None = None,
 ) -> bytes:
     if message is None:
-        message = make_eth_erc7730_display_format()
+        message = make_eth_display_format()
     return make_payload(
         data_type=DefinitionType.ETHEREUM_DISPLAY_FORMAT,
         message=message,
@@ -90,7 +115,8 @@ def _cases(session: Session) -> list[tuple]:
         (_make_token_payload, _fails_token),
     ]
     if session.model in models.CORE_MODELS:
-        cases.append((_make_display_format_payload, _fails_erc7730_display_format))
+        cases.append((_make_display_format_payload, _fails_display_format))
+        cases.append((_make_display_format_payload, _fails_display_format_via_request))
     return cases
 
 
@@ -170,23 +196,33 @@ def test_bad_type(session: Session) -> None:
         cases += [
             (
                 DefinitionType.ETHEREUM_DISPLAY_FORMAT,
-                make_eth_erc7730_display_format(),
+                make_eth_display_format(),
                 _fails_network,
             ),
             (
                 DefinitionType.ETHEREUM_DISPLAY_FORMAT,
-                make_eth_erc7730_display_format(),
+                make_eth_display_format(),
                 _fails_token,
             ),
             (
                 DefinitionType.ETHEREUM_TOKEN,
                 make_eth_token(),
-                _fails_erc7730_display_format,
+                _fails_display_format,
             ),
             (
                 DefinitionType.ETHEREUM_NETWORK,
                 make_eth_network(),
-                _fails_erc7730_display_format,
+                _fails_display_format,
+            ),
+            (
+                DefinitionType.ETHEREUM_TOKEN,
+                make_eth_token(),
+                _fails_display_format_via_request,
+            ),
+            (
+                DefinitionType.ETHEREUM_NETWORK,
+                make_eth_network(),
+                _fails_display_format_via_request,
             ),
         ]
     for data_type, message, check in cases:
@@ -218,23 +254,33 @@ def test_protobuf_mismatch(session: Session) -> None:
         cases += [
             (
                 DefinitionType.ETHEREUM_NETWORK,
-                make_eth_erc7730_display_format(),
+                make_eth_display_format(),
                 _fails_network,
             ),
             (
                 DefinitionType.ETHEREUM_TOKEN,
-                make_eth_erc7730_display_format(),
+                make_eth_display_format(),
                 _fails_token,
             ),
             (
                 DefinitionType.ETHEREUM_DISPLAY_FORMAT,
                 make_eth_token(),
-                _fails_erc7730_display_format,
+                _fails_display_format,
             ),
             (
                 DefinitionType.ETHEREUM_DISPLAY_FORMAT,
                 make_eth_network(),
-                _fails_erc7730_display_format,
+                _fails_display_format,
+            ),
+            (
+                DefinitionType.ETHEREUM_DISPLAY_FORMAT,
+                make_eth_token(),
+                _fails_display_format_via_request,
+            ),
+            (
+                DefinitionType.ETHEREUM_DISPLAY_FORMAT,
+                make_eth_network(),
+                _fails_display_format_via_request,
             ),
         ]
     for data_type, message, check in cases:

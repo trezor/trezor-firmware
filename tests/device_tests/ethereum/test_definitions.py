@@ -335,6 +335,7 @@ UNISWAP_WETH_WETH2_CALLDATA = bytes.fromhex(
 
 def get_clear_signing_sign_tx_params(
     data: bytes = UNISWAP_EXACT_INPUT_SINGLE_CALLDATA,
+    supports_definition_request: bool = False,
 ) -> dict:
     return dict(
         n=parse_path("m/44h/60h/0h/0/1"),
@@ -345,12 +346,31 @@ def get_clear_signing_sign_tx_params(
         value=0x0,
         data=data,
         chain_id=1,
+        supports_definition_request=supports_definition_request,
+    )
+
+
+def get_clear_signing_sign_tx_eip1559_params(
+    data: bytes = UNISWAP_EXACT_INPUT_SINGLE_CALLDATA,
+    supports_definition_request: bool = False,
+) -> dict:
+    return dict(
+        n=parse_path("m/44h/60h/0h/0/1"),
+        nonce=0x0,
+        max_gas_fee=0x14,
+        gas_limit=0x14,
+        max_priority_fee=0x14,
+        to=UNISWAP_V3_ROUTER2,
+        value=0x0,
+        data=data,
+        chain_id=1,
+        supports_definition_request=supports_definition_request,
     )
 
 
 # ERC-7730 display format for Uniswap V3 `exactInputSingle`.
 # `exactInputSingle` takes one struct parameter with 7 fields.
-UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT = definitions.make_eth_erc7730_display_format(
+UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT = definitions.make_eth_display_format(
     chain_id=1,
     address=UNISWAP_V3_ROUTER2,
     func_sig=FUNC_SIG_FAKE,
@@ -446,7 +466,7 @@ def _sign_tx_with_display_format(
         )
 
 
-def _make_label_checker(
+def make_label_checker(
     expected: set[str] | None = None,
     absent: set[str] | None = None,
 ) -> tuple[Callable, Callable[[], None]]:
@@ -473,7 +493,7 @@ def _make_label_checker(
 @pytest.mark.models("core")
 def test_clear_signing_with_definition_and_token(session: Session) -> None:
     # With WETH provided, TokenAmountFormatter can resolve the token symbol.
-    on_page, assert_all_seen = _make_label_checker(
+    on_page, assert_all_seen = make_label_checker(
         expected=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"FAKE WETH"},
         absent={"UNKN"},
     )
@@ -491,7 +511,7 @@ def test_clear_signing_builtin_token_no_override(session: Session) -> None:
     # With USDT (tokenOut) provided as encoded_token.
     # Note however that we still render it as "USDT" (built in token)
     # rather than "FAKE USDT"!
-    on_page, assert_all_seen = _make_label_checker(
+    on_page, assert_all_seen = make_label_checker(
         expected=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN"},
         absent={"FAKE USDT"},
     )
@@ -507,7 +527,7 @@ def test_clear_signing_builtin_token_no_override(session: Session) -> None:
 @pytest.mark.models("core")
 def test_clear_signing_without_token(session: Session) -> None:
     # Without token definitions, amounts are shown as UNKNOWN tokens.
-    on_page, assert_all_seen = _make_label_checker(
+    on_page, assert_all_seen = make_label_checker(
         expected=(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN"}),
         absent={"WETH", "USDT"},
     )
@@ -524,7 +544,7 @@ def test_clear_signing_without_token(session: Session) -> None:
 def test_clear_signing_with_definition_without_token(session: Session) -> None:
     # Without a token definition, amounts are shown as UNKNOWN token
     # (but builtin USDT is resolved).
-    on_page, assert_all_seen = _make_label_checker(
+    on_page, assert_all_seen = make_label_checker(
         expected=(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN", "USDT"}),
         absent={"WETH"},
     )
@@ -554,7 +574,7 @@ def test_clear_signing_with_mismatched_definition(session: Session) -> None:
         ],
         is_dynamic=False,
     )
-    bad_display_format = definitions.make_eth_erc7730_display_format(
+    bad_display_format = definitions.make_eth_display_format(
         chain_id=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.chain_id,
         address=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.address,
         func_sig=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.func_sig,
@@ -564,7 +584,7 @@ def test_clear_signing_with_mismatched_definition(session: Session) -> None:
             UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.field_definitions
         ),
     )
-    on_page, assert_all_seen = _make_label_checker(
+    on_page, assert_all_seen = make_label_checker(
         absent=(
             UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN", "WETH", "USDT"}
         )
