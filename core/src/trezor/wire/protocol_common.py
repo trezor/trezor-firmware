@@ -152,7 +152,13 @@ async def _waiting_screen(raise_on_cancel: type[Exception] | None) -> None:
     ) as obj:
         # Block until the user confirmation.
         # Don't use `interact` to avoid cancelling current workflow.
-        await Layout(obj).get_result()
+        layout = Layout(obj)
+        layout.start()
+        # This task doesn't have access to I/O context - see `ButtonRequestHandler.join()`.
+        # Therefore, the new layout won't start its own ButtonRequest handler,
+        # avoiding interference with the existing layout (the one we are waiting for).
+        assert layout.button_request_handler is None
+        await layout.get_result()
 
     if raise_on_cancel:
         raise raise_on_cancel()
@@ -212,6 +218,7 @@ class ButtonRequestHandler:
         self.box.put(None, replace=True)
 
         # Wait for the ButtonRequest handler to finish (or user cancellation)
+        # `_waiting_screen` layout won't have an I/O context, since it runs in a separate task.
         await loop.race(self.is_done, _waiting_screen(self.raise_on_cancel))
 
     async def _handle(self, ack_callback: AckCallback) -> None:
