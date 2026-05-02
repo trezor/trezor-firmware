@@ -3529,7 +3529,7 @@
     },
     "words__chain": "Chain",
     "words__comm_trouble": {
-      "Bolt": "Dein Trezor hat Probleme bei der Kommunikation mit deinem verbundenen Gerät.",
+      "Bolt": "Dein Trezor hat Probleme, mit deinem verbundenen Gerät zu kommunizieren.",
       "Caesar": "Dein Trezor hat Schwierigkeiten, mit deinem verbundenen Gerät zu kommunizieren.",
       "Delizia": "Dein Trezor hat Probleme, mit deinem verbundenen Gerät zu kommunizieren.",
       "Eckhart": "Dein Trezor hat Schwierigkeiten, mit deinem verbundenen Gerät zu kommunizieren."
