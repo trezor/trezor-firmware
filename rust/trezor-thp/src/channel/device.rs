@@ -4,8 +4,8 @@ use crate::{
     Backend, ChannelIO, Device, Error,
     alternating_bit::SyncBits,
     channel::{
-        ChannelState, HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, Nonce, PRIVKEY_LEN,
-        PacketInResult, PairingState, noise::NoiseHandshake,
+        HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, Nonce, PRIVKEY_LEN, PacketInResult,
+        PairingState, ReceiveState, SendState, noise::NoiseHandshake,
     },
     credential::CredentialVerifier,
     error::TransportError,
@@ -325,7 +325,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     }
 
     fn incoming_internal(&mut self) -> Result<(), Error> {
-        let ChannelState::Receiving { reassembler, .. } = &self.channel.state else {
+        let ReceiveState::Receiving { reassembler, .. } = &self.channel.receive_state else {
             return Err(Error::not_ready());
         };
         let sync_bits = reassembler.sync_bits();
@@ -402,7 +402,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     pub fn handshake_done(&self) -> bool {
         // Done only after peer acknowledges completion response.
         matches!(self.state, HandshakeState::SendingCompletionResponse { .. })
-            && matches!(self.channel.state, ChannelState::Idle)
+            && matches!(self.channel.send_state, SendState::Idle)
     }
 
     /// True if the handshake failed and the object should be discarded.
@@ -499,7 +499,7 @@ where
                 s
             );
             // Possibly damaged length field, ignore continuations.
-            self.channel.state = ChannelState::Idle;
+            self.channel.receive_state = ReceiveState::Idle;
             return PacketInResult::ignore(Error::malformed_data());
         }
         if res.got_message() {
