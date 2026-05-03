@@ -4,8 +4,9 @@ use crate::{
     Backend, ChannelIO, Error, Host,
     alternating_bit::SyncBits,
     channel::{
-        ChannelState, HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, MAX_ALLOC_RESPONSE_LEN,
-        MAX_DEVICE_PROPERTIES_LEN, Nonce, PacketInResult, PairingState, noise::NoiseHandshake,
+        HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, MAX_ALLOC_RESPONSE_LEN,
+        MAX_DEVICE_PROPERTIES_LEN, Nonce, PacketInResult, PairingState, ReceiveState,
+        noise::NoiseHandshake,
     },
     credential::CredentialStore,
     fragment::{Fragmenter, Reassembler},
@@ -519,7 +520,7 @@ where
                 s
             );
             // Possibly damaged length field, ignore continuations.
-            self.channel.state = ChannelState::Idle;
+            self.channel.receive_state = ReceiveState::Idle;
             return PacketInResult::ignore(Error::malformed_data());
         }
         if res.got_message() {
