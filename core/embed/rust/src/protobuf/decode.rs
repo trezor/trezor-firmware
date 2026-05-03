@@ -3,23 +3,24 @@ use core::{
     str,
 };
 
-use micropython::{buffer, gc::Gc, list::List, map::Map, obj::Obj, util};
+use micropython::{buffer, gc::Gc, list::List, map::Map, obj::Obj, py_object::GcObject, util};
 
-use crate::{error::Error, io::InputStream, micropython::qstr::Qstr};
+use crate::{error::Error, io::InputStream};
 
 use super::{
     defs::{self, FieldDef, FieldType, MsgDef},
     error,
-    obj::{MsgDefObj, MsgObj},
+    obj::MsgObj,
     zigzag,
 };
 
 pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
     let block = || {
-        let def = Gc::<MsgDefObj>::try_from(msg_def)?;
+        let def = GcObject::<MsgDef>::try_from(msg_def)?;
+        let def = def.borrow();
         let enable_experimental = bool::try_from(enable_experimental)?;
 
-        if !enable_experimental && def.msg().is_experimental {
+        if !enable_experimental && def.is_experimental {
             // Refuse to decode message defs marked as experimental if not
             // explicitly allowed. Messages can also mark certain fields as
             // experimental (not the whole message). This is enforced during the
@@ -36,7 +37,7 @@ pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: O
             enable_experimental,
         };
 
-        let obj = decoder.message_from_stream(stream, def.msg())?;
+        let obj = decoder.message_from_stream(stream, &def)?;
         Ok(obj)
     };
     unsafe { util::try_or_raise(block) }
@@ -54,32 +55,38 @@ impl Decoder {
         stream: &mut InputStream,
         msg: &MsgDef,
     ) -> Result<Obj, Error> {
-        let mut obj = self.empty_message(msg)?;
+        let obj = self.empty_message(msg)?;
         // SAFETY: We assume that `obj` is not aliased here.
-        let map = unsafe { Gc::as_mut(&mut obj) }.map_mut();
-        self.decode_fields_into(stream, msg, map)?;
-        self.decode_defaults_into(msg, map)?;
-        self.assign_required_into(msg, map)?;
+        {
+            let mut obj_mut = obj.borrow_mut();
+            let map = obj_mut.map_mut();
+            self.decode_fields_into(stream, msg, map)?;
+            self.decode_defaults_into(msg, map)?;
+            self.assign_required_into(msg, map)?;
+        }
         Ok(obj.into())
     }
 
     /// Create a new message instance and fill it from `values`, handling the
     /// default and required fields correctly.
     pub fn message_from_values(&self, values: &Map, msg: &MsgDef) -> Result<Obj, Error> {
-        let mut obj = self.empty_message(msg)?;
+        let obj = self.empty_message(msg)?;
         // SAFETY: We assume that `obj` is not aliased here.
-        let map = unsafe { Gc::as_mut(&mut obj) }.map_mut();
-        for elem in values.elems() {
-            map.set(elem.key, elem.value)?;
+        {
+            let mut obj_mut = obj.borrow_mut();
+            let map = obj_mut.map_mut();
+            for elem in values.elems() {
+                map.set(elem.key, elem.value)?;
+            }
+            self.decode_defaults_into(msg, map)?;
+            self.assign_required_into(msg, map)?;
         }
-        self.decode_defaults_into(msg, map)?;
-        self.assign_required_into(msg, map)?;
         Ok(obj.into())
     }
 
     /// Allocate the backing message object with enough pre-allocated space for
     /// all fields.
-    pub fn empty_message(&self, msg: &MsgDef) -> Result<Gc<MsgObj>, Error> {
+    pub fn empty_message(&self, msg: &MsgDef) -> Result<GcObject<MsgObj>, Error> {
         MsgObj::alloc_with_capacity(msg.fields.len(), msg)
     }
 
