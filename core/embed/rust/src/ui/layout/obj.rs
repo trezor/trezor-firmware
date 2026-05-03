@@ -12,6 +12,7 @@ use micropython::{
     macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
     map::Map,
     obj::{Obj, ObjBase},
+    py_object::HasBaseType,
     simple_type::SimpleTypeObj,
     typ::Type,
     util,
@@ -391,19 +392,25 @@ impl LayoutObj {
     }
 
     pub fn new_root(root: impl LayoutMaybeTrace + 'static) -> Result<Gc<Self>, Error> {
-        // SAFETY: This is a Python object and has a base as first element
-        unsafe {
-            Gc::new_with_custom_finaliser(Self {
-                base: Self::obj_type().as_base(),
-                inner: RefCell::new(LayoutObjInner::new(root)?),
-            })
-        }
+        Gc::new_with_custom_finaliser(Self {
+            base: Self::obj_type().as_base(),
+            inner: RefCell::new(LayoutObjInner::new(root)?),
+        })
     }
 
     fn inner_mut(&self) -> RefMut<'_, LayoutObjInner> {
         self.inner.borrow_mut()
     }
 
+    pub fn skip_first_paint(&self) {
+        self.inner_mut().repaint = Repaint::None;
+    }
+}
+
+/// SAFETY: has a base type as the first field.
+/// FWIW, LayoutObj is a hand-rolled version of PyObject,
+/// and we should remove it.
+unsafe impl HasBaseType for LayoutObj {
     fn obj_type() -> &'static Type {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_LayoutObj,
@@ -431,35 +438,6 @@ impl LayoutObj {
             }),
         };
         &TYPE
-    }
-
-    pub fn skip_first_paint(&self) {
-        self.inner_mut().repaint = Repaint::None;
-    }
-}
-
-impl From<Gc<LayoutObj>> for Obj {
-    fn from(val: Gc<LayoutObj>) -> Self {
-        // SAFETY:
-        //  - We are GC-allocated.
-        //  - We are `repr(C)`.
-        //  - We have a `base` as the first field with the correct type.
-        unsafe { Obj::from_ptr(Gc::into_raw(val).cast()) }
-    }
-}
-
-impl TryFrom<Obj> for Gc<LayoutObj> {
-    type Error = Error;
-
-    fn try_from(value: Obj) -> Result<Self, Self::Error> {
-        if LayoutObj::obj_type().is_type_of(value) {
-            // SAFETY: We assume that if `value` is an object pointer with the correct type,
-            // it is always GC-allocated.
-            let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
-            Ok(this)
-        } else {
-            Err(Error::TypeError)
-        }
     }
 }
 
