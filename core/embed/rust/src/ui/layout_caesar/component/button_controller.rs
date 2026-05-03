@@ -55,19 +55,14 @@ pub enum ButtonControllerMsg {
 pub enum ButtonType {
     Button(Button),
     HoldToConfirm(HoldToConfirm),
-    Nothing,
 }
 
 impl ButtonType {
-    pub fn from_button_details(pos: ButtonPos, btn_details: Option<ButtonDetails>) -> Self {
-        if let Some(btn_details) = btn_details {
-            if btn_details.duration.is_some() {
-                Self::HoldToConfirm(HoldToConfirm::from_button_details(pos, btn_details))
-            } else {
-                Self::Button(Button::from_button_details(pos, btn_details))
-            }
+    pub fn from_button_details(pos: ButtonPos, btn_details: ButtonDetails) -> Self {
+        if btn_details.duration.is_some() {
+            Self::HoldToConfirm(HoldToConfirm::from_button_details(btn_details))
         } else {
-            Self::Nothing
+            Self::Button(Button::new(pos, btn_details))
         }
     }
 
@@ -79,7 +74,6 @@ impl ButtonType {
             Self::HoldToConfirm(htc) => {
                 htc.place(button_area);
             }
-            Self::Nothing => {}
         }
     }
 
@@ -91,7 +85,6 @@ impl ButtonType {
             Self::HoldToConfirm(htc) => {
                 htc.render(target);
             }
-            Self::Nothing => {}
         }
     }
 }
@@ -103,7 +96,7 @@ impl ButtonType {
 /// `button_type` specified what from those two is used, if anything.
 pub struct ButtonContainer {
     pos: ButtonPos,
-    button_type: ButtonType,
+    button_type: Option<ButtonType>,
     /// Holds the timestamp of when the button was pressed.
     pressed_since: Option<Instant>,
     /// How long the button should be pressed to send `long_press=true` in
@@ -124,7 +117,7 @@ impl ButtonContainer {
         let send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
         Self {
             pos,
-            button_type: ButtonType::from_button_details(pos, btn_details),
+            button_type: btn_details.map(|d| ButtonType::from_button_details(pos, d)),
             pressed_since: None,
             long_press_ms: DEFAULT_LONG_PRESS_MS,
             long_pressed_timer: Timer::new(),
@@ -137,22 +130,28 @@ impl ButtonContainer {
     /// Passing `None` as `btn_details` will mark the button as inactive.
     pub fn set(&mut self, btn_details: Option<ButtonDetails>, button_area: Rect) {
         self.send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
-        self.button_type = ButtonType::from_button_details(self.pos, btn_details);
-        self.button_type.place(button_area);
+        self.button_type = btn_details.map(|d| ButtonType::from_button_details(self.pos, d));
+        if let Some(button_type) = &mut self.button_type {
+            button_type.place(button_area);
+        }
     }
 
     /// Placing the possible component.
     pub fn place(&mut self, bounds: Rect) {
-        self.button_type.place(bounds);
+        if let Some(button_type) = &mut self.button_type {
+            button_type.place(bounds);
+        }
     }
 
     pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.button_type.render(target);
+        if let Some(button_type) = &self.button_type {
+            button_type.render(target);
+        }
     }
 
     /// Setting the visual state of the button - released/pressed.
     pub fn set_pressed(&mut self, ctx: &mut EventCtx, is_pressed: bool) {
-        if let ButtonType::Button(btn) = &mut self.button_type {
+        if let Some(ButtonType::Button(btn)) = &mut self.button_type {
             btn.set_pressed(ctx, is_pressed);
         }
     }
@@ -162,7 +161,7 @@ impl ButtonContainer {
     /// a Triggered message. If it is a hold-to-confirm button, it ends the
     /// hold.
     pub fn maybe_trigger(&mut self, ctx: &mut EventCtx) -> Option<ButtonControllerMsg> {
-        match self.button_type {
+        match self.button_type.as_ref()? {
             ButtonType::Button(_) => {
                 // Finding out whether the button was long-pressed
                 let long_press = self.pressed_since.is_some_and(|since| {
@@ -173,21 +172,19 @@ impl ButtonContainer {
                 Some(ButtonControllerMsg::Triggered(self.pos, long_press))
             }
             ButtonType::HoldToConfirm(_) => {
-                self.hold_ended(ctx);
+                self.forward_hold(ctx, ButtonEvent::HoldEnded);
                 Some(ButtonControllerMsg::ReleasedWithoutLongPress(self.pos))
             }
-            _ => None,
         }
     }
 
     /// Find out whether hold-to-confirm was triggered.
     pub fn htc_got_triggered(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
-        if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
-            if matches!(htc.event(ctx, event), Some(HoldToConfirmMsg::Confirmed)) {
-                return true;
-            }
+        if let Some(ButtonType::HoldToConfirm(htc)) = &mut self.button_type {
+            matches!(htc.event(ctx, event), Some(HoldToConfirmMsg::Confirmed))
+        } else {
+            false
         }
-        false
     }
 
     /// Saving the timestamp of when the button was pressed.
@@ -211,24 +208,11 @@ impl ButtonContainer {
         self.long_pressed_timer.expire(event)
     }
 
-    /// Registering the hold event
-    pub fn hold_started(&mut self, ctx: &mut EventCtx) {
-        if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
-            htc.event(ctx, Event::Button(ButtonEvent::HoldStarted));
-        }
-    }
-
-    /// Ending the hold event by releasing the button held
-    pub fn hold_ended(&mut self, ctx: &mut EventCtx) {
-        if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
-            htc.event(ctx, Event::Button(ButtonEvent::HoldEnded));
-        }
-    }
-
-    /// Canceling the hold event
-    pub fn hold_canceled(&mut self, ctx: &mut EventCtx) {
-        if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
-            htc.event(ctx, Event::Button(ButtonEvent::HoldCanceled));
+    /// Forward a hold lifecycle event (started/ended/canceled) to the
+    /// hold-to-confirm component, if any.
+    pub fn forward_hold(&mut self, ctx: &mut EventCtx, event: ButtonEvent) {
+        if let Some(ButtonType::HoldToConfirm(htc)) = &mut self.button_type {
+            htc.event(ctx, Event::Button(event));
         }
     }
 }
@@ -313,9 +297,9 @@ impl ButtonController {
     /// Handle middle button hold-to-confirm start.
     /// We need to cancel possible holds in both other buttons.
     fn middle_hold_started(&mut self, ctx: &mut EventCtx) {
-        self.left_btn.hold_ended(ctx);
-        self.middle_btn.hold_started(ctx);
-        self.right_btn.hold_ended(ctx);
+        self.left_btn.forward_hold(ctx, ButtonEvent::HoldEnded);
+        self.middle_btn.forward_hold(ctx, ButtonEvent::HoldStarted);
+        self.right_btn.forward_hold(ctx, ButtonEvent::HoldEnded);
     }
 
     /// Handling the expiration of HTC elements.
@@ -416,13 +400,13 @@ impl Component for ButtonController {
                                     // ▼ *
                                     PhysicalButton::Left => {
                                         self.got_pressed(ctx, ButtonPos::Left);
-                                        self.left_btn.hold_started(ctx);
+                                        self.left_btn.forward_hold(ctx, ButtonEvent::HoldStarted);
                                         Some(ButtonControllerMsg::Pressed(ButtonPos::Left))
                                     }
                                     // * ▼
                                     PhysicalButton::Right => {
                                         self.got_pressed(ctx, ButtonPos::Right);
-                                        self.right_btn.hold_started(ctx);
+                                        self.right_btn.forward_hold(ctx, ButtonEvent::HoldStarted);
                                         Some(ButtonControllerMsg::Pressed(ButtonPos::Right))
                                     }
                                     _ => None,
@@ -476,10 +460,10 @@ impl Component for ButtonController {
                                 // cancel the hold and do not register the press.
                                 match which_down {
                                     PhysicalButton::Left => {
-                                        self.left_btn.hold_canceled(ctx);
+                                        self.left_btn.forward_hold(ctx, ButtonEvent::HoldCanceled);
                                     }
                                     PhysicalButton::Right => {
-                                        self.right_btn.hold_canceled(ctx);
+                                        self.right_btn.forward_hold(ctx, ButtonEvent::HoldCanceled);
                                     }
                                     _ => {}
                                 }
@@ -493,7 +477,7 @@ impl Component for ButtonController {
                     ButtonState::BothDown => match button_event {
                         // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(b) => {
-                            self.middle_btn.hold_ended(ctx);
+                            self.middle_btn.forward_hold(ctx, ButtonEvent::HoldEnded);
                             // _ ↓ | ↓ _
                             if self.handle_middle_button {
                                 (ButtonState::OneReleased(b), None)
@@ -786,10 +770,10 @@ impl Component for AutomaticMover {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for ButtonContainer {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        if let ButtonType::Button(btn) = &self.button_type {
-            btn.trace(t);
-        } else if let ButtonType::HoldToConfirm(htc) = &self.button_type {
-            htc.trace(t);
+        match &self.button_type {
+            Some(ButtonType::Button(btn)) => btn.trace(t),
+            Some(ButtonType::HoldToConfirm(htc)) => htc.trace(t),
+            None => {}
         }
     }
 }

@@ -4,7 +4,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never},
         constant,
-        display::{Color, Font, Icon},
+        display::{Font, Icon},
         event::PhysicalButton,
         geometry::{Alignment2D, Offset, Point, Rect},
         shape,
@@ -37,47 +37,29 @@ pub struct Button {
     bounds: Rect,
     pos: ButtonPos,
     content: ButtonContent,
-    styles: ButtonStyleSheet,
+    font: Font,
+    decoration: Option<Decoration>,
+    fixed_width: Option<i16>,
+    offset: Offset,
     state: State,
 }
 
 impl Button {
-    pub fn new(pos: ButtonPos, content: ButtonContent, styles: ButtonStyleSheet) -> Self {
+    pub fn new(pos: ButtonPos, btn_details: ButtonDetails) -> Self {
         Self {
             pos,
-            content,
-            styles,
+            content: btn_details.content,
+            font: btn_details.font,
+            decoration: btn_details.decoration,
+            fixed_width: btn_details.fixed_width,
+            offset: btn_details.offset,
             bounds: Rect::zero(),
             state: State::Released,
         }
     }
 
-    pub fn from_button_details(pos: ButtonPos, btn_details: ButtonDetails) -> Self {
-        // Deciding between text and icon
-        let style = btn_details.style();
-        match btn_details.content {
-            ButtonContent::Text(text) => Self::with_text(pos, text, style),
-            ButtonContent::Icon(icon) => Self::with_icon(pos, icon, style),
-        }
-    }
-
-    pub fn with_text(pos: ButtonPos, text: TString<'static>, styles: ButtonStyleSheet) -> Self {
-        Self::new(pos, ButtonContent::Text(text), styles)
-    }
-
-    pub fn with_icon(pos: ButtonPos, image: Icon, styles: ButtonStyleSheet) -> Self {
-        Self::new(pos, ButtonContent::Icon(image), styles)
-    }
-
     pub fn content(&self) -> &ButtonContent {
         &self.content
-    }
-
-    fn style(&self) -> &ButtonStyle {
-        match self.state {
-            State::Released => &self.styles.normal,
-            State::Pressed => &self.styles.active,
-        }
     }
 
     /// Changing the icon content of the button.
@@ -111,26 +93,22 @@ impl Button {
     /// Return the full area of the button according
     /// to its current style, content and position.
     fn get_current_area(&self) -> Rect {
-        let style = self.style();
-
         // Button width may be forced. Otherwise calculate it.
-        let button_width = if let Some(width) = style.fixed_width {
+        let button_width = if let Some(width) = self.fixed_width {
             width
         } else {
             match &self.content {
                 ButtonContent::Text(text) => {
-                    let text_width = text.map(|t| style.font.visible_text_width(t));
-                    if style.with_outline {
-                        text_width + 2 * theme::BUTTON_OUTLINE
-                    } else if style.with_arms {
-                        text_width + 2 * theme::ARMS_MARGIN
-                    } else {
-                        text_width
+                    let text_width = text.map(|t| self.font.visible_text_width(t));
+                    match self.decoration {
+                        Some(Decoration::Outline) => text_width + 2 * theme::BUTTON_OUTLINE,
+                        Some(Decoration::Arms) => text_width + 2 * theme::ARMS_MARGIN,
+                        None => text_width,
                     }
                 }
                 ButtonContent::Icon(icon) => {
                     // When Icon does not have outline, hardcode its width
-                    if style.with_outline {
+                    if matches!(self.decoration, Some(Decoration::Outline)) {
                         icon.toif.width() + 2 * theme::BUTTON_OUTLINE
                     } else {
                         theme::BUTTON_ICON_WIDTH
@@ -140,7 +118,7 @@ impl Button {
         };
 
         // Arms should connect to the center, therefore decreasing the height
-        let button_height = if style.with_arms {
+        let button_height = if matches!(self.decoration, Some(Decoration::Arms)) {
             theme::BUTTON_HEIGHT - 2
         } else {
             theme::BUTTON_HEIGHT
@@ -154,21 +132,19 @@ impl Button {
     }
 
     /// Determine baseline point for the text.
-    fn get_text_baseline(&self, style: &ButtonStyle) -> Point {
+    fn get_text_baseline(&self) -> Point {
         // Arms and outline require the text to be elevated.
         // Moving text to the right and elevating it for arms and outline.
-        let (mut offset_x, offset_y) = if style.with_outline {
-            (theme::BUTTON_OUTLINE, theme::BUTTON_OUTLINE)
-        } else if style.with_arms {
-            (theme::ARMS_MARGIN, theme::ARMS_MARGIN)
-        } else {
-            (0, 0)
+        let (mut offset_x, offset_y) = match self.decoration {
+            Some(Decoration::Outline) => (theme::BUTTON_OUTLINE, theme::BUTTON_OUTLINE),
+            Some(Decoration::Arms) => (theme::ARMS_MARGIN, theme::ARMS_MARGIN),
+            None => (0, 0),
         };
 
         // Centering the text in case of fixed width.
         if let ButtonContent::Text(text) = &self.content {
-            if let Some(fixed_width) = style.fixed_width {
-                let diff = fixed_width - text.map(|t| style.font.visible_text_width(t));
+            if let Some(fixed_width) = self.fixed_width {
+                let diff = fixed_width - text.map(|t| self.font.visible_text_width(t));
                 offset_x = diff / 2;
             }
         }
@@ -191,8 +167,10 @@ impl Component for Button {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let style = self.style();
-        let fg_color = style.text_color;
+        let fg_color = match self.state {
+            State::Released => theme::FG,
+            State::Pressed => theme::BG,
+        };
         let bg_color = fg_color.negate();
         let area = self.get_current_area();
         let inversed_colors = bg_color != theme::BG;
@@ -203,7 +181,7 @@ impl Component for Button {
                 .with_radius(3)
                 .with_bg(bg_color)
                 .render(target);
-        } else if style.with_outline {
+        } else if matches!(self.decoration, Some(Decoration::Outline)) {
             shape::Bar::new(area)
                 .with_radius(3)
                 .with_fg(fg_color)
@@ -214,7 +192,7 @@ impl Component for Button {
 
         // Optionally display "arms" at both sides of content - always in FG and BG
         // colors (they are not inverted).
-        if style.with_arms {
+        if matches!(self.decoration, Some(Decoration::Arms)) {
             shape::ToifImage::new(area.left_center(), theme::ICON_ARM_LEFT.toif)
                 .with_align(Alignment2D::TOP_RIGHT)
                 .with_fg(theme::FG)
@@ -230,17 +208,17 @@ impl Component for Button {
         match &self.content {
             ButtonContent::Text(text) => text.map(|t| {
                 shape::Text::new(
-                    self.get_text_baseline(style) - Offset::x(style.font.start_x_bearing(t)),
+                    self.get_text_baseline() - Offset::x(self.font.start_x_bearing(t)),
                     t,
-                    style.font,
+                    self.font,
                 )
                 .with_fg(fg_color)
                 .render(target);
             }),
             ButtonContent::Icon(icon) => {
                 // Allowing for possible offset of the area from current style
-                let icon_area = area.translate(style.offset);
-                if style.with_outline {
+                let icon_area = area.translate(self.offset);
+                if matches!(self.decoration, Some(Decoration::Outline)) {
                     shape::ToifImage::new(icon_area.center(), icon.toif)
                         .with_align(Alignment2D::CENTER)
                         .with_fg(fg_color)
@@ -279,74 +257,16 @@ enum State {
     Pressed,
 }
 
+#[derive(Copy, Clone)]
+pub enum Decoration {
+    Outline,
+    Arms,
+}
+
 #[derive(Clone)]
 pub enum ButtonContent {
     Text(TString<'static>),
     Icon(Icon),
-}
-
-pub struct ButtonStyleSheet {
-    pub normal: ButtonStyle,
-    pub active: ButtonStyle,
-}
-
-pub struct ButtonStyle {
-    pub font: Font,
-    pub text_color: Color,
-    pub with_outline: bool,
-    pub with_arms: bool,
-    pub fixed_width: Option<i16>,
-    pub offset: Offset,
-}
-
-impl ButtonStyleSheet {
-    pub fn new(
-        font: Font,
-        normal_color: Color,
-        active_color: Color,
-        with_outline: bool,
-        with_arms: bool,
-        fixed_width: Option<i16>,
-        offset: Offset,
-    ) -> Self {
-        Self {
-            normal: ButtonStyle {
-                font,
-                text_color: normal_color,
-                with_outline,
-                with_arms,
-                fixed_width,
-                offset,
-            },
-            active: ButtonStyle {
-                font,
-                text_color: active_color,
-                with_outline,
-                with_arms,
-                fixed_width,
-                offset,
-            },
-        }
-    }
-
-    // White text in normal mode.
-    pub fn default(
-        font: Font,
-        with_outline: bool,
-        with_arms: bool,
-        fixed_width: Option<i16>,
-        offset: Offset,
-    ) -> Self {
-        Self::new(
-            font,
-            theme::FG,
-            theme::BG,
-            with_outline,
-            with_arms,
-            fixed_width,
-            offset,
-        )
-    }
 }
 
 /// Describing the button on the screen - only visuals.
@@ -355,8 +275,7 @@ pub struct ButtonDetails {
     pub content: ButtonContent,
     font: Font,
     pub duration: Option<Duration>,
-    with_outline: bool,
-    with_arms: bool,
+    decoration: Option<Decoration>,
     fixed_width: Option<i16>,
     offset: Offset,
     pub send_long_press: bool,
@@ -369,8 +288,7 @@ impl ButtonDetails {
             content: ButtonContent::Text(text),
             font: fonts::FONT_NORMAL_UPPER,
             duration: None,
-            with_outline: true,
-            with_arms: false,
+            decoration: Some(Decoration::Outline),
             fixed_width: None,
             offset: Offset::zero(),
             send_long_press: false,
@@ -383,8 +301,7 @@ impl ButtonDetails {
             content: ButtonContent::Icon(icon),
             font: fonts::FONT_NORMAL_UPPER,
             duration: None,
-            with_outline: false,
-            with_arms: false,
+            decoration: None,
             fixed_width: None,
             offset: Offset::zero(),
             send_long_press: false,
@@ -445,20 +362,20 @@ impl ButtonDetails {
     /// Down arrow to signal paginating forward. Takes half the screen's width
     pub fn down_arrow_icon_wide() -> Self {
         Self::icon(theme::ICON_ARROW_DOWN)
-            .with_outline(true)
+            .with_outline()
             .with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
     /// Up arrow to signal paginating back. Takes half the screen's width
     pub fn up_arrow_icon_wide() -> Self {
         Self::icon(theme::ICON_ARROW_UP)
-            .with_outline(true)
+            .with_outline()
             .with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
-    /// Possible outline around the button.
-    pub fn with_outline(mut self, outline: bool) -> Self {
-        self.with_outline = outline;
+    /// Outline around the button.
+    pub fn with_outline(mut self) -> Self {
+        self.decoration = Some(Decoration::Outline);
         self
     }
 
@@ -471,10 +388,8 @@ impl ButtonDetails {
     }
 
     /// Left and right "arms" around the button.
-    /// Automatically disabling the outline.
     pub fn with_arms(mut self) -> Self {
-        self.with_arms = true;
-        self.with_outline = false;
+        self.decoration = Some(Decoration::Arms);
         self
     }
 
@@ -500,17 +415,6 @@ impl ButtonDetails {
     pub fn with_font(mut self, font: Font) -> Self {
         self.font = font;
         self
-    }
-
-    /// Button style that should be applied.
-    pub fn style(&self) -> ButtonStyleSheet {
-        ButtonStyleSheet::default(
-            self.font,
-            self.with_outline,
-            self.with_arms,
-            self.fixed_width,
-            self.offset,
-        )
     }
 }
 
@@ -772,15 +676,6 @@ impl ButtonLayout {
     /// Only armed text in the middle.
     pub fn none_armed_none(text: TString<'static>) -> Self {
         Self::new(None, Some(ButtonDetails::armed_text(text)), None)
-    }
-
-    /// HTC on both sides.
-    pub fn htc_none_htc(left: TString<'static>, right: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::text(left).with_default_duration()),
-            None,
-            Some(ButtonDetails::text(right).with_default_duration()),
-        )
     }
 
     /// Only left arrow.
