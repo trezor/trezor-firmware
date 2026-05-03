@@ -88,7 +88,8 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     if debug.layout_type is not LayoutType.Eckhart:
         go_next(debug)
 
-    # TODO: some validation of the generated secret?
+    secret = debug.state().mnemonic_secret
+    assert secret == " ".join(words).encode()
 
     # retrieve the result to check that it's not a TrezorFailure exception
     device_handler.result()
