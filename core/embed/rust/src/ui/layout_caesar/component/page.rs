@@ -163,11 +163,11 @@ where
                         // Clicked BACK. Scroll up.
                         self.prev_page();
                         self.change_page(ctx);
-                    } else if self.cancel_btn_details.is_some() {
-                        // Clicked CANCEL. Send result.
-                        return Some(PageMsg::Cancelled);
                     } else {
-                        return None;
+                        // First page — left slot can only be the cancel button
+                        // (otherwise the layout would not have rendered it and
+                        // no Triggered would arrive here).
+                        return Some(PageMsg::Cancelled);
                     }
                 }
                 ButtonPos::Middle => {
