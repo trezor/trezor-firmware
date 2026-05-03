@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import loop, protobuf
@@ -13,7 +14,6 @@ if TYPE_CHECKING:
         Awaitable,
         Callable,
         Container,
-        Generator,
         Literal,
         NoReturn,
         TypeVar,
@@ -131,11 +131,49 @@ class Context:
         ...
 
 
+# Show "trouble communicating" warning after 2s of "blank" screen (if ButtonRequest is not ACKed)
+_UNRESPONSIVE_WARNING_TIMEOUT_MS = const(2000)
+
+
+async def _waiting_screen(raise_on_cancel: type[Exception] | None) -> None:
+    import trezorui_api
+    from trezor import TR
+    from trezor.ui import Layout
+
+    verb = TR.buttons__abort if raise_on_cancel is not None else TR.buttons__continue
+
+    await loop.sleep(_UNRESPONSIVE_WARNING_TIMEOUT_MS)
+    with trezorui_api.show_warning(
+        title="",
+        description=TR.words__comm_trouble,
+        button=verb,
+        danger=True,
+        allow_cancel=False,
+    ) as obj:
+        # Block until the user confirmation.
+        # Don't use `interact` to avoid cancelling current workflow.
+        layout = Layout(obj)
+        layout.start()
+        # This task doesn't have access to I/O context - see `ButtonRequestHandler.join()`.
+        # Therefore, the new layout won't start its own ButtonRequest handler,
+        # avoiding interference with the existing layout (the one we are waiting for).
+        assert layout.button_request_handler is None
+        await layout.get_result()
+
+    if raise_on_cancel:
+        raise raise_on_cancel()
+
+
 class ButtonRequestHandler:
     """Handle button requests and unexpected messages from host."""
 
     def __init__(self, ctx: Context) -> None:
+        from trezor.wire.errors import ActionCancelled
+
         self.ctx = ctx  # used for communication with the host.
+
+        # will be raised from `self.join()` on user cancellation.
+        self.raise_on_cancel: type[ActionCancelled] | None = ActionCancelled
 
         # Receives ButtonRequest notifications from the active layout,
         # or `None` when the layout is closed.
@@ -164,27 +202,24 @@ class ButtonRequestHandler:
         # in production, we don't want this to fail, hence replace=True
         self.box.put(br, replace=True)
 
-    def br_task(self, ack_callback: AckCallback) -> Generator[Any, Any, None]:
+    async def br_task(self, ack_callback: AckCallback) -> None:
         assert self.is_done.is_empty()
         try:
-            yield from self._handle(ack_callback)
+            await self._handle(ack_callback)
         finally:
             # no pending I/O - mark as done, to unblock `join()`.
             self.is_done.put(None)
 
-    async def join(self, wait_task: loop.Task[None]) -> None:
+    async def join(self) -> None:
         # `br_task()` must be scheduled before joining.
 
         # notify the handler that no more button requests are expected
         # in production, we don't want this to fail, hence replace=True
         self.box.put(None, replace=True)
 
-        task = loop.spawn(wait_task)
-        try:
-            await self.is_done
-        finally:
-            assert self.is_done.is_empty()
-            task.close()
+        # Wait for the ButtonRequest handler to finish (or user cancellation)
+        # `_waiting_screen` layout won't have an I/O context, since it runs in a separate task.
+        await loop.race(self.is_done, _waiting_screen(self.raise_on_cancel))
 
     async def _handle(self, ack_callback: AckCallback) -> None:
         from trezor.messages import ButtonAck
@@ -214,29 +249,71 @@ class ContinueOnErrors(ButtonRequestHandler):
 
     def __init__(self, ctx: Context, msg: str) -> None:
         super().__init__(ctx)
+        self.raise_on_cancel = None  # continue on user cancellation
         self._prev_handler: ButtonRequestHandler | None = None
         self.msg = msg
+        self.ignore = False
+
+    def put(self, br: ButtonRequest) -> None:
+        if self.ignore:
+            # Stop handling ButtonRequests in case of unexpected error.
+            if __debug__:
+                log.debug(__name__, "ButtonRequest: skipped %s (%s)", br.code, br.name)
+            return
+
+        super().put(br)
+
+    async def join(self) -> None:
+        if self.ignore:
+            # Stop handling ButtonRequests in case of unexpected error.
+            return
+
+        await super().join()
+
+    async def br_task(self, ack_callback: AckCallback) -> None:
+        if self.ignore:
+            # Stop handling ButtonRequests in case of unexpected error.
+            return None
+
+        return await super().br_task(ack_callback)
 
     async def _handle(self, ack_callback: AckCallback) -> None:
         """Unexpected messages will not cause the handler to fail."""
+
         from .context import UnexpectedMessageException
 
-        while True:
-            try:
-                # Exit the loop when the layout is done.
-                return await super()._handle(ack_callback)
-            except UnexpectedMessageException as exc:
-                # in case of THP channel preemption, `msg` is not set.
-                # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
-                if exc.msg:
-                    from trezor.enums import FailureType
-                    from trezor.messages import Failure
+        # In case of an unexpected error, stop handling ButtonRequests till the end of this workflow.
+        # The host will be ignored, disabling host-side cancellation of this workflow.
+        success = False
+        try:
+            while True:
+                try:
+                    # Exit the loop when the layout is done.
+                    await super(ContinueOnErrors, self)._handle(ack_callback)
+                    # All is well, continue handling ButtonRequests.
+                    success = True
+                    return
+                except UnexpectedMessageException as exc:
+                    # in case of THP channel preemption, `msg` is not set.
+                    # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
+                    if exc.msg:
+                        from trezor.enums import FailureType
+                        from trezor.messages import Failure
 
-                    # notify the host that the device cannot be preempted
-                    await self.ctx.write(
-                        Failure(code=FailureType.InProgress, message=self.msg)
-                    )
-                # continue receiving messages
+                        # notify the host that the device cannot be preempted
+                        await self.ctx.write(
+                            Failure(code=FailureType.InProgress, message=self.msg)
+                        )
+                    # continue receiving messages
+                except Exception as exc:
+                    if __debug__:
+                        log.error(__name__, "ButtonRequest: ignored %s", exc)
+                        log.exception(__name__, exc)
+                    # Stop handling ButtonRequests in case of unexpected error (without failing the flow)
+                    return
+        finally:
+            # Handles GeneratorExit as well (in case of task cancellation).
+            self.ignore = not success
 
     def __enter__(self) -> None:
         assert self._prev_handler is None
