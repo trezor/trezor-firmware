@@ -13,7 +13,7 @@ use crate::{
             FixedHeightBar,
         },
         display::Color,
-        geometry::{Insets, Offset},
+        geometry::Offset,
         util::include_icon,
     },
 };
@@ -824,10 +824,6 @@ pub const CHECKLIST_DONE_OFFSET: Offset = Offset::y(-2);
 
 pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
     FixedHeightBar::bottom(inner, BUTTON_HEIGHT)
-}
-
-pub const fn borders_notification() -> Insets {
-    Insets::new(42, 0, 0, 0)
 }
 
 pub const RESULT_ERROR: ResultStyle =
