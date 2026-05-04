@@ -1,11 +1,12 @@
 import pytest
 
-from trezorlib import messages, protocol_v1
+from trezorlib import btc, messages, protocol_v1
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.mapping import DEFAULT_MAPPING
 from trezorlib.thp import control_byte, thp_io
 from trezorlib.thp.exceptions import ThpErrorCode
 from trezorlib.thp.message import Message
+from trezorlib.tools import parse_path
 from trezorlib.transport import Timeout, Transport
 
 pytestmark = [
@@ -48,3 +49,25 @@ def test_v2_unallocated(client: Client):
     assert response.cid == 0x789A
     assert response.ctrl_byte == control_byte.ERROR
     assert response.data == bytes([ThpErrorCode.UNALLOCATED_CHANNEL])
+
+
+@pytest.mark.setup_client(uninitialized=False)
+def test_message_length(test_ctx: Client):
+    # slightly under _PROTOBUF_BUFFER_SIZE, should pass
+    test_ctx.channel.BUSY_RETRIES = 1
+    session = test_ctx.get_session()
+    btc.sign_message(
+        session,
+        coin_name="Bitcoin",
+        n=parse_path("m/44h/0h/0h/0/0"),
+        message=("u" * 8_600),
+    )
+
+    # slightly over _PROTOBUF_BUFFER_SIZE, should time out
+    with pytest.raises(Timeout):
+        btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path("m/44h/0h/0h/0/0"),
+            message=("u" * 8_700),
+        )
