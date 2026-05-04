@@ -53,12 +53,12 @@ class Context:
     single Bluetooth connection, etc.).
     """
 
-    channel_id: AnyBytes
+    channel_id: int
 
     def __init__(
         self,
         iface: WireInterface,
-        channel_id: AnyBytes | None = None,
+        channel_id: int | None = None,
         message_type_enum_name: str = "MessageType",
     ) -> None:
         self.iface: WireInterface = iface
@@ -299,17 +299,19 @@ class ContinueOnErrors(ButtonRequestHandler):
                     # All is well, continue handling ButtonRequests.
                     success = True
                     return
-                except UnexpectedMessageException as exc:
-                    # in case of THP channel preemption, `msg` is not set.
-                    # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
-                    if exc.msg:
-                        from trezor.enums import FailureType
-                        from trezor.messages import Failure
+                except UnexpectedMessageException:
+                    from trezor.enums import FailureType
+                    from trezor.messages import Failure
 
-                        # notify the host that the device cannot be preempted
-                        await self.ctx.write(
-                            Failure(code=FailureType.InProgress, message=self.msg)
-                        )
+                    # notify the host that the device cannot be preempted
+                    await self.ctx.write(
+                        Failure(code=FailureType.InProgress, message=self.msg)
+                    )
+                    # continue receiving messages
+                except ChannelPreemptedException:
+                    # TRANSPORT_BUSY error has been already sent by
+                    # `InterfaceContext.read_packet_for_channel()`.
+                    pass
                     # continue receiving messages
                 except Exception as exc:
                     if __debug__:
@@ -333,4 +335,11 @@ class ContinueOnErrors(ButtonRequestHandler):
 
 
 class WireError(Exception):
+    pass
+
+
+class ChannelPreemptedException(Exception):
+    """THP uses this exception to free up resources taken by potentially stuck channel.
+    Raising this exception should restart the event loop."""
+
     pass

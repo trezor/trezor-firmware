@@ -35,7 +35,6 @@ def packet_in(iface_num: int, packet_buffer: AnyBytes, credential_verify_fn: Cal
     - An integer: Lower 16 bits contain channel id, upper 16 bits contain buffer size hint in 8-byte blocks.
       The event loop should call the `packet_in_channel()` function for this interface and if
       the size hint is non-zero, then the receive buffer needs to be at least as large.
-      If such buffer cannot be obtained, `channel_close()` should be called.
       If buffer is in use by another channel, `send_transport_busy()` should be called.
     """
 

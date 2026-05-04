@@ -417,7 +417,6 @@ pub static mp_module_trezorthp: Module = obj_module! {
     ///     - An integer: Lower 16 bits contain channel id, upper 16 bits contain buffer size hint in 8-byte blocks.
     ///       The event loop should call the `packet_in_channel()` function for this interface and if
     ///       the size hint is non-zero, then the receive buffer needs to be at least as large.
-    ///       If such buffer cannot be obtained, `channel_close()` should be called.
     ///       If buffer is in use by another channel, `send_transport_busy()` should be called.
     ///     """
     Qstr::MP_QSTR_packet_in => obj_fn_3!(thp_packet_in).as_obj(),
