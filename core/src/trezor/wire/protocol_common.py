@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import loop, protobuf
+from trezor import loop, protobuf, utils
 
 if __debug__:
     from trezor import log
@@ -53,12 +53,12 @@ class Context:
     single Bluetooth connection, etc.).
     """
 
-    channel_id: AnyBytes
+    channel_id: int
 
     def __init__(
         self,
         iface: WireInterface,
-        channel_id: AnyBytes | None = None,
+        channel_id: int | None = None,
         message_type_enum_name: str = "MessageType",
     ) -> None:
         self.iface: WireInterface = iface
@@ -250,6 +250,16 @@ class ButtonRequestHandler:
             ack_callback()
 
 
+if utils.USE_THP:
+    from trezorthp import (
+        ThpError,  # type: ignore [Type "type[Exception]" is not assignable to type "type[ThpError]"]
+    )
+else:
+
+    class ThpError(Exception):
+        pass
+
+
 class ContinueOnErrors(ButtonRequestHandler):
     """Handle I/O from host, while ignoring errors."""
 
@@ -302,15 +312,18 @@ class ContinueOnErrors(ButtonRequestHandler):
                 except UnexpectedMessageException as exc:
                     # in case of THP channel preemption, `msg` is not set.
                     # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
-                    if exc.msg:
-                        from trezor.enums import FailureType
-                        from trezor.messages import Failure
+                    from trezor.enums import FailureType
+                    from trezor.messages import Failure
 
-                        # notify the host that the device cannot be preempted
-                        await self.ctx.write(
-                            Failure(code=FailureType.InProgress, message=self.msg)
-                        )
+                    # notify the host that the device cannot be preempted
+                    await self.ctx.write(
+                        Failure(code=FailureType.InProgress, message=self.msg)
+                    )
                     # continue receiving messages
+                except ThpError as e:
+                    # ignore codec errors
+                    if __debug__:
+                        log.exception(__name__, e)
                 except Exception as exc:
                     if __debug__:
                         log.error(__name__, "ButtonRequest: ignored %s", exc)
@@ -333,4 +346,11 @@ class ContinueOnErrors(ButtonRequestHandler):
 
 
 class WireError(Exception):
+    pass
+
+
+class ChannelPreemptedException(Exception):
+    """THP uses this exception to free up resources taken by potentially stuck channel.
+    Raising this exception should restart the event loop."""
+
     pass
