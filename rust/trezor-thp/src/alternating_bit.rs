@@ -1,5 +1,5 @@
 use crate::{
-    control_byte::{ACK_BIT, SEQ_BIT},
+    control_byte::{ACK_BIT, SEQ_BIT, SYNC_MASK},
     error::Error,
 };
 
@@ -38,7 +38,7 @@ impl SyncBits {
 
 impl From<u8> for SyncBits {
     fn from(byte: u8) -> Self {
-        Self(byte)
+        Self(byte & SYNC_MASK)
     }
 }
 
@@ -99,7 +99,10 @@ impl ChannelSync {
             return None; // sending in progress, don't send
         }
 
-        let sb = SyncBits::new().with_seq_bit(self.sync_send);
+        let mut sb = SyncBits::new().with_seq_bit(self.sync_send);
+        if self.ack_piggybacking {
+            sb = sb.with_ack_bit(self.get_ack_bit());
+        }
         Some(sb) // start sending, use these bits
     }
 
@@ -120,7 +123,7 @@ impl ChannelSync {
     /// Call after receving initial fragment of a message.
     /// Returns true when seq_bit is correct and we should reassemble the message.
     /// If the function returns false all following continuation packets should be discarded.
-    pub fn receive_start(&mut self, sb: SyncBits) -> bool {
+    pub fn receive_start(&self, sb: SyncBits) -> bool {
         if sb.seq_bit() != self.sync_receive {
             // Either this message is a duplicate or previous one was dropped.
             return false;
@@ -133,9 +136,23 @@ impl ChannelSync {
     /// Call after receiving last fragment and successfully verifying CRC of the message.
     /// Caller needs to send ACK with the returned SyncBits.
     pub fn receive_acknowledge(&mut self) -> SyncBits {
-        let sb = SyncBits::new().with_ack_bit(self.sync_receive);
         self.sync_receive.increment();
-        sb
+        SyncBits::new().with_ack_bit(self.get_ack_bit())
+    }
+
+    // Returns previous value of the receive bit. We increment the bit after successfully
+    // receiving the message, an ACK is sent afterwards so it has to use the previous value.
+    fn get_ack_bit(&self) -> bool {
+        self.sync_receive.previous()
+    }
+
+    pub fn allow_ack_piggybacking(&mut self) {
+        log::debug!("Enabled ACK piggybacking.");
+        self.ack_piggybacking = true;
+    }
+
+    pub fn is_ack_piggybacking_allowed(&self) -> bool {
+        self.ack_piggybacking
     }
 
     /// Serialize for storage.
@@ -177,12 +194,20 @@ impl Default for ChannelSync {
 }
 
 trait BoolExt {
+    /// Increments the value.
     fn increment(&mut self);
+
+    /// Copies the value and decrements it.
+    fn previous(&self) -> Self;
 }
 
 impl BoolExt for bool {
     fn increment(&mut self) {
         *self = !*self;
+    }
+
+    fn previous(&self) -> Self {
+        !self
     }
 }
 

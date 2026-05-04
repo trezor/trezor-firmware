@@ -9,15 +9,34 @@ mod test;
 use crate::{
     Error, Role,
     alternating_bit::{ChannelSync, SyncBits},
+    crc32::CHECKSUM_LEN,
     error::{Result, TransportError},
     fragment::{Fragmenter, Reassembler},
     header::{BROADCAST_CHANNEL_ID, Header, NONCE_LEN, parse_cb_channel, parse_u16},
+    util::max,
 };
+
+use core::num::NonZeroU16;
 
 use noise::NoiseCiphers;
 pub use noise::{
     Backend, Cipher, DH, HANDSHAKE_HASH_LEN, Hash, PRIVKEY_LEN, PUBKEY_LEN, TAG_LEN, U8Array,
 };
+
+pub const MAX_DEVICE_PROPERTIES_LEN: usize = 64;
+pub const MAX_CREDENTIAL_LEN: usize = 128;
+
+// Size of internal buffer needed when opening a channel: host-to-device direction.
+const HANDSHAKE_BUFFER_HTD_LEN: usize =
+    PUBKEY_LEN + MAX_CREDENTIAL_LEN + 2 * TAG_LEN + CHECKSUM_LEN; // HandshakeCompletionRequest
+
+const MAX_ALLOC_RESPONSE_LEN: usize =
+    (NONCE_LEN as usize) + 2 + MAX_DEVICE_PROPERTIES_LEN + CHECKSUM_LEN;
+// Size of internal buffer needed when opening a channel: device-to-host direction.
+const HANDSHAKE_BUFFER_DTH_LEN: usize = max(
+    MAX_ALLOC_RESPONSE_LEN,                      // ChannelAllocationResponse
+    2 * PUBKEY_LEN + 2 * TAG_LEN + CHECKSUM_LEN, // HandshakeInitiationResponse
+);
 
 const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
@@ -91,9 +110,9 @@ impl From<PairingState> for u8 {
     }
 }
 
-/// Is the channel currently sending or receiving a message?
-enum ChannelState<R: Role> {
-    /// Ready to send or receive.
+/// Is the channel currently sending a message?
+enum SendState<R: Role> {
+    /// Ready to send.
     Idle,
     /// In the process of sending a message, or waiting for ACK.
     Sending {
@@ -103,13 +122,19 @@ enum ChannelState<R: Role> {
     /// About to send Transport error, these are not ACKed.
     /// Transitions to Failed afterwards unless the error is recoverable.
     SendingError { error: TransportError },
+    /// Channel is inoperable.
+    Failed,
+}
+
+/// Is the channel currently receiving a message?
+enum ReceiveState<R: Role> {
+    /// Ready to receive.
+    Idle,
     /// In the process of receiving a message, or waiting for the consumer to pick up
     /// an assembled message.
     Receiving { reassembler: Reassembler<R> },
     /// Channel is inoperable.
-    /// None: local failure
-    /// Some: error message received from other side
-    Failed { error: Option<TransportError> },
+    Failed,
 }
 
 /// THP channel with established secure layer.
@@ -122,7 +147,8 @@ pub struct Channel<R: Role, B: Backend> {
     sync: ChannelSync,
     noise: Option<NoiseCiphers<B>>,
     send_ack: Option<SyncBits>,
-    state: ChannelState<R>,
+    send_state: SendState<R>,
+    receive_state: ReceiveState<R>,
     pairing_state: PairingState,
 }
 
@@ -133,7 +159,8 @@ impl<R: Role, B: Backend> Channel<R, B> {
             sync: ChannelSync::new(),
             noise: None,
             send_ack: None,
-            state: ChannelState::Idle,
+            send_state: SendState::Idle,
+            receive_state: ReceiveState::Idle,
             pairing_state: PairingState::Unpaired,
         }
     }
@@ -162,55 +189,72 @@ impl<R: Role, B: Backend> Channel<R, B> {
     }
 
     pub fn is_failed(&self) -> bool {
-        matches!(self.state, ChannelState::Failed { .. })
+        matches!(self.send_state, SendState::Failed)
+            || matches!(self.receive_state, ReceiveState::Failed)
+    }
+
+    fn become_failed(&mut self) {
+        self.send_state = SendState::Failed;
+        self.receive_state = ReceiveState::Failed;
     }
 
     /// Return the retransmission attempt number (the first transmission returns 0),
     /// or `None` if the channel is currently not sending anything.
     pub fn sending_retry(&self) -> Option<u8> {
-        match self.state {
-            ChannelState::Sending { retry, .. } => Some(retry),
+        match &self.send_state {
+            SendState::Sending { retry, .. } => Some(*retry),
             _ => None,
         }
     }
 
     pub fn send_error(&mut self, error: TransportError) {
-        self.state = ChannelState::SendingError { error };
+        self.send_state = SendState::SendingError { error };
     }
 
-    fn raw_in(&mut self, header: Header<R>, send_buffer: &[u8]) -> Result<()> {
-        let ChannelState::Idle = self.state else {
+    fn raw_in_ext(
+        &mut self,
+        header: Header<R>,
+        send_buffer: &[u8],
+        override_ack_bit: bool,
+    ) -> Result<()> {
+        let SendState::Idle = self.send_state else {
             return Err(Error::not_ready());
         };
-        let sb = self.sync.send_start().ok_or_else(Error::not_ready)?;
+        let mut sb = self.sync.send_start().ok_or_else(Error::not_ready)?;
+        if self.sync.is_ack_piggybacking_allowed() {
+            // `sb` contains the ACK bit, cancel sending it as a message.
+            self.send_ack = None;
+            // Signal piggybacking support if host requested it.
+            if override_ack_bit {
+                sb = sb.with_ack_bit(true);
+            }
+        }
         let fragmenter = Fragmenter::new(header, sb, send_buffer)?;
-        self.state = ChannelState::Sending {
+        self.send_state = SendState::Sending {
             fragmenter,
             retry: 0,
         };
         Ok(())
     }
 
+    fn raw_in(&mut self, header: Header<R>, send_buffer: &[u8]) -> Result<()> {
+        self.raw_in_ext(header, send_buffer, false)
+    }
+
     fn raw_out(&mut self, receive_buffer: &[u8]) -> Result<(Header<R>, usize)> {
-        let ChannelState::Receiving { reassembler } = &mut self.state else {
+        let ReceiveState::Receiving { reassembler, .. } = &mut self.receive_state else {
             return Err(Error::not_ready());
         };
         if !reassembler.is_done() {
             return Err(Error::not_ready());
         }
-        let len = match reassembler.verify(receive_buffer) {
-            Ok(len) => len,
-            Err(e) => {
-                log::warn!(
-                    "[{}] Reassembled message with invalid checksum.",
-                    self.channel_id
-                );
-                return Err(e);
-            }
-        };
+        // Possible optimization: provided receive_buffer is the same as passed to
+        // `packet_in`, we're verifying the CRC for the second time, would be nice to
+        // get rid of it but probably won't make things massively faster.
+        let len = reassembler.verify(receive_buffer)?;
         self.send_ack = Some(self.sync.receive_acknowledge());
         let header = reassembler.header().clone();
-        self.state = ChannelState::Idle;
+        self.receive_state = ReceiveState::Idle;
         Ok((header, len))
     }
 
@@ -219,12 +263,12 @@ impl<R: Role, B: Backend> Channel<R, B> {
         packet_buffer: &[u8],
         receive_buffer: &mut [u8],
     ) -> Result<PacketInResult> {
-        let (cb, channel_id, _rest) = parse_cb_channel(packet_buffer)?;
-        if channel_id != self.channel_id {
+        let (cb, cid, _rest) = parse_cb_channel(packet_buffer)?;
+        if cid != self.channel_id {
             log::warn!(
-                "[{}] Invalid channel {}, ignoring.",
+                "[{:04x}] Invalid channel {:04x}, ignoring.",
                 self.channel_id,
-                channel_id
+                cid
             );
             return Err(Error::malformed_data());
         }
@@ -234,45 +278,38 @@ impl<R: Role, B: Backend> Channel<R, B> {
         } else if cb.is_error() {
             let te = self.handle_error(packet_buffer)?;
             return Ok(PacketInResult::transport_error(te));
-        }
-        let is_cont = cb.is_continuation();
-        if !(is_cont || cb.is_handshake() || cb.is_encrypted_transport()) {
+        } else if cb.is_continuation() {
+            self.handle_cont(packet_buffer, receive_buffer)?;
+        } else if cb.is_handshake() || cb.is_encrypted_transport() {
+            self.handle_invalid_seq(cb.sync_bits())?;
+            if matches!(self.send_state, SendState::Sending { .. })
+                && !self.sync.is_ack_piggybacking_allowed()
+            {
+                // Enforce half-duplex in 2.0.
+                return Err(Error::malformed_data());
+            }
+            self.handle_init(packet_buffer, receive_buffer)?;
+        } else {
             // Channel allocation and codec v1 are handled by Mux.
+            let cb = u8::from(cb);
             log::warn!(
-                "[{}] Unexpected control byte {}.",
+                "[{:04x}] Unexpected control byte 0x{:x}.",
                 self.channel_id,
-                u8::from(cb)
+                cb
             );
             return Err(Error::malformed_data());
         }
-        Ok(match &mut self.state {
-            // First fragment.
-            ChannelState::Receiving { .. } | ChannelState::Idle if !is_cont => {
-                let (is_done, enlarge) = self.handle_init(packet_buffer, receive_buffer)?;
-                PacketInResult::accept(is_done).with_buffer(enlarge)
-            }
-            // Continuation fragments.
-            ChannelState::Receiving { reassembler } => {
-                reassembler.update(packet_buffer, receive_buffer)?;
-                PacketInResult::accept(reassembler.is_done())
-            }
-            // Ignore unexpected continuations.
-            ChannelState::Idle => return Err(Error::malformed_data()),
-            // Might possibly happen when we've sent an ACK and it got lost.
-            // We end up sending reply while the other side is retransmitting.
-            // Is this recoverable?
-            ChannelState::Sending { .. } => return Err(Error::malformed_data()),
-            ChannelState::SendingError { .. } => return Err(Error::unexpected_input()),
-            ChannelState::Failed { .. } => return Err(Error::unexpected_input()),
-        })
+        self.handle_last_packet(receive_buffer)
     }
 
     fn handle_ack(&mut self, packet_buffer: &[u8]) -> Result<()> {
-        if matches!(self.state, ChannelState::Sending { .. }) {
+        if matches!(self.send_state, SendState::Sending { .. }) {
+            // Verify checksum.
+            let _ = Reassembler::<R>::single(packet_buffer)?;
             let sb = SyncBits::try_from(packet_buffer)?;
             self.sync.send_mark_delivered(sb);
             if self.sync.can_send() {
-                self.state = ChannelState::Idle;
+                self.send_state = SendState::Idle;
                 return Ok(());
             }
         }
@@ -281,17 +318,16 @@ impl<R: Role, B: Backend> Channel<R, B> {
     }
 
     fn handle_error(&mut self, packet_buffer: &[u8]) -> Result<TransportError> {
-        let mut err_buf = [0u8; 16];
-        if let Ok((header, payload)) = Reassembler::<R>::single(packet_buffer, &mut err_buf) {
+        if let Ok((header, payload)) = Reassembler::<R>::single(packet_buffer) {
             if header.is_error() {
                 if let Ok(te) = TransportError::try_from(payload) {
                     log::error!(
                         "[{:04x}] Peer sent an error: {}.",
                         self.channel_id,
-                        te as u8
+                        te.as_str()
                     );
                     if !te.is_recoverable() {
-                        self.state = ChannelState::Failed { error: Some(te) };
+                        self.become_failed();
                     }
                     return Ok(te);
                 } else {
@@ -302,7 +338,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                     );
                 }
             }
-            self.state = ChannelState::Failed { error: None };
+            self.become_failed();
             return Err(Error::malformed_data());
         }
         log::warn!(
@@ -312,23 +348,88 @@ impl<R: Role, B: Backend> Channel<R, B> {
         Err(Error::malformed_data())
     }
 
-    fn handle_init(
-        &mut self,
-        packet_buffer: &[u8],
-        receive_buffer: &mut [u8],
-    ) -> Result<(bool, Option<u16>)> {
-        let sb = SyncBits::try_from(packet_buffer)?;
-        if !self.sync.receive_start(sb) {
-            // Bad sync bit, drop this packet and continuations.
-            log::debug!("[{}] Bad sync bit, ignoring packet.", self.channel_id);
-            self.state = ChannelState::Idle;
+    fn handle_cont(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> Result<()> {
+        let ReceiveState::Receiving { reassembler } = &mut self.receive_state else {
             return Err(Error::malformed_data());
+        };
+        reassembler.update(packet_buffer, receive_buffer)
+    }
+
+    fn handle_invalid_seq(&mut self, sb: SyncBits) -> Result<()> {
+        if self.sync.receive_start(sb) {
+            return Ok(());
         }
+        if self.sync.is_ack_piggybacking_allowed()
+            && matches!(self.send_state, SendState::Sending { .. })
+        {
+            // ACK we sent was lost. Will be retransmitted along current outgoing message.
+            log::debug!("[{:04x}] Bad sync bit, ignoring packet.", self.channel_id);
+        } else if !matches!(self.receive_state, ReceiveState::Receiving { .. }) {
+            // Might happen when we've sent an ACK and it got lost or delayed.
+            // We end up sending reply while the other side is retransmitting.
+            // NOTE: no checksum verification because we drop the continuations
+            log::debug!(
+                "[{:04x}] Bad sync bit, resending last ACK.",
+                self.channel_id
+            );
+            self.send_ack = Some(SyncBits::new().with_ack_bit(sb.seq_bit()));
+        }
+        Err(Error::malformed_data())
+    }
+
+    fn handle_init(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> Result<()> {
         receive_buffer.fill(0);
         let reassembler = Reassembler::new(packet_buffer, receive_buffer)?;
-        let is_done = reassembler.is_done();
+        self.receive_state = ReceiveState::Receiving { reassembler };
+        Ok(())
+    }
+
+    fn handle_last_packet(&mut self, receive_buffer: &mut [u8]) -> Result<PacketInResult> {
+        let ReceiveState::Receiving { reassembler } = &self.receive_state else {
+            return Err(Error::unexpected_input());
+        };
+        let mut message_ready = false;
+        let mut ack_received = false;
+        if reassembler.is_done() {
+            if let Err(e) = reassembler.verify(receive_buffer) {
+                log::warn!(
+                    "[{:04x}] Reassembled message with invalid checksum.",
+                    self.channel_id
+                );
+                self.receive_state = ReceiveState::Idle;
+                return Err(e);
+            }
+            message_ready = true;
+            if matches!(self.send_state, SendState::Sending { .. })
+                && self.sync.is_ack_piggybacking_allowed()
+                && !self.sync.can_send()
+            {
+                self.sync.send_mark_delivered(reassembler.sync_bits());
+                if self.sync.can_send() {
+                    ack_received = true;
+                    self.send_state = SendState::Idle;
+                } else {
+                    log::warn!("[{:04x}] Unexpected ACK bit.", self.channel_id);
+                }
+            }
+        }
+        let pir = PacketInResult::Accepted {
+            ack_received,
+            message_ready,
+            pong: false,
+            buffer_size: self.check_buffer_len(receive_buffer),
+        };
+        Ok(pir)
+    }
+
+    fn check_buffer_len(&self, receive_buffer: &[u8]) -> Option<NonZeroU16> {
+        let ReceiveState::Receiving { reassembler } = &self.receive_state else {
+            return None;
+        };
         let payload_len = reassembler.header().payload_len();
-        let enlarge = (usize::from(payload_len) > receive_buffer.len()).then_some(payload_len);
+        let enlarge = (usize::from(payload_len) > receive_buffer.len())
+            .then_some(payload_len)
+            .and_then(NonZeroU16::new);
         if enlarge.is_some() {
             log::debug!(
                 "Message is larger ({}) than receive buffer ({}), requesting reallocation.",
@@ -336,8 +437,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                 receive_buffer.len()
             );
         }
-        self.state = ChannelState::Receiving { reassembler };
-        Ok((is_done, enlarge))
+        enlarge
     }
 }
 
@@ -354,15 +454,11 @@ pub enum PacketInResult {
         message_ready: bool,
         /// True if the packet was a valid keep-alive reply ("PONG") message.
         pong: bool,
-    },
-    /// Channel ingested the packet and started reassembling a message that is larger
-    /// than the current receive buffer. Resize it (keep the initial part) or destroy the channel.
-    EnlargeBuffer {
-        /// True if the packet contained valid ACK and channel is ready to send next message.
-        /// Reserved for ACK piggybacking.
-        ack_received: bool,
-        /// Message size including checksum, the minimum new size of receive buffer.
-        buffer_size: u16,
+        /// If Some, initiation packet was received for message that is larger than the current
+        /// receive buffer. Resize it (keep the initial part) or destroy the channel.
+        /// Please note the size is returned before checksum verification and can be unusually
+        /// large in presence of bit errors.
+        buffer_size: Option<NonZeroU16>,
     },
     /// Peer sent a `TRANSPORT_ERROR` message.
     TransportError {
@@ -399,16 +495,7 @@ impl PacketInResult {
             ack_received: false,
             message_ready,
             pong: false,
-        }
-    }
-
-    const fn with_buffer(self, enlarge_receive_buffer: Option<u16>) -> Self {
-        match enlarge_receive_buffer {
-            Some(buffer_size) => Self::EnlargeBuffer {
-                ack_received: self.got_ack(),
-                buffer_size,
-            },
-            None => self,
+            buffer_size: None,
         }
     }
 
@@ -421,6 +508,7 @@ impl PacketInResult {
             ack_received: true,
             message_ready: false,
             pong: false,
+            buffer_size: None,
         }
     }
 
@@ -445,6 +533,7 @@ impl PacketInResult {
             ack_received: false,
             message_ready: false,
             pong: true,
+            buffer_size: None,
         }
     }
 
@@ -452,7 +541,6 @@ impl PacketInResult {
     pub const fn got_ack(&self) -> bool {
         match self {
             Self::Accepted { ack_received, .. } => *ack_received,
-            Self::EnlargeBuffer { ack_received, .. } => *ack_received,
             _ => false,
         }
     }
@@ -518,7 +606,8 @@ impl PacketInResult {
 ///
 /// To give the application freedom in handling precious buffers used during message
 /// fragmentation and reassembly, channel does not keep ownership of them, instead they need
-/// to be passed along every call.
+/// to be passed along every call. You can wrap the channel in [`buffered::Buffered`] to
+/// handle the buffers for you.
 pub trait ChannelIO {
     /// Session ID (1B) + message type (2B) + AEAD tag (16B).
     const BUFFER_OVERHEAD: usize = APP_HEADER_LEN + TAG_LEN;
@@ -567,9 +656,6 @@ pub trait ChannelIO {
     /// Pick up reassembled and decrypted message. The channel will send ACK packet afterwards.
     ///
     /// Returns [`Error::NotReady`] if there is no reassembled message.
-    ///
-    /// Returns [`Error::InvalidChecksum`] if message integrity failed. Usually the other side
-    /// will retransmit the message.
     fn message_out<'a>(&mut self, receive_buffer: &'a mut [u8]) -> Result<(u8, u16, &'a [u8])>;
 
     /// Is there a reassembled incoming message ready?
@@ -621,29 +707,29 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         }
         let res = PacketInResult::from_result(self.handle_packet(packet_buffer, receive_buffer));
         if let PacketInResult::Failed { .. } = res {
-            self.state = ChannelState::Failed { error: None };
+            self.become_failed();
         }
         res
     }
 
     fn packet_out(&mut self, packet_buffer: &mut [u8], send_buffer: &[u8]) -> Result<()> {
-        // Send pending ACK.
+        // Send pending ACK, even if Failed.
         if let Some(sb) = self.send_ack.take() {
             let header = Header::<R>::new_ack(self.channel_id)?;
             Fragmenter::single(header, sb, &[], packet_buffer)?;
             return Ok(());
         }
-        if let ChannelState::SendingError { error } = self.state {
+        if let SendState::SendingError { error } = self.send_state {
             let header = Header::<R>::new_error(self.channel_id)?;
             Fragmenter::single(header, SyncBits::new(), &[error.into()], packet_buffer)?;
             if error.is_recoverable() {
-                self.state = ChannelState::Idle;
+                self.send_state = SendState::Idle;
             } else {
-                self.state = ChannelState::Failed { error: None };
+                self.become_failed();
             }
             return Ok(());
         }
-        let ChannelState::Sending { fragmenter, .. } = &mut self.state else {
+        let SendState::Sending { fragmenter, .. } = &mut self.send_state else {
             return Err(Error::not_ready());
         };
         let written = fragmenter.next(send_buffer, packet_buffer)?;
@@ -655,7 +741,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
                 // This is a special case for `channel_allocation_response` which is the only
                 // message sent through Channel (by `device::ChannelOpen`) but does not
                 // wait for ACK because as it is sent on broadcast channel.
-                self.state = ChannelState::Idle;
+                self.send_state = SendState::Idle;
             } else {
                 self.sync.send_finish();
             }
@@ -664,12 +750,10 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     }
 
     fn packet_out_ready(&self) -> bool {
-        if self.send_ack.is_some() {
-            return true;
-        }
-        match &self.state {
-            ChannelState::Sending { fragmenter, .. } => !fragmenter.is_done(),
-            ChannelState::SendingError { .. } => true,
+        match &self.send_state {
+            _ if self.send_ack.is_some() => true,
+            SendState::SendingError { .. } => true,
+            SendState::Sending { fragmenter, .. } => !fragmenter.is_done(),
             _ => false,
         }
     }
@@ -688,7 +772,8 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     }
 
     fn message_in_ready(&self) -> bool {
-        matches!(self.state, ChannelState::Idle)
+        matches!(self.send_state, SendState::Idle)
+            && !matches!(self.receive_state, ReceiveState::Failed)
     }
 
     fn message_out<'a>(&mut self, receive_buffer: &'a mut [u8]) -> Result<(u8, u16, &'a [u8])> {
@@ -708,7 +793,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             Err(e) => {
                 if R::is_host() {
                     log::error!("[{:04x}] Decryption failed.", self.channel_id);
-                    self.state = ChannelState::Failed { error: None };
+                    self.become_failed();
                 } else {
                     log::error!(
                         "[{:04x}] Decryption failed, sending DECRYPTION_FAILED.",
@@ -731,14 +816,14 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     }
 
     fn message_out_ready(&self) -> bool {
-        match &self.state {
-            ChannelState::Receiving { reassembler } => reassembler.is_done(),
+        match &self.receive_state {
+            ReceiveState::Receiving { reassembler } => reassembler.is_done(),
             _ => false,
         }
     }
 
     fn message_retransmit(&mut self) -> Result<()> {
-        let ChannelState::Sending { fragmenter, retry } = &mut self.state else {
+        let SendState::Sending { fragmenter, retry } = &mut self.send_state else {
             log::warn!("[{:04x}] Nothing to retransmit.", self.channel_id);
             return Ok(());
         };

@@ -109,6 +109,7 @@ impl<R: Role> Fragmenter<R> {
 
 pub struct Reassembler<R: Role> {
     header: Header<R>,
+    sync_bits: SyncBits,
     offset: usize,
     checksum: Crc32,
 }
@@ -116,6 +117,7 @@ pub struct Reassembler<R: Role> {
 impl<R: Role> Reassembler<R> {
     pub fn new(input: &[u8], buffer: &mut [u8]) -> Result<Self> {
         let (header, after_header) = Header::parse(input)?;
+        let sync_bits = SyncBits::try_from(input)?;
         if header.is_continuation() {
             return Err(Error::malformed_data());
         }
@@ -134,6 +136,7 @@ impl<R: Role> Reassembler<R> {
 
         Ok(Self {
             header,
+            sync_bits,
             offset: nbytes,
             checksum,
         })
@@ -200,19 +203,12 @@ impl<R: Role> Reassembler<R> {
         &self.header
     }
 
-    // Shortcut to deserialize single packet message.
-    pub fn single<'a>(buffer: &[u8], dest: &'a mut [u8]) -> Result<(Header<R>, &'a [u8])> {
-        let reassembler = Self::new(buffer, dest)?;
-        if !reassembler.is_done() {
-            log::error!("Single packet message expected.");
-            return Err(Error::malformed_data());
-        }
-        let reply_len = reassembler.verify(dest)?;
-        let header = reassembler.header;
-        Ok((header, &dest[..reply_len]))
+    pub fn sync_bits(&self) -> SyncBits {
+        self.sync_bits
     }
 
-    pub fn single_inplace(buffer: &[u8]) -> Result<(Header<R>, &[u8])> {
+    // Shortcut to deserialize single packet message.
+    pub fn single(buffer: &[u8]) -> Result<(Header<R>, &[u8])> {
         let (header, after_header) = Header::parse(buffer)?;
         if header.is_continuation() {
             return Err(Error::malformed_data());
@@ -318,7 +314,7 @@ mod test {
             let packets = fragment(header, SyncBits::new(), source, packet_size);
             assert_eq!(packets.len(), 1);
 
-            let res = Reassembler::<Device>::single_inplace(&packets[0]).unwrap();
+            let res = Reassembler::<Device>::single(&packets[0]).unwrap();
             let expected_hex = hex::encode(source);
             let received_hex = hex::encode(res.1);
             assert_eq!(received_hex, expected_hex);
@@ -328,15 +324,15 @@ mod test {
     #[test]
     fn test_reassemble_single_good() {
         let empty = hex::decode(EMPTY_PAYLOAD_EXPECTED).unwrap();
-        let res = Reassembler::<Device>::single_inplace(&empty).unwrap();
+        let res = Reassembler::<Device>::single(&empty).unwrap();
         assert_eq!(res.1, b"");
-        let res = Reassembler::<Host>::single_inplace(&empty).unwrap();
+        let res = Reassembler::<Host>::single(&empty).unwrap();
         assert_eq!(res.1, b"");
 
         let short = hex::decode(SHORT_PAYLOAD_EXPECTED).unwrap();
-        let res = Reassembler::<Device>::single_inplace(&short).unwrap();
+        let res = Reassembler::<Device>::single(&short).unwrap();
         assert_eq!(res.1, b"\x07");
-        let res = Reassembler::<Host>::single_inplace(&short).unwrap();
+        let res = Reassembler::<Host>::single(&short).unwrap();
         assert_eq!(res.1, b"\x07");
     }
 
@@ -344,16 +340,16 @@ mod test {
     fn test_reassemble_single_bad() {
         // failure expected when more data follows
         let incomplete = hex::decode(LONGER_PAYLOAD_EXPECTED[0]).unwrap();
-        let res = Reassembler::<Device>::single_inplace(&incomplete);
+        let res = Reassembler::<Device>::single(&incomplete);
         assert_eq!(res, Err(Error::MalformedData));
-        let res = Reassembler::<Host>::single_inplace(&incomplete);
+        let res = Reassembler::<Host>::single(&incomplete);
         assert_eq!(res, Err(Error::MalformedData));
 
         // failure expected on continuations
         let continuation = hex::decode(LONGER_PAYLOAD_EXPECTED[1]).unwrap();
-        let res = Reassembler::<Device>::single_inplace(&continuation);
+        let res = Reassembler::<Device>::single(&continuation);
         assert_eq!(res, Err(Error::MalformedData));
-        let res = Reassembler::<Host>::single_inplace(&continuation);
+        let res = Reassembler::<Host>::single(&continuation);
         assert_eq!(res, Err(Error::MalformedData));
     }
 
@@ -458,7 +454,7 @@ mod test {
         let reassembler = Reassembler::<Device>::new(packet, &mut received);
         assert!(matches!(reassembler, Err(Error::MalformedData)));
 
-        let inplace = Reassembler::<Device>::single_inplace(packet);
+        let inplace = Reassembler::<Device>::single(packet);
         assert!(matches!(inplace, Err(Error::MalformedData)));
     }
 }
