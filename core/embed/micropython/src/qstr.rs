@@ -51,6 +51,7 @@ impl<T: QstrValue> From<T> for Obj {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[repr(transparent)]
 pub struct Attribute(ffi::qstr);
 
 impl Attribute {
