@@ -63,7 +63,7 @@ translations = ["crypto"]
 secmon_layout = []
 dbg_console = []
 app_loading = []
-thp = ["crypto", "dep:trezor-thp"]
+thp = ["crypto", "dep:trezor-thp", "dep:zeroize"]
 test = [
     "backlight",
     "button",
