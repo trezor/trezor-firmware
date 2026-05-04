@@ -63,6 +63,7 @@ translations = ["crypto"]
 secmon_layout = []
 dbg_console = []
 app_loading = []
+thp = ["crypto", "dep:trezor-thp"]
 test = [
     "backlight",
     "button",
@@ -78,8 +79,10 @@ test = [
     "protobuf",
     "smp",
     "storage",
+    "thp",
     "touch",
     "translations",
+    "trezor-thp?/use_std",
     "ui",
     "ui_jpeg",
     "ui_font_kerning",
@@ -116,6 +119,7 @@ unsize.workspace = true
 without-alloc.workspace = true
 
 io = { workspace = true, optional = true }
+trezor-thp = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }
 zeroize = { workspace = true, optional = true }
 
