@@ -390,6 +390,7 @@ dependencies = [
  "stable_deref_trait",
  "ufmt",
  "ufmt-write",
+ "zeroize",
 ]
 
 [[package]]
@@ -930,6 +931,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
+name = "trezor-noise-protocol"
+version = "0.2.0"
+source = "git+https://github.com/trezor/noise-rust?rev=1bb08dfdfc11160b760b8d28c09677ed72fb1fff#1bb08dfdfc11160b760b8d28c09677ed72fb1fff"
+dependencies = [
+ "heapless",
+]
+
+[[package]]
+name = "trezor-thp"
+version = "0.1.0"
+dependencies = [
+ "heapless",
+ "log",
+ "trezor-noise-protocol",
+]
+
+[[package]]
 name = "trezor-tjpgdec"
 version = "0.1.0"
 
@@ -955,6 +973,7 @@ dependencies = [
  "serde_json",
  "spin",
  "static-alloc",
+ "trezor-thp",
  "trezor-tjpgdec",
  "ufmt",
  "unsize",
