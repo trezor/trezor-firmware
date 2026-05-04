@@ -584,7 +584,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     DER_ITEM sig_alg = {0};
     if (!der_read_item_expected(&cert.buf, DER_SEQUENCE, &sig_alg)) {
       cli_error(cli, PRODTEST_ERR_COMMON_CERT_CHAIN_READ_SIG_ALG,
-                "check_device_cert_chain, der_read_item 7, cert %d.", "%d.",
+                "check_device_cert_chain, der_read_item 7, cert %d.",
                 cert_count);
       return false;
     }
