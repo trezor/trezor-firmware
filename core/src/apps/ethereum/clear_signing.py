@@ -2,6 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import TR
+from trezor.wire import DataError
 
 from .definitions import Definitions
 from .helpers import (
@@ -845,6 +846,12 @@ async def try_confirm(
 
     if display_format is None:
         return False
+
+    if (
+        payment_request_verifier is not None
+        and display_format.func_sig != TRANSFER_DISPLAY_FORMAT.func_sig
+    ):
+        raise DataError("Payment Requests only supported for ERC-20 transfers.")
 
     calldata = memoryview(data)[SC_FUNC_SIG_BYTES:]
 
