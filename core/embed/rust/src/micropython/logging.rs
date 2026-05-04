@@ -1,10 +1,11 @@
 use crate::micropython::qstr::Qstr;
-use micropython::{map::Map, module::Module, obj::Obj, obj_fn_1, obj_fn_kw, obj_module};
+use micropython::{
+    error::Error, map::Map, module::Module, obj::Obj, obj_fn_1, obj_fn_kw, obj_module,
+};
 
 #[cfg(feature = "dbg_console")]
 use crate::{
-    error::Error,
-    trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel},
+    trezorhal::syslog::{LogLevel, syslog_start_record, syslog_write_chunk},
     util::logger::init_rust_logging,
 };
 #[cfg(feature = "dbg_console")]

@@ -1,11 +1,9 @@
 use heapless::Vec;
 
-use crate::{
-    error::{value_error, Error},
-    strutil::hexlify,
-};
+use crate::strutil::hexlify;
 use micropython::{
-    buffer::{get_buffer, StrBuffer},
+    buffer::{StrBuffer, get_buffer},
+    error::Error,
     iter::IterBuf,
     obj::Obj,
 };
@@ -18,7 +16,7 @@ where
     let vec: Vec<T, N> = iter_into_vec(iterable)?;
     // Returns error if array.len() != N
     vec.into_array()
-        .map_err(|_| value_error!(c"Invalid iterable length"))
+        .map_err(|_| Error::ValueError(c"Invalid iterable length"))
 }
 
 pub fn iter_into_vec<T, E, const N: usize>(iterable: Obj) -> Result<Vec<T, N>, Error>
@@ -29,7 +27,7 @@ where
     let mut vec = Vec::<T, N>::new();
     for item in IterBuf::new().try_iterate(iterable)? {
         vec.push(item.try_into()?)
-            .map_err(|_| value_error!(c"Invalid iterable length"))?;
+            .map_err(|_| Error::ValueError(c"Invalid iterable length"))?;
     }
     Ok(vec)
 }

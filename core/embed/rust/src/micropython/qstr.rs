@@ -3,10 +3,10 @@
 #![allow(dead_code)]
 
 use micropython::{
-    Obj, qstr::{Attribute, QstrValue, try_from_obj}
+    Obj,
+    error::Error,
+    qstr::{Attribute, QstrValue, try_from_obj},
 };
-
-use crate::error::Error;
 
 impl const QstrValue for Qstr {
     fn from_u16(val: u16) -> Self {
