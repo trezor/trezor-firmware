@@ -16,7 +16,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_8;
   MP_QSTR_9;
   MP_QSTR_;
+  MP_QSTR_ACK;
   MP_QSTR_ALERT;
+  MP_QSTR_APP_HEADER_LEN;
   MP_QSTR_ATTACHED;
   MP_QSTR_AttachType;
   MP_QSTR_BACK;
@@ -30,14 +32,21 @@ static void _librust_qstrs(void) {
   MP_QSTR_DONE;
   MP_QSTR_DeviceMenuResult;
   MP_QSTR_DisconnectDevice;
+  MP_QSTR_FAILED;
   MP_QSTR_INFO;
   MP_QSTR_INITIAL;
+  MP_QSTR_KEY_REQUIRED;
+  MP_QSTR_KEY_REQUIRED_UNLOCK;
   MP_QSTR_LOW;
   MP_QSTR_LayoutObj;
   MP_QSTR_LayoutState;
   MP_QSTR_MAX;
   MP_QSTR_MAX_BONDS;
+  MP_QSTR_MAX_CREDENTIAL_LEN;
+  MP_QSTR_MAX_DEVICE_PROPERTIES_LEN;
   MP_QSTR_MESSAGE_NAME;
+  MP_QSTR_MESSAGE_READY;
+  MP_QSTR_MESSAGE_READY_ACK;
   MP_QSTR_MESSAGE_WIRE_TYPE;
   MP_QSTR_MessageType;
   MP_QSTR_Msg;
@@ -54,6 +63,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_RemovePin;
   MP_QSTR_RemoveWipeCode;
   MP_QSTR_ReviewFailedBackup;
+  MP_QSTR_SEND_BUFFER_OVERHEAD;
   MP_QSTR_SUCCESS;
   MP_QSTR_SWIPE_DOWN;
   MP_QSTR_SWIPE_LEFT;
@@ -68,6 +78,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_TR;
   MP_QSTR_TRANSITIONING;
   MP_QSTR_TX_PACKET_LEN;
+  MP_QSTR_ThpError;
   MP_QSTR_ToggleBluetooth;
   MP_QSTR_ToggleHaptics;
   MP_QSTR_ToggleLed;
@@ -274,6 +285,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
   MP_QSTR_case_sensitive;
+  MP_QSTR_channel_close;
+  MP_QSTR_channel_close_all;
+  MP_QSTR_channel_info;
+  MP_QSTR_channel_is_open;
+  MP_QSTR_channel_paired;
+  MP_QSTR_channel_update_last_usage;
+  MP_QSTR_channel_was_closed;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
   MP_QSTR_code;
@@ -313,6 +331,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
   MP_QSTR_coveragedata;
+  MP_QSTR_credential;
   MP_QSTR_current;
   MP_QSTR_danger;
   MP_QSTR_data_hash;
@@ -336,6 +355,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_erase;
   MP_QSTR_erase_bonds;
   MP_QSTR_error;
+  MP_QSTR_exclude_channel_id;
   MP_QSTR_experimental_mode__enable;
   MP_QSTR_experimental_mode__only_for_dev;
   MP_QSTR_experimental_mode__title;
@@ -359,6 +379,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_get_enabled;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
+  MP_QSTR_handshake_hash;
+  MP_QSTR_handshake_key;
   MP_QSTR_haptic_feedback__disable;
   MP_QSTR_haptic_feedback__enable;
   MP_QSTR_haptic_feedback__subtitle;
@@ -384,6 +406,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_homescreen__title_seedless;
   MP_QSTR_homescreen__title_set;
   MP_QSTR_horizontal;
+  MP_QSTR_host_static_public_key;
   MP_QSTR_icon_name;
   MP_QSTR_iface;
   MP_QSTR_iface_num;
@@ -442,6 +465,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_language__progress;
   MP_QSTR_language__title;
   MP_QSTR_last_attempt;
+  MP_QSTR_last_write;
   MP_QSTR_led__disable;
   MP_QSTR_led__enable;
   MP_QSTR_led__title;
@@ -460,6 +484,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_ms;
   MP_QSTR_max_rounds;
   MP_QSTR_menu_title;
+  MP_QSTR_message_in;
+  MP_QSTR_message_out;
+  MP_QSTR_message_retransmit;
   MP_QSTR_min_count;
   MP_QSTR_min_ms;
   MP_QSTR_misc__decrypt_value;
@@ -490,12 +517,18 @@ static void _librust_qstrs(void) {
   MP_QSTR_n4w1__hold_next;
   MP_QSTR_n4w1__reading;
   MP_QSTR_n4w1__writing;
+  MP_QSTR_next_timeout;
   MP_QSTR_notification;
+  MP_QSTR_packet_in;
+  MP_QSTR_packet_in_channel;
+  MP_QSTR_packet_out;
+  MP_QSTR_packet_out_channel;
   MP_QSTR_page_count;
   MP_QSTR_page_counter;
   MP_QSTR_pages;
   MP_QSTR_paint;
   MP_QSTR_paired_devices;
+  MP_QSTR_pairing_state;
   MP_QSTR_passphrase__access_hidden_wallet;
   MP_QSTR_passphrase__access_wallet;
   MP_QSTR_passphrase__always_on_device;
@@ -803,6 +836,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
+  MP_QSTR_send_transport_busy;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;
   MP_QSTR_set_high_speed;
@@ -889,6 +923,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_trezorble;
   MP_QSTR_trezorlog;
   MP_QSTR_trezorproto;
+  MP_QSTR_trezorthp;
   MP_QSTR_trezorui_api;
   MP_QSTR_tutorial;
   MP_QSTR_tutorial__continue;

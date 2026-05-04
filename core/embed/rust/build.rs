@@ -331,6 +331,8 @@ fn generate_micropython_bindings() {
         .allowlist_function("trezor_obj_get_ll_checked")
         .allowlist_function("trezor_obj_str_from_rom_text")
         // buffer
+        .allowlist_function("mp_obj_new_slice")
+        .allowlist_function("mp_obj_subscr")
         .allowlist_function("mp_get_buffer")
         .allowlist_var("MP_BUFFER_READ")
         .allowlist_var("MP_BUFFER_WRITE")
