@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 _MAX_SESSIONS_COUNT = const(10)
-SESSION_ID_LENGTH = const(32)
+_SESSION_ID_LENGTH = const(32)
 
 
 class SessionCache(DataCache):
@@ -23,7 +23,7 @@ class SessionCache(DataCache):
     """
 
     def __init__(self) -> None:
-        self.session_id = bytearray(SESSION_ID_LENGTH)
+        self.session_id = bytearray(_SESSION_ID_LENGTH)
         if utils.BITCOIN_ONLY:
             self.fields = (
                 64,  # APP_COMMON_SEED
@@ -50,7 +50,7 @@ class SessionCache(DataCache):
 
         # generate a new session id if we don't have it yet
         if not self.session_id:
-            self.session_id[:] = random.bytes(SESSION_ID_LENGTH)
+            self.session_id[:] = random.bytes(_SESSION_ID_LENGTH)
         # export it as immutable bytes
         return bytes(self.session_id)
 
@@ -94,7 +94,7 @@ def start_session(received_session_id: AnyBytes | None = None) -> AnyBytes:
 
     if (
         received_session_id is not None
-        and len(received_session_id) != SESSION_ID_LENGTH
+        and len(received_session_id) != _SESSION_ID_LENGTH
     ):
         # Prevent the caller from setting received_session_id=b"" and finding a cleared
         # session. More generally, short-circuit the session id search, because we know
