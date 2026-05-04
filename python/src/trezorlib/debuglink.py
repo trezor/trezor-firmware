@@ -1502,6 +1502,9 @@ class TrezorTestContext:
         if self.is_thp():
             assert isinstance(self.client, TrezorClientThp)
             self.client.channel = channel
+            # destroy the old interactive context associated with the previous channel
+            # tests in device_tests/thp/test_handshake.py don't work without it
+            self.client._interact_ctx = self.client._interact()
             return
         raise AttributeError("Channel is not available for this protocol")
 

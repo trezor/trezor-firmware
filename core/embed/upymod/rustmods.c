@@ -36,7 +36,7 @@ MP_REGISTER_MODULE(MP_QSTR_trezortranslate, mp_module_trezortranslate);
 MP_REGISTER_MODULE(MP_QSTR_trezorble, mp_module_trezorble);
 #endif
 
-#if 0
+#ifdef USE_THP
 MP_REGISTER_MODULE(MP_QSTR_trezorthp, mp_module_trezorthp);
 #endif
 
