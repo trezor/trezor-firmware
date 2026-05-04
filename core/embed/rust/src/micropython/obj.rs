@@ -76,6 +76,12 @@ impl Obj {
         unsafe { Self::from_bits(0) }
     }
 
+    pub const fn const_sentinel() -> Self {
+        // micropython/py/obj.h
+        // #define MP_OBJ_SENTINEL (MP_OBJ_FROM_PTR((void *)4))
+        unsafe { Self::from_bits(4) }
+    }
+
     pub const fn const_none() -> Self {
         // micropython/py/obj.h
         // #define mp_const_none MP_OBJ_NEW_IMMEDIATE_OBJ(0)
@@ -449,6 +455,16 @@ impl Obj {
         match self.try_into() {
             Ok(x) => Ok(Some(x)),
             Err(e) => Err(e.into()),
+        }
+    }
+
+    pub fn from_option<T>(val: Option<T>) -> Result<Self, Error>
+    where
+        T: TryInto<Obj, Error = Error>,
+    {
+        match val {
+            Some(v) => v.try_into(),
+            None => Ok(Self::const_none()),
         }
     }
 }
