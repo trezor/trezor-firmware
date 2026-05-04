@@ -3,6 +3,6 @@ from buffer_types import *
 
 
 # rust/src/miniscript_bridge.rs
-def compile(descriptor: str) -> bytes:
+def compile(descriptor: str, index: int) -> bytes:
     """Parse a Bitcoin output descriptor (with concrete public keys)
     and return the witness script bytes."""
