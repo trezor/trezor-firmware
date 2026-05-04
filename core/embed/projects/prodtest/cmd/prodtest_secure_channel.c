@@ -61,6 +61,7 @@ static void prodtest_secure_channel_handshake_2(cli_t* cli) {
     cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_INPUT_LEN,
               "Unexpected input length. Expecting %d bytes.",
               (int)SECURE_CHANNEL_INPUT_SIZE);
+    return;
   }
 
   if (!secure_channel_handshake_2(input)) {
@@ -68,6 +69,7 @@ static void prodtest_secure_channel_handshake_2(cli_t* cli) {
     // not match.
     cli_error(cli, PRODTEST_ERR_SECURE_CHANNEL_HANDSHAKE_FINISH,
               "`secure_channel_handshake_2()` failed.");
+    return;
   }
 
   cli_ok(cli, "");
