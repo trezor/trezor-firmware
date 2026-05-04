@@ -7,6 +7,7 @@ use super::{
 
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
+pub const BLOCK_SIZE: usize = ffi::SHA512_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
