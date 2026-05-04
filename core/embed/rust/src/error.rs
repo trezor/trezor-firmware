@@ -10,6 +10,9 @@ use {
     core::convert::TryInto,
 };
 
+#[cfg(feature = "thp")]
+use crate::thp::micropython::ThpError;
+
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
 #[derive(Clone, Copy, Debug)]
 pub enum Error {
@@ -30,6 +33,8 @@ pub enum Error {
     ValueErrorParam(&'static CStr, Obj),
     RuntimeError(&'static CStr),
     NotImplementedError,
+    #[cfg(feature = "thp")]
+    ThpError(&'static CStr),
 }
 
 #[allow(unused_macros)]
@@ -71,6 +76,8 @@ impl Error {
                 Error::EOFError => new_exception(exception::EOFError),
                 Error::RuntimeError(msg) => new_exception_arg_from(exception::RuntimeError, msg),
                 Error::NotImplementedError => new_exception(exception::NotImplementedError),
+                #[cfg(feature = "thp")]
+                Error::ThpError(msg) => new_exception_arg_from(&ThpError, msg),
             }
         }
     }
@@ -88,5 +95,19 @@ impl From<Infallible> for Error {
 impl From<TryFromIntError> for Error {
     fn from(_: TryFromIntError) -> Self {
         Self::OutOfRange
+    }
+}
+
+#[cfg(feature = "thp")]
+impl From<trezor_thp::Error> for Error {
+    fn from(error: trezor_thp::Error) -> Self {
+        match error {
+            trezor_thp::Error::UnexpectedInput => Error::ThpError(c"Unexpected input"),
+            trezor_thp::Error::NotReady => Error::ThpError(c"Not ready"),
+            trezor_thp::Error::MalformedData => Error::ThpError(c"Malformed data"),
+            trezor_thp::Error::InvalidChecksum => Error::ThpError(c"Invalid checksum"),
+            trezor_thp::Error::InsufficientBuffer => Error::ThpError(c"Insufficient buffer"),
+            trezor_thp::Error::CryptoError => Error::ThpError(c"Crypto error"),
+        }
     }
 }
