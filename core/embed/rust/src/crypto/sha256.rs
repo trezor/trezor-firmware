@@ -1,6 +1,6 @@
-use core::pin::Pin;
+use core::{mem::MaybeUninit, pin::Pin};
 
-use zeroize::Zeroize as _;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::{
     ffi,
@@ -10,6 +10,7 @@ use super::{
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Sha256<'a> {
     ctx: Pin<&'a mut Memory<ffi::SHA256_CTX>>,
 }
@@ -37,12 +38,6 @@ impl<'a> Sha256<'a> {
     }
 }
 
-impl Drop for Sha256<'_> {
-    fn drop(&mut self) {
-        self.ctx.zeroize();
-    }
-}
-
 pub fn digest_into(data: &[u8], out: &mut Digest) {
     init_ctx!(Sha256, ctx);
     ctx.update(data);
@@ -53,6 +48,41 @@ pub fn digest(data: &[u8]) -> Digest {
     let mut out = Digest::default();
     digest_into(data, &mut out);
     out
+}
+
+// Unpinned variant for use with noise-protocol which does not guarantee
+// pinning. If possible please use [`Sha256`] above.
+#[derive(Clone)]
+pub struct NoPinSha256 {
+    ctx: ffi::SHA256_CTX,
+}
+
+impl Drop for NoPinSha256 {
+    fn drop(&mut self) {
+        // C implementation zeroes the state
+        // SAFETY: ffi
+        unsafe { ffi::sha256_Final(&mut self.ctx as *mut _, core::ptr::null_mut()) };
+    }
+}
+
+impl Default for NoPinSha256 {
+    fn default() -> Self {
+        let mut ctx = unsafe { MaybeUninit::<ffi::SHA256_CTX>::zeroed().assume_init() };
+        unsafe { ffi::sha256_Init(&mut ctx) };
+        Self { ctx }
+    }
+}
+
+impl NoPinSha256 {
+    pub fn update(&mut self, data: &[u8]) {
+        // SAFETY: ffi
+        unsafe { ffi::sha256_Update(&mut self.ctx as *mut _, data.as_ptr(), data.len()) };
+    }
+
+    pub fn finalize_into(mut self, out: &mut Digest) {
+        // SAFETY: ffi
+        unsafe { ffi::sha256_Final(&mut self.ctx as *mut _, out.as_mut_ptr()) };
+    }
 }
 
 #[cfg(test)]

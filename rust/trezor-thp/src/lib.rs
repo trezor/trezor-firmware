@@ -4,7 +4,7 @@
 
 mod alternating_bit;
 pub mod channel;
-mod control_byte;
+pub mod control_byte;
 mod crc32;
 pub mod credential;
 pub mod error;

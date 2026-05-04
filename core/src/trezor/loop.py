@@ -238,8 +238,9 @@ class sleep(Syscall[int]):
 class wait(Syscall[T]):
     """
     Pause current task, and resume only after a message on `msg_iface` is
-    received.  Messages are received either from an USB interface, or the
-    touch display.  Result value is a tuple of message values.
+    received.  Messages are received either from an USB/BLE interface,
+    or the touch display, or a physical button.  Result value is a tuple of
+    message values.
 
     Example:
 
