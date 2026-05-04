@@ -44,6 +44,7 @@ class HeaderType(Enum):
     FIRMWARE = b"TRZF"
     BOOTLOADER = b"TRZB"
     BOOTLOADER_V2 = b"TRZQ"
+    NRF_FIRMWARE = bytes.fromhex("3DB8F396")
 
 
 class FirmwareHeader(Struct):
@@ -348,6 +349,26 @@ class BootableImage(Struct):
         if isinstance(self.header.hw_model, Model):
             return self.header.hw_model
         return None
+
+    def insert_sigmask(self, sigmask: int) -> None:
+        self.header.sigmask = sigmask
+
+    def insert_signatures(
+        self, slh_signature: bytes, ec_signature: bytes, slot_idx: int
+    ) -> None:
+        if not (
+            0 <= slot_idx < len(self.unauth.slh_signatures)
+            and 0 <= slot_idx < len(self.unauth.ec_signatures)
+        ):
+            raise ValueError("Invalid pubkey-pair slot_idx")
+        if len(slh_signature) != 7856:
+            raise ValueError(
+                f"slh_signature must be 7856 bytes, got {len(slh_signature)}"
+            )
+        if len(ec_signature) != 64:
+            raise ValueError(f"ec_signature must be 64 bytes, got {len(ec_signature)}")
+        self.unauth.slh_signatures[slot_idx] = slh_signature
+        self.unauth.ec_signatures[slot_idx] = ec_signature
 
     def public_pq_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
         if dev_keys:
