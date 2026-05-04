@@ -19,12 +19,12 @@
 
 #include "buttons.h"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 uint16_t buttonRead(void) {
   uint16_t state = 0;
 
-  const uint8_t *scancodes = SDL_GetKeyboardState(NULL);
+  const bool *scancodes = SDL_GetKeyboardState(NULL);
   if (scancodes[SDL_SCANCODE_LEFT]) {
     state |= BTN_PIN_NO;
   }
