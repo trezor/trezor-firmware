@@ -9,9 +9,9 @@ ifeq ($(SECP256K1_ZKP),1)
 CFLAGS   += -DUSE_SECP256K1_ZKP
 CFLAGS   += -DUSE_SECP256K1_ZKP_ECDSA
 ifeq ($(EMULATOR),1)
-CFLAGS += -DSECP256K1_CONTEXT_SIZE=208
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=216
 else
-CFLAGS += -DSECP256K1_CONTEXT_SIZE=180
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=184
 OBJS += field_10x26_arm.o
 endif
 ZKP_CFLAGS = \
@@ -24,7 +24,8 @@ ZKP_CFLAGS = \
 	-DENABLE_MODULE_RECOVERY \
 	-DENABLE_MODULE_SCHNORRSIG \
 	-DENABLE_MODULE_EXTRAKEYS \
-	-DENABLE_MODULE_ECDH
+	-DENABLE_MODULE_ECDH \
+	-DENABLE_MODULE_ECDSA_S2C # This module is used by secp256k1_anti_exfil_sign() and secp256k1_anti_exfil_commit_nonce() from zkp_ecdsa.c, which are not actually called on T1. However, since we have enough space on T1, it is not worth the effort to use ifdefs to remove them.
 
 OBJS += secp256k1-zkp.o
 OBJS += precomputed_ecmult.o

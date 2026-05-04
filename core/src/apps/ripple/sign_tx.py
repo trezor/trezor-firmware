@@ -12,9 +12,9 @@ if TYPE_CHECKING:
 @auto_keychain(__name__, slip21_namespaces=[[b"SLIP-0024"]])
 async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     from trezor import TR
-    from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha512
+    from trezor.crypto.signature import encode_der_signature
     from trezor.messages import RippleSignedTx
     from trezor.ui.layouts import show_continue_in_app, show_warning
     from trezor.wire import ProcessError
@@ -76,8 +76,8 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
 
     # Signs and encodes signature into DER format
     first_half_of_sha512 = sha512(to_sign).digest()[:32]
-    sig = secp256k1.sign(node.private_key(), first_half_of_sha512)
-    sig_encoded = der.encode_signature(sig)
+    sig = secp256k1.sign_recoverable(node.private_key(), first_half_of_sha512)
+    sig_encoded = encode_der_signature(sig)
 
     tx = serialize(msg, source_address, node.public_key(), sig_encoded)
     show_continue_in_app(TR.send__transaction_signed)

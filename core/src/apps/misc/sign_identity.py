@@ -107,6 +107,8 @@ def sign_challenge(
     sigtype: str | coininfo.CoinInfo,
     curve: str,
 ) -> bytes:
+    from trezor.crypto.signature import encode_bip137_signature
+    from trezor.enums import InputScriptType
     from trezor.wire import DataError
 
     from apps.common.signverify import message_digest
@@ -135,11 +137,11 @@ def sign_challenge(
     if curve == "secp256k1":
         from trezor.crypto.curve import secp256k1
 
-        signature = secp256k1.sign(seckey, data)
+        signature = secp256k1.sign_recoverable(seckey, bytes(data))
     elif curve == "nist256p1":
         from trezor.crypto.curve import nist256p1
 
-        signature = nist256p1.sign(seckey, data)
+        signature = nist256p1.sign_recoverable(seckey, bytes(data))
     elif curve == "ed25519":
         from trezor.crypto.curve import ed25519
 
@@ -151,5 +153,7 @@ def sign_challenge(
         signature = b"\x00" + signature
     elif sigtype in ("gpg", "ssh"):
         signature = b"\x00" + signature[1:]
+    else:
+        signature = encode_bip137_signature(signature, InputScriptType.SPENDADDRESS)
 
     return signature

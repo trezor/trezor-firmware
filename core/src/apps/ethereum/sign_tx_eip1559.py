@@ -135,7 +135,7 @@ async def sign_tx_eip1559(
     digest = sha.get_digest()
 
     # transaction data confirmed, proceed with signing
-    result = _sign_digest(msg, keychain, digest)
+    result = await _sign_digest(msg, keychain, digest)
 
     show_continue_in_app(TR.send__transaction_signed)
     return result
@@ -168,20 +168,40 @@ def _get_digest_length(msg: EthereumSignTxEIP1559, data_length: int) -> int:
     return length
 
 
-def _sign_digest(
+async def _sign_digest(
     msg: EthereumSignTxEIP1559, keychain: Keychain, digest: bytes
 ) -> EthereumTxRequest:
     from trezor.crypto.curve import secp256k1
     from trezor.messages import EthereumTxRequest
 
+    from .sign_tx import send_request_entropy
+
     node = keychain.derive(msg.address_n)
-    signature = secp256k1.sign(
-        node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
-    )
+    private_key = node.private_key()
+
+    if msg.entropy_commitment is not None:
+        # use anti-exfil protocol
+        nonce_commitment = secp256k1.anti_exfil_commit_nonce(
+            private_key, digest, bytes(msg.entropy_commitment)
+        )
+        entropy = await send_request_entropy(nonce_commitment)
+
+        signature = secp256k1.anti_exfil_sign(private_key, digest, bytes(entropy))
+    else:
+        signature = secp256k1.sign_recoverable(
+            private_key, digest, secp256k1.CANONICAL_SIG_ETHEREUM
+        )
 
     req = EthereumTxRequest()
-    req.signature_v = signature[0] - 27
-    req.signature_r = signature[1:33]
-    req.signature_s = signature[33:]
+
+    if msg.entropy_commitment is not None:
+        # use anti-exfil protocol
+        req.signature_v = None
+        req.signature_r = signature[:32]
+        req.signature_s = signature[32:]
+    else:
+        req.signature_v = signature[0]
+        req.signature_r = signature[1:33]
+        req.signature_s = signature[33:]
 
     return req
