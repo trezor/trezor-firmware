@@ -118,12 +118,12 @@ void prodtest_pm_charge_disable(cli_t* cli) {
     return;
   }
 
-  cli_trace(cli, "Enabling battery charging");
+  cli_trace(cli, "Disabling battery charging");
 
   pm_status_t status = pm_charging_disable();
   if (status != PM_OK) {
     cli_error(cli, PRODTEST_ERR_PM_CHARGE_DISABLE,
-              "Failed to enable battery charging");
+              "Failed to disable battery charging");
     return;
   }
 
