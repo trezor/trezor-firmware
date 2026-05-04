@@ -364,7 +364,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
         {
             // ACK we sent was lost. Will be retransmitted along current outgoing message.
             log::debug!("[{:04x}] Bad sync bit, ignoring packet.", self.channel_id);
-        } else if !matches!(self.receive_state, ReceiveState::Receiving { .. }){
+        } else if !matches!(self.receive_state, ReceiveState::Receiving { .. }) {
             // Might happen when we've sent an ACK and it got lost or delayed.
             // We end up sending reply while the other side is retransmitting.
             // NOTE: no checksum verification because we drop the continuations
