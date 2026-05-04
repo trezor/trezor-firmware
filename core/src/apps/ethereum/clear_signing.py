@@ -21,6 +21,7 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
     )
     from trezor.ui.layouts import StrPropertyType
+    from trezor.ui.layouts.properties import AboveThreshold
     from typing_extensions import Self
 
     from apps.common.payment_request import PaymentRequestVerifier
@@ -225,7 +226,7 @@ class FieldFormatter:
         msg: MsgInSignTx,
         defs: Definitions,
         path_walker: PathWalker,
-    ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
         """
         Format a field using the current formatter.
         Return the formatted value and optionally a token and a token address,
@@ -242,7 +243,7 @@ class AddressNameFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         defs: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
         if address is None:
             return None, None, None
         elif isinstance(address, str):
@@ -260,7 +261,7 @@ class AmountFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         defs: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
         if amount is None:
             return None, None, None
         else:
@@ -274,11 +275,6 @@ class AmountFormatter(FieldFormatter):
 
 
 class TokenAmountFormatter(FieldFormatter):
-    # TODO: figure out a way for the formatter to signal that the amount was above the threshold.
-    # For now we return None and `confirm_ethereum_approve` shows the "Unlimited amount" warning,
-    # but the `tokenAmount` spec allows this message to be customized in which case
-    # being above the threshold could mean something else, not just "Unlimited".
-
     def __init__(
         self,
         token_path: Path,
@@ -295,7 +291,9 @@ class TokenAmountFormatter(FieldFormatter):
         msg: MsgInSignTx,
         defs: Definitions,
         path_walker: PathWalker,
-    ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+        from trezor.ui.layouts.properties import AboveThreshold
+
         from .tokens import UNKNOWN_TOKEN
 
         if amount is None:
@@ -311,7 +309,7 @@ class TokenAmountFormatter(FieldFormatter):
         if self.native_currency_address is not None:
             if token_address in self.native_currency_address:
                 if self.threshold is not None and amount > self.threshold:
-                    return None, None, None
+                    return AboveThreshold(TR.words__unlimited), None, None
                 else:
                     return (
                         format_ethereum_amount(amount, None, defs.network),
@@ -331,7 +329,7 @@ class TokenAmountFormatter(FieldFormatter):
                     token = received_definitions.get_token(token_address)
 
         if self.threshold is not None and amount > self.threshold:
-            return None, token, token_address
+            return AboveThreshold(TR.words__unlimited), token, token_address
         else:
             return (
                 format_ethereum_amount(amount, token, defs.network),
@@ -352,7 +350,7 @@ class UnitFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         _definitions: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
         if value is None:
             return None, None, None
         else:
@@ -660,7 +658,13 @@ class DisplayFormat:
         defs: Definitions,
     ) -> tuple[
         list[AnyValue],
-        list[tuple[StrPropertyType, EthereumTokenInfo | None, AnyBytes | None]],
+        list[
+            tuple[
+                tuple[str, str | AboveThreshold | None, bool | None],
+                EthereumTokenInfo | None,
+                AnyBytes | None,
+            ]
+        ],
     ]:
         parameters: list[AnyValue] = []
 
@@ -718,7 +722,11 @@ class DisplayFormat:
                 return p
 
         fields: list[
-            tuple[StrPropertyType, EthereumTokenInfo | None, AnyBytes | None]
+            tuple[
+                tuple[str, str | AboveThreshold | None, bool | None],
+                EthereumTokenInfo | None,
+                AnyBytes | None,
+            ]
         ] = []
         for field_definition in self.field_definitions:
             value = get_value_for_path(field_definition.path)
@@ -994,6 +1002,8 @@ async def _handle_generic_ui(
     defs: Definitions,
     maximum_fee: str,
 ) -> None:
+    from trezor.ui.layouts.properties import AboveThreshold
+
     from . import tokens
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
@@ -1003,8 +1013,10 @@ async def _handle_generic_ui(
 
     properties_to_confirm = []
 
-    for field, actual_token, actual_token_address in fields:
-        properties_to_confirm.append(field)
+    for (label, formatted, hint), actual_token, actual_token_address in fields:
+        if isinstance(formatted, AboveThreshold):
+            formatted = formatted.message
+        properties_to_confirm.append((label, formatted, hint))
         if actual_token is tokens.UNKNOWN_TOKEN:
             assert actual_token_address is not None
             token_address_str = address_from_bytes(actual_token_address, defs.network)

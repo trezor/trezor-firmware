@@ -31,11 +31,12 @@ if TYPE_CHECKING:
         PaymentRequest,
     )
     from trezor.ui.layouts import StrPropertyType
+    from trezor.ui.layouts.properties import AboveThreshold
 
 
 async def require_confirm_approve(
     recipient_addr: str,
-    total_amount: str | None,
+    total_amount: str | AboveThreshold | None,
     recipient_str: str | None,
     address_n: list[int],
     maximum_fee: str,

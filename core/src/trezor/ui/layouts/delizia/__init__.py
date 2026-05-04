@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
     from ..common import ExceptionType, PropertyType, StrPropertyType
     from ..menu import Details
+    from ..properties import AboveThreshold
     from ..slip24 import Refund, Trade
 
     T = TypeVar("T")
@@ -1124,13 +1125,15 @@ if not utils.BITCOIN_ONLY:
         chain_id: str,
         network_name: str,
         is_revoke: bool,
-        total_amount: str | None,
+        total_amount: str | AboveThreshold | None,
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[StrPropertyType],
         chunkify: bool = False,
     ) -> None:
+        from ..properties import AboveThreshold
+
         br_name = "confirm_ethereum_approve"
         br_code = ButtonRequestType.Other
         await confirm_value(
@@ -1175,7 +1178,7 @@ if not utils.BITCOIN_ONLY:
             )
             await with_info(main_layout, info_layout, br_name, br_code)
 
-        if total_amount is None:
+        if isinstance(total_amount, AboveThreshold):
             await show_warning(
                 br_name,
                 TR.ethereum__approve_unlimited_template.format(token_symbol),
@@ -1206,7 +1209,11 @@ if not utils.BITCOIN_ONLY:
             else [
                 (
                     TR.ethereum__approve_amount_allowance,
-                    total_amount or TR.words__unlimited,
+                    (
+                        total_amount.message
+                        if isinstance(total_amount, AboveThreshold)
+                        else total_amount
+                    ),
                     False,
                 )
             ]

@@ -13,6 +13,17 @@ if TYPE_CHECKING:
     def with_colon(properties: str) -> str: ...
 
 
+class AboveThreshold:
+    """Signals that an amount exceeds a threshold.
+
+    Passed to layout functions instead of a plain amount string so they can
+    show the appropriate warning and display text.
+    """
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 def with_colon(
     properties: Iterable[StrPropertyType] | str | None = None,
 ) -> list[StrPropertyType] | str | None:
