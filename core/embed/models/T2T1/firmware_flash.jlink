@@ -1,0 +1,8 @@
+device stm32f427vi
+if swd
+speed 50000
+loadbin build/firmware/firmware.bin.p1.bin 0x08040000
+loadbin build/firmware/firmware.bin.p2.bin 0x08120000
+r
+g
+exit
