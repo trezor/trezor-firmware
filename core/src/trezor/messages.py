@@ -649,6 +649,7 @@ if TYPE_CHECKING:
         decred_staking_spend: "DecredStakingSpendType | None"
         script_pubkey: "AnyBytes | None"
         coinjoin_flags: "int"
+        entropy_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -670,6 +671,7 @@ if TYPE_CHECKING:
             decred_staking_spend: "DecredStakingSpendType | None" = None,
             script_pubkey: "AnyBytes | None" = None,
             coinjoin_flags: "int | None" = None,
+            entropy_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -705,6 +707,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TxOutput"]:
+            return isinstance(msg, cls)
+
+    class TxEntropy(protobuf.MessageType):
+        entropy: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entropy: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TxEntropy"]:
             return isinstance(msg, cls)
 
     class PrevTx(protobuf.MessageType):
@@ -861,6 +877,20 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPrevExtraData"]:
             return isinstance(msg, cls)
 
+    class TxAckEntropy(protobuf.MessageType):
+        tx: "TxAckEntropyWrapper"
+
+        def __init__(
+            self,
+            *,
+            tx: "TxAckEntropyWrapper",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TxAckEntropy"]:
+            return isinstance(msg, cls)
+
     class GetOwnershipProof(protobuf.MessageType):
         address_n: "list[int]"
         coin_name: "str"
@@ -869,6 +899,7 @@ if TYPE_CHECKING:
         user_confirmation: "bool"
         ownership_ids: "list[AnyBytes]"
         commitment_data: "AnyBytes"
+        entropy_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -880,11 +911,40 @@ if TYPE_CHECKING:
             multisig: "MultisigRedeemScriptType | None" = None,
             user_confirmation: "bool | None" = None,
             commitment_data: "AnyBytes | None" = None,
+            entropy_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["GetOwnershipProof"]:
+            return isinstance(msg, cls)
+
+    class OwnershipProofNonceCommitment(protobuf.MessageType):
+        nonce_commitment: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce_commitment: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["OwnershipProofNonceCommitment"]:
+            return isinstance(msg, cls)
+
+    class OwnershipProofEntropy(protobuf.MessageType):
+        entropy: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entropy: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["OwnershipProofEntropy"]:
             return isinstance(msg, cls)
 
     class OwnershipProof(protobuf.MessageType):
@@ -974,6 +1034,7 @@ if TYPE_CHECKING:
         tx_hash: "AnyBytes | None"
         extra_data_len: "int | None"
         extra_data_offset: "int | None"
+        nonce_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -982,6 +1043,7 @@ if TYPE_CHECKING:
             tx_hash: "AnyBytes | None" = None,
             extra_data_len: "int | None" = None,
             extra_data_offset: "int | None" = None,
+            nonce_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -1075,6 +1137,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPrevExtraDataWrapper"]:
+            return isinstance(msg, cls)
+
+    class TxAckEntropyWrapper(protobuf.MessageType):
+        entropy: "TxEntropy"
+
+        def __init__(
+            self,
+            *,
+            entropy: "TxEntropy",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TxAckEntropyWrapper"]:
             return isinstance(msg, cls)
 
     class BleUnpair(protobuf.MessageType):
@@ -3981,6 +4057,7 @@ if TYPE_CHECKING:
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
         payment_req: "PaymentRequest | None"
+        entropy_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -3998,6 +4075,7 @@ if TYPE_CHECKING:
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
             payment_req: "PaymentRequest | None" = None,
+            entropy_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4020,6 +4098,7 @@ if TYPE_CHECKING:
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
         payment_req: "PaymentRequest | None"
+        entropy_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -4038,6 +4117,7 @@ if TYPE_CHECKING:
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
             payment_req: "PaymentRequest | None" = None,
+            entropy_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4050,6 +4130,7 @@ if TYPE_CHECKING:
         signature_v: "int | None"
         signature_r: "AnyBytes | None"
         signature_s: "AnyBytes | None"
+        nonce_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -4058,6 +4139,7 @@ if TYPE_CHECKING:
             signature_v: "int | None" = None,
             signature_r: "AnyBytes | None" = None,
             signature_s: "AnyBytes | None" = None,
+            nonce_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4067,11 +4149,13 @@ if TYPE_CHECKING:
 
     class EthereumTxAck(protobuf.MessageType):
         data_chunk: "AnyBytes"
+        entropy: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             data_chunk: "AnyBytes",
+            entropy: "AnyBytes | None" = None,
         ) -> None:
             pass
 

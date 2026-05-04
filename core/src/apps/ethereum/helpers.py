@@ -303,3 +303,25 @@ def get_data_confirmer(total_len: int) -> ConfirmDataFn:
                     return
 
     return confirm_fn
+
+
+def encode_signature(recoverable_signature: AnyBytes) -> bytes:
+    from trezor.crypto.signature import encode_bip137_signature
+    from trezor.enums import InputScriptType
+
+    signature = encode_bip137_signature(
+        recoverable_signature, InputScriptType.SPENDADDRESS_UNCOMPRESSED
+    )
+    return bytes(signature[1:]) + signature[0:1]
+
+
+def decode_signature(signature: AnyBytes) -> bytes:
+    from trezor.crypto.signature import decode_bip137_signature
+    from trezor.enums import InputScriptType
+
+    script_type, recoverable_signature = decode_bip137_signature(
+        bytes(signature[-1:]) + signature[:-1]
+    )
+    if script_type != InputScriptType.SPENDADDRESS_UNCOMPRESSED:
+        raise ValueError("Unsupported script type")
+    return recoverable_signature

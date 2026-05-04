@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Any, Coroutine, Iterable
 
-    from trezor.messages import EthereumSignTx, EthereumTxAck
+    from trezor.messages import EthereumSignTx
     from trezor.ui.layouts import StrPropertyType
 
     from apps.common.keychain import Keychain
@@ -144,7 +144,7 @@ async def sign_tx(
     digest = sha.get_digest()
 
     # transaction data confirmed, proceed with signing
-    result = _sign_digest(msg, keychain, digest)
+    result = await _sign_digest(msg, keychain, digest)
 
     show_continue_in_app(TR.send__transaction_signed)
     return result
@@ -165,8 +165,7 @@ async def confirm_data_and_summary(
 
         data_left = data_length - len(initial_data)
         while data_left > 0:
-            resp = await _send_request_chunk(data_left)
-            chunk = resp.data_chunk
+            chunk = await send_request_chunk(data_left)
             await confirm_data_chunk(chunk)
             data_left -= len(chunk)
             sha.extend(chunk)
@@ -197,8 +196,7 @@ async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
         while (
             data_left > 0 and initial_data_length + _DATA_CHUNK_SIZE <= _MAX_DATA_STORED
         ):
-            resp = await _send_request_chunk(data_left)
-            chunk = resp.data_chunk
+            chunk = await send_request_chunk(data_left)
             initial_data[initial_data_length : initial_data_length + len(chunk)] = chunk
             data_left -= len(chunk)
             initial_data_length += len(chunk)
@@ -358,34 +356,64 @@ def _get_digest_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def _send_request_chunk(data_left: int) -> EthereumTxAck:
+async def send_request_chunk(data_left: int) -> AnyBytes:
     from trezor.messages import EthereumTxAck
     from trezor.wire.context import call
 
     req = EthereumTxRequest()
     req.data_length = min(data_left, _DATA_CHUNK_SIZE)
-    return await call(req, EthereumTxAck)
+    resp = await call(req, EthereumTxAck)
+    assert resp.data_chunk is not None
+    return resp.data_chunk
 
 
-def _sign_digest(
+async def send_request_entropy(nonce_commitment: bytes) -> bytes:
+    from trezor.messages import EthereumTxAck
+    from trezor.wire.context import call
+
+    req = EthereumTxRequest()
+    req.nonce_commitment = nonce_commitment
+    resp = await call(req, EthereumTxAck)
+    assert resp.entropy is not None
+    return bytes(resp.entropy)
+
+
+async def _sign_digest(
     msg: EthereumSignTx, keychain: Keychain, digest: bytes
 ) -> EthereumTxRequest:
     from trezor.crypto.curve import secp256k1
 
     node = keychain.derive(msg.address_n)
-    signature = secp256k1.sign(
-        node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
-    )
+    private_key = node.private_key()
+
+    if msg.entropy_commitment is not None:
+        # use anti-exfil protocol
+        nonce_commitment = secp256k1.anti_exfil_commit_nonce(
+            private_key, digest, bytes(msg.entropy_commitment)
+        )
+        entropy = await send_request_entropy(nonce_commitment)
+
+        signature = secp256k1.anti_exfil_sign(private_key, digest, bytes(entropy))
+    else:
+        signature = secp256k1.sign_recoverable(
+            private_key, digest, secp256k1.CANONICAL_SIG_ETHEREUM
+        )
 
     req = EthereumTxRequest()
-    req.signature_v = signature[0]
-    if msg.chain_id > _MAX_CHAIN_ID:
-        req.signature_v -= 27
-    else:
-        req.signature_v += 2 * msg.chain_id + 8
 
-    req.signature_r = signature[1:33]
-    req.signature_s = signature[33:]
+    if msg.entropy_commitment is not None:
+        # use anti-exfil protocol
+        req.signature_v = None
+        req.signature_r = signature[:32]
+        req.signature_s = signature[32:]
+    else:
+        if msg.chain_id <= _MAX_CHAIN_ID:
+            req.signature_v = 35 + 2 * msg.chain_id + signature[0]
+        else:
+            # https://github.com/trezor/trezor-core/pull/311
+            req.signature_v = signature[0]
+        req.signature_r = signature[1:33]
+        req.signature_s = signature[33:]
 
     return req
 

@@ -23,7 +23,7 @@ async def sign_tx(msg: EosSignTx, keychain: Keychain) -> EosSignedTx:
     from apps.common import paths
 
     from .actions import process_action
-    from .helpers import base58_encode
+    from .helpers import encode_signature
     from .layout import require_sign_tx
     from .writers import write_bytes_fixed, write_header, write_uvarint
 
@@ -57,11 +57,11 @@ async def sign_tx(msg: EosSignTx, keychain: Keychain) -> EosSignedTx:
     write_bytes_fixed(sha, bytearray(32), 32)
 
     digest = sha.get_digest()
-    signature = secp256k1.sign(
-        node.private_key(), digest, True, secp256k1.CANONICAL_SIG_EOS
+    signature = secp256k1.sign_recoverable(
+        node.private_key(), digest, secp256k1.CANONICAL_SIG_EOS
     )
 
     progress_obj.stop()
 
     show_continue_in_app(TR.send__transaction_signed)
-    return EosSignedTx(signature=base58_encode("SIG_", "K1", signature))
+    return EosSignedTx(signature=encode_signature(signature))

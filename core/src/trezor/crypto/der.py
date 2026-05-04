@@ -37,6 +37,10 @@ def encode_signature(signature: AnyBytes) -> AnyBytes:
     return _encode_int_seq(r, s)
 
 
+def encode_seq(seq: tuple[AnyBytes, ...]) -> AnyBytes:
+    return _encode_int_seq(*seq)
+
+
 def read_length(r: BufferReader) -> int:
     init = r.get()
     if init < 0x80:

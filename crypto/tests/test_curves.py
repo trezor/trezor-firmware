@@ -295,7 +295,9 @@ def test_sign_native(curve, r):
     digest = r.randbytes(32)
     sig = r.randbytes(64)
 
-    lib.tc_ecdsa_sign_digest(curve.ptr, priv, digest, sig, c.c_void_p(0), c.c_void_p(0))
+    lib.tc_ecdsa_sign_digest_recoverable(
+        curve.ptr, priv, digest, sig, c.c_void_p(0), c.c_void_p(0)
+    )
 
     exp = bytes2num(priv)
     sk = ecdsa.SigningKey.from_secret_exponent(exp, curve, hashfunc=hashlib.sha256)
@@ -316,7 +318,7 @@ def test_sign_zkp(r):
     digest = r.randbytes(32)
     sig = r.randbytes(64)
 
-    lib.zkp_ecdsa_sign_digest(
+    lib.zkp_ecdsa_sign_digest_recoverable(
         curve.ptr, priv, digest, sig, c.c_void_p(0), c.c_void_p(0)
     )
 
