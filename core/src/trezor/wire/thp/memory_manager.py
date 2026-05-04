@@ -1,10 +1,9 @@
 from micropython import const
 from typing import TYPE_CHECKING
+from ustruct import pack_into
 
-from storage.cache_thp import SESSION_ID_LENGTH
-from trezor import protobuf, utils
-
-from .writer import MESSAGE_TYPE_LENGTH
+from trezor import protobuf, wire
+from trezorthp import APP_HEADER_LEN, SEND_BUFFER_OVERHEAD
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer
@@ -20,7 +19,7 @@ class ThpBuffer:
     def __init__(self) -> None:
         self.buf = memoryview(bytearray(_PROTOBUF_BUFFER_SIZE))
 
-    def get(self, length: int) -> memoryview | None:
+    def get(self, length: int) -> memoryview:
         assert length >= 0
         if length > len(self.buf):
             if __debug__:
@@ -29,8 +28,12 @@ class ThpBuffer:
                     "Failed to get a buffer - requested length (%d) is too big.",
                     length,
                 )
-            return None
+            raise wire.FirmwareError("Failed to get a sufficiently large buffer")
         return self.buf[:length]
+
+
+def buffer_size(msg: protobuf.MessageType) -> int:
+    return SEND_BUFFER_OVERHEAD + protobuf.encoded_length(msg)
 
 
 def encode_into_buffer(
@@ -44,33 +47,7 @@ def encode_into_buffer(
     if msg_type is None:
         raise Exception("Message has no wire type.")
 
-    msg_size = protobuf.encoded_length(msg)
-    payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
+    pack_into(">BH", memoryview(buffer)[:APP_HEADER_LEN], 0, session_id, msg_type)
+    msg_size = protobuf.encode(memoryview(buffer)[APP_HEADER_LEN:], msg)
 
-    _encode_session_into_buffer(memoryview(buffer), session_id)
-    _encode_message_type_into_buffer(memoryview(buffer), msg_type, SESSION_ID_LENGTH)
-    _encode_message_into_buffer(
-        memoryview(buffer), msg, SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH
-    )
-
-    return payload_size
-
-
-def _encode_session_into_buffer(
-    buffer: AnyBuffer, session_id: int, buffer_offset: int = 0
-) -> None:
-    session_id_bytes = int.to_bytes(session_id, SESSION_ID_LENGTH, "big")
-    utils.memcpy(buffer, buffer_offset, session_id_bytes, 0)
-
-
-def _encode_message_type_into_buffer(
-    buffer: AnyBuffer, message_type: int, offset: int = 0
-) -> None:
-    msg_type_bytes = int.to_bytes(message_type, MESSAGE_TYPE_LENGTH, "big")
-    utils.memcpy(buffer, offset, msg_type_bytes, 0)
-
-
-def _encode_message_into_buffer(
-    buffer: AnyBuffer, message: protobuf.MessageType, buffer_offset: int = 0
-) -> None:
-    protobuf.encode(memoryview(buffer[buffer_offset:]), message)
+    return APP_HEADER_LEN + msg_size
