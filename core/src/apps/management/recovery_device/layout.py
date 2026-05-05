@@ -281,12 +281,14 @@ class _DisplayHandler:
 if not utils.USE_N4W1:
 
     async def choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
-        from trezor.enums import BackupMethod
 
-        if method is not BackupMethod.Display and __debug__:
-            from trezor import log
+        if __debug__:
+            from trezor.enums import BackupMethod
 
-            log.warning(__name__, "Unsupported backup method: %s", method)
+            if method not in (None, BackupMethod.Display):
+                from trezor import log
+
+                log.warning(__name__, "Unsupported backup method: %s", method)
 
         return _DisplayHandler
 
