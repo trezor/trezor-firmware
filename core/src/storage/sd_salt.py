@@ -83,10 +83,10 @@ def load_sd_salt() -> bytearray | None:
         # No valid salt file on this SD card.
         raise WrongSdCard
 
-    # Normal salt file does not exist, but new salt file exists. That means that
-    # SD salt regeneration was interrupted earlier. Bring into consistent state.
-    # TODO Possibly overwrite salt file with random data.
+    # Normal salt file is no longer valid or does not exist, but new salt file exists. Meaning
+    # that SD salt regeneration was interrupted earlier. Bring into consistent state.
     try:
+        # No need to overwrite the salt file before unlinking, see commit_sd_salt().
         fatfs.unlink(salt_path)
     except fatfs.FatFSError:
         pass
@@ -112,6 +112,12 @@ def commit_sd_salt() -> None:
     salt_path = _get_salt_path(new=False)
     new_salt_path = _get_salt_path(new=True)
 
+    # No need to overwrite the old salt with random data before unlinking:
+    # A recovered old salt is useless because changing the SD salt zeroes out the old EDEK in
+    # internal storage, rendering data encrypted under the old salt unrecoverable. The threat
+    # model for regenerating the SD salt is that it has already leaked, not that it might be
+    # forensically recovered from the card later. If it has leaked, the only meaningful
+    # response is securely wiping the EDEK.
     try:
         fatfs.unlink(salt_path)
     except fatfs.FatFSError:
@@ -122,5 +128,5 @@ def commit_sd_salt() -> None:
 @with_filesystem
 def remove_sd_salt() -> None:
     salt_path = _get_salt_path()
-    # TODO Possibly overwrite salt file with random data.
+    # No need to overwrite the salt file before unlinking, see commit_sd_salt().
     fatfs.unlink(salt_path)
