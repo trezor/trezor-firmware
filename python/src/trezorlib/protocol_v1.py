@@ -359,6 +359,7 @@ def probe(
     if isinstance(resp, messages.Failure):
         if resp.code == messages.FailureType.InvalidProtocol:
             return False
+    sync_responses(transport, mapping=mapping, _cancel=False)
     return True
 
 
@@ -368,11 +369,13 @@ def sync_responses(
     *,
     mapping: ProtobufMapping = mapping.DEFAULT_MAPPING,
     retries: int = 10,
+    _cancel: bool = True,
 ) -> None:
     """Sync responses from the transport."""
     # cancel anything on screen -- on T1B1 this is the only way to exit e.g. a PIN prompt.
-    cancel_msg = mapping.encode(messages.Cancel())
-    write(transport, *cancel_msg)
+    if _cancel:
+        cancel_msg = mapping.encode(messages.Cancel())
+        write(transport, *cancel_msg)
 
     # prepare an unique message to wait for
     sync_string = "SYNC" + secrets.token_hex(8)
