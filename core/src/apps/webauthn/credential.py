@@ -6,6 +6,7 @@ from ubinascii import hexlify
 import storage.device as storage_device
 from trezor import utils
 from trezor.crypto import (
+    AuthenticationError,
     chacha20poly1305_decrypt,
     chacha20poly1305_encrypt,
     der,
@@ -213,7 +214,7 @@ class Fido2Credential(Credential):
         data = ctx.decrypt(ciphertext)
         try:
             ctx.finish(tag)
-        except RuntimeError:
+        except AuthenticationError:
             raise ValueError  # inauthentic ciphertext
 
         try:

@@ -258,6 +258,13 @@ class chacha20poly1305_decrypt:
         """
 
 
+# upymod/modtrezorcrypto/modtrezorcrypto-common.h
+class AuthenticationError(Exception):
+    """
+    Authentication failed.
+    """
+
+
 # upymod/modtrezorcrypto/modtrezorcrypto-groestl.h
 class groestl512:
     """

@@ -1,4 +1,5 @@
 from trezorcrypto import (  # noqa: F401
+    AuthenticationError,
     aes,
     bip32,
     bip39,

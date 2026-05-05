@@ -1,7 +1,11 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import chacha20poly1305_decrypt, chacha20poly1305_encrypt
+from trezor.crypto import (
+    AuthenticationError,
+    chacha20poly1305_decrypt,
+    chacha20poly1305_encrypt,
+)
 
 
 class TestCryptoChaCha20Poly1305(unittest.TestCase):
@@ -92,7 +96,7 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
             ctx = chacha20poly1305_decrypt(key, nonce)
             ctx.auth(aad)
             ctx.decrypt(ciphertext)
-            with self.assertRaises(RuntimeError) as e:
+            with self.assertRaises(AuthenticationError) as e:
                 ctx.finish(invalid_mac)
             self.assertEqual(e.value.value, "Authentication failed.")
 

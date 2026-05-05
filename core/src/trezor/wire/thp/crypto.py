@@ -1,6 +1,13 @@
 import ustruct
 from micropython import const
-from trezorcrypto import aesgcm_decrypt, aesgcm_encrypt, bip32, curve25519, hmac
+from trezorcrypto import (
+    AuthenticationError,
+    aesgcm_decrypt,
+    aesgcm_encrypt,
+    bip32,
+    curve25519,
+    hmac,
+)
 from typing import TYPE_CHECKING
 
 from storage import device
@@ -55,7 +62,7 @@ def dec(
     aes_ctx.decrypt_in_place(buffer)
     try:
         aes_ctx.finish(tag)
-    except RuntimeError:
+    except AuthenticationError:
         return False
     return True
 
@@ -162,7 +169,7 @@ class Handshake:
         ]
         try:
             aes_ctx.finish(encrypted_host_static_public_key[-16:])
-        except RuntimeError:
+        except AuthenticationError:
             raise ThpDecryptionError()
 
         self.ck, self.k = _hkdf(
@@ -181,7 +188,7 @@ class Handshake:
             )
         try:
             aes_ctx.finish(encrypted_payload[-16:])
-        except RuntimeError:
+        except AuthenticationError:
             raise ThpDecryptionError()
 
         self.key_receive, self.key_send = _hkdf(self.ck, b"")

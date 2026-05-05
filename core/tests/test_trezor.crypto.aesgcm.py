@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import aesgcm_decrypt, aesgcm_encrypt
+from trezor.crypto import AuthenticationError, aesgcm_decrypt, aesgcm_encrypt
 
 
 class TestCryptoAes(unittest.TestCase):
@@ -171,7 +171,7 @@ class TestCryptoAes(unittest.TestCase):
             self.assertEqual(ctx.decrypt(ct), pt)
 
             # Try finishing the decryption with an invalid tag
-            with self.assertRaises(RuntimeError) as e:
+            with self.assertRaises(AuthenticationError) as e:
                 ctx.finish(invalid_tag)
             self.assertEqual(
                 e.value.value,

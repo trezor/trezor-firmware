@@ -1,4 +1,8 @@
-from trezor.crypto import chacha20poly1305_decrypt, chacha20poly1305_encrypt
+from trezor.crypto import (
+    AuthenticationError,
+    chacha20poly1305_decrypt,
+    chacha20poly1305_encrypt,
+)
 
 
 def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
@@ -33,7 +37,7 @@ def _decrypt(
     plaintext = cipher.decrypt(ciphertext)
     try:
         cipher.finish(exp_tag)
-    except RuntimeError:
+    except AuthenticationError:
         raise ValueError("tag invalid")
 
     return plaintext
