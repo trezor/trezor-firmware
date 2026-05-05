@@ -165,16 +165,21 @@ def parse_uint256_array(raw_data: memoryview) -> list[Value]:
 DYNAMIC_DATA_PARSERS = [parse_bytes, parse_string, parse_uint256_array]
 
 
-def _get_parser(t: int) -> Parser:
-    """Get a parser for a type we received over the wire protocol."""
+def _get_parser(t: int, is_dynamic: bool) -> Parser:
+    """Get a parser for a type we received over the wire protocol.
+    `is_dynamic` selects whether the type is being used in a dynamic
+    (variable-length) or atomic (32-byte) context, and must match the type."""
     from trezor.enums import EthereumABIType as T
+
+    if is_dynamic:
+        if t == T.ABI_BYTES:
+            return parse_bytes
+        elif t == T.ABI_STRING:
+            return parse_string
+        raise InvalidFormatDefinition
 
     if t == T.ABI_ADDRESS:
         return parse_address
-    elif t == T.ABI_BYTES:
-        return parse_bytes
-    elif t == T.ABI_STRING:
-        return parse_string
     elif t == T.ABI_UINT256:
         return parse_uint256
     elif t == T.ABI_UINT248:
@@ -213,9 +218,9 @@ def _get_parser(t: int) -> Parser:
 def _get_leaf_parser(info: EthereumABIValueInfo) -> Parser:
     """Get a parser for a leaf (atomic or dynamic) value. Raises for nested structures."""
     if info.atomic is not None:
-        return _get_parser(info.atomic)
+        return _get_parser(info.atomic, is_dynamic=False)
     elif info.dynamic is not None:
-        return _get_parser(info.dynamic)
+        return _get_parser(info.dynamic, is_dynamic=True)
     raise InvalidFormatDefinition
 
 
@@ -408,9 +413,9 @@ class ABIValue:
     @staticmethod
     def from_proto(info: EthereumABIValueInfo) -> "ABIValue":
         if info.atomic is not None:
-            return Atomic(_get_parser(info.atomic))
+            return Atomic(_get_parser(info.atomic, is_dynamic=False))
         elif info.dynamic is not None:
-            return Dynamic(_get_parser(info.dynamic))
+            return Dynamic(_get_parser(info.dynamic, is_dynamic=True))
         elif info.tuple is not None:
             return Tuple(
                 tuple(_get_leaf_parser(f) for f in info.tuple.fields),
@@ -419,9 +424,9 @@ class ABIValue:
         elif info.array is not None:
             element = info.array
             if element.atomic is not None:
-                return Array(Atomic(_get_parser(element.atomic)))
+                return Array(Atomic(_get_parser(element.atomic, is_dynamic=False)))
             elif element.dynamic is not None:
-                return Array(Dynamic(_get_parser(element.dynamic)))
+                return Array(Dynamic(_get_parser(element.dynamic, is_dynamic=True)))
             elif element.tuple is not None:
                 return Array(
                     Tuple(
