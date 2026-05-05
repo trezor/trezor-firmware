@@ -5972,6 +5972,7 @@ class EvoluRegistrationRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("certificate_chain", "bytes", repeated=True, required=False, default=None),
         2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        3: protobuf.Field("rotation_index", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5979,9 +5980,11 @@ class EvoluRegistrationRequest(protobuf.MessageType):
         *,
         signature: "bytes",
         certificate_chain: Optional[Sequence["bytes"]] = None,
+        rotation_index: Optional["int"] = None,
     ) -> None:
         self.certificate_chain: Sequence["bytes"] = certificate_chain if certificate_chain is not None else []
         self.signature = signature
+        self.rotation_index = rotation_index
 
 
 class EvoluGetDelegatedIdentityKey(protobuf.MessageType):

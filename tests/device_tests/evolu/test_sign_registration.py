@@ -23,6 +23,20 @@ def signing_buffer(private_key: bytes, challenge: bytes, size: int) -> bytes:
     return b"".join((compact_size(len(comp)) + comp) for comp in components)
 
 
+def signing_buffer_more_indices(
+    private_key: bytes, rotation_index: int, challenge: bytes, size: int
+) -> bytes:
+    public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
+    components = [
+        b"EvoluSignRegistrationRequestV1:",
+        public_key.to_string("uncompressed"),
+        rotation_index.to_bytes(4, "big"),
+        challenge,
+        size.to_bytes(4, "big"),
+    ]
+    return b"".join((compact_size(len(comp)) + comp) for comp in components)
+
+
 def optiga_unavailable(client: Client) -> bool:
     """Check if Optiga is unavailable from the presence of its security counter."""
     return client.features.optiga_sec is None
@@ -238,7 +252,19 @@ def test_evolu_sign_request_with_different_rotation_indices(
         proof=proof,
     )
 
-    data = signing_buffer(delegated_identity_key, challenge, size)
+    if (rotation_index or 0) == 0:
+        data = signing_buffer(delegated_identity_key, challenge, size)
+    else:
+        data = signing_buffer_more_indices(
+            delegated_identity_key, rotation_index, challenge, size
+        )
+
     check_signature_optiga(
         response.signature, response.certificate_chain, client.model, data
     )
+
+    if rotation_index is None:
+        assert response.rotation_index is None
+    else:
+        assert response.rotation_index is not None
+        assert response.rotation_index == rotation_index
