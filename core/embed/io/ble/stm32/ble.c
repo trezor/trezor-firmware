@@ -28,12 +28,15 @@
 #include <io/ble.h>
 #include <io/nrf.h>
 #include <io/tsqueue.h>
-#include <sec/backup_ram.h>
 #include <sec/unit_properties.h>
 #include <sys/irq.h>
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
+
+#ifdef USE_BACKUP_RAM
+#include <sec/backup_ram.h>
+#endif
 
 #ifdef USE_POWER_MANAGER
 #include <io/power_manager.h>
@@ -666,6 +669,7 @@ bool ble_init(void) {
   }
 
   drv->enabled = true;
+#ifdef USE_BACKUP_RAM
   ble_recovery_data_t backup_data;
   if (backup_ram_read(BACKUP_RAM_KEY_BLE_SETTINGS, &backup_data,
                       sizeof(backup_data), NULL)) {
@@ -673,6 +677,7 @@ bool ble_init(void) {
       drv->enabled = backup_data.enabled;
     }
   }
+#endif
 
   drv->power_level = BLE_TX_POWER_PLUS_4_DBM;
   drv->initialized = true;
@@ -1374,10 +1379,12 @@ void ble_set_enabled(bool enabled) {
 
   drv->enabled = enabled;
 
+#ifdef USE_BACKUP_RAM
   ble_recovery_data_t data = {.version = 1, .enabled = enabled};
 
   backup_ram_write(BACKUP_RAM_KEY_BLE_SETTINGS, BACKUP_RAM_ITEM_PROTECTED,
                    &data, sizeof(data));
+#endif
 }
 
 bool ble_get_enabled(void) {

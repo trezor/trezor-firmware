@@ -190,7 +190,7 @@ void nrf_init(void) {
   EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
   EXTI_Config.Trigger = EXTI_TRIGGER_RISING;
   HAL_EXTI_SetConfigLine(&drv->exti, &EXTI_Config);
-  __HAL_GPIO_EXTI_CLEAR_FLAG(NRF_EXTI_INTERRUPT_PIN);
+  __HAL_GPIO_EXTI_CLEAR_IT(NRF_EXTI_INTERRUPT_PIN);
 
 #ifdef USE_SMP
   nrf_uart_init(drv);
@@ -208,15 +208,15 @@ void nrf_init(void) {
   nrf_start();
 
 #ifdef USE_SMP
-  NVIC_SetPriority(USART3_IRQn, IRQ_PRI_NORMAL);
-  NVIC_EnableIRQ(USART3_IRQn);
+  NVIC_SetPriority(NRF_UART_IRQN, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(NRF_UART_IRQN);
 #endif
   NVIC_SetPriority(GPDMA1_Channel1_IRQn, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(GPDMA1_Channel1_IRQn);
   NVIC_SetPriority(GPDMA1_Channel2_IRQn, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(GPDMA1_Channel2_IRQn);
-  NVIC_SetPriority(SPI1_IRQn, IRQ_PRI_NORMAL);
-  NVIC_EnableIRQ(SPI1_IRQn);
+  NVIC_SetPriority(NRF_SPI_IRQN, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(NRF_SPI_IRQN);
   NVIC_SetPriority(NRF_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(NRF_EXTI_INTERRUPT_NUM);
 
@@ -232,11 +232,11 @@ static void nrf_deinit_common(nrf_driver_t *drv) {
   systimer_delete(drv->timer);
 
 #ifdef USE_SMP
-  NVIC_DisableIRQ(USART3_IRQn);
+  NVIC_DisableIRQ(NRF_UART_IRQN);
 #endif
   NVIC_DisableIRQ(GPDMA1_Channel1_IRQn);
   NVIC_DisableIRQ(GPDMA1_Channel2_IRQn);
-  NVIC_DisableIRQ(SPI1_IRQn);
+  NVIC_DisableIRQ(NRF_SPI_IRQN);
 
   HAL_GPIO_DeInit(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN);
   HAL_GPIO_DeInit(NRF_OUT_SPI_READY_PORT, NRF_OUT_SPI_READY_PIN);
@@ -309,11 +309,11 @@ void nrf_resume(void) {
   nrf_spi_init(drv);
 
 #ifdef USE_SMP
-  NVIC_EnableIRQ(USART3_IRQn);
+  NVIC_EnableIRQ(NRF_UART_IRQN);
 #endif
   NVIC_EnableIRQ(GPDMA1_Channel1_IRQn);
   NVIC_EnableIRQ(GPDMA1_Channel2_IRQn);
-  NVIC_EnableIRQ(SPI1_IRQn);
+  NVIC_EnableIRQ(NRF_SPI_IRQN);
 
   nrf_start();
 
@@ -392,7 +392,7 @@ void NRF_EXTI_INTERRUPT_HANDLER(void) {
     }
   }
   // Clear the EXTI line pending bit
-  __HAL_GPIO_EXTI_CLEAR_FLAG(NRF_EXTI_INTERRUPT_PIN);
+  __HAL_GPIO_EXTI_CLEAR_IT(NRF_EXTI_INTERRUPT_PIN);
 
   mpu_restore(mpu_mode);
   IRQ_LOG_EXIT();
