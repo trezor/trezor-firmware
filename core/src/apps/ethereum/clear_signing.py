@@ -971,18 +971,18 @@ async def _handle_transfer(
     if len(args) != 2 or len(fields) != 2:
         raise InvalidFormatDefinition
 
-    (arg0_name, recipient_addr, _), _, _ = fields[0]
-    if arg0_name != "To":
+    (field0_name, recipient_addr, _), _, _ = fields[0]
+    if field0_name != "To":
         raise InvalidFormatDefinition
 
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
-    assert isinstance(arg1_raw_value, int)
-    (arg1_name, value, _), actual_token, _ = fields[1]
-    if arg1_name != "Amount":
+    (field1_name, value, _), actual_token, _ = fields[1]
+    if field1_name != "Amount":
         raise InvalidFormatDefinition
 
+    assert isinstance(arg1_raw_value, int)
     assert isinstance(value, str)
 
     if payment_request_verifier:
