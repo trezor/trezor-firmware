@@ -49,7 +49,7 @@ pub fn render_loader_indeterminate<'s>(
 
 fn progress_to_ratio(progress: u16) -> f32 {
     // convert to ratio from 0.0 to 1.0
-    (progress as f32 / 1000.0).clamp(0.0, 1.0)
+    (f32::from(progress) / 1000.0).clamp(0.0, 1.0)
 }
 
 fn get_clips_indeterminate(progress_ratio: f32) -> (Rect, Rect) {
@@ -133,7 +133,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         const PROGRESS_START: f32 = 0.0;
         const FULL_WIDTH: i16 = 190;
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
-        let width = ((1.0 - progress) * FULL_WIDTH as f32) as i16;
+        let width = ((1.0 - progress) * f32::from(FULL_WIDTH)) as i16;
         Rect::snap(
             SCREEN.top_right(),
             Offset::new(width, ScreenBorder::TOP_ARC_HEIGHT),
@@ -146,7 +146,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         const PROGRESS_START: f32 = 0.11;
         const FULL_HEIGHT: i16 = SCREEN.height() - ScreenBorder::TOP_ARC_HEIGHT;
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
-        let height = ((1.0 - progress) * FULL_HEIGHT as f32) as i16;
+        let height = ((1.0 - progress) * f32::from(FULL_HEIGHT)) as i16;
         Rect::snap(
             SCREEN.bottom_right(),
             Offset::new(ICON_BORDER_BR.toif.width(), height),
@@ -160,7 +160,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         const FULL_WIDTH: i16 =
             SCREEN.width() - ICON_BORDER_BL.toif.width() - ICON_BORDER_BR.toif.width();
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
-        let width = ((1.0 - progress) * FULL_WIDTH as f32) as i16;
+        let width = ((1.0 - progress) * f32::from(FULL_WIDTH)) as i16;
         Rect::snap(
             SCREEN.bottom_left() + Offset::x(ICON_BORDER_BL.toif.width()),
             Offset::new(width, ScreenBorder::WIDTH),
@@ -173,7 +173,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         const PROGRESS_START: f32 = 0.59;
         const FULL_HEIGHT: i16 = SCREEN.height() - ScreenBorder::TOP_ARC_HEIGHT;
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
-        let height = ((1.0 - progress) * FULL_HEIGHT as f32) as i16;
+        let height = ((1.0 - progress) * f32::from(FULL_HEIGHT)) as i16;
         Rect::snap(
             SCREEN.top_left() + Offset::y(ScreenBorder::TOP_ARC_HEIGHT),
             Offset::new(ICON_BORDER_BL.toif.width(), height),
@@ -186,7 +186,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         const PROGRESS_START: f32 = 0.89;
         const FULL_WIDTH: i16 = 190;
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
-        let width = ((1.0 - progress) * FULL_WIDTH as f32) as i16;
+        let width = ((1.0 - progress) * f32::from(FULL_WIDTH)) as i16;
         Rect::snap(
             SCREEN.top_center(),
             Offset::new(width, ScreenBorder::TOP_ARC_HEIGHT),

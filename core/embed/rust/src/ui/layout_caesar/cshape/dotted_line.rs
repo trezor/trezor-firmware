@@ -50,7 +50,7 @@ impl HorizontalLine {
 
 impl<'s> Shape<'s> for HorizontalLine {
     fn bounds(&self) -> Rect {
-        let size = Offset::new(self.length, self.thickness as i16);
+        let size = Offset::new(self.length, i16::from(self.thickness));
         Rect::from_top_left_and_size(self.pos, size)
     }
 
@@ -59,12 +59,12 @@ impl<'s> Shape<'s> for HorizontalLine {
     fn draw(&mut self, canvas: &mut dyn Canvas, _cache: &DrawingCache) {
         if self.step <= self.thickness {
             // Solid line
-            let size = Offset::new(self.length, self.thickness as i16);
+            let size = Offset::new(self.length, i16::from(self.thickness));
             let r = Rect::from_top_left_and_size(self.pos, size);
             canvas.fill_rect(r, self.color, 255);
         } else {
             // Dotted line
-            let thickness = self.thickness as i16;
+            let thickness = i16::from(self.thickness);
             for x in (0..self.length - thickness).step_by(self.step as usize) {
                 let r = Rect::from_top_left_and_size(
                     self.pos + Offset::x(x),

@@ -550,7 +550,7 @@ impl Input {
         }
 
         let visible_len = pp_len.min(max_dots);
-        let visible_icons = visible_len - last_char as usize;
+        let visible_icons = visible_len - usize::from(last_char);
 
         // Jiggle when overflowed
         if pp_len > visible_len && pp_len % 2 == 1 && self.display_style != DisplayStyle::Shown {

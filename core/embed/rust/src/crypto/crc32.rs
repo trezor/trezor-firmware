@@ -14,7 +14,7 @@ impl Crc32 {
 
     pub fn update(mut self, data: &[u8]) -> Self {
         for b in data {
-            self.value ^= *b as u32;
+            self.value ^= u32::from(*b);
             self.value = CRC32TAB[(self.value & 0x0f) as usize] ^ (self.value >> 4);
             self.value = CRC32TAB[(self.value & 0x0f) as usize] ^ (self.value >> 4);
         }

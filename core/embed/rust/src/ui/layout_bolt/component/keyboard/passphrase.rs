@@ -445,7 +445,7 @@ impl Input {
 
         Bar::new(self.shown_area)
             .with_bg(theme::GREY_DARK)
-            .with_radius(theme::RADIUS as i16)
+            .with_radius(theme::RADIUS.into())
             .render(target);
 
         TextLayout::new(Self::STYLE)
@@ -472,7 +472,7 @@ impl Input {
         let asterisk_width = style.text_font.char_width('*').max(1);
         let max_visible = (available_width / asterisk_width).max(1) as usize;
         let visible_count = pp_len.min(max_visible);
-        let asterisk_count = visible_count.saturating_sub(last_char_visible as usize);
+        let asterisk_count = visible_count.saturating_sub(last_char_visible.into());
 
         // Build asterisks string
         let mut asterisks = ShortString::new();

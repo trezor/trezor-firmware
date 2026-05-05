@@ -83,7 +83,7 @@ impl UIDelizia {
             let center_text_offset: i16 = 10;
             let center = SCREEN.center() + Offset::y(loader_offset);
             let inactive_color = bg_color.blend(fg_color, 85);
-            let end = 360.0 * progress as f32 / 1000.0;
+            let end = 360.0 * f32::from(progress) / 1000.0;
 
             render_loader(
                 center,
@@ -157,7 +157,7 @@ impl BootloaderUI for UIDelizia {
             // in practice, restart_seconds is 5 or less so this is fine
             let seconds_char = b'0' + restart_seconds % 10;
             unwrap!(reboot_msg.push(seconds_char as char));
-            let progress = (5 - (restart_seconds as u16)).clamp(0, 5) * 200;
+            let progress = (5 - u16::from(restart_seconds)).clamp(0, 5) * 200;
 
             Self::screen_progress(
                 "Restarting device",

@@ -196,7 +196,7 @@ impl<'a> Component for Footer<'a> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let progress = self.progress as f32 / 1000.0;
+        let progress = f32::from(self.progress) / 1000.0;
 
         let shift = pareen::constant(0.0).seq_ease_out(
             0.0,

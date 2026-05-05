@@ -919,7 +919,7 @@ impl crate::trace::Trace for ButtonDetails {
             }
         }
         if let Some(duration) = &self.duration {
-            t.int("hold_to_confirm", duration.to_millis() as i64);
+            t.int("hold_to_confirm", i64::from(duration.to_millis()));
         }
     }
 }

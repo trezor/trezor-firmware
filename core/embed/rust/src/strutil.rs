@@ -60,7 +60,7 @@ pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {
 /// Example: code=123, width=6 produces "0 0 0   1 2 3"
 pub fn format_pairing_code(code: u32, width: usize) -> ShortString {
     let mut buf = [0; 20];
-    let code_str = unwrap!(format_i64(code as _, &mut buf));
+    let code_str = unwrap!(format_i64(code.into(), &mut buf));
 
     let mut formatted_code = ShortString::new();
     let padding = width.saturating_sub(code_str.len());

@@ -200,7 +200,7 @@ fn get_buffer_info(obj: Obj, flags: u32) -> Result<ffi::mp_buffer_info_t, Error>
     // `bufinfo.buf` contains a pointer to data of `bufinfo.len` bytes.
     // EXCEPTION: Does not raise for Micropython's builtin types, and we don't
     // implement custom buffer protocols.
-    if unsafe { ffi::mp_get_buffer(obj, &mut bufinfo, flags as _) } {
+    if unsafe { ffi::mp_get_buffer(obj, &mut bufinfo, flags.into()) } {
         Ok(bufinfo)
     } else {
         Err(Error::TypeError)

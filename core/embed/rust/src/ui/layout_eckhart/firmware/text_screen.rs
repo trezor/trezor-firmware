@@ -400,9 +400,9 @@ where
             t.child("ActionBar", ab);
         }
         if let Some(page_limit) = self.page_limit {
-            t.int("page_limit", page_limit as i64);
+            t.int("page_limit", i64::from(page_limit));
         }
-        t.int("page_count", self.content.pager().total() as i64);
+        t.int("page_count", i64::from(self.content.pager().total()));
 
         debug_assert!(!(self.external_menu && self.has_flow_menu));
         t.bool("has_menu", self.external_menu);

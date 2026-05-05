@@ -348,7 +348,7 @@ impl TryFrom<(Obj, Obj, Obj)> for Obj {
 impl From<u8> for Obj {
     fn from(val: u8) -> Self {
         // `u8` will fit into smallint so no error should happen here.
-        Obj::small_int(val as u16)
+        Obj::small_int(u16::from(val))
     }
 }
 

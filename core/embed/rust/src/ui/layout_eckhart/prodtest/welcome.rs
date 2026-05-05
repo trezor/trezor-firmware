@@ -218,7 +218,7 @@ impl Component for Welcome {
         self.screen_border.render(u8::MAX, target);
 
         let mut buf = [0; 20];
-        let text = unwrap!(format_i64(soc() as _, &mut buf));
+        let text = unwrap!(format_i64(soc().into(), &mut buf));
 
         shape::Text::new(
             screen().center(),
