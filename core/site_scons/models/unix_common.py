@@ -47,6 +47,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/time_estimate/unix/time_estimate.c",
         "embed/sec/trustzone/unix/tz_init.c",
         "embed/sec/unit_properties/unix/unit_properties.c",
+        "embed/sys/bsp/unix/profile.c",
         "embed/sys/cpuid/unix/cpuid.c",
         "embed/sys/flash/unix/flash.c",
         "embed/sys/flash/unix/flash_otp.c",
