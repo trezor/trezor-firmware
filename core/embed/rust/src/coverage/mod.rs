@@ -2,8 +2,9 @@
 use heapless::index_map::{Entry, FnvIndexMap};
 use spin::RwLock;
 
-use crate::{error::Error, micropython::qstr::Qstr};
+use crate::micropython::qstr::Qstr;
 use micropython::{
+    error::Error,
     list::List,
     macros::{obj_fn_0, obj_fn_2, obj_module},
     module::Module,
