@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 #![deny(clippy::all)]
+#![warn(clippy::cast_lossless)]
 #![allow(clippy::new_without_default)]
 #![allow(clippy::ptr_offset_with_cast)] // workaround https://github.com/rust-lang/rust-bindgen/issues/3053
 #![deny(unsafe_op_in_unsafe_fn)]
