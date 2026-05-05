@@ -58,6 +58,14 @@ impl Trezor {
         self.transport.read_message().map_err(Error::TransportReceiveMessage)
     }
 
+    /// Sends a message without waiting for a response.
+    /// Useful for fire-and-forget debug messages such as `DebugLinkDecision`, which the
+    /// firmware may not reply to.
+    pub fn send_message<S: TrezorMessage>(&mut self, message: S) -> Result<()> {
+        let proto_msg = ProtoMessage(S::MESSAGE_TYPE, message.write_to_bytes()?);
+        self.transport.write_message(proto_msg).map_err(Error::TransportSendMessage)
+    }
+
     /// Sends a message and returns a TrezorResponse with either the expected response message,
     /// a failure or an interaction request.
     /// This method is only exported for users that want to expand the features of this library

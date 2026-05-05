@@ -136,11 +136,25 @@ pub fn unique(debug: bool) -> Result<Trezor> {
 
 #[cfg(test)]
 mod tests {
-    use serial_test::serial;
-    use std::str::FromStr;
+    use std::{
+        str::FromStr,
+        sync::{
+            atomic::{AtomicBool, Ordering},
+            Arc,
+        },
+        thread,
+    };
 
-    use crate::{client::handle_interaction, protos::IdentityType};
     use bitcoin::{bip32::DerivationPath, hex::FromHex};
+    use serial_test::serial;
+
+    use crate::{
+        client::handle_interaction,
+        protos::{
+            debug_link_decision::DebugButton, DebugLinkDecision, DebugLinkGetState, DebugLinkState,
+            IdentityType,
+        },
+    };
 
     use super::*;
 
@@ -153,6 +167,40 @@ mod tests {
             .expect("Failed to connect to emulator");
         emulator.init_device(None).expect("Failed to intialize device");
         emulator
+    }
+
+    /// Spawn a background thread that continuously sends a "YES" decision to the debug link.
+    fn with_auto_approve<F, T>(f: F) -> T
+    where
+        F: FnOnce() -> T,
+    {
+        let mut debuglink = find_devices(true)
+            .into_iter()
+            .find(|t| t.model == Model::TrezorEmulator)
+            .expect("No debug emulator found")
+            .connect()
+            .expect("Failed to connect to debug emulator");
+
+        let stop = Arc::new(AtomicBool::new(false));
+        let stop_clone = stop.clone();
+
+        let mut req = DebugLinkDecision::new();
+        req.set_button(DebugButton::YES);
+
+        thread::scope(|scope| {
+            scope.spawn(move || {
+                while !stop_clone.load(Ordering::Relaxed) {
+                    // DebugLinkDecision has no response; send fire-and-forget then poll
+                    // state (which returns when the firmware has processed the decision).
+                    let _ = debuglink.send_message(req.clone());
+                    let _ = debuglink
+                        .call(DebugLinkGetState::new(), Box::new(|_, m: DebugLinkState| Ok(m)));
+                }
+            });
+            let res = f();
+            stop.store(true, Ordering::Relaxed);
+            res
+        })
     }
 
     #[test]
@@ -189,12 +237,9 @@ mod tests {
         assert_eq!(address.ok().unwrap().to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
     }
 
-    #[ignore]
     #[test]
     #[serial]
     fn test_ecdh_shared_secret() {
-        tracing_subscriber::fmt().with_max_level(tracing::Level::TRACE).init();
-
         let mut emulator = init_emulator();
         assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
 
@@ -208,11 +253,14 @@ mod tests {
 
         let peer_public_key = Vec::from_hex("0407f2c6e5becf3213c1d07df0cfbe8e39f70a8c643df7575e5c56859ec52c45ca950499c019719dae0fda04248d851e52cf9d66eeb211d89a77be40de22b6c89d").unwrap();
         let curve_name = "secp256k1".to_owned();
-        let response = handle_interaction(
-            emulator
-                .get_ecdh_session_key(ident, peer_public_key, curve_name)
-                .expect("Failed to get ECDH shared secret"),
-        )
+
+        let response = with_auto_approve(|| {
+            handle_interaction(
+                emulator
+                    .get_ecdh_session_key(ident, peer_public_key, curve_name)
+                    .expect("Failed to get ECDH shared secret"),
+            )
+        })
         .unwrap();
 
         let expected_session_key = Vec::from_hex("048125883b086746244b0d2c548860ecc723346e14c87e51dc7ba32791bc780d132dbd814fbee77134f318afac6ad6db3c5334efe6a8798628a1038195b96e82e2").unwrap();
@@ -222,5 +270,32 @@ mod tests {
             Vec::from_hex("032726ba71aa066b47fc0f90b389f8c3e02fe20b94c858395d71f260e9944e3c65")
                 .unwrap();
         assert_eq!(response.public_key(), &expected_public_key);
+    }
+
+    #[test]
+    #[serial]
+    fn test_ethereum_sign_tx_large() {
+        let mut emulator = init_emulator();
+        assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
+
+        let signature = with_auto_approve(|| {
+            emulator.ethereum_sign_tx(
+                // default ETH path
+                vec![44 + (1 << 31), 60 + (1 << 31), 0 + (1 << 31), 0, 0],
+                vec![],
+                vec![],
+                vec![],
+                "".to_string(),
+                vec![],
+                // 10kB of empty data
+                vec![0; 10 * 1024],
+                Some(1u64),
+            )
+        })
+        .unwrap();
+
+        assert_eq!(signature.r.len(), 32);
+        assert_eq!(signature.s.len(), 32);
+        assert_eq!(signature.v, 38);
     }
 }
