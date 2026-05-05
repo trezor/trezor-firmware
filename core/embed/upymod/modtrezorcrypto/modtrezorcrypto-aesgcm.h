@@ -23,6 +23,8 @@
 #include "consteq.h"
 #include "memzero.h"
 
+extern const mp_obj_type_t mp_type_AuthenticationError;
+
 /// package: trezorcrypto.__init__
 
 /// class aesgcm_encrypt:
@@ -273,7 +275,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt_finish(mp_obj_t self,
   }
 
   if (!consteq(tag.buf, exp_tag.buf, exp_tag.len)) {
-    mp_raise_msg(&mp_type_RuntimeError,
+    mp_raise_msg(&mp_type_AuthenticationError,
                  MP_ERROR_TEXT("Authentication failed."));
   }
 

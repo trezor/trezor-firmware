@@ -23,6 +23,8 @@
 #include "consteq.h"
 #include "memzero.h"
 
+extern const mp_obj_type_t mp_type_AuthenticationError;
+
 /// package: trezorcrypto.__init__
 
 /// class chacha20poly1305_encrypt:
@@ -198,7 +200,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish(
   rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
 
   if (!consteq(mac.buf, exp_mac.buf, exp_mac.len)) {
-    mp_raise_msg(&mp_type_RuntimeError,
+    mp_raise_msg(&mp_type_AuthenticationError,
                  MP_ERROR_TEXT("Authentication failed."));
   }
 
