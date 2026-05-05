@@ -4,7 +4,7 @@ from common import *  # isort:skip
 if not utils.BITCOIN_ONLY:
     import ubinascii
 
-    from trezor.crypto import chacha20poly1305
+    from trezor.crypto import chacha20poly1305_decrypt, chacha20poly1305_encrypt
 
     from apps.monero.signing import offloading_keys, step_09_sign_input
     from apps.monero.signing.state import State
@@ -68,17 +68,16 @@ class TestMoneroProto(unittest.TestCase):
 
         iv = offloading_keys.key_signature(mst, st.current_input_index, True)[:12]
         key = offloading_keys.key_signature(mst, st.current_input_index, False)
-        cipher = chacha20poly1305(key, iv)
+        cipher = chacha20poly1305_encrypt(key, iv)
         ciphertext = cipher.encrypt(b"".join(mg_buff_b))
         ciphertext += cipher.finish()
         self.assertEqual(b"".join(mg_res), ciphertext)
 
-        cipher = chacha20poly1305(key, iv)
+        cipher = chacha20poly1305_decrypt(key, iv)
         ciphertext = b"".join(mg_res)
         exp_tag, ciphertext = ciphertext[-16:], ciphertext[:-16]
         plaintext = cipher.decrypt(ciphertext)
-        tag = cipher.finish()
-        self.assertEqual(tag, exp_tag)
+        self.assertIsNone(cipher.finish(exp_tag))
         self.assertEqual(plaintext, b"".join(mg_buff_b))
 
 

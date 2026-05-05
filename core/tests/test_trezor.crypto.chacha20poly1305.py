@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import chacha20poly1305
+from trezor.crypto import chacha20poly1305_decrypt, chacha20poly1305_encrypt
 
 
 class TestCryptoChaCha20Poly1305(unittest.TestCase):
@@ -28,34 +28,73 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
     ]
 
     def test_chacha20_encrypt(self):
-        for plaintext, _, key, nonce, ciphertext, _ in self.vectors:
-            ctx = chacha20poly1305(unhexlify(key), unhexlify(nonce))
-            out = ctx.encrypt(unhexlify(plaintext))
-            self.assertEqual(out, unhexlify(ciphertext))
+        for vector in self.vectors:
+            plaintext, _, key, nonce, ciphertext, _ = map(unhexlify, vector)
+
+            ctx = chacha20poly1305_encrypt(key, nonce)
+            out = ctx.encrypt(plaintext)
+            self.assertEqual(out, ciphertext)
 
     def test_chacha20_decrypt(self):
-        for plaintext, _, key, nonce, ciphertext, _ in self.vectors:
-            ctx = chacha20poly1305(unhexlify(key), unhexlify(nonce))
-            out = ctx.encrypt(unhexlify(ciphertext))
-            self.assertEqual(out, unhexlify(plaintext))
+        for vector in self.vectors:
+            plaintext, _, key, nonce, ciphertext, _ = map(unhexlify, vector)
+            ctx = chacha20poly1305_decrypt(key, nonce)
+            out = ctx.decrypt(ciphertext)
+            self.assertEqual(out, plaintext)
 
     def test_chacha20poly1305_encrypt_mac(self):
-        for plaintext, aad, key, nonce, ciphertext, tag in self.vectors:
-            ctx = chacha20poly1305(unhexlify(key), unhexlify(nonce))
-            ctx.auth(unhexlify(aad))
-            out = ctx.encrypt(unhexlify(plaintext))
-            self.assertEqual(out, unhexlify(ciphertext))
+        for vector in self.vectors:
+            plaintext, aad, key, nonce, ciphertext, tag = map(unhexlify, vector)
+
+            ctx = chacha20poly1305_encrypt(key, nonce)
+            ctx.auth(aad)
+            out = ctx.encrypt(plaintext)
+            self.assertEqual(out, ciphertext)
             out = ctx.finish()
-            self.assertEqual(out, unhexlify(tag))
+            self.assertEqual(out, tag)
 
     def test_chacha20poly1305_decrypt_mac(self):
-        for plaintext, aad, key, nonce, ciphertext, tag in self.vectors:
-            ctx = chacha20poly1305(unhexlify(key), unhexlify(nonce))
-            ctx.auth(unhexlify(aad))
-            out = ctx.decrypt(unhexlify(ciphertext))
-            self.assertEqual(out, unhexlify(plaintext))
-            out = ctx.finish()
-            self.assertEqual(out, unhexlify(tag))
+        for vector in self.vectors:
+            plaintext, aad, key, nonce, ciphertext, tag = map(unhexlify, vector)
+
+            ctx = chacha20poly1305_decrypt(key, nonce)
+            ctx.auth(aad)
+            out = ctx.decrypt(ciphertext)
+            self.assertEqual(out, plaintext)
+            self.assertIsNone(ctx.finish(tag))
+
+    def test_chacha20poly1305_invalid_mac_len(self):
+        for vector in self.vectors:
+            _, aad, key, nonce, ciphertext, _mac = map(unhexlify, vector)
+            invalid_macs = [
+                b"",
+                b"\x00",
+                _mac[:15],
+                b"\x00" + _mac,
+                _mac + _mac,
+            ]
+            for mac in invalid_macs:
+                ctx = chacha20poly1305_decrypt(key, nonce)
+                ctx.auth(aad)
+                ctx.decrypt(ciphertext)
+                with self.assertRaises(ValueError) as e:
+                    ctx.finish(mac)
+                self.assertEqual(
+                    e.value.value,
+                    "Invalid length of the expected mac. It has to be 16 bytes.",
+                )
+
+    def test_chacha20poly1305_invalid_mac(self):
+        invalid_mac = b"\xab" * 16
+        for vector in self.vectors:
+            _, aad, key, nonce, ciphertext, _ = map(unhexlify, vector)
+
+            ctx = chacha20poly1305_decrypt(key, nonce)
+            ctx.auth(aad)
+            ctx.decrypt(ciphertext)
+            with self.assertRaises(RuntimeError) as e:
+                ctx.finish(invalid_mac)
+            self.assertEqual(e.value.value, "Authentication failed.")
 
 
 if __name__ == "__main__":

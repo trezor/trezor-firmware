@@ -1,4 +1,4 @@
-from trezor.crypto import chacha20poly1305 as ChaCha20Poly1305
+from trezor.crypto import chacha20poly1305_decrypt, chacha20poly1305_encrypt
 
 
 def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
@@ -8,7 +8,7 @@ def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
     from trezor.crypto import random
 
     nonce = random.bytes(12)
-    cipher = ChaCha20Poly1305(key, nonce)
+    cipher = chacha20poly1305_encrypt(key, nonce)
     if associated_data:
         cipher.auth(associated_data)
     ciphertext = cipher.encrypt(plaintext)
@@ -20,21 +20,20 @@ def _decrypt(
     key: bytes,
     iv: bytes,
     ciphertext: bytes,
-    tag: bytes | None = None,
     associated_data: bytes | None = None,
 ):
     """
     ChaCha20Poly1305 decryption
     """
-    from trezor.crypto import monero
 
-    cipher = ChaCha20Poly1305(key, iv)
+    cipher = chacha20poly1305_decrypt(key, iv)
     if associated_data:
         cipher.auth(associated_data)
     exp_tag, ciphertext = ciphertext[-16:], ciphertext[:-16]
     plaintext = cipher.decrypt(ciphertext)
-    tag = cipher.finish()
-    if not monero.ct_equals(tag, exp_tag):
+    try:
+        cipher.finish(exp_tag)
+    except RuntimeError:
         raise ValueError("tag invalid")
 
     return plaintext
@@ -47,4 +46,8 @@ def encrypt_pack(key: bytes, plaintext: bytes, associated_data: bytes | None = N
 
 def decrypt_pack(key: bytes, ciphertext: bytes):
     cp = memoryview(ciphertext)
-    return _decrypt(key, cp[:12], cp[12:], None)
+    return _decrypt(
+        key=key,
+        iv=cp[:12],
+        ciphertext=cp[12:],
+    )

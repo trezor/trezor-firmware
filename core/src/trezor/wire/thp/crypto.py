@@ -1,6 +1,6 @@
 import ustruct
 from micropython import const
-from trezorcrypto import aesgcm, bip32, curve25519, hmac
+from trezorcrypto import aesgcm_decrypt, aesgcm_encrypt, bip32, curve25519, hmac
 from typing import TYPE_CHECKING
 
 from storage import device
@@ -30,7 +30,7 @@ def enc(buffer: AnyBuffer, key: bytes, nonce: int, auth_data: bytes = b"") -> by
     if __debug__ and _TRACE:
         log.debug(__name__, "enc (key: %s, nonce: %d)", hexlify_if_bytes(key), nonce)
     iv = _get_iv_from_nonce(nonce)
-    aes_ctx = aesgcm(key, iv)
+    aes_ctx = aesgcm_encrypt(key, iv)
     aes_ctx.auth(auth_data)
     aes_ctx.encrypt_in_place(buffer)
     return aes_ctx.finish()
@@ -50,11 +50,14 @@ def dec(
     iv = _get_iv_from_nonce(nonce)
     if __debug__ and _TRACE:
         log.debug(__name__, "dec (key: %s, nonce: %d)", hexlify_if_bytes(key), nonce)
-    aes_ctx = aesgcm(key, iv)
+    aes_ctx = aesgcm_decrypt(key, iv)
     aes_ctx.auth(auth_data)
     aes_ctx.decrypt_in_place(buffer)
-    computed_tag = aes_ctx.finish()
-    return utils.consteq(computed_tag, tag)
+    try:
+        aes_ctx.finish(tag)
+    except RuntimeError:
+        return False
+    return True
 
 
 PROTOCOL_NAME = b"Noise_XX_25519_AESGCM_SHA256\x00\x00\x00\x00"
@@ -103,7 +106,7 @@ class Handshake:
         trezor_masked_static_public_key = curve25519.multiply(
             mask, trezor_static_public_key
         )
-        aes_ctx = aesgcm(self.k, IV_1)
+        aes_ctx = aesgcm_encrypt(self.k, IV_1)
         encrypted_trezor_static_public_key = aes_ctx.encrypt(
             trezor_masked_static_public_key
         )
@@ -126,7 +129,7 @@ class Handshake:
             trezor_static_private_key, host_ephemeral_public_key
         )
         self.ck, self.k = _hkdf(self.ck, curve25519.multiply(mask, point))
-        aes_ctx = aesgcm(self.k, IV_1)
+        aes_ctx = aesgcm_encrypt(self.k, IV_1)
         aes_ctx.auth(self.h)
         tag = aes_ctx.finish()
         self.h = _hash_of_two(self.h, tag)
@@ -138,7 +141,7 @@ class Handshake:
         encrypted_payload: AnyBuffer,
     ) -> None:
 
-        aes_ctx = aesgcm(self.k, IV_2)
+        aes_ctx = aesgcm_decrypt(self.k, IV_2)
 
         # The new value of hash `h` MUST be computed before the `encrypted_host_static_public_key` is decrypted.
         # However, decryption of `encrypted_host_static_public_key` MUST use the previous value of `h` for
@@ -157,8 +160,9 @@ class Handshake:
         host_static_public_key = memoryview(encrypted_host_static_public_key)[
             :PUBKEY_LENGTH
         ]
-        tag = aes_ctx.finish()
-        if not utils.consteq(tag, encrypted_host_static_public_key[-16:]):
+        try:
+            aes_ctx.finish(encrypted_host_static_public_key[-16:])
+        except RuntimeError:
             raise ThpDecryptionError()
 
         self.ck, self.k = _hkdf(
@@ -167,7 +171,7 @@ class Handshake:
                 self.trezor_ephemeral_private_key, host_static_public_key
             ),
         )
-        aes_ctx = aesgcm(self.k, IV_1)
+        aes_ctx = aesgcm_decrypt(self.k, IV_1)
         aes_ctx.auth(self.h)
         self.h = _hash_of_two(self.h, memoryview(encrypted_payload))
         aes_ctx.decrypt_in_place(memoryview(encrypted_payload)[:-16])
@@ -175,8 +179,9 @@ class Handshake:
             log.debug(
                 __name__, "th2 - dec (key: %s, nonce: %d)", hexlify_if_bytes(self.k), 0
             )
-        tag = aes_ctx.finish()
-        if not utils.consteq(tag, encrypted_payload[-16:]):
+        try:
+            aes_ctx.finish(encrypted_payload[-16:])
+        except RuntimeError:
             raise ThpDecryptionError()
 
         self.key_receive, self.key_send = _hkdf(self.ck, b"")
@@ -189,7 +194,7 @@ class Handshake:
             )
 
     def get_handshake_completion_response(self, trezor_state: bytes) -> bytes:
-        aes_ctx = aesgcm(self.key_send, IV_1)
+        aes_ctx = aesgcm_encrypt(self.key_send, IV_1)
         encrypted_trezor_state = aes_ctx.encrypt(trezor_state)
         tag = aes_ctx.finish()
         return encrypted_trezor_state + tag

@@ -7,15 +7,16 @@ from .common import format_float, maximum_used_memory_in_bytes, random_bytes
 if TYPE_CHECKING:
     from typing import Protocol
 
-    class CipherCtx(Protocol):
-        def encrypt(self, data: bytes) -> bytes: ...
-
+    class CipherCtxDecrypt(Protocol):
         def decrypt(self, data: bytes) -> bytes: ...
+
+    class CipherCtxEncrypt(Protocol):
+        def encrypt(self, data: bytes) -> bytes: ...
 
 
 class EncryptBenchmark:
     def __init__(
-        self, cipher_ctx_constructor: Callable[[], CipherCtx], block_size: int
+        self, cipher_ctx_constructor: Callable[[], CipherCtxEncrypt], block_size: int
     ) -> None:
         self.cipher_ctx_constructor = cipher_ctx_constructor
         self.block_size = block_size
@@ -43,7 +44,7 @@ class EncryptBenchmark:
 
 class DecryptBenchmark:
     def __init__(
-        self, cipher_ctx_constructor: Callable[[], CipherCtx], block_size: int
+        self, cipher_ctx_constructor: Callable[[], CipherCtxDecrypt], block_size: int
     ) -> None:
         self.cipher_ctx_constructor = cipher_ctx_constructor
         self.block_size = block_size
