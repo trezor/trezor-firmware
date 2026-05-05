@@ -88,7 +88,7 @@ impl UIBolt {
 
             let center = SCREEN.center() + Offset::y(-20);
             let inactive_color = bg_color.blend(fg_color, 85);
-            let end = 360.0 * progress as f32 / 1000.0;
+            let end = 360.0 * f32::from(progress) / 1000.0;
 
             render_loader(
                 center,

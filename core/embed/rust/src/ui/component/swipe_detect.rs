@@ -219,7 +219,7 @@ impl SwipeDetect {
     }
 
     fn progress(&self, val: u16) -> i16 {
-        ((val as f32 / Self::DISTANCE as f32) * Self::PROGRESS_MAX as f32) as i16
+        ((f32::from(val) / f32::from(Self::DISTANCE)) * f32::from(Self::PROGRESS_MAX)) as i16
     }
 
     fn eval_anim_frame(&mut self, ctx: &mut EventCtx) -> Option<SwipeEvent> {
@@ -372,7 +372,7 @@ impl SwipeDetect {
                     ctx.request_paint();
 
                     if !animation_disabled() {
-                        let done = self.moved as f32 / Self::PROGRESS_MAX as f32;
+                        let done = f32::from(self.moved) / f32::from(Self::PROGRESS_MAX);
                         let ratio = if final_value == 0 { done } else { 1.0 - done };
 
                         let duration = config

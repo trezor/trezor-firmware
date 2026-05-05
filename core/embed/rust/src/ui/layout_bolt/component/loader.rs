@@ -191,8 +191,8 @@ impl Component for Loader {
                         use crate::ui::lerp::Lerp;
 
                         if matches!(self.state, State::Growing(_)) {
-                            let progress =
-                                self.progress(now).unwrap() as f32 / display::LOADER_MAX as f32;
+                            let progress = f32::from(self.progress(now).unwrap())
+                                / f32::from(display::LOADER_MAX);
                             let ampl = i16::lerp(0, HAPTIC_AMPLITUDE_MAX_PCT, progress);
                             haptic::play_custom(ampl as i8, HAPTIC_AMPLITUDE_DURATION_MS);
                         }
@@ -240,7 +240,7 @@ impl Component for Loader {
                 active_color
             };
 
-            let end = 360.0 * progress as f32 / 1000.0;
+            let end = 360.0 * f32::from(progress) / 1000.0;
             let start = 0.0;
 
             render_loader(

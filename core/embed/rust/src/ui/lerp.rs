@@ -29,13 +29,13 @@ macro_rules! impl_lerp_for_signed {
     ($int: ident) => {
         impl Lerp for $int {
             fn lerp(a: Self, b: Self, t: f32) -> Self {
-                (a as f32 + t * (b - a) as f32) as Self
+                (f32::from(a) + t * f32::from(b - a)) as Self
             }
         }
 
         impl InvLerp for $int {
             fn inv_lerp(min: Self, max: Self, value: Self) -> f32 {
-                (value - min) as f32 / (max - min) as f32
+                f32::from(value - min) / f32::from(max - min)
             }
         }
     };
@@ -46,9 +46,9 @@ macro_rules! impl_lerp_for_unsigned {
         impl Lerp for $uint {
             fn lerp(a: Self, b: Self, t: f32) -> Self {
                 if a <= b {
-                    (a as f32 + t * (b - a) as f32) as Self
+                    (f32::from(a) + t * f32::from(b - a)) as Self
                 } else {
-                    (a as f32 - t * (a - b) as f32) as Self
+                    (f32::from(a) - t * f32::from(a - b)) as Self
                 }
             }
         }
@@ -56,9 +56,9 @@ macro_rules! impl_lerp_for_unsigned {
         impl InvLerp for $uint {
             fn inv_lerp(min: Self, max: Self, value: Self) -> f32 {
                 if min <= max {
-                    (value - min) as f32 / (max - min) as f32
+                    f32::from(value - min) / f32::from(max - min)
                 } else {
-                    (value - max) as f32 / (min - max) as f32
+                    f32::from(value - max) / f32::from(min - max)
                 }
             }
         }

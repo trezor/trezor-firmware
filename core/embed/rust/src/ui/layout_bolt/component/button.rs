@@ -185,7 +185,7 @@ impl Button {
                 .with_bg(style.button_color)
                 .with_fg(style.border_color)
                 .with_thickness(style.border_width)
-                .with_radius(style.border_radius as i16)
+                .with_radius(i16::from(style.border_radius))
                 .render(target),
         }
     }

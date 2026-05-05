@@ -76,12 +76,12 @@ impl Swipe {
     }
 
     fn ratio(&self, dist: i16) -> f32 {
-        (dist as f32 / Self::DISTANCE as f32).min(1.0)
+        (f32::from(dist) / Self::DISTANCE as f32).min(1.0)
     }
 
     fn backlight(&self, ratio: f32) {
-        let start = self.backlight_start as f32;
-        let end = self.backlight_end as f32;
+        let start = f32::from(self.backlight_start);
+        let end = f32::from(self.backlight_end);
         let value = start + ratio * (end - start);
         display::set_backlight(value as u8);
     }

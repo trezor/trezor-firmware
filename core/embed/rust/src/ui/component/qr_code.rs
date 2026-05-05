@@ -114,7 +114,7 @@ impl Component for Qr {
         if self.border > 0 {
             shape::Bar::new(qr_area.expand(self.border))
                 .with_bg(LIGHT)
-                .with_radius(CORNER_RADIUS as i16 + 1)
+                .with_radius(i16::from(CORNER_RADIUS) + 1)
                 .render(target);
         }
 

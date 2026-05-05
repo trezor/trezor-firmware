@@ -102,13 +102,13 @@ impl Color {
 
     #[cfg(feature = "ui_color_32bit")]
     pub fn to_u16(self) -> u16 {
-        (((self.r() & 0xF8) as u16) << 8)
-            | (((self.g() & 0xFC) as u16) << 3)
-            | ((self.b() & 0xF8) as u16 >> 3)
+        (u16::from(self.r() & 0xF8) << 8)
+            | (u16::from(self.g() & 0xFC) << 3)
+            | (u16::from(self.b() & 0xF8) >> 3)
     }
 
     pub fn to_u32(self) -> u32 {
-        ((self.r() as u32) << 16) | ((self.g() as u32) << 8) | (self.b() as u32) | 0xff000000
+        (u32::from(self.r()) << 16) | (u32::from(self.g()) << 8) | u32::from(self.b()) | 0xff000000
     }
 
     pub fn hi_byte(self) -> u8 {
@@ -147,11 +147,11 @@ impl Color {
     /// If `alpha` equals 0, the background color (`self`) is used.
     /// If `alpha` equals 255, the foreground color (`fg`) is used.
     pub fn blend(self, fg: Color, alpha: u8) -> Color {
-        let fg_mul = alpha as u16;
-        let bg_mul = (255 - alpha) as u16;
-        let r = (fg.r() as u16) * fg_mul + (self.r() as u16) * bg_mul;
-        let g = (fg.g() as u16) * fg_mul + (self.g() as u16) * bg_mul;
-        let b = (fg.b() as u16) * fg_mul + (self.b() as u16) * bg_mul;
+        let fg_mul = u16::from(alpha);
+        let bg_mul = u16::from(255 - alpha);
+        let r = u16::from(fg.r()) * fg_mul + u16::from(self.r()) * bg_mul;
+        let g = u16::from(fg.g()) * fg_mul + u16::from(self.g()) * bg_mul;
+        let b = u16::from(fg.b()) * fg_mul + u16::from(self.b()) * bg_mul;
         Color::rgb((r / 255) as u8, (g / 255) as u8, (b / 255) as u8)
     }
 }

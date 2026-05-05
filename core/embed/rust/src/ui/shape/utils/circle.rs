@@ -51,7 +51,7 @@ impl Iterator for CirclePoints {
             let mut item = CirclePointsItem {
                 u: self.u,
                 v: self.v,
-                frac: 255 - ((self.t1 as i32 * 255) / self.radius as i32) as u8,
+                frac: 255 - ((i32::from(self.t1) * 255) / i32::from(self.radius)) as u8,
                 first: self.first,
                 last: false,
             };

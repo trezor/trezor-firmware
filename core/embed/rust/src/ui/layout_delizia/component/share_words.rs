@@ -217,7 +217,7 @@ impl<'a> Component for ShareWords<'a> {
             target.in_clip(self.area_word, &|target| {
                 let bounds = target.viewport().clip;
                 let full_offset = dir.as_offset(bounds.size());
-                let current_offset = full_offset * (self.progress as f32 / 1000.0);
+                let current_offset = full_offset * (f32::from(self.progress) / 1000.0);
 
                 target.with_origin(current_offset, &|target| {
                     self.render_word(self.page_index, target, target.viewport().clip)

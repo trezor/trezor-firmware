@@ -265,7 +265,7 @@ impl AttachAnimation {
                 }
             }
             Event::Attach(AttachType::Resume) => {
-                let start_opacity = resume.opacity as f32 / 255.0;
+                let start_opacity = f32::from(resume.opacity) / 255.0;
                 let duration = start_opacity * Self::DURATION_MS as f32;
                 self.start_opacity = start_opacity;
                 self.duration = Duration::from_millis(duration as u32);

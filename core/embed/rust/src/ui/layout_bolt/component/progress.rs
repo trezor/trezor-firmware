@@ -105,11 +105,11 @@ impl Component for Progress {
         let range = if self.indeterminate {
             let start = (self.value as i16 - 100) % 1000;
             let end = (self.value as i16 + 100) % 1000;
-            let start = 360.0 * start as f32 / 1000.0;
-            let end = 360.0 * end as f32 / 1000.0;
+            let start = 360.0 * f32::from(start) / 1000.0;
+            let end = 360.0 * f32::from(end) / 1000.0;
             LoaderRange::FromTo(start, end)
         } else {
-            let end = 360.0 * self.value as f32 / 1000.0;
+            let end = 360.0 * f32::from(self.value) / 1000.0;
             if self.value >= LOADER_MAX {
                 LoaderRange::Full
             } else {

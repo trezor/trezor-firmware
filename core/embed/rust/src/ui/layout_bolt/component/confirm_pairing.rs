@@ -115,7 +115,7 @@ impl Component for ConfirmPairing<'_> {
         self.title.render(target);
 
         let mut buf = [0; 20];
-        let text = unwrap!(format_i64(self.code as _, &mut buf));
+        let text = unwrap!(format_i64(self.code.into(), &mut buf));
 
         shape::Text::new(CONTENT_AREA.left_center(), text, fonts::FONT_BOLD_UPPER)
             .with_fg(WHITE)

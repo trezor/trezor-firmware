@@ -383,7 +383,7 @@ impl PinInput {
         // Number of visible icons + characters
         let visible_len = pin_len.min(MAX_SHOWN_LEN);
         // Number of visible icons
-        let visible_icons = visible_len - last_digit as usize;
+        let visible_icons = visible_len - usize::from(last_digit);
 
         // Jiggle when overflowed.
         if pin_len > visible_len && pin_len % 2 == 1 && self.display_style != DisplayStyle::Shown {

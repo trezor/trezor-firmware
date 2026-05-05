@@ -111,16 +111,16 @@ impl<'a> Canvas for Rgba8888Canvas<'a> {
                 let bg_g = ((bg & 0x0000FF00) >> 8) as u16;
                 let bg_b = (bg & 0x000000FF) as u16;
 
-                let fg_r = color.r() as u16;
-                let fg_g = color.g() as u16;
-                let fg_b = color.b() as u16;
+                let fg_r = u16::from(color.r());
+                let fg_g = u16::from(color.g());
+                let fg_b = u16::from(color.b());
 
-                let fg_mul = alpha as u16;
-                let bg_mul = (255 - alpha) as u16;
+                let fg_mul = u16::from(alpha);
+                let bg_mul = u16::from(255 - alpha);
 
-                let r = ((fg_r * fg_mul + bg_r * bg_mul) / 255) as u32;
-                let g = ((fg_g * fg_mul + bg_g * bg_mul) / 255) as u32;
-                let b = ((fg_b * fg_mul + bg_b * bg_mul) / 255) as u32;
+                let r = u32::from((fg_r * fg_mul + bg_r * bg_mul) / 255);
+                let g = u32::from((fg_g * fg_mul + bg_g * bg_mul) / 255);
+                let b = u32::from((fg_b * fg_mul + bg_b * bg_mul) / 255);
 
                 row[pt.x as usize] = (0xFF << 24) | (r << 16) | (g << 8) | b;
             }

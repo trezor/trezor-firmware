@@ -289,7 +289,7 @@ pub trait Canvas: BasicCanvas {
             ..r
         };
 
-        let alpha_mul = |a: u8| -> u8 { ((a as u16 * alpha as u16) / 255) as u8 };
+        let alpha_mul = |a: u8| -> u8 { ((u16::from(a) * u16::from(alpha)) / 255) as u8 };
 
         if self.viewport().contains(b) {
             for p in circle_points(radius) {
@@ -514,7 +514,7 @@ pub trait Canvas: BasicCanvas {
 
         let split = unwrap!(circle_points(radius).last()).v;
 
-        let alpha_mul = |a: u8| -> u8 { ((a as u16 * alpha as u16) / 255) as u8 };
+        let alpha_mul = |a: u8| -> u8 { ((u16::from(a) * u16::from(alpha)) / 255) as u8 };
 
         let r = Rect::new(
             Point::new(center.x - radius, center.y - radius),
@@ -610,7 +610,7 @@ pub trait Canvas: BasicCanvas {
         end = (360.0 + end % 360.0) % 360.0;
 
         let alpha = 255;
-        let alpha_mul = |a: u8| -> u8 { ((a as u16 * alpha as u16) / 255) as u8 };
+        let alpha_mul = |a: u8| -> u8 { ((u16::from(a) * u16::from(alpha)) / 255) as u8 };
 
         if start != end {
             // The algorithm fills everything except the middle point ;-)
@@ -620,11 +620,11 @@ pub trait Canvas: BasicCanvas {
         const PI4: f32 = 45.0;
 
         for octant in 0..8 {
-            let angle = PI4 * octant as f32;
+            let angle = PI4 * f32::from(octant);
 
             // Function for calculation of 'u' coordinate inside the circle octant
             // radius * sin(angle)
-            let sin = |angle: f32| -> i16 { (sin_f32(angle) * radius as f32 + 0.5) as i16 };
+            let sin = |angle: f32| -> i16 { (sin_f32(angle) * f32::from(radius) + 0.5) as i16 };
 
             // Calculate the octant's bounding rectangle
             let p = Point::new(sin(PI4) + 1, -radius - 1).rot(octant);
