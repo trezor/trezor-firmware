@@ -90,6 +90,8 @@ def _check_padding_zero(
     raw_data: memoryview, used_bytes: int, exc: type[ValueOverflow] = ValueOverflow
 ) -> None:
     """Sanity check to make sure unused data is zeroed out."""
+    if not 0 <= used_bytes <= 32:
+        raise InvalidFormatDefinition
     if any(raw_data[: 32 - used_bytes]):
         raise exc
 
