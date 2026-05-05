@@ -4,11 +4,11 @@ from ubinascii import hexlify
 from trezor import TR
 from trezor.ui.layouts import (
     confirm_address,
-    confirm_amount,
     confirm_metadata,
-    confirm_output,
     confirm_properties,
     confirm_stellar_output,
+    confirm_stellar_output_amount,
+    confirm_value,
 )
 from trezor.wire import DataError, ProcessError
 
@@ -43,6 +43,7 @@ async def confirm_source_account(source_account: str) -> None:
         source_account,
         description=TR.stellar__source_account,
         br_name="op_source_account",
+        verb=TR.buttons__continue,
     )
 
 
@@ -54,6 +55,7 @@ async def confirm_allow_trust_op(op: StellarAllowTrustOp) -> None:
             (TR.words__asset, op.asset_code, True),
             (TR.stellar__trusted_account, op.trusted_account, True),
         ),
+        verb=TR.buttons__continue,
     )
 
 
@@ -66,6 +68,7 @@ async def confirm_account_merge_op(
         subtitle=f"{TR.words__recipient} #{output_index + 1}",
         description=TR.stellar__all_will_be_sent_to,
         br_name="op_account_merge",
+        verb=TR.buttons__continue,
     )
 
 
@@ -75,26 +78,35 @@ async def confirm_bump_sequence_op(op: StellarBumpSequenceOp) -> None:
         TR.stellar__bump_sequence,
         TR.stellar__set_sequence_to_template,
         str(op.bump_to),
+        verb=TR.buttons__continue,
     )
 
 
 async def confirm_change_trust_op(op: StellarChangeTrustOp) -> None:
-    await confirm_amount(
+    await confirm_value(
         TR.stellar__delete_trust if op.limit == 0 else TR.stellar__add_trust,
         format_amount(op.limit, op.asset),
-        TR.stellar__limit,
-        "op_change_trust",
+        description="",
+        br_name="op_change_trust",
+        subtitle=TR.stellar__limit,
+        is_data=False,
+        verb=TR.buttons__continue,
     )
+
     await confirm_asset_issuer(op.asset)
 
 
 async def confirm_create_account_op(
     op: StellarCreateAccountOp, output_index: int
 ) -> None:
-    await confirm_output(
+    from trezor.enums import StellarAssetType
+    from trezor.messages import StellarAsset
+
+    await confirm_stellar_output(
         op.new_account,
         format_amount(op.starting_balance),
         output_index=output_index,
+        asset=StellarAsset(type=StellarAssetType.NATIVE),
     )
 
 
@@ -166,6 +178,7 @@ async def _confirm_offer(
             "op_offer",
             title,
             (buying, selling, price),
+            verb=TR.buttons__continue,
         )
     else:
         selling = (
@@ -183,6 +196,7 @@ async def _confirm_offer(
             "op_offer",
             title,
             (selling, buying, price),
+            verb=TR.buttons__continue,
         )
 
     await confirm_asset_issuer(selling_asset)
@@ -198,6 +212,7 @@ async def confirm_manage_data_op(op: StellarManageDataOp) -> None:
             "op_data",
             TR.stellar__set_data,
             ((TR.stellar__key, op.key, True), (TR.stellar__value_sha256, digest, True)),
+            verb=TR.buttons__continue,
         )
     else:
         await confirm_metadata(
@@ -205,6 +220,7 @@ async def confirm_manage_data_op(op: StellarManageDataOp) -> None:
             TR.stellar__clear_data,
             TR.stellar__wanna_clean_value_key_template,
             op.key,
+            verb=TR.buttons__continue,
         )
 
 
@@ -212,42 +228,42 @@ async def confirm_path_payment_strict_receive_op(
     op: StellarPathPaymentStrictReceiveOp,
     output_index: int,
 ) -> None:
-    # TODO: show output index in the subtitle
-    await confirm_output(
+    await confirm_stellar_output(
         op.destination_account,
         format_amount(op.destination_amount, op.destination_asset),
-        TR.stellar__path_pay,
+        output_index,
+        op.destination_asset,
+        descriptions=(TR.stellar__path_pay, TR.stellar__path_pay),
     )
-    await confirm_asset_issuer(op.destination_asset)
-    # confirm what the sender is using to pay
-    await confirm_amount(
+
+    await confirm_stellar_output_amount(
         TR.stellar__debited_amount,
+        f"{TR.words__recipient} #{output_index + 1}",
         format_amount(op.send_max, op.send_asset),
+        op.send_asset,
         TR.stellar__pay_at_most,
-        "op_path_payment_strict_receive",
     )
-    await confirm_asset_issuer(op.send_asset)
 
 
 async def confirm_path_payment_strict_send_op(
     op: StellarPathPaymentStrictSendOp,
     output_index: int,
 ) -> None:
-    # TODO: show output index in the subtitle
-    await confirm_output(
+    await confirm_stellar_output(
         op.destination_account,
         format_amount(op.destination_min, op.destination_asset),
-        TR.stellar__path_pay_at_least,
+        output_index,
+        op.destination_asset,
+        descriptions=(TR.stellar__path_pay_at_least, TR.stellar__path_pay_at_least),
     )
-    await confirm_asset_issuer(op.destination_asset)
-    # confirm what the sender is using to pay
-    await confirm_amount(
+
+    await confirm_stellar_output_amount(
         TR.stellar__debited_amount,
+        f"{TR.words__recipient} #{output_index + 1}",
         format_amount(op.send_amount, op.send_asset),
+        op.send_asset,
         TR.stellar__pay,
-        "op_path_payment_strict_send",
     )
-    await confirm_asset_issuer(op.send_asset)
 
 
 async def confirm_payment_op(op: StellarPaymentOp, output_index: int) -> None:
@@ -261,7 +277,7 @@ async def confirm_payment_op(op: StellarPaymentOp, output_index: int) -> None:
 
 async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
     from trezor.enums import StellarSignerType
-    from trezor.ui.layouts import confirm_blob, confirm_text
+    from trezor.ui.layouts import confirm_blob
 
     from .. import helpers
 
@@ -271,15 +287,28 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
             op.inflation_destination_account,
             description=TR.stellar__destination,
             br_name="op_inflation",
+            verb=TR.buttons__continue,
         )
 
     if op.clear_flags:
         t = _format_flags(op.clear_flags)
-        await confirm_text("op_set_options", TR.stellar__clear_flags, data=t)
+        await confirm_value(
+            title=TR.stellar__clear_flags,
+            value=t,
+            description="",
+            br_name="op_set_options",
+            verb=TR.buttons__continue,
+        )
 
     if op.set_flags:
         t = _format_flags(op.set_flags)
-        await confirm_text("op_set_options", TR.stellar__set_flags, data=t)
+        await confirm_value(
+            title=TR.stellar__set_flags,
+            value=t,
+            description="",
+            br_name="op_set_options",
+            verb=TR.buttons__continue,
+        )
 
     thresholds: list[PropertyType] = []
     append = thresholds.append  # local_cache_attribute
@@ -294,11 +323,20 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
 
     if thresholds:
         await confirm_properties(
-            "op_thresholds", TR.stellar__account_thresholds, thresholds
+            "op_thresholds",
+            TR.stellar__account_thresholds,
+            thresholds,
+            verb=TR.buttons__continue,
         )
 
     if op.home_domain:
-        await confirm_text("op_home_domain", TR.stellar__home_domain, op.home_domain)
+        await confirm_value(
+            title=TR.stellar__home_domain,
+            value=op.home_domain,
+            description="",
+            br_name="op_home_domain",
+            verb=TR.buttons__continue,
+        )
     signer_type = op.signer_type  # local_cache_attribute
     signer_key = op.signer_key  # local_cache_attribute
 
@@ -328,6 +366,7 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
             title=title,
             description=description,
             data=data,
+            verb=TR.buttons__continue,
         )
 
 
@@ -340,6 +379,7 @@ async def confirm_claim_claimable_balance_op(
         TR.stellar__claim_claimable_balance,
         TR.stellar__balance_id + ": {}",
         balance_id,
+        verb=TR.buttons__continue,
     )
 
 
@@ -370,4 +410,5 @@ async def confirm_asset_issuer(asset: StellarAsset) -> None:
         asset.issuer,
         description=TR.stellar__issuer_template.format(asset.code),
         br_name="confirm_asset_issuer",
+        verb=TR.buttons__continue,
     )

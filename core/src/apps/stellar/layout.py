@@ -30,6 +30,7 @@ async def require_confirm_tx_source(tx_source: str) -> None:
         address=tx_source,
         br_name="confirm_tx_source",
         br_code=ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__continue,
     )
 
 
@@ -50,12 +51,13 @@ async def require_confirm_memo(memo_type: StellarMemoType, memo_text: str) -> No
             content=TR.stellar__exchanges_require_memo,
         )
 
-    await layouts.confirm_text(
-        "confirm_memo",
-        TR.stellar__confirm_memo,
-        memo_text,
-        description,
-        ButtonRequestType.ConfirmOutput,
+    await layouts.confirm_value(
+        title=TR.stellar__confirm_memo,
+        value=memo_text,
+        description=description,
+        br_name="confirm_memo",
+        br_code=ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__continue,
     )
 
 
