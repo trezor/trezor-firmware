@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
-from trezor.utils import BufferReader
 from trezor.wire import DataError
 
+from .clear_signing import Atomic, DisplayFormat, parse_address, parse_uint256
 from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
 if TYPE_CHECKING:
@@ -44,8 +44,46 @@ if __debug__:
         ).digest()[:4]
     )
 
+# deposit(uint256 assets, address receiver)
+DEPOSIT_DISPLAY_FORMAT = DisplayFormat(
+    binding_context=None,
+    func_sig=FUNC_SIG_DEPOSIT,
+    intent="Deposit",
+    parameter_definitions=[
+        Atomic(parse_uint256),  # assets
+        Atomic(parse_address),  # receiver
+    ],
+    field_definitions=[],
+)
 
-def get_approver(
+# withdraw(uint256 assets, address receiver, address owner)
+WITHDRAW_DISPLAY_FORMAT = DisplayFormat(
+    binding_context=None,
+    func_sig=FUNC_SIG_WITHDRAW,
+    intent="Withdraw",
+    parameter_definitions=[
+        Atomic(parse_uint256),  # assets
+        Atomic(parse_address),  # receiver
+        Atomic(parse_address),  # owner
+    ],
+    field_definitions=[],
+)
+
+# redeem(uint256 shares, address receiver, address owner)
+REDEEM_DISPLAY_FORMAT = DisplayFormat(
+    binding_context=None,
+    func_sig=FUNC_SIG_REDEEM,
+    intent="Redeem",
+    parameter_definitions=[
+        Atomic(parse_uint256),  # shares
+        Atomic(parse_address),  # receiver
+        Atomic(parse_address),  # owner
+    ],
+    field_definitions=[],
+)
+
+
+async def get_approver(
     msg: MsgInSignTx,
     initial_data: AnyBytes,
     network: EthereumNetworkInfo,
@@ -61,18 +99,29 @@ def get_approver(
     if msg.data_length > len(initial_data):
         return None
 
-    data_reader = BufferReader(initial_data)
-    if data_reader.remaining_count() < SC_FUNC_SIG_BYTES:
+    if len(initial_data) < SC_FUNC_SIG_BYTES:
         return None
 
     vault = lookup_vault(network, address_bytes)
 
+    func_sig = bytes(initial_data[:SC_FUNC_SIG_BYTES])
+    calldata = memoryview(initial_data)[SC_FUNC_SIG_BYTES:]
+
     handler = None
-    func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
-    if func_sig in (FUNC_SIG_DEPOSIT, FUNC_SIG_WITHDRAW, FUNC_SIG_REDEEM):
-        token = vault.vault_token if func_sig == FUNC_SIG_REDEEM else vault.asset_token
-        handler = _prepare_vault_tx(
-            data_reader=data_reader,
+    if func_sig == FUNC_SIG_DEPOSIT:
+        vault_tx_config = (DEPOSIT_DISPLAY_FORMAT, vault.asset_token)
+    elif func_sig == FUNC_SIG_WITHDRAW:
+        vault_tx_config = (WITHDRAW_DISPLAY_FORMAT, vault.asset_token)
+    elif func_sig == FUNC_SIG_REDEEM:
+        vault_tx_config = (REDEEM_DISPLAY_FORMAT, vault.vault_token)
+    else:
+        vault_tx_config = None
+
+    if vault_tx_config is not None:
+        display_format, token = vault_tx_config
+        handler = await _prepare_vault_tx(
+            calldata=calldata,
+            display_format=display_format,
             msg=msg,
             network=network,
             maximum_fee=maximum_fee,
@@ -80,11 +129,10 @@ def get_approver(
             sender_bytes=sender_bytes,
             vault=vault,
             token=token,
-            func_sig=func_sig,
         )
     elif func_sig == FUNC_SIG_CLAIM:
         handler = _prepare_claim_rewards(
-            data_reader=data_reader,
+            calldata=calldata,
             msg=msg,
             network=network,
             maximum_fee=maximum_fee,
@@ -98,8 +146,9 @@ def get_approver(
     return None
 
 
-def _prepare_vault_tx(
-    data_reader: BufferReader,
+async def _prepare_vault_tx(
+    calldata: memoryview,
+    display_format: DisplayFormat,
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
     maximum_fee: str,
@@ -107,22 +156,19 @@ def _prepare_vault_tx(
     sender_bytes: AnyBytes,
     vault: EthereumVaultInfo,
     token: EthereumTokenInfo,
-    func_sig: AnyBytes,
 ) -> Coroutine[Any, Any, None] | None:
 
-    from .clear_signing import InvalidFunctionCall, parse_address, parse_uint256
+    from .clear_signing import InvalidFunctionCall
+    from .definitions import Definitions
     from .layout import require_confirm_vault_tx
 
-    # deposit(uint256 assets, address receiver)
-    # withdraw(uint256 assets, address receiver, address owner)
-    # redeem(uint256 shares, address receiver, address owner)
-    is_deposit = func_sig == FUNC_SIG_DEPOSIT
+    defs = Definitions(network, {})
+
     try:
-        amount = parse_uint256(data_reader.read_memoryview(32))
-        receiver_bytes = parse_address(data_reader.read_memoryview(32))
-        owner_bytes = (
-            None if is_deposit else parse_address(data_reader.read_memoryview(32))
-        )
+        parameters, _ = await display_format.parse_calldata(calldata, msg, defs)
+        amount = parameters[0]
+        receiver_bytes = parameters[1]
+        owner_bytes = parameters[2] if len(parameters) > 2 else None
         if (
             not isinstance(amount, int)
             or not isinstance(receiver_bytes, bytes)
@@ -131,15 +177,15 @@ def _prepare_vault_tx(
             or amount == 0
         ):
             raise ValueError
-    except (ValueError, EOFError, InvalidFunctionCall):
+    except (ValueError, InvalidFunctionCall):
         raise DataError("Invalid data for ERC-4626 vault transaction.")
 
     if not _is_vault_tx_safe(vault, sender_bytes, receiver_bytes, owner_bytes):
         return None
 
-    extra_data = None
-    if data_reader.remaining_count() != 0:
-        extra_data = data_reader.read_memoryview(data_reader.remaining_count())
+    # All atomic non-array fields for these 3 calls so this works.
+    params_size = len(display_format.parameter_definitions) * 32
+    calldata_suffix = calldata[params_size:] if len(calldata) > params_size else None
 
     return require_confirm_vault_tx(
         value=amount,
@@ -149,13 +195,13 @@ def _prepare_vault_tx(
         network=network,
         vault_str=(vault.name if vault is not UNKNOWN_VAULT else msg.to),
         token=token,
-        func_sig=func_sig,
-        extra_data=extra_data,
+        func_sig=display_format.func_sig,
+        extra_data=calldata_suffix,
     )
 
 
 def _prepare_claim_rewards(
-    data_reader: BufferReader,
+    calldata: memoryview,
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
     maximum_fee: str,
@@ -180,6 +226,9 @@ def _prepare_claim_rewards(
     # claim(address[] users, address[] tokens, uint256[] amounts, bytes32[][] proofs)
     # All 4 params are dynamic; first 128 bytes are their ABI offsets (relative to abi_base).
     try:
+        from trezor.utils import BufferReader
+
+        data_reader = BufferReader(bytes(calldata))
         param_base = data_reader.offset
 
         receivers_param_offset = int.from_bytes(data_reader.read_memoryview(32), "big")
