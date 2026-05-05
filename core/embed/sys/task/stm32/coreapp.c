@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
 
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -160,4 +160,4 @@ mpu_area_t coreapp_get_tls_area(void) { return coreapp_tls_area; }
 
 void* coreapp_get_api_getter(void) { return coreapp_api_getter; }
 
-#endif  // KERNEL
+#endif  // USE_APPLETS

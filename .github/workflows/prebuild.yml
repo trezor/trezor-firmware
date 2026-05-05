@@ -40,6 +40,8 @@ jobs:
       - name: Initialize and update ts-tvl
         run: |
           git submodule update --init --recursive vendor/ts-tvl
+      - name: Initialize and update QR-Code-generator (needed for cargo fmt)
+        run: git submodule update --init --recursive vendor/QR-Code-generator
       - uses: ./.github/actions/environment
       - name: "Run style check"
         run: nix-shell --run "uv run make style_check BLACK_FAST=0"

@@ -34,14 +34,14 @@
 #include "../trezorobj.h"
 #include "modtrezorutils-meminfo.h"
 
-#include <io/usb.h>
-#include <sys/logging.h>
-
 #include <io/notify.h>
+#include <io/usb.h>
 #include <rtl/scm_revision.h>
 #include <sec/fwutils.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
+#include <sys/logging.h>
+
 #include "blake2s.h"
 #include "memzero.h"
 
@@ -734,8 +734,35 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_set_log_filter_obj,
                                  mod_trezorutils_set_log_filter);
 #endif
 
-STATIC const mp_obj_str_t mod_trezorutils_revision_obj = {
-    {&mp_type_bytes}, 0, sizeof(SCM_REVISION), (const byte *)SCM_REVISION};
+/// def get_scm_revision(xor2: int) -> bytes:
+///     """
+///     Returns SCM revision of the firmware.
+///     """
+STATIC mp_obj_t mod_trezorutil_get_scm_revision(mp_obj_t xor2) {
+  uint8_t SCM_REVISION_LONG[] = SCM_REVISION_LONG_INIT;
+
+  uint8_t scm_revision[sizeof(SCM_REVISION_SHORT) + sizeof(SCM_REVISION_LONG)];
+
+  for (size_t i = 0; i < sizeof(SCM_REVISION_SHORT); ++i) {
+    scm_revision[i] = SCM_REVISION_SHORT[i];
+  }
+
+  for (size_t i = 0; i < sizeof(SCM_REVISION_LONG); ++i) {
+    scm_revision[i + sizeof(SCM_REVISION_SHORT)] = SCM_REVISION_LONG[i];
+  }
+
+  uint8_t xor2_byte = trezor_obj_get_uint(xor2) & 0xFF;
+
+  for (size_t i = sizeof(SCM_REVISION_SHORT); i < sizeof(scm_revision);
+       i += 2) {
+    scm_revision[i] ^= SCM_REVISION_XOR1;
+    scm_revision[i + 1] ^= xor2_byte;
+  }
+
+  return mp_obj_new_bytes(scm_revision, sizeof(scm_revision));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutil_get_scm_revision_obj,
+                                 mod_trezorutil_get_scm_revision);
 
 STATIC const mp_obj_str_t mod_trezorutils_model_name_obj = {
     {&mp_type_str}, 0, sizeof(MODEL_NAME) - 1, (const byte *)MODEL_NAME};
@@ -764,8 +791,6 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
     {MP_OBJ_NEW_SMALL_INT(VERSION_MAJOR), MP_OBJ_NEW_SMALL_INT(VERSION_MINOR),
      MP_OBJ_NEW_SMALL_INT(VERSION_PATCH), MP_OBJ_NEW_SMALL_INT(VERSION_BUILD)}};
 
-/// SCM_REVISION: bytes
-/// """Git commit hash of the firmware."""
 /// VERSION: VersionTuple
 /// """Firmware version as a tuple (major, minor, patch, build)."""
 /// USE_BLE: bool
@@ -842,6 +867,8 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Notification event: factory reset (wipe) invoked"""
 /// NOTIFY_UNPAIR: int
 /// """Notification event: BLE bonding for current connection deleted"""
+/// SCM_REVISION_XOR2: int
+/// """XOR2 byte for SCM revision obfuscation."""
 ///
 /// if __debug__:
 ///     DISABLE_ANIMATION: bool
@@ -896,6 +923,15 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_set_log_filter),
      MP_ROM_PTR(&mod_trezorutils_set_log_filter_obj)},
 #endif
+    {MP_ROM_QSTR(MP_QSTR_get_scm_revision),
+     MP_ROM_PTR(&mod_trezorutil_get_scm_revision_obj)},
+#if MICROPY_MODULE_FROZEN_MPY
+    // Hide xor2 key in the dictionary
+    // (direct constant is used instead)
+    {MP_ROM_QSTR(MP_QSTR_SCM_REVISION_XOR2), MP_ROM_INT(0)},
+#else
+    {MP_ROM_QSTR(MP_QSTR_SCM_REVISION_XOR2), MP_ROM_INT(SCM_REVISION_XOR2)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_delegated_identity),
      MP_ROM_PTR(&mod_trezorutils_delegated_identity_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_color),
@@ -943,8 +979,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_presize_module),
      MP_ROM_PTR(&mod_trezorutils_presize_module_obj)},
     // various built-in constants
-    {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
-     MP_ROM_PTR(&mod_trezorutils_revision_obj)},
     {MP_ROM_QSTR(MP_QSTR_VERSION), MP_ROM_PTR(&mod_trezorutils_version_obj)},
 #ifdef USE_SD_CARD
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_true},

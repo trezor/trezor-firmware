@@ -44,7 +44,7 @@ FEATURE_FLAGS = {
 }
 
 FEATURES_WANTED = [
-    "applet",
+    "applets",
     "ble",
     "consumption_mask",
     "display",
@@ -225,6 +225,7 @@ SOURCE_MOD += [
     'embed/io/gfx/terminal/terminal.c',
     'embed/io/translations/translations.c',
     'embed/rtl/error_handling.c',
+    'embed/rtl/scm_revision.c',
     'embed/rtl/strutils.c',
     'embed/sec/image/boot_image.c',
     'embed/sec/image/image.c',
@@ -270,7 +271,7 @@ else:
 
 env = Environment(
     ENV=os.environ,
-    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} -USCM_REVISION_INIT {DEBUG_FLAGS}",
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} {DEBUG_FLAGS}",
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",

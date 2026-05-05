@@ -246,8 +246,13 @@ def set_log_filter(filter: str) -> None:
     """
     Sets filter string for syslog
     """
-SCM_REVISION: bytes
-"""Git commit hash of the firmware."""
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def get_scm_revision(xor2: int) -> bytes:
+    """
+    Returns SCM revision of the firmware.
+    """
 VERSION: VersionTuple
 """Firmware version as a tuple (major, minor, patch, build)."""
 USE_BLE: bool
@@ -324,6 +329,8 @@ NOTIFY_WIPE: int
 """Notification event: factory reset (wipe) invoked"""
 NOTIFY_UNPAIR: int
 """Notification event: BLE bonding for current connection deleted"""
+SCM_REVISION_XOR2: int
+"""XOR2 byte for SCM revision obfuscation."""
 
 if __debug__:
     DISABLE_ANIMATION: bool

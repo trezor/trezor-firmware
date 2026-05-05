@@ -150,9 +150,7 @@ if DEBUGLINK:
         'embed/projects/bootloader/protob/pb/messages-debug.pb.c',
     ]
 
-SOURCE_UNIX = [
-    'embed/projects/unix/profile.c',
-]
+SOURCE_UNIX = []
 
 ui.init_ui(TREZOR_MODEL, "bootloader", RUST_UI_FEATURES)
 

@@ -1,0 +1,27 @@
+{
+  "cwd": "${workspaceFolder}",
+  "executable": "${tfTools.executablePath}",
+  "request": "attach",
+  "type": "cortex-debug",
+  "runToEntryPoint": "main",
+  "servertype": "openocd",
+  "configFiles": [
+    "interface/stlink.cfg",
+    "target/stm32f4x.cfg"
+  ],
+  "svdFile": "core/embed/.tf-tools/svd/STM32F427.svd",
+  "swoConfig": {
+    "enabled": true,
+    "cpuFrequency": 180000000,
+    "swoFrequency": 2000000,
+    "source": "probe",
+    "decoders": [
+      {
+        "type": "console",
+        "label": "ITM",
+        "port": 0,
+        "encoding": "ascii"
+      }
+    ]
+  }
+}
