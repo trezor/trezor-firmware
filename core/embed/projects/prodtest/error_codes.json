@@ -1,0 +1,1692 @@
+{
+  "source": "prodtest_error_codes.h",
+  "prodtest_version": "0.3.8.0",
+  "framework_codes": [
+    {
+      "code": 1,
+      "name": "CLI_ERROR_INVALID_CMD"
+    },
+    {
+      "code": 2,
+      "name": "CLI_ERROR_INVALID_ARG"
+    },
+    {
+      "code": 3,
+      "name": "CLI_ERROR_ABORT"
+    },
+    {
+      "code": 4,
+      "name": "CLI_ERROR_FATAL"
+    },
+    {
+      "code": 5,
+      "name": "CLI_ERROR_TIMEOUT"
+    },
+    {
+      "code": 6,
+      "name": "CLI_ERROR_LOCKED"
+    },
+    {
+      "code": 7,
+      "name": "CLI_ERROR_NODATA"
+    },
+    {
+      "code": 8,
+      "name": "CLI_ERROR_INVALID_CRC"
+    }
+  ],
+  "modules": [
+    {
+      "module": "backup-ram",
+      "range_start": 1000,
+      "range_end": 1999
+    },
+    {
+      "module": "ble",
+      "range_start": 2000,
+      "range_end": 2999
+    },
+    {
+      "module": "bootloader",
+      "range_start": 3000,
+      "range_end": 3999
+    },
+    {
+      "module": "button",
+      "range_start": 4000,
+      "range_end": 4999
+    },
+    {
+      "module": "haptic",
+      "range_start": 5000,
+      "range_end": 5999
+    },
+    {
+      "module": "manufacturing-lock",
+      "range_start": 6000,
+      "range_end": 6999
+    },
+    {
+      "module": "nfc",
+      "range_start": 7000,
+      "range_end": 7999
+    },
+    {
+      "module": "nrf",
+      "range_start": 8000,
+      "range_end": 8999
+    },
+    {
+      "module": "optiga",
+      "range_start": 9000,
+      "range_end": 9999
+    },
+    {
+      "module": "otp",
+      "range_start": 10000,
+      "range_end": 10999
+    },
+    {
+      "module": "otp-variant",
+      "range_start": 11000,
+      "range_end": 11999
+    },
+    {
+      "module": "power-manager",
+      "range_start": 12000,
+      "range_end": 12999
+    },
+    {
+      "module": "rtc",
+      "range_start": 13000,
+      "range_end": 13999
+    },
+    {
+      "module": "sdcard",
+      "range_start": 14000,
+      "range_end": 14999
+    },
+    {
+      "module": "secrets",
+      "range_start": 15000,
+      "range_end": 15999
+    },
+    {
+      "module": "secure-channel",
+      "range_start": 16000,
+      "range_end": 16999
+    },
+    {
+      "module": "tamper",
+      "range_start": 17000,
+      "range_end": 17999
+    },
+    {
+      "module": "telemetry",
+      "range_start": 18000,
+      "range_end": 18999
+    },
+    {
+      "module": "touch",
+      "range_start": 19000,
+      "range_end": 19999
+    },
+    {
+      "module": "tropic",
+      "range_start": 20000,
+      "range_end": 20999
+    },
+    {
+      "module": "unit-test",
+      "range_start": 21000,
+      "range_end": 21999
+    },
+    {
+      "module": "wpc",
+      "range_start": 22000,
+      "range_end": 22999
+    },
+    {
+      "module": "common",
+      "range_start": 23000,
+      "range_end": 23999
+    },
+    {
+      "module": "prodtest",
+      "range_start": 24000,
+      "range_end": 24999
+    }
+  ],
+  "errors": [
+    {
+      "code": 1000,
+      "name": "PRODTEST_ERR_BACKUP_RAM_LIST_INIT",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1001,
+      "name": "PRODTEST_ERR_BACKUP_RAM_KEY_INFO_READ",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1002,
+      "name": "PRODTEST_ERR_BACKUP_RAM_ERASE_INIT",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1003,
+      "name": "PRODTEST_ERR_BACKUP_RAM_READ_INIT",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1004,
+      "name": "PRODTEST_ERR_BACKUP_RAM_KEY_NOT_FOUND",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1005,
+      "name": "PRODTEST_ERR_BACKUP_RAM_KEY_READ",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1006,
+      "name": "PRODTEST_ERR_BACKUP_RAM_HEX_ENCODE",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1007,
+      "name": "PRODTEST_ERR_BACKUP_RAM_DATA_TOO_LONG",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1008,
+      "name": "PRODTEST_ERR_BACKUP_RAM_HEX_DECODE",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1009,
+      "name": "PRODTEST_ERR_BACKUP_RAM_WRITE_INIT",
+      "module": "backup-ram"
+    },
+    {
+      "code": 1010,
+      "name": "PRODTEST_ERR_BACKUP_RAM_KEY_WRITE",
+      "module": "backup-ram"
+    },
+    {
+      "code": 2000,
+      "name": "PRODTEST_ERR_BLE_INIT",
+      "module": "ble"
+    },
+    {
+      "code": 2001,
+      "name": "PRODTEST_ERR_BLE_TIMER_CREATE",
+      "module": "ble"
+    },
+    {
+      "code": 2002,
+      "name": "PRODTEST_ERR_BLE_ENTER_PAIRING_MODE",
+      "module": "ble"
+    },
+    {
+      "code": 2003,
+      "name": "PRODTEST_ERR_BLE_ADV_START_TIMEOUT",
+      "module": "ble"
+    },
+    {
+      "code": 2004,
+      "name": "PRODTEST_ERR_BLE_SWITCH_OFF",
+      "module": "ble"
+    },
+    {
+      "code": 2005,
+      "name": "PRODTEST_ERR_BLE_ADV_STOP_TIMEOUT",
+      "module": "ble"
+    },
+    {
+      "code": 2006,
+      "name": "PRODTEST_ERR_BLE_MAC_READ",
+      "module": "ble"
+    },
+    {
+      "code": 2007,
+      "name": "PRODTEST_ERR_BLE_STATE_UNKNOWN",
+      "module": "ble"
+    },
+    {
+      "code": 2008,
+      "name": "PRODTEST_ERR_BLE_BONDS_ERASE",
+      "module": "ble"
+    },
+    {
+      "code": 2009,
+      "name": "PRODTEST_ERR_BLE_UNPAIR_INDEX_PARSE",
+      "module": "ble"
+    },
+    {
+      "code": 2010,
+      "name": "PRODTEST_ERR_BLE_UNPAIR_INDEX_RANGE",
+      "module": "ble"
+    },
+    {
+      "code": 2011,
+      "name": "PRODTEST_ERR_BLE_UNPAIR",
+      "module": "ble"
+    },
+    {
+      "code": 2012,
+      "name": "PRODTEST_ERR_BLE_UART_INIT",
+      "module": "ble"
+    },
+    {
+      "code": 3000,
+      "name": "PRODTEST_ERR_BOOTLOADER_NO_AUTH_HEADER",
+      "module": "bootloader"
+    },
+    {
+      "code": 3001,
+      "name": "PRODTEST_ERR_BOOTLOADER_NO_IMAGE_HEADER",
+      "module": "bootloader"
+    },
+    {
+      "code": 4000,
+      "name": "PRODTEST_ERR_BUTTON_PRESS_TIMEOUT",
+      "module": "button"
+    },
+    {
+      "code": 4001,
+      "name": "PRODTEST_ERR_BUTTON_RELEASE_TIMEOUT",
+      "module": "button"
+    },
+    {
+      "code": 4002,
+      "name": "PRODTEST_ERR_BUTTON_COMBO_PRESS_TIMEOUT",
+      "module": "button"
+    },
+    {
+      "code": 4003,
+      "name": "PRODTEST_ERR_BUTTON_COMBO_RELEASE_TIMEOUT",
+      "module": "button"
+    },
+    {
+      "code": 5000,
+      "name": "PRODTEST_ERR_HAPTIC_INIT",
+      "module": "haptic"
+    },
+    {
+      "code": 5001,
+      "name": "PRODTEST_ERR_HAPTIC_TEST",
+      "module": "haptic"
+    },
+    {
+      "code": 6000,
+      "name": "PRODTEST_ERR_MANUF_LOCK_ALREADY_SET",
+      "module": "manufacturing-lock"
+    },
+    {
+      "code": 6001,
+      "name": "PRODTEST_ERR_MANUF_LOCK_OTP_WRITE",
+      "module": "manufacturing-lock"
+    },
+    {
+      "code": 6002,
+      "name": "PRODTEST_ERR_MANUF_LOCK_OTP_LOCK",
+      "module": "manufacturing-lock"
+    },
+    {
+      "code": 7000,
+      "name": "PRODTEST_ERR_NFC_READ_CARD_INIT",
+      "module": "nfc"
+    },
+    {
+      "code": 7001,
+      "name": "PRODTEST_ERR_NFC_TECH_REG",
+      "module": "nfc"
+    },
+    {
+      "code": 7002,
+      "name": "PRODTEST_ERR_NFC_ACTIVATION",
+      "module": "nfc"
+    },
+    {
+      "code": 7003,
+      "name": "PRODTEST_ERR_NFC_READ_CARD_TIMEOUT",
+      "module": "nfc"
+    },
+    {
+      "code": 7004,
+      "name": "PRODTEST_ERR_NFC_READ_CARD_ERROR",
+      "module": "nfc"
+    },
+    {
+      "code": 7005,
+      "name": "PRODTEST_ERR_NFC_UNEXPECTED",
+      "module": "nfc"
+    },
+    {
+      "code": 7006,
+      "name": "PRODTEST_ERR_NFC_EMULATE_INIT",
+      "module": "nfc"
+    },
+    {
+      "code": 7007,
+      "name": "PRODTEST_ERR_NFC_EMULATE_ERROR",
+      "module": "nfc"
+    },
+    {
+      "code": 7008,
+      "name": "PRODTEST_ERR_NFC_WRITE_CARD_INIT",
+      "module": "nfc"
+    },
+    {
+      "code": 7009,
+      "name": "PRODTEST_ERR_NFC_WRITE_CARD_TIMEOUT",
+      "module": "nfc"
+    },
+    {
+      "code": 7010,
+      "name": "PRODTEST_ERR_NFC_WRITE_CARD_ERROR",
+      "module": "nfc"
+    },
+    {
+      "code": 7011,
+      "name": "PRODTEST_ERR_NFC_TYPE_A_ONLY",
+      "module": "nfc"
+    },
+    {
+      "code": 8000,
+      "name": "PRODTEST_ERR_NRF_SPI_COMM",
+      "module": "nrf"
+    },
+    {
+      "code": 8001,
+      "name": "PRODTEST_ERR_NRF_UART_COMM",
+      "module": "nrf"
+    },
+    {
+      "code": 8002,
+      "name": "PRODTEST_ERR_NRF_RESET",
+      "module": "nrf"
+    },
+    {
+      "code": 8003,
+      "name": "PRODTEST_ERR_NRF_BOOTLOADER_GPIO",
+      "module": "nrf"
+    },
+    {
+      "code": 8004,
+      "name": "PRODTEST_ERR_NRF_RESERVED_GPIO",
+      "module": "nrf"
+    },
+    {
+      "code": 8005,
+      "name": "PRODTEST_ERR_NRF_VERSION_READ",
+      "module": "nrf"
+    },
+    {
+      "code": 8006,
+      "name": "PRODTEST_ERR_NRF_PAIR_SECRETS_LOCKED",
+      "module": "nrf"
+    },
+    {
+      "code": 8007,
+      "name": "PRODTEST_ERR_NRF_PAIR_FAILED",
+      "module": "nrf"
+    },
+    {
+      "code": 8008,
+      "name": "PRODTEST_ERR_NRF_PAIR_VERIFY",
+      "module": "nrf"
+    },
+    {
+      "code": 9000,
+      "name": "PRODTEST_ERR_OPTIGA_SET_META_SERIALIZE",
+      "module": "optiga"
+    },
+    {
+      "code": 9001,
+      "name": "PRODTEST_ERR_OPTIGA_SET_META_GET",
+      "module": "optiga"
+    },
+    {
+      "code": 9002,
+      "name": "PRODTEST_ERR_OPTIGA_SET_META_PARSE",
+      "module": "optiga"
+    },
+    {
+      "code": 9003,
+      "name": "PRODTEST_ERR_OPTIGA_SET_META_COMPARE",
+      "module": "optiga"
+    },
+    {
+      "code": 9004,
+      "name": "PRODTEST_ERR_OPTIGA_PAIR_SECRET",
+      "module": "optiga"
+    },
+    {
+      "code": 9005,
+      "name": "PRODTEST_ERR_OPTIGA_PAIR_SET_DATA",
+      "module": "optiga"
+    },
+    {
+      "code": 9006,
+      "name": "PRODTEST_ERR_OPTIGA_PAIR_HANDSHAKE",
+      "module": "optiga"
+    },
+    {
+      "code": 9007,
+      "name": "PRODTEST_ERR_OPTIGA_LOCK_TRUST_ANCHOR",
+      "module": "optiga"
+    },
+    {
+      "code": 9008,
+      "name": "PRODTEST_ERR_OPTIGA_STATUS_SERIALIZE",
+      "module": "optiga"
+    },
+    {
+      "code": 9009,
+      "name": "PRODTEST_ERR_OPTIGA_STATUS_PARSE",
+      "module": "optiga"
+    },
+    {
+      "code": 9010,
+      "name": "PRODTEST_ERR_OPTIGA_ID_READ",
+      "module": "optiga"
+    },
+    {
+      "code": 9011,
+      "name": "PRODTEST_ERR_OPTIGA_CERT_READ_GET",
+      "module": "optiga"
+    },
+    {
+      "code": 9012,
+      "name": "PRODTEST_ERR_OPTIGA_CERT_READ_SIGN",
+      "module": "optiga"
+    },
+    {
+      "code": 9013,
+      "name": "PRODTEST_ERR_OPTIGA_CERT_WRITE_TOO_LONG",
+      "module": "optiga"
+    },
+    {
+      "code": 9014,
+      "name": "PRODTEST_ERR_OPTIGA_CERT_WRITE_HEX_DECODE",
+      "module": "optiga"
+    },
+    {
+      "code": 9015,
+      "name": "PRODTEST_ERR_OPTIGA_CERT_WRITE_SET",
+      "module": "optiga"
+    },
+    {
+      "code": 9016,
+      "name": "PRODTEST_ERR_OPTIGA_CERT_WRITE_VERIFY",
+      "module": "optiga"
+    },
+    {
+      "code": 9017,
+      "name": "PRODTEST_ERR_OPTIGA_PUBKEY_CALC_SSEC",
+      "module": "optiga"
+    },
+    {
+      "code": 9018,
+      "name": "PRODTEST_ERR_OPTIGA_PUBKEY_SIZE",
+      "module": "optiga"
+    },
+    {
+      "code": 9019,
+      "name": "PRODTEST_ERR_OPTIGA_PUBKEY_MASK",
+      "module": "optiga"
+    },
+    {
+      "code": 9020,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_KEY_LONG",
+      "module": "optiga"
+    },
+    {
+      "code": 9021,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_HEX",
+      "module": "optiga"
+    },
+    {
+      "code": 9022,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_LEN",
+      "module": "optiga"
+    },
+    {
+      "code": 9023,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_DECODE",
+      "module": "optiga"
+    },
+    {
+      "code": 9024,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_SSEC",
+      "module": "optiga"
+    },
+    {
+      "code": 9025,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_AES_KEY",
+      "module": "optiga"
+    },
+    {
+      "code": 9026,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_AES_DEC",
+      "module": "optiga"
+    },
+    {
+      "code": 9027,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_ANCHOR",
+      "module": "optiga"
+    },
+    {
+      "code": 9028,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_MASK",
+      "module": "optiga"
+    },
+    {
+      "code": 9029,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_WRITE_PRIV",
+      "module": "optiga"
+    },
+    {
+      "code": 9030,
+      "name": "PRODTEST_ERR_OPTIGA_COUNTER_READ",
+      "module": "optiga"
+    },
+    {
+      "code": 9031,
+      "name": "PRODTEST_ERR_OPTIGA_KEYFIDO_READ_MASK",
+      "module": "optiga"
+    },
+    {
+      "code": 9032,
+      "name": "PRODTEST_ERR_OPTIGA_META_READ_OID_LONG",
+      "module": "optiga"
+    },
+    {
+      "code": 9033,
+      "name": "PRODTEST_ERR_OPTIGA_META_READ_HEX",
+      "module": "optiga"
+    },
+    {
+      "code": 9034,
+      "name": "PRODTEST_ERR_OPTIGA_META_READ_OID_SHORT",
+      "module": "optiga"
+    },
+    {
+      "code": 9035,
+      "name": "PRODTEST_ERR_OPTIGA_META_READ_GET",
+      "module": "optiga"
+    },
+    {
+      "code": 9036,
+      "name": "PRODTEST_ERR_OPTIGA_META_READ_PARSE",
+      "module": "optiga"
+    },
+    {
+      "code": 10000,
+      "name": "PRODTEST_ERR_OTP_READ",
+      "module": "otp"
+    },
+    {
+      "code": 10001,
+      "name": "PRODTEST_ERR_OTP_HEX_ENCODE",
+      "module": "otp"
+    },
+    {
+      "code": 10002,
+      "name": "PRODTEST_ERR_OTP_EMPTY",
+      "module": "otp"
+    },
+    {
+      "code": 10003,
+      "name": "PRODTEST_ERR_OTP_WRITE_HEX_ENCODE",
+      "module": "otp"
+    },
+    {
+      "code": 10004,
+      "name": "PRODTEST_ERR_OTP_LOCKED",
+      "module": "otp"
+    },
+    {
+      "code": 10005,
+      "name": "PRODTEST_ERR_OTP_WRITE",
+      "module": "otp"
+    },
+    {
+      "code": 10006,
+      "name": "PRODTEST_ERR_OTP_LOCK",
+      "module": "otp"
+    },
+    {
+      "code": 11000,
+      "name": "PRODTEST_ERR_OTP_VARIANT_BLOCK_READ",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11001,
+      "name": "PRODTEST_ERR_OTP_VARIANT_REWORK_BLOCK_READ",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11002,
+      "name": "PRODTEST_ERR_OTP_VARIANT_HEX_ENCODE",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11003,
+      "name": "PRODTEST_ERR_OTP_VARIANT_SECRETS_NOT_LOCKED",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11004,
+      "name": "PRODTEST_ERR_OTP_VARIANT_OPTIGA_NOT_LOCKED",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11005,
+      "name": "PRODTEST_ERR_OTP_VARIANT_TROPIC_NOT_LOCKED",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11006,
+      "name": "PRODTEST_ERR_OTP_VARIANT_REWORK_LOCKED",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11007,
+      "name": "PRODTEST_ERR_OTP_VARIANT_FIRST_NOT_LOCKED",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11008,
+      "name": "PRODTEST_ERR_OTP_VARIANT_REWORK_READ",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11009,
+      "name": "PRODTEST_ERR_OTP_VARIANT_REWORK_NOT_NEEDED",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11010,
+      "name": "PRODTEST_ERR_OTP_VARIANT_LOCKED",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11011,
+      "name": "PRODTEST_ERR_OTP_VARIANT_WRITE_HEX_ENCODE",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11012,
+      "name": "PRODTEST_ERR_OTP_VARIANT_WRITE",
+      "module": "otp-variant"
+    },
+    {
+      "code": 11013,
+      "name": "PRODTEST_ERR_OTP_VARIANT_LOCK",
+      "module": "otp-variant"
+    },
+    {
+      "code": 12000,
+      "name": "PRODTEST_ERR_PM_STATE_GET",
+      "module": "power-manager"
+    },
+    {
+      "code": 12001,
+      "name": "PRODTEST_ERR_PM_HIBERNATE",
+      "module": "power-manager"
+    },
+    {
+      "code": 12002,
+      "name": "PRODTEST_ERR_PM_CHARGE_DISABLE",
+      "module": "power-manager"
+    },
+    {
+      "code": 12003,
+      "name": "PRODTEST_ERR_PM_CHARGE_ENABLE",
+      "module": "power-manager"
+    },
+    {
+      "code": 12004,
+      "name": "PRODTEST_ERR_PM_FUEL_GAUGE_REPORT_GET",
+      "module": "power-manager"
+    },
+    {
+      "code": 12005,
+      "name": "PRODTEST_ERR_PM_REPORT_GET",
+      "module": "power-manager"
+    },
+    {
+      "code": 12006,
+      "name": "PRODTEST_ERR_PM_EVENTS_GET",
+      "module": "power-manager"
+    },
+    {
+      "code": 12007,
+      "name": "PRODTEST_ERR_PM_REBOOT",
+      "module": "power-manager"
+    },
+    {
+      "code": 12008,
+      "name": "PRODTEST_ERR_PM_BATTERY_TEST_ABORTED",
+      "module": "power-manager"
+    },
+    {
+      "code": 12009,
+      "name": "PRODTEST_ERR_PM_BATTERY_TEST_REPORT_GET",
+      "module": "power-manager"
+    },
+    {
+      "code": 12010,
+      "name": "PRODTEST_ERR_PM_BATTERY_TEST",
+      "module": "power-manager"
+    },
+    {
+      "code": 13000,
+      "name": "PRODTEST_ERR_RTC_TIMESTAMP_GET",
+      "module": "rtc"
+    },
+    {
+      "code": 13001,
+      "name": "PRODTEST_ERR_RTC_TIME_SET",
+      "module": "rtc"
+    },
+    {
+      "code": 13002,
+      "name": "PRODTEST_ERR_RTC_TIME_GET",
+      "module": "rtc"
+    },
+    {
+      "code": 14000,
+      "name": "PRODTEST_ERR_SDCARD_NO_CARD",
+      "module": "sdcard"
+    },
+    {
+      "code": 14001,
+      "name": "PRODTEST_ERR_SDCARD_POWER_ON",
+      "module": "sdcard"
+    },
+    {
+      "code": 14002,
+      "name": "PRODTEST_ERR_SDCARD_READ_INITIAL",
+      "module": "sdcard"
+    },
+    {
+      "code": 14003,
+      "name": "PRODTEST_ERR_SDCARD_WRITE",
+      "module": "sdcard"
+    },
+    {
+      "code": 14004,
+      "name": "PRODTEST_ERR_SDCARD_READ_VERIFY",
+      "module": "sdcard"
+    },
+    {
+      "code": 14005,
+      "name": "PRODTEST_ERR_SDCARD_DATA_MISMATCH",
+      "module": "sdcard"
+    },
+    {
+      "code": 15000,
+      "name": "PRODTEST_ERR_SECRETS_SECTOR_ALREADY_LOCKED",
+      "module": "secrets"
+    },
+    {
+      "code": 15001,
+      "name": "PRODTEST_ERR_SECRETS_OPTIGA_ALREADY_LOCKED",
+      "module": "secrets"
+    },
+    {
+      "code": 15002,
+      "name": "PRODTEST_ERR_SECRETS_TROPIC_PAIRING_STARTED",
+      "module": "secrets"
+    },
+    {
+      "code": 15003,
+      "name": "PRODTEST_ERR_SECRETS_TROPIC_SESSION",
+      "module": "secrets"
+    },
+    {
+      "code": 15004,
+      "name": "PRODTEST_ERR_SECRETS_MASTER_KEY_PRIV",
+      "module": "secrets"
+    },
+    {
+      "code": 15005,
+      "name": "PRODTEST_ERR_SECRETS_MASTER_KEY_UNPRIV",
+      "module": "secrets"
+    },
+    {
+      "code": 15006,
+      "name": "PRODTEST_ERR_SECRETS_OPTIGA_PAIRING",
+      "module": "secrets"
+    },
+    {
+      "code": 15007,
+      "name": "PRODTEST_ERR_SECRETS_DEVICE_KEY_AUTH",
+      "module": "secrets"
+    },
+    {
+      "code": 15008,
+      "name": "PRODTEST_ERR_SECRETS_DEVICE_KEY_KEYPAIR",
+      "module": "secrets"
+    },
+    {
+      "code": 15009,
+      "name": "PRODTEST_ERR_SECRETS_DEVICE_KEY_ENCRYPT",
+      "module": "secrets"
+    },
+    {
+      "code": 15010,
+      "name": "PRODTEST_ERR_SECRETS_CERT_CHAIN_AUTH",
+      "module": "secrets"
+    },
+    {
+      "code": 15011,
+      "name": "PRODTEST_ERR_SECRETS_CERT_CHAIN_KEYPAIR",
+      "module": "secrets"
+    },
+    {
+      "code": 15012,
+      "name": "PRODTEST_ERR_SECRETS_SIGN_SIGNATURE",
+      "module": "secrets"
+    },
+    {
+      "code": 15013,
+      "name": "PRODTEST_ERR_SECRETS_CERTDEV_WRITE_NOT_IMPL",
+      "module": "secrets"
+    },
+    {
+      "code": 15014,
+      "name": "PRODTEST_ERR_SECRETS_CERT_TOO_LONG",
+      "module": "secrets"
+    },
+    {
+      "code": 15015,
+      "name": "PRODTEST_ERR_SECRETS_CERT_HEX_DECODE",
+      "module": "secrets"
+    },
+    {
+      "code": 15016,
+      "name": "PRODTEST_ERR_SECRETS_WRITE",
+      "module": "secrets"
+    },
+    {
+      "code": 15017,
+      "name": "PRODTEST_ERR_SECRETS_CERTDEV_READ_NOT_IMPL",
+      "module": "secrets"
+    },
+    {
+      "code": 15018,
+      "name": "PRODTEST_ERR_SECRETS_READ",
+      "module": "secrets"
+    },
+    {
+      "code": 15019,
+      "name": "PRODTEST_ERR_SECRETS_INVALID_CERT",
+      "module": "secrets"
+    },
+    {
+      "code": 15020,
+      "name": "PRODTEST_ERR_SECRETS_SECTOR_LOCK",
+      "module": "secrets"
+    },
+    {
+      "code": 16000,
+      "name": "PRODTEST_ERR_SECURE_CHANNEL_HANDSHAKE_INIT",
+      "module": "secure-channel"
+    },
+    {
+      "code": 16001,
+      "name": "PRODTEST_ERR_SECURE_CHANNEL_INPUT_TOO_LONG",
+      "module": "secure-channel"
+    },
+    {
+      "code": 16002,
+      "name": "PRODTEST_ERR_SECURE_CHANNEL_HEX_DECODE",
+      "module": "secure-channel"
+    },
+    {
+      "code": 16003,
+      "name": "PRODTEST_ERR_SECURE_CHANNEL_INPUT_LEN",
+      "module": "secure-channel"
+    },
+    {
+      "code": 16004,
+      "name": "PRODTEST_ERR_SECURE_CHANNEL_HANDSHAKE_FINISH",
+      "module": "secure-channel"
+    },
+    {
+      "code": 17000,
+      "name": "PRODTEST_ERR_TAMPER_INIT",
+      "module": "tamper"
+    },
+    {
+      "code": 18000,
+      "name": "PRODTEST_ERR_TELEMETRY_NOT_AVAILABLE",
+      "module": "telemetry"
+    },
+    {
+      "code": 18001,
+      "name": "PRODTEST_ERR_TELEMETRY_NOT_MANUFACTURING",
+      "module": "telemetry"
+    },
+    {
+      "code": 19000,
+      "name": "PRODTEST_ERR_TOUCH_INIT",
+      "module": "touch"
+    },
+    {
+      "code": 19001,
+      "name": "PRODTEST_ERR_TOUCH_QUADRANT_TIMEOUT",
+      "module": "touch"
+    },
+    {
+      "code": 19002,
+      "name": "PRODTEST_ERR_TOUCH_CUSTOM_TIMEOUT",
+      "module": "touch"
+    },
+    {
+      "code": 19003,
+      "name": "PRODTEST_ERR_TOUCH_UNEXPECTED_ACTIVITY",
+      "module": "touch"
+    },
+    {
+      "code": 20000,
+      "name": "PRODTEST_ERR_TROPIC_RISCV_FW_VERSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20001,
+      "name": "PRODTEST_ERR_TROPIC_SPECT_FW_VERSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20002,
+      "name": "PRODTEST_ERR_TROPIC_CHIP_ID",
+      "module": "tropic"
+    },
+    {
+      "code": 20003,
+      "name": "PRODTEST_ERR_TROPIC_CERT_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20004,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_CHECK_SESSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20005,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_CHECK_R_CONFIG_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20006,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_CHECK_I_CONFIG_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20007,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_PUBKEY_UNPRIV",
+      "module": "tropic"
+    },
+    {
+      "code": 20008,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_PUBKEY_PRIV",
+      "module": "tropic"
+    },
+    {
+      "code": 20009,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_GET_PUBKEY",
+      "module": "tropic"
+    },
+    {
+      "code": 20010,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_STORE_SET",
+      "module": "tropic"
+    },
+    {
+      "code": 20011,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_STORE_SK",
+      "module": "tropic"
+    },
+    {
+      "code": 20012,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_STORE_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20013,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_KEY_WRITE_PRIV",
+      "module": "tropic"
+    },
+    {
+      "code": 20014,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_CERT_SIGN",
+      "module": "tropic"
+    },
+    {
+      "code": 20015,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_KEY_WRITE_UNPRIV",
+      "module": "tropic"
+    },
+    {
+      "code": 20016,
+      "name": "PRODTEST_ERR_TROPIC_PAIR_IS_PAIRED_FAILED",
+      "module": "tropic"
+    },
+    {
+      "code": 20017,
+      "name": "PRODTEST_ERR_TROPIC_ACCESS_CRED_PUBKEY",
+      "module": "tropic"
+    },
+    {
+      "code": 20018,
+      "name": "PRODTEST_ERR_TROPIC_ACCESS_CRED_GET_PUBKEY",
+      "module": "tropic"
+    },
+    {
+      "code": 20019,
+      "name": "PRODTEST_ERR_TROPIC_ACCESS_CRED_ENCRYPT",
+      "module": "tropic"
+    },
+    {
+      "code": 20020,
+      "name": "PRODTEST_ERR_TROPIC_FIDO_KEY_MASKING",
+      "module": "tropic"
+    },
+    {
+      "code": 20021,
+      "name": "PRODTEST_ERR_TROPIC_FIDO_KEY_ENCRYPT",
+      "module": "tropic"
+    },
+    {
+      "code": 20022,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_NOT_PAIRED",
+      "module": "tropic"
+    },
+    {
+      "code": 20023,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_INPUT_LONG",
+      "module": "tropic"
+    },
+    {
+      "code": 20024,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_HEX_DECODE",
+      "module": "tropic"
+    },
+    {
+      "code": 20025,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_INPUT_LEN",
+      "module": "tropic"
+    },
+    {
+      "code": 20026,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_REQ_LEN",
+      "module": "tropic"
+    },
+    {
+      "code": 20027,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_REQ_DAMAGED",
+      "module": "tropic"
+    },
+    {
+      "code": 20028,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_SEND",
+      "module": "tropic"
+    },
+    {
+      "code": 20029,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_L2_SEND",
+      "module": "tropic"
+    },
+    {
+      "code": 20030,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_L2_RECEIVE",
+      "module": "tropic"
+    },
+    {
+      "code": 20031,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_RSP_LEN",
+      "module": "tropic"
+    },
+    {
+      "code": 20032,
+      "name": "PRODTEST_ERR_TROPIC_HANDSHAKE_RSP_DAMAGED",
+      "module": "tropic"
+    },
+    {
+      "code": 20033,
+      "name": "PRODTEST_ERR_TROPIC_CMD_INPUT_LONG",
+      "module": "tropic"
+    },
+    {
+      "code": 20034,
+      "name": "PRODTEST_ERR_TROPIC_CMD_HEX_DECODE",
+      "module": "tropic"
+    },
+    {
+      "code": 20035,
+      "name": "PRODTEST_ERR_TROPIC_CMD_NO_HANDSHAKE",
+      "module": "tropic"
+    },
+    {
+      "code": 20036,
+      "name": "PRODTEST_ERR_TROPIC_CMD_L3_LEN_REQ",
+      "module": "tropic"
+    },
+    {
+      "code": 20037,
+      "name": "PRODTEST_ERR_TROPIC_CMD_REQ_DAMAGED",
+      "module": "tropic"
+    },
+    {
+      "code": 20038,
+      "name": "PRODTEST_ERR_TROPIC_CMD_SEND",
+      "module": "tropic"
+    },
+    {
+      "code": 20039,
+      "name": "PRODTEST_ERR_TROPIC_CMD_RECEIVE",
+      "module": "tropic"
+    },
+    {
+      "code": 20040,
+      "name": "PRODTEST_ERR_TROPIC_CMD_L3_LEN_RSP",
+      "module": "tropic"
+    },
+    {
+      "code": 20041,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_NOT_PAIRED",
+      "module": "tropic"
+    },
+    {
+      "code": 20042,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_INIT",
+      "module": "tropic"
+    },
+    {
+      "code": 20043,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_ERASE",
+      "module": "tropic"
+    },
+    {
+      "code": 20044,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_R_CONFIG_WRITE",
+      "module": "tropic"
+    },
+    {
+      "code": 20045,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_R_CONFIG_VERIFY_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20046,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20047,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_WRITE",
+      "module": "tropic"
+    },
+    {
+      "code": 20048,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_VERIFY_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20049,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20050,
+      "name": "PRODTEST_ERR_TROPIC_CERT_SIGN",
+      "module": "tropic"
+    },
+    {
+      "code": 20051,
+      "name": "PRODTEST_ERR_TROPIC_CERT_WRITE_TOO_LONG",
+      "module": "tropic"
+    },
+    {
+      "code": 20052,
+      "name": "PRODTEST_ERR_TROPIC_CERT_WRITE_HEX_DECODE",
+      "module": "tropic"
+    },
+    {
+      "code": 20053,
+      "name": "PRODTEST_ERR_TROPIC_CERT_WRITE_CHAIN",
+      "module": "tropic"
+    },
+    {
+      "code": 20054,
+      "name": "PRODTEST_ERR_TROPIC_CERT_WRITE_DATA",
+      "module": "tropic"
+    },
+    {
+      "code": 20055,
+      "name": "PRODTEST_ERR_TROPIC_CERT_WRITE_READ_BACK",
+      "module": "tropic"
+    },
+    {
+      "code": 20056,
+      "name": "PRODTEST_ERR_TROPIC_CERT_WRITE_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20057,
+      "name": "PRODTEST_ERR_TROPIC_CERT_READ_DATA",
+      "module": "tropic"
+    },
+    {
+      "code": 20058,
+      "name": "PRODTEST_ERR_TROPIC_CERT_READ_FAILED",
+      "module": "tropic"
+    },
+    {
+      "code": 20059,
+      "name": "PRODTEST_ERR_TROPIC_PUBKEY_READ_LT",
+      "module": "tropic"
+    },
+    {
+      "code": 20060,
+      "name": "PRODTEST_ERR_TROPIC_PUBKEY_READ_KEY",
+      "module": "tropic"
+    },
+    {
+      "code": 20061,
+      "name": "PRODTEST_ERR_TROPIC_PUBKEY_READ_CURVE",
+      "module": "tropic"
+    },
+    {
+      "code": 20062,
+      "name": "PRODTEST_ERR_TROPIC_PUBKEY_READ_UNMASK",
+      "module": "tropic"
+    },
+    {
+      "code": 20063,
+      "name": "PRODTEST_ERR_TROPIC_KEYFIDO_READ_MASK",
+      "module": "tropic"
+    },
+    {
+      "code": 20064,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_CHIP_ID",
+      "module": "tropic"
+    },
+    {
+      "code": 20065,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION",
+      "module": "tropic"
+    },
+    {
+      "code": 20066,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_NO_REVISION",
+      "module": "tropic"
+    },
+    {
+      "code": 20067,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_REBOOT_MAINTENANCE",
+      "module": "tropic"
+    },
+    {
+      "code": 20068,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_RISCV_FW",
+      "module": "tropic"
+    },
+    {
+      "code": 20069,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_SPECT_FW",
+      "module": "tropic"
+    },
+    {
+      "code": 20070,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_REBOOT_APP",
+      "module": "tropic"
+    },
+    {
+      "code": 20071,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_RISCV_VERSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20072,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_SPECT_VERSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20073,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_INIT",
+      "module": "tropic"
+    },
+    {
+      "code": 20074,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_READY",
+      "module": "tropic"
+    },
+    {
+      "code": 20075,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_SESSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20076,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_NO_PAIRING_KEY",
+      "module": "tropic"
+    },
+    {
+      "code": 20077,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_SESSION_INVALIDATE",
+      "module": "tropic"
+    },
+    {
+      "code": 20078,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_SESSION_START",
+      "module": "tropic"
+    },
+    {
+      "code": 20079,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_SIGN_FAILED",
+      "module": "tropic"
+    },
+    {
+      "code": 20080,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_KEY_GENERATE",
+      "module": "tropic"
+    },
+    {
+      "code": 20081,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_EDDSA_SIGN",
+      "module": "tropic"
+    },
+    {
+      "code": 20082,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_KEY_ERASE",
+      "module": "tropic"
+    },
+    {
+      "code": 20083,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_RANDOM_GET",
+      "module": "tropic"
+    },
+    {
+      "code": 20084,
+      "name": "PRODTEST_ERR_TROPIC_ERASE_SLOTS_SESSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20085,
+      "name": "PRODTEST_ERR_TROPIC_ERASE_SLOTS",
+      "module": "tropic"
+    },
+    {
+      "code": 20086,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_INPUT_LONG",
+      "module": "tropic"
+    },
+    {
+      "code": 20087,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_HEX_DECODE",
+      "module": "tropic"
+    },
+    {
+      "code": 20088,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_INPUT_LEN",
+      "module": "tropic"
+    },
+    {
+      "code": 20089,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_SESSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20090,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_ERASE",
+      "module": "tropic"
+    },
+    {
+      "code": 20091,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_READ_CONFIG",
+      "module": "tropic"
+    },
+    {
+      "code": 20092,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_SLOT_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20093,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_SLOT_WRITE",
+      "module": "tropic"
+    },
+    {
+      "code": 20094,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_WRITE_VERIFY",
+      "module": "tropic"
+    },
+    {
+      "code": 20095,
+      "name": "PRODTEST_ERR_TROPIC_READ_SENSORS_SESSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20096,
+      "name": "PRODTEST_ERR_TROPIC_READ_SENSORS_CONFIG",
+      "module": "tropic"
+    },
+    {
+      "code": 20097,
+      "name": "PRODTEST_ERR_TROPIC_READ_CONFIGS_SESSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20098,
+      "name": "PRODTEST_ERR_TROPIC_READ_CONFIGS_R_CONFIG",
+      "module": "tropic"
+    },
+    {
+      "code": 20099,
+      "name": "PRODTEST_ERR_TROPIC_READ_CONFIGS_I_CONFIG",
+      "module": "tropic"
+    },
+    {
+      "code": 21000,
+      "name": "PRODTEST_ERR_UNIT_TEST_FAILED",
+      "module": "unit-test"
+    },
+    {
+      "code": 22000,
+      "name": "PRODTEST_ERR_WPC_INFO_INIT",
+      "module": "wpc"
+    },
+    {
+      "code": 22001,
+      "name": "PRODTEST_ERR_WPC_INFO_READ",
+      "module": "wpc"
+    },
+    {
+      "code": 22002,
+      "name": "PRODTEST_ERR_WPC_BUF_SMALL",
+      "module": "wpc"
+    },
+    {
+      "code": 22003,
+      "name": "PRODTEST_ERR_WPC_INFO_PM_REINIT",
+      "module": "wpc"
+    },
+    {
+      "code": 22004,
+      "name": "PRODTEST_ERR_WPC_UPDATE_INIT",
+      "module": "wpc"
+    },
+    {
+      "code": 22005,
+      "name": "PRODTEST_ERR_WPC_UPDATE_INFO_READ",
+      "module": "wpc"
+    },
+    {
+      "code": 22006,
+      "name": "PRODTEST_ERR_WPC_UNKNOWN_CHIP_REVISION",
+      "module": "wpc"
+    },
+    {
+      "code": 22007,
+      "name": "PRODTEST_ERR_WPC_UPDATE",
+      "module": "wpc"
+    },
+    {
+      "code": 22008,
+      "name": "PRODTEST_ERR_WPC_UPDATE_PM_REINIT",
+      "module": "wpc"
+    },
+    {
+      "code": 23000,
+      "name": "PRODTEST_ERR_COMMON_CERT_EXTENSIONS",
+      "module": "common"
+    },
+    {
+      "code": 23001,
+      "name": "PRODTEST_ERR_COMMON_CERT_AUTH_KEY_NOT_FOUND",
+      "module": "common"
+    },
+    {
+      "code": 23002,
+      "name": "PRODTEST_ERR_COMMON_CERT_AUTH_KEY_EXTNVALUE",
+      "module": "common"
+    },
+    {
+      "code": 23003,
+      "name": "PRODTEST_ERR_COMMON_CERT_AUTH_KEY_FIELD",
+      "module": "common"
+    },
+    {
+      "code": 23004,
+      "name": "PRODTEST_ERR_COMMON_CERT_AUTH_KEY_LEN",
+      "module": "common"
+    },
+    {
+      "code": 23005,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_READ_CERT",
+      "module": "common"
+    },
+    {
+      "code": 23006,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_READ_TBS",
+      "module": "common"
+    },
+    {
+      "code": 23007,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_READ_TBS_PRELUDE",
+      "module": "common"
+    },
+    {
+      "code": 23008,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_READ_SUBJECT",
+      "module": "common"
+    },
+    {
+      "code": 23009,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_COMMON_NAME",
+      "module": "common"
+    },
+    {
+      "code": 23010,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_DEVICE_SN",
+      "module": "common"
+    },
+    {
+      "code": 23011,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_SERIAL_NUM",
+      "module": "common"
+    },
+    {
+      "code": 23012,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_SN_MISMATCH",
+      "module": "common"
+    },
+    {
+      "code": 23013,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_READ_SPKI",
+      "module": "common"
+    },
+    {
+      "code": 23014,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_ALGORITHM",
+      "module": "common"
+    },
+    {
+      "code": 23015,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_READ_PUBKEY_BITS",
+      "module": "common"
+    },
+    {
+      "code": 23016,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_PUBKEY",
+      "module": "common"
+    },
+    {
+      "code": 23017,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_VERIFY_SIG",
+      "module": "common"
+    },
+    {
+      "code": 23018,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_READ_SIG_ALG",
+      "module": "common"
+    },
+    {
+      "code": 23019,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_SIG_VALUE",
+      "module": "common"
+    },
+    {
+      "code": 23020,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_ECDSA_DER",
+      "module": "common"
+    },
+    {
+      "code": 23021,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_ECDSA_ROOT",
+      "module": "common"
+    },
+    {
+      "code": 23022,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_ROOT_KEY",
+      "module": "common"
+    },
+    {
+      "code": 23023,
+      "name": "PRODTEST_ERR_COMMON_CERT_CHAIN_ROOT_SIG",
+      "module": "common"
+    },
+    {
+      "code": 23024,
+      "name": "PRODTEST_ERR_COMMON_UPDATE_NOT_STARTED",
+      "module": "common"
+    },
+    {
+      "code": 23025,
+      "name": "PRODTEST_ERR_COMMON_UPDATE_NO_DATA",
+      "module": "common"
+    },
+    {
+      "code": 23026,
+      "name": "PRODTEST_ERR_COMMON_UPDATE_FINALIZE",
+      "module": "common"
+    },
+    {
+      "code": 23027,
+      "name": "PRODTEST_ERR_COMMON_UPDATE_UNKNOWN_PHASE",
+      "module": "common"
+    },
+    {
+      "code": 24000,
+      "name": "PRODTEST_ERR_PRODTEST_BLE_BONDS_ERASE",
+      "module": "prodtest"
+    }
+  ]
+}

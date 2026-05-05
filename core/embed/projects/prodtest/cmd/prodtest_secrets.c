@@ -99,7 +99,8 @@ static void prodtest_secrets_init(cli_t* cli) {
   // Make sure that the secrets sector isn't locked so that we don't overwrite
   // the MCU's nRF pairing secret.
   if (secfalse != secret_is_locked()) {
-    cli_error(cli, CLI_ERROR, "Secret sector is already locked");
+    cli_error(cli, PRODTEST_ERR_SECRETS_SECTOR_ALREADY_LOCKED,
+              "Secret sector is already locked");
     return;
   }
 #endif
@@ -110,7 +111,8 @@ static void prodtest_secrets_init(cli_t* cli) {
   optiga_locked_status optiga_status = get_optiga_locked_status(cli);
 
   if (optiga_status == OPTIGA_LOCKED_TRUE) {
-    cli_error(cli, CLI_ERROR, "Optiga is already locked");
+    cli_error(cli, PRODTEST_ERR_SECRETS_OPTIGA_ALREADY_LOCKED,
+              "Optiga is already locked");
     return;
   }
 
@@ -125,7 +127,8 @@ static void prodtest_secrets_init(cli_t* cli) {
   // MCU's pairing secrets.
   curve25519_key tropic_public = {0};
   if (secret_key_tropic_public(tropic_public) == sectrue) {
-    cli_error(cli, CLI_ERROR, "Tropic pairing has already started.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_TROPIC_PAIRING_STARTED,
+              "Tropic pairing has already started.");
     return;
   }
 
@@ -134,7 +137,8 @@ static void prodtest_secrets_init(cli_t* cli) {
   // provisioning the factory pairing key should still be valid.
   if (tropic_custom_session_start(cli, TROPIC_FACTORY_PAIRING_KEY_SLOT) !=
       LT_OK) {
-    cli_error(cli, CLI_ERROR, "`tropic_custom_session_start()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_TROPIC_SESSION,
+              "`tropic_custom_session_start()` failed.");
     return;
   }
 #endif
@@ -142,7 +146,7 @@ static void prodtest_secrets_init(cli_t* cli) {
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
   if (set_random_secret(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
                         SECRET_MASTER_KEY_SLOT_SIZE) != sectrue) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_SECRETS_MASTER_KEY_PRIV,
               "`set_random_secret` failed for privileged master key.");
     return;
   }
@@ -151,7 +155,7 @@ static void prodtest_secrets_init(cli_t* cli) {
 #ifdef SECRET_UNPRIVILEGED_MASTER_KEY_SLOT
   if (set_random_secret(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
                         SECRET_MASTER_KEY_SLOT_SIZE) != sectrue) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_SECRETS_MASTER_KEY_UNPRIV,
               "`set_random_secret` failed for unprivileged master key.");
     return;
   }
@@ -161,7 +165,7 @@ static void prodtest_secrets_init(cli_t* cli) {
 #ifdef SECRET_OPTIGA_SLOT
   if (set_random_secret(SECRET_OPTIGA_SLOT, OPTIGA_PAIRING_SECRET_SIZE) !=
       sectrue) {
-    cli_error(cli, CLI_ERROR,
+    cli_error(cli, PRODTEST_ERR_SECRETS_OPTIGA_PAIRING,
               "`set_random_secret` failed for optiga pairing secret.");
     return;
   }
@@ -180,14 +184,16 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
 
   uint8_t seed[MLDSA_SEEDBYTES] = {0};
   if (secret_key_mcu_device_auth(seed) != sectrue) {
-    cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_DEVICE_KEY_AUTH,
+              "`secret_key_mcu_device_auth()` failed.");
     goto cleanup;
   }
 
   uint8_t mcu_public[MCU_ATTESTATION_PUBKEY_SIZE] = {0};
   uint8_t mcu_private[MCU_ATTESTATION_PRIVKEY_SIZE] = {0};
   if (mldsa_keypair_internal(mcu_public, mcu_private, seed) != 0) {
-    cli_error(cli, CLI_ERROR, "`mldsa_keypair_internal()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_DEVICE_KEY_KEYPAIR,
+              "`mldsa_keypair_internal()` failed.");
     goto cleanup;
   }
 
@@ -195,7 +201,8 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
   if (!secure_channel_encrypt(mcu_public, sizeof(mcu_public), NULL, 0,
                               output)) {
     // `secure_channel_handshake_2()` might not have been called
-    cli_error(cli, CLI_ERROR, "`secure_channel_encrypt()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_DEVICE_KEY_ENCRYPT,
+              "`secure_channel_encrypt()` failed.");
     goto cleanup;
   }
 
@@ -213,14 +220,16 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
 
   uint8_t seed[MLDSA_SEEDBYTES] = {0};
   if (secret_key_mcu_device_auth(seed) != sectrue) {
-    cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_CERT_CHAIN_AUTH,
+              "`secret_key_mcu_device_auth()` failed.");
     goto cleanup;
   }
 
   uint8_t mcu_public[MCU_ATTESTATION_PUBKEY_SIZE] = {0};
   uint8_t mcu_private[MCU_ATTESTATION_PRIVKEY_SIZE] = {0};
   if (mldsa_keypair_internal(mcu_public, mcu_private, seed) != 0) {
-    cli_error(cli, CLI_ERROR, "`mldsa_keypair_internal()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_CERT_CHAIN_KEYPAIR,
+              "`mldsa_keypair_internal()` failed.");
     goto cleanup;
   }
 
@@ -236,7 +245,8 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
                                ENCODED_EMPTY_CONTEXT_STRING,
                                sizeof(ENCODED_EMPTY_CONTEXT_STRING), rnd,
                                mcu_private, 0) != 0) {
-    cli_error(cli, CLI_ERROR, "`mldsa_signature_internal()` failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_SIGN_SIGNATURE,
+              "`mldsa_signature_internal()` failed.");
     goto cleanup;
   }
 
@@ -262,16 +272,19 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
   }
 
 #ifdef TREZOR_EMULATOR
-  cli_error(cli, CLI_ERROR, "Not implemented");
+  cli_error(cli, PRODTEST_ERR_SECRETS_CERTDEV_WRITE_NOT_IMPL,
+            "Not implemented");
 #else
   size_t certificate_length = 0;
   uint8_t certificate[MCU_ATTESTATION_MAX_CERT_SIZE] = {0};
   if (!cli_arg_hex(cli, "hex-data", certificate, sizeof(certificate),
                    &certificate_length)) {
     if (certificate_length == sizeof(certificate)) {
-      cli_error(cli, CLI_ERROR, "Certificate too long.");
+      cli_error(cli, PRODTEST_ERR_SECRETS_CERT_TOO_LONG,
+                "Certificate too long.");
     } else {
-      cli_error(cli, CLI_ERROR, "Hexadecimal decoding error.");
+      cli_error(cli, PRODTEST_ERR_SECRETS_CERT_HEX_DECODE,
+                "Hexadecimal decoding error.");
     }
     return;
   }
@@ -283,7 +296,8 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
 
   if (secret_mcu_device_cert_write(certificate, certificate_length) !=
       sectrue) {
-    cli_error(cli, CLI_ERROR, "secret_mcu_device_cert_write() failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_WRITE,
+              "secret_mcu_device_cert_write() failed.");
     return;
   }
 
@@ -298,14 +312,15 @@ static void prodtest_secrets_certdev_read(cli_t* cli) {
   }
 
 #ifdef TREZOR_EMULATOR
-  cli_error(cli, CLI_ERROR, "Not implemented");
+  cli_error(cli, PRODTEST_ERR_SECRETS_CERTDEV_READ_NOT_IMPL, "Not implemented");
 #else
   uint8_t certificate[MCU_ATTESTATION_MAX_CERT_SIZE] = {0};
   size_t certificate_length = 0;
 
   if (secret_mcu_device_cert_read(certificate, sizeof(certificate),
                                   &certificate_length) != sectrue) {
-    cli_error(cli, CLI_ERROR, "secret_mcu_device_cert_read() failed.");
+    cli_error(cli, PRODTEST_ERR_SECRETS_READ,
+              "secret_mcu_device_cert_read() failed.");
     return;
   }
 
@@ -328,7 +343,8 @@ static void prodtest_secrets_lock(cli_t* cli) {
   }
 
   if (sectrue != secret_lock()) {
-    cli_error(cli, CLI_ERROR, "Failed to lock secret sector");
+    cli_error(cli, PRODTEST_ERR_SECRETS_SECTOR_LOCK,
+              "Failed to lock secret sector");
     return;
   }
 

@@ -199,6 +199,12 @@ hsm_keys:
 hsm_keys_check:
 	./core/tools/generate_hsm_keys.py --check
 
-gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config hsm_keys ## regenerate auto-generated files from sources
+prodtest_error_codes: ## generate prodtest error codes JSON
+	python3 core/tools/prodtest_error_codes.py
 
-gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check hsm_keys_check ## check validity of auto-generated files
+prodtest_error_codes_check: ## check prodtest error codes JSON is up to date
+	python3 core/tools/prodtest_error_codes.py --check
+
+gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config hsm_keys prodtest_error_codes ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check hsm_keys_check prodtest_error_codes_check ## check validity of auto-generated files

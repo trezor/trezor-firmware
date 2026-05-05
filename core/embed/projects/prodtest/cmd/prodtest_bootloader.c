@@ -46,7 +46,8 @@ static void prodtest_bootloader_version(cli_t *cli) {
 
   if (hdr == NULL) {
     mpu_restore(mpu_mode);
-    cli_error(cli, CLI_ERROR, "No valid bootloader header found.");
+    cli_error(cli, PRODTEST_ERR_BOOTLOADER_NO_AUTH_HEADER,
+              "No valid bootloader header found.");
     return;
   }
 
@@ -69,7 +70,8 @@ static void prodtest_bootloader_version(cli_t *cli) {
   if (header != NULL) {
     v = header->version;
   } else {
-    cli_error(cli, CLI_ERROR, "No valid bootloader header found.");
+    cli_error(cli, PRODTEST_ERR_BOOTLOADER_NO_IMAGE_HEADER,
+              "No valid bootloader header found.");
     return;
   }
 
