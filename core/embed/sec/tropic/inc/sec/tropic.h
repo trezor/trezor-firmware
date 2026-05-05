@@ -41,6 +41,10 @@
 #define TROPIC_DEVICE_CERT_SLOT_COUNT 3
 #define TROPIC_DEVICE_KEY_SLOT 0  // ECC_SLOT_0
 
+// Slot reserved for the version of Tropic configuration
+#define TROPIC_CONFIG_VERSION_SLOT 6
+#define TROPIC_CONFIG_VERSION 0x01
+
 // Pairing key used by prodtest to inject the privileged and unprivileged
 // pairing keys.
 #define TROPIC_FACTORY_PAIRING_KEY_SLOT 0  // TR01_PAIRING_KEY_SLOT_INDEX_0
@@ -99,9 +103,11 @@ lt_ret_t lt_read_whole_R_config_retry(lt_handle_t* tropic_handle,
 lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t* tropic_handle,
                                            const struct lt_config_t* config);
 
-#endif
+#endif  // TREZOR_PRODTEST
 
-#endif
+#endif  // KERNEL_MODE
+
+secbool tropic_ensure_configuration(void);
 
 typedef secbool (*tropic_ui_progress_t)(void);
 

@@ -64,6 +64,10 @@ extern const void nrf_app_size;
 
 #endif
 
+#ifdef USE_TROPIC
+#include <sec/tropic.h>
+#endif
+
 LOG_DECLARE(coreapp_main)
 
 int main_func(uint32_t cmd, void *arg) {
@@ -126,6 +130,10 @@ int main_func(uint32_t cmd, void *arg) {
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
+#endif
+
+#ifdef USE_TROPIC
+  ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
 #endif
 
   LOG_INF("Preparing stack");
