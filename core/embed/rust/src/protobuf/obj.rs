@@ -2,19 +2,20 @@ use core::convert::TryFrom;
 
 use micropython::{
     dict::Dict,
+    error::Error,
     ffi,
     gc::Gc,
     macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_type},
     map::Map,
     module::Module,
-    obj::{Obj, ObjBase},
-    py_object::{GcObject, PyObject, PythonObject},
+    obj::Obj,
+    py_object::{GcObject, PyObject},
     qstr::Attribute,
     typ::Type,
     util,
 };
 
-use crate::{error::Error, micropython::qstr::Qstr};
+use crate::micropython::qstr::Qstr;
 
 use super::{
     decode::{protobuf_decode, Decoder},

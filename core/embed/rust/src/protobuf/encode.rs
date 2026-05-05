@@ -1,12 +1,11 @@
 use core::convert::{TryFrom, TryInto};
 
-use micropython::{buffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, py_object::GcObject, util};
-
-use crate::error::Error;
+use micropython::{
+    buffer, error::Error, gc::Gc, iter::IterBuf, list::List, obj::Obj, py_object::GcObject, util,
+};
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
-    error,
     obj::MsgObj,
     zigzag,
 };
@@ -210,7 +209,7 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += len;
                 buf.copy_from_slice(val);
             })
-            .ok_or_else(error::end_of_buffer)
+            .ok_or_else(|| Error::EOFError)
     }
 
     fn write_byte(&mut self, val: u8) -> Result<(), Error> {
@@ -221,6 +220,6 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += 1;
                 *buf = val;
             })
-            .ok_or_else(error::end_of_buffer)
+            .ok_or_else(|| Error::EOFError)
     }
 }

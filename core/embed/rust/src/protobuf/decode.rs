@@ -3,9 +3,9 @@ use core::{
     str,
 };
 
-use micropython::{buffer, gc::Gc, list::List, map::Map, obj::Obj, py_object::GcObject, util};
+use micropython::{buffer, error::Error, gc::Gc, list::List, map::Map, obj::Obj, py_object::GcObject, util};
 
-use crate::{error::Error, io::InputStream};
+use crate::io::InputStream;
 
 use super::{
     defs::{self, FieldDef, FieldType, MsgDef},
