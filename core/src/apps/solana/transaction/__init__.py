@@ -7,7 +7,9 @@ from trezor.wire import DataError
 from ..constants import (
     MICROLAMPORTS_PER_LAMPORT,
     SOLANA_BASE_FEE_LAMPORTS,
+    SOLANA_BUILTIN_COMPUTE_UNIT_LIMIT,
     SOLANA_COMPUTE_UNIT_LIMIT,
+    SOLANA_COMPUTE_UNIT_LIMIT_CAP,
 )
 from ..types import AddressType
 from .instruction import Instruction
@@ -24,6 +26,28 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
     from ..types import Account, Address, AddressReference, RawInstruction
+
+
+ED25519_PROGRAM_ID = "Ed25519SigVerify111111111111111111111111111"
+SECP256K1_PROGRAM_ID = "KeccakSecp256k11111111111111111111111111111"
+SECP256R1_PROGRAM_ID = "Secp256r1SigVerify1111111111111111111111111"
+SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
+VOTE_PROGRAM_ID = "Vote111111111111111111111111111111111111111"
+BPF_LOADER_V1_PROGRAM_ID = "BPFLoader1111111111111111111111111111111111"
+BPF_LOADER_V2_PROGRAM_ID = "BPFLoader2111111111111111111111111111111111"
+BPF_LOADER_V3_PROGRAM_ID = "BPFLoaderUpgradeab1e11111111111111111111111"
+BPF_LOADER_V4_PROGRAM_ID = "LoaderV411111111111111111111111111111111111"
+SOLANA_BUILTIN_PROGRAM_IDS = (
+    VOTE_PROGRAM_ID,
+    SYSTEM_PROGRAM_ID,
+    COMPUTE_BUDGET_PROGRAM_ID,
+    BPF_LOADER_V3_PROGRAM_ID,
+    BPF_LOADER_V1_PROGRAM_ID,
+    BPF_LOADER_V2_PROGRAM_ID,
+    BPF_LOADER_V4_PROGRAM_ID,
+    SECP256K1_PROGRAM_ID,
+    ED25519_PROGRAM_ID,
+)
 
 
 class Fee:
@@ -222,18 +246,36 @@ class Transaction:
             if not instruction.is_ui_hidden
         ]
 
-    def calculate_fee(self) -> Fee | None:
-        number_of_signers = 0
-        for address in self.addresses:
-            if address[1] == AddressType.AddressSig:
-                number_of_signers += 1
+    def _count_precompile_signatures(self, precompile_program_id: str) -> int:
+        return sum(
+            # Solana precompile instructions encode the signature count in byte 0.
+            instruction.instruction_data[0] if len(instruction.instruction_data) else 0
+            for instruction in self.instructions
+            if instruction.program_id == precompile_program_id
+        )
 
-        base_fee = SOLANA_BASE_FEE_LAMPORTS * number_of_signers
+    def num_ed25519_signatures(self) -> int:
+        return self._count_precompile_signatures(ED25519_PROGRAM_ID)
+
+    def num_secp256k1_signatures(self) -> int:
+        return self._count_precompile_signatures(SECP256K1_PROGRAM_ID)
+
+    def num_secp256r1_signatures(self) -> int:
+        return self._count_precompile_signatures(SECP256R1_PROGRAM_ID)
+
+    def calculate_fee(self) -> Fee | None:
+        base_fee = SOLANA_BASE_FEE_LAMPORTS * (
+            self.required_signers_count
+            + self.num_ed25519_signatures()
+            + self.num_secp256k1_signatures()
+            + self.num_secp256r1_signatures()
+        )
 
         unit_price = 0
         is_unit_price_set = False
-        unit_limit = SOLANA_COMPUTE_UNIT_LIMIT
+        unit_limit = 0
         is_unit_limit_set = False
+        default_unit_limit = 0
 
         for instruction in self.instructions:
             if instruction.program_id == COMPUTE_BUDGET_PROGRAM_ID:
@@ -251,6 +293,14 @@ class Transaction:
                 ):
                     unit_price = instruction.lamports
                     is_unit_price_set = True
+            else:
+                if instruction.program_id in SOLANA_BUILTIN_PROGRAM_IDS:
+                    default_unit_limit += SOLANA_BUILTIN_COMPUTE_UNIT_LIMIT
+                else:
+                    default_unit_limit += SOLANA_COMPUTE_UNIT_LIMIT
+
+        if not is_unit_limit_set:
+            unit_limit = min(default_unit_limit, SOLANA_COMPUTE_UNIT_LIMIT_CAP)
 
         priority_fee = unit_price * unit_limit  # in microlamports
         rent = self.calculate_rent()
