@@ -98,9 +98,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_telemetry_get_obj,
 /// def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
 ///     """
 ///     Compares the private information in `sec` with public, user-provided
-///     information in `pub`.  Runs in constant time, corresponding to a length
-///     of `pub`.  Can access memory behind valid length of `sec`, caller is
-///     expected to avoid any invalid memory access.
+///     information in `pub`.  Runs in constant time, corresponding to the
+///     length of `pub`.
 ///     """
 STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
   mp_buffer_info_t secbuf = {0};
@@ -108,10 +107,14 @@ STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
   mp_buffer_info_t pubbuf = {0};
   mp_get_buffer_raise(pub, &pubbuf, MP_BUFFER_READ);
 
-  size_t diff = secbuf.len - pubbuf.len;
+  // Redirect s to p when lengths differ so the loop cannot read past sec,
+  // while keeping the instruction count independent of the secret length.
+  uint8_t diff = (secbuf.len != pubbuf.len);
+  uintptr_t mask = -(uintptr_t)diff;
+  const uint8_t *s = (const uint8_t *)(((uintptr_t)secbuf.buf & ~mask) |
+                                       ((uintptr_t)pubbuf.buf & mask));
+  const uint8_t *p = (const uint8_t *)pubbuf.buf;
   for (size_t i = 0; i < pubbuf.len; i++) {
-    const uint8_t *s = (uint8_t *)secbuf.buf;
-    const uint8_t *p = (uint8_t *)pubbuf.buf;
     diff |= s[i] - p[i];
   }
 

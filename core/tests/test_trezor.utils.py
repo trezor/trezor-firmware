@@ -81,6 +81,22 @@ class TestUtils(unittest.TestCase):
         utils.memzero(data)
         self.assertEqual(data, bytearray(10))
 
+    def test_consteq(self):
+        self.assertTrue(utils.consteq(b"", b""))
+        self.assertFalse(utils.consteq(b"", b"\x42"))
+        self.assertFalse(utils.consteq(b"\x42", b""))
+        self.assertFalse(utils.consteq(b"hell", b"hello"))
+        self.assertFalse(utils.consteq(b"hello", b"ello"))
+        long1 = b"x" * 999 + b"y"
+        long2 = b"x" * 1000
+        self.assertFalse(utils.consteq(bytearray(long1), long2))
+        self.assertFalse(utils.consteq(long1, bytearray(long2)))
+        self.assertTrue(utils.consteq(long1, bytearray(long1)))
+        self.assertTrue(utils.consteq(bytearray(long1), long1))
+        self.assertFalse(utils.consteq(b"", long1))
+        self.assertTrue(utils.consteq(memoryview(b"hello"), b"hello"))
+        self.assertTrue(utils.consteq(b"hello", memoryview(b"hello")))
+
 
 if __name__ == "__main__":
     unittest.main()
