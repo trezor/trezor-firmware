@@ -23,7 +23,7 @@
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
 
 void applet_init(applet_t* applet, const applet_privileges_t* privileges,
                  applet_unload_cb_t unload_cb) {
@@ -65,4 +65,4 @@ applet_t* applet_active(void) {
   return (applet_t*)task->applet;
 }
 
-#endif  // KERNEL
+#endif  // USE_APPLETS
