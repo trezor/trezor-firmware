@@ -445,7 +445,7 @@ class Atomic(ABIValue):
         self.parser = parser
 
     def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
-        if offset > len(raw_data):
+        if offset + 32 > len(raw_data):
             raise OutOfBounds
         return self.parser(raw_data[offset : offset + 32]), 32
 
