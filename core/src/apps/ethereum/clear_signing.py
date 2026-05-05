@@ -154,6 +154,8 @@ def parse_string(raw_data: memoryview) -> Value:
 
 
 def parse_uint256_array(raw_data: memoryview) -> list[Value]:
+    if len(raw_data) % 32 != 0:
+        raise InvalidFunctionCall
     return [
         parse_uint256(raw_data[i * 32 : (i + 1) * 32])
         for i in range(len(raw_data) // 32)
