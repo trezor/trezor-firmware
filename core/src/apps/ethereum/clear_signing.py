@@ -450,6 +450,17 @@ class Atomic(ABIValue):
         return self.parser(raw_data[offset : offset + 32]), 32
 
 
+def _read_dynamic_data(raw_data: memoryview, pointer: int) -> memoryview:
+    """Read a variable-length blob located at `pointer` in `raw_data`,
+    encoded as a 32-byte length prefix followed by `length` bytes of data."""
+    if pointer + 32 > len(raw_data):
+        raise OutOfBounds
+    length = int.from_bytes(raw_data[pointer : pointer + 32], "big")
+    if pointer + 32 + length > len(raw_data):
+        raise OutOfBounds
+    return raw_data[pointer + 32 : pointer + 32 + length]
+
+
 class Dynamic(ABIValue):
     """Dynamic values, such as strings or `bytes` are stored later in the calldata,
     the inline value being just a pointer to the actual location.
@@ -463,12 +474,7 @@ class Dynamic(ABIValue):
         if offset + 32 > len(raw_data):
             raise OutOfBounds
         pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-        if pointer + 32 > len(raw_data):
-            raise OutOfBounds
-        length = int.from_bytes(raw_data[pointer : pointer + 32], "big")
-        if pointer + 32 + length > len(raw_data):
-            raise OutOfBounds
-        data = raw_data[pointer + 32 : pointer + 32 + length]
+        data = _read_dynamic_data(raw_data, pointer)
         return self.parser(data), 32
 
 
@@ -511,15 +517,7 @@ class Tuple(ABIValue):
                 value[i] = v
             else:
                 field_pointer = base_offset + int.from_bytes(raw_field, "big")
-
-                if field_pointer + 32 > len(raw_data):
-                    raise OutOfBounds
-                length = int.from_bytes(
-                    raw_data[field_pointer : field_pointer + 32], "big"
-                )
-                if field_pointer + 32 + length > len(raw_data):
-                    raise OutOfBounds
-                raw_field = raw_data[field_pointer + 32 : field_pointer + 32 + length]
+                raw_field = _read_dynamic_data(raw_data, field_pointer)
                 v = parser(raw_field)
                 if isinstance(v, (tuple, list)):
                     # Tuple or Array inside a Tuple
