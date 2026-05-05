@@ -2406,13 +2406,15 @@ requires-dist = [
 
 [[package]]
 name = "tvl"
-version = "2.3"
+version = "2.4"
 source = { editable = "vendor/ts-tvl" }
 dependencies = [
+    { name = "cffi" },
     { name = "crcmod" },
     { name = "cryptography" },
     { name = "isort" },
     { name = "jinja2" },
+    { name = "libcst" },
     { name = "pycln" },
     { name = "pycryptodome" },
     { name = "pydantic" },
@@ -2423,10 +2425,14 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cffi", marker = "python_full_version == '3.8.*'", specifier = ">=1.12,<2.0" },
+    { name = "cffi", marker = "python_full_version >= '3.9'", specifier = ">=2.0" },
     { name = "crcmod", specifier = ">=1.7,<2.0" },
     { name = "cryptography", specifier = ">43" },
     { name = "isort", specifier = ">=5.13.2,<6.0.0" },
     { name = "jinja2", specifier = ">=3.1.4,<4.0.0" },
+    { name = "libcst", marker = "python_full_version == '3.8.*'", specifier = ">=1.1.0,<1.2.0" },
+    { name = "libcst", marker = "python_full_version >= '3.9'", specifier = ">=1.4.0" },
     { name = "pycln", specifier = ">=2.4.0,<3.0.0" },
     { name = "pycryptodome", specifier = ">=3.19.0,<4.0.0" },
     { name = "pydantic", specifier = ">=1.10.0,<2.0.0" },
