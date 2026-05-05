@@ -387,3 +387,23 @@ class workflow(t.Generic[P, R]):
             session.refresh_features()
 
         return result
+
+
+def __getattr__(name: str) -> t.Any:
+    import warnings
+
+    if name not in ("EnumAdapter", "TupleAdapter"):
+        raise AttributeError(f"module 'trezorlib.tools' has no attribute '{name}'")
+    warnings.warn(
+        f"trezorlib.tools.{name} is deprecated and will be removed in 0.21. Use trezorlib.construct_helpers.{name} instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    from . import construct_helpers
+
+    if name == "EnumAdapter":
+        return construct_helpers.EnumAdapter
+    if name == "TupleAdapter":
+        return construct_helpers.TupleAdapter
+    raise AttributeError(f"module 'trezorlib.tools' has no attribute '{name}'")

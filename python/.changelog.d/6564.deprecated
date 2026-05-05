@@ -1,0 +1,1 @@
+`trezorlib.ui` is deprecated, the module has been moved to `trezorlib.cli.ui`.
