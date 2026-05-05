@@ -201,7 +201,7 @@ impl Component for NumberInput {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut buf = [0u8; 10];
 
-        if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
+        if let Some(text) = strutil::format_i64(i64::from(self.value), &mut buf) {
             let digit_font = fonts::FONT_DEMIBOLD;
             let y_offset = digit_font.text_height() / 2 + Button::BASELINE_OFFSET;
 
@@ -221,6 +221,6 @@ impl Component for NumberInput {
 impl crate::trace::Trace for NumberInput {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("NumberInput");
-        t.int("value", self.value as i64);
+        t.int("value", i64::from(self.value));
     }
 }

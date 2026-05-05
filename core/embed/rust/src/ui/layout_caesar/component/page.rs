@@ -209,8 +209,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ButtonPage");
-        t.int("active_page", self.pager().current() as i64);
-        t.int("page_count", self.pager().total() as i64);
+        t.int("active_page", i64::from(self.pager().current()));
+        t.int("page_count", i64::from(self.pager().total()));
         t.child("buttons", &self.buttons);
         t.child("content", &self.content);
         t.bool("has_menu", self.has_menu);

@@ -217,6 +217,6 @@ impl Component for NumberInputSlider {
 impl crate::trace::Trace for NumberInputSlider {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("NumberInputSlider");
-        t.int("value", self.value as i64);
+        t.int("value", i64::from(self.value));
     }
 }

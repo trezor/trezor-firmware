@@ -70,7 +70,7 @@ impl HorizontalSwipe {
                     let p = Point::lerp(
                         bounds.top_right(),
                         bounds.top_left(),
-                        shift.eval(self.progress as f32 / SwipeDetect::PROGRESS_MAX as f32),
+                        shift.eval(f32::from(self.progress) / f32::from(SwipeDetect::PROGRESS_MAX)),
                     );
 
                     shape::Bar::new(Rect::new(p, bounds.bottom_right()))

@@ -166,7 +166,7 @@ impl SwipeContext {
     }
 
     fn get_params(&self, bounds: Rect) -> (Offset, Rect, u8) {
-        let progress = self.progress as f32 / 1000.0;
+        let progress = f32::from(self.progress) / 1000.0;
 
         let shift = pareen::constant(0.0).seq_ease_out(
             0.0,

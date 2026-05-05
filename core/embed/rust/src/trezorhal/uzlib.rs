@@ -236,7 +236,7 @@ unsafe extern "C" fn zlib_reader_callback(uncomp: *mut ffi::uzlib_uncomp) -> i32
     let mut ctx = unwrap!(unsafe { ctx.as_ref() }).borrow_mut();
 
     match ctx.reader_callback(uncomp) {
-        Some(byte) => byte as i32,
+        Some(byte) => i32::from(byte),
         None => -1, // EOF
     }
 }

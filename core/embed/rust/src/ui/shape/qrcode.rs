@@ -44,7 +44,7 @@ impl QrImage {
         // Copy content of QR code to the qrmodules buffer
         for y in 0..result.qr_size {
             for x in 0..result.qr_size {
-                result.set_module(x, y, qrcode.get_module(x as i32, y as i32));
+                result.set_module(x, y, qrcode.get_module(i32::from(x), i32::from(y)));
             }
         }
 

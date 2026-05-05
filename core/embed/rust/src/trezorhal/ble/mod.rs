@@ -41,7 +41,7 @@ pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
                 .iter()
                 .take(6)
                 .map(|&b| b - b'0')
-                .fold(0, |acc, d| acc * 10 + d as u32);
+                .fold(0, |acc, d| acc * 10 + u32::from(d));
             BLEEvent::PairingRequest(code)
         }
         ffi::ble_event_type_t_BLE_PAIRING_CANCELLED => BLEEvent::PairingCanceled,

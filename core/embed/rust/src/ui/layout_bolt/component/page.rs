@@ -412,8 +412,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ButtonPage");
-        t.int("active_page", self.scrollbar.pager().current() as i64);
-        t.int("page_count", self.scrollbar.pager().total() as i64);
+        t.int("active_page", i64::from(self.scrollbar.pager().current()));
+        t.int("page_count", i64::from(self.scrollbar.pager().total()));
         t.bool("hold", self.loader.is_some());
         t.child("content", &self.content);
     }

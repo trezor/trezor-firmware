@@ -118,7 +118,7 @@ impl PassphraseInput {
         // Number of visible icons + characters
         let visible_len = pp_len.min(Self::MAX_SHOWN_LEN);
         // Number of visible icons
-        let visible_icons = visible_len - last_char as usize;
+        let visible_icons = visible_len - usize::from(last_char);
 
         // Jiggle when overflowed.
         if pp_len > visible_len

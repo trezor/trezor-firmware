@@ -304,7 +304,7 @@ impl HoldToConfirmAnim {
 
     fn get_top_gap_rollback(&self, elapsed: Duration) -> Rect {
         let progress = (elapsed / self.rollback_duration()).clamp(0.0, 1.0);
-        let clip_width = (progress * SCREEN.width() as f32) as i16;
+        let clip_width = (progress * f32::from(SCREEN.width())) as i16;
         Rect::from_center_and_size(
             SCREEN.top_center().ofs(Offset::y(ScreenBorder::WIDTH / 2)),
             Offset::new(clip_width, ScreenBorder::WIDTH),

@@ -67,11 +67,13 @@ impl Menu {
         Rect::new(
             Point::new(
                 CONTENT_PADDING,
-                BUTTON_AREA_START + i as i16 * (BUTTON_HEIGHT + BUTTON_SPACING),
+                BUTTON_AREA_START + i16::from(i) * (BUTTON_HEIGHT + BUTTON_SPACING),
             ),
             Point::new(
                 WIDTH - CONTENT_PADDING,
-                BUTTON_AREA_START + (i + 1) as i16 * BUTTON_HEIGHT + i as i16 * BUTTON_SPACING,
+                BUTTON_AREA_START
+                    + i16::from(i + 1) * BUTTON_HEIGHT
+                    + i16::from(i) * BUTTON_SPACING,
             ),
         )
     }

@@ -493,7 +493,7 @@ impl Button {
                 shape::Bar::new(self.area)
                     .with_bg(style.button_color)
                     .with_fg(style.button_color)
-                    .with_radius(radius as i16)
+                    .with_radius(i16::from(radius))
                     .with_thickness(2)
                     .with_alpha(alpha)
                     .render(target);

@@ -42,6 +42,6 @@ impl Component for Timeout {
 impl crate::trace::Trace for Timeout {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Timeout");
-        t.int("time_ms", self.time_ms as i64);
+        t.int("time_ms", i64::from(self.time_ms));
     }
 }

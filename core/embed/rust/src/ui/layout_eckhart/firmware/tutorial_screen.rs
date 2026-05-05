@@ -135,7 +135,7 @@ impl Component for TutorialWelcomeScreen {
 
         if loader_running {
             let progress = self.stopwatch.elapsed() / LOADER_DURATION;
-            let loader_val = (progress * LOADER_MAX_VAL as f32) as u16;
+            let loader_val = (progress * f32::from(LOADER_MAX_VAL)) as u16;
             render_loader_indeterminate(loader_val, &self.border, target);
         }
     }
