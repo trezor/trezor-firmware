@@ -912,18 +912,22 @@ async def _handle_approve(
 
     args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
-    assert len(args) == 2
-    assert len(fields) == 2
+    if len(args) != 2 or len(fields) != 2:
+        raise InvalidFormatDefinition
 
     arg0_raw_value = args[0]
     (field0_name, recipient_addr, _), _, _ = fields[0]
-    assert field0_name == "Spender"
+    if field0_name != "Spender":
+        raise InvalidFormatDefinition
+
     assert isinstance(arg0_raw_value, bytes)
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
     (field1_name, value, _), actual_token, _ = fields[1]
-    assert field1_name == "Amount"
+    if field1_name != "Amount":
+        raise InvalidFormatDefinition
+
     assert isinstance(arg1_raw_value, int)
 
     recipient_str = KNOWN_ADDRESSES.get(arg0_raw_value)
@@ -964,17 +968,21 @@ async def _handle_transfer(
 
     args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
-    assert len(args) == 2
-    assert len(fields) == 2
+    if len(args) != 2 or len(fields) != 2:
+        raise InvalidFormatDefinition
 
     (arg0_name, recipient_addr, _), _, _ = fields[0]
-    assert arg0_name == "To"
+    if arg0_name != "To":
+        raise InvalidFormatDefinition
+
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
     assert isinstance(arg1_raw_value, int)
     (arg1_name, value, _), actual_token, _ = fields[1]
-    assert arg1_name == "Amount"
+    if arg1_name != "Amount":
+        raise InvalidFormatDefinition
+
     assert isinstance(value, str)
 
     if payment_request_verifier:
