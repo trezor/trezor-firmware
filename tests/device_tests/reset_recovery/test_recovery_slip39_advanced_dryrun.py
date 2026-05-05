@@ -51,6 +51,7 @@ def test_2of3_dryrun(session: Session):
             pin_protection=False,
             label="label",
             type=messages.RecoveryType.DryRun,
+            backup_method=messages.BackupMethod.Display,
         )
 
 
@@ -73,4 +74,5 @@ def test_2of3_invalid_seed_dryrun(session: Session):
             pin_protection=False,
             label="label",
             type=messages.RecoveryType.DryRun,
+            backup_method=messages.BackupMethod.Display,
         )

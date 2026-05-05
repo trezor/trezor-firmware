@@ -33,16 +33,18 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-def test_repeated_backup_via_host(session: Session):
+def test_repeated_backup_via_host(
+    session: Session, backup_method: messages.BackupMethod
+):
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicBackup(session, False)
+        IF = InputFlowSlip39BasicBackup(session, False, method=backup_method)
         client.set_input_flow(IF.get())
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
         mnemonics = IF.mnemonics
 
     assert len(mnemonics) == 5
@@ -53,15 +55,19 @@ def test_repeated_backup_via_host(session: Session):
     )
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
     with session.test_ctx as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            session, mnemonics[:3], unlock_repeated_backup=True
+            session, mnemonics[:3], unlock_repeated_backup=True, method=backup_method
         )
         client.set_input_flow(IF.get())
-        device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
+        device.recover(
+            session,
+            type=messages.RecoveryType.UnlockRepeatedBackup,
+            backup_method=backup_method,
+        )
         assert (
             session.features.backup_availability
             == messages.BackupAvailability.Available
@@ -70,9 +76,11 @@ def test_repeated_backup_via_host(session: Session):
 
     # we can now perform another backup
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicBackup(session, False, repeated=True)
+        IF = InputFlowSlip39BasicBackup(
+            session, False, repeated=True, method=backup_method
+        )
         client.set_input_flow(IF.get())
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
     # the backup feature is locked again...
     assert (
@@ -84,7 +92,9 @@ def test_repeated_backup_via_host(session: Session):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
-def test_repeated_backup_via_host_upgrade_single(session: Session):
+def test_repeated_backup_via_host_upgrade_single(
+    session: Session, backup_method: messages.BackupMethod
+):
     assert (
         session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
@@ -94,10 +104,17 @@ def test_repeated_backup_via_host_upgrade_single(session: Session):
     # unlock repeated backup by entering the single share
     with session.test_ctx as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            session, MNEMONIC_SLIP39_SINGLE_EXT_20, unlock_repeated_backup=True
+            session,
+            MNEMONIC_SLIP39_SINGLE_EXT_20,
+            unlock_repeated_backup=True,
+            method=backup_method,
         )
         client.set_input_flow(IF.get())
-        device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
+        device.recover(
+            session,
+            type=messages.RecoveryType.UnlockRepeatedBackup,
+            backup_method=backup_method,
+        )
         assert (
             session.features.backup_availability
             == messages.BackupAvailability.Available
@@ -106,9 +123,11 @@ def test_repeated_backup_via_host_upgrade_single(session: Session):
 
     # we can now perform another backup
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicBackup(session, False, repeated=True)
+        IF = InputFlowSlip39BasicBackup(
+            session, False, repeated=True, method=backup_method
+        )
         client.set_input_flow(IF.get())
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
     # backup type was upgraded:
     assert session.features.backup_type == messages.BackupType.Slip39_Basic_Extendable
@@ -122,16 +141,18 @@ def test_repeated_backup_via_host_upgrade_single(session: Session):
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-def test_repeated_backup_via_host_cancel(session: Session):
+def test_repeated_backup_via_host_cancel(
+    session: Session, backup_method: messages.BackupMethod
+):
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicBackup(session, False)
+        IF = InputFlowSlip39BasicBackup(session, False, method=backup_method)
         client.set_input_flow(IF.get())
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
         mnemonics = IF.mnemonics
 
     assert len(mnemonics) == 5
@@ -142,15 +163,19 @@ def test_repeated_backup_via_host_cancel(session: Session):
     )
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
     with session.test_ctx as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            session, mnemonics[:3], unlock_repeated_backup=True
+            session, mnemonics[:3], unlock_repeated_backup=True, method=backup_method
         )
         client.set_input_flow(IF.get())
-        device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
+        device.recover(
+            session,
+            type=messages.RecoveryType.UnlockRepeatedBackup,
+            backup_method=backup_method,
+        )
         assert (
             session.features.backup_availability
             == messages.BackupAvailability.Available
@@ -177,16 +202,18 @@ def test_repeated_backup_via_host_cancel(session: Session):
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-def test_repeated_backup_via_host_send_disallowed_message(session: Session):
+def test_repeated_backup_via_host_send_disallowed_message(
+    session: Session, backup_method: messages.BackupMethod
+):
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicBackup(session, False)
+        IF = InputFlowSlip39BasicBackup(session, False, method=backup_method)
         client.set_input_flow(IF.get())
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
         mnemonics = IF.mnemonics
 
     assert len(mnemonics) == 5
@@ -202,10 +229,14 @@ def test_repeated_backup_via_host_send_disallowed_message(session: Session):
     # unlock repeated backup by entering 3 of the 5 shares we have got
     with session.test_ctx as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            session, mnemonics[:3], unlock_repeated_backup=True
+            session, mnemonics[:3], unlock_repeated_backup=True, method=backup_method
         )
         client.set_input_flow(IF.get())
-        device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
+        device.recover(
+            session,
+            type=messages.RecoveryType.UnlockRepeatedBackup,
+            backup_method=backup_method,
+        )
         assert (
             session.features.backup_availability
             == messages.BackupAvailability.Available

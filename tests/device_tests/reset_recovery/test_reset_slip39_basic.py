@@ -23,7 +23,7 @@ from trezorlib import device
 from trezorlib.btc import get_public_node
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.messages import BackupAvailability, BackupType
+from trezorlib.messages import BackupAvailability, BackupMethod, BackupType
 
 from ...common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from ...input_flows import (
@@ -41,11 +41,14 @@ FLOW_ADAPTERS = [
 ]
 
 
-def reset_device(session: Session, strength: int, adapt_flow: FlowAdapter):
+def reset_device(
+    session: Session, strength: int, adapt_flow: FlowAdapter, method: BackupMethod
+):
+
     member_threshold = 3
 
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicResetRecovery(session)
+        IF = InputFlowSlip39BasicResetRecovery(session, method)
         client.set_input_flow(adapt_flow(session, IF.get()))
 
         # No PIN, no passphrase, don't display random
@@ -56,6 +59,7 @@ def reset_device(session: Session, strength: int, adapt_flow: FlowAdapter):
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Basic,
+            backup_method=method,
             entropy_check_count=0,
             _get_entropy=MOCK_GET_ENTROPY,
         )
@@ -80,27 +84,38 @@ def reset_device(session: Session, strength: int, adapt_flow: FlowAdapter):
         device.backup(session)
 
 
-@pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
-def test_reset_device_slip39_basic(session: Session, adapt_flow: FlowAdapter):
-    reset_device(session, 128, adapt_flow)
-
-
-@pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
-@pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_slip39_basic_256(session: Session, adapt_flow: FlowAdapter):
-    reset_device(session, 256, adapt_flow)
+TEST_PARAMS = [
+    pytest.param(adapt_flow, id=adapt_flow.__name__) for adapt_flow in FLOW_ADAPTERS
+]
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
-def test_reset_entropy_check(session: Session, adapt_flow: FlowAdapter):
+@pytest.mark.parametrize("adapt_flow", TEST_PARAMS)
+def test_reset_device_slip39_basic(
+    session: Session, adapt_flow: FlowAdapter, backup_method: BackupMethod
+):
+    reset_device(session, 128, adapt_flow, method=backup_method)
+
+
+@pytest.mark.parametrize("adapt_flow", TEST_PARAMS)
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_device_slip39_basic_256(
+    session: Session, adapt_flow: FlowAdapter, backup_method: BackupMethod
+):
+    reset_device(session, 256, adapt_flow, method=backup_method)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.parametrize("adapt_flow", TEST_PARAMS)
+def test_reset_entropy_check(
+    session: Session, adapt_flow: FlowAdapter, backup_method: BackupMethod
+):
     member_threshold = 3
 
     strength = 128  # 20 words
 
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicResetRecovery(session)
+        IF = InputFlowSlip39BasicResetRecovery(session, backup_method)
         client.set_input_flow(adapt_flow(session, IF.get()))
 
         # No PIN, no passphrase.
@@ -111,6 +126,7 @@ def test_reset_entropy_check(session: Session, adapt_flow: FlowAdapter):
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Basic,
+            backup_method=backup_method,
             entropy_check_count=3,
             _get_entropy=MOCK_GET_ENTROPY,
         )

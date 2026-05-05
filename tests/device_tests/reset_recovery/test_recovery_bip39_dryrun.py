@@ -63,7 +63,11 @@ def do_recover_core(
         client.watch_layout()
         IF = InputFlowBip39RecoveryDryRun(session, mnemonic, mismatch=mismatch)
         client.set_input_flow(IF.get())
-        return device.recover(session, type=messages.RecoveryType.DryRun)
+        return device.recover(
+            session,
+            type=messages.RecoveryType.DryRun,
+            backup_method=messages.BackupMethod.Display,
+        )
 
 
 def do_recover(session: Session, mnemonic: list[str], mismatch: bool = False) -> None:
@@ -102,6 +106,7 @@ def test_invalid_seed_core(session: Session):
             return device.recover(
                 session,
                 type=messages.RecoveryType.DryRun,
+                backup_method=messages.BackupMethod.Display,
             )
 
 
