@@ -1,8 +1,6 @@
 from micropython import const
 from ubinascii import unhexlify
 
-from trezor.crypto import base58
-
 from .clear_signing import (
     AddressNameFormatter,
     AmountFormatter,
@@ -29,7 +27,7 @@ from .clear_signing import (
 
 APPROVE_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
-    func_sig=base58.keccak_32(b"approve(address,uint256)"),
+    func_sig=b"\x09\x5e\xa7\xb3",  # approve(address,uint256)
     intent="Approve",
     parameter_definitions=[
         Atomic(parse_address),  # _spender
@@ -51,7 +49,7 @@ SC_FUNC_APPROVE_REVOKE_AMOUNT = const(0)
 
 TRANSFER_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
-    func_sig=base58.keccak_32(b"transfer(address,uint256)"),
+    func_sig=b"\xa9\x05\x9c\xbb",  # transfer(address,uint256)
     intent="Send",
     parameter_definitions=[
         Atomic(parse_address),  # _to
@@ -64,6 +62,16 @@ TRANSFER_DISPLAY_FORMAT = DisplayFormat(
         ),
     ],
 )
+
+if __debug__:
+    from trezor.crypto import base58
+
+    assert APPROVE_DISPLAY_FORMAT.func_sig == base58.keccak_32(
+        b"approve(address,uint256)"
+    )
+    assert TRANSFER_DISPLAY_FORMAT.func_sig == base58.keccak_32(
+        b"transfer(address,uint256)"
+    )
 
 ALL_DISPLAY_FORMATS = [APPROVE_DISPLAY_FORMAT, TRANSFER_DISPLAY_FORMAT]
 
