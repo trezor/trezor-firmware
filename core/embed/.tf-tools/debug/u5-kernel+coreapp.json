@@ -1,0 +1,30 @@
+{
+  "executable": "${tfTools.artifactPath}/kernel.elf",
+  "request": "attach",
+  "type": "cortex-debug",
+  "runToEntryPoint": "main",
+  "servertype": "openocd",
+  "configFiles": [
+    "interface/stlink.cfg",
+    "target/stm32u5x.cfg"
+  ],
+  "svdFile": "core/embed/.tf-tools/svd/STM32U5Gx.svd",
+  "postAttachCommands": [
+    "monitor adapter speed 8000",
+    "add-symbol-file ${tfTools.executablePath}"
+  ],
+  "swoConfig": {
+    "enabled": true,
+    "cpuFrequency": 160000000,
+    "swoFrequency": 2000000,
+    "source": "probe",
+    "decoders": [
+      {
+        "type": "console",
+        "label": "ITM",
+        "port": 0,
+        "encoding": "ascii"
+      }
+    ]
+  }
+}

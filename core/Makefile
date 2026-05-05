@@ -272,7 +272,7 @@ pyright:
 
 clippy:
 	export BUILD_DIR=$(abspath $(UNIX_BUILD_DIR)) ; \
-	cd embed/rust ; cargo clippy $(TESTOPTS) --all-features --target=$(RUST_TARGET)
+	cd embed/rust-staticlib ; cargo clippy $(TESTOPTS) --all-features --target=$(RUST_TARGET)
 
 audit_rust: ## run cargo audit on rust dependencies
 	cd embed/rust ; cargo audit
