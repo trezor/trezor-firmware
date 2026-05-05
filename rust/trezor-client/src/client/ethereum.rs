@@ -92,7 +92,9 @@ impl Trezor {
             let mut ack = protos::EthereumTxAck::new();
             ack.set_data_chunk(data.splice(..std::cmp::min(1024, data.len()), []).collect());
 
-            resp = self.call(ack, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?.ok()?;
+            resp = handle_interaction(
+                self.call(ack, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?,
+            )?;
         }
 
         convert_signature(&resp, chain_id)
@@ -147,7 +149,9 @@ impl Trezor {
             let mut ack = protos::EthereumTxAck::new();
             ack.set_data_chunk(data.splice(..std::cmp::min(1024, data.len()), []).collect());
 
-            resp = self.call(ack, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?.ok()?
+            resp = handle_interaction(
+                self.call(ack, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?,
+            )?;
         }
 
         convert_signature(&resp, chain_id)
