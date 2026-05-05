@@ -55,6 +55,7 @@ let
   rustProfiles = nixpkgs.rust-bin.nightly."2026-03-16";
   rustNightly = rustProfiles.minimal.override {
     targets = [
+      "thumbv8m.main-none-eabihf" # T3
       "thumbv7em-none-eabihf" # TT
       "thumbv7m-none-eabi"    # T1
     ];
