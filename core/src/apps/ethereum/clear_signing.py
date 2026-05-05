@@ -90,6 +90,8 @@ def _check_padding_zero(
     raw_data: memoryview, used_bytes: int, exc: type[ValueOverflow] = ValueOverflow
 ) -> None:
     """Sanity check to make sure unused data is zeroed out."""
+    if not 0 <= used_bytes <= 32:
+        raise InvalidFormatDefinition
     if any(raw_data[: 32 - used_bytes]):
         raise exc
 
@@ -154,6 +156,8 @@ def parse_string(raw_data: memoryview) -> Value:
 
 
 def parse_uint256_array(raw_data: memoryview) -> list[Value]:
+    if len(raw_data) % 32 != 0:
+        raise InvalidFunctionCall
     return [
         parse_uint256(raw_data[i * 32 : (i + 1) * 32])
         for i in range(len(raw_data) // 32)
@@ -163,16 +167,21 @@ def parse_uint256_array(raw_data: memoryview) -> list[Value]:
 DYNAMIC_DATA_PARSERS = [parse_bytes, parse_string, parse_uint256_array]
 
 
-def _get_parser(t: int) -> Parser:
-    """Get a parser for a type we received over the wire protocol."""
+def _get_parser(t: int, is_dynamic: bool) -> Parser:
+    """Get a parser for a type we received over the wire protocol.
+    `is_dynamic` selects whether the type is being used in a dynamic
+    (variable-length) or atomic (32-byte) context, and must match the type."""
     from trezor.enums import EthereumABIType as T
+
+    if is_dynamic:
+        if t == T.ABI_BYTES:
+            return parse_bytes
+        elif t == T.ABI_STRING:
+            return parse_string
+        raise InvalidFormatDefinition
 
     if t == T.ABI_ADDRESS:
         return parse_address
-    elif t == T.ABI_BYTES:
-        return parse_bytes
-    elif t == T.ABI_STRING:
-        return parse_string
     elif t == T.ABI_UINT256:
         return parse_uint256
     elif t == T.ABI_UINT248:
@@ -211,9 +220,9 @@ def _get_parser(t: int) -> Parser:
 def _get_leaf_parser(info: EthereumABIValueInfo) -> Parser:
     """Get a parser for a leaf (atomic or dynamic) value. Raises for nested structures."""
     if info.atomic is not None:
-        return _get_parser(info.atomic)
+        return _get_parser(info.atomic, is_dynamic=False)
     elif info.dynamic is not None:
-        return _get_parser(info.dynamic)
+        return _get_parser(info.dynamic, is_dynamic=True)
     raise InvalidFormatDefinition
 
 
@@ -406,9 +415,9 @@ class ABIValue:
     @staticmethod
     def from_proto(info: EthereumABIValueInfo) -> "ABIValue":
         if info.atomic is not None:
-            return Atomic(_get_parser(info.atomic))
+            return Atomic(_get_parser(info.atomic, is_dynamic=False))
         elif info.dynamic is not None:
-            return Dynamic(_get_parser(info.dynamic))
+            return Dynamic(_get_parser(info.dynamic, is_dynamic=True))
         elif info.tuple is not None:
             return Tuple(
                 tuple(_get_leaf_parser(f) for f in info.tuple.fields),
@@ -417,9 +426,9 @@ class ABIValue:
         elif info.array is not None:
             element = info.array
             if element.atomic is not None:
-                return Array(Atomic(_get_parser(element.atomic)))
+                return Array(Atomic(_get_parser(element.atomic, is_dynamic=False)))
             elif element.dynamic is not None:
-                return Array(Dynamic(_get_parser(element.dynamic)))
+                return Array(Dynamic(_get_parser(element.dynamic, is_dynamic=True)))
             elif element.tuple is not None:
                 return Array(
                     Tuple(
@@ -438,9 +447,20 @@ class Atomic(ABIValue):
         self.parser = parser
 
     def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
-        if offset > len(raw_data):
+        if offset + 32 > len(raw_data):
             raise OutOfBounds
         return self.parser(raw_data[offset : offset + 32]), 32
+
+
+def _read_dynamic_data(raw_data: memoryview, pointer: int) -> memoryview:
+    """Read a variable-length blob located at `pointer` in `raw_data`,
+    encoded as a 32-byte length prefix followed by `length` bytes of data."""
+    if pointer + 32 > len(raw_data):
+        raise OutOfBounds
+    length = int.from_bytes(raw_data[pointer : pointer + 32], "big")
+    if pointer + 32 + length > len(raw_data):
+        raise OutOfBounds
+    return raw_data[pointer + 32 : pointer + 32 + length]
 
 
 class Dynamic(ABIValue):
@@ -456,12 +476,7 @@ class Dynamic(ABIValue):
         if offset + 32 > len(raw_data):
             raise OutOfBounds
         pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-        if pointer + 32 > len(raw_data):
-            raise OutOfBounds
-        length = int.from_bytes(raw_data[pointer : pointer + 32], "big")
-        if pointer + 32 + length > len(raw_data):
-            raise OutOfBounds
-        data = raw_data[pointer + 32 : pointer + 32 + length]
+        data = _read_dynamic_data(raw_data, pointer)
         return self.parser(data), 32
 
 
@@ -504,15 +519,7 @@ class Tuple(ABIValue):
                 value[i] = v
             else:
                 field_pointer = base_offset + int.from_bytes(raw_field, "big")
-
-                if field_pointer + 32 > len(raw_data):
-                    raise OutOfBounds
-                length = int.from_bytes(
-                    raw_data[field_pointer : field_pointer + 32], "big"
-                )
-                if field_pointer + 32 + length > len(raw_data):
-                    raise OutOfBounds
-                raw_field = raw_data[field_pointer + 32 : field_pointer + 32 + length]
+                raw_field = _read_dynamic_data(raw_data, field_pointer)
                 v = parser(raw_field)
                 if isinstance(v, (tuple, list)):
                     # Tuple or Array inside a Tuple
@@ -905,18 +912,22 @@ async def _handle_approve(
 
     args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
-    assert len(args) == 2
-    assert len(fields) == 2
+    if len(args) != 2 or len(fields) != 2:
+        raise InvalidFormatDefinition
 
     arg0_raw_value = args[0]
     (field0_name, recipient_addr, _), _, _ = fields[0]
-    assert field0_name == "Spender"
+    if field0_name != "Spender":
+        raise InvalidFormatDefinition
+
     assert isinstance(arg0_raw_value, bytes)
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
     (field1_name, value, _), actual_token, _ = fields[1]
-    assert field1_name == "Amount"
+    if field1_name != "Amount":
+        raise InvalidFormatDefinition
+
     assert isinstance(arg1_raw_value, int)
 
     recipient_str = KNOWN_ADDRESSES.get(arg0_raw_value)
@@ -957,17 +968,21 @@ async def _handle_transfer(
 
     args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
-    assert len(args) == 2
-    assert len(fields) == 2
+    if len(args) != 2 or len(fields) != 2:
+        raise InvalidFormatDefinition
 
-    (arg0_name, recipient_addr, _), _, _ = fields[0]
-    assert arg0_name == "To"
+    (field0_name, recipient_addr, _), _, _ = fields[0]
+    if field0_name != "To":
+        raise InvalidFormatDefinition
+
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
+    (field1_name, value, _), actual_token, _ = fields[1]
+    if field1_name != "Amount":
+        raise InvalidFormatDefinition
+
     assert isinstance(arg1_raw_value, int)
-    (arg1_name, value, _), actual_token, _ = fields[1]
-    assert arg1_name == "Amount"
     assert isinstance(value, str)
 
     if payment_request_verifier:
