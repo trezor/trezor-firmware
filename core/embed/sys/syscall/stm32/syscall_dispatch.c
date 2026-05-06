@@ -394,7 +394,18 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_TOUCH_GET_EVENT: {
       args[0] = touch_get_event();
     } break;
-#endif
+
+#ifdef USE_TOUCH_WAKEUP
+    case SYSCALL_TOUCH_WAKEUP_SET_ENABLED: {
+      bool enabled = (args[0] != 0);
+      touch_wakeup_set_enabled(enabled);
+    } break;
+
+    case SYSCALL_TOUCH_WAKEUP_GET_ENABLED: {
+      args[0] = touch_wakeup_get_enabled();
+    } break;
+#endif  // USE_TOUCH_WAKEUP
+#endif  // USE_TOUCH
 
 #ifdef USE_RGB_LED
     case SYSCALL_RGB_LED_SET_ENABLED: {
