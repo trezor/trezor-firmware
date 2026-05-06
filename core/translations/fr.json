@@ -531,7 +531,12 @@
     "cardano__confirming_pool_registration": "Confirmation de l'enregistrement du pool en tant que propriétaire.",
     "cardano__confirming_transaction": "Confirmation d'une transaction.",
     "cardano__cost": "Coût",
-    "cardano__credential_intro_template": "L'identifiant de {0} est un(e) {1} :",
+    "cardano__credential_intro_template": {
+      "Bolt": "L'identifiant de {0} est un(e) {1}",
+      "Caesar": "L'identifiant de {0} est un(e) {1}",
+      "Delizia": "L'identifiant de {0} est un(e) {1} :",
+      "Eckhart": "L'identifiant de {0} est un(e) {1} :"
+    },
     "cardano__credential_mismatch": "L'identifiant ne correspond pas à l'identifiant de paiement.",
     "cardano__datum_hash": "Hash du datum",
     "cardano__delegating_to": "Délégation à",
@@ -583,12 +588,7 @@
     "cardano__required_signer": "Signataire requis",
     "cardano__reward": "récompense",
     "cardano__reward_address": "L'adresse est une adresse de récompense.",
-    "cardano__reward_eligibility_warning": {
-      "Bolt": "Avertissement : l'adr. n'est pas une adr. de paiement, elle n'est pas éligible aux récompenses.",
-      "Caesar": "Avertissement : l'adresse n'est pas une adresse de paiement, elle n'est pas éligible aux récompenses.",
-      "Delizia": "Avertissement : l'adresse n'est pas une adresse de paiement, elle n'est pas éligible aux récompenses.",
-      "Eckhart": "Avertissement : l'adresse n'est pas une adresse de paiement, elle n'est pas éligible aux récompenses."
-    },
+    "cardano__reward_eligibility_warning": "Avertissement : l'adresse n'est pas une adresse de paiement, elle n'est pas éligible aux récompenses.",
     "cardano__rewards_go_to": "Les récompenses vont à",
     "cardano__script": "script",
     "cardano__script_all": "tous",
@@ -1278,7 +1278,7 @@
     "instructions__shares_continue_with_x_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Continuez avec le fragm. n°{0}",
+      "Delizia": "Passez au Fragment n°{0}",
       "Eckhart": ""
     },
     "instructions__shares_start_with_1": {
@@ -2130,8 +2130,8 @@
       "Eckhart": "Continuez au fragment suivant"
     },
     "reset__continue_with_share_template": {
-      "Bolt": "Continuez avec le fragm. n°{0}.",
-      "Caesar": "Continuez avec le fragment n°{0}.",
+      "Bolt": "Passez au fragment n°{0}.",
+      "Caesar": "Passez au fragment n°{0}.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2169,7 +2169,7 @@
     "reset__group_share_checked_successfully_template": {
       "Bolt": "Groupe {0} - Fragment {1} vérifié avec succès.",
       "Caesar": "Groupe {0} - Fragment {1} vérifié avec succès.",
-      "Delizia": "Gr. {0} - Frag. {1} vérifié.",
+      "Delizia": "Gr. {0} - Frag. {1} vérifié",
       "Eckhart": "Groupe {0} - Fragment {1} vérifié avec succès."
     },
     "reset__group_share_title_template": {
@@ -3083,7 +3083,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Utilisez votre Trezor\navec les boutons de gauche et de droite.\n\rContinuez avec droite.",
+      "Caesar": "Utilisez votre Trezor\navec les boutons de gauche et de droite.\n\nContinuez avec droite.",
       "Delizia": "",
       "Eckhart": ""
     },

@@ -895,7 +895,7 @@
       "Bolt": "Dirección del contrato del token",
       "Caesar": "Contrato de token",
       "Delizia": "Dirección del contrato del token",
-      "Eckhart": "Contrato de token"
+      "Eckhart": "Dirección del contrato del token"
     },
     "ethereum__units_template": "{0} unidades",
     "ethereum__unknown_contract_address": {
