@@ -9,6 +9,7 @@ pub use crate::model::Model;
 pub struct ResolvedBuild {
     pub features: Vec<String>,
     pub target_triple: Option<&'static str>,
+    pub board_header: String,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]

@@ -176,6 +176,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
     Ok(ResolvedBuild {
         features,
         target_triple,
+        board_header: board_features.board_header,
     })
 }
 
@@ -187,6 +188,7 @@ pub fn configure_cargo(args: &BuildArgs, cmd: &mut process::Command) -> Result<(
     cmd.args(["--package", args.component.package_name(args.emulator)]);
     cmd.args(["--features", &resolved.features.join(",")]);
     cmd.args(["--profile", args.profile_name()]);
+    cmd.env("TREZOR_BOARD_HEADER", &resolved.board_header);
 
     if args.profile_name() == "release" {
         // Required by panic-immediate-abort in the release profile
