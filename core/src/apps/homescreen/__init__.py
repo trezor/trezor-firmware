@@ -78,8 +78,7 @@ async def homescreen() -> None:
 
 
 async def _lockscreen(screensaver: bool = False) -> None:
-    from apps.common.lock_manager import unlock_device
-    from apps.common.request_pin import can_lock_device
+    from apps.common.lock_manager import can_lock_device, unlock_device
 
     # Only show the lockscreen UI if the device can in fact be locked, or if it is
     # and OLED device (in which case the lockscreen is a screensaver).

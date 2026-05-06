@@ -29,17 +29,6 @@ async def _request_sd_salt(
                 raise
 
 
-def can_lock_device() -> bool:
-    """Return True if the device has a PIN set or SD-protect enabled (when supported)."""
-    # TR/T2B1 does not support SD card
-    if not utils.USE_SD_CARD:
-        return config.has_pin()
-    else:
-        import storage.sd_salt
-
-        return config.has_pin() or storage.sd_salt.is_enabled()
-
-
 async def request_pin(
     prompt: str,
     attempts_remaining: int | None = None,
