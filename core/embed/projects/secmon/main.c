@@ -125,7 +125,7 @@ static void drivers_init(void) {
 #endif
 
 #ifdef USE_TROPIC
-  tropic_init(NULL);
+  ensure_true(tropic_init(NULL), "Failed to initialize Tropic driver");
 #if defined(USE_SECRET) && defined(LOCKABLE_BOOTLOADER)
   if (secfalse != secret_bootloader_locked()) {
     ensure(tropic_ensure_configuration(), "Tropic configuration check failed");

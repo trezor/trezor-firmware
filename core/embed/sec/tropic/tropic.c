@@ -127,6 +127,11 @@ typedef enum {
 
 #ifdef TREZOR_EMULATOR
 #define TROPIC_RETRY_COMMAND(command) command
+
+static lt_ret_t lt_init_retry(lt_handle_t *tropic_handle) {
+  return lt_init(tropic_handle);
+}
+
 #else
 #define TROPIC_MAX_RETRIES 10
 
@@ -165,6 +170,17 @@ static bool is_retryable(lt_ret_t ret) {
     }                                                                     \
     TROPIC_RETRY_COMMAND_res;                                             \
   })
+
+static lt_ret_t lt_init_retry(lt_handle_t *tropic_handle) {
+  lt_ret_t ret = lt_init(tropic_handle);
+  for (int i = 0; i < TROPIC_MAX_RETRIES - 1 && is_retryable(ret); i++) {
+    tropic01_reset();
+    lt_deinit(tropic_handle);
+    ret = lt_init(tropic_handle);
+  }
+  return ret;
+}
+
 #endif  // TREZOR_EMULATOR
 
 typedef struct {
@@ -983,7 +999,7 @@ lt_ret_t tropic_init(cli_t *cli) {
   // Initialize crypto context
   drv->handle.l3.crypto_ctx = &drv->crypto_ctx;
 
-  lt_ret_t ret = lt_init(&drv->handle);
+  lt_ret_t ret = lt_init_retry(&drv->handle);
   if (ret != LT_OK) {
 #ifdef TREZOR_PRODTEST
     if (cli) {
