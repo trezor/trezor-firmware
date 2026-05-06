@@ -247,6 +247,11 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
+#ifdef TREZOR_PRODTEST
+    if (cli) {
+      cli_error(cli, CLI_ERROR, "Tropic driver is not initialized");
+    }
+#endif
     return LT_FAIL;
   }
 
