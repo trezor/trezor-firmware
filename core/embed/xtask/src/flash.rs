@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     args::{FlashArgs, FlashEraseArgs, FlashSection},
-    config, helpers,
+    helpers,
 };
 
 /// Flashes the specified component to the device using OpenOCD.
@@ -35,7 +35,7 @@ pub fn flash(args: FlashArgs) -> Result<()> {
     );
 
     let flash_instruction = build_flash_write_instruction(&binary, address);
-    let model_config = config::ModelConfig::load(args.model.model_id())?;
+    let model_config = args.model.config()?;
 
     let status = process::Command::new("openocd")
         .args(["-f", "interface/stlink.cfg"])
@@ -58,7 +58,7 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
     let content = fs::read_to_string(&mem_ld)
         .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
     let instr = build_flash_erase_instruction(&content, args.section)?;
-    let model_config = config::ModelConfig::load(args.model.model_id())?;
+    let model_config = args.model.config()?;
 
     let status = process::Command::new("openocd")
         .args(["-f", "interface/stlink.cfg"])

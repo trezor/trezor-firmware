@@ -103,15 +103,14 @@ impl BoardConfig {
             if key == "header" {
                 continue;
             }
-            let features = val
+            let periph_table = val
                 .as_table()
-                .map(|t| {
-                    t.values()
-                        .filter_map(|v| v.as_str())
-                        .map(|s| s.to_string())
-                        .collect()
-                })
-                .unwrap_or_default();
+                .ok_or_else(|| anyhow!("invalid peripheral '{key}': expected table"))?;
+            let features = periph_table
+                .values()
+                .filter_map(|v| v.as_str())
+                .map(|s| s.to_string())
+                .collect();
             peripherals.push(Peripheral {
                 name: key.clone(),
                 features,

@@ -140,7 +140,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
     }
 
     // Board and model-intrinsic features from TOML config
-    let model_config = config::ModelConfig::load(args.model.model_id())?;
+    let model_config = args.model.config()?;
     let board_id = if args.emulator {
         model_config
             .emulator_board
