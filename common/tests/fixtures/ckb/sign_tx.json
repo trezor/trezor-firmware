@@ -35,7 +35,8 @@
       },
       "result": {
         "signature_length": 65,
-        "tx_hash_length": 32
+        "tx_hash_length": 32,
+        "tx_hash": "dd6311141fe0bdc269462f1f73fb3786dc476c2e17c051ed5ae5f733b2c2ba13"
       }
     },
     {
@@ -69,7 +70,8 @@
       },
       "result": {
         "signature_length": 65,
-        "tx_hash_length": 32
+        "tx_hash_length": 32,
+        "tx_hash": "dd6311141fe0bdc269462f1f73fb3786dc476c2e17c051ed5ae5f733b2c2ba13"
       }
     },
     {
@@ -96,7 +98,8 @@
       },
       "result": {
         "signature_length": 65,
-        "tx_hash_length": 32
+        "tx_hash_length": 32,
+        "tx_hash": "b46995165c2d4471f70acc02ccd0f09872bf024e78da986600d3bdabfa8310d1"
       }
     },
     {
@@ -135,7 +138,8 @@
       },
       "result": {
         "signature_length": 65,
-        "tx_hash_length": 32
+        "tx_hash_length": 32,
+        "tx_hash": "fea4faf5632ed6a3e50815190ced600afc3b50ee778cd9056766c6a341ab8213"
       }
     },
     {
@@ -173,7 +177,8 @@
       },
       "result": {
         "signature_length": 65,
-        "tx_hash_length": 32
+        "tx_hash_length": 32,
+        "tx_hash": "71f7ab841279e2d0502f964d51c3ef9a6aebe2751b2d39b8ecb6efb20aa7dfc2"
       }
     }
   ]

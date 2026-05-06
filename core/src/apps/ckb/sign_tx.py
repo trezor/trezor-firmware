@@ -365,6 +365,11 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     if network not in ("Mainnet", "Testnet"):
         raise DataError("Invalid CKB network")
 
+    if msg.inputs_count == 0:
+        raise DataError("Transaction must have at least one input")
+    if msg.outputs_count == 0:
+        raise DataError("Transaction must have at least one output")
+
     # Collect inputs
     inputs: list["CKBCellInput"] = []
     for i in range(msg.inputs_count):
@@ -490,8 +495,10 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         title=TR.words__title_summary,
     )
 
-    # Sign
-    signature = secp256k1.sign(node.private_key(), sighash, True)
+    # Sign and output CKB native format: [R(32) | S(32) | recovery_id(1)]
+    raw_sig = secp256k1.sign(node.private_key(), sighash, False)
+    recid = raw_sig[0] - 27
+    signature = raw_sig[1:65] + bytes([recid])
 
     return CKBTxRequest(
         request_type=CKBTxRequestType.TXFINISHED,
