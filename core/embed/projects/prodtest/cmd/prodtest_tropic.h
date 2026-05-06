@@ -29,4 +29,5 @@ typedef enum {
   TROPIC_LOCKED_ERROR,
 } tropic_locked_status;
 
-tropic_locked_status get_tropic_locked_status(cli_t* cli);
+tropic_locked_status get_tropic_locked_status(cli_t* cli,
+                                              lt_handle_t* tropic_handle);

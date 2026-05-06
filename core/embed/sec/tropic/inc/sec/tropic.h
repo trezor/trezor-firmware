@@ -67,7 +67,9 @@
 
 #ifdef KERNEL_MODE
 
-bool tropic_init(void);
+#include "libtropic.h"
+
+lt_ret_t tropic_init(cli_t* cli);
 
 void tropic01_reset(void);
 
@@ -81,20 +83,19 @@ typedef struct {
 } tropic_expected_config_t;
 
 #ifdef TREZOR_PRODTEST
-#include "libtropic.h"
-lt_handle_t* tropic_get_handle(void);
+lt_handle_t* tropic_prodtest_init_and_get_handle(cli_t* cli);
 
 lt_ret_t tropic_custom_session_start(cli_t* cli,
                                      lt_pkey_index_t pairing_key_index);
 
 lt_ret_t tropic_session_invalidate(void);
 
-bool tropic_wait_for_ready(cli_t* cli);
+bool tropic_get_pubkey(cli_t* cli, lt_handle_t* tropic_handle,
+                       curve25519_key pubkey);
 
-bool tropic_get_pubkey(cli_t* cli, curve25519_key pubkey);
-
-bool tropic_get_cert_chain_ptr(cli_t* cli, uint8_t const** cert_chain,
-                               size_t* length);
+bool tropic_get_cert_chain_ptr(cli_t* cli, lt_handle_t* tropic_handle,
+                               uint8_t const** cert_chain,
+                               size_t* cert_chain_length);
 
 lt_ret_t lt_ecc_key_erase_retry(lt_handle_t* tropic_handle,
                                 const lt_ecc_slot_t ecc_slot);

@@ -94,7 +94,11 @@ static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* tropic_handle = tropic_get_handle();
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
 
   uint8_t version[TR01_L2_GET_INFO_RISCV_FW_SIZE] = {0};
   lt_ret_t ret = lt_get_info_riscv_fw_ver(tropic_handle, version);
@@ -115,7 +119,11 @@ static void prodtest_tropic_get_spect_fw_version(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* tropic_handle = tropic_get_handle();
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
 
   uint8_t version[TR01_L2_GET_INFO_SPECT_FW_SIZE];
   lt_ret_t ret = lt_get_info_spect_fw_ver(tropic_handle, version);
@@ -136,8 +144,11 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* tropic_handle = tropic_get_handle();
-
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
   lt_chip_id_t chip_id;
   lt_ret_t ret = lt_get_info_chip_id(tropic_handle, &chip_id);
   if (ret != LT_OK) {
@@ -161,9 +172,15 @@ static void prodtest_tropic_certtropic_read(cli_t* cli) {
     return;
   }
 
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
   const uint8_t* tropic_cert_chain = NULL;
   size_t tropic_cert_chain_length = 0;
-  if (!tropic_get_cert_chain_ptr(cli, &tropic_cert_chain,
+  if (!tropic_get_cert_chain_ptr(cli, tropic_handle, &tropic_cert_chain,
                                  &tropic_cert_chain_length)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_CERT_READ,
               "`tropic_get_cert_chain_ptr()` failed");
@@ -179,7 +196,13 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
     return;
   }
 
-  tropic_locked_status status = get_tropic_locked_status(cli);
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
+  tropic_locked_status status = get_tropic_locked_status(cli, tropic_handle);
   switch (status) {
     case TROPIC_LOCKED_TRUE:
       cli_trace(cli, "Tropic is locked.");
@@ -195,11 +218,9 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
   }
 }
 
-tropic_locked_status get_tropic_locked_status(cli_t* cli) {
+tropic_locked_status get_tropic_locked_status(cli_t* cli,
+                                              lt_handle_t* tropic_handle) {
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
-
-  lt_handle_t* tropic_handle = tropic_get_handle();
-  lt_ret_t ret = LT_FAIL;
 
   curve25519_key tropic_public = {0};
   if (secret_key_tropic_public(tropic_public) != sectrue) {
@@ -207,7 +228,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     return TROPIC_LOCKED_FALSE;
   }
 
-  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  lt_ret_t ret =
+      tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     if (ret == LT_L2_HSK_ERR) {
       cli_trace(cli,
@@ -339,17 +361,15 @@ static lt_ret_t pairing_key_write(cli_t* cli, lt_handle_t* handle,
   return LT_OK;
 }
 
-static bool tropic_is_paired(cli_t* cli) {
+static bool tropic_is_paired(cli_t* cli, lt_handle_t* tropic_handle) {
   static bool is_paired = false;
   if (is_paired) {
     return true;
   }
 
-  lt_handle_t* tropic_handle = tropic_get_handle();
-  lt_ret_t ret = LT_FAIL;
-
   // Try to establish a session using the unprivileged key pair.
-  ret = tropic_custom_session_start(cli, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT);
+  lt_ret_t ret =
+      tropic_custom_session_start(cli, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     cli_trace(
         cli,
@@ -417,18 +437,24 @@ static void prodtest_tropic_pair(cli_t* cli) {
 
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
-    goto cleanup;
+    return;
   }
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
-  lt_handle_t* tropic_handle = tropic_get_handle();
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
+  curve25519_key unprivileged_private = {0};
+  curve25519_key privileged_private = {0};
 
   // Retrieve the unprivileged pairing key pair.
   // NOTE: This ensures that secrets-init has already been called before any
   // other steps take place. Otherwise, if we wrote Tropic's public key to the
   // MCU's flash before completing secrets-init, we would run into a deadlock.
-  curve25519_key unprivileged_private = {0};
   if (secret_key_tropic_pairing_unprivileged(unprivileged_private) != sectrue) {
     cli_error(cli, PRODTEST_ERR_TROPIC_PAIR_PUBKEY_UNPRIV,
               "`secret_key_tropic_pairing_unprivileged()` failed.");
@@ -438,7 +464,6 @@ static void prodtest_tropic_pair(cli_t* cli) {
   curve25519_scalarmult_basepoint(unprivileged_public, unprivileged_private);
 
   // Retrieve the privileged pairing key pair.
-  curve25519_key privileged_private = {0};
   if (secret_key_tropic_pairing_privileged(privileged_private) != sectrue) {
     cli_error(cli, PRODTEST_ERR_TROPIC_PAIR_PUBKEY_PRIV,
               "`secret_key_tropic_pairing_privileged()` failed.");
@@ -449,9 +474,9 @@ static void prodtest_tropic_pair(cli_t* cli) {
 
   // Get the Tropic01 public pairing key from the chip's certificate.
   curve25519_key tropic_public = {0};
-  if (!tropic_get_pubkey(cli, tropic_public)) {
+  if (!tropic_get_pubkey(cli, tropic_handle, tropic_public)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_PAIR_GET_PUBKEY,
-              "`tropic_get_tropic_pubkey()` failed");
+              "`tropic_get_pubkey()` failed");
     goto cleanup;
   }
 
@@ -527,7 +552,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
     }
   }
 
-  if (!tropic_is_paired(cli)) {
+  if (!tropic_is_paired(cli, tropic_handle)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_PAIR_IS_PAIRED_FAILED,
               "`tropic_is_paired()` failed.");
     goto cleanup;
@@ -549,6 +574,12 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
   curve25519_key unprivileged_private = {0};
   if (secret_key_tropic_pairing_unprivileged(unprivileged_private) != sectrue) {
     cli_error(cli, PRODTEST_ERR_TROPIC_ACCESS_CRED_PUBKEY,
@@ -557,9 +588,9 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
   }
 
   curve25519_key tropic_public = {0};
-  if (!tropic_get_pubkey(cli, tropic_public)) {
+  if (!tropic_get_pubkey(cli, tropic_handle, tropic_public)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_ACCESS_CRED_GET_PUBKEY,
-              "`tropic_get_tropic_pubkey()` failed");
+              "`tropic_get_pubkey()` failed");
     goto cleanup;
   }
 
@@ -655,7 +686,13 @@ static void prodtest_tropic_handshake(cli_t* cli) {
     return;
   }
 
-  if (!tropic_is_paired(cli)) {
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
+  if (!tropic_is_paired(cli, tropic_handle)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_HANDSHAKE_NOT_PAIRED,
               "`tropic-pair` must be called first.");
     return;
@@ -680,11 +717,10 @@ static void prodtest_tropic_handshake(cli_t* cli) {
     return;
   }
 
-  lt_ret_t ret = LT_FAIL;
-  lt_l2_state_t l2_state = tropic_get_handle()->l2;
+  lt_l2_state_t l2_state = tropic_handle->l2;
 
   size_t request_length = 0;
-  ret = l2_get_req_len(input, sizeof(input), &request_length);
+  lt_ret_t ret = l2_get_req_len(input, sizeof(input), &request_length);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_HANDSHAKE_REQ_LEN,
               "`get_req_len()` failed with error '%s'.", lt_ret_verbose(ret));
@@ -787,11 +823,16 @@ static void prodtest_tropic_send_command(cli_t* cli) {
     return;
   }
 
-  lt_ret_t ret = LT_FAIL;
-  lt_l2_state_t l2_state = tropic_get_handle()->l2;
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
+  lt_l2_state_t l2_state = tropic_handle->l2;
 
   size_t command_length = 0;
-  ret = l3_get_frame_len(input, sizeof(input), &command_length);
+  lt_ret_t ret = l3_get_frame_len(input, sizeof(input), &command_length);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_CMD_L3_LEN_REQ,
               "`l3_get_cmd_len()` failed with error '%s'.",
@@ -944,16 +985,22 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (!tropic_is_paired(cli)) {
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
+  if (!tropic_is_paired(cli, tropic_handle)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_NOT_PAIRED,
               "`tropic-pair` must be called first.");
     return;
   }
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
-  lt_ret_t ret = LT_FAIL;
 
-  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  lt_ret_t ret =
+      tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_INIT,
               "`tropic_custom_session_start()` for privileged key failed with "
@@ -969,9 +1016,6 @@ static void prodtest_tropic_lock(cli_t* cli) {
               "Prodtest expected configuration not found.");
     return;
   }
-
-  lt_config_t configuration_read = {0};
-  lt_handle_t* tropic_handle = tropic_get_handle();
 
   ret = lt_r_config_erase(tropic_handle);
   if (ret != LT_OK) {
@@ -989,6 +1033,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
+  lt_config_t configuration_read = {0};
   ret = lt_read_whole_R_config(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_R_CONFIG_VERIFY_READ,
@@ -1136,9 +1181,7 @@ static lt_ret_t data_write(lt_handle_t* h, uint16_t first_slot,
   uint16_t slot = first_slot;
 
   while (slot <= last_data_slot) {
-    lt_ret_t ret = LT_FAIL;
-
-    ret = lt_r_mem_data_erase(h, slot);
+    lt_ret_t ret = lt_r_mem_data_erase(h, slot);
     if (ret != LT_OK) {
       return ret;
     }
@@ -1208,7 +1251,13 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
 
   ed25519_signature signature = {0};
 
-  lt_ret_t ret = lt_ecc_eddsa_sign(tropic_get_handle(), TROPIC_DEVICE_KEY_SLOT,
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return false;
+  }
+
+  lt_ret_t ret = lt_ecc_eddsa_sign(tropic_handle, TROPIC_DEVICE_KEY_SLOT,
                                    challenge, sizeof(challenge), signature);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_CERT_SIGN,
@@ -1247,6 +1296,12 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
   lt_ret_t ret =
       tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
@@ -1262,8 +1317,6 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
     // Error returned by check_device_cert_chain().
     return;
   }
-
-  lt_handle_t* tropic_handle = tropic_get_handle();
 
   ret = data_write(tropic_handle, first_slot, slots_count, certificate,
                    certificate_length);
@@ -1299,9 +1352,15 @@ static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   }
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
-  lt_ret_t ret = LT_FAIL;
 
-  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
+  lt_ret_t ret =
+      tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_CERT_READ_DATA,
               "`tropic_custom_session_start()` for privileged key failed with "
@@ -1312,7 +1371,7 @@ static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
 
   uint8_t certificate[TROPIC_SLOT_MAX_SIZE_V1 * slots_count];
   size_t certificate_length = 0;
-  ret = data_read(tropic_get_handle(), first_slot, slots_count, certificate,
+  ret = data_read(tropic_handle, first_slot, slots_count, certificate,
                   sizeof(certificate), &certificate_length);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_CERT_READ_FAILED,
@@ -1347,9 +1406,14 @@ static void pubkey_read(cli_t* cli, lt_ecc_slot_t slot,
     return;
   }
 
-  lt_ret_t ret = LT_FAIL;
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
 
-  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  lt_ret_t ret =
+      tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_PUBKEY_READ_LT,
               "`tropic_custom_session_start()` for privileged key failed with "
@@ -1361,7 +1425,7 @@ static void pubkey_read(cli_t* cli, lt_ecc_slot_t slot,
   uint8_t public_key[ECDSA_PUBLIC_KEY_SIZE] = {0x04};
   lt_ecc_curve_type_t curve_type = 0;
   lt_ecc_key_origin_t origin = 0;
-  ret = lt_ecc_key_read(tropic_get_handle(), slot, &public_key[1],
+  ret = lt_ecc_key_read(tropic_handle, slot, &public_key[1],
                         ECDSA_PUBLIC_KEY_SIZE - 1, &curve_type, &origin);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_PUBKEY_READ_KEY,
@@ -1408,7 +1472,11 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* h = tropic_get_handle();
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
 
   lt_chip_id_t chip_id = {0};
   if (lt_get_info_chip_id(h, &chip_id) != LT_OK) {
@@ -1625,18 +1693,20 @@ static void prodtest_tropic_stress_init(cli_t* cli) {
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
+  if (tropic_prodtest_init_and_get_handle(cli) == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   for (int i = 0; i < iterations; i++) {
     tropic_deinit();
     // Simulate a delay between suspend and wake-up.
     systick_delay_ms(delay_ms);
-    if (!tropic_init()) {
+    lt_ret_t ret = tropic_init(cli);
+    if (ret != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_INIT,
-                "Call #%d of `tropic_init()` failed", i + 1);
-      return;
-    }
-    if (!tropic_wait_for_ready(cli)) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_READY,
-                "Call #%d of `tropic_wait_for_ready()` failed", i + 1);
+                "Call #%d of `tropic_init()` failed with error '%s'", i + 1,
+                lt_ret_verbose(ret));
       return;
     }
   }
@@ -1650,6 +1720,11 @@ static void prodtest_tropic_stress_session(cli_t* cli) {
     return;
   }
   cli_trace(cli, "Session iterations: %u.", (unsigned)iterations);
+
+  if (tropic_prodtest_init_and_get_handle(cli) == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
 
   lt_pkey_index_t pairing_key_index = -1;
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
@@ -1690,6 +1765,12 @@ static void prodtest_tropic_stress_mac_and_destroy(cli_t* cli) {
   cli_trace(cli, "Iterations per slot: %u. Slot count: %u. Explicit slot: %d.",
             (unsigned)iterations, (unsigned)slot_count, (int)explicit_slot);
 
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   lt_pkey_index_t pairing_key_index = -1;
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
     return;
@@ -1710,7 +1791,6 @@ static void prodtest_tropic_stress_mac_and_destroy(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* h = tropic_get_handle();
   for (int s = 0; s < slot_count; s++) {
     lt_mac_and_destroy_slot_t slot = slots[s];
     for (int i = 0; i < iterations; i++) {
@@ -1750,6 +1830,12 @@ static void prodtest_tropic_test_mac_and_destroy(cli_t* cli) {
   cli_trace(cli, "Iterations per slot: %u. Slot count: %u. Explicit slot: %d.",
             (unsigned)iterations, (unsigned)slot_count, (int)explicit_slot);
 
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   lt_pkey_index_t pairing_key_index = -1;
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
     return;
@@ -1770,7 +1856,6 @@ static void prodtest_tropic_test_mac_and_destroy(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* h = tropic_get_handle();
   for (int s = 0; s < slot_count; s++) {
     lt_mac_and_destroy_slot_t slot = slots[s];
 
@@ -1840,11 +1925,16 @@ static void prodtest_tropic_test_sign(cli_t* cli) {
   cli_trace(cli, "Signing iterations: %u. ECC slot: %d.", (unsigned)iterations,
             TR01_ECC_SLOT_31);
 
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   if (!tropic_ensure_session(cli, NULL)) {
     return;
   }
 
-  lt_handle_t* h = tropic_get_handle();
   // Slot 31 is usable by both privileged and unprivileged sessions.
   lt_ecc_slot_t ecc_slot = TR01_ECC_SLOT_31;
 
@@ -1925,6 +2015,12 @@ static void prodtest_tropic_test_counter(cli_t* cli) {
             "Iterations per counter: %u. Counters: %u. Explicit counter: %d.",
             (unsigned)iterations, (unsigned)slot_count, (int)explicit_slot);
 
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   lt_pkey_index_t pairing_key_index = -1;
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
     return;
@@ -1944,7 +2040,6 @@ static void prodtest_tropic_test_counter(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* h = tropic_get_handle();
   for (int s = 0; s < slot_count; s++) {
     lt_mcounter_index_t idx = slots[s];
 
@@ -2023,6 +2118,12 @@ static void prodtest_tropic_test_rmem(cli_t* cli) {
   cli_trace(cli, "Iterations per slot: %u. Slot count: %u. Explicit slot: %d.",
             (unsigned)iterations, (unsigned)slot_count, (int)explicit_slot);
 
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   lt_pkey_index_t pairing_key_index = -1;
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
     return;
@@ -2043,7 +2144,6 @@ static void prodtest_tropic_test_rmem(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* h = tropic_get_handle();
   for (int s = 0; s < slot_count; s++) {
     uint16_t slot = slots[s];
     for (int i = 0; i < iterations; i++) {
@@ -2112,11 +2212,16 @@ static void prodtest_tropic_test_rng(cli_t* cli) {
   }
   cli_trace(cli, "RNG iterations: %u.", (unsigned)iterations);
 
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   if (!tropic_ensure_session(cli, NULL)) {
     return;
   }
 
-  lt_handle_t* h = tropic_get_handle();
   uint8_t previous[32] = {0};
   for (int i = 0; i < iterations; i++) {
     uint8_t value[32] = {0};
@@ -2272,22 +2377,24 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
   // test Tropic gets initialized
   for (int i = 0; i < init_iterations; i++) {
     tropic_deinit();
-    if (!tropic_init()) {
+    lt_ret_t res = tropic_init(cli);
+    if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_INIT,
-                "Call #%d of `tropic_init()` failed", i + 1);
-      return;
-    }
-    if (!tropic_wait_for_ready(cli)) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_READY,
-                "Call #%d of `tropic_wait_for_ready()` failed", i + 1);
+                "Call #%d of `tropic_init()` failed with error '%s'", i + 1,
+                lt_ret_verbose(res));
       return;
     }
   }
 
-  lt_ret_t res = LT_FAIL;
   lt_pkey_index_t pairing_key_index = -1;
 
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
@@ -2298,7 +2405,7 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
 
   // Test `lt_session_start()`
   for (int i = 0; i < start_session_iterations; i++) {
-    res = tropic_session_invalidate();
+    lt_ret_t res = tropic_session_invalidate();
     if (res != LT_OK) {
       cli_error(
           cli, PRODTEST_ERR_TROPIC_STRESS_SESSION_INVALIDATE,
@@ -2324,7 +2431,8 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
     for (int i = 0; i < mac_and_destroy_per_slot_iterations; i++) {
       uint8_t buffer[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
       rng_fill_buffer(buffer, sizeof(buffer));
-      res = lt_mac_and_destroy(tropic_get_handle(), slot_index, buffer, buffer);
+      lt_ret_t res =
+          lt_mac_and_destroy(tropic_handle, slot_index, buffer, buffer);
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_SIGN_FAILED,
                   "Call #%d of `lt_mac_and_destroy()` for slot %d failed "
@@ -2339,7 +2447,8 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   uint8_t message[32] = {0};
   ed25519_signature signature = {0};
   lt_ecc_slot_t ecc_slot = TR01_ECC_SLOT_31;
-  res = lt_ecc_key_generate(tropic_get_handle(), ecc_slot, TR01_CURVE_ED25519);
+  lt_ret_t res =
+      lt_ecc_key_generate(tropic_handle, ecc_slot, TR01_CURVE_ED25519);
   if (res != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_KEY_GENERATE,
               "`lt_ecc_key_generate()` failed with error '%s'",
@@ -2348,17 +2457,17 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   }
   for (int i = 0; i < signing_iterations; i++) {
     rng_fill_buffer(message, sizeof(message));
-    res = lt_ecc_eddsa_sign(tropic_get_handle(), ecc_slot, message,
-                            sizeof(message), signature);
+    res = lt_ecc_eddsa_sign(tropic_handle, ecc_slot, message, sizeof(message),
+                            signature);
     if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_EDDSA_SIGN,
                 "Call #%d of `lt_ecc_eddsa_sign()` failed with error '%s'",
                 i + 1, lt_ret_verbose(res));
-      lt_ecc_key_erase(tropic_get_handle(), ecc_slot);
+      lt_ecc_key_erase(tropic_handle, ecc_slot);
       return;
     }
   }
-  res = lt_ecc_key_erase(tropic_get_handle(), ecc_slot);
+  res = lt_ecc_key_erase(tropic_handle, ecc_slot);
   if (res != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_KEY_ERASE,
               "`lt_ecc_key_erase()` failed with error '%s'",
@@ -2369,8 +2478,8 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   // Test lt_random_value_get()
   for (int i = 0; i < rng_iterations; i++) {
     uint8_t random_value[32] = {0};
-    res = lt_random_value_get(tropic_get_handle(), random_value,
-                              sizeof(random_value));
+    lt_ret_t res =
+        lt_random_value_get(tropic_handle, random_value, sizeof(random_value));
     if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_RANDOM_GET,
                 "Call #%d of `lt_random_value_get()` failed with error '%s'",
@@ -2393,11 +2502,16 @@ static void prodtest_tropic_benchmark(cli_t* cli) {
   lt_ret_t res = LT_FAIL;
   lt_pkey_index_t pairing_key_index = -1;
 
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
     return;
   }
 
-  lt_handle_t* h = tropic_get_handle();
   uint32_t start_ms = 0;
 
   const int iterations = 25;
@@ -2644,13 +2758,17 @@ static void prodtest_tropic_erase_all_slots(cli_t* cli) {
     return;
   }
 
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
   if (!privileged_session_start(cli)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_ERASE_SLOTS_SESSION,
               "`privileged_session_start()` failed.");
     return;
   }
-
-  lt_handle_t* tropic_handle = tropic_get_handle();
 
   lt_ret_t ret = tropic_erase_all_slots_internal(cli, tropic_handle);
   if (ret == LT_OK) {
@@ -2693,12 +2811,16 @@ static void prodtest_tropic_set_sensors(cli_t* cli) {
                          ((uint32_t)input[2] << 8) | ((uint32_t)input[3]);
   }
 
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
   lt_pkey_index_t pairing_key_index = 0;
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
     return;
   }
-
-  lt_handle_t* tropic_handle = tropic_get_handle();
 
   // No need to wipe under a factory session. Tropic is unprovisioned.
   if (pairing_key_index != TROPIC_FACTORY_PAIRING_KEY_SLOT) {
@@ -2755,9 +2877,11 @@ static void prodtest_tropic_set_sensors(cli_t* cli) {
     return;
   }
   tropic_deinit();
-  if (!tropic_init() || !tropic_wait_for_ready(cli)) {
+  ret = tropic_init(cli);
+  if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_REBOOT,
-              "Re-initialization after reboot failed.");
+              "Re-initialization after reboot failed with error '%s'",
+              lt_ret_verbose(ret));
     return;
   }
 
@@ -2770,7 +2894,11 @@ static void prodtest_tropic_read_sensors(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* tropic_handle = tropic_get_handle();
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
 
   if (!privileged_session_start(cli)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_READ_SENSORS_SESSION,
@@ -2797,7 +2925,11 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
     return;
   }
 
-  lt_handle_t* tropic_handle = tropic_get_handle();
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
 
   if (!privileged_session_start(cli)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_SESSION,
@@ -2844,8 +2976,8 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
   uint8_t read_value_bytes[sizeof(uint32_t)] = {0};
   uint16_t read_length = 0;
   ret = lt_r_mem_data_read(
-      tropic_get_handle(), TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
-      read_value_bytes, sizeof(read_value_bytes), &read_length);
+      tropic_handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT, read_value_bytes,
+      sizeof(read_value_bytes), &read_length);
   if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
     cli_trace(cli, "Configuration distribution version: empty");
   } else if (ret != LT_OK) {
@@ -2863,7 +2995,7 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
   }
   read_length = 0;
   ret = lt_r_mem_data_read(
-      tropic_get_handle(), TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
+      tropic_handle, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
       read_value_bytes, sizeof(read_value_bytes), &read_length);
   if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
     cli_trace(cli, "Configuration backup distribution version: empty");
@@ -2890,12 +3022,19 @@ static void prodtest_tropic_tests_cleanup(cli_t* cli) {
     cli_error_arg_count(cli);
     return;
   }
+
+  lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
+  if (h == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "Initial `tropic_init()` failed");
+    return;
+  }
+
   lt_pkey_index_t pairing_key_index = -1;
   if (!tropic_ensure_session(cli, &pairing_key_index)) {
     return;
   }
   bool unprivileged = pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
-  if (!tropic_tests_cleanup(cli, tropic_get_handle(), unprivileged)) {
+  if (!tropic_tests_cleanup(cli, h, unprivileged)) {
     // Error already reported by tropic_tests_cleanup().
     return;
   }

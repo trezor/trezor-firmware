@@ -132,13 +132,21 @@ static void prodtest_secrets_init(cli_t* cli) {
     return;
   }
 
+  // Make sure the Tropic chip is initialized
+  if (tropic_prodtest_init_and_get_handle(cli) == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
   // Ensure that a session with Tropic is established so that we can include
   // randomness from the chip when generating the secrets. At this point in
   // provisioning the factory pairing key should still be valid.
-  if (tropic_custom_session_start(cli, TROPIC_FACTORY_PAIRING_KEY_SLOT) !=
-      LT_OK) {
+  lt_ret_t ret =
+      tropic_custom_session_start(cli, TROPIC_FACTORY_PAIRING_KEY_SLOT);
+  if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_SECRETS_TROPIC_SESSION,
-              "`tropic_custom_session_start()` failed.");
+              "`tropic_custom_session_start()` failed with error '%s'",
+              lt_ret_verbose(ret));
     return;
   }
 #endif
