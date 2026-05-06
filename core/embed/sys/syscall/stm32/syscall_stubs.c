@@ -398,7 +398,19 @@ uint32_t touch_get_event(void) {
   return syscall_invoke0(SYSCALL_TOUCH_GET_EVENT);
 }
 
-#endif
+#ifdef USE_TOUCH_WAKEUP
+
+void touch_wakeup_set_enabled(bool enabled) {
+  syscall_invoke1((uint32_t)enabled, SYSCALL_TOUCH_WAKEUP_SET_ENABLED);
+}
+
+bool touch_wakeup_get_enabled(void) {
+  return (bool)syscall_invoke0(SYSCALL_TOUCH_WAKEUP_GET_ENABLED);
+}
+
+#endif  // USE_TOUCH_WAKEUP
+
+#endif  // USE_TOUCH
 
 // =============================================================================
 // rgb_led.h

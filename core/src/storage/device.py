@@ -52,6 +52,7 @@ _DISABLE_BLUETOOTH        = const(0x24)  # bool (0x01 or empty)
 if not utils.BITCOIN_ONLY:
     _BINARY_MNEMONIC = const(0x25)  # bytes
 _DELEGATED_IDENTITY_KEY_ROTATION_INDEX = const(0x26)  # int
+_DISABLE_TAP_TO_WAKE      = const(0x27)  # bool (0x01 or empty)
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -491,6 +492,20 @@ def get_haptic_feedback() -> bool:
     Get haptic feedback enable, default to true if not set.
     """
     return not common.get_bool(_NAMESPACE, _DISABLE_HAPTIC_FEEDBACK, True)
+
+
+def set_tap_to_wake(enable: bool) -> None:
+    """
+    Enable or disable tap to wake.
+    """
+    common.set_bool(_NAMESPACE, _DISABLE_TAP_TO_WAKE, not enable, True)
+
+
+def get_tap_to_wake() -> bool:
+    """
+    Get tap to wake enable, default to true if not set.
+    """
+    return not common.get_bool(_NAMESPACE, _DISABLE_TAP_TO_WAKE, True)
 
 
 def set_ble(enable: bool) -> None:
