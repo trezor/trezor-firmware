@@ -23,9 +23,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed out-of-memory failure when confirming large input data.  [#6780]
 
 ### Security
-- Cached confirmed EIP-712 domain.  [#246]
-- Fixed Solana ALT recipient account parsing.  [#248]
-- Fixed bug in Solana account type identification.  [#249]
+- Cached confirmed EIP-712 domain.
+- Fixed Solana ALT recipient account parsing.
+- Fixed bug in Solana account type identification.
 
 ## [2.11.1] (22nd April 2026)
 
