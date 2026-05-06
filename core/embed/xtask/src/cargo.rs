@@ -4,7 +4,7 @@ use std::process;
 
 use crate::{
     args::{BuildArgs, Component, TestArgs},
-    artifacts, config, helpers, memusage, postbuild, prebuild,
+    artifacts, helpers, memusage, postbuild, prebuild,
 };
 
 pub fn build(args: BuildArgs) -> Result<()> {
@@ -91,7 +91,7 @@ pub fn fmt() -> Result<()> {
 fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
     if !args.emulator {
         // Recursively build dependencies (Firmware -> Kernel -> Secmon)
-        if let Some(dependency) = args.component.dependency(args.model) {
+        if let Some(dependency) = args.component.dependency(args.model)? {
             build_impl(
                 BuildArgs {
                     component: dependency,
@@ -116,7 +116,7 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
     if !args.emulator {
         let use_dev_keys = args.bootloader_devel || !args.production;
 
-        let model_config = config::ModelConfig::load(args.model.model_id())?;
+        let model_config = args.model.config()?;
 
         // For hardware targets, we need to convert the ELF file into a raw
         // binary before signing it.

@@ -292,7 +292,7 @@ fn main() -> Result<()> {
         let scm_revision_xor2 = define_scm_revision(lib)?;
 
         // Build content of genhdr folder
-        let mpy_builder = MpyBuilder::new(lib, scm_revision_xor2);
+        let mpy_builder = MpyBuilder::new(lib, scm_revision_xor2)?;
         let qstr_preprocessed = mpy_builder.build_genhdr()?;
 
         if cfg!(feature = "frozen") && !xbuild::is_rust_analyzer() {
@@ -409,7 +409,7 @@ struct MpyBuilder<'a> {
 }
 
 impl<'a> MpyBuilder<'a> {
-    fn new(lib: &'a CLibrary, scm_revision_xor2: u8) -> Self {
+    fn new(lib: &'a CLibrary, scm_revision_xor2: u8) -> Result<Self> {
         let crate_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
         let mpy_dir = crate_dir.join("../../vendor/micropython");
         let py_src_dir = crate_dir.join("../../src");
@@ -417,7 +417,7 @@ impl<'a> MpyBuilder<'a> {
         let genhdr_dir = out_dir.join("genhdr");
         let current_model = current_model_id()?;
 
-        Self {
+        Ok(Self {
             lib,
             crate_dir,
             mpy_dir,
@@ -426,7 +426,7 @@ impl<'a> MpyBuilder<'a> {
             py_src_dir,
             scm_revision_xor2,
             current_model,
-        }
+        })
     }
 
     fn build_genhdr(&self) -> Result<PathBuf> {

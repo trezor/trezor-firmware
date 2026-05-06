@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use clap::ValueEnum;
 
+use crate::config::ModelConfig;
 use crate::helpers;
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
@@ -40,6 +41,11 @@ impl Model {
             Model::T3T1 => "T3T1",
             Model::T3W1 => "T3W1",
         }
+    }
+
+    /// Loads this model's configuration from `models/<id>/model.toml`.
+    pub fn config(self) -> Result<ModelConfig> {
+        ModelConfig::load(self.model_id())
     }
 
     /// Returns the path to the model-specific memory.ld file
