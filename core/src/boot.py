@@ -19,7 +19,8 @@ from trezor.pin import (
 )
 from trezor.ui.layouts.homescreen import Lockscreen
 
-from apps.common.request_pin import can_lock_device, verify_user_pin
+from apps.common.request_pin import verify_user_pin
+from apps.common import lock_manager
 
 if utils.USE_OPTIGA:
     from trezor.crypto import optiga
@@ -27,7 +28,6 @@ if utils.USE_OPTIGA:
 if utils.USE_POWER_MANAGER:
     from micropython import const
     from trezor import workflow
-    from apps.common import lock_manager
 
 # have to use "==" over "in (list)" so that it can be statically replaced
 # with the correct value during the build process
@@ -101,7 +101,7 @@ async def bootscreen() -> None:
     while True:
         try:
 
-            if can_lock_device():
+            if lock_manager.can_lock_device():
                 enforce_welcome_screen_duration()
                 if utils.INTERNAL_MODEL == "T2T1":
                     ui.backlight_fade(ui.BacklightLevels.NONE)

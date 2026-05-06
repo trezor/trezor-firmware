@@ -175,8 +175,18 @@ def set_homescreen() -> None:
         set_default(homescreen)
 
 
+def can_lock_device() -> bool:
+    """Return True if the device has a PIN set or SD-protect enabled (when supported)."""
+    if not utils.USE_SD_CARD:
+        return config.has_pin()
+    else:
+        import storage.sd_salt
+
+        return config.has_pin() or storage.sd_salt.is_enabled()
+
+
 def lock_device(interrupt_workflow: bool = True) -> None:
-    if config.has_pin():
+    if can_lock_device():
         config.lock()
         filters.append(_pinlock_filter)
         set_homescreen()
@@ -187,8 +197,6 @@ def lock_device(interrupt_workflow: bool = True) -> None:
 
 
 def lock_device_if_unlocked() -> None:
-    from apps.common.request_pin import can_lock_device
-
     if not utils.USE_BACKLIGHT and not can_lock_device():
         # on OLED devices without PIN, trigger screensaver
         global _SCREENSAVER_IS_ON
