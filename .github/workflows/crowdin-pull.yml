@@ -24,7 +24,6 @@ concurrency:
 
 jobs:
   crowdin-pull-and-pr:
-    if: github.ref_name == 'main'  # run only when dispatched from main
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
