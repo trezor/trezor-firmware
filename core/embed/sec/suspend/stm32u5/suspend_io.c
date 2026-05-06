@@ -72,7 +72,7 @@ void resume_secure_drivers() {
   secure_aes_init();
 #endif
 #ifdef USE_TROPIC
-  tropic_init();
+  tropic_init(NULL);
 #endif
 }
 

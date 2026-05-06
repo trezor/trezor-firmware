@@ -42,9 +42,6 @@
 
 #ifdef SECURE_MODE
 
-// Maximum time to wait for Tropic to boot. Chosen arbitrarily.
-#define TROPIC_BOOT_TIMEOUT_MS 1000
-
 // KEK masks used in PIN verification
 #define TROPIC_KEK_MASKS_PRIVILEGED_SLOT 128
 #define TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT 256
@@ -157,8 +154,7 @@ static bool is_retryable(lt_ret_t ret) {
       }                                                                   \
       tropic01_reset();                                                   \
       tropic_deinit();                                                    \
-      tropic_init();                                                      \
-      tropic_wait_for_ready(NULL);                                        \
+      tropic_init(NULL);                                                  \
       if (TROPIC_RETRY_COMMAND_session_started) {                         \
         if (tropic_custom_session_start(                                  \
                 NULL, TROPIC_RETRY_COMMAND_pairing_key_index) != LT_OK) { \
@@ -174,7 +170,6 @@ static bool is_retryable(lt_ret_t ret) {
 typedef struct {
   bool initialized;
   bool session_started;
-  bool chip_ready;
   lt_pkey_index_t pairing_key_index;  // This field is valid only if
                                       // session_started is true.
   lt_handle_t handle;
@@ -193,7 +188,7 @@ static size_t tropic_cert_chain_length = 0;
 static curve25519_key tropic_public_cached = {0};
 
 // If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
-static bool cache_tropic_cert_chain(cli_t *cli) {
+static bool cache_tropic_cert_chain(cli_t *cli, lt_handle_t *tropic_handle) {
   if (tropic_cert_chain_length > 0) {
     return true;
   }
@@ -205,9 +200,7 @@ static bool cache_tropic_cert_chain(cli_t *cli) {
     cert_store.buf_len[i] = TR01_L2_GET_INFO_REQ_CERT_SIZE_SINGLE;
   }
 
-  lt_ret_t ret = LT_FAIL;
-
-  ret = lt_get_info_cert_store(&g_tropic_driver.handle, &cert_store);
+  lt_ret_t ret = lt_get_info_cert_store(tropic_handle, &cert_store);
   if (ret != LT_OK) {
 #if TREZOR_PRODTEST
     if (cli) {
@@ -243,17 +236,19 @@ static bool cache_tropic_cert_chain(cli_t *cli) {
   return true;
 }
 
-bool tropic_get_pubkey(cli_t *cli, curve25519_key pubkey) {
-  if (!cache_tropic_cert_chain(cli)) {
+bool tropic_get_pubkey(cli_t *cli, lt_handle_t *tropic_handle,
+                       curve25519_key pubkey) {
+  if (!cache_tropic_cert_chain(cli, tropic_handle)) {
     return false;
   }
   memcpy(pubkey, tropic_public_cached, sizeof(curve25519_key));
   return true;
 }
 
-bool tropic_get_cert_chain_ptr(cli_t *cli, uint8_t const **cert_chain,
+bool tropic_get_cert_chain_ptr(cli_t *cli, lt_handle_t *tropic_handle,
+                               uint8_t const **cert_chain,
                                size_t *cert_chain_length) {
-  if (!cache_tropic_cert_chain(cli)) {
+  if (!cache_tropic_cert_chain(cli, tropic_handle)) {
     return false;
   }
   *cert_chain = tropic_cert_chain;
@@ -262,41 +257,6 @@ bool tropic_get_cert_chain_ptr(cli_t *cli, uint8_t const **cert_chain,
 }
 
 #endif  // !PRODUCTION || defined(TREZOR_PRODTEST)
-
-// If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
-bool tropic_wait_for_ready(cli_t *cli) {
-  tropic_driver_t *drv = &g_tropic_driver;
-
-  if (!drv->initialized) {
-#if TREZOR_PRODTEST
-    if (cli) {
-      cli_trace(cli, "Tropic driver is not initialized");
-    }
-#endif
-    return false;
-  }
-
-  if (drv->chip_ready) {
-    return true;
-  }
-
-  // Wait for Tropic to boot before issuing any session commands.
-  uint32_t boot_start_ms = hal_ticks_ms();
-  while (hal_ticks_ms() - boot_start_ms < TROPIC_BOOT_TIMEOUT_MS) {
-    uint8_t ver[TR01_L2_GET_INFO_RISCV_FW_SIZE] = {0};
-    if (lt_get_info_riscv_fw_ver(&drv->handle, ver) != LT_L1_CHIP_BUSY) {
-      drv->chip_ready = true;
-      return true;
-    }
-  }
-
-#if TREZOR_PRODTEST
-  if (cli) {
-    cli_trace(cli, "Tropic is busy");
-  }
-#endif
-  return false;
-}
 
 lt_ret_t tropic_session_invalidate(void) {
   lt_ret_t ret = lt_session_abort(&g_tropic_driver.handle);
@@ -358,7 +318,7 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
   if (secret_key_tropic_public(tropic_public) != sectrue) {
 #if !PRODUCTION || defined(TREZOR_PRODTEST)
     if (pairing_key_index != TROPIC_FACTORY_PAIRING_KEY_SLOT ||
-        !tropic_get_pubkey(cli, tropic_public))
+        !tropic_get_pubkey(cli, &drv->handle, tropic_public))
 #endif
     {
 #ifdef TREZOR_PRODTEST
@@ -371,8 +331,6 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
       goto cleanup;
     }
   }
-
-  tropic_wait_for_ready(cli);
 
   ret = TROPIC_RETRY_COMMAND(lt_session_start(&drv->handle, tropic_public,
                                               pairing_key_index, trezor_private,
@@ -809,10 +767,7 @@ static secbool tropic_restart_chip(void) {
   tropic01_reset();
 #endif
   tropic_deinit();
-  if (!tropic_init()) {
-    return secfalse;
-  }
-  if (!tropic_wait_for_ready(NULL)) {
+  if (tropic_init(NULL) != LT_OK) {
     return secfalse;
   }
   return sectrue;
@@ -1011,11 +966,12 @@ static uint16_t get_tropic_model_port(void) {
 }
 #endif
 
-bool tropic_init(void) {
+// If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
+lt_ret_t tropic_init(cli_t *cli) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (drv->initialized) {
-    return true;
+    return LT_OK;
   }
 
 #ifdef TREZOR_EMULATOR
@@ -1027,21 +983,30 @@ bool tropic_init(void) {
   // Initialize crypto context
   drv->handle.l3.crypto_ctx = &drv->crypto_ctx;
 
-  if (lt_init(&drv->handle) != LT_OK) {
-    return false;
+  lt_ret_t ret = lt_init(&drv->handle);
+  if (ret != LT_OK) {
+#ifdef TREZOR_PRODTEST
+    if (cli) {
+      cli_trace(cli, "`lt_init()` failed with error '%s'", lt_ret_verbose(ret));
+    }
+#endif
+    return ret;
   }
   drv->initialized = true;
 
-  return true;
+  return LT_OK;
 }
 
 void tropic_deinit(void) {
   tropic_driver_t *drv = &g_tropic_driver;
-  lt_deinit(&drv->handle);
+  if (drv->handle.l3.crypto_ctx != NULL) {
+    lt_deinit(&drv->handle);
+  }
   memset(drv, 0, sizeof(*drv));
 }
 
-lt_handle_t *tropic_get_handle(void) {
+#ifdef TREZOR_PRODTEST
+static lt_handle_t *tropic_get_handle(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
@@ -1050,6 +1015,15 @@ lt_handle_t *tropic_get_handle(void) {
 
   return &drv->handle;
 }
+
+lt_handle_t *tropic_prodtest_init_and_get_handle(cli_t *cli) {
+  if (tropic_init(cli) != LT_OK) {
+    return NULL;
+  }
+
+  return tropic_get_handle();
+}
+#endif  // TREZOR_PRODTEST
 
 bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
   tropic_driver_t *drv = &g_tropic_driver;
@@ -1244,11 +1218,10 @@ static void get_change_pin_counter_time(uint32_t *time_ms,
 
 static bool update_change_pin_counter() {
   tropic_driver_t *drv = &g_tropic_driver;
-  lt_ret_t ret = LT_FAIL;
 
   // The cache is invalidated because the counter may be updated more than once
   g_is_change_pin_counter_cached = false;
-  ret = TROPIC_RETRY_COMMAND(
+  lt_ret_t ret = TROPIC_RETRY_COMMAND(
       lt_mcounter_update(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT));
   if (ret == LT_L3_COUNTER_INVALID || ret == LT_L3_UPDATE_ERR) {
     // The counter has not been initialized yet or is depleted.

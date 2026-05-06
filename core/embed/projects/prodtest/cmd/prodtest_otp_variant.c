@@ -31,6 +31,7 @@
 #include "prodtest_optiga.h"
 
 #ifdef USE_TROPIC
+#include <sec/tropic.h>
 #include "prodtest_tropic.h"
 #endif
 
@@ -168,7 +169,14 @@ static void prodtest_otp_variant_write(cli_t* cli) {
 #endif
 
 #ifdef USE_TROPIC
-  tropic_locked_status tropic_status = get_tropic_locked_status(cli);
+  lt_handle_t* tropic_handle = tropic_prodtest_init_and_get_handle(cli);
+  if (tropic_handle == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
+  tropic_locked_status tropic_status =
+      get_tropic_locked_status(cli, tropic_handle);
 
   if (tropic_status == TROPIC_LOCKED_FALSE) {
     cli_error(cli, PRODTEST_ERR_OTP_VARIANT_TROPIC_NOT_LOCKED,

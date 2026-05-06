@@ -1732,6 +1732,11 @@
       "module": "tropic"
     },
     {
+      "code": 20159,
+      "name": "PRODTEST_ERR_TROPIC_INIT",
+      "module": "tropic"
+    },
+    {
       "code": 21010,
       "name": "PRODTEST_ERR_UNIT_TEST_FAILED",
       "module": "unit-test"
