@@ -58,20 +58,24 @@ def test_sign_tx(session: Session, parameters, result):
         parameters
     )
 
-    resp = ckb.sign_tx(
-        session,
-        address_n,
-        inputs=inputs,
-        outputs=outputs,
-        cell_deps=cell_deps,
-        network=network,
-        fee=fee,
-    )
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+
+        resp = ckb.sign_tx(
+            session,
+            address_n,
+            inputs=inputs,
+            outputs=outputs,
+            cell_deps=cell_deps,
+            network=network,
+            fee=fee,
+            chunkify=True,
+        )
 
     sig = resp.serialized.signature
     tx_hash = resp.serialized.tx_hash
 
-    # Verify signature and tx_hash are present and correct length
     assert sig is not None
     assert tx_hash is not None
 
@@ -79,8 +83,6 @@ def test_sign_tx(session: Session, parameters, result):
         assert len(sig) == result["signature_length"]
     if "tx_hash_length" in result:
         assert len(tx_hash) == result["tx_hash_length"]
-    if "signature" in result:
-        assert sig.hex() == result["signature"]
     if "tx_hash" in result:
         assert tx_hash.hex() == result["tx_hash"]
 
@@ -145,6 +147,7 @@ def test_sign_tx_streaming_protocol(session: Session):
                 outputs_count=len(outputs),
                 cell_deps_count=len(cell_deps),
                 fee=fee,
+                chunkify=True,
             ),
             expect=messages.CKBTxRequest,
         )
@@ -222,6 +225,7 @@ def test_sign_tx_invalid_path(session: Session):
             inputs=inputs,
             outputs=outputs,
             network="Mainnet",
+            chunkify=True,
         )
 
 
@@ -248,4 +252,146 @@ def test_rejects_invalid_network(session: Session):
             inputs=inputs,
             outputs=outputs,
             network="Devnet",
+            chunkify=True,
+        )
+
+
+def test_sign_tx_invalid_input_tx_hash_length(session: Session):
+    inputs = [
+        ckb.create_cell_input(
+            tx_hash="d7aa3d44cd6e05823e9b76e4f74932545707832785e3a8ed",
+            index=0,
+        )
+    ]
+    outputs = [
+        ckb.create_cell_output(
+            capacity=10000000000,
+            lock_code_hash="9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            lock_hash_type=1,
+            lock_args="abcdef0123456789abcdef0123456789abcdef01",
+        )
+    ]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match="CellInput tx_hash must be 32 bytes"):
+            ckb.sign_tx(
+                session,
+                parse_path("m/44h/309h/0h/0/0"),
+                inputs=inputs,
+                outputs=outputs,
+                network="Mainnet",
+                fee=1000,
+                chunkify=True,
+            )
+
+
+def test_sign_tx_invalid_output_code_hash_length(session: Session):
+    inputs = [
+        ckb.create_cell_input(
+            tx_hash="d7aa3d44cd6e05823e9b76e4f74932545707832785e3a8ed92b7e409f46c18ac",
+            index=0,
+        )
+    ]
+    outputs = [
+        ckb.create_cell_output(
+            capacity=10000000000,
+            lock_code_hash="9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d",
+            lock_hash_type=1,
+            lock_args="abcdef0123456789abcdef0123456789abcdef01",
+        )
+    ]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match="Script code_hash must be 32 bytes"):
+            ckb.sign_tx(
+                session,
+                parse_path("m/44h/309h/0h/0/0"),
+                inputs=inputs,
+                outputs=outputs,
+                network="Mainnet",
+                fee=1000,
+                chunkify=True,
+            )
+
+
+def test_sign_tx_invalid_cell_dep_tx_hash_length(session: Session):
+    inputs = [
+        ckb.create_cell_input(
+            tx_hash="d7aa3d44cd6e05823e9b76e4f74932545707832785e3a8ed92b7e409f46c18ac",
+            index=0,
+        )
+    ]
+    outputs = [
+        ckb.create_cell_output(
+            capacity=10000000000,
+            lock_code_hash="9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            lock_hash_type=1,
+            lock_args="abcdef0123456789abcdef0123456789abcdef01",
+        )
+    ]
+    cell_deps = [
+        ckb.create_cell_dep(
+            tx_hash="f8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d",
+            index=0,
+            dep_type=1,
+        )
+    ]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match="CellDep tx_hash must be 32 bytes"):
+            ckb.sign_tx(
+                session,
+                parse_path("m/44h/309h/0h/0/0"),
+                inputs=inputs,
+                outputs=outputs,
+                cell_deps=cell_deps,
+                network="Mainnet",
+                fee=1000,
+                chunkify=True,
+            )
+
+
+def test_sign_tx_zero_inputs(session: Session):
+    outputs = [
+        ckb.create_cell_output(
+            capacity=10000000000,
+            lock_code_hash="9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            lock_hash_type=1,
+            lock_args="abcdef0123456789abcdef0123456789abcdef01",
+        )
+    ]
+
+    with pytest.raises(TrezorFailure, match="Transaction must have at least one input"):
+        ckb.sign_tx(
+            session,
+            parse_path("m/44h/309h/0h/0/0"),
+            inputs=[],
+            outputs=outputs,
+            network="Mainnet",
+            chunkify=True,
+        )
+
+
+def test_sign_tx_zero_outputs(session: Session):
+    inputs = [
+        ckb.create_cell_input(
+            tx_hash="d7aa3d44cd6e05823e9b76e4f74932545707832785e3a8ed92b7e409f46c18ac",
+            index=0,
+        )
+    ]
+
+    with pytest.raises(TrezorFailure, match="Transaction must have at least one output"):
+        ckb.sign_tx(
+            session,
+            parse_path("m/44h/309h/0h/0/0"),
+            inputs=inputs,
+            outputs=[],
+            network="Mainnet",
+            chunkify=True,
         )

@@ -14,18 +14,32 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("core")]
 def test_get_address(session: Session, parameters, result):
     address_n = parse_path(parameters["path"])
     network = parameters["network"]
-    address = ckb.get_address(session, address_n, show_display=True, network=network)
+    address = ckb.get_address(
+        session, address_n, show_display=True, network=network, chunkify=True
+    )
     assert address == result["address"]
 
 
 def test_invalid_path(session: Session):
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
-        ckb.get_address(session, parse_path("m/44h/999h/0h/0/0"), show_display=True, network="Mainnet")
+        ckb.get_address(
+            session,
+            parse_path("m/44h/999h/0h/0/0"),
+            show_display=True,
+            network="Mainnet",
+            chunkify=True,
+        )
 
 
 def test_rejects_invalid_network(session: Session):
     with pytest.raises(TrezorFailure, match="Invalid CKB network"):
-        ckb.get_address(session, parse_path("m/44h/309h/0h/0/0"), show_display=False, network="Devnet")
+        ckb.get_address(
+            session,
+            parse_path("m/44h/309h/0h/0/0"),
+            show_display=False,
+            network="Devnet",
+            chunkify=True,
+        )
 
 
 def test_get_address_cancel_show(session: Session):
@@ -37,4 +51,6 @@ def test_get_address_cancel_show(session: Session):
 
     with pytest.raises(Cancelled), session.test_ctx as client:
         client.set_input_flow(input_flow)
-        ckb.get_address(session, address_n, show_display=True, network="Mainnet")
+        ckb.get_address(
+            session, address_n, show_display=True, network="Mainnet", chunkify=True
+        )

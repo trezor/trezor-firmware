@@ -180,6 +180,152 @@
         "tx_hash_length": 32,
         "tx_hash": "71f7ab841279e2d0502f964d51c3ef9a6aebe2751b2d39b8ecb6efb20aa7dfc2"
       }
+    },
+    {
+      "name": "sign_send_to_self",
+      "parameters": {
+        "path": "m/44'/309'/0'/0/0",
+        "network": "Mainnet",
+        "inputs": [
+          {
+            "tx_hash": "aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd",
+            "index": 0,
+            "since": 0
+          }
+        ],
+        "outputs": [
+          {
+            "capacity": 9999900000,
+            "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            "lock_hash_type": 1,
+            "lock_args": "0af9cea353cca00eb173c7420547e358aead128f"
+          }
+        ],
+        "cell_deps": [
+          {
+            "tx_hash": "f8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37",
+            "index": 0,
+            "dep_type": 1
+          }
+        ],
+        "fee": 100000
+      },
+      "result": {
+        "signature_length": 65,
+        "tx_hash_length": 32,
+        "tx_hash": "386f6ee7661d94dadadcc297ee034f2b4b23cd2f27347d5322f75a1a162ee887"
+      }
+    },
+    {
+      "name": "sign_with_change_output",
+      "parameters": {
+        "path": "m/44'/309'/0'/0/0",
+        "network": "Mainnet",
+        "inputs": [
+          {
+            "tx_hash": "bbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaa",
+            "index": 0,
+            "since": 0
+          }
+        ],
+        "outputs": [
+          {
+            "capacity": 5000000000,
+            "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            "lock_hash_type": 1,
+            "lock_args": "abcdef0123456789abcdef0123456789abcdef01"
+          },
+          {
+            "capacity": 4999900000,
+            "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            "lock_hash_type": 1,
+            "lock_args": "0af9cea353cca00eb173c7420547e358aead128f"
+          }
+        ],
+        "cell_deps": [
+          {
+            "tx_hash": "f8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37",
+            "index": 0,
+            "dep_type": 1
+          }
+        ],
+        "fee": 100000
+      },
+      "result": {
+        "signature_length": 65,
+        "tx_hash_length": 32,
+        "tx_hash": "3459a4ccff6ae1b39235af005d5e067ce2a5f83bb84d305d203fa7b610a26999"
+      }
+    },
+    {
+      "name": "sign_with_nonzero_since",
+      "parameters": {
+        "path": "m/44'/309'/0'/0/0",
+        "network": "Mainnet",
+        "inputs": [
+          {
+            "tx_hash": "d7aa3d44cd6e05823e9b76e4f74932545707832785e3a8ed92b7e409f46c18ac",
+            "index": 0,
+            "since": 1000
+          }
+        ],
+        "outputs": [
+          {
+            "capacity": 10000000000,
+            "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            "lock_hash_type": 1,
+            "lock_args": "abcdef0123456789abcdef0123456789abcdef01"
+          }
+        ],
+        "cell_deps": [
+          {
+            "tx_hash": "f8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37",
+            "index": 0,
+            "dep_type": 1
+          }
+        ],
+        "fee": 1000
+      },
+      "result": {
+        "signature_length": 65,
+        "tx_hash_length": 32,
+        "tx_hash": "ec5b6fbf56b1e9591a60ad7e8562be95a450014d973146f156de4a7ea52de5e3"
+      }
+    },
+    {
+      "name": "sign_with_dep_type_code",
+      "parameters": {
+        "path": "m/44'/309'/0'/0/0",
+        "network": "Mainnet",
+        "inputs": [
+          {
+            "tx_hash": "d7aa3d44cd6e05823e9b76e4f74932545707832785e3a8ed92b7e409f46c18ac",
+            "index": 0,
+            "since": 0
+          }
+        ],
+        "outputs": [
+          {
+            "capacity": 10000000000,
+            "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            "lock_hash_type": 1,
+            "lock_args": "abcdef0123456789abcdef0123456789abcdef01"
+          }
+        ],
+        "cell_deps": [
+          {
+            "tx_hash": "f8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37",
+            "index": 0,
+            "dep_type": 0
+          }
+        ],
+        "fee": 1000
+      },
+      "result": {
+        "signature_length": 65,
+        "tx_hash_length": 32,
+        "tx_hash": "c7c8679fa8cbe73f5e79a3d86b5270c76f9c819292fd2362d162ae3dfbd7591c"
+      }
     }
   ]
 }

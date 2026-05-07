@@ -5,6 +5,7 @@
   },
   "tests": [
     {
+      "name": "mainnet_account_0_address_0",
       "parameters": {
         "path": "m/44'/309'/0'/0/0",
         "network": "Mainnet"
@@ -24,6 +25,7 @@
       }
     },
     {
+      "name": "mainnet_account_0_address_1",
       "parameters": {
         "path": "m/44'/309'/0'/0/1",
         "network": "Mainnet"
@@ -43,6 +45,7 @@
       }
     },
     {
+      "name": "mainnet_account_1_address_0",
       "parameters": {
         "path": "m/44'/309'/1'/0/0",
         "network": "Mainnet"
@@ -62,6 +65,7 @@
       }
     },
     {
+      "name": "mainnet_account_2_address_0",
       "parameters": {
         "path": "m/44'/309'/2'/0/0",
         "network": "Mainnet"
