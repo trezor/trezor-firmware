@@ -123,24 +123,64 @@ bool display_init(display_content_mode_t mode) {
     window_title_alloc = NULL;
   }
 
-  drv->window = SDL_CreateWindow(window_title, WINDOW_WIDTH, WINDOW_HEIGHT,
+  Uint32 window_flags =
 #ifdef TREZOR_EMULATOR_RASPI
-                                 SDL_WINDOW_FULLSCREEN
+      SDL_WINDOW_FULLSCREEN;
 #else
-                                 0  // windows are visible by default in SDL3
+      0;  // windows are visible by default in SDL3
 #endif
-  );
+
+  // SDL3 renderer creation can fail on Wayland.
+  // On failure falls back to X11 via XWayland.
+  for (int attempt = 1; attempt <= 2; attempt++) {
+    if (attempt == 2) {
+      // Second attempt: tear down Wayland, reinit with X11
+      LOG_WARN("Renderer failed on Wayland (%s), retrying with X11",
+               SDL_GetError());
+      SDL_DestroyWindow(drv->window);
+      drv->window = NULL;
+      SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+      SDL_SetHintWithPriority(SDL_HINT_VIDEO_DRIVER, "x11", SDL_HINT_OVERRIDE);
+      if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+        free(window_title_alloc);
+        LOG_ERR("X11 fallback: %s", SDL_GetError());
+        error_shutdown("SDL_Init error");
+      }
+    }
+
+    drv->window = SDL_CreateWindow(window_title, WINDOW_WIDTH, WINDOW_HEIGHT,
+                                   window_flags);
+    if (!drv->window) {
+      break;
+    }
+
+    drv->renderer = SDL_CreateRenderer(drv->window, NULL);
+    if (drv->renderer) {
+      break;  // success
+    }
+
+    // Retry if we're on Wayland and this is the first attempt
+    const char *video_driver = SDL_GetCurrentVideoDriver();
+    if (attempt == 1 && video_driver && strcmp(video_driver, "wayland") == 0) {
+      continue;  // try fallback with x11
+    }
+    break;  // no fallback possible
+  }
+
   free(window_title_alloc);
+
   if (!drv->window) {
     LOG_ERR("%s", SDL_GetError());
     error_shutdown("SDL_CreateWindow error");
   }
-  drv->renderer = SDL_CreateRenderer(drv->window, NULL);
+
   if (!drv->renderer) {
     LOG_ERR("%s", SDL_GetError());
     SDL_DestroyWindow(drv->window);
     error_shutdown("SDL_CreateRenderer error");
   }
+
   SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
   SDL_RenderClear(drv->renderer);
 
