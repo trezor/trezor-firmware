@@ -27,7 +27,7 @@
 #include <unistd.h>
 
 #include <io/sdcard.h>
-#include "profile.h"
+#include <sys/profile.h>
 
 #ifndef SDCARD_FILE
 #define SDCARD_FILE profile_sdcard_path()

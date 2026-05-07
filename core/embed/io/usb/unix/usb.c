@@ -33,8 +33,7 @@
 #include <io/usb_hid.h>
 #include <io/usb_vcp.h>
 #include <io/usb_webusb.h>
-
-#include "profile.h"
+#include <sys/profile.h>
 
 #include "memzero.h"
 
