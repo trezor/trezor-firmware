@@ -695,6 +695,10 @@ class Bitcoin:
                         self.get_sighash_type(txi),
                     )
                 else:
+                    if txi.miniscript:
+                        # TODO: no need to support serialization with miniscript
+                        public_key = scripts.derive_miniscript(txi, self.coin)
+
                     scripts.write_witness_p2wpkh(
                         self.serialized_tx,
                         signature,
@@ -955,7 +959,18 @@ class Bitcoin:
         if node is None:
             node = self.keychain.derive(txi.address_n)
 
-        address = addresses.get_address(txi.script_type, self.coin, node, txi.multisig)
+        if txi.miniscript is not None:
+            script = scripts.derive_miniscript(txi, self.coin)
+
+            assert self.coin.bech32_prefix is not None
+            address = addresses._address_p2wsh(
+                sha256(script).digest(), self.coin.bech32_prefix
+            )
+        else:
+            address = addresses.get_address(
+                txi.script_type, self.coin, node, txi.multisig
+            )
+
         return scripts.output_derive_script(address, self.coin)
 
     def output_derive_script(self, txo: TxOutput) -> AnyBytes:
