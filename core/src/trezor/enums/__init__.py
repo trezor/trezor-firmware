@@ -64,6 +64,7 @@ if TYPE_CHECKING:
         SPENDWITNESS = 3
         SPENDP2SHWITNESS = 4
         SPENDTAPROOT = 5
+        SPENDMINISCRIPT = 6
 
     class OutputScriptType(IntEnum):
         PAYTOADDRESS = 0
@@ -73,6 +74,7 @@ if TYPE_CHECKING:
         PAYTOWITNESS = 4
         PAYTOP2SHWITNESS = 5
         PAYTOTAPROOT = 6
+        PAYTOMINISCRIPT = 7
 
     class DecredStakingSpendType(IntEnum):
         SSGen = 0

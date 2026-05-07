@@ -443,6 +443,7 @@ if TYPE_CHECKING:
         script_type: "InputScriptType"
         ignore_xpub_magic: "bool | None"
         chunkify: "bool | None"
+        miniscript: "str | None"
 
         def __init__(
             self,
@@ -454,6 +455,7 @@ if TYPE_CHECKING:
             script_type: "InputScriptType | None" = None,
             ignore_xpub_magic: "bool | None" = None,
             chunkify: "bool | None" = None,
+            miniscript: "str | None" = None,
         ) -> None:
             pass
 
@@ -649,6 +651,7 @@ if TYPE_CHECKING:
         decred_staking_spend: "DecredStakingSpendType | None"
         script_pubkey: "AnyBytes | None"
         coinjoin_flags: "int"
+        miniscript: "str | None"
 
         def __init__(
             self,
@@ -670,6 +673,7 @@ if TYPE_CHECKING:
             decred_staking_spend: "DecredStakingSpendType | None" = None,
             script_pubkey: "AnyBytes | None" = None,
             coinjoin_flags: "int | None" = None,
+            miniscript: "str | None" = None,
         ) -> None:
             pass
 
