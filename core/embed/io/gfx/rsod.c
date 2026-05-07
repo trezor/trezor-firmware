@@ -22,15 +22,11 @@
 #include <io/display.h>
 #include <io/rsod.h>
 #include <io/terminal.h>
+#include <rtl/scm_revision.h>
+#include <rtl/strutils.h>
 #include <sec/rsod_special.h>
 #include <sys/bootutils.h>
 #include <sys/system.h>
-
-#include <rtl/strutils.h>
-
-#ifdef SCM_REVISION_INIT
-#include <rtl/scm_revision.h>
-#endif
 
 #define RSOD_DEFAULT_TITLE "Internal error";
 #define RSOD_DEFAULT_MESSAGE "Unspecified";
@@ -104,12 +100,10 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
     term_print("\n");
   }
 
-#ifdef SCM_REVISION_INIT
-  char rev[10 + 1];
-  cstr_encode_hex(rev, sizeof(rev), SCM_REVISION, (sizeof(rev) - 1) / 2);
+  char rev[8 + 1];
+  cstr_encode_hex(rev, sizeof(rev), SCM_REVISION_SHORT, (sizeof(rev) - 1) / 2);
   term_print("rev : ");
   term_print(rev);
-#endif
 
   if (footer != NULL) {
     term_print("\n");

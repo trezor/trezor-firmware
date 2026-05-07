@@ -19,4 +19,4 @@
 
 #include <rtl/scm_revision.h>
 
-const uint8_t SCM_REVISION[] = SCM_REVISION_INIT;
+const uint8_t SCM_REVISION_SHORT[] = SCM_REVISION_SHORT_INIT;

@@ -86,7 +86,7 @@ def get_features() -> Features:
         minor_version=v_minor,
         patch_version=v_patch,
         build_version=v_build,
-        revision=utils.SCM_REVISION,
+        revision=utils.get_scm_revision(utils.SCM_REVISION_XOR2),
         model=utils.MODEL,
         internal_model=utils.INTERNAL_MODEL,
         device_id=storage_device.get_device_id(),
