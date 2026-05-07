@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.wire import DataError
 
-from .clear_signing import Atomic, DisplayFormat, parse_address, parse_uint256
+from .clear_signing import Array, Atomic, DisplayFormat, parse_address, parse_uint256
 from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
 if TYPE_CHECKING:
@@ -82,6 +82,22 @@ REDEEM_DISPLAY_FORMAT = DisplayFormat(
     field_definitions=[],
 )
 
+# claim(address[] users, address[] tokens, uint256[] amounts, bytes32[][] proofs)
+# The proofs parameter is intentionally omitted from `parameter_definitions`:
+# we don't display it, so we skip the per-element parsing/allocations and only
+# manually validate the top-level array structure (see `_prepare_merkl_claim`).
+CLAIM_DISPLAY_FORMAT = DisplayFormat(
+    binding_context=None,
+    func_sig=FUNC_SIG_CLAIM,
+    intent="Claim",
+    parameter_definitions=[
+        Array(Atomic(parse_address)),  # users
+        Array(Atomic(parse_address)),  # tokens
+        Array(Atomic(parse_uint256)),  # amounts
+    ],
+    field_definitions=[],
+)
+
 
 async def get_approver(
     msg: MsgInSignTx,
@@ -131,7 +147,7 @@ async def get_approver(
             token=token,
         )
     elif func_sig == FUNC_SIG_CLAIM:
-        handler = _prepare_claim_rewards(
+        handler = await _prepare_merkl_claim(
             calldata=calldata,
             msg=msg,
             network=network,
@@ -200,7 +216,7 @@ async def _prepare_vault_tx(
     )
 
 
-def _prepare_claim_rewards(
+async def _prepare_merkl_claim(
     calldata: memoryview,
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
@@ -209,10 +225,8 @@ def _prepare_claim_rewards(
     sender_bytes: AnyBytes,
 ) -> Coroutine[Any, Any, None] | None:
 
-    return None
-    # TODO: Finalize the UI in the next iteration.
-
-    from .clear_signing import InvalidFunctionCall, parse_address
+    from .clear_signing import InvalidFunctionCall
+    from .definitions import Definitions
     from .layout import require_confirm_claim_rewards
     from .yielding_vaults import get_token_label
 
@@ -220,69 +234,72 @@ def _prepare_claim_rewards(
 
     if int.from_bytes(msg.value, "big") != 0:
         raise DataError(
-            "Non-zero ETH transfer with ERC-4626 vault transaction not allowed"
+            "Non-zero ETH transfer with claim rewards transaction not allowed"
         )
 
-    # claim(address[] users, address[] tokens, uint256[] amounts, bytes32[][] proofs)
-    # All 4 params are dynamic; first 128 bytes are their ABI offsets (relative to abi_base).
+    defs = Definitions(network, {})
+
     try:
-        from trezor.utils import BufferReader
-
-        data_reader = BufferReader(bytes(calldata))
-        param_base = data_reader.offset
-
-        receivers_param_offset = int.from_bytes(data_reader.read_memoryview(32), "big")
-        tokens_param_offset = int.from_bytes(data_reader.read_memoryview(32), "big")
-        amounts_param_offset = int.from_bytes(data_reader.read_memoryview(32), "big")
-        proofs_param_offset = int.from_bytes(data_reader.read_memoryview(32), "big")
-
-        def _read_array_length(param_offset: int) -> int:
-            data_reader.seek(param_base + param_offset)
-            return int.from_bytes(data_reader.read_memoryview(32), "big")
-
-        receivers_array_length = _read_array_length(receivers_param_offset)
-        tokens_array_length = _read_array_length(tokens_param_offset)
-        amounts_array_length = _read_array_length(amounts_param_offset)
-        proofs_array_length = _read_array_length(proofs_param_offset)
-
+        parameters, _ = await CLAIM_DISPLAY_FORMAT.parse_calldata(calldata, msg, defs)
+        users, tokens, amounts = parameters
         if (
-            receivers_array_length != tokens_array_length
-            or tokens_array_length != amounts_array_length
-            or amounts_array_length != proofs_array_length
+            not isinstance(users, list)
+            or not isinstance(tokens, list)
+            or not isinstance(amounts, list)
         ):
             raise ValueError
 
-        data_reader.seek(param_base + receivers_param_offset + 32)
-        first_receiver_address = parse_address(data_reader.read_memoryview(32))
-        if not isinstance(first_receiver_address, bytes):
-            raise InvalidFunctionCall
+        # The proofs head sits at offset 96, right after the three parsed array
+        # heads. We only validate that proofs is a well-formed top-level array
+        # whose length matches the others — we never read its elements.
+        _PROOFS_HEAD_OFFSET = 3 * 32
+        if _PROOFS_HEAD_OFFSET + 32 > len(calldata):
+            raise ValueError
+        proofs_body = int.from_bytes(
+            calldata[_PROOFS_HEAD_OFFSET : _PROOFS_HEAD_OFFSET + 32], "big"
+        )
+        if proofs_body + 32 > len(calldata):
+            raise ValueError
+        proofs_length = int.from_bytes(calldata[proofs_body : proofs_body + 32], "big")
 
-        # Check if all users are the same. We validate if it's the sender in _is_vault_tx_safe()
-        # If either of these conditions are unmet, we revert to blind signing (return None).
-        for i in range(1, receivers_array_length):
-            data_reader.seek(param_base + receivers_param_offset + 32 + i * 32)
-            other = parse_address(data_reader.read_memoryview(32))
-            if other != first_receiver_address:
-                return None
+        if (
+            len(users) != len(tokens)
+            or len(tokens) != len(amounts)
+            or len(amounts) != proofs_length
+        ):
+            raise ValueError
 
-        token_labels: list[str] = []
-        for i in range(tokens_array_length):
-            data_reader.seek(param_base + tokens_param_offset + 32 + i * 32)
-            addr = parse_address(data_reader.read_memoryview(32))
-            if not isinstance(addr, bytes):
-                raise InvalidFunctionCall
-            label = get_token_label(addr, network)
-            token_labels.append(label)
+        if len(users) == 0:
+            raise ValueError
 
-    except (ValueError, EOFError, InvalidFunctionCall):
+        first_user = users[0]
+        if not isinstance(first_user, bytes):
+            raise ValueError
+
+    except (ValueError, InvalidFunctionCall):
         raise DataError("Invalid data for claim rewards transaction")
 
-    # We don't show claim flows for any unknown distributor for now.
+    # All receivers must be the same; otherwise revert to blind signing.
+    for other in users[1:]:
+        if other != first_user:
+            return None
+
+    # We don't show claim flows for non claim.xyz or for non-signer users.
     if (
-        msg.to != _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR
-        or sender_bytes != first_receiver_address
+        msg.to.lower() != _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR
+        or sender_bytes != first_user
     ):
         return None
+
+    # Not sure about the UX if we fetch too many defintions so capping definition fetching to 4 for now.
+    try_fetch_definitions = len(tokens) <= 4
+
+    token_labels: list[str] = []
+    for token in tokens:
+        if not isinstance(token, bytes):
+            raise DataError("Invalid data for claim rewards transaction")
+        label = await get_token_label(token, network, msg, try_fetch_definitions)
+        token_labels.append(label)
 
     return require_confirm_claim_rewards(
         address_n=msg.address_n,

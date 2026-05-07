@@ -4,6 +4,8 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from trezor.messages import EthereumNetworkInfo
 
+    from .keychain import MsgInSignTx
+
 from trezor.messages import EthereumTokenInfo
 
 from .tokens import UNKNOWN_TOKEN
@@ -97,15 +99,31 @@ UNKNOWN_VAULT = EthereumVaultInfo(
 )
 
 
-def get_token_label(token_addr: AnyBytes, network: EthereumNetworkInfo) -> str:
-    # Only known token for now. We can use clear signing here to request token definitions from Connect, once it is done.
-    # Would move it to EthereumVaultInfo but there don't seem to be plans to add more tokens for now.
+async def get_token_label(
+    token_addr: AnyBytes,
+    network: EthereumNetworkInfo,
+    msg: MsgInSignTx,
+    try_fetch_definitions: bool,
+) -> str:
+    # MORPHO is hardcoded. We support it regardless of Trezor Connect support.
     # https://etherscan.io/token/0x58d97b57bb95320f9a05dc918aef65434969c2b2
     _MORPHO_ADDR = b"\x58\xd9\x7b\x57\xbb\x95\x32\x0f\x9a\x05\xdc\x91\x8a\xef\x65\x43\x49\x69\xc2\xb2"
     if token_addr == _MORPHO_ADDR and network.chain_id == 1:
         return "MORPHO"
-    else:
-        return "UNKNOWN"
+
+    if try_fetch_definitions and msg.supports_definition_request:
+        from .clear_signing import request_definitions
+
+        addr = bytes(token_addr)
+        received_definitions, _ = await request_definitions(
+            msg.chain_id, addr, func_sig=None
+        )
+        if received_definitions is not None:
+            token = received_definitions.get_token(addr)
+            if token is not UNKNOWN_TOKEN:
+                return token.symbol
+
+    return "UNKNOWN"
 
 
 def lookup_vault(
