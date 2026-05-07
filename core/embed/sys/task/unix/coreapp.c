@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
 
 #include <trezor_rtl.h>
 
@@ -57,4 +57,4 @@ bool coreapp_init(applet_t* applet, int argc, char** argv) {
 void* coreapp_get_api_getter(void) { return (void*)coreapp_api_get; }
 #endif
 
-#endif  // KERNEL
+#endif  // USE_APPLETS

@@ -29,7 +29,7 @@
 #include <sys/systask.h>
 #include <trezor_bsp.h>
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
 #include <sys/applet.h>
 #endif
 
@@ -269,7 +269,7 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
       if (ready || timed_out) {
         events_processed = true;
         systask_t *task = poller->task;
-#if defined(KERNEL) && !defined(TREZOR_EMULATOR)
+#ifdef USE_APPLETS
         systask_set_mpu(task);
 #endif
         if (poller->signalled_arg != NULL) {
