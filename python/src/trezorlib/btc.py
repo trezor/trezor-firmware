@@ -152,6 +152,7 @@ def get_authenticated_address(
     unlock_path: Optional[list[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
     chunkify: bool = False,
+    registered: Optional[messages.RegisteredPolicy] = None,
 ) -> messages.Address:
     if unlock_path:
         session.call(
@@ -168,6 +169,7 @@ def get_authenticated_address(
             script_type=script_type,
             ignore_xpub_magic=ignore_xpub_magic,
             chunkify=chunkify,
+            registered=registered,
         ),
         expect=messages.Address,
     )
