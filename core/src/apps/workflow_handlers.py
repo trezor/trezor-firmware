@@ -97,7 +97,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.bitcoin.sign_message"
     if msg_type == MessageType.VerifyMessage:
         return "apps.bitcoin.verify_message"
-
+    if msg_type == MessageType.Policy:
+        return "apps.bitcoin.register_policy"
     # misc
     if msg_type == MessageType.GetEntropy:
         return "apps.misc.get_entropy"
