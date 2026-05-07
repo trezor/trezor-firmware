@@ -19,7 +19,7 @@
 
 #pragma once
 
-#ifdef KERNEL
+#ifdef USE_APPLETS
 
 #include <trezor_types.h>
 
@@ -43,4 +43,4 @@ void syscall_ipc_enqueue(uint32_t* args, syscall_number_t syscall);
 // function is intended to be called from the kernel event loop.
 void syscall_ipc_dequeue(void);
 
-#endif  // KERNEL
+#endif  // USE_APPLETS

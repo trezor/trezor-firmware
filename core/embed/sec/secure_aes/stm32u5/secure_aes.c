@@ -73,7 +73,7 @@ static secbool is_key_supported(secure_aes_keysel_t key) {
 secbool secure_aes_ecb_encrypt_hw(const uint8_t* input, size_t size,
                                   uint8_t* output, secure_aes_keysel_t key) {
 #if NORCOW_MIN_VERSION <= 5
-#ifdef KERNEL
+#ifdef USE_APPLETS
   if (key == SECURE_AES_KEY_XORK_SN) {
     return secure_aes_unpriv_encrypt(input, size, output, key);
   }

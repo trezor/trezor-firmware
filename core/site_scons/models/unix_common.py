@@ -99,9 +99,10 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         defines += [("USE_IPC", "1")]
         paths += ["embed/sys/ipc/inc"]
 
-    if "applet" in features_wanted:
+    if "applets" in features_wanted:
         sources += ["embed/sys/task/applet.c"]
         sources += ["embed/sys/task/unix/coreapp.c"]
+        defines += [("USE_APPLETS", "1")]
 
     if "app_loading" in features_wanted:
         sources += ["embed/io/app_loader/unix/elf_loader.c"]
