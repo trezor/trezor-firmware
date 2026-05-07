@@ -53,6 +53,8 @@ if not utils.BITCOIN_ONLY:
     _BINARY_MNEMONIC = const(0x25)  # bytes
 _DELEGATED_IDENTITY_KEY_ROTATION_INDEX = const(0x26)  # int
 _DISABLE_TAP_TO_WAKE      = const(0x27)  # bool (0x01 or empty)
+if utils.USE_MINISCRIPT:
+    REGISTERED_MINISCRIPT = const(0x28)  # bytes
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -549,6 +551,21 @@ if utils.USE_THP:
         across reboots, unlike storage.cache.
         """
         return common.get(_NAMESPACE, THP_PAIRED_NAMES)
+
+
+if utils.USE_MINISCRIPT:
+
+    def set_registered_miniscript(blob: AnyBytes) -> None:
+        """
+        Set registered miniscript descriptor (using protobuf serialization).
+        """
+        common.set(_NAMESPACE, REGISTERED_MINISCRIPT, blob)
+
+    def get_registered_miniscript() -> bytes | None:
+        """
+        Get registered miniscript descriptor (using protobuf serialization).
+        """
+        return common.get(_NAMESPACE, REGISTERED_MINISCRIPT)
 
 
 def get_delegated_identity_key_rotation_index() -> int | None:
