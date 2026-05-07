@@ -63,16 +63,6 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
 
     mcu_certificates = None
     mcu_signature = None
-    if utils.USE_MCU_ATTESTATION:
-        from trezor.crypto import mcu
-
-        try:
-            mcu_signature = mcu.sign(challenge_bytes)
-        except RuntimeError:
-            raise wire.ProcessError("MCU signing failed.")
-
-        r = BufferReader(mcu.get_certificate())
-        mcu_certificates = parse_cert_chain(r)
 
     if not utils.DISABLE_ANIMATION:
         frame_delay = sleep(60)
