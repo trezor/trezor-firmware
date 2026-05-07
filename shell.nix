@@ -55,7 +55,8 @@ let
   rustProfiles = nixpkgs.rust-bin.nightly."2026-03-16";
   rustNightly = rustProfiles.minimal.override {
     targets = [
-      "thumbv7em-none-eabihf" # TT
+      "thumbv8m.main-none-eabihf" # T3
+      "thumbv7em-none-eabihf" # T2
       "thumbv7m-none-eabi"    # T1
     ];
     # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
