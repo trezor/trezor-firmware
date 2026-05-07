@@ -72,6 +72,16 @@ let
     version = "stm-cubeide-v1.13.0";
     nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ nixpkgs.autoreconfHook ];
   }));
+  # Workaround for "sdl3 from nix-shell running on non-NixOS wayland"
+  # taken from https://github.com/nix-community/nixGL/blob/main/nixGL.nix
+  vkIcd = nixpkgs.runCommand "mesa_icd" { } (
+    # 64 bits icd
+    ''
+      ls ${nixpkgs.mesa}/share/vulkan/icd.d/*.json > f
+    ''
+    # concat everything as a one line string with ":" as separator
+    + ''cat f | xargs | sed "s/ /:/g" > $out'');
+  vkIcdFilenames = builtins.readFile vkIcd;
 in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
@@ -147,6 +157,8 @@ stdenvNoCC.mkDerivation ({
   ];
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
+
+  VK_ICD_FILENAMES = vkIcdFilenames;
 
   # Fix bdist-wheel problem by setting source date epoch to a more recent date
   SOURCE_DATE_EPOCH = 1600000000;
