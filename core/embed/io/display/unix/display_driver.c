@@ -28,6 +28,7 @@
 #include <io/display.h>
 #include <io/unix/sdl_display.h>
 #include <sys/logging.h>
+#include <sys/profile.h>
 #include <sys/systask.h>
 
 #include <SDL3/SDL.h>
@@ -35,8 +36,6 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3_image/SDL_image.h>
 #include <stdlib.h>
-
-#include "profile.h"
 
 #ifdef USE_POWER_MANAGER
 #include "suspend_overlay.h"

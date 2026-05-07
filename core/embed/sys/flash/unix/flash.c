@@ -28,7 +28,7 @@
 #include <unistd.h>
 
 #include <sys/flash.h>
-#include "profile.h"
+#include <sys/profile.h>
 
 #ifndef FLASH_FILE
 #define FLASH_FILE profile_flash_path()
