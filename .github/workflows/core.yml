@@ -72,7 +72,7 @@ jobs:
           - model: T3T1
             coins: btconly
             type: debuglink
-            miniscript: true  # currently Miniscript is not supported for universal builds
+            miniscript: true  # currently Miniscript is not supported for universal FW builds
           - model: T3W1
             coins: universal
             type: debuglink
@@ -139,10 +139,10 @@ jobs:
             asan: asan
         include:
           - model: T3T1
-            coins: btconly
+            coins: universal
             type: debuglink
             asan: noasan
-            miniscript: true  # currently Miniscript is not supported for universal builds
+            miniscript: true
           - model: T3W1
             coins: universal
             type: debuglink
@@ -268,6 +268,7 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       PYOPT: 0
+      MINISCRIPT: 1
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -298,7 +299,7 @@ jobs:
       RUSTC_BOOTSTRAP: ${{ matrix.asan == 'asan' && '1' || '0' }}
       RUSTFLAGS: ${{ matrix.asan == 'asan' && '-Z sanitizer=address' || '' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
-      DISABLE_TROPIC: 1
+      MINISCRIPT: 1
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -322,7 +323,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
+          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan-miniscript
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
@@ -349,7 +350,7 @@ jobs:
         n1w1: [false]
         include:
           - model: T3T1
-            coins: btconly
+            coins: universal
             asan: noasan
             lang: en
             miniscript: true
