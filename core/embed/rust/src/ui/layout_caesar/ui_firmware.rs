@@ -163,7 +163,7 @@ impl FirmwareUI for UICaesar {
         _cancel: bool,
         _back_button: bool,
         _footer: Option<(TString<'static>, bool)>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
@@ -188,7 +188,7 @@ impl FirmwareUI for UICaesar {
             verb.unwrap_or(TR::buttons__confirm.into()),
             verb_cancel,
             hold,
-            false,
+            external_menu,
         )
     }
 
