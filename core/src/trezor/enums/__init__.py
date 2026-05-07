@@ -64,6 +64,7 @@ if TYPE_CHECKING:
         SPENDWITNESS = 3
         SPENDP2SHWITNESS = 4
         SPENDTAPROOT = 5
+        SPENDMINISCRIPT = 6
 
     class OutputScriptType(IntEnum):
         PAYTOADDRESS = 0
@@ -73,6 +74,7 @@ if TYPE_CHECKING:
         PAYTOWITNESS = 4
         PAYTOP2SHWITNESS = 5
         PAYTOTAPROOT = 6
+        PAYTOMINISCRIPT = 7
 
     class DecredStakingSpendType(IntEnum):
         SSGen = 0
@@ -720,6 +722,8 @@ if TYPE_CHECKING:
         TronWithdrawUnfreeze = 2209
         TronVoteWitnessContract = 2210
         TronWithdrawBalance = 2213
+        Policy = 2301
+        RegisteredPolicy = 2302
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
