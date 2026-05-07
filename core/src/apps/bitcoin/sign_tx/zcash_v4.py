@@ -95,7 +95,9 @@ class Zip243SigHasher:
         write_bytes_reversed(h_preimage, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(h_preimage, txi.prev_index)
         # 13b. scriptCode
-        write_bip143_script_code_prefixed(h_preimage, txi, public_keys, threshold, coin)
+        write_bip143_script_code_prefixed(
+            h_preimage, txi, public_keys, threshold, coin, keychain=None
+        )
         # 13c. value
         write_uint64(h_preimage, txi.amount)
         # 13d. nSequence
