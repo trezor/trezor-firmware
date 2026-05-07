@@ -58,6 +58,7 @@
 #define MICROPY_COMP_RETURN_IF_EXPR (1)
 #define MICROPY_HELPER_LEXER_UNIX   (1)
 #define MICROPY_READER_POSIX        (1)
+#define MICROPY_NLR_SETJMP          (1)
 
 // optimisations
 #define MICROPY_OPT_COMPUTED_GOTO   (1)
