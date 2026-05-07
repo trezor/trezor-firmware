@@ -134,6 +134,7 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       DISABLE_TROPIC: 0
+      MINISCRIPT: 1
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -218,6 +219,7 @@ jobs:
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       DISABLE_TROPIC: 0
       PYOPT: 0
+      MINISCRIPT: 1
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -247,6 +249,7 @@ jobs:
       RUSTC_BOOTSTRAP: ${{ matrix.asan == 'asan' && '1' || '0' }}
       RUSTFLAGS: ${{ matrix.asan == 'asan' && '-Z sanitizer=address' || '' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+      MINISCRIPT: 1
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
