@@ -239,7 +239,6 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
   do {                       \
     ts_t _status = status;   \
     if (ts_error(_status)) { \
-      TSH_LOG_((status));    \
       __status = _status;    \
       TSH_LOG_((__status));  \
       goto cleanup;          \
@@ -256,7 +255,6 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
 #define TSH_CHECK(cond, status) \
   do {                          \
     if (!(cond)) {              \
-      TSH_LOG_((status));       \
       __status = status;        \
       TSH_LOG_((__status));     \
       goto cleanup;             \
@@ -272,7 +270,6 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
 #define TSH_CHECK_ARG(cond) \
   do {                      \
     if (!(cond)) {          \
-      TSH_LOG_(TS_EINVAL);  \
       __status = TS_EINVAL; \
       TSH_LOG_(__status);   \
       goto cleanup;         \
@@ -289,7 +286,6 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
 #define TSH_CHECK_SEC(seccond, status) \
   do {                                 \
     if ((seccond) != sectrue) {        \
-      TSH_LOG_((status));              \
       __status = status;               \
       TSH_LOG_((__status));            \
       goto cleanup;                    \

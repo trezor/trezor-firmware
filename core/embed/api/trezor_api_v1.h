@@ -35,14 +35,14 @@
 #include "ecdsa.h"
 #include "ed25519-donna/ed25519.h"
 #include "hmac.h"
+#include "nist256p1.h"
 #include "secp256k1.h"
 #include "sha2.h"
 #include "sha3.h"
-#include "nist256p1.h"
 
 #ifndef USE_DBG_CONSOLE
-    // temporary hack to allow compilation when DBG console is disabled
-    ssize_t dbg_console_write(const void* data, size_t data_size);
+// temporary hack to allow compilation when DBG console is disabled
+ssize_t dbg_console_write(const void* data, size_t data_size);
 #endif
 
 typedef struct {

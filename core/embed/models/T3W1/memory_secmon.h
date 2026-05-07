@@ -111,16 +111,11 @@
 #define FB2_RAM_START (0x200D8000)
 #define FB2_RAM_SIZE (768 * 1024)
 
-<<<<<<< HEAD
 #define AUX1_RAM_START (0x20198000)
-#define AUX1_RAM_SIZE (800 * 1024)
-=======
-#define AUX1_RAM_START (0x20190000)
-#define AUX1_RAM_SIZE (576 * 1024)
+#define AUX1_RAM_SIZE (544 * 1024)
 
 #define APPDATA_RAM_START (0x20220000)
 #define APPDATA_RAM_SIZE (256 * 1024)
->>>>>>> 8351b58e2e (feat(core): reserve memory for user apps)
 
 #define MAIN_RAM_START (0x20260000)
 #define MAIN_RAM_SIZE (64 * 1024)
