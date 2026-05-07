@@ -587,6 +587,10 @@ pub enum MessageType {
     MessageType_TronWithdrawUnfreeze = 2209,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronVoteWitnessContract)
     MessageType_TronVoteWitnessContract = 2210,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_Policy)
+    MessageType_Policy = 2301,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_RegisteredPolicy)
+    MessageType_RegisteredPolicy = 2302,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -890,6 +894,8 @@ impl ::protobuf::Enum for MessageType {
             2208 => ::std::option::Option::Some(MessageType::MessageType_TronUnfreezeBalanceV2Contract),
             2209 => ::std::option::Option::Some(MessageType::MessageType_TronWithdrawUnfreeze),
             2210 => ::std::option::Option::Some(MessageType::MessageType_TronVoteWitnessContract),
+            2301 => ::std::option::Option::Some(MessageType::MessageType_Policy),
+            2302 => ::std::option::Option::Some(MessageType::MessageType_RegisteredPolicy),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1182,6 +1188,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_TronUnfreezeBalanceV2Contract" => ::std::option::Option::Some(MessageType::MessageType_TronUnfreezeBalanceV2Contract),
             "MessageType_TronWithdrawUnfreeze" => ::std::option::Option::Some(MessageType::MessageType_TronWithdrawUnfreeze),
             "MessageType_TronVoteWitnessContract" => ::std::option::Option::Some(MessageType::MessageType_TronVoteWitnessContract),
+            "MessageType_Policy" => ::std::option::Option::Some(MessageType::MessageType_Policy),
+            "MessageType_RegisteredPolicy" => ::std::option::Option::Some(MessageType::MessageType_RegisteredPolicy),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1473,6 +1481,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_TronUnfreezeBalanceV2Contract,
         MessageType::MessageType_TronWithdrawUnfreeze,
         MessageType::MessageType_TronVoteWitnessContract,
+        MessageType::MessageType_Policy,
+        MessageType::MessageType_RegisteredPolicy,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1770,12 +1780,14 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_TronUnfreezeBalanceV2Contract => 277,
             MessageType::MessageType_TronWithdrawUnfreeze => 278,
             MessageType::MessageType_TronVoteWitnessContract => 279,
-            MessageType::MessageType_BenchmarkListNames => 280,
-            MessageType::MessageType_BenchmarkNames => 281,
-            MessageType::MessageType_BenchmarkRun => 282,
-            MessageType::MessageType_BenchmarkResult => 283,
-            MessageType::MessageType_TelemetryGet => 284,
-            MessageType::MessageType_Telemetry => 285,
+            MessageType::MessageType_Policy => 280,
+            MessageType::MessageType_RegisteredPolicy => 281,
+            MessageType::MessageType_BenchmarkListNames => 282,
+            MessageType::MessageType_BenchmarkNames => 283,
+            MessageType::MessageType_BenchmarkRun => 284,
+            MessageType::MessageType_BenchmarkResult => 285,
+            MessageType::MessageType_TelemetryGet => 286,
+            MessageType::MessageType_Telemetry => 287,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1794,7 +1806,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xbed\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x86e\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2116,7 +2128,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ssageType_TronUnfreezeBalanceV2Contract\x10\xa0\x11\x1a\x04\x90\xb5\x18\
     \x01\x12+\n\x20MessageType_TronWithdrawUnfreeze\x10\xa1\x11\x1a\x04\x90\
     \xb5\x18\x01\x12.\n#MessageType_TronVoteWitnessContract\x10\xa2\x11\x1a\
-    \x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\
+    \x04\x90\xb5\x18\x01\x12\x1d\n\x12MessageType_Policy\x10\xfd\x11\x1a\x04\
+    \x90\xb5\x18\x01\x12'\n\x1cMessageType_RegisteredPolicy\x10\xfe\x11\x1a\
+    \x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\
     \x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\
     \x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\
     \x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\
