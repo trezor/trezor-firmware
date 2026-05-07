@@ -56,6 +56,9 @@ PATTERN_BIP48_RAW = "m/48'/coin_type'/account'/0'/change/address_index"
 PATTERN_BIP48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
 PATTERN_BIP48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
 
+# TODO: Liana uses non-standard change index derivation
+PATTERN_BIP48_LIANA = "m/48'/coin_type'/account'/2'/[0-9]/address_index"
+
 # BIP-49 for segwit-in-P2SH: https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki
 PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
 # BIP-84 for segwit: https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki
@@ -148,6 +151,10 @@ def validate_path_against_script_type(
         if coin.coin_name in BITCOIN_NAMES:
             append(PATTERN_CASA_UNHARDENED)
 
+    elif coin.segwit and script_type == InputScriptType.SPENDMINISCRIPT:
+        append(PATTERN_BIP84)
+        append(PATTERN_BIP48_LIANA)
+
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
         append(PATTERN_BIP84)
         if multisig:
@@ -215,6 +222,7 @@ def _get_schemas_for_coin(
                 PATTERN_BIP84,
                 PATTERN_BIP48_P2SHSEGWIT,
                 PATTERN_BIP48_SEGWIT,
+                PATTERN_BIP48_LIANA,
             )
         )
 
