@@ -59,6 +59,22 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
     address_n = msg.address_n  # local_cache_attribute
     script_type = msg.script_type  # local_cache_attribute
 
+    if msg.registered is not None:
+        from trezor.crypto.hashlib import sha256
+
+        from .register_policy import derive_miniscript
+
+        # TODO: only `wsh()` is supported
+        # TODO: make sure our key is included
+        script = derive_miniscript(msg.registered, keychain, address_n)
+
+        assert coin.coin_name == msg.registered.policy.coin_name
+        assert coin.bech32_prefix is not None
+
+        address = addresses._address_p2wsh(sha256(script).digest(), coin.bech32_prefix)
+        # TODO: support `show_display`
+        return Address(address=address)
+
     if msg.show_display:
         # skip soft-validation for silent calls
         await validate_path(

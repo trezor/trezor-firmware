@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from trezor.messages import MultisigRedeemScriptType, TxInput
 
     from apps.common.coininfo import CoinInfo
+    from apps.common.keychain import Keychain
 
     from .writers import Writer
 
@@ -65,7 +66,7 @@ def write_input_script_prefixed(
             write_input_script_p2wpkh_in_p2sh(
                 w, common.ecdsa_hash_pubkey(pubkey, coin), prefixed=True
             )
-    elif script_type in (IST.SPENDWITNESS, IST.SPENDTAPROOT):
+    elif script_type in (IST.SPENDWITNESS, IST.SPENDTAPROOT, IST.SPENDMINISCRIPT):
         # native p2wpkh or p2wsh or p2tr
         script_sig = _input_script_native_segwit()
         write_bytes_prefixed(w, script_sig)
@@ -128,9 +129,18 @@ def write_bip143_script_code_prefixed(
     public_keys: Sequence[AnyBytes],
     threshold: int,
     coin: CoinInfo,
+    keychain: Keychain | None,
 ) -> None:
     if len(public_keys) > 1:
         write_output_script_multisig(w, public_keys, threshold, prefixed=True)
+        return
+
+    if txi.registered is not None:
+        if keychain is None:
+            raise DataError("Cannot verify policy")
+        script = derive_miniscript(txi, keychain)
+        write_compact_size(w, len(script))
+        w.extend(script)
         return
 
     p2pkh = txi.script_type in (
@@ -147,6 +157,22 @@ def write_bip143_script_code_prefixed(
         )
     else:
         raise DataError("Unknown input script type for bip143 script code")
+
+
+def derive_miniscript(txi: TxInput, keychain: Keychain) -> bytes:
+    if txi.script_type != InputScriptType.SPENDMINISCRIPT:
+        raise DataError("Invalid script type")
+    if txi.registered is None:
+        raise DataError("Missing miniscript")
+
+    from . import register_policy
+
+    # TODO: only `wsh()` is supported
+    return register_policy.derive_miniscript(
+        txi.registered,
+        keychain,
+        address_n=txi.address_n,
+    )
 
 
 # P2PKH, P2SH
