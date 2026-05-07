@@ -1,0 +1,271 @@
+syntax = "proto2";
+package hw.trezor.ethereum;
+
+import "common.proto";
+
+
+/**
+ * Request: Ask device for public key corresponding to address_n path
+ * @start
+ * @next PublicKey
+ * @next Failure
+ */
+message GetPublicKey {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    optional bool show_display = 2;  // optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains public key derived from device private seed
+ * @end
+ */
+message PublicKey {
+    required hw.trezor.common.HDNodeType node = 1; // BIP32 public node
+    required string xpub = 2; // serialized form of public node
+}
+
+/**
+ * Request: Ask device for Ethereum address corresponding to address_n path
+ * @start
+ * @next Address
+ * @next Failure
+ */
+message GetAddress {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    optional bool show_display = 2;      // optionally show on display before sending the result
+    optional bytes encoded_network = 3;  // encoded Ethereum network, see external-definitions.md for details
+    optional bool chunkify = 4;          // display the address in chunks of 4 characters
+}
+
+/**
+ * Response: Contains an Ethereum address derived from device private seed
+ * @end
+ */
+message Address {
+    optional bytes _old_address = 1 [deprecated = true];  // trezor <1.8.0, <2.1.0 - raw bytes of Ethereum address
+    optional string address = 2;                          // Ethereum address as hex-encoded string
+    optional bytes mac = 3;                               // Address authentication code
+}
+
+/**
+ * Request: Ask device to sign transaction
+ * gas_price, gas_limit and chain_id must be provided and non-zero.
+ * All other fields are optional and default to value `0` if missing.
+ * Note: the first at most 1024 bytes of data MUST be transmitted as part of this message.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message SignTx {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    optional bytes nonce = 2 [default =''];               // <=256 bit unsigned big endian
+    required bytes gas_price = 3; // <=256 bit unsigned big endian (in wei)
+    required bytes gas_limit = 4; // <=256 bit unsigned big endian
+    optional string to = 11 [default =''];                // recipient address
+    optional bytes value = 6 [default =''];               // <=256 bit unsigned big endian (in wei)
+    optional bytes data_initial_chunk = 7 [default =''];  // The initial data chunk (<= 1024 bytes)
+    optional uint32 data_length = 8 [default = 0];        // Length of transaction payload
+    required uint64 chain_id = 9; // Chain Id for EIP 155
+    optional uint32 tx_type = 10;                         // Used for Wanchain
+    optional Definitions definitions = 12;        // network and/or token definitions for tx
+    optional bool chunkify = 13;                          // display the address in chunks of 4 characters
+    optional common.PaymentRequest payment_req = 14;      // SLIP-24 payment request
+}
+
+/**
+ * Request: Ask device to sign EIP1559 transaction
+ * Note: the first at most 1024 bytes of data MUST be transmitted as part of this message.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message SignTxEIP1559 {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    required bytes nonce = 2; // <=256 bit unsigned big endian
+    required bytes max_gas_fee = 3; // <=256 bit unsigned big endian (in wei)
+    required bytes max_priority_fee = 4; // <=256 bit unsigned big endian (in wei)
+    required bytes gas_limit = 5; // <=256 bit unsigned big endian
+    optional string to = 6 [default =''];                 // recipient address
+    required bytes value = 7; // <=256 bit unsigned big endian (in wei)
+    optional bytes data_initial_chunk = 8 [default =''];  // The initial data chunk (<= 1024 bytes)
+    required uint32 data_length = 9; // Length of transaction payload
+    required uint64 chain_id = 10; // Chain Id for EIP 155
+    repeated AccessList access_list = 11; // Access List
+    optional Definitions definitions = 12;        // network and/or token definitions for tx
+    optional bool chunkify = 13;                          // display the address in chunks of 4 characters
+    optional common.PaymentRequest payment_req = 14;      // SLIP-24 payment request
+
+    message AccessList {
+        required string address = 1;
+        repeated bytes storage_keys = 2;
+    }
+}
+
+/**
+ * Response: Device asks for more data from transaction payload, or returns the signature.
+ * If data_length is set, device awaits that many more bytes of payload.
+ * Otherwise, the signature_* fields contain the computed transaction signature. All three fields will be present.
+ * @end
+ * @next TxAck
+ */
+message TxRequest {
+    optional uint32 data_length = 1;  // Number of bytes being requested (<= 1024)
+    optional uint32 signature_v = 2;  // Computed signature (recovery parameter, limited to 27 or 28)
+    optional bytes signature_r = 3;   // Computed signature R component (256 bit)
+    optional bytes signature_s = 4;   // Computed signature S component (256 bit)
+}
+
+/**
+ * Request: Transaction payload data.
+ * @next TxRequest
+ */
+message TxAck {
+    required bytes data_chunk = 1; // Bytes from transaction payload (<= 1024 bytes)
+}
+
+/**
+ * Request: Ask device to sign message
+ * @start
+ * @next MessageSignature
+ * @next Failure
+ */
+message SignMessage {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    required bytes message = 2; // message to be signed
+    optional bytes encoded_network = 3;  // encoded Ethereum network, see external-definitions.md for details
+    optional bool chunkify = 4;          // display the address in chunks of 4 characters
+}
+
+/**
+ * Response: Signed message
+ * @end
+ */
+message MessageSignature {
+    required bytes signature = 2; // signature of the message
+    required string address = 3; // address used to sign the message
+}
+
+/**
+ * Request: Ask device to verify message
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message VerifyMessage {
+    required bytes signature = 2; // signature to verify
+    required bytes message = 3; // message to verify
+    required string address = 4; // address to verify
+    optional bool chunkify = 5;    // display the address in chunks of 4 characters
+}
+
+/**
+ * Request: Ask device to sign hash of typed data
+ * @start
+ * @next TypedDataSignature
+ * @next Failure
+ */
+message SignTypedHash {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    required bytes domain_separator_hash = 2; // Hash of domainSeparator of typed data to be signed
+    optional bytes message_hash = 3;     // Hash of the data of typed data to be signed (empty if domain-only data)
+    optional bytes encoded_network = 4;  // encoded Ethereum network, see external-definitions.md for details
+}
+
+/**
+ * Response: Signed typed data
+ * @end
+ */
+message TypedDataSignature {
+    required bytes signature = 1; // signature of the typed data
+    required string address = 2; // address used to sign the typed data
+}
+
+/**
+ * Contains an encoded network and/or token definition. See external-definitions.md for details.
+ * @embed
+ */
+message Definitions {
+    optional bytes encoded_network = 1;  // encoded ethereum network
+    optional bytes encoded_token = 2;    // encoded ethereum token
+}
+
+/**
+ * Request: Ask device to sign typed data
+ * @start
+ * @next TypedDataStructRequest
+ * @next TypedDataValueRequest
+ * @next TypedDataSignature
+ * @next Failure
+ */
+message SignTypedData {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    required string primary_type = 2; // name of the root message struct
+    optional bool metamask_v4_compat = 3 [default = true];  // use MetaMask v4, see
+                                                            // https://github.com/MetaMask/eth-sig-util/issues/106
+    optional ethereum.Definitions definitions = 4;  // network and/or token definitions
+    optional bytes show_message_hash = 5;                   // hash of the typed data to be signed (if set, user will
+                                                            // be asked to confirm before signing)
+}
+
+/**
+ * Response: Device asks for type information about a struct.
+ * @next TypedDataStructAck
+ */
+message TypedDataStructRequest {
+    required string name = 1; // name of the requested struct
+}
+
+/**
+ * Request: Type information about a struct.
+ * @next TypedDataStructRequest
+ */
+message TypedDataStructAck {
+    repeated StructMember members = 1;
+
+    message StructMember {
+        required FieldType type = 1;
+        required string name = 2;
+    }
+
+    message FieldType {
+        required DataType data_type = 1;
+        optional uint32 size = 2;  // for integer types: size in bytes (uint8 has size 1, uint256 has size 32)
+                                   // for bytes types: size in bytes, or unset for dynamic
+                                   // for arrays: size in elements, or unset for dynamic
+                                   // for structs: number of members
+                                   // for string, bool and address: unset
+        optional FieldType entry_type = 3;  // for array types, type of single entry
+        optional string struct_name = 4;            // for structs: its name
+    }
+
+    enum DataType {
+        UINT = 1;
+        INT = 2;
+        BYTES = 3;
+        STRING = 4;
+        BOOL = 5;
+        ADDRESS = 6;
+        ARRAY = 7;
+        STRUCT = 8;
+    }
+}
+
+/**
+ * Response: Device asks for data at the specific member path.
+ * @next TypedDataValueAck
+ */
+message TypedDataValueRequest {
+    repeated uint32 member_path = 1; // member path requested by device
+}
+
+/**
+ * Request: Single value of a specific atomic field.
+ * @next TypedDataValueRequest
+ */
+message TypedDataValueAck {
+    required bytes value = 1;
+    // * atomic types: value of the member.
+    //   Length must match the `size` of the corresponding field type, unless the size is dynamic.
+    // * array types: number of elements, encoded as uint16.
+    // * struct types: undefined, Trezor will not query a struct field.
+}

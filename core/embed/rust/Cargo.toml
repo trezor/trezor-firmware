@@ -122,6 +122,7 @@ spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 ufmt = "0.2.0"
 zeroize = { version = "1.8.2", default-features = false, optional = true }
+num_enum = { version = "0.7.5", default-features = false }
 
 # Runtime dependencies
 
@@ -170,6 +171,15 @@ features = ["libm"]
 version = "1.0.0"
 default-features = false
 
+[dependencies.rkyv]
+version = "0.8.0"
+default-features = false
+features = ["bytecheck"]
+
+[dependencies.trezor-structs]
+version = "0.1.0"
+path = "../../../sdk/crates/trezor-structs"
+default-features = false
 
 # Build dependencies
 

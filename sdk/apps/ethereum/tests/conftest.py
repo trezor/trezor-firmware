@@ -1,0 +1,707 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
+from __future__ import annotations
+
+import logging
+import os
+import typing as t
+from dataclasses import asdict, dataclass
+from enum import IntEnum
+from pathlib import Path
+import sys
+
+import subprocess
+import pytest
+import xdist
+from _pytest.python import IdMaker
+from _pytest.reports import TestReport
+
+from trezorlib import client as client_module
+from trezorlib import debuglink, log, messages, models
+from trezorlib.debuglink import TrezorTestContext
+from trezorlib.device import apply_settings
+from trezorlib.transport import enumerate_devices, get_transport
+from trezorlib.transport.ble import BleTransport
+from trezorlib.testing import translations
+from trezorlib.testing.device_handler import BackgroundDeviceHandler
+from trezorlib.testing.emulators import EmulatorWrapper
+
+from . import ui_tests
+
+# register rewrites before importing from local package
+# so that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+
+
+if t.TYPE_CHECKING:
+    from _pytest.config import Config
+    from _pytest.config.argparsing import Parser
+    from _pytest.mark import Mark
+    from _pytest.nodes import Node
+    from _pytest.terminal import TerminalReporter
+
+    from trezorlib._internal.emulator import Emulator
+    from trezorlib.client import Session
+
+
+HERE = Path(__file__).resolve().parent
+CORE = HERE.parent / "core"
+
+LOG = logging.getLogger(__name__)
+
+# So that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+pytest.register_assert_rewrite("tests.input_flows")
+pytest.register_assert_rewrite("tests.input_flows_helpers")
+
+
+def _emulator_wrapper_main_args() -> list[str]:
+    """Look at TREZOR_PROFILING env variable, so that we can generate coverage reports."""
+    do_profiling = os.environ.get("TREZOR_PROFILING") == "1"
+    # TODO: implement
+    if do_profiling:
+        src_dir = HERE.parent / "core" / "src"
+        # So that the coverage reports have the correct paths
+        os.environ["TREZOR_SRC"] = str(src_dir)
+        return ["-m", "prof"]
+    else:
+        return ["-m", "main"]
+
+
+@pytest.fixture
+def core_emulator(request: pytest.FixtureRequest) -> t.Iterator[Emulator]:
+    """Fixture returning default core emulator with possibility of screen recording."""
+    with EmulatorWrapper("core", main_args=_emulator_wrapper_main_args()) as emu:
+        # Modifying emu.client to add screen recording (when --ui=test is used)
+        _check_protocol(request, emu.client)
+        with ui_tests.screen_recording(emu.client, request, lambda: emu.client) as _:
+            yield emu
+
+
+@pytest.fixture(scope="session")
+def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, None]:
+    """Fixture for getting emulator connection in case tests should operate it on their own.
+
+    Is responsible for starting it at the start of the session and stopping
+    it at the end of the session - using `with EmulatorWrapper...`.
+
+    Makes sure that each process will run the emulator on a different
+    port and with different profile directory, which is cleaned afterwards.
+
+    Used so that we can run the device tests in parallel using `pytest-xdist` plugin.
+    Docs: https://pypi.org/project/pytest-xdist/
+
+    NOTE for parallel tests:
+    So that all worker processes will explore the tests in the exact same order,
+    we cannot use the "built-in" random order, we need to specify our own,
+    so that all the processes share the same order.
+    Done by appending `--random-order-seed=$RANDOM` as a `pytest` argument,
+    using system RNG.
+    """
+
+    model = str(request.session.config.getoption("model"))
+    # TODO: Implement interacting
+    interact = os.environ.get("INTERACT") == "1"
+
+    assert model == "core"
+
+    worker_id = xdist.get_xdist_worker_id(request)
+    assert worker_id.startswith("gw")
+    worker_id = int(worker_id[2:])
+
+    with EmulatorWrapper(
+        model,
+        worker_id=worker_id,
+        headless=True,
+        auto_interact=not interact,
+        main_args=_emulator_wrapper_main_args(),
+        launch_tropic_model=True,
+    ) as emu:
+        yield emu
+
+
+@pytest.fixture(scope="session")
+def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
+    # In case tests run in parallel, each process has its own emulator/client.
+    # Requesting the emulator fixture only if relevant.
+    if request.session.config.getoption("control_emulators"):
+        emu_fixture = request.getfixturevalue("emulator")
+        test_ctx = emu_fixture.client
+    else:
+        if os.environ.get("TREZOR_BLE") != "1":
+            BleTransport.ENABLED = False
+
+        interact = os.environ.get("INTERACT") == "1"
+        if not interact:
+            # prevent tests from getting stuck in case there is an USB packet loss
+            client_module._DEFAULT_READ_TIMEOUT = 50.0
+
+        path = os.environ.get("TREZOR_PATH")
+        try:
+            if path:
+                test_ctx = _test_ctx_from_path(path, interact)
+            else:
+                test_ctx = _find_test_ctx(interact)
+        except Exception:
+            request.session.shouldstop = "Failed to communicate with Trezor"
+            raise
+
+    return test_ctx
+
+
+def _test_ctx_from_path(path: str | None, interact: bool) -> TrezorTestContext:
+    transport = get_transport(path)
+    return TrezorTestContext(transport, auto_interact=not interact, force_wipe=True)
+
+
+def _find_test_ctx(interact: bool) -> TrezorTestContext:
+    devices = enumerate_devices()
+    for device in devices:
+        try:
+            return TrezorTestContext(
+                device, auto_interact=not interact, force_wipe=True
+            )
+        except Exception as exc:
+            LOG.warning("%s: %s", device, exc)
+
+    raise RuntimeError("No debuggable device found")
+
+
+class ModelsFilter:
+    MODEL_SHORTCUTS = {
+        "core": models.CORE_MODELS,
+        "delizia": {models.T3T1},
+        "eckhart": {models.T3W1},
+    }
+
+    def __init__(self, node: Node) -> None:
+        markers = node.iter_markers("models")
+        self.models = set(models.ALL_MODELS)
+        for marker in markers:
+            self._refine_by_marker(marker)
+
+    def __contains__(self, model: models.TrezorModel) -> bool:
+        return model in self.models
+
+    def __bool__(self) -> bool:
+        return bool(self.models)
+
+    def _refine_by_marker(self, marker: Mark) -> None:
+        """Apply the marker selector to the current models selection."""
+        if marker.args:
+            self.models &= self._set_from_marker_list(marker.args)
+        if "skip" in marker.kwargs:
+            self.models -= self._set_from_marker_list(marker.kwargs["skip"])
+
+    @classmethod
+    def _set_from_marker_list(
+        cls, marker_list: str | t.Sequence[str] | t.Sequence[models.TrezorModel]
+    ) -> set[models.TrezorModel]:
+        """Given either a possible value of pytest.mark.models positional args,
+        or a value of the `skip` kwarg, return a set of models specified by that value.
+        """
+        if not marker_list:
+            raise ValueError("No models specified")
+
+        if isinstance(marker_list[0], models.TrezorModel):
+            # raw list of TrezorModels
+            return set(marker_list)  # type: ignore [incompatible with return type]
+
+        if len(marker_list) == 1:
+            # @pytest.mark.models("t2t1,t2b1") -> ("t2t1,t2b1",) -> "t2t1,t2b1"
+            marker_list = marker_list[0]
+
+        if isinstance(marker_list, str):
+            # either a single model / shortcut, or a comma-separated text list
+            # @pytest.mark.models("t2t1,t2b1") -> "t2t1,t2b1" -> ["t2t1", "t2b1"]
+            marker_list = [s.strip() for s in marker_list.split(",")]
+
+        selected_models = set()
+        for marker in marker_list:
+            assert isinstance(marker, str)
+            if marker in cls.MODEL_SHORTCUTS:
+                selected_models |= cls.MODEL_SHORTCUTS[marker]
+            elif (model := models.by_internal_name(marker.upper())) is not None:
+                selected_models.add(model)
+            else:
+                raise ValueError(f"Unknown model: {marker}")
+
+        return selected_models
+
+
+@dataclass
+class SetupParams:
+    uninitialized: bool = False
+    mnemonic: str = " ".join(["all"] * 12)
+    pin: str | None = None
+    passphrase: bool | str = False
+    needs_backup: bool = False
+    no_backup: bool = False
+    unfinished_backup: bool | None = None
+    experimental: bool = False
+    label: str = "test"
+    extapp_path: str | None = None
+    extapp_instance_id: int | None = None
+
+    @classmethod
+    def from_request(cls, request: pytest.FixtureRequest) -> SetupParams:
+        default_params = asdict(cls())
+        marker = request.node.get_closest_marker("setup_client")
+        if marker:
+            default_params.update(marker.kwargs)
+        if request.node.get_closest_marker("experimental"):
+            default_params["experimental"] = True
+        return cls(**default_params)
+
+    @property
+    def use_passphrase(self) -> bool:
+        return self.passphrase is True or isinstance(self.passphrase, str)
+
+    def passphrase_value(self) -> str | None:
+        if self.uninitialized:
+            return None
+        if isinstance(self.passphrase, str):
+            return self.passphrase
+        return ""
+
+    def configure_client(self, session: Session) -> None:
+        if not self.uninitialized:
+            debuglink.load_device(
+                session,
+                mnemonic=self.mnemonic,
+                pin=self.pin,
+                passphrase_protection=self.use_passphrase,
+                label=self.label,
+                needs_backup=self.needs_backup,
+                no_backup=self.no_backup,
+                unfinished_backup=self.unfinished_backup,
+            )
+            if self.experimental:
+                apply_settings(session, experimental_features=True)
+
+        if not self.extapp_path:
+            raise ValueError("--extapp option must be provided")
+        path = Path(self.extapp_path)
+        if not path.exists():
+            raise FileNotFoundError(f"External app not found: {path}")
+        self.extapp_instance_id = debuglink.load_extapp(session, path)
+
+
+@pytest.fixture(scope="function")
+def setup_params(request: pytest.FixtureRequest) -> SetupParams:
+    params = SetupParams.from_request(request)
+    params.extapp_path = request.config.getoption("extapp")
+    return params
+
+
+@pytest.fixture(scope="function")
+def instance_id(
+    setup_params: SetupParams, _prepared_test_ctx: TrezorTestContext
+) -> int:
+    """Returns instance_id of the loaded external app."""
+    if setup_params.extapp_instance_id is None:
+        raise RuntimeError("External app was not loaded during test setup")
+    return setup_params.extapp_instance_id
+
+
+@pytest.fixture(scope="function")
+def _prepared_test_ctx(
+    request: pytest.FixtureRequest,
+    _raw_test_ctx: TrezorTestContext,
+    setup_params: SetupParams,
+) -> t.Generator[TrezorTestContext, None, None]:
+    """TrezorTestContext fixture.
+
+    Every test function that requires a client instance will get it from here.
+    If we can't connect to a debuggable device, the test will fail.
+    If 'skip_t2t1' is used and TT is connected, the test is skipped. Vice versa with T1
+    and 'skip_t1b1'. Same with T2B1, T3T1.
+
+    The client instance is wiped and preconfigured with "all all all..." mnemonic, no
+    password and no pin. It is possible to customize this with the `setup_client`
+    marker.
+
+    To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+
+    @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin="9999", passphrase=True)
+
+    To receive a client instance that was not initialized:
+
+    @pytest.mark.setup_client(uninitialized=True)
+
+    To enable experimental features:
+
+    @pytest.mark.experimental
+    """
+    models_filter = ModelsFilter(request.node)
+    if _raw_test_ctx.model not in models_filter:
+        pytest.skip(f"Skipping test for model {_raw_test_ctx.model.internal_name}")
+
+    is_btc_only = messages.Capability.Bitcoin_like not in _raw_test_ctx.capabilities
+    if request.node.get_closest_marker("altcoin") and is_btc_only:
+        pytest.skip("Skipping altcoin test")
+
+    _check_protocol(request, _raw_test_ctx)
+
+    sd_marker = request.node.get_closest_marker("sd_card")
+    if sd_marker and not _raw_test_ctx.sd_card_present:
+        raise RuntimeError(
+            "This test requires SD card.\n"
+            "To skip all such tests, run:\n"
+            "  pytest -m 'not sd_card' <test path>"
+        )
+
+    fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
+
+    _raw_test_ctx.reset_debug_features()
+    try:
+        _raw_test_ctx.sync_responses()
+    except Exception:
+        request.session.shouldstop = "Failed to communicate with Trezor"
+        pytest.fail("Failed to communicate with Trezor")
+
+    # Use DebugLink to wipe (since THP channel requires unlocked device)
+    _raw_test_ctx.wipe_device()
+
+    # Make sure there are no GC leaks from previous tests
+    # Also wait for the event loop restart after wipe
+    _raw_test_ctx.debug.check_gc_info(fail_on_gc_leak)
+
+    if sd_marker:
+        should_format = sd_marker.kwargs.get("formatted", True)
+        _raw_test_ctx.debug.erase_sd_card(format=should_format)
+
+    # Re-open client for this test
+    # _raw_test_ctx.reset_instance()
+    session = _raw_test_ctx.get_session(passphrase=None)
+
+    if not _raw_test_ctx.features.bootloader_mode:
+        _raw_test_ctx.refresh_features()
+
+    # Load language again, as it got erased in wipe
+    if _raw_test_ctx.model is not models.T1B1:
+        lang = request.session.config.getoption("lang") or "en"
+        assert isinstance(lang, str)
+        translations.set_language(session, lang)
+
+    setup_params.configure_client(session)
+    session.close()
+
+    try:
+        yield _raw_test_ctx
+    finally:
+        # Make sure there are no GC leaks from this test
+        _raw_test_ctx.debug.check_gc_info(fail_on_gc_leak)
+
+
+@pytest.fixture(scope="function")
+def test_ctx(
+    request: pytest.FixtureRequest, _prepared_test_ctx: TrezorTestContext
+) -> t.Generator[TrezorTestContext, None, None]:
+    _prepared_test_ctx.lock()
+    with ui_tests.screen_recording(_prepared_test_ctx, request):
+        yield _prepared_test_ctx
+
+
+@pytest.fixture(scope="function")
+def client(test_ctx: TrezorTestContext) -> t.Generator[TrezorTestContext, None, None]:
+    yield test_ctx
+
+
+@pytest.fixture(scope="function")
+def session(
+    request: pytest.FixtureRequest,
+    _prepared_test_ctx: TrezorTestContext,
+    setup_params: SetupParams,
+) -> t.Generator[Session, None, None]:
+    derive_cardano = bool(request.node.get_closest_marker("cardano"))
+    if setup_params.pin:
+        _prepared_test_ctx.use_pin_sequence([setup_params.pin])
+    session = _prepared_test_ctx.get_session(
+        derive_cardano=derive_cardano, passphrase=setup_params.passphrase_value()
+    )
+
+    if setup_params.pin:
+        session.lock()
+    with ui_tests.screen_recording(_prepared_test_ctx, request):
+        yield session
+    # Calling session.end() is not needed since the device gets wiped later anyway.
+
+
+def _check_protocol(request: pytest.FixtureRequest, client: TrezorTestContext) -> None:
+    protocol_marker = request.node.get_closest_marker("protocol")
+    if not protocol_marker:
+        return
+
+    if client.protocol_version.value not in protocol_marker.args:
+        pytest.skip(
+            f"Test does not support protocol '{client.protocol_version.value}'."
+        )
+
+
+def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:
+    """Return True if the current process is the main test runner.
+
+    In case tests are run in parallel, the main runner is the xdist controller.
+    We cannot use `is_xdist_controller` directly because it is False when xdist is
+    not used.
+    """
+    return xdist.get_xdist_worker_id(session_or_request) == "master"
+
+
+def _generate_python_protobuf(root: Path) -> None:
+    pb2py = root / "protob" / "pb2py"
+    proto_dir = root / "protob"
+    out_file = root / "tests" / "generated" / "messages.py"
+    template = proto_dir / "messages.py.mako"
+
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    (out_file.parent / "__init__.py").touch(exist_ok=True)
+
+    if not pb2py.exists():
+        raise RuntimeError(f"pb2py not found: {pb2py}")
+    if not template.exists():
+        raise RuntimeError(f"template not found: {template}")
+
+    proto_files = sorted(proto_dir.glob("*.proto"))
+    if not proto_files:
+        raise RuntimeError(f"no .proto files found in {proto_dir}")
+
+    cmd = [
+        sys.executable,
+        str(pb2py),
+        "--template",
+        str(template),
+        "--outfile",
+        str(out_file),
+        *[str(p) for p in proto_files],
+    ]
+
+    proc = subprocess.run(cmd, cwd=root, text=True, check=True, capture_output=True)
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"pb2py failed\ncmd: {' '.join(cmd)}\n"
+            f"stdout:\n{proc.stdout}\n"
+            f"stderr:\n{proc.stderr}"
+        )
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+
+    root = Path(__file__).resolve().parent.parent  # sdk/apps/ethereum
+    _generate_python_protobuf(root)
+
+    if session.config.getoption("ui"):
+        ui_tests.setup(main_runner=_is_main_runner(session))
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -> None:
+    test_ui = session.config.getoption("ui")
+    if test_ui and _is_main_runner(session):
+        session.exitstatus = ui_tests.sessionfinish(
+            exitstatus,
+            test_ui,  # type: ignore
+            bool(session.config.getoption("ui_check_missing")),
+            bool(session.config.getoption("do_master_diff")),
+        )
+
+
+def pytest_terminal_summary(
+    terminalreporter: "TerminalReporter", exitstatus: pytest.ExitCode, config: "Config"
+) -> None:
+    println = terminalreporter.write_line
+    println("")
+
+    ui_option = config.getoption("ui")
+    if ui_option:
+        ui_tests.terminal_summary(
+            terminalreporter.write_line,
+            ui_option,  # type: ignore
+            bool(config.getoption("ui_check_missing")),
+            exitstatus,
+        )
+
+
+def pytest_addoption(parser: "Parser") -> None:
+    parser.addoption(
+        "--ui",
+        action="store",
+        choices=["test", "record"],
+        help="Enable UI integration tests: 'record' or 'test'",
+    )
+    parser.addoption(
+        "--ui-check-missing",
+        action="store_true",
+        default=False,
+        help="Check UI fixtures are containing the appropriate test cases (fails on `test`,"
+        "deletes old ones on `record`).",
+    )
+    parser.addoption(
+        "--control-emulators",
+        action="store_true",
+        default=False,
+        help="Pytest will be responsible for starting and stopping the emulators. "
+        "Useful when running tests in parallel.",
+    )
+    parser.addoption(
+        "--model",
+        action="store",
+        choices=["core", "legacy"],
+        help="Which emulator to use: 'core' or 'legacy'. "
+        "Only valid in connection with `--control-emulators`",
+    )
+    parser.addoption(
+        "--record-text-layout",
+        action="store_true",
+        default=False,
+        help="Saving debugging traces for each screen change. "
+        "Will generate a report with text from all test-cases.",
+    )
+    parser.addoption(
+        "--do-master-diff",
+        action="store_true",
+        default=False,
+        help="Generating a master-diff report. "
+        "This shows all unique differing screens compared to master.",
+    )
+    parser.addoption(
+        "--lang",
+        action="store",
+        choices=translations.LANGUAGES,
+        help="Run tests with a specified language: 'en' is the default",
+    )
+    parser.addoption(
+        "--verbose-log-file",
+        action="store",
+        default=None,
+        help="File path for verbose logging",
+    )
+    parser.addoption(
+        "--ignore-gc-leak",
+        action="store_true",
+        default=False,
+        help="Issue a warning when GC leak detected (otherwise, fail the test)",
+    )
+    parser.addoption(
+        "--extapp",
+        action="store",
+        help="Path to the external application to load",
+    )
+
+
+def pytest_configure(config: "Config") -> None:
+    """Called at testsuite setup time.
+
+    Registers known markers, enables verbose output if requested.
+    """
+    # register known markers
+    config.addinivalue_line(
+        "markers",
+        'models("core", "t1b1", ..., skip=[...], reason="..."): select which models or families to run the test on',
+    )
+    config.addinivalue_line(
+        "markers", "experimental: enable experimental features on Trezor"
+    )
+    # config.addinivalue_line(
+    #     "markers", "extapp: enable external application features on Trezor"
+    # )
+    config.addinivalue_line(
+        "markers",
+        'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
+    )
+    # TODO: remove
+    # with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
+    #     for line in f:
+    #         config.addinivalue_line("markers", line.strip())
+
+    # enable debug if `-v` flag is passed (use multiple times for higher verbosity)
+    verbosity = config.getoption("verbose")
+    if verbosity:
+        log.enable_debug_output(verbosity)
+
+        verbose_log_file = config.getoption("verbose_log_file")
+        if verbose_log_file:
+            handler = logging.FileHandler(verbose_log_file)
+            log.enable_debug_output(verbosity, handler)
+
+    idval_orig = IdMaker._idval_from_value
+
+    def idval_from_value(self: IdMaker, val: object) -> str | None:
+        if isinstance(val, IntEnum):
+            return f"{type(val).__name__}.{val.name}"
+        return idval_orig(self, val)
+
+    IdMaker._idval_from_value = idval_from_value
+
+
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    """Called for each test item (class, individual tests).
+
+    Ensures that altcoin tests are skipped, and that no test is skipped for all models.
+    """
+    models_filter = ModelsFilter(item)
+    if not models_filter:
+        raise RuntimeError("Don't skip tests for all trezor models!")
+
+
+# def pytest_set_filtered_exceptions():
+#     UnexpectedMagicError = "TOOD"
+#     return (Timeout, UnexpectedMagicError)
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item: pytest.Item, call) -> t.Generator:
+    # Make test results available in fixtures.
+    # See https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
+    # The device_handler fixture uses this as 'request.node.rep_call.passed' attribute,
+    # in order to raise error only if the test passed.
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, f"rep_{rep.when}", rep)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_report_teststatus(
+    report: TestReport, config: Config
+) -> tuple[str, str, tuple[str, dict[str, bool]]] | None:
+    if report.passed:
+        for prop, _ in report.user_properties:
+            if prop == "ui_failed":
+                return "ui_failed", "U", ("UI-FAILED", {"red": True})
+            if prop == "ui_missing":
+                return "ui_missing", "M", ("UI-MISSING", {"yellow": True})
+    # else use default handling
+    return None
+
+
+@pytest.fixture
+def device_handler(
+    client: TrezorTestContext, request: pytest.FixtureRequest
+) -> t.Generator:
+    device_handler = BackgroundDeviceHandler(client)
+    yield device_handler
+
+    # get call test result
+    test_res = ui_tests.common.get_last_call_test_result(request)
+
+    if test_res is None:
+        return
+
+    # if test finished, make sure all background tasks are done
+    finalized_ok = device_handler.check_finalize()
+    if test_res and not finalized_ok:  # type: ignore [rep_call must exist]
+        raise RuntimeError("Test did not check result of background task")

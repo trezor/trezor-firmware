@@ -27,6 +27,181 @@
 #include <sys/irq.h>
 #include <sys/trustzone.h>
 
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+
+#define SAU_INIT_CTRL_ENABLE 1
+#define SAU_INIT_CTRL_ALLNS 0
+#define SET_REGION(n, start, size, sec)                     \
+  SAU->RNR = ((n) & SAU_RNR_REGION_Msk);                    \
+  SAU->RBAR = ((start) & SAU_RBAR_BADDR_Msk);               \
+  SAU->RLAR = (((start) + (size)-1) & SAU_RLAR_LADDR_Msk) | \
+              (((sec) << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1U
+
+#define DIS_REGION(n)                    \
+  SAU->RNR = ((n) & SAU_RNR_REGION_Msk); \
+  SAU->RBAR = 0;                         \
+  SAU->RLAR = 0
+
+#ifndef SECMON
+static void tz_configure_sau(void) {
+  SET_REGION(0, 0x0BF90000, 0x00019000, 0);  // OTP etc
+
+  SAU->CTRL =
+      ((SAU_INIT_CTRL_ENABLE << SAU_CTRL_ENABLE_Pos) & SAU_CTRL_ENABLE_Msk) |
+      ((SAU_INIT_CTRL_ALLNS << SAU_CTRL_ALLNS_Pos) & SAU_CTRL_ALLNS_Msk);
+}
+#endif
+
+#ifdef SECMON
+
+extern uint8_t _sgstubs_section_start;
+extern uint8_t _sgstubs_section_end;
+
+#define SGSTUBS_START ((uint32_t) & _sgstubs_section_start)
+#define SGSTUBS_END ((uint32_t) & _sgstubs_section_end)
+#define SGSTUBS_SIZE (SGSTUBS_END - SGSTUBS_START)
+
+// defined in linker script
+extern uint32_t _secmon_size;
+
+#define SECMON_SIZE ((uint32_t) & _secmon_size)
+
+#define NONSECURE_CODE_START (FIRMWARE_START + SECMON_SIZE)
+#define NONSECURE_CODE_SIZE (FIRMWARE_MAXSIZE - SECMON_SIZE + APPCODE_MAXSIZE)
+
+static void tz_configure_sau(void) {
+  SAU->CTRL = 0;
+  __DSB();
+  __ISB();
+
+  // clang-format off
+  SET_REGION(0, 0x0BFA0000,            0x800,               0); // OTP, UID, etc
+  SET_REGION(1, NONSECURE_CODE_START,  NONSECURE_CODE_SIZE, 0);
+  SET_REGION(2, ASSETS_START,          ASSETS_MAXSIZE,      0);
+  SET_REGION(3, SGSTUBS_START,         SGSTUBS_SIZE,        1);
+  SET_REGION(4, NONSECURE_RAM1_START,  NONSECURE_RAM1_SIZE, 0);
+  SET_REGION(5, NONSECURE_RAM2_START,  NONSECURE_RAM2_SIZE, 0);
+  SET_REGION(6, PERIPH_BASE_NS,        SIZE_256M,           0);
+  SET_REGION(7, GFXMMU_VIRTUAL_BUFFERS_BASE_NS, SIZE_16M,   0);
+  // clang-format on
+
+  SAU->CTRL = SAU_CTRL_ENABLE_Msk;
+  __DSB();
+  __ISB();
+}
+
+#endif  // SECMON
+
+static void tz_enable_gtzc(void) {
+  // Enable GTZC (Global Trust-Zone Controller) peripheral clock
+  __HAL_RCC_GTZC1_CLK_ENABLE();
+  __HAL_RCC_GTZC2_CLK_ENABLE();
+}
+
+static void tz_enable_illegal_access_interrupt(void) {
+  // Clear all illegal access flags in GTZC TZIC
+  HAL_GTZC_TZIC_ClearFlag(GTZC_PERIPH_ALL);
+  // Enable all illegal access interrupts in GTZC TZIC
+  HAL_GTZC_TZIC_EnableIT(GTZC_PERIPH_ALL);
+  // Enable GTZC secure interrupt
+  NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
+  NVIC_EnableIRQ(GTZC_IRQn);
+}
+
+// Configure ARMCortex-M33 SCB and FPU security
+static void tz_configure_arm(void) {
+  // Enable FPU in both secure and non-secure modes
+  SCB->NSACR |= SCB_NSACR_CP10_Msk | SCB_NSACR_CP11_Msk;
+
+  // Treat FPU registers as non-secure
+  FPU->FPCCR &= ~FPU_FPCCR_TS_Msk;
+  // CLRONRET field is accessible from both security states
+  FPU->FPCCR &= ~FPU_FPCCR_CLRONRETS_Msk;
+  // FPU registers are cleared on exception return
+  FPU->FPCCR |= FPU_FPCCR_CLRONRET_Msk;
+
+  uint32_t reg_value = SCB->AIRCR;
+  reg_value &= ~SCB_AIRCR_VECTKEY_Msk;
+  reg_value |= 0x5FAUL << SCB_AIRCR_VECTKEY_Pos;
+  // Prioritize secure world interrupts over non-secure world
+  reg_value |= SCB_AIRCR_PRIS_Msk;
+#if PRODUCTION
+  // Restrict SYSRESETREQ to secure world only.
+  // In development builds, this restriction is disabled to allow
+  // system resets from non-secure code (e.g., during debugging).
+  reg_value |= SCB_AIRCR_SYSRESETREQS_Msk;
+#endif
+  // NMI, BusFault, HardFault are handled only in secure world
+  reg_value &= ~SCB_AIRCR_BFHFNMINS_Msk;
+  SCB->AIRCR = reg_value;
+}
+
+// Configure SRAM security
+static void tz_configure_sram(void) {
+  MPCBB_ConfigTypeDef mpcbb = {0};
+
+  // No exceptions on illegal access
+  mpcbb.SecureRWIllegalMode = GTZC_MPCBB_SRWILADIS_DISABLE;
+  // Settings of SRAM clock in RCC is secure
+  mpcbb.InvertSecureState = GTZC_MPCBB_INVSECSTATE_NOT_INVERTED;
+  // Set configuration as unlocked
+  mpcbb.AttributeConfig.MPCBB_LockConfig_array[0] = 0x00000000U;
+
+  // Set all blocks secured & privileged
+  for (int index = 0; index < GTZC_MPCBB_NB_VCTR_REG_MAX; index++) {
+    mpcbb.AttributeConfig.MPCBB_SecConfig_array[index] = 0xFFFFFFFFU;
+    mpcbb.AttributeConfig.MPCBB_PrivConfig_array[index] = 0xFFFFFFFFU;
+  }
+
+  HAL_GTZC_MPCBB_ConfigMem(SRAM1_BASE, &mpcbb);
+  HAL_GTZC_MPCBB_ConfigMem(SRAM2_BASE, &mpcbb);
+  HAL_GTZC_MPCBB_ConfigMem(SRAM3_BASE, &mpcbb);
+  HAL_GTZC_MPCBB_ConfigMem(SRAM4_BASE, &mpcbb);
+#if defined STM32U5A9xx || defined STM32U5G9xx
+  HAL_GTZC_MPCBB_ConfigMem(SRAM5_BASE, &mpcbb);
+#endif
+#if defined STM32U5G9xx
+  HAL_GTZC_MPCBB_ConfigMem(SRAM6_BASE, &mpcbb);
+#endif
+}
+
+static void tz_configure_fsmc(void) {
+  __HAL_RCC_FMC_CLK_ENABLE();
+  MPCWM_ConfigTypeDef mpcwm = {0};
+
+  mpcwm.AreaId = GTZC_TZSC_MPCWM_ID1;
+  mpcwm.AreaStatus = ENABLE;
+  mpcwm.Attribute = GTZC_TZSC_MPCWM_REGION_SEC | GTZC_TZSC_MPCWM_REGION_PRIV;
+  mpcwm.Length = 128 * 1024;
+  mpcwm.Offset = 0;
+  mpcwm.Lock = GTZC_TZSC_MPCWM_LOCK_OFF;
+  HAL_GTZC_TZSC_MPCWM_ConfigMemAttributes(FMC_BANK1, &mpcwm);
+}
+
+// Configure FLASH security
+static void tz_configure_flash(void) {
+  FLASH_BBAttributesTypeDef flash_bb = {0};
+
+  // Set all blocks as secured & privileged
+  for (int index = 0; index < FLASH_BLOCKBASED_NB_REG; index++) {
+    flash_bb.BBAttributes_array[index] = 0xFFFFFFFF;
+  }
+
+  flash_bb.Bank = FLASH_BANK_1;
+  flash_bb.BBAttributesType = FLASH_BB_SEC;
+  HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
+  flash_bb.BBAttributesType = FLASH_BB_PRIV;
+  HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
+
+  flash_bb.Bank = FLASH_BANK_2;
+  flash_bb.BBAttributesType = FLASH_BB_SEC;
+  HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
+  flash_bb.BBAttributesType = FLASH_BB_PRIV;
+  HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
+}
+
+#endif  // __ARM_FEATURE_CMSE
+
 static void set_bit_array(volatile uint32_t* regs, uint32_t bit_offset,
                           uint32_t bit_count, bool value) {
   regs += bit_offset / 32;

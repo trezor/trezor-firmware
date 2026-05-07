@@ -291,3 +291,9 @@ if not utils.BITCOIN_ONLY:
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    ExtAppLoad = 9200
+    ExtAppLoaded = 9201
+    ExtAppMessage = 9202
+    ExtAppResponse = 9203
+    FunnycoinGetPublicKey = 9204
+    FunnycoinPublicKey = 9205

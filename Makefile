@@ -202,3 +202,22 @@ hsm_keys_check:
 gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config hsm_keys ## regenerate auto-generated files from sources
 
 gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check hsm_keys_check ## check validity of auto-generated files
+
+funnycoin_build:
+	@cd sdk/apps/funnycoin-rust ; cargo build
+
+funnycoin_get_public_key:
+	@cd sdk/apps/funnycoin-rust/scripts ; ./test_get_public_key.py
+
+ethereum_build_emu:
+	@cd sdk/apps/ethereum ; cargo build --release
+
+ethereum_build_hw:
+	@cd sdk/apps/ethereum ; cargo build --release --target thumbv7em-none-eabihf
+	@cd sdk/apps/ethereum/target/thumbv7em-none-eabihf/release ; arm-none-eabi-readelf -C -sW ethereum_rust | grep FUNC | awk '{printf "%d %s\n", strtonum("0x"$$3), $$0}' | sort -n | cut -d' ' -f2-
+	@echo "\n=== Binary Size ==="
+	@cd sdk/apps/ethereum ;arm-none-eabi-size -A target/thumbv7em-none-eabihf/release/ethereum_rust
+	@cd sdk/apps/ethereum ;arm-none-eabi-size -B target/thumbv7em-none-eabihf/release/ethereum_rust
+
+ethereum_unit_tests:
+	@cd sdk/apps/ethereum ; cargo test --release

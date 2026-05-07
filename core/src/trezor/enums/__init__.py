@@ -708,3 +708,9 @@ if TYPE_CHECKING:
         BenchmarkResult = 9103
         TelemetryGet = 1100
         Telemetry = 1101
+        ExtAppLoad = 9200
+        ExtAppLoaded = 9201
+        ExtAppMessage = 9202
+        ExtAppResponse = 9203
+        FunnycoinGetPublicKey = 9204
+        FunnycoinPublicKey = 9205

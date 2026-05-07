@@ -31,10 +31,52 @@
 #include <sys/ipc.h>
 #endif
 
+#include "bip32.h"
+#include "ecdsa.h"
+#include "ed25519-donna/ed25519.h"
+#include "hmac.h"
+#include "secp256k1.h"
+#include "sha2.h"
+#include "sha3.h"
+#include "nist256p1.h"
+
 #ifndef USE_DBG_CONSOLE
-// temporary hack to allow compilation when DBG console is disabled
-ssize_t dbg_console_write(const void* data, size_t data_size);
+    // temporary hack to allow compilation when DBG console is disabled
+    ssize_t dbg_console_write(const void* data, size_t data_size);
 #endif
+
+typedef struct {
+  int (*ed25519_cosi_combine_publickeys)(ed25519_public_key res,
+                                         CONST ed25519_public_key* pks,
+                                         size_t n);
+  int (*ed25519_sign_open)(const unsigned char* m, size_t mlen,
+                           const ed25519_public_key pk,
+                           const ed25519_signature RS);
+  void (*sha3_256_Init)(SHA3_CTX* ctx);
+  void (*sha3_512_Init)(SHA3_CTX* ctx);
+  void (*sha3_Update)(SHA3_CTX* ctx, const unsigned char* msg, size_t size);
+  void (*sha3_Final)(SHA3_CTX* ctx, unsigned char* result);
+  void (*keccak_Final)(SHA3_CTX* ctx, unsigned char* result);
+  void (*sha256_Init)(SHA256_CTX* ctx);
+  void (*sha256_Update)(SHA256_CTX* ctx, const unsigned char* data, size_t len);
+  void (*sha256_Final)(SHA256_CTX* ctx, unsigned char* digest);
+  void (*sha512_Init)(SHA512_CTX* ctx);
+  void (*sha512_Update)(SHA512_CTX* ctx, const unsigned char* data, size_t len);
+  void (*sha512_Final)(SHA512_CTX* ctx, unsigned char* digest);
+  void (*hmac_sha256_Init)(HMAC_SHA256_CTX* hctx, const uint8_t* key,
+                           const uint32_t keylen);
+  ;
+  void (*hmac_sha256_Update)(HMAC_SHA256_CTX* hctx, const uint8_t* msg,
+                             const uint32_t msglen);
+  void (*hmac_sha256_Final)(HMAC_SHA256_CTX* hctx, uint8_t* hmac);
+  int (*ecdsa_recover_pub_from_sig)(const ecdsa_curve* curve, uint8_t* pub_key,
+                                    const uint8_t* sig, const uint8_t* digest,
+                                    int recid);
+  int (*ecdsa_verify_digest)(const ecdsa_curve* curve, const uint8_t* pub_key,
+                             const uint8_t* sig, const uint8_t* digest);
+  const ecdsa_curve* secp256k1;
+  const ecdsa_curve* nist256p1;
+} trezor_crypto_v1_t;
 
 typedef struct {
   void (*system_exit)(int exitcode);
@@ -71,5 +113,7 @@ typedef struct {
 
   bool (*ipc_send)(systask_id_t remote, uint32_t fn, const void* data,
                    size_t data_size);
+
+  const trezor_crypto_v1_t* trezor_crypto_v1;
 
 } trezor_api_v1_t;

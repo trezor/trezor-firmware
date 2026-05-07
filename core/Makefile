@@ -49,7 +49,7 @@ TREZOR_DISABLE_ANIMATION ?= $(if $(filter 0,$(PYOPT)),1,0)
 STORAGE_INSECURE_TESTING_MODE ?= 0
 UI_PERFORMANCE_OVERLAY ?= 0
 DBG_CONSOLE ?=
-EXTAPP_SUPPORT ?= 0
+EXTAPP_SUPPORT ?= 1
 N4W1 ?= 0
 
 ifeq ($(PRODUCTION),1)
@@ -206,9 +206,9 @@ test_emu_sanity: ## make sure the emulator doesn't crash on startup
 	timeout -v 10 $(EMU) --disable-animation --headless --temporary-profile --command true
 
 test_emu: ## run selected device tests from python-trezor
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) --lang=$(TEST_LANG)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests  --ui=test $(TESTOPTS) --lang=$(TEST_LANG)
 
-test_emu_multicore: ## run device tests using multiple cores
+stest_emu_multicore: ## run device tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
 		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)

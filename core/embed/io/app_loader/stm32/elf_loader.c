@@ -253,23 +253,31 @@ static ts_t relocate_section(const Elf32_Ehdr* ehdr, const Elf32_Shdr* shdr,
   // Get section we are relocating
   const Elf32_Shdr* target_shdr = elf_get_shdr(ehdr, shdr->sh_info);
 
-  TSH_CHECK(target_shdr != NULL, TS_EINVAL);
+  if (target_shdr == NULL) {
+    return TS_EINVAL;
+  }
 
   // Get target section boundaries
   uint32_t target_start = map_va(map, target_shdr->sh_addr);
   uint32_t target_end = target_start + target_shdr->sh_size;
 
   while (rel < rel_end) {
-    // Is relocation type supported?
-    TSH_CHECK(ELF32_R_TYPE(rel->r_info) == R_ARM_ABS32, TS_EINVAL);
+    if (ELF32_R_TYPE(rel->r_info) != R_ARM_ABS32) {
+      // Unsupported relocation type
+      return TS_EINVAL;
+    }
 
     // Get pointer to the relocated 32-bit word
     uint32_t* mem_ptr = (uint32_t*)map_va(map, rel->r_offset);
-    TSH_CHECK(mem_ptr != NULL, TS_EINVAL);
+    if (mem_ptr == NULL) {
+      return TS_EINVAL;
+    }
 
     // Ensure the pointer is within the target section
-    TSH_CHECK((uint32_t)mem_ptr >= target_start, TS_EINVAL);
-    TSH_CHECK((uint32_t)mem_ptr + 4 <= target_end, TS_EINVAL);
+    if ((uint32_t)mem_ptr < target_start ||
+        (uint32_t)mem_ptr + 4 > target_end) {
+      return TS_EINVAL;
+    }
 
     // Relocate the 32-bit word
     *mem_ptr = map_va(map, *mem_ptr);
@@ -277,8 +285,7 @@ static ts_t relocate_section(const Elf32_Ehdr* ehdr, const Elf32_Shdr* shdr,
     ++rel;
   }
 
-cleanup:
-  TSH_RETURN;
+  return TS_OK;
 }
 
 static void get_stack_info(const Elf32_Ehdr* ehdr, uint32_t* stack_base,
