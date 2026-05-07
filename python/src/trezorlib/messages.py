@@ -68,6 +68,7 @@ class InputScriptType(IntEnum):
     SPENDWITNESS = 3
     SPENDP2SHWITNESS = 4
     SPENDTAPROOT = 5
+    SPENDMINISCRIPT = 6
 
 
 class OutputScriptType(IntEnum):
@@ -78,6 +79,7 @@ class OutputScriptType(IntEnum):
     PAYTOWITNESS = 4
     PAYTOP2SHWITNESS = 5
     PAYTOTAPROOT = 6
+    PAYTOMINISCRIPT = 7
 
 
 class DecredStakingSpendType(IntEnum):
@@ -762,6 +764,8 @@ class MessageType(IntEnum):
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    Policy = 2301
+    RegisteredPolicy = 2302
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -1190,6 +1194,46 @@ class PublicKey(protobuf.MessageType):
         self.descriptor = descriptor
 
 
+class Policy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2301
+    FIELDS = {
+        1: protobuf.Field("name", "string", repeated=False, required=True),
+        2: protobuf.Field("template", "string", repeated=False, required=True),
+        3: protobuf.Field("xpubs", "string", repeated=True, required=False, default=None),
+        4: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
+    }
+
+    def __init__(
+        self,
+        *,
+        name: "str",
+        template: "str",
+        xpubs: Optional[Sequence["str"]] = None,
+        coin_name: Optional["str"] = 'Bitcoin',
+    ) -> None:
+        self.xpubs: Sequence["str"] = xpubs if xpubs is not None else []
+        self.name = name
+        self.template = template
+        self.coin_name = coin_name
+
+
+class RegisteredPolicy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2302
+    FIELDS = {
+        1: protobuf.Field("policy", "Policy", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        policy: "Policy",
+        mac: "bytes",
+    ) -> None:
+        self.policy = policy
+        self.mac = mac
+
+
 class GetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 29
     FIELDS = {
@@ -1200,6 +1244,7 @@ class GetAddress(protobuf.MessageType):
         5: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False, default=InputScriptType.SPENDADDRESS),
         6: protobuf.Field("ignore_xpub_magic", "bool", repeated=False, required=False, default=None),
         7: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        8: protobuf.Field("registered", "RegisteredPolicy", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1212,6 +1257,7 @@ class GetAddress(protobuf.MessageType):
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
         ignore_xpub_magic: Optional["bool"] = None,
         chunkify: Optional["bool"] = None,
+        registered: Optional["RegisteredPolicy"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.coin_name = coin_name
@@ -1220,6 +1266,7 @@ class GetAddress(protobuf.MessageType):
         self.script_type = script_type
         self.ignore_xpub_magic = ignore_xpub_magic
         self.chunkify = chunkify
+        self.registered = registered
 
 
 class Address(protobuf.MessageType):
@@ -1458,6 +1505,7 @@ class TxInput(protobuf.MessageType):
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False, default=None),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False, default=None),
         20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False, default=0),
+        21: protobuf.Field("registered", "RegisteredPolicy", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1480,6 +1528,7 @@ class TxInput(protobuf.MessageType):
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
         coinjoin_flags: Optional["int"] = 0,
+        registered: Optional["RegisteredPolicy"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1498,6 +1547,7 @@ class TxInput(protobuf.MessageType):
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
         self.coinjoin_flags = coinjoin_flags
+        self.registered = registered
 
 
 class TxOutput(protobuf.MessageType):
@@ -1949,6 +1999,7 @@ class TxInputType(protobuf.MessageType):
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False, default=None),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False, default=None),
         20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False, default=0),
+        21: protobuf.Field("registered", "RegisteredPolicy", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1971,6 +2022,7 @@ class TxInputType(protobuf.MessageType):
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
         coinjoin_flags: Optional["int"] = 0,
+        registered: Optional["RegisteredPolicy"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1989,6 +2041,7 @@ class TxInputType(protobuf.MessageType):
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
         self.coinjoin_flags = coinjoin_flags
+        self.registered = registered
 
 
 class TxOutputBinType(protobuf.MessageType):
