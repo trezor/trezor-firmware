@@ -65,7 +65,7 @@ def write_input_script_prefixed(
             write_input_script_p2wpkh_in_p2sh(
                 w, common.ecdsa_hash_pubkey(pubkey, coin), prefixed=True
             )
-    elif script_type in (IST.SPENDWITNESS, IST.SPENDTAPROOT):
+    elif script_type in (IST.SPENDWITNESS, IST.SPENDTAPROOT, IST.SPENDMINISCRIPT):
         # native p2wpkh or p2wsh or p2tr
         script_sig = _input_script_native_segwit()
         write_bytes_prefixed(w, script_sig)
@@ -131,6 +131,17 @@ def write_bip143_script_code_prefixed(
 ) -> None:
     if len(public_keys) > 1:
         write_output_script_multisig(w, public_keys, threshold, prefixed=True)
+        return
+
+    if txi.miniscript is not None:
+        from trezorminiscript import compile
+
+        change, index = txi.address_n[-2:]
+        assert change in (0, 1)
+        # TODO: only `wsh()` is supported
+        script = compile(txi.miniscript, bool(change), index)
+        write_compact_size(w, len(script))
+        w.extend(script)
         return
 
     p2pkh = txi.script_type in (
