@@ -535,6 +535,11 @@ def test_send_multisig_2(session: Session):
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
+    assert (
+        signatures[0].hex()
+        == "304402204ab0b571d1f4a37cf94cb3644f261483bcfa387d6a9f3631720d0966bf9248cf0220650b1f928343600b7eedc929902c9b16bf0f00431643b05642fdcf1ae1fd72af"
+    )
+
     # store signature
     inp1.multisig.signatures[1] = signatures[0]
     # sign with first key
@@ -542,9 +547,14 @@ def test_send_multisig_2(session: Session):
 
     with session.test_ctx as client:
         client.set_expected_responses(expected_responses)
-        _, serialized_tx = btc.sign_tx(
+        signatures, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
+
+    assert (
+        signatures[0].hex()
+        == "3045022100ab35a9f9f915ed4d2017237c12d4676545bdf124c5b1c552e9e23777e601372b02202aee125c86a4255102ccba2ea0c5e7d42bb16f4b183a4cde3e707379574d6150"
+    )
 
     assert_tx_matches(
         serialized_tx,
@@ -642,6 +652,90 @@ def test_send_multisig_3_change(session: Session):
         serialized_tx,
         hash_link="https://tbtc1.trezor.io/api/tx/16bfb04cd202a9aab41dcc3c73504f5a342345b1e1420d934a91b49c2447029d",
         tx_hex="01000000000101a660b551efbe3f6e79b181d3c4445a7c3ffc4b970f6c1f5ef2f6284a0dfaabb90200000000ffffffff01905f01000000000017a914536250d41937e5b641082447580ff6a8e46c122a8704004730440220020e4bd3e7173769e82ddb10c101f612d5ef91197983015de9d20f556992bdb4022019f6e3774d1b96d6e82605f3919e5b306035c58c8f3023d12dfdfc9ececebdbe01483045022100e9175e1032d03761740f36c336f38b0b586659d74d57f89a301df551f934f29c02207a52b5a24a85a6344f4fd0b1d51f37a61408b75f3f21a7df5727196cbd2513d701695221039dba3a72f5dc3cad17aa924b5a03c34561465f997d0cb15993f2ca2c0be771c42103cd39f3f08bbd508dce4d307d57d0c70c258c285878bfda579fa260acc738c25d2102cd631ba95beca1d64766f5540885092d0bb384a3c13b6c3a5334d0ebacf51b9553ae00000000",
+    )
+
+
+@pytest.mark.miniscript
+def test_miniscript_send_multisig_2(session: Session):
+    # input tx: b9abfa0d4a28f6f25e1f6c0f974bfc3f7c5a44c4d381b1796e3fbeef51b560a6
+
+    nodes = [
+        btc.get_public_node(
+            session, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
+        )
+        for index in range(1, 4)
+    ]
+    items = (f"@{i}/**" for i in range(len(nodes)))
+    registered = session.call(
+        messages.Policy(
+            name="2-of-3",
+            template=f'wsh(multi(2,{",".join(items)}))',
+            xpubs=[node.xpub for node in nodes],
+            coin_name="Testnet",
+        ),
+        expect=messages.RegisteredPolicy,
+    )
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/84h/1h/2h/0/1"),
+        prev_hash=TXHASH_b9abfa,
+        prev_index=1,
+        script_type=messages.InputScriptType.SPENDMINISCRIPT,
+        registered=registered,
+        amount=100_000,
+    )
+
+    out1 = messages.TxOutputType(
+        address="tb1qr6xa5v60zyt3ry9nmfew2fk5g9y3gerkjeu6xxdz7qga5kknz2ssld9z2z",
+        amount=100_000 - 10_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    expected_responses = [
+        request_input(0),
+        request_output(0),
+        messages.ButtonRequest(code=B.ConfirmOutput),
+        (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
+        messages.ButtonRequest(code=B.SignTx),
+        request_input(0),
+        request_meta(TXHASH_b9abfa),
+        request_input(0, TXHASH_b9abfa),
+        request_output(0, TXHASH_b9abfa),
+        request_output(1, TXHASH_b9abfa),
+        request_output(2, TXHASH_b9abfa),
+        request_output(3, TXHASH_b9abfa),
+        request_output(4, TXHASH_b9abfa),
+        request_input(0),
+        request_output(0),
+        request_input(0),
+        request_finished(),
+    ]
+
+    with session.test_ctx as client:
+        client.set_expected_responses(expected_responses)
+        signatures, _ = btc.sign_tx(
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+        )
+
+    assert (
+        signatures[0].hex()
+        == "304402204ab0b571d1f4a37cf94cb3644f261483bcfa387d6a9f3631720d0966bf9248cf0220650b1f928343600b7eedc929902c9b16bf0f00431643b05642fdcf1ae1fd72af"
+    )
+
+    # store signature
+    # inp1.multisig.signatures[1] = signatures[0]
+    # sign with first key
+    inp1.address_n[2] = H_(1)
+
+    with session.test_ctx as client:
+        client.set_expected_responses(expected_responses)
+        signatures, _ = btc.sign_tx(
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+        )
+
+    assert (
+        signatures[0].hex()
+        == "3045022100ab35a9f9f915ed4d2017237c12d4676545bdf124c5b1c552e9e23777e601372b02202aee125c86a4255102ccba2ea0c5e7d42bb16f4b183a4cde3e707379574d6150"
     )
 
 
