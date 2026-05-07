@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
 
     from apps.common import coininfo
+    from apps.common.keychain import Keychain
 
     from ..common import SigHashType
 
@@ -51,7 +52,7 @@ if TYPE_CHECKING:
 
 # BIP-0143 hash
 class BitcoinSigHasher:
-    def __init__(self) -> None:
+    def __init__(self, keychain: Keychain | None = None) -> None:
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
 
@@ -60,6 +61,7 @@ class BitcoinSigHasher:
         self.h_scriptpubkeys = HashWriter(sha256())
         self.h_sequences = HashWriter(sha256())
         self.h_outputs = HashWriter(sha256())
+        self.keychain = keychain
 
     def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None:
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
@@ -105,7 +107,12 @@ class BitcoinSigHasher:
 
         # scriptCode
         scripts.write_bip143_script_code_prefixed(
-            h_preimage, txi, public_keys, threshold, coin
+            h_preimage,
+            txi,
+            public_keys,
+            threshold,
+            coin,
+            self.keychain,
         )
 
         # amount
