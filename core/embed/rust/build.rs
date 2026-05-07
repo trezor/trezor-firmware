@@ -580,7 +580,7 @@ fn generate_crypto_bindings() {
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
-        .clang_arg("-fgnuc-version=0") // avoid weirdness with ed25519.h CONST definition
+        .clang_arg("-Wno-unused-function") // mode_hdr.h has static inline functions unused at parse time
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(PathBuf::from(out_path).join("crypto.rs"))
