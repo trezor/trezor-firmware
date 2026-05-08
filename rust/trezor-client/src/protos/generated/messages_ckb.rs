@@ -1505,12 +1505,12 @@ impl CKBSignTx {
         ::std::default::Default::default()
     }
 
-    // optional string network = 2;
+    // required string network = 2;
 
     pub fn network(&self) -> &str {
         match self.network.as_ref() {
             Some(v) => v,
-            None => "Mainnet",
+            None => "",
         }
     }
 
@@ -1686,6 +1686,9 @@ impl ::protobuf::Message for CKBSignTx {
     const NAME: &'static str = "CKBSignTx";
 
     fn is_initialized(&self) -> bool {
+        if self.network.is_none() {
+            return false;
+        }
         if self.inputs_count.is_none() {
             return false;
         }
@@ -2418,6 +2421,9 @@ impl ::protobuf::Message for CKBTxAckInput {
     const NAME: &'static str = "CKBTxAckInput";
 
     fn is_initialized(&self) -> bool {
+        if self.input.is_none() {
+            return false;
+        }
         for v in &self.input {
             if !v.is_initialized() {
                 return false;
@@ -2546,6 +2552,9 @@ impl ::protobuf::Message for CKBTxAckOutput {
     const NAME: &'static str = "CKBTxAckOutput";
 
     fn is_initialized(&self) -> bool {
+        if self.output.is_none() {
+            return false;
+        }
         for v in &self.output {
             if !v.is_initialized() {
                 return false;
@@ -2674,6 +2683,9 @@ impl ::protobuf::Message for CKBTxAckCellDep {
     const NAME: &'static str = "CKBTxAckCellDep";
 
     fn is_initialized(&self) -> bool {
+        if self.cell_dep.is_none() {
+            return false;
+        }
         for v in &self.cell_dep {
             if !v.is_initialized() {
                 return false;
@@ -2852,25 +2864,25 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0cR\x08typeArgs\x12\x12\n\x04data\x18\x08\x20\x01(\x0cR\x04data\"V\n\n\
     CKBCellDep\x12\x17\n\x07tx_hash\x18\x01\x20\x02(\x0cR\x06txHash\x12\x14\
     \n\x05index\x18\x02\x20\x02(\rR\x05index\x12\x19\n\x08dep_type\x18\x03\
-    \x20\x02(\rR\x07depType\"\xf3\x01\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\
-    \x01\x20\x03(\rR\x08addressN\x12!\n\x07network\x18\x02\x20\x01(\t:\x07Ma\
-    innetR\x07network\x12!\n\x0cinputs_count\x18\x03\x20\x02(\rR\x0binputsCo\
-    unt\x12#\n\routputs_count\x18\x04\x20\x02(\rR\x0coutputsCount\x12)\n\x0f\
-    cell_deps_count\x18\x05\x20\x01(\r:\x010R\rcellDepsCount\x12\x10\n\x03fe\
-    e\x18\x06\x20\x01(\x04R\x03fee\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\
-    \x08R\x08chunkify:\x05\x90\xb2\x19\xfe*\"\xf9\x01\n\x0cCKBTxRequest\x12K\
-    \n\x0crequest_type\x18\x01\x20\x01(\x0e2(.hw.trezor.messages.ckb.CKBTxRe\
-    questTypeR\x0brequestType\x12E\n\x07details\x18\x02\x20\x01(\x0b2+.hw.tr\
-    ezor.messages.ckb.CKBTxRequestDetailsR\x07details\x12N\n\nserialized\x18\
+    \x20\x02(\rR\x07depType\"\xea\x01\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\
+    \x01\x20\x03(\rR\x08addressN\x12\x18\n\x07network\x18\x02\x20\x02(\tR\
+    \x07network\x12!\n\x0cinputs_count\x18\x03\x20\x02(\rR\x0binputsCount\
+    \x12#\n\routputs_count\x18\x04\x20\x02(\rR\x0coutputsCount\x12)\n\x0fcel\
+    l_deps_count\x18\x05\x20\x01(\r:\x010R\rcellDepsCount\x12\x10\n\x03fee\
+    \x18\x06\x20\x01(\x04R\x03fee\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08\
+    R\x08chunkify:\x05\x90\xb2\x19\xfe*\"\xf9\x01\n\x0cCKBTxRequest\x12K\n\
+    \x0crequest_type\x18\x01\x20\x01(\x0e2(.hw.trezor.messages.ckb.CKBTxRequ\
+    estTypeR\x0brequestType\x12E\n\x07details\x18\x02\x20\x01(\x0b2+.hw.trez\
+    or.messages.ckb.CKBTxRequestDetailsR\x07details\x12N\n\nserialized\x18\
     \x03\x20\x01(\x0b2..hw.trezor.messages.ckb.CKBTxRequestSerializedR\nseri\
     alized:\x05\x90\xb2\x19\xff*\":\n\x13CKBTxRequestDetails\x12#\n\rrequest\
     _index\x18\x01\x20\x01(\rR\x0crequestIndex\"O\n\x16CKBTxRequestSerialize\
     d\x12\x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\n\x07tx_\
     hash\x18\x02\x20\x01(\x0cR\x06txHash\"R\n\rCKBTxAckInput\x12:\n\x05input\
-    \x18\x01\x20\x01(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\x05input:\
+    \x18\x01\x20\x02(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\x05input:\
     \x05\x90\xb2\x19\x80+\"V\n\x0eCKBTxAckOutput\x12=\n\x06output\x18\x01\
-    \x20\x01(\x0b2%.hw.trezor.messages.ckb.CKBCellOutputR\x06output:\x05\x90\
-    \xb2\x19\x81+\"W\n\x0fCKBTxAckCellDep\x12=\n\x08cell_dep\x18\x01\x20\x01\
+    \x20\x02(\x0b2%.hw.trezor.messages.ckb.CKBCellOutputR\x06output:\x05\x90\
+    \xb2\x19\x81+\"W\n\x0fCKBTxAckCellDep\x12=\n\x08cell_dep\x18\x01\x20\x02\
     (\x0b2\".hw.trezor.messages.ckb.CKBCellDepR\x07cellDep:\x05\x90\xb2\x19\
     \x82+*L\n\x10CKBTxRequestType\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TX\
     OUTPUT\x10\x01\x12\r\n\tTXCELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\x10\x03B\
