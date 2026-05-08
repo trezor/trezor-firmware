@@ -171,7 +171,7 @@ impl ComponentMsgObj for DeviceMenuScreen {
         new_tuple(&[
             action_obj,
             result_obj,
-            next_menu_id.to_u8().into(),
+            next_menu_id.to_u8().try_into()?,
             vertical_offset.into(),
         ])
     }
