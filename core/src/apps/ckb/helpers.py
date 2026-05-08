@@ -6,7 +6,7 @@ from trezor.crypto.hashlib import blake2b
 from trezor.crypto.bech32 import bech32_encode, Encoding, convertbits
 
 # System script code_hash for secp256k1_blake160_sighash_all
-# Same on both Meepo Mainnet and Meepo Testnet
+# Same on both Mainnet and Testnet
 CODE_HASH_SECP256K1_BLAKE160 = unhexlify(
     "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8"
 )
@@ -30,31 +30,8 @@ def get_lock_script_arg(public_key: bytes) -> bytes:
 
 
 def encode_address(args: bytes, network: str) -> str:
-    """
-    Encode lock script to Bech32m address using CKB2021 Full format.
-
-    CKB2021 Full address format:
-    - Payload: 0x00 (full format) | code_hash (32B) | hash_type (1B) | args (20B)
-    """
-    # Full format payload for SECP256K1_BLAKE160:
-    # 0x00 = full format flag
-    # code_hash = 32 bytes (secp256k1_blake160_sighash_all)
-    # hash_type = 0x01 (Type)
-    # args = 20 bytes (blake160 of pubkey)
-    payload_bytes = (
-        bytes([0x00]) + CODE_HASH_SECP256K1_BLAKE160 + bytes([HASH_TYPE]) + args
-    )
-
-    # Convert bits from 8-bit groups to 5-bit groups for Bech32 encoding
-    payload_5bit = convertbits(payload_bytes, 8, 5)
-
-    # Select HRP based on network
-    hrp = HRP_MAINNET if network == "Mainnet" else HRP_TESTNET
-
-    # Encode with Bech32m (not Bech32)
-    address = bech32_encode(hrp, payload_5bit, Encoding.BECH32M)
-
-    return address
+    """Encode default secp256k1_blake160 lock script to Bech32m address."""
+    return encode_address_full(CODE_HASH_SECP256K1_BLAKE160, HASH_TYPE, args, network)
 
 
 def encode_address_full(

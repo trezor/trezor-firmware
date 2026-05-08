@@ -40,12 +40,10 @@ async def get_address(msg: CKBGetAddress, keychain: Keychain) -> CKBAddress:
     arg = get_lock_script_arg(public_key)
 
     # Validate network
-    if not msg.network or msg.network not in ("Mainnet", "Testnet"):
+    if msg.network not in ("Mainnet", "Testnet"):
         raise DataError("Invalid CKB network")
 
-    network = msg.network
-
-    address = encode_address(arg, network)
+    address = encode_address(arg, msg.network)
     mac = get_address_mac(address, SLIP44_ID, address_n, keychain)
 
     # Show on display if requested

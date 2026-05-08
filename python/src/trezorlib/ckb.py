@@ -1,19 +1,42 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 """CKB (Nervos Network) support for Trezor."""
+
+from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
     from .tools import Address
-    from .transport.session import Session
+    from .client import Session
 
 DEFAULT_BIP32_PATH = "m/44'/309'/0'/0/0"
 
+
 def get_address(*args: Any, **kwargs: Any) -> str:
-    return get_authenticated_address(*args, **kwargs).address
+    resp = get_authenticated_address(*args, **kwargs)
+    assert resp.address is not None
+    return resp.address
 
 
+@workflow(capability=messages.Capability.CKB)
 def get_authenticated_address(
     session: "Session",
     address_n: "Address",
@@ -32,6 +55,7 @@ def get_authenticated_address(
     )
 
 
+@workflow(capability=messages.Capability.CKB)
 def sign_tx(
     session: "Session",
     address_n: "Address",
@@ -77,20 +101,21 @@ def sign_tx(
     )
 
     while res.request_type != CKBTxRequestType.TXFINISHED:
+        if res.details is None:
+            raise ValueError("Device response missing request details")
+        idx = res.details.request_index
+
         if res.request_type == CKBTxRequestType.TXINPUT:
-            idx = res.details.request_index
             res = session.call(
                 messages.CKBTxAckInput(input=inputs[idx]),
                 expect=messages.CKBTxRequest,
             )
         elif res.request_type == CKBTxRequestType.TXOUTPUT:
-            idx = res.details.request_index
             res = session.call(
                 messages.CKBTxAckOutput(output=outputs[idx]),
                 expect=messages.CKBTxRequest,
             )
         elif res.request_type == CKBTxRequestType.TXCELLDEP:
-            idx = res.details.request_index
             res = session.call(
                 messages.CKBTxAckCellDep(cell_dep=cell_deps[idx]),
                 expect=messages.CKBTxRequest,

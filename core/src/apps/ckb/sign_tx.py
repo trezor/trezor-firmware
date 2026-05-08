@@ -27,9 +27,9 @@ if TYPE_CHECKING:
 SIGNATURE_PLACEHOLDER_SIZE = 65  # secp256k1 recoverable signature
 
 
-def _blake2b_hash(data: bytes, personalization: bytes = b"ckb-default-hash") -> bytes:
+def _blake2b_hash(data: bytes) -> bytes:
     """Compute Blake2b hash with CKB personalization."""
-    h = blake2b(data=data, outlen=32, personal=personalization)
+    h = blake2b(data=data, outlen=32, personal=b"ckb-default-hash")
     return h.digest()
 
 
@@ -81,6 +81,8 @@ def _serialize_script(code_hash: bytes, hash_type: int, args: bytes) -> bytes:
     """
     if len(code_hash) != 32:
         raise DataError("Script code_hash must be 32 bytes")
+    if hash_type not in (0, 1, 2, 4):
+        raise DataError("Invalid CKB hash_type")
     hash_type_byte = bytes([hash_type])
     args_serialized = _serialize_bytes(args)
 
@@ -124,20 +126,14 @@ def _serialize_cell_output(cell_output: "CKBCellOutput") -> bytes:
             cell_output.type_hash_type or 0,
             cell_output.type_args or b"",
         )
-        has_type = True
     else:
         type_script = b""
-        has_type = False
 
     header_size = 4 + (3 * 4)  # 16 bytes
     offset_capacity = header_size
     offset_lock = offset_capacity + 8
     offset_type = offset_lock + len(lock_script)
-
-    if has_type:
-        total_size = offset_type + len(type_script)
-    else:
-        total_size = offset_type
+    total_size = offset_type + len(type_script)
 
     result = bytearray()
     result.extend(_serialize_uint32_le(total_size))
@@ -146,8 +142,7 @@ def _serialize_cell_output(cell_output: "CKBCellOutput") -> bytes:
     result.extend(_serialize_uint32_le(offset_type))
     result.extend(capacity_bytes)
     result.extend(lock_script)
-    if has_type:
-        result.extend(type_script)
+    result.extend(type_script)
 
     return bytes(result)
 
@@ -163,6 +158,8 @@ def _serialize_cell_dep(cell_dep: "CKBCellDep") -> bytes:
     tx_hash = cell_dep.tx_hash
     if len(tx_hash) != 32:
         raise DataError("CellDep tx_hash must be 32 bytes")
+    if cell_dep.dep_type not in (0, 1):
+        raise DataError("Invalid CKB dep_type")
     index = _serialize_uint32_le(cell_dep.index)
     dep_type = bytes([cell_dep.dep_type])
     return tx_hash + index + dep_type
@@ -213,7 +210,6 @@ def _compute_raw_tx_hash(
     outputs: list["CKBCellOutput"],
     outputs_data: list[bytes],
     cell_deps: list["CKBCellDep"],
-    version: int = 0,
 ) -> bytes:
     """
     Compute the raw transaction hash (without witnesses).
@@ -226,12 +222,10 @@ def _compute_raw_tx_hash(
     - outputs: CellOutputVec (DynVec)
     - outputs_data: BytesVec (DynVec)
     """
-    version_bytes = _serialize_uint32_le(version)
+    version_bytes = _serialize_uint32_le(0)
 
-    cell_deps_bytes = (
-        _serialize_vec_fixed([_serialize_cell_dep(dep) for dep in cell_deps])
-        if cell_deps
-        else _serialize_uint32_le(0)
+    cell_deps_bytes = _serialize_vec_fixed(
+        [_serialize_cell_dep(dep) for dep in cell_deps]
     )
 
     header_deps_bytes = _serialize_uint32_le(0)  # empty FixVec
@@ -357,12 +351,11 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         CKBTxAckCellDep,
     )
     from trezor.wire.context import call
-    from trezor.ui.layouts import confirm_output, confirm_total
+    from trezor.ui.layouts import confirm_output, confirm_total, show_continue_in_app
 
     await paths.validate_path(keychain, msg.address_n)
 
-    network = msg.network or "Mainnet"
-    if network not in ("Mainnet", "Testnet"):
+    if msg.network not in ("Mainnet", "Testnet"):
         raise DataError("Invalid CKB network")
 
     if msg.inputs_count == 0:
@@ -393,6 +386,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     outputs_data: list[bytes] = []
     send_amount = 0
     has_external_output = False
+    is_change_flags: list[bool] = []
 
     for i in range(msg.outputs_count):
         req = CKBTxRequest(
@@ -407,27 +401,21 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         outputs.append(output)
         outputs_data.append(output.data or b"")
 
-        # Detect change: must match ALL lock script fields, not just args
         is_change = (
             output.lock_args == sender_lock_args
             and output.lock_code_hash == sender_lock_code_hash
             and output.lock_hash_type == sender_lock_hash_type
             and output.type_code_hash is None
+            and not output.data
         )
+        is_change_flags.append(is_change)
 
         if not is_change:
             has_external_output = True
 
     self_send_shown = False
-    for output in outputs:
-        is_change = (
-            output.lock_args == sender_lock_args
-            and output.lock_code_hash == sender_lock_code_hash
-            and output.lock_hash_type == sender_lock_hash_type
-            and output.type_code_hash is None
-        )
-
-        if not is_change:
+    for i, output in enumerate(outputs):
+        if not is_change_flags[i]:
             show = True
         elif not has_external_output and not self_send_shown:
             show = True
@@ -441,7 +429,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
                 output.lock_code_hash,
                 output.lock_hash_type,
                 output.lock_args,
-                network,
+                msg.network,
             )
             amount_str = helpers.format_amount(output.capacity)
 
@@ -499,6 +487,8 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     raw_sig = secp256k1.sign(node.private_key(), sighash, False)
     recid = raw_sig[0] - 27
     signature = raw_sig[1:65] + bytes([recid])
+
+    show_continue_in_app(TR.send__transaction_signed)
 
     return CKBTxRequest(
         request_type=CKBTxRequestType.TXFINISHED,

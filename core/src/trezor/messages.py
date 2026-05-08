@@ -1981,10 +1981,10 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
+            network: "str",
             inputs_count: "int",
             outputs_count: "int",
             address_n: "list[int] | None" = None,
-            network: "str | None" = None,
             cell_deps_count: "int | None" = None,
             fee: "int | None" = None,
             chunkify: "bool | None" = None,
@@ -2044,12 +2044,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CKBTxAckInput(protobuf.MessageType):
-        input: "CKBCellInput | None"
+        input: "CKBCellInput"
 
         def __init__(
             self,
             *,
-            input: "CKBCellInput | None" = None,
+            input: "CKBCellInput",
         ) -> None:
             pass
 
@@ -2058,12 +2058,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CKBTxAckOutput(protobuf.MessageType):
-        output: "CKBCellOutput | None"
+        output: "CKBCellOutput"
 
         def __init__(
             self,
             *,
-            output: "CKBCellOutput | None" = None,
+            output: "CKBCellOutput",
         ) -> None:
             pass
 
@@ -2072,12 +2072,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CKBTxAckCellDep(protobuf.MessageType):
-        cell_dep: "CKBCellDep | None"
+        cell_dep: "CKBCellDep"
 
         def __init__(
             self,
             *,
-            cell_dep: "CKBCellDep | None" = None,
+            cell_dep: "CKBCellDep",
         ) -> None:
             pass
 

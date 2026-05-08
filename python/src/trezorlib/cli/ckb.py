@@ -1,13 +1,32 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 """CKB (Nervos Network) CLI commands."""
 
-import click
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
+import click
 
 from .. import ckb, tools
 from . import with_session
 
 if TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/309'/0'/0/0"
@@ -114,6 +133,9 @@ def sign_tx(
         fee=fee,
         chunkify=chunkify,
     )
+
+    if result.serialized is None or result.serialized.signature is None or result.serialized.tx_hash is None:
+        raise click.ClickException("Device did not return signature data")
 
     return (
         f"Signature: 0x{result.serialized.signature.hex()}\n"

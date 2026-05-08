@@ -34,8 +34,6 @@
         "fee": 1000
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "dd6311141fe0bdc269462f1f73fb3786dc476c2e17c051ed5ae5f733b2c2ba13"
       }
     },
@@ -69,8 +67,6 @@
         "fee": 1000
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "dd6311141fe0bdc269462f1f73fb3786dc476c2e17c051ed5ae5f733b2c2ba13"
       }
     },
@@ -97,8 +93,6 @@
         "fee": 0
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "b46995165c2d4471f70acc02ccd0f09872bf024e78da986600d3bdabfa8310d1"
       }
     },
@@ -137,8 +131,6 @@
         "fee": 1000
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "fea4faf5632ed6a3e50815190ced600afc3b50ee778cd9056766c6a341ab8213"
       }
     },
@@ -176,8 +168,6 @@
         "fee": 1000
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "71f7ab841279e2d0502f964d51c3ef9a6aebe2751b2d39b8ecb6efb20aa7dfc2"
       }
     },
@@ -211,8 +201,6 @@
         "fee": 100000
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "386f6ee7661d94dadadcc297ee034f2b4b23cd2f27347d5322f75a1a162ee887"
       }
     },
@@ -252,8 +240,6 @@
         "fee": 100000
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "3459a4ccff6ae1b39235af005d5e067ce2a5f83bb84d305d203fa7b610a26999"
       }
     },
@@ -287,8 +273,6 @@
         "fee": 1000
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "ec5b6fbf56b1e9591a60ad7e8562be95a450014d973146f156de4a7ea52de5e3"
       }
     },
@@ -322,8 +306,6 @@
         "fee": 1000
       },
       "result": {
-        "signature_length": 65,
-        "tx_hash_length": 32,
         "tx_hash": "c7c8679fa8cbe73f5e79a3d86b5270c76f9c819292fd2362d162ae3dfbd7591c"
       }
     }

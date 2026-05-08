@@ -79,7 +79,7 @@ message CKBSignTx {
     option (wire_type) = 5502;
 
     repeated uint32 address_n = 1;                               // BIP-32 path for signing key
-    optional string network = 2 [default='Mainnet'];             // Mainnet or Testnet
+    required string network = 2;                                 // Mainnet or Testnet
     required uint32 inputs_count = 3;                            // number of cell inputs
     required uint32 outputs_count = 4;                           // number of cell outputs
     optional uint32 cell_deps_count = 5 [default=0];             // number of cell dependencies
@@ -133,7 +133,7 @@ message CKBTxRequestSerialized {
 message CKBTxAckInput {
     option (wire_type) = 5504;
 
-    optional CKBCellInput input = 1;
+    required CKBCellInput input = 1;
 }
 
 /**
@@ -143,7 +143,7 @@ message CKBTxAckInput {
 message CKBTxAckOutput {
     option (wire_type) = 5505;
 
-    optional CKBCellOutput output = 1;
+    required CKBCellOutput output = 1;
 }
 
 /**
@@ -153,5 +153,5 @@ message CKBTxAckOutput {
 message CKBTxAckCellDep {
     option (wire_type) = 5506;
 
-    optional CKBCellDep cell_dep = 1;
+    required CKBCellDep cell_dep = 1;
 }

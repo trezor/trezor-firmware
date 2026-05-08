@@ -78,11 +78,9 @@ def test_sign_tx(session: Session, parameters, result):
 
     assert sig is not None
     assert tx_hash is not None
+    assert len(sig) == 65
+    assert len(tx_hash) == 32
 
-    if "signature_length" in result:
-        assert len(sig) == result["signature_length"]
-    if "tx_hash_length" in result:
-        assert len(tx_hash) == result["tx_hash_length"]
     if "tx_hash" in result:
         assert tx_hash.hex() == result["tx_hash"]
 

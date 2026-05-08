@@ -3222,7 +3222,7 @@ class CKBSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 5502
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        2: protobuf.Field("network", "string", repeated=False, required=False, default='Mainnet'),
+        2: protobuf.Field("network", "string", repeated=False, required=True),
         3: protobuf.Field("inputs_count", "uint32", repeated=False, required=True),
         4: protobuf.Field("outputs_count", "uint32", repeated=False, required=True),
         5: protobuf.Field("cell_deps_count", "uint32", repeated=False, required=False, default=0),
@@ -3233,18 +3233,18 @@ class CKBSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
+        network: "str",
         inputs_count: "int",
         outputs_count: "int",
         address_n: Optional[Sequence["int"]] = None,
-        network: Optional["str"] = 'Mainnet',
         cell_deps_count: Optional["int"] = 0,
         fee: Optional["int"] = None,
         chunkify: Optional["bool"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.network = network
         self.inputs_count = inputs_count
         self.outputs_count = outputs_count
-        self.network = network
         self.cell_deps_count = cell_deps_count
         self.fee = fee
         self.chunkify = chunkify
@@ -3304,13 +3304,13 @@ class CKBTxRequestSerialized(protobuf.MessageType):
 class CKBTxAckInput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 5504
     FIELDS = {
-        1: protobuf.Field("input", "CKBCellInput", repeated=False, required=False, default=None),
+        1: protobuf.Field("input", "CKBCellInput", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        input: Optional["CKBCellInput"] = None,
+        input: "CKBCellInput",
     ) -> None:
         self.input = input
 
@@ -3318,13 +3318,13 @@ class CKBTxAckInput(protobuf.MessageType):
 class CKBTxAckOutput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 5505
     FIELDS = {
-        1: protobuf.Field("output", "CKBCellOutput", repeated=False, required=False, default=None),
+        1: protobuf.Field("output", "CKBCellOutput", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        output: Optional["CKBCellOutput"] = None,
+        output: "CKBCellOutput",
     ) -> None:
         self.output = output
 
@@ -3332,13 +3332,13 @@ class CKBTxAckOutput(protobuf.MessageType):
 class CKBTxAckCellDep(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 5506
     FIELDS = {
-        1: protobuf.Field("cell_dep", "CKBCellDep", repeated=False, required=False, default=None),
+        1: protobuf.Field("cell_dep", "CKBCellDep", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        cell_dep: Optional["CKBCellDep"] = None,
+        cell_dep: "CKBCellDep",
     ) -> None:
         self.cell_dep = cell_dep
 
