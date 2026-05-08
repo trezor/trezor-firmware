@@ -160,13 +160,13 @@ impl ComponentMsgObj for DeviceMenuScreen {
         if matches!(msg, DeviceMenuMsg::Close) {
             return Ok(CANCELLED.as_obj());
         }
-        let action_obj = msg.to_u8().into();
+        let action_obj = msg.to_u8().try_into()?;
         let result: Option<u8> = match msg {
             DeviceMenuMsg::UnpairDevice | DeviceMenuMsg::RefreshMenu => self.result_arg,
             _ => None,
         };
-        let result_obj = result.into();
-        let parent_idx_obj = DeviceMenuScreen::parent(msg).to_u8().into();
+        let result_obj = result.try_into()?;
+        let parent_idx_obj = DeviceMenuScreen::parent(msg).to_u8().try_into()?;
         new_tuple(&[action_obj, result_obj, parent_idx_obj])
     }
 }
