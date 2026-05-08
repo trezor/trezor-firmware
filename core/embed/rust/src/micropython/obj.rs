@@ -430,14 +430,17 @@ impl TryFrom<Obj> for usize {
     }
 }
 
-impl<T> From<Option<T>> for Obj
+impl<T, E> TryFrom<Option<T>> for Obj
 where
-    T: Into<Obj>,
+    T: TryInto<Obj, Error = E>,
+    E: Into<Error>,
 {
-    fn from(val: Option<T>) -> Self {
+    type Error = Error;
+
+    fn try_from(val: Option<T>) -> Result<Self, Error> {
         match val {
-            Some(v) => v.into(),
-            None => Self::const_none(),
+            Some(v) => v.try_into().map_err(|e| e.into()),
+            None => Ok(Self::const_none()),
         }
     }
 }
@@ -455,16 +458,6 @@ impl Obj {
         match self.try_into() {
             Ok(x) => Ok(Some(x)),
             Err(e) => Err(e.into()),
-        }
-    }
-
-    pub fn from_option<T>(val: Option<T>) -> Result<Self, Error>
-    where
-        T: TryInto<Obj, Error = Error>,
-    {
-        match val {
-            Some(v) => v.try_into(),
-            None => Ok(Self::const_none()),
         }
     }
 }
