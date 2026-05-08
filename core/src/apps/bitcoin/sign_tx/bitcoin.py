@@ -673,6 +673,7 @@ class Bitcoin:
         else:
             public_key, signature = self.sign_bip143_input(i, txi)
             if self.serialize:
+                assert (txi.miniscript is not None) == (txi.script_type == InputScriptType.SPENDMINISCRIPT)
                 if txi.multisig:
                     # find out place of our signature based on the pubkey
                     signature_index = multisig.multisig_pubkey_index(
@@ -686,6 +687,13 @@ class Bitcoin:
                         self.get_sighash_type(txi),
                     )
                 else:
+                    if txi.miniscript:
+                        from trezorminiscript import compile
+
+                        change, index = txi.address_n[-2:]
+                        assert change in (0, 1)
+                        # TODO: only `wsh()` is supported
+                        public_key = compile(txi.miniscript, bool(change), index)
                     scripts.write_witness_p2wpkh(
                         self.serialized_tx,
                         signature,
