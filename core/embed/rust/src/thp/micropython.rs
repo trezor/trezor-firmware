@@ -183,12 +183,12 @@ extern "C" fn thp_channel_info(channel_id: Obj) -> Obj {
 
         let credential = {
             let aux = THP_AUX.try_lock().ok_or(CANNOT_UNLOCK)?;
-            Obj::from_option(aux.get_credential(channel_id))?
+            aux.get_credential(channel_id).try_into()?
         };
 
         attr_tuple! {
-            Qstr::MP_QSTR_last_write => Obj::from_option(last_write_age_ms)?,
-            Qstr::MP_QSTR_pairing_state => pairing_state.into(),
+            Qstr::MP_QSTR_last_write => last_write_age_ms.try_into()?,
+            Qstr::MP_QSTR_pairing_state => pairing_state.try_into()?,
             Qstr::MP_QSTR_handshake_hash => hash.try_into()?,
             Qstr::MP_QSTR_host_static_public_key => remote_static_pubkey.try_into()?,
             Qstr::MP_QSTR_credential => credential,
@@ -204,7 +204,7 @@ extern "C" fn thp_channel_paired(channel_id: Obj) -> Obj {
 
         let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
         let replaced_channel_id = thp.channel_paired(channel_id)?;
-        Ok(replaced_channel_id.into())
+        replaced_channel_id.try_into()
     };
 
     unsafe { util::try_or_raise(block) }
