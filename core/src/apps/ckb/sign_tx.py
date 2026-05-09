@@ -351,12 +351,23 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         CKBTxAckCellDep,
     )
     from trezor.wire.context import call
-    from trezor.ui.layouts import confirm_output, confirm_total, show_continue_in_app
+    from trezor.ui.layouts import (
+        confirm_output,
+        confirm_total,
+        show_continue_in_app,
+        show_warning,
+    )
 
     await paths.validate_path(keychain, msg.address_n)
 
     if msg.network not in ("Mainnet", "Testnet"):
         raise DataError("Invalid CKB network")
+
+    if msg.network == "Testnet":
+        await show_warning(
+            "ckb_testnet",
+            "You are signing a testnet transaction.",
+        )
 
     if msg.inputs_count == 0:
         raise DataError("Transaction must have at least one input")
@@ -432,6 +443,12 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
                 msg.network,
             )
             amount_str = helpers.format_amount(output.capacity)
+
+            if output.type_code_hash is not None:
+                await show_warning(
+                    "ckb_type_script",
+                    "This output has a type script. Funds may be restricted.",
+                )
 
             await confirm_output(
                 address,

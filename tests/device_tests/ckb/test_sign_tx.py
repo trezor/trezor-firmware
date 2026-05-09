@@ -83,6 +83,8 @@ def test_sign_tx(session: Session, parameters, result):
 
     if "tx_hash" in result:
         assert tx_hash.hex() == result["tx_hash"]
+    if "signature" in result:
+        assert sig.hex() == result["signature"]
 
 
 def test_sign_tx_streaming_protocol(session: Session):
