@@ -3,7 +3,7 @@
 1. As always, use `nix-shell` + `uv` environment:
 
 ```sh
-nix-shell
+nix-shell --arg fullDeps true
 uv sync
 source .venv/bin/activate
 ```
@@ -43,3 +43,8 @@ TREZOR_UPGRADE_TEST="T1B1,T3W1" pytest tests/upgrade_tests
 If `TREZOR_UPGRADE_TEST` is not set, this command auto-selects targets based on locally available emulator builds.
 `T1B1` (legacy) runs when the local legacy emulator is available, and `T2T1`/`T3W1` (core) runs when the local core emulator is available.
 For local core builds, the suite detects the model from the build tree; if it cannot be determined, the run fails explicitly and you should set `TREZOR_UPGRADE_TEST` yourself.
+
+## Troubleshooting
+
+- Emulators from before 2026/05 are built using SDL2 library, and the library is required to for the emulators to run. This library is provided in nix-shell only with `--arg fullDeps true`.
+- On some systems, it is necessary to set env variable `SDL_VIDEODRIVER=x11` for the old emulators to run.
