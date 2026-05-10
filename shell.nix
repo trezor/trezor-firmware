@@ -23,10 +23,6 @@ let
     };
     overlays = [ rustOverlay ];
   };
-  oldNixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/c58e6fbf258df1572b535ac1868ec42faf7675dd.tar.gz";
-    sha256 = "18pna0yinvdprhhcmhyanlgrmgf81nwpc0j2z9fy9mc8cqkx3937";
-  }) { };
   moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.18.3.1-dev-tests-u18.04-01/trezor_tests";
     sha256 = "d8938679b69f53132ddacea1de4b38b225b06b37b3309aa17911cfbe09b70b4a";
@@ -80,11 +76,9 @@ stdenvNoCC.mkDerivation ({
   nativeBuildInputs = lib.optionals (!stdenv.isDarwin) [ autoPatchelfHook ];
   buildInputs = lib.optionals fullDeps [
     bitcoind
+    sdl2-compat # for running old emulators used in upgrade tests
+    SDL2_image # for running old emulators used in upgrade tests
   ] ++ [
-    # Current nixpkgs aliases SDL2 to sdl2-compat which on Ubuntu 25.04 makes the emulator
-    # crash with SDL_CreateRenderer error.
-    oldNixpkgs.SDL2
-    oldNixpkgs.SDL2_image
     sdl3
     sdl3-image
     bash
