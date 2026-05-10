@@ -845,11 +845,6 @@ dependencies = [
 [[package]]
 name = "secp256k1-sys"
 version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4387882333d3aa8cb20530a17c69a3752e97837832f34f6dccc760e715001d9"
-dependencies = [
- "cc",
-]
 
 [[package]]
 name = "semver"
