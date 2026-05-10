@@ -41,6 +41,7 @@ pub extern "C" fn upy_compile_descriptor(desc_obj: Obj, change_obj: Obj, index_o
         let index: u32 = index_obj.try_into()?; // for deriving specific public keys
 
         // Split multi-path descriptor into a vector of single-path descriptors.
+        // TODO: check it has then expected format: `@K/<M;N>/*`
         let descriptors = parse(&desc_str)
             .map_err(|_| Error::ValueErrorParam(c"Invalid descriptor", desc_obj))?
             .into_single_descriptors()
