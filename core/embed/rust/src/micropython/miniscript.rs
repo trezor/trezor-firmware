@@ -6,6 +6,8 @@
 
 extern crate alloc;
 
+use core::alloc::{GlobalAlloc, Layout};
+
 use miniscript::{
     bitcoin::secp256k1::Secp256k1,
     descriptor::Wsh,
@@ -18,8 +20,25 @@ use crate::{
     micropython::{buffer::StrBuffer, module::Module, obj::Obj, qstr::Qstr, util},
 };
 
-#[global_allocator]
 static MINISCRIPT_ALLOCATOR: emballoc::Allocator<{ 32 << 10 }> = emballoc::Allocator::new();
+
+struct TracingAllocator;
+
+unsafe impl GlobalAlloc for TracingAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let ptr = unsafe { MINISCRIPT_ALLOCATOR.alloc(layout) };
+        dbg_println!("@{:?}, +{}", ptr, layout.size());
+        ptr
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        dbg_println!("@{:?}, -{}", ptr, layout.size());
+        unsafe { MINISCRIPT_ALLOCATOR.dealloc(ptr, layout) }
+    }
+}
+
+#[global_allocator]
+static GLOBAL: TracingAllocator = TracingAllocator;
 
 fn parse(desc_str: &str) -> Result<Descriptor<DescriptorPublicKey>, miniscript::Error> {
     let tree = Tree::from_str(desc_str)?;
