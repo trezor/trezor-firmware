@@ -137,9 +137,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Exit pairing screen when already paired host connects.  [#5897]
 
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
-[#246]: https://github.com/trezor/trezor-firmware/pull/246
-[#248]: https://github.com/trezor/trezor-firmware/pull/248
-[#249]: https://github.com/trezor/trezor-firmware/pull/249
 [#5358]: https://github.com/trezor/trezor-firmware/pull/5358
 [#5723]: https://github.com/trezor/trezor-firmware/pull/5723
 [#5845]: https://github.com/trezor/trezor-firmware/pull/5845

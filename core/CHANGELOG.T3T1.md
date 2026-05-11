@@ -964,9 +964,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#15]: https://github.com/trezor/trezor-firmware/pull/15
 [#24]: https://github.com/trezor/trezor-firmware/pull/24
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
-[#246]: https://github.com/trezor/trezor-firmware/pull/246
-[#248]: https://github.com/trezor/trezor-firmware/pull/248
-[#249]: https://github.com/trezor/trezor-firmware/pull/249
 [#262]: https://github.com/trezor/trezor-firmware/pull/262
 [#379]: https://github.com/trezor/trezor-firmware/pull/379
 [#450]: https://github.com/trezor/trezor-firmware/pull/450
