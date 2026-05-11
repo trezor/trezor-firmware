@@ -21,14 +21,16 @@ import typing as t
 from dataclasses import field
 
 import construct as c
-from construct_classes import Struct, subcon
+from construct_classes import subcon
 from cryptography import exceptions as crypto_exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec, utils
 
+from ..construct_helpers import Reserved
 from . import consts, models, util
 from .core import FirmwareImage
 from .models import Model
+from .sanity_struct import SanityCheckedStruct
 
 __all__ = [
     "LegacyFirmware",
@@ -169,7 +171,7 @@ class LegacyV2Firmware(FirmwareImage):
             raise util.InvalidSignatureError("Firmware is not unsigned.")
 
 
-class LegacyFirmware(Struct):
+class LegacyFirmware(SanityCheckedStruct):
     """Legacy firmware image.
     Consists of a custom header and code block.
     This is the expected format of firmware binaries for Trezor One pre-1.8.0.
@@ -178,7 +180,10 @@ class LegacyFirmware(Struct):
     expected format of firmware binary for Trezor One version 1.8.0, which can be installed
     by both the older and the newer bootloader."""
 
+    magic: bytes
+    code_length: int
     key_indexes: list[int]
+    reserved: bytes
     signatures: list[bytes]
     code: bytes
     flags: dict[str, t.Any] = field(default_factory=dict)
@@ -190,10 +195,10 @@ class LegacyFirmware(Struct):
         "code_length" / c.Rebuild(c.Int32ul, c.len_(c.this.code)),
         "key_indexes" / c.Int8ul[consts.V1_SIGNATURE_SLOTS],  # pylint: disable=E1136
         "flags" / c.BitStruct(
-            c.Padding(7),
+            "reserved" / c.BitsInteger(7),
             "restore_storage" / c.Flag,
         ),
-        "_reserved" / c.Padding(52),
+        "reserved" / Reserved(52),
         "signatures" / c.Bytes(64)[consts.V1_SIGNATURE_SLOTS],
         "code" / c.Bytes(c.this.code_length),
         c.Terminated,

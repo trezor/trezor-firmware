@@ -19,11 +19,12 @@ from __future__ import annotations
 from copy import copy
 
 import construct as c
-from construct_classes import Struct, subcon
+from construct_classes import subcon
 
-from ..construct_helpers import EnumAdapter, TupleAdapter
+from ..construct_helpers import EnumAdapter, Reserved, TupleAdapter
 from . import util
 from .models import Model
+from .sanity_struct import SanityCheckedStruct
 
 __all__ = [
     "SecmonHeader",
@@ -31,32 +32,34 @@ __all__ = [
 ]
 
 
-class SecmonHeader(Struct):
+class SecmonHeader(SanityCheckedStruct):
     header_len: int
     code_length: int
     version: tuple[int, int, int, int]
     hw_model: Model | bytes
     hw_revision: int
     monotonic: int
+    reserved_0: bytes
     hash: bytes
 
+    reserved_1: bytes
     sigmask: int
     signature: bytes
 
     # fmt: off
     SUBCON = c.Struct(
         "_start_offset" / c.Tell,
-        "magic" / c.Const(b"TSEC"),
+        "_magic" / c.Const(b"TSEC"),
         "header_len" / c.Int32ul,
         "code_length" / c.Int32ul,
         "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
         "hw_model" / EnumAdapter(c.Bytes(4), Model),
         "hw_revision" / c.Int8ul,
         "monotonic" / c.Int8ul,
-        "_reserved" / c.Padding(2),
+        "reserved_0" / Reserved(2),
         "hash" / c.Bytes(32),
 
-        "_reserved" / c.Padding(391),
+        "reserved_1" / Reserved(391),
         "sigmask" / c.Byte,
         "signature" / c.Bytes(64),
 
@@ -70,7 +73,7 @@ class SecmonHeader(Struct):
     # fmt: on
 
 
-class SecmonImage(Struct):
+class SecmonImage(SanityCheckedStruct):
     """Raw secmon image.
 
     Consists of secmon header and code block.

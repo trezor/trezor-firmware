@@ -21,18 +21,22 @@ import typing as t
 from copy import copy
 
 import construct as c
-from construct_classes import Struct, subcon
+from construct_classes import subcon
 
 from .. import cosi
-from ..construct_helpers import EnumAdapter, TupleAdapter
+from ..construct_helpers import EnumAdapter, Reserved, TupleAdapter
 from ..toif import ToifStruct
 from . import util
 from .models import Model
+from .sanity_struct import SanityCheckedStruct
 
 __all__ = [
     "VendorTrust",
     "VendorHeader",
 ]
+
+if t.TYPE_CHECKING:
+    from . import HeaderType
 
 
 def _transform_vendor_trust(data: bytes) -> bytes:
@@ -48,7 +52,7 @@ def _transform_vendor_trust(data: bytes) -> bytes:
     return bytes(~b & 0xFF for b in data)[::-1]
 
 
-class VendorTrust(Struct):
+class VendorTrust(SanityCheckedStruct):
     limit_runtime: bool
     deny_provisioning_access: bool
     _dont_provide_secret: bool
@@ -58,11 +62,11 @@ class VendorTrust(Struct):
     red_background: bool
     delay: int
 
-    _reserved: int = 0
+    reserved: int = 0
 
     SUBCON = c.Transformed(
         c.BitStruct(
-            "_reserved" / c.Default(c.BitsInteger(5), 0b11111),
+            "reserved" / c.Default(c.BitsInteger(5), 0b11111),
             "limit_runtime" / c.Default(c.Flag, 1),
             "deny_provisioning_access" / c.Default(c.Flag, 1),
             "_dont_provide_secret"
@@ -88,17 +92,21 @@ class VendorTrust(Struct):
         )
 
 
-class VendorHeader(Struct):
+class VendorHeader(SanityCheckedStruct):
+    magic: HeaderType
     header_len: int
     expiry: int
     version: tuple[int, int]
     sig_m: int
-    # sig_n: int
+    # _sig_n: int
     hw_model: Model | bytes
     fw_type: int
+    reserved_0: bytes
     pubkeys: list[bytes]
     text: str
     image: dict[str, t.Any]
+
+    reserved_1: bytes
     sigmask: int
     signature: bytes
 
@@ -112,12 +120,12 @@ class VendorHeader(Struct):
         "expiry" / c.Int32ul,
         "version" / TupleAdapter(c.Int8ul, c.Int8ul),
         "sig_m" / c.Int8ul,
-        "sig_n" / c.Rebuild(c.Int8ul, c.len_(c.this.pubkeys)),
+        "_sig_n" / c.Rebuild(c.Int8ul, c.len_(c.this.pubkeys)),
         "trust" / VendorTrust.SUBCON,
         "hw_model" / EnumAdapter(c.Bytes(4), Model),
         "fw_type" / c.Int8ul,
-        "_reserved" / c.Padding(9),
-        "pubkeys" / c.Bytes(32)[c.this.sig_n],
+        "reserved_0" / Reserved(9),
+        "pubkeys" / c.Bytes(32)[c.this._sig_n],
         "text" / c.Aligned(4, c.PascalString(c.Int8ul, "utf-8")),
         "image" / ToifStruct,
         "_end_offset" / c.Tell,
@@ -125,7 +133,7 @@ class VendorHeader(Struct):
         "_min_header_len" / c.Check(c.this.header_len > (c.this._end_offset - c.this._start_offset) + 65),
         "_header_len_aligned" / c.Check(c.this.header_len % 512 == 0),
 
-        c.Padding(c.this.header_len - c.this._end_offset + c.this._start_offset - 65),
+        "reserved_1" / Reserved(c.this.header_len - c.this._end_offset + c.this._start_offset - 65),
         "sigmask" / c.Byte,
         "signature" / c.Bytes(64),
     )
