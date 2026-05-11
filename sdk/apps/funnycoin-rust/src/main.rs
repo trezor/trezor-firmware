@@ -1,100 +1,93 @@
-#![no_std]
-#![no_main]
+#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(test), no_main)]
 
+#[cfg(not(test))]
 extern crate alloc;
 
-use alloc::string::String;
-use alloc::vec;
-use prost::Message as _;
-use trezor_app_sdk::service::{self, CoreIpcService};
-use trezor_app_sdk::util::Timeout;
-use trezor_app_sdk::{CORE_SERVICE, Error, IpcMessage, Result, error, info, ui};
+use prost::Message;
+#[cfg(test)]
+use trezor_app_sdk::mock::{dummy_trezor_api_getter_t, sdk_init};
+use trezor_app_sdk::{
+    CORE_SERVICE, Error, IpcMessage, Result, error,
+    service::{self, CoreIpcService},
+    util::Timeout,
+};
 
-// Include generated protobuf code
-mod funnycoin_proto {
-    include!(concat!(env!("OUT_DIR"), "/funnycoin.rs"));
-}
-use funnycoin_proto::{FunnycoinGetPublicKey, FunnycoinPublicKey};
-use ufmt::derive::uDebug;
-use ufmt_utils::WriteAdapter;
+// Include generated code
+pub(crate) mod proto;
 
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, num_enum::FromPrimitive, num_enum::IntoPrimitive)]
-#[repr(u16)]
-enum FunnycoinMessages {
-    GetPublicKey = 0,
-    PublicKey = 1,
-    #[num_enum(catch_all)]
-    Unknown(u16),
-}
+#[macro_use]
+pub(crate) mod translations;
 
+mod get_public_key;
+mod strutil;
+
+use proto::{funnycoin::GetPublicKey, messages::MessageType};
+
+#[cfg(not(test))]
 #[global_allocator]
-static ALLOCATOR: emballoc::Allocator<8192> = emballoc::Allocator::new();
+static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
 
-// // Provide a critical section implementation for single-threaded environment
-// struct SingleThreadedCriticalSection;
-// critical_section::set_impl!(SingleThreadedCriticalSection);
+/// Macro to generate handler functions
+macro_rules! wire_handler {
+    ($handler_name:ident, $request_type:ty, $response_msg:expr, $handler_fn:path) => {
+        #[inline(never)]
+        fn $handler_name(request_data: &[u8]) -> Result<()> {
+            let request =
+                <$request_type>::decode(request_data).map_err(|_| Error::InvalidMessage)?;
 
-// unsafe impl critical_section::Impl for SingleThreadedCriticalSection {
-//     unsafe fn acquire() -> u8 {
-//         // In single-threaded environment, no need to disable interrupts
-//         0
-//     }
+            let response = $handler_fn(request);
 
-//     unsafe fn release(_token: u8) {
-//         // Nothing to restore
-//     }
-// }
+            match response {
+                Ok(resp) => {
+                    let response_bytes = resp.encode_to_vec();
+                    let message = IpcMessage::new(
+                        ($response_msg as i32)
+                            .try_into()
+                            .map_err(|_| Error::InvalidMessage)?,
+                        &response_bytes,
+                    );
+                    message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?;
+                }
+                Err(e) => {
+                    let message = IpcMessage::new(e.code(), e.message().as_bytes());
+                    message.send(
+                        service::CORE_SERVICE_REMOTE,
+                        CoreIpcService::WireError.into(),
+                    )?;
+                }
+            }
 
-/// Handle GetPublicKey request
-fn handle_get_public_key(request_data: &[u8]) -> Result<()> {
-    // Deserialize the request
-    let request = FunnycoinGetPublicKey::decode(request_data).map_err(|_| Error::InvalidMessage)?;
-
-    let mut confirm_msg = String::new();
-    let mut wa = WriteAdapter(&mut confirm_msg);
-    _ = ufmt::uwrite!(
-        wa,
-        "Confirm Public Key for path: {:?}",
-        request.address_n.as_slice()
-    );
-    match ui::confirm_value("Confirm Public Key", &confirm_msg) {
-        Ok(ui::TrezorUiResult::Confirmed) => (),
-        Ok(_) => return Err(Error::Cancelled),
-        Err(e) => return Err(e.into()),
-    }
-
-    // In a real implementation, you would:
-    // 1. Derive the key from the BIP-32 path
-    // 2. Generate the xpub
-    // 3. Show on display if requested
-
-    // For now, create a dummy response
-    let mut response = FunnycoinPublicKey::default();
-    let mut slice = [0u8; 128];
-    let mut writer = trezor_app_sdk::util::SliceWriter::new(&mut slice);
-    _ = ufmt::uwrite!(
-        writer,
-        "xpub_dummy_for_path_{:?}",
-        request.address_n.as_slice()
-    );
-    response.xpub = String::from(writer.as_ref());
-    response.public_key = Some(vec![0x04; 65]); // Dummy uncompressed public key
-
-    let response_bytes = response.encode_to_vec();
-    let message = IpcMessage::new(FunnycoinMessages::PublicKey.into(), &response_bytes);
-    Ok(message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?)
+            Ok(())
+        }
+    };
 }
+
+// Generate all handler functions
+wire_handler!(
+    handle_get_public_key,
+    GetPublicKey,
+    MessageType::PublicKey,
+    get_public_key::get_public_key
+);
 
 // Application entry point - receives raw bytes, returns raw bytes
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
-    let message = CORE_SERVICE.receive(Timeout::max())?;
-    match message.service().into() {
-        CoreIpcService::WireStart => handle_wire_message(&message),
-        _ => {
-            error!("Invalid service invoked: {:?}, message id {:?}, data {:?}", message.service(), message.id(), message.data());
-            Err(Error::InvalidFunction)
-        }
+    loop {
+        let message = CORE_SERVICE.receive(Timeout::max())?;
+        match message.service().into() {
+            CoreIpcService::WireStart => handle_wire_message(&message)?,
+            _ => {
+                error!(
+                    "Invalid service invoked: {:?}, message id {:?}, data {:?}",
+                    message.service(),
+                    message.id(),
+                    message.data()
+                );
+                return Err(Error::InvalidFunction);
+            }
+        };
     }
 }
 
@@ -103,8 +96,44 @@ pub fn app() -> Result<()> {
 /// data: serialized protobuf request
 /// Returns: serialized protobuf response
 pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
-    match message.id().into() {
-        FunnycoinMessages::GetPublicKey => handle_get_public_key(message.data()),
-        _ => Err(Error::InvalidFunction),
+    match (message.id() as i32).try_into() {
+        Ok(MessageType::GetPublicKey) => handle_get_public_key(message.data()),
+        Ok(_) => {
+            error!("Invalid function: {:?}", message.id());
+            Err(Error::InvalidFunction)
+        }
+        Err(_) => {
+            error!("Non existing message type: {:?}", message.id());
+            Err(Error::InvalidFunction)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Once;
+
+    static INIT: Once = Once::new();
+
+    #[test]
+    fn test_init_sdk() {
+        INIT.call_once(|| unsafe {
+            sdk_init(dummy_trezor_api_getter_t);
+        });
+    }
+
+    #[test]
+    #[cfg(feature = "model_eckhart")]
+    fn test_model_eckhart() {
+        assert!(cfg!(feature = "model_eckhart"));
+        assert!(!cfg!(feature = "model_delizia"));
+    }
+
+    #[test]
+    #[cfg(feature = "model_delizia")]
+    fn test_model_delizia() {
+        assert!(cfg!(feature = "model_delizia"));
+        assert!(!cfg!(feature = "model_eckhart"));
     }
 }

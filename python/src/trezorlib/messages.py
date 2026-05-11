@@ -788,8 +788,6 @@ class MessageType(IntEnum):
     ExtAppLoaded = 9201
     ExtAppMessage = 9202
     ExtAppResponse = 9203
-    FunnycoinGetPublicKey = 9204
-    FunnycoinPublicKey = 9205
 
 
 class BenchmarkListNames(protobuf.MessageType):
@@ -6213,43 +6211,6 @@ class ExtAppResponse(protobuf.MessageType):
         self.message_id = message_id
         self.data = data
         self.finished = finished
-
-
-class FunnycoinGetPublicKey(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 9204
-    FIELDS = {
-        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        2: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Funnycoin'),
-        3: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        address_n: Optional[Sequence["int"]] = None,
-        coin_name: Optional["str"] = 'Funnycoin',
-        show_display: Optional["bool"] = None,
-    ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.coin_name = coin_name
-        self.show_display = show_display
-
-
-class FunnycoinPublicKey(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 9205
-    FIELDS = {
-        1: protobuf.Field("xpub", "string", repeated=False, required=True),
-        2: protobuf.Field("public_key", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        xpub: "str",
-        public_key: Optional["bytes"] = None,
-    ) -> None:
-        self.xpub = xpub
-        self.public_key = public_key
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

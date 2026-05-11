@@ -18,7 +18,7 @@ use crate::low_level_api::get_crypto_or_die;
 pub use crate::low_level_api::{ed25519_cosi_combine_publickeys, ed25519_sign_open};
 use crate::service::{CoreIpcService, NoUtilHandler};
 use crate::util::Timeout;
-use crate::{Error, Result, info, unwrap};
+use crate::{Error, Result, unwrap};
 pub type ArchivedTrezorCryptoEnum<'a> = Archived<TrezorCryptoEnum<'a>>;
 
 #[cfg(not(feature = "test"))]

@@ -1,0 +1,29 @@
+syntax = "proto2";
+
+package hw.trezor.funnycoin;
+
+import "common.proto";
+
+/**
+ * Request: Get public key from external app
+ * @start
+ * @next PublicKey
+ * @next Failure
+ */
+message GetPublicKey {
+    // BIP-32 path to derive the key
+  repeated uint32 address_n = 1;
+    // Coin name (e.g., "Bitcoin")
+  optional string coin_name = 2 [default = "Funnycoin"];
+    // Show on display
+  optional bool show_display = 3;
+}
+
+/**
+ * Response: Public key from external app
+ * @end
+ */
+message PublicKey {
+  required hw.trezor.common.HDNodeType node = 1; // BIP32 public node
+  required string                      xpub = 2; // serialized form of public node
+}

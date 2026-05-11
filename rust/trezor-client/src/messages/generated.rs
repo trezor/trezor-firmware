@@ -113,8 +113,6 @@ trezor_message_impl! {
     ExtAppLoaded => MessageType_ExtAppLoaded,
     ExtAppMessage => MessageType_ExtAppMessage,
     ExtAppResponse => MessageType_ExtAppResponse,
-    FunnycoinGetPublicKey => MessageType_FunnycoinGetPublicKey,
-    FunnycoinPublicKey => MessageType_FunnycoinPublicKey,
 }
 
 #[cfg(feature = "bitcoin")]
