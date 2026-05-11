@@ -4,13 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.11.2] (21st May 2026)
+## [2.12.0] (21st May 2026)
 
 ### Added
 - Added UI flows for some ERC-4626 vault interactions.  [#6435]
 - [T3W1] Prolonged minimal auto-suspend time during backup and recovery to 2 minutes.  [#6567]
 - [T3T1,T3W1] Introduced font kerning.  [#6620]
-- [T3W1] Added MCU device attestation with ML-DSA-44.  [#6807]
 
 ### Changed
 - Improved EVM address chunking.  [#6601]
@@ -1450,4 +1449,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6707]: https://github.com/trezor/trezor-firmware/pull/6707
 [#6710]: https://github.com/trezor/trezor-firmware/pull/6710
 [#6780]: https://github.com/trezor/trezor-firmware/pull/6780
-[#6807]: https://github.com/trezor/trezor-firmware/pull/6807
