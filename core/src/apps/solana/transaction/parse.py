@@ -35,8 +35,9 @@ def parse_enum(serialized_tx: BufferReader) -> int:
 
 
 def parse_string(serialized_tx: BufferReader) -> str:
-    # TODO SOL: validation shall be checked (length is less than 2^32 or even less)
     length = read_uint64_le(serialized_tx)
+    if length > 0xFFFFFFFF:
+        raise ValueError
     return bytes(serialized_tx.read_memoryview(length)).decode("utf-8")
 
 
