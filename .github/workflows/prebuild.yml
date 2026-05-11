@@ -70,6 +70,21 @@ jobs:
       - name: "Run gen check"
         run: nix-shell --run "uv run make gen_check"
 
+  # Check uv.lock is up-to-date
+  uvlock_check:
+    name: uv.lock check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: "recursive"
+      - name: Install nix
+        uses: cachix/install-nix-action@2126ae7fc54c9df00dd18f7f18754393182c73cd  # cachix/install-nix-action@v31.9.1
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - name: "Run uv.lock check"
+        run: nix-shell --run "make uvlock_check"
+
   # Verifying that all commits changing some functionality have a changelog entry
   # or contain `[no changelog]` in the commit message.
   changelog_check:

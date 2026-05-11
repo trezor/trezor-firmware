@@ -202,3 +202,7 @@ hsm_keys_check:
 gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config hsm_keys ## regenerate auto-generated files from sources
 
 gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check hsm_keys_check ## check validity of auto-generated files
+
+uvlock_check: ## check that uv.lock is up to date
+	@echo [UVLOCK-CHECK]
+	uv lock --check
