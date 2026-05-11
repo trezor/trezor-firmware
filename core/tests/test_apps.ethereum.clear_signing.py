@@ -16,6 +16,7 @@ if not utils.BITCOIN_ONLY:
         ValueOverflow,
         parse_address,
         parse_bool,
+        parse_bytes32,
         parse_string,
         parse_uint24,
         parse_uint160,
@@ -224,7 +225,9 @@ class TestEthereumClearSigning(unittest.TestCase):
 
         array_length = len([addr1, addr2])
 
-        array_pointer = len(FIVE_RANDOM_BYTES) + 32  # payload start + pointer size
+        array_pointer = (
+            len(FIVE_RANDOM_BYTES) + 32
+        )  # absolute position of body in raw_data
         payload = (
             to_bytes(array_pointer)
             + to_bytes(array_length)
@@ -309,6 +312,88 @@ class TestEthereumClearSigning(unittest.TestCase):
 
         self.assertEqual(parsed, [(addr1, text1), (addr2, text2)])
         self.assertEqual(consumed, 32)
+
+    def test_bytes32_parsing(self):
+        atomic_bytes32 = Atomic(parse_bytes32)
+
+        b32 = bytes(range(32))
+        data = memoryview(FIVE_RANDOM_BYTES + b32 + SEVEN_RANDOM_BYTES)
+        parsed, consumed = atomic_bytes32.parse(data, len(FIVE_RANDOM_BYTES))
+        self.assertEqual(parsed, b32)
+        self.assertEqual(consumed, 32)
+
+        with self.assertRaises(OutOfBounds):
+            atomic_bytes32.parse(memoryview(b"\x00" * 20), 0)
+
+    def test_array_of_arrays_of_bytes32(self):
+        # bytes32[][] = [[b0, b1], [b2]]
+        nested_array_parser = Array(Array(Atomic(parse_bytes32)))
+
+        b0 = bytes(range(0, 32))
+        b1 = bytes(range(32, 64))
+        b2 = bytes(range(64, 96))
+
+        # ABI layout (offsets are absolute positions within raw_data):
+        #   [7]:   pointer slot → outer body at 7+32 = 39
+        #   [39]:  outer length = 2
+        #   [71]:  rel. offset to inner[0] from heads base (=71): 135-71 = 64
+        #   [103]: rel. offset to inner[1] from heads base (=71): 231-71 = 160
+        #   [135]: inner[0] length = 2
+        #   [167]: inner[0][0] = b0
+        #   [199]: inner[0][1] = b1
+        #   [231]: inner[1] length = 1
+        #   [263]: inner[1][0] = b2
+        payload = (
+            to_bytes(
+                len(SEVEN_RANDOM_BYTES) + 32
+            )  # pointer: absolute raw_data pos of outer body
+            + to_bytes(2)  # outer length
+            + to_bytes(64)  # rel. offset → inner[0]
+            + to_bytes(160)  # rel. offset → inner[1]
+            + to_bytes(2)  # inner[0] length
+            + b0
+            + b1
+            + to_bytes(1)  # inner[1] length
+            + b2
+        )
+        data = memoryview(SEVEN_RANDOM_BYTES + payload + FIVE_RANDOM_BYTES)
+
+        parsed, consumed = nested_array_parser.parse(data, len(SEVEN_RANDOM_BYTES))
+        self.assertEqual(parsed, [[b0, b1], [b2]])
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_arrays_out_of_bounds(self):
+        nested_array_parser = Array(Array(Atomic(parse_bytes32)))
+
+        # outer array pointer points beyond the data
+        payload = to_bytes(9999)
+        with self.assertRaises(OutOfBounds):
+            nested_array_parser.parse(memoryview(payload), 0)
+
+        # inner array length overruns the data — test both sides of the border
+
+        # border valid: inner[0] length = 0 → empty inner array, parses as [[]]
+        # pointer = len(SEVEN_RANDOM_BYTES) + 32 = absolute raw_data pos of outer body
+        payload_ok = (
+            to_bytes(len(SEVEN_RANDOM_BYTES) + 32)  # pointer to outer body
+            + to_bytes(1)  # outer length = 1
+            + to_bytes(32)  # rel. offset to inner[0] from heads base
+            + to_bytes(0)  # inner[0] length = 0 → empty
+        )
+        data = memoryview(SEVEN_RANDOM_BYTES + payload_ok + FIVE_RANDOM_BYTES)
+        parsed, consumed = nested_array_parser.parse(data, len(SEVEN_RANDOM_BYTES))
+        self.assertEqual(parsed, [[]])
+        self.assertEqual(consumed, 32)
+
+        # border invalid: inner[0] length = 1 but no element data follows
+        payload_fail = (
+            to_bytes(32)  # pointer to outer body (no prefix, absolute pos = 32)
+            + to_bytes(1)  # outer length = 1
+            + to_bytes(32)  # rel. offset to inner[0] from heads base
+            + to_bytes(1)  # inner[0] length = 1 — one element claimed but no data
+        )
+        with self.assertRaises(OutOfBounds):
+            nested_array_parser.parse(memoryview(payload_fail), 0)
 
 
 if __name__ == "__main__":

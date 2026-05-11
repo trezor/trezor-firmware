@@ -138,6 +138,12 @@ parse_uint16 = _make_uint_parser(16)
 parse_uint8 = _make_uint_parser(8)
 
 
+def parse_bytes32(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    return bytes(raw_data[:32])
+
+
 def parse_bool(raw_data: memoryview) -> Value:
     if len(raw_data) < 32:
         raise OutOfBounds
@@ -214,6 +220,8 @@ def _get_parser(t: int, is_dynamic: bool) -> Parser:
         return parse_uint8
     elif t == T.ABI_BOOL:
         return parse_bool
+    elif t == T.ABI_BYTES32:
+        return parse_bytes32
     raise InvalidFormatDefinition
 
 
@@ -332,7 +340,7 @@ class TokenAmountFormatter(FieldFormatter):
         token = defs.get_token(token_address)
         if token is UNKNOWN_TOKEN:
             if msg.supports_definition_request:
-                received_definitions, _ = await _request_definitions(
+                received_definitions, _ = await request_definitions(
                     msg.chain_id, token_address, func_sig=None
                 )
                 if received_definitions is not None:
@@ -436,7 +444,18 @@ class ABIValue:
                         is_dynamic=False,  # Tuples inside Arrays are always parsed as static!
                     )
                 )
-            raise InvalidFormatDefinition  # Array of arrays not supported
+            elif element.array is not None:
+                inner = element.array
+                if inner.atomic is not None:
+                    return Array(
+                        Array(Atomic(_get_parser(inner.atomic, is_dynamic=False)))
+                    )
+                elif inner.dynamic is not None:
+                    return Array(
+                        Array(Dynamic(_get_parser(inner.dynamic, is_dynamic=True)))
+                    )
+                raise InvalidFormatDefinition  # deeper nesting not supported
+            raise InvalidFormatDefinition
         raise InvalidFormatDefinition
 
 
@@ -538,33 +557,39 @@ class Array(ABIValue):
         if offset + 32 > len(raw_data):
             raise OutOfBounds
         array_pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-        if array_pointer + 32 > len(raw_data):
+        return self._parse_body(raw_data, array_pointer), 32
+
+    def _parse_body(self, raw_data: memoryview, array_start: int) -> ListValue:
+        if array_start + 32 > len(raw_data):
             raise OutOfBounds
-        array_length = int.from_bytes(
-            raw_data[array_pointer : array_pointer + 32], "big"
-        )
-        array_heads_end = array_pointer + 32 + (array_length * 32)
+        array_length = int.from_bytes(raw_data[array_start : array_start + 32], "big")
+        array_heads_end = array_start + 32 + (array_length * 32)
         if array_heads_end > len(raw_data):
             raise OutOfBounds
 
         value = []
 
         for i in range(array_length):
-            p = array_pointer + 32 + (i * 32)
+            p = array_start + 32 + (i * 32)
             if p + 32 > len(raw_data):
                 raise OutOfBounds
             if isinstance(self.element_definition, Atomic):
                 # atomic types are encoded in place
                 data, _ = self.element_definition.parse(raw_data, p)
+            elif isinstance(self.element_definition, Array):
+                # inner arrays: element head is a relative offset to the inner array body
+                element_pointer = int.from_bytes(raw_data[p : p + 32], "big")
+                inner_array_start = array_start + 32 + element_pointer
+                data = self.element_definition._parse_body(raw_data, inner_array_start)
             else:
                 element_pointer = int.from_bytes(raw_data[p : p + 32], "big")
-                element_absolute_pointer = array_pointer + 32 + element_pointer
+                element_absolute_pointer = array_start + 32 + element_pointer
                 data, _ = self.element_definition.parse(
                     raw_data, element_absolute_pointer
                 )
             value.append(data)
 
-        return value, 32  # arrays just consume the pointer
+        return value
 
 
 # https://eips.ethereum.org/EIPS/eip-7730#evm-transaction-container
@@ -775,7 +800,7 @@ class DisplayFormat:
         )
 
 
-async def _request_definitions(
+async def request_definitions(
     chain_id: int, token_address: bytes, func_sig: bytes | None
 ) -> tuple[Definitions | None, DisplayFormat | None]:
     from trezor.messages import EthereumDefinitionAck, EthereumDefinitionRequest
@@ -844,7 +869,7 @@ async def try_confirm(
         if display_format is None:
             # ... finally request the display format via another call!
             if msg.supports_definition_request:
-                _, f = await _request_definitions(msg.chain_id, address_bytes, func_sig)
+                _, f = await request_definitions(msg.chain_id, address_bytes, func_sig)
                 if f:
                     if f.func_sig == func_sig and f.matches_context(
                         msg.chain_id, address_bytes

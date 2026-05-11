@@ -309,6 +309,7 @@ if TYPE_CHECKING:
         ABI_UINT16 = 14
         ABI_UINT8 = 15
         ABI_BOOL = 16
+        ABI_BYTES32 = 17
         ABI_BYTES = 20
         ABI_STRING = 21
 
