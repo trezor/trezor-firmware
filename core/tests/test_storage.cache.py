@@ -7,7 +7,7 @@ if utils.USE_THP:
     import thp_common
     from mock_wire_interface import MockHID
     from storage import cache, cache_thp, cache_thp_keys
-    from storage.cache_common import SESSION_STATE
+    from storage.cache_common import SESSION_STATE, DataCache
     from trezor.wire.thp import ChannelState
     from trezor.wire.thp.session_context import SessionContext
 
@@ -31,6 +31,10 @@ else:
 
     def get_active_session():
         return cache_codec.get_active_session()
+
+
+def _copy_data(dc: DataCache) -> list[bytearray]:
+    return [bytearray(f) for f in dc.data]
 
 
 class TestStorageCache(TestCaseWithContext):
@@ -115,48 +119,43 @@ class TestStorageCache(TestCaseWithContext):
             cid = []
             sid = []
             for i in range(3):
-                sesions_A.append(
-                    cache_thp.create_or_replace_session(
-                        channel_A.channel_id_bytes(), (i + 1).to_bytes(1, "big")
-                    )
+                s = cache_thp.create_or_replace_session(
+                    channel_A.channel_id_bytes(), (i + 1).to_bytes(1, "big")
                 )
-                cid.append(sesions_A[i].channel_id)
-                sid.append(sesions_A[i].session_id)
+                sesions_A.append(_copy_data(s))
+                cid.append(s.channel_id)
+                sid.append(s.session_id)
 
             sessions_B = []
             for i in range(cache_thp._MAX_SESSIONS_COUNT - 3):
-                sessions_B.append(
-                    cache_thp.create_or_replace_session(
-                        channel_B.channel_id_bytes(), (i + 10).to_bytes(1, "big")
-                    )
+                s = cache_thp.create_or_replace_session(
+                    channel_B.channel_id_bytes(), (i + 10).to_bytes(1, "big")
                 )
+                sessions_B.append(_copy_data(s))
 
             for i in range(3):
-                self.assertEqual(sesions_A[i], cache_thp._SESSIONS[i])
-                self.assertEqual(cid[i], cache_thp._SESSIONS[i].channel_id)
-                self.assertEqual(sid[i], cache_thp._SESSIONS[i].session_id)
+                self.assertEqual(sesions_A[i], cache_thp._SESSIONS[i].data)
             for i in range(3, cache_thp._MAX_SESSIONS_COUNT):
-                self.assertEqual(sessions_B[i - 3], cache_thp._SESSIONS[i])
+                self.assertEqual(sessions_B[i - 3], cache_thp._SESSIONS[i].data)
 
             # Assert that new session replaces the oldest (least used) one (_SESSIONS[0])
             new_session = cache_thp.create_or_replace_session(
                 channel_B.channel_id_bytes(), b"\xab"
             )
             self.assertEqual(new_session, cache_thp._SESSIONS[0])
-            self.assertNotEqual(new_session.channel_id, cid[0])
-            self.assertNotEqual(new_session.session_id, sid[0])
+            self.assertNotEqual(new_session.data, sesions_A[0])
 
             # Assert that creating a new session on channel B shifts the "last usage" again
             # and that _SESSIONS[1] was not replaced, but that _SESSIONS[2] was replaced
-            cache_thp.update_session_last_used(
-                channel_A.channel_id_bytes(), sesions_A[1].session_id
+            cache_thp.update_session_last_used(channel_A.channel_id_bytes(), sid[1])
+            new_new_session = _copy_data(
+                cache_thp.create_or_replace_session(
+                    channel_B.channel_id_bytes(), b"\xaa"
+                )
             )
-            new_new_session = cache_thp.create_or_replace_session(
-                channel_B.channel_id_bytes(), b"\xaa"
-            )
-            self.assertEqualExceptLastUsage(sesions_A[1], cache_thp._SESSIONS[1])
-            self.assertNotEqual(sesions_A[2], cache_thp._SESSIONS[2])
-            self.assertEqual(new_new_session, cache_thp._SESSIONS[2])
+            self.assertEqualExceptLastUsage(sesions_A[1], cache_thp._SESSIONS[1].data)
+            self.assertNotEqual(sesions_A[2], cache_thp._SESSIONS[2].data)
+            self.assertEqual(new_new_session, cache_thp._SESSIONS[2].data)
 
         def test_clear(self):
             channel_A = thp_common.get_new_channel(self.interface)
@@ -247,6 +246,7 @@ class TestStorageCache(TestCaseWithContext):
                 session_1.set_bool(KEY_BOOL, True)
 
             # Change length of first session field to 0 so that the length check passes
+            orig_fields = session_1.fields
             session_1.fields = (0,) + session_1.fields[1:]
 
             # with self.assertRaises(AssertionError) as e:
@@ -256,7 +256,7 @@ class TestStorageCache(TestCaseWithContext):
             session_2 = cache_thp.create_or_replace_session(
                 channel.channel_id_bytes(), b"\x02"
             )
-            session_2.fields = session_2.fields = (0,) + session_2.fields[1:]
+            session_2.fields = (0,) + session_2.fields[1:]
             session_2.set_bool(KEY_BOOL, False)
             self.assertEqual(session_2.get_bool(KEY_BOOL), False)
 
@@ -267,6 +267,10 @@ class TestStorageCache(TestCaseWithContext):
             # Default value is False
             self.assertFalse(session_1.get_bool(KEY_BOOL))
             self.assertFalse(session_2.get_bool(KEY_BOOL))
+
+            # Restore fields for next testcases
+            session_1.fields = orig_fields
+            session_2.fields = orig_fields
 
         def test_delete(self):
             channel = thp_common.get_new_channel(self.interface)
