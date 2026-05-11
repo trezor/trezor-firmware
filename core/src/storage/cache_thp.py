@@ -142,7 +142,7 @@ def create_or_replace_session(channel_id: bytes, session_id: bytes) -> SessionTh
     if index is None:
         index = _get_next_session_index()
 
-    _SESSIONS[index] = SessionThpCache()
+    _SESSIONS[index].clear()
     _SESSIONS[index].set(CHANNEL_ID, channel_id)
     _SESSIONS[index].set(SESSION_ID, session_id)
     _SESSIONS[index].last_usage = _get_usage_counter_and_increment()
@@ -173,7 +173,10 @@ def _get_next_session_index() -> int:
 
 def _get_unallocated_session_index() -> int | None:
     for i in range(_MAX_SESSIONS_COUNT):
-        if (_SESSIONS[i]) is _UNALLOCATED_STATE:
+        if (
+            _SESSIONS[i].get_int(SESSION_STATE, _UNALLOCATED_STATE)
+            == _UNALLOCATED_STATE
+        ):
             return i
     return None
 
