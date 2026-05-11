@@ -781,7 +781,7 @@ def confirm_address(
     address: str,
     subtitle: str | None = None,
     description: str | None = None,
-    verb: str | None = TR.buttons__confirm,
+    verb: str | None = None,
     footer: tuple[str, bool] | None = None,
     chunkify: bool = True,
     br_name: str | None = None,
