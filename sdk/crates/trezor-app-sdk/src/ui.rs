@@ -29,7 +29,7 @@ use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
 use crate::service::{CoreIpcService, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler};
 use crate::util::Timeout;
-use crate::{Error, error, unwrap};
+use crate::{Error, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;

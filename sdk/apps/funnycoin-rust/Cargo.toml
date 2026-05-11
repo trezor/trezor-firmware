@@ -5,21 +5,47 @@ edition = "2024"
 
 [profile.dev]
 panic = "abort"
-debug = 2      # full DWARF info
+debug = 2       # full DWARF info
 strip = "none"
 
 [profile.release]
 panic = "abort"
+opt-level = "z"
 lto = "fat"
 codegen-units = 1
+debug = 0
+debug-assertions = false
+overflow-checks = false
+incremental = false
 
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
 emballoc = "0.3.0"
 prost = { version = "0.14.1", default-features = false, features = ["derive"] }
-num_enum = { version = "0.7.5", default-features = false }
 ufmt = { version = "0.2.0", default-features = false }
-ufmt-utils = "0.2.0"
 
 [build-dependencies]
 prost-build = "0.14.1"
+serde = { version = "=1.0.145", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+funnycoin_rust = { path = ".", features = ["test"] }
+trezor-app-sdk = { path = "../../crates/trezor-app-sdk", features = ["test"] }
+
+[package.metadata.rust-analyzer]
+# Tell rust-analyzer where to find generated code
+rustc-env = { OUT_DIR = "target/debug/build/funnycoin_rust/out" }
+
+[features]
+default = []
+# unit test support
+test = []
+
+# model selection
+model_delizia = []
+model_eckhart = []
+
+# language selection
+lang_en = []
+lang_cs = []
