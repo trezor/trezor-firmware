@@ -209,11 +209,11 @@ impl BootloaderUI for UIDelizia {
         unwrap!(version_str.push_str(vendor));
 
         let title_str = if is_newinstall {
-            "INSTALL FIRMWARE"
+            "INSTALL FW"
         } else if is_newvendor {
             "CHANGE FW\nVENDOR"
         } else if version_cmp > 0 {
-            "UPDATE FIRMWARE"
+            "UPDATE FW"
         } else if version_cmp == 0 {
             "REINSTALL FW"
         } else {
