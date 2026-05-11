@@ -29,6 +29,7 @@ from typing_extensions import Protocol, Self, runtime_checkable
 
 from .. import _ed25519, cosi, firmware
 from ..firmware import models as fw_models
+from ..firmware.sanity_struct import STRICT_SANITY_CHECK_DEFAULT
 
 SYM_OK = click.style("\u2714", fg="green")
 SYM_FAIL = click.style("\u274c", fg="red")
@@ -621,34 +622,36 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
         return self.header.v1_key_indexes
 
 
-def parse_image(image: bytes) -> SignableImageProto:
+def parse_image(
+    image: bytes, strict: bool = STRICT_SANITY_CHECK_DEFAULT
+) -> SignableImageProto:
     try:
-        return VendorFirmware.parse(image)
+        return VendorFirmware.parse(image, strict=strict)
     except c.ConstructError:
         pass
 
     try:
-        return VendorHeader.parse(image)
+        return VendorHeader.parse(image, strict=strict)
     except c.ConstructError:
         pass
 
     try:
-        return SecmonImage.parse(image)
+        return SecmonImage.parse(image, strict=strict)
     except c.ConstructError:
         pass
 
     try:
-        firmware_img = firmware.core.FirmwareImage.parse(image)
+        firmware_img = firmware.core.FirmwareImage.parse(image, strict=strict)
         if firmware_img.header.magic == firmware.core.HeaderType.BOOTLOADER:
-            return BootloaderImage.parse(image)
+            return BootloaderImage.parse(image, strict=strict)
         if firmware_img.header.magic == firmware.core.HeaderType.FIRMWARE:
-            return LegacyV2Firmware.parse(image)
+            return LegacyV2Firmware.parse(image, strict=strict)
         raise ValueError("Unrecognized firmware header magic")
     except c.ConstructError:
         pass
 
     try:
-        return LegacyFirmware.parse(image)
+        return LegacyFirmware.parse(image, strict=strict)
     except c.ConstructError:
         pass
 

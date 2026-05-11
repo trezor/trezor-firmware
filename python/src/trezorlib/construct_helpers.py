@@ -48,3 +48,9 @@ class TupleAdapter(construct.Adapter):
 
     def _decode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
         return tuple(obj)
+
+
+class Reserved(construct.Default):
+    def __init__(self, length: t.Any) -> None:
+        subcon = construct.Bytes(length)
+        super().__init__(subcon, b"\x00" * length)
