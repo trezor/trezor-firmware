@@ -385,7 +385,7 @@ class TR:
     ethereum__unknown_contract_address: str = "Unknown contract address"
     ethereum__unknown_token: str = "Unknown token"
     ethereum__valid_signature: str = "The signature is valid."
-    ethereum__vault_claim_intro: str = "Review details to claim rewards."
+    ethereum__vault_claim_intro: str = "Claim rewards from Merkl.xyz"
     ethereum__vault_claim_to: str = "Claim to"
     ethereum__vault_deposit_intro: str = "Review details to deposit to vault."
     ethereum__vault_redeem_intro: str = "Review details to redeem from vault."
