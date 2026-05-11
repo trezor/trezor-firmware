@@ -198,7 +198,7 @@ static void drivers_init(void) {
   ble_init();
 #endif
 #ifdef USE_TROPIC
-  ensure_true(tropic_init(), "Failed to initialize Tropic driver");
+  tropic_init();
   tropic_wait_for_ready(NULL);
 #endif
 #ifdef USE_HW_REVISION
