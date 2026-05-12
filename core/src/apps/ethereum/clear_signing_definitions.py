@@ -76,24 +76,6 @@ if __debug__:
 ALL_DISPLAY_FORMATS = [APPROVE_DISPLAY_FORMAT, TRANSFER_DISPLAY_FORMAT]
 
 
-# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV6.json#L9
-ONEINCH_ADDRESS = unhexlify("111111125421cA6dc452d289314280a0f8842A65")
-ONEINCH_CHAINS = [
-    1,
-    10,
-    56,
-    100,
-    137,
-    146,
-    250,
-    8217,
-    8453,
-    42161,
-    43114,
-    59144,
-    1313161554,
-]
-
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/lifi/calldata-LIFIDiamond.json
 LIFI_ADDRESS = unhexlify("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE")
 LIFI_CHAINS = [
