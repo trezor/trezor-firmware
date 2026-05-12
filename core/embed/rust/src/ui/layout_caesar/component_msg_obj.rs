@@ -6,8 +6,7 @@ use super::component::{
     PinEntry, Progress, ScrollableFrame, ShowMore, WordlistEntry,
 };
 use crate::{
-    error::Error,
-    micropython::obj::Obj,
+    micropython::{Error, Obj},
     ui::{
         component::{
             base::Component,

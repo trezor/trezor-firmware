@@ -1,10 +1,7 @@
 use heapless::String;
 
 #[cfg(feature = "micropython")]
-use crate::error::Error;
-
-#[cfg(feature = "micropython")]
-use crate::micropython::{buffer::StrBuffer, obj::Obj};
+use crate::micropython::{buffer::StrBuffer, Error, Obj};
 
 #[cfg(feature = "translations")]
 use crate::translations::TR;

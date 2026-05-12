@@ -88,8 +88,7 @@ where
 mod micropython {
     use super::*;
     use crate::{
-        error::Error,
-        micropython::obj::Obj,
+        micropython::{Error, Obj},
         ui::layout::{
             obj::ComponentMsgObj,
             result::{CANCELLED, CONFIRMED},

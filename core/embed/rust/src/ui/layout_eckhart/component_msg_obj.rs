@@ -6,8 +6,7 @@ use crate::ui::component::{
     Component, Timeout,
 };
 use crate::{
-    error::Error,
-    micropython::{obj::Obj, util::new_tuple},
+    micropython::{util::new_tuple, Error, Obj},
     ui::layout::{
         obj::ComponentMsgObj,
         result::{CANCELLED, CONFIRMED, INFO},

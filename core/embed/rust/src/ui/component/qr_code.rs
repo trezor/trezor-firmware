@@ -1,15 +1,12 @@
 use heapless::String;
 use qrcodegen::{QrCode, QrCodeEcc, Version};
 
-use crate::{
-    error::Error,
-    ui::{
-        component::{Component, Event, EventCtx, Never},
-        display::Color,
-        geometry::{Offset, Rect},
-        shape,
-        shape::Renderer,
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx, Never},
+    display::Color,
+    geometry::{Offset, Rect},
+    shape::{self, Renderer},
+    UIError,
 };
 
 use super::paginated::SinglePage;
@@ -33,7 +30,7 @@ pub struct Qr {
 }
 
 impl Qr {
-    pub fn new<T>(text: T, case_sensitive: bool) -> Result<Self, Error>
+    pub fn new<T>(text: T, case_sensitive: bool) -> Result<Self, UIError>
     where
         T: AsRef<str>,
     {
@@ -45,11 +42,10 @@ impl Qr {
             && Self::is_alphanumeric_after_conversion(indata)
         {
             for c in indata.chars() {
-                s.push(c.to_ascii_uppercase())
-                    .map_err(|_| Error::OutOfRange)?;
+                s.push(c.to_ascii_uppercase())?;
             }
         } else {
-            s.push_str(indata).map_err(|_| Error::OutOfRange)?;
+            s.push_str(indata)?;
         }
 
         Ok(Self {
@@ -137,7 +133,10 @@ impl crate::trace::Trace for Qr {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    use crate::{
+        micropython::{Error, Obj},
+        ui::layout::obj::ComponentMsgObj,
+    };
     impl ComponentMsgObj for super::Qr {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
             unreachable!();

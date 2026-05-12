@@ -1,7 +1,6 @@
 use heapless::Vec;
 
 use crate::{
-    error::Error,
     strutil::{ShortString, TString},
     time::Duration,
     ui::{
@@ -10,6 +9,7 @@ use crate::{
         geometry::{Offset, Rect},
         shape::Renderer,
         util::Pager,
+        UIError,
     },
 };
 
@@ -369,9 +369,9 @@ pub enum EventPropagation {
 pub struct TimerToken(u32);
 
 impl TimerToken {
-    pub const fn from_raw(raw: u32) -> Result<Self, Error> {
+    pub const fn from_raw(raw: u32) -> Result<Self, UIError> {
         if raw == Timer::INVALID_TOKEN_VALUE || raw > Timer::TOKEN_BITMASK {
-            return Err(Error::ValueError(c"Invalid token"));
+            return Err(UIError::InvalidValue);
         }
         Ok(Self(raw))
     }
@@ -624,10 +624,10 @@ pub enum FlowMsg {
 }
 
 #[cfg(feature = "micropython")]
-impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
-    type Error = crate::error::Error;
+impl TryFrom<FlowMsg> for crate::micropython::Obj {
+    type Error = crate::micropython::Error;
 
-    fn try_from(val: FlowMsg) -> Result<crate::micropython::obj::Obj, Self::Error> {
+    fn try_from(val: FlowMsg) -> Result<crate::micropython::Obj, Self::Error> {
         use crate::ui::layout::result;
 
         match val {

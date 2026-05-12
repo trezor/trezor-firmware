@@ -1,5 +1,5 @@
 use crate::{
-    error,
+    micropython::Error,
     translations::TR,
     ui::{
         button_request::ButtonRequestCode,
@@ -51,7 +51,7 @@ impl FlowController for ConfirmReset {
     }
 }
 
-pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
+pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, Error> {
     let (title, br) = if recovery {
         (
             TR::recovery__title_recover.into(),
@@ -98,7 +98,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         _ => None,
     });
 
-    let mut res = SwipeFlow::new(&ConfirmReset::Intro)?;
+    let mut res = SwipeFlow::new(&ConfirmReset::Intro);
     res.add_page(&ConfirmReset::Intro, content_intro)?
         .add_page(&ConfirmReset::Menu, content_menu)?;
     Ok(res)

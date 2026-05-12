@@ -1,5 +1,5 @@
 use crate::{
-    error::Error,
+    micropython::Error,
     strutil::{self, TString},
     translations::TR,
     ui::{

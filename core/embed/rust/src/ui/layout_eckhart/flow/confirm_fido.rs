@@ -1,6 +1,5 @@
 use crate::{
-    error,
-    micropython::{gc::Gc, list::List},
+    micropython::{gc::Gc, list::List, Error},
     strutil::TString,
     translations::TR,
     ui::{
@@ -89,7 +88,7 @@ pub fn new_confirm_fido(
     app_name: TString<'static>,
     icon_name: Option<TString<'static>>,
     accounts: Gc<List>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let num_accounts = accounts.len();
     SINGLE_CRED.store(num_accounts <= 1, Ordering::Relaxed);
     CRED_SELECTED.store(0, Ordering::Relaxed);
@@ -180,7 +179,7 @@ pub fn new_confirm_fido(
     } else {
         &ConfirmFido::Intro
     };
-    let mut flow = SwipeFlow::new(initial_page)?;
+    let mut flow = SwipeFlow::new(initial_page);
     flow.add_page(&ConfirmFido::Intro, content_intro)?
         .add_page(&ConfirmFido::ChooseCredential, content_choose_credential)?
         .add_page(&ConfirmFido::Authenticate, content_authenticate)?

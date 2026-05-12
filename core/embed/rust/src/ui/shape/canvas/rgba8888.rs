@@ -1,9 +1,9 @@
 use crate::{
-    error::Error,
     trezorhal::bitblt::{BitBltCopy, BitBltFill},
     ui::{
         display::Color,
         geometry::{Offset, Point, Rect},
+        UIError,
     },
 };
 
@@ -33,7 +33,7 @@ impl<'a> Rgba8888Canvas<'a> {
         stride: Option<usize>,
         min_height: Option<i16>,
         buff: &'a mut [u8],
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, UIError> {
         let bitmap = Bitmap::new_mut(BitmapFormat::RGBA8888, stride, size, min_height, buff)?;
         let viewport = Viewport::from_size(bitmap.size());
         Ok(Self { bitmap, viewport })

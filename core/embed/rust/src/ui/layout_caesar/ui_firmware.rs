@@ -1,10 +1,9 @@
 use core::cmp::Ordering;
 
 use crate::{
-    error::Error,
     io::BinaryData,
     maybe_trace::MaybeTrace,
-    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, util, Error, Obj},
     strutil::TString,
     translations::TR,
     ui::{

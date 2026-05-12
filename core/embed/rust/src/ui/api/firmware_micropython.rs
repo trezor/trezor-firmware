@@ -1,5 +1,4 @@
 use crate::{
-    error::Error,
     io::BinaryData,
     micropython::{
         buffer::StrBuffer,
@@ -9,9 +8,8 @@ use crate::{
         macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
         map::Map,
         module::Module,
-        obj::Obj,
         qstr::Qstr,
-        util,
+        util, Error, Obj,
     },
     strutil::TString,
     trezorhal::model,
@@ -41,7 +39,7 @@ use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 /// Dummy implementation so that we can use `Empty` in a return type of
 /// unimplemented trait function
 impl ComponentMsgObj for Empty {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, crate::error::Error> {
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unimplemented!()
     }
 }

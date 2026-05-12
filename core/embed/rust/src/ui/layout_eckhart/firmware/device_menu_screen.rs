@@ -2,8 +2,7 @@ use core::ops::{Deref, DerefMut};
 
 pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
 use crate::{
-    error::Error,
-    micropython::{gc::GcBox, obj::Obj},
+    micropython::{gc::GcBox, Error, Obj},
     strutil::TString,
     translations::TR,
     trezorhal::usb,

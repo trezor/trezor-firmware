@@ -1,5 +1,5 @@
 use crate::{
-    error,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -54,7 +54,7 @@ impl FlowController for PromptBackup {
     }
 }
 
-pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
+pub fn new_prompt_backup() -> Result<SwipeFlow, Error> {
     let title: TString = TR::backup__title_create_wallet_backup.into();
     let content: TString = TR::backup__it_should_be_backed_up.into();
 
@@ -113,7 +113,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         });
 
-    let mut res = SwipeFlow::new(&PromptBackup::Intro)?;
+    let mut res = SwipeFlow::new(&PromptBackup::Intro);
     res.add_page(&PromptBackup::Intro, content_intro)?
         .add_page(&PromptBackup::Menu, content_menu)?
         .add_page(&PromptBackup::SkipBackup, content_skip_intro)?;

@@ -1,8 +1,8 @@
 use heapless::Vec;
 
 use crate::{
-    error,
     maybe_trace::MaybeTrace,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -66,7 +66,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     hold: bool,
     extra_menu_label: Option<TString<'static>>,
     cancel_menu_label: Option<TString<'static>>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     // Value
     let confirm_button = if hold {
         let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
@@ -123,7 +123,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
             _ => None,
         });
 
-    let mut res = SwipeFlow::new(&ConfirmWithMenu::Value)?;
+    let mut res = SwipeFlow::new(&ConfirmWithMenu::Value);
     res.add_page(&ConfirmWithMenu::Value, content_value)?
         .add_page(&ConfirmWithMenu::Menu, content_menu)?;
     Ok(res)

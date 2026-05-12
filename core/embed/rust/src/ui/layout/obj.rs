@@ -25,7 +25,6 @@ use crate::ui::event::PMEvent;
 
 use super::base::{Layout, LayoutState};
 use crate::{
-    error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
         buffer::StrBuffer,
@@ -36,7 +35,7 @@ use crate::{
         qstr::Qstr,
         simple_type::SimpleTypeObj,
         typ::Type,
-        util,
+        util, Error,
     },
     time::Duration,
     ui::{
@@ -47,6 +46,7 @@ use crate::{
         },
         display::{self, Color},
         event::USBEvent,
+        layout::base::PaintOutOfBounds,
         shape::render_on_display,
         CommonUI, ModelUI,
     },
@@ -152,7 +152,7 @@ where
         self.returned_value.as_ref()
     }
 
-    fn paint(&mut self) -> Result<(), Error> {
+    fn paint(&mut self) -> Result<(), PaintOutOfBounds> {
         #[cfg(feature = "ui_debug")]
         let mut overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
@@ -329,7 +329,8 @@ impl LayoutObjInner {
 
         if self.repaint != Repaint::None {
             self.repaint = Repaint::None;
-            self.root_mut().paint().map(|_| true)
+            self.root_mut().paint().map_err(|_| Error::OutOfRange)?;
+            Ok(true)
         } else {
             Ok(false)
         }
@@ -546,7 +547,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
         let event_type = unwrap!(PhysicalButtonEvent::from_u8(event_type_num));
         let button = unwrap!(PhysicalButton::from_u8(button_num));
 
-        let event = ButtonEvent::new(event_type, button)?;
+        let event = ButtonEvent::new(event_type, button);
         let msg = this.inner_mut().obj_event(Event::Button(event))?;
         Ok(msg)
     };

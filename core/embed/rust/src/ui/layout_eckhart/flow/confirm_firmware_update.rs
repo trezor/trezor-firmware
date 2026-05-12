@@ -1,5 +1,5 @@
 use crate::{
-    error,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -57,7 +57,7 @@ impl FlowController for ConfirmFirmwareUpdate {
 pub fn new_confirm_firmware_update(
     description: TString<'static>,
     fingerprint: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let title = TR::firmware_update__title.into();
     let intro_paragraphs = Paragraph::new(&theme::firmware::TEXT_REGULAR, description)
         .into_paragraphs()
@@ -102,7 +102,7 @@ pub fn new_confirm_firmware_update(
             _ => None,
         });
 
-    let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?;
+    let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro);
     res.add_page(&ConfirmFirmwareUpdate::Intro, content_intro)?
         .add_page(&ConfirmFirmwareUpdate::Menu, content_menu)?
         .add_page(&ConfirmFirmwareUpdate::Fingerprint, content_fingerprint)?;

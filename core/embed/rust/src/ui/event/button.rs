@@ -1,5 +1,3 @@
-use crate::error::Error;
-
 pub use crate::trezorhal::button::PhysicalButton;
 use crate::trezorhal::button::PhysicalButtonEvent;
 
@@ -19,11 +17,10 @@ pub enum ButtonEvent {
 }
 
 impl ButtonEvent {
-    pub fn new(event: PhysicalButtonEvent, button: PhysicalButton) -> Result<Self, Error> {
-        let result = match event {
+    pub fn new(event: PhysicalButtonEvent, button: PhysicalButton) -> Self {
+        match event {
             PhysicalButtonEvent::Down => Self::ButtonPressed(button),
             PhysicalButtonEvent::Up => Self::ButtonReleased(button),
-        };
-        Ok(result)
+        }
     }
 }
