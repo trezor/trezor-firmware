@@ -1,6 +1,6 @@
 use super::super::component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
 use super::super::theme;
-use crate::error;
+use crate::micropython::Error;
 use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeSettings;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
@@ -57,7 +57,7 @@ impl FlowController for ShowTutorial {
     }
 }
 
-pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
+pub fn new_show_tutorial() -> Result<SwipeFlow, Error> {
     let content_step_welcome = Frame::with_header(
         Header::left_aligned(TR::tutorial__welcome_safe5.into()),
         SwipeContent::new(PromptScreen::new_tap_to_start()),
@@ -143,7 +143,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&ShowTutorial::StepWelcome)?;
+    let mut res = SwipeFlow::new(&ShowTutorial::StepWelcome);
     res.add_page(&ShowTutorial::StepWelcome, content_step_welcome)?
         .add_page(&ShowTutorial::StepBegin, content_step_begin)?
         .add_page(&ShowTutorial::StepNavigation, content_step_navigation)?

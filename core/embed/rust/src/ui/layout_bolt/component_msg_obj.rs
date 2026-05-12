@@ -8,8 +8,7 @@ use super::component::{
     Progress, SelectMenu, SelectMenuMsg, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog,
     SimplePage,
 };
-use crate::error::Error;
-use crate::micropython::obj::Obj;
+use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::ui::component::paginated::PageMsg;
 use crate::ui::component::placed::GridPlaced;

@@ -2,7 +2,6 @@ use heapless::Vec;
 use sys::time::Duration;
 
 use super::Paginate;
-use crate::error::Error;
 use crate::strutil::{ShortString, TString};
 use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
 use crate::ui::component::{MsgMap, PageMap};
@@ -13,14 +12,14 @@ use crate::ui::event::ButtonEvent;
 #[cfg(feature = "power_manager")]
 use crate::ui::event::PMEvent;
 use crate::ui::event::USBEvent;
+#[cfg(feature = "touch")]
+use crate::ui::event::{SwipeEvent, TouchEvent};
+#[cfg(feature = "touch")]
+use crate::ui::geometry::Direction;
 use crate::ui::geometry::{Offset, Rect};
 use crate::ui::shape::Renderer;
 use crate::ui::util::Pager;
-#[cfg(feature = "touch")]
-use crate::ui::{
-    event::{SwipeEvent, TouchEvent},
-    geometry::Direction,
-};
+use crate::ui::UIError;
 
 /// Type used by components that do not return any messages.
 ///
@@ -363,9 +362,9 @@ pub enum EventPropagation {
 pub struct TimerToken(u32);
 
 impl TimerToken {
-    pub const fn from_raw(raw: u32) -> Result<Self, Error> {
+    pub const fn from_raw(raw: u32) -> Result<Self, UIError> {
         if raw == Timer::INVALID_TOKEN_VALUE || raw > Timer::TOKEN_BITMASK {
-            return Err(Error::ValueError(c"Invalid token"));
+            return Err(UIError::InvalidValue);
         }
         Ok(Self(raw))
     }
@@ -618,10 +617,10 @@ pub enum FlowMsg {
 }
 
 #[cfg(feature = "micropython")]
-impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
-    type Error = crate::error::Error;
+impl TryFrom<FlowMsg> for crate::micropython::Obj {
+    type Error = crate::micropython::Error;
 
-    fn try_from(val: FlowMsg) -> Result<crate::micropython::obj::Obj, Self::Error> {
+    fn try_from(val: FlowMsg) -> Result<crate::micropython::Obj, Self::Error> {
         use crate::ui::layout::result;
 
         match val {

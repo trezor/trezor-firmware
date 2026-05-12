@@ -2,10 +2,10 @@
 use super::super::DrawingCache;
 use super::super::{Bitmap, BitmapFormat, BitmapView};
 use super::{BasicCanvas, Canvas, CanvasBuilder, Viewport};
-use crate::error::Error;
 use crate::trezorhal::bitblt::{BitBltCopy, BitBltFill};
 use crate::ui::display::Color;
 use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::UIError;
 
 /// A struct representing 8-bit monochromatic canvas
 pub struct Mono8Canvas<'a> {
@@ -25,7 +25,7 @@ impl<'a> Mono8Canvas<'a> {
         stride: Option<usize>,
         min_height: Option<i16>,
         buff: &'a mut [u8],
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, UIError> {
         let bitmap = Bitmap::new_mut(BitmapFormat::MONO8, stride, size, min_height, buff)?;
         let viewport = Viewport::from_size(bitmap.size());
         Ok(Self { bitmap, viewport })

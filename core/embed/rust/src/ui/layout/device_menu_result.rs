@@ -1,10 +1,8 @@
-use crate::error::Error;
 use crate::micropython::macros::obj_type;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::FullType;
-use crate::micropython::{ffi, util};
+use crate::micropython::{ffi, util, Error, Obj};
 
 #[derive(Copy, Clone)]
 pub enum DeviceMenuMsg {
@@ -125,7 +123,7 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             Qstr::MP_QSTR_Reboot => Qstr::MP_QSTR_Reboot,
             Qstr::MP_QSTR_RebootToBootloader => Qstr::MP_QSTR_RebootToBootloader,
             Qstr::MP_QSTR_RefreshMenu => Qstr::MP_QSTR_RefreshMenu,
-            _ => return Err(Error::AttributeError(attr)),
+            _ => return Err(Error::AttributeError(attr.to_obj())),
         };
         unsafe { dest.write(msg.to_obj()) };
         Ok(())

@@ -2,10 +2,10 @@
 use super::super::DrawingCache;
 use super::super::{Bitmap, BitmapFormat, BitmapView};
 use super::{BasicCanvas, Canvas, CanvasBuilder, Viewport};
-use crate::error::Error;
 use crate::trezorhal::bitblt::{BitBltCopy, BitBltFill};
 use crate::ui::display::Color;
 use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::UIError;
 
 /// A struct representing 16-bit (RGB565) color canvas
 pub struct Rgb565Canvas<'a> {
@@ -25,7 +25,7 @@ impl<'a> Rgb565Canvas<'a> {
         stride: Option<usize>,
         min_height: Option<i16>,
         buff: &'a mut [u8],
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, UIError> {
         let bitmap = Bitmap::new_mut(BitmapFormat::RGB565, stride, size, min_height, buff)?;
         let viewport = Viewport::from_size(bitmap.size());
         Ok(Self { bitmap, viewport })

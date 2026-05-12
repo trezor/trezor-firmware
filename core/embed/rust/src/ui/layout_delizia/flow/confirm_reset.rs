@@ -1,6 +1,6 @@
 use super::super::component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
 use super::super::theme;
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::button_request::ButtonRequestCode;
@@ -73,7 +73,7 @@ impl FlowController for ConfirmResetRecover {
     }
 }
 
-pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
+pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, Error> {
     let (title, br, cancel_btn_text) = if recovery {
         (
             TR::recovery__title_recover.into(),
@@ -110,7 +110,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     .map(super::util::map_to_choice);
 
     let res = if recovery {
-        let mut res = SwipeFlow::new(&ConfirmResetRecover::Intro)?;
+        let mut res = SwipeFlow::new(&ConfirmResetRecover::Intro);
         res.add_page(&ConfirmResetRecover::Intro, content_intro)?
             .add_page(&ConfirmResetRecover::Menu, content_menu)?;
         res
@@ -124,7 +124,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .map(super::util::map_to_confirm)
         .one_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
 
-        let mut res = SwipeFlow::new(&ConfirmResetCreate::Intro)?;
+        let mut res = SwipeFlow::new(&ConfirmResetCreate::Intro);
         res.add_page(&ConfirmResetCreate::Intro, content_intro)?
             .add_page(&ConfirmResetCreate::Menu, content_menu)?
             .add_page(&ConfirmResetCreate::Confirm, content_confirm)?;

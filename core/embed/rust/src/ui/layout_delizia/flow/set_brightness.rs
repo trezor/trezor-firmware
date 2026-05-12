@@ -5,7 +5,7 @@ use super::super::component::number_input_slider::{
 };
 use super::super::component::{Footer, Frame, Header};
 use super::super::theme;
-use crate::error::Error;
+use crate::micropython::Error;
 use crate::storage;
 use crate::translations::TR;
 use crate::trezorhal::display;
@@ -85,7 +85,7 @@ pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
         }
     });
 
-    let mut res = SwipeFlow::new(&SetBrightness::Slider)?;
+    let mut res = SwipeFlow::new(&SetBrightness::Slider);
     res.add_page(&SetBrightness::Slider, content_slider)?;
 
     Ok(res)

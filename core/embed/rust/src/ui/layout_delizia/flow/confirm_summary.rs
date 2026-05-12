@@ -5,7 +5,7 @@ use super::super::component::{
 };
 use super::super::theme;
 use super::util::{dummy_page, ShowInfoParams};
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeSettings;
@@ -66,7 +66,7 @@ pub fn new_confirm_summary(
     extra_title: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
     can_go_back: bool,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     // Summary
     let mut content_summary = summary_params.with_flow_menu(true);
     if can_go_back {
@@ -134,7 +134,7 @@ pub fn new_confirm_summary(
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?;
+    let mut res = SwipeFlow::new(&ConfirmSummary::Summary);
     res.add_page(&ConfirmSummary::Summary, content_summary)?
         .add_page(&ConfirmSummary::Hold, content_hold)?
         .add_page(&ConfirmSummary::Menu, content_menu)?;

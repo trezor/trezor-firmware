@@ -5,7 +5,7 @@ use super::super::firmware::{
 };
 use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
@@ -119,7 +119,7 @@ pub fn new_continue_recovery_homepage(
     recovery_type: RecoveryType,
     show_instructions: bool, // 1st screen of the recovery process
     remaining_shares: Option<(OpTextLayout<'static>, u16)>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let is_multigroup_check = subtext.is_none();
     let (header, verb, cancel_btn, cancel_title, cancel_intro) = match recovery_type {
         RecoveryType::Normal if show_instructions => (
@@ -235,7 +235,7 @@ fn flow_before_shares(
         impl Fn(TextScreenMsg) -> Option<FlowMsg> + 'static,
     >,
     cancel_btn: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::<ShortMenuVec>::empty().with_item(Button::new_cancel_menu_item(cancel_btn)),
     )
@@ -246,7 +246,7 @@ fn flow_before_shares(
         _ => None,
     });
 
-    let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?;
+    let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main);
     res.add_page(&ContinueRecoveryBeforeShares::Main, content_main)?
         .add_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?;
     Ok(res)
@@ -263,7 +263,7 @@ fn flow_between_shares_simple(
             impl Fn(TextScreenMsg) -> Option<FlowMsg> + 'static,
         >,
     >,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::<ShortMenuVec>::empty()
             .with_item(Button::new_menu_item_with_subtext(
@@ -297,7 +297,7 @@ fn flow_between_shares_simple(
             "recovery_share".into(),
         ));
 
-    let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;
+    let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main);
     res.add_page(&ContinueRecoveryBetweenShares::Main, content_main)?
         .add_page(&ContinueRecoveryBetweenShares::Menu, content_menu)?
         .add_page(&ContinueRecoveryBetweenShares::Cancel, content_cancel)?
@@ -322,7 +322,7 @@ fn flow_between_shares_advanced(
     pages: OpTextLayout<'static>,
     n_remaining_shares: u16,
     cancel_btn: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::<ShortMenuVec>::empty()
             .with_item(Button::new_menu_item(
@@ -347,7 +347,7 @@ fn flow_between_shares_advanced(
         ))
         .with_pages(move |_| n_remaining_shares);
 
-    let mut res = SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main)?;
+    let mut res = SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main);
     res.add_page(&ContinueRecoveryBetweenSharesAdvanced::Main, content_main)?
         .add_page(&ContinueRecoveryBetweenSharesAdvanced::Menu, content_menu)?
         .add_page(
