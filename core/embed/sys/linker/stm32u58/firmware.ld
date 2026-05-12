@@ -71,7 +71,7 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . += 32K; /* Overflow causes UsageFault */
-  } >AUX2_RAM
+  } >AUX1_RAM
 
   .buf : ALIGN(4) {
     *(.buf*);

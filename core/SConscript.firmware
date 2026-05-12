@@ -94,7 +94,7 @@ if PYOPT == '0':
 if DBG_CONSOLE != "":
     FEATURES_WANTED += ["dbg_console"]
 
-if TREZOR_MODEL in ['T3W1'] and EXTAPP_SUPPORT:
+if TREZOR_MODEL in ['T3W1', 'T3T1'] and EXTAPP_SUPPORT:
     FEATURES_WANTED += ["app_loading"]
 
 if N4W1:

@@ -24,7 +24,7 @@
 // Number of frame buffers used (1 or 2)
 // If 1 buffer is selected, some animations may not
 // be so smooth but the memory usage is lower.
-#define FRAME_BUFFER_COUNT 2
+#define FRAME_BUFFER_COUNT 1
 
 // Each frame buffer can be in one of the following states:
 typedef struct {
