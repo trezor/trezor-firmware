@@ -1,5 +1,6 @@
+use micropython::Error;
+
 use crate::{
-    error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -144,7 +145,7 @@ pub fn new_continue_recovery_homepage(
     recovery_type: RecoveryType,
     show_instructions: bool, // 1st screen of the recovery process
     pages: Option<ParagraphVecLong<'static>>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let (title, cancel_btn, cancel_title, cancel_intro) = match recovery_type {
         RecoveryType::Normal => (
             TR::recovery__title,
@@ -219,7 +220,7 @@ pub fn new_continue_recovery_homepage(
         .with_cancel_button()
         .map(super::util::map_to_choice);
 
-        let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?;
+        let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main);
         res.add_page(&ContinueRecoveryBeforeShares::Main, content_main)?
             .add_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?;
         res
@@ -262,7 +263,7 @@ pub fn new_continue_recovery_homepage(
         ))
         .with_pages(move |_| n_remaining_shares);
 
-        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main)?;
+        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main);
         res.add_page(&ContinueRecoveryBetweenSharesAdvanced::Main, content_main)?
             .add_page(&ContinueRecoveryBetweenSharesAdvanced::Menu, content_menu)?
             .add_page(
@@ -286,7 +287,7 @@ pub fn new_continue_recovery_homepage(
         .with_cancel_button()
         .map(super::util::map_to_choice);
 
-        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;
+        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main);
         res.add_page(&ContinueRecoveryBetweenShares::Main, content_main)?
             .add_page(&ContinueRecoveryBetweenShares::Menu, content_menu)?
             .add_page(

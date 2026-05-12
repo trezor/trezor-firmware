@@ -1,5 +1,4 @@
 use crate::{
-    error,
     strutil::{ShortString, TString},
     translations::TR,
     ui::{
@@ -14,6 +13,7 @@ use crate::{
         geometry::{Direction, LinearPlacement},
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::Button,
@@ -63,7 +63,7 @@ pub fn new_request_passphrase(
     prompt: TString<'static>,
     prompt_empty: TString<'static>,
     max_len: usize,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let content_confirm_empty = TextScreen::new(
         Paragraph::new(&theme::TEXT_REGULAR, prompt_empty)
             .into_paragraphs()
@@ -87,7 +87,7 @@ pub fn new_request_passphrase(
         StringKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
     });
 
-    let mut res = SwipeFlow::new(&RequestPassphrase::Keypad)?;
+    let mut res = SwipeFlow::new(&RequestPassphrase::Keypad);
     res.add_page(&RequestPassphrase::Keypad, content_keypad)?
         .add_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
     Ok(res)

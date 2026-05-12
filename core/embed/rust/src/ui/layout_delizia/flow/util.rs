@@ -1,5 +1,4 @@
 use crate::{
-    error::Error,
     maybe_trace::MaybeTrace,
     strutil::TString,
     translations::TR,
@@ -20,6 +19,7 @@ use crate::{
         layout::util::{ConfirmValueParams, StrOrBytes},
     },
 };
+use micropython::Error;
 use heapless::Vec;
 
 use super::{
@@ -484,7 +484,7 @@ pub fn single_page<T>(layout: T) -> Result<SwipeFlow, Error>
 where
     T: Component<Msg = FlowMsg> + Swipable + MaybeTrace + 'static,
 {
-    let mut flow = SwipeFlow::new(&SinglePage::Show)?;
+    let mut flow = SwipeFlow::new(&SinglePage::Show);
     flow.add_page(&SinglePage::Show, layout)?;
     Ok(flow)
 }

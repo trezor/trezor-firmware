@@ -1,9 +1,8 @@
 use core::cmp::Ordering;
 
-use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util};
+use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, Error};
 
 use crate::{
-    error::Error,
     io::BinaryData,
     maybe_trace::MaybeTrace,
     micropython::util::iter_into_array,

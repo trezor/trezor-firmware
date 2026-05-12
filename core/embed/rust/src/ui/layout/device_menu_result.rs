@@ -1,9 +1,9 @@
 use micropython::{
-    ffi, macros::obj_type, obj::Obj, qstr::Attribute, simple_type::SimpleTypeObj, typ::Type, util,
+    ffi, macros::obj_type, qstr::Attribute, simple_type::SimpleTypeObj, typ::Type, util, Error, Obj,
 };
 use num_traits::ToPrimitive;
 
-use crate::{error::Error, micropython::qstr::Qstr};
+use crate::micropython::qstr::Qstr;
 
 #[repr(u8)]
 #[derive(Copy, Clone, ToPrimitive)]

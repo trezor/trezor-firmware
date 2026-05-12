@@ -6,7 +6,7 @@ pub use super::generated::translated_string::TranslatedString;
 #[cfg(feature = "micropython")]
 use crate::micropython::qstr::Qstr;
 #[cfg(feature = "micropython")]
-use micropython::qstr::{Attribute, QstrValue as _};
+use micropython::qstr::Attribute;
 
 impl TranslatedString {
     fn untranslated(self) -> &'static str {

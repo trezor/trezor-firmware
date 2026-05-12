@@ -1,7 +1,7 @@
 use core::sync::atomic::{AtomicU8, Ordering};
 
+use micropython::Error;
 use crate::{
-    error::Error,
     storage,
     translations::TR,
     trezorhal::display,
@@ -93,7 +93,7 @@ pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
         }
     });
 
-    let mut res = SwipeFlow::new(&SetBrightness::Slider)?;
+    let mut res = SwipeFlow::new(&SetBrightness::Slider);
     res.add_page(&SetBrightness::Slider, content_slider)?;
 
     Ok(res)

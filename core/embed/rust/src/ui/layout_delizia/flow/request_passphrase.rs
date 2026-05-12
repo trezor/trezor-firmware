@@ -1,5 +1,5 @@
+use micropython::Error;
 use crate::{
-    error,
     strutil::{ShortString, TString},
     ui::{
         component::ComponentExt,
@@ -52,7 +52,7 @@ pub fn new_request_passphrase(
     prompt: TString<'static>,
     prompt_empty: TString<'static>,
     max_len: usize,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let content_confirm_empty = Frame::left_aligned(prompt_empty, PromptScreen::new_yes_or_no())
         .map(super::util::map_to_prompt);
 
@@ -61,7 +61,7 @@ pub fn new_request_passphrase(
         PassphraseKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
     });
 
-    let mut res = SwipeFlow::new(&RequestPassphrase::Keypad)?;
+    let mut res = SwipeFlow::new(&RequestPassphrase::Keypad);
     res.add_page(&RequestPassphrase::Keypad, content_keypad)?
         .add_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
     Ok(res)

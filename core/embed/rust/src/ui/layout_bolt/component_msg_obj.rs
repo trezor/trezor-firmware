@@ -1,6 +1,6 @@
 use core::convert::TryInto;
 
-use micropython::Obj;
+use micropython::{Error, Obj};
 
 use super::component::{
     AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress, Dialog,
@@ -10,7 +10,6 @@ use super::component::{
     Progress, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog, SimplePage,
 };
 use crate::{
-    error::Error,
     strutil::TString,
     ui::{
         component::{

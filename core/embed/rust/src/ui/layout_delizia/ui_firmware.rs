@@ -1,9 +1,8 @@
 use core::cmp::Ordering;
 
-use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util};
+use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, Error, Obj};
 
 use crate::{
-    error::{value_error, Error},
     io::BinaryData,
     micropython::util::iter_into_array,
     storage,
@@ -218,7 +217,7 @@ impl FirmwareUI for UIDelizia {
             )?
         } else {
             if !check_homescreen_format(image) {
-                return Err(value_error!(c"Invalid image."));
+                return Err(Error::ValueError(c"Invalid image."));
             };
 
             flow::confirm_homescreen::new_confirm_homescreen(title, CachedJpeg::new(image, 1)?)?

@@ -6,12 +6,10 @@ use micropython::{
     macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
     map::Map,
     module::Module,
-    obj::Obj,
-    util,
+    util, Error, Obj,
 };
 
 use crate::{
-    error::Error,
     io::BinaryData,
     micropython::{
         qstr::Qstr,
@@ -45,7 +43,7 @@ use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 /// Dummy implementation so that we can use `Empty` in a return type of
 /// unimplemented trait function
 impl ComponentMsgObj for Empty {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, crate::error::Error> {
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unimplemented!()
     }
 }
@@ -1009,7 +1007,6 @@ extern "C" fn new_wait_ble_host_confirmation(
     _args: *const Obj,
     _kwargs: *mut Map,
 ) -> Obj {
-
     #[cfg(feature = "ble")]
     {
         let block = move |_args: &[Obj], _kwargs: &Map| {

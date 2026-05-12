@@ -1,5 +1,5 @@
+use micropython::Error;
 use crate::{
-    error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -56,7 +56,7 @@ pub fn new_show_danger(
     description: TString<'static>,
     value: TString<'static>,
     verb_cancel: Option<TString<'static>>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let confirm: TString = TR::words__continue_anyway.into();
     let done_title: TString = TR::words__operation_cancelled.into();
 
@@ -94,7 +94,7 @@ pub fn new_show_danger(
     .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREY_DARK)
     .map(|_| Some(FlowMsg::Cancelled));
 
-    let mut res = SwipeFlow::new(&ShowDanger::Message)?;
+    let mut res = SwipeFlow::new(&ShowDanger::Message);
     res.add_page(&ShowDanger::Message, content_message)?
         .add_page(&ShowDanger::Menu, content_menu)?
         .add_page(&ShowDanger::Cancelled, content_cancelled)?;

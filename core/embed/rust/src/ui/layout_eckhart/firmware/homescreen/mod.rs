@@ -8,8 +8,9 @@ use notification_center::HomescreenNotificationCenter;
 
 pub use helpers::check_homescreen_format;
 
+use micropython::Error;
+
 use crate::{
-    error::Error,
     io::BinaryData,
     strutil::TString,
     translations::TR,

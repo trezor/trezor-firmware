@@ -109,7 +109,7 @@ impl MsgObj {
 
 unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
     let block = || {
-        let mut this = GcObject::<MsgObj>::try_from(self_in)?;
+        let this = GcObject::<MsgObj>::try_from(self_in)?;
         let attr = Attribute::from_raw(attr);
 
         unsafe {

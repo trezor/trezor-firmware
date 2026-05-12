@@ -1,7 +1,8 @@
 use core::cmp::Ordering;
 
+use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, Error, Obj};
+
 use crate::{
-    error::Error,
     io::BinaryData,
     micropython::util,
     storage,
@@ -34,7 +35,6 @@ use crate::{
     },
     util::interpolate,
 };
-use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj};
 
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};

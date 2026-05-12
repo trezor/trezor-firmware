@@ -1,5 +1,4 @@
 use crate::{
-    error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -14,6 +13,7 @@ use crate::{
         geometry::{Direction, LinearPlacement},
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::Button,
@@ -54,7 +54,7 @@ impl FlowController for SetNewCode {
     }
 }
 
-pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
+pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, Error> {
     let (title, description) = if is_wipe_code {
         (TR::wipe_code__title_settings, TR::wipe_code__info)
     } else {
@@ -120,7 +120,7 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
             _ => None,
         });
 
-    let mut res = SwipeFlow::new(&SetNewCode::Intro)?;
+    let mut res = SwipeFlow::new(&SetNewCode::Intro);
     res.add_page(&SetNewCode::Intro, content_intro)?
         .add_page(&SetNewCode::Menu, content_menu)?
         .add_page(&SetNewCode::Cancel, content_cancel)?;

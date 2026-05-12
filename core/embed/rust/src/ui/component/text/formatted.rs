@@ -175,8 +175,8 @@ impl crate::trace::Trace for FormattedText {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, ui::layout::obj::ComponentMsgObj};
-    use ::micropython::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
+    use ::micropython::{Error, Obj};
     impl ComponentMsgObj for super::FormattedText {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
             unreachable!();

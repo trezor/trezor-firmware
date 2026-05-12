@@ -1,7 +1,18 @@
-use crate::error::Error;
-
 #[cfg(feature = "micropython")]
 use micropython::{buffer::get_buffer, gc::Gc, obj::Obj};
+
+pub enum Error {
+    EOFError,
+}
+
+#[cfg(feature = "micropython")]
+impl From<Error> for micropython::error::Error {
+    fn from(error: Error) -> Self {
+        match error {
+            Error::EOFError => micropython::error::Error::EOFError,
+        }
+    }
+}
 
 pub struct InputStream<'a> {
     buf: &'a [u8],
@@ -162,11 +173,11 @@ impl From<Gc<[u8]>> for BinaryData<'static> {
 
 #[cfg(feature = "micropython")]
 impl TryFrom<Obj> for BinaryData<'static> {
-    type Error = Error;
+    type Error = micropython::error::Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
         if !obj.is_bytes() {
-            return Err(Error::TypeError);
+            return Err(micropython::error::Error::TypeError);
         }
         Ok(Self::Object(obj))
     }

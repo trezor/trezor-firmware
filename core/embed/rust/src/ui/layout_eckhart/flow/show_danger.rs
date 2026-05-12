@@ -1,5 +1,4 @@
 use crate::{
-    error,
     strutil::TString,
     time::Duration,
     translations::TR,
@@ -15,6 +14,7 @@ use crate::{
         geometry::{Direction, LinearPlacement},
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::Button,
@@ -63,7 +63,7 @@ pub fn new_show_danger(
     value: TString<'static>,
     menu_title: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let verb_cancel = verb_cancel.unwrap_or(TR::words__cancel_and_exit.into());
 
     // Message
@@ -119,7 +119,7 @@ pub fn new_show_danger(
     .with_page_limit(1)
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let mut res = SwipeFlow::new(&ShowDanger::Message)?;
+    let mut res = SwipeFlow::new(&ShowDanger::Message);
     res.add_page(&ShowDanger::Message, content_message)?
         .add_page(&ShowDanger::Menu, content_menu)?
         .add_page(&ShowDanger::Cancelled, content_cancelled)?;

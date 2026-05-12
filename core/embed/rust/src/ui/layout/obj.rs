@@ -8,6 +8,7 @@ use num_traits::FromPrimitive;
 
 use micropython::{
     buffer::StrBuffer,
+    error::Error,
     gc::{self, Gc, GcBox},
     macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
     map::Map,
@@ -37,20 +38,13 @@ use crate::ui::event::PMEvent;
 
 use super::base::{Layout, LayoutState};
 use crate::{
-    error::Error,
     maybe_trace::MaybeTrace,
     micropython::qstr::Qstr,
     time::Duration,
     ui::{
-        button_request::ButtonRequest,
-        component::{
-            base::{AttachType, TimerToken},
-            Component, Event, EventCtx, Never,
-        },
-        display::{self, Color},
-        event::USBEvent,
-        shape::render_on_display,
-        CommonUI, ModelUI,
+        CommonUI, ModelUI, UIError, button_request::ButtonRequest, component::{
+            Component, Event, EventCtx, Never, base::{AttachType, TimerToken}
+        }, display::{self, Color}, event::USBEvent, layout::base::PaintOutOfBounds, shape::render_on_display
     },
 };
 
@@ -154,7 +148,7 @@ where
         self.returned_value.as_ref()
     }
 
-    fn paint(&mut self) -> Result<(), Error> {
+    fn paint(&mut self) -> Result<(), PaintOutOfBounds> {
         #[cfg(feature = "ui_debug")]
         let mut overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
@@ -331,7 +325,8 @@ impl LayoutObjInner {
 
         if self.repaint != Repaint::None {
             self.repaint = Repaint::None;
-            self.root_mut().paint().map(|_| true)
+            self.root_mut().paint().map_err(|_| Error::OutOfRange)?;
+            Ok(true)
         } else {
             Ok(false)
         }
@@ -525,7 +520,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
         let event_type = unwrap!(PhysicalButtonEvent::from_u8(event_type_num));
         let button = unwrap!(PhysicalButton::from_u8(button_num));
 
-        let event = ButtonEvent::new(event_type, button)?;
+        let event = ButtonEvent::new(event_type, button);
         let msg = this.inner_mut().obj_event(Event::Button(event))?;
         Ok(msg)
     };

@@ -155,13 +155,12 @@ impl Component for SimpleChoice {
 mod micropython {
     use super::SimpleChoice;
     use crate::{
-        error::Error,
         ui::layout::{
             obj::ComponentMsgObj,
             result::{CANCELLED, CONFIRMED},
         },
     };
-    use ::micropython::Obj;
+    use ::micropython::{Error, Obj};
 
     impl ComponentMsgObj for SimpleChoice {
         fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {

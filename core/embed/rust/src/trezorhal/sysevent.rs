@@ -117,7 +117,7 @@ pub fn parse_event(signalled: &sysevents_t) -> Option<Event> {
     if Syshandle::Button.is_set_in(&signalled.read_ready) {
         if let Some(button_event) = ffi::button_event_t::get() {
             let (btn, evt) = button_parse_event(button_event);
-            return Some(Event::Button(unwrap!(ButtonEvent::new(evt, btn))));
+            return Some(Event::Button(ButtonEvent::new(evt, btn)));
         }
     }
     #[cfg(feature = "touch")]

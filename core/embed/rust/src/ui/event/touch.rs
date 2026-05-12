@@ -1,6 +1,6 @@
-use crate::{
-    error::Error,
-    ui::geometry::{Direction, Point},
+use crate::ui::{
+    geometry::{Direction, Point},
+    UIError,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -17,13 +17,13 @@ pub enum TouchEvent {
 }
 
 impl TouchEvent {
-    pub fn new(event: u32, x: u32, y: u32) -> Result<Self, Error> {
+    pub fn new(event: u32, x: u32, y: u32) -> Result<Self, UIError> {
         let point = Point::new(x.try_into()?, y.try_into()?);
         let result = match event {
             1 => Self::TouchStart(point),
             2 => Self::TouchMove(point),
             4 => Self::TouchEnd(point),
-            _ => return Err(Error::OutOfRange),
+            _ => return Err(UIError::InvalidValue),
         };
         Ok(result)
     }

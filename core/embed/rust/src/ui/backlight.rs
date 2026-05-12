@@ -1,10 +1,9 @@
 use crate::{
-    error::Error,
     micropython::qstr::Qstr,
     ui::{CommonUI, ModelUI},
 };
 use micropython::{
-    ffi, macros::obj_type, obj::Obj, qstr::Attribute, simple_type::SimpleTypeObj, typ::Type, util,
+    ffi, macros::obj_type, qstr::Attribute, simple_type::SimpleTypeObj, typ::Type, util, Error, Obj,
 };
 
 /*

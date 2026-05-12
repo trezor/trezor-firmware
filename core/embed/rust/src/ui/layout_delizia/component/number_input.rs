@@ -1,5 +1,6 @@
+use micropython::Error;
+
 use crate::{
-    error::Error,
     strutil::{self, TString},
     ui::{
         component::{

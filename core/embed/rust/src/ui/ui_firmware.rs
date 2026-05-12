@@ -1,6 +1,6 @@
-use crate::{error::Error, io::BinaryData, strutil::TString, ui::notification::Notification};
+use crate::{io::BinaryData, strutil::TString, ui::notification::Notification};
 use heapless::Vec;
-use micropython::{buffer::StrBuffer, gc::Gc, list::List, obj::Obj};
+use micropython::{buffer::StrBuffer, gc::Gc, list::List, Error, Obj};
 
 use super::layout::{
     obj::{LayoutMaybeTrace, LayoutObj},

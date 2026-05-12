@@ -1,11 +1,11 @@
 use crate::{
-    error::Error,
     io::BinaryData,
     ui::{
         component::{Component, Event, EventCtx, Never},
         display::image::ImageInfo,
         geometry::{Offset, Point, Rect},
         shape::{self, render_on_canvas, ImageBuffer, Renderer, Rgb565Canvas},
+        UIError,
     },
 };
 
@@ -19,7 +19,7 @@ pub struct CachedJpeg {
 }
 
 impl CachedJpeg {
-    pub fn new(image: BinaryData<'static>, scale: u8) -> Result<Self, Error> {
+    pub fn new(image: BinaryData<'static>, scale: u8) -> Result<Self, UIError> {
         let size = match ImageInfo::parse(image) {
             ImageInfo::Jpeg(info) => {
                 if info.mcu_height() > 16 {
@@ -86,8 +86,8 @@ impl crate::trace::Trace for CachedJpeg {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, ui::layout::obj::ComponentMsgObj};
-    use micropython::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
+    use ::micropython::{Error, Obj};
     impl ComponentMsgObj for super::CachedJpeg {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
             unreachable!();
