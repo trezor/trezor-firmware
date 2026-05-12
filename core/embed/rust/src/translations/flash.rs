@@ -1,7 +1,7 @@
 use spin::{RwLock, RwLockReadGuard};
 
 use super::blob::Translations;
-use crate::error::{value_error, Error};
+use super::error::Error;
 use crate::trezorhal::translations;
 
 static TRANSLATIONS_ON_FLASH: RwLock<Option<Translations>> = RwLock::new(None);
@@ -15,7 +15,7 @@ pub fn erase() -> Result<(), Error> {
     let blob = unwrap!(TRANSLATIONS_ON_FLASH.try_write());
     {
         if blob.is_some() {
-            return Err(value_error!(c"Translations blob already set"));
+            return Err(Error::TranslationsInUse);
         }
 
         // SAFETY: The blob is not set, so there are no references to it.
@@ -33,7 +33,7 @@ pub fn write(data: &[u8], offset: usize) -> Result<(), Error> {
     let blob = unwrap!(TRANSLATIONS_ON_FLASH.try_write());
     let result = {
         if blob.is_some() {
-            return Err(value_error!(c"Translations blob already set"));
+            return Err(Error::TranslationsInUse);
         }
 
         // SAFETY: The blob is not set, so there are no references to it.
@@ -42,7 +42,7 @@ pub fn write(data: &[u8], offset: usize) -> Result<(), Error> {
     if result {
         Ok(())
     } else {
-        Err(value_error!(c"Failed to write translations blob"))
+        Err(Error::WriteFailed)
     }
 }
 
@@ -92,7 +92,7 @@ pub fn init() {
 /// If the blob is locked by a reader, `deinit()` will return an error.
 pub fn deinit() -> Result<(), Error> {
     let Some(mut blob) = TRANSLATIONS_ON_FLASH.try_write() else {
-        return Err(value_error!(c"Translations are in use."));
+        return Err(Error::TranslationsInUse);
     };
     *blob = None;
     Ok(())
@@ -116,5 +116,5 @@ pub fn deinit() -> Result<(), Error> {
 pub fn get() -> Result<RwLockReadGuard<'static, Option<Translations<'static>>>, Error> {
     TRANSLATIONS_ON_FLASH
         .try_read()
-        .ok_or(value_error!(c"Translations are in use."))
+        .ok_or(Error::TranslationsInUse)
 }
