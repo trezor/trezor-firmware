@@ -4,10 +4,8 @@ use super::super::component::{
     AddressDetails, Frame, Header, PromptScreen, SwipeContent, VerticalMenu,
 };
 use super::super::theme;
-use crate::error;
 use crate::micropython::buffer::StrBuffer;
-use crate::micropython::obj::Obj;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::button_request::ButtonRequest;
@@ -80,7 +78,7 @@ pub fn new_receive(
     xpubs: Obj, // TODO: get rid of Obj
     br_code: u16,
     br_name: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let (content, cancel_title, cancel_content) = match content {
         ContentType::Address(address) => (
             address,
@@ -173,7 +171,7 @@ pub fn new_receive(
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&Receive::Content)?;
+    let mut res = SwipeFlow::new(&Receive::Content);
     res.add_page(&Receive::Content, content_address)?
         .add_page(&Receive::Tap, content_tap)?
         .add_page(&Receive::Menu, content_menu)?

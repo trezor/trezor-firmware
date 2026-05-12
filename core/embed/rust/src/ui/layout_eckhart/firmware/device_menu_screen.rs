@@ -10,9 +10,8 @@ use super::super::firmware::{
     VerticalMenuScreen, VerticalMenuScreenMsg, MEDIUM_MENU_ITEMS,
 };
 use super::{theme, MediumMenuVec, ShortMenuVec};
-use crate::error::Error;
 use crate::micropython::gc::GcBox;
-use crate::micropython::obj::Obj;
+use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::trezorhal::usb;

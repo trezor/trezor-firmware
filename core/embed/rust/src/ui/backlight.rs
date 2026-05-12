@@ -1,10 +1,8 @@
-use crate::error::Error;
 use crate::micropython::macros::obj_type;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::FullType;
-use crate::micropython::{ffi, util};
+use crate::micropython::{ffi, util, Error, Obj};
 use crate::ui::{CommonUI, ModelUI};
 
 /*
@@ -35,7 +33,7 @@ unsafe extern "C" fn backlight_levels_attr(_self_in: Obj, attr: ffi::qstr, dest:
             Qstr::MP_QSTR_LOW => ModelUI::get_backlight_low(),
             Qstr::MP_QSTR_DIM => ModelUI::get_backlight_dim(),
             Qstr::MP_QSTR_MAX => ModelUI::get_backlight_max(),
-            _ => return Err(Error::AttributeError(attr)),
+            _ => return Err(Error::AttributeError(attr.into())),
         };
         unsafe { dest.write(value.into()) };
         Ok(())

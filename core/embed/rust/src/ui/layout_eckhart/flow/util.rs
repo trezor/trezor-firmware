@@ -1,6 +1,6 @@
 use super::super::firmware::{Header, TextScreen, TextScreenMsg};
-use crate::error::Error;
 use crate::maybe_trace::MaybeTrace;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::ui::component::text::paragraphs::{ParagraphSource, Paragraphs};
 use crate::ui::component::{Component, ComponentExt, MsgMap};
@@ -31,7 +31,7 @@ pub fn single_page<T>(layout: T) -> Result<SwipeFlow, Error>
 where
     T: Component<Msg = FlowMsg> + Swipable + MaybeTrace + 'static,
 {
-    let mut flow = SwipeFlow::new(&SinglePage::Show)?;
+    let mut flow = SwipeFlow::new(&SinglePage::Show);
     flow.add_page(&SinglePage::Show, layout)?;
     Ok(flow)
 }

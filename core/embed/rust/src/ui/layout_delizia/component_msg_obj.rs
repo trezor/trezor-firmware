@@ -6,9 +6,8 @@ use super::component::{
     PromptScreen, SelectWordCount, SelectWordCountMsg, StatusScreen, SwipeContent, SwipeUpScreen,
     SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
 };
-use crate::error::Error;
 use crate::micropython::gc::GcBox;
-use crate::micropython::obj::Obj;
+use crate::micropython::{Error, Obj};
 use crate::ui::component::paginated::Paginate;
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{

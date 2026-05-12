@@ -49,12 +49,11 @@ impl crate::trace::Trace for Jpeg {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::error::Error;
-    use crate::micropython::obj::Obj;
+    use crate::micropython::{Error, Obj};
     use crate::ui::layout::obj::ComponentMsgObj;
     impl ComponentMsgObj for super::Jpeg {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-            unreachable!();
+            unreachable!()
         }
     }
 }

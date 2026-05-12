@@ -4,7 +4,7 @@ use super::super::firmware::{
     TextScreenMsg,
 };
 use super::super::theme;
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::{ShortString, TString};
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
@@ -52,7 +52,7 @@ pub fn new_request_passphrase(
     prompt: TString<'static>,
     prompt_empty: TString<'static>,
     max_len: usize,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let content_confirm_empty = TextScreen::new(
         Paragraph::new(&theme::TEXT_REGULAR, prompt_empty)
             .into_paragraphs()
@@ -76,7 +76,7 @@ pub fn new_request_passphrase(
         StringKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
     });
 
-    let mut res = SwipeFlow::new(&RequestPassphrase::Keypad)?;
+    let mut res = SwipeFlow::new(&RequestPassphrase::Keypad);
     res.add_page(&RequestPassphrase::Keypad, content_keypad)?
         .add_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
     Ok(res)

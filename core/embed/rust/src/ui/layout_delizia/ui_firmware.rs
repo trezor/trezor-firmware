@@ -13,14 +13,12 @@ use super::flow::{
     ConfirmActionOptions, ConfirmActionStrings, ConfirmValue, ShowInfoParams,
 };
 use super::{fonts, theme, UIDelizia};
-use crate::error::{value_error, Error};
 use crate::io::BinaryData;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
-use crate::micropython::obj::Obj;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
 use crate::storage;
 use crate::strutil::TString;
 use crate::translations::TR;
@@ -212,7 +210,7 @@ impl FirmwareUI for UIDelizia {
             )?
         } else {
             if !check_homescreen_format(image) {
-                return Err(value_error!(c"Invalid image."));
+                return Err(Error::ValueError(c"Invalid image."));
             };
 
             flow::confirm_homescreen::new_confirm_homescreen(title, CachedJpeg::new(image, 1)?)?

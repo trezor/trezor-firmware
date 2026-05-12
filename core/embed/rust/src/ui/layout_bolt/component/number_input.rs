@@ -1,6 +1,6 @@
 use super::super::fonts;
 use super::{theme, Button, ButtonMsg};
-use crate::error::Error;
+use crate::micropython::Error;
 use crate::strutil::{self, TString};
 use crate::translations::TR;
 use crate::ui::component::base::ComponentExt;

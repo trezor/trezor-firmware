@@ -1,6 +1,6 @@
 use super::{check_homescreen_format, theme, ActionBar, ActionBarMsg, Header};
-use crate::error::{value_error, Error};
 use crate::io::BinaryData;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::{Component, Event, EventCtx, Label};
@@ -42,7 +42,7 @@ impl ConfirmHomescreen {
         } else {
             // Validate and use custom homescreen
             if !check_homescreen_format(image) {
-                return Err(value_error!(c"Invalid image."));
+                return Err(Error::ValueError(c"Invalid image."));
             }
 
             Ok(Self {

@@ -1,4 +1,3 @@
-use crate::error::Error;
 use crate::ui::button_request::ButtonRequest;
 use crate::ui::component::base::AttachType;
 use crate::ui::component::{Event, EventCtx};
@@ -11,21 +10,23 @@ pub enum LayoutState {
     Done,
 }
 
+pub struct PaintOutOfBounds;
+
 pub trait Layout<T> {
     fn place(&mut self);
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState>;
     fn value(&self) -> Option<&T>;
-    fn paint(&mut self) -> Result<(), Error>;
+    fn paint(&mut self) -> Result<(), PaintOutOfBounds>;
 }
 
 #[cfg(feature = "micropython")]
 mod micropython {
     use super::LayoutState;
     use crate::micropython::macros::{obj_dict, obj_map, obj_type};
-    use crate::micropython::obj::Obj;
     use crate::micropython::qstr::Qstr;
     use crate::micropython::simple_type::SimpleTypeObj;
     use crate::micropython::typ::FullType;
+    use crate::micropython::Obj;
 
     static STATE_INITIAL_TYPE: FullType = obj_type! {
         name: Qstr::MP_QSTR_INITIAL,

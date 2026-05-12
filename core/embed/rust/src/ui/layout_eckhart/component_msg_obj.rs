@@ -7,9 +7,8 @@ use super::firmware::{
     SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
     TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
-use crate::error::Error;
-use crate::micropython::obj::Obj;
 use crate::micropython::util::new_tuple;
+use crate::micropython::{Error, Obj};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
