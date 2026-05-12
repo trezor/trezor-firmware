@@ -629,6 +629,8 @@ class MessageType(IntEnum):
     EthereumSignTypedHash = 470
     EthereumDefinitionRequest = 471
     EthereumDefinitionAck = 472
+    EthereumSignAuth7702 = 473
+    EthereumAuth7702Signature = 474
     NEMGetAddress = 67
     NEMAddress = 68
     NEMSignTx = 69
@@ -5838,6 +5840,49 @@ class EthereumDefinitions(protobuf.MessageType):
         self.encoded_network = encoded_network
         self.encoded_token = encoded_token
         self.encoded_display_format = encoded_display_format
+
+
+class EthereumSignAuth7702(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 473
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
+        3: protobuf.Field("delegate", "string", repeated=False, required=True),
+        4: protobuf.Field("nonce", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        chain_id: "int",
+        delegate: "str",
+        nonce: "int",
+        address_n: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.chain_id = chain_id
+        self.delegate = delegate
+        self.nonce = nonce
+
+
+class EthereumAuth7702Signature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 474
+    FIELDS = {
+        1: protobuf.Field("signature_v", "uint32", repeated=False, required=True),
+        2: protobuf.Field("signature_r", "bytes", repeated=False, required=True),
+        3: protobuf.Field("signature_s", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature_v: "int",
+        signature_r: "bytes",
+        signature_s: "bytes",
+    ) -> None:
+        self.signature_v = signature_v
+        self.signature_r = signature_r
+        self.signature_s = signature_s
 
 
 class EthereumAccessList(protobuf.MessageType):
