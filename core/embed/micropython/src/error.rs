@@ -23,17 +23,6 @@ pub enum Error {
     NotImplementedError,
 }
 
-#[allow(unused_macros)]
-#[macro_export]
-macro_rules! value_error {
-    ($msg:expr) => {
-        $crate::error::Error::ValueError($msg)
-    };
-}
-
-#[allow(unused_imports)]
-pub use value_error;
-
 impl Error {
     /// Create an exception instance matching the error code. The result of this
     /// call should only be used to immediately raise the exception, because the
