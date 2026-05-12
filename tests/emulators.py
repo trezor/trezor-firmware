@@ -163,7 +163,7 @@ def get_tags() -> dict[str, list[str]]:
 ALL_TAGS = get_tags()
 
 
-def _get_tropic_model_port(worker_id: int) -> int:
+def get_tropic_model_port(worker_id: int) -> int:
     """Get a unique port for this worker process' Tropic model.
 
     Guarantees to be unique because each worker has a unique ID.
@@ -175,9 +175,9 @@ def _get_port(worker_id: int) -> int:
     """Get a unique port for this worker process on which it can run.
 
     Guarantees to be unique because each worker has a unique ID.
-    #0=>20000, #1=>20003, #2=>20006, etc.
+    #0=>20000, #1=>20006, #2=>20012, etc.
     """
-    # One emulator instance occupies 3 consecutive ports:
+    # One emulator instance occupies 6 consecutive ports:
     # 1. normal link, 2. debug link and 3. webauthn fake interface
     # 4. USB serial 5. ble-emulator-data 6. ble-emulator-events
     return 20000 + worker_id * 6
@@ -206,8 +206,6 @@ class EmulatorWrapper:
         auto_interact: bool = True,
         main_args: Sequence[str] = ("-m", "main"),
         launch_tropic_model: bool | None = None,
-        tropic_model_port_override: int | None = None,
-        port_override: int | None = None,
     ) -> None:
 
         if model is None:
@@ -256,11 +254,7 @@ class EmulatorWrapper:
             shared_model = _get_shared_tropic_model(
                 profile_dir=self.profile_dir.name,
                 workdir=workdir,
-                port=(
-                    tropic_model_port_override
-                    if tropic_model_port_override is not None
-                    else _get_tropic_model_port(worker_id)
-                ),
+                port=get_tropic_model_port(worker_id),
                 configfile=tropic_configfile,
                 logfile=(
                     tropic_model_logfile
@@ -271,11 +265,8 @@ class EmulatorWrapper:
             launch_tropic_model_for_emulator = False
             tropic_model_port = shared_model.port
         else:
-            tropic_model_port = (
-                tropic_model_port_override
-                if tropic_model_port_override is not None
-                else _get_tropic_model_port(worker_id)
-            )
+            tropic_model_port = get_tropic_model_port(worker_id)
+
         if gen == "legacy":
             self.emulator = LegacyEmulator(
                 executable,
@@ -295,9 +286,7 @@ class EmulatorWrapper:
                 tropic_model_port=tropic_model_port,
                 tropic_model_configfile=str(tropic_configfile),
                 tropic_model_logfile=tropic_model_logfile,
-                port=(
-                    port_override if port_override is not None else _get_port(worker_id)
-                ),
+                port=_get_port(worker_id),
                 headless=headless,
                 auto_interact=auto_interact,
                 main_args=main_args,

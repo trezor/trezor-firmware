@@ -30,7 +30,7 @@
 const struct lt_config_t tropic_configs_irreversible = {
     .obj = {
         0xFFFFFFF9U,
-        0xFFFFFFFFU,
+        0xFFFC0000U,
         0xFFFFFFFEU,
         0xFFFFFFFFU,
         0xFFFFFFFFU,

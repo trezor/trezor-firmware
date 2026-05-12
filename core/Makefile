@@ -206,6 +206,9 @@ test_emu_multicore: ## run device tests using multiple cores
 		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
+test_emu_boot: ## run selected boot tests from python-trezor
+	$(PYTEST) $(TESTPATH)/boot_tests $(TESTOPTS) --lang=$(TEST_LANG)
+
 test_emu_monero: ## run selected monero device tests from monero-agent
 	cd tests ; $(EMU_TEST) ./run_tests_device_emu_monero.sh $(TESTOPTS)
 
