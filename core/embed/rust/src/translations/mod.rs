@@ -1,4 +1,5 @@
 mod blob;
+mod error;
 pub mod flash;
 mod generated;
 #[cfg(feature = "micropython")]
