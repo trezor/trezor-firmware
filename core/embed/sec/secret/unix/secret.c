@@ -199,10 +199,14 @@ void secret_bhk_regenerate(void) {}
 
 #include <sec/mcu_attestation.h>
 
+#ifdef TREZOR_PRODTEST
+#include "certs/prodtest.h"
+#else
 #if defined(TREZOR_MODEL_T3W1)
 #include "certs/T3W1.h"
 #else
 #error "MCU attestation is only supported for T3W1 model."
+#endif
 #endif
 
 secbool secret_mcu_device_cert_write(const uint8_t* cert, size_t cert_size) {
