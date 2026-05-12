@@ -32,6 +32,16 @@ r_user_data:
       AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 riscv_fw_version: !!binary |
   AAAAAQ==
-s_t_priv: tropic01_ese_private_key_1.pem
-s_t_pub: tropic01_ese_public_key_1.pem
-x509_certificate: tropic01_ese_certificate_1.pem
+s_t_priv: !!binary |
+  sEKAf+kv+HXfRScPbVWqKt9814O+VloX1Gbu1UW+42c=
+s_t_pub: !!binary |
+  MekK8VBFEO5O/XkTM0FIFYmiiVzF+7E+1XEcHpuBmHI=
+x509_certificate: !!binary |
+  MIIBkDCCARegAwIBAgIBATAKBggqhkjOPQQDAzBZMQswCQYDVQQGEwJDWjEPMA0GA1UEBwwGUHJh
+  Z3VlMRYwFAYDVQQKDA1Ucm9waWMgU3F1YXJlMSEwHwYDVQQDDBhUcm9waWMgU3F1YXJlIFJvb3Qg
+  Q0EgdjEwHhcNMjQwNjA0MDc0MDMxWhcNMjUwNjA0MDc0MDMxWjAXMRUwEwYDVQQDDAxUUk9QSUMw
+  MSBlU0UwKjAFBgMrZW4DIQAx6QrxUEUQ7k79eRMzQUgViaKJXMX7sT7VcRwem4GYcqNBMD8wDAYD
+  VR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCAwgwHwYDVR0jBBgwFoAUipzvY3hE2wO8KSaA0eZVB9Xe
+  j0cwCgYIKoZIzj0EAwMDZwAwZAIwDLRviNFPbY+5UWmuEBY2/3aSuTQf9iKXUZmrDh9o3mZS13ju
+  BhHV58yAg0vbqzD1AjBRNE490wx/su6TSuGMj9ZX37WugegiBI/r3TQoeL/T/JgO+JReqwIJopvp
+  b2Trhg4=

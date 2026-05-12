@@ -38,7 +38,6 @@ from . import model_only
 TROPIC_CONFIGS_JSON = (
     ROOT / "core" / "embed" / "sec" / "tropic" / "config" / "tropic_configs.json"
 )
-TROPIC_MODEL_DIR = TROPIC_MODEL_CONFIGFILE.parent
 TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT = 6
 TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT = 7
 CHIP_ID_BATCH_ID_OFFSET = 96
@@ -299,9 +298,6 @@ def _build_tropic_model_config(scenario: TropicBootScenario) -> dict:
     _set_slot(
         config, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT, scenario.backup_slot
     )
-    config["s_t_priv"] = str(TROPIC_MODEL_DIR / config["s_t_priv"])
-    config["s_t_pub"] = str(TROPIC_MODEL_DIR / config["s_t_pub"])
-    config["x509_certificate"] = str(TROPIC_MODEL_DIR / config["x509_certificate"])
     return config
 
 
