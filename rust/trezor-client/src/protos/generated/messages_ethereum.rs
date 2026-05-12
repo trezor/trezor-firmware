@@ -4912,79 +4912,606 @@ impl ::protobuf::reflect::ProtobufValue for EthereumDefinitions {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ethereum.EthereumSignAuth7702)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct EthereumSignAuth7702 {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignAuth7702.address_n)
+    pub address_n: ::std::vec::Vec<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignAuth7702.chain_id)
+    pub chain_id: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignAuth7702.delegate)
+    pub delegate: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignAuth7702.nonce)
+    pub nonce: ::std::option::Option<u64>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum.EthereumSignAuth7702.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a EthereumSignAuth7702 {
+    fn default() -> &'a EthereumSignAuth7702 {
+        <EthereumSignAuth7702 as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl EthereumSignAuth7702 {
+    pub fn new() -> EthereumSignAuth7702 {
+        ::std::default::Default::default()
+    }
+
+    // required uint64 chain_id = 2;
+
+    pub fn chain_id(&self) -> u64 {
+        self.chain_id.unwrap_or(0)
+    }
+
+    pub fn clear_chain_id(&mut self) {
+        self.chain_id = ::std::option::Option::None;
+    }
+
+    pub fn has_chain_id(&self) -> bool {
+        self.chain_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_chain_id(&mut self, v: u64) {
+        self.chain_id = ::std::option::Option::Some(v);
+    }
+
+    // required string delegate = 3;
+
+    pub fn delegate(&self) -> &str {
+        match self.delegate.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_delegate(&mut self) {
+        self.delegate = ::std::option::Option::None;
+    }
+
+    pub fn has_delegate(&self) -> bool {
+        self.delegate.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_delegate(&mut self, v: ::std::string::String) {
+        self.delegate = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_delegate(&mut self) -> &mut ::std::string::String {
+        if self.delegate.is_none() {
+            self.delegate = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.delegate.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_delegate(&mut self) -> ::std::string::String {
+        self.delegate.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required uint64 nonce = 4;
+
+    pub fn nonce(&self) -> u64 {
+        self.nonce.unwrap_or(0)
+    }
+
+    pub fn clear_nonce(&mut self) {
+        self.nonce = ::std::option::Option::None;
+    }
+
+    pub fn has_nonce(&self) -> bool {
+        self.nonce.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nonce(&mut self, v: u64) {
+        self.nonce = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "address_n",
+            |m: &EthereumSignAuth7702| { &m.address_n },
+            |m: &mut EthereumSignAuth7702| { &mut m.address_n },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "chain_id",
+            |m: &EthereumSignAuth7702| { &m.chain_id },
+            |m: &mut EthereumSignAuth7702| { &mut m.chain_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "delegate",
+            |m: &EthereumSignAuth7702| { &m.delegate },
+            |m: &mut EthereumSignAuth7702| { &mut m.delegate },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nonce",
+            |m: &EthereumSignAuth7702| { &m.nonce },
+            |m: &mut EthereumSignAuth7702| { &mut m.nonce },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumSignAuth7702>(
+            "EthereumSignAuth7702",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for EthereumSignAuth7702 {
+    const NAME: &'static str = "EthereumSignAuth7702";
+
+    fn is_initialized(&self) -> bool {
+        if self.chain_id.is_none() {
+            return false;
+        }
+        if self.delegate.is_none() {
+            return false;
+        }
+        if self.nonce.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    is.read_repeated_packed_uint32_into(&mut self.address_n)?;
+                },
+                8 => {
+                    self.address_n.push(is.read_uint32()?);
+                },
+                16 => {
+                    self.chain_id = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                26 => {
+                    self.delegate = ::std::option::Option::Some(is.read_string()?);
+                },
+                32 => {
+                    self.nonce = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.address_n {
+            my_size += ::protobuf::rt::uint32_size(1, *value);
+        };
+        if let Some(v) = self.chain_id {
+            my_size += ::protobuf::rt::uint64_size(2, v);
+        }
+        if let Some(v) = self.delegate.as_ref() {
+            my_size += ::protobuf::rt::string_size(3, &v);
+        }
+        if let Some(v) = self.nonce {
+            my_size += ::protobuf::rt::uint64_size(4, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.address_n {
+            os.write_uint32(1, *v)?;
+        };
+        if let Some(v) = self.chain_id {
+            os.write_uint64(2, v)?;
+        }
+        if let Some(v) = self.delegate.as_ref() {
+            os.write_string(3, v)?;
+        }
+        if let Some(v) = self.nonce {
+            os.write_uint64(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> EthereumSignAuth7702 {
+        EthereumSignAuth7702::new()
+    }
+
+    fn clear(&mut self) {
+        self.address_n.clear();
+        self.chain_id = ::std::option::Option::None;
+        self.delegate = ::std::option::Option::None;
+        self.nonce = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static EthereumSignAuth7702 {
+        static instance: EthereumSignAuth7702 = EthereumSignAuth7702 {
+            address_n: ::std::vec::Vec::new(),
+            chain_id: ::std::option::Option::None,
+            delegate: ::std::option::Option::None,
+            nonce: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for EthereumSignAuth7702 {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("EthereumSignAuth7702").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for EthereumSignAuth7702 {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for EthereumSignAuth7702 {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ethereum.EthereumAuth7702Signature)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct EthereumAuth7702Signature {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumAuth7702Signature.signature_v)
+    pub signature_v: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumAuth7702Signature.signature_r)
+    pub signature_r: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumAuth7702Signature.signature_s)
+    pub signature_s: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum.EthereumAuth7702Signature.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a EthereumAuth7702Signature {
+    fn default() -> &'a EthereumAuth7702Signature {
+        <EthereumAuth7702Signature as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl EthereumAuth7702Signature {
+    pub fn new() -> EthereumAuth7702Signature {
+        ::std::default::Default::default()
+    }
+
+    // required uint32 signature_v = 1;
+
+    pub fn signature_v(&self) -> u32 {
+        self.signature_v.unwrap_or(0)
+    }
+
+    pub fn clear_signature_v(&mut self) {
+        self.signature_v = ::std::option::Option::None;
+    }
+
+    pub fn has_signature_v(&self) -> bool {
+        self.signature_v.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature_v(&mut self, v: u32) {
+        self.signature_v = ::std::option::Option::Some(v);
+    }
+
+    // required bytes signature_r = 2;
+
+    pub fn signature_r(&self) -> &[u8] {
+        match self.signature_r.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signature_r(&mut self) {
+        self.signature_r = ::std::option::Option::None;
+    }
+
+    pub fn has_signature_r(&self) -> bool {
+        self.signature_r.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature_r(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature_r = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature_r(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature_r.is_none() {
+            self.signature_r = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signature_r.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature_r(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature_r.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required bytes signature_s = 3;
+
+    pub fn signature_s(&self) -> &[u8] {
+        match self.signature_s.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signature_s(&mut self) {
+        self.signature_s = ::std::option::Option::None;
+    }
+
+    pub fn has_signature_s(&self) -> bool {
+        self.signature_s.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature_s(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature_s = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature_s(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature_s.is_none() {
+            self.signature_s = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signature_s.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature_s(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature_s.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature_v",
+            |m: &EthereumAuth7702Signature| { &m.signature_v },
+            |m: &mut EthereumAuth7702Signature| { &mut m.signature_v },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature_r",
+            |m: &EthereumAuth7702Signature| { &m.signature_r },
+            |m: &mut EthereumAuth7702Signature| { &mut m.signature_r },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature_s",
+            |m: &EthereumAuth7702Signature| { &m.signature_s },
+            |m: &mut EthereumAuth7702Signature| { &mut m.signature_s },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumAuth7702Signature>(
+            "EthereumAuth7702Signature",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for EthereumAuth7702Signature {
+    const NAME: &'static str = "EthereumAuth7702Signature";
+
+    fn is_initialized(&self) -> bool {
+        if self.signature_v.is_none() {
+            return false;
+        }
+        if self.signature_r.is_none() {
+            return false;
+        }
+        if self.signature_s.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.signature_v = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                18 => {
+                    self.signature_r = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.signature_s = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.signature_v {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.signature_r.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.signature_s.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.signature_v {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.signature_r.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.signature_s.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> EthereumAuth7702Signature {
+        EthereumAuth7702Signature::new()
+    }
+
+    fn clear(&mut self) {
+        self.signature_v = ::std::option::Option::None;
+        self.signature_r = ::std::option::Option::None;
+        self.signature_s = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static EthereumAuth7702Signature {
+        static instance: EthereumAuth7702Signature = EthereumAuth7702Signature {
+            signature_v: ::std::option::Option::None,
+            signature_r: ::std::option::Option::None,
+            signature_s: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for EthereumAuth7702Signature {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("EthereumAuth7702Signature").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for EthereumAuth7702Signature {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for EthereumAuth7702Signature {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x17messages-ethereum.proto\x12\x1bhw.trezor.messages.ethereum\x1a\x15\
-    messages-common.proto\"V\n\x14EthereumGetPublicKey\x12\x1b\n\taddress_n\
-    \x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\
-    \x08R\x0bshowDisplay\"b\n\x11EthereumPublicKey\x129\n\x04node\x18\x01\
-    \x20\x02(\x0b2%.hw.trezor.messages.common.HDNodeTypeR\x04node\x12\x12\n\
-    \x04xpub\x18\x02\x20\x02(\tR\x04xpub\"\x99\x01\n\x12EthereumGetAddress\
+    messages-common.proto\x1a\roptions.proto\"V\n\x14EthereumGetPublicKey\
     \x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_dis\
-    play\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12'\n\x0fencoded_network\x18\
-    \x03\x20\x01(\x0cR\x0eencodedNetwork\x12\x1a\n\x08chunkify\x18\x04\x20\
-    \x01(\x08R\x08chunkify\"c\n\x0fEthereumAddress\x12$\n\x0c_old_address\
-    \x18\x01\x20\x01(\x0cR\nOldAddressB\x02\x18\x01\x12\x18\n\x07address\x18\
-    \x02\x20\x01(\tR\x07address\x12\x10\n\x03mac\x18\x03\x20\x01(\x0cR\x03ma\
-    c\"\xad\x04\n\x0eEthereumSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
-    \x08addressN\x12\x16\n\x05nonce\x18\x02\x20\x01(\x0c:\0R\x05nonce\x12\
-    \x1b\n\tgas_price\x18\x03\x20\x02(\x0cR\x08gasPrice\x12\x1b\n\tgas_limit\
-    \x18\x04\x20\x02(\x0cR\x08gasLimit\x12\x10\n\x02to\x18\x0b\x20\x01(\t:\0\
-    R\x02to\x12\x16\n\x05value\x18\x06\x20\x01(\x0c:\0R\x05value\x12.\n\x12d\
-    ata_initial_chunk\x18\x07\x20\x01(\x0c:\0R\x10dataInitialChunk\x12\"\n\
-    \x0bdata_length\x18\x08\x20\x01(\r:\x010R\ndataLength\x12\x19\n\x08chain\
-    _id\x18\t\x20\x02(\x04R\x07chainId\x12\x17\n\x07tx_type\x18\n\x20\x01(\r\
-    R\x06txType\x12R\n\x0bdefinitions\x18\x0c\x20\x01(\x0b20.hw.trezor.messa\
-    ges.ethereum.EthereumDefinitionsR\x0bdefinitions\x12\x1a\n\x08chunkify\
-    \x18\r\x20\x01(\x08R\x08chunkify\x12J\n\x0bpayment_req\x18\x0e\x20\x01(\
-    \x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentReq\x12>\n\x1bs\
-    upports_definition_request\x18\x0f\x20\x01(\x08R\x19supportsDefinitionRe\
-    quest\"\xfc\x05\n\x15EthereumSignTxEIP1559\x12\x1b\n\taddress_n\x18\x01\
-    \x20\x03(\rR\x08addressN\x12\x14\n\x05nonce\x18\x02\x20\x02(\x0cR\x05non\
-    ce\x12\x1e\n\x0bmax_gas_fee\x18\x03\x20\x02(\x0cR\tmaxGasFee\x12(\n\x10m\
-    ax_priority_fee\x18\x04\x20\x02(\x0cR\x0emaxPriorityFee\x12\x1b\n\tgas_l\
-    imit\x18\x05\x20\x02(\x0cR\x08gasLimit\x12\x10\n\x02to\x18\x06\x20\x01(\
-    \t:\0R\x02to\x12\x14\n\x05value\x18\x07\x20\x02(\x0cR\x05value\x12.\n\
-    \x12data_initial_chunk\x18\x08\x20\x01(\x0c:\0R\x10dataInitialChunk\x12\
-    \x1f\n\x0bdata_length\x18\t\x20\x02(\rR\ndataLength\x12\x19\n\x08chain_i\
-    d\x18\n\x20\x02(\x04R\x07chainId\x12f\n\x0baccess_list\x18\x0b\x20\x03(\
-    \x0b2E.hw.trezor.messages.ethereum.EthereumSignTxEIP1559.EthereumAccessL\
-    istR\naccessList\x12R\n\x0bdefinitions\x18\x0c\x20\x01(\x0b20.hw.trezor.\
-    messages.ethereum.EthereumDefinitionsR\x0bdefinitions\x12\x1a\n\x08chunk\
-    ify\x18\r\x20\x01(\x08R\x08chunkify\x12J\n\x0bpayment_req\x18\x0e\x20\
-    \x01(\x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentReq\x12>\n\
-    \x1bsupports_definition_request\x18\x0f\x20\x01(\x08R\x19supportsDefinit\
-    ionRequest\x1aQ\n\x12EthereumAccessList\x12\x18\n\x07address\x18\x01\x20\
-    \x02(\tR\x07address\x12!\n\x0cstorage_keys\x18\x02\x20\x03(\x0cR\x0bstor\
-    ageKeys\"\x97\x01\n\x11EthereumTxRequest\x12\x1f\n\x0bdata_length\x18\
-    \x01\x20\x01(\rR\ndataLength\x12\x1f\n\x0bsignature_v\x18\x02\x20\x01(\r\
-    R\nsignatureV\x12\x1f\n\x0bsignature_r\x18\x03\x20\x01(\x0cR\nsignatureR\
-    \x12\x1f\n\x0bsignature_s\x18\x04\x20\x01(\x0cR\nsignatureS\".\n\rEthere\
-    umTxAck\x12\x1d\n\ndata_chunk\x18\x01\x20\x02(\x0cR\tdataChunk\"v\n\x19E\
-    thereumDefinitionRequest\x12\x19\n\x08chain_id\x18\x01\x20\x02(\x04R\x07\
-    chainId\x12#\n\rtoken_address\x18\x02\x20\x02(\x0cR\x0ctokenAddress\x12\
-    \x19\n\x08func_sig\x18\x03\x20\x01(\x0cR\x07funcSig\"k\n\x15EthereumDefi\
-    nitionAck\x12R\n\x0bdefinitions\x18\x01\x20\x01(\x0b20.hw.trezor.message\
-    s.ethereum.EthereumDefinitionsR\x0bdefinitions\"\x91\x01\n\x13EthereumSi\
-    gnMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\n\
-    \x07message\x18\x02\x20\x02(\x0cR\x07message\x12'\n\x0fencoded_network\
-    \x18\x03\x20\x01(\x0cR\x0eencodedNetwork\x12\x1a\n\x08chunkify\x18\x04\
-    \x20\x01(\x08R\x08chunkify\"R\n\x18EthereumMessageSignature\x12\x1c\n\ts\
-    ignature\x18\x02\x20\x02(\x0cR\tsignature\x12\x18\n\x07address\x18\x03\
-    \x20\x02(\tR\x07address\"\x85\x01\n\x15EthereumVerifyMessage\x12\x1c\n\t\
-    signature\x18\x02\x20\x02(\x0cR\tsignature\x12\x18\n\x07message\x18\x03\
-    \x20\x02(\x0cR\x07message\x12\x18\n\x07address\x18\x04\x20\x02(\tR\x07ad\
-    dress\x12\x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify\"\xb4\x01\
-    \n\x15EthereumSignTypedHash\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08\
-    addressN\x122\n\x15domain_separator_hash\x18\x02\x20\x02(\x0cR\x13domain\
-    SeparatorHash\x12!\n\x0cmessage_hash\x18\x03\x20\x01(\x0cR\x0bmessageHas\
-    h\x12'\n\x0fencoded_network\x18\x04\x20\x01(\x0cR\x0eencodedNetwork\"T\n\
-    \x1aEthereumTypedDataSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0c\
-    R\tsignature\x12\x18\n\x07address\x18\x02\x20\x02(\tR\x07address\"\x99\
-    \x01\n\x13EthereumDefinitions\x12'\n\x0fencoded_network\x18\x01\x20\x01(\
-    \x0cR\x0eencodedNetwork\x12#\n\rencoded_token\x18\x02\x20\x01(\x0cR\x0ce\
-    ncodedToken\x124\n\x16encoded_display_format\x18\x03\x20\x01(\x0cR\x14en\
-    codedDisplayFormatB<\n#com.satoshilabs.trezor.lib.protobufB\x15TrezorMes\
-    sageEthereum\
+    play\x18\x02\x20\x01(\x08R\x0bshowDisplay\"b\n\x11EthereumPublicKey\x129\
+    \n\x04node\x18\x01\x20\x02(\x0b2%.hw.trezor.messages.common.HDNodeTypeR\
+    \x04node\x12\x12\n\x04xpub\x18\x02\x20\x02(\tR\x04xpub\"\x99\x01\n\x12Et\
+    hereumGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
+    \x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12'\n\x0fe\
+    ncoded_network\x18\x03\x20\x01(\x0cR\x0eencodedNetwork\x12\x1a\n\x08chun\
+    kify\x18\x04\x20\x01(\x08R\x08chunkify\"c\n\x0fEthereumAddress\x12$\n\
+    \x0c_old_address\x18\x01\x20\x01(\x0cR\nOldAddressB\x02\x18\x01\x12\x18\
+    \n\x07address\x18\x02\x20\x01(\tR\x07address\x12\x10\n\x03mac\x18\x03\
+    \x20\x01(\x0cR\x03mac\"\xad\x04\n\x0eEthereumSignTx\x12\x1b\n\taddress_n\
+    \x18\x01\x20\x03(\rR\x08addressN\x12\x16\n\x05nonce\x18\x02\x20\x01(\x0c\
+    :\0R\x05nonce\x12\x1b\n\tgas_price\x18\x03\x20\x02(\x0cR\x08gasPrice\x12\
+    \x1b\n\tgas_limit\x18\x04\x20\x02(\x0cR\x08gasLimit\x12\x10\n\x02to\x18\
+    \x0b\x20\x01(\t:\0R\x02to\x12\x16\n\x05value\x18\x06\x20\x01(\x0c:\0R\
+    \x05value\x12.\n\x12data_initial_chunk\x18\x07\x20\x01(\x0c:\0R\x10dataI\
+    nitialChunk\x12\"\n\x0bdata_length\x18\x08\x20\x01(\r:\x010R\ndataLength\
+    \x12\x19\n\x08chain_id\x18\t\x20\x02(\x04R\x07chainId\x12\x17\n\x07tx_ty\
+    pe\x18\n\x20\x01(\rR\x06txType\x12R\n\x0bdefinitions\x18\x0c\x20\x01(\
+    \x0b20.hw.trezor.messages.ethereum.EthereumDefinitionsR\x0bdefinitions\
+    \x12\x1a\n\x08chunkify\x18\r\x20\x01(\x08R\x08chunkify\x12J\n\x0bpayment\
+    _req\x18\x0e\x20\x01(\x0b2).hw.trezor.messages.common.PaymentRequestR\np\
+    aymentReq\x12>\n\x1bsupports_definition_request\x18\x0f\x20\x01(\x08R\
+    \x19supportsDefinitionRequest\"\xfc\x05\n\x15EthereumSignTxEIP1559\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x14\n\x05nonce\x18\
+    \x02\x20\x02(\x0cR\x05nonce\x12\x1e\n\x0bmax_gas_fee\x18\x03\x20\x02(\
+    \x0cR\tmaxGasFee\x12(\n\x10max_priority_fee\x18\x04\x20\x02(\x0cR\x0emax\
+    PriorityFee\x12\x1b\n\tgas_limit\x18\x05\x20\x02(\x0cR\x08gasLimit\x12\
+    \x10\n\x02to\x18\x06\x20\x01(\t:\0R\x02to\x12\x14\n\x05value\x18\x07\x20\
+    \x02(\x0cR\x05value\x12.\n\x12data_initial_chunk\x18\x08\x20\x01(\x0c:\0\
+    R\x10dataInitialChunk\x12\x1f\n\x0bdata_length\x18\t\x20\x02(\rR\ndataLe\
+    ngth\x12\x19\n\x08chain_id\x18\n\x20\x02(\x04R\x07chainId\x12f\n\x0bacce\
+    ss_list\x18\x0b\x20\x03(\x0b2E.hw.trezor.messages.ethereum.EthereumSignT\
+    xEIP1559.EthereumAccessListR\naccessList\x12R\n\x0bdefinitions\x18\x0c\
+    \x20\x01(\x0b20.hw.trezor.messages.ethereum.EthereumDefinitionsR\x0bdefi\
+    nitions\x12\x1a\n\x08chunkify\x18\r\x20\x01(\x08R\x08chunkify\x12J\n\x0b\
+    payment_req\x18\x0e\x20\x01(\x0b2).hw.trezor.messages.common.PaymentRequ\
+    estR\npaymentReq\x12>\n\x1bsupports_definition_request\x18\x0f\x20\x01(\
+    \x08R\x19supportsDefinitionRequest\x1aQ\n\x12EthereumAccessList\x12\x18\
+    \n\x07address\x18\x01\x20\x02(\tR\x07address\x12!\n\x0cstorage_keys\x18\
+    \x02\x20\x03(\x0cR\x0bstorageKeys\"\x97\x01\n\x11EthereumTxRequest\x12\
+    \x1f\n\x0bdata_length\x18\x01\x20\x01(\rR\ndataLength\x12\x1f\n\x0bsigna\
+    ture_v\x18\x02\x20\x01(\rR\nsignatureV\x12\x1f\n\x0bsignature_r\x18\x03\
+    \x20\x01(\x0cR\nsignatureR\x12\x1f\n\x0bsignature_s\x18\x04\x20\x01(\x0c\
+    R\nsignatureS\".\n\rEthereumTxAck\x12\x1d\n\ndata_chunk\x18\x01\x20\x02(\
+    \x0cR\tdataChunk\"v\n\x19EthereumDefinitionRequest\x12\x19\n\x08chain_id\
+    \x18\x01\x20\x02(\x04R\x07chainId\x12#\n\rtoken_address\x18\x02\x20\x02(\
+    \x0cR\x0ctokenAddress\x12\x19\n\x08func_sig\x18\x03\x20\x01(\x0cR\x07fun\
+    cSig\"k\n\x15EthereumDefinitionAck\x12R\n\x0bdefinitions\x18\x01\x20\x01\
+    (\x0b20.hw.trezor.messages.ethereum.EthereumDefinitionsR\x0bdefinitions\
+    \"\x91\x01\n\x13EthereumSignMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03\
+    (\rR\x08addressN\x12\x18\n\x07message\x18\x02\x20\x02(\x0cR\x07message\
+    \x12'\n\x0fencoded_network\x18\x03\x20\x01(\x0cR\x0eencodedNetwork\x12\
+    \x1a\n\x08chunkify\x18\x04\x20\x01(\x08R\x08chunkify\"R\n\x18EthereumMes\
+    sageSignature\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\x12\
+    \x18\n\x07address\x18\x03\x20\x02(\tR\x07address\"\x85\x01\n\x15Ethereum\
+    VerifyMessage\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\x12\
+    \x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07address\
+    \x18\x04\x20\x02(\tR\x07address\x12\x1a\n\x08chunkify\x18\x05\x20\x01(\
+    \x08R\x08chunkify\"\xb4\x01\n\x15EthereumSignTypedHash\x12\x1b\n\taddres\
+    s_n\x18\x01\x20\x03(\rR\x08addressN\x122\n\x15domain_separator_hash\x18\
+    \x02\x20\x02(\x0cR\x13domainSeparatorHash\x12!\n\x0cmessage_hash\x18\x03\
+    \x20\x01(\x0cR\x0bmessageHash\x12'\n\x0fencoded_network\x18\x04\x20\x01(\
+    \x0cR\x0eencodedNetwork\"T\n\x1aEthereumTypedDataSignature\x12\x1c\n\tsi\
+    gnature\x18\x01\x20\x02(\x0cR\tsignature\x12\x18\n\x07address\x18\x02\
+    \x20\x02(\tR\x07address\"\x99\x01\n\x13EthereumDefinitions\x12'\n\x0fenc\
+    oded_network\x18\x01\x20\x01(\x0cR\x0eencodedNetwork\x12#\n\rencoded_tok\
+    en\x18\x02\x20\x01(\x0cR\x0cencodedToken\x124\n\x16encoded_display_forma\
+    t\x18\x03\x20\x01(\x0cR\x14encodedDisplayFormat\"\x86\x01\n\x14EthereumS\
+    ignAuth7702\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x19\
+    \n\x08chain_id\x18\x02\x20\x02(\x04R\x07chainId\x12\x1a\n\x08delegate\
+    \x18\x03\x20\x02(\tR\x08delegate\x12\x14\n\x05nonce\x18\x04\x20\x02(\x04\
+    R\x05nonce:\x04\x88\xb2\x19\x01\"\x84\x01\n\x19EthereumAuth7702Signature\
+    \x12\x1f\n\x0bsignature_v\x18\x01\x20\x02(\rR\nsignatureV\x12\x1f\n\x0bs\
+    ignature_r\x18\x02\x20\x02(\x0cR\nsignatureR\x12\x1f\n\x0bsignature_s\
+    \x18\x03\x20\x02(\x0cR\nsignatureS:\x04\x88\xb2\x19\x01B<\n#com.satoshil\
+    abs.trezor.lib.protobufB\x15TrezorMessageEthereum\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -5001,9 +5528,10 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
+            let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(17);
+            deps.push(super::options::file_descriptor().clone());
+            let mut messages = ::std::vec::Vec::with_capacity(19);
             messages.push(EthereumGetPublicKey::generated_message_descriptor_data());
             messages.push(EthereumPublicKey::generated_message_descriptor_data());
             messages.push(EthereumGetAddress::generated_message_descriptor_data());
@@ -5020,6 +5548,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(EthereumSignTypedHash::generated_message_descriptor_data());
             messages.push(EthereumTypedDataSignature::generated_message_descriptor_data());
             messages.push(EthereumDefinitions::generated_message_descriptor_data());
+            messages.push(EthereumSignAuth7702::generated_message_descriptor_data());
+            messages.push(EthereumAuth7702Signature::generated_message_descriptor_data());
             messages.push(ethereum_sign_tx_eip1559::EthereumAccessList::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(

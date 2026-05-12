@@ -158,6 +158,8 @@ if not utils.BITCOIN_ONLY:
     EthereumSignTypedHash = 470
     EthereumDefinitionRequest = 471
     EthereumDefinitionAck = 472
+    EthereumSignAuth7702 = 473
+    EthereumAuth7702Signature = 474
     NEMGetAddress = 67
     NEMAddress = 68
     NEMSignTx = 69
