@@ -2,13 +2,10 @@ use core::{mem, str};
 
 use heapless::Vec;
 
-use crate::{
-    error::{value_error, Error, IntoError},
-    io::InputStream,
-};
+use crate::io::InputStream;
 use trezor_crypto::{cosi, ed25519, merkle::merkle_root, sha256};
 
-use super::{public_keys, translated_string::TranslatedString};
+use super::{error::Error, public_keys, translated_string::TranslatedString};
 
 pub const MAX_HEADER_LEN: u16 = 1024;
 pub const EMPTY_BYTE: u8 = 0xFF;
@@ -20,8 +17,6 @@ const SIGNATURE_THRESHOLD: u8 = 2;
 // purposes). We allow at most 3 for alignment 4. In practice right now this
 // should be max 1.
 const MAX_TABLE_PADDING: usize = 3;
-
-const INVALID_TRANSLATIONS_BLOB: Error = value_error!(c"Invalid translations blob");
 
 #[repr(C, packed)]
 struct OffsetEntry {
@@ -39,15 +34,15 @@ fn validate_offset_table(
     mut iter: impl Iterator<Item = u16>,
 ) -> Result<(), Error> {
     // every offset table must have at least the sentinel
-    let mut prev = iter.next().ok_or(INVALID_TRANSLATIONS_BLOB)?;
+    let mut prev = iter.next().ok_or(Error::InvalidOffsetTable)?;
     if prev != 0 {
         // first offset must always be 0 (even as a sentinel, indicating no data)
-        return Err(INVALID_TRANSLATIONS_BLOB);
+        return Err(Error::InvalidOffsetTable);
     }
     for next in iter {
         // offsets must be in ascending order
         if prev > next {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidOffsetTable);
         }
         prev = next;
     }
@@ -55,7 +50,7 @@ fn validate_offset_table(
     // data_len
     let sentinel: usize = prev.into();
     if sentinel < data_len - MAX_TABLE_PADDING || sentinel > data_len {
-        return Err(INVALID_TRANSLATIONS_BLOB);
+        return Err(Error::InvalidOffsetTable);
     }
     Ok(())
 }
@@ -107,7 +102,7 @@ impl<'a> KerningTable<'a> {
         // SAFETY: KernIndexEntry is #[repr(C, packed)] with size 4, align 1.
         let (_prefix, index, _suffix) = unsafe { index_data.align_to::<KernIndexEntry>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidAlignment);
         }
 
         let pair_count: usize = reader.read_u16_le()?.into();
@@ -116,14 +111,14 @@ impl<'a> KerningTable<'a> {
         // Validate that data_bytes is consistent with the explicit counts.
         let expected_data_bytes = 2 + index_size + 2 + pairs_size;
         if data_bytes != expected_data_bytes {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidLength);
         }
 
         let pairs_data = reader.read(pairs_size)?;
         // SAFETY: KernPair is #[repr(C, packed)] with size 4, align 1.
         let (_prefix, pairs, _suffix) = unsafe { pairs_data.align_to::<KernPair>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidAlignment);
         }
 
         Ok(Self { index, pairs })
@@ -159,7 +154,7 @@ impl<'a> Table<'a> {
         // a valid OffsetEntry value.
         let (_prefix, offsets, _suffix) = unsafe { offsets_data.align_to::<OffsetEntry>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidAlignment);
         }
 
         Ok(Self {
@@ -174,7 +169,7 @@ impl<'a> Table<'a> {
             self.offsets.iter().last().map(|it| it.id),
             Some(SENTINEL_ID)
         ) {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidOffsetTable);
         }
         // check that the ids are sorted
         let Some(first_entry) = self.offsets.first() else {
@@ -184,7 +179,7 @@ impl<'a> Table<'a> {
         let mut prev_id = first_entry.id;
         for entry in self.offsets.iter().skip(1) {
             if entry.id <= prev_id {
-                return Err(INVALID_TRANSLATIONS_BLOB);
+                return Err(Error::InvalidOffsetTable);
             }
             prev_id = entry.id;
         }
@@ -226,9 +221,9 @@ impl<'a> TranslationStringsChunk<'a> {
         // a sequence of u16 values is safe.
         let (_prefix, offsets, _suffix) = unsafe { offsets_bytes.align_to::<u16>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidAlignment);
         }
-        let strings = str::from_utf8(reader.rest()).map_err(|_| INVALID_TRANSLATIONS_BLOB)?;
+        let strings = str::from_utf8(reader.rest())?;
         validate_offset_table(strings.len(), offsets.iter().copied())?;
         Ok(Self { strings, offsets })
     }
@@ -261,7 +256,7 @@ pub struct Translations<'a> {
 
 fn read_u16_prefixed_block<'a>(reader: &mut InputStream<'a>) -> Result<InputStream<'a>, Error> {
     let len = reader.read_u16_le()?;
-    reader.read_stream(len.into())
+    Ok(reader.read_stream(len.into())?)
 }
 
 impl<'a> Translations<'a> {
@@ -274,14 +269,14 @@ impl<'a> Translations<'a> {
         let remaining = blob_reader.rest();
         if !remaining.iter().all(|&b| b == EMPTY_BYTE) {
             // TODO optimize to quadwords?
-            return Err(value_error!(c"Trailing data in translations blob"));
+            return Err(Error::TrailingData);
         }
 
         let payload_bytes = payload_reader.rest();
 
         let payload_digest = sha256::digest(payload_bytes);
         if payload_digest != header.data_hash {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidDataHash);
         }
 
         let mut payload_reader = InputStream::new(payload_bytes);
@@ -318,7 +313,7 @@ impl<'a> Translations<'a> {
             }
             BlobMagic::V0 | BlobMagic::V1 => {
                 if payload_reader.remaining() > 0 {
-                    return Err(INVALID_TRANSLATIONS_BLOB);
+                    return Err(Error::TrailingData);
                 }
                 Table {
                     offsets: &[],
@@ -463,7 +458,7 @@ fn read_fixedsize_str<'a>(reader: &mut InputStream<'a>, len: usize) -> Result<&'
     let bytes = reader.read(len)?;
     let find_zero = bytes.iter().position(|&b| b == 0).unwrap_or(len);
     let bytes_trimmed = &bytes[..find_zero];
-    core::str::from_utf8(bytes_trimmed).map_err(|_| INVALID_TRANSLATIONS_BLOB)
+    core::str::from_utf8(bytes_trimmed).map_err(|_| Error::InvalidString)
 }
 
 enum BlobMagic {
@@ -476,10 +471,8 @@ impl BlobMagic {
     fn parse_length(&self, reader: &mut InputStream<'_>) -> Result<usize, Error> {
         Ok(match self {
             Self::V0 => reader.read_u16_le()?.into(),
-            Self::V1 | Self::V2 => reader
-                .read_u32_le()?
-                .try_into() // can fail only on 16-bit system
-                .map_err(|_| Error::OutOfRange)?,
+            /* u32 -> usize can fail only on 16-bit system: */
+            Self::V1 | Self::V2 => unwrap!(reader.read_u32_le()?.try_into()),
         })
     }
 }
@@ -498,7 +491,7 @@ impl ContainerPrefix {
             b"TRTR00" => BlobMagic::V0,
             b"TRTR01" => BlobMagic::V1,
             b"TRTR02" => BlobMagic::V2,
-            _ => return Err(Error::ValueError(c"Unknown blob magic")),
+            _ => return Err(Error::BadMagic),
         };
         let container_length = blob_magic.parse_length(reader)?;
         let prefix_length = reader.tell() - offset;
@@ -547,17 +540,17 @@ impl<'a> TranslationsHeader<'a> {
 
         let magic = header_reader.read(Self::HEADER_MAGIC.len())?;
         if magic != Self::HEADER_MAGIC {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::BadMagic);
         }
 
         let language = read_fixedsize_str(&mut header_reader, Self::LANGUAGE_TAG_LEN)?;
         if language.is_empty() {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidString);
         }
 
         let model = read_fixedsize_str(&mut header_reader, 4)?;
         if model != crate::trezorhal::model::INTERNAL_NAME {
-            return Err(value_error!(c"Wrong Trezor model"));
+            return Err(Error::InvalidString);
         }
 
         let version_bytes = header_reader.read(4)?;
@@ -583,7 +576,7 @@ impl<'a> TranslationsHeader<'a> {
         // SAFETY: sha256::Digest is a plain array of u8, so any bytes are valid
         let (_prefix, merkle_proof, _suffix) = unsafe { proof_bytes.align_to::<sha256::Digest>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidAlignment);
         }
         let signature = cosi::Signature::new(
             proof_reader.read_byte()?,
@@ -592,12 +585,12 @@ impl<'a> TranslationsHeader<'a> {
 
         // check that there is no trailing data in the proof section
         if proof_reader.remaining() > 0 {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::TrailingData);
         }
 
         // check that the declared data section length matches the container size
         if prefix.container_length - reader.tell() != data_len {
-            return Err(INVALID_TRANSLATIONS_BLOB);
+            return Err(Error::InvalidLength);
         }
 
         let new = Self {
@@ -624,13 +617,13 @@ impl<'a> TranslationsHeader<'a> {
             BlobMagic::V1 | BlobMagic::V2 => reader.read_u16_le()?.into(),
         };
         if chunks_count > MAX_TRANSLATION_CHUNKS {
-            return Err(Error::OutOfRange);
+            return Err(Error::InvalidLength);
         }
         let mut chunks = Vec::new();
         for _ in 0..chunks_count {
             let chunk_reader = read_u16_prefixed_block(reader)?;
             let chunk = TranslationStringsChunk::parse_from(chunk_reader)?;
-            chunks.push(chunk).map_err(|_| INVALID_TRANSLATIONS_BLOB)?;
+            chunks.push(chunk).map_err(|_| Error::InvalidString)?;
         }
         Ok(chunks)
     }
@@ -643,7 +636,7 @@ impl<'a> TranslationsHeader<'a> {
             public_keys,
             &self.signature,
         )
-        .map_err(IntoError::into_error)
+        .map_err(|_| Error::InvalidSignature)
     }
 
     pub fn verify(&self) -> Result<(), Error> {
