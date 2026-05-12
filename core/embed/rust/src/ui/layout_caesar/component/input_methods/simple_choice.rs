@@ -154,11 +154,9 @@ impl Component for SimpleChoice {
 #[cfg(feature = "micropython")]
 mod micropython {
     use super::SimpleChoice;
-    use crate::{
-        ui::layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED},
-        },
+    use crate::ui::layout::{
+        obj::ComponentMsgObj,
+        result::{CANCELLED, CONFIRMED},
     };
     use ::micropython::{Error, Obj};
 

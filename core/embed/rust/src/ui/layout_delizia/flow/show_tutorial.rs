@@ -1,4 +1,3 @@
-use micropython::Error;
 use crate::{
     translations::TR,
     ui::{
@@ -13,6 +12,7 @@ use crate::{
         geometry::Direction,
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::{Frame, PromptScreen, SwipeContent, VerticalMenu},

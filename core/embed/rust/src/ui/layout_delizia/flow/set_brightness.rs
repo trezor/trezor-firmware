@@ -1,6 +1,5 @@
 use core::sync::atomic::{AtomicU8, Ordering};
 
-use micropython::Error;
 use crate::{
     storage,
     translations::TR,
@@ -14,6 +13,7 @@ use crate::{
         geometry::Direction,
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::{

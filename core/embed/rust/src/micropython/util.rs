@@ -2,7 +2,7 @@ use heapless::Vec;
 
 use crate::strutil::hexlify;
 use micropython::{
-    buffer::{StrBuffer, get_buffer},
+    buffer::{get_buffer, StrBuffer},
     error::Error,
     iter::IterBuf,
     obj::Obj,

@@ -3,9 +3,9 @@
 #![allow(dead_code)]
 
 use micropython::{
-    Obj,
     error::Error,
-    qstr::{Attribute, QstrValue, try_from_obj},
+    qstr::{try_from_obj, Attribute, QstrValue},
+    Obj,
 };
 
 impl const QstrValue for Qstr {

@@ -1,5 +1,5 @@
 use ::micropython::{
-    buffer::{StrBuffer, get_buffer, get_buffer_mut},
+    buffer::{get_buffer, get_buffer_mut, StrBuffer},
     error::Error,
     list::List,
     macros::*,

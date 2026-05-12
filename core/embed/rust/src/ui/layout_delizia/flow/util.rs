@@ -19,8 +19,8 @@ use crate::{
         layout::util::{ConfirmValueParams, StrOrBytes},
     },
 };
-use micropython::Error;
 use heapless::Vec;
+use micropython::Error;
 
 use super::{
     super::{

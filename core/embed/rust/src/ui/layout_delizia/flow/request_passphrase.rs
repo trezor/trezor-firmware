@@ -1,4 +1,3 @@
-use micropython::Error;
 use crate::{
     strutil::{ShortString, TString},
     ui::{
@@ -10,6 +9,7 @@ use crate::{
         geometry::Direction,
     },
 };
+use micropython::Error;
 
 use super::super::component::{Frame, PassphraseKeyboard, PassphraseKeyboardMsg, PromptScreen};
 

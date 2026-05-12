@@ -5,7 +5,7 @@ use micropython::{
 
 #[cfg(feature = "dbg_console")]
 use crate::{
-    trezorhal::syslog::{LogLevel, syslog_start_record, syslog_write_chunk},
+    trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel},
     util::logger::init_rust_logging,
 };
 #[cfg(feature = "dbg_console")]

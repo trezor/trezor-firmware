@@ -4,12 +4,12 @@ use crate::{
     strutil::{ShortString, TString},
     time::Duration,
     ui::{
-        UIError,
         button_request::{ButtonRequest, ButtonRequestCode},
         component::{MsgMap, PageMap},
         geometry::{Offset, Rect},
         shape::Renderer,
         util::Pager,
+        UIError,
     },
 };
 

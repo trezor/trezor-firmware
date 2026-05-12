@@ -1,4 +1,3 @@
-use micropython::Error;
 use crate::{
     strutil::TString,
     translations::TR,
@@ -10,6 +9,7 @@ use crate::{
         geometry::Direction,
     },
 };
+use micropython::Error;
 
 use core::sync::atomic::{AtomicU16, Ordering};
 

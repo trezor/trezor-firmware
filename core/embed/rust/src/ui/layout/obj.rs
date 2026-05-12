@@ -42,9 +42,16 @@ use crate::{
     micropython::qstr::Qstr,
     time::Duration,
     ui::{
-        CommonUI, ModelUI, UIError, button_request::ButtonRequest, component::{
-            Component, Event, EventCtx, Never, base::{AttachType, TimerToken}
-        }, display::{self, Color}, event::USBEvent, layout::base::PaintOutOfBounds, shape::render_on_display
+        button_request::ButtonRequest,
+        component::{
+            base::{AttachType, TimerToken},
+            Component, Event, EventCtx, Never,
+        },
+        display::{self, Color},
+        event::USBEvent,
+        layout::base::PaintOutOfBounds,
+        shape::render_on_display,
+        CommonUI, ModelUI, UIError,
     },
 };
 

@@ -1,4 +1,3 @@
-use micropython::Error;
 use crate::{
     strutil::TString,
     translations::TR,
@@ -14,6 +13,7 @@ use crate::{
         geometry::Direction,
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
