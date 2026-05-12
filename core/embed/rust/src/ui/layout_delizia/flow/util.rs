@@ -7,8 +7,8 @@ use super::super::{flow, theme};
 use super::{
     ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionOptions, ConfirmActionStrings,
 };
-use crate::error::Error;
 use crate::maybe_trace::MaybeTrace;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeSettings;
@@ -480,7 +480,7 @@ pub fn single_page<T>(layout: T) -> Result<SwipeFlow, Error>
 where
     T: Component<Msg = FlowMsg> + Swipable + MaybeTrace + 'static,
 {
-    let mut flow = SwipeFlow::new(&SinglePage::Show)?;
+    let mut flow = SwipeFlow::new(&SinglePage::Show);
     flow.add_page(&SinglePage::Show, layout)?;
     Ok(flow)
 }

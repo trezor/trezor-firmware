@@ -1,6 +1,6 @@
 use super::super::component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
 use super::super::theme;
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeSettings;
@@ -47,7 +47,7 @@ impl FlowController for SetNewCode {
     }
 }
 
-pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
+pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, Error> {
     let (title, description, cancel, cancel_menu_item) = if is_wipe_code {
         (
             TR::wipe_code__title_settings,
@@ -108,7 +108,7 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&SetNewCode::Intro)?;
+    let mut res = SwipeFlow::new(&SetNewCode::Intro);
     res.add_page(&SetNewCode::Intro, content_intro)?
         .add_page(&SetNewCode::Menu, content_menu)?
         .add_page(&SetNewCode::CancelIntro, content_cancel_intro)?

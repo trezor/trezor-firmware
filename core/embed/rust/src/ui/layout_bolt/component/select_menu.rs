@@ -1,7 +1,7 @@
 use heapless::Vec;
 
 use super::{theme, Button, ButtonMsg};
-use crate::error::Error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::geometry::{Insets, Rect};

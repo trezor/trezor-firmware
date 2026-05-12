@@ -10,7 +10,7 @@ use super::super::flow;
 use super::super::flow::util::content_menu_info;
 use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
-use crate::error::{self};
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{
@@ -81,14 +81,14 @@ pub fn new_confirm_summary(
     verb_cancel: Option<TString<'static>>,
     back_button: bool,
     external_menu: bool,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     if external_menu
         && (account_title.is_some()
             || account_paragraphs.is_some()
             || extra_title.is_some()
             || extra_paragraphs.is_some())
     {
-        return Err(error::Error::NotImplementedError);
+        return Err(Error::NotImplementedError);
     }
     // Summary
     let mut summary_paragraphs = ParagraphVecShort::new();
@@ -233,7 +233,7 @@ pub fn new_confirm_summary(
     .with_page_limit(1)
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let mut res = SwipeFlow::new(&ConfirmSummaryWithMenu::Summary)?;
+    let mut res = SwipeFlow::new(&ConfirmSummaryWithMenu::Summary);
     res.add_page(&ConfirmSummaryWithMenu::Summary, content_summary)?
         .add_page(&ConfirmSummaryWithMenu::Menu, content_menu)?
         .add_page(&ConfirmSummaryWithMenu::ExtraInfo, content_extra)?

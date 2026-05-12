@@ -17,6 +17,9 @@ pub mod util;
 pub mod layout;
 
 mod api;
+mod error;
+
+pub use error::UIError;
 
 #[cfg(feature = "rgb_led")]
 mod led;

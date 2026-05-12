@@ -5,7 +5,7 @@ use super::super::firmware::{
 };
 use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
@@ -44,7 +44,7 @@ impl FlowController for PromptBackup {
     }
 }
 
-pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
+pub fn new_prompt_backup() -> Result<SwipeFlow, Error> {
     let title: TString = TR::backup__title_create_wallet_backup.into();
     let content: TString = TR::backup__it_should_be_backed_up.into();
 
@@ -103,7 +103,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         });
 
-    let mut res = SwipeFlow::new(&PromptBackup::Intro)?;
+    let mut res = SwipeFlow::new(&PromptBackup::Intro);
     res.add_page(&PromptBackup::Intro, content_intro)?
         .add_page(&PromptBackup::Menu, content_menu)?
         .add_page(&PromptBackup::SkipBackup, content_skip_intro)?;

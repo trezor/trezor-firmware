@@ -5,7 +5,7 @@ use super::super::firmware::{
     VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
 };
 use super::super::theme::{self, Gradient, ScreenBackground};
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
@@ -93,7 +93,7 @@ fn content_tropic() -> TropicScreenMap {
     })
 }
 
-pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
+pub fn new_show_tutorial() -> Result<SwipeFlow, Error> {
     let content_step_welcome = TutorialWelcomeScreen::new().map(|msg| match msg {
         TutorialWelcomeScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
     });
@@ -281,7 +281,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         _ => None,
     });
 
-    let mut res = SwipeFlow::new(&ShowTutorial::StepWelcome)?;
+    let mut res = SwipeFlow::new(&ShowTutorial::StepWelcome);
     res.add_page(&ShowTutorial::StepWelcome, content_step_welcome)?
         .add_page(&ShowTutorial::StepBegin, content_step_begin)?
         .add_page(&ShowTutorial::StepNavigation, content_step_navigation)?

@@ -7,9 +7,7 @@ use super::super::firmware::{
 };
 use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
-use crate::error;
-use crate::micropython::obj::Obj;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::button_request::ButtonRequest;
@@ -73,7 +71,7 @@ pub fn new_receive(
     xpubs: Obj, // TODO: get rid of Obj
     br_code: u16,
     br_name: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let (content, cancel_info, cancel_hint, title_qr) = match content {
         ContentType::Address(address) => (
             address,
@@ -155,8 +153,12 @@ pub fn new_receive(
     });
 
     // QrCode
-    let content_qr = QrScreen::new(title_qr.into(), qr.map(|s| Qr::new(s, case_sensitive))?)
-        .map(|_| Some(FlowMsg::Cancelled));
+    let content_qr = QrScreen::new(
+        title_qr.into(),
+        qr.map(|s| Qr::new(s, case_sensitive))
+            .map_err(|_| Error::ValueError(c"Invalid QR code"))?,
+    )
+    .map(|_| Some(FlowMsg::Cancelled));
 
     // AccountInfo
     let mut para = ParagraphVecLong::new();
@@ -229,7 +231,7 @@ pub fn new_receive(
         _ => None,
     });
 
-    let mut res = SwipeFlow::new(&Receive::Content)?;
+    let mut res = SwipeFlow::new(&Receive::Content);
     res.add_page(&Receive::Content, content_address)?
         .add_page(&Receive::Menu, content_menu)?
         .add_page(&Receive::QrCode, content_qr)?
