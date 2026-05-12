@@ -29,19 +29,17 @@
 
 #if defined(TREZOR_MODEL_T2B1)
 #include "certs/T2B1.h"
-#define DEVICE_CERT_CHAIN T2B1_der
 #elif defined(TREZOR_MODEL_T3T1)
 #include "certs/T3T1.h"
-#define DEVICE_CERT_CHAIN T3T1_der
 #elif defined(TREZOR_MODEL_T3B1)
 #include "certs/T3B1.h"
-#define DEVICE_CERT_CHAIN T3B1_der
 #elif defined(TREZOR_MODEL_T3W1)
 #include "certs/T3W1.h"
-#define DEVICE_CERT_CHAIN T3W1_der
 #else
 #error "Cert chain for specified model is not available."
 #endif
+
+static const uint8_t optiga_device_cert_chain[] = OPTIGA_DEVICE_CERT_CHAIN;
 
 optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
                                size_t digest_size, uint8_t *der_signature,
@@ -73,7 +71,7 @@ bool optiga_cert_size(uint8_t index, size_t *cert_size) {
     return false;
   }
 
-  *cert_size = sizeof(DEVICE_CERT_CHAIN);
+  *cert_size = sizeof(optiga_device_cert_chain);
   return true;
 }
 
@@ -83,12 +81,12 @@ bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
     return false;
   }
 
-  if (max_cert_size < sizeof(DEVICE_CERT_CHAIN)) {
+  if (max_cert_size < sizeof(optiga_device_cert_chain)) {
     return false;
   }
 
-  memcpy(cert, DEVICE_CERT_CHAIN, sizeof(DEVICE_CERT_CHAIN));
-  *cert_size = sizeof(DEVICE_CERT_CHAIN);
+  memcpy(cert, optiga_device_cert_chain, sizeof(optiga_device_cert_chain));
+  *cert_size = sizeof(optiga_device_cert_chain);
   return true;
 }
 

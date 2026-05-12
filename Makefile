@@ -21,6 +21,7 @@
 	tropic_config tropic_config_check \
 	hsm_keys hsm_keys_check \
 	prodtest_error_codes prodtest_error_codes_check \
+	certs certs_check \
 	gen gen_check \
 	uvlock_check
 
@@ -233,9 +234,15 @@ prodtest_error_codes: ## generate prodtest error codes JSON
 prodtest_error_codes_check: ## check prodtest error codes JSON is up to date
 	python3 core/tools/prodtest_error_codes.py --check
 
-gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_config hsm_keys prodtest_error_codes ## regenerate auto-generated files from sources
+certs:
+	./core/tools/generate_certificates.py
 
-gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_config_check hsm_keys_check prodtest_error_codes_check ## check validity of auto-generated files
+certs_check:
+	./core/tools/generate_certificates.py --check
+
+gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_config hsm_keys prodtest_error_codes certs ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_config_check hsm_keys_check prodtest_error_codes_check certs_check ## check validity of auto-generated files
 
 uvlock_check: ## check that uv.lock is up to date
 	@echo [UVLOCK-CHECK]
