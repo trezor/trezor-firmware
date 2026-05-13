@@ -62,6 +62,10 @@ def _configure_common_modules(
 
         features_available.append("storage")
 
+    if "miniscript" in features_wanted:
+        defines += [("USE_MINISCRIPT", "1")]
+        features_available.append("miniscript")
+
 
 def has_emulator(model: str) -> bool:
     imported_module = importlib.import_module(f"models.{model}")
