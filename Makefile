@@ -1,3 +1,29 @@
+.PHONY: help \
+	style_check style \
+	pystyle_check pystyle_quick_check pystyle \
+	changelog_check changelog_style \
+	translations_style translations_style_check \
+	yaml_check editor_check \
+	cstyle_check cstyle \
+	protostyle protostyle_check \
+	defs_check \
+	ruststyle ruststyle_check \
+	typecheck pyright \
+	mocks mocks_check \
+	templates templates_check \
+	solana_templates solana_templates_check \
+	icons icons_check \
+	protobuf protobuf_check \
+	docs_summary_check \
+	vendorheader vendorheader_check \
+	bootloader_hashes bootloader_hashes_check \
+	lsgen lsgen_check \
+	tropic_config tropic_config_check \
+	hsm_keys hsm_keys_check \
+	prodtest_error_codes prodtest_error_codes_check \
+	gen gen_check \
+	uvlock_check
+
 ## help commands:
 
 help: ## show this help
