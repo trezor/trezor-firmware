@@ -1,3 +1,5 @@
+.PHONY: all clean
+
 all: messages.pb.c messages-debug.pb.c
 
 %.pb.c: %.pb %.options

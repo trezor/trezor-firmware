@@ -1,3 +1,5 @@
+.PHONY: clean flash_intermediate_fw openocd_reset
+
 APPVER = 1.8.0
 
 NAME  = trezor
