@@ -1616,6 +1616,7 @@ pub enum TranslatedString {
     n4w1__err_empty = 1223,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is empty. Continue to scan a different tag."}
     n4w1__err_nonempty = 1224,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Non-empty N4W1 tag."}
     n4w1__err_damaged = 1225,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is damaged. Continue to try again or scan the next tag."}
+    words__tap_to_wake = 1226,  // "Tap to wake"
 }
 
 impl TranslatedString {
@@ -2849,6 +2850,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4080,6 +4082,7 @@ impl TranslatedString {
                 19800,
                 19800,
                 19800,
+                19811,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5310,6 +5313,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6541,6 +6545,7 @@ impl TranslatedString {
                 19800,
                 19800,
                 19800,
+                19811,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7771,6 +7776,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9002,6 +9008,7 @@ impl TranslatedString {
                 19800,
                 19800,
                 19800,
+                19811,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10232,6 +10239,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11463,6 +11471,7 @@ impl TranslatedString {
                 19800,
                 19800,
                 19800,
+                19811,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12694,6 +12703,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13925,6 +13935,7 @@ impl TranslatedString {
                 17734,
                 17734,
                 17734,
+                17745,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15155,6 +15166,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16386,6 +16398,7 @@ impl TranslatedString {
                 17734,
                 17734,
                 17734,
+                17745,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17616,6 +17629,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18847,6 +18861,7 @@ impl TranslatedString {
                 17734,
                 17734,
                 17734,
+                17745,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20077,6 +20092,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21308,6 +21324,7 @@ impl TranslatedString {
                 17734,
                 17734,
                 17734,
+                17745,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22539,6 +22556,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23770,6 +23788,7 @@ impl TranslatedString {
                 19154,
                 19154,
                 19154,
+                19165,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25000,6 +25019,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26231,6 +26251,7 @@ impl TranslatedString {
                 19154,
                 19154,
                 19154,
+                19165,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27461,6 +27482,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28692,6 +28714,7 @@ impl TranslatedString {
                 19154,
                 19154,
                 19154,
+                19165,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29922,6 +29945,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Tap to wake",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31153,6 +31177,7 @@ impl TranslatedString {
                 19154,
                 19154,
                 19154,
+                19165,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32384,6 +32409,7 @@ impl TranslatedString {
                 "This tag is empty. Continue to scan a different tag.",
                 "Non-empty N4W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
+                "Tap to wake",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33615,6 +33641,7 @@ impl TranslatedString {
                 20418,
                 20437,
                 20501,
+                20512,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34845,6 +34872,7 @@ impl TranslatedString {
                 "This tag is empty. Continue to scan a different tag.",
                 "Non-empty N4W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
+                "Tap to wake",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36076,6 +36104,7 @@ impl TranslatedString {
                 20418,
                 20437,
                 20501,
+                20512,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37306,6 +37335,7 @@ impl TranslatedString {
                 "This tag is empty. Continue to scan a different tag.",
                 "Non-empty N4W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
+                "Tap to wake",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38537,6 +38567,7 @@ impl TranslatedString {
                 20418,
                 20437,
                 20501,
+                20512,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39767,6 +39798,7 @@ impl TranslatedString {
                 "This tag is empty. Continue to scan a different tag.",
                 "Non-empty N4W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
+                "Tap to wake",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40998,6 +41030,7 @@ impl TranslatedString {
                 20418,
                 20437,
                 20501,
+                20512,
             ];
 
         }
@@ -42588,6 +42621,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__sign, Self::words__sign),
         (Qstr::MP_QSTR_words__signer, Self::words__signer),
         (Qstr::MP_QSTR_words__swap, Self::words__swap),
+        (Qstr::MP_QSTR_words__tap_to_wake, Self::words__tap_to_wake),
         (Qstr::MP_QSTR_words__title_check, Self::words__title_check),
         (Qstr::MP_QSTR_words__title_done, Self::words__title_done),
         (Qstr::MP_QSTR_words__title_group, Self::words__title_group),

@@ -950,6 +950,9 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             kwargs.get(Qstr::MP_QSTR_device_name)?.try_into_option()?;
         let brightness: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_brightness)?.try_into_option()?;
+        let tap_to_wake_enabled: Option<bool> = kwargs
+            .get(Qstr::MP_QSTR_tap_to_wake_enabled)?
+            .try_into_option()?;
         let haptics_enabled: Option<bool> = kwargs
             .get(Qstr::MP_QSTR_haptics_enabled)?
             .try_into_option()?;
@@ -971,6 +974,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             backup_check_allowed,
             device_name,
             brightness,
+            tap_to_wake_enabled,
             haptics_enabled,
             led_enabled,
             about_items,
@@ -1978,6 +1982,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     backup_check_allowed: bool,
     ///     device_name: str | None,
     ///     brightness: str | None,
+    ///     tap_to_wake_enabled: bool | None,
     ///     haptics_enabled: bool | None,
     ///     led_enabled: bool | None,
     ///     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
@@ -2222,6 +2227,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     CheckBackup: ClassVar[int]
     ///     SetDeviceName: ClassVar[int]
     ///     SetBrightness: ClassVar[int]
+    ///     ToggleTapToWake: ClassVar[int]
     ///     ToggleHaptics: ClassVar[int]
     ///     ToggleLed: ClassVar[int]
     ///     WipeDevice: ClassVar[int]

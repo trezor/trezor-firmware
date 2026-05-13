@@ -106,6 +106,8 @@ async def bootscreen() -> None:
                 if utils.INTERNAL_MODEL == "T2T1":
                     ui.backlight_fade(ui.BacklightLevels.NONE)
                 ui.display.orientation(storage.device.get_rotation())
+                if utils.USE_TOUCH_WAKEUP:
+                    io.touch.touch_wakeup_set_enabled(storage.device.get_tap_to_wake())
                 if utils.USE_HAPTIC:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
                 if utils.USE_RGB_LED:
@@ -121,6 +123,8 @@ async def bootscreen() -> None:
                 storage.init_unlocked()
                 enforce_welcome_screen_duration()
                 rotation = storage.device.get_rotation()
+                if utils.USE_TOUCH_WAKEUP:
+                    io.touch.touch_wakeup_set_enabled(storage.device.get_tap_to_wake())
                 if utils.USE_HAPTIC:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
                 if utils.USE_RGB_LED:

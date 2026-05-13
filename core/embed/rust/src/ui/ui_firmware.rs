@@ -350,6 +350,7 @@ pub trait FirmwareUI {
         backup_check_allowed: bool,
         device_name: Option<TString<'static>>,
         brightness: Option<TString<'static>>,
+        tap_to_wake_enabled: Option<bool>,
         haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,

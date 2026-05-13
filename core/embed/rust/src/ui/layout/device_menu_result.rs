@@ -40,6 +40,7 @@ pub enum DeviceMenuMsg {
     // Device menu
     SetDeviceName,
     SetBrightness,
+    ToggleTapToWake,
     ToggleHaptics,
     ToggleLed,
     WipeDevice,
@@ -86,6 +87,7 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             Qstr::MP_QSTR_CheckBackup => DeviceMenuMsg::CheckBackup.as_obj(),
             Qstr::MP_QSTR_SetDeviceName => DeviceMenuMsg::SetDeviceName.as_obj(),
             Qstr::MP_QSTR_SetBrightness => DeviceMenuMsg::SetBrightness.as_obj(),
+            Qstr::MP_QSTR_ToggleTapToWake => DeviceMenuMsg::ToggleTapToWake.as_obj(),
             Qstr::MP_QSTR_ToggleHaptics => DeviceMenuMsg::ToggleHaptics.as_obj(),
             Qstr::MP_QSTR_ToggleLed => DeviceMenuMsg::ToggleLed.as_obj(),
             Qstr::MP_QSTR_WipeDevice => DeviceMenuMsg::WipeDevice.as_obj(),
