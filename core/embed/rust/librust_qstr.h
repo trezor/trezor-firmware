@@ -70,6 +70,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ToggleBluetooth;
   MP_QSTR_ToggleHaptics;
   MP_QSTR_ToggleLed;
+  MP_QSTR_ToggleTapToWake;
   MP_QSTR_TranslationsHeader;
   MP_QSTR_TurnOff;
   MP_QSTR_UnpairAllDevices;
@@ -861,6 +862,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_suite_sync__header;
   MP_QSTR_suite_sync__rotate_key;
   MP_QSTR_switch_off;
+  MP_QSTR_tap_to_wake_enabled;
   MP_QSTR_text;
   MP_QSTR_text_check;
   MP_QSTR_text_confirm;
@@ -1042,6 +1044,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
   MP_QSTR_words__swap;
+  MP_QSTR_words__tap_to_wake;
   MP_QSTR_words__title_check;
   MP_QSTR_words__title_done;
   MP_QSTR_words__title_group;

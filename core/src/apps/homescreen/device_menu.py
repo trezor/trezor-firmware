@@ -81,6 +81,7 @@ async def handle_device_menu() -> None:
         is_initialized = storage_device.is_initialized()
         led_configurable = is_initialized and utils.USE_RGB_LED
         haptic_configurable = is_initialized and utils.USE_HAPTIC
+        tap_to_wake_configurable = is_initialized and utils.USE_TOUCH_WAKEUP
         backup_failed = is_initialized and storage_device.unfinished_backup()
         backup_needed = is_initialized and storage_device.needs_backup()
         backup_finished = (
@@ -139,6 +140,11 @@ async def handle_device_menu() -> None:
                     else None
                 ),
                 brightness=TR.brightness__title if is_initialized else None,
+                tap_to_wake_enabled=(
+                    storage_device.get_tap_to_wake()
+                    if tap_to_wake_configurable
+                    else None
+                ),
                 haptics_enabled=(
                     storage_device.get_haptic_feedback()
                     if haptic_configurable
@@ -419,6 +425,17 @@ async def handle_SetBrightness() -> None:
     utils.notify_send(utils.NOTIFY_SETTING_CHANGE)
 
 
+async def handle_ToggleTapToWake() -> None:
+    from trezor import io
+
+    utils.ensure(storage_device.is_initialized() and utils.USE_TOUCH_WAKEUP)
+
+    enable = not storage_device.get_tap_to_wake()
+    io.touch.touch_wakeup_set_enabled(enable)
+    storage_device.set_tap_to_wake(enable)
+    utils.notify_send(utils.NOTIFY_SETTING_CHANGE)
+
+
 async def handle_ToggleHaptics() -> None:
     from trezor import io
 
@@ -487,6 +504,7 @@ _MENU_HANDLERS = {
     DeviceMenuResult.CheckBackup: handle_CheckBackup,
     DeviceMenuResult.SetDeviceName: handle_SetDeviceName,
     DeviceMenuResult.SetBrightness: handle_SetBrightness,
+    DeviceMenuResult.ToggleTapToWake: handle_ToggleTapToWake,
     DeviceMenuResult.ToggleHaptics: handle_ToggleHaptics,
     DeviceMenuResult.ToggleLed: handle_ToggleLed,
     DeviceMenuResult.WipeDevice: handle_WipeDevice,

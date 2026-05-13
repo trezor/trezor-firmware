@@ -642,6 +642,7 @@ def show_device_menu(
     backup_check_allowed: bool,
     device_name: str | None,
     brightness: str | None,
+    tap_to_wake_enabled: bool | None,
     haptics_enabled: bool | None,
     led_enabled: bool | None,
     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
@@ -910,6 +911,7 @@ class DeviceMenuResult:
     CheckBackup: ClassVar[int]
     SetDeviceName: ClassVar[int]
     SetBrightness: ClassVar[int]
+    ToggleTapToWake: ClassVar[int]
     ToggleHaptics: ClassVar[int]
     ToggleLed: ClassVar[int]
     WipeDevice: ClassVar[int]

@@ -259,6 +259,9 @@ def reload_settings_from_storage() -> None:
     if utils.USE_HAPTIC:
         io.haptic.haptic_set_enabled(storage_device.get_haptic_feedback())
 
+    if utils.USE_TOUCH_WAKEUP:
+        io.touch.touch_wakeup_set_enabled(storage_device.get_tap_to_wake())
+
     if utils.USE_RGB_LED:
         io.rgb_led.rgb_led_set_enabled(storage_device.get_rgb_led())
 

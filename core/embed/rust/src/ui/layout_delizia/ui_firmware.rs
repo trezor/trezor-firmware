@@ -910,6 +910,7 @@ impl FirmwareUI for UIDelizia {
         _backup_check_allowed: bool,
         _device_name: Option<TString<'static>>,
         _brightness: Option<TString<'static>>,
+        _tap_to_wake_enabled: Option<bool>,
         _haptics_enabled: Option<bool>,
         _led_enabled: Option<bool>,
         _about_items: Obj,

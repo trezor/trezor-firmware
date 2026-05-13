@@ -93,6 +93,7 @@ impl DeviceMenuScreen {
             DeviceMenuMsg::CheckBackup => DeviceMenuId::Security,
             DeviceMenuMsg::SetDeviceName => DeviceMenuId::Device,
             DeviceMenuMsg::SetBrightness => DeviceMenuId::Device,
+            DeviceMenuMsg::ToggleTapToWake => DeviceMenuId::Device,
             DeviceMenuMsg::ToggleHaptics => DeviceMenuId::Device,
             DeviceMenuMsg::ToggleLed => DeviceMenuId::Device,
             DeviceMenuMsg::WipeDevice => DeviceMenuId::Device,
@@ -295,6 +296,7 @@ impl DeviceMenuScreen {
         backup_check_allowed: bool,
         device_name: Option<TString<'static>>,
         brightness: Option<TString<'static>>,
+        tap_to_wake_enabled: Option<bool>,
         haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,
@@ -324,7 +326,13 @@ impl DeviceMenuScreen {
                 backup_check_allowed,
             );
         }
-        screen.register_device_menu(device_name, brightness, haptics_enabled, led_enabled);
+        screen.register_device_menu(
+            device_name,
+            brightness,
+            tap_to_wake_enabled,
+            haptics_enabled,
+            led_enabled,
+        );
         screen.register_settings_menu(ble_enabled);
         screen.register_power_menu();
 
@@ -618,6 +626,7 @@ impl DeviceMenuScreen {
         &mut self,
         device_name: Option<TString<'static>>,
         brightness: Option<TString<'static>>,
+        tap_to_wake_enabled: Option<bool>,
         haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
     ) {
@@ -633,6 +642,22 @@ impl DeviceMenuScreen {
         if let Some(brightness) = brightness {
             let brightness_item = MenuItem::return_msg(brightness, DeviceMenuMsg::SetBrightness);
             items.add(brightness_item);
+        }
+
+        if let Some(tap_to_wake_enabled) = tap_to_wake_enabled {
+            let subtext = match tap_to_wake_enabled {
+                true => (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                ),
+                _ => (TR::words__off.into(), None),
+            };
+            let tap_to_wake_item = MenuItem::return_msg(
+                TR::words__tap_to_wake.into(),
+                DeviceMenuMsg::ToggleTapToWake,
+            )
+            .with_subtext(Some(subtext));
+            items.add(tap_to_wake_item);
         }
 
         if let Some(haptics_enabled) = haptics_enabled {
