@@ -1,16 +1,16 @@
-use core::convert::{TryFrom, TryInto};
-
 use super::defs::{FieldDef, FieldType, MsgDef};
 use super::obj::MsgObj;
 use super::zigzag;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
+use crate::micropython::py_object::GcObject;
 use crate::micropython::{buffer, util, Error, Obj};
 
 pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
     let block = || {
-        let obj = Gc::<MsgObj>::try_from(obj)?;
+        let obj = GcObject::<MsgObj>::try_from(obj)?;
+        let obj = obj.borrow();
         let stream = &mut CounterStream { len: 0 };
         Encoder.encode_message(stream, &obj.def(), &obj)?;
         stream.len.try_into()
@@ -20,7 +20,8 @@ pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
 
 pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
     let block = || {
-        let obj = Gc::<MsgObj>::try_from(obj)?;
+        let obj = GcObject::<MsgObj>::try_from(obj)?;
+        let obj = obj.borrow();
 
         // SAFETY:
         // We assume that:
@@ -139,14 +140,15 @@ impl Encoder {
                 }
             }
             FieldType::Msg(msg_type) => {
-                let value = &Gc::<MsgObj>::try_from(value)?;
+                let value = &GcObject::<MsgObj>::try_from(value)?;
+                let value = value.borrow();
                 // Calculate the message size by encoding it through `CountingWriter`.
                 let counter = &mut CounterStream { len: 0 };
-                self.encode_message(counter, &msg_type, value)?;
+                self.encode_message(counter, &msg_type, &value)?;
 
                 // Encode the message as length-delimited bytes.
                 stream.write_uvarint(counter.len as u64)?;
-                self.encode_message(stream, &msg_type, value)?;
+                self.encode_message(stream, &msg_type, &value)?;
             }
         }
 

@@ -15,6 +15,7 @@ pub mod map;
 pub mod module;
 pub mod obj;
 pub mod print;
+pub mod py_object;
 pub mod qstr;
 pub mod runtime;
 pub mod simple_type;
