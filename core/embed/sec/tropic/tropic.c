@@ -541,7 +541,7 @@ secbool tropic_ensure_configuration(void) {
   if (lt_get_info_chip_id(&g_tropic_driver.handle, &chip_id) != LT_OK) {
     return secfalse;
   }
-  static bool batch_to_fix = false;
+  bool batch_to_fix = false;
   for (size_t i = 0;
        i < sizeof(TROPIC_BATCHES_TO_FIX) / sizeof(TROPIC_BATCHES_TO_FIX[0]);
        i++) {
