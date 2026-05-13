@@ -140,6 +140,13 @@ def configure(
             sources += ["embed/io/touch/touch_debug.c"]
             sources += ["embed/io/button/button_debug.c"]
 
+    if "suspend" in features_wanted:
+        paths += ["embed/io/suspend/inc"]
+        defines += [("USE_SUSPEND", "1")]
+        if "input" in features_wanted:
+            defines += [("USE_TOUCH_WAKEUP", "1")]
+            features_available.append("touch_wakeup")
+
     if "ble" in features_wanted:
         sources += ["embed/io/ble/unix/ble.c"]
         paths += ["embed/io/ble/inc"]
@@ -158,8 +165,6 @@ def configure(
     paths += ["embed/sec/telemetry/inc"]
     defines += [("USE_TELEMETRY", "1")]
     features_available.append("telemetry")
-
-    paths += ["embed/io/suspend/inc"]
 
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]

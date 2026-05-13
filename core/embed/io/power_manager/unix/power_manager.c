@@ -22,6 +22,9 @@
 #include <io/display.h>
 #include <io/power_manager.h>
 #include <io/unix/sdl_display.h>
+#ifdef USE_TOUCH_WAKEUP
+#include <io/touch.h>
+#endif
 
 #include <SDL3/SDL.h>
 #include <stdlib.h>
@@ -80,12 +83,21 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
     if (event.type == SDL_EVENT_QUIT) {
       exit(1);
     }
-    if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP ||
-        event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
-        event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+    if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
       *wakeup_reason = WAKEUP_FLAG_BUTTON;
       break;
     }
+#ifdef USE_TOUCH_WAKEUP
+    if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+        event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+      if (!touch_wakeup_get_enabled()) {
+        /* tap-to-wake disabled: ignore touch and stay suspended */
+        continue;
+      }
+      *wakeup_reason = WAKEUP_FLAG_TOUCH;
+      break;
+    }
+#endif
     SDL_Delay(50);
   }
   display_refresh();
