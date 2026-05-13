@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import protobuf
+from trezor import protobuf, utils
 from trezor.crypto import hmac
 from trezor.messages import (
     ThpAuthenticatedCredentialData,
@@ -92,7 +92,10 @@ def validate_credential(
     )
     authenticated_credential_data = _encode_message_into_new_buffer(proto_msg)
     mac = hmac(hmac.SHA256, cred_auth_key, authenticated_credential_data).digest()
-    return mac == credential.mac
+
+    if len(mac) != len(credential.mac):
+        return False
+    return utils.consteq(mac, credential.mac)
 
 
 def decode_and_validate_credential(
