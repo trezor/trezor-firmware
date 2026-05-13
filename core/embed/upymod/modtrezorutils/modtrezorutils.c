@@ -828,6 +828,8 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports MCU attestation signing and certificate."""
 /// USE_TOUCH: bool
 /// """Whether the hardware supports touch screen."""
+/// USE_TOUCH_WAKEUP: bool
+/// """Whether the hardware supports touch-based wakeup."""
 /// USE_BUTTON: bool
 /// """Whether the hardware supports two-button input."""
 /// USE_POWER_MANAGER: bool
@@ -1014,6 +1016,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_HAPTIC), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_HAPTIC), mp_const_false},
+#endif
+#ifdef USE_TOUCH_WAKEUP
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH_WAKEUP), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH_WAKEUP), mp_const_false},
 #endif
 #ifdef USE_RGB_LED
     {MP_ROM_QSTR(MP_QSTR_USE_RGB_LED), mp_const_true},

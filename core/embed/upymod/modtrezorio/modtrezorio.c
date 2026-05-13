@@ -58,6 +58,9 @@ uint32_t last_touch_sample_time = 0;
 #ifdef USE_HAPTIC
 #include "modtrezorio-haptic.h"
 #endif
+#ifdef USE_TOUCH
+#include "modtrezorio-touch.h"
+#endif
 #ifdef USE_RGB_LED
 #include "modtrezorio-rgb_led.h"
 #endif
@@ -70,7 +73,7 @@ uint32_t last_touch_sample_time = 0;
 #include "modtrezorio-poll.h"
 
 /// package: trezorio.__init__
-/// from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc, app_cache
+/// from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc, app_cache, touch
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -124,6 +127,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_TOUCH_START), MP_ROM_INT((TOUCH_START >> 24) & 0xFFU)},
     {MP_ROM_QSTR(MP_QSTR_TOUCH_MOVE), MP_ROM_INT((TOUCH_MOVE >> 24) & 0xFFU)},
     {MP_ROM_QSTR(MP_QSTR_TOUCH_END), MP_ROM_INT((TOUCH_END >> 24) & 0xFFU)},
+    {MP_ROM_QSTR(MP_QSTR_touch), MP_ROM_PTR(&mod_trezorio_touch_module)},
 #endif
 #ifdef USE_BUTTON
     {MP_ROM_QSTR(MP_QSTR_BUTTON), MP_ROM_INT(SYSHANDLE_BUTTON)},

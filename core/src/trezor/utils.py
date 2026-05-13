@@ -38,6 +38,7 @@ from trezorutils import (  # noqa: F401
     USE_TELEMETRY,
     USE_THP,
     USE_TOUCH,
+    USE_TOUCH_WAKEUP,
     USE_TROPIC,
     VERSION,
     bootloader_locked,
