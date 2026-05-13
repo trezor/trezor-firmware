@@ -511,8 +511,8 @@ static secbool tropic_ensure_r_config(void) {
       TR01_CFG_SENSORS_IDX,
   };
 
-  uint32_t current = {0};
-  uint32_t diff = {0};
+  uint32_t current = 0;
+  uint32_t diff = 0;
   for (int8_t i = 0; i < sizeof(cfg_to_check) / sizeof(cfg_to_check[0]); i++) {
     if (TROPIC_RETRY_COMMAND(lt_r_config_read(
             &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], &current)) !=
