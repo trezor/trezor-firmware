@@ -18,7 +18,7 @@ impl Trezor {
         let mut req = protos::GetPublicKey::new();
         req.address_n = utils::convert_path(path);
         req.set_show_display(show_display);
-        req.set_coin_name(utils::coin_name(network)?);
+        req.set_coin_name(utils::coin_name(network));
         req.set_script_type(script_type);
         self.call(req, Box::new(|_, m| Ok(m.xpub().parse()?)))
     }
@@ -33,7 +33,7 @@ impl Trezor {
     ) -> Result<TrezorResponse<'_, Address, protos::Address>> {
         let mut req = protos::GetAddress::new();
         req.address_n = utils::convert_path(path);
-        req.set_coin_name(utils::coin_name(network)?);
+        req.set_coin_name(utils::coin_name(network));
         req.set_show_display(show_display);
         req.set_script_type(script_type);
         self.call(req, Box::new(|_, m| parse_address(m.address())))
@@ -48,7 +48,7 @@ impl Trezor {
         let mut req = protos::SignTx::new();
         req.set_inputs_count(tx.input.len() as u32);
         req.set_outputs_count(tx.output.len() as u32);
-        req.set_coin_name(utils::coin_name(network)?);
+        req.set_coin_name(utils::coin_name(network));
         req.set_version(tx.version.0 as u32);
         req.set_lock_time(tx.lock_time.to_consensus_u32());
         self.call(req, Box::new(|c, m| Ok(SignTxProgress::new(c, m))))
@@ -66,7 +66,7 @@ impl Trezor {
         // Normalize to Unicode NFC.
         let msg_bytes = nfc_normalize(&message).into_bytes();
         req.set_message(msg_bytes);
-        req.set_coin_name(utils::coin_name(network)?);
+        req.set_coin_name(utils::coin_name(network));
         req.set_script_type(script_type);
         self.call(
             req,
