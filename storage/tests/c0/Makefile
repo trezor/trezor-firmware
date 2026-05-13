@@ -1,3 +1,5 @@
+.PHONY: clean
+
 CC=cc
 CFLAGS=-Wall -fPIC
 LIBS=

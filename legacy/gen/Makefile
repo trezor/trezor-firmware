@@ -1,3 +1,5 @@
+.PHONY: all clean
+
 CC=cc
 
 all: strwidth

@@ -1,3 +1,5 @@
+.PHONY: default compile
+
 default: compile
 
 compile:
