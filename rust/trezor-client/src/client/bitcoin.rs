@@ -23,6 +23,21 @@ impl Trezor {
         self.call(req, Box::new(|_, m: protos::PublicKey| Ok(m.xpub().parse()?)))?.interact()
     }
 
+    pub fn register_policy(
+        &mut self,
+        name: String,
+        template: String,
+        xpubs: Vec<String>,
+        network: Network,
+    ) -> Result<protos::RegisteredPolicy> {
+        let mut req = protos::Policy::new();
+        req.set_coin_name(utils::coin_name(network));
+        req.set_name(name);
+        req.set_template(template);
+        req.xpubs = xpubs;
+        self.call(req, Box::new(|_, m: protos::RegisteredPolicy| Ok(m)))?.interact()
+    }
+
     //TODO(stevenroose) multisig
     pub fn get_address(
         &mut self,

@@ -245,6 +245,36 @@ mod tests {
 
     #[test]
     #[serial]
+    fn test_register_policy() {
+        let mut emulator = init_emulator();
+        assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
+        let registered = with_auto_approve(|| {
+            emulator.register_policy("Policy name".to_owned(),
+            "wsh(or_d(pk(@0/**),and_v(v:pkh(@1/**),older(1))))".into(), vec![
+            "tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg".to_owned(),
+            "tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb".to_owned(),
+        ], network::Network::Signet).unwrap()
+        });
+
+        let path = DerivationPath::from_str("m/84'/1'/0'/0/1").expect("Failed to parse path");
+        let addr = emulator
+            .get_address(
+                &path,
+                InputScriptType::SPENDMINISCRIPT,
+                network::Network::Signet,
+                false,
+                Some(registered),
+            )
+            .unwrap();
+
+        assert_eq!(
+            addr.to_string(),
+            "tb1qzvr7ptes6kq2ee0745a7h2n639etfz43nsz9d2jn8u6wz8egx0hqnr5pza"
+        );
+    }
+
+    #[test]
+    #[serial]
     fn test_ecdh_shared_secret() {
         let mut emulator = init_emulator();
         assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
