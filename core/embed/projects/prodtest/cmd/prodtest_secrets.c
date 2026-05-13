@@ -213,7 +213,6 @@ cleanup:
   memzero(mcu_private, sizeof(mcu_private));
 }
 
-#ifndef TREZOR_EMULATOR
 static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
                                     size_t chain_size) {
   bool ret = false;
@@ -263,7 +262,6 @@ cleanup:
   memzero(rnd, sizeof(rnd));
   return ret;
 }
-#endif  // TREZOR_EMULATOR
 
 static void prodtest_secrets_certdev_write(cli_t* cli) {
   if (cli_arg_count(cli) != 1) {
@@ -271,10 +269,6 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
     return;
   }
 
-#ifdef TREZOR_EMULATOR
-  cli_error(cli, PRODTEST_ERR_SECRETS_CERTDEV_WRITE_NOT_IMPL,
-            "Not implemented");
-#else
   size_t certificate_length = 0;
   uint8_t certificate[MCU_ATTESTATION_MAX_CERT_SIZE] = {0};
   if (!cli_arg_hex(cli, "hex-data", certificate, sizeof(certificate),
@@ -301,8 +295,13 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
     return;
   }
 
-  cli_ok(cli, "");
+#ifdef TREZOR_EMULATOR
+  cli_trace(cli,
+            "The certificate is not persistent, it will be wiped after "
+            "reboot");
 #endif  // TREZOR_EMULATOR
+
+  cli_ok(cli, "");
 }
 
 static void prodtest_secrets_certdev_read(cli_t* cli) {
@@ -311,9 +310,6 @@ static void prodtest_secrets_certdev_read(cli_t* cli) {
     return;
   }
 
-#ifdef TREZOR_EMULATOR
-  cli_error(cli, PRODTEST_ERR_SECRETS_CERTDEV_READ_NOT_IMPL, "Not implemented");
-#else
   uint8_t certificate[MCU_ATTESTATION_MAX_CERT_SIZE] = {0};
   size_t certificate_length = 0;
 
@@ -325,7 +321,6 @@ static void prodtest_secrets_certdev_read(cli_t* cli) {
   }
 
   cli_ok_hexdata(cli, certificate, certificate_length);
-#endif  // TREZOR_EMULATOR
 }
 #endif  // USE_MCU_ATTESTATION
 
