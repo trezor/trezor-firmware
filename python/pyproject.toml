@@ -65,6 +65,7 @@ build-backend = "flit_core.buildapi"
 
 [tool.uv]
 package = true
+exclude-newer = "30 days"
 
 [tool.flit.module]
 name = "trezorlib"

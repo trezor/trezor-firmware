@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["flit_core >= 3.11,<5"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "toiftool"
@@ -17,3 +17,6 @@ dependencies = [
 
 [project.scripts]
 toiftool = "toiftool:cli"
+
+[tool.uv]
+exclude-newer = "30 days"
