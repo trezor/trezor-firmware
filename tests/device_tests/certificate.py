@@ -25,7 +25,8 @@ OPTIGA_ROOT_PUBLIC_KEY = {
 
 TROPIC_ROOT_PUBLIC_KEY = {
     models.T3W1: bytes.fromhex(
-        "1ab1c5f12f4570e0de5c16a8d9feea381f53c8d813feeb0eb2fb7f393f2b6b5f"
+        # This is `DEV_AUTH_ROOT_DEBUG_ED25519` from `hsm_keys.json`
+        "04e3856182309678a15767451f931ed86617b1d25462afcbddc81dc80bfc1661"
     ),
 }
 
