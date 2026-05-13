@@ -874,7 +874,6 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
       "rng_fill_buffer_strong failed");
   ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek),
          "derive_kek_set failed");
-
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
   chacha20poly1305_encrypt(&ctx, cached_keys, ekeys, KEYS_SIZE);

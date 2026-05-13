@@ -490,7 +490,7 @@ static secbool tropic_ensure_i_config(void) {
 
     // Bits that are currently 1 but are expected to be 0: flip them.
     uint32_t to_flip = ~expected & current;
-    for (uint8_t j = 0; j < BITS_PER_LONG; j++) {
+    for (uint8_t j = 0; j < 32; j++) {      // Tropic cfg objects are 32-bit
       if (to_flip & BIT(j)) {
         if (TROPIC_RETRY_COMMAND(lt_i_config_write(
                 &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], j)) !=
