@@ -583,9 +583,15 @@ secbool tropic_ensure_configuration(void) {
   }
 
   config_version = TROPIC_CONFIG_VERSION;
-  ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_erase_write(
-      &g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT, &config_version,
-      sizeof(config_version)));
+  ret = TROPIC_RETRY_COMMAND(
+      lt_r_mem_data_erase(&g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT));
+  if (ret != LT_OK) {
+    return secfalse;
+  }
+
+  ret = TROPIC_RETRY_COMMAND(
+      lt_r_mem_data_write(&g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT,
+                          &config_version, sizeof(config_version)));
   if (ret != LT_OK) {
     return secfalse;
   }
