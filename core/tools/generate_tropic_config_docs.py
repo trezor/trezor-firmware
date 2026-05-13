@@ -28,6 +28,7 @@ def print_value_lines(value_lines: List[List[str]], md_file: TextIOWrapper) -> N
     col_count = max(len(line) for line in value_lines)
     col_len = [max(len(line[i]) for line in value_lines) for i in range(col_count)]
 
+    print("", file=md_file)
     line = value_lines[0]
     print(
         f"| {' | '.join(line[i].ljust(col_len[i]) for i in range(col_count))} |",
