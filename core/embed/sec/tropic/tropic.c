@@ -589,7 +589,7 @@ secbool tropic_ensure_configuration(void) {
 
   config_version = TROPIC_CONFIG_VERSION;
   ret = lt_r_mem_data_write(&g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT,
-                            &config_version, sizeof(uint8_t));
+                            &config_version, sizeof(config_version));
   if (ret != LT_OK) {
     return secfalse;
   }
