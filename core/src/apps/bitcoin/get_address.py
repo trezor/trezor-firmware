@@ -72,6 +72,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
         assert coin.bech32_prefix is not None
 
         address = addresses._address_p2wsh(sha256(script).digest(), coin.bech32_prefix)
+        # TODO: support `show_display`
         return Address(address=address)
 
     if msg.show_display:

@@ -102,6 +102,10 @@ def test_miniscript_spend(session: Session):
         expect=messages.RegisteredPolicy,
     )
     assert (
+        registered.mac.hex()
+        == "c552c38ad4e1eb4d17e163459f07526ad0cab8c64c918d9ff8acf6c6d9293b4e"
+    )
+    assert (
         btc.get_address(session, n=[0, 2], registered=registered, coin_name=COIN)
         == "tb1qerjma9tcyn6qh5yt7wdqqm3q8sz7ft6dn7pratjclzc8pha27rcsgjn0sp"
     )
@@ -160,6 +164,10 @@ def test_miniscript_spend_liana(session: Session):
     registered = session.call(
         messages.Policy(name="Policy name", template=DESC, xpubs=TPUBS, coin_name=COIN),
         expect=messages.RegisteredPolicy,
+    )
+    assert (
+        registered.mac.hex()
+        == "76fac72a751773625658a22fe55867d30d9988347c03001b657b07fe418e1eb7"
     )
     assert (
         btc.get_address(session, n=[0, 1], registered=registered, coin_name=COIN)
