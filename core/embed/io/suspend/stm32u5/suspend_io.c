@@ -77,7 +77,11 @@ void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
   touch_suspend();
 #endif
 #ifdef USE_DISPLAY
-  display_suspend(&wakeup_params->display);
+#ifdef USE_TOUCH_WAKEUP
+  display_suspend(&wakeup_params->display, touch_wakeup_get_enabled());
+#else
+  display_suspend(&wakeup_params->display, false);
+#endif
 #endif
 }
 
@@ -94,7 +98,11 @@ void suspend_drivers_phase2(void) {
 // Reinitialize all drivers that were stopped earlier
 void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_DISPLAY
-  display_resume(&wakeup_params->display);
+#ifdef USE_TOUCH_WAKEUP
+  display_resume(&wakeup_params->display, touch_wakeup_get_enabled());
+#else
+  display_resume(&wakeup_params->display, false);
+#endif
 #endif
 #ifdef USE_TOUCH
   touch_resume();

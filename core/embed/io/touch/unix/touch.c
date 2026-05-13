@@ -69,6 +69,12 @@ static touch_driver_t g_touch_driver = {
     .initialized = secfalse,
 };
 
+#if defined(USE_SUSPEND) && defined(USE_TOUCH_WAKEUP)
+// Whether touch wakeup during suspend is enabled.
+// Kept outside the driver struct so it survives touch_deinit() memset.
+static secbool g_touch_wakeup_enabled = sectrue;
+#endif  // USE_SUSPEND && USE_TOUCH_WAKEUP
+
 static bool is_inside_display(int x, int y) {
   return x >= sdl_touch_offset_x && y >= sdl_touch_offset_y &&
          x - sdl_touch_offset_x < sdl_display_res_x &&
@@ -230,6 +236,27 @@ void touch_deinit(void) {
 void touch_power_set(bool on) {
   // Not implemented on the emulator
 }
+
+#ifdef USE_SUSPEND
+void touch_suspend(void) {
+  // Not implemented on the emulator
+}
+
+void touch_resume(void) {
+  // Not implemented on the emulator
+}
+
+#ifdef USE_TOUCH_WAKEUP
+void touch_wakeup_set_enabled(bool enabled) {
+  g_touch_wakeup_enabled = (enabled ? sectrue : secfalse);
+}
+
+bool touch_wakeup_get_enabled(void) {
+  return (sectrue == g_touch_wakeup_enabled);
+}
+#endif  // USE_TOUCH_WAKEUP
+
+#endif  // USE_SUSPEND
 
 secbool touch_ready(void) {
   touch_driver_t* drv = &g_touch_driver;
