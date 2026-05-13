@@ -56,21 +56,19 @@ fn main() {
     let mut trezor = trezor_client::unique(false).unwrap();
     trezor.init_device(None).unwrap();
 
-    let pubkey = handle_interaction(
-        trezor
-            .get_public_key(
-                &vec![
-                    bip32::ChildNumber::from_hardened_idx(0).unwrap(),
-                    bip32::ChildNumber::from_hardened_idx(0).unwrap(),
-                    bip32::ChildNumber::from_hardened_idx(1).unwrap(),
-                ]
-                .into(),
-                trezor_client::protos::InputScriptType::SPENDADDRESS,
-                Network::Testnet,
-                true,
-            )
-            .unwrap(),
-    );
+    let pubkey = trezor
+        .get_public_key(
+            &vec![
+                bip32::ChildNumber::from_hardened_idx(0).unwrap(),
+                bip32::ChildNumber::from_hardened_idx(0).unwrap(),
+                bip32::ChildNumber::from_hardened_idx(1).unwrap(),
+            ]
+            .into(),
+            trezor_client::protos::InputScriptType::SPENDADDRESS,
+            Network::Testnet,
+            true,
+        )
+        .unwrap();
     let addr = Address::p2pkh(pubkey.to_pub(), Network::Testnet);
     println!("address: {}", addr);
 

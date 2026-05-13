@@ -145,7 +145,7 @@ mod tests {
         thread,
     };
 
-    use bitcoin::{bip32::DerivationPath, hex::FromHex};
+    use bitcoin::{bip32::DerivationPath, hex::FromHex, network};
     use serial_test::serial;
 
     use crate::{
@@ -232,9 +232,15 @@ mod tests {
         assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
         let path = DerivationPath::from_str("m/44'/1'/0'/0/0").expect("Failed to parse path");
         let address = emulator
-            .get_address(&path, InputScriptType::SPENDADDRESS, bitcoin::Network::Testnet, false)
+            .get_address(
+                &path,
+                InputScriptType::SPENDADDRESS,
+                bitcoin::Network::Testnet,
+                false,
+                None,
+            )
             .expect("Failed to get address");
-        assert_eq!(address.ok().unwrap().to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
+        assert_eq!(address.to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
     }
 
     #[test]
