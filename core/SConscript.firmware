@@ -63,7 +63,6 @@ FEATURES_WANTED = [
     "dma2d",
     "haptic",
     "input",
-    "ipc",
     "optiga",
     "power_manager",
     "rgb_led",
@@ -95,7 +94,7 @@ if DBG_CONSOLE != "":
     FEATURES_WANTED += ["dbg_console"]
 
 if TREZOR_MODEL in ['T3W1'] and EXTAPP_SUPPORT:
-    FEATURES_WANTED += ["app_loading"]
+    FEATURES_WANTED += ["app_loading", "ipc"]
 
 if N4W1:
     assert PYOPT == "0", "N4W1 requires PYOPT=0"
