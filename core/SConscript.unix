@@ -22,6 +22,7 @@ MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '1') ==
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 EXTAPP_SUPPORT = ARGUMENTS.get('EXTAPP_SUPPORT', '0') == '1'
 N4W1 = ARGUMENTS.get('N4W1', '0') == '1'
+MINISCRIPT = ARGUMENTS.get('MINISCRIPT', '0') == '1'
 
 
 if DEBUGLINK or PYOPT == '0':
@@ -73,6 +74,9 @@ if TREZOR_MODEL in ['T3W1'] and EXTAPP_SUPPORT:
 if N4W1:
     assert PYOPT == "0", "N4W1 requires PYOPT=0"
     FEATURES_WANTED += ["n4w1"]
+
+if MINISCRIPT:
+    FEATURES_WANTED += ["miniscript"]
 
 if not models.has_emulator(TREZOR_MODEL):
     # skip unix build

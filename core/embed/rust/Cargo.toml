@@ -58,6 +58,7 @@ tropic = []
 serial_number = []
 storage = []
 telemetry = []
+miniscript = ["dep:miniscript", "dep:emballoc"]
 n4w1 = []
 translations = ["crypto"]
 secmon_layout = []
@@ -114,6 +115,9 @@ ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
 zeroize = { workspace = true, optional = true }
+
+miniscript = { version = "13.0.0", default-features = false, optional = true }
+emballoc = { version = "0.3.0", default-features = false, optional = true }
 
 io = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }

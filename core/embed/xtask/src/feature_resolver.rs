@@ -82,6 +82,10 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
             features.push("dev_keys".into());
         }
 
+        if args.miniscript {
+            features.push("miniscript".into());
+        }
+
         if args.n4w1 {
             features.push("n4w1".into());
         }
@@ -231,8 +235,12 @@ pub fn configure_cargo(args: &BuildArgs, cmd: &mut process::Command) -> Result<(
         cmd.arg("--verbose");
     }
 
-    if rebuild_std {
-        cmd.arg("-Zbuild-std=core");
+    if rebuild_std || args.miniscript {
+        let mut build_std = "-Zbuild-std=core".to_owned();
+        if args.miniscript {
+            build_std += ",alloc";
+        }
+        cmd.arg(build_std);
     }
 
     Ok(())

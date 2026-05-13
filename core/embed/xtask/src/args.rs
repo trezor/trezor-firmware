@@ -208,6 +208,10 @@ pub struct BuildArgs {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     pub debug_link: Option<bool>,
 
+    /// Enable experimental Miniscript support
+    #[arg(long)]
+    pub miniscript: bool,
+
     /// Enable N4W1 support
     #[arg(long)]
     pub n4w1: bool,
