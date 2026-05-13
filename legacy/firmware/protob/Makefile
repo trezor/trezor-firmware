@@ -1,3 +1,5 @@
+.PHONY: all clean
+
 ifneq ($(V),1)
 Q := @
 endif

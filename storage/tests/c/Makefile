@@ -1,3 +1,5 @@
+.PHONY: clean
+
 CC = cc
 
 CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces

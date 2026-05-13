@@ -1,5 +1,29 @@
 
-.PHONY: vendor
+.PHONY: help \
+	vendor \
+	run emu \
+	test test_rust \
+	test_emu_sanity test_emu test_emu_multicore test_emu_monero \
+	test_emu_u2f test_emu_fido2 \
+	test_emu_click test_emu_click_ui test_emu_click_ui_multicore \
+	test_emu_persistence test_emu_persistence_ui test_emu_upgrade \
+	test_emu_ui test_emu_ui_multicore test_emu_ui_record test_emu_ui_record_multicore \
+	pylint mypy typecheck pyright clippy \
+	audit_rust vet_rust \
+	templates templates_check translations translations_check \
+	translations_crowdin_push translations_crowdin_pull \
+	build build_embed \
+	build_boardloader build_bootloader build_bootloader_ci \
+	build_bootloader_emu build_bootloader_emu_debug \
+	build_prodtest build_prodtest_emu build_secmon build_firmware \
+	build_unix build_unix_frozen build_unix_debug \
+	clean \
+	flash flash_boardloader flash_bootloader flash_bootloader_ci \
+	flash_prodtest flash_firmware \
+	flash_erase flash_erase_bootloader flash_erase_firmware flash_erase_storage \
+	gdb_boardloader gdb_bootloader gdb_prodtest gdb_firmware \
+	bloaty combine combine_fw upload upload_prodtest \
+	coverage unused
 
 BUILD_DIR = build-xtask/artifacts/latest
 
@@ -350,6 +374,3 @@ coverage: $(COVERAGE_BUILD_DEP) ## generate coverage report
 
 unused:  ## find unused micropython code
 	vulture src src/_vulture_ignore.txt --exclude "messages.py,*/enums/*"
-
-
-.PHONY: templates translations templates_check translations_check

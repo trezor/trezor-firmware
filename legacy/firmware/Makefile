@@ -1,3 +1,5 @@
+.PHONY: clean
+
 APPVER = 1.8.0
 
 NAME  = trezor
