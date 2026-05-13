@@ -12,6 +12,10 @@ extern mp_obj_module_t mp_module_trezorui_api;
 extern mp_obj_module_t mp_module_trezortranslate;
 extern mp_obj_module_t mp_module_trezorble;
 
+#ifdef USE_MINISCRIPT
+extern mp_obj_module_t mp_module_trezorminiscript;
+#endif
+
 #if !PYOPT
 mp_obj_t ui_debug_layout_type();
 extern mp_obj_module_t mp_module_trezorlog;

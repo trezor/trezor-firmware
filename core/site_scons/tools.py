@@ -168,11 +168,16 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
             "--no-default-features",
             "--features " + ",".join(lib_features),
         ]
+        build_std_crates = set()
         if not is_debug:
-            cargo_opts += [
-                # Needed by panic=immediate-abort
-                "-Z build-std=core",
-            ]
+            # Skip build-std on unix debug to keep panic mechanism for `debug_assert!`
+            # Needed by panic=immediate-abort
+            build_std_crates.update(["core"])
+        if "miniscript" in lib_features:
+            # For miniscript: always use build-std to ensure consistent no_std behavior across all targets
+            build_std_crates.update(["alloc", "core"])
+        if build_std_crates:
+            cargo_opts += [f"-Z build-std={','.join(sorted(build_std_crates))}"]
 
         build_cmd = "cargo build " + " ".join(cargo_opts)
 
