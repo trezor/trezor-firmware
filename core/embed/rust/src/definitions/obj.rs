@@ -5,15 +5,15 @@ use super::{blob, constants};
 use crate::io::InputStream;
 use crate::micropython::buffer::get_buffer;
 use crate::micropython::exception::Exception;
-use crate::micropython::gc::Gc;
 use crate::micropython::macros::{obj_fn_var, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
+use crate::micropython::py_object::GcObject;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::util::EXTERNAL_DATA_ERROR;
 use crate::micropython::{util, Error, Obj};
 use crate::protobuf::decode::Decoder;
-use crate::protobuf::obj::MsgDefObj;
+use crate::protobuf::defs::MsgDef;
 
 impl From<DefinitionsError> for Error {
     fn from(error: DefinitionsError) -> Self {
@@ -46,7 +46,7 @@ extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
         // function.
         let definition = unsafe { get_buffer(args[0])? };
         let expected_type = u8::try_from(args[1])?;
-        let msg_def = Gc::<MsgDefObj>::try_from(args[2])?;
+        let msg_def = GcObject::<MsgDef>::try_from(args[2])?;
 
         // parse the definition blob and verify its CoSi signature
         let payload = blob::parse_and_verify(definition, expected_type)?;
@@ -56,8 +56,9 @@ extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
         let decoder = Decoder {
             enable_experimental: false,
         };
+        let msg_def = msg_def.borrow();
         decoder
-            .message_from_stream(&mut stream, msg_def.msg())
+            .message_from_stream(&mut stream, &msg_def)
             .map_err(|_| DefinitionsError::InvalidPayload.into())
     };
 
