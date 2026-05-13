@@ -145,7 +145,12 @@ mod tests {
         thread,
     };
 
-    use bitcoin::{bip32::DerivationPath, hex::FromHex, network};
+    use base64::prelude::*;
+    use bitcoin::{
+        bip32::DerivationPath,
+        hex::{DisplayHex as _, FromHex},
+        network, Psbt,
+    };
     use serial_test::serial;
 
     use crate::{
@@ -241,6 +246,61 @@ mod tests {
             )
             .expect("Failed to get address");
         assert_eq!(address.to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
+    }
+
+    #[test]
+    #[serial]
+    fn test_miniscript_register_policy() {
+        let mut emulator = init_emulator();
+        let network = network::Network::Signet;
+        assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
+        let registered = with_auto_approve(|| {
+            emulator.register_policy("Policy name".to_owned(),
+            "wsh(or_d(pk(@0/**),and_v(v:pkh(@1/**),older(1))))".to_owned(),
+            vec![
+                "tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg".to_owned(),
+                "tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb".to_owned(),
+            ],
+            network
+        )}).unwrap();
+
+        let path = DerivationPath::from_str("m/84'/1'/0'/0/1").expect("Failed to parse path");
+        let addr = emulator
+            .get_address(&path, InputScriptType::SPENDMINISCRIPT, network, false, Some(registered))
+            .unwrap();
+
+        assert_eq!(
+            addr.to_string(),
+            "tb1qzvr7ptes6kq2ee0745a7h2n639etfz43nsz9d2jn8u6wz8egx0hqnr5pza"
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_miniscript_sign_psbt() {
+        let mut emulator = init_emulator();
+        let network = network::Network::Signet;
+        assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
+        let registered = with_auto_approve(|| {
+            emulator.register_policy("Policy name".to_owned(),
+            "wsh(or_d(pk(@0/**),and_v(v:pkh(@1/**),older(52596))))".to_owned(),
+            vec![
+                "tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76".to_owned(),
+                "tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb".to_owned(),
+            ],
+            network
+        )}).unwrap();
+
+        let psbt_b64 = "cHNidP8BAFICAAAAAeLueDmXeu2TBFNQoar0iky5T9JE59JPX0yr/gzIIr7UAAAAAAD9////AUYhAAAAAAAAFgAUhH7Jd+SNi4/DMKLI3HIJdwhi1+6kowQAAAEAywIAAAAAAQHYqmd/WZL+qJOT+5f2XEPzUALTONhlyumq5tyciNVZ8wAAAAAA/f///wE0IgAAAAAAACIAIDUq27pDBHpIicznRJ7W0Vfte6npLsF1yY7B5qOLXbjQAkcwRAIgEAu12ThbMeLnoUW4gXGoyRNtgLoJiMVTGBmN/EF1Ud8CIFacrJc9i3SqN3KU6pUlTnNm6GK1N4Vxa5D2tgz2MYc/ASEDwaxgrIFP7ymqIm9BGZ+2SbpwuLq5OiGykBIZVIRQOEqjowQAAQErNCIAAAAAAAAiACA1Ktu6QwR6SInM50Se1tFX7Xup6S7BdcmOweaji1240AEFRCEDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JWsc2R2qRStjQxCX2+O2vUnBSggjUbj8GSQbIitA3TNALJoIgYCI1EpH6IXHxLBFqXb1/FWdb0zvMoXyhBDC5/EcW5MSpUYcnWLw1QAAIABAACAAAAAgAAAAAABAAAAIgYDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JUcXJ4ijTAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAAA";
+        let psbt = Psbt::deserialize(&BASE64_STANDARD.decode(psbt_b64).unwrap()).unwrap();
+
+        let signed =
+            with_auto_approve(|| emulator.sign_tx(&psbt, network, Some(registered)).unwrap());
+        assert_eq!(signed.signatures.len(), 1);
+        let (i, sig) = signed.signatures.get(0).unwrap();
+        assert_eq!(*i, 0);
+        assert_eq!(sig.to_lower_hex_string(), "30440220106ef246defefb79999e95d92a1fd63684ea17d5944133762ad589d10b6e2faa02200a73ee663bb732cf78f9f3a61dbc1cc5ca254a9b22b9737ac24149d144c2be18");
+        assert_eq!(signed.serialized, vec![]);
     }
 
     #[test]
