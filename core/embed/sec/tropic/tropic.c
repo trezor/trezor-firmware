@@ -37,6 +37,7 @@
 #include <time.h>
 #endif  // TREZOR_EMULATOR
 
+#include <sec/tropic_configs.h>
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 
@@ -464,8 +465,6 @@ lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t *tropic_handle,
       lt_erase_and_write_R_config(tropic_handle, config));
 }
 
-#include <sec/tropic_configs.h>
-
 static secbool tropic_ensure_i_config(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
@@ -490,7 +489,7 @@ static secbool tropic_ensure_i_config(void) {
 
     // Bits that are currently 1 but are expected to be 0: flip them.
     uint32_t to_flip = ~expected & current;
-    for (uint8_t j = 0; j < 32; j++) {      // Tropic cfg objects are 32-bit
+    for (uint8_t j = 0; j < 32; j++) {  // Tropic cfg objects are 32-bit
       if (to_flip & BIT(j)) {
         if (TROPIC_RETRY_COMMAND(lt_i_config_write(
                 &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], j)) !=
