@@ -304,7 +304,9 @@ def configure(
             "embed/sec/suspend/inc",
         ]
         defines += [("USE_SUSPEND", "1")]
-        defines += [("TOUCH_WAKEUP_ENABLED", "0")]
+        if "input" in features_wanted:
+            defines += [("USE_TOUCH_WAKEUP", "1")]
+            features_available.append("touch_wakeup")
 
     if "power_manager" in features_wanted:
         sources += [
