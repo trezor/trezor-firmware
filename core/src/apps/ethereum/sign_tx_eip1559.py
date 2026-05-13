@@ -104,6 +104,11 @@ async def sign_tx_eip1559(
         rlp.write(sha, field)
 
     initial_data = await request_initial_data(msg, sha)
+    digest: bytes | None = None
+
+    def _digest_getter() -> bytes:
+        assert digest
+        return digest
 
     confirm_data_chunk, confirm_summary = await confirm_tx_data(
         initial_data,
@@ -115,24 +120,29 @@ async def sign_tx_eip1559(
         fee_items,
         payment_req_verifier,
         sender_bytes,
+        _digest_getter,
     )
 
-    await confirm_data_and_summary(
-        confirm_data_chunk, confirm_summary, initial_data, data_length, sha
+    def _finalize_digest(sha: HashWriter) -> bytes:
+        payload_length = sum(access_list_item_length(i) for i in msg.access_list)
+        rlp.write_header(sha, payload_length, rlp.LIST_HEADER_BYTE)
+        for item in msg.access_list:
+            item_address = bytes_from_address(item.address)
+            address_length = rlp.length(item_address)
+            keys_length = rlp.length(item.storage_keys)
+            rlp.write_header(sha, address_length + keys_length, rlp.LIST_HEADER_BYTE)
+            rlp.write(sha, item_address)
+            rlp.write(sha, item.storage_keys)
+        return sha.get_digest()
+
+    digest = await confirm_data_and_summary(
+        confirm_data_chunk,
+        confirm_summary,
+        initial_data,
+        data_length,
+        sha,
+        _finalize_digest,
     )
-
-    # write_access_list
-    payload_length = sum(access_list_item_length(i) for i in msg.access_list)
-    rlp.write_header(sha, payload_length, rlp.LIST_HEADER_BYTE)
-    for item in msg.access_list:
-        address_bytes = bytes_from_address(item.address)
-        address_length = rlp.length(address_bytes)
-        keys_length = rlp.length(item.storage_keys)
-        rlp.write_header(sha, address_length + keys_length, rlp.LIST_HEADER_BYTE)
-        rlp.write(sha, address_bytes)
-        rlp.write(sha, item.storage_keys)
-
-    digest = sha.get_digest()
 
     # transaction data confirmed, proceed with signing
     result = _sign_digest(msg, keychain, digest)

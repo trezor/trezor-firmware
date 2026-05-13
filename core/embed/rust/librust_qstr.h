@@ -239,6 +239,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__check_again;
   MP_QSTR_buttons__close;
   MP_QSTR_buttons__confirm;
+  MP_QSTR_buttons__confirm_hash_only;
   MP_QSTR_buttons__continue;
   MP_QSTR_buttons__details;
   MP_QSTR_buttons__enable;
@@ -268,6 +269,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__view;
   MP_QSTR_buttons__view_all_data;
   MP_QSTR_buy_amount;
+  MP_QSTR_can_confirm_hash_only;
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
   MP_QSTR_case_sensitive;
@@ -1298,6 +1300,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__vault_redeem_intro;
   MP_QSTR_ethereum__vault_redeem_to;
   MP_QSTR_ethereum__vault_withdraw_intro;
+  MP_QSTR_ethereum__view_calldata_hash_confirmation;
   MP_QSTR_ethereum__withdraw;
   MP_QSTR_ethereum__withdraw_amount;
   MP_QSTR_ethereum__withdraw_from;

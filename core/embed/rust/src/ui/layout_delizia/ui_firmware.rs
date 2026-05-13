@@ -165,6 +165,7 @@ impl FirmwareUI for UIDelizia {
         verb_cancel: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
+        can_confirm_hash_only: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         const CONFIRM_VALUE_INTRO_MARGIN: usize = 24;
         ConfirmValue::new(
@@ -174,6 +175,11 @@ impl FirmwareUI for UIDelizia {
         )
         .with_verb(verb)
         .with_verb_info(Some(TR::buttons__view_all_data.into()))
+        .with_verb_extra(if can_confirm_hash_only {
+            Some(TR::buttons__confirm_hash_only.into())
+        } else {
+            None
+        })
         .with_description_font(&theme::TEXT_SUB_GREEN_LIME)
         .with_subtitle(subtitle)
         .with_verb_cancel(verb_cancel)

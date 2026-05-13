@@ -1224,5 +1224,7 @@
   "1222": "n4w1__reading",
   "1223": "n4w1__err_empty",
   "1224": "n4w1__err_nonempty",
-  "1225": "n4w1__err_damaged"
+  "1225": "n4w1__err_damaged",
+  "1226": "buttons__confirm_hash_only",
+  "1227": "ethereum__view_calldata_hash_confirmation"
 }

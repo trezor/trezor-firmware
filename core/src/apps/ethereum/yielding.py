@@ -7,7 +7,7 @@ from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Coroutine, Iterable
+    from typing import Iterable
 
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
@@ -107,7 +107,7 @@ async def get_approver(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     sender_bytes: AnyBytes,
-) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
+) -> tuple[ConfirmDataFn, ConfirmDataFn] | None:
 
     from .clear_signing import SC_FUNC_SIG_BYTES
     from .helpers import get_progress_indicator
@@ -172,7 +172,7 @@ async def _prepare_vault_tx(
     sender_bytes: AnyBytes,
     vault: EthereumVaultInfo,
     token: EthereumTokenInfo,
-) -> Coroutine[Any, Any, None] | None:
+) -> ConfirmDataFn | None:
 
     from .clear_signing import InvalidFunctionCall
     from .definitions import Definitions
@@ -203,17 +203,20 @@ async def _prepare_vault_tx(
     params_size = len(display_format.parameter_definitions) * 32
     calldata_suffix = calldata[params_size:] if len(calldata) > params_size else None
 
-    return require_confirm_vault_tx(
-        value=amount,
-        address_n=msg.address_n,
-        maximum_fee=maximum_fee,
-        fee_info_items=fee_items,
-        network=network,
-        vault_str=(vault.name if vault is not UNKNOWN_VAULT else msg.to),
-        token=token,
-        func_sig=display_format.func_sig,
-        extra_data=calldata_suffix,
-    )
+    async def _confirm(_digest: AnyBytes | None) -> None:
+        await require_confirm_vault_tx(
+            value=amount,
+            address_n=msg.address_n,
+            maximum_fee=maximum_fee,
+            fee_info_items=fee_items,
+            network=network,
+            vault_str=(vault.name if vault is not UNKNOWN_VAULT else msg.to),
+            token=token,
+            func_sig=display_format.func_sig,
+            extra_data=calldata_suffix,
+        )
+
+    return _confirm
 
 
 async def _prepare_merkl_claim(
@@ -223,7 +226,7 @@ async def _prepare_merkl_claim(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     sender_bytes: AnyBytes,
-) -> Coroutine[Any, Any, None] | None:
+) -> ConfirmDataFn | None:
 
     from .clear_signing import InvalidFunctionCall
     from .definitions import Definitions
@@ -301,12 +304,15 @@ async def _prepare_merkl_claim(
         label = await get_token_label(token, network, msg, try_fetch_definitions)
         token_labels.append(label)
 
-    return require_confirm_claim_rewards(
-        address_n=msg.address_n,
-        maximum_fee=maximum_fee,
-        fee_info_items=fee_items,
-        token_labels=token_labels,
-    )
+    async def confirm(_digest: AnyBytes | None) -> None:
+        await require_confirm_claim_rewards(
+            address_n=msg.address_n,
+            maximum_fee=maximum_fee,
+            fee_info_items=fee_items,
+            token_labels=token_labels,
+        )
+
+    return confirm
 
 
 def _is_vault_tx_safe(

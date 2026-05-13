@@ -694,28 +694,23 @@ async def confirm_blob_intro(
     subtitle: str,
     verb: str,
     verb_cancel: str,
+    can_confirm_hash_only: bool,
     br_name: str,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> bool:
-    """
-    Introduce blob to be confirmed, allowing the user to:
-    - view (returns `False`)
-    - confirm (returns `True`)
-    - cancel (raises `ActionCancelled`)
-    """
+) -> ui.UiResult:
 
-    res = await interact(
+    return await interact(
         trezorui_api.confirm_value_intro(
             title=title,
             value=value,
             subtitle=subtitle,
             verb=verb,
             verb_cancel=verb_cancel,
+            can_confirm_hash_only=can_confirm_hash_only,
         ),
         br_name=br_name,
         br_code=br_code,
     )
-    return res is CONFIRMED
 
 
 def confirm_blob(

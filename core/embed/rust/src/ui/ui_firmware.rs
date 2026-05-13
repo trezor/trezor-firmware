@@ -75,6 +75,7 @@ pub trait FirmwareUI {
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn confirm_value_intro(
         title: TString<'static>,
         value: Obj, // TODO: replace Obj
@@ -83,6 +84,7 @@ pub trait FirmwareUI {
         verb_cancel: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
+        can_confirm_hash_only: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_homescreen(

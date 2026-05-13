@@ -1,7 +1,9 @@
+from micropython import const
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import TR
+from trezor.wire.errors import ActionCancelled
 
 from . import networks
 
@@ -14,10 +16,14 @@ if TYPE_CHECKING:
 
     from .networks import EthereumNetworkInfo
 
-    ConfirmDataFn = Callable[[AnyBytes], Awaitable[None]]
+    ConfirmDataFn = Callable[[AnyBytes | None], Awaitable[None]]
 
 
 RSKIP60_NETWORKS = (30, 31)
+
+CONFIRM_HASH_ONLY = const(
+    2
+)  # must match const `MENU_ITEM_EXTRA` in confirm_value_intro.rs
 
 
 def address_from_bytes(
@@ -240,42 +246,75 @@ def get_progress_indicator(total_len: int, progress_len: int = 0) -> ConfirmData
     layout = progress(title=TR.progress__loading_transaction)
     layout.value = _progress_value()
 
-    async def confirm_fn(chunk: AnyBytes) -> None:
+    async def confirm_fn(chunk: AnyBytes | None) -> None:
         nonlocal progress_len
+        assert chunk is not None
         progress_len += len(chunk)
         layout.report(_progress_value())
 
     return confirm_fn
 
 
-def get_data_confirmer(total_len: int) -> ConfirmDataFn:
+def get_data_confirmer(total_len: int) -> tuple[ConfirmDataFn, Callable[[], bool]]:
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_blob_intro, confirm_blob_prefix
+    from trezor.ui.layouts.common import interact
+    from trezorui_api import CONFIRMED, show_warning
 
     confirmed_len = 0
     progress_bar: ConfirmDataFn | None = None
     first: bool = True
+    should_confirm_hash: bool = False
 
-    async def confirm_fn(chunk: AnyBytes) -> None:
+    def _should_confirm_hash() -> bool:
+        return should_confirm_hash
+
+    async def _confirm_fn(chunk: AnyBytes | None) -> None:
+        assert chunk is not None
         nonlocal confirmed_len
         nonlocal progress_bar
         nonlocal first
+        nonlocal should_confirm_hash
 
         if first:
             first = False
             # show intro layout
-            skip = await confirm_blob_intro(
-                title=TR.ethereum__title_input_data,
-                value=chunk,
-                subtitle=TR.ethereum__data_size_template.format(total_len),
-                verb=TR.buttons__confirm,
-                verb_cancel=TR.send__cancel_sign,
-                br_name="confirm_data",
-                br_code=ButtonRequestType.SignTx,
-            )
-            if skip:
-                # skip following chunks confirmation - use a progress bar instead
-                progress_bar = get_progress_indicator(total_len, progress_len=0)
+            while True:
+                result = await confirm_blob_intro(
+                    title=TR.ethereum__title_input_data,
+                    value=chunk,
+                    subtitle=TR.ethereum__data_size_template.format(total_len),
+                    verb=TR.buttons__confirm,
+                    verb_cancel=TR.send__cancel_sign,
+                    br_name="confirm_data",
+                    br_code=ButtonRequestType.SignTx,
+                    can_confirm_hash_only=True,
+                )
+                if result == CONFIRM_HASH_ONLY:
+                    try:
+                        await interact(
+                            show_warning(
+                                title=TR.words__important,
+                                button=TR.buttons__continue,
+                                value=TR.ethereum__view_calldata_hash_confirmation,
+                                allow_cancel=True,
+                                danger=True,
+                            ),
+                            br_name="confirm_show_hash",
+                        )
+                        should_confirm_hash = True
+                        # skip following chunks confirmation - use a progress bar instead
+                        progress_bar = get_progress_indicator(total_len, progress_len=0)
+                        break
+                    except ActionCancelled:
+                        # canceling the warning keeps us on the first page
+                        pass
+                elif result == CONFIRMED:
+                    # skip following chunks confirmation - use a progress bar instead
+                    progress_bar = get_progress_indicator(total_len, progress_len=0)
+                    break
+                else:
+                    break
 
         if progress_bar is not None:
             return await progress_bar(chunk)
@@ -302,4 +341,4 @@ def get_data_confirmer(total_len: int) -> ConfirmDataFn:
                 if not chunk:
                     return
 
-    return confirm_fn
+    return _confirm_fn, _should_confirm_hash

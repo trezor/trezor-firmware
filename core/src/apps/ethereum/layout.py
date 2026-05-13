@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 from ubinascii import hexlify
 
 from trezor import TR
@@ -32,6 +32,8 @@ if TYPE_CHECKING:
     )
     from trezor.ui.layouts import StrPropertyType
     from trezor.ui.layouts.properties import AboveThreshold
+
+    from .helpers import ConfirmDataFn
 
 
 async def require_confirm_approve(
@@ -92,7 +94,8 @@ async def require_confirm_clear_signing(
     await confirm_ethereum_clear_signing(recipient_str, intent, properties, maximum_fee)
 
 
-async def require_confirm_tx(
+def require_confirm_tx(
+    should_confirm_hash: Callable[[], bool] | None,
     recipient: str | None,
     total_amount: str,
     address_bytes: bytes,
@@ -102,41 +105,47 @@ async def require_confirm_tx(
     token: EthereumTokenInfo | None,
     is_send: bool,
     chunkify: bool,
-) -> None:
+) -> ConfirmDataFn:
     from trezor.ui.layouts import confirm_ethereum_tx, ethereum_address_title
 
     from . import tokens
 
     account, account_path = get_account_and_path(address_n)
+    recipient_padded = addr_pad(recipient, chunkify) if recipient is not None else None
+    unknown_token = token is tokens.UNKNOWN_TOKEN
 
-    if token is tokens.UNKNOWN_TOKEN:
-        title = ethereum_address_title()
-        await require_confirm_unknown_token(title)
-        await require_confirm_address(
-            address_bytes,
-            title,
-            TR.ethereum__title_token_contract,
-            TR.buttons__continue,
-            "unknown_token",
-            TR.ethereum__unknown_contract_address,
+    async def confirm(digest: AnyBytes | None) -> None:
+        if should_confirm_hash is not None and should_confirm_hash():
+            assert digest is not None
+            await confirm_message_hash(digest)
+
+        if unknown_token:
+            title = ethereum_address_title()
+            await require_confirm_unknown_token(title)
+            await require_confirm_address(
+                address_bytes,
+                title,
+                TR.ethereum__title_token_contract,
+                TR.buttons__continue,
+                "unknown_token",
+                TR.ethereum__unknown_contract_address,
+            )
+
+        await confirm_ethereum_tx(
+            recipient_padded,
+            total_amount,
+            account,
+            account_path,
+            maximum_fee,
+            fee_info_items,
+            is_send,
+            chunkify=chunkify,
         )
 
-    if recipient is not None:
-        recipient = addr_pad(recipient, chunkify)
-
-    await confirm_ethereum_tx(
-        recipient,
-        total_amount,
-        account,
-        account_path,
-        maximum_fee,
-        fee_info_items,
-        is_send,
-        chunkify=chunkify,
-    )
+    return confirm
 
 
-async def require_confirm_payment_request(
+def require_confirm_payment_request(
     provider_address: str,
     verified_payment_req: PaymentRequest,
     address_n: list[int],
@@ -146,7 +155,7 @@ async def require_confirm_payment_request(
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
     token_address: str | None,
-) -> None:
+) -> ConfirmDataFn:
     from trezor import wire
     from trezor.ui.layouts import confirm_payment_request
     from trezor.ui.layouts.slip24 import Refund, Trade
@@ -199,17 +208,20 @@ async def require_confirm_payment_request(
             (TR.ethereum__approve_chain_id, f"{network.name} ({chain_id})", True)
         )
 
-    await confirm_payment_request(
-        verified_payment_req.recipient_name,
-        provider_address,
-        texts,
-        refunds,
-        trades,
-        account_items,
-        maximum_fee,
-        fee_info_items,
-        [(TR.ethereum__token_contract, token_address)] if token_address else [],
-    )
+    async def confirm(_digest: AnyBytes | None) -> None:
+        await confirm_payment_request(
+            verified_payment_req.recipient_name,
+            provider_address,
+            texts,
+            refunds,
+            trades,
+            account_items,
+            maximum_fee,
+            fee_info_items,
+            [(TR.ethereum__token_contract, token_address)] if token_address else [],
+        )
+
+    return confirm
 
 
 async def require_confirm_stake(
@@ -408,7 +420,7 @@ def require_confirm_address(
     )
 
 
-async def confirm_message_hash(message_hash: bytes) -> None:
+async def confirm_message_hash(message_hash: AnyBytes) -> None:
     from ubinascii import hexlify
 
     from trezor.ui.layouts import confirm_value

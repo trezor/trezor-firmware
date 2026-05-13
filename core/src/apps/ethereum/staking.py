@@ -5,7 +5,8 @@ from trezor.utils import BufferReader
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
-    from typing import Any, Coroutine, Iterable
+    from buffer_types import AnyBytes
+    from typing import Iterable
 
     from trezor.messages import EthereumNetworkInfo
     from trezor.ui.layouts import StrPropertyType
@@ -35,7 +36,7 @@ def get_approver(
     address_bytes: bytes,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
+) -> tuple[ConfirmDataFn, ConfirmDataFn] | None:
     """
     Returns a awaitable confirmation for ETH staking approval.
 
@@ -82,14 +83,14 @@ def get_approver(
     return None
 
 
-async def _handle_staking_tx_stake(
+def _handle_staking_tx_stake(
     data_reader: BufferReader,
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
     address_bytes: bytes,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-) -> None:
+) -> ConfirmDataFn:
     from .layout import require_confirm_stake
 
     # stake args:
@@ -101,25 +102,28 @@ async def _handle_staking_tx_stake(
     except (ValueError, EOFError):
         raise DataError("Invalid staking transaction call")
 
-    await require_confirm_stake(
-        address_bytes,
-        int.from_bytes(msg.value, "big"),
-        msg.address_n,
-        maximum_fee,
-        fee_items,
-        network,
-        bool(msg.chunkify),
-    )
+    async def confirm(_digest: AnyBytes | None) -> None:
+        await require_confirm_stake(
+            address_bytes,
+            int.from_bytes(msg.value, "big"),
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            network,
+            bool(msg.chunkify),
+        )
+
+    return confirm
 
 
-async def _handle_staking_tx_unstake(
+def _handle_staking_tx_unstake(
     data_reader: BufferReader,
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
     address_bytes: bytes,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-) -> None:
+) -> ConfirmDataFn:
     from .layout import require_confirm_unstake
 
     # unstake args:
@@ -135,18 +139,21 @@ async def _handle_staking_tx_unstake(
     except (ValueError, EOFError):
         raise DataError("Invalid staking transaction call")
 
-    await require_confirm_unstake(
-        address_bytes,
-        value,
-        msg.address_n,
-        maximum_fee,
-        fee_items,
-        network,
-        bool(msg.chunkify),
-    )
+    async def confirm(_digest: AnyBytes | None) -> None:
+        await require_confirm_unstake(
+            address_bytes,
+            value,
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            network,
+            bool(msg.chunkify),
+        )
+
+    return confirm
 
 
-async def _handle_staking_tx_claim(
+def _handle_staking_tx_claim(
     data_reader: BufferReader,
     msg: MsgInSignTx,
     staking_addr: bytes,
@@ -154,13 +161,16 @@ async def _handle_staking_tx_claim(
     fee_items: Iterable[StrPropertyType],
     network: EthereumNetworkInfo,
     chunkify: bool,
-) -> None:
+) -> ConfirmDataFn:
     from .layout import require_confirm_claim
 
     # claim has no args
     if data_reader.remaining_count() != 0:
         raise DataError("Invalid staking transaction call")
 
-    await require_confirm_claim(
-        staking_addr, msg.address_n, maximum_fee, fee_items, network, chunkify
-    )
+    async def confirm(_digest: AnyBytes | None) -> None:
+        await require_confirm_claim(
+            staking_addr, msg.address_n, maximum_fee, fee_items, network, chunkify
+        )
+
+    return confirm

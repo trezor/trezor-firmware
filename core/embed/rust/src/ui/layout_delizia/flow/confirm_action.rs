@@ -26,6 +26,7 @@ use super::super::{
 
 const MENU_ITEM_CANCEL: usize = 0;
 const MENU_ITEM_INFO: usize = 1;
+const MENU_ITEM_EXTRA: usize = 2;
 
 // Extra button at the top-right corner of the Action screen
 #[derive(PartialEq)]
@@ -124,6 +125,7 @@ impl ConfirmActionOptions {
 pub struct ConfirmActionMenuStrings {
     verb_cancel: TString<'static>,
     verb_info: Option<TString<'static>>,
+    verb_extra: Option<TString<'static>>,
 }
 
 impl ConfirmActionMenuStrings {
@@ -131,6 +133,7 @@ impl ConfirmActionMenuStrings {
         Self {
             verb_cancel: TR::buttons__cancel.into(),
             verb_info: None,
+            verb_extra: None,
         }
     }
 
@@ -141,6 +144,11 @@ impl ConfirmActionMenuStrings {
 
     pub const fn with_verb_info(mut self, verb_info: Option<TString<'static>>) -> Self {
         self.verb_info = verb_info;
+        self
+    }
+
+    pub const fn with_verb_extra(mut self, verb_extra: Option<TString<'static>>) -> Self {
+        self.verb_extra = verb_extra;
         self
     }
 }
@@ -235,6 +243,9 @@ impl FlowController for ConfirmActionWithMenu {
             (Self::Menu, FlowMsg::Cancelled) => Self::Action.swipe_right(),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => self.return_msg(FlowMsg::Cancelled),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_INFO)) => self.return_msg(FlowMsg::Info),
+            (Self::Menu, FlowMsg::Choice(MENU_ITEM_EXTRA)) => {
+                self.return_msg(FlowMsg::Choice(MENU_ITEM_EXTRA))
+            }
             _ => self.do_nothing(),
         }
     }
@@ -439,11 +450,16 @@ fn create_menu(
     menu_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
     let mut menu = VerticalMenu::empty();
-    let mut menu_items = Vec::<usize, 2>::new();
+    let mut menu_items = Vec::<usize, 3>::new();
 
     if let Some(verb_info) = menu_strings.verb_info {
         menu = menu.item(theme::ICON_CHEVRON_RIGHT, verb_info);
         unwrap!(menu_items.push(MENU_ITEM_INFO));
+    }
+
+    if let Some(verb_extra) = menu_strings.verb_extra {
+        menu = menu.item(theme::ICON_CHEVRON_RIGHT, verb_extra);
+        unwrap!(menu_items.push(MENU_ITEM_EXTRA));
     }
 
     menu = menu.cancel_item(menu_strings.verb_cancel);

@@ -722,9 +722,9 @@ async def confirm_blob_intro(
     verb_cancel: str,
     br_name: str,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> bool:
+) -> ui.UiResult:
     """Not needed for this layout - `confirm_blob_prefix` can skip confirmation."""
-    return False
+    return INFO
 
 
 def confirm_blob(

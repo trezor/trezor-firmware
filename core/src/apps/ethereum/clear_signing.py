@@ -1027,9 +1027,10 @@ async def _handle_transfer(
             defs.network,
             actual_token or defs.get_token(address_bytes),
             address_from_bytes(address_bytes, defs.network),
-        )
+        )(None)
     else:
         await require_confirm_tx(
+            None,
             recipient_addr,
             value,
             address_bytes,
@@ -1039,7 +1040,7 @@ async def _handle_transfer(
             actual_token or defs.get_token(address_bytes),
             is_send=True,
             chunkify=bool(msg.chunkify),
-        )
+        )(None)
 
 
 async def _handle_generic_ui(

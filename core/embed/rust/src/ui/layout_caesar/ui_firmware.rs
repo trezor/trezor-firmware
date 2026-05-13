@@ -200,6 +200,7 @@ impl FirmwareUI for UICaesar {
         _verb_cancel: Option<TString<'static>>,
         _hold: bool,
         _chunkify: bool,
+        _can_confirm_hash_only: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
