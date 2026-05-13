@@ -81,15 +81,15 @@ def _set_last_unlock_time() -> None:
     context.cache_set_int(APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now)
 
 
-_DEF_ARG_PIN_ENTER: str = TR.pin__enter
-
-
 async def verify_user_pin(
-    prompt: str = _DEF_ARG_PIN_ENTER,
+    prompt: str | None = None,
     allow_cancel: bool = True,
     retry: bool = True,
     cache_time_ms: int = 0,
 ) -> None:
+    if prompt is None:
+        prompt = TR.pin__enter
+
     # _get_last_unlock_time
     last_unlock = int.from_bytes(
         context.cache_get(APP_COMMON_REQUEST_PIN_LAST_UNLOCK, b""), "big"
