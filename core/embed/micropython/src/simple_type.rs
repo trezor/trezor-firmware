@@ -11,8 +11,8 @@ use crate::{
 /// visible to MicroPython.
 ///
 /// Example:
-/// ```
-/// use crate::micropython::{obj::Obj, simple_type::SimpleTypeObj, typ::Type};
+/// ```rust,ignore
+/// use crate::micropython::{obj::Obj, simple_type::SimpleTypeObj, typ::Type, macros::obj_type};
 ///
 /// static CONFIRMED_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_CONFIRMED, };
 ///

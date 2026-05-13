@@ -89,12 +89,12 @@ pub fn new_tuple(args: &[Obj]) -> Result<Obj, Error> {
 /// Create a new "attrtuple", which is essentially a namedtuple / ad-hoc object.
 ///
 /// It is recommended to use the attr_tuple! macro instead of this function:
-/// ```
+/// ```rust,ignore
 /// let obj = attr_tuple! {
 ///     Qstr::MP_QSTR_language => header.language.try_into()?,
 ///     Qstr::MP_QSTR_version => util::new_tuple(&version_objs)?,
 ///     // ...
-/// }
+/// };
 /// ```
 pub fn new_attrtuple(fields: &'static [Attribute], values: &[Obj]) -> Result<Obj, Error> {
     if fields.len() != values.len() {
