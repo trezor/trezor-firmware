@@ -1007,6 +1007,8 @@ extern "C" fn new_wait_ble_host_confirmation(
     _args: *const Obj,
     _kwargs: *mut Map,
 ) -> Obj {
+    #[cfg(not(feature = "ble"))]
+    unimplemented!();
     #[cfg(feature = "ble")]
     {
         let block = move |_args: &[Obj], _kwargs: &Map| {
@@ -1014,11 +1016,8 @@ extern "C" fn new_wait_ble_host_confirmation(
             let layout_obj = LayoutObj::new_root(layout)?;
             Ok(layout_obj.into())
         };
-        return unsafe { util::try_with_args_and_kwargs(_n_args, _args, _kwargs, block) };
+        unsafe { util::try_with_args_and_kwargs(_n_args, _args, _kwargs, block) }
     }
-
-    #[cfg(not(feature = "ble"))]
-    unimplemented!()
 }
 
 // Prefix parameters with `_` to avoid unused variable warning when building
@@ -1028,6 +1027,8 @@ extern "C" fn new_show_ble_pairing_code(
     _args: *const Obj,
     _kwargs: *mut Map,
 ) -> Obj {
+    #[cfg(not(feature = "ble"))]
+    unimplemented!();
     #[cfg(feature = "ble")]
     {
         let block = move |_args: &[Obj], kwargs: &Map| {
@@ -1038,11 +1039,9 @@ extern "C" fn new_show_ble_pairing_code(
             let layout_obj = LayoutObj::new_root(layout)?;
             Ok(layout_obj.into())
         };
-        return unsafe { util::try_with_args_and_kwargs(_n_args, _args, _kwargs, block) };
+        unsafe { util::try_with_args_and_kwargs(_n_args, _args, _kwargs, block) }
     }
 
-    #[cfg(not(feature = "ble"))]
-    unimplemented!()
 }
 
 extern "C" fn new_show_thp_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {

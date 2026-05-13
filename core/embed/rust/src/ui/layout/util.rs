@@ -11,7 +11,6 @@ use crate::{
             TextStyle,
         },
         util::set_animation_disabled,
-        UIError,
     },
 };
 

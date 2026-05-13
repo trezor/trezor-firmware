@@ -51,7 +51,7 @@ use crate::{
         event::USBEvent,
         layout::base::PaintOutOfBounds,
         shape::render_on_display,
-        CommonUI, ModelUI, UIError,
+        CommonUI, ModelUI,
     },
 };
 
