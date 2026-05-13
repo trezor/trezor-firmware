@@ -129,6 +129,9 @@ def configure(
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         defines += [("USE_TOUCH", "1")]
+        features_available.append("touch_wakeup")
+        defines += [("USE_SUSPEND", "1")]
+        defines += [("USE_TOUCH_WAKEUP", "1")]
 
         sources += ["embed/io/button/unix/button.c"]
         sources += ["embed/io/button/button_poll.c"]
