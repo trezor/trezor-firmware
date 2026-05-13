@@ -2,6 +2,7 @@ use core::alloc::Layout;
 use core::ops::{Deref, DerefMut};
 use core::ptr::{self, NonNull};
 
+use crate::py_object::HasBaseType;
 use crate::{Error, ffi};
 
 /// A pointer type for values on the garbage-collected heap.
@@ -59,7 +60,9 @@ impl<T> Gc<T> {
             Self::alloc(v, 0)
         }
     }
+}
 
+impl<T: HasBaseType> Gc<T> {
     /// Allocate memory on the heap managed by the MicroPython garbage
     /// collector, place `v` into it, and register for finalisation.
     ///
@@ -68,10 +71,13 @@ impl<T> Gc<T> {
     /// has a `__del__` method, it will be called when the object is garbage
     /// collected. You can use this to implement custom finalisation, in
     /// which you can, e.g., invoke the Drop implementation.
-    /// SAFETY:
+    ///
+    /// # Safety
+    ///
     /// Can only be used with Python objects that have a base as their
     /// first element
-    pub unsafe fn new_with_custom_finaliser(v: T) -> Result<Self, Error> {
+    pub fn new_with_custom_finaliser(v: T) -> Result<Self, Error> {
+        // SAFETY: HasBaseType promises that `v` has a base as its first element.
         unsafe { Self::alloc(v, ffi::GC_ALLOC_FLAG_HAS_FINALISER as _) }
     }
 }
