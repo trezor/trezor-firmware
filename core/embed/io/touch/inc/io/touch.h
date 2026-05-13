@@ -95,6 +95,14 @@ uint32_t touch_get_state(void);
 // Returns `0` if there's no event or the driver is not initialized.
 uint32_t touch_get_event(void);
 
+#if defined(USE_SUSPEND) && defined(USE_TOUCH_WAKEUP)
+// Enables or disables touch wakeup during suspend
+void touch_wakeup_set_enabled(bool enabled);
+
+// Returns whether touch wakeup during suspend is enabled
+bool touch_wakeup_get_enabled(void);
+#endif  // USE_SUSPEND && USE_TOUCH_WAKEUP
+
 // Touch event is packed 32-bit value
 //
 //  31    24 23        12 11         0

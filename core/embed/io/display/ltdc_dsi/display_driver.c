@@ -633,8 +633,15 @@ void display_refresh_rate_config(void) {
 #endif  // REFRESH_RATE_SCALING_SUPPORTED
 
 #ifdef USE_SUSPEND
-void display_suspend(display_wakeup_params_t *wakeup_params) {
-#if TOUCH_WAKEUP_ENABLED == 1
+void display_suspend(display_wakeup_params_t *wakeup_params,
+                     bool touch_wakeup_enabled) {
+#ifdef USE_TOUCH_WAKEUP
+  if (!touch_wakeup_enabled) {
+    wakeup_params->backlight_level = display_get_backlight();
+    display_deinit(DISPLAY_RESET_CONTENT);
+    return;
+  }
+
   display_driver_t *drv = &g_display_driver;
 
   memset(wakeup_params, 0, sizeof(display_wakeup_params_t));
@@ -656,13 +663,21 @@ void display_suspend(display_wakeup_params_t *wakeup_params) {
 
   memcpy(wakeup_params, &drv->wakeup_params, sizeof(display_wakeup_params_t));
 #else
+  UNUSED(touch_wakeup_enabled);
   wakeup_params->backlight_level = display_get_backlight();
   display_deinit(DISPLAY_RESET_CONTENT);
-#endif  // TOUCH_WAKEUP_ENABLED
+#endif  // USE_TOUCH_WAKEUP
 }
 
-void display_resume(const display_wakeup_params_t *wakeup_params) {
-#if TOUCH_WAKEUP_ENABLED == 1
+void display_resume(const display_wakeup_params_t *wakeup_params,
+                    bool touch_wakeup_enabled) {
+#ifdef USE_TOUCH_WAKEUP
+  if (!touch_wakeup_enabled) {
+    display_init(DISPLAY_RESET_CONTENT);
+    display_set_backlight(wakeup_params->backlight_level);
+    return;
+  }
+
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
@@ -691,9 +706,10 @@ cleanup:
   display_deinit(DISPLAY_RESET_CONTENT);
   return;
 #else
+  UNUSED(touch_wakeup_enabled);
   display_init(DISPLAY_RESET_CONTENT);
   display_set_backlight(wakeup_params->backlight_level);
-#endif  // TOUCH_WAKEUP_ENABLED
+#endif  // USE_TOUCH_WAKEUP
 }
 #endif  // USE_SUSPEND
 

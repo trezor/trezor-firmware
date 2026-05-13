@@ -75,6 +75,12 @@ static touch_driver_t g_touch_driver = {
     .initialized = secfalse,
 };
 
+#if defined(USE_SUSPEND) && defined(USE_TOUCH_WAKEUP)
+// Whether touch wakeup during suspend is enabled.
+// Kept outside the driver struct so it survives touch_deinit() memset.
+static secbool g_touch_wakeup_enabled = sectrue;
+#endif  // USE_SUSPEND && USE_TOUCH_WAKEUP
+
 // Reads a subsequent registers from the FT3168.
 //
 // Returns: `sectrue` if the register was read
@@ -405,10 +411,15 @@ void touch_deinit(void) {
 
 #ifdef USE_SUSPEND
 void touch_suspend(void) {
-#if TOUCH_WAKEUP_ENABLED == 1
+#ifdef USE_TOUCH_WAKEUP
+  if (sectrue != g_touch_wakeup_enabled) {
+    touch_deinit();
+    return;
+  }
+
   touch_driver_t* driver = &g_touch_driver;
 
-  if (secfalse == driver->initialized) {
+  if (sectrue != driver->initialized) {
     // The driver isn't initialized, wrong control flow applied
     return;
   }
@@ -432,19 +443,24 @@ void touch_suspend(void) {
   NVIC_EnableIRQ(TOUCH_EXTI_INTERRUPT_NUM);
 #else
   touch_deinit();
-#endif  // TOUCH_WAKEUP_ENABLED
+#endif  // USE_TOUCH_WAKEUP
 }
 
 void touch_resume(void) {
-#if TOUCH_WAKEUP_ENABLED == 1
+#ifdef USE_TOUCH_WAKEUP
+  if (sectrue != g_touch_wakeup_enabled) {
+    touch_init();
+    return;
+  }
+
   touch_driver_t* driver = &g_touch_driver;
 
-  if (secfalse == driver->initialized) {
+  if (sectrue != driver->initialized) {
     // The driver isn't initialized, wrong control flow applied
     return;
   }
 
-  if (secfalse == driver->suspended) {
+  if (sectrue != driver->suspended) {
     // The driver isn't suspended, nothing to resume
     return;
   }
@@ -458,7 +474,7 @@ void touch_resume(void) {
   // Configure the touch controller (the display and touch controllers share
   // the same power and reset lines => we need to configure the touch controller
   // again after resuming from suspend).
-  if (secfalse == ft3168_configure(driver->i2c_bus)) {
+  if (sectrue != ft3168_configure(driver->i2c_bus)) {
     goto cleanup;
   }
 
@@ -475,8 +491,21 @@ cleanup:
   return;
 #else
   touch_init();
-#endif  // TOUCH_WAKEUP_ENABLED
+#endif  // USE_TOUCH_WAKEUP
 }
+
+#ifdef USE_TOUCH_WAKEUP
+void touch_wakeup_set_enabled(bool enabled) {
+  irq_key_t irq_key = irq_lock();
+  g_touch_wakeup_enabled = (enabled ? sectrue : secfalse);
+  irq_unlock(irq_key);
+}
+
+bool touch_wakeup_get_enabled(void) {
+  return (sectrue == g_touch_wakeup_enabled);
+}
+#endif  // USE_TOUCH_WAKEUP
+
 #endif  // USE_SUSPEND
 
 void touch_power_set(bool on) {
@@ -685,7 +714,7 @@ void TOUCH_EXTI_INTERRUPT_HANDLER(void) {
   // Clear the EXTI line pending bit
   __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_EXTI_INTERRUPT_PIN);
 
-  if (secfalse != driver->initialized && secfalse != driver->suspended) {
+  if (sectrue == driver->initialized && sectrue == driver->suspended) {
     // Inform the powerctl module about touch press
     wakeup_flags_set(WAKEUP_FLAG_TOUCH);
   }
