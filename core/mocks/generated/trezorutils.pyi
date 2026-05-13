@@ -275,6 +275,8 @@ USE_MCU_ATTESTATION: bool
 """Whether the hardware supports MCU attestation signing and certificate."""
 USE_TOUCH: bool
 """Whether the hardware supports touch screen."""
+USE_TOUCH_WAKEUP: bool
+"""Whether the hardware supports touch-based wakeup."""
 USE_BUTTON: bool
 """Whether the hardware supports two-button input."""
 USE_POWER_MANAGER: bool
