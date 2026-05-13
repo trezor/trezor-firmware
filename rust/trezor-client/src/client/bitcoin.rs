@@ -14,13 +14,13 @@ impl Trezor {
         script_type: InputScriptType,
         network: Network,
         show_display: bool,
-    ) -> Result<TrezorResponse<'_, bip32::Xpub, protos::PublicKey>> {
+    ) -> Result<bip32::Xpub> {
         let mut req = protos::GetPublicKey::new();
         req.address_n = utils::convert_path(path);
         req.set_show_display(show_display);
         req.set_coin_name(utils::coin_name(network));
         req.set_script_type(script_type);
-        self.call(req, Box::new(|_, m| Ok(m.xpub().parse()?)))
+        self.call(req, Box::new(|_, m: protos::PublicKey| Ok(m.xpub().parse()?)))?.interact()
     }
 
     //TODO(stevenroose) multisig
@@ -30,13 +30,15 @@ impl Trezor {
         script_type: InputScriptType,
         network: Network,
         show_display: bool,
-    ) -> Result<TrezorResponse<'_, Address, protos::Address>> {
+        registered: Option<protos::RegisteredPolicy>,
+    ) -> Result<Address> {
         let mut req = protos::GetAddress::new();
         req.address_n = utils::convert_path(path);
         req.set_coin_name(utils::coin_name(network));
         req.set_show_display(show_display);
         req.set_script_type(script_type);
-        self.call(req, Box::new(|_, m| parse_address(m.address())))
+        req.registered = registered.into();
+        self.call(req, Box::new(|_, m: protos::Address| parse_address(m.address())))?.interact()
     }
 
     pub fn sign_tx(

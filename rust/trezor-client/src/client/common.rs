@@ -213,6 +213,10 @@ impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
             }
         }
     }
+
+    pub fn interact(self) -> Result<T> {
+        handle_interaction(self)
+    }
 }
 
 pub fn handle_interaction<T, R: TrezorMessage>(resp: TrezorResponse<'_, T, R>) -> Result<T> {
