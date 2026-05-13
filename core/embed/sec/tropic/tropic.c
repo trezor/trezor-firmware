@@ -538,7 +538,8 @@ secbool tropic_ensure_configuration(void) {
   }
 
   lt_chip_id_t chip_id = {0};
-  if (lt_get_info_chip_id(&g_tropic_driver.handle, &chip_id) != LT_OK) {
+  if (TROPIC_RETRY_COMMAND(
+          lt_get_info_chip_id(&g_tropic_driver.handle, &chip_id)) != LT_OK) {
     return secfalse;
   }
   bool batch_to_fix = false;
@@ -558,9 +559,9 @@ secbool tropic_ensure_configuration(void) {
 
   uint8_t config_version = 0;
   uint16_t data_read_size = 0;
-  lt_ret_t ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_read(&g_tropic_driver.handle,
-                                    TROPIC_CONFIG_VERSION_SLOT, &config_version,
-                                    sizeof(config_version), &data_read_size));
+  lt_ret_t ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_read(
+      &g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT, &config_version,
+      sizeof(config_version), &data_read_size));
   if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
     config_version = 0;
   } else if (ret != LT_OK) {
@@ -582,17 +583,16 @@ secbool tropic_ensure_configuration(void) {
   }
 
   config_version = TROPIC_CONFIG_VERSION;
-  ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_erase_write(&g_tropic_driver.handle,
-                                                       TROPIC_CONFIG_VERSION_SLOT,
-                                                       &config_version,
-                                                       sizeof(config_version)));
+  ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_erase_write(
+      &g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT, &config_version,
+      sizeof(config_version)));
   if (ret != LT_OK) {
     return secfalse;
   }
 
-  ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_read(&g_tropic_driver.handle,
-                                    TROPIC_CONFIG_VERSION_SLOT, &config_version,
-                                    sizeof(config_version), &data_read_size));
+  ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_read(
+      &g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT, &config_version,
+      sizeof(config_version), &data_read_size));
   if (ret != LT_OK || data_read_size != sizeof(config_version) ||
       config_version != TROPIC_CONFIG_VERSION) {
     return secfalse;
