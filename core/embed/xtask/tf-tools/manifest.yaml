@@ -240,6 +240,13 @@ options:
         name: Disabled
         description: Disable debug link support.
 
+  - id: miniscript
+    name: Miniscript Support
+    description: Enables Miniscript support.
+    group: Testing
+    when: component(firmware)
+    type: checkbox
+
   - id: n4w1
     name: N4W1 Support
     description: Enables N4W1 support.

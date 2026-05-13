@@ -47,3 +47,7 @@ MP_REGISTER_MODULE(MP_QSTR_coveragedata, mp_module_coveragedata);
 #if defined(USE_DBG_CONSOLE)
 MP_REGISTER_MODULE(MP_QSTR_trezorlog, mp_module_trezorlog);
 #endif
+
+#ifdef USE_MINISCRIPT
+MP_REGISTER_MODULE(MP_QSTR_trezorminiscript, mp_module_trezorminiscript);
+#endif

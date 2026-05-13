@@ -40,6 +40,9 @@ endif
 ifeq ($(BOOTLOADER_DEVEL),1)
 XTASK_BUILD_OPTS += --bootloader-devel
 endif
+ifeq ($(MINISCRIPT),1)
+XTASK_BUILD_OPTS += --miniscript
+endif
 ifeq ($(N4W1),1)
 XTASK_BUILD_OPTS += --n4w1
 endif
