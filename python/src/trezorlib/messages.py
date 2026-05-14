@@ -270,6 +270,7 @@ class Capability(IntEnum):
     NFC = 23
     Tron = 24
     N4W1 = 25
+    TouchWakeup = 26
 
 
 class SdProtectOperationType(IntEnum):
@@ -3334,6 +3335,7 @@ class Features(protobuf.MessageType):
         58: protobuf.Field("led", "bool", repeated=False, required=False, default=None),
         59: protobuf.Field("usb_connected", "bool", repeated=False, required=False, default=None),
         60: protobuf.Field("wireless_connected", "bool", repeated=False, required=False, default=None),
+        63: protobuf.Field("tap_to_wake", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3399,6 +3401,7 @@ class Features(protobuf.MessageType):
         led: Optional["bool"] = None,
         usb_connected: Optional["bool"] = None,
         wireless_connected: Optional["bool"] = None,
+        tap_to_wake: Optional["bool"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3460,6 +3463,7 @@ class Features(protobuf.MessageType):
         self.led = led
         self.usb_connected = usb_connected
         self.wireless_connected = wireless_connected
+        self.tap_to_wake = tap_to_wake
 
 
 class LockDevice(protobuf.MessageType):

@@ -215,6 +215,8 @@ class Menu(Enum):
                         TR.brightness__title,
                     ]
                 )
+                if features.tap_to_wake is not None:
+                    content.append(TR.words__tap_to_wake)
                 if features.haptic_feedback is not None:
                     content.append(TR.haptic_feedback__title)
                 content.append(TR.led__title)
