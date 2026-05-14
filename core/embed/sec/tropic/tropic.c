@@ -465,6 +465,33 @@ lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t *tropic_handle,
       lt_erase_and_write_R_config(tropic_handle, config));
 }
 
+static lt_ret_t lt_r_mem_data_erase_write(lt_handle_t *h,
+                                          const uint16_t udata_slot,
+                                          uint8_t *data, const uint16_t size) {
+  lt_ret_t ret = lt_r_mem_data_erase(h, udata_slot);
+  if (ret != LT_OK) {
+    return ret;
+  }
+
+  return lt_r_mem_data_write(h, udata_slot, data, size);
+}
+
+static lt_ret_t lt_r_mem_data_erase_write_retry(lt_handle_t *h,
+                                                const uint16_t udata_slot,
+                                                uint8_t *data,
+                                                const uint16_t size) {
+  return TROPIC_RETRY_COMMAND(
+      lt_r_mem_data_erase_write(h, udata_slot, data, size));
+}
+
+static lt_ret_t lt_r_mem_data_read_retry(lt_handle_t *h,
+                                         const uint16_t udata_slot,
+                                         uint8_t *data, const uint16_t size,
+                                         uint16_t *size_out) {
+  return TROPIC_RETRY_COMMAND(
+      lt_r_mem_data_read(h, udata_slot, data, size, size_out));
+}
+
 static secbool tropic_ensure_i_config(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
@@ -497,6 +524,16 @@ static secbool tropic_ensure_i_config(void) {
           return secfalse;
         }
       }
+    }
+
+    current = 0;
+    if (TROPIC_RETRY_COMMAND(lt_i_config_read(
+            &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], &current)) !=
+        LT_OK) {
+      return secfalse;
+    }
+    if (current != expected) {
+      return secfalse;
     }
   }
 
@@ -559,14 +596,12 @@ secbool tropic_ensure_configuration(void) {
 
   uint8_t config_version = 0;
   uint16_t data_read_size = 0;
-  lt_ret_t ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_read(
+  lt_ret_t ret = lt_r_mem_data_read_retry(
       &g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT, &config_version,
-      sizeof(config_version), &data_read_size));
+      sizeof(config_version), &data_read_size);
   if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
     config_version = 0;
-  } else if (ret != LT_OK) {
-    return secfalse;
-  } else if (data_read_size != sizeof(config_version)) {
+  } else if (ret != LT_OK || data_read_size != sizeof(config_version)) {
     return secfalse;
   }
 
@@ -583,22 +618,17 @@ secbool tropic_ensure_configuration(void) {
   }
 
   config_version = TROPIC_CONFIG_VERSION;
-  ret = TROPIC_RETRY_COMMAND(
-      lt_r_mem_data_erase(&g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT));
-  if (ret != LT_OK) {
-    return secfalse;
-  }
 
-  ret = TROPIC_RETRY_COMMAND(
-      lt_r_mem_data_write(&g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT,
-                          &config_version, sizeof(config_version)));
-  if (ret != LT_OK) {
-    return secfalse;
-  }
-
-  ret = TROPIC_RETRY_COMMAND(lt_r_mem_data_read(
+  ret = lt_r_mem_data_erase_write_retry(
       &g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT, &config_version,
-      sizeof(config_version), &data_read_size));
+      sizeof(config_version));
+  if (ret != LT_OK) {
+    return secfalse;
+  }
+
+  ret = lt_r_mem_data_read_retry(&g_tropic_driver.handle,
+                                 TROPIC_CONFIG_VERSION_SLOT, &config_version,
+                                 sizeof(config_version), &data_read_size);
   if (ret != LT_OK || data_read_size != sizeof(config_version) ||
       config_version != TROPIC_CONFIG_VERSION) {
     return secfalse;
@@ -723,8 +753,8 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
     return false;
   }
 
-  lt_ret_t res = lt_r_mem_data_read(&drv->handle, udata_slot, data,
-                                    TROPIC_SLOT_MAX_SIZE_V1, size);
+  lt_ret_t res = lt_r_mem_data_read_retry(&drv->handle, udata_slot, data,
+                                          TROPIC_SLOT_MAX_SIZE_V1, size);
   return res == LT_OK;
 }
 
@@ -811,16 +841,6 @@ static void lt_r_mem_data_erase_time(uint32_t *time_ms) { *time_ms += 55; }
 static void lt_mcounter_get_time(uint32_t *time_ms) { *time_ms += 51; }
 
 static void lt_mcounter_update_time(uint32_t *time_ms) { *time_ms += 51; }
-
-lt_ret_t lt_r_mem_data_erase_write(lt_handle_t *h, const uint16_t udata_slot,
-                                   uint8_t *data, const uint16_t size) {
-  lt_ret_t ret = lt_r_mem_data_erase(h, udata_slot);
-  if (ret != LT_OK) {
-    return ret;
-  }
-
-  return lt_r_mem_data_write(h, udata_slot, data, size);
-}
 
 lt_ret_t lt_r_mem_data_erase_write_time(uint32_t *time_ms) {
   lt_r_mem_data_erase_time(time_ms);
