@@ -55,9 +55,16 @@ def merge() -> None:
         # Replace non-breaking spaces with regular spaces, EXCEPT before ? ! and :
         # Use negative lookahead to avoid replacing before French punctuation
         text = re.sub(r'\u00A0(?![?!:])', ' ', text)
+        # Replace double newlines with newline-carriage return
+        # This is needed because Crowdin converts \n\r to \n\n on import
+        text = text.replace("\n\n", "\n\r")
         return text
 
     for lang in sorted(tdir.all_languages()):
+        # No reason to process English "translations", they are empty and overwrite en.json
+        # This is happening because English was added to Crowdin as a target language
+        if lang == "en":
+            continue
         merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(dict)
 
         for layout_type in translations.ALL_LAYOUTS:
