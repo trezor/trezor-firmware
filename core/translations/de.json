@@ -62,7 +62,7 @@
     "address__check_with_source": "Überprüfe die Adresse mit der Quelle.",
     "address__coin_address_template": "{0} Adresse",
     "address__confirmed": {
-      "Bolt": "Empfangsadresse bestätigt",
+      "Bolt": "Empfängeradresse bestätigt",
       "Caesar": "Empfängeradresse bestätigt",
       "Delizia": "Empfängeradresse bestätigt.",
       "Eckhart": "Empfängeradresse bestätigt."
@@ -974,12 +974,7 @@
     },
     "ethereum__redeem": "",
     "ethereum__redeem_amount": "Einlösungsbetrag",
-    "ethereum__redeem_from": {
-      "Bolt": "Einlösen auf",
-      "Caesar": "Einlösen von",
-      "Delizia": "Einlösen von",
-      "Eckhart": "Einlösen von"
-    },
+    "ethereum__redeem_from": "Einlösen von",
     "ethereum__reward_tokens": "Reward-Tokens",
     "ethereum__rewards_claim": "Rewards beanspruchen",
     "ethereum__show_full_array": {
@@ -1042,7 +1037,7 @@
     "ethereum__title_signing_address": "Signieradresse",
     "ethereum__title_token_contract": {
       "Bolt": "Token-Contract",
-      "Caesar": "Token-Kontakt Adresse",
+      "Caesar": "Adresse des Token-Vertrags",
       "Delizia": "Token-Contract",
       "Eckhart": "Adresse des Token-Vertrags"
     },
@@ -1059,32 +1054,12 @@
     "ethereum__vault_claim_intro": "Prüfe die Details, um Rewards zu beanspruchen.",
     "ethereum__vault_claim_to": "",
     "ethereum__vault_deposit_intro": "Prüfe die Details, um in den Vault einzuzahlen.",
-    "ethereum__vault_redeem_intro": {
-      "Bolt": "Prüfe die Details, um aus dem Vault einzulösen.",
-      "Caesar": "Prüfe die Details, um aus dem Vault einzulösen.",
-      "Delizia": "Prüfe die Details, um aus dem Vault einzulösen.",
-      "Eckhart": "Prüfe die Details, um aus dem Vault abzuheben."
-    },
+    "ethereum__vault_redeem_intro": "Prüfe die Details, um aus dem Vault einzulösen.",
     "ethereum__vault_redeem_to": "",
-    "ethereum__vault_withdraw_intro": {
-      "Bolt": "Prüfe die Details, um aus dem Vault abzuheben.",
-      "Caesar": "Prüfe die Details, um aus dem Vault abzuheben.",
-      "Delizia": "Prüfe die Details, um aus dem Vault abzuheben.",
-      "Eckhart": "Prüfe die Details, um in den Vault einzuzahlen."
-    },
-    "ethereum__withdraw": {
-      "Bolt": "abheben",
-      "Caesar": "abheben",
-      "Delizia": "abheben",
-      "Eckhart": "Abheben"
-    },
+    "ethereum__vault_withdraw_intro": "Prüfe die Details, um aus dem Vault abzuheben.",
+    "ethereum__withdraw": "Abheben",
     "ethereum__withdraw_amount": "",
-    "ethereum__withdraw_from": {
-      "Bolt": "abheben von",
-      "Caesar": "Abheben von",
-      "Delizia": "Abheben von",
-      "Eckhart": "Abheben von"
-    },
+    "ethereum__withdraw_from": "Abheben von",
     "ethereum__withdraw_to": "",
     "experimental_mode__enable": "Experimentelle Funktionen aktivieren?",
     "experimental_mode__only_for_dev": {
@@ -1806,12 +1781,7 @@
       "Eckhart": ""
     },
     "nostr__event_kind_template": "Event-Art: {0}",
-    "passphrase__access_hidden_wallet": {
-      "Bolt": "Zugriff auf versteckte Wallet",
-      "Caesar": "Zugriff auf verborgene Wallet",
-      "Delizia": "Zugriff auf versteckte Wallet",
-      "Eckhart": "Zugriff auf Passphrase Wallet"
-    },
+    "passphrase__access_hidden_wallet": "Zugriff auf Passphrase Wallet",
     "passphrase__access_wallet": "Passphr. Wall. öffnen?",
     "passphrase__always_on_device": "Deine Passphrase immer auf dem Trezor eingeben?",
     "passphrase__continue_with_empty_passphrase": "Mit leerer Passphrase fortfahren?",
@@ -2015,7 +1985,7 @@
       "Delizia": "Das Gerät sperren...",
       "Eckhart": ""
     },
-    "progress__one_second_left": "1 Sekunde verbleibend",
+    "progress__one_second_left": "Noch 1 Sekunde",
     "progress__please_wait": {
       "Bolt": "Bitte warten",
       "Caesar": "Bitte warten",
