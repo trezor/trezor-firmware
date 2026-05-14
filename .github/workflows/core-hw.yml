@@ -99,6 +99,8 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
+        with:
+          full-deps: "true"
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
       - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"

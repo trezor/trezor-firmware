@@ -155,7 +155,7 @@ jobs:
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
-        run: nix-shell --arg fullDeps true --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
+        run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core test_emu_sanity"
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.n4w1 && '-n4w1' || '' }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -233,7 +233,7 @@ jobs:
       - run: nix-shell --run "uv run make -C core build_unix"
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
-        run: nix-shell --arg fullDeps true --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
+        run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core test"
       - run: nix-shell --run "uv run make -C core test_emu_sanity"  # sanity check non-frozen emulator
 
@@ -334,7 +334,7 @@ jobs:
       - uses: ./.github/actions/environment
       - name: Start Tropic model
         if: ${{ env.TREZOR_MODEL == 'T3W1' && env.ACTIONS_DO_UI_TEST != 'true' }}  # ACTIONS_DO_UI_TEST refers to the test_emu_ui_multicore below which uses --control-emulators and starts tvl internally
-        run: nix-shell --arg fullDeps true --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
+        run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
       - name: Run device tests
         if: ${{ !matrix.n4w1 }}
         run: nix-shell --run "uv run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
@@ -440,16 +440,10 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-        if: ${{ matrix.model != 'T3W1' }}
-      - uses: ./.github/actions/environment
-        if: ${{ matrix.model == 'T3W1' }}
         with:
-          full-deps: true
-      - run: nix-shell --run "tests/download_emulators.sh ${{ matrix.model }}"
-      - run: nix-shell --run "uv run pytest tests/upgrade_tests"
-        if: ${{ matrix.model != 'T3W1' }}
+          full-deps: "true"
+      - run: nix-shell --arg fullDeps true --run "tests/download_emulators.sh ${{ matrix.model }}"
       - run: nix-shell --arg fullDeps true --run "uv run pytest tests/upgrade_tests"
-        if: ${{ matrix.model == 'T3W1' }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-test-upgrade-${{ matrix.model }}-${{ matrix.asan }}
@@ -489,7 +483,7 @@ jobs:
       - uses: ./.github/actions/environment
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
-        run: nix-shell --arg fullDeps true --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
+        run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core test_emu_persistence_ui"
         if: ${{ matrix.asan == 'noasan' }}
       - run: nix-shell --run "uv run make -C core test_emu_persistence"
@@ -529,7 +523,9 @@ jobs:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
-      - uses: ./.github/actions/environment  # XXX poetry maybe not needed
+      - uses: ./.github/actions/environment
+        with:
+          full-deps: "true"
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
       - run: nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -614,7 +610,7 @@ jobs:
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
         with:
-          full-deps: true
+          full-deps: "true"
       - run: nix-shell --arg fullDeps true --run "uv run make -C core test_emu_monero"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
@@ -654,7 +650,7 @@ jobs:
       - uses: ./.github/actions/environment
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
-        run: nix-shell --arg fullDeps true --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
+        run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C tests/fido_tests/u2f-tests-hid"
       - run: nix-shell --run "uv run make -C core test_emu_u2f"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -692,7 +688,7 @@ jobs:
       - uses: ./.github/actions/environment
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
-        run: nix-shell --arg fullDeps true --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
+        run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core test_emu_fido2"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
