@@ -134,7 +134,7 @@ ATTRIBUTES = (
     ("confidential_assets", optional_dict),
 )
 
-btc_names = ["Bitcoin", "Testnet", "Regtest"]
+btc_names = ["Bitcoin", "Testnet", "Regtest", "Signet"]
 
 coins = {}
 for model in ALL_MODELS:

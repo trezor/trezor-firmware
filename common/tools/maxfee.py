@@ -17,6 +17,7 @@ import marketcap
 DEFAULT_SKIP_RE = (
     r"^Bitcoin$",
     r"^Regtest$",
+    r"^Signet$",
     r"Testnet",
 )
 MAX_DELTA_PERCENT = 25
