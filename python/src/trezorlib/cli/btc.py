@@ -254,6 +254,7 @@ def get_address(
 @click.option("-e", "--curve")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS))
 @click.option("-d", "--show-display", is_flag=True)
+@click.option("-i", "--ignore-xpub-magic", is_flag=True)
 @with_session
 def get_public_node(
     session: "Session",
@@ -262,6 +263,7 @@ def get_public_node(
     curve: Optional[str],
     script_type: Optional[messages.InputScriptType],
     show_display: bool,
+    ignore_xpub_magic: bool,
 ) -> dict:
     """Get public node of given path."""
     address_n = tools.parse_path(address)
@@ -275,6 +277,7 @@ def get_public_node(
         coin_name=coin,
         script_type=script_type,
         unlock_path=get_unlock_path(address_n),
+        ignore_xpub_magic=ignore_xpub_magic,
     )
     return {
         "node": {
