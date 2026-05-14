@@ -72,6 +72,41 @@ static const uint8_t
         {0x19, 0x0a, 0x1f, 0x0f, 0x2c}, {0x19, 0x0c, 0x03, 0x0d, 0x38},
 };
 
+// clang-format off
+// Address table for all 27 I/R-config objects, ordered to match lt_config_t.obj[].
+// Using a local const table (flash/.rodata) instead of cfg_desc_table from
+// libtropic which is a non-const global (RAM/.data).
+static const enum lt_config_obj_addr_t TROPIC_CONFIG_ADDRS[LT_CONFIG_OBJ_CNT] = {
+    TR01_CFG_START_UP_ADDR,
+    TR01_CFG_SENSORS_ADDR,
+    TR01_CFG_DEBUG_ADDR,
+    TR01_CFG_GPO_ADDR,
+    TR01_CFG_SLEEP_MODE_ADDR,
+    TR01_CFG_UAP_PAIRING_KEY_WRITE_ADDR,
+    TR01_CFG_UAP_PAIRING_KEY_READ_ADDR,
+    TR01_CFG_UAP_PAIRING_KEY_INVALIDATE_ADDR,
+    TR01_CFG_UAP_R_CONFIG_WRITE_ERASE_ADDR,
+    TR01_CFG_UAP_R_CONFIG_READ_ADDR,
+    TR01_CFG_UAP_I_CONFIG_WRITE_ADDR,
+    TR01_CFG_UAP_I_CONFIG_READ_ADDR,
+    TR01_CFG_UAP_PING_ADDR,
+    TR01_CFG_UAP_R_MEM_DATA_WRITE_ADDR,
+    TR01_CFG_UAP_R_MEM_DATA_READ_ADDR,
+    TR01_CFG_UAP_R_MEM_DATA_ERASE_ADDR,
+    TR01_CFG_UAP_RANDOM_VALUE_GET_ADDR,
+    TR01_CFG_UAP_ECC_KEY_GENERATE_ADDR,
+    TR01_CFG_UAP_ECC_KEY_STORE_ADDR,
+    TR01_CFG_UAP_ECC_KEY_READ_ADDR,
+    TR01_CFG_UAP_ECC_KEY_ERASE_ADDR,
+    TR01_CFG_UAP_ECDSA_SIGN_ADDR,
+    TR01_CFG_UAP_EDDSA_SIGN_ADDR,
+    TR01_CFG_UAP_MCOUNTER_INIT_ADDR,
+    TR01_CFG_UAP_MCOUNTER_GET_ADDR,
+    TR01_CFG_UAP_MCOUNTER_UPDATE_ADDR,
+    TR01_CFG_UAP_MAC_AND_DESTROY_ADDR,
+};
+// clang-format on
+
 #ifdef TREZOR_EMULATOR
 #define TROPIC_RETRY_COMMAND(command) command
 #else
@@ -375,41 +410,6 @@ void tropic_session_start_time(uint32_t *time_ms) {
     *time_ms += 210;
   }
 }
-
-// clang-format off
-// Address table for all 27 I/R-config objects, ordered to match lt_config_t.obj[].
-// Using a local const table (flash/.rodata) instead of cfg_desc_table from
-// libtropic which is a non-const global (RAM/.data).
-static const enum lt_config_obj_addr_t TROPIC_CONFIG_ADDRS[LT_CONFIG_OBJ_CNT] = {
-    TR01_CFG_START_UP_ADDR,
-    TR01_CFG_SENSORS_ADDR,
-    TR01_CFG_DEBUG_ADDR,
-    TR01_CFG_GPO_ADDR,
-    TR01_CFG_SLEEP_MODE_ADDR,
-    TR01_CFG_UAP_PAIRING_KEY_WRITE_ADDR,
-    TR01_CFG_UAP_PAIRING_KEY_READ_ADDR,
-    TR01_CFG_UAP_PAIRING_KEY_INVALIDATE_ADDR,
-    TR01_CFG_UAP_R_CONFIG_WRITE_ERASE_ADDR,
-    TR01_CFG_UAP_R_CONFIG_READ_ADDR,
-    TR01_CFG_UAP_I_CONFIG_WRITE_ADDR,
-    TR01_CFG_UAP_I_CONFIG_READ_ADDR,
-    TR01_CFG_UAP_PING_ADDR,
-    TR01_CFG_UAP_R_MEM_DATA_WRITE_ADDR,
-    TR01_CFG_UAP_R_MEM_DATA_READ_ADDR,
-    TR01_CFG_UAP_R_MEM_DATA_ERASE_ADDR,
-    TR01_CFG_UAP_RANDOM_VALUE_GET_ADDR,
-    TR01_CFG_UAP_ECC_KEY_GENERATE_ADDR,
-    TR01_CFG_UAP_ECC_KEY_STORE_ADDR,
-    TR01_CFG_UAP_ECC_KEY_READ_ADDR,
-    TR01_CFG_UAP_ECC_KEY_ERASE_ADDR,
-    TR01_CFG_UAP_ECDSA_SIGN_ADDR,
-    TR01_CFG_UAP_EDDSA_SIGN_ADDR,
-    TR01_CFG_UAP_MCOUNTER_INIT_ADDR,
-    TR01_CFG_UAP_MCOUNTER_GET_ADDR,
-    TR01_CFG_UAP_MCOUNTER_UPDATE_ADDR,
-    TR01_CFG_UAP_MAC_AND_DESTROY_ADDR,
-};
-// clang-format on
 
 lt_ret_t lt_ecc_key_erase_retry(lt_handle_t *tropic_handle,
                                 const lt_ecc_slot_t ecc_slot) {
