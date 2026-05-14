@@ -240,6 +240,7 @@ if TYPE_CHECKING:
         NFC = 23
         Tron = 24
         N4W1 = 25
+        TouchWakeup = 26
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0

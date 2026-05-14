@@ -153,6 +153,10 @@ def get_features() -> Features:
         f.haptic_feedback = storage_device.get_haptic_feedback()
         f.capabilities.append(Capability.Haptic)
 
+    if utils.USE_TOUCH_WAKEUP:
+        f.tap_to_wake = storage_device.get_tap_to_wake()
+        f.capabilities.append(Capability.TouchWakeup)
+
     if utils.USE_BACKLIGHT:
         f.capabilities.append(Capability.Brightness)
 
