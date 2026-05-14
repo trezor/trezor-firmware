@@ -899,7 +899,7 @@ def render(
         defs["bitcoin"] = [
             x
             for x in defs["bitcoin"]
-            if x["coin_name"] in ("Bitcoin", "Testnet", "Regtest")
+            if x["coin_name"] in ("Bitcoin", "Testnet", "Regtest", "Signet")
         ]
 
     # munch dicts - make them attribute-accessible

@@ -131,7 +131,7 @@ def load_json(*path: str | Path) -> Any:
 
 
 def get_btc_testnet_status(name: str) -> bool:
-    return any((mark in name.lower()) for mark in ("testnet", "regtest"))
+    return any((mark in name.lower()) for mark in ("testnet", "regtest", "signet"))
 
 
 # ====== CoinsInfo ======
@@ -583,7 +583,7 @@ def fill_blockchain_links(all_coins: CoinsInfo) -> None:
 
 
 def _btc_sort_key(coin: Coin) -> str:
-    if coin["name"] in ("Bitcoin", "Testnet", "Regtest"):
+    if coin["name"] in ("Bitcoin", "Testnet", "Regtest", "Signet"):
         return "000000" + coin["name"]
     else:
         return coin["name"]

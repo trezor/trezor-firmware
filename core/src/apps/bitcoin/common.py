@@ -21,7 +21,7 @@ else:
     IntEnum = object
 
 
-BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
+BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet", "Signet")
 
 
 class SigHashType(IntEnum):
