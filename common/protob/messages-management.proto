@@ -145,6 +145,7 @@ message Features {
     optional bool led = 58;                                        // RGB LED settings
     optional bool usb_connected = 59;                              // USB connected
     optional bool wireless_connected = 60;                         // Wireless charger connected
+    optional bool tap_to_wake = 63;                                // tap to wake is enabled (None = not supported)
 
     enum BackupAvailability {
         /// Device is already backed up, or a previous backup has failed.
@@ -190,6 +191,7 @@ message Features {
         Capability_NFC = 23 [(bitcoin_only) = true];  // Near Field Communications
         Capability_Tron = 24;
         Capability_N4W1 = 25 [(bitcoin_only) = true];
+        Capability_TouchWakeup = 26 [(bitcoin_only) = true];  // Touch to wake from sleep
     }
 }
 
