@@ -43,8 +43,10 @@ CORE_SRC_DIR = ROOT / "core" / "src"
 
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
+TROPIC_MODEL_CONFIGFILE_OLD = ROOT / "tests" / "tropic_model" / "config_old.yml"
 TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
 TROPIC_CAPABLE_MODELS = {"T3W1"}
+TROPIC_OLD_CONFIG_UNTIL_VERSION = (2, 11, 1)  # inclusive
 
 
 def is_tropic_capable_model(model_internal_name: str | None) -> bool:
@@ -181,6 +183,16 @@ def _get_port(worker_id: int) -> int:
     return 20000 + worker_id * 6
 
 
+def _get_tropic_model_configfile(tag: str | None) -> Path:
+    if tag is not None and tag.startswith("v"):
+        tag_version = tag[1:].partition("-")[0]
+        if len(tag_version.split(".")) == 3:
+            version_tuple = tuple(int(i) for i in tag_version.split("."))
+            if version_tuple <= TROPIC_OLD_CONFIG_UNTIL_VERSION:
+                return TROPIC_MODEL_CONFIGFILE_OLD
+    return TROPIC_MODEL_CONFIGFILE
+
+
 class EmulatorWrapper:
 
     def __init__(
@@ -194,6 +206,8 @@ class EmulatorWrapper:
         auto_interact: bool = True,
         main_args: Sequence[str] = ("-m", "main"),
         launch_tropic_model: bool | None = None,
+        tropic_model_port_override: int | None = None,
+        port_override: int | None = None,
     ) -> None:
 
         if model is None:
@@ -228,7 +242,7 @@ class EmulatorWrapper:
                 Path(logs_dir) / f"trezor-tropic-model-{worker_id}.log"
             )
 
-        tropic_configfile = Path(TROPIC_MODEL_CONFIGFILE)
+        tropic_configfile = _get_tropic_model_configfile(tag)
         if launch_tropic_model:
             tropic_config_output = (
                 Path(self.profile_dir.name) / "tropic_model_config_output.yml"
@@ -242,7 +256,11 @@ class EmulatorWrapper:
             shared_model = _get_shared_tropic_model(
                 profile_dir=self.profile_dir.name,
                 workdir=workdir,
-                port=_get_tropic_model_port(worker_id),
+                port=(
+                    tropic_model_port_override
+                    if tropic_model_port_override is not None
+                    else _get_tropic_model_port(worker_id)
+                ),
                 configfile=tropic_configfile,
                 logfile=(
                     tropic_model_logfile
@@ -253,7 +271,11 @@ class EmulatorWrapper:
             launch_tropic_model_for_emulator = False
             tropic_model_port = shared_model.port
         else:
-            tropic_model_port = _get_tropic_model_port(worker_id)
+            tropic_model_port = (
+                tropic_model_port_override
+                if tropic_model_port_override is not None
+                else _get_tropic_model_port(worker_id)
+            )
         if gen == "legacy":
             self.emulator = LegacyEmulator(
                 executable,
@@ -273,7 +295,9 @@ class EmulatorWrapper:
                 tropic_model_port=tropic_model_port,
                 tropic_model_configfile=str(tropic_configfile),
                 tropic_model_logfile=tropic_model_logfile,
-                port=_get_port(worker_id),
+                port=(
+                    port_override if port_override is not None else _get_port(worker_id)
+                ),
                 headless=headless,
                 auto_interact=auto_interact,
                 main_args=main_args,

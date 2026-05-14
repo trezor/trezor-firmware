@@ -559,6 +559,11 @@ access_violation:
   apptask_access_violation();
   return false;
 }
+
+secbool tropic_ensure_configuration__verified(void) {
+  return tropic_ensure_configuration();
+}
+
 #endif
 
 #ifdef USE_BACKUP_RAM
