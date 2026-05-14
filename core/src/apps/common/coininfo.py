@@ -153,6 +153,35 @@ def by_name(name: str) -> CoinInfo:
                 False,  # overwintered
                 None,  # confidential_assets
             )
+        if name == "Signet":
+            return CoinInfo(
+                name,  # coin_name
+                "SIGNET",  # coin_shortcut
+                8,  # decimals
+                111,  # address_type
+                196,  # address_type_p2sh
+                10000000,  # maxfee_kb
+                "Bitcoin Signed Message:\n",  # signed_message_header
+                0x043587cf,  # xpub_magic
+                0x044a5262,  # xpub_magic_segwit_p2sh
+                0x045f1cf6,  # xpub_magic_segwit_native
+                0x024289ef,  # xpub_magic_multisig_segwit_p2sh
+                0x02575483,  # xpub_magic_multisig_segwit_native
+                "tb",  # bech32_prefix
+                None,  # cashaddr_prefix
+                1,  # slip44
+                True,  # segwit
+                True,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
         if name == "Testnet":
             return CoinInfo(
                 name,  # coin_name
@@ -1476,6 +1505,35 @@ def by_name(name: str) -> CoinInfo:
                 0x024289ef,  # xpub_magic_multisig_segwit_p2sh
                 0x02575483,  # xpub_magic_multisig_segwit_native
                 "bcrt",  # bech32_prefix
+                None,  # cashaddr_prefix
+                1,  # slip44
+                True,  # segwit
+                True,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
+        if name == "Signet":
+            return CoinInfo(
+                name,  # coin_name
+                "SIGNET",  # coin_shortcut
+                8,  # decimals
+                111,  # address_type
+                196,  # address_type_p2sh
+                10000000,  # maxfee_kb
+                "Bitcoin Signed Message:\n",  # signed_message_header
+                0x043587cf,  # xpub_magic
+                0x044a5262,  # xpub_magic_segwit_p2sh
+                0x045f1cf6,  # xpub_magic_segwit_native
+                0x024289ef,  # xpub_magic_multisig_segwit_p2sh
+                0x02575483,  # xpub_magic_multisig_segwit_native
+                "tb",  # bech32_prefix
                 None,  # cashaddr_prefix
                 1,  # slip44
                 True,  # segwit
@@ -3088,6 +3146,35 @@ def by_name(name: str) -> CoinInfo:
                 False,  # overwintered
                 None,  # confidential_assets
             )
+        if name == "Signet":
+            return CoinInfo(
+                name,  # coin_name
+                "SIGNET",  # coin_shortcut
+                8,  # decimals
+                111,  # address_type
+                196,  # address_type_p2sh
+                10000000,  # maxfee_kb
+                "Bitcoin Signed Message:\n",  # signed_message_header
+                0x043587cf,  # xpub_magic
+                0x044a5262,  # xpub_magic_segwit_p2sh
+                0x045f1cf6,  # xpub_magic_segwit_native
+                0x024289ef,  # xpub_magic_multisig_segwit_p2sh
+                0x02575483,  # xpub_magic_multisig_segwit_native
+                "tb",  # bech32_prefix
+                None,  # cashaddr_prefix
+                1,  # slip44
+                True,  # segwit
+                True,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
         if name == "Testnet":
             return CoinInfo(
                 name,  # coin_name
@@ -4411,6 +4498,35 @@ def by_name(name: str) -> CoinInfo:
                 0x024289ef,  # xpub_magic_multisig_segwit_p2sh
                 0x02575483,  # xpub_magic_multisig_segwit_native
                 "bcrt",  # bech32_prefix
+                None,  # cashaddr_prefix
+                1,  # slip44
+                True,  # segwit
+                True,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
+        if name == "Signet":
+            return CoinInfo(
+                name,  # coin_name
+                "SIGNET",  # coin_shortcut
+                8,  # decimals
+                111,  # address_type
+                196,  # address_type_p2sh
+                10000000,  # maxfee_kb
+                "Bitcoin Signed Message:\n",  # signed_message_header
+                0x043587cf,  # xpub_magic
+                0x044a5262,  # xpub_magic_segwit_p2sh
+                0x045f1cf6,  # xpub_magic_segwit_native
+                0x024289ef,  # xpub_magic_multisig_segwit_p2sh
+                0x02575483,  # xpub_magic_multisig_segwit_native
+                "tb",  # bech32_prefix
                 None,  # cashaddr_prefix
                 1,  # slip44
                 True,  # segwit
@@ -5762,6 +5878,35 @@ def by_name(name: str) -> CoinInfo:
                 False,  # overwintered
                 None,  # confidential_assets
             )
+        if name == "Signet":
+            return CoinInfo(
+                name,  # coin_name
+                "SIGNET",  # coin_shortcut
+                8,  # decimals
+                111,  # address_type
+                196,  # address_type_p2sh
+                10000000,  # maxfee_kb
+                "Bitcoin Signed Message:\n",  # signed_message_header
+                0x043587cf,  # xpub_magic
+                0x044a5262,  # xpub_magic_segwit_p2sh
+                0x045f1cf6,  # xpub_magic_segwit_native
+                0x024289ef,  # xpub_magic_multisig_segwit_p2sh
+                0x02575483,  # xpub_magic_multisig_segwit_native
+                "tb",  # bech32_prefix
+                None,  # cashaddr_prefix
+                1,  # slip44
+                True,  # segwit
+                True,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
         if name == "Testnet":
             return CoinInfo(
                 name,  # coin_name
@@ -7099,6 +7244,35 @@ def by_name(name: str) -> CoinInfo:
                 False,  # overwintered
                 None,  # confidential_assets
             )
+        if name == "Signet":
+            return CoinInfo(
+                name,  # coin_name
+                "SIGNET",  # coin_shortcut
+                8,  # decimals
+                111,  # address_type
+                196,  # address_type_p2sh
+                10000000,  # maxfee_kb
+                "Bitcoin Signed Message:\n",  # signed_message_header
+                0x043587cf,  # xpub_magic
+                0x044a5262,  # xpub_magic_segwit_p2sh
+                0x045f1cf6,  # xpub_magic_segwit_native
+                0x024289ef,  # xpub_magic_multisig_segwit_p2sh
+                0x02575483,  # xpub_magic_multisig_segwit_native
+                "tb",  # bech32_prefix
+                None,  # cashaddr_prefix
+                1,  # slip44
+                True,  # segwit
+                True,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
         if name == "Testnet":
             return CoinInfo(
                 name,  # coin_name
@@ -8422,6 +8596,35 @@ def by_name(name: str) -> CoinInfo:
                 0x024289ef,  # xpub_magic_multisig_segwit_p2sh
                 0x02575483,  # xpub_magic_multisig_segwit_native
                 "bcrt",  # bech32_prefix
+                None,  # cashaddr_prefix
+                1,  # slip44
+                True,  # segwit
+                True,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
+        if name == "Signet":
+            return CoinInfo(
+                name,  # coin_name
+                "SIGNET",  # coin_shortcut
+                8,  # decimals
+                111,  # address_type
+                196,  # address_type_p2sh
+                10000000,  # maxfee_kb
+                "Bitcoin Signed Message:\n",  # signed_message_header
+                0x043587cf,  # xpub_magic
+                0x044a5262,  # xpub_magic_segwit_p2sh
+                0x045f1cf6,  # xpub_magic_segwit_native
+                0x024289ef,  # xpub_magic_multisig_segwit_p2sh
+                0x02575483,  # xpub_magic_multisig_segwit_native
+                "tb",  # bech32_prefix
                 None,  # cashaddr_prefix
                 1,  # slip44
                 True,  # segwit
