@@ -691,7 +691,9 @@ class Bitcoin:
                 else:
                     if txi.registered:
                         # TODO: not sure if it works for >1 witness items (i.e. Liana recovery path)
-                        public_key = scripts.derive_miniscript(txi, self.keychain)
+                        public_key = scripts.derive_miniscript(
+                            txi, self.keychain, self.coin
+                        )
 
                     scripts.write_witness_p2wpkh(
                         self.serialized_tx,
@@ -954,7 +956,7 @@ class Bitcoin:
             node = self.keychain.derive(txi.address_n)
 
         if txi.registered is not None:
-            script = scripts.derive_miniscript(txi, self.keychain)
+            script = scripts.derive_miniscript(txi, self.keychain, self.coin)
 
             assert self.coin.bech32_prefix is not None
             address = addresses._address_p2wsh(

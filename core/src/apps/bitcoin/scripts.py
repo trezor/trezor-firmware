@@ -138,7 +138,7 @@ def write_bip143_script_code_prefixed(
     if txi.registered is not None:
         if keychain is None:
             raise DataError("Cannot verify policy")
-        script = derive_miniscript(txi, keychain)
+        script = derive_miniscript(txi, keychain, coin)
         write_compact_size(w, len(script))
         w.extend(script)
         return
@@ -159,7 +159,7 @@ def write_bip143_script_code_prefixed(
         raise DataError("Unknown input script type for bip143 script code")
 
 
-def derive_miniscript(txi: TxInput, keychain: Keychain) -> bytes:
+def derive_miniscript(txi: TxInput, keychain: Keychain, coin: CoinInfo) -> bytes:
     if txi.script_type != InputScriptType.SPENDMINISCRIPT:
         raise DataError("Invalid script type")
     if txi.registered is None:
@@ -171,6 +171,7 @@ def derive_miniscript(txi: TxInput, keychain: Keychain) -> bytes:
     return register_policy.derive_miniscript(
         txi.registered,
         keychain,
+        coin,
         address_n=txi.address_n,
     )
 

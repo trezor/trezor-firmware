@@ -35,7 +35,12 @@ def get_descriptor(msg: Policy) -> str:
     return res.replace("/**", "/<0;1>/*")
 
 
-def _derive_miniscript_unchecked(policy: Policy, address_n: Bip32Path) -> bytes:
+def _derive_miniscript_unchecked(
+    policy: Policy, coin: CoinInfo, address_n: Bip32Path
+) -> bytes:
+    if coin.coin_name != policy.coin_name:
+        raise DataError("Invalid coin name")
+
     from trezorminiscript import compile
 
     # TODO: check change sanity?
@@ -47,11 +52,12 @@ def _derive_miniscript_unchecked(policy: Policy, address_n: Bip32Path) -> bytes:
 def derive_miniscript(
     msg: RegisteredPolicy,
     keychain: Keychain,
+    coin: CoinInfo,
     address_n: Bip32Path,
 ) -> bytes:
 
     if policy_hmac(msg.policy, keychain) == msg.mac:
-        return _derive_miniscript_unchecked(msg.policy, address_n)
+        return _derive_miniscript_unchecked(msg.policy, coin, address_n)
 
     raise DataError("Unregistered policy")
 
@@ -71,7 +77,7 @@ async def register_policy(
 
     # Make sure the policy is valid and can be compiled into a script, before user confirmation
     # (derive first external address: change=0, index=0)
-    _derive_miniscript_unchecked(msg, [0, 0])
+    _derive_miniscript_unchecked(msg, coin, [0, 0])
 
     await confirm_value(
         title=f"Register {msg.coin_name} policy",

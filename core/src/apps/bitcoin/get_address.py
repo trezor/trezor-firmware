@@ -66,7 +66,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
 
         # TODO: only `wsh()` is supported
         # TODO: make sure our key is included
-        script = derive_miniscript(msg.registered, keychain, address_n)
+        script = derive_miniscript(msg.registered, keychain, coin, address_n)
 
         assert coin.coin_name == msg.registered.policy.coin_name
         assert coin.bech32_prefix is not None
