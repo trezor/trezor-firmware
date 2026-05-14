@@ -164,7 +164,7 @@ impl<'a> SignTxProgress<'a> {
                 return Err(Error::InvalidPsbt(format!("no utxo for PSBT input {}", input_index)));
             };
 
-            let our_derivations: Vec<_> = psbt_input
+            let mut our_derivations: Vec<_> = psbt_input
                 .bip32_derivation
                 .iter()
                 .filter_map(|(pubkey, (fpr, derivation))| {
@@ -177,7 +177,10 @@ impl<'a> SignTxProgress<'a> {
             if our_derivations.len() == 1 {
                 data_input.address_n = our_derivations[0].to_u32_vec();
             } else {
-                unimplemented!("Unknown BIP32 derivation");
+                // TODO: is there a better way? see https://github.com/wizardsardine/liana/pull/706#issuecomment-1751088278
+                our_derivations.sort();
+                eprintln!("\n{} derivations: {:?}", self.fingerprint, our_derivations);
+                data_input.address_n = our_derivations[0].to_u32_vec();
             }
 
             // Since we know the keypath, we probably have to sign it.  So update script_type.

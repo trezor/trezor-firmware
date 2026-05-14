@@ -94,6 +94,7 @@ impl Trezor {
                     .get_public_key(&path, InputScriptType::SPENDADDRESS, network, false)?
                     .public_key;
                 if *pubkey == derived_pubkey {
+                    eprintln!("{}: {} {}", fpr, path, derived_pubkey);
                     if derivations.insert(derived_pubkey, path.clone()).is_some() {
                         return Err(crate::Error::InvalidPsbt(format!(
                             "Duplicate public key: {}",
