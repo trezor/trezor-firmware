@@ -48,7 +48,7 @@ async def key_image_sync(
         raise DataError("Invalid number of outputs")
     final_hash = state.hasher.digest()
     if final_hash != state.expected_hash:
-        raise DataError("Invalid number of outputs")
+        raise DataError("Invalid hash")
     return MoneroKeyImageSyncFinalAck(enc_key=state.enc_key)
 
 
