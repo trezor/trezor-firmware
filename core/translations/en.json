@@ -104,7 +104,7 @@
     "backup__title_backup_completed": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Wallet backup completed",
+      "Delizia": "Wallet backup completed.",
       "Eckhart": "Wallet backup completed."
     },
     "backup__title_backup_wallet": {
@@ -320,7 +320,7 @@
     "brightness__changed_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Display brightness changed",
+      "Delizia": "Display brightness changed.",
       "Eckhart": ""
     },
     "brightness__title": "Display brightness",
@@ -766,7 +766,12 @@
     "ethereum__approve_revoke": "Revoke",
     "ethereum__approve_revoke_from": "Revoke from",
     "ethereum__approve_to": "Approve to",
-    "ethereum__approve_unlimited_template": "Approving unlimited amount of {0}",
+    "ethereum__approve_unlimited_template": {
+      "Bolt": "Approving unlimited amount of {0}",
+      "Caesar": "Approving unlimited amount of {0}",
+      "Delizia": "Approving unlimited amount of {0}.",
+      "Eckhart": "Approving unlimited amount of {0}."
+    },
     "ethereum__calldata_suffix": "Calldata suffix",
     "ethereum__confirm_contract": "Confirm contract",
     "ethereum__contract_address": "Provider contract address",
@@ -1074,7 +1079,12 @@
     "joint__to_the_total_amount": "To the total amount",
     "joint__you_are_contributing": "You are contributing",
     "language__change_to_template": "Change language to {0}?",
-    "language__changed": "Language changed successfully",
+    "language__changed": {
+      "Bolt": "Language changed successfully",
+      "Caesar": "Language changed successfully",
+      "Delizia": "Language changed successfully.",
+      "Eckhart": "Language changed successfully."
+    },
     "language__progress": {
       "Bolt": "Changing language",
       "Caesar": "Changing language",
@@ -1793,7 +1803,7 @@
     "recovery__wallet_recovered": {
       "Bolt": "Wallet recovery completed",
       "Caesar": "Wallet recovery completed",
-      "Delizia": "Wallet recovery completed",
+      "Delizia": "Wallet recovery completed.",
       "Eckhart": "Wallet recovery completed."
     },
     "recovery__wanna_cancel_dry_run": "Are you sure you want to cancel the backup check?",
@@ -2081,8 +2091,8 @@
     "reset__share_completed_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Share #{0} completed",
-      "Eckhart": "Share #{0} completed"
+      "Delizia": "Share #{0} completed.",
+      "Eckhart": "Share #{0} completed."
     },
     "reset__share_words_first": "Write down the first word from the backup.",
     "reset__share_words_title": "Standard backup",
@@ -2430,7 +2440,7 @@
     "send__transaction_signed": {
       "Bolt": "Transaction signed",
       "Caesar": "Transaction signed",
-      "Delizia": "Transaction signed",
+      "Delizia": "Transaction signed.",
       "Eckhart": "Transaction signed."
     },
     "send__you_are_contributing": "You are contributing:",
@@ -2706,7 +2716,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "View more info, quit flow, ..."
+      "Eckhart": "View more info, quit flow..."
     },
     "tutorial__middle_click": {
       "Bolt": "",
