@@ -287,6 +287,9 @@ trezor_message_impl! {
     SolanaAddress => MessageType_SolanaAddress,
     SolanaSignTx => MessageType_SolanaSignTx,
     SolanaTxSignature => MessageType_SolanaTxSignature,
+    SolanaSignMessage => MessageType_SolanaSignMessage,
+    SolanaMessageSignature => MessageType_SolanaMessageSignature,
+    SolanaVerifyMessage => MessageType_SolanaVerifyMessage,
 }
 
 #[cfg(feature = "stellar")]

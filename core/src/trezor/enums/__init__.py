@@ -686,6 +686,9 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaTxSignature = 905
+        SolanaSignMessage = 906
+        SolanaMessageSignature = 907
+        SolanaVerifyMessage = 908
         ThpCreateNewSession = 1000
         ThpCredentialRequest = 1016
         ThpCredentialResponse = 1017

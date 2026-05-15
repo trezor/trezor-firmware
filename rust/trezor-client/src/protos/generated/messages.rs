@@ -541,6 +541,12 @@ pub enum MessageType {
     MessageType_SolanaSignTx = 904,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaTxSignature)
     MessageType_SolanaTxSignature = 905,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaSignMessage)
+    MessageType_SolanaSignMessage = 906,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaMessageSignature)
+    MessageType_SolanaMessageSignature = 907,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaVerifyMessage)
+    MessageType_SolanaVerifyMessage = 908,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCreateNewSession)
     MessageType_ThpCreateNewSession = 1000,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCredentialRequest)
@@ -873,6 +879,9 @@ impl ::protobuf::Enum for MessageType {
             903 => ::std::option::Option::Some(MessageType::MessageType_SolanaAddress),
             904 => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             905 => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
+            906 => ::std::option::Option::Some(MessageType::MessageType_SolanaSignMessage),
+            907 => ::std::option::Option::Some(MessageType::MessageType_SolanaMessageSignature),
+            908 => ::std::option::Option::Some(MessageType::MessageType_SolanaVerifyMessage),
             1000 => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
             1016 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
             1017 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
@@ -1168,6 +1177,9 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_SolanaAddress" => ::std::option::Option::Some(MessageType::MessageType_SolanaAddress),
             "MessageType_SolanaSignTx" => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             "MessageType_SolanaTxSignature" => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
+            "MessageType_SolanaSignMessage" => ::std::option::Option::Some(MessageType::MessageType_SolanaSignMessage),
+            "MessageType_SolanaMessageSignature" => ::std::option::Option::Some(MessageType::MessageType_SolanaMessageSignature),
+            "MessageType_SolanaVerifyMessage" => ::std::option::Option::Some(MessageType::MessageType_SolanaVerifyMessage),
             "MessageType_ThpCreateNewSession" => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
             "MessageType_ThpCredentialRequest" => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
             "MessageType_ThpCredentialResponse" => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
@@ -1462,6 +1474,9 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_SolanaAddress,
         MessageType::MessageType_SolanaSignTx,
         MessageType::MessageType_SolanaTxSignature,
+        MessageType::MessageType_SolanaSignMessage,
+        MessageType::MessageType_SolanaMessageSignature,
+        MessageType::MessageType_SolanaVerifyMessage,
         MessageType::MessageType_ThpCreateNewSession,
         MessageType::MessageType_ThpCredentialRequest,
         MessageType::MessageType_ThpCredentialResponse,
@@ -1762,38 +1777,41 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_SolanaAddress => 254,
             MessageType::MessageType_SolanaSignTx => 255,
             MessageType::MessageType_SolanaTxSignature => 256,
-            MessageType::MessageType_ThpCreateNewSession => 257,
-            MessageType::MessageType_ThpCredentialRequest => 258,
-            MessageType::MessageType_ThpCredentialResponse => 259,
-            MessageType::MessageType_NostrGetPubkey => 260,
-            MessageType::MessageType_NostrPubkey => 261,
-            MessageType::MessageType_NostrSignEvent => 262,
-            MessageType::MessageType_NostrEventSignature => 263,
-            MessageType::MessageType_EvoluGetNode => 264,
-            MessageType::MessageType_EvoluNode => 265,
-            MessageType::MessageType_EvoluSignRegistrationRequest => 266,
-            MessageType::MessageType_EvoluRegistrationRequest => 267,
-            MessageType::MessageType_EvoluGetDelegatedIdentityKey => 268,
-            MessageType::MessageType_EvoluDelegatedIdentityKey => 269,
-            MessageType::MessageType_EvoluIndexManagement => 270,
-            MessageType::MessageType_EvoluIndexManagementResponse => 271,
-            MessageType::MessageType_TronGetAddress => 272,
-            MessageType::MessageType_TronAddress => 273,
-            MessageType::MessageType_TronSignTx => 274,
-            MessageType::MessageType_TronSignature => 275,
-            MessageType::MessageType_TronContractRequest => 276,
-            MessageType::MessageType_TronTransferContract => 277,
-            MessageType::MessageType_TronTriggerSmartContract => 278,
-            MessageType::MessageType_TronFreezeBalanceV2Contract => 279,
-            MessageType::MessageType_TronUnfreezeBalanceV2Contract => 280,
-            MessageType::MessageType_TronWithdrawUnfreeze => 281,
-            MessageType::MessageType_TronVoteWitnessContract => 282,
-            MessageType::MessageType_BenchmarkListNames => 283,
-            MessageType::MessageType_BenchmarkNames => 284,
-            MessageType::MessageType_BenchmarkRun => 285,
-            MessageType::MessageType_BenchmarkResult => 286,
-            MessageType::MessageType_TelemetryGet => 287,
-            MessageType::MessageType_Telemetry => 288,
+            MessageType::MessageType_SolanaSignMessage => 257,
+            MessageType::MessageType_SolanaMessageSignature => 258,
+            MessageType::MessageType_SolanaVerifyMessage => 259,
+            MessageType::MessageType_ThpCreateNewSession => 260,
+            MessageType::MessageType_ThpCredentialRequest => 261,
+            MessageType::MessageType_ThpCredentialResponse => 262,
+            MessageType::MessageType_NostrGetPubkey => 263,
+            MessageType::MessageType_NostrPubkey => 264,
+            MessageType::MessageType_NostrSignEvent => 265,
+            MessageType::MessageType_NostrEventSignature => 266,
+            MessageType::MessageType_EvoluGetNode => 267,
+            MessageType::MessageType_EvoluNode => 268,
+            MessageType::MessageType_EvoluSignRegistrationRequest => 269,
+            MessageType::MessageType_EvoluRegistrationRequest => 270,
+            MessageType::MessageType_EvoluGetDelegatedIdentityKey => 271,
+            MessageType::MessageType_EvoluDelegatedIdentityKey => 272,
+            MessageType::MessageType_EvoluIndexManagement => 273,
+            MessageType::MessageType_EvoluIndexManagementResponse => 274,
+            MessageType::MessageType_TronGetAddress => 275,
+            MessageType::MessageType_TronAddress => 276,
+            MessageType::MessageType_TronSignTx => 277,
+            MessageType::MessageType_TronSignature => 278,
+            MessageType::MessageType_TronContractRequest => 279,
+            MessageType::MessageType_TronTransferContract => 280,
+            MessageType::MessageType_TronTriggerSmartContract => 281,
+            MessageType::MessageType_TronFreezeBalanceV2Contract => 282,
+            MessageType::MessageType_TronUnfreezeBalanceV2Contract => 283,
+            MessageType::MessageType_TronWithdrawUnfreeze => 284,
+            MessageType::MessageType_TronVoteWitnessContract => 285,
+            MessageType::MessageType_BenchmarkListNames => 286,
+            MessageType::MessageType_BenchmarkNames => 287,
+            MessageType::MessageType_BenchmarkRun => 288,
+            MessageType::MessageType_BenchmarkResult => 289,
+            MessageType::MessageType_TelemetryGet => 290,
+            MessageType::MessageType_Telemetry => 291,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1812,7 +1830,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xd9e\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xdef\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2107,50 +2125,53 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     dress\x10\x86\x07\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_SolanaAd\
     dress\x10\x87\x07\x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_SolanaSi\
     gnTx\x10\x88\x07\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageType_SolanaTxS\
-    ignature\x10\x89\x07\x1a\x04\x98\xb5\x18\x01\x12.\n\x1fMessageType_ThpCr\
-    eateNewSession\x10\xe8\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12/\
-    \n\x20MessageType_ThpCredentialRequest\x10\xf8\x07\x1a\x08\x80\xa6\x1d\
-    \x01\x90\xb5\x18\x01\x120\n!MessageType_ThpCredentialResponse\x10\xf9\
-    \x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x1aMessageType_Nostr\
-    GetPubkey\x10\xd1\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_Nos\
-    trPubkey\x10\xd2\x0f\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_Nostr\
-    SignEvent\x10\xd3\x0f\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_Nost\
-    rEventSignature\x10\xd4\x0f\x1a\x04\x98\xb5\x18\x01\x12'\n\x18MessageTyp\
-    e_EvoluGetNode\x10\xb4\x10\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\
-    \n\x15MessageType_EvoluNode\x10\xb5\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
-    \x18\x01\x127\n(MessageType_EvoluSignRegistrationRequest\x10\xb6\x10\x1a\
-    \x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x123\n$MessageType_EvoluRegistratio\
-    nRequest\x10\xb7\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x127\n(Mess\
-    ageType_EvoluGetDelegatedIdentityKey\x10\xb8\x10\x1a\x08\x80\xa6\x1d\x01\
-    \x90\xb5\x18\x01\x124\n%MessageType_EvoluDelegatedIdentityKey\x10\xb9\
-    \x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12/\n\x20MessageType_Evolu\
-    IndexManagement\x10\xba\x10\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x127\
-    \n(MessageType_EvoluIndexManagementResponse\x10\xbb\x10\x1a\x08\x80\xa6\
-    \x1d\x01\x98\xb5\x18\x01\x12%\n\x1aMessageType_TronGetAddress\x10\x98\
-    \x11\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_TronAddress\x10\x99\
-    \x11\x1a\x04\x98\xb5\x18\x01\x12!\n\x16MessageType_TronSignTx\x10\x9a\
-    \x11\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_TronSignature\x10\x9b\
-    \x11\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageType_TronContractRequest\
-    \x10\x9c\x11\x1a\x04\x98\xb5\x18\x01\x12+\n\x20MessageType_TronTransferC\
-    ontract\x10\x9d\x11\x1a\x04\x90\xb5\x18\x01\x12/\n$MessageType_TronTrigg\
-    erSmartContract\x10\x9e\x11\x1a\x04\x90\xb5\x18\x01\x122\n'MessageType_T\
-    ronFreezeBalanceV2Contract\x10\x9f\x11\x1a\x04\x90\xb5\x18\x01\x124\n)Me\
-    ssageType_TronUnfreezeBalanceV2Contract\x10\xa0\x11\x1a\x04\x90\xb5\x18\
-    \x01\x12+\n\x20MessageType_TronWithdrawUnfreeze\x10\xa1\x11\x1a\x04\x90\
-    \xb5\x18\x01\x12.\n#MessageType_TronVoteWitnessContract\x10\xa2\x11\x1a\
-    \x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\
-    \x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\
-    \x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\
-    \x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\
-    \x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\xcc\x08\x1a\
-    \x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_Telemetry\x10\
-    \xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\
-    \xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\
-    \x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\
-    \xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\
-    \x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\
-    \x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\
-    \x80\xa6\x1d\x01\
+    ignature\x10\x89\x07\x1a\x04\x98\xb5\x18\x01\x12(\n\x1dMessageType_Solan\
+    aSignMessage\x10\x8a\x07\x1a\x04\x90\xb5\x18\x01\x12-\n\"MessageType_Sol\
+    anaMessageSignature\x10\x8b\x07\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessag\
+    eType_SolanaVerifyMessage\x10\x8c\x07\x1a\x04\x90\xb5\x18\x01\x12.\n\x1f\
+    MessageType_ThpCreateNewSession\x10\xe8\x07\x1a\x08\x80\xa6\x1d\x01\x90\
+    \xb5\x18\x01\x12/\n\x20MessageType_ThpCredentialRequest\x10\xf8\x07\x1a\
+    \x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x120\n!MessageType_ThpCredentialRes\
+    ponse\x10\xf9\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x1aMess\
+    ageType_NostrGetPubkey\x10\xd1\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17Me\
+    ssageType_NostrPubkey\x10\xd2\x0f\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMess\
+    ageType_NostrSignEvent\x10\xd3\x0f\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMes\
+    sageType_NostrEventSignature\x10\xd4\x0f\x1a\x04\x98\xb5\x18\x01\x12'\n\
+    \x18MessageType_EvoluGetNode\x10\xb4\x10\x1a\x08\x80\xa6\x1d\x01\x90\xb5\
+    \x18\x01\x12$\n\x15MessageType_EvoluNode\x10\xb5\x10\x1a\x08\x80\xa6\x1d\
+    \x01\x98\xb5\x18\x01\x127\n(MessageType_EvoluSignRegistrationRequest\x10\
+    \xb6\x10\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x123\n$MessageType_Evol\
+    uRegistrationRequest\x10\xb7\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\
+    \x127\n(MessageType_EvoluGetDelegatedIdentityKey\x10\xb8\x10\x1a\x08\x80\
+    \xa6\x1d\x01\x90\xb5\x18\x01\x124\n%MessageType_EvoluDelegatedIdentityKe\
+    y\x10\xb9\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12/\n\x20MessageT\
+    ype_EvoluIndexManagement\x10\xba\x10\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
+    \x01\x127\n(MessageType_EvoluIndexManagementResponse\x10\xbb\x10\x1a\x08\
+    \x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x1aMessageType_TronGetAddress\
+    \x10\x98\x11\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_TronAddress\
+    \x10\x99\x11\x1a\x04\x98\xb5\x18\x01\x12!\n\x16MessageType_TronSignTx\
+    \x10\x9a\x11\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_TronSignature\
+    \x10\x9b\x11\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageType_TronContractR\
+    equest\x10\x9c\x11\x1a\x04\x98\xb5\x18\x01\x12+\n\x20MessageType_TronTra\
+    nsferContract\x10\x9d\x11\x1a\x04\x90\xb5\x18\x01\x12/\n$MessageType_Tro\
+    nTriggerSmartContract\x10\x9e\x11\x1a\x04\x90\xb5\x18\x01\x122\n'Message\
+    Type_TronFreezeBalanceV2Contract\x10\x9f\x11\x1a\x04\x90\xb5\x18\x01\x12\
+    4\n)MessageType_TronUnfreezeBalanceV2Contract\x10\xa0\x11\x1a\x04\x90\
+    \xb5\x18\x01\x12+\n\x20MessageType_TronWithdrawUnfreeze\x10\xa1\x11\x1a\
+    \x04\x90\xb5\x18\x01\x12.\n#MessageType_TronVoteWitnessContract\x10\xa2\
+    \x11\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\
+    \x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\
+    \x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\
+    \x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\
+    \x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\xcc\
+    \x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_Telem\
+    etry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\
+    \x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\x10\
+    z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\
+    \x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\
+    \"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\
+    \xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMes\
+    sage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

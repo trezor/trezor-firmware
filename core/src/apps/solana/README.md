@@ -194,3 +194,8 @@ Assuming that all the information presented to the user is confirmed and accepte
 
 The presence of multisig instructions within the Token program adds an additional layer of complexity to the Solana message signing app. Multisig instructions involve owner accounts that are multisignature accounts, which means they require multiple signatures to authorize a transaction. In the context of Solana, this impacts the determination of the transaction fee since the fee is calculated based on the number of required signatures.
 
+## Off-Chain Message Signing
+
+We support signing and verifying off-chain messages as defined by the [Solana off-chain message signing spec v0](https://docs.anza.xyz/proposals/off-chain-message-signing). The firmware expects messages already formatted according to the spec (i.e., prefixed with `\xffsolana offchain`); [trezorlib](../../../../python/src/trezorlib/solana.py) provides utilities to do so. For verification, the firmware expects the message wrapped in an [envelope](https://docs.anza.xyz/proposals/off-chain-message-signing#envelope) (signatures concatenated with the formatted message). Also see [messages-solana.proto](../../../../common/protob/messages-solana.proto).
+
+The spec requires that HW wallets clear-sign format 0 (ASCII), blind-sign format 1 (short UTF-8), and reject format 2 (long UTF-8) messages. We deviate from this and clear-sign all formats, since Trezor can display longer messages including non-ASCII characters, making the restriction arbitrary. This limitation is also removed in the newer [v1 spec](https://github.com/solana-foundation/SRFCs/discussions/3).

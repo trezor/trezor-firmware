@@ -6056,6 +6056,54 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["SolanaTxSignature"]:
             return isinstance(msg, cls)
 
+    class SolanaSignMessage(protobuf.MessageType):
+        address_n: "list[int]"
+        message: "AnyBytes"
+        chunkify: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            message: "AnyBytes",
+            address_n: "list[int] | None" = None,
+            chunkify: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaSignMessage"]:
+            return isinstance(msg, cls)
+
+    class SolanaMessageSignature(protobuf.MessageType):
+        signature: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            signature: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaMessageSignature"]:
+            return isinstance(msg, cls)
+
+    class SolanaVerifyMessage(protobuf.MessageType):
+        envelope: "AnyBytes"
+        chunkify: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            envelope: "AnyBytes",
+            chunkify: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaVerifyMessage"]:
+            return isinstance(msg, cls)
+
     class StellarAsset(protobuf.MessageType):
         type: "StellarAssetType"
         code: "str | None"
