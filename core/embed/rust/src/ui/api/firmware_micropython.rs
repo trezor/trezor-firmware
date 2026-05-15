@@ -223,6 +223,8 @@ extern "C" fn new_confirm_value_intro(n_args: usize, args: *const Obj, kwargs: *
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+        let can_confirm_hash_only: bool =
+            kwargs.get_or(Qstr::MP_QSTR_can_confirm_hash_only, false)?;
 
         let layout_obj = ModelUI::confirm_value_intro(
             title,
@@ -232,6 +234,7 @@ extern "C" fn new_confirm_value_intro(n_args: usize, args: *const Obj, kwargs: *
             verb_cancel,
             hold,
             chunkify,
+            can_confirm_hash_only,
         )?;
         Ok(layout_obj.into())
     };
@@ -1585,6 +1588,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
+    ///     can_confirm_hash_only: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Similar to `confirm_value`, but only the first page is shown.
     ///     This function is intended as a building block for a higher level `confirm_blob`

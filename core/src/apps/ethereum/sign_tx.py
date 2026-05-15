@@ -18,7 +18,7 @@ from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Coroutine, Iterable
+    from typing import Callable, Iterable
 
     from trezor.messages import EthereumSignTx, EthereumTxAck
     from trezor.ui.layouts import StrPropertyType
@@ -119,6 +119,11 @@ async def sign_tx(
         rlp.write(sha, field)
 
     initial_data = await request_initial_data(msg, sha)
+    digest: bytes | None = None
+
+    def _digest_getter() -> bytes:
+        assert digest
+        return digest
 
     confirm_data_chunk, confirm_summary = await confirm_tx_data(
         initial_data,
@@ -130,18 +135,25 @@ async def sign_tx(
         fee_items,
         payment_req_verifier,
         sender_bytes,
+        _digest_getter,
     )
 
-    await confirm_data_and_summary(
-        confirm_data_chunk, confirm_summary, initial_data, data_length, sha
+    def _finalize_digest(sha: HashWriter) -> bytes:
+        # eip 155 replay protection
+        rlp.write(sha, msg.chain_id)
+        rlp.write(sha, 0)
+        rlp.write(sha, 0)
+
+        return sha.get_digest()
+
+    digest = await confirm_data_and_summary(
+        confirm_data_chunk,
+        confirm_summary,
+        initial_data,
+        data_length,
+        sha,
+        _finalize_digest,
     )
-
-    # eip 155 replay protection
-    rlp.write(sha, msg.chain_id)
-    rlp.write(sha, 0)
-    rlp.write(sha, 0)
-
-    digest = sha.get_digest()
 
     # transaction data confirmed, proceed with signing
     result = _sign_digest(msg, keychain, digest)
@@ -152,11 +164,12 @@ async def sign_tx(
 
 async def confirm_data_and_summary(
     confirm_data_chunk: ConfirmDataFn | None,
-    confirm_summary: Coroutine[Any, Any, None] | None,
+    confirm_summary: ConfirmDataFn | None,
     initial_data: AnyBytes,
     data_length: int,
     sha: HashWriter,
-) -> None:
+    finalize_digest: Callable[[HashWriter], bytes],
+) -> bytes:
     # `confirm_data_chunk` and `confirm_summary` can be `None`
     # if we clear signed so there is nothing more to confirm
 
@@ -171,9 +184,13 @@ async def confirm_data_and_summary(
             data_left -= len(chunk)
             sha.extend(chunk)
 
+    digest = finalize_digest(sha)
+
     if confirm_summary is not None:
         # blind signer's summary
-        await confirm_summary
+        await confirm_summary(digest)
+
+    return digest
 
 
 _MAX_DATA_STORED = const(4096)
@@ -224,7 +241,8 @@ async def confirm_tx_data(
     fee_items: Iterable[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
     sender_bytes: AnyBytes,
-) -> tuple[ConfirmDataFn | None, Coroutine[Any, Any, None] | None]:
+    digest_getter: Callable[[], bytes],
+) -> tuple[ConfirmDataFn | None, ConfirmDataFn | None]:
     """Returns data chunk callback and transaction summary layout to be awaited.
     [None, None] implies clear signing attempted and succeeded."""
 
@@ -311,14 +329,18 @@ async def confirm_tx_data(
         )
     elif not clear_signed:
         if data_length > 0:
-            confirm_data_chunk = get_data_confirmer(data_length)
+            confirm_data_chunk, should_confirm_hash = get_data_confirmer(data_length)
         else:
-            confirm_data_chunk = get_progress_indicator(data_length)
+            confirm_data_chunk, should_confirm_hash = (
+                get_progress_indicator(data_length),
+                None,
+            )
         token = (
             None  # what we want to confirm here is the ETH amount being sent on-chain
         )
 
         return confirm_data_chunk, require_confirm_tx(
+            should_confirm_hash,
             recipient_str,
             format_ethereum_amount(value, token, network),
             address_bytes,

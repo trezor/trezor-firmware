@@ -1621,6 +1621,9 @@ pub enum TranslatedString {
     n4w1__err_empty = 1223,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is empty. Continue to scan a different tag."}
     n4w1__err_nonempty = 1224,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Non-empty N4W1 tag."}
     n4w1__err_damaged = 1225,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is damaged. Continue to try again or scan the next tag."}
+    buttons__confirm_hash_only = 1226,  // "Confirm hash only"
+    #[cfg(feature = "universal_fw")]
+    ethereum__view_calldata_hash_confirmation = 1227,  // "View calldata hash confirmation. You can't return to view full calldata after this."
 }
 
 impl TranslatedString {
@@ -2854,6 +2857,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4085,6 +4090,8 @@ impl TranslatedString {
                 20256,
                 20256,
                 20256,
+                20273,
+                20356,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5315,6 +5322,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6546,6 +6555,8 @@ impl TranslatedString {
                 20256,
                 20256,
                 20256,
+                20273,
+                20356,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7776,6 +7787,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9007,6 +9020,8 @@ impl TranslatedString {
                 20256,
                 20256,
                 20256,
+                20273,
+                20356,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10237,6 +10252,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11468,6 +11485,8 @@ impl TranslatedString {
                 20256,
                 20256,
                 20256,
+                20273,
+                20356,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12699,6 +12718,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13930,6 +13951,8 @@ impl TranslatedString {
                 18281,
                 18281,
                 18281,
+                18298,
+                18381,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15160,6 +15183,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16391,6 +16416,8 @@ impl TranslatedString {
                 18281,
                 18281,
                 18281,
+                18298,
+                18381,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17621,6 +17648,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18852,6 +18881,8 @@ impl TranslatedString {
                 18281,
                 18281,
                 18281,
+                18298,
+                18381,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20082,6 +20113,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21313,6 +21346,8 @@ impl TranslatedString {
                 18281,
                 18281,
                 18281,
+                18298,
+                18381,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22544,6 +22579,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23775,6 +23812,8 @@ impl TranslatedString {
                 19502,
                 19502,
                 19502,
+                19519,
+                19602,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25005,6 +25044,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26236,6 +26277,8 @@ impl TranslatedString {
                 19502,
                 19502,
                 19502,
+                19519,
+                19602,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27466,6 +27509,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28697,6 +28742,8 @@ impl TranslatedString {
                 19502,
                 19502,
                 19502,
+                19519,
+                19602,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29927,6 +29974,8 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31158,6 +31207,8 @@ impl TranslatedString {
                 19502,
                 19502,
                 19502,
+                19519,
+                19602,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32389,6 +32440,8 @@ impl TranslatedString {
                 "This tag is empty. Continue to scan a different tag.",
                 "Non-empty N4W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33620,6 +33673,8 @@ impl TranslatedString {
                 20744,
                 20763,
                 20827,
+                20844,
+                20927,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34850,6 +34905,8 @@ impl TranslatedString {
                 "This tag is empty. Continue to scan a different tag.",
                 "Non-empty N4W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36081,6 +36138,8 @@ impl TranslatedString {
                 20744,
                 20763,
                 20827,
+                20844,
+                20927,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37311,6 +37370,8 @@ impl TranslatedString {
                 "This tag is empty. Continue to scan a different tag.",
                 "Non-empty N4W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38542,6 +38603,8 @@ impl TranslatedString {
                 20744,
                 20763,
                 20827,
+                20844,
+                20927,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39772,6 +39835,8 @@ impl TranslatedString {
                 "This tag is empty. Continue to scan a different tag.",
                 "Non-empty N4W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
+                "Confirm hash only",
+                "View calldata hash confirmation. You can't return to view full calldata after this.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41003,6 +41068,8 @@ impl TranslatedString {
                 20744,
                 20763,
                 20827,
+                20844,
+                20927,
             ];
 
         }
@@ -41129,6 +41196,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_buttons__check_again, Self::buttons__check_again),
         (Qstr::MP_QSTR_buttons__close, Self::buttons__close),
         (Qstr::MP_QSTR_buttons__confirm, Self::buttons__confirm),
+        (Qstr::MP_QSTR_buttons__confirm_hash_only, Self::buttons__confirm_hash_only),
         (Qstr::MP_QSTR_buttons__continue, Self::buttons__continue),
         (Qstr::MP_QSTR_buttons__details, Self::buttons__details),
         (Qstr::MP_QSTR_buttons__enable, Self::buttons__enable),
@@ -41629,6 +41697,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__vault_redeem_to, Self::ethereum__vault_redeem_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_withdraw_intro, Self::ethereum__vault_withdraw_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__view_calldata_hash_confirmation, Self::ethereum__view_calldata_hash_confirmation),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__withdraw, Self::ethereum__withdraw),
         #[cfg(feature = "universal_fw")]

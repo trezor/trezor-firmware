@@ -43,6 +43,7 @@ pub struct ConfirmValue {
     verb: Option<TString<'static>>,
     verb_cancel: TString<'static>,
     verb_info: Option<TString<'static>>,
+    verb_extra: Option<TString<'static>>,
     cancel_button: bool,
     menu_button: bool,
     prompt: bool,
@@ -74,6 +75,7 @@ impl ConfirmValue {
             verb: None,
             verb_cancel: TR::buttons__cancel.into(),
             verb_info: None,
+            verb_extra: None,
             cancel_button: false,
             menu_button: false,
             prompt: false,
@@ -124,6 +126,11 @@ impl ConfirmValue {
 
     pub const fn with_verb_info(mut self, verb_info: Option<TString<'static>>) -> Self {
         self.verb_info = verb_info;
+        self
+    }
+
+    pub const fn with_verb_extra(mut self, verb_extra: Option<TString<'static>>) -> Self {
+        self.verb_extra = verb_extra;
         self
     }
 
@@ -271,7 +278,8 @@ impl ConfirmValue {
             ConfirmActionExtra::Menu(
                 ConfirmActionMenuStrings::new()
                     .with_verb_cancel(Some(self.verb_cancel))
-                    .with_verb_info(self.verb_info),
+                    .with_verb_info(self.verb_info)
+                    .with_verb_extra(self.verb_extra),
             )
         };
 

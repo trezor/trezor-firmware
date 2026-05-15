@@ -28,6 +28,10 @@ use super::super::{
 
 const TIMEOUT_MS: u32 = 2000;
 
+const MENU_ITEM_CANCEL: usize = 0;
+const MENU_ITEM_VIEW_ALL: usize = 1;
+const MENU_ITEM_EXTRA: usize = 2;
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmValueIntro {
     Intro,
@@ -50,8 +54,11 @@ impl FlowController for ConfirmValueIntro {
             // special case for the "view all data" button
             (Self::Intro, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Info),
             (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
-            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Info),
-            (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Menu, FlowMsg::Choice(MENU_ITEM_VIEW_ALL)) => self.return_msg(FlowMsg::Info),
+            (Self::Menu, FlowMsg::Choice(MENU_ITEM_EXTRA)) => {
+                self.return_msg(FlowMsg::Choice(MENU_ITEM_EXTRA))
+            }
+            (Self::Menu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => self.return_msg(FlowMsg::Cancelled),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.goto(),
             _ => self.do_nothing(),
         }
@@ -63,9 +70,9 @@ pub fn new_confirm_value_intro(
     title: TString<'static>,
     subtitle: Option<TString<'static>>,
     value: Obj,
-    value_menu_label: TString<'static>,
     cancel_menu_label: Option<TString<'static>>,
     confirm_button_label: Option<TString<'static>>,
+    extra_menu_label: Option<TString<'static>>,
     hold: bool,
     chunkify: bool,
 ) -> Result<SwipeFlow, error::Error> {
@@ -112,17 +119,28 @@ pub fn new_confirm_value_intro(
         TextScreenMsg::Menu => Some(FlowMsg::Info),
     });
 
-    let menu_items = VerticalMenu::<ShortMenuVec>::empty()
-        .with_item(Button::new_menu_item(
-            value_menu_label,
+    let mut menu_items = VerticalMenu::<ShortMenuVec>::empty().with_item(Button::new_menu_item(
+        TR::buttons__view_all_data.into(),
+        theme::menu_item_title(),
+    ));
+    if let Some(extra_menu_label) = extra_menu_label {
+        menu_items = menu_items.with_item(Button::new_menu_item(
+            extra_menu_label,
             theme::menu_item_title(),
-        ))
-        .with_item(Button::new_cancel_menu_item(cancel_menu_label));
+        ));
+    }
+    menu_items = menu_items.with_item(Button::new_cancel_menu_item(cancel_menu_label));
 
     let content_menu = VerticalMenuScreen::new(menu_items)
         .with_header(Header::new(TString::empty()).with_close_button())
         .map(move |msg| match msg {
-            VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+            VerticalMenuScreenMsg::Selected(i) => match (i, extra_menu_label) {
+                (0, _) => Some(FlowMsg::Choice(MENU_ITEM_VIEW_ALL)),
+                (1, None) => Some(FlowMsg::Choice(MENU_ITEM_CANCEL)),
+                (1, Some(_)) => Some(FlowMsg::Choice(MENU_ITEM_EXTRA)),
+                (2, _) => Some(FlowMsg::Choice(MENU_ITEM_CANCEL)),
+                _ => unreachable!(),
+            },
             VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
             _ => None,
         });

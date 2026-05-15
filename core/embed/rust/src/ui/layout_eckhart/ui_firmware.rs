@@ -570,14 +570,19 @@ impl FirmwareUI for UIEckhart {
         verb_cancel: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
+        can_confirm_hash_only: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let flow = flow::new_confirm_value_intro(
             title,
             subtitle,
             value,
-            TR::buttons__view_all_data.into(),
             verb_cancel,
             verb,
+            if can_confirm_hash_only {
+                Some(TR::buttons__confirm_hash_only.into())
+            } else {
+                None
+            },
             hold,
             chunkify,
         )?;

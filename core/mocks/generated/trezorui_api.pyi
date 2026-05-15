@@ -216,6 +216,7 @@ def confirm_value_intro(
     verb_cancel: str | None = None,
     hold: bool = False,
     chunkify: bool = False,
+    can_confirm_hash_only: bool = False,
 ) -> LayoutObj[UiResult]:
     """Similar to `confirm_value`, but only the first page is shown.
     This function is intended as a building block for a higher level `confirm_blob`
