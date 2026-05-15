@@ -396,10 +396,14 @@ fn test_open() -> Result<()> {
     let mut d = d.map(|d| d.unwrap().complete())?;
 
     // pairing
+    assert!(!h.is_encrypted_transport() && !d.is_encrypted_transport());
     HostToDevice.send(&mut h, &mut d, 0, 1008, b"ThpPairingRequest placeholder")?;
     DeviceToHost.send(&mut h, &mut d, 0, 1009, b"ThpPairingResponse placeholder")?;
     HostToDevice.send(&mut h, &mut d, 0, 1010, b"ThpSelectMethod with SkipParing")?;
     DeviceToHost.send(&mut h, &mut d, 0, 1019, b"ThpEndResponse means done")?;
+    h.end_pairing();
+    d.end_pairing();
+    assert!(h.is_encrypted_transport() && d.is_encrypted_transport());
 
     // application messaging
     HostToDevice.send(&mut h, &mut d, 0, 1234, b"Ping")?;

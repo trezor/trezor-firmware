@@ -5,7 +5,7 @@ use crate::{
     alternating_bit::SyncBits,
     channel::{
         HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, MAX_DEVICE_PROPERTIES_LEN, Nonce,
-        PRIVKEY_LEN, PacketInResult, PairingState, ReceiveState, SendState,
+        PRIVKEY_LEN, PacketInResult, PairingState, Phase, ReceiveState, SendState,
         noise::NoiseHandshake,
     },
     credential::CredentialVerifier,
@@ -437,7 +437,9 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         log::debug!("[{:04x}] Handshake complete.", self.channel_id());
         Ok(match self.state {
             HandshakeState::SendingCompletionResponse { pairing_state } => {
-                self.channel.pairing_state = pairing_state;
+                self.channel.phase = Phase::PairingCredential {
+                    handshake_pairing_state: pairing_state,
+                };
                 self.channel
             }
             _ => return Err(Error::unexpected_input()),
