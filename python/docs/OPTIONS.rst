@@ -313,7 +313,7 @@ Evolu commands.
   Commands:
     get-delegated-identity-key  Request the delegated identity key of this device.
     get-node                    Return the SLIP-21 node for Evolu.
-    index-management
+    index-management            Set the optional delegated identity key rotation index if unset.
     sign-registration-request   Sign a registration request for this device to be registered at...
 
 FIDO2, U2F and WebAuthN management commands.
