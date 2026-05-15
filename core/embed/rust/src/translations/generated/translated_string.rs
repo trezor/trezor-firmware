@@ -1623,6 +1623,10 @@ pub enum TranslatedString {
     words__account_deletion = 1228,  // "Account deletion"
     words__tap_to_wake = 1229,  // "Tap to wake"
     words__made_in = 1230,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Made in"}
+    #[cfg(feature = "universal_fw")]
+    solana__app_domain = 1231,  // "Application domain"
+    #[cfg(feature = "universal_fw")]
+    solana__offchain_is_multisig = 1232,  // "The following message requires multiple signers."
 }
 
 impl TranslatedString {
@@ -2861,6 +2865,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4097,6 +4103,8 @@ impl TranslatedString {
                 19852,
                 19863,
                 19863,
+                19881,
+                19929,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5332,6 +5340,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6568,6 +6578,8 @@ impl TranslatedString {
                 19852,
                 19863,
                 19863,
+                19881,
+                19929,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7803,6 +7815,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9039,6 +9053,8 @@ impl TranslatedString {
                 19852,
                 19863,
                 19863,
+                19881,
+                19929,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10274,6 +10290,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11510,6 +11528,8 @@ impl TranslatedString {
                 19852,
                 19863,
                 19863,
+                19881,
+                19929,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12746,6 +12766,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13982,6 +14004,8 @@ impl TranslatedString {
                 17786,
                 17797,
                 17797,
+                17815,
+                17863,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15217,6 +15241,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16453,6 +16479,8 @@ impl TranslatedString {
                 17786,
                 17797,
                 17797,
+                17815,
+                17863,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17688,6 +17716,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18924,6 +18954,8 @@ impl TranslatedString {
                 17786,
                 17797,
                 17797,
+                17815,
+                17863,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20159,6 +20191,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21395,6 +21429,8 @@ impl TranslatedString {
                 17786,
                 17797,
                 17797,
+                17815,
+                17863,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22631,6 +22667,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23867,6 +23905,8 @@ impl TranslatedString {
                 19206,
                 19217,
                 19217,
+                19235,
+                19283,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25102,6 +25142,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26338,6 +26380,8 @@ impl TranslatedString {
                 19206,
                 19217,
                 19217,
+                19235,
+                19283,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27573,6 +27617,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28809,6 +28855,8 @@ impl TranslatedString {
                 19206,
                 19217,
                 19217,
+                19235,
+                19283,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30044,6 +30092,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31280,6 +31330,8 @@ impl TranslatedString {
                 19206,
                 19217,
                 19217,
+                19235,
+                19283,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32516,6 +32568,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "Made in",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33752,6 +33806,8 @@ impl TranslatedString {
                 20553,
                 20564,
                 20571,
+                20589,
+                20637,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34987,6 +35043,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "Made in",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36223,6 +36281,8 @@ impl TranslatedString {
                 20553,
                 20564,
                 20571,
+                20589,
+                20637,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37458,6 +37518,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "Made in",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38694,6 +38756,8 @@ impl TranslatedString {
                 20553,
                 20564,
                 20571,
+                20589,
+                20637,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39929,6 +39993,8 @@ impl TranslatedString {
                 "Account deletion",
                 "Tap to wake",
                 "Made in",
+                "Application domain",
+                "The following message requires multiple signers.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41165,6 +41231,8 @@ impl TranslatedString {
                 20553,
                 20564,
                 20571,
+                20589,
+                20637,
             ];
 
         }
@@ -42384,6 +42452,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__account_index, Self::solana__account_index),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__app_domain, Self::solana__app_domain),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__associated_token_account, Self::solana__associated_token_account),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__base_fee, Self::solana__base_fee),
@@ -42413,6 +42483,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_solana__max_rent_fee, Self::solana__max_rent_fee),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__multiple_signers, Self::solana__multiple_signers),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__offchain_is_multisig, Self::solana__offchain_is_multisig),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__priority_fee, Self::solana__priority_fee),
         #[cfg(feature = "universal_fw")]

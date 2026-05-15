@@ -85,3 +85,34 @@ message SolanaSignTx {
 message SolanaTxSignature {
     required bytes signature = 1;  // tx signature
 }
+
+/**
+ * Request: Ask device to sign a Solana off-chain message
+ * @start
+ * @next SolanaMessageSignature
+ * @next Failure
+ */
+message SolanaSignMessage {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key to sign with
+    required bytes message = 2;     // message to be signed, in OCMS format
+    optional bool chunkify = 3;     // display the address in chunks of 4 characters
+}
+
+/**
+ * Response: Contains the message signature
+ * @end
+ */
+message SolanaMessageSignature {
+    required bytes signature = 1;  // message signature
+}
+
+/**
+ * Request: Ask device to verify a Solana off-chain message signature(s)
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message SolanaVerifyMessage {
+    required bytes envelope = 1;  // OCMS envelope containing the signatures and the message
+    optional bool chunkify = 2;   // display the address in chunks of 4 characters
+}

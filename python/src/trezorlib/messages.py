@@ -746,6 +746,9 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    SolanaSignMessage = 906
+    SolanaMessageSignature = 907
+    SolanaVerifyMessage = 908
     ThpCreateNewSession = 1000
     ThpCredentialRequest = 1016
     ThpCredentialResponse = 1017
@@ -7833,6 +7836,57 @@ class SolanaTxSignature(protobuf.MessageType):
         signature: "bytes",
     ) -> None:
         self.signature = signature
+
+
+class SolanaSignMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 906
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("message", "bytes", repeated=False, required=True),
+        3: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        message: "bytes",
+        address_n: Optional[Sequence["int"]] = None,
+        chunkify: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.message = message
+        self.chunkify = chunkify
+
+
+class SolanaMessageSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 907
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+    ) -> None:
+        self.signature = signature
+
+
+class SolanaVerifyMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 908
+    FIELDS = {
+        1: protobuf.Field("envelope", "bytes", repeated=False, required=True),
+        2: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        envelope: "bytes",
+        chunkify: Optional["bool"] = None,
+    ) -> None:
+        self.envelope = envelope
+        self.chunkify = chunkify
 
 
 class StellarAsset(protobuf.MessageType):

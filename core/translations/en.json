@@ -2595,6 +2595,7 @@
       "Eckhart": "Serial number"
     },
     "solana__account_index": "Account index",
+    "solana__app_domain": "Application domain",
     "solana__associated_token_account": "Associated token account",
     "solana__base_fee": "Base fee",
     "solana__claim": "Claim",
@@ -2610,6 +2611,7 @@
     "solana__max_fees_rent": "Max fees and rent",
     "solana__max_rent_fee": "Max rent fee",
     "solana__multiple_signers": "Multiple signers",
+    "solana__offchain_is_multisig": "The following message requires multiple signers.",
     "solana__priority_fee": "Priority fee",
     "solana__stake": "Stake",
     "solana__stake_account": "Stake account",

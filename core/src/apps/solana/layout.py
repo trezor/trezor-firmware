@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from trezor.ui.layouts import PropertyType, StrPropertyType
 
     from .definitions import Definitions
+    from .offchain_message import OffchainMessage
     from .transaction import Fee
     from .transaction.instructions import Instruction, SystemProgramTransferInstruction
     from .types import AddressReference
@@ -609,4 +610,60 @@ async def confirm_payment_request(
         account_items,
         fee_str,
         fee_items,
+    )
+
+
+async def confirm_offchain_signverify(
+    offchain_message: OffchainMessage,
+    verify: bool,
+    signer_index: int = 0,
+    signer_path: list[int] | None = None,
+    chunkify: bool = False,
+) -> None:
+    from trezor.ui.layouts import confirm_address, confirm_signverify
+
+    from .offchain_message import OffchainMessageV0
+
+    if isinstance(offchain_message, OffchainMessageV0):
+        await confirm_address(
+            TR.solana__app_domain,
+            base58.encode(offchain_message.app),
+            verb=TR.buttons__continue,
+            chunkify=chunkify,
+        )
+
+    if len(offchain_message.signers) > 1:
+        await confirm_metadata(
+            "confirm_multisig",
+            TR.solana__confirm_multisig,
+            TR.solana__offchain_is_multisig,
+            br_code=ButtonRequestType.Other,
+        )
+
+    # TODO: consider using confirm_properties for multisig
+    for i, signer in enumerate(offchain_message.signers):
+        if i != signer_index:
+            await confirm_address(
+                TR.address__title_cosigner,
+                base58.encode(signer),
+                verb=TR.buttons__continue,
+                chunkify=chunkify,
+            )
+
+    signer_address = base58.encode(offchain_message.signers[signer_index])
+
+    if signer_path is not None:
+        signer_path_str = address_n_to_str(signer_path)
+        signer_account = _format_path(signer_path)
+    else:
+        signer_path_str = None
+        signer_account = None
+
+    await confirm_signverify(
+        offchain_message.message,
+        signer_address,
+        verify=verify,
+        path=signer_path_str,
+        account=signer_account,
+        chunkify=chunkify,
     )
