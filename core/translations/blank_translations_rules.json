@@ -78,6 +78,7 @@
   },
   {
     "exact": [
+      "lockscreen__title_locked",
       "reset__all_x_of_y_template",
       "reset__any_x_of_y_template",
       "reset__need_all_share_template",
@@ -92,7 +93,8 @@
       "reset__to_form_group_template",
       "reset__use_your_backup",
       "reset__you_need_one_share",
-      "send__title_receiving_to"
+      "send__title_receiving_to",
+      "wipe_code__wipe_code_mismatch"
     ],
     "allowedLayouts": [ "Bolt" ],
     "description": "These are specific to Bolt layout"
@@ -105,6 +107,8 @@
       "confirm_total__title_sending_from",
       "fido__wanna_erase_credentials",
       "homescreen__click_to_connect",
+      "homescreen__click_to_unlock",
+      "modify_fee__fee_rate",
       "pin__cursor_will_change",
       "pin__please_check_again",
       "pin__reenter_to_confirm",
@@ -120,6 +124,7 @@
       "share_words__wrote_down_all",
       "wipe_code__reenter_to_confirm",
       "wipe_code__title_check",
+      "wipe_code__title_invalid",
       "words__keep_it_safe",
       "words__title_check",
       "words__title_group",
@@ -138,6 +143,9 @@
       "homescreen__settings_title",
       "instructions__hold_to_confirm",
       "instructions__shares_continue_with_x_template",
+      "instructions__tap_to_confirm",
+      "instructions__tap_to_continue",
+      "instructions__tap",
       "pin__cancel_description",
       "recovery__cancel_dry_run",
       "tutorial__did_you_know",
@@ -153,15 +161,22 @@
       "homescreen__backup_needed_info",
       "instructions__shares_start_with_x_template",
       "lockscreen__unlock",
+      "passphrase__access_hidden_wallet",
+      "passphrase__hidden_wallet",
       "pin__setup_completed",
       "recovery__share_from_group_entered_template",
       "reset__check_share_backup_template",
       "reset__select_word_from_share_template",
       "reset__select_word_template",
+      "send__send_in_the_app",
       "tutorial__menu_appendix",
       "tutorial__navigation_ts7",
       "tutorial__power",
+      "tutorial__tap_to_start",
       "tutorial__welcome_safe7",
+      "wipe_code__change",
+      "wipe_code__remove",
+      "wipe_code__title",
       "words__cancel_question",
       "words__disabled",
       "words__enabled",
@@ -178,12 +193,14 @@
       "backup__want_to_skip",
       "buttons__check_again",
       "reset__button_create",
+      "reset__button_recover",
       "reset__continue_with_share_template",
       "reset__finished_verifying_shares",
       "reset__finished_verifying_wallet_backup",
       "reset__share_checked_successfully_template",
       "reset__slip39_checklist_write_down",
       "reset__wrong_word_selected",
+      "send__including_fee",
       "words__please_check_again"
     ],
     "allowedLayouts": [ "Bolt", "Caesar" ],
@@ -191,24 +208,40 @@
   },
   {
     "exact": [
+      "lockscreen__tap_to_connect",
+      "lockscreen__tap_to_unlock",
+      "lockscreen__title_not_connected",
       "reset__check_share_title_template",
-      "reset__title_set_threshold"
+      "reset__title_set_threshold",
+      "wipe_code__invalid",
+      "words__really_wanna"
     ],
     "allowedLayouts": [ "Bolt", "Delizia" ],
     "description": "These are specific to Bolt and Delizia layouts"
   },
   {
     "exact": [
+      "fido__title_reset",
+      "passphrase__access_wallet",
+      "passphrase__wallet",
       "pin__enabled",
       "progress__locking_device",
       "recovery__group_num_template",
       "recovery__you_have_entered",
       "reset__select_word_x_of_y_template",
       "wipe_code__turn_on",
-      "words__from"
+      "words__from",
+      "words__please_try_again"
     ],
     "allowedLayouts": [ "Bolt", "Caesar", "Delizia" ],
     "description": "These are specific to Bolt, Caesar, and Delizia layouts"
+  },
+  {
+    "exact": [
+      "wipe_code__info"
+    ],
+    "allowedLayouts": [ "Bolt", "Caesar", "Eckhart" ],
+    "description": "These are specific to Bolt, Caesar, and Eckhart layouts"
   },
   {
     "exact": [
@@ -227,6 +260,8 @@
       "reset__title_set_number_of_groups",
       "reset__title_set_number_of_shares",
       "reset__total_number_of_shares_in_group_template",
+      "send__to_the_total_amount",
+      "send__you_are_contributing",
       "sign_message__message_size"
     ],
     "allowedLayouts": [ "Bolt", "Delizia", "Eckhart" ],
@@ -241,6 +276,7 @@
   },
   {
     "exact": [
+      "backup__title_skip",
       "reset__write_down_words_template"
     ],
     "allowedLayouts": [ "Caesar", "Delizia", "Eckhart" ],
@@ -255,6 +291,9 @@
       "instructions__shares_start_with_1",
       "pin__cancel_info",
       "pin__cancel_setup",
+      "address__cancel_contact_support",
+      "instructions__continue_in_app",
+      "reset__incorrect_word_selected",
       "reset__num_of_shares_how_many",
       "reset__num_of_shares_long_info_template",
       "reset__select_threshold",
@@ -265,9 +304,12 @@
       "reset__slip39_checklist_threshold_x_template",
       "reset__slip39_checklist_write_down_recovery",
       "reset__words_written_down_template",
+      "send__incl_transaction_fee",
       "tutorial__ready_to_use_safe5",
       "tutorial__title_well_done",
-      "wipe_code__cancel_setup"
+      "wipe_code__cancel_setup",
+      "words__continue_anyway",
+      "words__try_again"
     ],
     "allowedLayouts": [ "Delizia", "Eckhart" ],
     "description": "These are specific to Delizia and Eckhart layouts"
