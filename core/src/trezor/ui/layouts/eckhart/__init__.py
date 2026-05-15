@@ -1744,9 +1744,8 @@ if not utils.BITCOIN_ONLY:
 
     async def confirm_stellar_output(
         address: str,
-        amount: str | None,
+        amount: tuple[str, StellarAsset] | None,
         output_index: int,
-        asset: StellarAsset | None,
         address_description: str | None = None,
         amount_description: str | None = None,
     ) -> None:
@@ -1762,11 +1761,12 @@ if not utils.BITCOIN_ONLY:
             verb=TR.buttons__continue,
         )
 
-        if amount is not None and asset is not None:
+        if amount is not None:
+            amount_str, asset = amount
             await confirm_stellar_output_amount(
                 title=TR.words__send,
                 subtitle=subtitle,
-                amount=amount,
+                amount=amount_str,
                 asset=asset,
                 description=amount_description or TR.words__amount,
             )

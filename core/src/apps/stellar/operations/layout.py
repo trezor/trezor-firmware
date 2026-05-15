@@ -103,9 +103,8 @@ async def confirm_create_account_op(
 
     await confirm_stellar_output(
         op.new_account,
-        format_amount(op.starting_balance),
+        (format_amount(op.starting_balance), StellarAsset(type=StellarAssetType.NATIVE)),
         output_index=output_index,
-        asset=StellarAsset(type=StellarAssetType.NATIVE),
     )
 
 
@@ -230,9 +229,8 @@ async def confirm_path_payment_strict_receive_op(
 ) -> None:
     await confirm_stellar_output(
         op.destination_account,
-        format_amount(op.destination_amount, op.destination_asset),
+        (format_amount(op.destination_amount, op.destination_asset), op.destination_asset),
         output_index,
-        op.destination_asset,
         address_description=TR.stellar__path_pay,
         amount_description=TR.stellar__path_pay,
     )
@@ -252,9 +250,8 @@ async def confirm_path_payment_strict_send_op(
 ) -> None:
     await confirm_stellar_output(
         op.destination_account,
-        format_amount(op.destination_min, op.destination_asset),
+        (format_amount(op.destination_min, op.destination_asset), op.destination_asset),
         output_index,
-        op.destination_asset,
         address_description=TR.stellar__path_pay_at_least,
         amount_description=TR.stellar__path_pay_at_least,
     )
@@ -271,9 +268,8 @@ async def confirm_path_payment_strict_send_op(
 async def confirm_payment_op(op: StellarPaymentOp, output_index: int) -> None:
     await confirm_stellar_output(
         op.destination_account,
-        format_amount(op.amount, op.asset),
+        (format_amount(op.amount, op.asset), op.asset),
         output_index,
-        op.asset,
     )
 
 
