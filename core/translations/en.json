@@ -70,7 +70,6 @@
       "Delizia": "Auto-lock delay",
       "Eckhart": "Auto-lock"
     },
-    "auto_lock__turned_on": "Auto-lock turned on",
     "backup__can_back_up_anytime": "You can back up your Trezor once, at any time.",
     "backup__create_backup_to_prevent_loss": {
       "Bolt": "Create a backup to avoid losing access to your funds",
@@ -506,7 +505,6 @@
     },
     "coinjoin__waiting_for_others": "Waiting for others",
     "confirm_total__fee_rate": "Fee rate",
-    "confirm_total__fee_rate_colon": "Fee rate:",
     "confirm_total__title_fee": "Fee info",
     "confirm_total__title_sending_from": {
       "Bolt": "",
@@ -755,7 +753,6 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "ethereum__amount_sent": "Amount sent:",
     "ethereum__approve": "Approve",
     "ethereum__approve_amount_allowance": "Amount allowance",
     "ethereum__approve_chain_id": "Chain ID",
@@ -1711,7 +1708,6 @@
     "progress__signing_transaction": "Signing transaction...",
     "progress__syncing": "Syncing...",
     "progress__x_seconds_left_template": "{0} seconds left",
-    "reboot_to_bootloader__just_a_moment": "Just a moment...",
     "reboot_to_bootloader__restart": "Trezor will restart in bootloader mode.",
     "reboot_to_bootloader__title": "Go to bootloader",
     "reboot_to_bootloader__version_by_template": "Firmware version {0}\nby {1}",
