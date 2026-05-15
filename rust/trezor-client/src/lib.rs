@@ -234,7 +234,7 @@ mod tests {
         let address = emulator
             .get_address(&path, InputScriptType::SPENDADDRESS, bitcoin::Network::Testnet, false)
             .expect("Failed to get address");
-        assert_eq!(address.ok().unwrap().to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
+        assert_eq!(address.to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
     }
 
     #[test]
