@@ -24,7 +24,7 @@ except Exception:
 
 
 HERE = Path(__file__).resolve().parent
-MICROPYTHON = HERE / "build" / "unix" / "trezor-emu-core"
+MICROPYTHON = HERE / "build-xtask" / "artifacts" / "latest" / "firmware-emu"
 SRC_DIR = HERE / "src"
 
 PROFILE_BASE = Path.home() / ".trezoremu"
