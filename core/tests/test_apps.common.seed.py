@@ -1,12 +1,17 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
+from mock_storage import mock_storage
+from storage import cache
 from trezor.crypto import bip39
-from trezor.wire import DataError
+from trezor.wire import DataError, NotInitialized
 
 from apps.common.keychain import ForbiddenKeyPath, Keychain
 from apps.common.paths import address_n_slip21_to_str
-from apps.common.seed import Slip21Node
+from apps.common.seed import Slip21Node, get_seed
+
+if not utils.USE_THP:
+    from storage import cache_codec
 
 
 class TestSeed(unittest.TestCase):
@@ -92,6 +97,23 @@ class TestSeed(unittest.TestCase):
             address_n_slip21_to_str([label, label, label]),
             "m/\\xc5\\x99e\\xc5\\x99icha/\\xc5\\x99e\\xc5\\x99icha/\\xc5\\x99e\\xc5\\x99icha",
         )
+
+
+@unittest.skipUnless(
+    utils.BITCOIN_ONLY and not utils.USE_THP,
+    "bitcoin-only legacy seed path",
+)
+class TestLegacyBitcoinOnlySeed(TestCaseWithContext):
+    def setUp(self):
+        cache_codec.start_session()
+
+    def tearDown(self):
+        cache.clear_all()
+
+    @mock_storage
+    def test_get_seed_requires_initialized_device(self):
+        with self.assertRaises(NotInitialized):
+            await_result(get_seed())
 
 
 if __name__ == "__main__":

@@ -1,0 +1,1 @@
+Return NotInitialized when deriving the Bitcoin-only seed on an uninitialized device.

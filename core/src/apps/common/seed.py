@@ -126,6 +126,11 @@ else:
 
         @cache.stored_async(APP_COMMON_SEED)
         async def get_seed() -> bytes:
+            from trezor import wire
+
+            if not storage_device.is_initialized():
+                raise wire.NotInitialized("Device is not initialized")
+
             passphrase = await get_passphrase_legacy()
             return mnemonic.get_seed(passphrase=passphrase)
 
