@@ -101,7 +101,12 @@
       "Delizia": "",
       "Eckhart": "připojeno k USB"
     },
-    "auto_lock__title": "Prodleva automatického zámku",
+    "auto_lock__title": {
+      "Bolt": "Prodleva automatického zámku",
+      "Caesar": "Prodleva automatického zámku",
+      "Delizia": "Prodleva automatického zámku",
+      "Eckhart": "Automatický zámek"
+    },
     "auto_lock__turned_on": "Automatické zamknutí zapnuto",
     "backup__can_back_up_anytime": {
       "Bolt": "Trezor si můžete zazálohovat kdykoli, ale pouze jednou.",
@@ -974,12 +979,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "homescreen__click_to_unlock": {
-      "Bolt": "Odemknout kliknutím",
-      "Caesar": "Odemkněte libovolným tlačítkem",
-      "Delizia": "Odemknout kliknutím",
-      "Eckhart": "Odemknout kliknutím"
-    },
+    "homescreen__click_to_unlock": "Odemkněte libovolným tlačítkem",
     "homescreen__firmware_type": "Typ firmwaru",
     "homescreen__firmware_version": "Verze firmwaru",
     "homescreen__set_default": {
@@ -1080,7 +1080,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Začněte s podílem č. 1",
-      "Eckhart": "Začněte s podílem č. 1"
+      "Eckhart": "Začít s podílem č. 1"
     },
     "instructions__shares_start_with_x_template": {
       "Bolt": "",
@@ -1091,8 +1091,8 @@
     "instructions__swipe_down": "Přejeďte prstem dolů",
     "instructions__swipe_horizontally": "Přejeďte prstem vodorovně",
     "instructions__tap": "Klepněte",
-    "instructions__tap_to_confirm": "Klepnutím potvrďte",
-    "instructions__tap_to_continue": "Klepnutím pokračujte",
+    "instructions__tap_to_confirm": "Potvrďte klepnutím",
+    "instructions__tap_to_continue": "Pokračujte klepnutím",
     "instructions__view_all_data": "Zobrazit všechna data v menu.",
     "joint__title": "Společná transakce",
     "joint__to_the_total_amount": "Do celkové částky",
@@ -1124,8 +1124,8 @@
       "Delizia": "",
       "Eckhart": "LED"
     },
-    "lockscreen__tap_to_connect": "Připojit klepnutím",
-    "lockscreen__tap_to_unlock": "Odemknout klepnutím",
+    "lockscreen__tap_to_connect": "Připojte se klepnutím",
+    "lockscreen__tap_to_unlock": "Odemkněte klepnutím",
     "lockscreen__title_locked": "Zamknutý",
     "lockscreen__title_not_connected": "Není připojený",
     "lockscreen__unlock": {
@@ -1537,7 +1537,12 @@
       "Delizia": "Zobrazit passphrase",
       "Eckhart": "Zobrazit passphrase"
     },
-    "passphrase__title_confirm": "Potvrzení passphrase",
+    "passphrase__title_confirm": {
+      "Bolt": "Potvrzení passphrase",
+      "Caesar": "Potvrzení passphrase",
+      "Delizia": "Potvrzení passphrase",
+      "Eckhart": "Potvrdit passphrase"
+    },
     "passphrase__title_enter": "Zadejte passphrase",
     "passphrase__title_hide": "Skrýt passphrase",
     "passphrase__title_passphrase": "Passphrase",
@@ -1914,7 +1919,7 @@
     "reset__group_share_checked_successfully_template": {
       "Bolt": "Podíl {1} ze skupiny {0} je v pořádku.",
       "Caesar": "Podíl {1} ze skupiny {0} je v pořádku.",
-      "Delizia": "Podíl {1} ze skupiny {0} ověřen",
+      "Delizia": "Podíl {1} ze sk. {0} je správně",
       "Eckhart": "Podíl {1} ze skupiny {0} byl úspěšně zkontrolován."
     },
     "reset__group_share_title_template": {
