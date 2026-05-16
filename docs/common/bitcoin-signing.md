@@ -65,7 +65,7 @@ If all internal inputs are taproot, then the verification of the previous transa
 is skipped. This is possible because if the host provides invalid information about the
 UTXOs being spent, then the resulting taproot signatures will also be invalid.
 
-Trezor T also supports pre-signed inputs for multi-party signing. If an input has script
+Trezor Core also supports pre-signed inputs for multi-party signing. If an input has script
 type `EXTERNAL` and provides a signature, Trezor will validate the signature against the
 previous transaction in this step.
 
@@ -159,7 +159,7 @@ supplied to the transaction by verified external inputs are subtracted from the
 transaction total that the user is asked to confirm, whereas unverified
 external inputs are not subtracted.
 
-Verified external inputs are only supported on the Trezor T. They must either
+Verified external inputs are only supported on the Trezor Core. They must either
 already have a valid signature or they must come with an ownership proof. If
 the input already has a valid signature, then the host provides the
 `script_sig` and/or `witness` fields. If the other signing party hasn't signed
@@ -356,7 +356,7 @@ So the replacement transaction is, for example, allowed to:
 
 ## Payment requests
 
-In Trezor T a set of transaction outputs can be accompanied by a payment request.
+In Trezor Core a set of transaction outputs can be accompanied by a payment request.
 Multiple payment requests per transaction are also possible. A payment request is a
 message signed by a trusted party requesting payment of certain amounts to a set of
 outputs as specified in [SLIP-24](https://github.com/satoshilabs/slips/blob/master/slip-0024.md).

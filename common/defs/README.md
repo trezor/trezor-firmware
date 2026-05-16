@@ -5,7 +5,7 @@ This directory hosts JSON definitions of recognized coins, tokens, and FIDO/U2F 
 ## FIDO
 
 The [`fido/`](fido) subdirectory contains definitons of apps whose logos and
-names are shown on Trezor T screen for FIDO/U2F authentication.
+names are shown on Trezor Core screen for FIDO/U2F authentication.
 
 Each app must have a single JSON file in the `fido/` subdirectory. Every app must have
 its `label` set to the user-recognizable application name. The `u2f` field is a list of
@@ -27,7 +27,7 @@ based on Bitcoin code.
 
 Each Bitcoin-like coin must have a single JSON file in the `bitcoin/` subdirectory,
 and a corresponding PNG image with the same name. The PNG must be 96x96 pixels and
-the picture must be a circle suitable for displaying on Trezor T.
+the picture must be a circle suitable for displaying on Trezor Core.
 
 Testnet is considered a separate coin, so it must have its own JSON and icon.
 
@@ -83,7 +83,7 @@ added to the dataset.
 We keep track of support status of each built-in coin over our devices. That is `T1B1`
 for Trezor One, `T2T1` for Trezor T, `T2B1` and `T3B1` for Trezor Safe 3 (both models
 should have identical entries, except for minimum versions which are higher on `T3B1`),
-`T3T1` for Trezor Safe 5.
+`T3T1` for Trezor Safe 5, `T3W1` for Trezor Safe 7.
 
 This information is stored in [`support.json`](support.json).
 External contributors should not touch this file unless asked to.
