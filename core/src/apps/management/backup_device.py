@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 from trezor.enums import BackupType
 
+from apps.common.device import require_initialized
+
 if TYPE_CHECKING:
     from typing import Sequence
 
@@ -98,8 +100,7 @@ async def backup_device(msg: BackupDevice) -> Success:
     repeated_backup_enabled = backup.repeated_backup_enabled()
     is_repeated_backup = repeated_backup_enabled and not storage_device.needs_backup()
 
-    if not storage_device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    require_initialized()
     if not storage_device.needs_backup() and not repeated_backup_enabled:
         raise wire.ProcessError("Seed already backed up")
 

@@ -9,10 +9,10 @@ if TYPE_CHECKING:
 
 
 async def change_pin(msg: ChangePin) -> Success:
-    from storage.device import is_initialized
     from trezor.messages import Success
     from trezor.ui.layouts import pin_wipe_code_exists_popup, success_pin_change
 
+    from apps.common.device import require_initialized
     from apps.common.request_pin import (
         error_pin_invalid,
         error_pin_matches_wipe_code,
@@ -20,8 +20,7 @@ async def change_pin(msg: ChangePin) -> Success:
         request_pin_confirm,
     )
 
-    if not is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    require_initialized()
 
     # confirm that user wants to change the pin
     await _require_confirm_change_pin(msg)

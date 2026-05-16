@@ -11,6 +11,7 @@ from trezor.wire.message_handler import filters
 
 from . import workflow_handlers
 from .common import lock_manager
+from .common.device import require_initialized
 
 if TYPE_CHECKING:
     from typing import NoReturn
@@ -418,8 +419,7 @@ async def handle_LockDevice(msg: LockDevice) -> Success:
 
 
 async def handle_SetBusy(msg: SetBusy) -> Success:
-    if not storage_device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    require_initialized()
 
     if msg.expiry_ms:
         import utime

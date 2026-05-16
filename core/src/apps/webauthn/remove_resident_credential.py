@@ -5,16 +5,16 @@ if TYPE_CHECKING:
 
 
 async def remove_resident_credential(msg: WebAuthnRemoveResidentCredential) -> Success:
-    import storage.device
     import storage.resident_credentials
     from trezor import TR, wire
     from trezor.messages import Success
     from trezor.ui.layouts.fido import confirm_fido
 
+    from apps.common.device import require_initialized
+
     from .resident_credentials import get_resident_credential
 
-    if not storage.device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    require_initialized()
     if msg.index is None:
         raise wire.ProcessError("Missing credential index parameter.")
 

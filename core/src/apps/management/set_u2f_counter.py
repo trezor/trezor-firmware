@@ -11,8 +11,9 @@ async def set_u2f_counter(msg: SetU2FCounter) -> Success:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
 
-    if not storage_device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    from apps.common.device import require_initialized
+
+    require_initialized()
     if msg.u2f_counter is None:
         raise wire.ProcessError("No value provided")
 

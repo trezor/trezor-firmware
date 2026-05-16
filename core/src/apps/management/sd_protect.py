@@ -8,6 +8,7 @@ from trezor.messages import Success
 from trezor.ui.layouts import show_success
 from trezor.wire import ProcessError
 
+from apps.common.device import require_initialized
 from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
 from apps.common.sdcard import ensure_sdcard
 
@@ -38,10 +39,7 @@ async def _set_salt(salt: bytes, salt_tag: bytes, stage: bool = False) -> None:
 
 
 async def sd_protect(msg: SdProtect) -> Success:
-    from trezor.wire import NotInitialized
-
-    if not storage_device.is_initialized():
-        raise NotInitialized("Device is not initialized")
+    require_initialized()
 
     if msg.operation == SdProtectOperationType.ENABLE:
         return await _sd_protect_enable(msg)

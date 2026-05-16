@@ -23,14 +23,13 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
         NotInitialized: If the device is not initialized.
         ValueError: If the proof of delegated identity is missing or invalid.
     """
-    from storage.device import is_initialized
     from trezor.messages import EvoluNode
-    from trezor.wire import NotInitialized
+
+    from apps.common.device import require_initialized
 
     from .common import check_delegated_identity_proof
 
-    if not is_initialized():
-        raise NotInitialized("Device is not initialized")
+    require_initialized()
 
     if not check_delegated_identity_proof(
         bytes(msg.proof_of_delegated_identity),
