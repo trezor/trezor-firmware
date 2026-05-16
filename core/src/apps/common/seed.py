@@ -11,7 +11,6 @@ from trezor.wire.errors import DataError
 from apps.common import cache
 
 from . import mnemonic
-from .device import require_initialized
 from .passphrase import get_passphrase
 
 if TYPE_CHECKING:
@@ -83,6 +82,8 @@ if utils.USE_THP:
             if ctx.cache.is_set(APP_COMMON_SEED):
                 raise Exception("Seed is already set!")
 
+            from .device import require_initialized
+
             require_initialized()
 
             passphrase = await get_passphrase(msg)
@@ -98,6 +99,8 @@ if utils.USE_THP:
 
             if msg.passphrase is not None and msg.on_device:
                 raise DataError("Passphrase provided when it shouldn't be!")
+
+            from .device import require_initialized
 
             require_initialized()
 
@@ -121,6 +124,8 @@ else:
 
         @cache.stored_async(APP_COMMON_SEED)
         async def get_seed() -> bytes:
+            from .device import require_initialized
+
             require_initialized()
 
             passphrase = await get_passphrase_legacy()
@@ -139,6 +144,8 @@ else:
             return common_seed
 
         async def derive_and_store_roots_legacy() -> None:
+            from .device import require_initialized
+
             require_initialized()
 
             ctx = get_context()
