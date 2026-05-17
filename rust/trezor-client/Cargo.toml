@@ -54,6 +54,7 @@ unicode-normalization = { version = "0.1.22", optional = true }
 [dev-dependencies]
 tracing-subscriber = "0.3"
 serial_test = "3"
+hex_lit = "0.1.1"
 
 [features]
 default = ["bitcoin", "ethereum", "solana"]

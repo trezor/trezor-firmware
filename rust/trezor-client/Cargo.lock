@@ -794,6 +794,7 @@ dependencies = [
  "bitcoin",
  "byteorder",
  "hex",
+ "hex_lit",
  "protobuf",
  "rusb",
  "serial_test",

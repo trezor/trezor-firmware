@@ -145,7 +145,10 @@ mod tests {
         thread,
     };
 
-    use bitcoin::{bip32::DerivationPath, hex::FromHex};
+    use bitcoin::{
+        bip32::DerivationPath, consensus::deserialize, hex::FromHex, Psbt, ScriptBuf, Transaction,
+    };
+    use hex_lit::hex;
     use serial_test::serial;
 
     use crate::{
@@ -297,5 +300,59 @@ mod tests {
         assert_eq!(signature.r.len(), 32);
         assert_eq!(signature.s.len(), 32);
         assert_eq!(signature.v, 38);
+    }
+
+    #[test]
+    #[serial]
+    fn test_btc_sign_tx_1in_1out() {
+        let mut emulator = init_emulator();
+        assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
+
+        let network = bitcoin::Network::Bitcoin;
+        // txid=b893aeed4b12227b6f5348d7f6cb84ba2cda2ba70a41933a25f363b9d2fc2cf9
+        let signed_tx = hex!("0100000001b5f59e2273c85b93aa9deff9bba5d7deace78610d3b0fb892a7ba6d86f36ac0d000000006b483045022100dd4dd136a70371bc9884c3c51fd52f4aed9ab8ee98f3ac7367bb19e6538096e702200c56be09c4359fc7eb494b4bdf8f2b72706b0575c4021373345b593e9661c7b6012103d7f3a07085bee09697cf03125d5c8760dfed65403dba787f1d1d8b1251af2cbeffffffff0148c40000000000001976a91419140511436e947448be994ab7fda9f98623e68e88ac00000000");
+
+        let mut unsigned_tx: Transaction = deserialize(&signed_tx).unwrap();
+        for txi in &mut unsigned_tx.input {
+            txi.script_sig = ScriptBuf::new();
+            txi.witness.clear();
+        }
+        let deriv = DerivationPath::from_str("m/44h/0h/5h/0/9").unwrap();
+        let fpr = emulator.get_root_fingerprint().unwrap();
+        let pubkey = emulator.get_public_key(&deriv, network, false).unwrap().public_key;
+
+        let mut psbt = Psbt::from_unsigned_tx(unsigned_tx).unwrap();
+        psbt.inputs[0].bip32_derivation.insert(pubkey, (fpr, deriv));
+        psbt.inputs[0].non_witness_utxo = Some(deserialize(&hex!("0100000001dacfb5828cd2434f29d237968d4c785b8e12d6d45108df91a2fc09cc26f7f9eb000000006b4830450221009deff16fa96f178b429a8a816ca08762fd5fd2972e0090c878b36a56898ce553022055caab6afe0ed050e6dfbf91af9541166b17bda4ade447c08077902a9992f19b012102187fc04e6004c9bbe63178bc3fb3d3d6fd747f127ade47753c6f2dab37a3ac85ffffffff02f4f90000000000001976a914afbbf5e4c1315ec9f5e96428986660130dbee7b888ac05d70200000000001976a9143f1cccd6cc6174f2ac6454081d66444dc39a02bc88ac00000000")).unwrap());
+
+        let signed = with_auto_approve(|| emulator.sign_tx(&psbt, network)).unwrap();
+        assert_eq!(signed.serialized, signed_tx);
+    }
+
+    #[test]
+    #[serial]
+    fn test_btc_sign_tx_1in_2out() {
+        let mut emulator = init_emulator();
+        assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
+
+        let network = bitcoin::Network::Testnet;
+        // txid=65047a2b107d6301d72d4a1e49e7aea9cf06903fdc4ae74a4a9bba9bc1a414d2
+        let signed_tx = hex!("010000000001019e2123e595e20d6aa2c8d227b2b98c781b8b41fda635756eca0768b8ce8067b30000000000ffffffff02409c00000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c98750c3000000000000160014cd4ee15090b177f15ed0760d85956d93b5990d5f0247304402200c734ed16a9226162a29133c14fad3565332c60346050ceb9246e73a2fc8485002203463d40cf78eb5cc9718d6617d9f251b987e96cb58525795a507acb9b91696c7012103f60fc56bf7b5326537c7e86e0a63b6cd008eeb87d39af324cee5bcc3424bf4d000000000");
+
+        let mut unsigned_tx: Transaction = deserialize(&signed_tx).unwrap();
+        for txi in &mut unsigned_tx.input {
+            txi.script_sig = ScriptBuf::new();
+            txi.witness.clear();
+        }
+        let deriv = DerivationPath::from_str("m/84h/1h/0h/0/87").unwrap();
+        let fpr = emulator.get_root_fingerprint().unwrap();
+        let pubkey = emulator.get_public_key(&deriv, network, false).unwrap().public_key;
+
+        let mut psbt = Psbt::from_unsigned_tx(unsigned_tx).unwrap();
+        psbt.inputs[0].bip32_derivation.insert(pubkey, (fpr, deriv));
+        psbt.inputs[0].non_witness_utxo = Some(deserialize(&hex!("0100000001e5af569cb6720e4a0c86b1b58de522cf4615e5045992388e84f8eae0022d8e33010000006a47304402202b09991327f3734d1a50ff8ce1df2f57d19c97009a65f24a26828ce717f8df6302205d653b0f704cd8162e467b6c465496d2b94d04eeeb51d34ad4679bbf01b8a4a0012103685ff9491738f67ae75d0a0c2b9f8527df44d9add4fa23bd5f3cdb66b8a36876fdffffff02a086010000000000160014ec871ec494e095efd8c3dcfd8b1fe1529a822d9dba5d1000000000001976a914c6f2998ea98ce79b750288124ec2b381a8f1745688ac00000000")).unwrap());
+
+        let signed = with_auto_approve(|| emulator.sign_tx(&psbt, network)).unwrap();
+        assert_eq!(signed.serialized, signed_tx);
     }
 }
