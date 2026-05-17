@@ -19,7 +19,6 @@ impl Trezor {
     pub fn get_public_key(
         &mut self,
         path: &bip32::DerivationPath,
-        script_type: InputScriptType,
         network: Network,
         show_display: bool,
     ) -> Result<bip32::Xpub> {
@@ -27,14 +26,12 @@ impl Trezor {
         req.address_n = utils::convert_path(path);
         req.set_show_display(show_display);
         req.set_coin_name(utils::coin_name(network)?);
-        req.set_script_type(script_type);
         self.call(req, Box::new(|_, m: protos::PublicKey| Ok(m.xpub().parse()?)))?.interact()
     }
 
     pub fn get_root_fingerprint(&mut self) -> Result<bip32::Fingerprint> {
         let xpub = self.get_public_key(
             &bip32::DerivationPath::default(),
-            InputScriptType::SPENDADDRESS,
             bitcoin::Network::Bitcoin,
             false,
         )?;
@@ -68,9 +65,7 @@ impl Trezor {
                 if *fpr != root_fingerprint {
                     continue;
                 }
-                let derived_pubkey = self
-                    .get_public_key(&path, InputScriptType::SPENDADDRESS, network, false)?
-                    .public_key;
+                let derived_pubkey = self.get_public_key(&path, network, false)?.public_key;
                 if *pubkey == derived_pubkey {
                     if derivations.insert(derived_pubkey, path.clone()).is_some() {
                         return Err(crate::Error::InvalidPsbt(format!(

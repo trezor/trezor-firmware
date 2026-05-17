@@ -13,7 +13,6 @@ fn main() {
     let pubkey = trezor
         .get_public_key(
             &DerivationPath::from_str("m/44h/1h/0h/0/0").unwrap(),
-            trezor_client::protos::InputScriptType::SPENDADDRESS,
             Network::Testnet,
             true,
         )
