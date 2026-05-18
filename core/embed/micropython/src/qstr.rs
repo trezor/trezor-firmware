@@ -67,6 +67,9 @@ impl Attribute {
         Self(val as _)
     }
 
+    // SAFETY: Qstr pools are either ROM-based or permanently allocated in the GC
+    // arena. The MicroPython runtime holds the respective head pointers so we don't
+    // need to care.
     pub fn as_str(self) -> &'static str {
         let mut len = 0usize;
         let slice = unsafe {
@@ -74,10 +77,9 @@ impl Attribute {
             let ptr = ffi::qstr_data(self.0, &mut len as *mut _);
             slice::from_raw_parts(ptr, len)
         };
-        // SAFETY: Qstr pools are either ROM-based or permanently allocated in the GC
-        // arena. The MicroPython runtime holds the respective head pointers so we don't
-        // need to care.
-        unwrap!(from_utf8(slice))
+        // assuming that qstrs only contain the same subsets of utf8 that both
+        // MicroPython and Rust agree on
+        from_utf8(slice).unwrap()
     }
 
     pub const fn to_obj(self) -> Obj {

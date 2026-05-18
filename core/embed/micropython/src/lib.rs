@@ -2,9 +2,6 @@
 #![feature(const_trait_impl)]
 
 #[macro_use]
-mod error_util;
-
-#[macro_use]
 #[allow(unused_macros)]
 pub mod macros;
 
@@ -20,8 +17,8 @@ pub mod map;
 pub mod module;
 pub mod obj;
 pub mod print;
-pub mod qstr;
 pub mod py_object;
+pub mod qstr;
 pub mod runtime;
 pub mod simple_type;
 pub mod typ;
@@ -30,5 +27,5 @@ pub mod util;
 #[cfg(test)]
 pub mod testutil;
 
-pub use obj::Obj;
 pub use error::Error;
+pub use obj::Obj;

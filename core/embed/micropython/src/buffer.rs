@@ -38,9 +38,10 @@ impl StrBuffer {
     // This generally holds for GC-managed pointers and for static data.
     // Dangerous with anything else.
     pub unsafe fn from_ptr_and_len(ptr: *const u8, len: usize) -> Self {
+        debug_assert!(len <= u16::MAX as usize, "string too long for StrBuffer");
         Self {
             ptr,
-            len: unwrap!(len.try_into()),
+            len: len as u16,
             off: 0,
         }
     }
@@ -91,8 +92,9 @@ impl StrBuffer {
     }
 
     pub fn skip_prefix(&self, skip_bytes: usize) -> Self {
-        let off: u16 = unwrap!(skip_bytes.try_into());
-        assert!(off <= self.len);
+        assert!(skip_bytes <= self.len as usize);
+        // len is u16 and skip_bytes <= len so implicitly the following conversion is valid
+        let off = skip_bytes as u16;
         assert!(self.as_ref().is_char_boundary(skip_bytes));
         Self {
             ptr: self.ptr,
@@ -106,9 +108,10 @@ impl StrBuffer {
     }
 
     pub fn prefix(&self, bytes: usize) -> Self {
-        let new_len: u16 = unwrap!(bytes.try_into());
-        assert!(new_len <= self.len);
+        assert!(bytes <= self.len as usize);
         assert!(self.as_ref().is_char_boundary(bytes));
+        // len is u16 and bytes <= len so implicitly the following conversion is valid
+        let new_len = bytes as u16;
         Self {
             ptr: self.ptr,
             len: new_len,

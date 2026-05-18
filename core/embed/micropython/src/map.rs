@@ -131,16 +131,16 @@ impl Map {
         unsafe {
             let map = self as *mut Self;
             // EXCEPTION: Will raise if allocation fails.
-            let elem = unwrap!(
-                catch_exception(|| {
-                    ffi::mp_map_lookup(
-                        map,
-                        index,
-                        ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
-                    )
-                })?
-                .as_mut()
-            ); // `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` should always return a non-null pointer.
+            let elem = catch_exception(|| {
+                ffi::mp_map_lookup(
+                    map,
+                    index,
+                    ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
+                )
+            })?
+            .as_mut()
+            // `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` should always return a non-null pointer.
+            .unwrap();
             elem.value = value;
         }
         Ok(())
