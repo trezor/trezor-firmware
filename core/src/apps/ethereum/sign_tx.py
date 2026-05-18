@@ -290,10 +290,16 @@ async def confirm_tx_data(
     )
 
     if payment_request_verifier is not None:
-        assert data_length == 0
+        if data_length != 0:
+            raise DataError(
+                "Data length must be 0 when `payment_request_verifier` is provided."
+            )
 
-        # If a payment_request_verifier is provided, then msg.payment_req must have been set.
-        assert msg.payment_req is not None
+        if msg.payment_req is None:
+            raise DataError(
+                "Payment request (`payment_req`) must not be None when `payment_request_verifier` is provided."
+            )
+
         assert recipient_str is not None
 
         payment_request_verifier.add_output(value, recipient_str or "")
