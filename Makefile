@@ -115,13 +115,17 @@ defs_check: ## check validity of coin definitions and protobuf files
 
 ruststyle:
 	@echo [RUSTFMT]
-	@cd core/embed/rust ; cargo fmt
+	@(cd core/embed/rust ; cargo fmt) && \
+	(cd core/embed/crypto ; cargo fmt) && \
+	(cd core/embed/micropython ; cargo fmt)
 	make -C rust style
 
 ruststyle_check:
 	rustfmt --version
 	@echo [RUSTFMT]
-	@cd core/embed/rust ; cargo fmt -- --check
+	@(cd core/embed/rust ; cargo fmt -- --check) && \
+	(cd core/embed/crypto ; cargo fmt -- --check) && \
+	(cd core/embed/micropython ; cargo fmt -- --check)
 	make -C rust style_check
 
 

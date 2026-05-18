@@ -201,9 +201,15 @@ test: ## run unit tests
 
 test_rust: ## run rs unit tests
 	export BUILD_DIR=$(abspath $(UNIX_BUILD_DIR)) ; \
-	cd embed/rust ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) \
+	(cd embed/crypto ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) \
+		--no-default-features --features test \
+		-- --test-threads=1 --nocapture) && \
+	(cd embed/micropython ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) \
+		--no-default-features --features test \
+		-- --test-threads=1 --nocapture) && \
+	(cd embed/rust ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) \
 		--no-default-features --features $(LAYOUT_FEATURE),power_manager,test \
-		-- --test-threads=1 --nocapture
+		-- --test-threads=1 --nocapture)
 
 test_emu_sanity: ## make sure the emulator doesn't crash on startup
 	timeout -v 10 $(EMU) --disable-animation --headless --temporary-profile --command true
@@ -279,10 +285,14 @@ pyright:
 
 clippy:
 	export BUILD_DIR=$(abspath $(UNIX_BUILD_DIR)) ; \
-	cd embed/rust ; cargo clippy $(TESTOPTS) --all-features --target=$(RUST_TARGET)
+	(cd embed/crypto ; cargo clippy $(TESTOPTS) --target=$(RUST_TARGET)) && \
+	(cd embed/micropython ; cargo clippy $(TESTOPTS) --target=$(RUST_TARGET)) && \
+	(cd embed/rust ; cargo clippy $(TESTOPTS) --all-features --target=$(RUST_TARGET))
 
 audit_rust: ## run cargo audit on rust dependencies
-	cd embed/rust ; cargo audit
+	(cd embed/crypto ; cargo audit) && \
+	(cd embed/micropython ; cargo audit) && \
+	(cd embed/rust ; cargo audit)
 
 ## code generation:
 
