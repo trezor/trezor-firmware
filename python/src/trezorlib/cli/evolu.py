@@ -114,6 +114,11 @@ def index_management(
     session: Session,
     rotation_index: Optional[int] = None,
 ) -> str:
+    """
+    Read the rotation index for the delegated identity key.
+    If the index is not set and `--rotation_index` is provided, initialize it to that value.
+    Returns the current index, or None if unset.
+    """
     return str(
         evolu.index_management(
             session,
