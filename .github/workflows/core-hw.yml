@@ -49,7 +49,6 @@ jobs:
         --retries=5
         --retry-delay=1
       TT_UHUB_PORT: 1
-      QUIET_MODE: 1
     timeout-minutes: 360  # 6h CI job timeout
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # actions/checkout@v4.3.1
@@ -93,7 +92,6 @@ jobs:
       DISABLE_OPTIGA: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2B1' && '1' || '0' }}
       TT_UHUB_PORT: 1
-      QUIET_MODE: 1
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # actions/checkout@v4.3.1
         with:
