@@ -16,33 +16,43 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os
-from typing import List
+import argparse
+from pathlib import Path
+from typing import TextIO
 
 import click
 
 from trezorlib.cli import trezorctl
 
 DELIMITER_STR = "### ALL CONTENT BELOW IS GENERATED"
+OPTIONS_RST = Path(__file__).resolve().parent / "../docs/OPTIONS.rst"
 
-options_rst = open(os.path.dirname(__file__) + "/../docs/OPTIONS.rst", "r+")
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--output",
+    type=Path,
+    default=OPTIONS_RST,
+    help="Path to write the generated OPTIONS.rst content.",
+)
+args = parser.parse_args()
 
-lead_in: List[str] = []
+lead_in: list[str] = []
 
-for line in options_rst:
-    lead_in.append(line)
-    if DELIMITER_STR in line:
-        break
+with OPTIONS_RST.open() as options_rst:
+    for line in options_rst:
+        lead_in.append(line)
+        if DELIMITER_STR in line:
+            break
 
-options_rst.seek(0)
-options_rst.truncate(0)
+output: TextIO
+output = args.output.open("w")
 
 for line in lead_in:
-    options_rst.write(line)
+    output.write(line)
 
 
 def _print(s: str = "") -> None:
-    options_rst.write(s + "\n")
+    output.write(s + "\n")
 
 
 def rst_code_block(help_str: str) -> None:
@@ -68,3 +78,5 @@ for subcommand in sorted(trezorctl.cli.commands):
     rst_code_block(f"trezorctl {subcommand} --help")
     ctx = click.Context(cmd, info_name=f"trezorctl {subcommand}", terminal_width=99)
     rst_code_block(cmd.get_help(ctx))
+
+output.close()

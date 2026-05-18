@@ -197,6 +197,7 @@ Miscellaneous debug features.
     optiga-set-sec-max  Set Optiga's security event counter to maximum.
     prodtest-t1         Perform a prodtest on Model One.
     record              Record screen changes into a specified directory.
+    set-battery-state   Set emulated battery/power state (emulator only).
     set-log-filter      Set logging filter string.
 
 Device management commands - setup, recover seed, wipe, etc.
@@ -312,6 +313,7 @@ Evolu commands.
   Commands:
     get-delegated-identity-key  Request the delegated identity key of this device.
     get-node                    Return the SLIP-21 node for Evolu.
+    index-management            Set the optional delegated identity key rotation index if unset.
     sign-registration-request   Sign a registration request for this device to be registered at...
 
 FIDO2, U2F and WebAuthN management commands.

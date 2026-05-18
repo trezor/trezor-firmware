@@ -13,6 +13,14 @@ dist: doc clean
 doc:
 	$(PYTHON) helper-scripts/make-options-rst.py
 
+doc_check:
+	@echo [OPTIONS-RST-CHECK]
+	@set -e; \
+		tmp=$$(mktemp); \
+		trap 'rm -f "$$tmp"' EXIT; \
+		$(PYTHON) helper-scripts/make-options-rst.py --output "$$tmp"; \
+		diff -u docs/OPTIONS.rst "$$tmp"
+
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
 clean-build: ## remove build artifacts
