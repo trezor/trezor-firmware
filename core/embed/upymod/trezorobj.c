@@ -76,19 +76,3 @@ mp_obj_t trezor_obj_call_protected(void (*func)(void *), void *arg) {
     return MP_OBJ_FROM_PTR(nlr.ret_val);
   }
 }
-
-mp_obj_t trezor_obj_str_from_rom_text(const char *str) {
-  // taken from mp_obj_new_exception_msg
-  mp_obj_str_t *o_str = m_new_obj_maybe(mp_obj_str_t);
-  if (o_str == NULL) return NULL;
-
-  o_str->base.type = &mp_type_str;
-  o_str->len = strlen(str);
-  o_str->data = (const byte *)str;
-#if MICROPY_ROM_TEXT_COMPRESSION
-  o_str->hash = 0;  // will be computed only if string object is accessed
-#else
-  o_str->hash = qstr_compute_hash(o_str->data, o_str->len);
-#endif
-  return MP_OBJ_FROM_PTR(o_str);
-}

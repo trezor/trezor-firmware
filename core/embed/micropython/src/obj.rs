@@ -279,25 +279,6 @@ impl TryFrom<&str> for Obj {
     }
 }
 
-/// ROM null-terminated strings can be converted to `str` MicroPython objects
-/// without making a copy on the heap, only allocating the `mp_obj_str_t`
-/// struct.
-impl TryFrom<&'static CStr> for Obj {
-    type Error = Error;
-
-    fn try_from(val: &'static CStr) -> Result<Self, Self::Error> {
-        // SAFETY:
-        //  - `CStr` is guaranteed to be null-terminated UTF-8.
-        //  - the argument is static so it will remain valid for the lifetime of result.
-        let obj = unsafe { ffi::trezor_obj_str_from_rom_text(val.as_ptr() as _) };
-        if obj.is_null() {
-            Err(Error::AllocationFailed)
-        } else {
-            Ok(obj)
-        }
-    }
-}
-
 impl TryFrom<(Obj, Obj)> for Obj {
     type Error = Error;
 

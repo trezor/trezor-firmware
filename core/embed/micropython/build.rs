@@ -100,7 +100,6 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_get_type_str")
         .allowlist_function("mp_call_function_n_kw")
         .allowlist_function("trezor_obj_get_ll_checked")
-        .allowlist_function("trezor_obj_str_from_rom_text")
         // buffer
         .allowlist_function("mp_get_buffer")
         .allowlist_var("MP_BUFFER_READ")
@@ -109,10 +108,29 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_bytes")
         .allowlist_var("mp_type_bytearray")
         .allowlist_var("mp_type_memoryview")
+        // debug
+        .allowlist_function("mp_print_strn")
+        .allowlist_function("str_modulo_format")
+        .allowlist_var("mp_plat_print")
         // dict
         .allowlist_type("mp_obj_dict_t")
         .allowlist_function("mp_obj_new_dict")
         .allowlist_var("mp_type_dict")
+        // exceptions
+        .allowlist_function("nlr_jump")
+        .allowlist_function("mp_obj_new_exception")
+        .allowlist_function("mp_obj_new_exception_args")
+        .allowlist_function("trezor_obj_call_protected")
+        .allowlist_var("mp_type_AttributeError")
+        .allowlist_var("mp_type_EOFError")
+        .allowlist_var("mp_type_IndexError")
+        .allowlist_var("mp_type_KeyError")
+        .allowlist_var("mp_type_MemoryError")
+        .allowlist_var("mp_type_OverflowError")
+        .allowlist_var("mp_type_ValueError")
+        .allowlist_var("mp_type_TypeError")
+        .allowlist_var("mp_type_RuntimeError")
+        .allowlist_var("mp_type_NotImplementedError")
         // fun
         .allowlist_type("mp_obj_fun_builtin_fixed_t")
         .allowlist_var("mp_type_fun_builtin_0")
@@ -141,37 +159,21 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_map_init")
         .allowlist_function("mp_map_init_fixed_table")
         .allowlist_function("mp_map_lookup")
-        // exceptions
-        .allowlist_function("nlr_jump")
-        .allowlist_function("mp_obj_new_exception")
-        .allowlist_function("mp_obj_new_exception_args")
-        .allowlist_function("trezor_obj_call_protected")
-        .allowlist_var("mp_type_AttributeError")
-        .allowlist_var("mp_type_EOFError")
-        .allowlist_var("mp_type_IndexError")
-        .allowlist_var("mp_type_KeyError")
-        .allowlist_var("mp_type_MemoryError")
-        .allowlist_var("mp_type_OverflowError")
-        .allowlist_var("mp_type_ValueError")
-        .allowlist_var("mp_type_TypeError")
-        .allowlist_var("mp_type_RuntimeError")
-        .allowlist_var("mp_type_NotImplementedError")
-        // time
-        .allowlist_function("mp_hal_ticks_ms")
-        .allowlist_function("mp_hal_delay_ms")
-        // debug
-        .allowlist_function("mp_print_strn")
-        .allowlist_function("str_modulo_format")
-        .allowlist_var("mp_plat_print")
-        // typ
-        .allowlist_var("mp_type_type")
         // module
         .allowlist_type("mp_obj_module_t")
         .allowlist_var("mp_type_module")
         // qstr
         .allowlist_function("qstr_data")
+        .allowlist_function("qstr_compute_hash")
+        // str
+        .allowlist_type("mp_obj_str_t")
+        // time
+        .allowlist_function("mp_hal_ticks_ms")
+        .allowlist_function("mp_hal_delay_ms")
         // tuple
         .allowlist_type("mp_obj_tuple_t")
+        // typ
+        .allowlist_var("mp_type_type")
         // `ffi::mp_map_t` type is not allowed to be `Clone` or `Copy` because we tie it
         // to the data lifetimes with the `MapRef` type, see `src/micropython/map.rs`.
         // TODO: We should disable `Clone` and `Copy` for all types and only allow-list
