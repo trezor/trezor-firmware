@@ -1466,6 +1466,25 @@ OK
 
 Runs a Tropic stress test that repeatedly calls `lt_init()`, `lt_session_start()`, `lt_mac_and_destroy()`, `lt_ecc_key_generate()` and `lt_random_value_get()` to test that Tropic doesn't enter alarm mode.
 
+### tropic-benchmark
+
+Measures the actual average duration of individual Tropic operations over 25 iterations and prints the results.
+
+Example:
+```
+tropic-benchmark
+# session_start()    204 ms
+# mac_and_destroy()  28 ms
+# r_mem_data_write() 37 ms
+# r_mem_data_read()  33 ms
+# r_mem_data_erase() 4 ms
+# mcounter_init()    9 ms
+# mcounter_get()     4 ms
+# mcounter_update()  4 ms
+# random_value_get() 10 ms
+OK
+```
+
 ### wpc-info
 Retrieves detailed information from the wireless power receiver, including chip identification, firmware version, configuration settings, and error status.
 

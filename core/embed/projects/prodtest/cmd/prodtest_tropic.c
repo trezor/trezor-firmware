@@ -1807,6 +1807,199 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_tropic_benchmark(cli_t* cli) {
+  if (cli_arg_count(cli) != 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+
+  lt_ret_t res = LT_FAIL;
+  lt_pkey_index_t pairing_key_index = -1;
+
+  if (!find_pairing_key(cli, &pairing_key_index)) {
+    cli_error(cli, CLI_ERROR, "No pairing key is available");
+    return;
+  }
+
+  lt_handle_t* h = tropic_get_handle();
+  uint32_t start_ms = 0;
+
+  const int iterations = 25;
+  const uint16_t timing_data_slot = TR01_R_MEM_DATA_SLOT_MAX;
+  const lt_mcounter_index_t timing_mcounter_slot = TR01_MCOUNTER_INDEX_15;
+
+  // Ensure data slot is empty before the first iteration
+  res = lt_r_mem_data_erase(h, timing_data_slot);
+  if (res != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_r_mem_data_erase()` failed with error '%s'",
+              lt_ret_verbose(res));
+    return;
+  }
+
+  uint32_t total_session_start_ms = 0;
+  uint32_t total_mac_and_destroy_ms = 0;
+  uint32_t total_r_mem_data_write_ms = 0;
+  uint32_t total_r_mem_data_read_ms = 0;
+  uint32_t total_r_mem_data_erase_ms = 0;
+  uint32_t total_mcounter_init_ms = 0;
+  uint32_t total_mcounter_get_ms = 0;
+  uint32_t total_mcounter_update_ms = 0;
+  uint32_t total_random_value_get_ms = 0;
+
+  for (int i = 0; i < iterations; i++) {
+    // Measure `tropic_custom_session_start()`
+    {
+      res = tropic_session_invalidate();
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "`tropic_session_invalidate()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+      start_ms = systick_ms();
+      res = tropic_custom_session_start(cli, pairing_key_index);
+      total_session_start_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "`tropic_custom_session_start()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+
+    // Measure `lt_mac_and_destroy()`
+    {
+      uint8_t buffer[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+      rng_fill_buffer(buffer, sizeof(buffer));
+      start_ms = systick_ms();
+      res = lt_mac_and_destroy(
+          h, TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED, buffer, buffer);
+      total_mac_and_destroy_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "`lt_mac_and_destroy()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+
+    uint8_t data[320] = {0};
+
+    // Measure `lt_r_mem_data_write()` (320 bytes)
+    {
+      rng_fill_buffer(data, sizeof(data));
+      start_ms = systick_ms();
+      res = lt_r_mem_data_write(h, timing_data_slot, data, sizeof(data));
+      total_r_mem_data_write_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "`lt_r_mem_data_write()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+
+    // Measure `lt_r_mem_data_read()` (320 bytes)
+    {
+      uint16_t read_size = 0;
+      start_ms = systick_ms();
+      res = lt_r_mem_data_read(h, timing_data_slot, data, sizeof(data),
+                               &read_size);
+      total_r_mem_data_read_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "`lt_r_mem_data_read()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+
+    // Measure `lt_r_mem_data_erase()`
+    {
+      start_ms = systick_ms();
+      res = lt_r_mem_data_erase(h, timing_data_slot);
+      total_r_mem_data_erase_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "`lt_r_mem_data_erase()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+
+    // Measure `lt_mcounter_init()`
+    {
+      start_ms = systick_ms();
+      res = lt_mcounter_init(h, timing_mcounter_slot, 1);
+      total_mcounter_init_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR, "`lt_mcounter_init()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+
+    // Measure `lt_mcounter_get()`
+    {
+      uint32_t counter_value = 0;
+      start_ms = systick_ms();
+      res = lt_mcounter_get(h, timing_mcounter_slot, &counter_value);
+      total_mcounter_get_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR, "`lt_mcounter_get()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+
+    // Measure `lt_mcounter_update()`
+    {
+      start_ms = systick_ms();
+      res = lt_mcounter_update(h, timing_mcounter_slot);
+      total_mcounter_update_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "`lt_mcounter_update()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+
+    // Measure `lt_random_value_get()` (32 bytes)
+    {
+      uint8_t buffer[32] = {0};
+      start_ms = systick_ms();
+      res = lt_random_value_get(h, buffer, sizeof(buffer));
+      total_random_value_get_ms += systick_ms() - start_ms;
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "`lt_random_value_get()` failed with error '%s'",
+                  lt_ret_verbose(res));
+        return;
+      }
+    }
+  }
+
+#define CLI_TRACE_AVERAGE(name, total) \
+  cli_trace(cli, name " %lu ms", (((total) + iterations / 2) / iterations))
+
+  CLI_TRACE_AVERAGE("session_start()   ", total_session_start_ms);
+  CLI_TRACE_AVERAGE("mac_and_destroy() ", total_mac_and_destroy_ms);
+  CLI_TRACE_AVERAGE("r_mem_data_write()", total_r_mem_data_write_ms);
+  CLI_TRACE_AVERAGE("r_mem_data_read() ", total_r_mem_data_read_ms);
+  CLI_TRACE_AVERAGE("r_mem_data_erase()", total_r_mem_data_erase_ms);
+  CLI_TRACE_AVERAGE("mcounter_init()   ", total_mcounter_init_ms);
+  CLI_TRACE_AVERAGE("mcounter_get()    ", total_mcounter_get_ms);
+  CLI_TRACE_AVERAGE("mcounter_update() ", total_mcounter_update_ms);
+  CLI_TRACE_AVERAGE("random_value_get()", total_random_value_get_ms);
+
+#undef CLI_TRACE_AVERAGE
+
+  cli_ok(cli, "");
+}
+
 static bool privileged_session_start(cli_t* cli) {
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
@@ -2165,6 +2358,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_tropic_stress_test,
   .info = "Run stress test for Tropic",
   .args = "[<init-iterations> <start-session-iterations> <mac-and-destroy-slot-count> <mac-and-destroy-per-slot-iterations> <signing-iterations> <rng-iterations>]"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-benchmark",
+  .func = prodtest_tropic_benchmark,
+  .info = "Measure actual duration of Tropic operations",
+  .args = ""
 );
 
 PRODTEST_CLI_CMD(
