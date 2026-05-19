@@ -1529,9 +1529,6 @@ static void prodtest_tropic_keyfido_read(cli_t* cli) {
 }
 
 static void prodtest_tropic_update_fw(cli_t* cli) {
-#define FW_APP_UPDATE_BANK TR01_FW_BANK_FW1
-#define FW_SPECT_UPDATE_BANK TR01_FW_BANK_SPECT1
-
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -1549,7 +1546,7 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
             chip_id.silicon_rev[1], chip_id.silicon_rev[2],
             chip_id.silicon_rev[3]);
 
-#ifdef ABAB
+#ifdef LT_SILICON_REV_ABAB
   if (strncmp((char*)chip_id.silicon_rev, "ABAB", 4) != 0) {
     cli_error(cli, CLI_ERROR, "Wrong tropic chip silicon revision");
     return;
@@ -1570,20 +1567,11 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 
   cli_trace(cli, "Chip is executing bootloader");
 
-  cli_trace(cli, "Updating RISC-V FW");
-  ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), FW_APP_UPDATE_BANK);
+  cli_trace(cli, "Updating RISC-V and SPECT FW");
+  ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), fw_SPECT,
+                                sizeof(fw_SPECT));
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR, "RISC-V FW update failed, ret=%s",
-              lt_ret_verbose(ret));
-    goto cleanup;
-  }
-
-  cli_trace(cli, "Updating SPECT FW");
-  ret = lt_do_mutable_fw_update(h, fw_SPECT, sizeof(fw_SPECT),
-                                FW_SPECT_UPDATE_BANK);
-  if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR, "SPECT FW update failed, ret=%s",
-              lt_ret_verbose(ret));
+    cli_error(cli, CLI_ERROR, "FW update failed, ret=%s", lt_ret_verbose(ret));
     goto cleanup;
   }
 
