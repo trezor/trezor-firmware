@@ -1,5 +1,4 @@
 use core::convert::{TryFrom, TryInto};
-use core::ffi::CStr;
 
 use crate::runtime::catch_exception;
 use crate::{Error, ffi};
@@ -102,17 +101,46 @@ impl Obj {
         unsafe { Self::from_bits((val << 3) | 6) }
     }
 
-    pub const fn small_int(val: u16) -> Self {
+    pub const fn small_int(val: i16) -> Self {
+        // an i16 value always fits into `isize - 1` bits
+        Self::small_int_unchecked(val as isize)
+    }
+
+    pub const fn try_small_int(val: isize) -> Result<Self, ()> {
+        // check if we can fit into `isize - 1` bits, including sign:
+        let val_shifted = val << 1;
+        let val_unshifted = val_shifted >> 1;
+        if val_unshifted != val {
+            Err(())
+        } else {
+            Ok(Self::small_int_unchecked(val))
+        }
+    }
+
+    /// Convert an isize to a small-int inline Obj representation.
+    ///
+    /// The actual value must use one less bit than the size of `isize`,
+    /// otherwise the topmost bit is silently truncated.
+    pub const fn small_int_unchecked(val: isize) -> Self {
         // SAFETY:
         //  - MicroPython compiled with `MICROPY_OBJ_REPR == MICROPY_OBJ_REPR_A`.
-        //  - val fits in 31 bits
-        // (TODO if we ever add static asserts, we can extend this function to u32)
+        //  - `mp_int_t` is the same size as `isize`, per micropython requirements.
 
         // micropython/py/obj.h
         // #define MP_OBJ_NEW_SMALL_INT(small_int) \
         //     ((mp_obj_t)((((mp_uint_t)(small_int)) << 1) | 1))
         let val = val as usize;
         unsafe { Self::from_bits((val << 1) | 1) }
+    }
+
+    pub fn small_int_value(self) -> isize {
+        // SAFETY:
+        //  - MicroPython compiled with `MICROPY_OBJ_REPR == MICROPY_OBJ_REPR_A`.
+        //  - `mp_int_t` is the same size as `isize`, per micropython requirements.
+
+        // micropython/py/obj.h
+        // #define MP_OBJ_SMALL_INT_VALUE(o) (((mp_int_t)(o)) >> 1)
+        (self.as_bits() >> 1) as isize
     }
 }
 
@@ -141,45 +169,6 @@ impl TryFrom<Obj> for bool {
         // EXCEPTION: Can call Python code (on custom instances) and therefore raise.
         let is_true = catch_exception(|| unsafe { ffi::mp_obj_is_true(obj) })?;
         Ok(is_true)
-    }
-}
-
-impl TryFrom<Obj> for i32 {
-    type Error = Error;
-
-    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let mut int: ffi::mp_int_t = 0;
-
-        // TODO: Avoid type casts on the Python side.
-        // SAFETY:
-        //  - `int` is a mutable pointer of the right type.
-        //  - `obj` can be anything uPy understands.
-        // EXCEPTION: Can raise if `obj` is int but cannot fit into `cty::mp_int_t`.
-        let result =
-            catch_exception(|| unsafe { ffi::mp_obj_get_int_maybe(obj.as_ptr(), &mut int) })?;
-        if result {
-            Ok(int.try_into()?)
-        } else {
-            Err(Error::TypeError)
-        }
-    }
-}
-
-impl TryFrom<Obj> for i64 {
-    type Error = Error;
-
-    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let mut ll: cty::c_longlong = 0;
-
-        // SAFETY:
-        //  - `ll` is a mutable variable of the right type.
-        //  - `obj` can be anything uPy understands.
-        // EXCEPTION: Does not raise.
-        if unsafe { ffi::trezor_obj_get_ll_checked(obj, &mut ll) } {
-            Ok(ll)
-        } else {
-            Err(Error::TypeError)
-        }
     }
 }
 
@@ -320,13 +309,25 @@ impl TryFrom<(Obj, Obj, Obj)> for Obj {
 impl From<u8> for Obj {
     fn from(val: u8) -> Self {
         // `u8` will fit into smallint so no error should happen here.
-        Obj::small_int(val as u16)
+        Obj::small_int(val as i16)
+    }
+}
+
+impl From<i8> for Obj {
+    fn from(val: i8) -> Self {
+        Obj::small_int(val as i16)
     }
 }
 
 impl From<u16> for Obj {
     fn from(val: u16) -> Self {
         // `u16` will fit into smallint so no error should happen here.
+        Obj::small_int(val as i16)
+    }
+}
+
+impl From<i16> for Obj {
+    fn from(val: i16) -> Self {
         Obj::small_int(val)
     }
 }
@@ -355,27 +356,6 @@ impl TryFrom<Obj> for u16 {
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
         let val = i32::try_from(obj)?;
-        let this = Self::try_from(val)?;
-        Ok(this)
-    }
-}
-
-impl TryFrom<Obj> for u32 {
-    type Error = Error;
-
-    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let val = i64::try_from(obj)?;
-        let this = Self::try_from(val)?;
-        Ok(this)
-    }
-}
-
-impl TryFrom<Obj> for u64 {
-    type Error = Error;
-
-    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        // TODO: Support full range.
-        let val = i64::try_from(obj)?;
         let this = Self::try_from(val)?;
         Ok(this)
     }
@@ -459,17 +439,27 @@ mod tests {
 
     #[test]
     fn test_small_int() {
+        assert_eq!(Obj::small_int(0).small_int_value(), 0);
+        assert_eq!(Obj::small_int(10).small_int_value(), 10);
+        assert_eq!(Obj::small_int(-1).small_int_value(), -1);
+        assert_eq!(Obj::small_int(i16::MAX).small_int_value(), i16::MAX as isize);
+        assert_eq!(Obj::small_int(i16::MIN).small_int_value(), i16::MIN as isize);
+    }
+
+    #[test]
+    fn test_try_small_int() {
+        assert_eq!(Obj::try_small_int(0).map(Obj::small_int_value), Ok(0));
+        assert_eq!(Obj::try_small_int(isize::MAX), Err(()));
+        assert_eq!(Obj::try_small_int(isize::MIN), Err(()));
         assert_eq!(
-            Obj::small_int(0x0000).as_bits(),
-            0b00000000000000000000000000000001
+            Obj::try_small_int(0xc000_0000u32 as isize).map(Obj::small_int_value),
+            Ok(0xc000_0000u32 as isize)
         );
+        assert_eq!(Obj::try_small_int((0xc000_0000u32 as isize) - 1), Err(()));
         assert_eq!(
-            Obj::small_int(0x00f0).as_bits(),
-            0b00000000000000000000000111100001
+            Obj::try_small_int(0x3fff_ffffu32 as isize).map(Obj::small_int_value),
+            Ok(0x3fff_ffffu32 as isize)
         );
-        assert_eq!(
-            Obj::small_int(0xffff).as_bits(),
-            0b00000000000000011111111111111111
-        );
+        assert_eq!(Obj::try_small_int((0x3fff_ffffu32 as isize) + 1), Err(()))
     }
 }

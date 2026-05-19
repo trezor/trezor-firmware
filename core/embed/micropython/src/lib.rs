@@ -11,6 +11,7 @@ pub mod error;
 pub mod ffi;
 pub mod func;
 pub mod gc;
+mod int;
 pub mod iter;
 pub mod list;
 pub mod map;

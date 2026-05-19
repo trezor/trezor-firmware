@@ -109,8 +109,6 @@ static inline uint64_t trezor_obj_get_uint64(mp_const_obj_t obj) {
   }
 }
 
-bool trezor_obj_get_ll_checked(mp_obj_t obj, long long *value);
-
 mp_obj_t trezor_obj_call_protected(void (*func)(void *), void *arg);
 
 #endif

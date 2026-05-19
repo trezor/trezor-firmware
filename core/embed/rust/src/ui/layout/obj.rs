@@ -88,12 +88,12 @@ impl AttachType {
 static ATTACH_TYPE: Type = obj_type! {
     name: Qstr::MP_QSTR_AttachType,
     locals: &obj_dict!(obj_map! {
-        Qstr::MP_QSTR_INITIAL => Obj::small_int(0u16),
-        Qstr::MP_QSTR_RESUME => Obj::small_int(1u16),
-        Qstr::MP_QSTR_SWIPE_UP => Obj::small_int(2u16),
-        Qstr::MP_QSTR_SWIPE_DOWN => Obj::small_int(3u16),
-        Qstr::MP_QSTR_SWIPE_LEFT => Obj::small_int(4u16),
-        Qstr::MP_QSTR_SWIPE_RIGHT => Obj::small_int(5u16),
+        Qstr::MP_QSTR_INITIAL => Obj::small_int(0i16),
+        Qstr::MP_QSTR_RESUME => Obj::small_int(1i16),
+        Qstr::MP_QSTR_SWIPE_UP => Obj::small_int(2i16),
+        Qstr::MP_QSTR_SWIPE_DOWN => Obj::small_int(3i16),
+        Qstr::MP_QSTR_SWIPE_LEFT => Obj::small_int(4i16),
+        Qstr::MP_QSTR_SWIPE_RIGHT => Obj::small_int(5i16),
     }),
 };
 

@@ -99,7 +99,6 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_is_true")
         .allowlist_function("mp_obj_get_type_str")
         .allowlist_function("mp_call_function_n_kw")
-        .allowlist_function("trezor_obj_get_ll_checked")
         // buffer
         .allowlist_function("mp_get_buffer")
         .allowlist_var("MP_BUFFER_READ")
@@ -143,6 +142,12 @@ fn generate_micropython_bindings() {
         .allowlist_function("gc_alloc")
         .allowlist_function("gc_free")
         .allowlist_var("GC_ALLOC_FLAG_HAS_FINALISER")
+        // int
+        .allowlist_type("mp_obj_int_t")
+        .allowlist_var("mp_type_int")
+        .allowlist_type("mpz_t")
+        .allowlist_function("mpz_as_bytes")
+        .allowlist_var("MICROPY_DIG_SIZE")
         // iter
         .allowlist_type("mp_obj_iter_buf_t")
         .allowlist_function("mp_getiter")

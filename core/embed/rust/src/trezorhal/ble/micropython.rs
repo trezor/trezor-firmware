@@ -278,8 +278,8 @@ static BLE_INTERFACE_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_iface_num => obj_fn_1!(py_iface_num).as_obj(),
         Qstr::MP_QSTR_write => obj_fn_2!(py_iface_write).as_obj(),
         Qstr::MP_QSTR_read => obj_fn_var!(2, 3, py_iface_read).as_obj(),
-        Qstr::MP_QSTR_RX_PACKET_LEN => Obj::small_int(RX_PACKET_SIZE as u16),
-        Qstr::MP_QSTR_TX_PACKET_LEN => Obj::small_int(TX_PACKET_SIZE as u16),
+        Qstr::MP_QSTR_RX_PACKET_LEN => Obj::small_int(RX_PACKET_SIZE as i16),
+        Qstr::MP_QSTR_TX_PACKET_LEN => Obj::small_int(TX_PACKET_SIZE as i16),
     }),
 };
 
@@ -291,7 +291,7 @@ pub static mp_module_trezorble: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorble.to_obj(),
 
     /// MAX_BONDS: int
-    Qstr::MP_QSTR_MAX_BONDS => Obj::small_int(BLE_MAX_BONDS as u16),
+    Qstr::MP_QSTR_MAX_BONDS => Obj::small_int(BLE_MAX_BONDS as i16),
 
     /// class BLEIF:
     ///     """
