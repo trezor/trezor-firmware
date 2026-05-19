@@ -136,7 +136,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_auto_lock__on_battery;
   MP_QSTR_auto_lock__on_usb;
   MP_QSTR_auto_lock__title;
-  MP_QSTR_auto_lock__turned_on;
   MP_QSTR_back_button;
   MP_QSTR_backlight_fade;
   MP_QSTR_backlight_get;
@@ -298,7 +297,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_summary;
   MP_QSTR_confirm_thp_pairing;
   MP_QSTR_confirm_total__fee_rate;
-  MP_QSTR_confirm_total__fee_rate_colon;
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
   MP_QSTR_confirm_trade;
@@ -585,7 +583,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_pubkey_qr;
   MP_QSTR_qr_title;
   MP_QSTR_read;
-  MP_QSTR_reboot_to_bootloader__just_a_moment;
   MP_QSTR_reboot_to_bootloader__restart;
   MP_QSTR_reboot_to_bootloader__title;
   MP_QSTR_reboot_to_bootloader__version_by_template;
@@ -1230,7 +1227,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__vote_for_producers;
   MP_QSTR_eos__vote_for_proxy;
   MP_QSTR_eos__voter;
-  MP_QSTR_ethereum__amount_sent;
   MP_QSTR_ethereum__approve;
   MP_QSTR_ethereum__approve_amount_allowance;
   MP_QSTR_ethereum__approve_chain_id;
