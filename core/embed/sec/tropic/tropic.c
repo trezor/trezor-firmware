@@ -70,7 +70,7 @@
 bool tropic_session_start(void);
 
 static bool is_retryable(lt_ret_t ret) {
-  return ret == LT_L1_CHIP_ALARM_MODE || ret == LT_L1_SPI_ERROR ||
+  return ret == LT_L1_CHIP_ALARM_MODE || ret == LT_HAL_ERROR ||
          ret == LT_L2_IN_CRC_ERR || ret == LT_L2_CRC_ERR;
 }
 
