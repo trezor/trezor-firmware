@@ -362,7 +362,7 @@ bool tropic_session_start(void) {
 
 void tropic_session_start_time(uint32_t *time_ms) {
   if (!g_tropic_driver.session_started) {
-    *time_ms += 210;
+    *time_ms += 204;
   }
 }
 
@@ -581,7 +581,7 @@ bool tropic_random_buffer(void *buffer, size_t length) {
 
 void tropic_random_buffer_time(uint32_t *time_ms) {
   // Assuming the data size is 32 bytes
-  *time_ms += 50;
+  *time_ms += 10;
 }
 
 #ifdef USE_STORAGE
@@ -607,23 +607,23 @@ static uint16_t get_kek_masks_slot(tropic_driver_t *drv) {
              : TROPIC_KEK_MASKS_PRIVILEGED_SLOT;
 }
 
-static void lt_mac_and_destroy_time(uint32_t *time_ms) { *time_ms += 51; }
+static void lt_mac_and_destroy_time(uint32_t *time_ms) { *time_ms += 28; }
 
 static void lt_r_mem_data_read_time(uint32_t *time_ms) {
   // Assuming the data size is 320 bytes
-  *time_ms += 100;
+  *time_ms += 33;
 }
 
 static void lt_r_mem_data_write_time(uint32_t *time_ms) {
   // Assuming the data size is 320 bytes
-  *time_ms += 77;
+  *time_ms += 37;
 }
 
-static void lt_r_mem_data_erase_time(uint32_t *time_ms) { *time_ms += 55; }
+static void lt_r_mem_data_erase_time(uint32_t *time_ms) { *time_ms += 4; }
 
-static void lt_mcounter_get_time(uint32_t *time_ms) { *time_ms += 51; }
+static void lt_mcounter_get_time(uint32_t *time_ms) { *time_ms += 4; }
 
-static void lt_mcounter_update_time(uint32_t *time_ms) { *time_ms += 51; }
+static void lt_mcounter_update_time(uint32_t *time_ms) { *time_ms += 4; }
 
 lt_ret_t lt_r_mem_data_erase_write(lt_handle_t *h, const uint16_t udata_slot,
                                    uint8_t *data, const uint16_t size) {
