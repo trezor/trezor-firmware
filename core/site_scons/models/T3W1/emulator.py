@@ -122,6 +122,8 @@ def configure(
 
         paths += ["vendor/libtropic/TROPIC01_fw_update_files/boot_v_1_0_1/fw_v_1_0_0"]
         defines += [("LT_SILICON_REV_ABAB", "1")]
+        defines += [("LT_L1_READ_RETRY_DELAY_MS", "1")]
+        defines += [("LT_L1_READ_MAX_TRIES", "1250")]
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/unix/touch.c"]

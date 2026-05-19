@@ -56,6 +56,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_defines([
         ("LT_USE_TREZOR_CRYPTO", Some("1")),
         ("LT_HELPERS", Some("1")),
+        ("LT_L1_READ_RETRY_DELAY_MS", Some("1")),
+        ("LT_L1_READ_MAX_TRIES", Some("1250")),
     ]);
 
     Ok(())
