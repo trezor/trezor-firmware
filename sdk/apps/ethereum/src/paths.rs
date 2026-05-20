@@ -1,16 +1,8 @@
-use crate::common::COIN;
-
-#[cfg(not(test))]
-use alloc::{
-    string::{String, ToString},
-    vec::Vec,
+use crate::{
+    alloc_types::{String, ToString, Vec},
+    common::COIN,
 };
 use core::convert::AsRef;
-#[cfg(test)]
-use std::{
-    string::{String, ToString},
-    vec::Vec,
-};
 
 // https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
 // The BIP44 pattern, overloaded to be used for ETH accounts, as described above
@@ -53,7 +45,7 @@ impl Bip32Path {
         &self.path
     }
 
-    pub fn to_string(&self) -> String {
+    pub fn format_path(&self) -> String {
         if self.path.is_empty() {
             return String::from("m");
         }
@@ -116,7 +108,7 @@ impl Bip32Path {
         if self.path[0] == 45 | HARDENED && self.path[1] & HARDENED == 0 {
             return Some(self.path[1]);
         }
-        return Some(self.path[1] & !HARDENED);
+        Some(self.path[1] & !HARDENED)
     }
 
     pub fn account_and_path(&self) -> (Option<String>, Option<String>) {
@@ -126,7 +118,7 @@ impl Bip32Path {
 
         let slip44_id = self.path[1]; //it depends on the network (ETH vs ETC...)
         let account = self.get_account_name(COIN, &PATTERNS_ADDRESS, slip44_id);
-        let path = self.to_string();
+        let path = self.format_path();
 
         (account, Some(path))
     }

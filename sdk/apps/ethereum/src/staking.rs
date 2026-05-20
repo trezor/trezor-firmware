@@ -1,21 +1,16 @@
 use crate::{
-    helpers::get_progress_indicator,
+    alloc_types::Box,
     layout::{require_confirm_claim, require_confirm_stake, require_confirm_unstake},
     paths::Bip32Path,
-    proto::{definitions::NetworkInfo, ethereum::SignTx},
+    proto::definitions::NetworkInfo,
     sc_constants::{SC_ARGUMENT_BYTES, SC_FUNC_SIG_BYTES},
 };
 use primitive_types::U256;
-use trezor_app_sdk::{Error, Result, ui::Property, unwrap};
+use trezor_app_sdk::{Error, Result, ui::Property};
 
 const SC_FUNC_SIG_STAKE: [u8; 4] = [0x3a, 0x29, 0xdb, 0xae];
 const SC_FUNC_SIG_UNSTAKE: [u8; 4] = [0x76, 0xec, 0x87, 0x1c];
 const SC_FUNC_SIG_CLAIM: [u8; 4] = [0x33, 0x98, 0x6f, 0xfa];
-
-#[cfg(not(test))]
-use alloc::boxed::Box;
-#[cfg(test)]
-use std::boxed::Box;
 
 // addresses for pool (stake/unstake) and accounting (claim) operations
 const ADDRESSES_POOL: [[u8; 20]; 2] = [
@@ -73,13 +68,13 @@ pub(crate) fn get_approver<'a>(
         .iter()
         .any(|addr| addr.as_slice() == address_bytes)
     {
-        if func_sig == &SC_FUNC_SIG_STAKE {
+        if func_sig == SC_FUNC_SIG_STAKE {
             return Ok((
                 None,
                 Some(Box::new(move || {
                     handle_staking_tx_stake(
                         data,
-                        &dp,
+                        dp,
                         value,
                         network,
                         address_bytes,
@@ -89,13 +84,13 @@ pub(crate) fn get_approver<'a>(
                     )
                 })),
             ));
-        } else if func_sig == &SC_FUNC_SIG_UNSTAKE {
+        } else if func_sig == SC_FUNC_SIG_UNSTAKE {
             return Ok((
                 None,
                 Some(Box::new(move || {
                     handle_staking_tx_unstake(
                         data,
-                        &dp,
+                        dp,
                         network,
                         address_bytes,
                         maximum_fee,
@@ -110,27 +105,26 @@ pub(crate) fn get_approver<'a>(
     if ADDRESSES_ACCOUNTING
         .iter()
         .any(|addr| addr.as_slice() == address_bytes)
+        && func_sig == SC_FUNC_SIG_CLAIM
     {
-        if func_sig == &SC_FUNC_SIG_CLAIM {
-            return Ok((
-                None,
-                Some(Box::new(move || {
-                    handle_staking_tx_claim(
-                        data,
-                        &dp,
-                        address_bytes,
-                        maximum_fee,
-                        fee_items,
-                        network,
-                        chunkify,
-                    )
-                })),
-            ));
-        }
+        return Ok((
+            None,
+            Some(Box::new(move || {
+                handle_staking_tx_claim(
+                    data,
+                    dp,
+                    address_bytes,
+                    maximum_fee,
+                    fee_items,
+                    network,
+                    chunkify,
+                )
+            })),
+        ));
     }
 
     // data not corresponding to staking transaction
-    return Ok((None, None));
+    Ok((None, None))
 }
 
 fn handle_staking_tx_stake<'a>(
@@ -216,7 +210,7 @@ fn handle_staking_tx_claim<'a>(
     chunkify: Option<bool>,
 ) -> Result<()> {
     // claim has no args
-    if data.len() != 0 {
+    if !data.is_empty() {
         return Err(Error::DataError("Invalid staking transaction call"));
     }
 

@@ -1,10 +1,9 @@
-use crate::{helpers::write_compact_size, proto::common::PaymentRequest};
-#[cfg(not(test))]
-use alloc::vec::Vec;
+use crate::{alloc_types::Vec, helpers::write_compact_size, proto::common::PaymentRequest};
 use primitive_types::U256;
-#[cfg(test)]
-use std::vec::Vec;
-use trezor_app_sdk::{Error, Result, crypto::{self, Hasher}};
+use trezor_app_sdk::{
+    Error, Result,
+    crypto::{self, Hasher},
+};
 
 const SLIP44_ID_UNDEFINED: u32 = 0xFFFF_FFFF;
 
@@ -18,7 +17,7 @@ pub fn parse_amount(amount: &[u8]) -> Result<U256> {
         return Err(Error::DataError("amount must be exactly 32 bytes"));
     }
 
-    let amount = U256::from_little_endian(&amount);
+    let amount = U256::from_little_endian(amount);
     Ok(amount)
 }
 
@@ -105,14 +104,14 @@ pub struct PaymentRequestVerifier {
 impl PaymentRequestVerifier {
     const AMOUNT_SIZE_BYTES: usize = 32;
     pub fn new(payment_request: &PaymentRequest, slip44_id: u32) -> Result<Self> {
-        sanitize_payment_request(&payment_request)?;
-        verify_payment_request_is_supported(&payment_request)?;
+        sanitize_payment_request(payment_request)?;
+        verify_payment_request_is_supported(payment_request)?;
 
         let h_outputs = crypto::Sha256::new(None);
         let mut h_pr = crypto::Sha256::new(None);
 
         let expected_amount = if let Some(amount) = payment_request.amount.as_deref() {
-            Some(parse_amount(&amount)?)
+            Some(parse_amount(amount)?)
         } else {
             None
         };
@@ -124,10 +123,8 @@ impl PaymentRequestVerifier {
             if !crypto::verify_nonce_cache(nonce)? {
                 return Err(Error::DataError("Invalid nonce in payment request."));
             }
-        } else {
-            if !payment_request.memos.is_empty() {
-                return Err(Error::DataError("Missing nonce in payment request."));
-            }
+        } else if !payment_request.memos.is_empty() {
+            return Err(Error::DataError("Missing nonce in payment request."));
         };
 
         h_pr.update(b"SL\x00\x24");
@@ -146,13 +143,13 @@ impl PaymentRequestVerifier {
 
         for memo in &payment_request.memos {
             if let Some(text_memo) = &memo.text_memo {
-                h_pr.update(&u32::from(MEMO_TYPE_TEXT).to_le_bytes());
+                h_pr.update(&MEMO_TYPE_TEXT.to_le_bytes());
                 let text = &text_memo.text.as_bytes();
                 let text_prefix = write_compact_size(text.len() as _);
                 h_pr.update(&text_prefix);
                 h_pr.update(text);
             } else if let Some(text_details_memo) = &memo.text_details_memo {
-                h_pr.update(&u32::from(MEMO_TYPE_TEXT_DETAILS).to_le_bytes());
+                h_pr.update(&MEMO_TYPE_TEXT_DETAILS.to_le_bytes());
 
                 let title = &text_details_memo.title.as_bytes();
                 let title_prefix = write_compact_size(title.len() as _);
@@ -183,7 +180,7 @@ impl PaymentRequestVerifier {
                     return Err(Error::DataError("Invalid MAC in refund memo"));
                 }
 
-                h_pr.update(&u32::from(MEMO_TYPE_REFUND).to_le_bytes());
+                h_pr.update(&MEMO_TYPE_REFUND.to_le_bytes());
                 let address = &refund_memo.address.as_bytes();
                 let address_prefix = write_compact_size(address.len() as _);
                 h_pr.update(&address_prefix);
@@ -202,8 +199,8 @@ impl PaymentRequestVerifier {
                 )? {
                     return Err(Error::DataError("Invalid MAC in coin purchase memo"));
                 }
-                h_pr.update(&u32::from(MEMO_TYPE_COIN_PURCHASE).to_le_bytes());
-                h_pr.update(&u32::from(coin_purchase_memo.coin_type).to_le_bytes());
+                h_pr.update(&MEMO_TYPE_COIN_PURCHASE.to_le_bytes());
+                h_pr.update(&coin_purchase_memo.coin_type.to_le_bytes());
 
                 let amount = &coin_purchase_memo.amount.as_bytes();
                 let amount_prefix = write_compact_size(amount.len() as _);
@@ -220,7 +217,7 @@ impl PaymentRequestVerifier {
                 ));
             }
         }
-        h_pr.update(&u32::from(slip44_id).to_le_bytes());
+        h_pr.update(&slip44_id.to_le_bytes());
 
         Ok(PaymentRequestVerifier {
             amount: 0.into(),
@@ -232,10 +229,10 @@ impl PaymentRequestVerifier {
     }
 
     pub fn verify(&mut self) -> Result<()> {
-        if let Some(expected_amount) = self.expected_amount {
-            if self.amount != expected_amount {
-                return Err(Error::DataError("Invalid amount in payment request"));
-            }
+        if let Some(expected_amount) = self.expected_amount
+            && self.amount != expected_amount
+        {
+            return Err(Error::DataError("Invalid amount in payment request"));
         }
 
         let hash_outputs = self.h_outputs.digest();

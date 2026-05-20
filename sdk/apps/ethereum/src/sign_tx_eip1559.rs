@@ -1,7 +1,7 @@
 use crate::{
+    alloc_types::{Vec, vec},
     common::{
         check_common_fields, confirm_data_and_summary, confirm_tx_data, request_initial_data,
-        send_request_chunk,
     },
     definitions::Definitions,
     helpers::{bytes_from_address, format_ethereum_amount, get_fee_items_eip1559},
@@ -13,15 +13,9 @@ use crate::{
     },
     rlp::{self, RLPItem},
 };
-#[cfg(not(test))]
-use alloc::{vec, vec::Vec};
-use core::hash;
 use primitive_types::U256;
-#[cfg(test)]
-use std::{vec, vec::Vec};
 use trezor_app_sdk::{
-    Error, Result,
-    crypto::{self, Hasher},
+    Error, Result, crypto,
     ui::{self, Property},
     unwrap,
 };
@@ -168,7 +162,7 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
 
     for item in &msg.access_list {
         let address_bytes = bytes_from_address(&item.address)?;
-        let address_length = rlp::length(&&RLPItem::Bytes(address_bytes.as_slice()));
+        let address_length = rlp::length(&RLPItem::Bytes(address_bytes.as_slice()));
         let storage_key_items: Vec<RLPItem<'_>> = item
             .storage_keys
             .iter()
@@ -196,7 +190,7 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
         tr!("instructions__continue_in_app"),
         Some(3200),
         None,
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )?;
 
     Ok(res)
@@ -262,10 +256,12 @@ fn sign_digest(msg: &SignTxEip1559, digest: &[u8; 32]) -> Result<TxRequest> {
     let signature =
         crypto::sign_typed_hash(&msg.address_n, digest, None, None, Some(msg.chain_id), true)?;
 
-    let mut req = TxRequest::default();
-    req.signature_v = Some(signature[0] as u32 - 27);
-    req.signature_r = Some(signature[1..33].to_vec());
-    req.signature_s = Some(signature[33..].to_vec());
+    let req = TxRequest {
+        signature_v: Some(signature[0] as u32 - 27),
+        signature_r: Some(signature[1..33].to_vec()),
+        signature_s: Some(signature[33..].to_vec()),
+        ..Default::default()
+    };
 
     Ok(req)
 }

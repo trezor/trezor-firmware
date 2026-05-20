@@ -1,15 +1,12 @@
 use crate::{
+    alloc_types::String,
     common::COIN,
     ed25519,
     proto::definitions::{DefinitionType, NetworkInfo, TokenInfo},
     tokens::{token_by_chain_address, unknown_token},
     uformat,
 };
-#[cfg(not(test))]
-use alloc::string::String;
 use prost::Message;
-#[cfg(test)]
-use std::string::String;
 use trezor_app_sdk::{
     Error,
     crypto::{self, Hasher},
@@ -59,10 +56,10 @@ impl Definitions {
             return Ok(Self::new(unknown_network(), token));
         };
 
-        if network == unknown_network() {
-            if let Some(encoded_network) = encoded_network {
-                network = decode_definition::<NetworkInfo>(encoded_network)?;
-            }
+        if network == unknown_network()
+            && let Some(encoded_network) = encoded_network
+        {
+            network = decode_definition::<NetworkInfo>(encoded_network)?;
         }
 
         if network == unknown_network() {
@@ -70,15 +67,15 @@ impl Definitions {
             return Ok(Self::new(unknown_network(), token));
         }
 
-        if let Some(chain_id) = chain_id {
-            if network.chain_id != chain_id {
-                return Err(Error::DataError("Network definition mismatch"));
-            }
+        if let Some(chain_id) = chain_id
+            && network.chain_id != chain_id
+        {
+            return Err(Error::DataError("Network definition mismatch"));
         }
-        if let Some(slip44) = slip44 {
-            if network.slip44 != slip44 {
-                return Err(Error::DataError("Network definition mismatch"));
-            }
+        if let Some(slip44) = slip44
+            && network.slip44 != slip44
+        {
+            return Err(Error::DataError("Network definition mismatch"));
         }
 
         // get token definition
@@ -210,8 +207,8 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, Error> {
         };
 
         let mut hasher = crypto::Sha256::new(Some(b"\x01"));
-        hasher.update(&hash_a);
-        hasher.update(&hash_b);
+        hasher.update(hash_a);
+        hasher.update(hash_b);
         hash = hasher.digest();
     }
 

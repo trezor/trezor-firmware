@@ -1,21 +1,14 @@
 use crate::{
+    alloc_types::Box,
     layout::require_confirm_vault_tx,
     paths::Bip32Path,
-    proto::{
-        definitions::{NetworkInfo, TokenInfo},
-        ethereum::SignTx,
-    },
+    proto::definitions::{NetworkInfo, TokenInfo},
     sc_constants::SC_FUNC_SIG_BYTES,
     yielding_vaults::{VaultInfo, lookup_vault, unknown_vault},
 };
 
 use primitive_types::U256;
 use trezor_app_sdk::{Error, Result, ui::Property, unwrap};
-
-#[cfg(not(test))]
-use alloc::boxed::Box;
-#[cfg(test)]
-use std::boxed::Box;
 
 // https://ethereum.org/developers/docs/standards/tokens/erc-4626
 pub(crate) const FUNC_SIG_DEPOSIT: &[u8] = b"\x6e\x55\x3f\x65";
@@ -54,10 +47,7 @@ pub(crate) fn get_approver<'a>(
     let vault = lookup_vault(network, address_bytes);
 
     let mut handler = None;
-    if [FUNC_SIG_DEPOSIT, FUNC_SIG_WITHDRAW, FUNC_SIG_REDEEM]
-        .iter()
-        .any(|sig| func_sig == *sig)
-    {
+    if [FUNC_SIG_DEPOSIT, FUNC_SIG_WITHDRAW, FUNC_SIG_REDEEM].contains(&func_sig) {
         let token = if func_sig == FUNC_SIG_REDEEM {
             vault.vault_token.clone()
         } else {
@@ -67,7 +57,7 @@ pub(crate) fn get_approver<'a>(
             data,
             value,
             to,
-            &dp,
+            dp,
             network,
             maximum_fee,
             fee_items,
@@ -160,7 +150,7 @@ fn prepare_vault_tx<'a>(
     Ok(Some(Box::new(move || {
         require_confirm_vault_tx(
             amount,
-            &dp,
+            dp,
             maximum_fee,
             fee_items,
             network,

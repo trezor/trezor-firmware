@@ -8,10 +8,6 @@ use crate::{
     },
     sign_message::message_digest,
 };
-#[cfg(not(test))]
-use alloc::{string::ToString, vec, vec::Vec};
-#[cfg(test)]
-use std::{string::ToString, vec, vec::Vec};
 use trezor_app_sdk::{Error, Result, crypto, ui, unwrap};
 
 pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
@@ -50,15 +46,16 @@ pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
 
     ui::show_success(
         tr!("words__title_done"),
-        "The signature is valid.",
-        "Continue",
+        tr!("ethereum__valid_signature"),
+        tr!("buttons__continue"),
         None,
         Some("verify_message"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )?;
 
-    let mut msg = Success::default();
-    msg.message = Some("Message verified".into());
+    let msg = Success {
+        message: Some("Message verified".into()),
+    };
 
     Ok(msg)
 }

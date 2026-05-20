@@ -206,26 +206,3 @@ gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_c
 uvlock_check: ## check that uv.lock is up to date
 	@echo [UVLOCK-CHECK]
 	uv lock --check
-
-funnycoin_build:
-	@cd sdk/apps/funnycoin-rust ; cargo build
-
-funnycoin_get_public_key:
-	@cd sdk/apps/funnycoin-rust/scripts ; ./test_get_public_key.py
-
-ethereum_build_emu:
-	@cd sdk/apps/ethereum ; cargo build --release
-
-ethereum_build_hw:
-	@cd sdk/apps/ethereum ; cargo build --release --target thumbv7em-none-eabihf
-	@cd sdk/apps/ethereum/target/thumbv7em-none-eabihf/release ; arm-none-eabi-readelf -C -sW ethereum_rust | grep FUNC | awk '{printf "%d %s\n", strtonum("0x"$$3), $$0}' | sort -n | cut -d' ' -f2-
-	@echo "\n=== Binary Size ==="
-	@cd sdk/apps/ethereum ;arm-none-eabi-size -A target/thumbv7em-none-eabihf/release/ethereum_rust
-	@cd sdk/apps/ethereum ;arm-none-eabi-size -B target/thumbv7em-none-eabihf/release/ethereum_rust
-
-ethereum_unit_tests:
-	@cd sdk/apps/ethereum ; cargo test --release
-
-check_api_bindings: ## check that app-sdk api.rs is identical across all targets
-	./tools/check_api_bindings.sh
-

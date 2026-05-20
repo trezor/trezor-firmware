@@ -41,18 +41,12 @@ from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 from . import ui_tests
 
-# register rewrites before importing from local package
-# so that we see details of failed asserts from this module
-pytest.register_assert_rewrite("tests.common")
-
 if t.TYPE_CHECKING:
     from _pytest.config import Config
     from _pytest.config.argparsing import Parser
     from _pytest.mark import Mark
     from _pytest.nodes import Node
     from _pytest.terminal import TerminalReporter
-
-    from trezorlib._internal.emulator import Emulator
     from trezorlib.client import Session
 
 
@@ -62,49 +56,28 @@ CORE = HERE.parent / "core"
 LOG = logging.getLogger(__name__)
 
 # So that we see details of failed asserts from this module
-pytest.register_assert_rewrite("tests.common")
 pytest.register_assert_rewrite("tests.input_flows")
-pytest.register_assert_rewrite("tests.input_flows_helpers")
-
-
-def _emulator_wrapper_main_args() -> list[str]:
-    """Look at TREZOR_PROFILING env variable, so that we can generate coverage reports."""
-    do_profiling = os.environ.get("TREZOR_PROFILING") == "1"
-    # TODO: implement
-    if do_profiling:
-        src_dir = HERE.parent / "core" / "src"
-        # So that the coverage reports have the correct paths
-        os.environ["TREZOR_SRC"] = str(src_dir)
-        return ["-m", "prof"]
-    else:
-        return ["-m", "main"]
 
 
 @pytest.fixture(scope="session")
 def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
-    # In case tests run in parallel, each process has its own emulator/client.
-    # Requesting the emulator fixture only if relevant.
-    if request.session.config.getoption("control_emulators"):
-        emu_fixture = request.getfixturevalue("emulator")
-        test_ctx = emu_fixture.client
-    else:
-        if os.environ.get("TREZOR_BLE") != "1":
-            BleTransport.ENABLED = False
+    if os.environ.get("TREZOR_BLE") != "1":
+        BleTransport.ENABLED = False
 
-        interact = os.environ.get("INTERACT") == "1"
-        if not interact:
-            # prevent tests from getting stuck in case there is an USB packet loss
-            client_module._DEFAULT_READ_TIMEOUT = 50.0
+    interact = os.environ.get("INTERACT") == "1"
+    if not interact:
+        # prevent tests from getting stuck in case there is an USB packet loss
+        client_module._DEFAULT_READ_TIMEOUT = 50.0
 
-        path = os.environ.get("TREZOR_PATH")
-        try:
-            if path:
-                test_ctx = _test_ctx_from_path(path, interact)
-            else:
-                test_ctx = _find_test_ctx(interact)
-        except Exception:
-            request.session.shouldstop = "Failed to communicate with Trezor"
-            raise
+    path = os.environ.get("TREZOR_PATH")
+    try:
+        if path:
+            test_ctx = _test_ctx_from_path(path, interact)
+        else:
+            test_ctx = _find_test_ctx(interact)
+    except Exception:
+        request.session.shouldstop = "Failed to communicate with Trezor"
+        raise
 
     return test_ctx
 
@@ -129,14 +102,6 @@ def _find_test_ctx(interact: bool) -> TrezorTestContext:
 
 class ModelsFilter:
     MODEL_SHORTCUTS = {
-        "core": models.CORE_MODELS,
-        "legacy": models.LEGACY_MODELS,
-        "t1": {models.T1B1},
-        "t2": {models.T2T1},
-        "tt": {models.T2T1},
-        "safe": {models.T2B1, models.T3T1, models.T3B1, models.T3W1},
-        "safe3": {models.T2B1, models.T3B1},
-        "safe5": {models.T3T1},
         "delizia": {models.T3T1},
         "eckhart": {models.T3W1},
     }
@@ -307,21 +272,7 @@ def _prepared_test_ctx(
     if request.node.get_closest_marker("emulator") and not _raw_test_ctx.is_emulator:
         pytest.skip("Skipping emulator-only test")
 
-    is_btc_only = messages.Capability.Bitcoin_like not in _raw_test_ctx.capabilities
-    if request.node.get_closest_marker("altcoin") and is_btc_only:
-        pytest.skip("Skipping altcoin test")
-
     _check_protocol(request, _raw_test_ctx)
-
-    sd_marker = request.node.get_closest_marker("sd_card")
-    if sd_marker and not _raw_test_ctx.sd_card_present:
-        raise RuntimeError(
-            "This test requires SD card.\n"
-            "To skip all such tests, run:\n"
-            "  pytest -m 'not sd_card' <test path>"
-        )
-
-    fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
 
     _raw_test_ctx.reset_debug_features()
     try:
@@ -332,14 +283,6 @@ def _prepared_test_ctx(
 
     # Use DebugLink to wipe (since THP channel requires unlocked device)
     _raw_test_ctx.wipe_device()
-
-    # Make sure there are no GC leaks from previous tests
-    # Also wait for the event loop restart after wipe
-    _raw_test_ctx.debug.check_gc_info(fail_on_gc_leak)
-
-    if sd_marker:
-        should_format = sd_marker.kwargs.get("formatted", True)
-        _raw_test_ctx.debug.erase_sd_card(format=should_format)
 
     # Re-open client for this test
     # _raw_test_ctx.reset_instance()
@@ -360,8 +303,7 @@ def _prepared_test_ctx(
     try:
         yield _raw_test_ctx
     finally:
-        # Make sure there are no GC leaks from this test
-        _raw_test_ctx.debug.check_gc_info(fail_on_gc_leak)
+        pass
 
 
 @pytest.fixture(scope="function")
@@ -507,25 +449,11 @@ def pytest_addoption(parser: "Parser") -> None:
         "deletes old ones on `record`).",
     )
     parser.addoption(
-        "--control-emulators",
-        action="store_true",
-        default=False,
-        help="Pytest will be responsible for starting and stopping the emulators. "
-        "Useful when running tests in parallel.",
-    )
-    parser.addoption(
         "--model",
         action="store",
         choices=["core", "legacy"],
         help="Which emulator to use: 'core' or 'legacy'. "
         "Only valid in connection with `--control-emulators`",
-    )
-    parser.addoption(
-        "--record-text-layout",
-        action="store_true",
-        default=False,
-        help="Saving debugging traces for each screen change. "
-        "Will generate a report with text from all test-cases.",
     )
     parser.addoption(
         "--do-master-diff",
@@ -547,12 +475,6 @@ def pytest_addoption(parser: "Parser") -> None:
         help="File path for verbose logging",
     )
     parser.addoption(
-        "--ignore-gc-leak",
-        action="store_true",
-        default=False,
-        help="Issue a warning when GC leak detected (otherwise, fail the test)",
-    )
-    parser.addoption(
         "--extapp",
         action="store",
         help="Path to the external application to load",
@@ -572,17 +494,10 @@ def pytest_configure(config: "Config") -> None:
     config.addinivalue_line(
         "markers", "experimental: enable experimental features on Trezor"
     )
-    # config.addinivalue_line(
-    #     "markers", "extapp: enable external application features on Trezor"
-    # )
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
     )
-    # TODO: remove
-    # with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
-    #     for line in f:
-    #         config.addinivalue_line("markers", line.strip())
 
     # enable debug if `-v` flag is passed (use multiple times for higher verbosity)
     verbosity = config.getoption("verbose")
@@ -612,11 +527,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     models_filter = ModelsFilter(item)
     if not models_filter:
         raise RuntimeError("Don't skip tests for all trezor models!")
-
-
-# def pytest_set_filtered_exceptions():
-#     UnexpectedMagicError = "TOOD"
-#     return (Timeout, UnexpectedMagicError)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
