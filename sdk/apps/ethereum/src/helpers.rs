@@ -1,25 +1,12 @@
 use crate::{
+    alloc_types::{Box, String, ToString, Vec, vec},
     definitions::unknown_network,
     proto::definitions::{NetworkInfo, TokenInfo},
     proto::ethereum::typed_data_struct_ack::{DataType, FieldType},
     strutil::{hex_decode, hex_encode},
     uformat,
 };
-#[cfg(not(test))]
-use alloc::{
-    boxed::Box,
-    string::{String, ToString},
-    vec,
-    vec::Vec,
-};
 use primitive_types::U256;
-#[cfg(test)]
-use std::{
-    boxed::Box,
-    string::{String, ToString},
-    vec,
-    vec::Vec,
-};
 use trezor_app_sdk::{Error, Result, crypto, ui};
 
 const RSKIP60_NETWORKS: [u64; 2] = [30, 31];
@@ -85,10 +72,10 @@ pub fn get_type_name(field: &FieldType) -> Result<String> {
     let size = field.size;
 
     if data_type == DataType::Struct as i32 {
-        return Ok(field
+        return field
             .struct_name
             .clone()
-            .ok_or(Error::DataError("Missing struct name"))?);
+            .ok_or(Error::DataError("Missing struct name"));
     } else if data_type == DataType::Array as i32 {
         let entry_type = field
             .entry_type
@@ -212,11 +199,9 @@ pub fn format_ethereum_amount(
         debug_assert!(decimals >= 9);
         decimals -= 9;
         suffix = "Gwei".to_string();
-    } else if decimals > 9 {
-        if digits.len() <= (decimals - 9) {
-            suffix = uformat!("Wei {}", suffix.as_str());
-            decimals = 0;
-        }
+    } else if decimals > 9 && digits.len() <= (decimals - 9) {
+        suffix = uformat!("Wei {}", suffix.as_str());
+        decimals = 0;
     }
 
     let amount = format_amount_from_digits(&digits, decimals);
@@ -258,7 +243,7 @@ fn format_amount_from_digits(digits: &str, decimals: usize) -> String {
 
 fn push_grouped_digits(out: &mut String, digits: &str) {
     for (i, ch) in digits.chars().enumerate() {
-        if i != 0 && (digits.len() - i) % 3 == 0 {
+        if i != 0 && (digits.len() - i).is_multiple_of(3) {
             out.push(',');
         }
         out.push(ch);
@@ -275,13 +260,13 @@ pub fn write_compact_size(n: u32) -> Vec<u8> {
         out.extend_from_slice(&(n as u16).to_le_bytes());
     } else {
         out.push(254);
-        out.extend_from_slice(&(n as u32).to_le_bytes());
+        out.extend_from_slice(&(n).to_le_bytes());
     }
 
     out
 }
 
-#[derive(Debug, Clone)]
+// #[derive(Debug, Clone)]
 pub struct Refund {
     pub address: String,
     pub account: Option<String>,
@@ -298,7 +283,7 @@ impl Refund {
     }
 }
 
-#[derive(Debug, Clone)]
+// #[derive(Debug, Clone)]
 pub struct Trade {
     pub sell_amount: Option<String>,
     pub buy_amount: String,
@@ -315,10 +300,10 @@ impl Trade {
         account: Option<&str>,
         account_path: Option<&str>,
     ) -> Result<Self> {
-        if let Some(ref sell_amount) = sell_amount {
-            if !sell_amount.starts_with('-') {
-                return Err(Error::DataError("Invalid sell amount format"));
-            }
+        if let Some(sell_amount) = sell_amount
+            && !sell_amount.starts_with('-')
+        {
+            return Err(Error::DataError("Invalid sell amount format"));
         }
 
         if !buy_amount.starts_with('+') {
@@ -359,7 +344,7 @@ pub fn get_progress_indicator<'a>(
     total_len: usize,
     mut progress_len: usize,
 ) -> Box<dyn FnOnce(&[u8]) -> Result<()> + 'a> {
-    let value = progress_value(total_len, progress_len);
+    let _value = progress_value(total_len, progress_len);
 
     Box::new(move |chunk: &[u8]| {
         progress_len += chunk.len();

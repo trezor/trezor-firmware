@@ -1,14 +1,5 @@
-#[cfg(not(test))]
-use alloc::{
-    string::{String, ToString},
-    vec::Vec,
-};
+use crate::alloc_types::{String, ToString, Vec};
 use core::{convert::Infallible, result::Result};
-#[cfg(test)]
-use std::{
-    string::{String, ToString},
-    vec::Vec,
-};
 use trezor_app_sdk::unwrap;
 use ufmt::uWrite;
 pub struct StringWriter(String);
@@ -16,7 +7,7 @@ impl StringWriter {
     pub fn new() -> Self {
         Self(String::new())
     }
-    pub fn to_string(self) -> String {
+    pub fn finalize(self) -> String {
         self.0
     }
 }
@@ -48,7 +39,7 @@ macro_rules! uformat {
             use trezor_app_sdk::unwrap;
             let mut s = $crate::strutil::StringWriter::new();
             unwrap!(ufmt::uwrite!(&mut s, $($tt)*));
-            s.to_string()
+            s.finalize()
         }
     };
 }
@@ -58,11 +49,11 @@ pub fn hex_encode(bytes: &[u8]) -> String {
     for byte in bytes {
         unwrap!(ufmt::uwrite!(&mut s, "{:02x}", *byte));
     }
-    s.to_string()
+    s.finalize()
 }
 
 pub fn hex_decode(hex: &str) -> Result<Vec<u8>, ()> {
-    if hex.len() % 2 != 0 {
+    if !hex.len().is_multiple_of(2) {
         return Err(());
     }
 

@@ -1,34 +1,19 @@
 use crate::{
+    alloc_types::{Box, String, ToString, Vec},
     clear_signing,
-    clear_signing_definitions::SC_FUNC_APPROVE_REVOKE_AMOUNT,
     definitions::Definitions,
     helpers::{address_from_bytes, format_ethereum_amount},
-    layout::{
-        require_confirm_address, require_confirm_approve, require_confirm_payment_request,
-        require_confirm_tx,
-    },
+    layout::{require_confirm_payment_request, require_confirm_tx},
     paths::Bip32Path,
     payment_request::PaymentRequestVerifier,
     proto::{
         common::{PaymentRequest, button_request::ButtonRequestType},
-        ethereum::{SignTx, TxAck, TxRequest, Definitions as EthereumDefinitions},
+        ethereum::{Definitions as EthereumDefinitions, TxAck, TxRequest},
         messages::MessageType,
     },
     rlp, staking, uformat, wire_request, yielding,
 };
-#[cfg(not(test))]
-use alloc::{
-    boxed::Box,
-    string::{String, ToString},
-    vec::Vec,
-};
 use primitive_types::U256;
-#[cfg(test)]
-use std::{
-    boxed::Box,
-    string::{String, ToString},
-    vec::Vec,
-};
 use trezor_app_sdk::{
     Error, Result,
     crypto::{self, Hasher},
@@ -130,8 +115,10 @@ pub(crate) fn request_initial_data(
 }
 
 pub(crate) fn send_request_chunk(data_left: u32) -> Result<TxAck> {
-    let mut req = TxRequest::default();
-    req.data_length = Some(core::cmp::min(data_left, 1024) as u32);
+    let req = TxRequest {
+        data_length: Some(core::cmp::min(data_left, 1024) as u32),
+        ..Default::default()
+    };
     let resp: TxAck = wire_request(&req, MessageType::TxRequest)?;
 
     Ok(resp)
@@ -183,7 +170,7 @@ pub(crate) fn confirm_tx_data<'a>(
     initial_data: &'a [u8],
     // msg: &'a SignTx,
     data_length: usize,
-    data_initial_chunk: &'a[u8],
+    data_initial_chunk: &'a [u8],
     value_bytes: &'a [u8],
     to: &'a str,
     dp: &'a Bip32Path,
@@ -209,7 +196,7 @@ pub(crate) fn confirm_tx_data<'a>(
         data_length,
         data_initial_chunk,
         value_bytes,
-        &dp,
+        dp,
         defs.network(),
         address_bytes,
         maximum_fee,
@@ -226,7 +213,7 @@ pub(crate) fn confirm_tx_data<'a>(
 
     let yielding_approver = yielding::get_approver(
         data_length,
-        &dp,
+        dp,
         to,
         value_bytes,
         initial_data,
@@ -250,10 +237,10 @@ pub(crate) fn confirm_tx_data<'a>(
 
         ui::error_if_not_confirmed(ui::confirm_value(
             tr!("ethereum__eip_7702_title"),
-            unwrap!(get_eip_7702_known_address(&address_bytes)),
+            unwrap!(get_eip_7702_known_address(address_bytes)),
             Some(tr!("ethereum__eip_7702")),
             Some("confirm_provider"),
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
             true,
             None,
             None,
@@ -275,21 +262,19 @@ pub(crate) fn confirm_tx_data<'a>(
         // this is because clear signing doesn't currently support fetching additional data,
         // which is because if it did, we would not be able to fall back to blind signing anymore.
         clear_signed = false;
-    } else {
-        if clear_signing::try_confirm(
-            initial_data,
-            address_bytes,
-            chain_id,
-            definitions,
-            defs,
-            maximum_fee,
-            fee_items,
-            payment_request_verifier.as_ref(),
-        )
-        .is_err()
-        {
-            clear_signed = false;
-        }
+    } else if clear_signing::try_confirm(
+        initial_data,
+        address_bytes,
+        chain_id,
+        definitions,
+        defs,
+        maximum_fee,
+        fee_items,
+        payment_request_verifier.as_ref(),
+    )
+    .is_err()
+    {
+        clear_signed = false;
     }
 
     let recipient_str = if address_bytes.is_empty() {
@@ -314,7 +299,7 @@ pub(crate) fn confirm_tx_data<'a>(
                 require_confirm_payment_request(
                     unwrap!(recipient_str.as_deref()),
                     unwrap!(payment_req.as_ref()),
-                    &dp,
+                    dp,
                     maximum_fee,
                     fee_items,
                     chain_id,
@@ -346,7 +331,7 @@ pub(crate) fn confirm_tx_data<'a>(
                     recipient_str.as_deref(),
                     &format_ethereum_amount(value, token, defs.network(), false),
                     address_bytes,
-                    &dp,
+                    dp,
                     maximum_fee,
                     fee_items,
                     token,

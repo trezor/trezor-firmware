@@ -1,34 +1,11 @@
-#[cfg(not(test))]
-use alloc::{
-    string::{String, ToString},
-    vec,
-    vec::Vec,
+use crate::{
+    alloc_types::{String, Vec},
+    definitions::Definitions,
+    payment_request::PaymentRequestVerifier,
+    proto::ethereum::Definitions as EthereumDefinitions,
 };
 use primitive_types::U256;
-#[cfg(test)]
-use std::{
-    string::{String, ToString},
-    vec,
-    vec::Vec,
-};
-use trezor_app_sdk::{
-    Error, Result,
-    ui::{self, Property},
-    unwrap,
-};
-
-use crate::{
-    definitions::Definitions,
-    helpers::{address_from_bytes, bytes_from_address},
-    layout::{require_confirm_clear_signing, require_confirm_payment_request, require_confirm_tx},
-    paths::Bip32Path,
-    payment_request::PaymentRequestVerifier,
-    proto::{
-        definitions::{AbiType, TokenInfo},
-        ethereum::{Definitions as EthereumDefinitions, SignTx},
-    },
-    sc_constants::SC_FUNC_SIG_BYTES,
-};
+use trezor_app_sdk::{Result, ui::Property};
 
 pub enum Value {
     Int(U256),

@@ -1,8 +1,4 @@
-use crate::proto::definitions::TokenInfo;
-#[cfg(not(test))]
-use alloc::vec;
-#[cfg(test)]
-use std::vec;
+use crate::{alloc_types::vec, proto::definitions::TokenInfo};
 
 type TokenDef = (&'static [u8; 20], &'static str, u8, &'static str);
 
@@ -159,7 +155,7 @@ pub(crate) fn token_by_chain_address(chain_id: u64, address: &[u8]) -> Option<To
             symbol: (*symbol).into(),
             decimals: (*decimals).into(),
             address: addr.to_vec(),
-            chain_id: chain_id.into(),
+            chain_id,
             name: (*name).into(),
         })
 }

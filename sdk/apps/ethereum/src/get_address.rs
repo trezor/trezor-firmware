@@ -34,17 +34,17 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             .get_account_name(COIN, &PATTERNS_ADDRESS, *slip44_id)
             .unwrap();
         let chunkify = msg.chunkify.unwrap_or_default();
-        ui::show_address(
+        ui::error_if_not_confirmed(ui::show_address(
             &addr_pad(&address, chunkify),
             &address,
             None,
             Some(subtitle.as_str()),
             Some(account_name.as_str()),
-            Some(&dp.to_string()),
+            Some(&dp.format_path()),
             &[],
             chunkify,
-            ButtonRequestType::ButtonRequestOther.into(),
-        )?;
+            ButtonRequestType::Other.into(),
+        )?)?;
 
         ui::show_success(
             tr!("words__title_done"),
@@ -52,13 +52,15 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             tr!("instructions__continue_in_app"),
             Some(3200),
             None,
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
         )?;
     }
 
-    let mut res = Address::default();
-    res.address = Some(address);
-    res.mac = Some(mac.to_vec());
+    let res = Address {
+        address: Some(address),
+        mac: Some(mac.to_vec()),
+        ..Default::default()
+    };
 
     Ok(res)
 }

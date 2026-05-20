@@ -1,5 +1,8 @@
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(not(test), no_main)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::type_complexity)]
+#![allow(dead_code)]
 
 #[cfg(not(test))]
 extern crate alloc;
@@ -12,14 +15,13 @@ use trezor_app_sdk::{
     util::Timeout,
 };
 
-#[cfg(test)]
-use trezor_app_sdk::mock::{dummy_trezor_api_getter_t, sdk_init};
 // Include generated code
 pub(crate) mod proto;
 
 #[macro_use]
 pub(crate) mod translations;
 
+pub(crate) mod alloc_types;
 mod clear_signing;
 mod clear_signing_definitions;
 mod common;
@@ -197,14 +199,36 @@ pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
 
 #[cfg(test)]
 pub(crate) mod test_init {
-    use super::*;
     use std::sync::Once;
-
-    static INIT: Once = Once::new();
+    use trezor_app_sdk::mock::{dummy_trezor_api_getter_t, sdk_init};
+    pub static INIT: Once = Once::new();
 
     pub fn init_sdk() {
         INIT.call_once(|| unsafe {
-            sdk_init(dummy_trezor_api_getter_t);
+            sdk_init(Some(dummy_trezor_api_getter_t));
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_init_sdk() {
+        test_init::init_sdk();
+    }
+
+    #[test]
+    #[cfg(feature = "model_t3w1")]
+    fn test_model_t3w1() {
+        assert!(cfg!(feature = "model_t3w1"));
+        assert!(!cfg!(feature = "model_t3t1"));
+    }
+
+    #[test]
+    #[cfg(feature = "model_t3t1")]
+    fn test_model_t3t1() {
+        assert!(cfg!(feature = "model_t3t1"));
+        assert!(!cfg!(feature = "model_t3w1"));
     }
 }

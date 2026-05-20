@@ -1,5 +1,5 @@
 use crate::{
-    clear_signing_definitions::SC_FUNC_APPROVE_REVOKE_AMOUNT,
+    alloc_types::{String, ToString, Vec, vec},
     definitions,
     helpers::{
         Refund, Trade, address_from_bytes, decode_typed_data, format_ethereum_amount,
@@ -12,24 +12,11 @@ use crate::{
         definitions::{NetworkInfo, TokenInfo},
         ethereum::typed_data_struct_ack::{DataType, FieldType, StructMember},
     },
-    sc_constants::get_approve_known_address,
     strutil::{format_plural_english, hex_encode},
     tokens, uformat,
     yielding::{FUNC_SIG_DEPOSIT, FUNC_SIG_REDEEM, FUNC_SIG_WITHDRAW},
 };
-#[cfg(not(test))]
-use alloc::{
-    string::{String, ToString},
-    vec,
-    vec::Vec,
-};
 use primitive_types::U256;
-#[cfg(test)]
-use std::{
-    string::{String, ToString},
-    vec,
-    vec::Vec,
-};
 use trezor_app_sdk::{
     Error, Result,
     ui::{self, Property, StrExt},
@@ -70,7 +57,7 @@ pub(crate) fn require_confirm_approve<'a>(
     }
 
     confirm_ethereum_approve(
-        &addr_pad(&recipient_addr, chunkify),
+        &addr_pad(recipient_addr, chunkify),
         recipient_str,
         is_unknown_token,
         &addr_pad(&token_address_str, chunkify),
@@ -79,7 +66,7 @@ pub(crate) fn require_confirm_approve<'a>(
         &chain_id_str,
         &network.name,
         is_revoke,
-        total_amount.as_deref(),
+        total_amount,
         account_path.as_deref(),
         maximum_fee,
         fee_info_items,
@@ -105,7 +92,7 @@ fn confirm_ethereum_approve<'a>(
     chunkify: bool,
 ) -> Result<()> {
     let br_name = "confirm_ethereum_approve";
-    let br_code = ButtonRequestType::ButtonRequestOther.into();
+    let br_code = ButtonRequestType::Other.into();
     let (title, action) = if is_revoke {
         (
             tr!("ethereum__approve_intro_title_revoke"),
@@ -127,7 +114,7 @@ fn confirm_ethereum_approve<'a>(
         Some(tr!("buttons__continue")),
         false,
         Some(br_name),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
         false,
     )?)?;
 
@@ -190,7 +177,7 @@ fn confirm_ethereum_approve<'a>(
             &content,
             tr!("words__continue_anyway"),
             Some(br_name),
-            ButtonRequestType::ButtonRequestWarning.into(),
+            ButtonRequestType::Warning.into(),
             true,
             true,
         )?;
@@ -202,7 +189,7 @@ fn confirm_ethereum_approve<'a>(
             token_address,
             None,
             Some(br_name),
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
             true,
             None,
             Some(tr!("ethereum__title_token_contract")),
@@ -222,7 +209,7 @@ fn confirm_ethereum_approve<'a>(
             chain_id,
             Some(tr!("ethereum__approve_chain_id")),
             Some(br_name),
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
             true,
             None,
             None,
@@ -257,7 +244,7 @@ fn confirm_ethereum_approve<'a>(
         Some(tr!("buttons__continue")),
         false,
         Some(br_name),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )?)?;
 
     let account_item = account_path.map(|p| {
@@ -280,7 +267,7 @@ fn confirm_ethereum_approve<'a>(
         Some(fee_info_items),
         false,
         Some("confirm_total"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )?)?;
 
     Ok(())
@@ -311,7 +298,7 @@ fn confirm_ethereum_clear_signing(
         None,
         false,
         Some("confirm_contract"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
         false,
     )?;
     ui::confirm_action(
@@ -323,7 +310,7 @@ fn confirm_ethereum_clear_signing(
         None,
         false,
         Some("confirm_contract"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
         false,
     )?;
     ui::confirm_properties(
@@ -333,7 +320,7 @@ fn confirm_ethereum_clear_signing(
         None,
         false,
         Some("confirm_contract"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )?;
     ui::error_if_not_confirmed(ui::confirm_summary(
         None,
@@ -347,7 +334,7 @@ fn confirm_ethereum_clear_signing(
         None,
         false,
         Some("confirm_ethereum_tx"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )?)?;
 
     Ok(())
@@ -366,26 +353,26 @@ pub(crate) fn require_confirm_tx<'a>(
 ) -> Result<()> {
     let (account, account_path) = dp.account_and_path();
 
-    if let Some(token) = token {
-        if token == &tokens::unknown_token() {
-            let title = tr!("words__send");
-            require_confirm_unknown_token(title)?;
-            require_confirm_address(
-                address_bytes,
-                Some(title),
-                Some(tr!("ethereum__title_token_contract")),
-                Some(tr!("buttons__continue")),
-                Some("unknown_token"),
-                Some(tr!("ethereum__unknown_contract_address")),
-            )?;
-        }
+    if let Some(token) = token
+        && token == &tokens::unknown_token()
+    {
+        let title = tr!("words__send");
+        require_confirm_unknown_token(title)?;
+        require_confirm_address(
+            address_bytes,
+            Some(title),
+            Some(tr!("ethereum__title_token_contract")),
+            Some(tr!("buttons__continue")),
+            Some("unknown_token"),
+            Some(tr!("ethereum__unknown_contract_address")),
+        )?;
     }
 
     let recipient = recipient.map(|r| addr_pad(r, chunkify));
 
     confirm_ethereum_tx(
         recipient.as_deref(),
-        &total_amount,
+        total_amount,
         account.as_deref(),
         account_path.as_deref(),
         maximum_fee,
@@ -411,7 +398,7 @@ fn confirm_ethereum_tx<'a>(
     chunkify: bool,
 ) -> Result<()> {
     let br_name = br_name.unwrap_or("confirm_total");
-    let br_code = br_code.unwrap_or(ButtonRequestType::ButtonRequestSignTx.into());
+    let br_code = br_code.unwrap_or(ButtonRequestType::SignTx.into());
 
     let subtitle = if !is_send && recipient.is_none() {
         None
@@ -428,7 +415,7 @@ fn confirm_ethereum_tx<'a>(
         &account_properties,
         None,
         Some(tr!("send__send_from")),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )];
 
     let menu = ui::Menu::new(menu_items, Some(ui::Cancel::new(tr!("send__cancel_sign"))));
@@ -556,15 +543,12 @@ pub(crate) fn require_confirm_payment_request<'a>(
         ));
     }
 
-    let extra_menu_items = if let Some(token_address) = token_address {
-        Some([(tr!("ethereum__title_token_contract"), token_address)])
-    } else {
-        None
-    };
+    let extra_menu_items =
+        token_address.map(|token_address| [(tr!("ethereum__title_token_contract"), token_address)]);
 
     confirm_payment_request(
         verified_payment_req.recipient_name.as_str(),
-        Some(&provider_address),
+        Some(provider_address),
         texts.as_slice(),
         &refunds,
         &trades,
@@ -600,7 +584,7 @@ fn confirm_payment_request<'a>(
             text,
             None,
             Some("confirm_payment_request"),
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
             true,
             Some(tr!("buttons__confirm")),
             None,
@@ -624,7 +608,7 @@ fn confirm_payment_request<'a>(
             &props,
             None,
             None,
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
         ));
     }
 
@@ -658,7 +642,7 @@ fn confirm_payment_request<'a>(
             refund_account_info.as_slice(),
             None,
             None,
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
         ));
     }
 
@@ -677,7 +661,7 @@ fn confirm_payment_request<'a>(
                     recipient_name,
                     None,
                     name,
-                    ButtonRequestType::ButtonRequestOther.into(),
+                    ButtonRequestType::Other.into(),
                     true,
                     Some(tr!("buttons__continue")),
                     Some(tr!("words__provider")),
@@ -737,7 +721,7 @@ fn confirm_payment_request<'a>(
                         fee_info_items,
                         true,
                         Some("confirm_payment_request"),
-                        ButtonRequestType::ButtonRequestSignTx.into(),
+                        ButtonRequestType::SignTx.into(),
                     )?,
                     ui::TrezorUiResult::Back
                 ) {
@@ -870,7 +854,7 @@ fn confirm_ethereum_vault_tx(
     extra_data: Option<&str>,
 ) -> Result<()> {
     let br_name = br_name.unwrap_or("ethereum/vault");
-    let br_code = br_code.unwrap_or(ButtonRequestType::ButtonRequestSignTx.into());
+    let br_code = br_code.unwrap_or(ButtonRequestType::SignTx.into());
 
     let mut menu_items = Vec::with_capacity(1);
     let account_properties = get_account_info_items(account, account_path);
@@ -880,7 +864,7 @@ fn confirm_ethereum_vault_tx(
             account_properties.as_slice(),
             None,
             Some(tr!("send__send_from")),
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
         ))
     }
 
@@ -1036,7 +1020,7 @@ fn confirm_ethereum_vault_claim(
     br_name: &str,
     br_code: Option<i32>,
 ) -> Result<()> {
-    let br_code = br_code.unwrap_or(ButtonRequestType::ButtonRequestSignTx.into());
+    let br_code = br_code.unwrap_or(ButtonRequestType::SignTx.into());
     let mut menu_items = Vec::with_capacity(1);
     let account_properties = get_account_info_items(account, account_path);
     if !account_properties.is_empty() {
@@ -1045,7 +1029,7 @@ fn confirm_ethereum_vault_claim(
             &account_properties,
             None,
             Some(tr!("send__send_from")),
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
         ))
     }
 
@@ -1140,7 +1124,7 @@ fn confirm_ethereum_staking_tx<'a>(
     );
 
     let br_name = br_name.unwrap_or("confirm_ethereum_staking_tx");
-    let br_code = br_code.unwrap_or(ButtonRequestType::ButtonRequestSignTx.into());
+    let br_code = br_code.unwrap_or(ButtonRequestType::SignTx.into());
 
     let mut menu_items = Vec::with_capacity(2);
     let props = [Property::new("", address, true)];
@@ -1149,7 +1133,7 @@ fn confirm_ethereum_staking_tx<'a>(
         &props,
         None,
         None,
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     ));
 
     let account_properties = get_account_info_items(account, account_path);
@@ -1159,7 +1143,7 @@ fn confirm_ethereum_staking_tx<'a>(
             &account_properties,
             None,
             Some(tr!("send__send_from")),
-            ButtonRequestType::ButtonRequestOther.into(),
+            ButtonRequestType::Other.into(),
         ));
     };
 
@@ -1183,7 +1167,7 @@ fn confirm_ethereum_staking_tx<'a>(
                         intro_question,
                         None,
                         name,
-                        ButtonRequestType::ButtonRequestSignTx.into(),
+                        ButtonRequestType::SignTx.into(),
                         false,
                         None,
                         None,
@@ -1297,7 +1281,7 @@ fn confirm_ethereum_unknown_contract_warning(title: Option<&str>) -> Result<()> 
         tr!("words__important"),
         &content,
         Some("unknown_contract_warning"),
-        ButtonRequestType::ButtonRequestWarning.into(),
+        ButtonRequestType::Warning.into(),
         Some(tr!("send__cancel_sign")),
         title,
     )?;
@@ -1314,7 +1298,7 @@ pub(crate) fn require_confirm_address(
     footer: Option<&'static str>,
 ) -> Result<()> {
     let address_hex = uformat!("0x{}", hex_encode(address_bytes).as_str());
-    return confirm_address(
+    confirm_address(
         title.unwrap_or(tr!("ethereum__title_signing_address")),
         &address_hex,
         subtitle,
@@ -1323,8 +1307,9 @@ pub(crate) fn require_confirm_address(
         footer.map(|f| (f, true)),
         None,
         br_name,
-        ButtonRequestType::ButtonRequestSignTx.into(),
-    );
+        ButtonRequestType::SignTx.into(),
+    )?;
+    Ok(())
 }
 
 fn confirm_address(
@@ -1364,7 +1349,7 @@ pub(crate) fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         &message_hash_hex,
         None,
         Some("confirm_message_hash"),
-        ButtonRequestType::ButtonRequestSignTx.into(),
+        ButtonRequestType::SignTx.into(),
         true,
         Some(tr!("buttons__confirm")),
         None,
@@ -1382,14 +1367,16 @@ fn get_account_info_items<'a>(
     account_path: Option<&'a str>,
 ) -> Vec<Property<'a>> {
     let mut items = Vec::with_capacity(2);
-    account.map(|acc| items.push(Property::new(tr!("words__account"), acc, false)));
-    account_path.map(|path| {
+    if let Some(acc) = account {
+        items.push(Property::new(tr!("words__account"), acc, false))
+    }
+    if let Some(path) = account_path {
         items.push(Property::new(
             tr!("address_details__derivation_path"),
             path,
             false,
         ))
-    });
+    }
 
     items
 }
@@ -1404,7 +1391,7 @@ pub(crate) fn confirm_typed_data_final() -> Result<()> {
         Some(tr!("buttons__hold_to_confirm")),
         true,
         Some("confirm_typed_data_final"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
         false,
     )? {
         ui::TrezorUiResult::Confirmed => Ok(()),
@@ -1418,7 +1405,7 @@ pub(crate) fn confirm_empty_typed_message() -> Result<()> {
         tr!("ethereum__title_confirm_message"),
         "",
         Some(tr!("ethereum__no_message_field")),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )
 }
 
@@ -1462,7 +1449,7 @@ pub(crate) fn should_show_domain(name: &[u8], version: &[u8]) -> Result<bool> {
         &para,
         tr!("ethereum__show_full_domain"),
         Some("should_show_domain"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
         tr!("buttons__confirm"),
     )
     .map_err(|_| Error::Cancelled)?;
@@ -1498,7 +1485,7 @@ pub(crate) fn should_show_struct(
         &para,
         button_text,
         Some("should_show_struct"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
         tr!("buttons__confirm"),
     )
     .map_err(|_| Error::Cancelled)
@@ -1521,7 +1508,7 @@ pub(crate) fn should_show_array(
         &para,
         tr!("ethereum__show_full_array"),
         Some("should_show_array"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
         tr!("buttons__confirm"),
     )
     .map_err(|_| Error::Cancelled)
@@ -1552,7 +1539,7 @@ pub(crate) fn confirm_typed_value(
 
     let data = decode_typed_data(value, &type_name)?;
     let br_name = "confirm_typed_value";
-    let br_code = ButtonRequestType::ButtonRequestOther.into();
+    let br_code = ButtonRequestType::Other.into();
 
     if field.data_type == DataType::Address as i32 || field.data_type == DataType::Bytes as i32 {
         confirm_blob(
@@ -1601,8 +1588,12 @@ pub(crate) fn confirm_signverify(
     };
 
     let mut items = Vec::with_capacity(3);
-    account.map(|a| items.push(Property::new("Account", a, true)));
-    path.map(|p| items.push(Property::new("Derivation path", p, true)));
+    if let Some(a) = account {
+        items.push(Property::new("Account", a, true))
+    };
+    if let Some(p) = path {
+        items.push(Property::new("Derivation path", p, true))
+    };
     let size = uformat!("{} bytes", message.len());
     items.push(Property::new("Message size", size.as_str(), true));
 
@@ -1614,7 +1605,7 @@ pub(crate) fn confirm_signverify(
                     address,
                     None,
                     name,
-                    ButtonRequestType::ButtonRequestOther.into(),
+                    ButtonRequestType::Other.into(),
                     true,
                     Some("Continue"),
                     None,
@@ -1633,7 +1624,7 @@ pub(crate) fn confirm_signverify(
                     &items,
                     chunkify,
                     name,
-                    ButtonRequestType::ButtonRequestOther.into(),
+                    ButtonRequestType::Other.into(),
                 )
             },
             br_name,
@@ -1648,10 +1639,7 @@ pub(crate) fn confirm_signverify(
             Err(_) => {
                 // Right button aborts action, left goes back to showing address.
                 if matches!(
-                    ui::show_mismatch(
-                        "Address mismatch?",
-                        ButtonRequestType::ButtonRequestOther.into()
-                    ),
+                    ui::show_mismatch("Address mismatch?", ButtonRequestType::Other.into()),
                     Ok(ui::TrezorUiResult::Confirmed)
                 ) {
                     return Err(Error::Cancelled);
@@ -1663,7 +1651,7 @@ pub(crate) fn confirm_signverify(
     }
 
     let title = "Confirm message";
-    let br_code = ButtonRequestType::ButtonRequestOther.into();
+    let br_code = ButtonRequestType::Other.into();
     let hold = !verify;
     if message.chars().count() > LONG_MSG_PAGE_THRESHOLD {
         confirm_blob(
@@ -1750,13 +1738,13 @@ fn trade_flow(
         &account_properties,
         None,
         Some("Send from"),
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     ));
 
     let extra_props: Option<Vec<[Property; 1]>> = extra_menu_items.map(|items| {
         items
             .iter()
-            .map(|(_, value)| [Property::new(*value, "", false)])
+            .map(|(_, value)| [Property::new(value, "", false)])
             .collect()
     });
 
@@ -1767,7 +1755,7 @@ fn trade_flow(
                 props,
                 None,
                 None,
-                ButtonRequestType::ButtonRequestOther.into(),
+                ButtonRequestType::Other.into(),
             ));
         }
     }
@@ -1783,7 +1771,7 @@ fn trade_flow(
                 trade.sell_amount.as_deref(),
                 back_button,
                 name,
-                ButtonRequestType::ButtonRequestOther.into(),
+                ButtonRequestType::Other.into(),
             )
         },
         &menu,

@@ -1,7 +1,7 @@
 {
   "header": {
     "language": "en-US",
-    "version": "2.11.1"
+    "version": "2.11.2"
   },
   "translations": {
     "send__send_from": "Send from",
@@ -33,7 +33,10 @@
     "ethereum__deposit_to": "Deposit to",
     "ethereum__gas_limit": "Gas limit",
     "ethereum__gas_price": "Gas price",
-    "ethereum__interaction_contract": "Interaction contract address",
+    "ethereum__interaction_contract": {
+      "Delizia": "Interaction contract",
+      "Eckhart": "Interaction contract address"
+    },
     "ethereum__max_gas_price": "Max fee per gas",
     "ethereum__name_and_version": "Name and version",
     "ethereum__new_contract": "New contract will be deployed",
@@ -62,8 +65,14 @@
     "ethereum__title_confirm_message_hash": "Confirm message hash",
     "ethereum__title_confirm_struct": "Confirm struct",
     "ethereum__title_confirm_typed_data": "Confirm typed data",
-    "ethereum__title_token_contract": "Token contract address",
-    "ethereum__unknown_contract_address": "Unknown token contract address.",
+    "ethereum__title_token_contract": {
+      "Delizia": "Token contract",
+      "Eckhart": "Token contract address"
+    },
+    "ethereum__unknown_contract_address": {
+      "Delizia": "Unknown contract address.",
+      "Eckhart": "Unknown token contract address."
+    },
     "ethereum__vault_claim_intro": "Review details to claim rewards.",
     "ethereum__vault_deposit_intro": "Review details to deposit to vault.",
     "ethereum__vault_redeem_intro": "Review details to redeem from vault.",
@@ -77,9 +86,13 @@
     "buttons__cancel": "Cancel",
     "progress__signing_transaction": "Signing transaction...",
     "send__cancel_sign": "Cancel sign",
+    "ethereum__valid_signature": "The signature is valid.",
     "send__cancel_transaction": "Cancel transaction",
     "send__maximum_fee": "Maximum fee",
-    "send__transaction_signed": "Transaction signed",
+    "send__transaction_signed": {
+      "Delizia": "Transaction signed",
+      "Eckhart": "Transaction signed."
+    },
     "words__account": "Account",
     "words__amount": "Amount",
     "words__array_of": "Array of",

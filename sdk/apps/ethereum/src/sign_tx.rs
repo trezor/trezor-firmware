@@ -1,4 +1,5 @@
 use crate::{
+    alloc_types::{Vec, vec},
     common::{
         EIP_7702_TX_TYPE, check_common_fields, confirm_data_and_summary, confirm_tx_data,
         get_eip_7702_known_address, request_initial_data,
@@ -13,13 +14,9 @@ use crate::{
     },
     rlp::{self, RLPItem},
 };
-#[cfg(not(test))]
-use alloc::{vec, vec::Vec};
 use primitive_types::U256;
-#[cfg(test)]
-use std::{vec, vec::Vec};
 use trezor_app_sdk::{
-    Error, Result, crypto, info,
+    Error, Result, crypto,
     ui::{self, Property},
 };
 
@@ -75,10 +72,9 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
 
     let address_bytes = bytes_from_address(to)?;
 
-    if !matches!(
-        msg.tx_type,
-        Some(1) | Some(6) | Some(EIP_7702_TX_TYPE) | None
-    ) {
+    let valid_tx_types = [Some(1), Some(6), Some(EIP_7702_TX_TYPE), None];
+
+    if !valid_tx_types.contains(&msg.tx_type) {
         return Err(Error::DataError("tx_type out of bounds"));
     }
 
@@ -111,18 +107,11 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
         Some(msg.chain_id),
     )?;
 
-    // TODO: better implement parsing int value from bytes
-    assert!(msg.gas_price.len() <= 32);
     let gas_price = U256::from_big_endian(&msg.gas_price);
-
-    // TODO: better implement parsing int value from bytes
-    assert!(msg.gas_limit.len() <= 32);
     let gas_limit = U256::from_big_endian(&msg.gas_limit);
-
     let maximum_fee =
-        format_ethereum_amount(gas_price * gas_limit, None, &definitions.network(), false);
-    let fee_items = get_fee_items_regular(gas_price, gas_limit, &definitions.network());
-
+        format_ethereum_amount(gas_price * gas_limit, None, definitions.network(), false);
+    let fee_items = get_fee_items_regular(gas_price, gas_limit, definitions.network());
     let fee_items_ref: Vec<Property> = fee_items
         .iter()
         .map(|(k, v, mono)| Property::new(k, v, *mono))
@@ -142,7 +131,7 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
             nonce,
             &msg.gas_price,
             &msg.gas_limit,
-            &to,
+            to,
             value,
             data_initial_chunk,
             data_length,
@@ -158,7 +147,7 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
     }
 
     // Write transaction fields
-    let fields: Vec<RLPItem> = vec![
+    let fields = [
         RLPItem::Bytes(nonce),
         RLPItem::Bytes(&msg.gas_price),
         RLPItem::Bytes(&msg.gas_limit),
@@ -201,19 +190,26 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
     )?;
 
     // EIP-155 replay protection
-    rlp::write(&mut hasher, &RLPItem::Int(msg.chain_id.into()));
-    rlp::write(&mut hasher, &RLPItem::Int(0.into()));
-    rlp::write(&mut hasher, &RLPItem::Int(0.into()));
+    let fields = [
+        RLPItem::Int(msg.chain_id.into()),
+        RLPItem::Int(0.into()),
+        RLPItem::Int(0.into()),
+    ];
+    for field in &fields {
+        rlp::write(&mut hasher, field);
+    }
+
     let digest = hasher.digest();
+
+    // transaction data confirmed, proceed with signing
     let res = sign_digest(&msg, &digest)?;
-    // ui::end_progress()?;
     ui::show_success(
         tr!("words__title_done"),
         tr!("send__transaction_signed"),
         tr!("instructions__continue_in_app"),
         Some(3200),
         None,
-        ButtonRequestType::ButtonRequestOther.into(),
+        ButtonRequestType::Other.into(),
     )?;
 
     Ok(res)

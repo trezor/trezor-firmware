@@ -25,7 +25,7 @@ pub fn sign_message(msg: SignMessage) -> Result<MessageSignature> {
     let encoded_network = msg.encoded_network.as_ref().map(|buf| buf.as_ref());
     let pubkey_hash = crypto::get_eth_pubkey_hash(dp.as_ref(), encoded_network, None, None)?;
     let address = address_from_bytes(&pubkey_hash, Some(definitions.network()));
-    let path = dp.to_string();
+    let path = dp.format_path();
 
     let message = crate::common::decode_message(&msg.message);
 
@@ -38,9 +38,10 @@ pub fn sign_message(msg: SignMessage) -> Result<MessageSignature> {
         crypto::sign_typed_hash(dp.as_ref(), &hash, encoded_network, None, None, false)?;
     signature.rotate_left(1);
 
-    let mut res = MessageSignature::default();
-    res.address = address;
-    res.signature = signature.into();
+    let res = MessageSignature {
+        address,
+        signature: signature.into(),
+    };
 
     Ok(res)
 }

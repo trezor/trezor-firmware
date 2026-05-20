@@ -6,8 +6,8 @@ package hw.trezor.definitions;
  * Used to check the encoded EthereumNetworkInfo/EthereumTokenInfo/EthereumDisplayFormat message.
  */
 enum DefinitionType {
-  NETWORK = 0;
-  TOKEN   = 1;
+  NETWORK        = 0;
+  TOKEN          = 1;
   DISPLAY_FORMAT = 2;
 
 }
@@ -100,10 +100,10 @@ message ABIValueInfo {
  * @embed
  */
 enum ERC7730FieldFormatterType {
-  FORMATTER_ADDRESS_NAME = 0;
-  FORMATTER_AMOUNT       = 1;
-  FORMATTER_TOKEN_AMOUNT = 2;
-  FORMATTER_UNIT         = 3;
+  ADDRESS_NAME = 0;
+  AMOUNT       = 1;
+  TOKEN_AMOUNT = 2;
+  UNIT         = 3;
 }
 
 /**
@@ -121,6 +121,7 @@ enum ERC7730ContainerPath {
  * We currently support two kinds of paths:
  *  * paths that access function parameters
  *  * container paths (starting with `@`)
+ *
  * `$` and `#` paths are not supported.
  * @embed
  */

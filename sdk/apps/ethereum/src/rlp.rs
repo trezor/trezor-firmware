@@ -1,11 +1,5 @@
-#[cfg(not(test))]
-use alloc::vec::Vec;
+use crate::alloc_types::Vec;
 use primitive_types::U256;
-#[cfg(test)]
-use std::vec;
-#[cfg(test)]
-use std::vec::Vec;
-
 use trezor_app_sdk::crypto::Hasher;
 
 pub const STRING_HEADER_BYTE: u8 = 0x80;
@@ -32,7 +26,7 @@ impl RlpWriter for trezor_app_sdk::crypto::Keccak256 {
     }
 }
 
-#[cfg_attr(test, derive(Debug))]
+// #[cfg_attr(test, derive(Debug))]
 pub enum RLPItem<'a> {
     Int(U256),
     Bytes(&'a [u8]),
@@ -41,7 +35,7 @@ pub enum RLPItem<'a> {
 
 /// Returns the minimum number of bytes needed to represent an unsigned integer
 fn byte_size(x: U256) -> usize {
-    (x.bits() + 7) / 8
+    x.bits().div_ceil(8)
 }
 
 /// Converts unsigned integer to big-endian bytes (minimal representation)
@@ -53,12 +47,12 @@ pub fn int_to_bytes(x: U256) -> Vec<u8> {
 /// Calculates the length of the RLP header for given payload length
 pub fn header_length(length: u32, data_start: Option<&[u8]>) -> u32 {
     // Special case: single byte < 0x80 has no header
-    if length == 1 {
-        if let Some(data) = data_start {
-            if !data.is_empty() && data[0] <= 0x7F {
-                return 0;
-            }
-        }
+    if length == 1
+        && let Some(data) = data_start
+        && !data.is_empty()
+        && data[0] <= 0x7F
+    {
+        return 0;
     }
 
     if length <= 55 {
@@ -92,12 +86,12 @@ pub fn write_header<W: RlpWriter>(
     data_start: Option<&[u8]>,
 ) {
     // Special case: single byte < 0x80 has no header
-    if length == 1 {
-        if let Some(data) = data_start {
-            if !data.is_empty() && data[0] <= 0x7F {
-                return;
-            }
-        }
+    if length == 1
+        && let Some(data) = data_start
+        && !data.is_empty()
+        && data[0] <= 0x7F
+    {
+        return;
     }
 
     if length <= 55 {

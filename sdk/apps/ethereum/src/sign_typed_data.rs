@@ -1,4 +1,5 @@
 use crate::{
+    alloc_types::{BTreeMap, BTreeSet, String, ToString, Vec, vec},
     definitions::Definitions,
     helpers::address_from_bytes,
     layout::{
@@ -17,23 +18,7 @@ use crate::{
     },
 };
 use crate::{helpers::get_type_name, uformat, wire_request};
-#[cfg(not(test))]
-use alloc::{
-    collections::{BTreeMap, BTreeSet},
-    string::String,
-    string::ToString,
-    vec,
-    vec::Vec,
-};
 use primitive_types::U256;
-#[cfg(test)]
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    string::String,
-    string::ToString,
-    vec,
-    vec::Vec,
-};
 use trezor_app_sdk::{
     Error, Result,
     crypto::{self, Hasher},
@@ -60,16 +45,12 @@ pub fn sign_typed_data(msg: SignTypedData) -> Result<TypedDataSignature> {
     require_confirm_address(&address_bytes, None, None, None, None, None)?;
 
     let metamask_v4_compat = msg.metamask_v4_compat.unwrap_or(true);
-    let show_message_hash = if let Some(hash) = &msg.show_message_hash {
-        Some(hash.as_slice())
-    } else {
-        None
-    };
+    let show_message_hash = msg.show_message_hash.as_deref();
 
     let data_hash =
         generate_typed_data_hash(&msg.primary_type, metamask_v4_compat, show_message_hash)?;
 
-    let signature = crypto::sign_typed_hash(
+    let mut signature = crypto::sign_typed_hash(
         dp.as_ref(),
         &data_hash,
         encoded_network,
@@ -78,10 +59,12 @@ pub fn sign_typed_data(msg: SignTypedData) -> Result<TypedDataSignature> {
         true,
     )?;
 
-    let mut sig = TypedDataSignature::default();
-    sig.address = address_from_bytes(&address_bytes, Some(definitions.network()));
-    sig.signature.extend_from_slice(&signature[1..]);
-    sig.signature.push(signature[0]);
+    signature.rotate_left(1);
+
+    let sig = TypedDataSignature {
+        signature: signature.to_vec(),
+        address: address_from_bytes(&address_bytes, Some(definitions.network())),
+    };
 
     Ok(sig)
 }
@@ -147,7 +130,7 @@ fn generate_typed_data_hash(
     };
 
     if let Some(show_message_hash) = show_message_hash {
-        if show_message_hash != &message_hash {
+        if show_message_hash != message_hash {
             return Err(Error::DataError("Message hash mismatch"));
         }
 
@@ -211,7 +194,7 @@ impl TypedDataEnvelope {
                 )?;
             }
             let mut member_type = &member.r#type;
-            validate_field_type(&member_type)?;
+            validate_field_type(member_type)?;
             while member_type.data_type == DataType::Array as i32 {
                 if let Some(entry_type) = &member_type.entry_type {
                     member_type = entry_type;
@@ -355,7 +338,7 @@ impl TypedDataEnvelope {
                     el_member_path.push(0);
                     for idx in 0..array_size {
                         // we can unwrap because the vector is never empty
-                        *unwrap!(el_member_path.last_mut()) = idx as u32;
+                        *unwrap!(el_member_path.last_mut()) = idx;
                         // TODO: we do not support arrays of arrays, check if we should
                         if entry_type.data_type == DataType::Struct as i32 {
                             if let Some(struct_name) = &entry_type.struct_name {
@@ -393,7 +376,7 @@ impl TypedDataEnvelope {
                                 confirm_typed_value(
                                     field_name,
                                     &value,
-                                    &parent_objects,
+                                    parent_objects,
                                     entry_type,
                                     Some(idx),
                                 )?
@@ -409,7 +392,7 @@ impl TypedDataEnvelope {
                 let value = get_value(field_type, &member_value_path)?;
                 encode_field(hasher, field_type, &value)?;
                 if show_data {
-                    confirm_typed_value(field_name, &value, &parent_objects, field_type, None)?
+                    confirm_typed_value(field_name, &value, parent_objects, field_type, None)?
                 }
             }
         }
@@ -534,10 +517,10 @@ fn validate_field_type(field: &FieldType) -> Result<()> {
             return Err(Error::DataError("Missing struct size"));
         }
     } else if data_type == DataType::Bytes as i32 {
-        if let Some(s) = size {
-            if !(1..=32).contains(&s) {
-                return Err(Error::DataError("Invalid bytes size"));
-            }
+        if let Some(s) = size
+            && !(1..=32).contains(&s)
+        {
+            return Err(Error::DataError("Invalid bytes size"));
         }
     } else if data_type == DataType::Uint as i32 || data_type == DataType::Int as i32 {
         if let Some(s) = size {
@@ -547,13 +530,12 @@ fn validate_field_type(field: &FieldType) -> Result<()> {
         } else {
             return Err(Error::DataError("Missing integer size"));
         }
-    } else if data_type == DataType::String as i32
+    } else if (data_type == DataType::String as i32
         || data_type == DataType::Bool as i32
-        || data_type == DataType::Address as i32
+        || data_type == DataType::Address as i32)
+        && size.is_some()
     {
-        if size.is_some() {
-            return Err(Error::DataError("Unexpected size"));
-        }
+        return Err(Error::DataError("Unexpected size"));
     }
 
     Ok(())
@@ -588,7 +570,7 @@ fn get_name_and_version_for_domain(
 /// Get a single value from the client and perform its validation.
 fn get_value(field: &FieldType, member_value_path: &[u32]) -> Result<Vec<u8>> {
     let req = TypedDataValueRequest {
-        member_path: member_value_path.iter().map(|&v| v).collect(),
+        member_path: member_value_path.to_vec(),
     };
 
     let res: TypedDataValueAck = unwrap!(wire_request(&req, MessageType::TypedDataValueRequest));
@@ -603,10 +585,10 @@ fn get_value(field: &FieldType, member_value_path: &[u32]) -> Result<Vec<u8>> {
 /// Return an error if encountering a problem, so clients are notified.
 fn validate_value(field: &FieldType, value: &[u8]) -> Result<()> {
     // Size check
-    if let Some(size) = field.size {
-        if value.len() != size as usize {
-            return Err(Error::DataError("Invalid value size"));
-        }
+    if let Some(size) = field.size
+        && value.len() != size as usize
+    {
+        return Err(Error::DataError("Invalid value size"));
     }
 
     // Type-specific checks
@@ -668,8 +650,10 @@ fn rightpad32(value: &[u8]) -> Result<[u8; 32]> {
 /// - Bytes1 to bytes31 are arrays with a beginning (index 0)
 ///   and an end (index length - 1), they are zero-padded at the end to bytes32 and encoded
 ///   in beginning to end order
+///
 /// Dynamic types:
 /// - Bytes and string are encoded as a keccak256 hash of their contents
+///
 /// Reference types:
 /// - Array values are encoded as the keccak256 hash of the concatenated
 ///   encodeData of their contents
@@ -713,7 +697,7 @@ fn _get_array_size(member_path: &[u32]) -> Result<u32> {
     };
     let length_value = get_value(&array_length_type, member_path)?;
 
-    Ok(U256::from_big_endian(&length_value)
+    U256::from_big_endian(&length_value)
         .try_into()
-        .map_err(|_| Error::DataError("Invalid array length"))?)
+        .map_err(|_| Error::DataError("Invalid array length"))
 }

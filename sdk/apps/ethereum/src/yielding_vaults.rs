@@ -1,12 +1,8 @@
 use crate::{
+    alloc_types::{String, vec},
     proto::definitions::{NetworkInfo, TokenInfo},
     tokens::unknown_token,
 };
-
-#[cfg(not(test))]
-use alloc::{string::String, vec};
-#[cfg(test)]
-use std::{string::String, vec};
 
 #[derive(PartialEq)]
 pub(crate) struct VaultInfo {
@@ -137,10 +133,11 @@ pub(crate) fn get_token_label(token_addr: &[u8], network: &NetworkInfo) -> &'sta
 
 pub(crate) fn lookup_vault(network: &NetworkInfo, vault_addr: &[u8]) -> VaultInfo {
     for vault in known_vaults() {
-        if let (Some(chain_id), Some(address)) = (vault.chain_id, vault.address) {
-            if network.chain_id == chain_id && vault_addr == address {
-                return vault;
-            }
+        if let (Some(chain_id), Some(address)) = (vault.chain_id, vault.address)
+            && network.chain_id == chain_id
+            && vault_addr == address
+        {
+            return vault;
         }
     }
     unknown_vault()

@@ -1,7 +1,4 @@
-#[cfg(not(test))]
-use alloc::vec::Vec;
-#[cfg(test)]
-use std::vec::Vec;
+use crate::alloc_types::Vec;
 use trezor_app_sdk::{Error, Result, crypto};
 
 fn select_keys(sigmask: u8, keys: &[&[u8; 32]]) -> Result<Vec<[u8; 32]>> {
