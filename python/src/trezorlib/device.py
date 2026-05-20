@@ -18,16 +18,25 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import io
 import random
 import secrets
 import time
 import warnings
-from typing import TYPE_CHECKING, Callable, Iterable, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Iterable,
+    Optional,
+    Sequence,
+    Tuple,
+    overload,
+)
 
 from slip10 import SLIP10
 
 from . import messages
-from .exceptions import Cancelled, TrezorException
+from .exceptions import Cancelled, TrezorException, UnexpectedMessageError
 from .tools import Address, parse_path, workflow
 
 if TYPE_CHECKING:
@@ -630,12 +639,150 @@ def set_busy(session: "Session", expiry_ms: Optional[int]) -> None:
     session.call(messages.SetBusy(expiry_ms=expiry_ms), expect=messages.Success)
 
 
-@workflow()
-def authenticate(session: "Session", challenge: bytes) -> messages.AuthenticityProof:
-    return session.call(
-        messages.AuthenticateDevice(challenge=challenge),
-        expect=messages.AuthenticityProof,
+# AuthenticityProof-related data cannot be too large.
+PROOF_BLOB_SIZE_LIMIT = 100 * 1024
+PROOF_CERTS_LEN_LIMIT = 10
+
+
+def _fetch_proof_chunks(
+    session: "Session",
+    chunk_size: int,
+    proof_type: messages.AuthenticityProofType,
+    index: int | None,
+    size: int,
+) -> bytes:
+    result = io.BytesIO()
+    if size > PROOF_BLOB_SIZE_LIMIT:
+        raise ValueError("Unexpected blob size")
+
+    while size > 0:
+        req_size = min(size, chunk_size)
+        resp = session.call(
+            messages.GetAuthenticityProofChunk(
+                proof_type=proof_type,
+                index=index,
+                offset=result.tell(),
+                size=req_size,
+            ),
+            expect=messages.AuthenticityProofChunk,
+        )
+        if req_size != len(resp.chunk):
+            raise ValueError("Unexpected response size")
+
+        size -= len(resp.chunk)
+        result.write(resp.chunk)
+
+    assert size == 0
+    return result.getvalue()
+
+
+if TYPE_CHECKING:
+    # the fetched `signature` is None iff `signature_size` parameter is None.
+    # (needed since `optiga_signature` field is required)
+
+    @overload
+    def _fetch_proof_part(
+        session: "Session",
+        chunk_size: int,
+        part: messages.AuthenticityProofType,
+        signature_size: int,
+        certificate_sizes: Sequence[int] | None,
+    ) -> tuple[bytes, list[bytes]]: ...
+
+    @overload
+    def _fetch_proof_part(
+        session: "Session",
+        chunk_size: int,
+        part: messages.AuthenticityProofType,
+        signature_size: None,
+        certificate_sizes: Sequence[int] | None,
+    ) -> tuple[None, list[bytes]]: ...
+
+
+def _fetch_proof_part(
+    session: "Session",
+    chunk_size: int,
+    part: messages.AuthenticityProofType,
+    signature_size: int | None,
+    certificate_sizes: Sequence[int] | None,
+) -> tuple[bytes | None, list[bytes]]:
+    signature = None
+    if signature_size is not None:
+        signature = _fetch_proof_chunks(
+            session, chunk_size, part, index=None, size=signature_size
+        )
+
+    certificate_sizes = certificate_sizes or []
+    if len(certificate_sizes) > PROOF_CERTS_LEN_LIMIT:
+        raise ValueError("Too many certificates")
+
+    certificates = [
+        _fetch_proof_chunks(session, chunk_size, part, index, size)
+        for index, size in enumerate(certificate_sizes)
+    ]
+    return (signature, certificates)
+
+
+def _fetch_proof(
+    session: "Session",
+    chunk_size: int,
+    sizes: messages.AuthenticityProofSizes,
+) -> messages.AuthenticityProof:
+    optiga_signature, optiga_certificates = _fetch_proof_part(
+        session,
+        chunk_size,
+        part=messages.AuthenticityProofType.OPTIGA,
+        signature_size=sizes.optiga_signature,
+        certificate_sizes=sizes.optiga_certificates,
     )
+    tropic_signature, tropic_certificates = _fetch_proof_part(
+        session,
+        chunk_size,
+        part=messages.AuthenticityProofType.TROPIC,
+        signature_size=sizes.tropic_signature,
+        certificate_sizes=sizes.tropic_certificates,
+    )
+    mcu_signature, mcu_certificates = _fetch_proof_part(
+        session,
+        chunk_size,
+        part=messages.AuthenticityProofType.MCU,
+        signature_size=sizes.mcu_signature,
+        certificate_sizes=sizes.mcu_certificates,
+    )
+    return messages.AuthenticityProof(
+        optiga_certificates=optiga_certificates,
+        optiga_signature=optiga_signature,
+        tropic_certificates=tropic_certificates,
+        tropic_signature=tropic_signature,
+        mcu_certificates=mcu_certificates,
+        mcu_signature=mcu_signature,
+    )
+
+
+@workflow()
+def authenticate(
+    session: "Session", challenge: bytes, chunk_size: int = 1024
+) -> messages.AuthenticityProof:
+    stream = chunk_size > 0
+    try:
+        sizes = session.call(
+            messages.AuthenticateDevice(challenge=challenge, stream=stream),
+            expect=messages.AuthenticityProofSizes,
+        )
+    except UnexpectedMessageError as exc:
+        # support older FW versions (without streaming support)
+        if isinstance(exc.actual, messages.AuthenticityProof):
+            return exc.actual
+        raise
+
+    try:
+        return _fetch_proof(session, chunk_size, sizes)
+    finally:
+        # stop the workflow using `proof_type=None`.
+        session.call(
+            messages.GetAuthenticityProofChunk(proof_type=None, offset=0, size=0),
+            expect=messages.Success,
+        )
 
 
 @workflow()
