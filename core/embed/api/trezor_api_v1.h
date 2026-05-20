@@ -100,8 +100,8 @@ typedef struct {
   void (*sysevents_poll)(const sysevents_t* awaited, sysevents_t* signalled,
                          uint32_t deadline);
 
-  ssize_t (*syshandle_read)(syshandle_t handle, void* buffer,
-                            size_t buffer_size);
+  // ssize_t (*syshandle_read)(syshandle_t handle, void* buffer,
+  //                           size_t buffer_size);
 
   bool (*ipc_register)(systask_id_t remote, void* buffer, size_t size);
 

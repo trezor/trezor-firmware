@@ -40,8 +40,9 @@
 //! }
 //! ```
 
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(feature = "test"), no_std)]
 #![allow(internal_features)]
+#![allow(dead_code)]
 #![feature(core_intrinsics)]
 #![feature(lang_items)]
 
@@ -60,14 +61,13 @@ pub mod service;
 pub mod ui;
 pub mod util;
 
-#[cfg(any(test, feature = "test"))]
+#[cfg(feature = "test")]
 pub mod mock;
 
 #[macro_use]
 pub mod macros;
 
 /// A wrapper which aligns its inner value to 4 bytes.
-#[derive(Clone, Copy, Debug)]
 #[repr(C, align(8))]
 pub struct Align<T>(
     /// The inner value.
@@ -176,6 +176,7 @@ pub unsafe extern "C" fn applet_main(
     }
 }
 
+#[cfg(feature = "debug")]
 #[cfg(not(feature = "test"))]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
@@ -184,18 +185,6 @@ fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
         info.location().map_or("<unknown>", |loc| &loc.file()[20..]),
         info.location().map_or(0, |loc| loc.line() as i32),
     );
-}
-
-#[cfg(not(feature = "test"))]
-#[lang = "eh_personality"]
-fn eh_personality() -> ! {
-    loop {}
-}
-
-#[cfg(not(feature = "test"))]
-#[unsafe(no_mangle)]
-unsafe extern "C" fn _Unwind_Resume() {
-    unsafe { core::intrinsics::unreachable() };
 }
 
 #[cfg(not(feature = "test"))]

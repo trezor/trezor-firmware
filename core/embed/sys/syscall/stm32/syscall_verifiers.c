@@ -1471,6 +1471,21 @@ access_violation:
   return TS_EACCES;
 }
 
+ts_t app_task_get_id__verified(const app_hash_t *hash, systask_id_t *task_id) {
+  if (!probe_read_access(hash, sizeof(*hash))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(task_id, sizeof(*task_id))) {
+    goto access_violation;
+  }
+
+  return app_task_get_id(hash, task_id);
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
 app_cache_handle_t app_cache_create_image__verified(const app_hash_t *hash,
                                                     size_t image_size) {
   if (!probe_read_access(hash, sizeof(*hash))) {

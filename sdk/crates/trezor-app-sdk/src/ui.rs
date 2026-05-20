@@ -734,7 +734,7 @@ pub fn show_public_key(
         br_name: br_name.into(),
         br_code,
     };
-    ipc_ui_call_confirm(&value)
+    ipc_ui_call(&value)
 }
 
 pub fn should_show_more<'a>(
@@ -807,5 +807,5 @@ pub fn show_address<'a>(
         chunkify,
         br_code,
     };
-    ipc_ui_call_confirm(&value)
+    ipc_ui_call(&value)
 }

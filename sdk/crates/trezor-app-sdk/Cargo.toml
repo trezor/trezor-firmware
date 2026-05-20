@@ -1,3 +1,4 @@
+
 [package]
 name = "trezor-app-sdk"
 version = "0.1.0"
@@ -18,13 +19,23 @@ spin = "0.10.0"
 cty = "0.2.2"
 num_enum = { version = "0.7.5", default-features = false }
 bs58 = { version = "0.5", default-features = false }
-sha3 = { package = "sha3", version = "0.11", optional = true }
-hmac_sha256 = { package = "hmac-sha256", version = "1.1", optional = true }
-hmac_sha512 = { package = "hmac-sha512", version = "1.1", optional = true }
-[build-dependencies]
-quote = "1.0"
-syn = "2.0"
+mock_sha3 = { package = "sha3", version = "0.11", optional = true }
+mock_hmac_sha256 = { package = "hmac-sha256", version = "1.1", optional = true }
+mock_hmac_sha512 = { package = "hmac-sha512", version = "1.1", optional = true }
 
 [features]
-default = []
-test = ["sha3", "hmac_sha256", "hmac_sha512"]
+# --------------------------------------------------------------------------
+# Log level features
+# --------------------------------------------------------------------------
+log_level_error = []
+log_level_warn = []
+log_level_info = []
+log_level_debug = []
+log_level_trace = []
+
+debug = []
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+test = ["mock_sha3", "mock_hmac_sha256", "mock_hmac_sha512"]

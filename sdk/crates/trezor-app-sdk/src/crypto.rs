@@ -224,7 +224,7 @@ pub fn secp256k1_verify_recover(
     let secp256k1 = unsafe { &*get_crypto_or_die().secp256k1 };
 
     if unsafe {
-        (get_crypto_or_die().ecdsa_recover_pub_from_sig)(
+        unwrap!(get_crypto_or_die().ecdsa_recover_pub_from_sig)(
             secp256k1,
             &mut pub_key as *mut u8,
             &signature[1],
@@ -256,7 +256,7 @@ pub fn nist256p1_verify(public_key: &[u8], signature: &[u8], digest: &[u8; 32]) 
     let offset = if signature.len() == 65 { 1 } else { 0 };
     let nist256p1 = unsafe { &*get_crypto_or_die().nist256p1 };
     unsafe {
-        (get_crypto_or_die().ecdsa_verify_digest)(
+        unwrap!(get_crypto_or_die().ecdsa_verify_digest)(
             nist256p1,
             public_key.as_ptr(),
             signature.as_ptr().byte_offset(offset),
