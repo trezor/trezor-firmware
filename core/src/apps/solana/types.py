@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from .definitions import Definitions
-from .transaction.parse import parse_pubkey
 
 if TYPE_CHECKING:
     from enum import IntEnum
@@ -65,6 +64,8 @@ class PropertyTemplate(Generic[T]):
         self.args = args
 
     def is_pubkey(self) -> bool:
+        from .transaction.parse import parse_pubkey
+
         return self.parse is parse_pubkey
 
 
