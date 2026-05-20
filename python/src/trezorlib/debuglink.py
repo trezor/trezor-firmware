@@ -31,7 +31,7 @@ from pathlib import Path
 
 from mnemonic import Mnemonic
 
-from . import client, extapp, mapping, messages, models, protobuf, protocol_v1
+from . import client, mapping, messages, models, protobuf, protocol_v1, trezorapp
 from .exceptions import DeviceLockedError, TrezorFailure
 from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
@@ -1849,8 +1849,8 @@ def load_device(
     session.refresh_features()
 
 
-def load_extapp(session: client.Session, binary: Path) -> int:
-    instance_id = extapp.load(session, binary.read_bytes())
+def load_trezorapp(session: client.Session, binary: Path) -> int:
+    instance_id = trezorapp.load(session, binary.read_bytes())
     return instance_id
 
 

@@ -5,7 +5,12 @@ from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
 from trezor import app
 from trezor.crypto import random
-from trezor.messages import DataChunkAck, DataChunkRequest, ExtAppLoad, ExtAppLoaded
+from trezor.messages import (
+    DataChunkAck,
+    DataChunkRequest,
+    TrezorAppLoad,
+    TrezorAppLoaded,
+)
 from trezor.wire import context
 from trezor.wire.errors import DataError
 
@@ -37,7 +42,7 @@ async def _load_image(hash: AnyBytes, size: int) -> None:
     prog.stop()
 
 
-async def load(msg: ExtAppLoad) -> ExtAppLoaded:
+async def load(msg: TrezorAppLoad) -> TrezorAppLoaded:
     """Load external application from a host and return its hash."""
     from trezor import app
 
@@ -47,11 +52,11 @@ async def load(msg: ExtAppLoad) -> ExtAppLoaded:
         try:
             await _load_image(msg.hash, msg.size)
         except Exception as e:
-            raise DataError(f"ExtApp load failed: {e}") from e
+            raise DataError(f"TrezorApp load failed: {e}") from e
         else:
             task = app.spawn_task(msg.hash)
 
     instance_id = random.uniform(2**32 - 1)
     cache_entry = ustruct.pack("<BI", task.id(), instance_id)
     get_sessionless_cache().set(cc.APP_EXTAPP_IDS, cache_entry)
-    return ExtAppLoaded(instance_id=instance_id)
+    return TrezorAppLoaded(instance_id=instance_id)

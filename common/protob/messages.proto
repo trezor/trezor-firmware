@@ -390,9 +390,9 @@ enum MessageType {
     MessageType_TelemetryGet = 1100 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_Telemetry = 1101 [(bitcoin_only) = true, (wire_out) = true];
 
-    // External Apps
-    MessageType_ExtAppLoad = 9200 [(wire_in) = true];
-    MessageType_ExtAppLoaded = 9201 [(wire_out) = true];
-    MessageType_ExtAppMessage = 9202 [(wire_in) = true];
-    MessageType_ExtAppResponse = 9203 [(wire_out) = true];
+    // Trezor Apps
+    MessageType_TrezorAppLoad = 9200 [(wire_in) = true];
+    MessageType_TrezorAppLoaded = 9201 [(wire_out) = true];
+    MessageType_TrezorAppMessage = 9202 [(wire_in) = true];
+    MessageType_TrezorAppResponse = 9203 [(wire_out) = true];
 }

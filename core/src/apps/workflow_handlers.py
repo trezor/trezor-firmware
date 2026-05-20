@@ -98,11 +98,11 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.VerifyMessage:
         return "apps.bitcoin.verify_message"
 
-    # extapp
-    if msg_type == MessageType.ExtAppLoad:
-        return "apps.extapp.load"
-    if msg_type == MessageType.ExtAppMessage:
-        return "apps.extapp.run"
+    # trezorapp
+    if msg_type == MessageType.TrezorAppLoad:
+        return "apps.trezorapp.load"
+    if msg_type == MessageType.TrezorAppMessage:
+        return "apps.trezorapp.run"
 
     # misc
     if msg_type == MessageType.GetEntropy:

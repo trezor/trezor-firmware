@@ -1,9 +1,12 @@
+#[cfg(feature = "app_loading")]
+use bindgen::EnumVariation;
 #[cfg(all(feature = "test", not(feature = "with_new_crates")))]
 use std::ffi::OsStr;
-use std::{env, path::PathBuf};
-
+#[cfg(feature = "app_loading")]
+use std::fs;
 #[cfg(not(feature = "with_new_crates"))]
 use std::process::Command;
+use std::{env, path::PathBuf};
 
 fn main() {
     // hide warning: unexpected `cfg` condition name: `rust_analyzer` in ffi.rs
@@ -672,6 +675,7 @@ fn generate_crypto_bindings() {
         .unwrap();
 }
 
+#[cfg(feature = "app_loading")]
 fn generate_api_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
     let out_file = PathBuf::from(&out_path).join("api.rs");

@@ -7,7 +7,7 @@ import trezorui_api
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
 from trezor import app, io, loop
-from trezor.messages import ExtAppMessage, ExtAppResponse, Failure
+from trezor.messages import Failure, TrezorAppMessage, TrezorAppResponse
 from trezor.ui import ProgressLayout
 from trezor.ui.layouts.common import interact
 from trezor.ui.layouts.progress import progress
@@ -55,7 +55,7 @@ def from_fn_id(fn_id: int) -> tuple[int, int]:
     return ((fn_id >> 16) & 0xFFFF, fn_id & 0xFFFF)
 
 
-async def run(request: ExtAppMessage) -> ExtAppResponse:
+async def run(request: TrezorAppMessage) -> TrezorAppResponse:
     if request.message_id > 0xFFFF:
         raise DataError("Invalid message ID.")
 
@@ -214,10 +214,10 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 
         elif service == _SERVICE_WIRE_CONTINUE:
             # usb request/ack
-            response = ExtAppResponse(
+            response = TrezorAppResponse(
                 message_id=message_id, data=msg.data, finished=False
             )
-            ack = await context.call(response, ExtAppMessage)
+            ack = await context.call(response, TrezorAppMessage)
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
             io.ipc_send(
@@ -228,7 +228,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 
         elif service == _SERVICE_WIRE_END:
             # usb final message
-            response = ExtAppResponse(
+            response = TrezorAppResponse(
                 message_id=message_id, data=msg.data, finished=True
             )
             # task.unload()
@@ -284,8 +284,11 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 if isinstance(msg.data, (bytes, bytearray))
                 else str(msg.data)
             )
-            response = Failure(code=message_id, message=err_message) # pyright: ignore [reportArgumentType]
-            ack = await context.call(response, ExtAppMessage)
+            response = Failure(
+                code=message_id,  # pyright: ignore [reportArgumentType]
+                message=err_message,
+            )
+            ack = await context.call(response, TrezorAppMessage)
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
             io.ipc_send(

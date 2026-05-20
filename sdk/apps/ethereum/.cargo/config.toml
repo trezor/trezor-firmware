@@ -7,7 +7,7 @@ rustflags = ["-C", "relocation-model=pic"]
 [target.aarch64-apple-darwin]
 rustflags = ["-C", "relocation-model=pic", "-C", "link-arg=-Wl,-export_dynamic"]
 
-[target.thumbv7em-none-eabihf]
+[target.thumbv8m.main-none-eabihf]
 linker = "rust-lld"
 rustflags = [
     "-C",

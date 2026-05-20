@@ -35,19 +35,23 @@ use crate::{
     util::interpolate,
 };
 
+#[cfg(feature = "app_loading")]
 use rkyv::{option::ArchivedOption, tuple::ArchivedTuple2};
+#[cfg(feature = "app_loading")]
 use trezor_structs::{ArchivedSlice, ArchivedStrSlice, ArchivedTrezorUiEnum, Property, StrExt};
 
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
 
+#[cfg(feature = "app_loading")]
+use super::firmware::LongContentScreen;
 use super::{
     component::Button,
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
-        HeaderMsg, Hint, Homescreen, LabelInput, LongContentScreen, MnemonicKeyboard, PinKeyboard,
-        ProgressScreen, SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec,
-        Slip39Input, StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu,
+        HeaderMsg, Hint, Homescreen, LabelInput, MnemonicKeyboard, PinKeyboard, ProgressScreen,
+        SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
+        StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     flow, fonts,
@@ -133,6 +137,7 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
+    #[cfg(feature = "app_loading")]
     fn confirm_long(
         title: TString<'static>,
         pages: usize,
@@ -1637,6 +1642,7 @@ impl FirmwareUI for UIEckhart {
         Ok(flow)
     }
 
+    #[cfg(feature = "app_loading")]
     fn process_ipc_message(
         data: &[u8],
         request_cb: impl Fn(&[u8], u16) + 'static,

@@ -63,4 +63,3 @@ pub fn printer() -> impl ufmt::uWrite {
 pub fn print(to_log: &str) {
     PRINTER.try_read().unwrap().print(to_log);
 }
-

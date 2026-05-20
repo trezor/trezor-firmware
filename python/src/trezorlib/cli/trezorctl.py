@@ -49,7 +49,6 @@ from . import (
     eos,
     ethereum,
     evolu,
-    extapp,
     fido,
     firmware,
     monero,
@@ -61,6 +60,7 @@ from . import (
     stellar,
     telemetry,
     tezos,
+    trezorapp,
     tron,
     with_client,
 )
@@ -453,7 +453,7 @@ cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
 cli.add_command(benchmark.cli)
 cli.add_command(ble.cli)
-cli.add_command(extapp.cli)
+cli.add_command(trezorapp.cli)
 
 #
 # Main

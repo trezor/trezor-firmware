@@ -23,7 +23,7 @@ from pathlib import Path
 
 import click
 
-from .. import extapp
+from .. import trezorapp
 from . import with_session
 
 if t.TYPE_CHECKING:
@@ -32,7 +32,7 @@ if t.TYPE_CHECKING:
 LOG = logging.getLogger(__name__)
 
 
-@click.group(name="extapp")
+@click.group(name="trezorapp")
 def cli() -> None:
     """External application commands - load and run external apps."""
 
@@ -46,11 +46,11 @@ def load(session: "Session", app_path: Path) -> None:
     """Load an external application onto the device.
 
     Example:
-        trezorctl extapp load ./sdk/apps/funnycoin-rust/target/debug/libfunnycoin_rust.so
+        trezorctl trezorapp load ./sdk/apps/funnycoin-rust/target/debug/libfunnycoin_rust.so
     """
     try:
         app_bytes = app_path.read_bytes()
-        app_hash = extapp.load(session, app_bytes)
+        app_hash = trezorapp.load(session, app_bytes)
         click.echo(f"Loaded app hash: {app_hash:064x}")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)

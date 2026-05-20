@@ -46,7 +46,7 @@ impl Model {
     /// Returns the Rust target triple for the building firmware for hardware target
     pub fn target_triple(self) -> &'static str {
         match self {
-            Model::T3T1 | Model::T3W1 => "thumbv7em-none-eabihf",
+            Model::T3T1 | Model::T3W1 => "thumbv8m.main-none-eabihf",
         }
     }
 

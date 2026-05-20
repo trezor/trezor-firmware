@@ -450,8 +450,6 @@ pub fn confirm_value_intro(
     ipc_ui_call(&value)
 }
 
-
-
 pub fn confirm_summary<'a>(
     title: Option<&str>,
     amount: Option<&str>,
@@ -746,15 +744,7 @@ pub fn should_show_more<'a>(
     verb: &str,
 ) -> Result<bool> {
     // TODO: move mapping to the coreapp
-    match confirm_with_info(
-        title,
-        None,
-        para,
-        verb,
-        Some(button_text),
-        br_name,
-        br_code,
-    ) {
+    match confirm_with_info(title, None, para, verb, Some(button_text), br_name, br_code) {
         Ok(TrezorUiResult::Confirmed) => Ok(false),
         Ok(TrezorUiResult::Info) => Ok(true),
         _ => {
