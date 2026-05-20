@@ -393,10 +393,13 @@ message FirmwareHash {
  * Request: Request a signature of the provided challenge.
  * @start
  * @next AuthenticityProof
+ * @next AuthenticityProofSizes
  * @next Failure
  */
 message AuthenticateDevice {
     required bytes challenge = 1;  // A random challenge to sign.
+    optional bool stream = 2;      // If set, the certificates and signatures data is sent using a stream of
+                                   // AuthenticityProofChunk responses (to avoid sending one large response).
 }
 
 /**
@@ -417,6 +420,45 @@ message AuthenticityProof {
     repeated bytes mcu_certificates = 5;     // An MCU device certificate signed by Trezor company's root CA.
     optional bytes mcu_signature = 6;        // A DER-encoded signature of "\x13AuthenticateDevice:" + length-prefixed
                                              // challenge that should be verified using the MCU device certificate.
+}
+
+/**
+ * Response: Sizes of the corresponding proof parts (see above).
+ * @next GetAuthenticityProofChunk
+ */
+message AuthenticityProofSizes {
+    repeated uint32 optiga_certificates = 1;
+    required uint32 optiga_signature = 2;
+    repeated uint32 tropic_certificates = 3;
+    optional uint32 tropic_signature = 4;
+    repeated uint32 mcu_certificates = 5;
+    optional uint32 mcu_signature = 6;
+}
+
+/**
+ * Request: Request authenticity proof data chunk, or finish the workflow if `proof_type` is not set.
+ * @next AuthenticityProofChunk
+ * @next Success
+ */
+message GetAuthenticityProofChunk {
+    optional AuthenticityProofType proof_type = 1;  // Specifies proof part to fetch.
+    optional uint32 index = 2;   // If set, certificates[index] is fetched. Otherwise, signature is fetched.
+    required uint32 offset = 3;  // Data chunk offset (in bytes).
+    required uint32 size = 4;    // Data chunk size (in bytes).
+
+    enum AuthenticityProofType {
+        OPTIGA = 0;
+        TROPIC = 1;
+        MCU = 2;
+    }
+}
+
+/**
+ * Response: Return requested authenticity proof data chunk.
+ * @next GetAuthenticityProofChunk
+ */
+message AuthenticityProofChunk {
+    required bytes chunk = 1;
 }
 
 /**

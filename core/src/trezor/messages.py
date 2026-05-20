@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import TypeGuard
     from trezor.enums import AmountUnit  # noqa: F401
+    from trezor.enums import AuthenticityProofType  # noqa: F401
     from trezor.enums import BackupAvailability  # noqa: F401
     from trezor.enums import BackupMethod  # noqa: F401
     from trezor.enums import BackupType  # noqa: F401
@@ -2415,11 +2416,13 @@ if TYPE_CHECKING:
 
     class AuthenticateDevice(protobuf.MessageType):
         challenge: "AnyBytes"
+        stream: "bool | None"
 
         def __init__(
             self,
             *,
             challenge: "AnyBytes",
+            stream: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2449,6 +2452,64 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthenticityProof"]:
+            return isinstance(msg, cls)
+
+    class AuthenticityProofSizes(protobuf.MessageType):
+        optiga_certificates: "list[int]"
+        optiga_signature: "int"
+        tropic_certificates: "list[int]"
+        tropic_signature: "int | None"
+        mcu_certificates: "list[int]"
+        mcu_signature: "int | None"
+
+        def __init__(
+            self,
+            *,
+            optiga_signature: "int",
+            optiga_certificates: "list[int] | None" = None,
+            tropic_certificates: "list[int] | None" = None,
+            mcu_certificates: "list[int] | None" = None,
+            tropic_signature: "int | None" = None,
+            mcu_signature: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthenticityProofSizes"]:
+            return isinstance(msg, cls)
+
+    class GetAuthenticityProofChunk(protobuf.MessageType):
+        proof_type: "AuthenticityProofType | None"
+        index: "int | None"
+        offset: "int"
+        size: "int"
+
+        def __init__(
+            self,
+            *,
+            offset: "int",
+            size: "int",
+            proof_type: "AuthenticityProofType | None" = None,
+            index: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["GetAuthenticityProofChunk"]:
+            return isinstance(msg, cls)
+
+    class AuthenticityProofChunk(protobuf.MessageType):
+        chunk: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            chunk: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthenticityProofChunk"]:
             return isinstance(msg, cls)
 
     class WipeDevice(protobuf.MessageType):

@@ -247,6 +247,11 @@ if TYPE_CHECKING:
         ENABLE = 1
         REFRESH = 2
 
+    class AuthenticityProofType(IntEnum):
+        OPTIGA = 0
+        TROPIC = 1
+        MCU = 2
+
     class RecoveryDeviceInputMethod(IntEnum):
         ScrambledWords = 0
         Matrix = 1
@@ -473,12 +478,15 @@ if TYPE_CHECKING:
         UnlockBootloader = 96
         AuthenticateDevice = 97
         AuthenticityProof = 98
+        AuthenticityProofSizes = 99
         ChangeLanguage = 990
         DataChunkRequest = 991
         DataChunkAck = 992
         SetBrightness = 993
         GetSerialNumber = 996
         SerialNumber = 997
+        GetAuthenticityProofChunk = 998
+        AuthenticityProofChunk = 999
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81

@@ -22,6 +22,7 @@
 // uncollectable garbage in the GC arena.
 
 Q(AmountUnit)
+Q(AuthenticityProofType)
 Q(BackupAvailability)
 Q(BackupMethod)
 Q(BackupType)
@@ -338,6 +339,7 @@ Q(trezor.crypto.scripts)
 Q(trezor.crypto.slip39)
 Q(trezor.enums)
 Q(trezor.enums.AmountUnit)
+Q(trezor.enums.AuthenticityProofType)
 Q(trezor.enums.BackupAvailability)
 Q(trezor.enums.BackupMethod)
 Q(trezor.enums.BackupType)

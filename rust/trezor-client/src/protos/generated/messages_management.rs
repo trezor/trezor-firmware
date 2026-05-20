@@ -6374,6 +6374,8 @@ pub struct AuthenticateDevice {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticateDevice.challenge)
     pub challenge: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticateDevice.stream)
+    pub stream: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.AuthenticateDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -6426,13 +6428,37 @@ impl AuthenticateDevice {
         self.challenge.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bool stream = 2;
+
+    pub fn stream(&self) -> bool {
+        self.stream.unwrap_or(false)
+    }
+
+    pub fn clear_stream(&mut self) {
+        self.stream = ::std::option::Option::None;
+    }
+
+    pub fn has_stream(&self) -> bool {
+        self.stream.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_stream(&mut self, v: bool) {
+        self.stream = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "challenge",
             |m: &AuthenticateDevice| { &m.challenge },
             |m: &mut AuthenticateDevice| { &mut m.challenge },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "stream",
+            |m: &AuthenticateDevice| { &m.stream },
+            |m: &mut AuthenticateDevice| { &mut m.stream },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<AuthenticateDevice>(
             "AuthenticateDevice",
@@ -6458,6 +6484,9 @@ impl ::protobuf::Message for AuthenticateDevice {
                 10 => {
                     self.challenge = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                16 => {
+                    self.stream = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -6473,6 +6502,9 @@ impl ::protobuf::Message for AuthenticateDevice {
         if let Some(v) = self.challenge.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
+        if let Some(v) = self.stream {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -6481,6 +6513,9 @@ impl ::protobuf::Message for AuthenticateDevice {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.challenge.as_ref() {
             os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.stream {
+            os.write_bool(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -6500,12 +6535,14 @@ impl ::protobuf::Message for AuthenticateDevice {
 
     fn clear(&mut self) {
         self.challenge = ::std::option::Option::None;
+        self.stream = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static AuthenticateDevice {
         static instance: AuthenticateDevice = AuthenticateDevice {
             challenge: ::std::option::Option::None,
+            stream: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6849,6 +6886,779 @@ impl ::std::fmt::Display for AuthenticityProof {
 }
 
 impl ::protobuf::reflect::ProtobufValue for AuthenticityProof {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.management.AuthenticityProofSizes)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct AuthenticityProofSizes {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProofSizes.optiga_certificates)
+    pub optiga_certificates: ::std::vec::Vec<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProofSizes.optiga_signature)
+    pub optiga_signature: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProofSizes.tropic_certificates)
+    pub tropic_certificates: ::std::vec::Vec<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProofSizes.tropic_signature)
+    pub tropic_signature: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProofSizes.mcu_certificates)
+    pub mcu_certificates: ::std::vec::Vec<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProofSizes.mcu_signature)
+    pub mcu_signature: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.management.AuthenticityProofSizes.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a AuthenticityProofSizes {
+    fn default() -> &'a AuthenticityProofSizes {
+        <AuthenticityProofSizes as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl AuthenticityProofSizes {
+    pub fn new() -> AuthenticityProofSizes {
+        ::std::default::Default::default()
+    }
+
+    // required uint32 optiga_signature = 2;
+
+    pub fn optiga_signature(&self) -> u32 {
+        self.optiga_signature.unwrap_or(0)
+    }
+
+    pub fn clear_optiga_signature(&mut self) {
+        self.optiga_signature = ::std::option::Option::None;
+    }
+
+    pub fn has_optiga_signature(&self) -> bool {
+        self.optiga_signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_optiga_signature(&mut self, v: u32) {
+        self.optiga_signature = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 tropic_signature = 4;
+
+    pub fn tropic_signature(&self) -> u32 {
+        self.tropic_signature.unwrap_or(0)
+    }
+
+    pub fn clear_tropic_signature(&mut self) {
+        self.tropic_signature = ::std::option::Option::None;
+    }
+
+    pub fn has_tropic_signature(&self) -> bool {
+        self.tropic_signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_tropic_signature(&mut self, v: u32) {
+        self.tropic_signature = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 mcu_signature = 6;
+
+    pub fn mcu_signature(&self) -> u32 {
+        self.mcu_signature.unwrap_or(0)
+    }
+
+    pub fn clear_mcu_signature(&mut self) {
+        self.mcu_signature = ::std::option::Option::None;
+    }
+
+    pub fn has_mcu_signature(&self) -> bool {
+        self.mcu_signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mcu_signature(&mut self, v: u32) {
+        self.mcu_signature = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "optiga_certificates",
+            |m: &AuthenticityProofSizes| { &m.optiga_certificates },
+            |m: &mut AuthenticityProofSizes| { &mut m.optiga_certificates },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "optiga_signature",
+            |m: &AuthenticityProofSizes| { &m.optiga_signature },
+            |m: &mut AuthenticityProofSizes| { &mut m.optiga_signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "tropic_certificates",
+            |m: &AuthenticityProofSizes| { &m.tropic_certificates },
+            |m: &mut AuthenticityProofSizes| { &mut m.tropic_certificates },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "tropic_signature",
+            |m: &AuthenticityProofSizes| { &m.tropic_signature },
+            |m: &mut AuthenticityProofSizes| { &mut m.tropic_signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "mcu_certificates",
+            |m: &AuthenticityProofSizes| { &m.mcu_certificates },
+            |m: &mut AuthenticityProofSizes| { &mut m.mcu_certificates },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mcu_signature",
+            |m: &AuthenticityProofSizes| { &m.mcu_signature },
+            |m: &mut AuthenticityProofSizes| { &mut m.mcu_signature },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<AuthenticityProofSizes>(
+            "AuthenticityProofSizes",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for AuthenticityProofSizes {
+    const NAME: &'static str = "AuthenticityProofSizes";
+
+    fn is_initialized(&self) -> bool {
+        if self.optiga_signature.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    is.read_repeated_packed_uint32_into(&mut self.optiga_certificates)?;
+                },
+                8 => {
+                    self.optiga_certificates.push(is.read_uint32()?);
+                },
+                16 => {
+                    self.optiga_signature = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                26 => {
+                    is.read_repeated_packed_uint32_into(&mut self.tropic_certificates)?;
+                },
+                24 => {
+                    self.tropic_certificates.push(is.read_uint32()?);
+                },
+                32 => {
+                    self.tropic_signature = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                42 => {
+                    is.read_repeated_packed_uint32_into(&mut self.mcu_certificates)?;
+                },
+                40 => {
+                    self.mcu_certificates.push(is.read_uint32()?);
+                },
+                48 => {
+                    self.mcu_signature = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.optiga_certificates {
+            my_size += ::protobuf::rt::uint32_size(1, *value);
+        };
+        if let Some(v) = self.optiga_signature {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        for value in &self.tropic_certificates {
+            my_size += ::protobuf::rt::uint32_size(3, *value);
+        };
+        if let Some(v) = self.tropic_signature {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        for value in &self.mcu_certificates {
+            my_size += ::protobuf::rt::uint32_size(5, *value);
+        };
+        if let Some(v) = self.mcu_signature {
+            my_size += ::protobuf::rt::uint32_size(6, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.optiga_certificates {
+            os.write_uint32(1, *v)?;
+        };
+        if let Some(v) = self.optiga_signature {
+            os.write_uint32(2, v)?;
+        }
+        for v in &self.tropic_certificates {
+            os.write_uint32(3, *v)?;
+        };
+        if let Some(v) = self.tropic_signature {
+            os.write_uint32(4, v)?;
+        }
+        for v in &self.mcu_certificates {
+            os.write_uint32(5, *v)?;
+        };
+        if let Some(v) = self.mcu_signature {
+            os.write_uint32(6, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> AuthenticityProofSizes {
+        AuthenticityProofSizes::new()
+    }
+
+    fn clear(&mut self) {
+        self.optiga_certificates.clear();
+        self.optiga_signature = ::std::option::Option::None;
+        self.tropic_certificates.clear();
+        self.tropic_signature = ::std::option::Option::None;
+        self.mcu_certificates.clear();
+        self.mcu_signature = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static AuthenticityProofSizes {
+        static instance: AuthenticityProofSizes = AuthenticityProofSizes {
+            optiga_certificates: ::std::vec::Vec::new(),
+            optiga_signature: ::std::option::Option::None,
+            tropic_certificates: ::std::vec::Vec::new(),
+            tropic_signature: ::std::option::Option::None,
+            mcu_certificates: ::std::vec::Vec::new(),
+            mcu_signature: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for AuthenticityProofSizes {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("AuthenticityProofSizes").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for AuthenticityProofSizes {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for AuthenticityProofSizes {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.management.GetAuthenticityProofChunk)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct GetAuthenticityProofChunk {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.GetAuthenticityProofChunk.proof_type)
+    pub proof_type: ::std::option::Option<::protobuf::EnumOrUnknown<get_authenticity_proof_chunk::AuthenticityProofType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.GetAuthenticityProofChunk.index)
+    pub index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.GetAuthenticityProofChunk.offset)
+    pub offset: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.GetAuthenticityProofChunk.size)
+    pub size: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.management.GetAuthenticityProofChunk.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a GetAuthenticityProofChunk {
+    fn default() -> &'a GetAuthenticityProofChunk {
+        <GetAuthenticityProofChunk as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl GetAuthenticityProofChunk {
+    pub fn new() -> GetAuthenticityProofChunk {
+        ::std::default::Default::default()
+    }
+
+    // optional .hw.trezor.messages.management.GetAuthenticityProofChunk.AuthenticityProofType proof_type = 1;
+
+    pub fn proof_type(&self) -> get_authenticity_proof_chunk::AuthenticityProofType {
+        match self.proof_type {
+            Some(e) => e.enum_value_or(get_authenticity_proof_chunk::AuthenticityProofType::OPTIGA),
+            None => get_authenticity_proof_chunk::AuthenticityProofType::OPTIGA,
+        }
+    }
+
+    pub fn clear_proof_type(&mut self) {
+        self.proof_type = ::std::option::Option::None;
+    }
+
+    pub fn has_proof_type(&self) -> bool {
+        self.proof_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_proof_type(&mut self, v: get_authenticity_proof_chunk::AuthenticityProofType) {
+        self.proof_type = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // optional uint32 index = 2;
+
+    pub fn index(&self) -> u32 {
+        self.index.unwrap_or(0)
+    }
+
+    pub fn clear_index(&mut self) {
+        self.index = ::std::option::Option::None;
+    }
+
+    pub fn has_index(&self) -> bool {
+        self.index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_index(&mut self, v: u32) {
+        self.index = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 offset = 3;
+
+    pub fn offset(&self) -> u32 {
+        self.offset.unwrap_or(0)
+    }
+
+    pub fn clear_offset(&mut self) {
+        self.offset = ::std::option::Option::None;
+    }
+
+    pub fn has_offset(&self) -> bool {
+        self.offset.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_offset(&mut self, v: u32) {
+        self.offset = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 size = 4;
+
+    pub fn size(&self) -> u32 {
+        self.size.unwrap_or(0)
+    }
+
+    pub fn clear_size(&mut self) {
+        self.size = ::std::option::Option::None;
+    }
+
+    pub fn has_size(&self) -> bool {
+        self.size.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_size(&mut self, v: u32) {
+        self.size = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "proof_type",
+            |m: &GetAuthenticityProofChunk| { &m.proof_type },
+            |m: &mut GetAuthenticityProofChunk| { &mut m.proof_type },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "index",
+            |m: &GetAuthenticityProofChunk| { &m.index },
+            |m: &mut GetAuthenticityProofChunk| { &mut m.index },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "offset",
+            |m: &GetAuthenticityProofChunk| { &m.offset },
+            |m: &mut GetAuthenticityProofChunk| { &mut m.offset },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "size",
+            |m: &GetAuthenticityProofChunk| { &m.size },
+            |m: &mut GetAuthenticityProofChunk| { &mut m.size },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<GetAuthenticityProofChunk>(
+            "GetAuthenticityProofChunk",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for GetAuthenticityProofChunk {
+    const NAME: &'static str = "GetAuthenticityProofChunk";
+
+    fn is_initialized(&self) -> bool {
+        if self.offset.is_none() {
+            return false;
+        }
+        if self.size.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.proof_type = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                16 => {
+                    self.index = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                24 => {
+                    self.offset = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                32 => {
+                    self.size = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.proof_type {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.index {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.offset {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.size {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.proof_type {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.index {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.offset {
+            os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.size {
+            os.write_uint32(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> GetAuthenticityProofChunk {
+        GetAuthenticityProofChunk::new()
+    }
+
+    fn clear(&mut self) {
+        self.proof_type = ::std::option::Option::None;
+        self.index = ::std::option::Option::None;
+        self.offset = ::std::option::Option::None;
+        self.size = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static GetAuthenticityProofChunk {
+        static instance: GetAuthenticityProofChunk = GetAuthenticityProofChunk {
+            proof_type: ::std::option::Option::None,
+            index: ::std::option::Option::None,
+            offset: ::std::option::Option::None,
+            size: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for GetAuthenticityProofChunk {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("GetAuthenticityProofChunk").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for GetAuthenticityProofChunk {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GetAuthenticityProofChunk {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `GetAuthenticityProofChunk`
+pub mod get_authenticity_proof_chunk {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.management.GetAuthenticityProofChunk.AuthenticityProofType)
+    pub enum AuthenticityProofType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.GetAuthenticityProofChunk.AuthenticityProofType.OPTIGA)
+        OPTIGA = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.GetAuthenticityProofChunk.AuthenticityProofType.TROPIC)
+        TROPIC = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.GetAuthenticityProofChunk.AuthenticityProofType.MCU)
+        MCU = 2,
+    }
+
+    impl ::protobuf::Enum for AuthenticityProofType {
+        const NAME: &'static str = "AuthenticityProofType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<AuthenticityProofType> {
+            match value {
+                0 => ::std::option::Option::Some(AuthenticityProofType::OPTIGA),
+                1 => ::std::option::Option::Some(AuthenticityProofType::TROPIC),
+                2 => ::std::option::Option::Some(AuthenticityProofType::MCU),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<AuthenticityProofType> {
+            match str {
+                "OPTIGA" => ::std::option::Option::Some(AuthenticityProofType::OPTIGA),
+                "TROPIC" => ::std::option::Option::Some(AuthenticityProofType::TROPIC),
+                "MCU" => ::std::option::Option::Some(AuthenticityProofType::MCU),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [AuthenticityProofType] = &[
+            AuthenticityProofType::OPTIGA,
+            AuthenticityProofType::TROPIC,
+            AuthenticityProofType::MCU,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for AuthenticityProofType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("GetAuthenticityProofChunk.AuthenticityProofType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for AuthenticityProofType {
+        fn default() -> Self {
+            AuthenticityProofType::OPTIGA
+        }
+    }
+
+    impl AuthenticityProofType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<AuthenticityProofType>("GetAuthenticityProofChunk.AuthenticityProofType")
+        }
+    }
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.management.AuthenticityProofChunk)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct AuthenticityProofChunk {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProofChunk.chunk)
+    pub chunk: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.management.AuthenticityProofChunk.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a AuthenticityProofChunk {
+    fn default() -> &'a AuthenticityProofChunk {
+        <AuthenticityProofChunk as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl AuthenticityProofChunk {
+    pub fn new() -> AuthenticityProofChunk {
+        ::std::default::Default::default()
+    }
+
+    // required bytes chunk = 1;
+
+    pub fn chunk(&self) -> &[u8] {
+        match self.chunk.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_chunk(&mut self) {
+        self.chunk = ::std::option::Option::None;
+    }
+
+    pub fn has_chunk(&self) -> bool {
+        self.chunk.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_chunk(&mut self, v: ::std::vec::Vec<u8>) {
+        self.chunk = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_chunk(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.chunk.is_none() {
+            self.chunk = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.chunk.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_chunk(&mut self) -> ::std::vec::Vec<u8> {
+        self.chunk.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "chunk",
+            |m: &AuthenticityProofChunk| { &m.chunk },
+            |m: &mut AuthenticityProofChunk| { &mut m.chunk },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<AuthenticityProofChunk>(
+            "AuthenticityProofChunk",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for AuthenticityProofChunk {
+    const NAME: &'static str = "AuthenticityProofChunk";
+
+    fn is_initialized(&self) -> bool {
+        if self.chunk.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.chunk = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.chunk.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.chunk.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> AuthenticityProofChunk {
+        AuthenticityProofChunk::new()
+    }
+
+    fn clear(&mut self) {
+        self.chunk = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static AuthenticityProofChunk {
+        static instance: AuthenticityProofChunk = AuthenticityProofChunk {
+            chunk: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for AuthenticityProofChunk {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("AuthenticityProofChunk").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for AuthenticityProofChunk {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for AuthenticityProofChunk {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -12706,79 +13516,93 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x01\x20\x02(\rR\x04size\"#\n\x07Entropy\x12\x18\n\x07entropy\x18\
     \x01\x20\x02(\x0cR\x07entropy\"/\n\x0fGetFirmwareHash\x12\x1c\n\tchallen\
     ge\x18\x01\x20\x01(\x0cR\tchallenge\"\"\n\x0cFirmwareHash\x12\x12\n\x04h\
-    ash\x18\x01\x20\x02(\x0cR\x04hash\"2\n\x12AuthenticateDevice\x12\x1c\n\t\
-    challenge\x18\x01\x20\x02(\x0cR\tchallenge\"\x9b\x02\n\x11AuthenticityPr\
-    oof\x12/\n\x13optiga_certificates\x18\x01\x20\x03(\x0cR\x12optigaCertifi\
-    cates\x12)\n\x10optiga_signature\x18\x02\x20\x02(\x0cR\x0foptigaSignatur\
-    e\x12/\n\x13tropic_certificates\x18\x03\x20\x03(\x0cR\x12tropicCertifica\
-    tes\x12)\n\x10tropic_signature\x18\x04\x20\x01(\x0cR\x0ftropicSignature\
-    \x12)\n\x10mcu_certificates\x18\x05\x20\x03(\x0cR\x0fmcuCertificates\x12\
-    #\n\rmcu_signature\x18\x06\x20\x01(\x0cR\x0cmcuSignature\"\x0c\n\nWipeDe\
-    vice\"\xda\x02\n\nLoadDevice\x12\x1c\n\tmnemonics\x18\x01\x20\x03(\tR\tm\
-    nemonics\x12\x10\n\x03pin\x18\x03\x20\x01(\tR\x03pin\x123\n\x15passphras\
-    e_protection\x18\x04\x20\x01(\x08R\x14passphraseProtection\x12\x1e\n\x08\
-    language\x18\x05\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\
-    \x18\x06\x20\x01(\tR\x05label\x12#\n\rskip_checksum\x18\x07\x20\x01(\x08\
-    R\x0cskipChecksum\x12\x1f\n\x0bu2f_counter\x18\x08\x20\x01(\rR\nu2fCount\
-    er\x12!\n\x0cneeds_backup\x18\t\x20\x01(\x08R\x0bneedsBackup\x12\x1b\n\t\
-    no_backup\x18\n\x20\x01(\x08R\x08noBackup\x12+\n\x11unfinished_backup\
-    \x18\x0b\x20\x01(\x08R\x10unfinishedBackup\"\xf8\x03\n\x0bResetDevice\
-    \x12\x1f\n\x08strength\x18\x02\x20\x01(\r:\x03256R\x08strength\x123\n\
-    \x15passphrase_protection\x18\x03\x20\x01(\x08R\x14passphraseProtection\
-    \x12%\n\x0epin_protection\x18\x04\x20\x01(\x08R\rpinProtection\x12\x1e\n\
-    \x08language\x18\x05\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05l\
-    abel\x18\x06\x20\x01(\tR\x05label\x12\x1f\n\x0bu2f_counter\x18\x07\x20\
-    \x01(\rR\nu2fCounter\x12\x1f\n\x0bskip_backup\x18\x08\x20\x01(\x08R\nski\
-    pBackup\x12\x1b\n\tno_backup\x18\t\x20\x01(\x08R\x08noBackup\x12Q\n\x0bb\
-    ackup_type\x18\n\x20\x01(\x0e2).hw.trezor.messages.management.BackupType\
-    :\x05Bip39R\nbackupType\x12#\n\rentropy_check\x18\x0b\x20\x01(\x08R\x0ce\
-    ntropyCheck\x12Y\n\rbackup_method\x18\x0c\x20\x01(\x0e2+.hw.trezor.messa\
-    ges.management.BackupMethod:\x07DisplayR\x0cbackupMethodJ\x04\x08\x01\
-    \x10\x02\"\xc0\x02\n\x0cBackupDevice\x12'\n\x0fgroup_threshold\x18\x01\
-    \x20\x01(\rR\x0egroupThreshold\x12O\n\x06groups\x18\x02\x20\x03(\x0b27.h\
-    w.trezor.messages.management.BackupDevice.Slip39GroupR\x06groups\x12Y\n\
-    \rbackup_method\x18\x03\x20\x01(\x0e2+.hw.trezor.messages.management.Bac\
-    kupMethod:\x07DisplayR\x0cbackupMethod\x1a[\n\x0bSlip39Group\x12)\n\x10m\
-    ember_threshold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12!\n\x0cmember_\
-    count\x18\x02\x20\x02(\rR\x0bmemberCount\"b\n\x0eEntropyRequest\x12-\n\
-    \x12entropy_commitment\x18\x01\x20\x01(\x0cR\x11entropyCommitment\x12!\n\
-    \x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bprevEntropy\"&\n\nEntropyAck\
-    \x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\x13\n\x11Entrop\
-    yCheckReady\"5\n\x14EntropyCheckContinue\x12\x1d\n\x06finish\x18\x01\x20\
-    \x01(\x08:\x05falseR\x06finish\"\xdf\x04\n\x0eRecoveryDevice\x12\x1d\n\n\
-    word_count\x18\x01\x20\x01(\rR\twordCount\x123\n\x15passphrase_protectio\
-    n\x18\x02\x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\
-    \x18\x03\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x04\x20\
-    \x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x05\x20\x01(\tR\
-    \x05label\x12)\n\x10enforce_wordlist\x18\x06\x20\x01(\x08R\x0fenforceWor\
-    dlist\x12j\n\x0cinput_method\x18\x08\x20\x01(\x0e2G.hw.trezor.messages.m\
-    anagement.RecoveryDevice.RecoveryDeviceInputMethodR\x0binputMethod\x12\
-    \x1f\n\x0bu2f_counter\x18\t\x20\x01(\rR\nu2fCounter\x12O\n\x04type\x18\n\
-    \x20\x01(\x0e2+.hw.trezor.messages.management.RecoveryType:\x0eNormalRec\
-    overyR\x04type\x12P\n\rbackup_method\x18\x0b\x20\x01(\x0e2+.hw.trezor.me\
-    ssages.management.BackupMethodR\x0cbackupMethod\";\n\x19RecoveryDeviceIn\
-    putMethod\x12\x12\n\x0eScrambledWords\x10\0\x12\n\n\x06Matrix\x10\x01J\
-    \x04\x08\x07\x10\x08\"\xc5\x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\
-    \x20\x02(\x0e2:.hw.trezor.messages.management.WordRequest.WordRequestTyp\
-    eR\x04type\"f\n\x0fWordRequestType\x12\x19\n\x15WordRequestType_Plain\
-    \x10\0\x12\x1b\n\x17WordRequestType_Matrix9\x10\x01\x12\x1b\n\x17WordReq\
-    uestType_Matrix6\x10\x02\"\x1d\n\x07WordAck\x12\x12\n\x04word\x18\x01\
-    \x20\x02(\tR\x04word\"0\n\rSetU2FCounter\x12\x1f\n\x0bu2f_counter\x18\
-    \x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\"1\n\x0eNextU2\
-    FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x11\
-    \n\x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\x15\n\x13CancelA\
-    uthorization\"\xeb\x01\n\x12RebootToBootloader\x12o\n\x0cboot_command\
-    \x18\x01\x20\x01(\x0e2=.hw.trezor.messages.management.RebootToBootloader\
-    .BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ffirmware_header\
-    \x18\x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBootCommand\x12\x11\n\r\
-    STOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01J\x04\x08\x03\
-    \x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\n\x05nonce\x18\x01\
-    \x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\
-    \x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\
-    '\n\x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x02(\x0cR\x03mac\
-    \"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBootloader\"%\n\rSetBrig\
-    htness\x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"\x11\n\x0fGetSer\
-    ialNumber\"3\n\x0cSerialNumber\x12#\n\rserial_number\x18\x01\x20\x02(\tR\
+    ash\x18\x01\x20\x02(\x0cR\x04hash\"J\n\x12AuthenticateDevice\x12\x1c\n\t\
+    challenge\x18\x01\x20\x02(\x0cR\tchallenge\x12\x16\n\x06stream\x18\x02\
+    \x20\x01(\x08R\x06stream\"\x9b\x02\n\x11AuthenticityProof\x12/\n\x13opti\
+    ga_certificates\x18\x01\x20\x03(\x0cR\x12optigaCertificates\x12)\n\x10op\
+    tiga_signature\x18\x02\x20\x02(\x0cR\x0foptigaSignature\x12/\n\x13tropic\
+    _certificates\x18\x03\x20\x03(\x0cR\x12tropicCertificates\x12)\n\x10trop\
+    ic_signature\x18\x04\x20\x01(\x0cR\x0ftropicSignature\x12)\n\x10mcu_cert\
+    ificates\x18\x05\x20\x03(\x0cR\x0fmcuCertificates\x12#\n\rmcu_signature\
+    \x18\x06\x20\x01(\x0cR\x0cmcuSignature\"\xa0\x02\n\x16AuthenticityProofS\
+    izes\x12/\n\x13optiga_certificates\x18\x01\x20\x03(\rR\x12optigaCertific\
+    ates\x12)\n\x10optiga_signature\x18\x02\x20\x02(\rR\x0foptigaSignature\
+    \x12/\n\x13tropic_certificates\x18\x03\x20\x03(\rR\x12tropicCertificates\
+    \x12)\n\x10tropic_signature\x18\x04\x20\x01(\rR\x0ftropicSignature\x12)\
+    \n\x10mcu_certificates\x18\x05\x20\x03(\rR\x0fmcuCertificates\x12#\n\rmc\
+    u_signature\x18\x06\x20\x01(\rR\x0cmcuSignature\"\x86\x02\n\x19GetAuthen\
+    ticityProofChunk\x12m\n\nproof_type\x18\x01\x20\x01(\x0e2N.hw.trezor.mes\
+    sages.management.GetAuthenticityProofChunk.AuthenticityProofTypeR\tproof\
+    Type\x12\x14\n\x05index\x18\x02\x20\x01(\rR\x05index\x12\x16\n\x06offset\
+    \x18\x03\x20\x02(\rR\x06offset\x12\x12\n\x04size\x18\x04\x20\x02(\rR\x04\
+    size\"8\n\x15AuthenticityProofType\x12\n\n\x06OPTIGA\x10\0\x12\n\n\x06TR\
+    OPIC\x10\x01\x12\x07\n\x03MCU\x10\x02\".\n\x16AuthenticityProofChunk\x12\
+    \x14\n\x05chunk\x18\x01\x20\x02(\x0cR\x05chunk\"\x0c\n\nWipeDevice\"\xda\
+    \x02\n\nLoadDevice\x12\x1c\n\tmnemonics\x18\x01\x20\x03(\tR\tmnemonics\
+    \x12\x10\n\x03pin\x18\x03\x20\x01(\tR\x03pin\x123\n\x15passphrase_protec\
+    tion\x18\x04\x20\x01(\x08R\x14passphraseProtection\x12\x1e\n\x08language\
+    \x18\x05\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\
+    \x20\x01(\tR\x05label\x12#\n\rskip_checksum\x18\x07\x20\x01(\x08R\x0cski\
+    pChecksum\x12\x1f\n\x0bu2f_counter\x18\x08\x20\x01(\rR\nu2fCounter\x12!\
+    \n\x0cneeds_backup\x18\t\x20\x01(\x08R\x0bneedsBackup\x12\x1b\n\tno_back\
+    up\x18\n\x20\x01(\x08R\x08noBackup\x12+\n\x11unfinished_backup\x18\x0b\
+    \x20\x01(\x08R\x10unfinishedBackup\"\xf8\x03\n\x0bResetDevice\x12\x1f\n\
+    \x08strength\x18\x02\x20\x01(\r:\x03256R\x08strength\x123\n\x15passphras\
+    e_protection\x18\x03\x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epin\
+    _protection\x18\x04\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\
+    \x18\x05\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\
+    \x20\x01(\tR\x05label\x12\x1f\n\x0bu2f_counter\x18\x07\x20\x01(\rR\nu2fC\
+    ounter\x12\x1f\n\x0bskip_backup\x18\x08\x20\x01(\x08R\nskipBackup\x12\
+    \x1b\n\tno_backup\x18\t\x20\x01(\x08R\x08noBackup\x12Q\n\x0bbackup_type\
+    \x18\n\x20\x01(\x0e2).hw.trezor.messages.management.BackupType:\x05Bip39\
+    R\nbackupType\x12#\n\rentropy_check\x18\x0b\x20\x01(\x08R\x0centropyChec\
+    k\x12Y\n\rbackup_method\x18\x0c\x20\x01(\x0e2+.hw.trezor.messages.manage\
+    ment.BackupMethod:\x07DisplayR\x0cbackupMethodJ\x04\x08\x01\x10\x02\"\
+    \xc0\x02\n\x0cBackupDevice\x12'\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\
+    \x0egroupThreshold\x12O\n\x06groups\x18\x02\x20\x03(\x0b27.hw.trezor.mes\
+    sages.management.BackupDevice.Slip39GroupR\x06groups\x12Y\n\rbackup_meth\
+    od\x18\x03\x20\x01(\x0e2+.hw.trezor.messages.management.BackupMethod:\
+    \x07DisplayR\x0cbackupMethod\x1a[\n\x0bSlip39Group\x12)\n\x10member_thre\
+    shold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12!\n\x0cmember_count\x18\
+    \x02\x20\x02(\rR\x0bmemberCount\"b\n\x0eEntropyRequest\x12-\n\x12entropy\
+    _commitment\x18\x01\x20\x01(\x0cR\x11entropyCommitment\x12!\n\x0cprev_en\
+    tropy\x18\x02\x20\x01(\x0cR\x0bprevEntropy\"&\n\nEntropyAck\x12\x18\n\
+    \x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\x13\n\x11EntropyCheckRead\
+    y\"5\n\x14EntropyCheckContinue\x12\x1d\n\x06finish\x18\x01\x20\x01(\x08:\
+    \x05falseR\x06finish\"\xdf\x04\n\x0eRecoveryDevice\x12\x1d\n\nword_count\
+    \x18\x01\x20\x01(\rR\twordCount\x123\n\x15passphrase_protection\x18\x02\
+    \x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\x18\x03\
+    \x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x04\x20\x01(\tR\
+    \x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x05\x20\x01(\tR\x05labe\
+    l\x12)\n\x10enforce_wordlist\x18\x06\x20\x01(\x08R\x0fenforceWordlist\
+    \x12j\n\x0cinput_method\x18\x08\x20\x01(\x0e2G.hw.trezor.messages.manage\
+    ment.RecoveryDevice.RecoveryDeviceInputMethodR\x0binputMethod\x12\x1f\n\
+    \x0bu2f_counter\x18\t\x20\x01(\rR\nu2fCounter\x12O\n\x04type\x18\n\x20\
+    \x01(\x0e2+.hw.trezor.messages.management.RecoveryType:\x0eNormalRecover\
+    yR\x04type\x12P\n\rbackup_method\x18\x0b\x20\x01(\x0e2+.hw.trezor.messag\
+    es.management.BackupMethodR\x0cbackupMethod\";\n\x19RecoveryDeviceInputM\
+    ethod\x12\x12\n\x0eScrambledWords\x10\0\x12\n\n\x06Matrix\x10\x01J\x04\
+    \x08\x07\x10\x08\"\xc5\x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\x20\
+    \x02(\x0e2:.hw.trezor.messages.management.WordRequest.WordRequestTypeR\
+    \x04type\"f\n\x0fWordRequestType\x12\x19\n\x15WordRequestType_Plain\x10\
+    \0\x12\x1b\n\x17WordRequestType_Matrix9\x10\x01\x12\x1b\n\x17WordRequest\
+    Type_Matrix6\x10\x02\"\x1d\n\x07WordAck\x12\x12\n\x04word\x18\x01\x20\
+    \x02(\tR\x04word\"0\n\rSetU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\
+    \x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\"1\n\x0eNextU2FCou\
+    nter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x11\n\
+    \x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\x15\n\x13CancelAut\
+    horization\"\xeb\x01\n\x12RebootToBootloader\x12o\n\x0cboot_command\x18\
+    \x01\x20\x01(\x0e2=.hw.trezor.messages.management.RebootToBootloader.Boo\
+    tCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ffirmware_header\x18\
+    \x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBootCommand\x12\x11\n\rSTOP\
+    _AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01J\x04\x08\x03\x10\
+    \x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\n\x05nonce\x18\x01\x20\
+    \x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\x20\
+    \x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"'\n\
+    \x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x02(\x0cR\x03mac\"\
+    \x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBootloader\"%\n\rSetBright\
+    ness\x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"\x11\n\x0fGetSeria\
+    lNumber\"3\n\x0cSerialNumber\x12#\n\rserial_number\x18\x01\x20\x02(\tR\
     \x0cserialNumber*\x99\x01\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\
     \x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\n\
     \x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_Basic_Extendabl\
@@ -12810,7 +13634,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(50);
+            let mut messages = ::std::vec::Vec::with_capacity(53);
             messages.push(Initialize::generated_message_descriptor_data());
             messages.push(GetFeatures::generated_message_descriptor_data());
             messages.push(Features::generated_message_descriptor_data());
@@ -12833,6 +13657,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(FirmwareHash::generated_message_descriptor_data());
             messages.push(AuthenticateDevice::generated_message_descriptor_data());
             messages.push(AuthenticityProof::generated_message_descriptor_data());
+            messages.push(AuthenticityProofSizes::generated_message_descriptor_data());
+            messages.push(GetAuthenticityProofChunk::generated_message_descriptor_data());
+            messages.push(AuthenticityProofChunk::generated_message_descriptor_data());
             messages.push(WipeDevice::generated_message_descriptor_data());
             messages.push(LoadDevice::generated_message_descriptor_data());
             messages.push(ResetDevice::generated_message_descriptor_data());
@@ -12861,7 +13688,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(GetSerialNumber::generated_message_descriptor_data());
             messages.push(SerialNumber::generated_message_descriptor_data());
             messages.push(backup_device::Slip39Group::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(13);
+            let mut enums = ::std::vec::Vec::with_capacity(14);
             enums.push(BackupType::generated_enum_descriptor_data());
             enums.push(BackupMethod::generated_enum_descriptor_data());
             enums.push(SafetyCheckLevel::generated_enum_descriptor_data());
@@ -12872,6 +13699,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             enums.push(features::RecoveryStatus::generated_enum_descriptor_data());
             enums.push(features::Capability::generated_enum_descriptor_data());
             enums.push(sd_protect::SdProtectOperationType::generated_enum_descriptor_data());
+            enums.push(get_authenticity_proof_chunk::AuthenticityProofType::generated_enum_descriptor_data());
             enums.push(recovery_device::RecoveryDeviceInputMethod::generated_enum_descriptor_data());
             enums.push(word_request::WordRequestType::generated_enum_descriptor_data());
             enums.push(reboot_to_bootloader::BootCommand::generated_enum_descriptor_data());
