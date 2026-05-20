@@ -19,6 +19,11 @@
 
 #pragma once
 
+#include <sys/sysevent.h>
 #include "trezor_api_v1.h"
+
+#ifdef USE_IPC
+const uint32_t SYSHANDLE__IPC0 = SYSHANDLE_IPC0;
+#endif
 
 typedef void* (*trezor_api_getter_t)(uint32_t version);

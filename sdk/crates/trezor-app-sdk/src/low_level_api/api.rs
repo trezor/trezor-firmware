@@ -5,8 +5,14 @@ use super::ffi::{self, ipc_message_t};
 use super::ffi::{HMAC_SHA256_CTX, SHA3_CTX, SHA256_CTX, SHA512_CTX};
 #[cfg(not(feature = "test"))]
 use crate::crypto::Hasher;
+use crate::unwrap;
 
-pub const TREZOR_API_SUPPORTED_VERSION: u32 = ffi::TREZOR_API_VERSION_1;
+pub const TREZOR_API_SUPPORTED_VERSION: u32 = 1;
+
+unsafe impl Send for ffi::trezor_crypto_v1_t {}
+unsafe impl Sync for ffi::trezor_crypto_v1_t {}
+unsafe impl Send for ffi::trezor_api_v1_t {}
+unsafe impl Sync for ffi::trezor_api_v1_t {}
 
 /// Global API singleton - initialized once and then immutable
 pub static API: spin::Once<&'static ffi::trezor_api_v1_t> = spin::Once::new();
@@ -51,7 +57,7 @@ impl ApiError {
 pub unsafe fn init(getter: ffi::trezor_api_getter_t) {
     API.call_once(|| {
         // SAFETY: Safe, assuming getter itself is ok.
-        let ptr = unsafe { getter(TREZOR_API_SUPPORTED_VERSION) };
+        let ptr = unsafe { unwrap!(getter)(TREZOR_API_SUPPORTED_VERSION) };
         // SAFETY: Getter returns null or a valid pointer to the API struct.
         let v1_ptr = unsafe { (ptr as *const ffi::trezor_api_v1_t).as_ref() };
         v1_ptr.expect("API getter returned null pointer")
@@ -72,7 +78,7 @@ fn get_or_die() -> &'static ffi::trezor_api_v1_t {
 #[inline]
 pub(crate) fn get_crypto_or_die() -> &'static ffi::trezor_crypto_v1_t {
     unsafe {
-        (get_or_die().trezor_crypto_v1_t)
+        (get_or_die().trezor_crypto_v1)
             .as_ref()
             .expect("Crypto API getter returned null pointer")
     }
@@ -86,7 +92,7 @@ pub(crate) fn get_crypto_or_die() -> &'static ffi::trezor_crypto_v1_t {
 /// `ipc_try_receive`. The data pointed to by its `data` field may be
 /// invalidated and overwritten.
 pub unsafe fn ipc_message_free(mut msg: ipc_message_t) {
-    unsafe { (get_or_die().ipc_message_free)(&mut msg) };
+    unsafe { unwrap!(get_or_die().ipc_message_free)(&mut msg) };
 }
 
 /// Register an IPC inbox
@@ -104,7 +110,8 @@ pub unsafe fn ipc_register(
     buffer: *mut u8,
     buf_len: usize,
 ) -> Result<(), ApiError> {
-    let result = unsafe { (get_or_die().ipc_register)(remote, buffer as *mut c_void, buf_len) };
+    let result =
+        unsafe { unwrap!(get_or_die().ipc_register)(remote, buffer as *mut c_void, buf_len) };
     if result {
         Ok(())
     } else {
@@ -119,16 +126,12 @@ pub unsafe fn ipc_register(
 /// Safe to call from anywhere. No data is invalidated, this only causes the
 /// kernel to forget about it.
 pub fn ipc_unregister(remote: ffi::systask_id_t) {
-    unsafe { (get_or_die().ipc_unregister)(remote) };
+    unsafe { unwrap!(get_or_die().ipc_unregister)(remote) };
 }
 
-pub fn ipc_send(
-    remote: ffi::systask_id_t,
-    fn_: ffi::ipc_fn_t,
-    bytes: &[u8],
-) -> Result<(), ApiError> {
+pub fn ipc_send(remote: ffi::systask_id_t, fn_: u32, bytes: &[u8]) -> Result<(), ApiError> {
     let result = unsafe {
-        (get_or_die().ipc_send)(remote, fn_, bytes.as_ptr() as *const c_void, bytes.len())
+        unwrap!(get_or_die().ipc_send)(remote, fn_, bytes.as_ptr() as *const c_void, bytes.len())
     };
     if result {
         Ok(())
@@ -147,7 +150,7 @@ pub fn ipc_send(
 pub fn ipc_try_receive(remote: ffi::systask_id_t) -> Result<ffi::ipc_message_t, ApiError> {
     let mut msg = ffi::ipc_message_t::default();
     msg.remote = remote;
-    let result = unsafe { (get_or_die().ipc_try_receive)(&mut msg) };
+    let result = unsafe { unwrap!(get_or_die().ipc_try_receive)(&mut msg) };
     if result {
         Ok(msg)
     } else {
@@ -156,21 +159,21 @@ pub fn ipc_try_receive(remote: ffi::systask_id_t) -> Result<ffi::ipc_message_t, 
 }
 
 pub fn sysevents_poll(awaited: &ffi::sysevents_t, signalled: &mut ffi::sysevents_t, deadline: u32) {
-    unsafe { (get_or_die().sysevents_poll)(awaited, signalled, deadline) };
+    unsafe { unwrap!(get_or_die().sysevents_poll)(awaited, signalled, deadline) };
 }
 
 pub fn systick_ms() -> u32 {
-    unsafe { (get_or_die().systick_ms)() }
+    unsafe { unwrap!(get_or_die().systick_ms)() }
 }
 
 pub fn dbg_console_write(data: &[u8]) {
-    unsafe { (get_or_die().dbg_console_write)(data.as_ptr() as *const c_void, data.len()) };
+    unsafe { unwrap!(get_or_die().dbg_console_write)(data.as_ptr() as *const c_void, data.len()) };
 }
 
 pub fn system_exit() -> ! {
     if let Some(api) = API.get() {
         // If the API was initialized, we call its system_exit function.
-        unsafe { (api.system_exit)(0) };
+        unsafe { unwrap!(api.system_exit)(0) };
     }
     // If API is not initialized, or if `system_exit` returns despite not being
     // supposed to, we abort.
@@ -180,7 +183,7 @@ pub fn system_exit() -> ! {
 pub fn system_exit_error(title: &str, message: &str, footer: &str) -> ! {
     if let Some(api) = API.get() {
         unsafe {
-            (api.system_exit_error_ex)(
+            unwrap!(api.system_exit_error_ex)(
                 title.as_ptr() as *const core::ffi::c_char,
                 title.len(),
                 message.as_ptr() as *const core::ffi::c_char,
@@ -198,7 +201,7 @@ pub fn system_exit_error(title: &str, message: &str, footer: &str) -> ! {
 pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
     if let Some(api) = API.get() {
         unsafe {
-            (api.system_exit_fatal_ex)(
+            unwrap!(api.system_exit_fatal_ex)(
                 message.as_ptr() as *const core::ffi::c_char,
                 message.len(),
                 file.as_ptr() as *const core::ffi::c_char,
@@ -222,7 +225,7 @@ pub fn ed25519_sign_open(
     }
 
     let result = unsafe {
-        (get_crypto_or_die().ed25519_sign_open)(
+        unwrap!(get_crypto_or_die().ed25519_sign_open)(
             message.as_ptr(),
             message.len(),
             public_key.as_ptr() as *const _,
@@ -244,7 +247,11 @@ pub fn ed25519_cosi_combine_publickeys(
 
     let mut res: ffi::ed25519_public_key = [0u8; 32];
     let result = unsafe {
-        (get_crypto_or_die().ed25519_cosi_combine_publickeys)(res.as_mut_ptr(), pks.as_ptr(), n)
+        unwrap!(get_crypto_or_die().ed25519_cosi_combine_publickeys)(
+            res.as_mut_ptr(),
+            pks.as_ptr() as *mut _,
+            n,
+        )
     };
     if result == 0 {
         Ok(res)
@@ -268,7 +275,7 @@ impl Sha256 {
             buffer: [0u32; 16],
         };
         let mut hasher = Self { ctx };
-        unsafe { (get_crypto_or_die().sha256_Init)(&mut hasher.ctx) };
+        unsafe { unwrap!(get_crypto_or_die().sha256_Init)(&mut hasher.ctx) };
         if let Some(data) = data {
             Self::update(&mut hasher, data);
         }
@@ -285,11 +292,13 @@ impl Sha256 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Sha256 {
     fn update(&mut self, data: &[u8]) {
-        unsafe { (get_crypto_or_die().sha256_Update)(&mut self.ctx, data.as_ptr(), data.len()) };
+        unsafe {
+            unwrap!(get_crypto_or_die().sha256_Update)(&mut self.ctx, data.as_ptr(), data.len())
+        };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
-        unsafe { (get_crypto_or_die().sha256_Final)(&mut self.ctx, output.as_mut_ptr()) };
+        unsafe { unwrap!(get_crypto_or_die().sha256_Final)(&mut self.ctx, output.as_mut_ptr()) };
     }
 }
 
@@ -317,7 +326,7 @@ impl Keccak256 {
             block_size: 0,
         };
         let mut hasher = Self { ctx };
-        unsafe { (get_crypto_or_die().sha3_256_Init)(&mut hasher.ctx) };
+        unsafe { unwrap!(get_crypto_or_die().sha3_256_Init)(&mut hasher.ctx) };
         if let Some(data) = data {
             Self::update(&mut hasher, data);
         }
@@ -334,11 +343,13 @@ impl Keccak256 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Keccak256 {
     fn update(&mut self, data: &[u8]) {
-        unsafe { (get_crypto_or_die().sha3_Update)(&mut self.ctx, data.as_ptr(), data.len()) };
+        unsafe {
+            unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.as_ptr(), data.len())
+        };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
-        unsafe { (get_crypto_or_die().keccak_Final)(&mut self.ctx, output.as_mut_ptr()) };
+        unsafe { unwrap!(get_crypto_or_die().keccak_Final)(&mut self.ctx, output.as_mut_ptr()) };
     }
 }
 
@@ -366,7 +377,7 @@ impl Sha3_256 {
             block_size: 0,
         };
         let mut hasher = Self { ctx };
-        unsafe { (get_crypto_or_die().sha3_256_Init)(&mut hasher.ctx) };
+        unsafe { unwrap!(get_crypto_or_die().sha3_256_Init)(&mut hasher.ctx) };
         if let Some(data) = data {
             Self::update(&mut hasher, data);
         }
@@ -383,11 +394,13 @@ impl Sha3_256 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Sha3_256 {
     fn update(&mut self, data: &[u8]) {
-        unsafe { (get_crypto_or_die().sha3_Update)(&mut self.ctx, data.as_ptr(), data.len()) };
+        unsafe {
+            unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.as_ptr(), data.len())
+        };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
-        unsafe { (get_crypto_or_die().sha3_Final)(&mut self.ctx, output.as_mut_ptr()) };
+        unsafe { unwrap!(get_crypto_or_die().sha3_Final)(&mut self.ctx, output.as_mut_ptr()) };
     }
 }
 
@@ -414,7 +427,7 @@ impl Sha512 {
             buffer: [0u64; 16],
         };
         let mut hasher = Self { ctx };
-        unsafe { (get_crypto_or_die().sha512_Init)(&mut hasher.ctx) };
+        unsafe { unwrap!(get_crypto_or_die().sha512_Init)(&mut hasher.ctx) };
         if let Some(data) = data {
             Self::update(&mut hasher, data);
         }
@@ -431,11 +444,13 @@ impl Sha512 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Sha512 {
     fn update(&mut self, data: &[u8]) {
-        unsafe { (get_crypto_or_die().sha512_Update)(&mut self.ctx, data.as_ptr(), data.len()) };
+        unsafe {
+            unwrap!(get_crypto_or_die().sha512_Update)(&mut self.ctx, data.as_ptr(), data.len())
+        };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
-        unsafe { (get_crypto_or_die().sha512_Final)(&mut self.ctx, output.as_mut_ptr()) };
+        unsafe { unwrap!(get_crypto_or_die().sha512_Final)(&mut self.ctx, output.as_mut_ptr()) };
     }
 }
 
@@ -466,7 +481,11 @@ impl HmacSha256 {
         };
         let mut hasher = Self { ctx };
         unsafe {
-            (get_crypto_or_die().hmac_sha256_Init)(&mut hasher.ctx, key.as_ptr(), key.len() as u32)
+            unwrap!(get_crypto_or_die().hmac_sha256_Init)(
+                &mut hasher.ctx,
+                key.as_ptr(),
+                key.len() as u32,
+            )
         };
         if let Some(data) = data {
             Self::update(&mut hasher, data);
@@ -485,7 +504,7 @@ impl HmacSha256 {
 impl Hasher for HmacSha256 {
     fn update(&mut self, data: &[u8]) {
         unsafe {
-            (get_crypto_or_die().hmac_sha256_Update)(
+            unwrap!(get_crypto_or_die().hmac_sha256_Update)(
                 &mut self.ctx,
                 data.as_ptr(),
                 data.len() as u32,
@@ -494,7 +513,9 @@ impl Hasher for HmacSha256 {
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
-        unsafe { (get_crypto_or_die().hmac_sha256_Final)(&mut self.ctx, output.as_mut_ptr()) };
+        unsafe {
+            unwrap!(get_crypto_or_die().hmac_sha256_Final)(&mut self.ctx, output.as_mut_ptr())
+        };
     }
 }
 

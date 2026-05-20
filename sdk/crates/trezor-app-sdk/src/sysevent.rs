@@ -5,13 +5,13 @@ use crate::low_level_api::{self, ffi};
 use crate::util::Timeout;
 
 pub(crate) trait HasSysHandle: Copy {
-    fn syshandle(self) -> ffi::syshandle_t;
+    fn syshandle(self) -> u32;
 }
 
 impl HasSysHandle for RemoteSysTask {
-    fn syshandle(self) -> ffi::syshandle_t {
+    fn syshandle(self) -> u32 {
         let remote_id: u8 = self.into();
-        ffi::SYSHANDLE_IPC0 + remote_id as u32
+        ffi::SYSHANDLE__IPC0 + remote_id as u32
     }
 }
 

@@ -20,8 +20,6 @@
 //! ```
 
 /// Log level enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-#[repr(u8)]
 pub enum Level {
     Error = 1,
     Warn = 2,
@@ -81,7 +79,13 @@ pub fn __log_print_header(level: Level, module: &str) {
 #[macro_export]
 macro_rules! log {
     ($level:expr, $($args:tt)*) => {
-        #[cfg(not(log_level = "off"))]
+        #[cfg(any(
+            feature = "log_level_error",
+            feature = "log_level_warn",
+            feature = "log_level_info",
+            feature = "log_level_debug",
+            feature = "log_level_trace"
+        ))]
         {
             $crate::log::__log_print_header($level, module_path!());
             let _ = ufmt::uwrite!($crate::print::printer(), $($args)*);
@@ -95,11 +99,11 @@ macro_rules! log {
 macro_rules! error {
     ($($arg:tt)*) => {
         #[cfg(any(
-            log_level = "error",
-            log_level = "warn",
-            log_level = "info",
-            log_level = "debug",
-            log_level = "trace"
+            feature = "log_level_error",
+            feature = "log_level_warn",
+            feature = "log_level_info",
+            feature = "log_level_debug",
+            feature = "log_level_trace"
         ))]
         {
             $crate::log::log!(
@@ -114,10 +118,10 @@ macro_rules! error {
 macro_rules! warn_internal {
     ($($arg:tt)*) => {
         #[cfg(any(
-            log_level = "warn",
-            log_level = "info",
-            log_level = "debug",
-            log_level = "trace"
+            feature = "log_level_warn",
+            feature = "log_level_info",
+            feature = "log_level_debug",
+            feature = "log_level_trace"
         ))]
         {
             $crate::log::log!(
@@ -139,9 +143,9 @@ macro_rules! warn {
 macro_rules! info {
     ($($arg:tt)*) => {
         #[cfg(any(
-            log_level = "info",
-            log_level = "debug",
-            log_level = "trace"
+            feature = "log_level_info",
+            feature = "log_level_debug",
+            feature = "log_level_trace"
         ))]
         {
             $crate::log::log!(
@@ -156,8 +160,8 @@ macro_rules! info {
 macro_rules! debug {
     ($($arg:tt)*) => {
         #[cfg(any(
-            log_level = "debug",
-            log_level = "trace"
+            feature = "log_level_debug",
+            feature = "log_level_trace"
         ))]
         {
             $crate::log::log!(
@@ -172,7 +176,7 @@ macro_rules! debug {
 macro_rules! trace {
     ($($arg:tt)*) => {
         #[cfg(any(
-            log_level = "trace"
+            feature = "log_level_trace"
         ))]
         {
             $crate::log::log!(
@@ -183,6 +187,7 @@ macro_rules! trace {
     };
 }
 
-use {crate::low_level_api};
 #[allow(unused_imports)]
-pub use {log, error, warn_internal, warn_internal as warn, info, debug, trace};
+pub use {debug, error, info, log, trace, warn_internal, warn_internal as warn};
+
+use crate::low_level_api;

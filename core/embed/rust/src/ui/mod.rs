@@ -2,6 +2,7 @@ pub mod animation;
 #[cfg(feature = "micropython")]
 pub mod backlight;
 pub mod button_request;
+#[cfg(feature = "micropython")]
 pub mod cache;
 pub mod component;
 pub mod constant;

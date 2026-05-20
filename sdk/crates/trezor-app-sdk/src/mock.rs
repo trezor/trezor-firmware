@@ -1,7 +1,7 @@
-use hmac_sha256::{HMAC as HMAC256_impl, Hash as Sha256_impl};
-use hmac_sha512::{HMAC as HMAC512_impl, Hash as Sha512_impl};
-use sha3::digest::FixedOutput;
-use sha3::{
+use mock_hmac_sha256::{HMAC as HMAC256_impl, Hash as Sha256_impl};
+use mock_hmac_sha512::{HMAC as HMAC512_impl, Hash as Sha512_impl};
+use mock_sha3::digest::FixedOutput;
+use mock_sha3::{
     Digest, Keccak256 as Keccak256_impl, Sha3_256 as Sha3_256_impl, Sha3_512 as Sha3_512_impl,
 };
 
@@ -143,7 +143,7 @@ unsafe extern "C" fn dummy_ecdsa_verify_digest(
 
 unsafe extern "C" fn dummy_ed25519_cosi_combine_publickeys(
     _res: *mut core::ffi::c_uchar,
-    _pks: *const ed25519_public_key,
+    _pks: *mut ed25519_public_key,
     _n: usize,
 ) -> core::ffi::c_int {
     0
@@ -159,38 +159,35 @@ unsafe extern "C" fn dummy_ed25519_sign_open(
 }
 
 pub static DUMMY_TREZOR_CRYPTO_V1: trezor_crypto_v1_t = trezor_crypto_v1_t {
-    ed25519_cosi_combine_publickeys: dummy_ed25519_cosi_combine_publickeys,
-    ed25519_sign_open: dummy_ed25519_sign_open,
-    sha3_256_Init: dummy_sha3_256_init,
-    sha3_512_Init: dummy_sha3_512_init,
-    sha3_Update: dummy_sha3_update,
-    sha3_Final: dummy_sha3_final,
-    keccak_Final: dummy_keccak_final,
-    sha256_Init: dummy_sha256_init,
-    sha256_Update: dummy_sha256_update,
-    sha256_Final: dummy_sha256_final,
-    sha512_Init: dummy_sha512_init,
-    sha512_Update: dummy_sha512_update,
-    sha512_Final: dummy_sha512_final,
-    hmac_sha256_Init: dummy_hmac_sha256_init,
-    hmac_sha256_Update: dummy_hmac_sha256_update,
-    hmac_sha256_Final: dummy_hmac_sha256_final,
-    ecdsa_recover_pub_from_sig: dummy_ecdsa_recover_pub_from_sig,
-    ecdsa_verify_digest: dummy_ecdsa_verify_digest,
-    secp256k1: &SECP256K1,
-    nist256p1: &NIST256P1,
+    ed25519_cosi_combine_publickeys: Some(dummy_ed25519_cosi_combine_publickeys),
+    ed25519_sign_open: Some(dummy_ed25519_sign_open),
+    sha3_256_Init: Some(dummy_sha3_256_init),
+    sha3_512_Init: Some(dummy_sha3_512_init),
+    sha3_Update: Some(dummy_sha3_update),
+    sha3_Final: Some(dummy_sha3_final),
+    keccak_Final: Some(dummy_keccak_final),
+    sha256_Init: Some(dummy_sha256_init),
+    sha256_Update: Some(dummy_sha256_update),
+    sha256_Final: Some(dummy_sha256_final),
+    sha512_Init: Some(dummy_sha512_init),
+    sha512_Update: Some(dummy_sha512_update),
+    sha512_Final: Some(dummy_sha512_final),
+    hmac_sha256_Init: Some(dummy_hmac_sha256_init),
+    hmac_sha256_Update: Some(dummy_hmac_sha256_update),
+    hmac_sha256_Final: Some(dummy_hmac_sha256_final),
+    ecdsa_recover_pub_from_sig: Some(dummy_ecdsa_recover_pub_from_sig),
+    ecdsa_verify_digest: Some(dummy_ecdsa_verify_digest),
+    secp256k1: &SECP256K1 as *const ecdsa_curve,
+    nist256p1: &NIST256P1 as *const ecdsa_curve,
 };
 
-unsafe extern "C" fn dummy_system_exit(_exitcode: core::ffi::c_int) -> ! {
-    panic!("dummy_system_exit")
-}
+unsafe extern "C" fn dummy_system_exit(_exitcode: core::ffi::c_int) {}
 
 unsafe extern "C" fn dummy_system_exit_error(
     _title: *const core::ffi::c_char,
     _message: *const core::ffi::c_char,
     _footer: *const core::ffi::c_char,
-) -> ! {
-    panic!("dummy_system_exit_error")
+) {
 }
 
 unsafe extern "C" fn dummy_system_exit_error_ex(
@@ -200,16 +197,14 @@ unsafe extern "C" fn dummy_system_exit_error_ex(
     _message_len: usize,
     _footer: *const core::ffi::c_char,
     _footer_len: usize,
-) -> ! {
-    panic!("dummy_system_exit_error_ex")
+) {
 }
 
 unsafe extern "C" fn dummy_system_exit_fatal(
     _message: *const core::ffi::c_char,
     _file: *const core::ffi::c_char,
     _line: core::ffi::c_int,
-) -> ! {
-    panic!("dummy_system_exit_fatal")
+) {
 }
 
 unsafe extern "C" fn dummy_system_exit_fatal_ex(
@@ -218,11 +213,15 @@ unsafe extern "C" fn dummy_system_exit_fatal_ex(
     _file: *const core::ffi::c_char,
     _file_len: usize,
     _line: core::ffi::c_int,
-) -> ! {
-    panic!("dummy_system_exit_fatal_ex")
+) {
 }
 
-unsafe extern "C" fn dummy_dbg_console_write(_data: *const core::ffi::c_void, _size: usize) {}
+unsafe extern "C" fn dummy_dbg_console_write(
+    _data: *const core::ffi::c_void,
+    _size: usize,
+) -> isize {
+    0
+}
 
 unsafe extern "C" fn dummy_systick_ms() -> u32 {
     0
@@ -233,14 +232,6 @@ unsafe extern "C" fn dummy_sysevents_poll(
     _signalled: *mut sysevents_t,
     _deadline: u32,
 ) {
-}
-
-unsafe extern "C" fn dummy_syshandle_read(
-    _handle: syshandle_t,
-    _buffer: *mut core::ffi::c_void,
-    _buffer_size: usize,
-) -> isize {
-    -1
 }
 
 unsafe extern "C" fn dummy_ipc_register(
@@ -269,28 +260,27 @@ unsafe extern "C" fn dummy_ipc_send(
 }
 
 pub static DUMMY_TREZOR_API_V1: trezor_api_v1_t = trezor_api_v1_t {
-    system_exit: dummy_system_exit,
-    system_exit_error: dummy_system_exit_error,
-    system_exit_error_ex: dummy_system_exit_error_ex,
-    system_exit_fatal: dummy_system_exit_fatal,
-    system_exit_fatal_ex: dummy_system_exit_fatal_ex,
-    dbg_console_write: dummy_dbg_console_write,
-    systick_ms: dummy_systick_ms,
-    sysevents_poll: dummy_sysevents_poll,
-    syshandle_read: dummy_syshandle_read,
-    ipc_register: dummy_ipc_register,
-    ipc_unregister: dummy_ipc_unregister,
-    ipc_try_receive: dummy_ipc_try_receive,
-    ipc_message_free: dummy_ipc_message_free,
-    ipc_send: dummy_ipc_send,
-    trezor_crypto_v1_t: &DUMMY_TREZOR_CRYPTO_V1 as *const trezor_crypto_v1_t,
+    system_exit: Some(dummy_system_exit),
+    system_exit_error: Some(dummy_system_exit_error),
+    system_exit_error_ex: Some(dummy_system_exit_error_ex),
+    system_exit_fatal: Some(dummy_system_exit_fatal),
+    system_exit_fatal_ex: Some(dummy_system_exit_fatal_ex),
+    dbg_console_write: Some(dummy_dbg_console_write),
+    systick_ms: Some(dummy_systick_ms),
+    sysevents_poll: Some(dummy_sysevents_poll),
+    ipc_register: Some(dummy_ipc_register),
+    ipc_unregister: Some(dummy_ipc_unregister),
+    ipc_try_receive: Some(dummy_ipc_try_receive),
+    ipc_message_free: Some(dummy_ipc_message_free),
+    ipc_send: Some(dummy_ipc_send),
+    trezor_crypto_v1: &DUMMY_TREZOR_CRYPTO_V1,
 };
 
-pub unsafe extern "C" fn dummy_trezor_api_getter_t(version: u32) -> *const core::ffi::c_void {
-    if version == TREZOR_API_VERSION_1 {
-        &DUMMY_TREZOR_API_V1 as *const _ as *const core::ffi::c_void
+pub unsafe extern "C" fn dummy_trezor_api_getter_t(version: u32) -> *mut core::ffi::c_void {
+    if version == 1 {
+        &DUMMY_TREZOR_API_V1 as *const _ as *mut _
     } else {
-        core::ptr::null()
+        core::ptr::null_mut()
     }
 }
 
@@ -492,7 +482,6 @@ impl Hasher for Sha3_512 {
         output.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
     }
 }
-
 
 // HMAC functions
 pub struct HmacSha256 {

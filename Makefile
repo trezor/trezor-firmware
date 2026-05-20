@@ -225,3 +225,7 @@ ethereum_build_hw:
 
 ethereum_unit_tests:
 	@cd sdk/apps/ethereum ; cargo test --release
+
+check_api_bindings: ## check that app-sdk api.rs is identical across all targets
+	./tools/check_api_bindings.sh
+

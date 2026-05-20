@@ -1,13 +1,12 @@
 import ustruct
 from micropython import const
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import trezorcrypto_api
 import trezorui_api
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
 from trezor import app, io, loop
-from trezor.enums import FailureType
 from trezor.messages import ExtAppMessage, ExtAppResponse, Failure
 from trezor.ui import ProgressLayout
 from trezor.ui.layouts.common import interact
@@ -126,8 +125,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                     address_n: list[int] = obj
                     try:
                         result = await _get_public_key(address_n)
-                    # TODO: catch specific exception
-                    except:  # noqa: E722
+                    except Exception:
                         result = False
 
                 elif message_id == _SERIVICE_CRYPTO_GET_ETH_XPUB_HASH:
@@ -140,7 +138,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                         result = await _ethereum_pubkeyhash(
                             address_n, encoded_network, encoded_token, chain_id
                         )
-                    except Exception as _e:
+                    except Exception:
                         result = False
 
                 elif message_id == _SERVICE_CRYPTO_SIGN_TYPED_HASH:
@@ -160,7 +158,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                             chain_id,
                             show_progress,
                         )
-                    except Exception as _e:
+                    except Exception:
                         result = False
 
                 elif message_id == _SERVICE_CRYPTO_GET_ADDRESS_MAC:
@@ -170,13 +168,13 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                     network: bytes | None = obj[2]
                     try:
                         result = await _get_address_mac(address_n, address_str, network)
-                    except Exception as _e:
+                    except Exception:
                         result = False
                 elif message_id == _SERVICE_CRYPTO_VERIFY_NONCE_CACHE:
                     nonce: bytes = obj
                     try:
                         result = await _verify_nonce_cache(bytes(nonce))
-                    except Exception as _e:
+                    except Exception:
                         result = False
                 elif message_id == _SERVICE_CRYPTO_CHECK_ADDRESS_MAC:
                     assert len(obj) == 4
@@ -198,12 +196,12 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                             address_n, encoded_network, encoded_token, chain_id
                         )
                         result = True
-                    except Exception as _e:
+                    except Exception:
                         result = False
                 else:
                     die(DataError("Unknown crypto operation"))
 
-            except Exception as _e:
+            except Exception:
                 result = False
 
             # Serialize and send the result back
@@ -211,7 +209,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 trezorcrypto_api.send_crypto_result(
                     result=result, ipc_cb=crypto_resp_cb
                 )
-            except Exception as _e:
+            except Exception:
                 die(DataError("Failed to serialize or send crypto result"))
 
         elif service == _SERVICE_WIRE_CONTINUE:
@@ -286,8 +284,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 if isinstance(msg.data, (bytes, bytearray))
                 else str(msg.data)
             )
-            code: FailureType = message_id
-            response = Failure(code=code, message=err_message)
+            response = Failure(code=message_id, message=err_message) # pyright: ignore [reportArgumentType]
             ack = await context.call(response, ExtAppMessage)
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
