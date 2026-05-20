@@ -5,13 +5,16 @@
 extern crate alloc;
 
 use prost::Message;
-#[cfg(test)]
-use trezor_app_sdk::mock::{dummy_trezor_api_getter_t, sdk_init};
 use trezor_app_sdk::{
     CORE_SERVICE, Error, IpcMessage, Result, error,
     service::{self, CoreIpcService},
     util::Timeout,
 };
+
+#[cfg(not(test))]
+pub(crate) use alloc::string::{String, ToString};
+#[cfg(test)]
+pub(crate) use std::string::{String, ToString};
 
 // Include generated code
 pub(crate) mod proto;
@@ -110,30 +113,38 @@ pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
 }
 
 #[cfg(test)]
+pub(crate) mod test_init {
+    use std::sync::Once;
+    use trezor_app_sdk::mock::{dummy_trezor_api_getter_t, sdk_init};
+    pub static INIT: Once = Once::new();
+
+    pub fn init_sdk() {
+        INIT.call_once(|| unsafe {
+            sdk_init(Some(dummy_trezor_api_getter_t));
+        });
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Once;
-
-    static INIT: Once = Once::new();
 
     #[test]
     fn test_init_sdk() {
-        INIT.call_once(|| unsafe {
-            sdk_init(dummy_trezor_api_getter_t);
-        });
+        test_init::init_sdk();
     }
 
     #[test]
-    #[cfg(feature = "model_eckhart")]
-    fn test_model_eckhart() {
-        assert!(cfg!(feature = "model_eckhart"));
-        assert!(!cfg!(feature = "model_delizia"));
+    #[cfg(feature = "model_t3w1")]
+    fn test_model_t3w1() {
+        assert!(cfg!(feature = "model_t3w1"));
+        assert!(!cfg!(feature = "model_t3t1"));
     }
 
     #[test]
-    #[cfg(feature = "model_delizia")]
-    fn test_model_delizia() {
-        assert!(cfg!(feature = "model_delizia"));
-        assert!(!cfg!(feature = "model_eckhart"));
+    #[cfg(feature = "model_t3t1")]
+    fn test_model_t3t1() {
+        assert!(cfg!(feature = "model_t3t1"));
+        assert!(!cfg!(feature = "model_t3w1"));
     }
 }

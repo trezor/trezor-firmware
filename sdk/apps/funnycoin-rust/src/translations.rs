@@ -2,14 +2,21 @@
 
 include!(concat!(env!("OUT_DIR"), "/translations.rs"));
 
-#[cfg(all(feature = "lang_en", feature = "lang_cs"))]
-compile_error!("features `lang_en` and `lang_cs` are mutually exclusive");
-
-#[cfg(not(any(feature = "lang_en", feature = "lang_cs")))]
-compile_error!("one of `lang_en` or `lang_cs` must be enabled");
-
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    #[cfg(feature = "lang_en")]
+    fn test_lang_eng() {
+        assert!(cfg!(feature = "lang_en"));
+        assert!(!cfg!(feature = "lang_cs"));
+    }
+
+    #[cfg(feature = "lang_cs")]
+    fn test_lang_cs() {
+        assert!(cfg!(feature = "lang_cs"));
+        assert!(!cfg!(feature = "lang_en"));
+    }
     #[test]
     fn test_known_keys_compile() {
         // If a key is missing in the current lang's JSON this won't compile

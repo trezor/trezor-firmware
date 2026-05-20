@@ -1,14 +1,11 @@
 use crate::{
+    ToString,
     proto::{
         common::{HdNodeType, button_request::ButtonRequestType},
         funnycoin::{GetPublicKey, PublicKey},
     },
     strutil::hex_encode,
 };
-#[cfg(not(test))]
-use alloc::string::ToString;
-#[cfg(test)]
-use std::string::ToString;
 use trezor_app_sdk::{Error, Result, crypto, ui, util::HdNodeData};
 
 const VERSION: u32 = 0x0488B21E;
@@ -22,12 +19,14 @@ pub(crate) fn get_public_key(msg: GetPublicKey) -> Result<PublicKey> {
     let node_ll = HdNodeData::deserialize_public(xpub.as_str(), VERSION)
         .map_err(|_| Error::DataError("Failed to deserialize public key"))?;
 
-    let mut node = HdNodeType::default();
-    node.depth = node_ll.depth;
-    node.fingerprint = node_ll.fingerprint;
-    node.child_num = node_ll.child_num;
-    node.chain_code = node_ll.chain_code.to_vec();
-    node.public_key = node_ll.public_key.to_vec();
+    let node = HdNodeType {
+        depth: node_ll.depth,
+        fingerprint: node_ll.fingerprint,
+        child_num: node_ll.child_num,
+        chain_code: node_ll.chain_code.to_vec(),
+        public_key: node_ll.public_key.to_vec(),
+        ..Default::default()
+    };
 
     if matches!(msg.show_display, Some(true)) {
         let xpub = hex_encode(&node.public_key);

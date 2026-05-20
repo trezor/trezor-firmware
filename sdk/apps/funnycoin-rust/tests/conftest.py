@@ -47,7 +47,6 @@ if t.TYPE_CHECKING:
     from _pytest.mark import Mark
     from _pytest.nodes import Node
     from _pytest.terminal import TerminalReporter
-
     from trezorlib.client import Session
 
 
@@ -291,8 +290,6 @@ def test_ctx(
 ) -> t.Generator[TrezorTestContext, None, None]:
     _prepared_test_ctx.lock()
     with ui_tests.screen_recording(_prepared_test_ctx, request):
-        print(_prepared_test_ctx)
-        assert False
         yield _prepared_test_ctx
 
 

@@ -168,7 +168,6 @@ name = "funnycoin_rust"
 version = "0.1.0"
 dependencies = [
  "emballoc",
- "funnycoin_rust",
  "prost",
  "prost-build",
  "serde",
@@ -692,11 +691,9 @@ dependencies = [
  "hmac-sha256",
  "hmac-sha512",
  "num_enum",
- "quote",
  "rkyv",
  "sha3",
  "spin 0.10.0",
- "syn 2.0.108",
  "trezor-structs",
  "ufmt",
 ]

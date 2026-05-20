@@ -17,26 +17,26 @@ message Failure {
   optional FailureType code    = 1;  // computer-readable definition of the error state
   optional string      message = 2;    // human-readable message of the error state
   enum FailureType {
-    Failure_UnexpectedMessage     = 1;
-    Failure_ButtonExpected        = 2;
-    Failure_DataError             = 3;
-    Failure_ActionCancelled       = 4;
-    Failure_PinExpected           = 5;
-    Failure_PinCancelled          = 6;
-    Failure_PinInvalid            = 7;
-    Failure_InvalidSignature      = 8;
-    Failure_ProcessError          = 9;
-    Failure_NotEnoughFunds        = 10;
-    Failure_NotInitialized        = 11;
-    Failure_PinMismatch           = 12;
-    Failure_WipeCodeMismatch      = 13;
-    Failure_InvalidSession        = 14;
-    Failure_Busy                  = 15;
-    Failure_ThpUnallocatedSession = 16;
-    Failure_InvalidProtocol       = 17;
+    UnexpectedMessage     = 1;
+    ButtonExpected        = 2;
+    DataError             = 3;
+    ActionCancelled       = 4;
+    PinExpected           = 5;
+    PinCancelled          = 6;
+    PinInvalid            = 7;
+    InvalidSignature      = 8;
+    ProcessError          = 9;
+    NotEnoughFunds        = 10;
+    NotInitialized        = 11;
+    PinMismatch           = 12;
+    WipeCodeMismatch      = 13;
+    InvalidSession        = 14;
+    Busy                  = 15;
+    ThpUnallocatedSession = 16;
+    InvalidProtocol       = 17;
     reserved 18;
-    Failure_InProgress    = 19;
-    Failure_FirmwareError = 99;
+    InProgress    = 19;
+    FirmwareError = 99;
   }
 }
 
