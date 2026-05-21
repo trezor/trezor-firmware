@@ -65,7 +65,8 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof | Su
 
     mcu_certificates = None
     mcu_signature = None
-    if utils.USE_MCU_ATTESTATION:
+    # Following https://github.com/trezor/trezor-firmware/pull/6893, don't send MCU attestation in one large response.
+    if utils.USE_MCU_ATTESTATION and msg.stream:
         from trezor.crypto import mcu
 
         try:

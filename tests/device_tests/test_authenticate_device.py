@@ -43,6 +43,10 @@ def test_authenticate_device_optiga(
 
     # Issue an AuthenticateDevice challenge to Trezor.
     proof = device.authenticate(session, challenge, chunk_size)
+    if chunk_size == 0:
+        # MCU attestation is sent only when streaming is supported.
+        assert proof.mcu_signature is None
+        assert proof.mcu_certificates == []
 
     data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
     check_signature_optiga(
@@ -61,6 +65,10 @@ def test_authenticate_device_tropic(
 
     # Issue an AuthenticateDevice challenge to Trezor.
     proof = device.authenticate(session, challenge, chunk_size)
+    if chunk_size == 0:
+        # MCU attestation is sent only when streaming is supported.
+        assert proof.mcu_signature is None
+        assert proof.mcu_certificates == []
 
     data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
     check_signature_tropic(
