@@ -1239,6 +1239,8 @@ impl FirmwareUI for UIDelizia {
         description: TString<'static>,
         _allow_cancel: bool,
         danger: bool,
+        _footer: Option<TString<'static>>,
+        _external_menu: Option<bool>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let action = if button.is_empty() {
             None

@@ -463,6 +463,7 @@ pub trait FirmwareUI {
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn show_warning(
         title: Option<TString<'static>>,
         button: TString<'static>,
@@ -470,6 +471,8 @@ pub trait FirmwareUI {
         description: TString<'static>,
         allow_cancel: bool,
         danger: bool,
+        footer: Option<TString<'static>>,
+        external_menu: Option<bool>,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error>;

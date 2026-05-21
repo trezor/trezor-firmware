@@ -1556,6 +1556,8 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         allow_cancel: bool,
         danger: bool,
+        footer: Option<TString<'static>>,
+        external_menu: Option<bool>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_REGULAR, description),
@@ -1570,29 +1572,44 @@ impl FirmwareUI for UIEckhart {
             (theme::YELLOW, theme::label_title_warning())
         };
 
-        let action_bar = if allow_cancel {
-            ActionBar::new_double(
-                Button::with_icon(theme::ICON_CROSS),
-                Button::with_text(button),
-            )
+        if danger && title.is_none() {
+            // Disallow showing "dangerous" warning with no header.
+            return Err(Error::ValueError(c"Non-empty title is required"));
+        }
+
+        let show_menu = external_menu.unwrap_or(false);
+        let confirm_button = if danger {
+            Button::with_text(button)
+                .styled(button_actionbar_danger())
+                .with_gradient(Gradient::Alert)
         } else {
-            ActionBar::new_single(Button::with_text(button))
+            Button::with_text(button)
         };
-        let screen = TextScreen::new(paragraphs).with_action_bar(action_bar);
-        let screen = match title {
-            None => {
-                if danger {
-                    // Disallow showing "dangerous" warning with no header.
-                    return Err(Error::ValueError(c"Non-empty title is required"));
-                }
-                screen
+        let action_bar = if allow_cancel {
+            ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), confirm_button)
+        } else {
+            ActionBar::new_single(confirm_button)
+        };
+        let mut screen = TextScreen::new(paragraphs)
+            .with_action_bar(action_bar)
+            .with_external_menu(show_menu);
+        if let Some(title) = title {
+            let mut header = Header::new(title)
+                .with_icon(theme::ICON_INFO, color)
+                .with_text_style(style);
+            if show_menu {
+                header =
+                    header.with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu);
             }
-            Some(title) => screen.with_header(
-                Header::new(title)
-                    .with_icon(theme::ICON_INFO, color)
-                    .with_text_style(style),
-            ),
-        };
+            screen = screen.with_header(header);
+        }
+        if let Some(footer_text) = footer {
+            screen = screen.with_hint(if danger {
+                Hint::new_text_only_footer(footer_text)
+            } else {
+                Hint::new_warning_neutral(footer_text)
+            });
+        }
         let layout = LayoutObj::new(screen)?;
         Ok(layout)
     }
