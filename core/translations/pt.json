@@ -48,8 +48,8 @@
     "addr_mismatch__wrong_derivation_path": "Caminho de derivação incorreto para a conta.",
     "addr_mismatch__xpub_mismatch": "XPUB não coincide?",
     "address__cancel_contact_support": {
-      "Bolt": "Se o endereço de destino não coincidir, contate o suporte Trezor em trezor.io/support.",
-      "Caesar": "Se o endereço de destino não coincidir, contate o suporte Trezor em trezor.io/support.",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Se o endereço de destino não coincidir, contate o suporte Trezor em trezor.io/support.",
       "Eckhart": "Se o endereço não coincidir, contate o suporte Trezor em trezor.io/support."
     },
@@ -117,7 +117,6 @@
       "Delizia": "Bloqueio automático após",
       "Eckhart": "Bloqueio automático"
     },
-    "auto_lock__turned_on": "Bloqueio automático ativado",
     "backup__can_back_up_anytime": "Você pode gerar o backup do seu Trezor uma vez, a qualquer hora",
     "backup__create_backup_to_prevent_loss": {
       "Bolt": "Crie um backup para evitar perder acesso aos seus fundos",
@@ -156,7 +155,7 @@
     "backup__title_backup_completed": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Backup da carteira concluído",
+      "Delizia": "Backup da carteira concluído.",
       "Eckhart": "Backup da carteira concluído."
     },
     "backup__title_backup_wallet": {
@@ -166,7 +165,14 @@
       "Eckhart": ""
     },
     "backup__title_create_wallet_backup": "Criar backup da carteira",
-    "backup__title_skip": "Pular backup",
+    "backup__title_skip": {
+      "Bolt": "",
+      "Caesar": "Pular backup",
+      "Delizia": "Pular backup",
+      "Eckhart": "Pular backup"
+    },
+    "backup__type_create": "",
+    "backup__type_have": "",
     "backup__type_n4w1": "",
     "backup__type_wordlist": "",
     "backup__want_to_skip": {
@@ -350,7 +356,7 @@
     "brightness__changed_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Brilho da tela alterado",
+      "Delizia": "Brilho da tela alterado.",
       "Eckhart": ""
     },
     "brightness__title": "Brilho da tela",
@@ -556,7 +562,6 @@
     },
     "coinjoin__waiting_for_others": "Esperando por outros",
     "confirm_total__fee_rate": "Fator de taxa",
-    "confirm_total__fee_rate_colon": "Fator de taxa:",
     "confirm_total__title_fee": "Info. sobre taxas",
     "confirm_total__title_sending_from": {
       "Bolt": "",
@@ -805,7 +810,6 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "ethereum__amount_sent": "Quantia enviada:",
     "ethereum__approve": "Aprovar",
     "ethereum__approve_amount_allowance": "Quantia permitida",
     "ethereum__approve_chain_id": "ID da chain",
@@ -816,7 +820,13 @@
     "ethereum__approve_revoke": "Revogar",
     "ethereum__approve_revoke_from": "Revogar de",
     "ethereum__approve_to": "Aprovar a",
-    "ethereum__approve_unlimited_template": "Aprovando quantia ilimitada de {0}",
+    "ethereum__approve_unlimited_template": {
+      "Bolt": "Aprovando quantia ilimitada de {0}",
+      "Caesar": "Aprovando quantia ilimitada de {0}",
+      "Delizia": "Aprovando quantia ilimitada de {0}.",
+      "Eckhart": "Aprovando quantia ilimitada de {0}."
+    },
+    "ethereum__calldata_suffix": "",
     "ethereum__confirm_contract": "Confirmar contrato",
     "ethereum__contract_address": "Endereço de contr. do provedor",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
@@ -973,7 +983,12 @@
     "fido__title_list_credentials": "Listar credenciais",
     "fido__title_register": "Registro FIDO2 ",
     "fido__title_remove_credential": "Remover credencial",
-    "fido__title_reset": "Redefinir FIDO2",
+    "fido__title_reset": {
+      "Bolt": "Redefinir FIDO2",
+      "Caesar": "Redefinir FIDO2",
+      "Delizia": "Redefinir FIDO2",
+      "Eckhart": ""
+    },
     "fido__title_select_credential": "Selecionar credencial",
     "fido__title_u2f_auth": "Autenticação U2F",
     "fido__title_u2f_register": "Registro U2F",
@@ -1025,10 +1040,10 @@
       "Eckhart": ""
     },
     "homescreen__click_to_unlock": {
-      "Bolt": "Clique para desbloq.",
+      "Bolt": "",
       "Caesar": "Clique para desbloq.",
-      "Delizia": "Clique para desbloquear",
-      "Eckhart": "Clique para desbloquear"
+      "Delizia": "",
+      "Eckhart": ""
     },
     "homescreen__firmware_type": "Tipo de firmware",
     "homescreen__firmware_version": "Versão do firmware",
@@ -1107,7 +1122,12 @@
       "Delizia": "Continue\nsegurando",
       "Eckhart": "Continue segurando"
     },
-    "instructions__continue_in_app": "Continue no app",
+    "instructions__continue_in_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Continue no app",
+      "Eckhart": "Continue no app"
+    },
     "instructions__enter_next_share": "Insira próximo share",
     "instructions__hold_to_confirm": {
       "Bolt": "",
@@ -1140,15 +1160,35 @@
     },
     "instructions__swipe_down": "Deslize para baixo",
     "instructions__swipe_horizontally": "Deslize horizontalmente",
-    "instructions__tap": "Toque",
-    "instructions__tap_to_confirm": "Toque para confirmar",
-    "instructions__tap_to_continue": "Toque para continuar",
+    "instructions__tap": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Toque",
+      "Eckhart": ""
+    },
+    "instructions__tap_to_confirm": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Toque para confirmar",
+      "Eckhart": ""
+    },
+    "instructions__tap_to_continue": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Toque para continuar",
+      "Eckhart": ""
+    },
     "instructions__view_all_data": "Veja todos os dados no menu.",
     "joint__title": "Transação conjunta",
     "joint__to_the_total_amount": "À quantia total de",
     "joint__you_are_contributing": "Você está contribuindo",
     "language__change_to_template": "Alterar idioma para {0}?",
-    "language__changed": "Idioma alterado com sucesso",
+    "language__changed": {
+      "Bolt": "Idioma alterado com sucesso",
+      "Caesar": "Idioma alterado com sucesso",
+      "Delizia": "Idioma alterado com sucesso.",
+      "Eckhart": "Idioma alterado com sucesso."
+    },
     "language__progress": {
       "Bolt": "Alterando idioma",
       "Caesar": "Alterando idioma",
@@ -1174,10 +1214,30 @@
       "Delizia": "",
       "Eckhart": "LED"
     },
-    "lockscreen__tap_to_connect": "Toque para conectar",
-    "lockscreen__tap_to_unlock": "Toque para desbloquear",
-    "lockscreen__title_locked": "Bloqueado",
-    "lockscreen__title_not_connected": "Não conectado",
+    "lockscreen__tap_to_connect": {
+      "Bolt": "Toque para conectar",
+      "Caesar": "",
+      "Delizia": "Toque para conectar",
+      "Eckhart": ""
+    },
+    "lockscreen__tap_to_unlock": {
+      "Bolt": "Toque para desbloquear",
+      "Caesar": "",
+      "Delizia": "Toque para desbloquear",
+      "Eckhart": ""
+    },
+    "lockscreen__title_locked": {
+      "Bolt": "Bloqueado",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "lockscreen__title_not_connected": {
+      "Bolt": "Não conectado",
+      "Caesar": "",
+      "Delizia": "Não conectado",
+      "Eckhart": ""
+    },
     "lockscreen__unlock": {
       "Bolt": "",
       "Caesar": "",
@@ -1223,7 +1283,12 @@
       "Delizia": "Diminuir taxa em",
       "Eckhart": "Diminuir taxa em"
     },
-    "modify_fee__fee_rate": "Fator de taxa:",
+    "modify_fee__fee_rate": {
+      "Bolt": "",
+      "Caesar": "Fator de taxa:",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "modify_fee__increase_fee": {
       "Bolt": "Aumentar taxa em:",
       "Caesar": "Aumentar taxa em:",
@@ -1267,12 +1332,16 @@
     "monero__wanna_export_watchkey": "Deseja mesmo exportar credenciais de somente exibição?",
     "monero__wanna_start_refresh": "Deseja mesmo\niniciar atualização?",
     "monero__wanna_sync_key_images": "Deseja mesmo\nsincronizar imagens de chave?",
+    "n4w1__err_damaged": "",
+    "n4w1__err_empty": "",
+    "n4w1__err_nonempty": "",
     "n4w1__footer_first": "",
     "n4w1__footer_last": "",
     "n4w1__footer_next": "",
     "n4w1__hold_first": "",
     "n4w1__hold_last": "",
     "n4w1__hold_next": "",
+    "n4w1__reading": "",
     "n4w1__writing": "",
     "nem__absolute": {
       "Bolt": "absoluto",
@@ -1581,8 +1650,18 @@
       "Eckhart": ""
     },
     "nostr__event_kind_template": "Tipo de evento: {0}",
-    "passphrase__access_hidden_wallet": "Acessar carteira com frase secreta",
-    "passphrase__access_wallet": "Acessar carteira com frase secreta?",
+    "passphrase__access_hidden_wallet": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Acessar carteira com frase secreta"
+    },
+    "passphrase__access_wallet": {
+      "Bolt": "Acessar carteira com frase secreta?",
+      "Caesar": "Acessar carteira com frase secreta?",
+      "Delizia": "Acessar carteira com frase secreta?",
+      "Eckhart": ""
+    },
     "passphrase__always_on_device": "Inserir a frase secreta sempre no Trezor?",
     "passphrase__continue_with_empty_passphrase": "Continuar com frase secreta vazia?",
     "passphrase__from_host_not_shown": {
@@ -1591,7 +1670,12 @@
       "Delizia": "A frase secreta fornecida pelo app conectado será usada, mas não exibida devido às configurações do dispositivo.",
       "Eckhart": "A frase secreta fornecida pelo app conectado será usada, mas não exibida devido às configurações do dispositivo."
     },
-    "passphrase__hidden_wallet": "Carteira com frase secreta",
+    "passphrase__hidden_wallet": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Carteira com frase secreta"
+    },
     "passphrase__hide": {
       "Bolt": "Ocultar a frase secreta fornecida pelo app?",
       "Caesar": "Ocultar a frase secreta fornecida pelo app?",
@@ -1630,7 +1714,12 @@
     "passphrase__title_source": "Origem da frase secreta",
     "passphrase__turn_off": "Desligar a proteção por frase secreta?",
     "passphrase__turn_on": "Ligar a proteção por frase secreta?",
-    "passphrase__wallet": "Carteira com frase secreta",
+    "passphrase__wallet": {
+      "Bolt": "Carteira com frase secreta",
+      "Caesar": "Carteira com frase secreta",
+      "Delizia": "Carteira com frase secreta",
+      "Eckhart": ""
+    },
     "pin__cancel_description": {
       "Bolt": "",
       "Caesar": "",
@@ -1766,7 +1855,6 @@
     "progress__signing_transaction": "Assinando transação...",
     "progress__syncing": "Sincronizando...",
     "progress__x_seconds_left_template": "{0} segundos restantes",
-    "reboot_to_bootloader__just_a_moment": "Um momento...",
     "reboot_to_bootloader__restart": "O Trezor reiniciará no modo bootloader.",
     "reboot_to_bootloader__title": "Ir para o bootloader",
     "reboot_to_bootloader__version_by_template": "Versão do firmware {0}\npor {1}",
@@ -1865,7 +1953,12 @@
     "recovery__type_word_x_of_y_template": "Digite a palavra {0} de {1}",
     "recovery__unlock_repeated_backup": "Criar backup adicional?",
     "recovery__unlock_repeated_backup_verb": "Criar backup",
-    "recovery__wallet_recovered": "Carteira recuperada com sucesso",
+    "recovery__wallet_recovered": {
+      "Bolt": "Carteira recuperada com sucesso",
+      "Caesar": "Carteira recuperada com sucesso",
+      "Delizia": "Carteira recuperada com sucesso.",
+      "Eckhart": "Carteira recuperada com sucesso"
+    },
     "recovery__wanna_cancel_dry_run": "Deseja mesmo cancelar a verificação do backup?",
     "recovery__wanna_cancel_recovery": {
       "Bolt": "Deseja mesmo cancelar o processo de recuperação?",
@@ -1937,8 +2030,8 @@
     "reset__button_recover": {
       "Bolt": "Recup. carteira",
       "Caesar": "Recuperar carteira",
-      "Delizia": "Recuperar carteira",
-      "Eckhart": "Recuperar carteira"
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__by_continuing": {
       "Bolt": "Ao continuar, você aceita os T&C da Trezor Company.",
@@ -2024,8 +2117,8 @@
       "Eckhart": "Grupo nº {0} - Share nº {1}"
     },
     "reset__incorrect_word_selected": {
-      "Bolt": "Palavra incorreta selecionada",
-      "Caesar": "Palavra incorreta selecionada",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Palavra incorreta selecionada",
       "Eckhart": "Palavra incorreta selecionada."
     },
@@ -2161,8 +2254,8 @@
     "reset__share_completed_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Share nº {0} concluído",
-      "Eckhart": "Share nº {0} concluído"
+      "Delizia": "Share nº {0} concluído.",
+      "Eckhart": "Share nº {0} concluído."
     },
     "reset__share_words_first": "Anote a primeira palavra do backup.",
     "reset__share_words_title": "Backup padrão",
@@ -2494,13 +2587,28 @@
     "send__cancel_transaction": "Cancelar transação",
     "send__confirm_sending": "Quantia de envio",
     "send__from_multiple_accounts": "Enviando de múltiplas contas.",
-    "send__incl_transaction_fee": "incluindo taxa de transação",
-    "send__including_fee": "Incluindo taxa",
+    "send__incl_transaction_fee": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "incluindo taxa de transação",
+      "Eckhart": "incluindo taxa de transação"
+    },
+    "send__including_fee": {
+      "Bolt": "Incluindo taxa",
+      "Caesar": "Incluindo taxa",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "send__maximum_fee": "Taxa máxima",
     "send__multisig_different_paths": "Usando caminhos diferentes para XPUBs diferentes.",
     "send__receiving_to_multisig": "Recebendo em um endereço multiass.",
     "send__send_from": "Enviar de",
-    "send__send_in_the_app": "Após assinar, envie a transação pelo app.",
+    "send__send_in_the_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Após assinar, envie a transação pelo app."
+    },
     "send__sign_cancelled": "Assinatura cancelada.",
     "send__sign_transaction": "Assinar transação",
     "send__title_confirm_sending": "Confirmar envio",
@@ -2514,16 +2622,26 @@
     "send__title_sending": "Envio",
     "send__title_sending_amount": "Quantia de envio",
     "send__title_sending_to": "Enviando para",
-    "send__to_the_total_amount": "À quantia total de:",
+    "send__to_the_total_amount": {
+      "Bolt": "À quantia total de:",
+      "Caesar": "",
+      "Delizia": "À quantia total de:",
+      "Eckhart": "À quantia total de:"
+    },
     "send__total_amount": "Quantia total:",
     "send__transaction_id": "ID da transação",
     "send__transaction_signed": {
       "Bolt": "Transação assinada",
       "Caesar": "Transação assinada",
-      "Delizia": "Transação assinada",
+      "Delizia": "Transação assinada.",
       "Eckhart": "Transação assinada."
     },
-    "send__you_are_contributing": "Você está contribuindo:",
+    "send__you_are_contributing": {
+      "Bolt": "Você está contribuindo:",
+      "Caesar": "",
+      "Delizia": "Você está contribuindo:",
+      "Eckhart": "Você está contribuindo:"
+    },
     "setting__adjust": "Ajustar",
     "setting__apply": "Aplicar",
     "share_words__words_in_order": {
@@ -2806,7 +2924,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Ver mais info., sair da operação, ..."
+      "Eckhart": "Ver mais info., sair da operação..."
     },
     "tutorial__middle_click": {
       "Bolt": "",
@@ -2865,7 +2983,12 @@
       "Delizia": "Toque na metade inferior da tela para continuar, ou deslize para baixo para voltar.",
       "Eckhart": ""
     },
-    "tutorial__tap_to_start": "Toque para iniciar o tutorial",
+    "tutorial__tap_to_start": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Toque para iniciar o tutorial"
+    },
     "tutorial__title_easy_navigation": "Fácil navegação",
     "tutorial__title_handy_menu": "Menu prático",
     "tutorial__title_hello": {
@@ -2955,15 +3078,30 @@
       "Delizia": "Cancelar configuração do código de limpeza",
       "Eckhart": "Cancelar configuração do código de limpeza?"
     },
-    "wipe_code__change": "Alterar código de limpeza",
+    "wipe_code__change": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Alterar código de limpeza"
+    },
     "wipe_code__change_question": "Alterar código de limpeza?",
     "wipe_code__changed": "O código de limpeza foi alterado.",
     "wipe_code__diff_from_pin": "O código de limpeza deve ser diferente do seu PIN.",
     "wipe_code__disabled": "Código de limpeza desativado.",
     "wipe_code__enabled": "Código de limpeza ativado.",
     "wipe_code__enter_new": "Novo cód. limpeza",
-    "wipe_code__info": "O cód. limpeza serve para apagar todos os dados deste dispositivo.",
-    "wipe_code__invalid": "Cód. limpeza inválido",
+    "wipe_code__info": {
+      "Bolt": "O cód. limpeza serve para apagar todos os dados deste dispositivo.",
+      "Caesar": "O cód. limpeza serve para apagar todos os dados deste dispositivo.",
+      "Delizia": "",
+      "Eckhart": "O cód. limpeza serve para apagar todos os dados deste dispositivo."
+    },
+    "wipe_code__invalid": {
+      "Bolt": "Cód. limpeza inválido",
+      "Caesar": "",
+      "Delizia": "Cód. limpeza inválido",
+      "Eckhart": ""
+    },
     "wipe_code__mismatch": {
       "Bolt": "Cód. limpeza não coincidem.",
       "Caesar": "Os códigos de limpeza inseridos não coincidem.",
@@ -2984,19 +3122,29 @@
       "Eckhart": ""
     },
     "wipe_code__remove": {
-      "Bolt": "Remover código de limpeza",
-      "Caesar": "Remover código de limpeza",
-      "Delizia": "Remover código de limpeza",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "Remover o código de limpeza"
     },
-    "wipe_code__title": "Código de limpeza",
+    "wipe_code__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Código de limpeza"
+    },
     "wipe_code__title_check": {
       "Bolt": "",
       "Caesar": "Verif. cód. limpeza",
       "Delizia": "",
       "Eckhart": ""
     },
-    "wipe_code__title_invalid": "Código de limpeza inválido",
+    "wipe_code__title_invalid": {
+      "Bolt": "",
+      "Caesar": "Código de limpeza inválido",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "wipe_code__title_settings": {
       "Bolt": "Config. cód. limpeza",
       "Caesar": "Config. cód. limpeza",
@@ -3012,9 +3160,9 @@
     },
     "wipe_code__wipe_code_mismatch": {
       "Bolt": "Cód. limp. não coincidem",
-      "Caesar": "Cód. limp. não coincidem",
-      "Delizia": "Cód. limp. não coincidem",
-      "Eckhart": "Códigos de limpeza não coincidem"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "word_count__title": "Número de palavras",
     "words__about": "Sobre",
@@ -3046,8 +3194,8 @@
     "words__connected": "Conectado",
     "words__contains": "Contém",
     "words__continue_anyway": {
-      "Bolt": "Continuar",
-      "Caesar": "Continuar mesmo assim",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Continuar mesmo assim",
       "Eckhart": "Continuar mesmo assim"
     },
@@ -3127,10 +3275,20 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "words__please_try_again": "Tente novamente",
+    "words__please_try_again": {
+      "Bolt": "Tente novamente",
+      "Caesar": "Tente novamente",
+      "Delizia": "Tente novamente",
+      "Eckhart": ""
+    },
     "words__power": "Energia",
     "words__provider": "Provedor",
-    "words__really_wanna": "Deseja mesmo",
+    "words__really_wanna": {
+      "Bolt": "Deseja mesmo",
+      "Caesar": "",
+      "Delizia": "Deseja mesmo",
+      "Eckhart": ""
+    },
     "words__receive": {
       "Bolt": "",
       "Caesar": "",
@@ -3192,8 +3350,8 @@
     "words__token": "Token",
     "words__transaction_fee": "Taxa de transação",
     "words__try_again": {
-      "Bolt": "Tente novamente.",
-      "Caesar": "Tente novamente.",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Tente novamente.",
       "Eckhart": "Tente novamente"
     },
