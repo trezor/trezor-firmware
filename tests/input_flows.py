@@ -22,17 +22,19 @@ from trezorlib.debuglink import DebugLink, DebugSession, LayoutContent, LayoutTy
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import multipage_content
 from trezorlib.exceptions import TrezorFailure
-
-from . import translations as TR
-from .common import (
+from trezorlib.testing import translations as TR
+from trezorlib.testing.common import (
     BRGeneratorType,
+    get_text_possible_pagination,
+    swipe_if_necessary,
+)
+
+from .common import (
     check_pin_backoff_time,
     click_info_button_bolt,
     click_info_button_delizia_eckhart,
     click_through,
-    get_text_possible_pagination,
     read_and_confirm_mnemonic,
-    swipe_if_necessary,
 )
 from .input_flows_helpers import (
     BackupFlow,

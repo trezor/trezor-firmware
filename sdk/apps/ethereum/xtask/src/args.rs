@@ -35,11 +35,11 @@ pub enum LogLevel {
 
 impl Model {
     /// Returns feature name corresponding to the model
-    pub fn feature_name(self) -> &'static str {
+    pub fn feature_name(self) -> String {
         match self {
             Model::T3T1 => "model_t3t1",
             Model::T3W1 => "model_t3w1",
-        }
+        }.into()
     }
 
     /// Returns the Rust target triple for the building firmware for hardware target
@@ -59,24 +59,29 @@ impl Model {
 }
 
 impl Language {
-    /// Returns feature name corresponding to the language
-    pub fn feature_name(self) -> &'static str {
+    /// Returns the name of the language
+    pub fn name(self) -> String {
         match self {
-            Language::EN => "lang_en",
-            Language::CS => "lang_cs",
+            Language::EN => "en".into(),
+            Language::CS => "cs".into(),
         }
+    }
+
+    /// Returns feature name corresponding to the language
+    pub fn feature_name(self) -> String {
+        format!("lang_{}", self.name())
     }
 }
 
 impl LogLevel {
-    pub fn feature_name(self) -> &'static str {
+    pub fn feature_name(self) -> String {
         match self {
             LogLevel::Error => "log_level_error",
             LogLevel::Warn => "log_level_warn",
             LogLevel::Info => "log_level_info",
             LogLevel::Debug => "log_level_debug",
             LogLevel::Trace => "log_level_trace",
-        }
+        }.into()
     }
 }
 
@@ -148,7 +153,7 @@ pub struct BuildArgs {
 
 impl BuildArgs {
     /// Resolves the list of cargo features to enable based on the provided cli arguments
-    pub fn resolve_features(&self) -> Result<Vec<&'static str>> {
+    pub fn resolve_features(&self) -> Result<Vec<String>> {
         let mut features = vec![
             self.model.feature_name(),
             self.lang.feature_name(),
@@ -156,15 +161,15 @@ impl BuildArgs {
         ];
 
         if self.emulator {
-            features.push("emulator");
+            features.push("emulator".into());
         }
 
         if self.debug {
-            features.push("debug");
+            features.push("debug".into());
         }
 
         if !self.production {
-            features.push("dev_keys");
+            features.push("dev_keys".into());
         }
 
         Ok(features)
@@ -212,13 +217,16 @@ pub struct UnitTestArgs {
 }
 
 #[derive(Args, Debug)]
-#[command(override_usage = "xtask upload --model <MODEL> [OPTIONS]")]
+#[command(override_usage = "xtask upload --model <MODEL> --lang <LANGUAGE> [OPTIONS]")]
 pub struct UploadArgs {
     #[arg(default_value = "ethereum")]
     pub app: String,
 
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    #[arg(long, short = 'l', ignore_case = true)]
+    pub lang: Language,
 
     #[arg(long, short = 'e')]
     pub emulator: bool,

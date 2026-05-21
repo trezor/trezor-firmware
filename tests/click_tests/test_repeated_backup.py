@@ -19,14 +19,14 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import device, exceptions, messages
+from trezorlib.testing import translations as TR
 
-from .. import translations as TR
 from ..common import MOCK_GET_ENTROPY, LayoutType
 from . import recovery, reset
 from .common import go_next
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("core")

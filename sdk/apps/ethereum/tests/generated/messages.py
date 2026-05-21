@@ -44,7 +44,7 @@ class ButtonRequestType(IntEnum):
     PublicKey = 11
     MnemonicWordCount = 12
     MnemonicInput = 13
-    _Deprecated_ButtonRequest_PassphraseType = 14
+    _Deprecated_PassphraseType = 14
     UnknownDerivationPath = 15
     RecoveryHomepage = 16
     Success = 17
@@ -82,10 +82,10 @@ class ABIType(IntEnum):
 
 
 class ERC7730FieldFormatterType(IntEnum):
-    FORMATTER_ADDRESS_NAME = 0
-    FORMATTER_AMOUNT = 1
-    FORMATTER_TOKEN_AMOUNT = 2
-    FORMATTER_UNIT = 3
+    ADDRESS_NAME = 0
+    AMOUNT = 1
+    TOKEN_AMOUNT = 2
+    UNIT = 3
 
 
 class ERC7730ContainerPath(IntEnum):

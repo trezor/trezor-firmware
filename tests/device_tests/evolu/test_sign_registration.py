@@ -4,8 +4,8 @@ from ecdsa import NIST256p, SigningKey, VerifyingKey
 from trezorlib import evolu
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.testing.common import compact_size
 
-from ...common import compact_size
 from ..certificate import check_signature_optiga
 from .common import get_delegated_identity_key, get_invalid_proof, get_proof
 

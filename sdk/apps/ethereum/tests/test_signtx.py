@@ -26,9 +26,9 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import MessageFilter
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path, unharden
-from trezorlib.testing.common import parametrize_using_common_fixtures
 
 from . import ethereum_ext
+from .common import parametrize_using_common_fixtures
 from .generated import messages as ethereum_messages
 from .definitions import encode_eth_network
 from .input_flows import (
@@ -92,7 +92,9 @@ def test_signtx(
             session, safety_checks=trezor_messages.SafetyCheckLevel.PromptTemporarily
         )
 
-    _do_test_signtx(session, instance_id, parameters, result, input_flow, chunkify=chunkify)
+    _do_test_signtx(
+        session, instance_id, parameters, result, input_flow, chunkify=chunkify
+    )
 
 
 def _do_test_signtx(

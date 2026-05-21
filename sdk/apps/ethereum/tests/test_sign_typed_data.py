@@ -20,7 +20,7 @@ from . import ethereum_ext
 from trezorlib import exceptions
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
-from trezorlib.testing.common import parametrize_using_common_fixtures
+from .common import parametrize_using_common_fixtures
 from .input_flows import InputFlowEIP712Cancel, InputFlowEIP712ShowMore
 
 

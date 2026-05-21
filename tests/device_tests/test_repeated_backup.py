@@ -20,8 +20,8 @@ import pytest
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.testing import translations as TR
 
-from .. import translations as TR
 from ..common import (
     MNEMONIC_SLIP39_SINGLE_EXT_20,
     TEST_ADDRESS_N,

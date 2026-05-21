@@ -15,11 +15,12 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.testing.common import parametrize_using_common_fixtures
 from trezorlib.tools import parse_path
 
+from .common import parametrize_using_common_fixtures
 from . import ethereum_ext
 from .input_flows import InputFlowShowAddressQRCode
+
 
 @parametrize_using_common_fixtures("getaddress.json")
 def test_getaddress(session: Session, instance_id: int, parameters, result):
