@@ -109,7 +109,6 @@ async def sign_tx_eip1559(
         initial_data,
         msg,
         defs,
-        None,
         address_bytes,
         maximum_fee,
         fee_items,

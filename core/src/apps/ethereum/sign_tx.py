@@ -1,6 +1,5 @@
 from micropython import const
 from typing import TYPE_CHECKING
-from ubinascii import unhexlify
 
 from trezor import TR
 from trezor.crypto import rlp
@@ -36,20 +35,6 @@ if TYPE_CHECKING:
 # the full value: v = 2 * chain_id + 35 + v_bit
 _MAX_CHAIN_ID = const(0xFFFF_FFFF - 36) // 2
 
-# EIP-7702
-
-_EIP_7702_TX_TYPE = const(4)
-EIP_7702_KNOWN_ADDRESSES = {
-    unhexlify("000000009B1D0aF20D8C6d0A44e162d11F9b8f00"): "Uniswap",
-    unhexlify("69007702764179f14F51cdce752f4f775d74E139"): "alchemyplatform",
-    unhexlify("5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d"): "AmbireTech",
-    unhexlify("63c0c19a282a1b52b07dd5a65b58948a07dae32b"): "MetaMask",
-    unhexlify(
-        "4Cd241E8d1510e30b2076397afc7508Ae59C66c9"
-    ): "Ethereum Foundation AA team",
-    unhexlify("17c11FDdADac2b341F2455aFe988fec4c3ba26e3"): "Luganodes",
-}
-
 
 @with_keychain_from_chain_id
 async def sign_tx(
@@ -61,7 +46,7 @@ async def sign_tx(
     from trezor.ui.layouts import show_continue_in_app
     from trezor.utils import HashWriter
 
-    from apps.common import paths, safety_checks
+    from apps.common import paths
 
     from .helpers import format_ethereum_amount, get_fee_items_regular
 
@@ -74,14 +59,9 @@ async def sign_tx(
 
     address_bytes = bytes_from_address(msg.to)
 
-    valid_tx_types = (1, 6, _EIP_7702_TX_TYPE, None)
+    valid_tx_types = (1, 6, None)
     if tx_type not in valid_tx_types:
         raise DataError("tx_type out of bounds")
-    if tx_type == _EIP_7702_TX_TYPE:
-        if safety_checks.is_strict():
-            raise DataError("EIP-7702 not allowed in strict checks")
-        if address_bytes not in EIP_7702_KNOWN_ADDRESSES:
-            raise DataError("Unknown EIP-7702 address")
     if len(msg.gas_price) + len(msg.gas_limit) > 30:
         raise DataError("Fee overflow")
 
@@ -124,7 +104,6 @@ async def sign_tx(
         initial_data,
         msg,
         defs,
-        tx_type,
         address_bytes,
         maximum_fee,
         fee_items,
@@ -218,7 +197,6 @@ async def confirm_tx_data(
     initial_data: AnyBytes,
     msg: MsgInSignTx,
     defs: Definitions,
-    tx_type: int | None,
     address_bytes: bytes,
     maximum_fee: str,
     fee_items: Sequence[StrPropertyType],
@@ -227,8 +205,6 @@ async def confirm_tx_data(
 ) -> tuple[ConfirmDataFn | None, Coroutine[Any, Any, None] | None]:
     """Returns data chunk callback and transaction summary layout to be awaited.
     [None, None] implies clear signing attempted and succeeded."""
-
-    from trezor.ui.layouts import confirm_value
 
     from . import clear_signing, staking, yielding
     from .helpers import format_ethereum_amount
@@ -253,16 +229,6 @@ async def confirm_tx_data(
         if payment_request_verifier is not None:
             raise DataError("Payment Requests don't support yielding")
         return yielding_approver
-
-    if tx_type == _EIP_7702_TX_TYPE:
-        # we have already made sure that the address is a known address
-        # as part of the initial validation
-        await confirm_value(
-            TR.ethereum__eip_7702_title,
-            EIP_7702_KNOWN_ADDRESSES[address_bytes],
-            TR.ethereum__eip_7702,
-            "confirm_provider",
-        )
 
     value = int.from_bytes(msg.value, "big")
 
@@ -332,7 +298,7 @@ async def confirm_tx_data(
             maximum_fee,
             fee_items,
             token,
-            is_send=(data_length == 0 and tx_type != _EIP_7702_TX_TYPE),
+            is_send=(data_length == 0),
             chunkify=bool(msg.chunkify),
         )
     else:
