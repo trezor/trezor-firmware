@@ -38,7 +38,6 @@ FEATURES_WANTED = [
     "display",
     "dma2d",
     "input",
-    "ipc",
     "kernel_mode",
     "optiga",
     "powerctl",
@@ -68,7 +67,7 @@ if not DISABLE_TROPIC:
     FEATURES_WANTED.append('tropic')
 
 if TREZOR_MODEL in ['T3W1'] and EXTAPP_SUPPORT:
-    FEATURES_WANTED += ["app_loading"]
+    FEATURES_WANTED += ["app_loading", "ipc"]
 
 if N4W1:
     assert PYOPT == "0", "N4W1 requires PYOPT=0"
