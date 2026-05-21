@@ -32,6 +32,7 @@ FEATURES_WANTED = [
     "power_manager",
     "rgb_led",
     "secure_mode",
+    "suspend",
     "usb",
     "usb_iface_wire",
     ]
