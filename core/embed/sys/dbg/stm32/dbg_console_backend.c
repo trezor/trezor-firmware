@@ -31,10 +31,6 @@
 #include "SEGGER_SYSVIEW.h"
 #endif
 
-#if defined(USE_DBG_CONSOLE_VCP) && !defined(USE_USB_IFACE_VCP)
-#error "USE_DBG_CONSOLE_VCP requires USE_USB_IFACE_VCP"
-#endif
-
 #if defined(USE_DBG_CONSOLE_SYSTEM_VIEW) && !defined(USE_SYSTEM_VIEW)
 #error "USE_DBG_CONSOLE_SYSTEM_VIEW requires USE_SYSTEM_VIEW"
 #endif
