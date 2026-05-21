@@ -1,0 +1,108 @@
+name: Core-xtask
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize  # branch head update
+      - labeled
+  workflow_dispatch:
+
+# cancel any previous runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read       # for actions/checkout
+  pull-requests: read  # for dflook comments on PR
+
+env:
+  SDL_VIDEODRIVER: dummy
+  PULL_COMMENT_PATH: ${{ github.workspace }}/tests/core-pull-comment.md
+  TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
+
+jobs:
+  core_firmware:
+    name: xtask build firmware (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [T3W1]
+        coins: [universal, btconly]
+        type: [normal, debuglink]
+    env:
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '' || '--btc-only' }}
+      DEBUGLINK: --debug-link ${{ matrix.type == 'debuglink' && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run xtask build boardloader -m ${{ matrix.model }}"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "uv run xtask build bootloader -m ${{ matrix.model }}"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "uv run xtask build prodtest -m ${{ matrix.model }}"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "uv run xtask build prodtest -m ${{ matrix.model }} --emulator"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "uv run xtask build firmware -m ${{ matrix.model }} --bootloader-devel $DEBUGLINK $BITCOIN_ONLY"
+      - run: nix-shell --run "uv run ./tools/check-bitcoin-only core/build-xtask/artifacts/latest/firmware.bin"
+        if: matrix.coins == 'btconly' && matrix.type != 'debuglink'
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}
+          path: |
+            core/build-xtask/artifacts/*
+          retention-days: 3
+
+  core_emu:
+    name: xtask build emu (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [T3W1]
+        coins: [universal, btconly]
+        type: [debuglink]
+    env:
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '' || '--btc-only' }}
+      DEBUGLINK: --debug-link ${{ matrix.type == 'debuglink' && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run xtask build bootloader --emulator --model ${{ matrix.model }}"
+        if: matrix.coins == 'universal'
+      - run: nix-shell --run "uv run xtask build firmware --emulator --frozen --model ${{ matrix.model }} $DEBUGLINK $BITCOIN_ONLY"
+      - run: mkdir -p core/build/unix && ln -s ../../build-xtask/artifacts/latest/firmware-emu core/build/unix/trezor-emu-core
+      - run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml > ../../tests/trezor-tropic-model.log 2>&1 &"
+      - run: nix-shell --run "uv run make -C core test_emu_sanity"
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}
+          path: |
+            core/build-xtask/artifacts/*
+          retention-days: 3
+
+  core_unit_python_test:
+    name: xtask python unit tests (${{ matrix.model }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [T3W1]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run xtask build firmware --emulator --model ${{ matrix.model }}"
+      - run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml > ../../tests/trezor-tropic-model.log 2>&1 &"
+      - run: mkdir -p core/build/unix && ln -s ../../build-xtask/artifacts/latest/firmware-emu core/build/unix/trezor-emu-core
+      - run: nix-shell --run "uv run make -C core test"
+      - run: nix-shell --run "uv run make -C core test_emu_sanity"  # sanity check non-frozen emulator
