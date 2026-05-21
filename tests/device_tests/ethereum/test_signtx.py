@@ -21,7 +21,7 @@ from itertools import product
 
 import pytest
 
-from trezorlib import device, ethereum, exceptions, messages, models
+from trezorlib import ethereum, exceptions, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import TrezorFailure
@@ -76,11 +76,6 @@ def test_signtx(session: Session, chunkify: bool, parameters: dict, result: dict
         if not session.debug.legacy_debug
         else None
     )
-
-    if not parameters.get("safety_checks", True):
-        device.apply_settings(
-            session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
-        )
 
     _do_test_signtx(session, parameters, result, input_flow, chunkify=chunkify)
 
@@ -558,11 +553,6 @@ def test_signtx_staking(
     "ethereum/sign_tx_error.json",
 )
 def test_signtx_error(session: Session, parameters: dict, result: dict):
-    if not parameters.get("safety_checks", True):
-        device.apply_settings(
-            session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
-        )
-
     # result not needed
     with pytest.raises(TrezorFailure, match=r"DataError"):
         ethereum.sign_tx(
