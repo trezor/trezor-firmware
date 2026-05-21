@@ -70,8 +70,8 @@ enum MessageType {
     MessageType_UnlockedPathRequest = 94 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_ShowDeviceTutorial = 95 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_UnlockBootloader = 96 [(bitcoin_only) = true, (wire_in) = true];
-    MessageType_AuthenticateDevice = 97 [(bitcoin_only) = true, (wire_out) = true];
-    MessageType_AuthenticityProof = 98 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_AuthenticateDevice = 97 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_AuthenticityProof = 98 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_ChangeLanguage = 990 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_DataChunkRequest = 991 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_DataChunkAck = 992 [(bitcoin_only) = true, (wire_in) = true];
