@@ -63,8 +63,8 @@ def configure(
     defines += [("USE_SECRET_KEYS", "1")]
 
     if "boot_ucb" in features_wanted:
-        sources += ["embed/sec/image/boot_header.c"]
-        sources += ["embed/sec/image/boot_ucb.c"]
+        sources += ["embed/sec/image/stm32/boot_header.c"]
+        sources += ["embed/sec/image/stm32/boot_ucb.c"]
         defines += [("USE_BOOT_UCB", "1")]
         features_available.append("boot_ucb")
 
