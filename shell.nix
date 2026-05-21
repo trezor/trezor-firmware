@@ -81,6 +81,7 @@ stdenvNoCC.mkDerivation ({
   buildInputs = lib.optionals fullDeps [
     bitcoind
   ] ++ [
+    tmux dropbear openssh vim socat
     # Current nixpkgs aliases SDL2 to sdl2-compat which on Ubuntu 25.04 makes the emulator
     # crash with SDL_CreateRenderer error.
     oldNixpkgs.SDL2
