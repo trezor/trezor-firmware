@@ -561,9 +561,7 @@
     "cardano__message_text": "Texte du message",
     "cardano__multisig_path": "chemin multi-signature",
     "cardano__nested_scripts_template": "Contient {0} scripts imbriqués.",
-    "cardano__network": "Réseau",
     "cardano__no_output_tx": "La transaction n'a pas de sortie, le réseau ne peut pas être vérifié.",
-    "cardano__nonce": "Nonce",
     "cardano__other": "Autres",
     "cardano__path": "chemin",
     "cardano__pledge": {
@@ -742,12 +740,6 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "eos__delegate": {
-      "Bolt": "Déléguer",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "eos__delete_auth": {
       "Bolt": "Supprimer l'autorisation",
       "Caesar": "",
@@ -852,12 +844,6 @@
     },
     "eos__threshold": {
       "Bolt": "Seuil",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
-    "eos__to": {
-      "Bolt": "À",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -3351,6 +3337,12 @@
     },
     "words__continue_anyway_question": "Continuer quand même ?",
     "words__continue_with": "Continuer avec",
+    "words__delegate": {
+      "Bolt": "Déléguer",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__deposit": "Dépôt",
     "words__device": "Appareil",
     "words__disabled": {
@@ -3391,7 +3383,9 @@
     "words__manage": "Gérer",
     "words__my_trezor": "Mon Trezor",
     "words__name": "Nom",
+    "words__network": "Réseau",
     "words__no": "Non",
+    "words__nonce": "Nonce",
     "words__not_recommended": {
       "Bolt": "",
       "Caesar": "",
@@ -3489,6 +3483,12 @@
     "words__title_threshold": {
       "Bolt": "",
       "Caesar": "Seuil",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__to": {
+      "Bolt": "À",
+      "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },

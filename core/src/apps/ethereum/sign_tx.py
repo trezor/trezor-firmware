@@ -228,8 +228,6 @@ async def confirm_tx_data(
     """Returns data chunk callback and transaction summary layout to be awaited.
     [None, None] implies clear signing attempted and succeeded."""
 
-    from trezor.ui.layouts import confirm_value
-
     from . import clear_signing, staking, yielding
     from .helpers import format_ethereum_amount
     from .layout import require_confirm_payment_request, require_confirm_tx
@@ -254,15 +252,16 @@ async def confirm_tx_data(
             raise DataError("Payment Requests don't support yielding")
         return yielding_approver
 
-    if tx_type == _EIP_7702_TX_TYPE:
-        # we have already made sure that the address is a known address
-        # as part of the initial validation
-        await confirm_value(
-            TR.ethereum__eip_7702_title,
-            EIP_7702_KNOWN_ADDRESSES[address_bytes],
-            TR.ethereum__eip_7702,
-            "confirm_provider",
-        )
+    # TODO: Type 4 transaction supports will be added in a later PR after adding the authorisation tag signing flow.
+    # if tx_type == _EIP_7702_TX_TYPE:
+    #     # we have already made sure that the address is a known address
+    #     # as part of the initial validation
+    #     await confirm_value(
+    #         TR.ethereum__eip_7702_title,
+    #         EIP_7702_KNOWN_ADDRESSES[address_bytes],
+    #         TR.ethereum__eip_7702,
+    #         "confirm_provider",
+    #     )
 
     value = int.from_bytes(msg.value, "big")
 
