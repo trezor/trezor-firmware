@@ -1,4 +1,4 @@
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{Context, Result, anyhow, ensure};
 use cargo_metadata::MetadataCommand;
 use std::process::Command;
 use std::{
@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::args::{BuildArgs, Model};
+use crate::args::{BuildArgs, Language, Model};
 
 /// Returns the path to the built ELF file for the given build arguments.
 pub fn elf_path(args: &BuildArgs) -> Result<PathBuf> {
@@ -48,8 +48,13 @@ pub fn workspace_dir() -> Result<PathBuf> {
 
 /// Returns the directory where built artifacts for a specific model
 /// should be stored.
-pub fn artifacts_dir(model: Model, emulator: bool) -> Result<PathBuf> {
-    let model_dir = format!("{}{}", model.model_id(), if emulator { "-emu" } else { "" });
+pub fn artifacts_dir(model: Model, lang: Language, emulator: bool) -> Result<PathBuf> {
+    let model_dir = format!(
+        "{}-{}{}",
+        model.model_id(),
+        lang.name(),
+        if emulator { "-emu" } else { "" }
+    );
     Ok(build_dir()?.join("artifacts").join(model_dir))
 }
 
@@ -170,8 +175,10 @@ mod tests {
 
         let error = parse_version_file(&path).unwrap_err();
 
-        assert!(error
-            .to_string()
-            .contains("Failed to parse version from file"));
+        assert!(
+            error
+                .to_string()
+                .contains("Failed to parse version from file")
+        );
     }
 }

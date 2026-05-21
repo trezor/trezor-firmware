@@ -26,7 +26,7 @@ from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from . import reset
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("core")

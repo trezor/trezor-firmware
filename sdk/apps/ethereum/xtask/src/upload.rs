@@ -5,7 +5,7 @@ use crate::{args::UploadArgs, helpers};
 
 pub fn upload(args: UploadArgs) -> Result<u64> {
     let binary =
-        helpers::artifacts_dir(args.model, args.emulator)?.join(format!("{}.elf", &args.app));
+        helpers::artifacts_dir(args.model, args.lang, args.emulator)?.join(format!("{}.elf", &args.app));
 
     let binary = binary
         .canonicalize()

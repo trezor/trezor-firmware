@@ -42,8 +42,7 @@ from .test_pin import Situation, prepare_pin_dialogue
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
-
-    from ...device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 # Trezor Safe 7 only
 pytestmark = [pytest.mark.models("eckhart")]
 

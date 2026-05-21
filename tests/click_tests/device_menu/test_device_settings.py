@@ -24,8 +24,7 @@ from .common import Menu, assert_device_screen, close_device_menu, open_device_m
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
     from trezorlib.messages import Features
-
-    from ...device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 # Trezor Safe 7 only
 pytestmark = [pytest.mark.models("eckhart")]
 

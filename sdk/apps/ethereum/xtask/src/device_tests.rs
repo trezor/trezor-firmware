@@ -4,8 +4,8 @@ use std::process;
 use crate::{args::UploadArgs, helpers};
 
 pub fn device_tests(args: UploadArgs) -> Result<()> {
-    let binary =
-        helpers::artifacts_dir(args.model, args.emulator)?.join(format!("{}.elf", &args.app));
+    let binary = helpers::artifacts_dir(args.model, args.lang, args.emulator)?
+        .join(format!("{}.elf", &args.app));
 
     let binary = binary
         .canonicalize()
@@ -16,10 +16,10 @@ pub fn device_tests(args: UploadArgs) -> Result<()> {
             "run",
             "pytest",
             &format!("--extapp={}", binary.display()),
+            &format!("--lang={}", args.lang.name()),
             "--ui=test",
             "--verbose",
         ])
-        .env("TREZOR_COMMON_FIXTURES_DIR", "tests/fixtures")
         .env("TREZOR_TRANSLATIONS_DIR", "translations")
         .status()
         .context("Failed to spawn `pytest`")?;

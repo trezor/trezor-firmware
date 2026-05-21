@@ -24,8 +24,7 @@ from ... import translations as TR
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
     from trezorlib.messages import Features
-
-    from ...device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 PIN4 = "1234"
 

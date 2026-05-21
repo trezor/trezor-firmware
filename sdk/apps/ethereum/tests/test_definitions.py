@@ -412,18 +412,18 @@ UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT = definitions.make_eth_display_format(
             path=ethereum_messages.ERC7730Path(path=[0, 4]),
             label="FAKE Amount",
             token_path=ethereum_messages.ERC7730Path(path=[0, 0]),
-            formatter=ethereum_messages.ERC7730FieldFormatterType.FORMATTER_TOKEN_AMOUNT,
+            formatter=ethereum_messages.ERC7730FieldFormatterType.TOKEN_AMOUNT,
         ),
         ethereum_messages.ERC7730FieldInfo(
             path=ethereum_messages.ERC7730Path(path=[0, 5]),
             label="FAKE Minimum to Receive",
             token_path=ethereum_messages.ERC7730Path(path=[0, 1]),
-            formatter=ethereum_messages.ERC7730FieldFormatterType.FORMATTER_TOKEN_AMOUNT,
+            formatter=ethereum_messages.ERC7730FieldFormatterType.TOKEN_AMOUNT,
         ),
         ethereum_messages.ERC7730FieldInfo(
             path=ethereum_messages.ERC7730Path(path=[0, 2]),
             label="FAKE fee",
-            formatter=ethereum_messages.ERC7730FieldFormatterType.FORMATTER_UNIT,
+            formatter=ethereum_messages.ERC7730FieldFormatterType.UNIT,
         ),
         ethereum_messages.ERC7730FieldInfo(
             path=ethereum_messages.ERC7730Path(path=[0, 3]),
@@ -431,7 +431,7 @@ UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT = definitions.make_eth_display_format(
             decimals=4,
             base="%",
             prefix=False,
-            formatter=ethereum_messages.ERC7730FieldFormatterType.FORMATTER_ADDRESS_NAME,
+            formatter=ethereum_messages.ERC7730FieldFormatterType.ADDRESS_NAME,
         ),
     ],
 )

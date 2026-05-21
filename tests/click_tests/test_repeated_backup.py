@@ -26,7 +26,7 @@ from . import recovery, reset
 from .common import go_next
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("core")

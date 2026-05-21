@@ -26,7 +26,7 @@ from . import reset
 from .common import LayoutType, go_next
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.models("core")

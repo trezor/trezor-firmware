@@ -102,6 +102,18 @@ def set_language(session: DebugSession, lang: str, *, force: bool = False) -> No
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
+def check_language(session: DebugSession, lang: str) -> None:
+    with session.test_ctx:
+        language = session.features.language
+        assert isinstance(language, str)
+        if not language.startswith(lang):
+            raise RuntimeError(
+                f"Incompatible language on device: expected '{lang}', got '{language}'"
+            )
+    _CURRENT_TRANSLATION.LAYOUT = session.layout_type
+    _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
+
+
 def get_language() -> str:
     for lang in LANGUAGES:
         if _CURRENT_TRANSLATION.TR == TRANSLATIONS[lang]:

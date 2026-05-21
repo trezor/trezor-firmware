@@ -34,11 +34,11 @@ pub fn build(args: BuildArgs) -> Result<()> {
 
         arm::print_elf_sections(&min)?;
 
-        postbuild::publish_artifact(&min, &args.app, args.model, args.emulator)?;
+        postbuild::publish_artifact(&min, &args.app, args.model, args.lang, args.emulator)?;
     } else {
         run_cargo_subcommand("size", &args, Some(&["-A"]))?;
         run_cargo_subcommand("size", &args, Some(&["-B"]))?;
-        postbuild::publish_artifact(&orig, &args.app, args.model, args.emulator)?;
+        postbuild::publish_artifact(&orig, &args.app, args.model, args.lang, args.emulator)?;
     };
 
     Ok(())
@@ -72,8 +72,8 @@ pub fn test(args: UnitTestArgs) -> Result<()> {
     let features = vec![
         args.model.feature_name(),
         args.lang.feature_name(),
-        "test",
-        "log_level_trace",
+        "test".into(),
+        "log_level_trace".into(),
     ];
 
     let status = process::Command::new("cargo")

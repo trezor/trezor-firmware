@@ -26,8 +26,7 @@ from .. import translations as TR
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
-
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 # Safe family only

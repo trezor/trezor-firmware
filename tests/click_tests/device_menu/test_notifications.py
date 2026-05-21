@@ -33,7 +33,7 @@ from .common import (
 
 if TYPE_CHECKING:
 
-    from ...device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 # Trezor Safe 7 only
 pytestmark = [pytest.mark.models("eckhart")]
 

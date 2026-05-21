@@ -35,8 +35,7 @@ from .common import go_next, unlock_gesture
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import LayoutContent
-
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 TX_CACHE_MAINNET = TxCache("Bitcoin")
 TX_CACHE_TESTNET = TxCache("Testnet")
