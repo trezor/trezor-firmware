@@ -213,6 +213,7 @@ class Menu(Enum):
                     [
                         TR.words__name,
                         TR.brightness__title,
+                        TR.words__tap_to_wake,
                     ]
                 )
                 if features.haptic_feedback is not None:
