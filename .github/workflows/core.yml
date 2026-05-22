@@ -212,16 +212,18 @@ jobs:
           retention-days: 2
 
   core_unit_python_test:
-    name: Python unit tests (${{ matrix.model }}, ${{ matrix.asan }})
+    name: Python unit tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
     needs: param
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
+        coins: ${{ fromJSON(github.event_name == 'schedule' && '["universal", "btconly"]' || '["universal"]') }}
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_MODEL: ${{ matrix.model }}
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       DISABLE_TROPIC: 0
