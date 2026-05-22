@@ -181,6 +181,9 @@ clippy:
 audit_rust: ## run cargo audit on rust dependencies
 	cd embed ; cargo audit
 
+vet_rust: ## run cargo vet on rust dependencies
+	cd embed ; cargo vet --locked
+
 ## code generation:
 
 templates: translations ## render Mako templates (for lists of coins, tokens, etc.)
