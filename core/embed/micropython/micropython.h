@@ -21,7 +21,6 @@
  */
 
 #include "py/gc.h"
-#include "py/mphal.h"
 #include "py/nlr.h"
 #include "py/obj.h"
 #include "py/objstr.h"

@@ -46,7 +46,8 @@ fn prepare_bindings() -> bindgen::Builder {
 
     let build_dir_include = format!("-I{}", build_dir());
     let port_include =
-        env::var("MPCONFIG_PORT_INCLUDE").unwrap_or(env::var("CARGO_MANIFEST_DIR").unwrap());
+        env::var("MPCONFIG_PORT_INCDIR").unwrap_or(String::from("../projects/unix"));
+    println!("cargo:warning=MPCONFIG_PORT_INCDIR: {:?}", port_include);
 
     let mut clang_args: Vec<String> = Vec::new();
 
@@ -115,7 +116,6 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_new_str")
         .allowlist_function("mp_obj_new_tuple")
         .allowlist_function("mp_obj_new_attrtuple")
-        .allowlist_function("mp_obj_get_int_maybe")
         .allowlist_function("mp_obj_is_true")
         .allowlist_function("mp_obj_get_type_str")
         .allowlist_function("mp_call_function_n_kw")
@@ -192,9 +192,6 @@ fn generate_micropython_bindings() {
         .allowlist_function("qstr_compute_hash")
         // str
         .allowlist_type("mp_obj_str_t")
-        // time
-        .allowlist_function("mp_hal_ticks_ms")
-        .allowlist_function("mp_hal_delay_ms")
         // tuple
         .allowlist_type("mp_obj_tuple_t")
         // typ
