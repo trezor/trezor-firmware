@@ -21,7 +21,7 @@ class TrezorCore(Device):
         self.power_off()
         self.power_on()
 
-        self.wait(5)
+        self.wait(15)
         self.log(f"[software] Updating the firmware to {file}")
         self.run_trezorctl(f"firmware-update -s -f {file}")
 
