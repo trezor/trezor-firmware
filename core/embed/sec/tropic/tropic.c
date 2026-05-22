@@ -73,9 +73,11 @@ static const uint8_t
 };
 
 // clang-format off
-// Address table for all 27 I/R-config objects, ordered to match lt_config_t.obj[].
-// Using a local const table (flash/.rodata) instead of cfg_desc_table from
-// libtropic which is a non-const global (RAM/.data).
+// Temporary address table for config objects, ordered to match lt_config_t.obj[].
+// Using a local const table instead of `cfg_desc_table` from libtropic because including
+// that breaks the build due to RAM overflow.
+// Will get removed once the libtropic table is made const.
+// https://github.com/trezor/trezor-firmware/pull/6816#discussion_r3248307252
 static const enum lt_config_obj_addr_t TROPIC_CONFIG_ADDRS[LT_CONFIG_OBJ_CNT] = {
     TR01_CFG_START_UP_ADDR,
     TR01_CFG_SENSORS_ADDR,
