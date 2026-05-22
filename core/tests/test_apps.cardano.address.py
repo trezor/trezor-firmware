@@ -1,15 +1,16 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import wire
-from trezor.crypto import bip39, cardano, slip39
-from trezor.enums import CardanoAddressType
-from trezor.messages import CardanoAddressParametersType, CardanoBlockchainPointerType
-
-from apps.common import seed
-from apps.common.paths import HARDENED
-
 if not utils.BITCOIN_ONLY:
+
+    from trezor import wire
+    from trezor.crypto import bip39, cardano, slip39
+    from trezor.enums import CardanoAddressType
+    from trezor.messages import (
+        CardanoAddressParametersType,
+        CardanoBlockchainPointerType,
+    )
+
     from apps.cardano.addresses import (
         derive_human_readable,
         validate_address_parameters,
@@ -17,6 +18,8 @@ if not utils.BITCOIN_ONLY:
     from apps.cardano.byron_addresses import _address_hash
     from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.seed import Keychain
+    from apps.common import seed
+    from apps.common.paths import HARDENED
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

@@ -1,66 +1,63 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import protobuf
-from trezor.messages import (
-    DebugLinkMemoryRead,
-    Failure,
-    SignMessage,
-    WebAuthnCredential,
-)
+if not utils.BITCOIN_ONLY:
+
+    from trezor import protobuf
+    from trezor.messages import (
+        ApplySettings,
+        Failure,
+        MoneroTransactionDestinationEntry,
+        SignMessage,
+    )
+
+    def load_uvarint32(data: bytes) -> int:
+        # use known uint32 field in an all-optional message
+        buffer = bytearray(len(data) + 1)
+        buffer[1:] = data
+        buffer[0] = (6 << 3) | 0  # field number 6, wire type 0
+        msg = protobuf.decode(buffer, ApplySettings, False)
+        return msg.auto_lock_delay_ms
+
+    def load_uvarint64(data: bytes) -> int:
+        # use known uint64 field in an all-optional message
+        buffer = bytearray(len(data) + 1)
+        buffer[1:] = data
+        buffer[0] = (1 << 3) | 0  # field number 1, wire type 0
+        msg = protobuf.decode(buffer, MoneroTransactionDestinationEntry, False)
+        return msg.amount
+
+    def dump_uvarint32(value: int) -> bytearray:
+        # use known uint32 field in an all-optional message
+        msg = ApplySettings(auto_lock_delay_ms=value)
+        length = protobuf.encoded_length(msg)
+        buffer = bytearray(length)
+        protobuf.encode(buffer, msg)
+        assert buffer[0] == (6 << 3) | 0  # field number 6, wire type 0
+        return buffer[1:]
+
+    def dump_uvarint64(value: int) -> bytearray:
+        # use known uint64 field in an all-optional message
+        msg = MoneroTransactionDestinationEntry(amount=value)
+        length = protobuf.encoded_length(msg)
+        buffer = bytearray(length)
+        protobuf.encode(buffer, msg)
+        assert buffer[0] == (1 << 3) | 0  # field number 1, wire type 0
+        return buffer[1:]
+
+    def dump_message(msg: protobuf.MessageType) -> bytearray:
+        length = protobuf.encoded_length(msg)
+        buffer = bytearray(length)
+        protobuf.encode(buffer, msg)
+        return buffer
+
+    def load_message(
+        msg_type: Type[protobuf.MessageType], buffer: bytes
+    ) -> protobuf.MessageType:
+        return protobuf.decode(buffer, msg_type, False)
 
 
-def load_uvarint32(data: bytes) -> int:
-    # use known uint32 field in an all-optional message
-    buffer = bytearray(len(data) + 1)
-    buffer[1:] = data
-    buffer[0] = (1 << 3) | 0  # field number 1, wire type 0
-    msg = protobuf.decode(buffer, WebAuthnCredential, False)
-    return msg.index
-
-
-def load_uvarint64(data: bytes) -> int:
-    # use known uint64 field in an all-optional message
-    buffer = bytearray(len(data) + 1)
-    buffer[1:] = data
-    buffer[0] = (2 << 3) | 0  # field number 1, wire type 0
-    msg = protobuf.decode(buffer, DebugLinkMemoryRead, False)
-    return msg.length
-
-
-def dump_uvarint32(value: int) -> bytearray:
-    # use known uint32 field in an all-optional message
-    msg = WebAuthnCredential(index=value)
-    length = protobuf.encoded_length(msg)
-    buffer = bytearray(length)
-    protobuf.encode(buffer, msg)
-    assert buffer[0] == (1 << 3) | 0  # field number 1, wire type 0
-    return buffer[1:]
-
-
-def dump_uvarint64(value: int) -> bytearray:
-    # use known uint64 field in an all-optional message
-    msg = DebugLinkMemoryRead(length=value)
-    length = protobuf.encoded_length(msg)
-    buffer = bytearray(length)
-    protobuf.encode(buffer, msg)
-    assert buffer[0] == (2 << 3) | 0  # field number 2, wire type 0
-    return buffer[1:]
-
-
-def dump_message(msg: protobuf.MessageType) -> bytearray:
-    length = protobuf.encoded_length(msg)
-    buffer = bytearray(length)
-    protobuf.encode(buffer, msg)
-    return buffer
-
-
-def load_message(
-    msg_type: Type[protobuf.MessageType], buffer: bytes
-) -> protobuf.MessageType:
-    return protobuf.decode(buffer, msg_type, False)
-
-
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "incompatible with BTC-only FW")
 class TestProtobuf(unittest.TestCase):
     def test_dump_uvarint(self):
         for dump_uvarint in (dump_uvarint32, dump_uvarint64):

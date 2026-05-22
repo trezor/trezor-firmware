@@ -1,15 +1,15 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import wire
-from trezor.enums import EthereumDataType as EDT
-from trezor.messages import EthereumFieldType as EFT
-from trezor.messages import EthereumStructMember as ESM
-from trezor.messages import EthereumTypedDataStructAck as ETDSA
-from trezor.messages import EthereumTypedDataValueAck
-from trezor.wire import context
-
 if not utils.BITCOIN_ONLY:
+    from trezor import wire
+    from trezor.enums import EthereumDataType as EDT
+    from trezor.messages import EthereumFieldType as EFT
+    from trezor.messages import EthereumStructMember as ESM
+    from trezor.messages import EthereumTypedDataStructAck as ETDSA
+    from trezor.messages import EthereumTypedDataValueAck
+    from trezor.wire import context
+
     from apps.ethereum.helpers import decode_typed_data, get_type_name
     from apps.ethereum.sign_typed_data import (
         TypedDataEnvelope,
@@ -19,251 +19,242 @@ if not utils.BITCOIN_ONLY:
         validate_field_type,
     )
 
+    class MockContext:
+        """Simulating the client sending us data values."""
 
-class MockContext:
-    """Simulating the client sending us data values."""
+        def __init__(self, message_contents: list):
+            # TODO: it could be worth (for better readability and quicker modification)
+            # to accept a whole EIP712 JSON object and create the list internally
+            self.message_contents = message_contents
+            self.next_response = b""
 
-    def __init__(self, message_contents: list):
-        # TODO: it could be worth (for better readability and quicker modification)
-        # to accept a whole EIP712 JSON object and create the list internally
-        self.message_contents = message_contents
-        self.next_response = b""
+        async def write(self, request) -> None:
+            entry = self.message_contents
+            for index in request.member_path:
+                entry = entry[index]
 
-    async def write(self, request) -> None:
-        entry = self.message_contents
-        for index in request.member_path:
-            entry = entry[index]
+            if isinstance(entry, list):
+                self.next_response = len(entry).to_bytes(2, "big")
+            else:
+                self.next_response = entry
 
-        if isinstance(entry, list):
-            self.next_response = len(entry).to_bytes(2, "big")
+        async def read(self, _resp_types, _resp_type):
+            return EthereumTypedDataValueAck(value=self.next_response)
+
+        async def call(
+            self,
+            msg: protobuf.MessageType,
+            expected_type: type[LoadedMessageType],
+        ) -> LoadedMessageType:
+            assert expected_type.MESSAGE_WIRE_TYPE is not None
+
+            await self.write(msg)
+            del msg
+            return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
+
+    # Helper functions from trezorctl to build expected type data structures
+    # TODO: it could be better to group these functions into a class, to visibly differentiate it
+    def get_type_definitions(types: dict) -> dict:
+        result = {}
+        for struct, fields in types.items():
+            members = []
+            for name, type in fields:
+                field_type = get_field_type(type, types)
+                struct_member = ESM(
+                    type=field_type,
+                    name=name,
+                )
+                members.append(struct_member)
+
+            result[struct] = ETDSA(members=members)
+
+        return result
+
+    def get_field_type(type_name: str, types: dict) -> EFT:
+        data_type = None
+        size = None
+        entry_type = None
+        struct_name = None
+
+        if is_array(type_name):
+            data_type = EDT.ARRAY
+            size = parse_array_n(type_name)
+            member_typename = typeof_array(type_name)
+            entry_type = get_field_type(member_typename, types)
+        elif type_name.startswith("uint"):
+            data_type = EDT.UINT
+            size = get_byte_size_for_int_type(type_name)
+        elif type_name.startswith("int"):
+            data_type = EDT.INT
+            size = get_byte_size_for_int_type(type_name)
+        elif type_name.startswith("bytes"):
+            data_type = EDT.BYTES
+            size = None if type_name == "bytes" else parse_type_n(type_name)
+        elif type_name == "string":
+            data_type = EDT.STRING
+        elif type_name == "bool":
+            data_type = EDT.BOOL
+        elif type_name == "address":
+            data_type = EDT.ADDRESS
+        elif type_name in types:
+            data_type = EDT.STRUCT
+            size = len(types[type_name])
+            struct_name = type_name
         else:
-            self.next_response = entry
+            raise ValueError(f"Unsupported type name: {type_name}")
 
-    async def read(self, _resp_types, _resp_type):
-        return EthereumTypedDataValueAck(value=self.next_response)
+        return EFT(
+            data_type=data_type,
+            size=size,
+            entry_type=entry_type,
+            struct_name=struct_name,
+        )
 
-    async def call(
-        self,
-        msg: protobuf.MessageType,
-        expected_type: type[LoadedMessageType],
-    ) -> LoadedMessageType:
-        assert expected_type.MESSAGE_WIRE_TYPE is not None
+    def is_array(type_name: str) -> bool:
+        return type_name[-1] == "]"
 
-        await self.write(msg)
-        del msg
-        return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
+    def typeof_array(type_name: str) -> str:
+        return type_name[: type_name.rindex("[")]
 
+    def parse_type_n(type_name: str) -> int:
+        """Parse N from type<N>.
 
-# Helper functions from trezorctl to build expected type data structures
-# TODO: it could be better to group these functions into a class, to visibly differentiate it
-def get_type_definitions(types: dict) -> dict:
-    result = {}
-    for struct, fields in types.items():
-        members = []
-        for name, type in fields:
-            field_type = get_field_type(type, types)
-            struct_member = ESM(
-                type=field_type,
-                name=name,
-            )
-            members.append(struct_member)
+        Example: "uint256" -> 256
+        """
+        # STRANGE: "ImportError: no module named 're'" in Micropython?
+        buf = ""
+        for char in reversed(type_name):
+            if char.isdigit():
+                buf += char
+            else:
+                return int("".join(reversed(buf)))
+        raise ValueError(f"Invalid type name: {type_name}")
 
-        result[struct] = ETDSA(members=members)
+    def parse_array_n(type_name: str) -> int | None:
+        """Parse N in type[<N>] where "type" can itself be an array type."""
+        if type_name.endswith("[]"):
+            return None
 
-    return result
+        start_idx = type_name.rindex("[") + 1
+        return int(type_name[start_idx:-1])
 
+    def get_byte_size_for_int_type(int_type: str) -> int:
+        return parse_type_n(int_type) // 8
 
-def get_field_type(type_name: str, types: dict) -> EFT:
-    data_type = None
-    size = None
-    entry_type = None
-    struct_name = None
+    types_basic = {
+        "EIP712Domain": [
+            ("name", "string"),
+            ("version", "string"),
+            ("chainId", "uint256"),
+            ("verifyingContract", "address"),
+        ],
+        "Person": [
+            ("name", "string"),
+            ("wallet", "address"),
+        ],
+        "Mail": [
+            ("from", "Person"),
+            ("to", "Person"),
+            ("contents", "string"),
+        ],
+    }
+    TYPES_BASIC = get_type_definitions(types_basic)
 
-    if is_array(type_name):
-        data_type = EDT.ARRAY
-        size = parse_array_n(type_name)
-        member_typename = typeof_array(type_name)
-        entry_type = get_field_type(member_typename, types)
-    elif type_name.startswith("uint"):
-        data_type = EDT.UINT
-        size = get_byte_size_for_int_type(type_name)
-    elif type_name.startswith("int"):
-        data_type = EDT.INT
-        size = get_byte_size_for_int_type(type_name)
-    elif type_name.startswith("bytes"):
-        data_type = EDT.BYTES
-        size = None if type_name == "bytes" else parse_type_n(type_name)
-    elif type_name == "string":
-        data_type = EDT.STRING
-    elif type_name == "bool":
-        data_type = EDT.BOOL
-    elif type_name == "address":
-        data_type = EDT.ADDRESS
-    elif type_name in types:
-        data_type = EDT.STRUCT
-        size = len(types[type_name])
-        struct_name = type_name
-    else:
-        raise ValueError(f"Unsupported type name: {type_name}")
+    types_complex = {
+        "EIP712Domain": [
+            ("name", "string"),
+            ("version", "string"),
+            ("chainId", "uint256"),
+            ("verifyingContract", "address"),
+            ("salt", "bytes32"),
+        ],
+        "Person": [
+            ("name", "string"),
+            ("wallet", "address"),
+            ("married", "bool"),
+            ("kids", "uint8"),
+            ("karma", "int16"),
+            ("secret", "bytes"),
+            ("small_secret", "bytes16"),
+            ("pets", "string[]"),
+            ("two_best_friends", "string[2]"),
+        ],
+        "Mail": [
+            ("from", "Person"),
+            ("to", "Person"),
+            ("messages", "string[]"),
+        ],
+    }
+    TYPES_COMPLEX = get_type_definitions(types_complex)
 
-    return EFT(
-        data_type=data_type,
-        size=size,
-        entry_type=entry_type,
-        struct_name=struct_name,
+    DOMAIN_VALUES = [
+        [
+            b"Ether Mail",
+            b"1",
+            # 1
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01",
+            # 0x1e0Ae8205e9726E6F296ab8869160A6423E2337E
+            b"\x1e\n\xe8 ^\x97&\xe6\xf2\x96\xab\x88i\x16\nd#\xe23~",
+        ]
+    ]
+    MESSAGE_VALUES_BASIC = [
+        [
+            [
+                b"Cow",
+                b"\xc0\x00Kb\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4\xa4\xe5K\x15\xad",
+            ],
+            [
+                b"Bob",
+                b"T\xb0\xfaf\xa0et\x8c@\xdc\xa2\xc7\xfe\x12Z (\xcf\x99\x82",
+            ],
+            b"Hello, Bob!",
+        ]
+    ]
+    MESSAGE_VALUES_COMPLEX = [
+        [
+            [
+                b"Amy",
+                b"\xc0\x00Kb\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4\xa4\xe5K\x15\xad",
+                b"\x01",
+                b"\x02",
+                b"\x00\x04",
+                b"b\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4b\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4b\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4b\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4",
+                b"\\\xcf\x0eT6q\x04yZG\xbc\x04\x81d]\x9e",
+                [
+                    b"parrot",
+                ],
+                [
+                    b"Carl",
+                    b"Denis",
+                ],
+            ],
+            [
+                b"Bob",
+                b"T\xb0\xfaf\xa0et\x8c@\xdc\xa2\xc7\xfe\x12Z (\xcf\x99\x82",
+                b"\x00",
+                b"\x00",
+                b"\xff\xfc",
+                b"\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9",
+                b"\xa5\xe5\xc4{dwZ\xbcGm)b@2X\xde",
+                [
+                    b"dog",
+                    b"cat",
+                ],
+                [
+                    b"Emil",
+                    b"Franz",
+                ],
+            ],
+            [b"Hello, Bob!", b"How are you?", b"Hope you're fine"],
+        ]
+    ]
+
+    # Object for testing functionality not needing context
+    # (Each test needs to assign EMPTY_ENVELOPE.types as needed)
+    EMPTY_ENVELOPE = TypedDataEnvelope(
+        primary_type="test",
+        metamask_v4_compat=True,
     )
-
-
-def is_array(type_name: str) -> bool:
-    return type_name[-1] == "]"
-
-
-def typeof_array(type_name: str) -> str:
-    return type_name[: type_name.rindex("[")]
-
-
-def parse_type_n(type_name: str) -> int:
-    """Parse N from type<N>.
-
-    Example: "uint256" -> 256
-    """
-    # STRANGE: "ImportError: no module named 're'" in Micropython?
-    buf = ""
-    for char in reversed(type_name):
-        if char.isdigit():
-            buf += char
-        else:
-            return int("".join(reversed(buf)))
-    raise ValueError(f"Invalid type name: {type_name}")
-
-
-def parse_array_n(type_name: str) -> int | None:
-    """Parse N in type[<N>] where "type" can itself be an array type."""
-    if type_name.endswith("[]"):
-        return None
-
-    start_idx = type_name.rindex("[") + 1
-    return int(type_name[start_idx:-1])
-
-
-def get_byte_size_for_int_type(int_type: str) -> int:
-    return parse_type_n(int_type) // 8
-
-
-types_basic = {
-    "EIP712Domain": [
-        ("name", "string"),
-        ("version", "string"),
-        ("chainId", "uint256"),
-        ("verifyingContract", "address"),
-    ],
-    "Person": [
-        ("name", "string"),
-        ("wallet", "address"),
-    ],
-    "Mail": [
-        ("from", "Person"),
-        ("to", "Person"),
-        ("contents", "string"),
-    ],
-}
-TYPES_BASIC = get_type_definitions(types_basic)
-
-types_complex = {
-    "EIP712Domain": [
-        ("name", "string"),
-        ("version", "string"),
-        ("chainId", "uint256"),
-        ("verifyingContract", "address"),
-        ("salt", "bytes32"),
-    ],
-    "Person": [
-        ("name", "string"),
-        ("wallet", "address"),
-        ("married", "bool"),
-        ("kids", "uint8"),
-        ("karma", "int16"),
-        ("secret", "bytes"),
-        ("small_secret", "bytes16"),
-        ("pets", "string[]"),
-        ("two_best_friends", "string[2]"),
-    ],
-    "Mail": [
-        ("from", "Person"),
-        ("to", "Person"),
-        ("messages", "string[]"),
-    ],
-}
-TYPES_COMPLEX = get_type_definitions(types_complex)
-
-DOMAIN_VALUES = [
-    [
-        b"Ether Mail",
-        b"1",
-        # 1
-        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01",
-        # 0x1e0Ae8205e9726E6F296ab8869160A6423E2337E
-        b"\x1e\n\xe8 ^\x97&\xe6\xf2\x96\xab\x88i\x16\nd#\xe23~",
-    ]
-]
-MESSAGE_VALUES_BASIC = [
-    [
-        [
-            b"Cow",
-            b"\xc0\x00Kb\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4\xa4\xe5K\x15\xad",
-        ],
-        [
-            b"Bob",
-            b"T\xb0\xfaf\xa0et\x8c@\xdc\xa2\xc7\xfe\x12Z (\xcf\x99\x82",
-        ],
-        b"Hello, Bob!",
-    ]
-]
-MESSAGE_VALUES_COMPLEX = [
-    [
-        [
-            b"Amy",
-            b"\xc0\x00Kb\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4\xa4\xe5K\x15\xad",
-            b"\x01",
-            b"\x02",
-            b"\x00\x04",
-            b"b\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4b\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4b\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4b\xc5\xa3\x9ar\x8eJ\xf5\xbe\xe0\xc6\xb4",
-            b"\\\xcf\x0eT6q\x04yZG\xbc\x04\x81d]\x9e",
-            [
-                b"parrot",
-            ],
-            [
-                b"Carl",
-                b"Denis",
-            ],
-        ],
-        [
-            b"Bob",
-            b"T\xb0\xfaf\xa0et\x8c@\xdc\xa2\xc7\xfe\x12Z (\xcf\x99\x82",
-            b"\x00",
-            b"\x00",
-            b"\xff\xfc",
-            b"\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9\x7f\xe1%\xa2\x02\x8c\xf9",
-            b"\xa5\xe5\xc4{dwZ\xbcGm)b@2X\xde",
-            [
-                b"dog",
-                b"cat",
-            ],
-            [
-                b"Emil",
-                b"Franz",
-            ],
-        ],
-        [b"Hello, Bob!", b"How are you?", b"Hope you're fine"],
-    ]
-]
-
-# Object for testing functionality not needing context
-# (Each test needs to assign EMPTY_ENVELOPE.types as needed)
-EMPTY_ENVELOPE = TypedDataEnvelope(
-    primary_type="test",
-    metamask_v4_compat=True,
-)
 
 # TODO: validate it more by some third party app, like signing data by Metamask
 # ??? How to approach the testing ???

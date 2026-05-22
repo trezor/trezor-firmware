@@ -1,13 +1,15 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from apps.common import coininfo
-from apps.zcash import unified_addresses
+if not utils.BITCOIN_ONLY:
+    from apps.common import coininfo
+    from apps.zcash import unified_addresses
 
-P2PKH = unified_addresses.Typecode.P2PKH
-P2SH = unified_addresses.Typecode.P2SH
-SAPLING = unified_addresses.Typecode.SAPLING
-ORCHARD = unified_addresses.Typecode.ORCHARD
+    P2PKH = unified_addresses.Typecode.P2PKH
+    P2SH = unified_addresses.Typecode.P2SH
+    SAPLING = unified_addresses.Typecode.SAPLING
+    ORCHARD = unified_addresses.Typecode.ORCHARD
+    COIN = coininfo.by_name("Zcash")
 
 TESTVECTORS = [
     [
@@ -282,9 +284,6 @@ def get_receivers(tv: ZcashTestVector):
         receivers[tv.unknown_typecode] = unhexlify(tv.unknown_bytes)
 
     return receivers
-
-
-COIN = coininfo.by_name("Zcash")
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

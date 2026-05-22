@@ -4,10 +4,11 @@
 <%def name="getInstructionIdText(program, instruction)">${"_".join([getProgramId(program)] + ["INS"] + instruction["name"].upper().split(" "))}</%def>\
 from common import Any, unittest, utils  # isort:skip
 
-from trezor.crypto import base58
+if not utils.BITCOIN_ONLY:
+    from trezor.crypto import base58
 
-from apps.solana.predefined_transaction import is_predefined_token_transfer
-from apps.solana.transaction.instruction import Instruction
+    from apps.solana.predefined_transaction import is_predefined_token_transfer
+    from apps.solana.transaction.instruction import Instruction
 
 % for program in programs["programs"]:
 ${getProgramId(program)} = "${program["id"]}"

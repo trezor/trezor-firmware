@@ -1,13 +1,12 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import bip39, cardano
-
-from apps.common.paths import HARDENED
-
 if not utils.BITCOIN_ONLY:
+    from trezor.crypto import bip39, cardano
+
     from apps.cardano.get_public_key import _get_public_key
     from apps.cardano.seed import Keychain
+    from apps.common.paths import HARDENED
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

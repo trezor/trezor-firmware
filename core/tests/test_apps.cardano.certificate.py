@@ -1,16 +1,20 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import wire
-from trezor.enums import CardanoCertificateType, CardanoDRepType
-from trezor.messages import CardanoDRep, CardanoPoolParametersType, CardanoTxCertificate
-
-from apps.common.paths import HARDENED
-
 if not utils.BITCOIN_ONLY:
+
+    from trezor import wire
+    from trezor.enums import CardanoCertificateType, CardanoDRepType
+    from trezor.messages import (
+        CardanoDRep,
+        CardanoPoolParametersType,
+        CardanoTxCertificate,
+    )
+
     from apps.cardano import certificates
     from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.helpers.account_path_check import AccountPathChecker
+    from apps.common.paths import HARDENED
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
