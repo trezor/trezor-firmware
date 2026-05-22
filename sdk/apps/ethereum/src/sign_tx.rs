@@ -16,7 +16,7 @@ use crate::{
 };
 use primitive_types::U256;
 use trezor_app_sdk::{
-    Error, Result, crypto,
+    Error, Result, ResultExt, crypto,
     ui::{self, Property},
 };
 
@@ -31,12 +31,6 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
     msg.value.get_or_insert_default();
     msg.data_initial_chunk.get_or_insert_default();
     msg.data_length.get_or_insert_default();
-
-    assert!(msg.nonce.is_some());
-    assert!(msg.to.is_some());
-    assert!(msg.value.is_some());
-    assert!(msg.data_initial_chunk.is_some());
-    assert!(msg.data_length.is_some());
 
     let nonce = msg
         .nonce
@@ -66,11 +60,13 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
     };
 
     let definitions =
-        Definitions::from_encoded(encoded_network, encoded_token, Some(msg.chain_id), None)?;
+        Definitions::from_encoded(encoded_network, encoded_token, Some(msg.chain_id), None)
+            .context("Failed to decode definitions")?;
 
-    check_common_fields(data_length, data_initial_chunk, to, msg.chain_id)?;
+    check_common_fields(data_length, data_initial_chunk, to, msg.chain_id)
+        .context("Failed to check common fields")?;
 
-    let address_bytes = bytes_from_address(to)?;
+    let address_bytes = bytes_from_address(to).context("Failed to convert address to bytes")?;
 
     let valid_tx_types = [Some(1), Some(6), Some(EIP_7702_TX_TYPE), None];
 
@@ -98,20 +94,24 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
         encoded_network,
         encoded_token,
         Some(msg.chain_id),
-    )?;
+    )
+    .context("Failed to verify derivation path")?;
 
     let sender_bytes = crypto::get_eth_pubkey_hash(
         dp.as_slice(),
         encoded_network,
         encoded_token,
         Some(msg.chain_id),
-    )?;
+    )
+    .context("Failed to get eth pubkey hash")?;
 
     let gas_price = U256::from_big_endian(&msg.gas_price);
     let gas_limit = U256::from_big_endian(&msg.gas_limit);
     let maximum_fee =
-        format_ethereum_amount(gas_price * gas_limit, None, definitions.network(), false);
-    let fee_items = get_fee_items_regular(gas_price, gas_limit, definitions.network());
+        format_ethereum_amount(gas_price * gas_limit, None, definitions.network(), false)
+            .context("Failed to create max fee string")?;
+    let fee_items = get_fee_items_regular(gas_price, gas_limit, definitions.network())
+        .context("Failed to create fee items")?;
     let fee_items_ref: Vec<Property> = fee_items
         .iter()
         .map(|(k, v, mono)| Property::new(k, v, *mono))
@@ -159,7 +159,8 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
         rlp::write(&mut hasher, field);
     }
 
-    let initial_data = request_initial_data(&mut hasher, data_length as usize, data_initial_chunk)?;
+    let initial_data = request_initial_data(&mut hasher, data_length as usize, data_initial_chunk)
+        .context("Failed to request initial data")?;
 
     let (confirm_data_chunk, confirm_summary) = confirm_tx_data(
         &initial_data,
@@ -179,7 +180,9 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
         msg.payment_req.as_ref(),
         msg.chain_id,
         msg.definitions.as_ref(),
-    )?;
+        msg.supports_definition_request,
+    )
+    .context("Failed to confirm transaction data")?;
 
     confirm_data_and_summary(
         confirm_data_chunk,
@@ -187,7 +190,8 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
         &initial_data,
         data_length as usize,
         &mut hasher,
-    )?;
+    )
+    .context("Failed to confirm data and summary")?;
 
     // EIP-155 replay protection
     let fields = [
@@ -202,7 +206,7 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
     let digest = hasher.digest();
 
     // transaction data confirmed, proceed with signing
-    let res = sign_digest(&msg, &digest)?;
+    let res = sign_digest(&msg, &digest).context("Failed to sign digest")?;
     ui::show_success(
         tr!("words__title_done"),
         tr!("send__transaction_signed"),
@@ -231,7 +235,8 @@ fn sign_digest(msg: &SignTx, digest: &[u8; 32]) -> Result<TxRequest> {
         encoded_token,
         Some(msg.chain_id),
         true,
-    )?;
+    )
+    .context("Failed to sign typed hash")?;
 
     let mut req = TxRequest::default();
     let mut signature_v: u32 = signature[0].into();
@@ -266,7 +271,7 @@ pub fn get_total_length(
         length += rlp::length(&RLPItem::Int(tx_type.into()));
     }
 
-    let to_bytes = bytes_from_address(to)?;
+    let to_bytes = bytes_from_address(to).context("Failed to convert address to bytes")?;
 
     let fields: Vec<RLPItem> = vec![
         RLPItem::Bytes(nonce),

@@ -1,5 +1,6 @@
 use crate::{
     alloc_types::Box,
+    clear_signing,
     layout::require_confirm_vault_tx,
     paths::Bip32Path,
     proto::definitions::{NetworkInfo, TokenInfo},
@@ -8,7 +9,7 @@ use crate::{
 };
 
 use primitive_types::U256;
-use trezor_app_sdk::{Error, Result, ui::Property, unwrap};
+use trezor_app_sdk::{Error, Result, ResultExt, ui::Property};
 
 // https://ethereum.org/developers/docs/standards/tokens/erc-4626
 pub(crate) const FUNC_SIG_DEPOSIT: &[u8] = b"\x6e\x55\x3f\x65";
@@ -17,7 +18,6 @@ pub(crate) const FUNC_SIG_REDEEM: &[u8] = b"\xba\x08\x76\x52";
 pub(crate) const FUNC_SIG_CLAIM: &[u8] = b"\x71\xee\x95\xc0";
 
 pub(crate) fn get_approver<'a>(
-    // msg: &'a SignTx,
     data_length: usize,
     dp: &'a Bip32Path,
     to: &'a str,
@@ -29,11 +29,9 @@ pub(crate) fn get_approver<'a>(
     fee_items: &'a [Property<'a>],
     sender_bytes: &'a [u8],
 ) -> Result<(
-    Option<Box<dyn Fn(&[u8]) -> Result<()> + 'a>>,
+    Option<Box<dyn FnMut(&[u8]) -> Result<()> + 'a>>,
     Option<Box<dyn FnOnce() -> Result<()> + 'a>>,
 )> {
-    // let data_length = unwrap!(msg.data_length);
-
     if data_length > initial_data.len() {
         return Ok((None, None));
     }
@@ -65,7 +63,8 @@ pub(crate) fn get_approver<'a>(
             vault,
             token,
             func_sig,
-        )?;
+        )
+        .context("Failed to prepare vault tx")?;
     } else if func_sig == FUNC_SIG_CLAIM {
         handler = prepare_claim_rewards(
             data,
@@ -76,7 +75,8 @@ pub(crate) fn get_approver<'a>(
             maximum_fee,
             fee_items,
             sender_bytes,
-        )?;
+        )
+        .context("Failed to prepare claim rewards")?;
     }
 
     // TODO: implement
@@ -88,7 +88,6 @@ pub(crate) fn get_approver<'a>(
 
 fn prepare_vault_tx<'a>(
     data: &'a [u8],
-    // msg: &'a SignTx,
     value: &'a [u8],
     to: &'a str,
     dp: &'a Bip32Path,
@@ -123,29 +122,29 @@ fn prepare_vault_tx<'a>(
     }
 
     let (receiver_bytes, rest) = rest.split_at(32);
+    let receiver =
+        clear_signing::parse_address(receiver_bytes).context("Failed to parse receiver address")?;
 
-    // TODO: use parse_address instead
-    if unwrap!(receiver_bytes.first_chunk::<12>()) != &[0; 12] {
-        return Err(Error::DataError(
-            "Invalid data for ERC-4626 vault transaction.",
-        ));
-    }
-
-    let (owner_bytes, rest) = if is_deposit {
+    let (owner, rest) = if is_deposit {
         (None, rest)
     } else {
         let (owner_bytes, rest) = rest.split_at(32);
-        (Some(owner_bytes), rest)
+        (
+            Some(
+                clear_signing::parse_address(owner_bytes)
+                    .context("Failed to parse owner address")?,
+            ),
+            rest,
+        )
     };
 
-    if !is_vault_tx_safe(&vault, sender_bytes, receiver_bytes, owner_bytes)? {
+    if !is_vault_tx_safe(&vault, sender_bytes, &receiver, owner.as_deref())
+        .context("Failed to check vault tx safety")?
+    {
         return Ok(None);
     }
 
-    let mut extra_data = None;
-    if !rest.is_empty() {
-        extra_data = Some(rest);
-    }
+    let extra_data = if !rest.is_empty() { Some(rest) } else { None };
 
     Ok(Some(Box::new(move || {
         require_confirm_vault_tx(
@@ -178,6 +177,7 @@ fn prepare_claim_rewards<'a>(
     _sender_bytes: &'a [u8],
 ) -> Result<Option<Box<dyn FnOnce() -> Result<()> + 'a>>> {
     Ok(None)
+    // TODO: implement
 }
 
 fn is_vault_tx_safe<'a>(

@@ -20,7 +20,7 @@ use crate::{
 use crate::{helpers::get_type_name, uformat, wire_request};
 use primitive_types::U256;
 use trezor_app_sdk::{
-    Error, Result,
+    Error, Result, ResultExt,
     crypto::{self, Hasher},
     ui, unwrap,
 };
@@ -63,7 +63,8 @@ pub fn sign_typed_data(msg: SignTypedData) -> Result<TypedDataSignature> {
 
     let sig = TypedDataSignature {
         signature: signature.to_vec(),
-        address: address_from_bytes(&address_bytes, Some(definitions.network())),
+        address: address_from_bytes(&address_bytes, Some(definitions.network()))
+            .context("Failed to convert bytes to address")?,
     };
 
     Ok(sig)
@@ -113,10 +114,15 @@ fn generate_typed_data_hash(
             unwrap!(data_envelope.types.get(primary_type))
                 .members
                 .as_slice(),
-            Some("Confirm message"),
-            Some("Show full message"),
+            Some(tr!("ethereum__title_confirm_message")),
+            Some(tr!("ethereum__show_full_message")),
         )?;
-        ui::init_progress(None, Some("Loading transaction..."), false, false)?;
+        ui::init_progress(
+            None,
+            Some(tr!("progress__loading_transaction")),
+            false,
+            false,
+        )?;
         let message_hash = data_envelope.hash_struct(
             primary_type,
             &[1],
@@ -199,7 +205,7 @@ impl TypedDataEnvelope {
                 if let Some(entry_type) = &member_type.entry_type {
                     member_type = entry_type;
                 } else {
-                    return Err(Error::DataError("Missing member type"));
+                    return Err(Error::DataError("Missing member type"))?;
                 }
             }
             if member_type.data_type == DataType::Struct as i32 {
@@ -208,7 +214,7 @@ impl TypedDataEnvelope {
                         self._collect_types::<F>(struct_name, None)?;
                     }
                 } else {
-                    return Err(Error::DataError("Missing struct name"));
+                    return Err(Error::DataError("Missing struct name"))?;
                 }
             }
         }
@@ -313,7 +319,7 @@ impl TypedDataEnvelope {
                     )?;
                     hasher.update(&hash);
                 } else {
-                    return Err(Error::DataError("Missing struct name for struct field"));
+                    return Err(Error::DataError("Missing struct name for struct field"))?;
                 }
             } else if field_type.data_type == DataType::Array as i32 {
                 // Getting the length of the array first, if not fixed
@@ -367,7 +373,9 @@ impl TypedDataEnvelope {
                                     )?;
                                 }
                             } else {
-                                return Err(Error::DataError("Missing entry type for array field"));
+                                return Err(Error::DataError(
+                                    "Missing entry type for array field",
+                                ))?;
                             }
                         } else {
                             let value = get_value(entry_type, &el_member_path)?;
@@ -386,7 +394,7 @@ impl TypedDataEnvelope {
                     let hash = arr_w.digest();
                     hasher.update(&hash);
                 } else {
-                    return Err(Error::DataError("Missing entry type for array field"));
+                    return Err(Error::DataError("Missing entry type for array field"))?;
                 }
             } else {
                 let value = get_value(field_type, &member_value_path)?;
@@ -573,7 +581,8 @@ fn get_value(field: &FieldType, member_value_path: &[u32]) -> Result<Vec<u8>> {
         member_path: member_value_path.to_vec(),
     };
 
-    let res: TypedDataValueAck = unwrap!(wire_request(&req, MessageType::TypedDataValueRequest));
+    let res: TypedDataValueAck = wire_request(&req, MessageType::TypedDataValueRequest)
+        .context("Failed to get value from client")?;
     let value = res.value;
 
     validate_value(field, &value)?;

@@ -39,7 +39,8 @@ impl Model {
         match self {
             Model::T3T1 => "model_t3t1",
             Model::T3W1 => "model_t3w1",
-        }.into()
+        }
+        .into()
     }
 
     /// Returns the Rust target triple for the building firmware for hardware target
@@ -81,7 +82,8 @@ impl LogLevel {
             LogLevel::Info => "log_level_info",
             LogLevel::Debug => "log_level_debug",
             LogLevel::Trace => "log_level_trace",
-        }.into()
+        }
+        .into()
     }
 }
 
@@ -106,7 +108,7 @@ pub enum Cmd {
     /// Run unit tests of specified package
     UnitTests(UnitTestArgs),
     /// Run device tests of specified package
-    DeviceTests(UploadArgs),
+    DeviceTests(DeviceTestArgs),
     /// Clean build artifacts
     Clean,
     /// Format code with rustfmt
@@ -212,7 +214,7 @@ pub struct UnitTestArgs {
     pub lang: Language,
 
     /// Test to run (defaults to all tests in the package)
-    #[arg(long, short = 'p', default_value = "")]
+    #[arg(long, short = 't', default_value = "")]
     pub test: String,
 }
 
@@ -230,4 +232,26 @@ pub struct UploadArgs {
 
     #[arg(long, short = 'e')]
     pub emulator: bool,
+}
+
+#[derive(Args, Debug)]
+// #[command(override_usage = "xtask build --model <MODEL> --language <LANGUAGE> [OPTIONS]")]
+pub struct DeviceTestArgs {
+    #[arg(default_value = "ethereum")]
+    pub app: String,
+
+    /// Build target model
+    #[arg(long, short = 'm', ignore_case = true, default_value = "t3w1")]
+    pub model: Model,
+
+    /// Build target language
+    #[arg(long, short = 'l', ignore_case = true, default_value = "en")]
+    pub lang: Language,
+
+    #[arg(long, short = 'e')]
+    pub emulator: bool,
+
+    /// Test to run (defaults to all tests in the package)
+    #[arg(long, short = 't', default_value = "")]
+    pub test: String,
 }

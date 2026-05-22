@@ -8,7 +8,7 @@ use crate::{
     },
     sign_message::message_digest,
 };
-use trezor_app_sdk::{Error, Result, crypto, ui, unwrap};
+use trezor_app_sdk::{Error, Result, ResultExt, crypto, ui};
 
 pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
     let digest = message_digest(msg.message.as_slice());
@@ -27,22 +27,30 @@ pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
     let mut hasher = crypto::Keccak256::new(Some(&pubkey[1..len]));
     let pkh_hash = hasher.digest();
 
-    let address_bytes = bytes_from_address(&msg.address)?;
+    let address_bytes =
+        bytes_from_address(&msg.address).context("Failed to convert address to bytes")?;
 
-    if address_bytes != unwrap!(pkh_hash.last_chunk::<20>()) {
+    // We can use unwrap here because the hash is always 32 bytes
+    if address_bytes
+        != pkh_hash
+            .last_chunk::<20>()
+            .ok_or(Error::DataError("Hash is too short"))?
+    {
         return Err(Error::DataError("Invalid signature"));
     }
 
-    let address = address_from_bytes(&address_bytes, None);
+    let address =
+        address_from_bytes(&address_bytes, None).context("Failed to convert bytes to address")?;
 
     confirm_signverify(
-        &decode_message(&msg.message),
+        &decode_message(&msg.message).context("Failed to decode message")?,
         &address,
         true,
         None,
         None,
         false,
-    )?;
+    )
+    .context("Failed to confirm sign/verify")?;
 
     ui::show_success(
         tr!("words__title_done"),

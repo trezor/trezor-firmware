@@ -18,9 +18,8 @@ use crate::{
 };
 use primitive_types::U256;
 use trezor_app_sdk::{
-    Error, Result,
+    Error, Result, ResultExt,
     ui::{self, Property, StrExt},
-    unwrap,
 };
 
 // TODO: This threshold is arbitrary
@@ -41,7 +40,8 @@ pub(crate) fn require_confirm_approve<'a>(
     chunkify: bool,
 ) -> Result<()> {
     let chain_id_str = uformat!("{} (0x{:x})", chain_id, chain_id);
-    let token_address_str = address_from_bytes(token_address, Some(network));
+    let token_address_str = address_from_bytes(token_address, Some(network))
+        .context("Failed to convert bytes to address")?;
     let (_, account_path) = dp.account_and_path();
 
     let is_unknown_token = token == &tokens::unknown_token();
@@ -57,10 +57,10 @@ pub(crate) fn require_confirm_approve<'a>(
     }
 
     confirm_ethereum_approve(
-        &addr_pad(recipient_addr, chunkify),
+        &addr_pad(recipient_addr, chunkify).context("Failed to pad recipient address")?,
         recipient_str,
         is_unknown_token,
-        &addr_pad(&token_address_str, chunkify),
+        &addr_pad(&token_address_str, chunkify)?,
         &token.symbol,
         is_unknown_network,
         &chain_id_str,
@@ -368,7 +368,7 @@ pub(crate) fn require_confirm_tx<'a>(
         )?;
     }
 
-    let recipient = recipient.map(|r| addr_pad(r, chunkify));
+    let recipient = recipient.map(|r| addr_pad(r, chunkify)).transpose()?;
 
     confirm_ethereum_tx(
         recipient.as_deref(),
@@ -481,11 +481,17 @@ pub(crate) fn require_confirm_payment_request<'a>(
     token_address: Option<&'a str>,
 ) -> Result<()> {
     let total_amount = format_ethereum_amount(
-        parse_amount(unwrap!(verified_payment_req.amount.as_deref()))?,
+        parse_amount(
+            verified_payment_req
+                .amount
+                .as_deref()
+                .ok_or(Error::DataError("Missing payment request amount"))?,
+        )?,
         token,
         network,
         false,
-    );
+    )
+    .context("Failed to create amount string")?;
 
     let mut texts = Vec::new();
     let mut refunds = Vec::new();
@@ -752,8 +758,14 @@ pub(crate) fn require_confirm_stake<'a>(
     network: &'a NetworkInfo,
     chunkify: bool,
 ) -> Result<()> {
-    let address_str = addr_pad(&address_from_bytes(address_bytes, Some(network)), chunkify);
-    let total_amount = format_ethereum_amount(value, None, network, false);
+    let address_str = addr_pad(
+        &address_from_bytes(address_bytes, Some(network))
+            .context("Failed to convert bytes to address")?,
+        chunkify,
+    )
+    .context("Failed to pad address string")?;
+    let total_amount = format_ethereum_amount(value, None, network, false)
+        .context("Failed to create amount string")?;
     let (account, account_path) = dp.account_and_path();
 
     confirm_ethereum_staking_tx(
@@ -810,13 +822,23 @@ pub(crate) fn require_confirm_vault_tx<'a>(
             "ethereum/vault/withdraw",
         )
     } else {
-        return Err(Error::ValueError("Unknown vault function signature"));
+        return Err(Error::ValueError("Unknown vault function signature"))?;
     };
 
-    let amount = format_ethereum_amount(value, Some(&token), network, false);
+    let amount = format_ethereum_amount(value, Some(&token), network, false)
+        .context("Failed to create amount string")?;
     let (account, account_path) = dp.account_and_path();
 
-    let extra_data_str = extra_data.map(|b| uformat!("0x{}", hex_encode(b).as_str()));
+    let extra_data_str = if let Some(b) = extra_data {
+        Some(uformat!(
+            "0x{}",
+            hex_encode(b)
+                .map_err(|_| Error::DataError("Failed to hex-encode extra data"))?
+                .as_str()
+        ))
+    } else {
+        None
+    };
 
     confirm_ethereum_vault_tx(
         title,
@@ -1117,11 +1139,14 @@ fn confirm_ethereum_staking_tx<'a>(
     br_name: Option<&'a str>,
     br_code: Option<i32>,
 ) -> Result<()> {
-    assert!(
-        verb == tr!("ethereum__staking_stake")
-            || verb == tr!("ethereum__staking_unstake")
-            || verb == tr!("ethereum__staking_claim")
-    );
+    if !(verb == tr!("ethereum__staking_stake")
+        || verb == tr!("ethereum__staking_unstake")
+        || verb == tr!("ethereum__staking_claim"))
+    {
+        return Err(Error::ValueError(
+            "Invalid verb for staking transaction confirmation",
+        ));
+    }
 
     let br_name = br_name.unwrap_or("confirm_ethereum_staking_tx");
     let br_code = br_code.unwrap_or(ButtonRequestType::SignTx.into());
@@ -1215,8 +1240,14 @@ pub(crate) fn require_confirm_unstake<'a>(
     network: &'a NetworkInfo,
     chunkify: bool,
 ) -> Result<()> {
-    let address_str = addr_pad(&address_from_bytes(address_bytes, Some(network)), chunkify);
-    let total_amount = format_ethereum_amount(value, None, network, false);
+    let address_str = addr_pad(
+        &address_from_bytes(address_bytes, Some(network))
+            .context("Failed to convert bytes to address")?,
+        chunkify,
+    )
+    .context("Failed to pad address string")?;
+    let total_amount = format_ethereum_amount(value, None, network, false)
+        .context("Failed to create amount string")?;
     let (account, account_path) = dp.account_and_path();
 
     confirm_ethereum_staking_tx(
@@ -1245,7 +1276,12 @@ pub(crate) fn require_confirm_claim<'a>(
     network: &'a NetworkInfo,
     chunkify: bool,
 ) -> Result<()> {
-    let addr_str = addr_pad(&address_from_bytes(address_bytes, Some(network)), chunkify);
+    let addr_str = addr_pad(
+        &address_from_bytes(address_bytes, Some(network))
+            .context("Failed to convert bytes to address")?,
+        chunkify,
+    )
+    .context("Failed to pad address string")?;
     let (account, account_path) = dp.account_and_path();
 
     confirm_ethereum_staking_tx(
@@ -1297,7 +1333,12 @@ pub(crate) fn require_confirm_address(
     br_name: Option<&'static str>,
     footer: Option<&'static str>,
 ) -> Result<()> {
-    let address_hex = uformat!("0x{}", hex_encode(address_bytes).as_str());
+    let address_hex = uformat!(
+        "0x{}",
+        hex_encode(address_bytes)
+            .map_err(|_| Error::DataError("Failed to hex-encode address"))?
+            .as_str()
+    );
     confirm_address(
         title.unwrap_or(tr!("ethereum__title_signing_address")),
         &address_hex,
@@ -1342,7 +1383,12 @@ fn confirm_address(
 }
 
 pub(crate) fn confirm_message_hash(hash: &[u8]) -> Result<()> {
-    let message_hash_hex = uformat!("0x{}", hex_encode(hash).as_str());
+    let message_hash_hex = uformat!(
+        "0x{}",
+        hex_encode(hash)
+            .map_err(|_| Error::DataError("Failed to hex-encode message hash"))?
+            .as_str()
+    );
 
     confirm_value(
         tr!("ethereum__title_confirm_message_hash"),
@@ -1395,7 +1441,7 @@ pub(crate) fn confirm_typed_data_final() -> Result<()> {
         false,
     )? {
         ui::TrezorUiResult::Confirmed => Ok(()),
-        _ => Err(Error::Cancelled),
+        _ => Err(Error::Cancelled)?,
     }
 }
 
@@ -1780,13 +1826,15 @@ fn trade_flow(
 }
 
 /// Keep "0x" prefix in a separate chunk (#6601).
-pub(crate) fn addr_pad(addr: &str, chunkify: bool) -> String {
-    assert!(addr.starts_with("0x"));
+pub(crate) fn addr_pad(addr: &str, chunkify: bool) -> Result<String> {
+    if !addr.starts_with("0x") {
+        return Err(Error::DataError("Invalid address format"));
+    }
     let mut addr = addr.to_string();
     if chunkify {
         addr = uformat!("  {}", addr.as_str());
     }
-    addr
+    Ok(addr)
 }
 
 /// General confirmation dialog, used by many other confirm_* functions.
@@ -1835,6 +1883,77 @@ pub fn confirm_value(
         br_name,
     )?)?;
     Ok(())
+}
+
+pub(crate) fn confirm_blob_intro(
+    title: &str,
+    value: &[u8],
+    subtitle: &str,
+    verb: &str,
+    verb_cancel: &str,
+    br_name: &str,
+    br_code: ButtonRequestType,
+) -> Result<bool> {
+    // Introduce blob to be confirmed, allowing the user to:
+    // - view (returns `False`)
+    // - confirm (returns `True`)
+    // - cancel (raises `ActionCancelled`)
+
+    let value_str =
+        hex_encode(value).map_err(|_| Error::DataError("Failed to hex-encode value"))?;
+
+    let res = ui::confirm_value_intro(
+        title,
+        &value_str,
+        Some(subtitle),
+        Some(verb),
+        Some(verb_cancel),
+        false,
+        false,
+        Some(br_name),
+        br_code.into(),
+    )?;
+
+    match res {
+        ui::TrezorUiResult::Confirmed => Ok(true),
+        ui::TrezorUiResult::Info => Ok(false),
+        _ => Err(Error::Cancelled)?,
+    }
+}
+
+pub(crate) fn confirm_blob_prefix(
+    data: &[u8],
+    total_len: usize,
+    confirmed_len: usize,
+    br_name: &str,
+    br_code: ButtonRequestType,
+) -> Result<Option<usize>> {
+    // Returns the number of bytes confirmed, or `None` if confirmation should be skipped.
+    let prefix_len = core::cmp::min(9 * 9, data.len()); // 9 rows x 18 hex digits (2 chars per byte)
+    let prefix = hex_encode(&data[..prefix_len])
+        .map_err(|_| Error::DataError("Failed to hex-encode prefix"))?;
+    let confirmed_len = confirmed_len + prefix.len();
+    let verb = if confirmed_len < total_len {
+        tr!("words__show_next")
+    } else {
+        tr!("buttons__continue")
+    };
+
+    // TODO: use tr ethereum__title_input_data_bytes
+    let title = uformat!("Data:\n{} / {} bytes", confirmed_len, total_len);
+
+    let show_more = !ui::should_show_more(
+        &title,
+        &[StrExt::new(&prefix, true)],
+        tr!("words__confirm_all"), // will return True
+        Some(br_name),
+        br_code.into(),
+        verb, // will return False
+    )?;
+    if show_more {
+        return Ok(Some(prefix.len()));
+    }
+    Ok(None)
 }
 
 pub fn confirm_blob(

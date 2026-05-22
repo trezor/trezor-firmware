@@ -2,13 +2,13 @@ use crate::{
     alloc_types::String,
     common::COIN,
     ed25519,
-    proto::definitions::{DefinitionType, NetworkInfo, TokenInfo},
+    proto::definitions::{DefinitionType, DisplayFormatInfo, NetworkInfo, TokenInfo},
     tokens::{token_by_chain_address, unknown_token},
     uformat,
 };
 use prost::Message;
 use trezor_app_sdk::{
-    Error,
+    Error, Result,
     crypto::{self, Hasher},
 };
 
@@ -44,7 +44,7 @@ impl Definitions {
         encoded_token: Option<&[u8]>,
         chain_id: Option<u64>,
         slip44: Option<u32>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self> {
         // if we have a built-in definition, use it
         let mut token = None;
         let mut network = if let Some(chain_id) = chain_id {
@@ -70,12 +70,12 @@ impl Definitions {
         if let Some(chain_id) = chain_id
             && network.chain_id != chain_id
         {
-            return Err(Error::DataError("Network definition mismatch"));
+            return Err(Error::DataError("Network definition mismatch"))?;
         }
         if let Some(slip44) = slip44
             && network.slip44 != slip44
         {
-            return Err(Error::DataError("Network definition mismatch"));
+            return Err(Error::DataError("Network definition mismatch"))?;
         }
 
         // get token definition
@@ -112,7 +112,7 @@ impl Definitions {
     }
 }
 
-trait DefinitionMessage: Message + Default {
+pub(crate) trait DefinitionMessage: Message + Default {
     fn definition_type() -> DefinitionType;
 }
 
@@ -128,7 +128,13 @@ impl DefinitionMessage for TokenInfo {
     }
 }
 
-fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, Error> {
+impl DefinitionMessage for DisplayFormatInfo {
+    fn definition_type() -> DefinitionType {
+        DefinitionType::DisplayFormat
+    }
+}
+
+pub(crate) fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A> {
     let expected_type = A::definition_type();
 
     let mut offset = 0;

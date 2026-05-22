@@ -91,6 +91,7 @@ class ERC7730FieldFormatterType(IntEnum):
 class ERC7730ContainerPath(IntEnum):
     FROM = 1
     VALUE = 2
+    TO = 3
 
 
 class DataType(IntEnum):

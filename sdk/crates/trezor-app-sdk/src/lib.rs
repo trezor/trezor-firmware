@@ -44,7 +44,12 @@
 #![allow(internal_features)]
 #![allow(dead_code)]
 #![feature(core_intrinsics)]
-#![feature(lang_items)]
+#![cfg_attr(all(feature = "debug", not(feature = "test")), feature(lang_items))]
+
+#[cfg(feature = "debug")]
+extern crate alloc;
+#[cfg(feature = "debug")]
+use alloc::boxed::Box;
 
 mod critical_section;
 mod ipc;
@@ -77,7 +82,7 @@ pub struct Align<T>(
 // Re-export UI archived types
 pub use ui::{ArchivedTrezorUiEnum, ArchivedTrezorUiResult};
 
-#[cfg_attr(feature = "test", derive(Debug))]
+#[cfg_attr(any(feature = "debug", feature = "test"), derive(Debug))]
 pub enum Error {
     ApiError(ApiError),
     ServiceError,
@@ -87,6 +92,11 @@ pub enum Error {
     InvalidMessage,
     InvalidArgument,
     ValueError(&'static str),
+    #[cfg(feature = "debug")]
+    Context {
+        context: &'static str,
+        source: Box<Error>,
+    },
 }
 
 impl Error {
@@ -101,20 +111,103 @@ impl Error {
             Self::InvalidMessage => 6,
             Self::InvalidArgument => 7,
             Self::ValueError(_) => 8,
+            #[cfg(feature = "debug")]
+            Self::Context { source, .. } => source.code(),
         }
     }
 
     pub fn message(&self) -> &'static str {
         match self {
-            Self::ApiError(_) => "api error",
-            Self::ServiceError => "service error",
-            Self::InvalidFunction => "invalid function",
-            Self::InvalidMessage => "invalid message",
-            Self::InvalidArgument => "invalid argument",
+            Self::ApiError(_) => "",
+            Self::ServiceError => "",
+            Self::InvalidFunction => "",
+            Self::InvalidMessage => "",
+            Self::InvalidArgument => "",
             Self::DataError(msg) => msg,
             Self::ValueError(msg) => msg,
-            Self::Cancelled => "cancelled",
+            Self::Cancelled => "",
+            #[cfg(feature = "debug")]
+            Self::Context { source, .. } => source.message(),
         }
+    }
+
+    pub fn error_type(&self) -> &'static str {
+        match self {
+            Self::ApiError(_) => "ApiError",
+            Self::ServiceError => "ServiceError",
+            Self::DataError(_) => "DataError",
+            Self::Cancelled => "Cancelled",
+            Self::InvalidFunction => "InvalidFunction",
+            Self::InvalidMessage => "InvalidMessage",
+            Self::InvalidArgument => "InvalidArgument",
+            Self::ValueError(_) => "ValueError",
+            #[cfg(feature = "debug")]
+            Self::Context { source, .. } => source.error_type(),
+        }
+    }
+
+    #[cfg(feature = "debug")]
+    pub fn context(self, context: &'static str) -> Self {
+        Error::Context {
+            context,
+            source: Box::new(self),
+        }
+    }
+    #[cfg(not(feature = "debug"))]
+    pub fn context(self, _context: &'static str) -> Self {
+        self
+    }
+
+    #[cfg(feature = "debug")]
+    pub fn source(&self) -> Option<&Error> {
+        match self {
+            Error::Context { source, .. } => Some(&*source),
+            _ => None,
+        }
+    }
+}
+
+#[cfg(feature = "debug")]
+impl ufmt::uDisplay for Error {
+    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
+    where
+        W: ufmt::uWrite,
+    {
+        // Print the main error line
+        match self {
+            Error::Context { context, .. } => {
+                ufmt::uwrite!(f, "{}", context)?;
+            }
+            _ => {
+                ufmt::uwrite!(f, "{}: {}", self.error_type(), self.message())?;
+            }
+        }
+
+        // Print the context chain
+        let mut source = self.source();
+        while let Some(err) = source {
+            match err {
+                Error::Context { context, .. } => {
+                    ufmt::uwrite!(f, "\nCaused by: {}", context)?;
+                }
+                _ => {
+                    ufmt::uwrite!(f, "\nCaused by: {}: {}", err.error_type(), err.message())?;
+                }
+            }
+            source = err.source();
+        }
+        Ok(())
+    }
+}
+
+#[cfg(not(feature = "debug"))]
+impl ufmt::uDisplay for Error {
+    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
+    where
+        W: ufmt::uWrite,
+    {
+        ufmt::uwrite!(f, "{}: {}", self.error_type(), self.message())?;
+        Ok(())
     }
 }
 
@@ -130,6 +223,16 @@ impl From<service::Error<'_>> for Error {
     }
 }
 
+pub trait ResultExt<T> {
+    fn context(self, context: &'static str) -> Self;
+}
+
+impl<T> ResultExt<T> for Result<T> {
+    fn context(self, context: &'static str) -> Self {
+        self.map_err(|e| e.context(context))
+    }
+}
+
 // The application provides an unmangled Rust function `app` that returns Result<()>
 #[cfg(not(feature = "test"))]
 unsafe extern "Rust" {
@@ -138,7 +241,9 @@ unsafe extern "Rust" {
 
 /// Result type alias
 pub use low_level_api::ApiError;
+
 pub type Result<T> = core::result::Result<T, Error>;
+
 pub use ipc::IpcMessage;
 
 static_service!(CORE_SERVICE, CoreApp, service::CoreIpcService, 16384);
@@ -162,15 +267,17 @@ pub unsafe extern "C" fn applet_main(
             _ = low_level_api::system_exit();
         }
         Err(e) => {
+            error!("Application error");
             let mut error_buf = [0u8; 256];
             let mut writer = util::SliceWriter::new(&mut error_buf);
             _ = ufmt::uwrite!(
                 writer,
-                "Application failed with error code: {} and message: {}",
+                "Application failed with error type: {} code: {} and message: {}",
+                e.error_type(),
                 e.code(),
                 e.message()
             );
-            error!("{}", writer.as_ref());
+            error!("{}", e);
             _ = low_level_api::system_exit_error("Error", writer.as_ref(), "");
         }
     }
@@ -180,11 +287,31 @@ pub unsafe extern "C" fn applet_main(
 #[cfg(not(feature = "test"))]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
-    low_level_api::system_exit_fatal(
-        info.message().as_str().unwrap_or("PANIC"),
-        info.location().map_or("<unknown>", |loc| &loc.file()[20..]),
-        info.location().map_or(0, |loc| loc.line() as i32),
-    );
+    let msg = info.message().as_str().unwrap_or("PANIC");
+    let (file, line) = info
+        .location()
+        .map(|loc| {
+            // Show only the file name, not the full path
+            let file = loc.file();
+            let file_short = file.rsplit('/').next().unwrap_or(file);
+            (file_short, loc.line() as i32)
+        })
+        .unwrap_or(("<unknown>", 0));
+    low_level_api::system_exit_fatal(msg, file, line);
+}
+
+#[cfg(feature = "debug")]
+#[cfg(not(feature = "test"))]
+#[lang = "eh_personality"]
+fn eh_personality() -> ! {
+    loop {}
+}
+
+#[cfg(feature = "debug")]
+#[cfg(not(feature = "test"))]
+#[unsafe(no_mangle)]
+unsafe extern "C" fn _Unwind_Resume() {
+    unsafe { core::intrinsics::unreachable() };
 }
 
 #[cfg(not(feature = "test"))]

@@ -1,19 +1,23 @@
 use crate::{
     alloc_types::{Box, String, ToString, Vec, vec},
     definitions::unknown_network,
+    layout::{confirm_blob_intro, confirm_blob_prefix},
     proto::definitions::{NetworkInfo, TokenInfo},
-    proto::ethereum::typed_data_struct_ack::{DataType, FieldType},
+    proto::{
+        common::button_request::ButtonRequestType,
+        ethereum::typed_data_struct_ack::{DataType, FieldType},
+    },
     strutil::{hex_decode, hex_encode},
     uformat,
 };
 use primitive_types::U256;
-use trezor_app_sdk::{Error, Result, crypto, ui};
+use trezor_app_sdk::{Error, Result, ResultExt, crypto, ui};
 
 const RSKIP60_NETWORKS: [u64; 2] = [30, 31];
 
 /// Converts address in bytes to a checksummed string as defined
 /// in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md
-pub fn address_from_bytes(address_bytes: &[u8], network: Option<&NetworkInfo>) -> String {
+pub fn address_from_bytes(address_bytes: &[u8], network: Option<&NetworkInfo>) -> Result<String> {
     let default = unknown_network();
     let network_info = network.unwrap_or(&default);
     let prefix = if RSKIP60_NETWORKS.contains(&network_info.chain_id) {
@@ -22,7 +26,8 @@ pub fn address_from_bytes(address_bytes: &[u8], network: Option<&NetworkInfo>) -
         String::new()
     };
 
-    let address_hex = hex_encode(address_bytes);
+    let address_hex =
+        hex_encode(address_bytes).map_err(|_| Error::DataError("Failed to hex-encode message"))?;
 
     // Calculate sha3-256 keccak hash
     let hash_input = uformat!("{}{}", prefix.as_str(), address_hex.as_str());
@@ -47,22 +52,25 @@ pub fn address_from_bytes(address_bytes: &[u8], network: Option<&NetworkInfo>) -
         }
     }
 
-    result
+    Ok(result)
 }
 
 pub fn bytes_from_address(address: &str) -> Result<Vec<u8>> {
     if address.len() == 40 {
-        hex_decode(address).map_err(|_| Error::DataError("Invalid address format"))
+        Ok(hex_decode(address).map_err(|_| Error::DataError("Invalid address format"))?)
     } else if address.len() == 42 {
         if !address.starts_with("0x") && !address.starts_with("0X") {
-            Err(Error::DataError("invalid beginning of an address"))
+            Err(Error::DataError("invalid beginning of an address"))?
         } else {
-            hex_decode(&address[2..]).map_err(|_| Error::DataError("Invalid address format"))
+            Ok(
+                hex_decode(&address[2..])
+                    .map_err(|_| Error::DataError("Invalid address format"))?,
+            )
         }
     } else if address.is_empty() {
         Ok(vec![])
     } else {
-        Err(Error::DataError("Invalid address length"))
+        Err(Error::DataError("Invalid address length"))?
     }
 }
 
@@ -111,13 +119,13 @@ pub fn get_type_name(field: &FieldType) -> Result<String> {
 /// Used by sign_typed_data module to show data to user.
 pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
     if type_name.starts_with("bytes") {
-        return Ok(hex_encode(data));
+        return hex_encode(data).map_err(|_| Error::DataError("Failed to hex-encode data"));
     } else if type_name == "string" {
         return core::str::from_utf8(data)
             .map(|s| s.to_string())
             .map_err(|_| Error::DataError("Invalid UTF-8 string"));
     } else if type_name == "address" {
-        return Ok(address_from_bytes(data, None));
+        return address_from_bytes(data, None).context("Failed to convert bytes to address");
     } else if type_name == "bool" {
         return Ok(if data == [0x01] { "true" } else { "false" }.to_string());
     } else if type_name.starts_with("uint") {
@@ -146,14 +154,15 @@ pub fn get_fee_items_regular(
     gas_price: U256,
     gas_limit: U256,
     network: &NetworkInfo,
-) -> [(String, String, bool); 2] {
+) -> Result<[(String, String, bool); 2]> {
     let gas_limit_str = uformat!("{} units", gas_limit.to_string().as_str());
-    let gas_price_str = format_ethereum_amount(gas_price, None, network, true);
+    let gas_price_str = format_ethereum_amount(gas_price, None, network, true)
+        .context("Failed to create regular fee items")?;
 
-    [
+    Ok([
         (tr!("ethereum__gas_limit").into(), gas_limit_str, false),
         (tr!("ethereum__gas_price").into(), gas_price_str, false),
-    ]
+    ])
 }
 
 pub fn get_fee_items_eip1559(
@@ -161,11 +170,13 @@ pub fn get_fee_items_eip1559(
     max_priority_fee: U256,
     gas_limit: U256,
     network: &NetworkInfo,
-) -> [(String, String, bool); 3] {
+) -> Result<[(String, String, bool); 3]> {
     let gas_limit_str = uformat!("{} units", gas_limit.to_string().as_str());
-    let max_gas_fee_str = format_ethereum_amount(max_gas_fee, None, network, true);
-    let max_priority_fee_str = format_ethereum_amount(max_priority_fee, None, network, true);
-    [
+    let max_gas_fee_str = format_ethereum_amount(max_gas_fee, None, network, true)
+        .context("Failed to create gas fee string")?;
+    let max_priority_fee_str = format_ethereum_amount(max_priority_fee, None, network, true)
+        .context("Failed to create priority fee string")?;
+    Ok([
         (tr!("ethereum__gas_limit").into(), gas_limit_str, false),
         (
             tr!("ethereum__max_gas_price").into(),
@@ -177,7 +188,7 @@ pub fn get_fee_items_eip1559(
             max_priority_fee_str,
             false,
         ),
-    ]
+    ])
 }
 
 pub fn format_ethereum_amount(
@@ -185,7 +196,7 @@ pub fn format_ethereum_amount(
     token: Option<&TokenInfo>,
     network: &NetworkInfo,
     force_unit_gwei: bool,
-) -> String {
+) -> Result<String> {
     let (mut suffix, mut decimals) = if let Some(token) = token {
         (token.symbol.as_str().to_string(), token.decimals as usize)
     } else {
@@ -195,8 +206,14 @@ pub fn format_ethereum_amount(
     let digits = value.to_string();
 
     if force_unit_gwei {
-        debug_assert!(token.is_none());
-        debug_assert!(decimals >= 9);
+        if token.is_some() {
+            return Err(Error::DataError("Cannot force Gwei unit for tokens"));
+        }
+        if decimals < 9 {
+            return Err(Error::DataError(
+                "Cannot force Gwei unit for networks with decimals < 9",
+            ));
+        }
         decimals -= 9;
         suffix = "Gwei".to_string();
     } else if decimals > 9 && digits.len() <= (decimals - 9) {
@@ -205,7 +222,7 @@ pub fn format_ethereum_amount(
     }
 
     let amount = format_amount_from_digits(&digits, decimals);
-    uformat!("{} {}", amount.as_str(), suffix.as_str())
+    Ok(uformat!("{} {}", amount.as_str(), suffix.as_str()))
 }
 
 fn format_amount_from_digits(digits: &str, decimals: usize) -> String {
@@ -303,11 +320,11 @@ impl Trade {
         if let Some(sell_amount) = sell_amount
             && !sell_amount.starts_with('-')
         {
-            return Err(Error::DataError("Invalid sell amount format"));
+            return Err(Error::DataError("Invalid sell amount format"))?;
         }
 
         if !buy_amount.starts_with('+') {
-            return Err(Error::DataError("Invalid buy amount format"));
+            return Err(Error::DataError("Invalid buy amount format"))?;
         }
 
         Ok(Self {
@@ -331,26 +348,90 @@ pub fn is_swap(trades: &[Trade]) -> Result<bool> {
     Ok(has_sell_amount)
 }
 
-fn progress_value(total_len: usize, progress_len: usize) -> u32 {
-    assert!(progress_len <= total_len);
+fn progress_value(total_len: usize, progress_len: usize) -> Result<u32> {
+    if progress_len > total_len {
+        return Err(Error::DataError("Progress length exceeds total length"));
+    }
     if total_len == 0 {
-        1000
+        Ok(1000)
     } else {
-        (1000 * progress_len as u32) / total_len as u32
+        Ok((1000 * progress_len as u32) / total_len as u32)
     }
 }
 
 pub fn get_progress_indicator<'a>(
     total_len: usize,
     mut progress_len: usize,
-) -> Box<dyn FnOnce(&[u8]) -> Result<()> + 'a> {
-    let _value = progress_value(total_len, progress_len);
+) -> Result<Box<dyn FnMut(&[u8]) -> Result<()> + 'a>> {
+    let _value = progress_value(total_len, progress_len)?;
 
-    Box::new(move |chunk: &[u8]| {
+    Ok(Box::new(move |chunk: &[u8]| {
         progress_len += chunk.len();
 
-        ui::update_progress(None, progress_value(total_len, progress_len))?;
+        ui::update_progress(None, progress_value(total_len, progress_len)?)?;
         Ok(())
+    }))
+}
+
+pub fn get_data_confirmer(total_len: usize) -> Box<dyn FnMut(&[u8]) -> Result<()>> {
+    let mut confirmed_len: usize = 0;
+    let mut progress_bar: Option<Box<dyn FnMut(&[u8]) -> Result<()>>> = None;
+    let mut first = true;
+
+    Box::new(move |chunk: &[u8]| {
+        if first {
+            first = false;
+            let subtitle = uformat!("{} bytes", total_len.to_string().as_str());
+            let skip = confirm_blob_intro(
+                tr!("ethereum__title_input_data"),
+                chunk,
+                subtitle.as_str(),
+                tr!("buttons__confirm"),
+                tr!("send__cancel_sign"),
+                "confirm_data",
+                ButtonRequestType::SignTx,
+            )?;
+
+            if skip {
+                let mut pb = get_progress_indicator(total_len, 0)
+                    .context("Failed to create progress indicator")?;
+                return pb(chunk);
+            }
+        }
+
+        if let Some(ref mut pb) = progress_bar {
+            return pb(chunk);
+        }
+
+        let mut remaining = chunk;
+        loop {
+            debug_assert!(confirmed_len <= total_len);
+
+            let prefix_len = confirm_blob_prefix(
+                remaining,
+                total_len,
+                confirmed_len,
+                "confirm_data",
+                ButtonRequestType::SignTx,
+            )?;
+
+            match prefix_len {
+                None => {
+                    let mut pb = get_progress_indicator(total_len, confirmed_len)
+                        .context("Failed to create progress indicator")?;
+                    pb(remaining)?;
+                    progress_bar = Some(pb);
+                    return Ok(());
+                }
+                Some(n) => {
+                    confirmed_len += n;
+                    remaining = &remaining[n..];
+                    if remaining.is_empty() {
+                        return Ok(());
+                    }
+                }
+            }
+        }
     })
 }
 
@@ -401,41 +482,50 @@ mod tests {
     fn test_denominations() {
         let network = by_chain_id(1);
 
-        let text = format_ethereum_amount(1.into(), None, &network, false);
+        let text = format_ethereum_amount(1.into(), None, &network, false).unwrap();
         assert_eq!(text, "1 Wei ETH");
-        let text = format_ethereum_amount(1000.into(), None, &network, false);
+        let text = format_ethereum_amount(1000.into(), None, &network, false).unwrap();
         assert_eq!(text, "1,000 Wei ETH");
-        let text = format_ethereum_amount(1000000.into(), None, &network, false);
+        let text = format_ethereum_amount(1000000.into(), None, &network, false).unwrap();
         assert_eq!(text, "1,000,000 Wei ETH");
-        let text = format_ethereum_amount(10000000.into(), None, &network, false);
+        let text = format_ethereum_amount(10000000.into(), None, &network, false).unwrap();
         assert_eq!(text, "10,000,000 Wei ETH");
-        let text = format_ethereum_amount(100000000.into(), None, &network, false);
+        let text = format_ethereum_amount(100000000.into(), None, &network, false).unwrap();
         assert_eq!(text, "100,000,000 Wei ETH");
-        let text = format_ethereum_amount(1000000000.into(), None, &network, false);
+        let text = format_ethereum_amount(1000000000.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.000000001 ETH");
-        let text = format_ethereum_amount(10000000000u128.into(), None, &network, false);
+        let text = format_ethereum_amount(10000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.00000001 ETH");
-        let text = format_ethereum_amount(100000000000u128.into(), None, &network, false);
+        let text = format_ethereum_amount(100000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.0000001 ETH");
-        let text = format_ethereum_amount(1000000000000u128.into(), None, &network, false);
+        let text = format_ethereum_amount(1000000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.000001 ETH");
-        let text = format_ethereum_amount(10000000000000u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(10000000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.00001 ETH");
-        let text = format_ethereum_amount(100000000000000u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(100000000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.0001 ETH");
-        let text = format_ethereum_amount(1000000000000000u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(1000000000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.001 ETH");
-        let text = format_ethereum_amount(10000000000000000u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(10000000000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.01 ETH");
-        let text = format_ethereum_amount(100000000000000000u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(100000000000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "0.1 ETH");
-        let text = format_ethereum_amount(1000000000000000000u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(1000000000000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "1 ETH");
-        let text = format_ethereum_amount(10000000000000000000u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(10000000000000000000u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "10 ETH");
-        let text = format_ethereum_amount(100000000000000000000u128.into(), None, &network, false);
+        let text = format_ethereum_amount(100000000000000000000u128.into(), None, &network, false)
+            .unwrap();
         assert_eq!(text, "100 ETH");
-        let text = format_ethereum_amount(1000000000000000000000u128.into(), None, &network, false);
+        let text = format_ethereum_amount(1000000000000000000000u128.into(), None, &network, false)
+            .unwrap();
         assert_eq!(text, "1,000 ETH");
     }
 
@@ -443,31 +533,35 @@ mod tests {
     fn test_force_units() {
         let network = by_chain_id(1);
         let wei_amount = U256::from(100_000_000);
-        let text = format_ethereum_amount(wei_amount, None, &network, false);
+        let text = format_ethereum_amount(wei_amount, None, &network, false).unwrap();
         assert_eq!(text, "100,000,000 Wei ETH");
-        let text = format_ethereum_amount(wei_amount, None, &network, true);
+        let text = format_ethereum_amount(wei_amount, None, &network, true).unwrap();
         assert_eq!(text, "0.1 Gwei");
     }
 
     #[test]
     fn test_precision() {
         let network = by_chain_id(1);
-        let text = format_ethereum_amount(1000000000000000001u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(1000000000000000001u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "1.000000000000000001 ETH");
-        let text = format_ethereum_amount(10000000000000000001u128.into(), None, &network, false);
+        let text =
+            format_ethereum_amount(10000000000000000001u128.into(), None, &network, false).unwrap();
         assert_eq!(text, "10.000000000000000001 ETH");
     }
 
     #[test]
     fn test_symbols() {
         let fake_network = _make_eth_network(None, None, Some("FAKE"), None);
-        let text = format_ethereum_amount(1.into(), None, &fake_network, false);
+        let text = format_ethereum_amount(1.into(), None, &fake_network, false).unwrap();
         assert_eq!(text, "1 Wei FAKE");
         let text =
-            format_ethereum_amount(1000000000000000000u128.into(), None, &fake_network, false);
+            format_ethereum_amount(1000000000000000000u128.into(), None, &fake_network, false)
+                .unwrap();
         assert_eq!(text, "1 FAKE");
         let text =
-            format_ethereum_amount(1000000000000000001u128.into(), None, &fake_network, false);
+            format_ethereum_amount(1000000000000000001u128.into(), None, &fake_network, false)
+                .unwrap();
         assert_eq!(text, "1.000000000000000001 FAKE");
     }
 
@@ -475,9 +569,10 @@ mod tests {
     fn test_unknown_chain() {
         let unknown = unknown_network();
         // unknown chain
-        let text = format_ethereum_amount(1.into(), None, &unknown, false);
+        let text = format_ethereum_amount(1.into(), None, &unknown, false).unwrap();
         assert_eq!(text, "1 Wei UNKN");
-        let text = format_ethereum_amount(10000000000000000001u128.into(), None, &unknown, false);
+        let text =
+            format_ethereum_amount(10000000000000000001u128.into(), None, &unknown, false).unwrap();
         assert_eq!(text, "10.000000000000000001 UNKN");
     }
 
@@ -489,20 +584,20 @@ mod tests {
         let network = by_chain_id(1);
 
         // when decimals < 10, should never display 'Wei' format
-        let text = format_ethereum_amount(1.into(), Some(&usdc_token), &network, false);
+        let text = format_ethereum_amount(1.into(), Some(&usdc_token), &network, false).unwrap();
         assert_eq!(text, "0.000001 USDC");
-        let text = format_ethereum_amount(0.into(), Some(&usdc_token), &network, false);
+        let text = format_ethereum_amount(0.into(), Some(&usdc_token), &network, false).unwrap();
         assert_eq!(text, "0 USDC");
 
         // ICO has 10 decimals
         let ico_token = _make_eth_token(Some("ICO"), Some(10), None, None, None);
-        let text = format_ethereum_amount(1.into(), Some(&ico_token), &network, false);
+        let text = format_ethereum_amount(1.into(), Some(&ico_token), &network, false).unwrap();
         assert_eq!(text, "1 Wei ICO");
-        let text = format_ethereum_amount(9.into(), Some(&ico_token), &network, false);
+        let text = format_ethereum_amount(9.into(), Some(&ico_token), &network, false).unwrap();
         assert_eq!(text, "9 Wei ICO");
-        let text = format_ethereum_amount(10.into(), Some(&ico_token), &network, false);
+        let text = format_ethereum_amount(10.into(), Some(&ico_token), &network, false).unwrap();
         assert_eq!(text, "0.000000001 ICO");
-        let text = format_ethereum_amount(11.into(), Some(&ico_token), &network, false);
+        let text = format_ethereum_amount(11.into(), Some(&ico_token), &network, false).unwrap();
         assert_eq!(text, "0.0000000011 ICO");
     }
 
@@ -510,9 +605,11 @@ mod tests {
     fn test_unknown_token() {
         let unknown_token = unknown_token();
         let unknown_network = unknown_network();
-        let text = format_ethereum_amount(1.into(), Some(&unknown_token), &unknown_network, false);
+        let text = format_ethereum_amount(1.into(), Some(&unknown_token), &unknown_network, false)
+            .unwrap();
         assert_eq!(text, "1 Wei UNKN");
-        let text = format_ethereum_amount(0.into(), Some(&unknown_token), &unknown_network, false);
+        let text = format_ethereum_amount(0.into(), Some(&unknown_token), &unknown_network, false)
+            .unwrap();
         assert_eq!(text, "0 Wei UNKN");
         // unknown token has 0 decimals so is always wei
         let text = format_ethereum_amount(
@@ -520,7 +617,8 @@ mod tests {
             Some(&unknown_token),
             &unknown_network,
             false,
-        );
+        )
+        .unwrap();
         assert_eq!(text, "1,000,000,000,000,000,000 Wei UNKN");
     }
 
@@ -540,7 +638,7 @@ mod tests {
         ];
         for s in eip55.iter() {
             let b = hex_decode(&s[2..]).unwrap();
-            let h = address_from_bytes(&b, None);
+            let h = address_from_bytes(&b, None).unwrap();
             assert_eq!(&h, s);
         }
     }
@@ -564,14 +662,14 @@ mod tests {
         let n = _make_eth_network(Some(30), None, None, None);
         for s in rskip60_chain_30.into_iter() {
             let b = hex_decode(&s[2..]).unwrap();
-            let h = address_from_bytes(&b, Some(&n));
+            let h = address_from_bytes(&b, Some(&n)).unwrap();
             assert_eq!(&h, s);
         }
 
         let n = _make_eth_network(Some(31), None, None, None);
         for s in rskip60_chain_31.into_iter() {
             let b = hex_decode(&s[2..]).unwrap();
-            let h = address_from_bytes(&b, Some(&n));
+            let h = address_from_bytes(&b, Some(&n)).unwrap();
             assert_eq!(&h, s);
         }
     }

@@ -11,7 +11,6 @@ use prost::Message;
 use trezor_app_sdk::{
     CORE_SERVICE, Error, IpcMessage, Result, error,
     service::{self, CoreIpcService, NoUtilHandler},
-    unwrap,
     util::Timeout,
 };
 
@@ -56,7 +55,7 @@ use proto::{
 // TODO: decrease size and use long string confirmation instead of blob
 #[cfg(not(test))]
 #[global_allocator]
-static ALLOCATOR: emballoc::Allocator<65536> = emballoc::Allocator::new();
+static ALLOCATOR: emballoc::Allocator<262144> = emballoc::Allocator::new();
 
 /// Macro to generate handler functions
 macro_rules! wire_handler {
@@ -81,6 +80,8 @@ macro_rules! wire_handler {
                 }
                 Err(e) => {
                     let message = IpcMessage::new(e.code(), e.message().as_bytes());
+                    trezor_app_sdk::error!("{}", e);
+
                     message.send(
                         service::CORE_SERVICE_REMOTE,
                         CoreIpcService::WireError.into(),
@@ -99,7 +100,7 @@ where
     Resp: Message + Default,
 {
     let req_bytes = req.encode_to_vec();
-    let message = IpcMessage::new(unwrap!((id as u32).try_into()), &req_bytes);
+    let message = IpcMessage::new(id as u16, &req_bytes);
     let result = CORE_SERVICE.call(
         CoreIpcService::WireContinue,
         &message,
@@ -167,7 +168,7 @@ pub fn app() -> Result<()> {
                     message.id(),
                     message.data()
                 );
-                return Err(Error::InvalidFunction);
+                return Err(Error::InvalidFunction)?;
             }
         };
     }
@@ -188,11 +189,11 @@ pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
         Ok(MessageType::VerifyMessage) => handle_verify_message(message.data()),
         Ok(_) => {
             error!("Invalid function: {:?}", message.id());
-            Err(Error::InvalidFunction)
+            Err(Error::InvalidFunction)?
         }
         Err(_) => {
             error!("Non existing message type: {:?}", message.id());
-            Err(Error::InvalidFunction)
+            Err(Error::InvalidFunction)?
         }
     }
 }

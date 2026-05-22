@@ -38,8 +38,8 @@ impl Language {
 #[derive(Default)]
 enum Model {
     #[default]
-    T3T1,
     T3W1,
+    T3T1,
 }
 
 impl Model {
@@ -55,8 +55,8 @@ impl Model {
 
     fn layout(&self) -> &'static str {
         match self {
-            Self::T3T1 => "Eckhart",
-            Self::T3W1 => "Delizia",
+            Self::T3W1 => "Eckhart",
+            Self::T3T1 => "Delizia",
         }
     }
 }

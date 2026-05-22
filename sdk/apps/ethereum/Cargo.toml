@@ -64,7 +64,7 @@ log_level_trace = ['trezor-app-sdk/log_level_trace']
 # --------------------------------------------------------------------------
 # Selectable features
 # --------------------------------------------------------------------------
-emulator = ["debug"]
+emulator = ['trezor-app-sdk/debug']
 test = ["dev_keys", 'trezor-app-sdk/test', 'trezor-app-sdk/log_level_trace']
 debug = ['trezor-app-sdk/debug']
 

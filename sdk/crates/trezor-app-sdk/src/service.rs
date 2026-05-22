@@ -82,6 +82,17 @@ pub enum Error<'a> {
     UnexpectedResponse(IpcMessage<'a>),
 }
 
+impl<'a> Error<'a> {
+    pub fn message(&self) -> &'static str {
+        match self {
+            Self::Timeout => "timeout while waiting for response",
+            Self::FailedToSend => "failed to send message",
+            Self::UnexpectedService(_) => "received message from unexpected service",
+            Self::UnexpectedResponse(_) => "received unexpected response message",
+        }
+    }
+}
+
 impl<'a, T: Into<u16> + Copy> IpcRemote<'a, T> {
     pub const fn new(inbox: IpcInbox<'a>) -> Self {
         Self {

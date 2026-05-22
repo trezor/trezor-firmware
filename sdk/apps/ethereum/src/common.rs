@@ -2,7 +2,9 @@ use crate::{
     alloc_types::{Box, String, ToString, Vec},
     clear_signing,
     definitions::Definitions,
-    helpers::{address_from_bytes, format_ethereum_amount},
+    helpers::{
+        address_from_bytes, format_ethereum_amount, get_data_confirmer, get_progress_indicator,
+    },
     layout::{require_confirm_payment_request, require_confirm_tx},
     paths::Bip32Path,
     payment_request::PaymentRequestVerifier,
@@ -11,11 +13,13 @@ use crate::{
         ethereum::{Definitions as EthereumDefinitions, TxAck, TxRequest},
         messages::MessageType,
     },
-    rlp, staking, uformat, wire_request, yielding,
+    rlp, staking,
+    strutil::hex_encode,
+    uformat, wire_request, yielding,
 };
 use primitive_types::U256;
 use trezor_app_sdk::{
-    Error, Result,
+    Error, Result, ResultExt,
     crypto::{self, Hasher},
     ui::{self, Property},
     unwrap,
@@ -68,27 +72,26 @@ pub fn get_eip_7702_known_address(addr: &[u8]) -> Option<&'static str> {
         .map(|(_, name)| *name)
 }
 
-pub(crate) fn decode_message(message: &[u8]) -> String {
+pub(crate) fn decode_message(message: &[u8]) -> Result<String> {
     match core::str::from_utf8(message) {
-        Ok(s) => s.to_string(),
+        Ok(s) => Ok(s.to_string()),
         Err(_) => {
-            use crate::strutil::hex_encode;
-            uformat!("hex({})", hex_encode(message).as_str())
+            let hex = hex_encode(message)
+                .map_err(|_| Error::DataError("Failed to hex-encode message"))?;
+            Ok(uformat!("hex({})", hex.as_str()))
         }
     }
 }
 
 /// Request at most `MAX_DATA_STORED` which we keep locally
 pub(crate) fn request_initial_data(
-    // msg: &SignTx,
     hasher: &mut crypto::Keccak256,
     data_length: usize,
     data_initial_chunk: &[u8],
 ) -> Result<Vec<u8>> {
-    // let data_length = unwrap!(msg.data_length) as usize;
-    // let data_initial_chunk = unwrap!(msg.data_initial_chunk.as_deref());
-
-    assert!(data_length >= data_initial_chunk.len());
+    if data_length < data_initial_chunk.len() {
+        return Err(Error::DataError("Invalid size of initial chunk"));
+    }
 
     // pre-allocate memory
     let mut initial_data = Vec::with_capacity(data_length);
@@ -104,7 +107,7 @@ pub(crate) fn request_initial_data(
     let mut data_left = data_length - data_initial_chunk.len();
 
     while data_left > 0 {
-        let resp = send_request_chunk(data_left as u32)?;
+        let resp = send_request_chunk(data_left as u32).context("Failed to send request chunk")?;
         let chunk = resp.data_chunk.as_ref();
         initial_data.extend_from_slice(chunk);
         data_left -= chunk.len();
@@ -119,7 +122,8 @@ pub(crate) fn send_request_chunk(data_left: u32) -> Result<TxAck> {
         data_length: Some(core::cmp::min(data_left, 1024) as u32),
         ..Default::default()
     };
-    let resp: TxAck = wire_request(&req, MessageType::TxRequest)?;
+    let resp: TxAck =
+        wire_request(&req, MessageType::TxRequest).context("Failed to send wire request")?;
 
     Ok(resp)
 }
@@ -168,7 +172,6 @@ pub(crate) fn check_common_fields(
 /// [None, None] implies clear signing attempted and succeeded.
 pub(crate) fn confirm_tx_data<'a>(
     initial_data: &'a [u8],
-    // msg: &'a SignTx,
     data_length: usize,
     data_initial_chunk: &'a [u8],
     value_bytes: &'a [u8],
@@ -179,14 +182,15 @@ pub(crate) fn confirm_tx_data<'a>(
     address_bytes: &'a [u8],
     maximum_fee: &'a str,
     fee_items: &'a [Property<'a>],
-    payment_request_verifier: Option<PaymentRequestVerifier>,
+    mut payment_request_verifier: Option<PaymentRequestVerifier>,
     sender_bytes: &'a [u8],
     chunkify: Option<bool>,
     payment_req: Option<&'a PaymentRequest>,
     chain_id: u64,
     definitions: Option<&'a EthereumDefinitions>,
+    supports_definition_request: Option<bool>,
 ) -> Result<(
-    Option<Box<dyn Fn(&[u8]) -> Result<()> + 'a>>,
+    Option<Box<dyn FnMut(&[u8]) -> Result<()> + 'a>>,
     Option<Box<dyn FnOnce() -> Result<()> + 'a>>,
 )> {
     // let value_bytes = unwrap!(msg.value.as_deref());
@@ -202,7 +206,8 @@ pub(crate) fn confirm_tx_data<'a>(
         maximum_fee,
         fee_items,
         chunkify,
-    )?;
+    )
+    .context("Failed to get staking approver")?;
 
     if staking_approver.1.is_some() {
         if payment_request_verifier.is_some() {
@@ -222,7 +227,8 @@ pub(crate) fn confirm_tx_data<'a>(
         maximum_fee,
         fee_items,
         sender_bytes,
-    )?;
+    )
+    .context("Failed to get yielding approver")?;
 
     if yielding_approver.1.is_some() {
         if payment_request_verifier.is_some() {
@@ -237,7 +243,8 @@ pub(crate) fn confirm_tx_data<'a>(
 
         ui::error_if_not_confirmed(ui::confirm_value(
             tr!("ethereum__eip_7702_title"),
-            unwrap!(get_eip_7702_known_address(address_bytes)),
+            get_eip_7702_known_address(address_bytes)
+                .ok_or(Error::DataError("Address is not known"))?,
             Some(tr!("ethereum__eip_7702")),
             Some("confirm_provider"),
             ButtonRequestType::Other.into(),
@@ -265,12 +272,18 @@ pub(crate) fn confirm_tx_data<'a>(
     } else if clear_signing::try_confirm(
         initial_data,
         address_bytes,
+        dp,
+        value,
+        to,
+        chunkify.unwrap_or_default(),
         chain_id,
         definitions,
         defs,
         maximum_fee,
         fee_items,
-        payment_request_verifier.as_ref(),
+        payment_request_verifier.as_mut(),
+        payment_req,
+        supports_definition_request,
     )
     .is_err()
     {
@@ -280,21 +293,34 @@ pub(crate) fn confirm_tx_data<'a>(
     let recipient_str = if address_bytes.is_empty() {
         None
     } else {
-        Some(address_from_bytes(address_bytes, Some(defs.network())))
+        Some(
+            address_from_bytes(address_bytes, Some(defs.network()))
+                .context("Failed to convert bytes to address")?,
+        )
     };
 
     if let Some(mut payment_request_verifier) = payment_request_verifier {
-        assert!(data_length == 0);
+        if data_length != 0 {
+            return Err(Error::DataError("Invalid data length for payment request"));
+        }
 
         //  If a payment_request_verifier is provided, then payment_req must have been set.
-        assert!(payment_req.is_some());
-        assert!(recipient_str.is_some());
+        if payment_req.is_none() {
+            return Err(Error::DataError("Missing payment request"));
+        }
+        if recipient_str.is_none() {
+            return Err(Error::DataError("Missing recipient address"));
+        }
 
-        payment_request_verifier.add_output(value, recipient_str.as_deref().unwrap_or(""), None)?;
+        // recipient_str is guaranteed to be Some due to the check above
+        payment_request_verifier.add_output(value, unwrap!(recipient_str.as_deref()), None)?;
         payment_request_verifier.verify()?;
-        // TODO: implement
         Ok((
-            None,
+            Some(
+                get_progress_indicator(data_length, 0)
+                    .context("Failed to create progress indicator")?,
+            ),
+            // recipient_str and payment_req are guaranteed to be Some due to the check above
             Some(Box::new(move || {
                 require_confirm_payment_request(
                     unwrap!(recipient_str.as_deref()),
@@ -310,26 +336,24 @@ pub(crate) fn confirm_tx_data<'a>(
             })),
         ))
     } else if !clear_signed {
-        // TODO: implement
-        // let confirm_data_chunk: Option<_> = if data_length > 0 {
-        //     // get_data_confirmer(data_length)
-        //     None
-        // } else {
-        //     // get_progress_indicator(data_length)
-        //     None
-        // };
+        let confirm_data_chunk = if data_length > 0 {
+            get_data_confirmer(data_length)
+        } else {
+            get_progress_indicator(data_length, 0)
+                .context("Failed to create progress value indicator")?
+        };
         // what we want to confirm here is the ETH amount being sent on-chain
         let token = None;
 
         let is_send = data_length == 0 && tx_type != Some(EIP_7702_TX_TYPE);
 
-        // TODO: implement
         Ok((
-            None,
+            Some(confirm_data_chunk),
             Some(Box::new(move || {
                 require_confirm_tx(
                     recipient_str.as_deref(),
-                    &format_ethereum_amount(value, token, defs.network(), false),
+                    &format_ethereum_amount(value, token, defs.network(), false)
+                        .context("Failed to create amount string")?,
                     address_bytes,
                     dp,
                     maximum_fee,
@@ -346,7 +370,7 @@ pub(crate) fn confirm_tx_data<'a>(
 }
 
 pub(crate) fn confirm_data_and_summary<'a>(
-    confirm_data_chunk: Option<Box<dyn Fn(&[u8]) -> Result<()> + 'a>>,
+    confirm_data_chunk: Option<Box<dyn FnMut(&[u8]) -> Result<()> + 'a>>,
     confirm_summary: Option<Box<dyn FnOnce() -> Result<()> + 'a>>,
     initial_data: &[u8],
     data_length: usize,
@@ -355,7 +379,7 @@ pub(crate) fn confirm_data_and_summary<'a>(
     // `confirm_data_chunk` and `confirm_summary` can be `None`
     // if we clear signed so there is nothing more to confirm
 
-    if let Some(confirm_data_chunk) = confirm_data_chunk {
+    if let Some(mut confirm_data_chunk) = confirm_data_chunk {
         confirm_data_chunk(initial_data)?;
 
         let mut data_left = data_length - initial_data.len();

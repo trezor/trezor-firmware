@@ -14,8 +14,10 @@ pub use trezor_structs::{String, TrezorCryptoResult};
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
 pub use crate::low_level_api::ffi::{HMAC_SHA256_CTX, SHA256_CTX, SHA512_CTX};
-use crate::low_level_api::get_crypto_or_die;
-pub use crate::low_level_api::{ed25519_cosi_combine_publickeys, ed25519_sign_open};
+use crate::low_level_api::{
+    ed25519_cosi_combine_publickeys as impl_ed25519_cosi_combine_publickeys,
+    ed25519_sign_open as impl_ed25519_sign_open, get_crypto_or_die,
+};
 use crate::service::{CoreIpcService, NoUtilHandler};
 use crate::util::Timeout;
 use crate::{Error, Result, unwrap};
@@ -67,7 +69,7 @@ pub fn get_xpub(address_n: &[u32]) -> Result<String<150>> {
         Ok(xpub)
     } else {
         // TODO: proper error type
-        Err(Error::DataError("Failed to get xpub"))
+        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
     }
 }
 
@@ -90,7 +92,7 @@ pub fn get_eth_pubkey_hash(
         Ok(hash)
     } else {
         // TODO: proper error type
-        Err(Error::DataError("Failed to get ethereum pubkey hash"))
+        Err(Error::DataError("Failed to get ethereum pubkey hash"))?
     }
 }
 
@@ -117,7 +119,7 @@ pub fn sign_typed_hash(
         Ok(signature)
     } else {
         // TODO: proper error type
-        Err(Error::DataError("Failed to sign typed hash"))
+        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
     }
 }
 
@@ -140,7 +142,7 @@ pub fn check_address_mac(
         Ok(valid)
     } else {
         // TODO: proper error type
-        Err(Error::DataError("Failed to check address MAC"))
+        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
     }
 }
 
@@ -161,7 +163,7 @@ pub fn get_address_mac(
         Ok(mac)
     } else {
         // TODO: proper error type
-        Err(Error::DataError("Failed to get address MAC"))
+        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
     }
 }
 
@@ -176,7 +178,8 @@ pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
         Ok(valid)
     } else {
         // TODO: proper error type
-        Err(Error::DataError("Failed to verify nonce cache"))
+        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
+
     }
 }
 
@@ -199,7 +202,7 @@ pub fn verify_derivation_path(
         Ok(())
     } else {
         // TODO: proper error type
-        Err(Error::DataError("Forbidden key path"))
+        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
     }
 }
 
@@ -269,4 +272,34 @@ pub trait Hasher {
     // Required methods
     fn update(&mut self, input: &[u8]);
     fn finalize(&mut self, output: &mut [u8]);
+}
+
+pub fn ed25519_sign_open(
+    public_key: &[u8; 32],
+    signature: &[u8; 64],
+    message: &[u8],
+) -> Result<bool> {
+    if message.is_empty() {
+        return Err(Error::DataError("Message is empty"));
+    }
+
+    let result = impl_ed25519_sign_open(public_key, signature, message);
+    Ok(result == 0)
+}
+
+pub fn ed25519_cosi_combine_publickeys(pks: &[[u8; 32]]) -> Result<[u8; 32]> {
+    let n = pks.len();
+
+    if n > 15 {
+        // Can't combine more than 15 COSI signatures
+        return Err(Error::DataError("Too many COSI signatures"));
+    }
+
+    let mut res = [0u8; 32];
+    let result = impl_ed25519_cosi_combine_publickeys(pks, &mut res);
+    if result == 0 {
+        Ok(res)
+    } else {
+        Err(Error::DataError("Failed to combine COSI public keys"))
+    }
 }
