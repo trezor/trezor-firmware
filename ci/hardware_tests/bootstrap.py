@@ -25,6 +25,8 @@ def main(model: str, file: str = None):
         path = tt.update_firmware(file, "Trezor T")
     elif model == "T2B1":
         path = tt.update_firmware(file, "Safe 3")
+    elif model == "T3T1":
+        path = tt.update_firmware(file, "Safe 5")
     else:
         raise ValueError("Unknown Trezor model.")
 
