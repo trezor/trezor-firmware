@@ -15,9 +15,8 @@ use crate::{
 };
 use primitive_types::U256;
 use trezor_app_sdk::{
-    Error, Result, crypto,
+    Error, Result, ResultExt, crypto,
     ui::{self, Property},
-    unwrap,
 };
 
 const TX_TYPE: u32 = 2;
@@ -26,11 +25,14 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
     msg.to.get_or_insert_default();
     msg.data_initial_chunk.get_or_insert_default();
 
-    assert!(msg.to.is_some());
-    assert!(msg.data_initial_chunk.is_some());
-
-    let to = unwrap!(msg.to.as_deref());
-    let data_initial_chunk = unwrap!(msg.data_initial_chunk.as_deref());
+    let to = msg
+        .to
+        .as_deref()
+        .ok_or(Error::DataError("Missing to address"))?;
+    let data_initial_chunk = msg
+        .data_initial_chunk
+        .as_deref()
+        .ok_or(Error::DataError("Missing data initial chunk"))?;
 
     let dp = Bip32Path::from_slice(&msg.address_n);
 
@@ -77,13 +79,15 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
     let max_priority_fee = U256::from_big_endian(&msg.max_priority_fee);
     let gas_limit = U256::from_big_endian(&msg.gas_limit);
     let maximum_fee =
-        format_ethereum_amount(max_gas_fee * gas_limit, None, definitions.network(), false);
+        format_ethereum_amount(max_gas_fee * gas_limit, None, definitions.network(), false)
+            .context("Failed to create max fee string")?;
     let fee_items = get_fee_items_eip1559(
         max_gas_fee,
         max_priority_fee,
         gas_limit,
         definitions.network(),
-    );
+    )
+    .context("Failed to create fee items")?;
 
     let fee_items_ref: Vec<Property> = fee_items
         .iter()
@@ -144,6 +148,7 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
         msg.payment_req.as_ref(),
         msg.chain_id,
         msg.definitions.as_ref(),
+        msg.supports_definition_request,
     )?;
 
     confirm_data_and_summary(
@@ -155,9 +160,12 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
     )?;
 
     // write_access_list
-    let payload_length: u32 = msg.access_list.iter().try_fold(0u32, |acc, item| {
-        Ok::<u32, Error>(acc + access_list_item_length(item)?)
-    })?;
+    let payload_length: u32 = msg
+        .access_list
+        .iter()
+        .try_fold(0u32, |acc, item| -> Result<u32> {
+            Ok(acc + access_list_item_length(item)?)
+        })?;
     rlp::write_header(&mut hasher, payload_length, rlp::LIST_HEADER_BYTE, None);
 
     for item in &msg.access_list {
@@ -227,9 +235,12 @@ pub fn get_digest_length(msg: &SignTxEip1559, data_total: u32) -> Result<u32> {
     length += rlp::header_length(data_total, Some(data_initial_chunk));
     length += data_total;
 
-    let payload_length: u32 = msg.access_list.iter().try_fold(0u32, |acc, item| {
-        Ok::<u32, Error>(acc + access_list_item_length(item)?)
-    })?;
+    let payload_length: u32 = msg
+        .access_list
+        .iter()
+        .try_fold(0u32, |acc, item| -> Result<u32> {
+            Ok(acc + access_list_item_length(item)?)
+        })?;
     let access_list_length = rlp::header_length(payload_length, None) + payload_length;
 
     length += access_list_length;

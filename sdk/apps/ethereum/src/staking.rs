@@ -6,7 +6,7 @@ use crate::{
     sc_constants::{SC_ARGUMENT_BYTES, SC_FUNC_SIG_BYTES},
 };
 use primitive_types::U256;
-use trezor_app_sdk::{Error, Result, ui::Property};
+use trezor_app_sdk::{Error, Result, ResultExt, ui::Property};
 
 const SC_FUNC_SIG_STAKE: [u8; 4] = [0x3a, 0x29, 0xdb, 0xae];
 const SC_FUNC_SIG_UNSTAKE: [u8; 4] = [0x76, 0xec, 0x87, 0x1c];
@@ -36,7 +36,6 @@ const ADDRESSES_ACCOUNTING: [[u8; 20]; 2] = [
 ];
 
 pub(crate) fn get_approver<'a>(
-    // msg: &'a SignTx,
     data_length: usize,
     data_initial_chunk: &'a [u8],
     value: &'a [u8],
@@ -47,13 +46,9 @@ pub(crate) fn get_approver<'a>(
     fee_items: &'a [Property<'a>],
     chunkify: Option<bool>,
 ) -> Result<(
-    Option<Box<dyn Fn(&[u8]) -> Result<()> + 'a>>,
+    Option<Box<dyn FnMut(&[u8]) -> Result<()> + 'a>>,
     Option<Box<dyn FnOnce() -> Result<()> + 'a>>,
 )> {
-    // let data_length = unwrap!(msg.data_length);
-    // let data_initial_chunk = unwrap!(msg.data_initial_chunk.as_deref());
-    // let value = unwrap!(msg.value.as_deref());
-
     if data_length > data_initial_chunk.len() {
         return Ok((None, None));
     }
@@ -145,7 +140,6 @@ fn handle_staking_tx_stake<'a>(
         return Err(Error::DataError("Invalid staking transaction call"));
     }
 
-    assert!(value.len() <= 32);
     let value = U256::from_big_endian(value);
 
     require_confirm_stake(
@@ -156,7 +150,8 @@ fn handle_staking_tx_stake<'a>(
         fee_items,
         network,
         chunkify.unwrap_or_default(),
-    )?;
+    )
+    .context("Failed to confirm stake")?;
 
     Ok(())
 }
@@ -195,7 +190,8 @@ fn handle_staking_tx_unstake<'a>(
         fee_items,
         network,
         chunkify.unwrap_or_default(),
-    )?;
+    )
+    .context("Failed to confirm unstake")?;
 
     Ok(())
 }
@@ -221,7 +217,8 @@ fn handle_staking_tx_claim<'a>(
         fee_items,
         network,
         chunkify.unwrap_or_default(),
-    )?;
+    )
+    .context("Failed to confirm claim")?;
 
     Ok(())
 }

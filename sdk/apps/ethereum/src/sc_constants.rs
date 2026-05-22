@@ -1,3 +1,5 @@
+use crate::alloc_types::String;
+
 // Smart contract 'data' field lengths in bytes
 pub(crate) const SC_FUNC_SIG_BYTES: usize = 4;
 pub(crate) const SC_ARGUMENT_BYTES: usize = 32;
@@ -32,11 +34,11 @@ pub const APPROVE_KNOWN_ADDRESSES: [([u8; 20], &str); 3] = [
     (ADDR_LIFI_DIAMOND, "LiFI Diamond"),
 ];
 
-pub fn get_approve_known_address(addr: &[u8]) -> Option<&'static str> {
+pub fn get_approve_known_address(addr: &[u8]) -> Option<String> {
     APPROVE_KNOWN_ADDRESSES
         .iter()
         .find(|(a, _)| a.as_slice() == addr)
-        .map(|(_, name)| *name)
+        .map(|(_, name)| (*name).into())
 }
 
 #[cfg(test)]

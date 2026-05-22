@@ -114,6 +114,7 @@ enum ERC7730FieldFormatterType {
 enum ERC7730ContainerPath {
   FROM  = 1;
   VALUE = 2;
+  TO    = 3;
 }
 
 /**

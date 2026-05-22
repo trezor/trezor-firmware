@@ -19,7 +19,7 @@ pub static API: spin::Once<&'static ffi::trezor_api_v1_t> = spin::Once::new();
 
 /// API errors
 #[derive(ufmt::derive::uDebug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "test", derive(Debug))]
+#[cfg_attr(any(feature = "debug", feature = "test"), derive(Debug))]
 pub enum ApiError {
     /// API not initialized
     NotInitialized,
@@ -44,7 +44,27 @@ impl ApiError {
             ApiError::Failed => -4,
         }
     }
+
+    pub fn message(&self) -> &'static str {
+        match self {
+            ApiError::NotInitialized => "API not initialized",
+            ApiError::UnsupportedVersion => "Unsupported API version",
+            ApiError::InvalidFunction => "Invalid function pointer",
+            ApiError::InvalidMessage => "Invalid message pointer",
+            ApiError::Failed => "Operation failed",
+        }
+    }
 }
+
+#[cfg(feature = "debug")]
+impl core::fmt::Display for ApiError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", self.message())
+    }
+}
+
+#[cfg(feature = "debug")]
+impl core::error::Error for ApiError {}
 
 /// Initialize the global API singleton from getter function pointer
 ///
@@ -215,49 +235,32 @@ pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
     core::intrinsics::abort();
 }
 
-pub fn ed25519_sign_open(
+pub(crate) fn ed25519_sign_open(
     public_key: &[u8; 32],
     signature: &[u8; 64],
     message: &[u8],
-) -> Result<bool, ApiError> {
-    if message.is_empty() {
-        return Err(ApiError::Failed);
-    }
-
-    let result = unsafe {
+) -> i32 {
+    unsafe {
         unwrap!(get_crypto_or_die().ed25519_sign_open)(
             message.as_ptr(),
             message.len(),
             public_key.as_ptr() as *const _,
             signature.as_ptr() as *const _,
         )
-    };
-    Ok(result == 0)
+    }
 }
 
-pub fn ed25519_cosi_combine_publickeys(
+pub(crate) fn ed25519_cosi_combine_publickeys(
     pks: &[ffi::ed25519_public_key],
-) -> Result<[u8; 32], ApiError> {
+    res: &mut [u8; 32],
+) -> i32 {
     let n = pks.len();
-
-    if n > 15 {
-        // Can't combine more than 15 COSI signatures
-        return Err(ApiError::Failed);
-    }
-
-    let mut res: ffi::ed25519_public_key = [0u8; 32];
-    let result = unsafe {
+    unsafe {
         unwrap!(get_crypto_or_die().ed25519_cosi_combine_publickeys)(
             res.as_mut_ptr(),
             pks.as_ptr() as *mut _,
             n,
         )
-    };
-    if result == 0 {
-        Ok(res)
-    } else {
-        // TODO: proper error type
-        Err(ApiError::Failed)
     }
 }
 

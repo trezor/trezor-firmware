@@ -1,6 +1,5 @@
 use crate::alloc_types::{String, ToString, Vec};
 use core::{convert::Infallible, result::Result};
-use trezor_app_sdk::unwrap;
 use ufmt::uWrite;
 pub struct StringWriter(String);
 impl StringWriter {
@@ -28,8 +27,8 @@ impl uWrite for StringWriter {
 macro_rules! uformat {
     (len:$len:expr, $($tt:tt)*) => {
         {
-            let mut s = heapless::String::<$len>::new();
             use trezor_app_sdk::unwrap;
+            let mut s = heapless::String::<$len>::new();
             unwrap!(ufmt::uwrite!(&mut s, $($tt)*));
             s
         }
@@ -44,12 +43,12 @@ macro_rules! uformat {
     };
 }
 
-pub fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> Result<String, ()> {
     let mut s = StringWriter::new();
     for byte in bytes {
-        unwrap!(ufmt::uwrite!(&mut s, "{:02x}", *byte));
+        ufmt::uwrite!(&mut s, "{:02x}", *byte).map_err(|_| ())?;
     }
-    s.finalize()
+    Ok(s.finalize())
 }
 
 pub fn hex_decode(hex: &str) -> Result<Vec<u8>, ()> {
@@ -97,25 +96,25 @@ mod tests {
 
     #[test]
     fn test_hex_encode_empty() {
-        let result = hex_encode(&[]);
+        let result = hex_encode(&[]).unwrap();
         assert_eq!(result, "");
     }
 
     #[test]
     fn test_hex_encode_single_byte() {
-        let result = hex_encode(&[0xAB]);
+        let result = hex_encode(&[0xAB]).unwrap();
         assert_eq!(result, "ab");
     }
 
     #[test]
     fn test_hex_encode_multiple_bytes() {
-        let result = hex_encode(&[0x00, 0xFF, 0xAB, 0xCD]);
+        let result = hex_encode(&[0x00, 0xFF, 0xAB, 0xCD]).unwrap();
         assert_eq!(result, "00ffabcd");
     }
 
     #[test]
     fn test_hex_encode_all_zeros() {
-        let result = hex_encode(&[0x00, 0x00, 0x00]);
+        let result = hex_encode(&[0x00, 0x00, 0x00]).unwrap();
         assert_eq!(result, "000000");
     }
 
@@ -196,7 +195,7 @@ mod tests {
     #[test]
     fn test_hex_encode_decode_roundtrip() {
         let original = vec![0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0];
-        let encoded = hex_encode(&original);
+        let encoded = hex_encode(&original).unwrap();
         let decoded = hex_decode(&encoded).expect("decode failed");
         assert_eq!(decoded, original);
     }

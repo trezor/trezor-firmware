@@ -8,7 +8,7 @@ use crate::{
     uformat,
 };
 use trezor_app_sdk::{
-    Result,
+    Result, ResultExt,
     crypto::{self, Hasher},
 };
 
@@ -24,10 +24,12 @@ pub fn sign_message(msg: SignMessage) -> Result<MessageSignature> {
 
     let encoded_network = msg.encoded_network.as_ref().map(|buf| buf.as_ref());
     let pubkey_hash = crypto::get_eth_pubkey_hash(dp.as_ref(), encoded_network, None, None)?;
-    let address = address_from_bytes(&pubkey_hash, Some(definitions.network()));
+    let address = address_from_bytes(&pubkey_hash, Some(definitions.network()))
+        .context("Failed to convert bytes to address")?;
     let path = dp.format_path();
 
-    let message = crate::common::decode_message(&msg.message);
+    let message =
+        crate::common::decode_message(&msg.message).context("Failed to decode message")?;
 
     confirm_signverify(&message, &address, false, Some(&path), Some(COIN), false)?;
 

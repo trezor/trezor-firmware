@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, ensure};
 use std::process;
 
-use crate::{args::UploadArgs, helpers};
+use crate::{args::DeviceTestArgs, helpers};
 
-pub fn device_tests(args: UploadArgs) -> Result<()> {
+pub fn device_tests(args: DeviceTestArgs) -> Result<()> {
     let binary = helpers::artifacts_dir(args.model, args.lang, args.emulator)?
         .join(format!("{}.elf", &args.app));
 
@@ -19,6 +19,7 @@ pub fn device_tests(args: UploadArgs) -> Result<()> {
             &format!("--lang={}", args.lang.name()),
             "--ui=test",
             "--verbose",
+            args.test.as_str(),
         ])
         .env("TREZOR_TRANSLATIONS_DIR", "translations")
         .status()
