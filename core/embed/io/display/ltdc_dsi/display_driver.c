@@ -633,21 +633,12 @@ void display_refresh_rate_config(void) {
 #endif  // REFRESH_RATE_SCALING_SUPPORTED
 
 #ifdef USE_SUSPEND
-void display_suspend(display_wakeup_params_t *wakeup_params,
-                     bool touch_wakeup_enabled) {
-#ifdef USE_TOUCH_WAKEUP
-  if (!touch_wakeup_enabled) {
-    wakeup_params->backlight_level = display_get_backlight();
-    display_deinit(DISPLAY_RESET_CONTENT);
-    return;
-  }
-
+void display_suspend(display_wakeup_params_t *wakeup_params) {
   display_driver_t *drv = &g_display_driver;
 
   memset(wakeup_params, 0, sizeof(display_wakeup_params_t));
 
   if (!drv->initialized) {
-    // The driver isn't initialized, wrong control flow applied
     return;
   }
 
@@ -662,26 +653,18 @@ void display_suspend(display_wakeup_params_t *wakeup_params,
   }
 
   memcpy(wakeup_params, &drv->wakeup_params, sizeof(display_wakeup_params_t));
-#else
-  UNUSED(touch_wakeup_enabled);
-  wakeup_params->backlight_level = display_get_backlight();
-  display_deinit(DISPLAY_RESET_CONTENT);
-#endif  // USE_TOUCH_WAKEUP
 }
 
-void display_resume(const display_wakeup_params_t *wakeup_params,
-                    bool touch_wakeup_enabled) {
-#ifdef USE_TOUCH_WAKEUP
-  if (!touch_wakeup_enabled) {
-    display_init(DISPLAY_RESET_CONTENT);
-    display_set_backlight(wakeup_params->backlight_level);
-    return;
-  }
-
+void display_resume(const display_wakeup_params_t *wakeup_params) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
-    // The driver isn't initialized, wrong control flow applied
+    if (!display_init(DISPLAY_RESET_CONTENT)) {
+      return;
+    }
+    if (!display_set_backlight(wakeup_params->backlight_level)) {
+      goto cleanup;
+    }
     return;
   }
 
@@ -705,11 +688,6 @@ void display_resume(const display_wakeup_params_t *wakeup_params,
 cleanup:
   display_deinit(DISPLAY_RESET_CONTENT);
   return;
-#else
-  UNUSED(touch_wakeup_enabled);
-  display_init(DISPLAY_RESET_CONTENT);
-  display_set_backlight(wakeup_params->backlight_level);
-#endif  // USE_TOUCH_WAKEUP
 }
 #endif  // USE_SUSPEND
 

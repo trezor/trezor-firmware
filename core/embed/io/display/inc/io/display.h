@@ -80,18 +80,14 @@ typedef struct {
 // Suspends the display driver.
 //
 // Saves the current display state into `wakeup_params`.
-// `touch_wakeup_enabled` controls whether a light-suspend (keep panel powered
-// for touch wakeup) or a full deinit is performed.
-void display_suspend(display_wakeup_params_t *wakeup_params,
-                     bool touch_wakeup_enabled);
+void display_suspend(display_wakeup_params_t *wakeup_params);
 
 // Resumes the display driver.
 //
-// Restores the display state from `wakeup_params`.
-// `touch_wakeup_enabled` must match the value passed to `display_suspend()`;
-// it selects the matching light-resume or full reinit path.
-void display_resume(const display_wakeup_params_t *wakeup_params,
-                    bool touch_wakeup_enabled);
+// Restores the display state from `wakeup_params`. Handles both the
+// light-suspend case (driver still initialized) and the full-deinit
+// case (driver was fully deinitialized during suspend).
+void display_resume(const display_wakeup_params_t *wakeup_params);
 #endif  // USE_SUSPEND
 
 // Allows unprivileged access to the display framebuffer from

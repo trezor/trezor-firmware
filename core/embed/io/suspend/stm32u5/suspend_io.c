@@ -78,11 +78,17 @@ void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
 #endif
 #ifdef USE_DISPLAY
 #ifdef USE_TOUCH_WAKEUP
-  display_suspend(&wakeup_params->display, touch_wakeup_get_enabled());
+  bool touch_wakeup_enabled = touch_wakeup_get_enabled();
 #else
-  display_suspend(&wakeup_params->display, false);
+  bool touch_wakeup_enabled = false;
 #endif
-#endif
+  if (touch_wakeup_enabled) {
+    display_suspend(&wakeup_params->display);
+  } else {
+    wakeup_params->display.backlight_level = display_get_backlight();
+    display_deinit(DISPLAY_RESET_CONTENT);
+  }
+#endif  // USE_DISPLAY
 }
 
 void suspend_drivers_phase2(void) {
@@ -98,11 +104,7 @@ void suspend_drivers_phase2(void) {
 // Reinitialize all drivers that were stopped earlier
 void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_DISPLAY
-#ifdef USE_TOUCH_WAKEUP
-  display_resume(&wakeup_params->display, touch_wakeup_get_enabled());
-#else
-  display_resume(&wakeup_params->display, false);
-#endif
+  display_resume(&wakeup_params->display);
 #endif
 #ifdef USE_TOUCH
   touch_resume();
