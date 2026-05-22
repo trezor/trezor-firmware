@@ -84,6 +84,7 @@ stdenvNoCC.mkDerivation ({
     bash
     bloaty  # for binsize
     cargo-audit
+    cargo-vet
     check
     crowdin-cli  # for translations
     curl  # for connect tests

@@ -261,6 +261,7 @@ jobs:
       - run: nix-shell --run "uv run make -C core -f Makefile.scons test_rust"
       - run: nix-shell --run "uv run make -C core clippy"
       - run: nix-shell --run "uv run make -C core audit_rust"
+      - run: nix-shell --run "uv run make -C core vet_rust"
 
   core_rust_client_test:
     name: Rust trezor-client tests
