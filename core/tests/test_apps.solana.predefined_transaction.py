@@ -2,10 +2,11 @@
 # do not edit manually!
 from common import Any, unittest, utils  # isort:skip
 
-from trezor.crypto import base58
+if not utils.BITCOIN_ONLY:
+    from trezor.crypto import base58
 
-from apps.solana.predefined_transaction import is_predefined_token_transfer
-from apps.solana.transaction.instruction import Instruction
+    from apps.solana.predefined_transaction import is_predefined_token_transfer
+    from apps.solana.transaction.instruction import Instruction
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
