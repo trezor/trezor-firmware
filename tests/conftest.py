@@ -32,7 +32,7 @@ from trezorlib import client as client_module
 from trezorlib import debuglink, log, messages, models
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.device import apply_settings
-from trezorlib.transport import Timeout, enumerate_devices, get_transport
+from trezorlib.transport import enumerate_devices, get_transport
 from trezorlib.transport.ble import BleTransport
 
 # register rewrites before importing from local package
@@ -593,11 +593,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     models_filter = ModelsFilter(item)
     if not models_filter:
         raise RuntimeError("Don't skip tests for all trezor models!")
-
-
-def pytest_set_filtered_exceptions():
-    UnexpectedMagicError = "TOOD"
-    return (Timeout, UnexpectedMagicError)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
