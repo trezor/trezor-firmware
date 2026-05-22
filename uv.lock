@@ -8,7 +8,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-04-14T17:11:22.998829178Z"
+exclude-newer = "2026-04-22T08:40:57.146969307Z"
 exclude-newer-span = "P30D"
 
 [options.exclude-newer-package]
@@ -1701,18 +1701,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-retry"
-version = "1.7.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c5/5b/607b017994cca28de3a1ad22a3eee8418e5d428dcd8ec25b26b18e995a73/pytest_retry-1.7.0.tar.gz", hash = "sha256:f8d52339f01e949df47c11ba9ee8d5b362f5824dff580d3870ec9ae0057df80f", size = 19977, upload-time = "2025-01-19T01:56:13.115Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/ff/3266c8a73b9b93c4b14160a7e2b31d1e1088e28ed29f4c2d93ae34093bfd/pytest_retry-1.7.0-py3-none-any.whl", hash = "sha256:a2dac85b79a4e2375943f1429479c65beb6c69553e7dae6b8332be47a60954f4", size = 13775, upload-time = "2025-01-19T01:56:11.199Z" },
-]
-
-[[package]]
 name = "pytest-timeout"
 version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2231,7 +2219,6 @@ dependencies = [
     { name = "pytest" },
     { name = "pytest-ordering" },
     { name = "pytest-random-order" },
-    { name = "pytest-retry" },
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "python-bitcoinlib" },
@@ -2297,7 +2284,6 @@ requires-dist = [
     { name = "pytest", specifier = ">=9.0.3,<10" },
     { name = "pytest-ordering" },
     { name = "pytest-random-order" },
-    { name = "pytest-retry", specifier = ">=1.7.0,<2" },
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "python-bitcoinlib", specifier = ">=0.11.0,<0.12" },
