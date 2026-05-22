@@ -1620,6 +1620,28 @@ cleanup:
   tropic_deinit();
 }
 
+static bool find_pairing_key(cli_t* cli, lt_pkey_index_t* pairing_key_index) {
+  *pairing_key_index = -1;
+
+  for (lt_pkey_index_t i = TROPIC_FACTORY_PAIRING_KEY_SLOT;
+       i <= TROPIC_PRIVILEGED_PAIRING_KEY_SLOT; i++) {
+    lt_ret_t res = tropic_custom_session_start(cli, i);
+    if (res == LT_OK) {
+      *pairing_key_index = i;
+      return true;
+    }
+    if (res != LT_L2_HSK_ERR) {
+      cli_error(
+          cli, CLI_ERROR,
+          "`tropic_custom_session_start()` for key %d failed with error '%s'",
+          i, lt_ret_verbose(res));
+      return false;
+    }
+  }
+
+  return false;
+}
+
 static void prodtest_tropic_stress_test(cli_t* cli) {
   if (cli_arg_count(cli) > 6) {
     cli_error_arg_count(cli);
@@ -1694,24 +1716,7 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   lt_ret_t res = LT_FAIL;
   lt_pkey_index_t pairing_key_index = -1;
 
-  // Find an available pairing key
-  for (lt_pkey_index_t i = TROPIC_FACTORY_PAIRING_KEY_SLOT;
-       i <= TROPIC_PRIVILEGED_PAIRING_KEY_SLOT; i++) {
-    res = tropic_custom_session_start(cli, i);
-    if (res == LT_OK) {
-      pairing_key_index = i;
-      break;
-    }
-    if (res != LT_L2_HSK_ERR) {
-      cli_error(
-          cli, CLI_ERROR,
-          "`tropic_custom_session_start() for key %d failed with error '%s'", i,
-          lt_ret_verbose(res));
-      return;
-    }
-  }
-
-  if (pairing_key_index == -1) {
+  if (!find_pairing_key(cli, &pairing_key_index)) {
     cli_error(cli, CLI_ERROR, "No pairing key is available");
     return;
   }
