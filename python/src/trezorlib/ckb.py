@@ -18,14 +18,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, AnyStr
 
-from . import messages
-from .tools import workflow
+from . import exceptions, messages
+from .tools import prepare_message_bytes, workflow
 
 if TYPE_CHECKING:
-    from .tools import Address
     from .client import Session
+    from .tools import Address
 
 DEFAULT_BIP32_PATH = "m/44'/309'/0'/0/0"
 
@@ -53,6 +53,49 @@ def get_authenticated_address(
         ),
         expect=messages.CKBAddress,
     )
+
+
+@workflow(capability=messages.Capability.CKB)
+def sign_message(
+    session: "Session",
+    address_n: "Address",
+    message: AnyStr,
+    network: str = "Mainnet",
+    chunkify: bool = False,
+) -> messages.CKBMessageSignature:
+    return session.call(
+        messages.CKBSignMessage(
+            address_n=address_n,
+            message=prepare_message_bytes(message),
+            network=network,
+            chunkify=chunkify,
+        ),
+        expect=messages.CKBMessageSignature,
+    )
+
+
+def verify_message(
+    session: "Session",
+    address: str,
+    signature: bytes,
+    message: AnyStr,
+    network: str = "Mainnet",
+    chunkify: bool = False,
+) -> bool:
+    try:
+        session.call(
+            messages.CKBVerifyMessage(
+                address=address,
+                signature=signature,
+                message=prepare_message_bytes(message),
+                network=network,
+                chunkify=chunkify,
+            ),
+            expect=messages.Success,
+        )
+        return True
+    except exceptions.TrezorFailure:
+        return False
 
 
 @workflow(capability=messages.Capability.CKB)

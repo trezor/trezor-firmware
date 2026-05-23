@@ -385,6 +385,9 @@ enum MessageType {
     MessageType_CKBTxAckInput = 5504 [(wire_in) = true];
     MessageType_CKBTxAckOutput = 5505 [(wire_in) = true];
     MessageType_CKBTxAckCellDep = 5506 [(wire_in) = true];
+    MessageType_CKBSignMessage = 5507 [(wire_in) = true];
+    MessageType_CKBVerifyMessage = 5509 [(wire_in) = true];
+    MessageType_CKBMessageSignature = 5508 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

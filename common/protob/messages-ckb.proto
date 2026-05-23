@@ -34,6 +34,52 @@ message CKBAddress {
 }
 
 // ============================================================
+// Message Signing/Verification
+// ============================================================
+
+/**
+ * Request: Ask device to sign message
+ * @start
+ * @next CKBMessageSignature
+ * @next Failure
+ */
+message CKBSignMessage {
+    option (wire_type) = 5507;
+
+    repeated uint32 address_n = 1;                               // BIP-32 path to derive the key from master node
+    required bytes message = 2;                                  // message to be signed
+    required string network = 3;                                 // "Mainnet" or "Testnet"
+    optional bool chunkify = 4;                                  // display the address in chunks of 4 characters
+}
+
+/**
+ * Response: Signed message
+ * @end
+ */
+message CKBMessageSignature {
+    option (wire_type) = 5508;
+
+    required string address = 1;                                 // address used to sign the message
+    required bytes signature = 2;                                // 65-byte recoverable secp256k1 signature
+}
+
+/**
+ * Request: Ask device to verify message
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message CKBVerifyMessage {
+    option (wire_type) = 5509;
+
+    required string address = 1;                                 // address to verify
+    required bytes signature = 2;                                // signature to verify
+    required bytes message = 3;                                  // message to verify
+    required string network = 4;                                 // "Mainnet" or "Testnet"
+    optional bool chunkify = 5;                                  // display the address in chunks of 4 characters
+}
+
+// ============================================================
 // Transaction Signing Messages
 // ============================================================
 

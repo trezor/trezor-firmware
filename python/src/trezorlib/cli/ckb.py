@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 import click
 
@@ -38,9 +38,7 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option(
-    "-n", "--address", default=ckb.DEFAULT_BIP32_PATH, help=PATH_HELP
-)
+@click.option("-n", "--address", default=ckb.DEFAULT_BIP32_PATH, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
 @click.option(
     "--coin",
@@ -65,6 +63,61 @@ def get_address(
         show_display=show_display,
         network=coin,
         chunkify=chunkify,
+    )
+
+
+@cli.command()
+@click.option("-n", "--address", default=ckb.DEFAULT_BIP32_PATH, help=PATH_HELP)
+@click.option(
+    "--coin",
+    type=click.Choice(["Mainnet", "Testnet"]),
+    default="Mainnet",
+    help="Network (default: Mainnet)",
+)
+@click.option("-C", "--chunkify", is_flag=True)
+@click.argument("message")
+@with_session
+def sign_message(
+    session: "Session",
+    address: str,
+    coin: str,
+    chunkify: bool,
+    message: str,
+) -> Dict[str, str]:
+    """Sign message with CKB address."""
+    address_n = tools.parse_path(address)
+    ret = ckb.sign_message(session, address_n, message, network=coin, chunkify=chunkify)
+    return {
+        "message": message,
+        "address": ret.address,
+        "signature": f"0x{ret.signature.hex()}",
+    }
+
+
+@cli.command()
+@click.option(
+    "--coin",
+    type=click.Choice(["Mainnet", "Testnet"]),
+    default="Mainnet",
+    help="Network (default: Mainnet)",
+)
+@click.option("-C", "--chunkify", is_flag=True)
+@click.argument("address")
+@click.argument("signature")
+@click.argument("message")
+@with_session
+def verify_message(
+    session: "Session",
+    coin: str,
+    chunkify: bool,
+    address: str,
+    signature: str,
+    message: str,
+) -> bool:
+    """Verify message signed with CKB address."""
+    signature_bytes = bytes.fromhex(signature.removeprefix("0x"))
+    return ckb.verify_message(
+        session, address, signature_bytes, message, network=coin, chunkify=chunkify
     )
 
 

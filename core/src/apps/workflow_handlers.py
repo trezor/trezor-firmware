@@ -241,6 +241,10 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ckb.get_address"
         if msg_type == MessageType.CKBSignTx:
             return "apps.ckb.sign_tx"
+        if msg_type == MessageType.CKBSignMessage:
+            return "apps.ckb.sign_message"
+        if msg_type == MessageType.CKBVerifyMessage:
+            return "apps.ckb.verify_message"
 
     raise ValueError
 

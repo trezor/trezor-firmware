@@ -1,4 +1,4 @@
-"""CKB helper functions for address generation."""
+"""CKB helper functions."""
 
 from ubinascii import unhexlify
 
@@ -17,6 +17,14 @@ HASH_TYPE = 0x01
 # Human-readable parts for Bech32m encoding
 HRP_MAINNET = "ckb"
 HRP_TESTNET = "ckt"
+
+
+def message_digest(message: bytes) -> bytes:
+    """Blake2b with CKB personal and message prefix."""
+    h = blake2b(outlen=32, personal=b"ckb-default-hash")
+    h.update(b"Nervos Message:")
+    h.update(message)
+    return h.digest()
 
 
 def get_lock_script_arg(public_key: bytes) -> bytes:

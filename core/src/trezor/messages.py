@@ -1905,6 +1905,64 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["CKBAddress"]:
             return isinstance(msg, cls)
 
+    class CKBSignMessage(protobuf.MessageType):
+        address_n: "list[int]"
+        message: "AnyBytes"
+        network: "str"
+        chunkify: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            message: "AnyBytes",
+            network: "str",
+            address_n: "list[int] | None" = None,
+            chunkify: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CKBSignMessage"]:
+            return isinstance(msg, cls)
+
+    class CKBMessageSignature(protobuf.MessageType):
+        address: "str"
+        signature: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            signature: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CKBMessageSignature"]:
+            return isinstance(msg, cls)
+
+    class CKBVerifyMessage(protobuf.MessageType):
+        address: "str"
+        signature: "AnyBytes"
+        message: "AnyBytes"
+        network: "str"
+        chunkify: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            signature: "AnyBytes",
+            message: "AnyBytes",
+            network: "str",
+            chunkify: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CKBVerifyMessage"]:
+            return isinstance(msg, cls)
+
     class CKBCellInput(protobuf.MessageType):
         previous_output_tx_hash: "AnyBytes"
         previous_output_index: "int"

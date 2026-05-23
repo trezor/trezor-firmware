@@ -787,6 +787,9 @@ class MessageType(IntEnum):
     CKBTxAckInput = 5504
     CKBTxAckOutput = 5505
     CKBTxAckCellDep = 5506
+    CKBSignMessage = 5507
+    CKBVerifyMessage = 5509
+    CKBMessageSignature = 5508
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -3141,6 +3144,72 @@ class CKBAddress(protobuf.MessageType):
     ) -> None:
         self.address = address
         self.mac = mac
+
+
+class CKBSignMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5507
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("message", "bytes", repeated=False, required=True),
+        3: protobuf.Field("network", "string", repeated=False, required=True),
+        4: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        message: "bytes",
+        network: "str",
+        address_n: Optional[Sequence["int"]] = None,
+        chunkify: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.message = message
+        self.network = network
+        self.chunkify = chunkify
+
+
+class CKBMessageSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5508
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        signature: "bytes",
+    ) -> None:
+        self.address = address
+        self.signature = signature
+
+
+class CKBVerifyMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5509
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        3: protobuf.Field("message", "bytes", repeated=False, required=True),
+        4: protobuf.Field("network", "string", repeated=False, required=True),
+        5: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        signature: "bytes",
+        message: "bytes",
+        network: "str",
+        chunkify: Optional["bool"] = None,
+    ) -> None:
+        self.address = address
+        self.signature = signature
+        self.message = message
+        self.network = network
+        self.chunkify = chunkify
 
 
 class CKBCellInput(protobuf.MessageType):
