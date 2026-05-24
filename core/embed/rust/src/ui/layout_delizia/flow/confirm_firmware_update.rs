@@ -16,7 +16,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
+    component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -62,16 +62,15 @@ pub fn new_confirm_firmware_update(
     fingerprint: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
-    let content_intro = Frame::left_aligned(
-        TR::firmware_update__title.into(),
+    let content_intro = Frame::new(
+        Header::left_aligned(TR::firmware_update__title.into()).with_menu_button(),
         SwipeContent::new(paragraphs),
     )
-    .with_menu_button()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
-    let content_menu = Frame::left_aligned(
-        TString::empty(),
+    let content_menu = Frame::new(
+        Header::left_aligned(TString::empty()).with_cancel_button(),
         VerticalMenu::empty()
             .item(
                 theme::ICON_CHEVRON_RIGHT,
@@ -79,23 +78,20 @@ pub fn new_confirm_firmware_update(
             )
             .cancel_item(TR::buttons__cancel.into()),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
     let paragraphs_fingerprint =
         Paragraphs::new(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, fingerprint));
-    let content_fingerprint = Frame::left_aligned(
-        TR::firmware_update__title_fingerprint.into(),
+    let content_fingerprint = Frame::new(
+        Header::left_aligned(TR::firmware_update__title_fingerprint.into()).with_cancel_button(),
         SwipeContent::new(paragraphs_fingerprint),
     )
-    .with_cancel_button()
     .map_to_button_msg();
 
-    let content_confirm = Frame::left_aligned(
-        TR::firmware_update__title.into(),
+    let content_confirm = Frame::new(
+        Header::left_aligned(TR::firmware_update__title.into()).with_menu_button(),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
-    .with_menu_button()
     .with_footer(TR::instructions__hold_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);

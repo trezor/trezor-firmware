@@ -22,7 +22,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Footer, Frame, PromptScreen, SwipeContent, VerticalMenu},
+    component::{Footer, Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -175,48 +175,49 @@ pub fn new_continue_recovery_homepage(
         Some(TR::instructions__enter_next_share.into())
     };
 
-    let content_main =
-        Frame::left_aligned(title.into(), SwipeContent::new(pars_main.into_paragraphs()))
+    let content_main = Frame::new(
+        Header::left_aligned(title.into())
             .with_subtitle(TR::words__instructions.into())
-            .with_menu_button()
-            .with_swipeup_footer(footer_description)
-            .map_to_button_msg()
-            .repeated_button_request(ButtonRequest::new(
-                ButtonRequestCode::RecoveryHomepage,
-                "recovery".into(),
-            ))
-            .with_pages(|_| 1);
+            .with_menu_button(),
+        SwipeContent::new(pars_main.into_paragraphs()),
+    )
+    .with_swipeup_footer(footer_description)
+    .map_to_button_msg()
+    .repeated_button_request(ButtonRequest::new(
+        ButtonRequestCode::RecoveryHomepage,
+        "recovery".into(),
+    ))
+    .with_pages(|_| 1);
 
     let paragraphs_cancel = ParagraphVecShort::from_iter([
         Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, cancel_intro).with_bottom_padding(17),
         Paragraph::new(&theme::TEXT_WARNING, TR::recovery__progress_will_be_lost),
     ])
     .into_paragraphs();
-    let content_cancel_intro =
-        Frame::left_aligned(cancel_title.into(), SwipeContent::new(paragraphs_cancel))
-            .with_cancel_button()
-            .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
-            .map_to_button_msg()
-            .repeated_button_request(ButtonRequest::new(
-                ButtonRequestCode::ProtectCall,
-                "abort_recovery".into(),
-            ));
+    let content_cancel_intro = Frame::new(
+        Header::left_aligned(cancel_title.into()).with_cancel_button(),
+        SwipeContent::new(paragraphs_cancel),
+    )
+    .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
+    .map_to_button_msg()
+    .repeated_button_request(ButtonRequest::new(
+        ButtonRequestCode::ProtectCall,
+        "abort_recovery".into(),
+    ));
 
-    let content_cancel_confirm = Frame::left_aligned(
-        cancel_title.into(),
+    let content_cancel_confirm = Frame::new(
+        Header::left_aligned(cancel_title.into()).with_cancel_button(),
         SwipeContent::new(PromptScreen::new_tap_to_cancel()),
     )
-    .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     let res = if show_instructions {
-        let content_menu = Frame::left_aligned(
-            TString::empty(),
+        let content_menu = Frame::new(
+            Header::left_aligned(TString::empty()).with_cancel_button(),
             VerticalMenu::empty().cancel_item(cancel_btn.into()),
         )
-        .with_cancel_button()
         .map(super::util::map_to_choice);
 
         let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?;
@@ -224,8 +225,8 @@ pub fn new_continue_recovery_homepage(
             .add_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?;
         res
     } else if pages.is_some() {
-        let content_menu = Frame::left_aligned(
-            TString::empty(),
+        let content_menu = Frame::new(
+            Header::left_aligned(TString::empty()).with_cancel_button(),
             VerticalMenu::empty()
                 .item(
                     theme::ICON_CHEVRON_RIGHT,
@@ -233,7 +234,6 @@ pub fn new_continue_recovery_homepage(
                 )
                 .cancel_item(cancel_btn.into()),
         )
-        .with_cancel_button()
         .map(super::util::map_to_choice);
 
         let (footer_instruction, footer_description) = (
@@ -241,11 +241,10 @@ pub fn new_continue_recovery_homepage(
             TR::recovery__more_shares_needed.into(),
         );
         let n_remaining_shares = pages.as_ref().unwrap().len() as u16 / 2;
-        let content_remaining_shares = Frame::left_aligned(
-            TR::recovery__title_remaining_shares.into(),
+        let content_remaining_shares = Frame::new(
+            Header::left_aligned(TR::recovery__title_remaining_shares.into()).with_cancel_button(),
             SwipeContent::new(SwipePage::vertical(pages.unwrap().into_paragraphs())),
         )
-        .with_cancel_button()
         .with_footer_page_hint(
             footer_description,
             TString::empty(),
@@ -279,11 +278,10 @@ pub fn new_continue_recovery_homepage(
             )?;
         res
     } else {
-        let content_menu = Frame::left_aligned(
-            TString::empty(),
+        let content_menu = Frame::new(
+            Header::left_aligned(TString::empty()).with_cancel_button(),
             VerticalMenu::empty().cancel_item(cancel_btn.into()),
         )
-        .with_cancel_button()
         .map(super::util::map_to_choice);
 
         let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;

@@ -18,7 +18,7 @@ use crate::{
 use super::super::{
     component::{
         number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
-        Footer, Frame,
+        Footer, Frame, Header,
     },
     theme,
 };
@@ -69,16 +69,16 @@ fn footer_update_fn(
 }
 
 pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
-    let content_slider = Frame::left_aligned(
-        TR::brightness__title.into(),
+    let content_slider = Frame::new(
+        Header::left_aligned(TR::brightness__title.into())
+            .with_subtitle(TR::homescreen__settings_subtitle.into())
+            .with_cancel_button(),
         NumberInputSliderDialog::new(
             theme::backlight::get_backlight_min().into(),
             theme::backlight::get_backlight_max().into(),
             brightness.into(),
         ),
     )
-    .with_subtitle(TR::homescreen__settings_subtitle.into())
-    .with_cancel_button()
     .with_swipe(Direction::Up, SwipeSettings::Default)
     .with_footer(
         TR::instructions__swipe_horizontally.into(),

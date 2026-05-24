@@ -16,7 +16,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
+    component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -61,16 +61,17 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     let text_intro: TString = TR::backup__it_should_be_backed_up.into();
 
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text_intro));
-    let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
-        .with_menu_button()
-        .with_swipeup_footer(None)
-        .map_to_button_msg();
+    let content_intro = Frame::new(
+        Header::left_aligned(title).with_menu_button(),
+        SwipeContent::new(paragraphs),
+    )
+    .with_swipeup_footer(None)
+    .map_to_button_msg();
 
-    let content_menu = Frame::left_aligned(
-        "".into(),
+    let content_menu = Frame::new(
+        Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(TR::backup__title_skip.into()),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
     let paragraphs_skip_intro = ParagraphVecShort::from_iter([
@@ -81,20 +82,18 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
         ),
     ])
     .into_paragraphs();
-    let content_skip_intro = Frame::left_aligned(
-        TR::backup__title_skip.into(),
+    let content_skip_intro = Frame::new(
+        Header::left_aligned(TR::backup__title_skip.into()).with_cancel_button(),
         SwipeContent::new(paragraphs_skip_intro),
     )
-    .with_cancel_button()
     .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
     .with_swipe(Direction::Up, SwipeSettings::Default)
     .map_to_button_msg();
 
-    let content_skip_confirm = Frame::left_aligned(
-        TR::backup__title_skip.into(),
+    let content_skip_confirm = Frame::new(
+        Header::left_aligned(TR::backup__title_skip.into()).with_cancel_button(),
         SwipeContent::new(PromptScreen::new_tap_to_cancel()),
     )
-    .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);

@@ -15,7 +15,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
+    component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -69,15 +69,15 @@ impl FlowController for ShowTutorial {
 }
 
 pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
-    let content_step_welcome = Frame::left_aligned(
-        TR::tutorial__welcome_safe5.into(),
+    let content_step_welcome = Frame::new(
+        Header::left_aligned(TR::tutorial__welcome_safe5.into()),
         SwipeContent::new(PromptScreen::new_tap_to_start()),
     )
     .with_footer(TR::instructions__tap_to_continue.into(), None)
     .map(super::util::map_to_confirm);
 
-    let content_step_begin = Frame::left_aligned(
-        TR::tutorial__title_lets_begin.into(),
+    let content_step_begin = Frame::new(
+        Header::left_aligned(TR::tutorial__title_lets_begin.into()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__lets_begin,
@@ -86,8 +86,8 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
-    let content_step_navigation = Frame::left_aligned(
-        TR::tutorial__title_easy_navigation.into(),
+    let content_step_navigation = Frame::new(
+        Header::left_aligned(TR::tutorial__title_easy_navigation.into()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__swipe_up_and_down,
@@ -97,29 +97,29 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map_to_button_msg();
 
-    let content_step_menu = Frame::left_aligned(
-        TR::tutorial__title_handy_menu.into(),
+    let content_step_menu = Frame::new(
+        Header::left_aligned(TR::tutorial__title_handy_menu.into())
+            .with_menu_button()
+            .button_styled(theme::button_warning_low()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__menu,
         ))),
     )
-    .with_menu_button()
-    .button_styled(theme::button_warning_low())
     .with_swipeup_footer(None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map_to_button_msg();
 
-    let content_step_hold = Frame::left_aligned(
-        TR::tutorial__title_hold.into(),
+    let content_step_hold = Frame::new(
+        Header::left_aligned(TR::tutorial__title_hold.into()),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
     .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let content_step_done = Frame::left_aligned(
-        TR::tutorial__title_well_done.into(),
+    let content_step_done = Frame::new(
+        Header::left_aligned(TR::tutorial__title_well_done.into()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__ready_to_use_safe5,
@@ -128,28 +128,26 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
-    let content_menu = Frame::left_aligned(
-        "".into(),
+    let content_menu = Frame::new(
+        Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty()
             .item(theme::ICON_CHEVRON_RIGHT, TR::tutorial__did_you_know.into())
             .item(theme::ICON_REBOOT, TR::tutorial__restart_tutorial.into())
             .cancel_item(TR::tutorial__exit.into()),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
-    let content_did_you_know = Frame::left_aligned(
-        "".into(),
+    let content_did_you_know = Frame::new(
+        Header::left_aligned("".into()).with_cancel_button(),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__first_wallet,
         ))),
     )
-    .with_cancel_button()
     .map_to_button_msg();
 
-    let content_hold_to_exit = Frame::left_aligned(
-        TR::tutorial__title_hold.into(),
+    let content_hold_to_exit = Frame::new(
+        Header::left_aligned(TR::tutorial__title_hold.into()),
         SwipeContent::new(PromptScreen::new_hold_to_confirm_danger()),
     )
     .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)

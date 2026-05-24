@@ -15,7 +15,7 @@ use core::sync::atomic::{AtomicU16, Ordering};
 
 use super::super::{
     component::{
-        Frame, NumberInputDialog, NumberInputDialogMsg, SwipeContent, UpdatableMoreInfo,
+        Frame, Header, NumberInputDialog, NumberInputDialogMsg, SwipeContent, UpdatableMoreInfo,
         VerticalMenu,
     },
     theme,
@@ -79,27 +79,30 @@ pub fn new_request_number(
         count as u16,
         description,
     )?;
-    let content_number_input = Frame::left_aligned(title, SwipeContent::new(number_input_dialog))
-        .with_menu_button()
-        .with_swipeup_footer(None)
-        .map(|msg| match msg {
-            NumberInputDialogMsg::Changed(n) => {
-                NUM_DISPLAYED.store(n, Ordering::Relaxed);
-                None
-            }
-        });
+    let content_number_input = Frame::new(
+        Header::left_aligned(title).with_menu_button(),
+        SwipeContent::new(number_input_dialog),
+    )
+    .with_swipeup_footer(None)
+    .map(|msg| match msg {
+        NumberInputDialogMsg::Changed(n) => {
+            NUM_DISPLAYED.store(n, Ordering::Relaxed);
+            None
+        }
+    });
 
-    let content_menu = Frame::left_aligned(
-        TString::empty(),
+    let content_menu = Frame::new(
+        Header::left_aligned(TString::empty()).with_cancel_button(),
         VerticalMenu::empty().item(theme::ICON_CHEVRON_RIGHT, TR::buttons__more_info.into()),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
     let updatable_info = UpdatableMoreInfo::new(info_closure);
-    let content_info = Frame::left_aligned(TString::empty(), SwipeContent::new(updatable_info))
-        .with_cancel_button()
-        .map_to_button_msg();
+    let content_info = Frame::new(
+        Header::left_aligned(TString::empty()).with_cancel_button(),
+        SwipeContent::new(updatable_info),
+    )
+    .map_to_button_msg();
 
     let mut res = SwipeFlow::new(&RequestNumber::Number)?;
     res.add_page(&RequestNumber::Number, content_number_input)?

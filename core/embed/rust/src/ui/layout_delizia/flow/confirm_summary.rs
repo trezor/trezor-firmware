@@ -16,7 +16,9 @@ use crate::{
 
 use super::{
     super::{
-        component::{Frame, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
+        component::{
+            Frame, Header, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+        },
         theme,
     },
     util::{dummy_page, ShowInfoParams},
@@ -86,12 +88,11 @@ pub fn new_confirm_summary(
         .with_pages(|summary_pages| summary_pages + 1);
 
     // Hold to confirm
-    let content_hold = Frame::left_aligned(
-        TR::send__sign_transaction.into(),
+    let content_hold = Frame::new(
+        Header::left_aligned(TR::send__sign_transaction.into()).with_menu_button(),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
     .with_flow_menu()
-    .with_menu_button()
     .with_footer(TR::instructions__hold_to_sign.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
@@ -124,21 +125,22 @@ pub fn new_confirm_summary(
     }
     menu = menu.cancel_item(verb_cancel.unwrap_or(TR::send__cancel_sign.into()));
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
-    let content_menu = Frame::left_aligned(TString::empty(), menu)
-        .with_cancel_button()
-        .map(move |msg| match msg {
-            VerticalMenuChoiceMsg::Selected(i) => {
-                let selected_item = menu_items[i];
-                Some(FlowMsg::Choice(selected_item))
-            }
-        });
+    let content_menu = Frame::new(
+        Header::left_aligned(TString::empty()).with_cancel_button(),
+        menu,
+    )
+    .map(move |msg| match msg {
+        VerticalMenuChoiceMsg::Selected(i) => {
+            let selected_item = menu_items[i];
+            Some(FlowMsg::Choice(selected_item))
+        }
+    });
 
     // CancelTap
-    let content_cancel_tap = Frame::left_aligned(
-        TR::send__cancel_sign.into(),
+    let content_cancel_tap = Frame::new(
+        Header::left_aligned(TR::send__cancel_sign.into()).with_cancel_button(),
         PromptScreen::new_tap_to_cancel(),
     )
-    .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .map(super::util::map_to_confirm);
 

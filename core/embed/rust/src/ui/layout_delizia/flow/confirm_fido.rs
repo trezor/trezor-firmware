@@ -20,7 +20,8 @@ use crate::{
 
 use super::super::{
     component::{
-        FidoCredential, Footer, Frame, PagedVerticalMenu, PromptScreen, SwipeContent, VerticalMenu,
+        FidoCredential, Footer, Frame, Header, PagedVerticalMenu, PromptScreen, SwipeContent,
+        VerticalMenu,
     },
     theme,
 };
@@ -102,14 +103,14 @@ pub fn new_confirm_fido(
     SINGLE_CRED.store(num_accounts <= 1, Ordering::Relaxed);
     CRED_SELECTED.store(0, Ordering::Relaxed);
 
-    let content_intro = Frame::left_aligned(
-        title,
+    let header = Header::left_aligned(title).with_menu_button();
+    let content_intro = Frame::new(
+        header,
         SwipeContent::new(Paragraphs::new(Paragraph::new::<TString>(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::fido__select_intro.into(),
         ))),
     )
-    .with_menu_button()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
@@ -123,15 +124,16 @@ pub fn new_confirm_fido(
             .unwrap_or_else(|_| TString::from_str("-"))
     };
 
-    let content_choose_credential = Frame::left_aligned(
-        TR::fido__title_select_credential.into(),
+    let header = Header::left_aligned(TR::fido__title_select_credential.into())
+        .with_subtitle(TR::fido__title_for_authentication.into())
+        .with_menu_button();
+    let content_choose_credential = Frame::new(
+        header,
         SwipeContent::new(SwipePage::vertical(PagedVerticalMenu::new(
             num_accounts,
             label_fn,
         ))),
     )
-    .with_subtitle(TR::fido__title_for_authentication.into())
-    .with_menu_button()
     .with_footer_page_hint(
         TR::fido__more_credentials.into(),
         TR::buttons__go_back.into(),
@@ -148,29 +150,29 @@ pub fn new_confirm_fido(
         let account = unwrap!(accounts.get(current));
         account.try_into().unwrap_or_else(|_| TString::from_str(""))
     };
-    let content_details = Frame::left_aligned(
-        TR::fido__title_credential_details.into(),
+    let header = Header::left_aligned(TR::fido__title_credential_details.into());
+    let header = if single_cred() {
+        header.with_menu_button()
+    } else {
+        header.with_cancel_button()
+    };
+    let content_details = Frame::new(
+        header,
         SwipeContent::new(FidoCredential::new(icon_name, app_name, get_account)),
     )
-    .with_swipeup_footer(Some(title));
-    let content_details = if single_cred() {
-        content_details.with_menu_button()
-    } else {
-        content_details.with_cancel_button()
-    }
+    .with_swipeup_footer(Some(title))
     .map_to_button_msg();
 
-    let content_tap = Frame::left_aligned(title, PromptScreen::new_tap_to_confirm())
-        .with_menu_button()
+    let header = Header::left_aligned(title).with_menu_button();
+    let content_tap = Frame::new(header, PromptScreen::new_tap_to_confirm())
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::Default)
         .map(super::util::map_to_confirm);
 
-    let content_menu = Frame::left_aligned(
-        "".into(),
+    let content_menu = Frame::new(
+        Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(TR::buttons__cancel.into()),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
     let initial_page = if single_cred() {

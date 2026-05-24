@@ -20,7 +20,7 @@ use crate::{
     },
 };
 
-use super::{theme, Frame, FrameMsg};
+use super::{theme, Frame, FrameMsg, Header};
 
 pub struct AddressDetails {
     details: Frame<Paragraphs<ParagraphVecShort<'static>>>,
@@ -58,14 +58,15 @@ impl AddressDetails {
             para.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, p));
         }
         let result = Self {
-            details: Frame::left_aligned(details_title, para.into_paragraphs())
-                .with_cancel_button()
-                .with_horizontal_pages(),
-            xpub_view: Frame::left_aligned(
-                " \n ".into(),
+            details: Frame::new(
+                Header::left_aligned(details_title).with_cancel_button(),
+                para.into_paragraphs(),
+            )
+            .with_horizontal_pages(),
+            xpub_view: Frame::new(
+                Header::left_aligned(" \n ".into()).with_cancel_button(),
                 Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, "").into_paragraphs(),
             )
-            .with_cancel_button()
             .with_horizontal_pages(),
             xpubs: Vec::new(),
             xpub_page_count: Vec::new(),
