@@ -59,6 +59,7 @@ if t.TYPE_CHECKING:
         def __call__(
             self,
             hold_ms: int | None = None,
+            wait: bool | None = None,
         ) -> "None": ...
 
     InputFlowType = t.Generator[None, messages.ButtonRequest, None]
