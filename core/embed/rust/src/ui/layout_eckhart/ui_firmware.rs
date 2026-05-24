@@ -1566,9 +1566,6 @@ impl FirmwareUI for UIEckhart {
             (theme::YELLOW, theme::label_title_warning())
         };
 
-        let header = Header::new(title)
-            .with_icon(theme::ICON_INFO, color)
-            .with_text_style(style);
         let action_bar = if allow_cancel {
             ActionBar::new_double(
                 Button::with_icon(theme::ICON_CROSS),
@@ -1577,9 +1574,16 @@ impl FirmwareUI for UIEckhart {
         } else {
             ActionBar::new_single(Button::with_text(button))
         };
-        let screen = TextScreen::new(paragraphs)
-            .with_header(header)
-            .with_action_bar(action_bar);
+        let screen = TextScreen::new(paragraphs).with_action_bar(action_bar);
+        let screen = if title.is_empty() {
+            screen
+        } else {
+            screen.with_header(
+                Header::new(title)
+                    .with_icon(theme::ICON_INFO, color)
+                    .with_text_style(style),
+            )
+        };
         let layout = LayoutObj::new(screen)?;
         Ok(layout)
     }
