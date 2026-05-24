@@ -41,7 +41,7 @@ if __debug__:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
-    from typing import Any, Awaitable, Callable, Generator
+    from typing import Any, Awaitable, Callable
 
     from trezor.messages import ThpPairingCredential
     from trezor.wire import WireInterface
@@ -458,7 +458,7 @@ class Channel:
         # allows preempting this channel, if another channel becomes active
         self.last_write_ms = utime.ticks_ms()
 
-        def _write_loop() -> Generator[Any, Any, None]:
+        async def _write_loop() -> None:
             """
             Retransmit the payload (with increasing delay), raising `Timeout` in the end.
 
@@ -470,17 +470,17 @@ class Channel:
 
             for i in range(_MAX_RETRANSMISSION_COUNT):
                 # Try to send the payload (split into packets), or raise if transport is blocked
-                yield from self._write_payload_once(header, payload)
+                await self._write_payload_once(header, payload)
                 # Channel's estimated latency + a variable delay (from 200ms till ~3.52s)
                 delay_ms = ack_latency_ms + round(10300 - 1010000 / (100 + i))
-                yield from sleep(delay_ms)
+                await sleep(delay_ms)
                 if __debug__:
                     log.warning(__name__, "Retransmit after %d ms", delay_ms)
 
             # restart event loop due to unresponsive channel
             raise Timeout("THP retransmission timeout")
 
-        def _wait_for_ack() -> Generator[Any, Any, None]:
+        async def _wait_for_ack() -> None:
             """
             Wait for the expected ACK to be received.
 
@@ -489,7 +489,7 @@ class Channel:
             """
             while not ABP.is_sending_allowed(self.channel_cache):
                 # `ABP.set_sending_allowed()` will be called after a valid ACK
-                yield from self.recv_payload(expected_ctrl_byte=None)
+                await self.recv_payload(expected_ctrl_byte=None)
 
         try:
             # wait and return after receiving an ACK, or raise in case of an unexpected message / retransmission timeout.
