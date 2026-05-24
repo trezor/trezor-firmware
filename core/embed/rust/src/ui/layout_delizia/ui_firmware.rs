@@ -38,7 +38,7 @@ use heapless::Vec;
 
 use super::{
     component::{
-        check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Homescreen,
+        check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Header, Homescreen,
         Lockscreen, MnemonicKeyboard, PinKeyboard, Progress, PromptScreen, ScrolledVerticalMenu,
         SelectWordCount, SelectWordCountLayout, Slip39Input, StatusScreen, SwipeContent,
         SwipeUpScreen, TradeScreen, VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem,
@@ -361,9 +361,11 @@ impl FirmwareUI for UIDelizia {
         .into_paragraphs();
 
         let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::left_aligned(TR::modify_amount__title.into(), paragraphs)
-                .with_cancel_button()
-                .with_swipeup_footer(None),
+            Frame::new(
+                Header::left_aligned(TR::modify_amount__title.into()).with_cancel_button(),
+                paragraphs,
+            )
+            .with_swipeup_footer(None),
         ));
         Ok(layout)
     }
@@ -725,7 +727,10 @@ impl FirmwareUI for UIDelizia {
             unwrap!(menu_items.push(VerticalMenuItem::Item(text)));
         }
         let menu = ScrolledVerticalMenu::new(menu_items, current);
-        let frame = Frame::left_aligned(TString::empty(), menu).with_cancel_button();
+        let frame = Frame::new(
+            Header::left_aligned(TString::empty()).with_cancel_button(),
+            menu,
+        );
         let layout = MsgMap::new(frame, move |msg| {
             let choice = match msg {
                 FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => i,
@@ -747,8 +752,10 @@ impl FirmwareUI for UIDelizia {
         words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let content = VerticalMenu::select_word(words);
-        let layout =
-            RootComponent::new(Frame::left_aligned(title, content).with_subtitle(description));
+        let layout = RootComponent::new(Frame::new(
+            Header::left_aligned(title).with_subtitle(description),
+            content,
+        ));
         Ok(layout)
     }
 
@@ -760,8 +767,8 @@ impl FirmwareUI for UIDelizia {
                 SelectWordCountLayout::LAYOUT_ALL
             },
         );
-        let layout = RootComponent::new(Frame::left_aligned(
-            TR::recovery__num_of_words.into(),
+        let layout = RootComponent::new(Frame::new(
+            Header::left_aligned(TR::recovery__num_of_words.into()),
             selector,
         ));
         Ok(layout)
@@ -827,8 +834,11 @@ impl FirmwareUI for UIDelizia {
         .with_done_offset(theme::CHECKLIST_DONE_OFFSET);
 
         let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(checklist_content))
-                .with_swipeup_footer(None),
+            Frame::new(
+                Header::left_aligned(title),
+                SwipeContent::new(checklist_content),
+            )
+            .with_swipeup_footer(None),
         ));
         Ok(layout)
     }
@@ -853,14 +863,19 @@ impl FirmwareUI for UIDelizia {
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
         let frame = if allow_cancel {
-            Frame::left_aligned(title, SwipeContent::new(content))
-                .with_cancel_button()
-                .with_danger()
-                .with_swipeup_footer(None)
+            Frame::new(
+                Header::left_aligned(title)
+                    .with_cancel_button()
+                    .with_danger(),
+                SwipeContent::new(content),
+            )
+            .with_swipeup_footer(None)
         } else {
-            Frame::left_aligned(title, SwipeContent::new(content))
-                .with_danger()
-                .with_swipeup_footer(None)
+            Frame::new(
+                Header::left_aligned(title).with_danger(),
+                SwipeContent::new(content),
+            )
+            .with_swipeup_footer(None)
         };
 
         let obj = LayoutObj::new(SwipeUpScreen::new(frame))?;
@@ -880,7 +895,11 @@ impl FirmwareUI for UIDelizia {
         .with_placement(geometry::LinearPlacement::vertical().align_at_center());
 
         let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::left_aligned("".into(), SwipeContent::new(paragraphs)).with_swipeup_footer(None),
+            Frame::new(
+                Header::left_aligned("".into()),
+                SwipeContent::new(paragraphs),
+            )
+            .with_swipeup_footer(None),
         ));
         Ok(layout)
     }
@@ -981,7 +1000,8 @@ impl FirmwareUI for UIDelizia {
         }
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(content)).with_swipeup_footer(None),
+            Frame::new(Header::left_aligned(title), SwipeContent::new(content))
+                .with_swipeup_footer(None),
         ))?;
         Ok(obj)
     }
@@ -1006,10 +1026,10 @@ impl FirmwareUI for UIDelizia {
             }
         }
 
-        let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(paragraphs.into_paragraphs()))
-                .with_cancel_button(),
-        ));
+        let layout = RootComponent::new(SwipeUpScreen::new(Frame::new(
+            Header::left_aligned(title).with_cancel_button(),
+            SwipeContent::new(paragraphs.into_paragraphs()),
+        )));
         Ok(layout)
     }
 
@@ -1034,9 +1054,11 @@ impl FirmwareUI for UIDelizia {
         .into_paragraphs();
 
         let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(paragraphs))
-                .with_cancel_button()
-                .with_swipeup_footer(Some(button)),
+            Frame::new(
+                Header::left_aligned(title).with_cancel_button(),
+                SwipeContent::new(paragraphs),
+            )
+            .with_swipeup_footer(Some(button)),
         ));
 
         Ok(layout)
@@ -1193,13 +1215,13 @@ impl FirmwareUI for UIDelizia {
             StatusScreen::new_success(title)
         };
         let layout = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(
-                TR::words__title_success.into(),
+            Frame::new(
+                Header::left_aligned(TR::words__title_success.into())
+                    .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT),
                 SwipeContent::new(content).with_no_attach_anim(),
             )
             .with_footer(instruction, description)
-            .with_swipe(Direction::Up, SwipeSettings::Default)
-            .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT),
+            .with_swipe(Direction::Up, SwipeSettings::Default),
         ))?;
         Ok(layout)
     }
@@ -1229,24 +1251,27 @@ impl FirmwareUI for UIDelizia {
         ])
         .into_paragraphs();
 
-        let frame = Frame::left_aligned(title, SwipeContent::new(content));
-        let frame = if danger {
-            frame.with_danger_icon().with_tap_footer(action)
+        let header = Header::left_aligned(title);
+        let header = if danger {
+            header.with_danger_icon()
         } else {
-            frame.with_warning_low_icon().with_swipeup_footer(action)
+            header.with_warning_low_icon()
         };
-
-        let layout = LayoutObj::new(SwipeUpScreen::new(frame))?;
-        Ok(layout)
+        let frame = Frame::new(header, SwipeContent::new(content));
+        let frame = if danger {
+            frame.with_tap_footer(action)
+        } else {
+            frame.with_swipeup_footer(action)
+        };
+        LayoutObj::new(SwipeUpScreen::new(frame))
     }
 
     fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error> {
         Ok(RootComponent::new(
-            Frame::left_aligned(
-                TR::send__cancel_sign.into(),
+            Frame::new(
+                Header::left_aligned(TR::send__cancel_sign.into()).with_cancel_button(),
                 SwipeContent::new(PromptScreen::new_tap_to_cancel()),
             )
-            .with_cancel_button()
             .with_footer(TR::instructions__tap_to_confirm.into(), None),
         ))
     }

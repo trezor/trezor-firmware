@@ -88,43 +88,41 @@ pub fn new_show_share_words(
     let paragraphs_spacing = 8;
     let title = TR::reset__recovery_wallet_backup_title.into();
 
-    let content_instruction = Frame::left_aligned(
-        title,
+    let content_instruction = Frame::new(
+        Header::left_aligned(title).with_subtitle(TR::words__instructions.into()),
         SwipeContent::new(
             instructions_paragraphs
                 .into_paragraphs()
                 .with_spacing(paragraphs_spacing),
         ),
     )
-    .with_subtitle(TR::words__instructions.into())
     .with_swipeup_footer(text_footer)
     .map_to_button_msg()
     .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
     .with_pages(move |_| nwords + 2);
 
-    let content_words = Frame::left_aligned(
-        title,
+    let content_words = Frame::new(
+        Header::left_aligned(title).with_subtitle(subtitle),
         InternallySwipableContent::new(ShareWords::new(share_words_vec, subtitle)),
     )
     .with_swipe(Direction::Up, SwipeSettings::Default)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .with_vertical_pages()
-    .with_subtitle(subtitle)
     .register_header_update_fn(header_updating_func)
     .with_footer_counter(TR::instructions__tap_to_continue.into())
     .register_footer_update_fn(footer_updating_func)
     .map_to_button_msg();
 
-    let content_confirm = Frame::left_aligned(
-        text_confirm,
+    let content_confirm = Frame::new(
+        Header::left_aligned(text_confirm),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
     .with_footer(TR::instructions__hold_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let content_check_backup_intro = Frame::left_aligned(
-        TR::reset__check_wallet_backup_title.into(),
+    let content_check_backup_intro = Frame::new(
+        Header::left_aligned(TR::reset__check_wallet_backup_title.into()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             text_check,

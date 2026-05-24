@@ -11,7 +11,9 @@ use crate::{
     },
 };
 
-use super::super::component::{Frame, PassphraseKeyboard, PassphraseKeyboardMsg, PromptScreen};
+use super::super::component::{
+    Frame, Header, PassphraseKeyboard, PassphraseKeyboardMsg, PromptScreen,
+};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum RequestPassphrase {
@@ -53,8 +55,11 @@ pub fn new_request_passphrase(
     prompt_empty: TString<'static>,
     max_len: usize,
 ) -> Result<SwipeFlow, error::Error> {
-    let content_confirm_empty = Frame::left_aligned(prompt_empty, PromptScreen::new_yes_or_no())
-        .map(super::util::map_to_prompt);
+    let content_confirm_empty = Frame::new(
+        Header::left_aligned(prompt_empty),
+        PromptScreen::new_yes_or_no(),
+    )
+    .map(super::util::map_to_prompt);
 
     let content_keypad = PassphraseKeyboard::new(prompt, max_len).map(|msg| match msg {
         PassphraseKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),

@@ -13,7 +13,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Frame, StatusScreen, SwipeContent, VerticalMenu},
+    component::{Frame, Header, StatusScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -68,30 +68,30 @@ pub fn new_show_danger(
         Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, value).with_top_padding(EXTRA_PADDING),
     ]
     .into_paragraphs();
-    let content_message = Frame::left_aligned(title, SwipeContent::new(paragraphs))
-        .with_menu_button()
-        .with_tap_footer(Some(verb_cancel))
-        .with_danger()
-        .map_to_button_msg();
+    let content_message = Frame::new(
+        Header::left_aligned(title).with_menu_button().with_danger(),
+        SwipeContent::new(paragraphs),
+    )
+    .with_tap_footer(Some(verb_cancel))
+    .map_to_button_msg();
     // .one_button_request(ButtonRequestCode::Warning, br_name);
 
     // Menu
-    let content_menu = Frame::left_aligned(
-        "".into(),
+    let content_menu = Frame::new(
+        Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty()
             .item(theme::ICON_CANCEL, verb_cancel)
             .danger_item(theme::ICON_CHEVRON_RIGHT, confirm),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
     // Cancelled
-    let content_cancelled = Frame::left_aligned(
-        TR::words__title_done.into(),
+    let content_cancelled = Frame::new(
+        Header::left_aligned(TR::words__title_done.into())
+            .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREY_DARK),
         StatusScreen::new_neutral_timeout(done_title),
     )
     .with_footer(TR::instructions__continue_in_app.into(), None)
-    .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREY_DARK)
     .map(|_| Some(FlowMsg::Cancelled));
 
     let mut res = SwipeFlow::new(&ShowDanger::Message)?;

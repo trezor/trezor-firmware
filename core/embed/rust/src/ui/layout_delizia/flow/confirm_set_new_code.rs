@@ -16,7 +16,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
+    component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -73,16 +73,17 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
         )
     };
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
-    let content_intro = Frame::left_aligned(title.into(), SwipeContent::new(paragraphs))
-        .with_menu_button()
-        .with_swipeup_footer(None)
-        .map_to_button_msg();
+    let content_intro = Frame::new(
+        Header::left_aligned(title.into()).with_menu_button(),
+        SwipeContent::new(paragraphs),
+    )
+    .with_swipeup_footer(None)
+    .map_to_button_msg();
 
-    let content_menu = Frame::left_aligned(
-        "".into(),
+    let content_menu = Frame::new(
+        Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(cancel_menu_item.into()),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
     let paragraphs_cancel_intro = ParagraphVecShort::from_iter(if is_wipe_code {
@@ -97,21 +98,21 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
         ]
     })
     .into_paragraphs();
-    let content_cancel_intro =
-        Frame::left_aligned(cancel.into(), SwipeContent::new(paragraphs_cancel_intro))
-            .with_cancel_button()
-            .with_swipeup_footer(Some(if is_wipe_code {
-                TR::buttons__cancel.into()
-            } else {
-                TR::pin__cancel_description.into()
-            }))
-            .map_to_button_msg();
+    let content_cancel_intro = Frame::new(
+        Header::left_aligned(cancel.into()).with_cancel_button(),
+        SwipeContent::new(paragraphs_cancel_intro),
+    )
+    .with_swipeup_footer(Some(if is_wipe_code {
+        TR::buttons__cancel.into()
+    } else {
+        TR::pin__cancel_description.into()
+    }))
+    .map_to_button_msg();
 
-    let content_cancel_confirm = Frame::left_aligned(
-        cancel.into(),
+    let content_cancel_confirm = Frame::new(
+        Header::left_aligned(cancel.into()).with_cancel_button(),
         SwipeContent::new(PromptScreen::new_tap_to_cancel()),
     )
-    .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);

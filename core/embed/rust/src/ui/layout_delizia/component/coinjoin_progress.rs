@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-use super::{constant, theme, Frame};
+use super::{constant, theme, Frame, Header};
 
 const RECTANGLE_HEIGHT: i16 = 56;
 const LABEL_TOP: i16 = 135;
@@ -58,8 +58,8 @@ where
         Ok(Self {
             value: 0,
             indeterminate,
-            content: Frame::left_aligned(
-                TR::coinjoin__title_progress.into(),
+            content: Frame::new(
+                Header::left_aligned(TR::coinjoin__title_progress.into()),
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),
             ),
             label: Label::centered(text, theme::TEXT_NORMAL),

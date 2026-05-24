@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-use super::super::component::{Frame, PromptScreen, SwipeContent, VerticalMenu};
+use super::super::component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
 
 /// Flow for a setting of homescreen wallpaper showing a preview of the image,
 /// menu to cancel and tap to confirm prompt.
@@ -53,25 +53,25 @@ pub fn new_confirm_homescreen(
     title: TString<'static>,
     image: CachedJpeg,
 ) -> Result<SwipeFlow, error::Error> {
-    let content_homescreen = Frame::left_aligned(title, SwipeContent::new(image))
-        .with_menu_button()
-        .with_swipeup_footer(Some(TR::buttons__change.into()))
-        .map_to_button_msg()
-        // Homescreen + Tap to confirm
-        .with_pages(|_| 2);
+    let content_homescreen = Frame::new(
+        Header::left_aligned(title).with_menu_button(),
+        SwipeContent::new(image),
+    )
+    .with_swipeup_footer(Some(TR::buttons__change.into()))
+    .map_to_button_msg()
+    // Homescreen + Tap to confirm
+    .with_pages(|_| 2);
 
-    let content_menu = Frame::left_aligned(
-        TString::empty(),
+    let content_menu = Frame::new(
+        Header::left_aligned(TString::empty()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(TR::buttons__cancel.into()),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
-    let content_confirm = Frame::left_aligned(
-        TR::homescreen__title_set.into(),
+    let content_confirm = Frame::new(
+        Header::left_aligned(TR::homescreen__title_set.into()).with_menu_button(),
         SwipeContent::new(PromptScreen::new_tap_to_confirm()),
     )
-    .with_menu_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);

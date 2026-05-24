@@ -1,4 +1,4 @@
-use super::{header::HeaderMsg, theme, ButtonStyleSheet, Footer, Header};
+use super::{theme, Footer, Header};
 use crate::{
     strutil::TString,
     ui::{
@@ -6,14 +6,12 @@ use crate::{
             base::AttachType,
             paginated::Paginate,
             swipe_detect::{SwipeConfig, SwipeSettings},
-            text::TextStyle,
             Component,
             Event::{self, Swipe},
             EventCtx, FlowMsg, MsgMap, SwipeDetect,
         },
-        display::{Color, Icon},
         event::SwipeEvent,
-        geometry::{Alignment, Direction, Insets, Point, Rect},
+        geometry::{Direction, Insets, Point, Rect},
         lerp::Lerp,
         shape::{self, Renderer},
     },
@@ -110,11 +108,12 @@ impl<T> Frame<T>
 where
     T: Component + Paginate,
 {
-    pub const fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
+    #[inline(never)]
+    pub const fn new(header: Header, content: T) -> Self {
         Self {
             bounds: Rect::zero(),
             content,
-            header: Header::new(alignment, title),
+            header,
             header_update_fn: None,
             footer: None,
             footer_update_fn: None,
@@ -128,58 +127,8 @@ where
         }
     }
 
-    #[inline(never)]
-    pub const fn left_aligned(title: TString<'static>, content: T) -> Self {
-        Self::new(Alignment::Start, title, content)
-    }
-
-    #[inline(never)]
-    pub const fn right_aligned(title: TString<'static>, content: T) -> Self {
-        Self::new(Alignment::End, title, content)
-    }
-
-    #[inline(never)]
-    pub const fn centered(title: TString<'static>, content: T) -> Self {
-        Self::new(Alignment::Center, title, content)
-    }
-
-    #[inline(never)]
-    pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
-        self.header = self.header.with_subtitle(subtitle);
-        self
-    }
-
-    #[inline(never)]
-    fn with_button(mut self, icon: Icon, msg: HeaderMsg, enabled: bool) -> Self {
-        self.header = self.header.with_button(icon, enabled, msg);
-        self
-    }
-
-    pub fn with_cancel_button(self) -> Self {
-        self.with_button(theme::ICON_CLOSE, HeaderMsg::Cancelled, true)
-    }
-
-    pub fn with_menu_button(self) -> Self {
-        self.with_button(theme::ICON_MENU, HeaderMsg::Info, true)
-    }
-
-    pub fn with_danger_menu_button(self) -> Self {
-        self.with_button(theme::ICON_MENU, HeaderMsg::Info, true)
-            .button_styled(theme::button_warning_high())
-    }
-
-    pub fn with_warning_low_icon(self) -> Self {
-        self.with_button(theme::ICON_WARNING, HeaderMsg::Info, false)
-            .button_styled(theme::button_warning_low())
-    }
-
-    pub fn with_danger_icon(self) -> Self {
-        self.with_button(theme::ICON_WARNING, HeaderMsg::Info, false)
-            .button_styled(theme::button_danger())
-    }
-
     // `has_menu` is used to gradually introduce multi-item menus (#5189).
-    // TODO: After the migration, this flag should be set in `with_button()`.
+    // TODO: After the migration, this flag should be set in `self.header`.
     #[cfg(feature = "ui_debug")]
     pub fn with_external_menu(mut self) -> Self {
         // Allow visiting this menu automatically by tests
@@ -203,26 +152,6 @@ where
     }
     #[cfg(not(feature = "ui_debug"))]
     pub fn with_flow_menu(self) -> Self {
-        self
-    }
-
-    pub fn title_styled(mut self, style: TextStyle) -> Self {
-        self.header = self.header.styled(style);
-        self
-    }
-
-    pub fn subtitle_styled(mut self, style: TextStyle) -> Self {
-        self.header = self.header.subtitle_styled(style);
-        self
-    }
-
-    pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
-        self.header = self.header.button_styled(style);
-        self
-    }
-
-    pub fn with_result_icon(mut self, icon: Icon, color: Color) -> Self {
-        self.header = self.header.with_result_icon(icon, color);
         self
     }
 
@@ -286,11 +215,6 @@ where
     ) -> Self {
         self.footer_update_fn = Some(f);
         self
-    }
-
-    pub fn with_danger(self) -> Self {
-        self.button_styled(theme::button_danger())
-            .title_styled(theme::label_title_danger())
     }
 
     pub fn inner(&self) -> &T {

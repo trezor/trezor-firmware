@@ -24,7 +24,7 @@ use heapless::Vec;
 
 use super::{
     super::{
-        component::{Frame, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
+        component::{Frame, Header, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
         flow, theme,
     },
     ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionOptions, ConfirmActionStrings,
@@ -211,17 +211,18 @@ impl ConfirmValue {
         }
         .into_paragraphs();
 
-        let page = SwipeContent::new(SwipePage::vertical(paragraphs));
-        let mut frame = Frame::left_aligned(self.title, page);
+        let mut header = Header::left_aligned(self.title);
         if let Some(subtitle) = self.subtitle {
-            frame = frame.with_subtitle(subtitle);
+            header = header.with_subtitle(subtitle);
         }
         if self.menu_button {
-            frame = frame.with_menu_button();
+            header = header.with_menu_button();
         }
         if self.cancel_button {
-            frame = frame.with_cancel_button();
+            header = header.with_cancel_button();
         }
+        let page = SwipeContent::new(SwipePage::vertical(paragraphs));
+        let mut frame = Frame::new(header, page);
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
         }
@@ -406,19 +407,22 @@ impl ShowInfoParams {
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, item.1));
         }
 
-        let mut frame = Frame::left_aligned(
-            self.title,
-            SwipeContent::new(SwipePage::vertical(paragraphs.into_paragraphs())),
-        );
+        let mut header = Header::left_aligned(self.title);
         if let Some(subtitle) = self.subtitle {
-            frame = frame.with_subtitle(subtitle);
+            header = header.with_subtitle(subtitle);
         }
         if self.cancel_button {
-            frame = frame
-                .with_cancel_button()
-                .with_swipe(Direction::Right, SwipeSettings::Immediate);
+            header = header.with_cancel_button()
         } else if self.menu_button {
-            frame = frame.with_menu_button()
+            header = header.with_menu_button()
+        }
+
+        let mut frame = Frame::new(
+            header,
+            SwipeContent::new(SwipePage::vertical(paragraphs.into_paragraphs())),
+        );
+        if self.cancel_button {
+            frame = frame.with_swipe(Direction::Right, SwipeSettings::Immediate);
         }
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
@@ -490,5 +494,9 @@ where
 }
 
 pub fn dummy_page() -> impl Component<Msg = FlowMsg> + Swipable + MaybeTrace {
-    Frame::left_aligned(TString::empty(), VerticalMenu::empty()).map(|_| Some(FlowMsg::Cancelled))
+    Frame::new(
+        Header::left_aligned(TString::empty()),
+        VerticalMenu::empty(),
+    )
+    .map(|_| Some(FlowMsg::Cancelled))
 }

@@ -21,7 +21,7 @@ use crate::{
 use heapless::Vec;
 
 use super::super::{
-    component::{AddressDetails, Frame, PromptScreen, SwipeContent, VerticalMenu},
+    component::{AddressDetails, Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -109,26 +109,29 @@ pub fn new_receive(
         extra_font: &theme::TEXT_DEMIBOLD,
     }
     .into_paragraphs();
-    let content_address =
-        Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(paragraphs)))
-            .with_menu_button()
-            .with_swipeup_footer(None)
-            .with_vertical_pages()
-            .map_to_button_msg()
-            .one_button_request(ButtonRequest::from_num(br_code, br_name))
-            // Count tap-to-confirm screen towards page count
-            .with_pages(|address_pages| address_pages + 1);
+    let content_address = Frame::new(
+        Header::left_aligned(title).with_menu_button(),
+        SwipeContent::new(SwipePage::vertical(paragraphs)),
+    )
+    .with_swipeup_footer(None)
+    .with_vertical_pages()
+    .map_to_button_msg()
+    .one_button_request(ButtonRequest::from_num(br_code, br_name))
+    // Count tap-to-confirm screen towards page count
+    .with_pages(|address_pages| address_pages + 1);
 
     // Tap
-    let content_tap =
-        Frame::left_aligned(title, SwipeContent::new(PromptScreen::new_tap_to_confirm()))
-            .with_footer(TR::instructions__tap_to_confirm.into(), None)
-            .with_swipe(Direction::Down, SwipeSettings::Default)
-            .map(super::util::map_to_confirm);
+    let content_tap = Frame::new(
+        Header::left_aligned(title),
+        SwipeContent::new(PromptScreen::new_tap_to_confirm()),
+    )
+    .with_footer(TR::instructions__tap_to_confirm.into(), None)
+    .with_swipe(Direction::Down, SwipeSettings::Default)
+    .map(super::util::map_to_confirm);
 
     // Menu
-    let content_menu = Frame::left_aligned(
-        "".into(),
+    let content_menu = Frame::new(
+        Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty()
             .item(theme::ICON_QR_CODE, TR::address__qr_code.into())
             .item(
@@ -137,16 +140,14 @@ pub fn new_receive(
             )
             .cancel_item(cancel_title.into()),
     )
-    .with_cancel_button()
     .map(super::util::map_to_choice);
 
     // QrCode
-    let content_qr = Frame::left_aligned(
-        title,
+    let content_qr = Frame::new(
+        Header::left_aligned(title).with_cancel_button(),
         qr.map(|s| Qr::new(s, case_sensitive))?
             .with_border(QR_BORDER),
     )
-    .with_cancel_button()
     .map_to_button_msg();
 
     // AccountInfo
@@ -159,24 +160,24 @@ pub fn new_receive(
     let content_account = ad.map(|_| Some(FlowMsg::Cancelled));
 
     // Cancel
-    let content_cancel_info = Frame::left_aligned(
-        cancel_title.into(),
+    let content_cancel_info = Frame::new(
+        Header::left_aligned(cancel_title.into()).with_cancel_button(),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             cancel_content,
         ))),
     )
-    .with_cancel_button()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
     // CancelTap
-    let content_cancel_tap =
-        Frame::left_aligned(cancel_title.into(), PromptScreen::new_tap_to_cancel())
-            .with_cancel_button()
-            .with_footer(TR::instructions__tap_to_confirm.into(), None)
-            .with_swipe(Direction::Down, SwipeSettings::Default)
-            .map(super::util::map_to_confirm);
+    let content_cancel_tap = Frame::new(
+        Header::left_aligned(cancel_title.into()).with_cancel_button(),
+        PromptScreen::new_tap_to_cancel(),
+    )
+    .with_footer(TR::instructions__tap_to_confirm.into(), None)
+    .with_swipe(Direction::Down, SwipeSettings::Default)
+    .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&Receive::Content)?;
     res.add_page(&Receive::Content, content_address)?

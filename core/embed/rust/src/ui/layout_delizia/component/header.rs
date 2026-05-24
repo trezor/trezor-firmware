@@ -90,6 +90,19 @@ pub struct Header {
 }
 
 impl Header {
+    pub const fn left_aligned(title: TString<'static>) -> Self {
+        Self::new(Alignment::Start, title)
+    }
+
+    pub const fn centered(title: TString<'static>) -> Self {
+        Self::new(Alignment::Center, title)
+    }
+
+    pub const fn right_aligned(title: TString<'static>) -> Self {
+        Self::new(Alignment::End, title)
+    }
+
+    #[inline(never)]
     pub const fn new(alignment: Alignment, title: TString<'static>) -> Self {
         Self {
             area: Rect::zero(),
@@ -103,6 +116,35 @@ impl Header {
             button_msg: HeaderMsg::Cancelled,
         }
     }
+
+    pub fn with_cancel_button(self) -> Self {
+        self.with_button(theme::ICON_CLOSE, true, HeaderMsg::Cancelled)
+    }
+
+    pub fn with_menu_button(self) -> Self {
+        self.with_button(theme::ICON_MENU, true, HeaderMsg::Info)
+    }
+
+    pub fn with_danger_menu_button(self) -> Self {
+        self.with_button(theme::ICON_MENU, true, HeaderMsg::Info)
+            .button_styled(theme::button_warning_high())
+    }
+
+    pub fn with_warning_low_icon(self) -> Self {
+        self.with_button(theme::ICON_WARNING, false, HeaderMsg::Info)
+            .button_styled(theme::button_warning_low())
+    }
+
+    pub fn with_danger_icon(self) -> Self {
+        self.with_button(theme::ICON_WARNING, false, HeaderMsg::Info)
+            .button_styled(theme::button_danger())
+    }
+
+    pub fn with_danger(self) -> Self {
+        self.button_styled(theme::button_danger())
+            .styled(theme::label_title_danger())
+    }
+
     #[inline(never)]
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         let style = theme::TEXT_SUB_GREY;
