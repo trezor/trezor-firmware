@@ -56,41 +56,44 @@ async def get_delegated_identity_key(
     )
 
 
-async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
-    from trezor import TR
-    from trezor.ui.layouts import confirm_action
-    from trezor.wire.context import get_channel_context
-    from trezor.wire.errors import DataError
+if utils.USE_THP:
 
-    from apps.thp.credential_manager import decode_credential, validate_credential
+    async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
+        from trezor import TR
+        from trezor.ui.layouts import confirm_action
+        from trezor.wire.context import get_channel_context
+        from trezor.wire.errors import DataError
 
-    if msg.thp_credential is None:
-        raise DataError("THP credential must be provided when THP is enabled")
-    credential_received = decode_credential(msg.thp_credential)
-    host_static_public_key = (
-        get_channel_context().channel_cache.get_host_static_public_key()
-    )
-    if not validate_credential(credential_received, host_static_public_key):
-        raise DataError("Invalid credential")
+        from apps.thp.credential_manager import decode_credential, validate_credential
 
-    app_name = credential_received.cred_metadata.app_name
-    host_name = credential_received.cred_metadata.host_name
-    await confirm_action(
-        "suite_sync",
-        TR.suite_sync__header,
-        TR.suite_sync__delegated_identity_key_thp.format(app_name, host_name),
-    )
+        if msg.thp_credential is None:
+            raise DataError("THP credential must be provided when THP is enabled")
+        credential_received = decode_credential(msg.thp_credential)
+        host_static_public_key = (
+            get_channel_context().channel_cache.get_host_static_public_key()
+        )
+        if not validate_credential(credential_received, host_static_public_key):
+            raise DataError("Invalid credential")
 
+        app_name = credential_received.cred_metadata.app_name
+        host_name = credential_received.cred_metadata.host_name
+        await confirm_action(
+            "suite_sync",
+            TR.suite_sync__header,
+            TR.suite_sync__delegated_identity_key_thp.format(app_name, host_name),
+        )
 
-async def confirm_no_thp() -> None:
-    from trezor import TR
-    from trezor.ui.layouts import confirm_action
+else:
 
-    await confirm_action(
-        "suite_sync",
-        TR.suite_sync__header,
-        TR.suite_sync__delegated_identity_key_no_thp,
-    )
+    async def confirm_no_thp() -> None:
+        from trezor import TR
+        from trezor.ui.layouts import confirm_action
+
+        await confirm_action(
+            "suite_sync",
+            TR.suite_sync__header,
+            TR.suite_sync__delegated_identity_key_no_thp,
+        )
 
 
 def get_rotation_index(msg: EvoluGetDelegatedIdentityKey) -> int | None:
