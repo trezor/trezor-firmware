@@ -192,6 +192,7 @@ message Features {
         Capability_Tron = 24;
         Capability_N4W1 = 25 [(bitcoin_only) = true];
         Capability_TouchWakeup = 26 [(bitcoin_only) = true];  // Touch to wake from sleep
+        reserved 27;                                          // reserved for internal use
     }
 }
 
