@@ -78,7 +78,7 @@
         {
           "id": 2,
           "name": "Transfer",
-          "is_multisig": false,
+          "is_multisig": true,
           "parameters": [
             {
               "name": "lamports",

@@ -92,6 +92,7 @@ SystemProgram_Transfer = Struct(
     / CompactStruct(
         "funding_account" / Byte,
         "recipient_account" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
