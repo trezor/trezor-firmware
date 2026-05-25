@@ -1,10 +1,12 @@
-use crate::micropython::{
+use micropython::{
     macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module},
     module::Module,
-    qstr::Qstr,
 };
 
-use crate::protobuf::obj::{protobuf_type_for_name, protobuf_type_for_wire};
+use crate::{
+    micropython::qstr::Qstr,
+    protobuf::obj::{protobuf_type_for_name, protobuf_type_for_wire},
+};
 
 use super::decode::hashbuffers_decode;
 

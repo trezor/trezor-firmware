@@ -953,7 +953,7 @@ if PYOPT == '0' or ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
 else:
     profile = 'release'
 
-features = ['micropython', 'protobuf', 'ui', 'translations'] + FEATURES_AVAILABLE + RUST_UI_FEATURES
+features = ['micropython', 'protobuf', 'hashbuffers', 'ui', 'translations'] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 if PYOPT == '0':
     features.append('debug')
     features.append('debuglink')

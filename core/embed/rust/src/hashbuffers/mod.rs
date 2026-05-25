@@ -1,3 +1,3 @@
-pub mod codec;
 mod decode;
+mod error;
 mod obj;

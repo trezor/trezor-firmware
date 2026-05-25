@@ -10,6 +10,7 @@ build = "build.rs"
 [features]
 default = ["layout_bolt"]
 crypto = ["zeroize", "trezor-crypto"]
+hashbuffers = ["dep:hashbuffers", "bytemuck"]
 layout_bolt = ["touch"]
 layout_caesar = ["button"]
 layout_delizia = ["touch"]
@@ -40,7 +41,7 @@ prodtest = []
 button = []
 touch = []
 clippy = []
-debug = ["ui_debug", "dev_keys"]
+debug = ["ui_debug", "dev_keys", "hashbuffers?/debug"]
 debuglink = []
 dev_keys = []
 sbu = []
@@ -124,6 +125,8 @@ ufmt = "0.2.0"
 zeroize = { version = "1.8.2", default-features = false, optional = true }
 micropython = { version = "0.1.0", path = "../micropython", optional = true }
 trezor-crypto = { version = "0.1.0", path = "../crypto", optional = true }
+hashbuffers = { version = "0.0.1", path = "../../../rust/hashbuffers", optional = true }
+bytemuck = { version = "1.25.0", default-features = false, features = ["derive"], optional = true }
 
 # Runtime dependencies
 
