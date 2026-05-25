@@ -391,7 +391,7 @@ impl FirmwareUI for UIEckhart {
         items: Obj,
         hold: bool,
         verb: Option<TString<'static>>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new_styled(
             items,
@@ -404,8 +404,38 @@ impl FirmwareUI for UIEckhart {
         .into_paragraphs()
         .with_placement(LinearPlacement::vertical());
 
-        let flow =
-            flow::new_confirm_with_menu(title, None, paragraphs, None, verb, hold, None, None)?;
+        let flow = if external_menu {
+            let confirm_button = if hold {
+                let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
+                Button::with_text(verb)
+                    .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                    .styled(button_confirm())
+                    .with_gradient(Gradient::SignGreen)
+            } else if let Some(verb) = verb {
+                Button::with_text(verb)
+            } else {
+                Button::with_text(TR::buttons__confirm.into())
+                    .styled(button_confirm())
+                    .with_gradient(Gradient::SignGreen)
+            };
+
+            let header = Header::new(title)
+                .with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu);
+
+            let screen = TextScreen::new(paragraphs)
+                .with_header(header)
+                .with_external_menu(true)
+                .with_action_bar(ActionBar::new_single(confirm_button))
+                .map(|msg| match msg {
+                    TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+                    TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+                    TextScreenMsg::Menu => Some(FlowMsg::Info),
+                });
+
+            flow::util::single_page(screen)?
+        } else {
+            flow::new_confirm_with_menu(title, None, paragraphs, None, verb, hold, None, None)?
+        };
         Ok(flow)
     }
 
