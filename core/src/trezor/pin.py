@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 _previous_seconds: int | None = None
 _previous_remaining: str | None = None
+_previous_message: config.StorageMessage | None = None
 _progress_layout: ProgressLayout | None = None
 _started_with_empty_loader = False
 keepalive_callback: Any = None
@@ -38,6 +39,7 @@ def render_empty_loader(
     """
     from trezor.ui.layouts.progress import pin_progress
 
+    global _previous_message
     global _progress_layout
     global _started_with_empty_loader
 
@@ -45,6 +47,7 @@ def render_empty_loader(
     _progress_layout.report(0, None)
 
     _started_with_empty_loader = True
+    _previous_message = message
 
 
 def show_pin_timeout(
@@ -62,6 +65,7 @@ def show_pin_timeout(
 
     global _previous_seconds
     global _previous_remaining
+    global _previous_message
     global _progress_layout
     global _started_with_empty_loader
 
@@ -85,8 +89,13 @@ def show_pin_timeout(
         remaining = _previous_remaining
 
     # create the layout if it doesn't exist yet or should be started again
-    if _progress_layout is None or (progress == 0 and not _started_with_empty_loader):
+    if (
+        _progress_layout is None
+        or (progress == 0 and not _started_with_empty_loader)
+        or message != _previous_message
+    ):
         _progress_layout = pin_progress(message, description=remaining or "")
+        _previous_message = message
 
     # reset the flag - the render_empty_loader() has the effect only in the first call
     # of this function, where we do not want to re-initialize the layout
@@ -100,5 +109,6 @@ def show_pin_timeout(
     if progress >= 1000:
         _progress_layout = None
         _previous_remaining = None
+        _previous_message = None
 
     return False
