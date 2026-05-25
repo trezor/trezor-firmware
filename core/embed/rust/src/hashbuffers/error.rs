@@ -50,3 +50,10 @@ pub const fn invalid_value(field: Attribute) -> Error {
         field.to_obj(),
     ))
 }
+
+pub const fn invalid_encoding(field: Attribute) -> Error {
+    Error(micropython::Error::ValueErrorParam(
+        c"Invalid encoding for field.",
+        field.to_obj(),
+    ))
+}
