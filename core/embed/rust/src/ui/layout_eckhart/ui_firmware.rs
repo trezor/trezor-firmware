@@ -1016,7 +1016,7 @@ impl FirmwareUI for UIEckhart {
         button: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        _time_ms: u32,
+        time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::firmware::TEXT_REGULAR, description))
             .with_placement(LinearPlacement::vertical());
@@ -1027,7 +1027,11 @@ impl FirmwareUI for UIEckhart {
                 Button::with_text(button),
             )
         } else {
-            ActionBar::new_single(Button::with_text(button))
+            let button = Button::with_text(button);
+            match time_ms {
+                0 => ActionBar::new_single(button),
+                _ => ActionBar::new_timeout(button, Duration::from_millis(time_ms)),
+            }
         };
         let screen = TextScreen::new(content)
             .with_header(
