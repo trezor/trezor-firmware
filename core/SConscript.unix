@@ -22,6 +22,7 @@ MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '1') ==
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 EXTAPP_SUPPORT = ARGUMENTS.get('EXTAPP_SUPPORT', '0') == '1'
 N4W1 = ARGUMENTS.get('N4W1', '0') == '1'
+MINISCRIPT = ARGUMENTS.get('MINISCRIPT', '0') == '1'
 
 
 if DEBUGLINK or PYOPT == '0':
@@ -75,6 +76,9 @@ if N4W1:
     assert PYOPT == "0", "N4W1 requires PYOPT=0"
     FEATURES_WANTED += ["n4w1"]
 
+if MINISCRIPT:
+    FEATURES_WANTED += ["miniscript"]
+
 if not models.has_emulator(TREZOR_MODEL):
     # skip unix build
     env = Environment()
@@ -87,7 +91,7 @@ if not models.has_emulator(TREZOR_MODEL):
     Return()
 
 FEATURE_FLAGS = {
-    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
+    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot) and, when MINISCRIPT=1, for rust-miniscript's secp256k1 FFI
     "AES_GCM": True,
 }
 
@@ -221,6 +225,15 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/secp256k1-zkp/src/precomputed_ecmult.c',
         'vendor/secp256k1-zkp/src/precomputed_ecmult_gen.c',
     ]
+    if MINISCRIPT:
+        # rust-miniscript pulls in secp256k1::ellswift (unconditional in
+        # secp256k1 0.29) and ecdsa::Signature::from_der_lax. The ellswift
+        # symbols come from libsecp256k1 once ENABLE_MODULE_ELLSWIFT is set;
+        # ecdsa_signature_parse_der_lax lives in contrib/lax_der_parsing.c
+        # and is built separately below because it does
+        # `#include <secp256k1.h>`, which collides with
+        # vendor/trezor-crypto/secp256k1.h on the default include path.
+        CPPDEFINES_MOD += ['ENABLE_MODULE_ELLSWIFT']
     SOURCE_MOD_CRYPTO += [
         'vendor/trezor-crypto/zkp_context.c',
         'vendor/trezor-crypto/zkp_ecdsa.c',
@@ -911,6 +924,17 @@ obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftriv
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
     source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
+    if MINISCRIPT:
+        # contrib/lax_der_parsing.c does `#include <secp256k1.h>`. The default
+        # CPPPATH order finds vendor/trezor-crypto/secp256k1.h first; force
+        # the libsecp256k1 include dir to the front for this one file.
+        lax_der_src = 'vendor/secp256k1-zkp/contrib/lax_der_parsing.c'
+        obj_program.extend(env.Object(
+            source=lax_der_src,
+            CCFLAGS='$CCFLAGS -Wno-unused-function',
+            CPPPATH=['vendor/secp256k1-zkp/include'] + list(env.get('CPPPATH') or []),
+        ))
+        source_files.append(lax_der_src)
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_UNIX))
 if FROZEN:

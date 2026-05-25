@@ -83,6 +83,7 @@ CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES: dict[OutputScriptType, InputScriptType] = {
     OutputScriptType.PAYTOP2SHWITNESS: InputScriptType.SPENDP2SHWITNESS,
     OutputScriptType.PAYTOWITNESS: InputScriptType.SPENDWITNESS,
     OutputScriptType.PAYTOTAPROOT: InputScriptType.SPENDTAPROOT,
+    OutputScriptType.PAYTOMINISCRIPT: InputScriptType.SPENDMINISCRIPT,
 }
 
 INTERNAL_INPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.values())
@@ -92,12 +93,14 @@ SEGWIT_INPUT_SCRIPT_TYPES = (
     InputScriptType.SPENDP2SHWITNESS,
     InputScriptType.SPENDWITNESS,
     InputScriptType.SPENDTAPROOT,
+    InputScriptType.SPENDMINISCRIPT,
 )
 
 SEGWIT_OUTPUT_SCRIPT_TYPES = (
     OutputScriptType.PAYTOP2SHWITNESS,
     OutputScriptType.PAYTOWITNESS,
     OutputScriptType.PAYTOTAPROOT,
+    OutputScriptType.PAYTOMINISCRIPT,
 )
 
 NONSEGWIT_INPUT_SCRIPT_TYPES = (

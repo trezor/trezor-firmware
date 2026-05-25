@@ -58,11 +58,14 @@ pub fn parse_recoverable_signature(
 
 /// Convert a bitcoin network constant to the Trezor-compatible coin_name string.
 pub fn coin_name(network: Network) -> Result<String> {
-    match network {
-        Network::Bitcoin => Ok("Bitcoin".to_owned()),
-        Network::Testnet => Ok("Testnet".to_owned()),
-        _ => Err(Error::UnsupportedNetwork),
+    Ok(match network {
+        Network::Bitcoin => "Bitcoin",
+        Network::Regtest => "Regtest",
+        Network::Signet => "Signet",
+        Network::Testnet | Network::Testnet4 => "Testnet",
+        _ => return Err(Error::UnsupportedNetwork),
     }
+    .to_owned())
 }
 
 /// Convert a BIP-32 derivation path into a `Vec<u32>`.

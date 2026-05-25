@@ -62,6 +62,7 @@ storage = []
 telemetry = []
 n4w1 = []
 translations = ["crypto"]
+miniscript = ["dep:miniscript", "dep:emballoc"]
 secmon_layout = []
 dbg_console = []
 app_loading = []
@@ -171,6 +172,16 @@ features = ["libm"]
 version = "1.0.0"
 default-features = false
 
+[dependencies.miniscript]
+version = "13.0.0"
+default-features = false
+optional = true
+
+[dependencies.emballoc]
+version = "0.3.0"
+default-features = false
+optional = true
+
 
 # Build dependencies
 
@@ -192,3 +203,13 @@ version = "0.3.0"
 [dev-dependencies]
 hex = "0.4.3"
 serde_json = "1.0.96"
+
+# Route secp256k1-sys (pulled in transitively via miniscript -> bitcoin ->
+# secp256k1) to a fork that skips its bundled libsecp256k1 build and uses
+# unprefixed FFI symbols. The symbols are provided at link time by the
+# vendored copy at vendor/secp256k1-zkp/, compiled by SCons. This avoids
+# linking two copies of libsecp256k1 (and two sets of ecmult tables) into
+# the firmware. The patch only takes effect when the `miniscript` feature
+# is enabled, since secp256k1-sys is not pulled in otherwise.
+[patch.crates-io]
+secp256k1-sys = { path = "../../../vendor/rust-secp256k1-sys" }

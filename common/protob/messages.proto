@@ -374,6 +374,10 @@ enum MessageType {
     MessageType_TronWithdrawUnfreeze = 2209 [(wire_in) = true];
     MessageType_TronVoteWitnessContract = 2210 [(wire_in) = true];
 
+    // Miniscript
+    MessageType_Policy = 2301 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_RegisteredPolicy = 2302 [(bitcoin_only) = true, (wire_out) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];
