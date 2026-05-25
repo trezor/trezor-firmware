@@ -1,4 +1,4 @@
-use micropython::{buffer::StrBuffer, gc::Gc, list::List, util::try_or_raise, Error, Obj};
+use micropython::{Error, Obj, buffer::StrBuffer, gc::{Gc, GcBox}, list::List, util::try_or_raise};
 
 use crate::{
     io::BinaryData,
@@ -254,10 +254,9 @@ pub extern "C" fn upy_disable_animation(disable: Obj) -> Obj {
 
 pub fn get_user_custom_image() -> Result<BinaryData<'static>, Error> {
     let len = get_avatar_len()?;
-    let mut data = Gc::<[u8]>::new_slice(len)?;
-    // SAFETY: buffer is freshly allocated so nobody else has it.
-    load_avatar(unsafe { Gc::<[u8]>::as_mut(&mut data) })?;
-    Ok(data.into())
+    let mut data = GcBox::new_slice(len, 0)?;
+    load_avatar(data.as_mut())?;
+    Ok(data.leak_ref().into())
 }
 
 /// ContentType is used to define the type of content that can be displayed

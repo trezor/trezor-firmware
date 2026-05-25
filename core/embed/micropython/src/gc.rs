@@ -25,6 +25,38 @@ use core::ptr::{self, NonNull};
 use crate::py_object::HasBaseType;
 use crate::{Error, ffi};
 
+/// Allocate memory on the heap managed by the MicroPython garbage collector
+///
+/// `flags` can be an int value built out of constants in the ffi module.
+/// The current MicroPython only supports GC_ALLOC_FLAG_HAS_FINALISER, which
+/// will cause the __del__ method to be called when the object is
+/// garbage collected.
+///
+/// # Safety
+///
+/// Flag GC_ALLOC_FLAG_HAS_FINALISER can only be used with Python objects
+/// that have a base as their first element
+unsafe fn gc_alloc(layout: Layout, flags: u32) -> Result<NonNull<u8>, Error> {
+    debug_assert!(
+        layout.size() > 0,
+        "Zero-sized allocations are not supported"
+    );
+    // TODO: Assert that `layout.align()` is the same as the GC alignment.
+    // SAFETY:
+    //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
+    //    not support custom alignment.
+    //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack
+    //    or the MicroPython heap.
+    // EXCEPTION: Returns null instead of raising.
+    unsafe {
+        let raw = ffi::gc_alloc(layout.size(), flags);
+        match NonNull::new(raw) {
+            Some(ptr) => Ok(ptr.cast()),
+            None => Err(Error::AllocationFailed),
+        }
+    }
+}
+
 /// A pointer type for values on the garbage-collected heap.
 pub struct Gc<T: ?Sized>(NonNull<T>);
 
@@ -37,37 +69,23 @@ impl<T: ?Sized> Clone for Gc<T> {
 impl<T: ?Sized> Copy for Gc<T> {}
 
 impl<T> Gc<T> {
-    /// Allocate memory on the heap managed by the MicroPython garbage collector
-    /// and then place `v` into it.
+    /// Internal helper for `new()` and `new_with_custom_finaliser()`.
     ///
-    /// `flags` can be an int value built out of constants in the ffi module.
-    /// The current MicroPython only supports GC_ALLOC_FLAG_HAS_FINALISER, which
-    /// will cause the __del__ method to be called when the object is
-    /// garbage collected.
+    /// Performs memory allocation via `gc_alloc` and then writes `v` into the
+    /// allocated memory. `v` will not get its destructor called.
     ///
-    /// SAFETY:
-    /// Flag GC_ALLOC_FLAG_HAS_FINALISER can only be used with Python objects
-    /// that have a base as their first element
-    unsafe fn alloc(v: T, flags: u32) -> Result<Self, Error> {
+    /// The function is unsafe because passing nonzero flags is unsafe, see
+    /// `gc_alloc`.
+    unsafe fn new_with_flags(v: T, flags: u32) -> Result<Self, Error> {
         let layout = Layout::for_value(&v);
-        debug_assert!(
-            layout.size() > 0,
-            "Zero-sized allocations are not supported"
-        );
-        // TODO: Assert that `layout.align()` is the same as the GC alignment.
-        // SAFETY:
-        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
-        //    not support custom alignment.
-        //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack
-        //    or the MicroPython heap.
-        // EXCEPTION: Returns null instead of raising.
         unsafe {
-            let raw = ffi::gc_alloc(layout.size(), flags);
-            if raw.is_null() {
-                return Err(Error::AllocationFailed);
-            }
-            let typed = raw.cast();
+            // SAFETY: see `gc_alloc` for safety requirements
+            let ptr = gc_alloc(layout, flags)?;
+            // SAFETY: `ptr` was allocated for the type
+            let typed = ptr.as_ptr().cast();
+            // SAFETY: `typed` is non-null and has the right layout
             ptr::write(typed, v);
+            // SAFETY: `typed` is initialized and allocated by the GC
             Ok(Self::from_raw(typed))
         }
     }
@@ -75,10 +93,8 @@ impl<T> Gc<T> {
     /// Allocate memory on the heap managed by the MicroPython garbage collector
     /// and then place `v` into it. `v` will _not_ get its destructor called.
     pub fn new(v: T) -> Result<Self, Error> {
-        unsafe {
-            // SAFETY: No flag is used
-            Self::alloc(v, 0)
-        }
+        // SAFETY: safe with no flags
+        unsafe { Self::new_with_flags(v, 0) }
     }
 }
 
@@ -98,34 +114,7 @@ impl<T: HasBaseType> Gc<T> {
     /// first element
     pub fn new_with_custom_finaliser(v: T) -> Result<Self, Error> {
         // SAFETY: HasBaseType promises that `v` has a base as its first element.
-        unsafe { Self::alloc(v, ffi::GC_ALLOC_FLAG_HAS_FINALISER as _) }
-    }
-}
-
-impl<T: Default> Gc<[T]> {
-    /// Allocate slice on the heap managed by the MicroPython garbage collector
-    /// and fill with default values.
-    pub fn new_slice(len: usize) -> Result<Self, Error> {
-        let layout = Layout::array::<T>(len).unwrap();
-        // TODO: Assert that `layout.align()` is the same as the GC alignment.
-        // SAFETY:
-        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
-        //    not support custom alignment.
-        //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack
-        //    or the MicroPython heap.
-        // EXCEPTION: Returns null instead of raising.
-        unsafe {
-            let raw = ffi::gc_alloc(layout.size(), 0);
-            if raw.is_null() {
-                return Err(Error::AllocationFailed);
-            }
-            let typed: *mut T = raw.cast();
-            for i in 0..len {
-                ptr::write(typed.add(i), T::default());
-            }
-            let array_ptr = ptr::slice_from_raw_parts_mut(typed, len);
-            Ok(Self::from_raw(array_ptr as _))
-        }
+        unsafe { Self::new_with_flags(v, ffi::GC_ALLOC_FLAG_HAS_FINALISER as _) }
     }
 }
 
@@ -271,6 +260,59 @@ impl<T: ?Sized> GcBox<T> {
         core::mem::forget(self);
         inner
     }
+
+    /// Leak contents of the box as a GcRef.
+    ///
+    /// This trades the unique ownership for a shared reference to the value.
+    /// It is no longer possible to mutate the value at all, and its destructor
+    /// will not be called when it is finally deallocated.
+    pub fn leak_ref(self) -> GcRef<T> {
+        GcRef(self.leak())
+    }
+}
+
+impl<T> GcBox<[T]> {
+    /// Allocate slice on the heap managed by the MicroPython garbage collector
+    /// and copy the contents of `src` into it.
+    pub fn from_slice(src: &[T]) -> Result<Self, Error> {
+        // We know that the layout is valid because a slice of it exists.
+        let layout = Layout::array::<T>(src.len()).unwrap();
+
+        // SAFETY: we are not using flags
+        let ptr = unsafe { gc_alloc(layout, 0)? };
+        let typed = ptr.as_ptr().cast();
+        // SAFETY: `typed` has the right layout and it is non-null
+        unsafe { ptr::copy_nonoverlapping(src.as_ptr(), typed, src.len()) };
+
+        let array_ptr = ptr::slice_from_raw_parts_mut(typed, src.len());
+        // SAFETY: `array_ptr` is now a properly initialized fat pointer of the right
+        // type
+        Ok(unsafe { Self::from_raw(array_ptr as _) })
+    }
+}
+
+impl<T: Copy> GcBox<[T]> {
+    /// Allocate slice on the heap managed by the MicroPython garbage collector
+    /// and fill with default values.
+    pub fn new_slice(len: usize, element: T) -> Result<Self, Error> {
+        let Ok(layout) = Layout::array::<T>(len) else {
+            // fails if `len` * sizeof(T) > isize::MAX
+            return Err(Error::AllocationFailed);
+        };
+
+        // SAFETY: we are not using flags
+        let ptr = unsafe { gc_alloc(layout, 0)? };
+        let typed: *mut T = ptr.as_ptr().cast();
+        for i in 0..len {
+            // SAFETY: `typed` has the right layout and it is non-null
+            unsafe { ptr::write(typed.add(i), element) };
+        }
+
+        let array_ptr = ptr::slice_from_raw_parts_mut(typed, len);
+        // SAFETY: `array_ptr` is now a properly initialized fat pointer of the right
+        // type
+        Ok(unsafe { Self::from_raw(array_ptr as _) })
+    }
 }
 
 /// Type-cast GcBox contents to a `dyn Trait` object.
@@ -291,7 +333,9 @@ impl<T: ?Sized> Deref for GcBox<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        self.0.deref()
+        // SAFETY: We are the sole owner of the allocated value, and we are borrowed
+        // immutably.
+        unsafe { Gc::as_ref(&self.0) }
     }
 }
 
@@ -312,6 +356,37 @@ impl<T: ?Sized> Drop for GcBox<T> {
             ptr::drop_in_place(ptr);
             ffi::gc_free(ptr.cast());
         }
+    }
+}
+
+/// Shared reference to a value on the GC heap.
+///
+/// GcRef allows shared access to the underlying value, in exchange for not
+/// being able to mutate it.
+///
+/// The only way to create a GcRef is to consume a GcBox via [`GcBox::leak_ref`].
+///
+/// TODO: we could implement a `GcRc` or `GcRefCell` to support mutation and destructors.
+pub struct GcRef<T: ?Sized>(Gc<T>);
+
+impl<T: ?Sized> Clone for GcRef<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<T: ?Sized> Copy for GcRef<T> {}
+
+impl<T: ?Sized> Deref for GcRef<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        // SAFETY:
+        // * we were created by consuming a GcBox
+        // * we do not expose any mutable access to the value
+        // * it is therefore safe to borrow the value immutably across multiple
+        //   copies of the GcRef
+        unsafe { Gc::as_ref(&self.0) }
     }
 }
 
@@ -407,5 +482,16 @@ mod test {
             assert_eq!(coerced.foo(), 42);
         }
         assert!(drop_signalled.get());
+    }
+
+    #[test]
+    fn test_gcref() {
+        unsafe { mpy_init() };
+
+        let drop_signalled = Cell::new(false);
+        {
+            let gcbox = GcBox::new(SignalDrop(&drop_signalled)).unwrap();
+            let gcref = GcRef::new(gcbox);
+        }
     }
 }

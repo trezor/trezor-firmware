@@ -65,6 +65,7 @@ impl<T: PyObject> From<T> for PythonObject<T> {
     }
 }
 
+#[repr(transparent)]
 pub struct GcObject<T>(Gc<PythonObject<T>>);
 
 impl<T: PyObject> GcObject<T> {
@@ -79,11 +80,17 @@ impl<T: PyObject> GcObject<T> {
     }
 
     pub fn borrow(&self) -> Ref<'_, T> {
-        self.0.object.borrow()
+        // SAFETY: we only ever take immutable references, and nobody else
+        // (in particular micropython) has the knowledge to mutate the object.
+        let this = unsafe { Gc::as_ref(&self.0) };
+        this.object.borrow()
     }
 
     pub fn borrow_mut(&self) -> RefMut<'_, T> {
-        self.0.object.borrow_mut()
+        // SAFETY: we only ever take immutable references, and nobody else
+        // (in particular micropython) has the knowledge to mutate the object.
+        let this = unsafe { Gc::as_ref(&self.0) };
+        this.object.borrow_mut()
     }
 }
 

@@ -1,5 +1,5 @@
 #[cfg(feature = "micropython")]
-use micropython::{buffer::get_buffer, gc::Gc, obj::Obj};
+use micropython::{buffer::get_buffer, gc::GcRef, obj::Obj};
 
 pub enum Error {
     EOFError,
@@ -90,7 +90,7 @@ pub enum BinaryData<'a> {
     #[cfg(feature = "micropython")]
     Object(Obj),
     #[cfg(feature = "micropython")]
-    AllocatedSlice(Gc<[u8]>),
+    AllocatedSlice(GcRef<[u8]>),
 }
 
 impl<'a> BinaryData<'a> {
@@ -165,8 +165,8 @@ impl<'a> PartialEq for BinaryData<'a> {
 }
 
 #[cfg(feature = "micropython")]
-impl From<Gc<[u8]>> for BinaryData<'static> {
-    fn from(data: Gc<[u8]>) -> Self {
+impl From<GcRef<[u8]>> for BinaryData<'static> {
+    fn from(data: GcRef<[u8]>) -> Self {
         Self::AllocatedSlice(data)
     }
 }
