@@ -43,10 +43,7 @@ class Device:
             return f"-l {self.uhub_location}"
 
     def _port(self):
-        if self.device_port:
-            return f"-p {self.device_port}"
-        else:
-            return ""
+        return ""
 
     def power_on(self):
         self.now()
