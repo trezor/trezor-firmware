@@ -351,11 +351,13 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         CKBTxAckCellDep,
     )
     from trezor.wire.context import call
-    from trezor.ui.layouts import (
-        confirm_output,
-        confirm_total,
-        show_continue_in_app,
-        show_warning,
+    from trezor.ui.layouts import show_continue_in_app
+
+    from .layout import (
+        require_confirm_output,
+        require_confirm_testnet,
+        require_confirm_total,
+        require_confirm_type_script,
     )
 
     await paths.validate_path(keychain, msg.address_n)
@@ -364,10 +366,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         raise DataError("Invalid CKB network")
 
     if msg.network == "Testnet":
-        await show_warning(
-            "ckb_testnet",
-            "You are signing a testnet transaction.",
-        )
+        await require_confirm_testnet()
 
     if msg.inputs_count == 0:
         raise DataError("Transaction must have at least one input")
@@ -442,18 +441,12 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
                 output.lock_args,
                 msg.network,
             )
-            amount_str = helpers.format_amount(output.capacity)
-
             if output.type_code_hash is not None:
-                await show_warning(
-                    "ckb_type_script",
-                    "This output has a type script. Funds may be restricted.",
-                )
+                await require_confirm_type_script()
 
-            await confirm_output(
+            await require_confirm_output(
                 address,
-                amount_str,
-                title=TR.send__confirm_sending,
+                output.capacity,
                 chunkify=bool(msg.chunkify),
             )
 
@@ -494,11 +487,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
 
     # Confirm total
     fee = msg.fee or 0
-    await confirm_total(
-        total_amount=helpers.format_amount(send_amount + fee),
-        fee_amount=helpers.format_amount(fee),
-        title=TR.words__title_summary,
-    )
+    await require_confirm_total(send_amount + fee, fee)
 
     # Sign and output CKB native format: [R(32) | S(32) | recovery_id(1)]
     raw_sig = secp256k1.sign(node.private_key(), sighash, False)

@@ -3708,59 +3708,55 @@ impl CKBTxRequestType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x12messages-ckb.proto\x12\x16hw.trezor.messages.ckb\x1a\roptions.prot\
-    o\"\x8c\x01\n\rCKBGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
-    \x08addressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\
-    \x12\x18\n\x07network\x18\x03\x20\x02(\tR\x07network\x12\x1a\n\x08chunki\
-    fy\x18\x04\x20\x01(\x08R\x08chunkify:\x05\x90\xb2\x19\xfc*\"?\n\nCKBAddr\
-    ess\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x10\n\x03mac\
-    \x18\x02\x20\x01(\x0cR\x03mac:\x05\x90\xb2\x19\xfd*\"\x84\x01\n\x0eCKBSi\
-    gnMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\n\
-    \x07message\x18\x02\x20\x02(\x0cR\x07message\x12\x18\n\x07network\x18\
+    \n\x12messages-ckb.proto\x12\x16hw.trezor.messages.ckb\"\x85\x01\n\rCKBG\
+    etAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\
+    \x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x18\n\x07netwo\
+    rk\x18\x03\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x04\x20\x01(\
+    \x08R\x08chunkify\"8\n\nCKBAddress\x12\x18\n\x07address\x18\x01\x20\x02(\
+    \tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"}\n\x0eCKB\
+    SignMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\
+    \n\x07message\x18\x02\x20\x02(\x0cR\x07message\x12\x18\n\x07network\x18\
     \x03\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x04\x20\x01(\x08R\
-    \x08chunkify:\x05\x90\xb2\x19\x83+\"T\n\x13CKBMessageSignature\x12\x18\n\
-    \x07address\x18\x01\x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\
-    \x20\x02(\x0cR\tsignature:\x05\x90\xb2\x19\x84+\"\xa1\x01\n\x10CKBVerify\
-    Message\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x1c\n\ts\
-    ignature\x18\x02\x20\x02(\x0cR\tsignature\x12\x18\n\x07message\x18\x03\
-    \x20\x02(\x0cR\x07message\x12\x18\n\x07network\x18\x04\x20\x02(\tR\x07ne\
-    twork\x12\x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify:\x05\x90\
-    \xb2\x19\x85+\"\x92\x01\n\x0cCKBCellInput\x125\n\x17previous_output_tx_h\
-    ash\x18\x01\x20\x02(\x0cR\x14previousOutputTxHash\x122\n\x15previous_out\
-    put_index\x18\x02\x20\x02(\rR\x13previousOutputIndex\x12\x17\n\x05since\
-    \x18\x03\x20\x01(\x04:\x010R\x05since\"\x91\x02\n\rCKBCellOutput\x12\x1a\
-    \n\x08capacity\x18\x01\x20\x02(\x04R\x08capacity\x12$\n\x0elock_code_has\
-    h\x18\x02\x20\x02(\x0cR\x0clockCodeHash\x12$\n\x0elock_hash_type\x18\x03\
-    \x20\x02(\rR\x0clockHashType\x12\x1b\n\tlock_args\x18\x04\x20\x02(\x0cR\
-    \x08lockArgs\x12$\n\x0etype_code_hash\x18\x05\x20\x01(\x0cR\x0ctypeCodeH\
-    ash\x12$\n\x0etype_hash_type\x18\x06\x20\x01(\rR\x0ctypeHashType\x12\x1b\
-    \n\ttype_args\x18\x07\x20\x01(\x0cR\x08typeArgs\x12\x12\n\x04data\x18\
-    \x08\x20\x01(\x0cR\x04data\"V\n\nCKBCellDep\x12\x17\n\x07tx_hash\x18\x01\
-    \x20\x02(\x0cR\x06txHash\x12\x14\n\x05index\x18\x02\x20\x02(\rR\x05index\
-    \x12\x19\n\x08dep_type\x18\x03\x20\x02(\rR\x07depType\"\xea\x01\n\tCKBSi\
-    gnTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\n\x07n\
-    etwork\x18\x02\x20\x02(\tR\x07network\x12!\n\x0cinputs_count\x18\x03\x20\
-    \x02(\rR\x0binputsCount\x12#\n\routputs_count\x18\x04\x20\x02(\rR\x0cout\
-    putsCount\x12)\n\x0fcell_deps_count\x18\x05\x20\x01(\r:\x010R\rcellDepsC\
-    ount\x12\x10\n\x03fee\x18\x06\x20\x01(\x04R\x03fee\x12\x1a\n\x08chunkify\
-    \x18\x07\x20\x01(\x08R\x08chunkify:\x05\x90\xb2\x19\xfe*\"\xf9\x01\n\x0c\
-    CKBTxRequest\x12K\n\x0crequest_type\x18\x01\x20\x01(\x0e2(.hw.trezor.mes\
-    sages.ckb.CKBTxRequestTypeR\x0brequestType\x12E\n\x07details\x18\x02\x20\
-    \x01(\x0b2+.hw.trezor.messages.ckb.CKBTxRequestDetailsR\x07details\x12N\
-    \n\nserialized\x18\x03\x20\x01(\x0b2..hw.trezor.messages.ckb.CKBTxReques\
-    tSerializedR\nserialized:\x05\x90\xb2\x19\xff*\":\n\x13CKBTxRequestDetai\
-    ls\x12#\n\rrequest_index\x18\x01\x20\x01(\rR\x0crequestIndex\"O\n\x16CKB\
-    TxRequestSerialized\x12\x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignatur\
-    e\x12\x17\n\x07tx_hash\x18\x02\x20\x01(\x0cR\x06txHash\"R\n\rCKBTxAckInp\
-    ut\x12:\n\x05input\x18\x01\x20\x02(\x0b2$.hw.trezor.messages.ckb.CKBCell\
-    InputR\x05input:\x05\x90\xb2\x19\x80+\"V\n\x0eCKBTxAckOutput\x12=\n\x06o\
-    utput\x18\x01\x20\x02(\x0b2%.hw.trezor.messages.ckb.CKBCellOutputR\x06ou\
-    tput:\x05\x90\xb2\x19\x81+\"W\n\x0fCKBTxAckCellDep\x12=\n\x08cell_dep\
-    \x18\x01\x20\x02(\x0b2\".hw.trezor.messages.ckb.CKBCellDepR\x07cellDep:\
-    \x05\x90\xb2\x19\x82+*L\n\x10CKBTxRequestType\x12\x0b\n\x07TXINPUT\x10\0\
-    \x12\x0c\n\x08TXOUTPUT\x10\x01\x12\r\n\tTXCELLDEP\x10\x02\x12\x0e\n\nTXF\
-    INISHED\x10\x03B7\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessag\
-    eCKB\
+    \x08chunkify\"M\n\x13CKBMessageSignature\x12\x18\n\x07address\x18\x01\
+    \x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsign\
+    ature\"\x9a\x01\n\x10CKBVerifyMessage\x12\x18\n\x07address\x18\x01\x20\
+    \x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignatur\
+    e\x12\x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07net\
+    work\x18\x04\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x05\x20\
+    \x01(\x08R\x08chunkify\"\x92\x01\n\x0cCKBCellInput\x125\n\x17previous_ou\
+    tput_tx_hash\x18\x01\x20\x02(\x0cR\x14previousOutputTxHash\x122\n\x15pre\
+    vious_output_index\x18\x02\x20\x02(\rR\x13previousOutputIndex\x12\x17\n\
+    \x05since\x18\x03\x20\x01(\x04:\x010R\x05since\"\x91\x02\n\rCKBCellOutpu\
+    t\x12\x1a\n\x08capacity\x18\x01\x20\x02(\x04R\x08capacity\x12$\n\x0elock\
+    _code_hash\x18\x02\x20\x02(\x0cR\x0clockCodeHash\x12$\n\x0elock_hash_typ\
+    e\x18\x03\x20\x02(\rR\x0clockHashType\x12\x1b\n\tlock_args\x18\x04\x20\
+    \x02(\x0cR\x08lockArgs\x12$\n\x0etype_code_hash\x18\x05\x20\x01(\x0cR\
+    \x0ctypeCodeHash\x12$\n\x0etype_hash_type\x18\x06\x20\x01(\rR\x0ctypeHas\
+    hType\x12\x1b\n\ttype_args\x18\x07\x20\x01(\x0cR\x08typeArgs\x12\x12\n\
+    \x04data\x18\x08\x20\x01(\x0cR\x04data\"V\n\nCKBCellDep\x12\x17\n\x07tx_\
+    hash\x18\x01\x20\x02(\x0cR\x06txHash\x12\x14\n\x05index\x18\x02\x20\x02(\
+    \rR\x05index\x12\x19\n\x08dep_type\x18\x03\x20\x02(\rR\x07depType\"\xe3\
+    \x01\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
+    \x12\x18\n\x07network\x18\x02\x20\x02(\tR\x07network\x12!\n\x0cinputs_co\
+    unt\x18\x03\x20\x02(\rR\x0binputsCount\x12#\n\routputs_count\x18\x04\x20\
+    \x02(\rR\x0coutputsCount\x12)\n\x0fcell_deps_count\x18\x05\x20\x01(\r:\
+    \x010R\rcellDepsCount\x12\x10\n\x03fee\x18\x06\x20\x01(\x04R\x03fee\x12\
+    \x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"\xf2\x01\n\x0cCKBT\
+    xRequest\x12K\n\x0crequest_type\x18\x01\x20\x01(\x0e2(.hw.trezor.message\
+    s.ckb.CKBTxRequestTypeR\x0brequestType\x12E\n\x07details\x18\x02\x20\x01\
+    (\x0b2+.hw.trezor.messages.ckb.CKBTxRequestDetailsR\x07details\x12N\n\ns\
+    erialized\x18\x03\x20\x01(\x0b2..hw.trezor.messages.ckb.CKBTxRequestSeri\
+    alizedR\nserialized\":\n\x13CKBTxRequestDetails\x12#\n\rrequest_index\
+    \x18\x01\x20\x01(\rR\x0crequestIndex\"O\n\x16CKBTxRequestSerialized\x12\
+    \x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\n\x07tx_hash\
+    \x18\x02\x20\x01(\x0cR\x06txHash\"K\n\rCKBTxAckInput\x12:\n\x05input\x18\
+    \x01\x20\x02(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\x05input\"O\n\
+    \x0eCKBTxAckOutput\x12=\n\x06output\x18\x01\x20\x02(\x0b2%.hw.trezor.mes\
+    sages.ckb.CKBCellOutputR\x06output\"P\n\x0fCKBTxAckCellDep\x12=\n\x08cel\
+    l_dep\x18\x01\x20\x02(\x0b2\".hw.trezor.messages.ckb.CKBCellDepR\x07cell\
+    Dep*L\n\x10CKBTxRequestType\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TXOU\
+    TPUT\x10\x01\x12\r\n\tTXCELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\x10\x03B7\
+    \n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessageCKB\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3777,8 +3773,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::options::file_descriptor().clone());
+            let mut deps = ::std::vec::Vec::with_capacity(0);
             let mut messages = ::std::vec::Vec::with_capacity(15);
             messages.push(CKBGetAddress::generated_message_descriptor_data());
             messages.push(CKBAddress::generated_message_descriptor_data());

@@ -57,17 +57,3 @@ def encode_address_full(
 
     return bech32_encode(hrp, payload_5bit, Encoding.BECH32M)
 
-
-def format_amount(shannons: int) -> str:
-    """
-    Format capacity in shannons as human-readable CKB string.
-    1 CKB = 10^8 shannons.
-    Uses integer arithmetic to avoid float precision issues.
-    """
-    whole = shannons // 100_000_000
-    frac = shannons % 100_000_000
-    if frac == 0:
-        return f"{whole} CKB"
-    # Format fractional part with leading zeros, then strip trailing zeros
-    frac_str = f"{frac:08d}".rstrip("0")
-    return f"{whole}.{frac_str} CKB"

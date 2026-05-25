@@ -5,7 +5,6 @@ package hw.trezor.messages.ckb;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageCKB";
 
-import "options.proto";
 
 /**
  * Request: Get CKB (Nervos Network) address for specified BIP-32 path
@@ -14,8 +13,6 @@ import "options.proto";
  * @next Failure
  */
 message CKBGetAddress {
-    option (wire_type) = 5500;
-
     repeated uint32 address_n = 1;                              // BIP-32 path to derive the key from master node (e.g., m/44'/309'/0'/0/0)
     optional bool show_display = 2;                              // optionally show on display before sending the result
     required string network = 3;                                 // "Mainnet" or "Testnet"
@@ -27,8 +24,6 @@ message CKBGetAddress {
  * @end
  */
 message CKBAddress {
-    option (wire_type) = 5501;
-
     required string address = 1;                                 // Bech32m encoded CKB address (ckb1... or ckt1...)
     optional bytes mac = 2;                                      // authentication code for the address
 }
@@ -44,8 +39,6 @@ message CKBAddress {
  * @next Failure
  */
 message CKBSignMessage {
-    option (wire_type) = 5507;
-
     repeated uint32 address_n = 1;                               // BIP-32 path to derive the key from master node
     required bytes message = 2;                                  // message to be signed
     required string network = 3;                                 // "Mainnet" or "Testnet"
@@ -57,8 +50,6 @@ message CKBSignMessage {
  * @end
  */
 message CKBMessageSignature {
-    option (wire_type) = 5508;
-
     required string address = 1;                                 // address used to sign the message
     required bytes signature = 2;                                // 65-byte recoverable secp256k1 signature
 }
@@ -70,8 +61,6 @@ message CKBMessageSignature {
  * @next Failure
  */
 message CKBVerifyMessage {
-    option (wire_type) = 5509;
-
     required string address = 1;                                 // address to verify
     required bytes signature = 2;                                // signature to verify
     required bytes message = 3;                                  // message to verify
@@ -122,8 +111,6 @@ message CKBCellDep {
  * @next Failure
  */
 message CKBSignTx {
-    option (wire_type) = 5502;
-
     repeated uint32 address_n = 1;                               // BIP-32 path for signing key
     required string network = 2;                                 // Mainnet or Testnet
     required uint32 inputs_count = 3;                            // number of cell inputs
@@ -140,8 +127,6 @@ message CKBSignTx {
  * @next CKBTxAckCellDep
  */
 message CKBTxRequest {
-    option (wire_type) = 5503;
-
     optional CKBTxRequestType request_type = 1;
     optional CKBTxRequestDetails details = 2;
     optional CKBTxRequestSerialized serialized = 3;
@@ -177,8 +162,6 @@ message CKBTxRequestSerialized {
  * @next CKBTxRequest
  */
 message CKBTxAckInput {
-    option (wire_type) = 5504;
-
     required CKBCellInput input = 1;
 }
 
@@ -187,8 +170,6 @@ message CKBTxAckInput {
  * @next CKBTxRequest
  */
 message CKBTxAckOutput {
-    option (wire_type) = 5505;
-
     required CKBCellOutput output = 1;
 }
 
@@ -197,7 +178,5 @@ message CKBTxAckOutput {
  * @next CKBTxRequest
  */
 message CKBTxAckCellDep {
-    option (wire_type) = 5506;
-
     required CKBCellDep cell_dep = 1;
 }
