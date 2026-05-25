@@ -176,7 +176,7 @@ async def confirm_data_and_summary(
         await confirm_summary
 
 
-_MAX_DATA_STORED = const(4096)
+_MAX_DATA_STORED = const(6144)
 _DATA_CHUNK_SIZE = const(1024)
 
 
