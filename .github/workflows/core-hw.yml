@@ -44,7 +44,6 @@ jobs:
         -k 'not test_authenticate_device'
         --durations=50
         --session-timeout 19800
-      TT_UHUB_PORT: 1
       QUIET_MODE: 1
     timeout-minutes: 360  # 6h CI job timeout
     steps:

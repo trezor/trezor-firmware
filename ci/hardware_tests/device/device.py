@@ -42,11 +42,17 @@ class Device:
         else:
             return f"-l {self.uhub_location}"
 
+    def _port(self):
+        if self.device_port:
+            return f"-p {self.device_port}"
+        else:
+            return ""
+
     def power_on(self):
         self.now()
         self.log("[hardware/usb] Turning power on...")
         run(
-            f"uhubctl {self._hub()} -p {self.device_port} -a on",
+            f"uhubctl {self._hub()} {self._port()} -a on",
             shell=True,
             check=True,
         )
@@ -56,7 +62,7 @@ class Device:
         self.now()
         self.log("[hardware/usb] Turning power off...")
         run(
-            f"uhubctl {self._hub()} -p {self.device_port} -r 5 -a off",
+            f"uhubctl {self._hub()} {self._port()} -r 5 -a off",
             shell=True,
             check=True,
         )
