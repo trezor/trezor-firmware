@@ -1033,7 +1033,7 @@ def get_instruction(
                 True,
                 True,
                 False,
-                False,
+                True,
                 None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED:
