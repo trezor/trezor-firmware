@@ -312,9 +312,8 @@ def test_data_streaming(session: Session):
             expected_responses += [message_filters.EthereumTxRequest(data_length=None)]
         else:
             expected_responses: list[ExpectedResponse] = []
-            expected_responses += [tx_request(l) for l in (1024, 1024, 1024)]
+            expected_responses += [tx_request(l) for l in (1024, 1024, 1024, 3)]
             expected_responses += [br_sign_tx("confirm_data")]
-            expected_responses += [tx_request(3)]
             if client.model is models.T3T1 or client.model is models.T3W1:
                 # related issue: https://github.com/trezor/trezor-firmware/issues/6490
                 # TODO: make these consistent!
