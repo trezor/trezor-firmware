@@ -17,6 +17,7 @@ from .clear_signing import (
     parse_address,
     parse_bool,
     parse_bytes,
+    parse_bytes32,
     parse_string,
     parse_uint24,
     parse_uint160,
@@ -450,6 +451,284 @@ ALL_DISPLAY_FORMATS.extend(
                 ),
                 FieldDefinition(
                     (3,),  # receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "606326ff"
+            ),  # swapAndStartBridgeTokensViaGasZip(tuple _bridgeData,tuple[] _swapData,tuple _gasZipData)
+            intent="Swap",
+            parameter_definitions=[
+                Tuple(
+                    (
+                        parse_bytes32,  # transactionId
+                        parse_string,  # bridge
+                        parse_string,  # integrator
+                        parse_address,  # referrer
+                        parse_address,  # sendingAssetId
+                        parse_address,  # receiver
+                        parse_uint256,  # minAmount
+                        parse_uint256,  # destinationChainId
+                        parse_bool,  # hasSourceSwaps
+                        parse_bool,  # hasDestinationCall
+                    ),
+                    is_dynamic=True,
+                ),  # _bridgeData
+                Array(
+                    Tuple(
+                        (
+                            parse_address,  # callTo
+                            parse_address,  # approveTo
+                            parse_address,  # sendingAssetId
+                            parse_address,  # receivingAssetId
+                            parse_uint256,  # fromAmount
+                            parse_bytes,  # callData
+                            parse_bool,  # requiresDeposit
+                        ),
+                        is_dynamic=False,
+                    )
+                ),  # _swapData
+                Tuple(
+                    (
+                        parse_bytes32,  # receiverAddress
+                        parse_uint256,  # destinationChains
+                    ),
+                    is_dynamic=False,
+                ),  # _gasZipData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1, 0, 4),  # _swapData.[0].fromAmount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(1, 0, 2),  # _swapData.[0].sendingAssetId
+                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 6),  # _bridgeData.minAmount
+                    "Minimum Amount to receive",
+                    TokenAmountFormatter(
+                        token_path=(0, 4),  # _bridgeData.sendingAssetId
+                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 5),  # _bridgeData.receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "a3443faa"
+            ),  # swapAndStartBridgeTokensViaRelayDepository(tuple _bridgeData,tuple[] _swapData,tuple _relayDepositoryData)
+            intent="Swap",
+            parameter_definitions=[
+                Tuple(
+                    (
+                        parse_bytes32,  # transactionId
+                        parse_string,  # bridge
+                        parse_string,  # integrator
+                        parse_address,  # referrer
+                        parse_address,  # sendingAssetId
+                        parse_address,  # receiver
+                        parse_uint256,  # minAmount
+                        parse_uint256,  # destinationChainId
+                        parse_bool,  # hasSourceSwaps
+                        parse_bool,  # hasDestinationCall
+                    ),
+                    is_dynamic=True,
+                ),  # _bridgeData
+                Array(
+                    Tuple(
+                        (
+                            parse_address,  # callTo
+                            parse_address,  # approveTo
+                            parse_address,  # sendingAssetId
+                            parse_address,  # receivingAssetId
+                            parse_uint256,  # fromAmount
+                            parse_bytes,  # callData
+                            parse_bool,  # requiresDeposit
+                        ),
+                        is_dynamic=False,
+                    )
+                ),  # _swapData
+                Tuple(
+                    (
+                        parse_bytes32,  # orderId
+                        parse_address,  # depositorAddress
+                    ),
+                    is_dynamic=False,
+                ),  # _relayDepositoryData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1, 0, 4),  # _swapData.[0].fromAmount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(1, 0, 2),  # _swapData.[0].sendingAssetId
+                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 6),  # _bridgeData.minAmount
+                    "Minimum Amount to receive",
+                    TokenAmountFormatter(
+                        token_path=(0, 4),  # _bridgeData.sendingAssetId
+                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 5),  # _bridgeData.receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "3110c7b9"
+            ),  # swapAndStartBridgeTokensViaNEARIntents(tuple _bridgeData,tuple[] _swapData,tuple _nearData)
+            intent="Swap",
+            parameter_definitions=[
+                Tuple(
+                    (
+                        parse_bytes32,  # transactionId
+                        parse_string,  # bridge
+                        parse_string,  # integrator
+                        parse_address,  # referrer
+                        parse_address,  # sendingAssetId
+                        parse_address,  # receiver
+                        parse_uint256,  # minAmount
+                        parse_uint256,  # destinationChainId
+                        parse_bool,  # hasSourceSwaps
+                        parse_bool,  # hasDestinationCall
+                    ),
+                    is_dynamic=True,
+                ),  # _bridgeData
+                Array(
+                    Tuple(
+                        (
+                            parse_address,  # callTo
+                            parse_address,  # approveTo
+                            parse_address,  # sendingAssetId
+                            parse_address,  # receivingAssetId
+                            parse_uint256,  # fromAmount
+                            parse_bytes,  # callData
+                            parse_bool,  # requiresDeposit
+                        ),
+                        is_dynamic=False,
+                    )
+                ),  # _swapData
+                Tuple(
+                    (
+                        parse_bytes32,  # nonEVMReceiver
+                        parse_address,  # depositAddress
+                        parse_bytes32,  # quoteId
+                        parse_uint256,  # deadline
+                        parse_uint256,  # minAmountOut
+                        parse_address,  # refundRecipient
+                        parse_bytes,  # signature
+                    ),
+                    is_dynamic=True,
+                ),  # _nearData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1, 0, 4),  # _swapData.[0].fromAmount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(1, 0, 2),  # _swapData.[0].sendingAssetId
+                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 6),  # _bridgeData.minAmount
+                    "Minimum Amount to Receive",
+                    TokenAmountFormatter(
+                        token_path=(0, 4),  # _bridgeData.sendingAssetId
+                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 5),  # _bridgeData.receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "30c48952"
+            ),  # swapAndStartBridgeTokensViaMayan(tuple _bridgeData,tuple[] _swapData,tuple _mayanData)
+            intent="Swap",
+            parameter_definitions=[
+                Tuple(
+                    (
+                        parse_bytes32,  # transactionId
+                        parse_string,  # bridge
+                        parse_string,  # integrator
+                        parse_address,  # referrer
+                        parse_address,  # sendingAssetId
+                        parse_address,  # receiver
+                        parse_uint256,  # minAmount
+                        parse_uint256,  # destinationChainId
+                        parse_bool,  # hasSourceSwaps
+                        parse_bool,  # hasDestinationCall
+                    ),
+                    is_dynamic=True,
+                ),  # _bridgeData
+                Array(
+                    Tuple(
+                        (
+                            parse_address,  # callTo
+                            parse_address,  # approveTo
+                            parse_address,  # sendingAssetId
+                            parse_address,  # receivingAssetId
+                            parse_uint256,  # fromAmount
+                            parse_bytes,  # callData
+                            parse_bool,  # requiresDeposit
+                        ),
+                        is_dynamic=False,
+                    )
+                ),  # _swapData
+                Tuple(
+                    (
+                        parse_bytes32,  # nonEVMReceiver
+                        parse_address,  # mayanProtocol
+                        parse_bytes,  # protocolData
+                    ),
+                    is_dynamic=True,
+                ),  # _mayanData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1, 0, 4),  # _swapData.[0].fromAmount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(1, 0, 2),  # _swapData.[0].sendingAssetId
+                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 6),  # _bridgeData.minAmount
+                    "Minimum Amount to Receive",
+                    TokenAmountFormatter(
+                        token_path=(0, 4),  # _bridgeData.sendingAssetId
+                        native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 5),  # _bridgeData.receiver
                     "Recipient",
                     AddressNameFormatter,
                 ),
