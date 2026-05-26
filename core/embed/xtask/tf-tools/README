@@ -1,0 +1,9 @@
+This directory contains configuration assets for the Trezor Firmware Tools VS Code extension.
+
+The extension is available at https://github.com/cepetr/vscode-tf-tools.
+
+Contents:
+
+- `manifest.yaml`: Extension manifest and configuration metadata.
+- `debug/`: Launch and debug templates.
+- `svd/`: SVD files describing MCU registers.

@@ -148,7 +148,7 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   }
 #endif
 
-#ifdef USE_OPTIGA
+#if defined(USE_OPTIGA) && !defined(TREZOR_EMULATOR)
   optiga_locked_status optiga_status = get_optiga_locked_status(cli);
 
   if (optiga_status == OPTIGA_LOCKED_FALSE) {
@@ -171,7 +171,7 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   }
 
   if (tropic_status != TROPIC_LOCKED_TRUE) {
-    // Error reported by get_optiga_locked_status().
+    // Error reported by get_tropic_locked_status().
     return;
   }
 #endif

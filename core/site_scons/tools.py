@@ -161,10 +161,11 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
         lib_features = []
         lib_features.extend(features)
 
-        cargo_opts = [] if is_debug else ["--release"]
+        cargo_opts = ["-p trezor_lib_staticlib"]
+        cargo_opts += [] if is_debug else ["--release"]
         cargo_opts += [
             f"--target={RUST_TARGET}",
-            f"--target-dir=../../build/{build}/rust",
+            f"--target-dir=../build/{build}/rust",
             "--no-default-features",
             "--features " + ",".join(lib_features),
         ]
@@ -193,7 +194,7 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
         return (
             f"export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; "
             f"export BUILD_DIR='{build_dir}'; "
-            f"cd embed/rust; {build_cmd} > {build_dir}/rust-type-sizes.log"
+            f"cd embed; {build_cmd} > {build_dir}/rust-type-sizes.log"
         )
 
     # Target path should be relative to `build_dir`.

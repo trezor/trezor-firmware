@@ -61,7 +61,7 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
     return;
   }
 
-#ifdef USE_BLE
+#if defined(USE_BLE) && !defined(TREZOR_EMULATOR)
   cli_trace(cli, "Erasing BLE bonds...");
   if (!prodtest_ble_erase_bonds(cli)) {
     cli_error(cli, CLI_ERROR, "Failed to erase BLE bonds.");

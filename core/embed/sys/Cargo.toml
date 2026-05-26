@@ -1,0 +1,84 @@
+[package]
+name = "sys"
+version = "0.0.0"
+edition = "2024"
+links = "sys"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+rtl.workspace = true
+models.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = ["rtl/model_d001"]
+model_d002 = ["rtl/model_d002"]
+model_t2t1 = ["rtl/model_t2t1"]
+model_t2b1 = ["rtl/model_t2b1"]
+model_t3b1 = ["rtl/model_t3b1"]
+model_t3t1 = ["rtl/model_t3t1"]
+model_t3w1 = ["rtl/model_t3w1"]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f427 = ["rtl/mcu_stm32f427", "mcu_stm32f4"]
+mcu_stm32f429 = ["rtl/mcu_stm32f429", "mcu_stm32f4"]
+mcu_stm32u58 = ["rtl/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["rtl/mcu_stm32u5g", "mcu_stm32u5"]
+
+# --------------------------------------------------------------------------
+# Privilege mode features
+# --------------------------------------------------------------------------
+
+kernel_mode = ["rtl/kernel_mode"]
+secure_mode = ["rtl/secure_mode"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+applets = []
+app_loading = ["applets"]
+block_on_vcp = []
+boot_ucb = []
+emulator = ["rtl/emulator"]
+i2c_bus = []
+ipc = []
+lockable_bootloader = []
+pvd = []
+rtc = []
+trustzone = []
+dbg_console = []
+dbg_console_swo = ["dbg_console"]
+dbg_console_vcp = ["dbg_console"]
+dbg_console_system_view = ["dbg_console", "system_view"]
+sdram = []
+storage_hw_key = []
+system_view = []
+production = ["rtl/production"]
+
+test = [
+    "mcu_stm32u5g",
+    "model_t3w1",
+    "emulator",
+    "kernel_mode",
+    "secure_mode",
+]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+mcu_stm32f4 = ["mcu_stm32"]
+mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32 = []
+

@@ -230,8 +230,8 @@ Now that all the code changes have been done, the final part is to build a Trezo
 Detailed information about the emulator can be found in its [docs](../core/emulator/index.md), but we only need two most important commands, that will build and spawn the emulator:
 
 ```sh
+xtask build firmware -e -m t3t1
 cd core
-make build_unix
 ./emu.py
 ```
 
