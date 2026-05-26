@@ -1117,6 +1117,7 @@ class TR:
     words__keep_it_safe: str = "Keep it safe!"
     words__know_what_your_doing: str = "Continue only if you know what you are doing!"
     words__led: str = "LED"
+    words__made_in: str = "Made in"
     words__manage: str = "Manage"
     words__my_trezor: str = "My Trezor"
     words__name: str = "Name"

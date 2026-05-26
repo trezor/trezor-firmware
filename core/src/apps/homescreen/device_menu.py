@@ -117,6 +117,16 @@ async def handle_device_menu() -> None:
 
         firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
         production_year = _get_production_year()
+        serial_no = utils.serial_number() if utils.USE_SERIAL_NUMBER else None
+
+        about_items: list[tuple[str | None, str | None, bool]] = [
+            (TR.homescreen__firmware_version, firmware_version, False),
+            (TR.homescreen__firmware_type, firmware_type, False),
+            (TR.ble__version, bluetooth_version, False),
+        ]
+        if serial_no is not None:
+            about_items.append((TR.sn__title, serial_no, True))
+        about_items.append((TR.words__made_in, "Ostrava, Czechia", False))
 
         menu_result = await interact(
             trezorui_api.show_device_menu(
@@ -153,11 +163,7 @@ async def handle_device_menu() -> None:
                 led_enabled=(
                     storage_device.get_rgb_led() if led_configurable else None
                 ),
-                about_items=[
-                    (TR.homescreen__firmware_version, firmware_version, False),
-                    (TR.homescreen__firmware_type, firmware_type, False),
-                    (TR.ble__version, bluetooth_version, False),
-                ],
+                about_items=about_items,
                 production_year=production_year,
             ),
             br_name=None,

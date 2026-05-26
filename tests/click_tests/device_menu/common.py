@@ -425,9 +425,17 @@ class Menu(Enum):
                 debug.synchronize_at("TextScreen")
                 layout = debug.read_layout()
                 assert layout.title() == TR.words__about
-                assert TR.homescreen__firmware_version in layout.text_content()
-                assert TR.homescreen__firmware_type in layout.text_content()
-                assert TR.ble__version in layout.text_content()
+                # Scroll through all pages, collecting text content
+                page_count = layout.page_count()
+                about_text = layout.text_content()
+                for _ in range(page_count - 1):
+                    debug.click(debug.screen_buttons.ok())
+                    about_text += " " + debug.read_layout().text_content()
+                assert TR.homescreen__firmware_version in about_text
+                assert TR.homescreen__firmware_type in about_text
+                assert TR.ble__version in about_text
+                assert TR.sn__title in about_text
+                assert TR.words__made_in in about_text
                 # Close the about screen
                 debug.click(debug.screen_buttons.menu())
                 menu = debug.read_layout().vertical_menu_content()
