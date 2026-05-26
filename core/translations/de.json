@@ -243,7 +243,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Alle Verbindungen entfernt."
+      "Eckhart": "Alle Geräte entfernt."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -261,7 +261,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Verbindung entfernt."
+      "Eckhart": "Gerät entfernt."
     },
     "ble__host_info": {
       "Bolt": "",
@@ -941,7 +941,7 @@
       "Delizia": "Unbegrenzten Betrag von {0} zulassen.",
       "Eckhart": "Unbegrenzten Betrag von {0} zulassen."
     },
-    "ethereum__calldata_suffix": "",
+    "ethereum__calldata_suffix": "Calldata-Suffix",
     "ethereum__confirm_contract": "Vertrag bestätigen",
     "ethereum__contract_address": {
       "Bolt": "{provider} Kontraktadresse",
@@ -977,7 +977,7 @@
       "Delizia": "Max. Prio. Gebühr",
       "Eckhart": "Prioritätsgebühr"
     },
-    "ethereum__redeem": "",
+    "ethereum__redeem": "Einlösen",
     "ethereum__redeem_amount": "Einlösungsbetrag",
     "ethereum__redeem_from": "Einlösen von",
     "ethereum__reward_tokens": "Reward-Tokens",
@@ -1061,16 +1061,16 @@
     },
     "ethereum__unknown_token": "Ungültiger Token",
     "ethereum__valid_signature": "Die Signatur ist gültig.",
-    "ethereum__vault_claim_intro": "Prüfe die Details, um Rewards zu beanspruchen.",
-    "ethereum__vault_claim_to": "",
+    "ethereum__vault_claim_intro": "Belohungen von Merkl.xyz beanspruchen",
+    "ethereum__vault_claim_to": "Beanspruchen auf",
     "ethereum__vault_deposit_intro": "Prüfe die Details, um in den Vault einzuzahlen.",
     "ethereum__vault_redeem_intro": "Prüfe die Details, um aus dem Vault einzulösen.",
-    "ethereum__vault_redeem_to": "",
+    "ethereum__vault_redeem_to": "Einlösen auf",
     "ethereum__vault_withdraw_intro": "Prüfe die Details, um aus dem Vault abzuheben.",
     "ethereum__withdraw": "Abheben",
-    "ethereum__withdraw_amount": "",
+    "ethereum__withdraw_amount": "Abhebungsbetrag",
     "ethereum__withdraw_from": "Abheben von",
-    "ethereum__withdraw_to": "",
+    "ethereum__withdraw_to": "Abheben auf",
     "experimental_mode__enable": "Experimentelle Funktionen aktivieren?",
     "experimental_mode__only_for_dev": {
       "Bolt": "Nur für Entwicklung und Beta-Tests.",
@@ -2332,7 +2332,7 @@
     "reset__finished_verifying_group_template": {
       "Bolt": "Verifizierung deiner Recovery Shares für Gruppe {0} ist abgeschlossen.",
       "Caesar": "Verifizierung deiner Recovery Shares für Gruppe {0} ist abgeschlossen.",
-      "Delizia": "Verifizierung deiner Recovery Shares für Gruppe {0} ist abgeschlossen.",
+      "Delizia": "Gruppe {0} verifiziert",
       "Eckhart": "Verifizierung deiner Recovery Shares für Gruppe {0} abgeschlossen."
     },
     "reset__finished_verifying_shares": {
@@ -2359,7 +2359,12 @@
       "Delizia": "Jede Gruppe hat eine feste Share-Anzahl und eine eigene Schwelle. In den nächsten Schritten legst du die Anzahl der Shares und die Schwellen fest.",
       "Eckhart": "Jede Gruppe hat eine feste Share-Anzahl und ihre eigene Schwelle. Als Nächstes legst du die Anzahl der Shares und die Schwellen fest."
     },
-    "reset__group_share_checked_successfully_template": "Gruppe {0} - Share {1} erfolgreich geprüft.",
+    "reset__group_share_checked_successfully_template": {
+      "Bolt": "Gruppe {0} - Share {1} erfolgreich geprüft.",
+      "Caesar": "Gruppe {0} - Share {1} erfolgreich geprüft.",
+      "Delizia": "Gruppe {0} - Share {1} verifiziert",
+      "Eckhart": "Gruppe {0} - Share {1} erfolgreich geprüft."
+    },
     "reset__group_share_title_template": {
       "Bolt": "Gruppe {0} - share {1}",
       "Caesar": "Gruppe {0} - share {1}",
@@ -2453,12 +2458,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__recovery_share_description": {
-      "Bolt": "Die Recovery-Share ist eine Wortliste, die du beim Einrichten deines Trezors aufgeschrieben hast.",
-      "Caesar": "Ein Recovery-Share ist eine Wortliste, die du beim Einrichten deines Trezors aufgeschrieben hast.",
-      "Delizia": "Ein Recovery-Share ist eine Liste von Wörtern, die du beim Einrichten deines Trezors aufgeschrieben hast.",
-      "Eckhart": "Ein Recovery-Share ist eine Liste von Wörtern, die du beim Einrichten deines Trezors aufgeschrieben hast."
-    },
+    "reset__recovery_share_description": "Ein Recovery-Share ist eine Wortliste, die du beim Einrichten deines Trezors aufgeschrieben hast.",
     "reset__recovery_share_number": "Dein Wallet-Backup besteht aus 1 von 16 Shares.",
     "reset__recovery_share_title_template": "Recovery-Share #{0}",
     "reset__recovery_wallet_backup_title": {
@@ -2532,14 +2532,14 @@
     "reset__slip39_checklist_more_info_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Der Schwellenwert legt die minimale Anzahl an Shares fest, die erforderlich ist, um deine Wallet wiederherzustellen.",
-      "Eckhart": "Der Schwellenwert legt die minimale Anzahl an Shares fest, die erforderlich ist, um deine Wallet wiederherzustellen."
+      "Delizia": "Der Schwellenwert legt die Mindestanzahl an Anteilen fest, die zur Wiederherstellung deines Wallets benötigt werden.",
+      "Eckhart": "Der Schwellenwert legt die Mindestanzahl an Anteilen fest, die zur Wiederherstellung deines Wallets benötigt werden."
     },
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Wenn du {0} von {1} Shares festlegst, sind {0} Backup-Shares zur Wallet-Wiederherstellung nötig.",
-      "Eckhart": "Wenn du {0} von {1} Shares festlegst, sind {0} Backup-Shares zur Wallet-Wiederherstellung nötig."
+      "Delizia": "Wenn du den Wert auf {0} von {1} Anteilen festlegst, werden {0} Anteile benötigt, um dein Wallet wiederherzustellen.",
+      "Eckhart": "Wenn du den Wert auf {0} von {1} Anteilen festlegst, werden {0} Anteile benötigt, um dein Wallet wiederherzustellen."
     },
     "reset__slip39_checklist_num_groups": "Anzahl der Gruppen",
     "reset__slip39_checklist_num_groups_x_template": "Anzahl der Gruppen: {0}",
