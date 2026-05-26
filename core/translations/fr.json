@@ -2187,7 +2187,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Vérifions rapidement le Fragment #{0}."
+      "Eckhart": "Vérifions rapidement le Fragment {0}."
     },
     "reset__check_share_title_template": {
       "Bolt": "Vérifier fragm. n°{0}",
@@ -2215,7 +2215,7 @@
     },
     "reset__create_x_of_y_multi_share_backup_template": "Voulez-vous créer une sauvegarde multi-fragments de {0} sur {1} ?",
     "reset__finished_verifying_group_template": {
-      "Bolt": "Vous avez terminé la vérification des fragments du groupe {0}.",
+      "Bolt": "Vous avez terminé la vérification de vos fragments de récupération du groupe {0}.",
       "Caesar": "Vous avez terminé la vérification de vos fragments de récupération du groupe {0}.",
       "Delizia": "Groupe {0} vérifié",
       "Eckhart": "Vous avez terminé la vérification de vos fragments de récupération du groupe {0}."

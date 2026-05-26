@@ -1318,7 +1318,7 @@
     "instructions__shares_continue_with_x_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Mit Share #{0} fortfahren",
+      "Delizia": "Mit Share {0} fortfahren",
       "Eckhart": ""
     },
     "instructions__shares_start_with_1": {
@@ -1331,7 +1331,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Beginne mit Share #{0}"
+      "Eckhart": "Beginne mit Share {0}"
     },
     "instructions__swipe_down": {
       "Bolt": "Nach unten wischen",
@@ -2174,14 +2174,9 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Share #{0} von Gruppe #{1} eingegeben."
+      "Eckhart": "Share {0} von Gruppe {1} eingegeben."
     },
-    "recovery__share_num_template": {
-      "Bolt": "Share {0}",
-      "Caesar": "Share {0}",
-      "Delizia": "Share {0}",
-      "Eckhart": "Share #{0}"
-    },
+    "recovery__share_num_template": "Share {0}",
     "recovery__start_entering": {
       "Bolt": "Starte die Eingabe",
       "Caesar": "Starte mit Eingabe",
@@ -2302,12 +2297,12 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Lass uns kurz Share #{0} überprüfen."
+      "Eckhart": "Lass uns kurz Share {0} überprüfen."
     },
     "reset__check_share_title_template": {
-      "Bolt": "Share #{0} prüfen",
+      "Bolt": "Share {0} prüfen",
       "Caesar": "",
-      "Delizia": "Share #{0} prüfen",
+      "Delizia": "Share {0} prüfen",
       "Eckhart": ""
     },
     "reset__check_wallet_backup_title": {
@@ -2323,8 +2318,8 @@
       "Eckhart": "Fahre mit dem nächsten Share fort"
     },
     "reset__continue_with_share_template": {
-      "Bolt": "Fahre mit Share #{0} fort.",
-      "Caesar": "Fahre mit Share #{0} fort.",
+      "Bolt": "Fahre mit Share {0} fort.",
+      "Caesar": "Fahre mit Share {0} fort.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2369,7 +2364,7 @@
       "Bolt": "Gruppe {0} - share {1}",
       "Caesar": "Gruppe {0} - share {1}",
       "Delizia": "Gruppe {0} - share {1}",
-      "Eckhart": "Gruppe #{0} - Share #{1}"
+      "Eckhart": "Gruppe {0} - Share {1}"
     },
     "reset__incorrect_word_selected": {
       "Bolt": "",
@@ -2460,7 +2455,7 @@
     },
     "reset__recovery_share_description": "Ein Recovery-Share ist eine Wortliste, die du beim Einrichten deines Trezors aufgeschrieben hast.",
     "reset__recovery_share_number": "Dein Wallet-Backup besteht aus 1 von 16 Shares.",
-    "reset__recovery_share_title_template": "Recovery-Share #{0}",
+    "reset__recovery_share_title_template": "Recovery-Share {0}",
     "reset__recovery_wallet_backup_title": {
       "Bolt": "Recovery Seed",
       "Caesar": "Recovery Seed",
@@ -2490,13 +2485,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Wähle das Wort #{0} aus Share #{1}"
+      "Eckhart": "Wähle das Wort {0} aus Share {1}"
     },
     "reset__select_word_template": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Wähle das Wort #{0} aus deinem Wallet-Backup"
+      "Eckhart": "Wähle das Wort {0} aus deinem Wallet-Backup"
     },
     "reset__select_word_x_of_y_template": {
       "Bolt": "Wort {0} von {1}:",
@@ -2511,16 +2506,16 @@
       "Eckhart": ""
     },
     "reset__share_checked_successfully_template": {
-      "Bolt": "Share #{0} erfolgreich geprüft.",
-      "Caesar": "Share #{0} erfolgreich geprüft.",
+      "Bolt": "Share {0} erfolgreich geprüft.",
+      "Caesar": "Share {0} erfolgreich geprüft.",
       "Delizia": "",
       "Eckhart": ""
     },
     "reset__share_completed_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Share #{0} abgeschlossen.",
-      "Eckhart": "Share #{0} abgeschlossen."
+      "Delizia": "Share {0} abgeschlossen.",
+      "Eckhart": "Share {0} abgeschlossen."
     },
     "reset__share_words_first": {
       "Bolt": "Notiere das erste Wort deines Backups.",
