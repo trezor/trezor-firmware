@@ -12,6 +12,7 @@ mod tests {
         assert!(!cfg!(feature = "lang_cs"));
     }
 
+    #[test]
     #[cfg(feature = "lang_cs")]
     fn test_lang_cs() {
         assert!(cfg!(feature = "lang_cs"));
