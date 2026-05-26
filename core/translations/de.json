@@ -2333,7 +2333,7 @@
       "Bolt": "Verifizierung deiner Recovery Shares für Gruppe {0} ist abgeschlossen.",
       "Caesar": "Verifizierung deiner Recovery Shares für Gruppe {0} ist abgeschlossen.",
       "Delizia": "Gruppe {0} verifiziert",
-      "Eckhart": "Verifizierung deiner Recovery Shares für Gruppe {0} abgeschlossen."
+      "Eckhart": "Verifizierung deiner Recovery Shares für Gruppe {0} ist abgeschlossen."
     },
     "reset__finished_verifying_shares": {
       "Bolt": "Die Verifizierung deiner Recovery Shares ist abgeschlossen.",
