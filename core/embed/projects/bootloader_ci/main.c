@@ -53,6 +53,10 @@
 #include <sec/tz_init.h>
 #endif
 
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
+
 #define USB_IFACE_NUM SYSHANDLE_USB_WIRE
 
 static void drivers_init(void) {
@@ -176,6 +180,12 @@ int main(void) {
   tz_init();
 #endif
 
+#ifdef USE_SECRET
+  // because bootloader CI stops after each run, we must not reset in
+  // secret_prepare_fw in case the bhk is loaded, so reset rather here
+  secret_reset();
+#endif
+
   system_init(&rsod_panic_handler);
 
   drivers_init();
@@ -268,16 +278,47 @@ int main(void) {
                               &FIRMWARE_AREA),
          "invalid firmware hash");
 
+  size_t secmon_code_offset = 0;
+
+#ifdef USE_SECMON_VERIFICATION
+  size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
+                                                 IMAGE_HEADER_SIZE);
+  const secmon_header_t *secmon_hdr =
+      read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
+
+  if (secmon_hdr != NULL) {
+    secmon_code_offset = IMAGE_CODE_ALIGN(SECMON_HEADER_SIZE);
+  }
+
+  ensure((secmon_hdr != NULL) * sectrue, "Secmon header not found");
+
+  ensure(check_secmon_model(secmon_hdr), "Wrong secmon model");
+
+  ensure(check_secmon_header_sig(secmon_hdr), "Invalid secmon signature");
+
+  ensure(check_secmon_min_version(secmon_hdr->monotonic),
+         "Secmon downgrade protection");
+
+  ensure(check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
+                               &FIRMWARE_AREA),
+         "Secmon is corrupted");
+
+#endif
+
   // do not check any trust flags on header, proceed
+#ifdef USE_SECRET
+  secret_prepare_fw(sectrue, sectrue);
+#endif
 
   drivers_deinit();
 
   system_deinit();
 
   uint32_t vectbl_addr =
-      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE) +
+      secmon_code_offset;
 
-  jump_to_next_stage(vectbl_addr, NULL);
+  jump_to_next_stage(vectbl_addr, startup_args_export());
 
   return 0;
 }
