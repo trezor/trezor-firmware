@@ -1152,3 +1152,58 @@ def test_p2tr_invalid_signature(session: Session):
 
     with pytest.raises(TrezorFailure, match="Invalid signature"):
         btc.sign_tx(session, "Testnet", [inp1, inp2], [out1, out2], prev_txes=prev_txes)
+
+
+def test_attack_add_external_output_in_replacement(session: Session):
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/49h/1h/0h/0/4"),
+        amount=100_000,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        prev_hash=TXHASH_5e7667,
+        prev_index=1,
+        orig_hash=TXHASH_334cd7,
+        orig_index=0,
+    )
+
+    inp2 = messages.TxInputType(
+        address_n=parse_path("m/49h/1h/0h/0/3"),
+        amount=998_060,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        prev_hash=TXHASH_efaa41,
+        prev_index=0,
+        orig_hash=TXHASH_334cd7,
+        orig_index=1,
+    )
+
+    # Original recipient, decreased to fund the attacker output.
+    out_bob = messages.TxOutputType(
+        address="2MvUUSiQZDSqyeSdofKX9KrSCio1nANPDTe",
+        amount=990_000,
+        orig_hash=TXHASH_334cd7,
+        orig_index=0,
+    )
+
+    # Attacker's new external output. No orig_hash.
+    out_attacker = messages.TxOutputType(
+        address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
+        amount=5_000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+
+    out_change = messages.TxOutputType(
+        address_n=parse_path("m/49h/1h/0h/1/0"),
+        amount=94_280,
+        script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
+    )
+
+    with pytest.raises(
+        TrezorFailure,
+        match="Adding new external outputs in replacement transactions is not supported",
+    ):
+        btc.sign_tx(
+            session,
+            "Testnet",
+            [inp1, inp2],
+            [out_bob, out_attacker, out_change],
+            prev_txes=TX_CACHE_TESTNET,
+        )
