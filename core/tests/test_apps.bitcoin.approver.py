@@ -73,7 +73,7 @@ class TestApprover(TestCaseWithContext):
                 script_pubkey=bytes(22),
                 script_type=InputScriptType.EXTERNAL,
                 sequence=0xFFFFFFFF,
-                witness="",
+                witness=bytes(1),
             )
             for i in range(99)
         ]

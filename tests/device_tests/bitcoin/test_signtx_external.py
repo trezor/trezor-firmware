@@ -842,6 +842,49 @@ def test_p2tr_external_unverified(session: Session):
     )
 
 
+def test_p2tr_external_unverified_empty_witness(session: Session):
+    # An external input with witness=b"" / script_sig=b"" must be treated
+    # the same as one with the fields absent — i.e. unverified. If empty
+    # bytes were accepted as a "presigned" witness, the input would skip
+    # both signature verification and the unverified-external warning.
+    inp1 = messages.TxInputType(
+        # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
+        address_n=parse_path("m/86h/1h/0h/0/0"),
+        amount=6_800,
+        prev_hash=TXHASH_df862e,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    inp2 = messages.TxInputType(
+        # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
+        # m/86'/1'/0'/0/1 for "all all ... all" seed.
+        amount=13_000,
+        prev_hash=TXHASH_3ac32e,
+        prev_index=1,
+        script_pubkey=bytes.fromhex(
+            "51203ad9b641978673e88ee4d9f4e5d63400c1b2a8304c09726bb19d10ead2829cc2"
+        ),
+        script_type=messages.InputScriptType.EXTERNAL,
+        witness=b"",
+        script_sig=b"",
+    )
+    out1 = messages.TxOutputType(
+        address="tb1q7r9yvcdgcl6wmtta58yxf29a8kc96jkyxl7y88",
+        amount=15_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+    out2 = messages.TxOutputType(
+        address_n=parse_path("m/86h/1h/0h/1/0"),
+        script_type=messages.OutputScriptType.PAYTOTAPROOT,
+        amount=6_800 + 13_000 - 200 - 15_000,
+    )
+
+    with pytest.raises(TrezorFailure, match="[Ee]xternal input"):
+        btc.sign_tx(
+            session, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+        )
+
+
 def test_p2wpkh_external_unverified(session: Session):
     inp1 = messages.TxInputType(
         # tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9
