@@ -501,6 +501,9 @@ def _sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
 
         if txi.script_pubkey:
             raise DataError("Input's script_pubkey provided but not expected.")
+
+        if txi.ownership_proof:
+            raise DataError("Ownership proof not expected for internal input.")
     else:
         if txi.address_n:
             raise DataError("Input's address_n provided but not expected.")
@@ -517,6 +520,9 @@ def _sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
 
     if script_type == InputScriptType.SPENDTAPROOT and not coin.taproot:
         raise DataError("Taproot not enabled on this coin")
+
+    if txi.ownership_proof and (txi.witness or txi.script_sig):
+        raise DataError("Ownership proof not expected for presigned input.")
 
     if txi.commitment_data and not txi.ownership_proof:
         raise DataError("commitment_data field provided but not expected.")
