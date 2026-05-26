@@ -22,7 +22,13 @@ FUNC_SIG_WITHDRAW = b"\xb4\x60\xaf\x94"
 FUNC_SIG_REDEEM = b"\xba\x08\x76\x52"
 FUNC_SIG_CLAIM = b"\x71\xee\x95\xc0"
 
+_MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR = (
+    b"\x3e\xf3\xd8\xba\x38\xeb\xe1\x8d\xb1\x33\xce\xc1\x08\xf4\xd1\x4c\xe0\x0d\xd9\xae"
+)
+
 if __debug__:
+    from ubinascii import unhexlify
+
     from trezor.crypto.hashlib import sha3_256
 
     assert (
@@ -42,6 +48,10 @@ if __debug__:
         == sha3_256(
             b"claim(address[],address[],uint256[],bytes32[][])", keccak=True
         ).digest()[:4]
+    )
+    # https://etherscan.io/address/0x3ef3d8ba38ebe18db133cec108f4d14ce00dd9ae
+    assert _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR == unhexlify(
+        "3ef3d8ba38ebe18db133cec108f4d14ce00dd9ae"
     )
 
 # deposit(uint256 assets, address receiver)
@@ -146,7 +156,10 @@ async def get_approver(
             vault=vault,
             token=token,
         )
-    elif func_sig == FUNC_SIG_CLAIM:
+    elif (
+        func_sig == FUNC_SIG_CLAIM
+        and address_bytes == _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR
+    ):
         handler = await _prepare_merkl_claim(
             calldata=calldata,
             msg=msg,
@@ -230,8 +243,6 @@ async def _prepare_merkl_claim(
     from .layout import require_confirm_claim_rewards
     from .yielding_vaults import get_token_label
 
-    _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR = "0x3ef3d8ba38ebe18db133cec108f4d14ce00dd9ae"
-
     if int.from_bytes(msg.value, "big") != 0:
         raise DataError(
             "Non-zero ETH transfer with claim rewards transaction not allowed"
@@ -284,11 +295,8 @@ async def _prepare_merkl_claim(
         if other != first_user:
             return None
 
-    # We don't show claim flows for non claim.xyz or for non-signer users.
-    if (
-        msg.to.lower() != _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR
-        or sender_bytes != first_user
-    ):
+    # We don't show claim flows for non-signer users.
+    if sender_bytes != first_user:
         return None
 
     # Not sure about the UX if we fetch too many defintions so capping definition fetching to 4 for now.
