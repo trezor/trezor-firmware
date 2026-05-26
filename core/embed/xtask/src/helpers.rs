@@ -20,7 +20,10 @@ pub fn profile_dir(args: &BuildArgs) -> Result<PathBuf> {
         path = path.join(args.model.target_triple());
     }
 
-    Ok(path.join(args.profile_name()))
+    let is_release = !args.debug.unwrap_or(args.emulator);
+    let profile_dir = if is_release { "release" } else { "debug" };
+
+    Ok(path.join(profile_dir))
 }
 
 /// Returns the directory where Cargo build artifacts are stored
