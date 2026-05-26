@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import messages
+from trezorlib.testing import translations as TR
 
-from ... import translations as TR
 from ..test_pin import PIN4, _assert_pin_entry, _enter_two_times
 from .common import (
     Menu,

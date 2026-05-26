@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import messages
+from trezorlib.testing import translations as TR
 
-from ... import translations as TR
 from ...common import MNEMONIC12
 from .common import (
     Menu,

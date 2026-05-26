@@ -19,7 +19,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ... import translations as TR
+from trezorlib.testing import translations as TR
+
 from ..common import go_next
 from ..test_pin import (
     PIN1,

@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ... import translations as TR
+from trezorlib.testing import translations as TR
+
 from ..common import KeyboardCategory, delete_char, go_to_category, press_char
 from .common import (
     Menu,

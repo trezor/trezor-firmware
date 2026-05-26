@@ -24,10 +24,10 @@ from trezorlib import btc, device, exceptions, messages
 from trezorlib.client import PassphraseSetting
 from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.protobuf import MessageType
+from trezorlib.testing import translations as TR
 from trezorlib.tools import parse_path
 
 from .. import common
-from .. import translations as TR
 from ..device_tests.bitcoin.coinjoin_req import make_coinjoin_request
 from ..tx_cache import TxCache
 from . import recovery

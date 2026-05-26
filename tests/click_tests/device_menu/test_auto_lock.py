@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ... import translations as TR
+from trezorlib.testing import translations as TR
+
 from ..test_pin import PIN4
 from .common import (
     Menu,

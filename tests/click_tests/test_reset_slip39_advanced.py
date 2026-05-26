@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.testing import translations as TR
 
-from .. import translations as TR
 from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from . import reset
 

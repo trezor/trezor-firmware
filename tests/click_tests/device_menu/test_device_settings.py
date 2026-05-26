@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ... import translations as TR
+from trezorlib.testing import translations as TR
+
 from .common import Menu, assert_device_screen, close_device_menu, open_device_menu
 
 if TYPE_CHECKING:

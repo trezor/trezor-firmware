@@ -39,9 +39,10 @@ from trezorlib.transport.ble import BleTransport
 # so that we see details of failed asserts from this module
 pytest.register_assert_rewrite("tests.common")
 
+from trezorlib.testing import translations
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
-from . import translations, ui_tests
+from . import ui_tests
 from .emulators import EmulatorWrapper
 
 if t.TYPE_CHECKING:

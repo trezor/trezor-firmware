@@ -19,8 +19,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import device
-
-from .. import translations as TR
+from trezorlib.testing import translations as TR
 
 if TYPE_CHECKING:
     from trezorlib.testing.device_handler import BackgroundDeviceHandler
