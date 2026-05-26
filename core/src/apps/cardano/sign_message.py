@@ -6,8 +6,9 @@ from trezor.wire.context import call as ctx_call
 
 from apps.cardano.helpers.credential import Credential
 from apps.cardano.helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
-from apps.cardano.helpers.utils import derive_public_key, is_printable_ascii
+from apps.cardano.helpers.utils import derive_public_key
 from apps.common import cbor
+from apps.common.signverify import is_printable_ascii
 
 from . import addresses, seed
 
