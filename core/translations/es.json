@@ -821,7 +821,7 @@
       "Delizia": "Aprobando una cantidad ilimitada de {0}.",
       "Eckhart": "Aprobando una cantidad ilimitada de {0}."
     },
-    "ethereum__calldata_suffix": "",
+    "ethereum__calldata_suffix": "Sufijo calldata",
     "ethereum__confirm_contract": "Confirmar contrato",
     "ethereum__contract_address": "Dir. del contrato del proveedor",
     "ethereum__data_size_template": "Tamaño: {0} bytes",
@@ -847,7 +847,7 @@
     "ethereum__new_contract": "Se desplegará un nuevo contrato",
     "ethereum__no_message_field": "Sin campo de mensaje.",
     "ethereum__priority_fee": "Comisión máx. de prioridad",
-    "ethereum__redeem": "Reclamar",
+    "ethereum__redeem": "Redimir",
     "ethereum__redeem_amount": "Redimir importe",
     "ethereum__redeem_from": "Redimir de",
     "ethereum__reward_tokens": "Tokens de recompensa",
@@ -917,10 +917,10 @@
     "ethereum__unknown_token": "Token desconocido",
     "ethereum__valid_signature": "La firma es válida.",
     "ethereum__vault_claim_intro": "Verifica los detalles para reclamar las recompensas.",
-    "ethereum__vault_claim_to": "Reclamar a",
+    "ethereum__vault_claim_to": "Reclamar en",
     "ethereum__vault_deposit_intro": "Verifica los detalles para depositar en la bóveda.",
     "ethereum__vault_redeem_intro": "Verifica los detalles para redimir de la bóveda.",
-    "ethereum__vault_redeem_to": "Reclamar a",
+    "ethereum__vault_redeem_to": "Redimir en",
     "ethereum__vault_withdraw_intro": "Verifica los detalles para retirar de la bóveda.",
     "ethereum__withdraw": "Retirar",
     "ethereum__withdraw_amount": "Cantidad a retirar",
@@ -1887,7 +1887,7 @@
       "Bolt": "Recuperación de la billetera completada",
       "Caesar": "Recuperación de la billetera completada",
       "Delizia": "Recuperación de la billetera completada.",
-      "Eckhart": "Recuperación de la billetera completada"
+      "Eckhart": "Recuperación de la billetera completada."
     },
     "recovery__wanna_cancel_dry_run": "¿Quieres cancelar la revisión de la copia de seguridad?",
     "recovery__wanna_cancel_recovery": "¿Quieres cancelar el proceso de recuperación?",
@@ -2030,7 +2030,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Palabra incorrecta seleccionada",
-      "Eckhart": "Palabra incorrecta seleccionada"
+      "Eckhart": "Palabra incorrecta seleccionada."
     },
     "reset__more_at": "Más en",
     "reset__more_info_at": "Más información en",
@@ -2172,8 +2172,8 @@
     "reset__slip39_checklist_more_info_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "El umbral fija el número mínimo de fragmentos necesarios para recuperar tu billetera.",
-      "Eckhart": "El umbral fija el número mínimo de fragmentos necesarios para recuperar tu billetera."
+      "Delizia": "El umbral fija el número mínimo de fragmentos para recuperar tu billetera.",
+      "Eckhart": "El umbral fija el número mínimo de fragmentos para recuperar tu billetera."
     },
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
@@ -3069,7 +3069,7 @@
       "Eckhart": ""
     },
     "wipe_code__wipe_code_mismatch": {
-      "Bolt": "Cód.borrar no coincide.",
+      "Bolt": "Código de borrado no coincide",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""

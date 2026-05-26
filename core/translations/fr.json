@@ -313,7 +313,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Les connexions ont été retirées."
+      "Eckhart": "Les appareils ont été retirés."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -331,7 +331,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Connexion supprimée."
+      "Eckhart": "Appareil retiré."
     },
     "ble__host_info": {
       "Bolt": "",
@@ -951,7 +951,7 @@
       "Delizia": "Autoriser un montant illimité de {0}.",
       "Eckhart": "Autoriser un montant illimité de {0}."
     },
-    "ethereum__calldata_suffix": "",
+    "ethereum__calldata_suffix": "Suffixe de calldata",
     "ethereum__confirm_contract": "Confirmer le contrat",
     "ethereum__contract_address": "Adresse de contrat du fournisseur",
     "ethereum__data_size_template": "Taille : {0} octets",
@@ -972,7 +972,7 @@
     "ethereum__new_contract": "Le nouveau contrat sera déployé",
     "ethereum__no_message_field": "Aucun champ de message",
     "ethereum__priority_fee": "Frais de priorité max",
-    "ethereum__redeem": "",
+    "ethereum__redeem": "Récupérer",
     "ethereum__redeem_amount": "Montant récupéré",
     "ethereum__redeem_from": "Récupérer depuis",
     "ethereum__reward_tokens": "Jetons de récompense",
@@ -1046,13 +1046,8 @@
     },
     "ethereum__unknown_token": "Jeton inconnu",
     "ethereum__valid_signature": "La signature est valide.",
-    "ethereum__vault_claim_intro": {
-      "Bolt": "Vérifiez pour récupérer vos récompenses.",
-      "Caesar": "Vérifiez pour récupérer vos récompenses.",
-      "Delizia": "Vérifiez pour récupérer vos récompenses.",
-      "Eckhart": "Vérifiez les détails pour récupérer vos récompenses."
-    },
-    "ethereum__vault_claim_to": "",
+    "ethereum__vault_claim_intro": "Réclamez vos récompenses sur Merkl.xyz",
+    "ethereum__vault_claim_to": "Réclamer vers",
     "ethereum__vault_deposit_intro": {
       "Bolt": "Vérifiez pour déposer dans le coffre.",
       "Caesar": "Vérifiez pour déposer dans le coffre.",
@@ -1065,7 +1060,7 @@
       "Delizia": "Vérifiez pour récupérer depuis le coffre.",
       "Eckhart": "Vérifiez les détails pour récupérer depuis le coffre."
     },
-    "ethereum__vault_redeem_to": "",
+    "ethereum__vault_redeem_to": "Récupérer vers",
     "ethereum__vault_withdraw_intro": {
       "Bolt": "Vérifiez pour retirer du coffre.",
       "Caesar": "Vérifiez pour retirer du coffre.",
@@ -1073,9 +1068,9 @@
       "Eckhart": "Vérifiez les détails pour retirer du coffre."
     },
     "ethereum__withdraw": "Retirer",
-    "ethereum__withdraw_amount": "",
+    "ethereum__withdraw_amount": "Montant du retrait",
     "ethereum__withdraw_from": "Retirer depuis",
-    "ethereum__withdraw_to": "",
+    "ethereum__withdraw_to": "Retirer vers",
     "experimental_mode__enable": "Activer les fonctionnalités expérimentales ?",
     "experimental_mode__only_for_dev": "Uniquement pour le développement et les tests bêta !",
     "experimental_mode__title": "Mode expérimental",
@@ -1799,12 +1794,12 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Accéder au portefeuille caché"
+      "Eckhart": "Accéder à la Passphrase du portefeuille "
     },
     "passphrase__access_wallet": {
-      "Bolt": "Accéder à la passphrase du portefeuille ?",
-      "Caesar": "Accéder à la passphrase du portefeuille ?",
-      "Delizia": "Accéder à la passphrase du portefeuille ?",
+      "Bolt": "Accéder à la Passphrase du portefeuille ?",
+      "Caesar": "Accéder à la Passphrase du portefeuille ?",
+      "Delizia": "Accéder à la Passphrase du portefeuille ?",
       "Eckhart": ""
     },
     "passphrase__always_on_device": "Toujours saisir votre passphrase sur votre Trezor ?",
@@ -2222,7 +2217,7 @@
     "reset__finished_verifying_group_template": {
       "Bolt": "Vous avez terminé la vérification des fragments du groupe {0}.",
       "Caesar": "Vous avez terminé la vérification de vos fragments de récupération du groupe {0}.",
-      "Delizia": "Vous avez terminé la vérification de vos fragments de récupération du groupe {0}.",
+      "Delizia": "Groupe {0} vérifié",
       "Eckhart": "Vous avez terminé la vérification de vos fragments de récupération du groupe {0}."
     },
     "reset__finished_verifying_shares": {
@@ -2422,14 +2417,14 @@
     "reset__slip39_checklist_more_info_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Le seuil définit le nombre minimum de parts nécessaires pour récupérer votre portefeuille.",
-      "Eckhart": "Le seuil définit le nombre minimum de parts nécessaires pour récupérer votre portefeuille."
+      "Delizia": "Le seuil définit le nombre minimum de fragments nécessaires pour récupérer votre portefeuille.",
+      "Eckhart": "Le seuil définit le nombre minimum de fragments nécessaires pour récupérer votre portefeuille."
     },
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {0} fragments de sauvegarde pour récupérer votre portefeuille.",
-      "Eckhart": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {0} fragments de sauvegarde pour récupérer votre portefeuille."
+      "Delizia": "Si vous le fixez à {0} sur {1}, le nombre de fragments requis sera de {0}.",
+      "Eckhart": "Si vous le fixez à {0} sur {1}, le nombre de fragments requis sera de {0}."
     },
     "reset__slip39_checklist_num_groups": "Nombre de groupes",
     "reset__slip39_checklist_num_groups_x_template": "Nombre de groupes : {0}",
