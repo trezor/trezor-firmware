@@ -1,0 +1,14 @@
+[package]
+name = "xbuild"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bindgen.workspace = true
+cc.workspace = true
+color-eyre.workspace = true
+globset.workspace = true
+pathdiff.workspace = true
+pkg-config.workspace = true
+serde_json.workspace = true
+zlib-rs.workspace = true

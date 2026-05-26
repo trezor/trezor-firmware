@@ -10,15 +10,13 @@ Size optimizations on the other hand go against comfort or usability of debug.
 Therefore it's usually hard to make a single profile or setting, but best way is to start with
 is probably these build options:
 
-    make PYOPT=0 BITCOIN_ONLY=1 V=1 VERBOSE=1 OPTIMIZE=-Og build_firmware
+    xtask build firmware -m t3w1 --btc-only --debug=true
 
 Options mean:
 
- * `PYOPT=0` - enable debuglink and test
- * `V=1 VERBOSE=1` - just more of a check to see it's building with options you want
- * `BITCOIN_ONLY=1` - most of the time for C/Rust parts you don't need other coins and it saves
+ * --debug=true - enable debuglink and test, and `dev-size` profile defined in embed/Cargo.toml
+ * --btc-only - most of the time for C/Rust parts you don't need other coins and it saves
    space on flash to be usable for other than `-Os` optimization
- * `OPTIMIZE=-Og` - optimization of C better suited for debug, but it will be larger than default `-Os`
 
 Micropython has its own optimization setting, so if you need to step through its code as well,
 set it separately in its build.
@@ -107,105 +105,3 @@ registers. To look at what is used in passes you can print them out with:
 
 The `-O0` level often generates too big code to fit in flash which is why this experiment
 in customizing optimization level exists.
-
-## Additional notes on making CLion understand and parse code correctly
-
-**Note**: Creating a project in CLion doesn't seem necessary for running debug like described above.
-
-CLion remote debugger bindings will gather most information from debug info after
-connecting to external debugger (JLink or openocd GDB server), but it may be handy
-for general edit/completion/following definitions and so on.
-
-Since we don't keep a `CMakeLists.txt` for `core` because everyone is using different
-editor/IDE, here is a trick for creating it so that CLion will parse code without having
-to run the debugger with debug info.
-
-First, clone the repo and build both emulator and embedded code:
-
-      make build_unix
-      make build_embed
-
-Now rename `Makefile` under `core` to something else, like `Makefile.orig`. Open the
-`core` directory as new project in CLion.
-
-Open any .c file, e.g. `embed/projects/firmware/main.c`.
-At this point since CLion does not see `Makefile` or `CMakeLists.txt`, it will
-[suggest creating CMakeLists for you based on existing files](https://www.jetbrains.com/help/clion/creating-new-project-from-scratch.html#example).
-
-Let it autogenerate one, then add following defines that are taken from build
-(there are more that should be added, but this suffices for most code including micropython
-stm32lib):
-
-      add_definitions(
-              -DFF_FS_READONLY=0
-              -DFF_FS_MINIMIZE=0
-              -DFF_USE_STRFUNC=0
-              -DFF_USE_FIND=0
-              -DFF_USE_FASTSEEK=0
-              -DFF_USE_EXPAND=0
-              -DFF_USE_CHMOD=0
-              -DFF_USE_LABEL=0
-              -DFF_USE_FORWARD=0
-              -DFF_USE_REPAIR=0
-              -DFF_CODE_PAGE=437
-              -DFF_USE_LFN=1
-              -DFF_LFN_UNICODE=2
-              -DFF_STRF_ENCODE=3
-              -DFF_FS_RPATH=0
-              -DFF_VOLUMES=1
-              -DFF_STR_VOLUME_ID=0
-              -DFF_MULTI_PARTITION=0
-              -DFF_USE_TRIM=0
-              -DFF_FS_NOFSINFO=0
-              -DFF_FS_TINY=0
-              -DFF_FS_EXFAT=0
-              -DFF_FS_NORTC=1
-              -DFF_FS_LOCK=0
-              -DFF_FS_REENTRANT=0
-              -DFF_USE_MKFS=1
-
-              -DSTM32_HAL_H=<stm32f4xx.h>
-
-              -DTREZOR_MODEL=T2T1
-              -DTREZOR_MODEL_T2T1=1
-              -DSTM32F427xx
-              -DUSE_HAL_DRIVER
-              -DSTM32_HAL_H="<stm32f4xx.h>"
-              -DAES_128 -DAES_192
-              -DRAND_PLATFORM_INDEPENDENT
-              -DUSE_KECCAK=1
-              -DUSE_ETHEREUM=1
-              -DUSE_MONERO=1
-              -DUSE_CARDANO=1
-              -DUSE_NEM=1
-              -DUSE_EOS=1
-              -DSECP256K1_BUILD
-              -DUSE_ASM_ARM
-              -DUSE_NUM_NONE
-              -DUSE_FIELD_INV_BUILTIN
-              -DUSE_SCALAR_INV_BUILTIN
-              -DUSE_EXTERNAL_ASM
-              -DUSE_FIELD_10X26
-              -DUSE_SCALAR_8X32
-              -DUSE_ECMULT_STATIC_PRECOMPUTATION
-              -DUSE_EXTERNAL_DEFAULT_CALLBACKS
-              -DECMULT_WINDOW_SIZE=8
-              -DENABLE_MODULE_GENERATOR
-              -DENABLE_MODULE_RANGEPROOF
-              -DENABLE_MODULE_RECOVERY
-              -DENABLE_MODULE_ECDH
-              -DTREZOR_FONT_BOLD_ENABLE
-              -DTREZOR_FONT_NORMAL_ENABLE
-              -DTREZOR_FONT_MONO_ENABLE
-              -DTREZOR_FONT_MONO_BOLD_ENABLE
-      )
-
-      include_directories(vendor/micropython)
-      include_directories(build/firmware/genhdr/)
-      include_directories(vendor/micropython/lib/stm32lib/STM32L4xx_HAL_Driver/Inc)
-
-Rename the `Makefile.orig` back to `Makefile`. This is clumsy, but AFAIK there is no
-explicit option to autogenerate `CMakeLists.txt` otherwise.
-
-To make Rust code part of the project, right click `embed/rust/Cargo.toml` and
-choose "Attach Cargo Project"

@@ -75,11 +75,17 @@ requires libclang for generating MicroPython FFI.
 
 ## Build
 
+Most `xtask` commands require specifying the model via the `--model` or `-m` option. You can select one of the following models:
+
+- `t2t1` - Model T
+- `t3b1` - Trezor Safe 3
+- `t3t1` - Trezor Safe 5
+- `t3w1` - Trezor Safe 7
+
 Run the build with:
 
 ```sh
-make build_unix                     # default
-make build_unix TREZOR_MODEL=T2B1   # different model
+xtask build firmware --emulator -m t2b1
 ```
 
 ## Run
@@ -91,14 +97,3 @@ Now you can start the emulator:
 ```
 
 The emulator has a number of interesting features all documented in the [Emulator](../emulator/index.md) section.
-
-## Building for debugging and hacking in Emulator (Unix port)
-
-Build the debuggable unix binary so you can attach the gdb or lldb.
-This removes optimizations and reduces address space randomization.
-Beware that this will significantly bloat the final binary
-and the firmware runtime memory limit HEAPSIZE may have to be increased.
-
-```sh
-make build_unix_debug
-```

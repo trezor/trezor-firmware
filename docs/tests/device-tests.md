@@ -71,7 +71,7 @@ To run the tests quicker, spawn the emulator with disabled animations using `-a`
 To run the tests even quicker, the emulator should come from a frozen build. (However, then changes to python code files are not reflected in emulator, one needs to build it again each time.)
 
 ```sh
-PYOPT=0 make build_unix_frozen
+xtask build firmware -e --pyopt=false --frozen
 ```
 
 It is possible to specify the timeout for each test in seconds, using `PYTEST_TIMEOUT` env variable.
