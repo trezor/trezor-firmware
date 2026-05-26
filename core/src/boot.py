@@ -36,9 +36,10 @@ if (  # pylint: disable-next=consider-using-in
     or utils.INTERNAL_MODEL == "T2B1"
     or utils.INTERNAL_MODEL == "T3B1"
 ):
-    _WELCOME_SCREEN_MS = 1000  # how long do we want to show welcome screen (minimum)
+    # how long do we want to show welcome screen (minimum)
+    _WELCOME_SCREEN_MS = const(1000)
 else:
-    _WELCOME_SCREEN_MS = 0
+    _WELCOME_SCREEN_MS = const(0)
 
 
 def enforce_welcome_screen_duration() -> None:
