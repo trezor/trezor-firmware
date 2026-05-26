@@ -20,11 +20,10 @@ import pytest
 
 from trezorlib import device, exceptions
 from trezorlib.debuglink import DebugLink
-
-from .. import translations as TR
+from trezorlib.testing import translations as TR
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 # Trezor Safe 7 only

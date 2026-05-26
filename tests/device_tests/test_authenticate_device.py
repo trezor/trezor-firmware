@@ -2,8 +2,8 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.testing.common import compact_size
 
-from ..common import compact_size
 from .certificate import check_signature_optiga, check_signature_tropic
 
 # The tests below require Optiga (and some require Tropic)

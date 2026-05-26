@@ -25,9 +25,8 @@ from trezorlib.debuglink import LayoutType, TrezorTestContext
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import FailureType, SafetyCheckLevel
 from trezorlib.protocol_v1 import SessionV1, TrezorClientV1
+from trezorlib.testing import translations as TR
 from trezorlib.tools import parse_path
-
-from .. import translations as TR
 
 pytestmark = pytest.mark.protocol("v1")
 

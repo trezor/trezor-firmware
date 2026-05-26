@@ -5,15 +5,15 @@ from concurrent.futures import ThreadPoolExecutor
 
 import typing_extensions as tx
 
-from trezorlib.messages import DebugWaitType
-from trezorlib.transport import udp
+from ..messages import DebugWaitType
+from ..transport import udp
 
 if t.TYPE_CHECKING:
-    from trezorlib._internal.emulator import Emulator
-    from trezorlib.client import Session
-    from trezorlib.debuglink import DebugLink
-    from trezorlib.debuglink import TrezorTestContext as Client
-    from trezorlib.messages import Features
+    from .._internal.emulator import Emulator
+    from ..client import Session
+    from ..debuglink import DebugLink
+    from ..debuglink import TrezorTestContext as Client
+    from ..messages import Features
 
     P = tx.ParamSpec("P")
 
@@ -23,15 +23,15 @@ udp.SOCKET_TIMEOUT = 0.1
 
 class NullUI:
     @staticmethod
-    def clear(*args, **kwargs):
+    def clear(*args: t.Any, **kwargs: t.Any) -> None:
         pass
 
     @staticmethod
-    def button_request(code):
+    def button_request(code: t.Any) -> None:
         pass
 
     @staticmethod
-    def get_pin(code=None):
+    def get_pin(code: t.Any = None) -> None:
         raise NotImplementedError("NullUI should not be used with T1")
 
 
@@ -45,12 +45,12 @@ class BackgroundDeviceHandler:
 
     def _configure_client(self, client: "Client") -> None:
         self.client = client
-        self.client.ui = NullUI  # type: ignore [NullUI is OK UI]
+        self.client.ui = t.cast(t.Any, NullUI())
         self.client.app.button_callback = self.client.ui.button_request
         self.client.watch_layout(True)
         self.client.debug.input_wait_type = DebugWaitType.CURRENT_LAYOUT
 
-    def get_session(self, *args, **kwargs):
+    def get_session(self, *args: t.Any, **kwargs: t.Any) -> None:
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
 
@@ -71,7 +71,7 @@ class BackgroundDeviceHandler:
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
 
-        def task_function(*args, **kwargs):
+        def task_function(*args: t.Any, **kwargs: t.Any) -> t.Any:
             if seedless:
                 session = self.client.get_seedless_session()
             else:
@@ -84,7 +84,7 @@ class BackgroundDeviceHandler:
 
     def run_with_provided_session(
         self,
-        session,
+        session: "Session",
         function: t.Callable[tx.Concatenate["Session", P], t.Any],
         *args: P.args,
         **kwargs: P.kwargs,
@@ -116,7 +116,7 @@ class BackgroundDeviceHandler:
         # TODO handle actual restart as well
         self.kill_task()
         emulator.restart()
-        self._configure_client(emulator.client)  # type: ignore [client cannot be None]
+        self._configure_client(emulator.client)
 
     def result(self, timeout: float | None = None) -> t.Any:
         if self.task is None:
@@ -144,7 +144,7 @@ class BackgroundDeviceHandler:
     def __enter__(self) -> "BackgroundDeviceHandler":
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
+    def __exit__(self, exc_type: t.Any, exc_value: t.Any, traceback: t.Any) -> None:
         finalized_ok = self.check_finalize()
         if exc_type is None and not finalized_ok:
             raise RuntimeError("Exit while task is unfinished")

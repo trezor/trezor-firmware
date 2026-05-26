@@ -18,14 +18,12 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Callable
 
 from trezorlib.messages import BackupAvailability
-
-from ... import translations as TR
+from trezorlib.testing import translations as TR
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
     from trezorlib.messages import Features
-
-    from ...device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 PIN4 = "1234"
 
