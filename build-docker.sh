@@ -278,16 +278,16 @@ for TREZOR_MODEL in ${MODELS[@]}; do
       rm -rf /build/*
       uv run make clean vendor $MAKE_TARGETS QUIET_MODE=1
       for item in bootloader secmon kernel firmware prodtest; do
-        if [ -s build/\$item/\$item.bin ]; then
+        if [ -s build-xtask/artifacts/$TREZOR_MODEL/\$item.bin ]; then
           uv run ../python/tools/firmware-fingerprint.py \
-                      -o build/\$item/\$item.bin.fingerprint \
-                      build/\$item/\$item.bin \
-                      || echo "No fingerprint for build/\$item/\$item.bin"
+                      -o build-xtask/artifacts/$TREZOR_MODEL/\$item.bin.fingerprint \
+                      build-xtask/artifacts/$TREZOR_MODEL/\$item.bin \
+                      || echo "No fingerprint for build-xtask/artifacts/TREZOR_MODEL/\$item.bin"
         fi
-        if [ -d build/\$item/ ]; then
+        if [ -f build-xtask/artifacts/$TREZOR_MODEL/\$item.bin ]; then
           # copy only the artifacts to the build output directory
           mkdir /build/\$item/
-          cp -v build/\$item/\$item* /build/\$item/
+          cp -v build-xtask/artifacts/$TREZOR_MODEL/\$item* /build/\$item/
         fi
       done
       chown -R $USER:$GROUP /build
