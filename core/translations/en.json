@@ -3129,6 +3129,12 @@
     },
     "words__know_what_your_doing": "Continue only if you know what you are doing!",
     "words__led": "LED",
+    "words__made_in": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Made in"
+    },
     "words__manage": "Manage",
     "words__my_trezor": "My Trezor",
     "words__name": "Name",

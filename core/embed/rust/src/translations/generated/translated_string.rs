@@ -1622,6 +1622,7 @@ pub enum TranslatedString {
     ripple__account_to_be_deleted = 1227,  // "To be deleted:"
     words__account_deletion = 1228,  // "Account deletion"
     words__tap_to_wake = 1229,  // "Tap to wake"
+    words__made_in = 1230,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Made in"}
 }
 
 impl TranslatedString {
@@ -2859,6 +2860,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4094,6 +4096,7 @@ impl TranslatedString {
                 19836,
                 19852,
                 19863,
+                19863,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5328,6 +5331,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6563,6 +6567,7 @@ impl TranslatedString {
                 19836,
                 19852,
                 19863,
+                19863,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7797,6 +7802,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9032,6 +9038,7 @@ impl TranslatedString {
                 19836,
                 19852,
                 19863,
+                19863,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10266,6 +10273,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11500,6 +11508,7 @@ impl TranslatedString {
                 19822,
                 19836,
                 19852,
+                19863,
                 19863,
             ];
 
@@ -12736,6 +12745,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13971,6 +13981,7 @@ impl TranslatedString {
                 17770,
                 17786,
                 17797,
+                17797,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15205,6 +15216,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16440,6 +16452,7 @@ impl TranslatedString {
                 17770,
                 17786,
                 17797,
+                17797,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17674,6 +17687,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18909,6 +18923,7 @@ impl TranslatedString {
                 17770,
                 17786,
                 17797,
+                17797,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20143,6 +20158,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21377,6 +21393,7 @@ impl TranslatedString {
                 17756,
                 17770,
                 17786,
+                17797,
                 17797,
             ];
 
@@ -22613,6 +22630,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23848,6 +23866,7 @@ impl TranslatedString {
                 19190,
                 19206,
                 19217,
+                19217,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25082,6 +25101,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26317,6 +26337,7 @@ impl TranslatedString {
                 19190,
                 19206,
                 19217,
+                19217,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27551,6 +27572,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28786,6 +28808,7 @@ impl TranslatedString {
                 19190,
                 19206,
                 19217,
+                19217,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30020,6 +30043,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31254,6 +31278,7 @@ impl TranslatedString {
                 19176,
                 19190,
                 19206,
+                19217,
                 19217,
             ];
 
@@ -32490,6 +32515,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "Made in",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33725,6 +33751,7 @@ impl TranslatedString {
                 20537,
                 20553,
                 20564,
+                20571,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34959,6 +34986,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "Made in",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36194,6 +36222,7 @@ impl TranslatedString {
                 20537,
                 20553,
                 20564,
+                20571,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37428,6 +37457,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "Made in",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38663,6 +38693,7 @@ impl TranslatedString {
                 20537,
                 20553,
                 20564,
+                20571,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39897,6 +39928,7 @@ impl TranslatedString {
                 "To be deleted:",
                 "Account deletion",
                 "Tap to wake",
+                "Made in",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41132,6 +41164,7 @@ impl TranslatedString {
                 20537,
                 20553,
                 20564,
+                20571,
             ];
 
         }
@@ -42698,6 +42731,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
         (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
         (Qstr::MP_QSTR_words__led, Self::words__led),
+        (Qstr::MP_QSTR_words__made_in, Self::words__made_in),
         (Qstr::MP_QSTR_words__manage, Self::words__manage),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
         (Qstr::MP_QSTR_words__name, Self::words__name),

@@ -1016,6 +1016,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
   MP_QSTR_words__led;
+  MP_QSTR_words__made_in;
   MP_QSTR_words__manage;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;
