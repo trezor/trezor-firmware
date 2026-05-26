@@ -202,42 +202,62 @@ class BasicApprover(Approver):
     ) -> None:
         await super().add_external_output(txo, script_pubkey, tx_info, orig_txo)
 
+        # This function handles the confirmation logic relating to replacement transactions, which
+        # allow users to make modifications to transactions that they already signed without having
+        # to re-approve the entire transaction again. This is useful for fee bumps or payjoins.
+        #
+        # As a general rule for replacement transactions, approve_tx() ensures that any increase in
+        # the amount the user is spending goes towards the mining fee.
+        #
+        # A payjoin is a replacement transaction that increases the amount supplied by external
+        # inputs. Payjoins allow increasing existing external outputs and adding new ones without
+        # confirmation, while decreasing external outputs is not allowed. The combination of this
+        # no-decrease rule and approve_tx()'s spending invariant ensures that any increase to
+        # external outputs is paid for by new external inputs rather than by the user. Without the
+        # no-decrease rule, one external output's decrease could silently fund another's increase.
+        #
+        # Non-payjoin replacement transactions are only allowed to decrease the value of external
+        # outputs. This may be needed to bump the mining fee if the original transaction transfers
+        # the entire account balance, aka "Send Max".
+
         if orig_txo:
+            # This is an external output in a replacement transaction, referencing an original output.
             if txo.amount < orig_txo.amount:
-                # Replacement transactions may need to decrease the value of external outputs to
-                # bump the fee. This is needed if the original transaction transfers the entire
-                # account balance ("Send Max").
+                # Payjoin transactions must not decrease external outputs. See top comment.
                 if self.is_payjoin():
-                    # In case of PayJoin the above could be used to increase other external
-                    # outputs, which would create too much UI complexity.
                     raise ProcessError(
                         "Reducing original output amounts is not supported."
                     )
+
+                # Non-payjoin replacement transactions are allowed to decrease external outputs
+                # upon user confirmation. See top comment.
                 await helpers.confirm_modify_output(
                     txo, orig_txo, self.coin, self.amount_unit
                 )
             elif txo.amount > orig_txo.amount:
-                # PayJoin transactions may increase the value of external outputs without
-                # confirmation, because approve_tx() together with the branch above ensures that
-                # the increase is paid by external inputs.
+                # Payjoin transactions may silently increase the value of external outputs, but
+                # non-payjoins cannot. See top comment.
                 if not self.is_payjoin():
                     raise ProcessError(
                         "Increasing original output amounts is not supported."
                     )
-
-        if self.orig_total_in:
-            # Skip output confirmation for replacement transactions,
-            # but don't allow adding new OP_RETURN outputs.
-            if txo.script_type == OutputScriptType.PAYTOOPRETURN and not orig_txo:
+        elif self.orig_total_in:
+            # This is a new external output in a replacement transaction.
+            if txo.script_type == OutputScriptType.PAYTOOPRETURN:
                 raise ProcessError(
                     "Adding new OP_RETURN outputs in replacement transactions is not supported."
                 )
+            # Payjoin transactions may silently introduce new external outputs, but non-payjoins
+            # cannot. See top comment.
+            if not self.is_payjoin():
+                raise ProcessError(
+                    "Adding new external outputs in replacement transactions is not supported."
+                )
         elif txo.payment_req_index is None:
+            # This is an external output in a standard transaction not referencing a payment request.
             source_path = (
                 tx_info.change_detector.wallet_path.get_path() if tx_info else None
             )
-            # Ask user to confirm output, unless it is part of a payment
-            # request, which gets confirmed separately.
             await helpers.confirm_output(
                 txo,
                 self.coin,
@@ -247,6 +267,10 @@ class BasicApprover(Approver):
                 source_path,
             )
             self.external_output_index += 1
+        else:
+            # This is an external output in a standard transaction referencing a payment request,
+            # which is confirmed separately.
+            pass
 
     async def add_payment_request(
         self,
