@@ -117,16 +117,13 @@ def validate_network_info(network_id: int, protocol_magic: int) -> None:
         raise wire.ProcessError("Invalid network id/protocol magic combination!")
 
 
-def is_printable_ascii(bytestring: AnyBytes) -> bool:
-    """Includes space character."""
-    return all(32 <= b <= 126 for b in bytestring)
-
-
 def is_unambiguous_ascii(bytestring: AnyBytes) -> bool:
     """
     Checks whether the bytestring can be printed as ASCII without confusion.
     Based on https://github.com/vacuumlabs/ledger-app-cardano-shelley/blob/6ddc60e8fdff13e35bff5cdf108b84b81a79f10c/src/textUtils.c#L274
     """
+    from apps.common.signverify import is_printable_ascii
+
     # no empty strings
     if len(bytestring) == 0:
         return False

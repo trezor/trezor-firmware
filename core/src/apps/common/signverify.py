@@ -35,3 +35,8 @@ def decode_message(message: AnyBytes) -> str:
         return bytes(message).decode()
     except UnicodeError:
         return f"hex({hexlify(message).decode()})"
+
+
+def is_printable_ascii(bytestring: AnyBytes) -> bool:
+    """Includes space character."""
+    return all(32 <= b <= 126 for b in bytestring)
