@@ -157,7 +157,7 @@ struct RegulatoryContent {
 }
 
 impl RegulatoryContent {
-    const SCREENS: usize = 14;
+    const SCREENS: usize = 17;
     /// Regulatory zones data. EU, US, CA first, then alphabetical order.
     const ZONES: [RegulatoryZone; Self::SCREENS] = [
         RegulatoryZone {
@@ -203,10 +203,31 @@ impl RegulatoryContent {
             production_year: false,
         },
         RegulatoryZone {
+            name: Some("Brazil"),
+            content: "",
+            icon1: Some(theme::ICON_BRASIL_1),
+            icon2: Some(theme::ICON_BRASIL_2),
+            production_year: false,
+        },
+        RegulatoryZone {
+            name: Some("Ghana"),
+            content: "NCA APPROVED:\nSRH-7EA-X37-HRS",
+            icon1: None,
+            icon2: None,
+            production_year: false,
+        },
+        RegulatoryZone {
             name: Some("Japan"),
             content: "",
             icon1: Some(theme::ICON_JAPAN_1),
             icon2: Some(theme::ICON_JAPAN_2),
+            production_year: false,
+        },
+        RegulatoryZone {
+            name: Some("Nigeria"),
+            content: "",
+            icon1: Some(theme::ICON_NIGERIA_1),
+            icon2: Some(theme::ICON_NIGERIA_2),
             production_year: false,
         },
         RegulatoryZone {

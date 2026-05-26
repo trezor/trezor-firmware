@@ -193,6 +193,8 @@ include_icon!(
     ICON_ARGENTINA,
     "layout_eckhart/res/regulatory/argentina.toif"
 );
+include_icon!(ICON_BRASIL_1, "layout_eckhart/res/regulatory/brasil_1.toif");
+include_icon!(ICON_BRASIL_2, "layout_eckhart/res/regulatory/brasil_2.toif");
 include_icon!(ICON_EUROPE, "layout_eckhart/res/regulatory/europe.toif");
 include_icon!(ICON_FCC, "layout_eckhart/res/regulatory/fcc.toif");
 include_icon!(ICON_JAPAN_1, "layout_eckhart/res/regulatory/japan_1.toif");
@@ -200,6 +202,14 @@ include_icon!(ICON_JAPAN_2, "layout_eckhart/res/regulatory/japan_2.toif");
 include_icon!(ICON_KOREA_1, "layout_eckhart/res/regulatory/korea_1.toif");
 include_icon!(ICON_KOREA_2, "layout_eckhart/res/regulatory/korea_2.toif");
 include_icon!(ICON_KOREA_3, "layout_eckhart/res/regulatory/korea_3.toif");
+include_icon!(
+    ICON_NIGERIA_1,
+    "layout_eckhart/res/regulatory/nigeria_1.toif"
+);
+include_icon!(
+    ICON_NIGERIA_2,
+    "layout_eckhart/res/regulatory/nigeria_2.toif"
+);
 include_icon!(ICON_RCM, "layout_eckhart/res/regulatory/rcm.toif");
 include_icon!(
     ICON_SINGAPORE,
