@@ -300,7 +300,7 @@ static bool ft3168_test_and_clear_interrupt(void) {
 
 // Configures the touch controller to the functional state.
 static secbool ft3168_configure(i2c_bus_t* i2c_bus) {
-  const static uint8_t config[] = {
+  static const uint8_t config[] = {
       // Set touch controller to the interrupt trigger mode.
       // Basically, CTPM generates a pulse when new data is available.
       FT3168_REG_G_MODE,
