@@ -183,11 +183,12 @@ def input_is_external(txi: TxInput) -> bool:
 
 
 def input_is_external_unverified(txi: TxInput) -> bool:
+    # Evaluate fields as bool, same as in `process_external_input()` for consistency in case of empty bytes.
     return (
         txi.script_type == InputScriptType.EXTERNAL
-        and txi.ownership_proof is None
-        and txi.witness is None
-        and txi.script_sig is None
+        and not txi.ownership_proof
+        and not txi.witness
+        and not txi.script_sig
     )
 
 
