@@ -77,7 +77,6 @@ jobs:
       N4W1: ${{ matrix.n4w1 && '1' || '0' }}
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T3W1' && '1' || '0' }}
-      QUIET_MODE: 1
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -95,23 +94,16 @@ jobs:
         if: matrix.coins == 'universal' && matrix.type != 'debuglink' && matrix.model == 'T3W1'
       - run: nix-shell --run "uv run make -C core build_firmware"
       - run: nix-shell --run "uv run ./tools/print-rust-stack-sizes.py | sort -k1 -n | tail -n 50"
-      - run: nix-shell --run "uv run ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log" | awk '$1 >= 1000' | sort -k1 -n
-      - run: nix-shell --run "uv run make -C core sizecheck"
-        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
-      - run: nix-shell --run "uv run ./tools/check-bitcoin-only core/build/firmware/firmware.bin"
+      # - run: nix-shell --run "uv run ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log" | awk '$1 >= 1000' | sort -k1 -n
+      - run: nix-shell --run "uv run ./tools/check-bitcoin-only core/build-xtask/artifacts/latest/firmware.bin"
         if: matrix.coins == 'btconly' && matrix.type != 'debuglink'
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}${{ matrix.n4w1 && '-n4w1' || '' }}
           path: |
-            core/build/boardloader/*.bin
-            core/build/bootloader/*.bin
-            core/build/bootloader_ci/*.bin
-            core/build/prodtest/*.bin
-            core/build/prodtest_emu/*.bin
-            core/build/firmware/firmware.elf
-            core/build/firmware/firmware-*.bin
-            core/build/firmware/rust-type-sizes.log
+            core/build-xtask/artifacts/latest/*.bin
+            core/build-xtask/artifacts/latest/*.elf
+            core/build-xtask/artifacts/pub/*
           retention-days: 7
 
   core_emu:
@@ -143,7 +135,6 @@ jobs:
       N4W1: ${{ matrix.n4w1 && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
-      QUIET_MODE: 1
       DISABLE_TROPIC: 0
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
@@ -157,14 +148,14 @@ jobs:
         if: ${{ matrix.model == 'T3W1' }}
         run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core test_emu_sanity"
-      - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.n4w1 && '-n4w1' || '' }}
+      - run: cp core/build-xtask/artifacts/latest/firmware-emu core/build-xtask/artifacts/latest/firmware-emu-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.n4w1 && '-n4w1' || '' }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}${{ matrix.n4w1 && '-n4w1' || '' }}
           path: |
-            core/build/unix/trezor-emu-core*
-            core/build/bootloader_emu/bootloader.elf
-            core/build/unix/src/**/*.i
+            core/build-xtask/artifacts/latest/firmware-emu*
+            core/build-xtask/artifacts/latest/bootloader-emu
+            core/build-xtask/artifacts/latest/mpy-files/**/*.i
           retention-days: 7
 
   core_emu_arm:
@@ -193,7 +184,6 @@ jobs:
       N4W1: ${{ matrix.n4w1 && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
-      QUIET_MODE: 1
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -202,13 +192,13 @@ jobs:
       - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal'
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
-      - run: mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-arm-core-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.n4w1 && '-n4w1' || '' }}
+      - run: mv core/build-xtask/artifacts/latest/firmware-emu core/build-xtask/artifacts/latest/firmware-emu-arm-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.n4w1 && '-n4w1' || '' }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-emu-arm-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}${{ matrix.n4w1 && '-n4w1' || '' }}
           path: |
-            core/build/unix/trezor-emu-*
-            core/build/bootloader_emu/bootloader.elf
+            core/build-xtask/artifacts/latest/firmware-emu*
+            core/build-xtask/artifacts/latest/bootloader-emu
           retention-days: 2
 
   core_unit_python_test:
@@ -259,14 +249,14 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "uv run make -C core build_unix"
+      - run: nix-shell --run "uv run make -C core -f Makefile.scons build_unix"
       # Ensure that "cargo build" works when NOT executed through our makefiles,
       # indicating that it does not rely on particular envvars or other flags.
       # This makes sure that rust-analyzer will work on our codebase.
       - run: nix-shell --run "cd core/embed/rust && cargo build"
         if: matrix.asan == 'noasan'
+      - run: nix-shell --run "uv run make -C core -f Makefile.scons test_rust"
       - run: nix-shell --run "uv run make -C core clippy"
-      - run: nix-shell --run "uv run make -C core test_rust"
       - run: nix-shell --run "uv run make -C core audit_rust"
 
   core_rust_client_test:
@@ -284,8 +274,8 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run core/emu.py --headless -q --temporary-profile --slip0014 --command cargo test --manifest-path rust/trezor-client/Cargo.toml"
 
@@ -329,8 +319,8 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}${{ matrix.n4w1 && '-n4w1' || '' }}
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
       - name: Start Tropic model
         if: ${{ env.TREZOR_MODEL == 'T3W1' && env.ACTIONS_DO_UI_TEST != 'true' }}  # ACTIONS_DO_UI_TEST refers to the test_emu_ui_multicore below which uses --control-emulators and starts tvl internally
@@ -387,8 +377,8 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core test_emu_click_ui_multicore"
         if: ${{ matrix.asan == 'noasan' }}
@@ -437,8 +427,8 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
         with:
           full-deps: "true"
@@ -478,8 +468,8 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
@@ -521,13 +511,13 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
         with:
           full-deps: "true"
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
-      - run: nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
+      - run: nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build-xtask/artifacts/latest/firmware-emu bitcoind"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-test-hwi-${{ matrix.model }}
@@ -580,9 +570,9 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-firmware-${{ matrix.model }}-universal-normal  # FIXME: s/normal/debuglink/
-          path: core/build
+          path: core/build-xtask/artifacts
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "uv run core/tools/size/checker.py core/build/firmware/firmware.elf"
+      - run: nix-shell --run "uv run core/tools/size/checker.py core/build-xtask/artifacts/latest/firmware.elf"
 
   # Monero tests.
   core_monero_test:
@@ -606,8 +596,8 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
         with:
           full-deps: "true"
@@ -625,7 +615,7 @@ jobs:
 
   # Tests for U2F and HID.
   core_u2f_test:
-    name: U2F test (${{ matrix.model }}, ${{ matrix.asan }}
+    name: U2F test (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -645,8 +635,8 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
@@ -663,7 +653,7 @@ jobs:
 
   # FIDO2 device tests.
   core_fido2_test:
-    name: FIDO2 test (${{ matrix.model }}, ${{ matrix.asan }}
+    name: FIDO2 test (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -683,8 +673,8 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
-          path: core/build
-      - run: chmod +x core/build/unix/trezor-emu-core*
+          path: core/build-xtask/artifacts/latest
+      - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
@@ -731,7 +721,7 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
-          path: core/build
+          path: core/build-xtask/artifacts/latest
       - uses: ./.github/actions/environment
       # `make coverage` uses .i files downloaded above
       - run: nix-shell --run "uv run make -C core coverage"
@@ -806,15 +796,21 @@ jobs:
         with:
           pattern: core-emu*debuglink-noasan*
           merge-multiple: true
+          path: emulators
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
         continue-on-error: true
-      - run: |
-          rm unix/trezor-emu-core
-          aws s3 sync --only-show-errors unix s3://data.trezor.io/dev/firmware/emu-nightly
+      - name: Upload nightly artifacts
+        run: |
+          rm -rf emulators/{bootloader,firmware}-emu emulators/mpy-files emulators/*.json
+          pushd emulators
+          for F in firmware-emu-*; do NEWF=`echo $F | sed s/firmware-emu/trezor-emu-core/`; mv $F $NEWF; done
+          popd
+          tree
+          aws s3 sync --only-show-errors emulators s3://data.trezor.io/dev/firmware/emu-nightly
 
   core_upload_emu_branch:
     name: Upload emulator binaries for the current branch
@@ -829,6 +825,7 @@ jobs:
         with:
           pattern: core-emu*debuglink-noasan*
           merge-multiple: true
+          path: emulators
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
@@ -845,8 +842,12 @@ jobs:
           echo "branch_name=$branch_name" >> $GITHUB_ENV
       - name: Upload artifacts to branch directory
         run: |
-          rm unix/trezor-emu-core
-          aws s3 sync --only-show-errors unix s3://data.trezor.io/dev/firmware/emu-branches/$branch_name
+          rm -rf emulators/{bootloader,firmware}-emu emulators/mpy-files emulators/*.json
+          pushd emulators
+          for F in firmware-emu-*; do NEWF=`echo $F | sed s/firmware-emu/trezor-emu-core/`; mv $F $NEWF; done
+          popd
+          tree
+          aws s3 sync --only-show-errors emulators s3://data.trezor.io/dev/firmware/emu-branches/$branch_name
 
   # Connect
   # TODO: core_connect_test

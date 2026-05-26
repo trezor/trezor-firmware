@@ -8,6 +8,7 @@ help: ## show this help
 PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude ) common/protob/pb2py
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 PROTO_FILES = $(shell find common core -type f -name '*.proto')
+RUST_CRATES = $(shell find core -type f -name Cargo.toml -printf "%h\n")
 
 # suppress black's warning - remove when using Python 3.14
 BLACK_FAST ?= 1
@@ -113,15 +114,14 @@ defs_check: ## check validity of coin definitions and protobuf files
 	python3 common/protob/check.py
 	python3 common/protob/graph.py common/protob/*.proto
 
-ruststyle:
+ruststyle: ## apply code style on rust sources
 	@echo [RUSTFMT]
-	@cd core/embed/rust ; cargo fmt
+	@cd core/embed ; cargo fmt
 	make -C rust style
 
-ruststyle_check:
-	rustfmt --version
+ruststyle_check: ## run code style check on rust sources
 	@echo [RUSTFMT]
-	@cd core/embed/rust ; cargo fmt -- --check
+	@cd core/embed ; cargo fmt -- --check
 	make -C rust style_check
 
 
