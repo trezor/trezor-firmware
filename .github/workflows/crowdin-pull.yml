@@ -68,7 +68,10 @@ jobs:
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0  # peter-evans/create-pull-request@v8.1.0
         with:
           token: ${{ steps.trezor-bot-token.outputs.token }}
-          commit-message: "chore(translations): sync Crowdin translations"
+          commit-message: |
+            chore(translations): sync Crowdin translations
+
+            [no changelog]
           title: "Crowdin translations update"
           body: "Automated update of translations pulled from Crowdin."
           branch: ci/crowdin-sync-${{ github.ref_name }}-${{ github.run_id }}
