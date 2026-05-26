@@ -587,6 +587,14 @@ secbool secret_is_locked(void) {
 }
 #endif
 
+void secret_reset(void) {
+  secret_keys_uncache();
+
+  if (sectrue == secret_bhk_locked()) {
+    reboot_device();
+  }
+}
+
 void secret_prepare_fw(secbool allow_run_with_secret,
                        secbool allow_provisioning_access) {
   /**

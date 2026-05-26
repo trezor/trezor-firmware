@@ -83,6 +83,13 @@ secbool secret_key_writable(uint8_t slot);
 void secret_bhk_regenerate(void);
 
 /**
+ * @brief Resets the secret storage to a known state.
+ *
+ * Clears all secrets and keys, and prepares the storage for a new firmware run.
+ */
+void secret_reset(void);
+
+/**
  * @brief Prepares the secret storage for running the firmware.
  *
  * Provisions secrets and keys to the firmware depending on the trust level.

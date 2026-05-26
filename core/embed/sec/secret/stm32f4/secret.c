@@ -186,6 +186,8 @@ secbool secret_key_writable(uint8_t slot) {
 
 #endif
 
+void secret_reset(void) {}
+
 void secret_prepare_fw(secbool allow_run_with_secret,
                        secbool allow_provisioning_access) {
   (void)allow_provisioning_access;
