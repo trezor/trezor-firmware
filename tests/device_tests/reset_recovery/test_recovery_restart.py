@@ -16,12 +16,12 @@
 
 import pytest
 
-from tests import translations as TR
 from trezorlib import device
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import Cancelled
 from trezorlib.messages import BackupMethod, Capability, RecoveryStatus
+from trezorlib.testing import translations as TR
 
 from ...input_flows import RecoveryFlow
 

@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 from trezorlib.debuglink import LayoutType
+from trezorlib.testing import translations as TR
 
-from .. import translations as TR
 from ..recovery_helpers import navigate_to_keyboard
 from .common import go_next
 
