@@ -18,11 +18,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ... import translations as TR
+from trezorlib.testing import translations as TR
+
 from .common import PIN4, Menu, enter_pin, open_device_menu
 
 if TYPE_CHECKING:
-    from ...device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 # Trezor Safe 7 only
 pytestmark = [pytest.mark.models("eckhart")]

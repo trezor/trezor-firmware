@@ -5,8 +5,7 @@ from ecdsa import NIST256p, SigningKey
 
 from trezorlib import messages
 from trezorlib.client import Session
-
-from ..common import compact_size
+from trezorlib.testing.common import compact_size
 
 SLIP44_ID_UNDEFINED = 0xFFFF_FFFF
 

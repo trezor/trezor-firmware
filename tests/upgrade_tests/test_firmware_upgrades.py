@@ -33,11 +33,11 @@ from trezorlib.messages import (
     RecoveryStatus,
     Success,
 )
+from trezorlib.testing.device_handler import BackgroundDeviceHandler
 from trezorlib.tools import H_, parse_path
 
 from ..click_tests import recovery
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of6_SECRET
-from ..device_handler import BackgroundDeviceHandler
 from ..emulators import EmulatorWrapper
 from ..input_flows import InputFlowSlip39BasicBackup
 from . import ALL_TAGS, for_all, for_tags, recovery_old, version_from_tag

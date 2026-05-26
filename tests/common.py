@@ -36,10 +36,6 @@ if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
     from trezorlib.messages import ButtonRequest
 
-PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
-
-BRGeneratorType = Generator[None, messages.ButtonRequest, None]
-
 
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
@@ -384,45 +380,6 @@ def get_test_address(session: "Session") -> str:
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
     return btc.get_address(session, "Testnet", TEST_ADDRESS_N)
-
-
-def compact_size(n: int) -> bytes:
-    if n < 253:
-        return n.to_bytes(1, "little")
-    elif n < 0x1_0000:
-        return bytes([253]) + n.to_bytes(2, "little")
-    elif n < 0x1_0000_0000:
-        return bytes([254]) + n.to_bytes(4, "little")
-    else:
-        return bytes([255]) + n.to_bytes(8, "little")
-
-
-def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest) -> str:
-    text = debug.read_layout().text_content()
-    if br.pages is not None:
-        for _ in range(br.pages - 1):
-            if debug.layout_type is LayoutType.Eckhart:
-                debug.click(debug.screen_buttons.ok())
-            else:
-                debug.swipe_up()
-            text += " "
-            text += debug.read_layout().text_content()
-    return text
-
-
-def swipe_if_necessary(
-    debug: "DebugLink", br_code: messages.ButtonRequestType | None = None
-) -> BRGeneratorType:
-    br = yield
-    if br_code is not None:
-        assert br.code == br_code
-    swipe_till_the_end(debug, br)
-
-
-def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
-    if br.pages is not None:
-        for _ in range(br.pages - 1):
-            debug.swipe_up()
 
 
 def is_core(session: Client | Session) -> bool:
