@@ -13,7 +13,7 @@ SYMBOL_TYPES = ("t", "w")  # text, weak
 
 ROOT = Path(__file__).parent.parent.resolve()
 
-FIRMWARE_ELF = ROOT / "core" / "build" / "firmware" / "firmware.elf"
+FIRMWARE_ELF = ROOT / "core" / "build-xtask" / "artifacts" / "latest" / "firmware.elf"
 elf = ELFFile(FIRMWARE_ELF.open("rb"))
 
 
