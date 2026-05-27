@@ -88,6 +88,20 @@ class UiConfirmDecredSSTXSubmission(UiConfirm):
         )
 
 
+class UiConfirmNamecoinOp(UiConfirm):
+    def __init__(
+        self, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
+    ) -> None:
+        self.output = output
+        self.coin = coin
+        self.amount_unit = amount_unit
+
+    def confirm_dialog(self) -> Awaitable[Any]:
+        return layout.confirm_namecoin_op(
+            self.output, self.coin, self.amount_unit
+        )
+
+
 class UiConfirmPaymentRequest(UiConfirm):
     def __init__(
         self,
@@ -273,6 +287,10 @@ def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, ou
 
 def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
     return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))  # type: ignore [awaitable-return-type]
+
+
+def confirm_namecoin_op(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmNamecoinOp(output, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
 def show_payment_request_details(provider_address: str, payment_req: PaymentRequest, coin: CoinInfo, amount_unit: AmountUnit, address_n: Bip32Path | None) -> Awaitable[bool]:  # type: ignore [awaitable-return-type]
