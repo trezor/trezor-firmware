@@ -55,7 +55,7 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build-xtask/artifacts/latest/firmware.bin"
       - run: nix-shell --run "uv run trezorctl list"
       - run: nix-shell --run "uv run trezorctl get-features"
       - run: |
@@ -99,7 +99,7 @@ jobs:
           full-deps: "true"
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build-xtask/artifacts/latest/firmware.bin"
       - run: nix-shell --run "uv run trezorctl list"
       - run: nix-shell --run "uv run trezorctl get-features"
       - run: |
