@@ -140,6 +140,7 @@ model_t3w1 = [
     "tamper",
     "telemetry",
     "touch",
+    "touch_wakeup",
     # "tropic", # selected from xtask
     "layout_eckhart",
 ]
@@ -233,6 +234,7 @@ suspend = ["io/suspend"]
 tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
 touch = ["io/touch", "trezor_lib/touch"]
+touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
 tropic = ["sec/tropic", "trezor_lib/tropic"]
 
 

@@ -127,6 +127,7 @@ model_t3w1 = [
     "tamper",
     "telemetry",
     "touch",
+    "touch_wakeup",
     "layout_eckhart",
 ]
 
@@ -204,6 +205,7 @@ suspend = ["io/suspend"]
 tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
 touch = ["io/touch", "trezor_lib/touch"]
+touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
 ui_empty_lock = ["trezor_lib/ui_empty_lock"]
 
 layout_bolt_d001 = [

@@ -132,6 +132,7 @@ model_t3w1 = [
     "tamper",
     "telemetry",
     "touch",
+    "touch_wakeup",
     # "tropic", # selected from xtask
     ]
 
@@ -211,4 +212,5 @@ suspend = ["io/suspend"]
 tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry"]
 touch = ["io/touch"]
+touch_wakeup = ["io/touch_wakeup"]
 tropic = ["sec/tropic"]
