@@ -195,8 +195,10 @@ async def confirm_namecoin_op(
 
     assert op.name is not None
     assert op.value is not None
-    name_text = op.name.decode("utf-8", errors="backslashreplace")
-    value_text = op.value.decode("utf-8", errors="backslashreplace")
+    # bytes(...) accepts AnyBytes (bytes / bytearray / memoryview) uniformly
+    # so the type-checker sees a concrete bytes object before .decode().
+    name_text = bytes(op.name).decode("utf-8", errors="backslashreplace")
+    value_text = bytes(op.value).decode("utf-8", errors="backslashreplace")
 
     await confirm_blob(
         "confirm_namecoin_op",

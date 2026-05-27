@@ -66,6 +66,7 @@ class Coin(TypedDict):
     links: dict[str, str]
     curve: str
     decimals: int
+    has_name_ops: bool
 
     # Mandatory fields added later in coin.update()
     name: str

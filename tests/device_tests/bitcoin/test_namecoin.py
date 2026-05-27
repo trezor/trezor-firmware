@@ -72,9 +72,7 @@ P2WPKH_INNER = bytes.fromhex("0014751e76e8199196d454941c45d1b3a323f1433bd6")
 RECIPIENT_NMC_P2SH_P2WPKH = "6Xd9yRABooCXFfUyPUU4M6xdgKRqxVdLs1"
 # Expected P2SH scriptPubKey for the above address:
 #   OP_HASH160 (0xa9) | push20 (0x14) | hash160(redeem) | OP_EQUAL (0x87).
-P2SH_P2WPKH_INNER = bytes.fromhex(
-    "a914bcfeb728b584253d5f3f70bcb780e9ef218a68f487"
-)
+P2SH_P2WPKH_INNER = bytes.fromhex("a914bcfeb728b584253d5f3f70bcb780e9ef218a68f487")
 
 # 20-byte commitment hash for NAME_NEW (HASH160 of name||rand by convention).
 COMMITMENT_HASH = bytes.fromhex("ababababababababababababababababababcdef")
