@@ -86,7 +86,7 @@ impl HorizontalSwipe {
 pub struct Frame<T> {
     bounds: Rect,
     content: T,
-    header: Header,
+    header: Option<Header>,
     header_update_fn: Option<fn(&T, &mut EventCtx, &mut Header)>,
     footer: Option<Footer<'static>>,
     footer_update_fn: Option<fn(&T, &mut EventCtx, &mut Footer<'static>)>,
@@ -108,8 +108,16 @@ impl<T> Frame<T>
 where
     T: Component + Paginate,
 {
-    #[inline(never)]
     pub const fn with_header(header: Header, content: T) -> Self {
+        Self::new(Some(header), content)
+    }
+
+    pub const fn content(content: T) -> Self {
+        Self::new(None, content)
+    }
+
+    #[inline(never)]
+    const fn new(header: Option<Header>, content: T) -> Self {
         Self {
             bounds: Rect::zero(),
             content,
@@ -222,7 +230,10 @@ where
     }
 
     pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: TString<'static>) {
-        self.header.update_title(ctx, new_title);
+        debug_assert!(self.header.is_some());
+        if let Some(header) = &mut self.header {
+            header.update_title(ctx, new_title)
+        }
     }
 
     pub fn update_content<F, R>(&mut self, ctx: &mut EventCtx, update_fn: F) -> R
@@ -331,7 +342,9 @@ where
         };
 
         if let Some(header_update_fn) = self.header_update_fn {
-            header_update_fn(&self.content, ctx, &mut self.header);
+            if let Some(header) = &mut self.header {
+                header_update_fn(&self.content, ctx, header);
+            }
         }
 
         if let Some(footer_update_fn) = self.footer_update_fn {
@@ -356,30 +369,30 @@ where
 fn frame_event(
     horizontal_swipe: &mut HorizontalSwipe,
     swipe_config: SwipeConfig,
-    header: &mut Header,
+    header: &mut Option<Header>,
     ctx: &mut EventCtx,
     event: Event,
 ) -> Option<FlowMsg> {
     // horizontal_swipe does not return any message
     horizontal_swipe.event(event, swipe_config);
     // msg type of header is FlowMsg, which will be the return value
-    header.event(ctx, event)
+    header.as_mut()?.event(ctx, event)
 }
 
 fn frame_place(
-    header: &mut Header,
+    header: &mut Option<Header>,
     footer: &mut Option<Footer>,
     bounds: Rect,
     margin: u8,
 ) -> Rect {
     let margin: i16 = margin.into();
 
-    let header_area = header.place(bounds);
-    let mut content_area = bounds
-        .inset(Insets::top(header_area.height().max(TITLE_HEIGHT)))
-        .inset(Insets::top(theme::SPACING))
-        .inset(Insets::top(margin));
-
+    let mut content_area = if let Some(header) = header.as_mut() {
+        let header_height = header.place(bounds).height().max(TITLE_HEIGHT);
+        bounds.inset(Insets::top(header_height + theme::SPACING + margin))
+    } else {
+        bounds
+    };
     if let Some(footer) = footer {
         // FIXME: spacer at the bottom might be applied also for usage without footer
         // but not for VerticalMenu
@@ -409,7 +422,9 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Frame");
-        t.child("header", &self.header);
+        if let Some(header) = &self.header {
+            t.child("header", header);
+        }
         t.child("content", &self.content);
 
         if let Some(footer) = &self.footer {

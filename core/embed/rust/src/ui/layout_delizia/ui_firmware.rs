@@ -1245,19 +1245,29 @@ impl FirmwareUI for UIDelizia {
         } else {
             Some(button)
         };
-        let content = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description),
-            Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, value),
-        ])
-        .into_paragraphs();
+        let content = SwipeContent::new(
+            ParagraphVecShort::from_iter([
+                Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description),
+                Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, value),
+            ])
+            .into_paragraphs(),
+        );
 
-        let header = Header::left_aligned(title);
-        let header = if danger {
-            header.with_danger_icon()
+        let frame = if title.is_empty() {
+            if danger {
+                // Disallow showing "dangerous" warning with no header.
+                return Err(Error::ValueError(c"Non-empty title is required"));
+            }
+            Frame::content(content)
         } else {
-            header.with_warning_low_icon()
+            let header = Header::left_aligned(title);
+            let header = if danger {
+                header.with_danger_icon()
+            } else {
+                header.with_warning_low_icon()
+            };
+            Frame::with_header(header, content)
         };
-        let frame = Frame::with_header(header, SwipeContent::new(content));
         let frame = if danger {
             frame.with_tap_footer(action)
         } else {
