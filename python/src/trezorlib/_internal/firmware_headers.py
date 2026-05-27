@@ -83,6 +83,11 @@ class LiteralStr(str):
     pass
 
 
+def chunkify(data: bytes) -> str:
+    s = data.hex()
+    return " ".join(s[i : i + 4] for i in range(0, len(s), 4))
+
+
 def format_container(
     pb: t.Union[c.Container, Struct, dict],
     indent: int = 0,
@@ -90,6 +95,7 @@ def format_container(
     truncate_after: t.Optional[int] = 64,
     truncate_to: t.Optional[int] = 32,
 ) -> str:
+
     def mostly_printable(bytes: bytes | bytearray) -> bool:
         if not bytes:
             return True
@@ -182,7 +188,7 @@ def format_header(
 
     output = [
         "Firmware Header " + format_container(header_out),
-        f"Fingerprint: {click.style(digest.hex(), bold=True)}",
+        f"Fingerprint: {click.style(chunkify(digest), bold=True)}",
         f"{all_ok} Signature is {sig_status.value}, hashes are {hash_status.value}",
     ]
 
@@ -217,8 +223,8 @@ def format_secmon_header(
 
     output = [
         "SECMON Header " + format_container(header_out),
-        "Code hash: " + click.style(code_hash.hex(), bold=True),
-        f"Fingerprint: {click.style(digest.hex(), bold=True)}",
+        f"Code hash:   {click.style(chunkify(code_hash), bold=True)}",
+        f"Fingerprint: {click.style(chunkify(digest), bold=True)}",
         f"{all_ok} Signature is {sig_status.value}, hash is {hash_status.value}",
     ]
 
@@ -326,7 +332,9 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
             ]
 
         if not terse:
-            output.append(f"Fingerprint: {click.style(self.digest().hex(), bold=True)}")
+            output.append(
+                f"Fingerprint: {click.style(chunkify(self.digest()), bold=True)}"
+            )
 
         sig_status = check_signature_any(self)
         sym = SYM_OK if sig_status.is_ok() else SYM_FAIL
@@ -485,8 +493,8 @@ class BootloaderV2Image(firmware.BootableImage):
 
         output = [
             "Firmware Header " + format_container(header_out),
-            f"Leaf hash: {click.style(self.leaf_hash().hex(), bold=True)}",
-            f"Merkle root: {click.style(self.merkle_root().hex(), bold=True)}",
+            f"Leaf hash:   {click.style(chunkify(self.leaf_hash()), bold=True)}",
+            f"Merkle root: {click.style(chunkify(self.merkle_root()), bold=True)}",
             f"{all_ok} Signature is {sig_status.value}",
         ]
 
