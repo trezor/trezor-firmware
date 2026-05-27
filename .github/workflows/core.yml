@@ -682,7 +682,7 @@ jobs:
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
         run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
-      - run: nix-shell --run "uv run make -C core test_emu_fido2"
+      - run: nix-shell --run "uv run make -C core test_emu_fido2_ui"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}
