@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import time
+import typing as t
 
 import pytest
 
@@ -137,13 +138,29 @@ def test_sd_protect_unlock(session: Session):
     assert e.value.code == messages.FailureType.ProcessError
 
 
+def session_lock(session: Session) -> None:
+    session.lock()
+
+
+def auto_lock(session: Session) -> None:
+    time.sleep(10.5)
+    session.refresh_features()
+
+
+def press_lock(session: Session) -> None:
+    buttons = session.debug.screen_buttons
+    center = (buttons._width() // 2, buttons._height() // 2)
+    session.debug.click(center, hold_ms=3500)
+    session.refresh_features()
+
+
 @pytest.mark.sd_card
 @pytest.mark.setup_client(pin=PIN)
 @pytest.mark.parametrize(
-    "autolock",
-    [pytest.param(False, id="session_lock"), pytest.param(True, id="auto_lock")],
+    "lock_func",
+    [pytest.param(fn, id=fn.__name__) for fn in (session_lock, auto_lock, press_lock)],
 )
-def test_sd_protect_lock(session: Session, autolock: bool):
+def test_sd_protect_lock(session: Session, lock_func: "t.Callable[[Session], None]"):
     layout = session.debug.read_layout
 
     assert "Lockscreen" in layout().all_components()
@@ -166,22 +183,13 @@ def test_sd_protect_lock(session: Session, autolock: bool):
         )
         device.sd_protect(session, Op.ENABLE)
 
-    if autolock:
+    if lock_func is auto_lock:
         device.apply_settings(session, auto_lock_delay_ms=10 * 1000)
-
-        def lock_func():
-            time.sleep(10.5)
-            session.refresh_features()
-
-    else:
-
-        def lock_func():
-            session.lock()  # features are auto-refreshed
 
     assert session.features.pin_protection is True
     assert session.features.sd_protection is True
     assert session.features.unlocked is True
-    lock_func()
+    lock_func(session)
     assert "Lockscreen" in layout().all_components()
     assert session.features.pin_protection is True
     assert session.features.sd_protection is None
@@ -205,7 +213,7 @@ def test_sd_protect_lock(session: Session, autolock: bool):
     assert session.features.pin_protection is False
     assert session.features.sd_protection is True
     assert session.features.unlocked is True
-    lock_func()
+    lock_func(session)
     assert "Lockscreen" in layout().all_components()
     assert session.features.pin_protection is False
     assert session.features.sd_protection is None
@@ -229,7 +237,7 @@ def test_sd_protect_lock(session: Session, autolock: bool):
     assert session.features.pin_protection is True
     assert session.features.sd_protection is True
     assert session.features.unlocked is True
-    lock_func()
+    lock_func(session)
     assert "Lockscreen" in layout().all_components()
     assert session.features.pin_protection is True
     assert session.features.sd_protection is None
