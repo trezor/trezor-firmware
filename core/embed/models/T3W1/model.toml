@@ -22,7 +22,6 @@ features = [
     "secure_aes",
     "serial_number",
     "smp",
-    "storage_hw_key",
     "framebuffer",
     "suspend",
     "tamper",

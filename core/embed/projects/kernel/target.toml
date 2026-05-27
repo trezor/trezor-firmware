@@ -27,7 +27,6 @@ uses = [
     "secret",
     "secure_aes",
     "smp",
-    "storage_hw_key",
     "suspend",
     "tamper",
     "telemetry",

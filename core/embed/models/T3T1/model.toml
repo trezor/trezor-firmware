@@ -12,7 +12,6 @@ features = [
     "secure_aes",
     "framebuffer",
     "secure_mode",
-    "storage_hw_key",
     "tamper",
     "layout_delizia",
 ]

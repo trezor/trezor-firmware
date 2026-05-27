@@ -9,7 +9,6 @@ uses = [
     "optiga",
     "secret",
     "secure_aes",
-    "storage_hw_key",
     "suspend",
     "tamper",
     "telemetry",

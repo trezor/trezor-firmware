@@ -49,7 +49,9 @@ fn main() -> Result<()> {
             lib.add_define("USE_BOOT_UCB", Some("1"));
         }
 
-        if cfg!(feature = "storage_hw_key") {
+        // Hardware-derived storage key (BHK) is an stm32u5 feature only,
+        // and the emulator has no BHK regardless of which MCU it emulates.
+        if cfg!(feature = "mcu_stm32u5") && cfg!(not(feature = "emulator")) {
             lib.add_define("USE_STORAGE_HWKEY", Some("1"));
         }
 

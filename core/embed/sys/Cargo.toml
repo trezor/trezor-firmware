@@ -51,7 +51,6 @@ dbg_console_vcp = ["dbg_console"]
 dbg_console_system_view = ["dbg_console", "system_view"]
 sdram = []
 sdram_stm32f429i_disc1 = []
-storage_hw_key = []
 system_view = []
 production = ["rtl/production"]
 
