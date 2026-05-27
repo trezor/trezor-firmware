@@ -29,7 +29,6 @@ uses = [
     "secmon_verification",
     "secret",
     "secure_aes",
-    "storage_hw_key",
     "suspend",
     "tamper",
     "telemetry",

@@ -27,9 +27,6 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_source("storage/unix/storage_salt.c");
     } else if cfg!(feature = "mcu_stm32f4") {
         lib.add_source("storage/stm32f4/storage_salt.c");
-        if cfg!(feature = "storage_hw_key") {
-            bail_unsupported!();
-        }
     } else if cfg!(feature = "mcu_stm32u5") {
         lib.add_source("storage/stm32u5/storage_salt.c");
     } else {

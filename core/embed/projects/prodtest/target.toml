@@ -34,7 +34,6 @@ uses = [
     "secmon_header",
     "secure_aes",
     "smp",
-    "storage_hw_key",
     "suspend",
     "tamper",
     "telemetry",

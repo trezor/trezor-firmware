@@ -13,7 +13,6 @@ features = [
     "secmon_verification",
     "secret",
     "secure_aes",
-    "storage_hw_key",
     "tamper",
     "framebuffer",
     "layout_bolt_d002",
