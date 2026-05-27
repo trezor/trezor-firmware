@@ -25,6 +25,7 @@
   "segwit": false,
   "taproot": false,
   "decred": false,
+  "has_name_ops": true,
   "fork_id": null,
   "force_bip143": false,
   "default_fee_b": {
