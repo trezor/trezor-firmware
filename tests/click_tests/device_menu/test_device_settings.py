@@ -32,6 +32,7 @@ pytestmark = [pytest.mark.models("eckhart")]
 LED_TITLE = "led__title"
 BRIGHTNESS_TITLE = "brightness__title"
 HAPTIC_FEEDBACK_TITLE = "haptic_feedback__title"
+TAP_TO_WAKE_TITLE = "words__tap_to_wake"
 
 
 def prepare_device_menu(debug: "DebugLink", features: "Features") -> None:
@@ -58,6 +59,7 @@ def test_device_settings_uninitialized(device_handler: "BackgroundDeviceHandler"
     assert TR.translate(LED_TITLE) not in items
     assert TR.translate(BRIGHTNESS_TITLE) not in items
     assert TR.translate(HAPTIC_FEEDBACK_TITLE) not in items
+    assert TR.translate(TAP_TO_WAKE_TITLE) not in items
 
 
 @pytest.mark.setup_client(pin=None)
@@ -121,6 +123,47 @@ def test_toggle_haptic(device_handler: "BackgroundDeviceHandler"):
     assert haptic_new is not None
     # Make sure the haptic setting was toggled
     assert haptic_new != haptic_old
+
+
+@pytest.mark.setup_client(pin=None)
+def test_toggle_tap_to_wake(device_handler: "BackgroundDeviceHandler"):
+    debug = device_handler.debuglink()
+    features = device_handler.features()
+
+    if features.tap_to_wake is None:
+        pytest.skip("tap to wake not supported")
+
+    assert features.initialized is True
+    assert features.pin_protection is False
+    # Default must be enabled on a fresh device
+    assert features.tap_to_wake is True
+
+    tap_to_wake_original = features.tap_to_wake
+
+    # Go to device settings
+    prepare_device_menu(debug, features)
+
+    items = debug.read_layout().vertical_menu_content()
+    assert TR.translate(TAP_TO_WAKE_TITLE) in items
+    tap_to_wake_idx = items.index(TR.translate(TAP_TO_WAKE_TITLE))
+
+    # First toggle — value must change
+    debug.button_actions.navigate_to_menu_item(tap_to_wake_idx)
+    assert_device_screen(debug, Menu.DEVICE)
+    close_device_menu(debug)
+    features = device_handler.features()
+    assert features.tap_to_wake == (not tap_to_wake_original)
+
+    # Second toggle — value must return to original
+    prepare_device_menu(debug, features)
+    items = debug.read_layout().vertical_menu_content()
+    tap_to_wake_idx = items.index(TR.translate(TAP_TO_WAKE_TITLE))
+    debug.button_actions.navigate_to_menu_item(tap_to_wake_idx)
+    assert_device_screen(debug, Menu.DEVICE)
+    close_device_menu(debug)
+
+    features = device_handler.features()
+    assert features.tap_to_wake == tap_to_wake_original
 
 
 @pytest.mark.setup_client(pin=None)
