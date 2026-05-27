@@ -97,9 +97,7 @@ class UiConfirmNamecoinOp(UiConfirm):
         self.amount_unit = amount_unit
 
     def confirm_dialog(self) -> Awaitable[Any]:
-        return layout.confirm_namecoin_op(
-            self.output, self.coin, self.amount_unit
-        )
+        return layout.confirm_namecoin_op(self.output, self.coin, self.amount_unit)
 
 
 class UiConfirmPaymentRequest(UiConfirm):

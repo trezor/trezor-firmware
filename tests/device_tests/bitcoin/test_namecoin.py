@@ -164,9 +164,12 @@ def test_name_firstupdate(session: Session) -> None:
     # OP_2 (0x52) + push(name) + push20(rand) + push(value) + OP_2DROP OP_2DROP OP_DROP
     expected_prefix = (
         b"\x52"
-        + bytes([len(NAME_BYTES)]) + NAME_BYTES
-        + b"\x14" + NAME_RAND
-        + bytes([len(VALUE_BYTES)]) + VALUE_BYTES
+        + bytes([len(NAME_BYTES)])
+        + NAME_BYTES
+        + b"\x14"
+        + NAME_RAND
+        + bytes([len(VALUE_BYTES)])
+        + VALUE_BYTES
         + b"\x6d\x6d\x75\x76"
     )
     _assert_script_prefix(serialized_tx, expected_prefix)
@@ -194,8 +197,10 @@ def test_name_update(session: Session) -> None:
     # OP_3 (0x53) + push(name) + push(value) + OP_2DROP OP_DROP + P2PKH
     expected_prefix = (
         b"\x53"
-        + bytes([len(NAME_BYTES)]) + NAME_BYTES
-        + bytes([len(VALUE_BYTES)]) + VALUE_BYTES
+        + bytes([len(NAME_BYTES)])
+        + NAME_BYTES
+        + bytes([len(VALUE_BYTES)])
+        + VALUE_BYTES
         + b"\x6d\x75\x76"
     )
     _assert_script_prefix(serialized_tx, expected_prefix)
@@ -207,9 +212,7 @@ def test_rejects_name_op_on_non_namecoin_coin(session: Session) -> None:
 
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/0"),
-        prev_hash=bytes.fromhex(
-            "00" * 32
-        ),
+        prev_hash=bytes.fromhex("00" * 32),
         prev_index=0,
         amount=10_000_000,
         script_type=messages.InputScriptType.SPENDADDRESS,
@@ -224,6 +227,4 @@ def test_rejects_name_op_on_non_namecoin_coin(session: Session) -> None:
         ),
     )
     with pytest.raises(TrezorFailure):
-        btc.sign_tx(
-            session, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin")
-        )
+        btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin"))
