@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Sequence
 
-    from trezor.messages import MultisigRedeemScriptType, TxInput
+    from trezor.messages import MultisigRedeemScriptType, NamecoinOp, TxInput
 
     from apps.common.coininfo import CoinInfo
 
@@ -118,6 +118,56 @@ def output_derive_script(address: str, coin: CoinInfo) -> AnyBytes:
         return script
 
     raise DataError("Invalid address type")
+
+
+def output_derive_name_op_script(
+    name_op: NamecoinOp, address: str, coin: CoinInfo
+) -> AnyBytes:
+    """Wrap a standard inner P2PKH/P2SH address script with a Namecoin name-op prelude.
+
+    Namecoin consensus permits any inner script type, but namecoin-core's
+    wallet only produces P2PKH and P2SH name outputs today and Trezor's NMC
+    coin def reflects that (segwit=false, taproot=false, bech32_prefix=null,
+    cashaddr_prefix=null). Widening to segwit/taproot inner scripts for NMC
+    would require BIP-173 prefix work and is a separate change.
+    """
+    from trezor.enums import NameOpKind
+
+    from . import scripts_namecoin
+
+    if not coin.has_name_ops:
+        raise DataError("name op on non-namecoin coin")
+
+    address_script = output_derive_script(address, coin)
+
+    # Defensive: output_derive_script on a coin with no segwit/cashaddr can
+    # only return P2PKH (starts with OP_DUP=0x76) or P2SH (starts with
+    # OP_HASH160=0xa9). Reject anything else so we never silently wrap a
+    # script type Namecoin's wallet would not produce today.
+    if len(address_script) == 0 or address_script[0] not in (0x76, 0xA9):
+        raise DataError("name op requires P2PKH or P2SH inner script")
+
+    kind = name_op.kind
+    if kind == NameOpKind.NAME_NEW:
+        assert name_op.commitment_hash is not None  # checked in _sanitize_tx_output
+        return scripts_namecoin.output_script_name_new(
+            name_op.commitment_hash, address_script
+        )
+    elif kind == NameOpKind.NAME_FIRSTUPDATE:
+        assert name_op.name is not None  # checked in _sanitize_tx_output
+        assert name_op.rand is not None  # checked in _sanitize_tx_output
+        assert name_op.value is not None  # checked in _sanitize_tx_output
+        return scripts_namecoin.output_script_name_firstupdate(
+            name_op.name, name_op.rand, name_op.value, address_script
+        )
+    elif kind == NameOpKind.NAME_UPDATE:
+        assert name_op.name is not None  # checked in _sanitize_tx_output
+        assert name_op.value is not None  # checked in _sanitize_tx_output
+        return scripts_namecoin.output_script_name_update(
+            name_op.name, name_op.value, address_script
+        )
+
+    raise DataError("Unknown name op kind")
 
 
 # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification

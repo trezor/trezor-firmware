@@ -537,6 +537,52 @@ def _sanitize_tx_prev_input(txi: PrevInput, coin: CoinInfo) -> PrevInput:
     return txi
 
 
+def _sanitize_namecoin_op(txo: TxOutput, coin: CoinInfo) -> None:
+    from trezor.enums import NameOpKind
+
+    if not coin.has_name_ops:
+        raise DataError("Name operations not enabled on this coin.")
+    if txo.namecoin_op is None:
+        raise DataError("PAYTONAMECOINOP output without namecoin_op.")
+    if txo.amount == 0:
+        raise DataError("PAYTONAMECOINOP output with zero amount.")
+    if txo.multisig:
+        raise DataError("PAYTONAMECOINOP output with multisig.")
+    # The inner P2PKH/P2SH recipient must be an explicit address: name-op
+    # outputs are never change outputs and the device never derives them
+    # from a BIP-32 path.
+    if not txo.address:
+        raise DataError("PAYTONAMECOINOP output missing address.")
+    if txo.address_n:
+        raise DataError("PAYTONAMECOINOP output must not use address_n.")
+
+    op = txo.namecoin_op
+    kind = op.kind
+    if kind == NameOpKind.NAME_NEW:
+        if op.commitment_hash is None or len(op.commitment_hash) != 20:
+            raise DataError("name_new requires 20-byte commitment_hash.")
+        if op.name is not None or op.value is not None or op.rand is not None:
+            raise DataError("name_new must not carry name/value/rand.")
+    elif kind == NameOpKind.NAME_FIRSTUPDATE:
+        if op.name is None or not 1 <= len(op.name) <= 255:
+            raise DataError("name_firstupdate name length out of range.")
+        if op.rand is None or len(op.rand) != 20:
+            raise DataError("name_firstupdate requires 20-byte rand.")
+        if op.value is None or len(op.value) > 520:
+            raise DataError("name_firstupdate value length out of range.")
+        if op.commitment_hash is not None:
+            raise DataError("name_firstupdate must not carry commitment_hash.")
+    elif kind == NameOpKind.NAME_UPDATE:
+        if op.name is None or not 1 <= len(op.name) <= 255:
+            raise DataError("name_update name length out of range.")
+        if op.value is None or len(op.value) > 520:
+            raise DataError("name_update value length out of range.")
+        if op.commitment_hash is not None or op.rand is not None:
+            raise DataError("name_update must not carry commitment_hash/rand.")
+    else:
+        raise DataError("Unknown name op kind.")
+
+
 def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
     script_type = txo.script_type  # local_cache_attribute
     address_n = txo.address_n  # local_cache_attribute
@@ -575,6 +621,11 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
             raise DataError("Both address and address_n provided.")
         if not address_n and not txo.address:
             raise DataError("Missing address")
+
+    if script_type == OutputScriptType.PAYTONAMECOINOP:
+        _sanitize_namecoin_op(txo, coin)
+    elif txo.namecoin_op is not None:
+        raise DataError("namecoin_op provided but not PAYTONAMECOINOP script type.")
 
     if txo.orig_hash and txo.orig_index is None:
         raise DataError("Missing orig_index field.")
