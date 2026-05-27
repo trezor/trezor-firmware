@@ -27,13 +27,42 @@ enum InputScriptType {
  * Type of script which will be used for transaction output
  */
 enum OutputScriptType {
-    PAYTOADDRESS = 0;      // used for all addresses (bitcoin, p2sh, witness)
-    PAYTOSCRIPTHASH = 1;   // p2sh address (deprecated; use PAYTOADDRESS)
-    PAYTOMULTISIG = 2;     // only for change output
-    PAYTOOPRETURN = 3;     // op_return
-    PAYTOWITNESS = 4;      // only for change output
-    PAYTOP2SHWITNESS = 5;  // only for change output
-    PAYTOTAPROOT = 6;      // only for change output
+    PAYTOADDRESS = 0;        // used for all addresses (bitcoin, p2sh, witness)
+    PAYTOSCRIPTHASH = 1;     // p2sh address (deprecated; use PAYTOADDRESS)
+    PAYTOMULTISIG = 2;       // only for change output
+    PAYTOOPRETURN = 3;       // op_return
+    PAYTOWITNESS = 4;        // only for change output
+    PAYTOP2SHWITNESS = 5;    // only for change output
+    PAYTOTAPROOT = 6;        // only for change output
+    PAYTONAMECOINOP = 7;     // Namecoin name operation: prepends a name_new/name_firstupdate/name_update
+                             // prelude in front of a standard inner P2PKH/P2SH script. The recipient
+                             // is still controlled by address / address_n on TxOutput.
+}
+
+/**
+ * Namecoin name-operation metadata for a TxOutput.
+ *
+ * The inner address script (P2PKH or P2SH) is still derived from the outer
+ * TxOutput.address / address_n; this message only describes the OP_* + OP_DROP
+ * prelude that wraps it. Coin must have has_name_ops set.
+ *
+ * See https://github.com/namecoin/proposals/blob/master/ifa-0001.md
+ */
+message NamecoinOp {
+    enum NameOpKind {
+        NAME_NEW = 0;
+        NAME_FIRSTUPDATE = 1;
+        NAME_UPDATE = 2;
+    }
+    required NameOpKind kind = 1;
+    // For NAME_NEW: 20-byte commitment hash. Mutually exclusive with name/value/rand.
+    optional bytes commitment_hash = 2;
+    // For NAME_FIRSTUPDATE and NAME_UPDATE: the name (<=255 bytes; the host pre-encodes UTF-8).
+    optional bytes name = 3;
+    // For NAME_FIRSTUPDATE and NAME_UPDATE: the value (<=520 bytes).
+    optional bytes value = 4;
+    // For NAME_FIRSTUPDATE only: 20-byte random nonce committed in the prior NAME_NEW.
+    optional bytes rand = 5;
 }
 
 /**
@@ -377,6 +406,7 @@ message TxAck {
             optional uint32 orig_index = 11;  // index of the output in the original transaction
                                               // (used when creating a replacement transaction)
             optional uint32 payment_req_index = 12;  // index of the PaymentRequest containing this output
+            optional NamecoinOp namecoin_op = 13;    // Namecoin name op; script_type must be PAYTONAMECOINOP
         }
     }
 }
@@ -428,6 +458,7 @@ message TxOutput {
     optional uint32 orig_index = 11;    // index of the output in the original transaction (used when
                                         // creating a replacement transaction)
     optional uint32 payment_req_index = 12;  // index of the PaymentRequest containing this output
+    optional NamecoinOp namecoin_op = 13;    // Namecoin name op; script_type must be PAYTONAMECOINOP
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.
