@@ -19,9 +19,7 @@ class TestScriptsNamecoin(unittest.TestCase):
         commitment = b"\x01" * 20
         script = output_script_name_new(commitment, INNER_P2PKH)
         # OP_1 (0x51) + push20 (0x14) + 20 bytes + OP_2DROP (0x6d) + inner
-        expected = (
-            b"\x51" + b"\x14" + commitment + b"\x6d" + INNER_P2PKH
-        )
+        expected = b"\x51" + b"\x14" + commitment + b"\x6d" + INNER_P2PKH
         self.assertEqual(bytes(script), bytes(expected))
 
     def test_name_new_p2sh(self):
@@ -45,9 +43,12 @@ class TestScriptsNamecoin(unittest.TestCase):
         # + OP_2DROP OP_2DROP OP_DROP + inner
         expected = (
             b"\x52"
-            + bytes([len(name)]) + name
-            + b"\x14" + rand
-            + bytes([len(value)]) + value
+            + bytes([len(name)])
+            + name
+            + b"\x14"
+            + rand
+            + bytes([len(value)])
+            + value
             + b"\x6d\x6d\x75"
             + INNER_P2PKH
         )
@@ -63,9 +64,13 @@ class TestScriptsNamecoin(unittest.TestCase):
         # We verify the byte sequence directly.
         expected = (
             b"\x52"
-            + bytes([len(name)]) + name
-            + b"\x14" + rand
-            + b"\x4c" + bytes([len(value)]) + value
+            + bytes([len(name)])
+            + name
+            + b"\x14"
+            + rand
+            + b"\x4c"
+            + bytes([len(value)])
+            + value
             + b"\x6d\x6d\x75"
             + INNER_P2PKH
         )
@@ -73,21 +78,15 @@ class TestScriptsNamecoin(unittest.TestCase):
 
     def test_name_firstupdate_rejects_bad_rand(self):
         with self.assertRaises(Exception):
-            output_script_name_firstupdate(
-                b"d/x", b"\x00" * 19, b"v", INNER_P2PKH
-            )
+            output_script_name_firstupdate(b"d/x", b"\x00" * 19, b"v", INNER_P2PKH)
 
     def test_name_firstupdate_rejects_empty_name(self):
         with self.assertRaises(Exception):
-            output_script_name_firstupdate(
-                b"", b"\x00" * 20, b"v", INNER_P2PKH
-            )
+            output_script_name_firstupdate(b"", b"\x00" * 20, b"v", INNER_P2PKH)
 
     def test_name_firstupdate_rejects_oversized_name(self):
         with self.assertRaises(Exception):
-            output_script_name_firstupdate(
-                b"x" * 256, b"\x00" * 20, b"v", INNER_P2PKH
-            )
+            output_script_name_firstupdate(b"x" * 256, b"\x00" * 20, b"v", INNER_P2PKH)
 
     def test_name_firstupdate_rejects_oversized_value(self):
         with self.assertRaises(Exception):
@@ -101,8 +100,10 @@ class TestScriptsNamecoin(unittest.TestCase):
         script = output_script_name_update(name, value, INNER_P2PKH)
         expected = (
             b"\x53"
-            + bytes([len(name)]) + name
-            + bytes([len(value)]) + value
+            + bytes([len(name)])
+            + name
+            + bytes([len(value)])
+            + value
             + b"\x6d\x75"
             + INNER_P2PKH
         )
@@ -115,8 +116,11 @@ class TestScriptsNamecoin(unittest.TestCase):
         script = output_script_name_update(name, value, INNER_P2PKH)
         expected = (
             b"\x53"
-            + bytes([len(name)]) + name
-            + b"\x4d" + bytes([520 & 0xFF, (520 >> 8) & 0xFF]) + value
+            + bytes([len(name)])
+            + name
+            + b"\x4d"
+            + bytes([520 & 0xFF, (520 >> 8) & 0xFF])
+            + value
             + b"\x6d\x75"
             + INNER_P2PKH
         )
