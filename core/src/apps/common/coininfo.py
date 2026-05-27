@@ -2507,18 +2507,18 @@ def by_name(name: str) -> CoinInfo:
                     "NMC",  # coin_shortcut
                     8,  # decimals
                     52,  # address_type
-                    5,  # address_type_p2sh
+                    13,  # address_type_p2sh
                     8700000000,  # maxfee_kb
                     "Namecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
+                    0x049d7cb2,  # xpub_magic_segwit_p2sh
+                    0x04b24746,  # xpub_magic_segwit_native
                     None,  # xpub_magic_multisig_segwit_p2sh
                     None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
+                    "nc",  # bech32_prefix
                     None,  # cashaddr_prefix
                     7,  # slip44
-                    False,  # segwit
+                    True,  # segwit
                     False,  # taproot
                     None,  # fork_id
                     False,  # force_bip143
