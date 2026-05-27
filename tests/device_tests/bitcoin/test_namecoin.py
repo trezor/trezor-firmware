@@ -58,6 +58,24 @@ FAKE_TXHASH_namecoin = bytes.fromhex(
 # Recipient address: a P2PKH NMC address (address_type 52, base58 prefix 'N').
 RECIPIENT_NMC = "NHFmgkR3X4xUYXkmgUFTxnRcyN3JpoaTYf"
 
+# Recipient address: a P2WPKH NMC bech32 address (HRP 'nc', witness v0,
+# 20-byte program). Built deterministically from the well-known BIP-173
+# pubkey hash 751e76e8199196d454941c45d1b3a323f1433bd6 with HRP 'nc'.
+RECIPIENT_NMC_BECH32 = "nc1qw508d6qejxtdg4y5r3zarvary0c5xw7kttkktk"
+# Expected P2WPKH scriptPubKey for the above bech32 address:
+#   OP_0 (0x00) | push20 (0x14) | 20-byte program.
+P2WPKH_INNER = bytes.fromhex("0014751e76e8199196d454941c45d1b3a323f1433bd6")
+
+# Recipient address: a P2SH-P2WPKH NMC base58 address. The redeem script
+# is the same P2WPKH program; the address prefix is the (corrected)
+# Namecoin P2SH prefix 13.
+RECIPIENT_NMC_P2SH_P2WPKH = "6Xd9yRABooCXFfUyPUU4M6xdgKRqxVdLs1"
+# Expected P2SH scriptPubKey for the above address:
+#   OP_HASH160 (0xa9) | push20 (0x14) | hash160(redeem) | OP_EQUAL (0x87).
+P2SH_P2WPKH_INNER = bytes.fromhex(
+    "a914bcfeb728b584253d5f3f70bcb780e9ef218a68f487"
+)
+
 # 20-byte commitment hash for NAME_NEW (HASH160 of name||rand by convention).
 COMMITMENT_HASH = bytes.fromhex("ababababababababababababababababababcdef")
 
@@ -228,3 +246,160 @@ def test_rejects_name_op_on_non_namecoin_coin(session: Session) -> None:
     )
     with pytest.raises(TrezorFailure):
         btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin"))
+
+
+# ---------------------------------------------------------------------------
+# Segwit name-op tests.
+#
+# These cover the script shapes that namecoin-core's wallet emits today when
+# wallet.m_default_address_type is bech32 (P2WPKH) or p2sh-segwit
+# (P2SH-P2WPKH). The prelude is unchanged; only the inner address script
+# differs.
+# ---------------------------------------------------------------------------
+
+
+def _segwit_input_template() -> messages.TxInputType:
+    return messages.TxInputType(
+        address_n=parse_path("m/84h/7h/0h/0/0"),
+        prev_hash=FAKE_TXHASH_namecoin,
+        prev_index=0,
+        amount=200_000_000,
+        script_type=messages.InputScriptType.SPENDWITNESS,
+    )
+
+
+def _p2sh_segwit_input_template() -> messages.TxInputType:
+    return messages.TxInputType(
+        address_n=parse_path("m/49h/7h/0h/0/0"),
+        prev_hash=FAKE_TXHASH_namecoin,
+        prev_index=0,
+        amount=200_000_000,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+    )
+
+
+def test_name_new_p2wpkh(session: Session) -> None:
+    """NAME_NEW to a Namecoin bech32 (P2WPKH) recipient address."""
+    inp1 = _segwit_input_template()
+    out1 = messages.TxOutputType(
+        address=RECIPIENT_NMC_BECH32,
+        amount=10_000_000,
+        script_type=messages.OutputScriptType.PAYTONAMECOINOP,
+        namecoin_op=messages.NamecoinOp(
+            kind=messages.NameOpKind.NAME_NEW,
+            commitment_hash=COMMITMENT_HASH,
+        ),
+    )
+
+    with session.test_ctx as client:
+        client.set_expected_responses(_expected_responses())
+        _, serialized_tx = btc.sign_tx(
+            session, "Namecoin", [inp1], [out1], prev_txes=TX_API
+        )
+
+    # OP_1 (0x51) + push20 (0x14) + commitment + OP_2DROP (0x6d) + P2WPKH inner.
+    expected_prefix = b"\x51\x14" + COMMITMENT_HASH + b"\x6d" + P2WPKH_INNER
+    _assert_script_prefix(serialized_tx, expected_prefix)
+
+
+def test_name_firstupdate_p2wpkh(session: Session) -> None:
+    """NAME_FIRSTUPDATE to a Namecoin bech32 (P2WPKH) recipient address."""
+    inp1 = _segwit_input_template()
+    out1 = messages.TxOutputType(
+        address=RECIPIENT_NMC_BECH32,
+        amount=10_000_000,
+        script_type=messages.OutputScriptType.PAYTONAMECOINOP,
+        namecoin_op=messages.NamecoinOp(
+            kind=messages.NameOpKind.NAME_FIRSTUPDATE,
+            name=NAME_BYTES,
+            rand=NAME_RAND,
+            value=VALUE_BYTES,
+        ),
+    )
+
+    with session.test_ctx as client:
+        client.set_expected_responses(_expected_responses())
+        _, serialized_tx = btc.sign_tx(
+            session, "Namecoin", [inp1], [out1], prev_txes=TX_API
+        )
+
+    expected_prefix = (
+        b"\x52"
+        + bytes([len(NAME_BYTES)])
+        + NAME_BYTES
+        + b"\x14"
+        + NAME_RAND
+        + bytes([len(VALUE_BYTES)])
+        + VALUE_BYTES
+        + b"\x6d\x6d\x75"
+        + P2WPKH_INNER
+    )
+    _assert_script_prefix(serialized_tx, expected_prefix)
+
+
+def test_name_update_p2wpkh(session: Session) -> None:
+    """NAME_UPDATE to a Namecoin bech32 (P2WPKH) recipient address."""
+    inp1 = _segwit_input_template()
+    out1 = messages.TxOutputType(
+        address=RECIPIENT_NMC_BECH32,
+        amount=10_000_000,
+        script_type=messages.OutputScriptType.PAYTONAMECOINOP,
+        namecoin_op=messages.NamecoinOp(
+            kind=messages.NameOpKind.NAME_UPDATE,
+            name=NAME_BYTES,
+            value=VALUE_BYTES,
+        ),
+    )
+
+    with session.test_ctx as client:
+        client.set_expected_responses(_expected_responses())
+        _, serialized_tx = btc.sign_tx(
+            session, "Namecoin", [inp1], [out1], prev_txes=TX_API
+        )
+
+    expected_prefix = (
+        b"\x53"
+        + bytes([len(NAME_BYTES)])
+        + NAME_BYTES
+        + bytes([len(VALUE_BYTES)])
+        + VALUE_BYTES
+        + b"\x6d\x75"
+        + P2WPKH_INNER
+    )
+    _assert_script_prefix(serialized_tx, expected_prefix)
+
+
+def test_name_update_p2sh_p2wpkh(session: Session) -> None:
+    """NAME_UPDATE to a Namecoin P2SH-P2WPKH recipient address.
+
+    The on-chain scriptPubKey is a plain P2SH script (OP_HASH160 ... OP_EQUAL);
+    the embedded segwit witness program is opaque to the prelude wrapper.
+    """
+    inp1 = _p2sh_segwit_input_template()
+    out1 = messages.TxOutputType(
+        address=RECIPIENT_NMC_P2SH_P2WPKH,
+        amount=10_000_000,
+        script_type=messages.OutputScriptType.PAYTONAMECOINOP,
+        namecoin_op=messages.NamecoinOp(
+            kind=messages.NameOpKind.NAME_UPDATE,
+            name=NAME_BYTES,
+            value=VALUE_BYTES,
+        ),
+    )
+
+    with session.test_ctx as client:
+        client.set_expected_responses(_expected_responses())
+        _, serialized_tx = btc.sign_tx(
+            session, "Namecoin", [inp1], [out1], prev_txes=TX_API
+        )
+
+    expected_prefix = (
+        b"\x53"
+        + bytes([len(NAME_BYTES)])
+        + NAME_BYTES
+        + bytes([len(VALUE_BYTES)])
+        + VALUE_BYTES
+        + b"\x6d\x75"
+        + P2SH_P2WPKH_INNER
+    )
+    _assert_script_prefix(serialized_tx, expected_prefix)
