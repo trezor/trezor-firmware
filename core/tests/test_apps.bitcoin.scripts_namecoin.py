@@ -13,6 +13,12 @@ INNER_P2PKH = unhexlify("76a914" + "00" * 20 + "88ac")
 # A canonical P2SH inner script: OP_HASH160 <push20 sh> OP_EQUAL.
 INNER_P2SH = unhexlify("a914" + "11" * 20 + "87")
 
+# A canonical P2WPKH inner script: OP_0 <push20 program>.
+INNER_P2WPKH = unhexlify("0014" + "22" * 20)
+
+# A canonical P2WSH inner script: OP_0 <push32 program>.
+INNER_P2WSH = unhexlify("0020" + "33" * 32)
+
 
 class TestScriptsNamecoin(unittest.TestCase):
     def test_name_new_p2pkh(self):
@@ -133,6 +139,117 @@ class TestScriptsNamecoin(unittest.TestCase):
     def test_name_update_rejects_oversized_value(self):
         with self.assertRaises(Exception):
             output_script_name_update(b"d/x", b"v" * 521, INNER_P2PKH)
+
+    # ----- Segwit inner-script coverage --------------------------------
+
+    def test_name_new_p2wpkh(self):
+        commitment = b"\xcd" * 20
+        script = output_script_name_new(commitment, INNER_P2WPKH)
+        # OP_1 + push20 + commitment + OP_2DROP + P2WPKH inner.
+        expected = b"\x51\x14" + commitment + b"\x6d" + INNER_P2WPKH
+        self.assertEqual(bytes(script), bytes(expected))
+
+    def test_name_new_p2wsh(self):
+        commitment = b"\xef" * 20
+        script = output_script_name_new(commitment, INNER_P2WSH)
+        expected = b"\x51\x14" + commitment + b"\x6d" + INNER_P2WSH
+        self.assertEqual(bytes(script), bytes(expected))
+
+    def test_name_firstupdate_p2wpkh(self):
+        name = b"d/segwit"
+        rand = b"\x07" * 20
+        value = b'{"info":"segwit name"}'
+        script = output_script_name_firstupdate(name, rand, value, INNER_P2WPKH)
+        expected = (
+            b"\x52"
+            + bytes([len(name)])
+            + name
+            + b"\x14"
+            + rand
+            + bytes([len(value)])
+            + value
+            + b"\x6d\x6d\x75"
+            + INNER_P2WPKH
+        )
+        self.assertEqual(bytes(script), bytes(expected))
+
+    def test_name_update_p2wpkh(self):
+        name = b"d/segwit"
+        value = b'{"info":"updated"}'
+        script = output_script_name_update(name, value, INNER_P2WPKH)
+        expected = (
+            b"\x53"
+            + bytes([len(name)])
+            + name
+            + bytes([len(value)])
+            + value
+            + b"\x6d\x75"
+            + INNER_P2WPKH
+        )
+        self.assertEqual(bytes(script), bytes(expected))
+
+
+class TestOutputDeriveNameOpScriptInnerGuard(unittest.TestCase):
+    """Cover the inner-script structural check in scripts.output_derive_name_op_script.
+
+    The function itself depends on output_derive_script + a real coin def,
+    which we don't have inside a MicroPython unit test context. We test the
+    structural predicate _is_namecoin_inner_script directly so the guard
+    rejects unexpected shapes (notably witness v1 / taproot).
+    """
+
+    def test_predicate_accepts_p2pkh(self):
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertTrue(_is_namecoin_inner_script(INNER_P2PKH))
+
+    def test_predicate_accepts_p2sh(self):
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertTrue(_is_namecoin_inner_script(INNER_P2SH))
+
+    def test_predicate_accepts_p2wpkh(self):
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertTrue(_is_namecoin_inner_script(INNER_P2WPKH))
+
+    def test_predicate_accepts_p2wsh(self):
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertTrue(_is_namecoin_inner_script(INNER_P2WSH))
+
+    def test_predicate_rejects_taproot(self):
+        # Witness v1 (taproot): OP_1 (0x51) push32 (0x20) + 32-byte program.
+        taproot = b"\x51\x20" + b"\x44" * 32
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertFalse(_is_namecoin_inner_script(taproot))
+
+    def test_predicate_rejects_op_return(self):
+        # OP_RETURN <push5> 'hello'.
+        op_return = b"\x6a\x05hello"
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertFalse(_is_namecoin_inner_script(op_return))
+
+    def test_predicate_rejects_short_p2pkh(self):
+        # Missing trailing OP_EQUALVERIFY OP_CHECKSIG.
+        truncated = b"\x76\xa9\x14" + b"\x00" * 20
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertFalse(_is_namecoin_inner_script(truncated))
+
+    def test_predicate_rejects_witness_v0_wrong_length(self):
+        # Witness v0 with a 30-byte program (neither P2WPKH nor P2WSH).
+        weird = b"\x00\x1e" + b"\x55" * 30
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertFalse(_is_namecoin_inner_script(weird))
+
+    def test_predicate_rejects_empty(self):
+        from apps.bitcoin.scripts import _is_namecoin_inner_script
+
+        self.assertFalse(_is_namecoin_inner_script(b""))
 
 
 if __name__ == "__main__":
