@@ -39,14 +39,6 @@ endif
 ifeq ($(BOOTLOADER_DEVEL),1)
 XTASK_BUILD_OPTS += --bootloader-devel
 endif
-ifeq ($(DISABLE_OPTIGA),1)
-XTASK_BUILD_OPTS += --disable-optiga
-endif
-ifeq ($(DISABLE_TROPIC),1)
-XTASK_BUILD_OPTS += --disable-tropic true
-else ifeq ($(DISABLE_TROPIC),0)
-XTASK_BUILD_OPTS += --disable-tropic false
-endif
 ifeq ($(N4W1),1)
 XTASK_BUILD_OPTS += --n4w1
 endif
@@ -57,15 +49,28 @@ ifeq ($(PYOPT),1)
 XTASK_BUILD_OPTS += --pyopt true
 else ifeq ($(PYOPT),0)
 XTASK_BUILD_OPTS += --pyopt false
-endif
-ifeq ($(STORAGE_INSECURE_TESTING_MODE),1)
-XTASK_BUILD_OPTS += --storage-insecure-testing-mode
+XTASK_BUILD_OPTS += --disable-animation
 endif
 ifeq ($(TREZOR_MEMPERF),1)
 XTASK_BUILD_OPTS += --mem-perf
 endif
 ifeq ($(UNSAFE_FW),1)
 XTASK_BUILD_OPTS += --unsafe-fw
+endif
+
+ifeq ($(STORAGE_INSECURE_TESTING_MODE),1)
+XTASK_BUILD_OPTS += --storage-insecure-testing-mode
+XTASK_BUILD_OPTS += --disable-tropic true
+XTASK_BUILD_OPTS += --disable-optiga
+else
+	ifeq ($(DISABLE_OPTIGA),1)
+	XTASK_BUILD_OPTS += --disable-optiga
+	endif
+	ifeq ($(DISABLE_TROPIC),1)
+	XTASK_BUILD_OPTS += --disable-tropic true
+	else ifeq ($(DISABLE_TROPIC),0)
+	XTASK_BUILD_OPTS += --disable-tropic false
+	endif
 endif
 
 ## help commands:
@@ -322,10 +327,10 @@ combine_fw: ## combine boardloader + bootloader + firmware into one combined ima
 	xtask combine --model $(TREZOR_MODEL) firmware
 
 upload: ## upload firmware using trezorctl
-	xtask upload --component firmware --model $(TREZOR_MODEL)
+	xtask upload firmware --model $(TREZOR_MODEL)
 
 upload_prodtest: ## upload prodtest using trezorctl
-	xtask upload --component prodtest --model $(TREZOR_MODEL)
+	xtask upload prodtest --model $(TREZOR_MODEL)
 
 # Skip the frozen-build rebuild when preprocessed `.i` files are already
 # present (e.g. downloaded as a CI artifact); otherwise build first so local

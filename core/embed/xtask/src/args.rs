@@ -396,7 +396,7 @@ impl BuildArgs {
             }
         }
 
-        let pyopt = self.pyopt.unwrap_or(!self.emulator);
+        let pyopt = self.pyopt.unwrap_or(true);
 
         if self.component == Component::Firmware {
             if pyopt {
@@ -474,7 +474,7 @@ impl BuildArgs {
                 features.push("ui_performance_overlay");
             }
 
-            if self.debug_link.unwrap_or(self.emulator) {
+            if self.debug_link.unwrap_or(!pyopt) {
                 features.push("debuglink");
                 features.push("ui_debug");
             }
@@ -484,7 +484,7 @@ impl BuildArgs {
             }
         }
 
-        if matches!(self.component, Component::Kernel) && self.debug_link.unwrap_or(self.emulator) {
+        if matches!(self.component, Component::Kernel) && self.debug_link.unwrap_or(!pyopt) {
             features.push("debuglink");
         }
 
