@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.12.1] (2026-06-17)
+
+### Added
+- Added support for `AccountDelete` transaction in Ripple.  [#6370]
+- Support for Solana off-chain message signing (OCMS) v0.  [#6759]
+
+### Changed
+- Solana System Program's Transfer instruction now allows multisig.  [#6843]
+
+### Fixed
+- Hide written characters in passphrase keyboard.  [#6342]
+- Improved Tron TRX transfer flow.  [#6520]
+- Improve Stellar confirmations flows.  [#6709]
+
+### Security
+- Fix device locking if only SD card protection is enabled.  [#265]
+
 ## [2.12.0] (21st May 2026)
 
 ### Added
@@ -16,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Updated translations in Cardano flow.  [#5723]
 - Re-introduced initial blob confirmation layout for Ethereum.  [#6597]
+- Truncated device name on BLE pairing.  [#6710]
 - Fixed out-of-memory failure when confirming large input data.  [#6780]
 
 ### Security
@@ -30,6 +48,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Support receive-side THP ACK piggybacking.  [#6202]
 - Support WebAuthn credentials' pagination.  [#6349]
 - Added support for `VoteWitnessContract` in Tron.  [#6524]
+
+### Fixed
 
 ## [2.11.0] (18th March 2026)
 
@@ -59,18 +79,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Added version build number to Features message.  [#6225]
 
+### Changed
+
 ### Fixed
 - Allow loading translations with different BUILD_VERSION.  [#6228]
 
 ### Security
 - Fixed side-channel vulnerability in BIP-39 mnemonic processing.
 
-## [2.9.6] (internal release)
+## [2.9.6] (10th December 2025)
 
 ### Fixed
 - Fixed Stellar Amount and Bitcoin lock time font.  [#6109]
+- Make sure to increment THP `seq_bit`.  [#6138]
+- Fixed external tamper trigger clearing.  [#6186]
 
-## [2.9.5] (internal release)
+## [2.9.5] (28th November 2025)
 
 ### Fixed
 - Fixed tamper RSOD not showing.  [#6165]
@@ -91,7 +115,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed "More info" menu item from screens that don't have more info.  [#6053]
 - Fixed touch issue causing stuck hold-to-confirm buttons.  [#6075]
 
-## [2.9.3] (internal release)
+## [2.9.3] (21st October 2025)
+
+### Added
+
+### Changed
 
 ### Fixed
 - Fix incorrect chunkified address rendering.  [#5882]
@@ -182,7 +210,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Cancelling device recovery after aborting from Suite.  [#3503]
 
-## [2.8.8] (internal release)
+## [2.8.8] (19th February 2025)
 
 ### Fixed
 - Fixed flashing old content when fading.  [#4492]
@@ -965,6 +993,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#24]: https://github.com/trezor/trezor-firmware/pull/24
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
 [#262]: https://github.com/trezor/trezor-firmware/pull/262
+[#265]: https://github.com/trezor/trezor-firmware/pull/265
 [#379]: https://github.com/trezor/trezor-firmware/pull/379
 [#450]: https://github.com/trezor/trezor-firmware/pull/450
 [#642]: https://github.com/trezor/trezor-firmware/pull/642
@@ -1352,14 +1381,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6279]: https://github.com/trezor/trezor-firmware/pull/6279
 [#6281]: https://github.com/trezor/trezor-firmware/pull/6281
 [#6321]: https://github.com/trezor/trezor-firmware/pull/6321
+[#6342]: https://github.com/trezor/trezor-firmware/pull/6342
 [#6349]: https://github.com/trezor/trezor-firmware/pull/6349
 [#6358]: https://github.com/trezor/trezor-firmware/pull/6358
+[#6370]: https://github.com/trezor/trezor-firmware/pull/6370
 [#6394]: https://github.com/trezor/trezor-firmware/pull/6394
 [#6435]: https://github.com/trezor/trezor-firmware/pull/6435
 [#6448]: https://github.com/trezor/trezor-firmware/pull/6448
 [#6483]: https://github.com/trezor/trezor-firmware/pull/6483
 [#6501]: https://github.com/trezor/trezor-firmware/pull/6501
 [#6506]: https://github.com/trezor/trezor-firmware/pull/6506
+[#6520]: https://github.com/trezor/trezor-firmware/pull/6520
 [#6524]: https://github.com/trezor/trezor-firmware/pull/6524
 [#6551]: https://github.com/trezor/trezor-firmware/pull/6551
 [#6567]: https://github.com/trezor/trezor-firmware/pull/6567
@@ -1368,6 +1400,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6601]: https://github.com/trezor/trezor-firmware/pull/6601
 [#6620]: https://github.com/trezor/trezor-firmware/pull/6620
 [#6707]: https://github.com/trezor/trezor-firmware/pull/6707
+[#6709]: https://github.com/trezor/trezor-firmware/pull/6709
 [#6710]: https://github.com/trezor/trezor-firmware/pull/6710
+[#6759]: https://github.com/trezor/trezor-firmware/pull/6759
 [#6780]: https://github.com/trezor/trezor-firmware/pull/6780
 [#6807]: https://github.com/trezor/trezor-firmware/pull/6807
+[#6843]: https://github.com/trezor/trezor-firmware/pull/6843
+[#6900]: https://github.com/trezor/trezor-firmware/pull/6900
