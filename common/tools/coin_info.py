@@ -336,6 +336,10 @@ def _load_btc_coins() -> Coins:
             icon=str(file.with_suffix(".png")),
             is_testnet=get_btc_testnet_status(coin["coin_label"]),
         )
+        # Optional boolean flags that default to False on coins where the
+        # corresponding feature is not declared in JSON. Keep this list short:
+        # only flags that the firmware reads via CoinInfo belong here.
+        coin.setdefault("has_name_ops", False)
         coins.append(coin)
 
     return coins
