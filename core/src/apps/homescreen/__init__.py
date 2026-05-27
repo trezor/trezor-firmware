@@ -10,7 +10,7 @@ from trezorui_api import NotificationLevel
 
 from apps.base import busy_expiry_ms
 from apps.common.authorization import is_set_any_session
-from apps.common.lock_manager import lock_device
+from apps.common.lock_manager import can_lock_device, lock_device
 
 
 async def busyscreen() -> None:
@@ -66,7 +66,7 @@ async def homescreen() -> None:
         )
 
     res = await run_homescreen(
-        label=label, notification=notification, lockable=config.has_pin()
+        label=label, notification=notification, lockable=can_lock_device()
     )
 
     if utils.INTERNAL_MODEL == "T3W1":
@@ -78,7 +78,7 @@ async def homescreen() -> None:
 
 
 async def _lockscreen(screensaver: bool = False) -> None:
-    from apps.common.lock_manager import can_lock_device, unlock_device
+    from apps.common.lock_manager import unlock_device
 
     # Only show the lockscreen UI if the device can in fact be locked, or if it is
     # and OLED device (in which case the lockscreen is a screensaver).
