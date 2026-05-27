@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improve Stellar confirmations flows.  [#6709]
 
 ### Security
-- Fix device locking if only SD card protection is enabled.  [#265]
+- [T2T1,T3T1] Fix device locking if only SD card protection is enabled.
 
 ## [2.12.0] (21st May 2026)
 
@@ -37,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Updated translations in Cardano flow.  [#5723]
 - Re-introduced initial blob confirmation layout for Ethereum.  [#6597]
-- Truncated device name on BLE pairing.  [#6710]
+- [T3W1] Truncated device name on BLE pairing.  [#6710]
 - Fixed out-of-memory failure when confirming large input data.  [#6780]
 
 ### Security
@@ -1063,7 +1063,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#24]: https://github.com/trezor/trezor-firmware/pull/24
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
 [#262]: https://github.com/trezor/trezor-firmware/pull/262
-[#265]: https://github.com/trezor/trezor-firmware/pull/265
 [#379]: https://github.com/trezor/trezor-firmware/pull/379
 [#450]: https://github.com/trezor/trezor-firmware/pull/450
 [#642]: https://github.com/trezor/trezor-firmware/pull/642
