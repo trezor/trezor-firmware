@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improve Stellar confirmations flows.  [#6709]
 
 ### Security
-- Fix device locking if only SD card protection is enabled.  [#265]
+- Fix device locking if only SD card protection is enabled.
 
 ## [2.12.0] (21st May 2026)
 
@@ -33,7 +33,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Updated translations in Cardano flow.  [#5723]
 - Re-introduced initial blob confirmation layout for Ethereum.  [#6597]
-- Truncated device name on BLE pairing.  [#6710]
 - Fixed out-of-memory failure when confirming large input data.  [#6780]
 
 ### Security
@@ -48,8 +47,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Support receive-side THP ACK piggybacking.  [#6202]
 - Support WebAuthn credentials' pagination.  [#6349]
 - Added support for `VoteWitnessContract` in Tron.  [#6524]
-
-### Fixed
 
 ## [2.11.0] (18th March 2026)
 
@@ -79,22 +76,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Added version build number to Features message.  [#6225]
 
-### Changed
-
 ### Fixed
 - Allow loading translations with different BUILD_VERSION.  [#6228]
 
 ### Security
 - Fixed side-channel vulnerability in BIP-39 mnemonic processing.
 
-## [2.9.6] (10th December 2025)
+## [2.9.6] (internal release)
 
 ### Fixed
 - Fixed Stellar Amount and Bitcoin lock time font.  [#6109]
-- Make sure to increment THP `seq_bit`.  [#6138]
-- Fixed external tamper trigger clearing.  [#6186]
 
-## [2.9.5] (28th November 2025)
+## [2.9.5] (internal release)
 
 ### Fixed
 - Fixed tamper RSOD not showing.  [#6165]
@@ -115,11 +108,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed "More info" menu item from screens that don't have more info.  [#6053]
 - Fixed touch issue causing stuck hold-to-confirm buttons.  [#6075]
 
-## [2.9.3] (21st October 2025)
-
-### Added
-
-### Changed
+## [2.9.3] (internal release)
 
 ### Fixed
 - Fix incorrect chunkified address rendering.  [#5882]
@@ -210,7 +199,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Cancelling device recovery after aborting from Suite.  [#3503]
 
-## [2.8.8] (19th February 2025)
+## [2.8.8] (internal release)
 
 ### Fixed
 - Fixed flashing old content when fading.  [#4492]
@@ -993,7 +982,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#24]: https://github.com/trezor/trezor-firmware/pull/24
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
 [#262]: https://github.com/trezor/trezor-firmware/pull/262
-[#265]: https://github.com/trezor/trezor-firmware/pull/265
 [#379]: https://github.com/trezor/trezor-firmware/pull/379
 [#450]: https://github.com/trezor/trezor-firmware/pull/450
 [#642]: https://github.com/trezor/trezor-firmware/pull/642
