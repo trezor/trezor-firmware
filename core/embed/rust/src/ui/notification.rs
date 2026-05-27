@@ -1,12 +1,13 @@
-use crate::{error::Error, strutil::TString};
+use crate::strutil::TString;
 
 #[cfg(feature = "micropython")]
-use crate::micropython::{
+use crate::micropython::qstr::Qstr;
+#[cfg(feature = "micropython")]
+use micropython::{
     macros::{obj_dict, obj_map, obj_type},
-    obj::Obj,
-    qstr::Qstr,
     simple_type::SimpleTypeObj,
     typ::Type,
+    Error, Obj,
 };
 
 /// Homescreen notification.
@@ -43,14 +44,14 @@ pub enum NotificationLevel {
 }
 
 impl TryFrom<u8> for NotificationLevel {
-    type Error = Error;
+    type Error = ();
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(NotificationLevel::Alert),
             1 => Ok(NotificationLevel::Warning),
             2 => Ok(NotificationLevel::Info),
             3 => Ok(NotificationLevel::Success),
-            _ => Err(Error::OutOfRange),
+            _ => Err(()),
         }
     }
 }
@@ -61,8 +62,10 @@ impl TryFrom<Obj> for NotificationLevel {
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
         let val = u8::try_from(obj)?;
-        let this = Self::try_from(val)?;
-        Ok(this)
+        match Self::try_from(val) {
+            Ok(this) => Ok(this),
+            Err(()) => Err(Error::OutOfRange),
+        }
     }
 }
 

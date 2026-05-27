@@ -5,14 +5,11 @@ use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
     Component, Timeout,
 };
-use crate::{
-    error::Error,
-    micropython::{obj::Obj, util::new_tuple},
-    ui::layout::{
-        obj::ComponentMsgObj,
-        result::{CANCELLED, CONFIRMED, INFO},
-    },
+use crate::ui::layout::{
+    obj::ComponentMsgObj,
+    result::{CANCELLED, CONFIRMED, INFO},
 };
+use micropython::{util::new_tuple, Error, Obj};
 
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,

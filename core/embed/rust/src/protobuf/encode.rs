@@ -1,20 +1,19 @@
 use core::convert::{TryFrom, TryInto};
 
-use crate::{
-    error::Error,
-    micropython::{buffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, qstr::Qstr, util},
+use micropython::{
+    buffer, error::Error, gc::Gc, iter::IterBuf, list::List, obj::Obj, py_object::GcObject, util,
 };
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
-    error,
     obj::MsgObj,
     zigzag,
 };
 
 pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
     let block = || {
-        let obj = Gc::<MsgObj>::try_from(obj)?;
+        let obj = GcObject::<MsgObj>::try_from(obj)?;
+        let obj = obj.borrow();
         let stream = &mut CounterStream { len: 0 };
         Encoder.encode_message(stream, &obj.def(), &obj)?;
         stream.len.try_into()
@@ -24,7 +23,8 @@ pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
 
 pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
     let block = || {
-        let obj = Gc::<MsgObj>::try_from(obj)?;
+        let obj = GcObject::<MsgObj>::try_from(obj)?;
+        let obj = obj.borrow();
 
         // SAFETY:
         // We assume that:
@@ -51,10 +51,8 @@ impl Encoder {
         obj: &MsgObj,
     ) -> Result<(), Error> {
         for field in msg.fields {
-            let field_name = Qstr::from(field.name);
-
             // Lookup the field by name. If not set or None, skip.
-            let field_value = match obj.map().get(field_name) {
+            let field_value = match obj.map().get(field.name()) {
                 Ok(value) => value,
                 Err(_) => continue,
             };
@@ -136,14 +134,15 @@ impl Encoder {
                 }
             }
             FieldType::Msg(msg_type) => {
-                let value = &Gc::<MsgObj>::try_from(value)?;
+                let value = &GcObject::<MsgObj>::try_from(value)?;
+                let value = value.borrow();
                 // Calculate the message size by encoding it through `CountingWriter`.
                 let counter = &mut CounterStream { len: 0 };
-                self.encode_message(counter, &msg_type, value)?;
+                self.encode_message(counter, &msg_type, &value)?;
 
                 // Encode the message as length-delimited bytes.
                 stream.write_uvarint(counter.len as u64)?;
-                self.encode_message(stream, &msg_type, value)?;
+                self.encode_message(stream, &msg_type, &value)?;
             }
         }
 
@@ -210,7 +209,7 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += len;
                 buf.copy_from_slice(val);
             })
-            .ok_or_else(error::end_of_buffer)
+            .ok_or(Error::EOFError)
     }
 
     fn write_byte(&mut self, val: u8) -> Result<(), Error> {
@@ -221,6 +220,6 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += 1;
                 *buf = val;
             })
-            .ok_or_else(error::end_of_buffer)
+            .ok_or(Error::EOFError)
     }
 }

@@ -7,6 +7,7 @@
 // Allowing dead code not to cause a lot of warnings when building for a specific target
 // (when building for TR, a lot of code only used in TT would get marked as unused).
 #![allow(dead_code)]
+#![feature(const_trait_impl)]
 #![feature(lang_items)]
 #![feature(trait_alias)]
 #![feature(custom_test_frameworks)]
@@ -22,8 +23,6 @@ mod macros;
 mod align;
 #[cfg(feature = "debug")]
 mod coverage;
-#[cfg(feature = "crypto")]
-mod crypto;
 #[cfg(feature = "debug")]
 mod debug;
 mod error;
@@ -68,9 +67,9 @@ fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
     // TODO: find out how to display message from panic_info.message()
     let msg = panic_info.message().as_str().unwrap_or("rs");
     if let Some(location) = panic_info.location() {
-        trezorhal::fatal_error::__fatal_error(msg, location.file(), location.line());
+        trezorhal::fatal_error::__fatal_error_rust(msg, location.file(), location.line());
     } else {
-        trezorhal::fatal_error::__fatal_error(msg, "", 0);
+        trezorhal::fatal_error::__fatal_error_rust(msg, "", 0);
     }
 }
 

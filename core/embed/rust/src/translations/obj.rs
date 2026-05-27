@@ -1,24 +1,41 @@
-use crate::{
+use micropython::{
+    buffer::get_buffer,
     error::Error,
-    io::InputStream,
-    micropython::{
-        buffer::get_buffer,
-        ffi,
-        macros::{
-            attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type,
-        },
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
-    trezorhal::translations,
+    ffi,
+    macros::{attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type},
+    map::Map,
+    module::Module,
+    obj::Obj,
+    qstr::Attribute,
+    simple_type::SimpleTypeObj,
+    typ::Type,
+    util,
 };
 
-use super::translated_string::TranslatedString;
+use crate::{io::InputStream, micropython::qstr::Qstr, trezorhal::translations};
+
+use super::{error::Error as TranslationsError, translated_string::TranslatedString};
+
+impl From<TranslationsError> for Error {
+    fn from(error: TranslationsError) -> Self {
+        const INVALID_TRANSLATIONS_BLOB: Error = Error::ValueError(c"Invalid translations blob");
+        match error {
+            TranslationsError::InvalidString => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::TranslationsInUse => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidOffsetTable => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidAlignment => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidLength => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::TrailingData => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::NotEnoughData => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidDataHash => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidSignature => Error::ValueError(c"Invalid signature"),
+            TranslationsError::BadMagic => Error::ValueError(c"Unknown translations blob version"),
+            TranslationsError::WriteFailed => {
+                Error::ValueError(c"Failed to write translations blob")
+            }
+        }
+    }
+}
 
 // SAFETY: Caller is supposed to be MicroPython, or copy MicroPython contracts
 // about the meaning of arguments.
@@ -29,8 +46,8 @@ unsafe extern "C" fn tr_attr_fn(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) 
             // Null destination would mean a `setattr`.
             return Err(Error::TypeError);
         }
-        let attr = Qstr::from_u16(attr as u16);
-        let result = if let Some(translation) = TranslatedString::from_qstr(attr) {
+        let attr = Attribute::from_raw(attr);
+        let result = if let Some(translation) = TranslatedString::from_attribute(attr) {
             translation.map_translated(|t| t.try_into())?
             // TODO fall back to English (which is static and can be converted
             // infallibly) if the allocation fails?

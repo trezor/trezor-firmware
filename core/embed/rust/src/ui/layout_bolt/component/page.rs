@@ -1,5 +1,6 @@
+use micropython::Error;
+
 use crate::{
-    error::Error,
     strutil::TString,
     time::Instant,
     translations::TR,

@@ -3,25 +3,26 @@ use core::{
     str,
 };
 
-use crate::{
-    error::Error,
-    io::InputStream,
-    micropython::{buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr, util},
+use micropython::{
+    buffer, error::Error, gc::Gc, list::List, map::Map, obj::Obj, py_object::GcObject, util,
 };
+
+use crate::io::InputStream;
 
 use super::{
     defs::{self, FieldDef, FieldType, MsgDef},
     error,
-    obj::{MsgDefObj, MsgObj},
+    obj::MsgObj,
     zigzag,
 };
 
 pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
     let block = || {
-        let def = Gc::<MsgDefObj>::try_from(msg_def)?;
+        let def = GcObject::<MsgDef>::try_from(msg_def)?;
+        let def = def.borrow();
         let enable_experimental = bool::try_from(enable_experimental)?;
 
-        if !enable_experimental && def.msg().is_experimental {
+        if !enable_experimental && def.is_experimental {
             // Refuse to decode message defs marked as experimental if not
             // explicitly allowed. Messages can also mark certain fields as
             // experimental (not the whole message). This is enforced during the
@@ -38,7 +39,7 @@ pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: O
             enable_experimental,
         };
 
-        let obj = decoder.message_from_stream(stream, def.msg())?;
+        let obj = decoder.message_from_stream(stream, &def)?;
         Ok(obj)
     };
     unsafe { util::try_or_raise(block) }
@@ -56,32 +57,38 @@ impl Decoder {
         stream: &mut InputStream,
         msg: &MsgDef,
     ) -> Result<Obj, Error> {
-        let mut obj = self.empty_message(msg)?;
+        let obj = self.empty_message(msg)?;
         // SAFETY: We assume that `obj` is not aliased here.
-        let map = unsafe { Gc::as_mut(&mut obj) }.map_mut();
-        self.decode_fields_into(stream, msg, map)?;
-        self.decode_defaults_into(msg, map)?;
-        self.assign_required_into(msg, map)?;
+        {
+            let mut obj_mut = obj.borrow_mut();
+            let map = obj_mut.map_mut();
+            self.decode_fields_into(stream, msg, map)?;
+            self.decode_defaults_into(msg, map)?;
+            self.assign_required_into(msg, map)?;
+        }
         Ok(obj.into())
     }
 
     /// Create a new message instance and fill it from `values`, handling the
     /// default and required fields correctly.
     pub fn message_from_values(&self, values: &Map, msg: &MsgDef) -> Result<Obj, Error> {
-        let mut obj = self.empty_message(msg)?;
+        let obj = self.empty_message(msg)?;
         // SAFETY: We assume that `obj` is not aliased here.
-        let map = unsafe { Gc::as_mut(&mut obj) }.map_mut();
-        for elem in values.elems() {
-            map.set(elem.key, elem.value)?;
+        {
+            let mut obj_mut = obj.borrow_mut();
+            let map = obj_mut.map_mut();
+            for elem in values.elems() {
+                map.set(elem.key, elem.value)?;
+            }
+            self.decode_defaults_into(msg, map)?;
+            self.assign_required_into(msg, map)?;
         }
-        self.decode_defaults_into(msg, map)?;
-        self.assign_required_into(msg, map)?;
         Ok(obj.into())
     }
 
     /// Allocate the backing message object with enough pre-allocated space for
     /// all fields.
-    pub fn empty_message(&self, msg: &MsgDef) -> Result<Gc<MsgObj>, Error> {
+    pub fn empty_message(&self, msg: &MsgDef) -> Result<GcObject<MsgObj>, Error> {
         MsgObj::alloc_with_capacity(msg.fields.len(), msg)
     }
 
@@ -101,16 +108,15 @@ impl Decoder {
 
             match msg.field(field_tag) {
                 Some(field) if field.get_type().primitive_type() != prim_type => {
-                    return Err(error::invalid_value(field.name.into()));
+                    return Err(error::invalid_value(field.name()));
                 }
                 Some(field) => {
                     let field_value = self.decode_field(stream, field)?;
-                    let field_name = Qstr::from(field.name);
                     if field.is_repeated() {
                         // Repeated field, values are stored in a list. First, look up the list
                         // object. If it exists, append to it. If it doesn't, create a new list with
                         // this field's value and assign it.
-                        if let Ok(obj) = map.get(field_name) {
+                        if let Ok(obj) = map.get(field.name()) {
                             let mut list = Gc::<List>::try_from(obj)?;
                             // SAFETY: We assume that `list` is not aliased here. This holds for
                             // uses in `message_from_stream` and `message_from_values`, because we
@@ -118,11 +124,11 @@ impl Decoder {
                             unsafe { Gc::as_mut(&mut list) }.append(field_value)?;
                         } else {
                             let list = List::alloc(&[field_value])?;
-                            map.set(field_name, list)?;
+                            map.set(field.name(), list)?;
                         }
                     } else {
                         // Singular field, assign the value directly.
-                        map.set(field_name, field_value)?;
+                        map.set(field.name(), field_value)?;
                     }
                 }
                 None => {
@@ -161,8 +167,7 @@ impl Decoder {
             let field = msg
                 .field(field_tag)
                 .ok_or_else(|| Error::KeyError(field_tag.into()))?;
-            let field_name = Qstr::from(field.name);
-            if map.contains_key(field_name) {
+            if map.contains_key(field.name()) {
                 // Field already has a value assigned, skip it.
                 match field.get_type().primitive_type() {
                     defs::PRIMITIVE_TYPE_VARINT => {
@@ -180,7 +185,7 @@ impl Decoder {
             } else {
                 // Decode the value and assign it.
                 let field_value = self.decode_field(stream, field)?;
-                map.set(field_name, field_value)?;
+                map.set(field.name(), field_value)?;
             }
         }
         Ok(())
@@ -190,21 +195,20 @@ impl Decoder {
     /// assigned and all optional missing fields are set to `None`.
     fn assign_required_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
         for field in msg.fields {
-            let field_name = Qstr::from(field.name);
-            if map.contains_key(field_name) {
+            if map.contains_key(field.name()) {
                 // Field is assigned, skip.
                 continue;
             }
             if field.is_required() {
                 // Required field is missing, abort.
-                return Err(error::missing_required_field(field_name));
+                return Err(error::missing_required_field(field.name()));
             }
             if field.is_repeated() {
                 // Optional repeated field, set to a new empty list.
-                map.set(field_name, List::alloc(&[])?)?;
+                map.set(field.name(), List::alloc(&[])?)?;
             } else {
                 // Optional singular field, set to None.
-                map.set(field_name, Obj::const_none())?;
+                map.set(field.name(), Obj::const_none())?;
             }
         }
         Ok(())
@@ -235,7 +239,7 @@ impl Decoder {
                 let buf_len = num.try_into()?;
                 let buf = stream.read(buf_len)?;
                 let unicode =
-                    str::from_utf8(buf).map_err(|_| error::invalid_value(field.name.into()))?;
+                    str::from_utf8(buf).map_err(|_| error::invalid_value(field.name()))?;
                 unicode.try_into()
             }
             FieldType::Enum(enum_type) => {
@@ -243,7 +247,7 @@ impl Decoder {
                 if enum_type.values.contains(&enum_val) {
                     Ok(enum_val.into())
                 } else {
-                    Err(error::invalid_value(field.name.into()))
+                    Err(error::invalid_value(field.name()))
                 }
             }
             FieldType::Msg(msg_type) => {

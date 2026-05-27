@@ -1,9 +1,9 @@
 use crate::{
-    error::Error,
-    micropython::{
-        ffi, macros::obj_type, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util,
-    },
+    micropython::qstr::Qstr,
     ui::{CommonUI, ModelUI},
+};
+use micropython::{
+    ffi, macros::obj_type, qstr::Attribute, simple_type::SimpleTypeObj, typ::Type, util, Error, Obj,
 };
 
 /*
@@ -27,8 +27,8 @@ unsafe extern "C" fn backlight_levels_attr(_self_in: Obj, attr: ffi::qstr, dest:
             // Null destination would mean a `setattr`.
             return Err(Error::TypeError);
         }
-        let attr = Qstr::from_u16(attr as _);
-        let value = match attr {
+        let attr = Attribute::from_raw(attr);
+        let value = match attr.into() {
             Qstr::MP_QSTR_NONE => ModelUI::get_backlight_none(),
             Qstr::MP_QSTR_NORMAL => ModelUI::get_backlight_normal(),
             Qstr::MP_QSTR_LOW => ModelUI::get_backlight_low(),

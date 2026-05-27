@@ -1,5 +1,4 @@
 use crate::{
-    error::Error,
     maybe_trace::MaybeTrace,
     strutil::TString,
     ui::{
@@ -14,6 +13,7 @@ use crate::{
         geometry::{Direction, LinearPlacement},
     },
 };
+use micropython::Error;
 
 use super::super::firmware::{Header, TextScreen, TextScreenMsg};
 
@@ -40,7 +40,7 @@ pub fn single_page<T>(layout: T) -> Result<SwipeFlow, Error>
 where
     T: Component<Msg = FlowMsg> + Swipable + MaybeTrace + 'static,
 {
-    let mut flow = SwipeFlow::new(&SinglePage::Show)?;
+    let mut flow = SwipeFlow::new(&SinglePage::Show);
     flow.add_page(&SinglePage::Show, layout)?;
     Ok(flow)
 }

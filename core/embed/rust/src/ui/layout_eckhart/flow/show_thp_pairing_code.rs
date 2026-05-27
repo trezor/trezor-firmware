@@ -1,5 +1,4 @@
 use crate::{
-    error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -11,6 +10,7 @@ use crate::{
         geometry::{Alignment, Direction},
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::Button,
@@ -53,7 +53,7 @@ pub fn new_show_thp_pairing_code(
     title: TString<'static>,
     description: TString<'static>,
     code: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
     ops.add_text_with_font(description, fonts::FONT_SATOSHI_REGULAR_38)
         .add_newline()
@@ -80,7 +80,7 @@ pub fn new_show_thp_pairing_code(
             _ => None,
         });
 
-    let mut flow = SwipeFlow::new(&ShowPairingCode::Main)?;
+    let mut flow = SwipeFlow::new(&ShowPairingCode::Main);
     flow.add_page(&ShowPairingCode::Main, main_content)?
         .add_page(&ShowPairingCode::Menu, menu_content)?;
 

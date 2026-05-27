@@ -1,21 +1,19 @@
 use core::convert::TryInto;
 
+use micropython::{gc::GcBox, Error, Obj};
+
 use super::component::{
     AddressDetails, CoinJoinProgress, Frame, FrameMsg, Homescreen, HomescreenMsg, Lockscreen,
     MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
     PromptScreen, SelectWordCount, SelectWordCountMsg, StatusScreen, SwipeContent, SwipeUpScreen,
     SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
 };
-use crate::{
-    error::Error,
-    micropython::{gc::GcBox, obj::Obj},
-    ui::{
-        component::{paginated::Paginate, Component, Never},
-        flow::Swipable,
-        layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED},
-        },
+use crate::ui::{
+    component::{paginated::Paginate, Component, Never},
+    flow::Swipable,
+    layout::{
+        obj::ComponentMsgObj,
+        result::{CANCELLED, CONFIRMED},
     },
 };
 

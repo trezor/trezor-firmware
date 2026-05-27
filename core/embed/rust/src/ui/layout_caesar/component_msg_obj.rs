@@ -1,24 +1,22 @@
 use core::convert::TryInto;
 
+use micropython::{Error, Obj};
+
 use super::component::{
     AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress,
     ConfirmHomescreen, Flow, Frame, Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry,
     PinEntry, Progress, ScrollableFrame, ShowMore, WordlistEntry,
 };
-use crate::{
-    error::Error,
-    micropython::obj::Obj,
-    ui::{
-        component::{
-            base::Component,
-            paginated::{PageMsg, Paginate},
-            text::paragraphs::{ParagraphSource, Paragraphs},
-            Never, Timeout,
-        },
-        layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED, INFO},
-        },
+use crate::ui::{
+    component::{
+        base::Component,
+        paginated::{PageMsg, Paginate},
+        text::paragraphs::{ParagraphSource, Paragraphs},
+        Never, Timeout,
+    },
+    layout::{
+        obj::ComponentMsgObj,
+        result::{CANCELLED, CONFIRMED, INFO},
     },
 };
 

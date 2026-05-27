@@ -1,7 +1,8 @@
 use core::mem;
 
+use micropython::Error;
+
 use crate::{
-    error::Error,
     maybe_trace::MaybeTrace,
     strutil::TString,
     translations::TR,

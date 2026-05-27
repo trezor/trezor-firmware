@@ -1,30 +1,26 @@
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
 
+use micropython::Error;
+
 use crate::{
-    error::Error,
     io::BinaryData,
     strutil::TString,
     time::{Duration, Instant, Stopwatch},
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
-        component::{Component, Event, EventCtx, Timer},
+        component::{base::AttachType, Component, Event, EventCtx, Label, Timer},
+        constant::{screen, HEIGHT, WIDTH},
         display::{image::ImageInfo, Color},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
+        lerp::Lerp,
         notification::{Notification, NotificationLevel},
-        shape::{self, Renderer},
+        shape::{self, render_on_canvas, ImageBuffer, Renderer, Rgb565Canvas},
+        util::animation_disabled,
     },
-};
-
-use crate::ui::{
-    component::{base::AttachType, Label},
-    constant::{screen, HEIGHT, WIDTH},
-    lerp::Lerp,
-    shape::{render_on_canvas, ImageBuffer, Rgb565Canvas},
-    util::animation_disabled,
 };
 
 use super::{

@@ -1,19 +1,27 @@
-use super::{super::model, *};
-use crate::{
+use ::micropython::{
+    buffer::{get_buffer, get_buffer_mut, StrBuffer},
     error::Error,
-    micropython::{
-        buffer::{get_buffer, get_buffer_mut, StrBuffer},
-        list::List,
-        macros::*,
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
+    list::List,
+    macros::*,
+    map::Map,
+    module::Module,
+    obj::Obj,
+    simple_type::SimpleTypeObj,
+    typ::Type,
+    util,
 };
+
+use super::{super::model, *};
+use crate::micropython::{qstr::Qstr, util::iter_into_array};
+
+impl From<BleError> for Error {
+    fn from(error: BleError) -> Self {
+        match error {
+            BleError::CommandFailed => Error::RuntimeError(c"BLE command failed"),
+            BleError::WriteFailed => Error::RuntimeError(c"BLE write failed"),
+        }
+    }
+}
 
 extern "C" fn py_erase_bonds() -> Obj {
     let block = || {
@@ -28,7 +36,7 @@ extern "C" fn py_unpair(obj: Obj) -> Obj {
     let addr_bytes_opt = if obj == Obj::const_none() {
         None
     } else {
-        let bytes: [u8; 6] = unwrap!(util::iter_into_array(obj));
+        let bytes: [u8; 6] = unwrap!(iter_into_array(obj));
         Some(bytes)
     };
 
@@ -38,7 +46,7 @@ extern "C" fn py_unpair(obj: Obj) -> Obj {
             get_bonds(|bonds| -> Result<(), Error> {
                 for b in bonds {
                     if b.addr == bytes {
-                        return unpair(Some(b));
+                        return Ok(unpair(Some(b))?);
                     }
                 }
                 Err(Error::ValueError(c"Address not found among bonds"))
@@ -255,7 +263,7 @@ extern "C" fn py_iface_read(n_args: usize, args: *const Obj) -> Obj {
         if buf.len() < RX_PACKET_SIZE {
             return Err(Error::ValueError(c"Buffer too small"));
         }
-        let read_len = read(buf, RX_PACKET_SIZE)?;
+        let read_len = read(&mut buf[..RX_PACKET_SIZE])?;
         if read_len != RX_PACKET_SIZE {
             return Err(Error::ValueError(c"Unexpected read length"));
         }
@@ -270,8 +278,8 @@ static BLE_INTERFACE_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_iface_num => obj_fn_1!(py_iface_num).as_obj(),
         Qstr::MP_QSTR_write => obj_fn_2!(py_iface_write).as_obj(),
         Qstr::MP_QSTR_read => obj_fn_var!(2, 3, py_iface_read).as_obj(),
-        Qstr::MP_QSTR_RX_PACKET_LEN => Obj::small_int(RX_PACKET_SIZE as u16),
-        Qstr::MP_QSTR_TX_PACKET_LEN => Obj::small_int(TX_PACKET_SIZE as u16),
+        Qstr::MP_QSTR_RX_PACKET_LEN => Obj::small_int(RX_PACKET_SIZE as i16),
+        Qstr::MP_QSTR_TX_PACKET_LEN => Obj::small_int(TX_PACKET_SIZE as i16),
     }),
 };
 
@@ -283,7 +291,7 @@ pub static mp_module_trezorble: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorble.to_obj(),
 
     /// MAX_BONDS: int
-    Qstr::MP_QSTR_MAX_BONDS => Obj::small_int(BLE_MAX_BONDS as u16),
+    Qstr::MP_QSTR_MAX_BONDS => Obj::small_int(BLE_MAX_BONDS as i16),
 
     /// class BLEIF:
     ///     """

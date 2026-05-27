@@ -1,9 +1,10 @@
 use core::cmp::Ordering;
 
+use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, Error, Obj};
+
 use crate::{
-    error::Error,
     io::BinaryData,
-    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::util,
     storage,
     strutil::TString,
     time::Duration,

@@ -1,13 +1,8 @@
+use micropython::{buffer::StrBuffer, gc::Gc, list::List, util::try_or_raise, Error, Obj};
+
 use crate::{
-    error::{value_error, Error},
     io::BinaryData,
-    micropython::{
-        buffer::{hexlify_bytes, StrBuffer},
-        gc::Gc,
-        list::List,
-        obj::Obj,
-        util::{iter_into_array, try_or_raise},
-    },
+    micropython::util::{hexlify_bytes, iter_into_array},
     storage::{get_avatar_len, load_avatar},
     strutil::TString,
     ui::{
@@ -244,7 +239,7 @@ impl TryFrom<u32> for RecoveryType {
             0 => Ok(RecoveryType::Normal),
             1 => Ok(RecoveryType::DryRun),
             2 => Ok(RecoveryType::UnlockRepeatedBackup),
-            _ => Err(value_error!(c"Invalid RecoveryType")),
+            _ => Err(Error::ValueError(c"Invalid RecoveryType")),
         }
     }
 }

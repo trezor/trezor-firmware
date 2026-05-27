@@ -1,10 +1,11 @@
 use core::cmp::Ordering;
 
+use micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, Error};
+
 use crate::{
-    error::Error,
     io::BinaryData,
     maybe_trace::MaybeTrace,
-    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::util::iter_into_array,
     strutil::TString,
     translations::TR,
     ui::{
@@ -410,7 +411,7 @@ impl FirmwareUI for UICaesar {
         let mut paragraphs = ParagraphVecLong::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
+            let [text, is_data]: [Obj; 2] = iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
                 &theme::TEXT_MONO_DATA
@@ -589,7 +590,7 @@ impl FirmwareUI for UICaesar {
 
                     let mut ops = OpTextLayout::new(theme::TEXT_MONO);
                     for item in unwrap!(IterBuf::new().try_iterate(*info_obj)) {
-                        let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(item));
+                        let [key, value, _is_data]: [Obj; 3] = unwrap!(iter_into_array(item));
                         if !ops.is_empty() {
                             // Each key-value pair is on its own page
                             ops.add_next_page();
@@ -631,7 +632,7 @@ impl FirmwareUI for UICaesar {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
+            let [text, is_data]: [Obj; 2] = iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
                 &theme::TEXT_MONO_DATA_WITH_CLASSIC_ELLIPSIS
@@ -667,7 +668,7 @@ impl FirmwareUI for UICaesar {
         button: Option<TString<'static>>,
         recovery_type: RecoveryType,
         show_instructions: bool,
-        _remaining_shares: Option<crate::micropython::obj::Obj>,
+        _remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
         let button = button.unwrap_or(TString::empty());
@@ -982,7 +983,7 @@ impl FirmwareUI for UICaesar {
         let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
+            let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
 
@@ -1282,7 +1283,7 @@ impl FirmwareUI for UICaesar {
             add_paragraphs(&mut paragraphs, None, Some(value.try_into()?), true);
         } else {
             for para in IterBuf::new().try_iterate(value)? {
-                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(para)?;
+                let [key, value, _is_data]: [Obj; 3] = iter_into_array(para)?;
                 add_paragraphs(
                     &mut paragraphs,
                     key.try_into_option()?,
@@ -1565,7 +1566,7 @@ fn parse_properties(items: Obj) -> Result<ParagraphVecLong<'static>, Error> {
     let mut paragraphs = ParagraphVecLong::new();
 
     for para in IterBuf::new().try_iterate(items)? {
-        let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
+        let [key, value, is_data]: [Obj; 3] = iter_into_array(para)?;
         add_paragraphs(
             &mut paragraphs,
             key.try_into_option()?,

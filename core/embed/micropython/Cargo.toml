@@ -1,0 +1,20 @@
+[package]
+name = "micropython"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+test = []
+debug = ["ufmt"]
+
+[dependencies]
+cty = "0.2.2"
+ufmt = { version = "0.2.0", default-features = false, optional = true }
+
+[build-dependencies]
+bindgen = { version = "0.72.1", default-features = false }
+cc = "1.2.61"
+glob = "0.3.3"
+
+[dev-dependencies]
+micropython = { path = ".", features = ["test"] }

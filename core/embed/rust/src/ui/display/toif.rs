@@ -1,7 +1,4 @@
-use crate::{
-    error::{value_error, Error},
-    ui::geometry::Offset,
-};
+use crate::ui::geometry::Offset;
 
 const TOIF_HEADER_LENGTH: usize = 12;
 
@@ -13,6 +10,11 @@ pub enum ToifFormat {
     GrayScaleEH = 3, // even hi
 }
 
+pub enum ToifError {
+    InvalidHeader,
+    InvalidLength,
+}
+
 /// Holding toif data
 /// See https://docs.trezor.io/trezor-firmware/misc/toif.html for data format.
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -21,14 +23,14 @@ pub struct Toif<'i> {
 }
 
 impl<'i> Toif<'i> {
-    pub const fn new(data: &'i [u8]) -> Result<Self, Error> {
+    pub const fn new(data: &'i [u8]) -> Result<Self, ToifError> {
         if data.len() < TOIF_HEADER_LENGTH || data[0] != b'T' || data[1] != b'O' || data[2] != b'I'
         {
-            return Err(value_error!(c"Invalid TOIF header."));
+            return Err(ToifError::InvalidHeader);
         }
         let zdatalen = u32::from_le_bytes([data[8], data[9], data[10], data[11]]) as usize;
         if zdatalen + TOIF_HEADER_LENGTH != data.len() {
-            return Err(value_error!(c"Invalid TOIF length."));
+            return Err(ToifError::InvalidLength);
         }
         Ok(Self { data })
     }

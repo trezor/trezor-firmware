@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use super::ffi;
-use crate::error::{value_error, Error};
 use core::ptr;
 
 use num_traits::FromPrimitive;
@@ -75,20 +74,6 @@ pub enum StorageError {
     DeleteFailed,
     /// Failed to perform the get-and-increment operation on a counter.
     CounterFailed,
-}
-
-impl From<StorageError> for Error {
-    fn from(err: StorageError) -> Self {
-        match err {
-            StorageError::InvalidData => value_error!(c"Invalid data for storage"),
-            StorageError::WriteFailed => value_error!(c"Storage write failed"),
-            StorageError::ReadFailed => value_error!(c"Storage read failed"),
-            StorageError::DeleteFailed => value_error!(c"Storage delete failed"),
-            StorageError::CounterFailed => {
-                value_error!(c"Retrieving counter value failed")
-            }
-        }
-    }
 }
 
 pub type StorageResult<T> = Result<T, StorageError>;

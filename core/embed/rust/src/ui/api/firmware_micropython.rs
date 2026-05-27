@@ -1,17 +1,19 @@
+use micropython::{
+    buffer::StrBuffer,
+    gc::Gc,
+    iter::IterBuf,
+    list::List,
+    macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
+    map::Map,
+    module::Module,
+    util, Error, Obj,
+};
+
 use crate::{
-    error::Error,
     io::BinaryData,
     micropython::{
-        buffer::StrBuffer,
-        gc::Gc,
-        iter::IterBuf,
-        list::List,
-        macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
-        map::Map,
-        module::Module,
-        obj::Obj,
         qstr::Qstr,
-        util,
+        util::{iter_into_array, iter_into_vec},
     },
     strutil::TString,
     trezorhal::model,
@@ -41,7 +43,7 @@ use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 /// Dummy implementation so that we can use `Empty` in a return type of
 /// unimplemented trait function
 impl ComponentMsgObj for Empty {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, crate::error::Error> {
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unimplemented!()
     }
 }
@@ -175,7 +177,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let footer: Option<(TString, bool)> = if footer_obj == Obj::const_none() {
             None
         } else {
-            let [text_obj, is_warning_obj]: [Obj; 2] = util::iter_into_array(footer_obj)?;
+            let [text_obj, is_warning_obj]: [Obj; 2] = iter_into_array(footer_obj)?;
             Some((text_obj.try_into()?, is_warning_obj.try_into()?))
         };
         let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
@@ -740,7 +742,7 @@ extern "C" fn new_request_string(n_args: usize, args: *const Obj, kwargs: *mut M
 extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let items_iterable: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let items = util::iter_into_vec(items_iterable)?;
+        let items = iter_into_vec(items_iterable)?;
         let current = kwargs.get(Qstr::MP_QSTR_current)?.try_into()?;
         let cancel = kwargs
             .get(Qstr::MP_QSTR_cancel)
@@ -758,7 +760,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
-        let words: [TString<'static>; MAX_WORD_QUIZ_ITEMS] = util::iter_into_array(words_iterable)?;
+        let words: [TString<'static>; MAX_WORD_QUIZ_ITEMS] = iter_into_array(words_iterable)?;
 
         let layout = ModelUI::select_word(title, description, words)?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -817,7 +819,7 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
-        let items: [TString<'static>; MAX_CHECKLIST_ITEMS] = util::iter_into_array(items)?;
+        let items: [TString<'static>; MAX_CHECKLIST_ITEMS] = iter_into_array(items)?;
 
         let layout = ModelUI::show_checklist(title, button, active, items)?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -866,7 +868,7 @@ extern "C" fn new_show_group_share_success(
 ) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let lines_iterable: Obj = kwargs.get(Qstr::MP_QSTR_lines)?;
-        let lines: [TString; MAX_GROUP_SHARE_LINES] = util::iter_into_array(lines_iterable)?;
+        let lines: [TString; MAX_GROUP_SHARE_LINES] = iter_into_array(lines_iterable)?;
 
         let layout = ModelUI::show_group_share_success(lines)?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -885,7 +887,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let notification = if let Some(notif_tuple) = notification {
-            let [text, level, actionable]: [Obj; 3] = util::iter_into_array(notif_tuple)?;
+            let [text, level, actionable]: [Obj; 3] = iter_into_array(notif_tuple)?;
             let text: TString<'static> = text.try_into()?;
             let level: NotificationLevel = level.try_into()?;
             let actionable: bool = actionable.try_into()?;
@@ -922,11 +924,11 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             MAX_PAIRED_DEVICES,
         > = heapless::Vec::new();
         for device in IterBuf::new().try_iterate(paired_obj)? {
-            let [mac, host_info]: [Obj; 2] = util::iter_into_array(device)?;
+            let [mac, host_info]: [Obj; 2] = iter_into_array(device)?;
             let mac: TString<'static> = mac.try_into()?;
             let host_info: Option<[TString<'static>; 2]> = host_info
                 .try_into_option()?
-                .map(util::iter_into_array)
+                .map(iter_into_array)
                 .transpose()?;
 
             if paired_devices.push((mac, host_info)).is_err() {
@@ -939,7 +941,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let auto_lock: Option<[TString; 2]> = kwargs
             .get(Qstr::MP_QSTR_auto_lock)?
             .try_into_option()?
-            .map(util::iter_into_array)
+            .map(iter_into_array)
             .transpose()?;
         let wipe_code_enabled: Option<bool> = kwargs
             .get(Qstr::MP_QSTR_wipe_code_enabled)?
@@ -1009,6 +1011,8 @@ extern "C" fn new_wait_ble_host_confirmation(
     _args: *const Obj,
     _kwargs: *mut Map,
 ) -> Obj {
+    #[cfg(not(feature = "ble"))]
+    unimplemented!();
     #[cfg(feature = "ble")]
     {
         let block = move |_args: &[Obj], _kwargs: &Map| {
@@ -1018,9 +1022,6 @@ extern "C" fn new_wait_ble_host_confirmation(
         };
         unsafe { util::try_with_args_and_kwargs(_n_args, _args, _kwargs, block) }
     }
-
-    #[cfg(not(feature = "ble"))]
-    unimplemented!()
 }
 
 // Prefix parameters with `_` to avoid unused variable warning when building
@@ -1030,6 +1031,8 @@ extern "C" fn new_show_ble_pairing_code(
     _args: *const Obj,
     _kwargs: *mut Map,
 ) -> Obj {
+    #[cfg(not(feature = "ble"))]
+    unimplemented!();
     #[cfg(feature = "ble")]
     {
         let block = move |_args: &[Obj], kwargs: &Map| {
@@ -1043,8 +1046,6 @@ extern "C" fn new_show_ble_pairing_code(
         unsafe { util::try_with_args_and_kwargs(_n_args, _args, _kwargs, block) }
     }
 
-    #[cfg(not(feature = "ble"))]
-    unimplemented!()
 }
 
 extern "C" fn new_show_thp_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -1080,7 +1081,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option::<Obj>()?
             .map(|obj| -> Result<(TString<'_>, bool), Error> {
-                let [text, enabled]: [Obj; 2] = util::iter_into_array(obj)?;
+                let [text, enabled]: [Obj; 2] = iter_into_array(obj)?;
                 Ok((text.try_into()?, enabled.try_into()?))
             })
             .transpose()?;
@@ -1182,7 +1183,7 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
 
-        let words: Vec<TString, 33> = util::iter_into_vec(words)?;
+        let words: Vec<TString, 33> = iter_into_vec(words)?;
 
         let layout = ModelUI::show_share_words(words, title)?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -1213,7 +1214,7 @@ extern "C" fn new_show_share_words_extended(
         let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
         let text_check: TString = kwargs.get(Qstr::MP_QSTR_text_check)?.try_into()?;
 
-        let words: Vec<TString, 33> = util::iter_into_vec(words)?;
+        let words: Vec<TString, 33> = iter_into_vec(words)?;
 
         let layout = ModelUI::show_share_words_extended(
             words,

@@ -2,16 +2,14 @@
 use heapless::index_map::{Entry, FnvIndexMap};
 use spin::RwLock;
 
-use crate::{
+use crate::micropython::qstr::Qstr;
+use micropython::{
     error::Error,
-    micropython::{
-        list::List,
-        macros::{obj_fn_0, obj_fn_2, obj_module},
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
-    },
+    list::List,
+    macros::{obj_fn_0, obj_fn_2, obj_module},
+    module::Module,
+    obj::Obj,
+    util,
 };
 
 struct Key {

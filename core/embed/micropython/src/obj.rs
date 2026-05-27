@@ -1,0 +1,482 @@
+// Copyright (c) 2026 Trezor Company s.r.o.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+use core::convert::{TryFrom, TryInto};
+
+use crate::runtime::catch_exception;
+use crate::{Error, ffi};
+
+pub type Obj = ffi::mp_obj_t;
+pub type ObjBase = ffi::mp_obj_base_t;
+
+impl PartialEq for Obj {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_bits() == other.as_bits()
+    }
+}
+
+impl Eq for Obj {}
+
+impl Obj {
+    pub const unsafe fn from_ptr(ptr: *mut cty::c_void) -> Self {
+        Self(ptr)
+    }
+
+    pub const fn as_ptr(self) -> *mut cty::c_void {
+        self.0
+    }
+
+    pub const unsafe fn from_bits(bits: cty::uintptr_t) -> Self {
+        Self(bits as _)
+    }
+
+    pub fn as_bits(self) -> cty::uintptr_t {
+        self.0 as _
+    }
+}
+
+impl Obj {
+    pub fn is_small_int(self) -> bool {
+        // micropython/py/obj.h mp_obj_is_small_int
+        self.as_bits() & 1 != 0
+    }
+
+    pub fn is_qstr(self) -> bool {
+        // micropython/py/obj.h mp_obj_is_qstr
+        self.as_bits() & 7 == 2
+    }
+
+    pub fn is_immediate(self) -> bool {
+        // micropython/py/obj.h mp_obj_is_immediate_obj
+        self.as_bits() & 7 == 6
+    }
+
+    pub fn is_ptr(self) -> bool {
+        // micropython/py/obj.h mp_obj_is_obj
+        self.as_bits() & 3 == 0
+    }
+
+    pub fn is_null(self) -> bool {
+        // obj == NULL
+        self.as_bits() == 0
+    }
+}
+
+impl Obj {
+    pub const fn const_null() -> Self {
+        // micropython/py/obj.h
+        // #define MP_OBJ_NULL (MP_OBJ_FROM_PTR((void *)0))
+        unsafe { Self::from_bits(0) }
+    }
+
+    pub const fn const_stop_iteration() -> Self {
+        // micropython/py/obj.h
+        // #define MP_OBJ_STOP_ITERATION (MP_OBJ_FROM_PTR((void *)0))
+        unsafe { Self::from_bits(0) }
+    }
+
+    pub const fn const_none() -> Self {
+        // micropython/py/obj.h
+        // #define mp_const_none MP_OBJ_NEW_IMMEDIATE_OBJ(0)
+        unsafe { Self::immediate(0) }
+    }
+
+    pub const fn const_false() -> Self {
+        // micropython/py/obj.h
+        // #define mp_const_false MP_OBJ_NEW_IMMEDIATE_OBJ(1)
+        unsafe { Self::immediate(1) }
+    }
+
+    pub const fn const_true() -> Self {
+        // micropython/py/obj.h
+        // #define mp_const_true MP_OBJ_NEW_IMMEDIATE_OBJ(3)
+        unsafe { Self::immediate(3) }
+    }
+
+    const unsafe fn immediate(val: usize) -> Self {
+        // SAFETY:
+        //  - `val` is in `0..=3` range.
+        //  - MicroPython compiled with `MICROPY_OBJ_REPR == MICROPY_OBJ_REPR_A`.
+        //  - MicroPython compiled with `MICROPY_OBJ_IMMEDIATE_OBJS.
+
+        // micropython/py/obj.h
+        // #define MP_OBJ_NEW_IMMEDIATE_OBJ(val) ((mp_obj_t)(((val) << 3) | 6))
+        unsafe { Self::from_bits((val << 3) | 6) }
+    }
+
+    pub const fn small_int(val: i16) -> Self {
+        // an i16 value always fits into `isize - 1` bits
+        Self::small_int_unchecked(val as isize)
+    }
+
+    pub const fn try_small_int(val: isize) -> Result<Self, ()> {
+        // check if we can fit into `isize - 1` bits, including sign:
+        let val_shifted = val << 1;
+        let val_unshifted = val_shifted >> 1;
+        if val_unshifted != val {
+            Err(())
+        } else {
+            Ok(Self::small_int_unchecked(val))
+        }
+    }
+
+    /// Convert an isize to a small-int inline Obj representation.
+    ///
+    /// The actual value must use one less bit than the size of `isize`,
+    /// otherwise the topmost bit is silently truncated.
+    pub const fn small_int_unchecked(val: isize) -> Self {
+        // SAFETY:
+        //  - MicroPython compiled with `MICROPY_OBJ_REPR == MICROPY_OBJ_REPR_A`.
+        //  - `mp_int_t` is the same size as `isize`, per micropython requirements.
+
+        // micropython/py/obj.h
+        // #define MP_OBJ_NEW_SMALL_INT(small_int) \
+        //     ((mp_obj_t)((((mp_uint_t)(small_int)) << 1) | 1))
+        let val = val as usize;
+        unsafe { Self::from_bits((val << 1) | 1) }
+    }
+
+    pub fn small_int_value(self) -> isize {
+        // SAFETY:
+        //  - MicroPython compiled with `MICROPY_OBJ_REPR == MICROPY_OBJ_REPR_A`.
+        //  - `mp_int_t` is the same size as `isize`, per micropython requirements.
+
+        // micropython/py/obj.h
+        // #define MP_OBJ_SMALL_INT_VALUE(o) (((mp_int_t)(o)) >> 1)
+        (self.as_bits() >> 1) as isize
+    }
+}
+
+impl Obj {
+    pub fn call_with_n_args(self, args: &[Obj]) -> Result<Obj, Error> {
+        // SAFETY:
+        //  - Each of `args` has no lifetime bounds.
+        // EXCEPTION: Calls Python code so can raise arbitrarily.
+        catch_exception!(unsafe { ffi::mp_call_function_n_kw } => { self, args.len(), 0, args.as_ptr() })
+    }
+}
+
+//
+// # Converting `Obj` into plain data.
+//
+
+impl TryFrom<Obj> for bool {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        // TODO: Avoid type casts on the Python side.
+        // SAFETY:
+        //  - `obj` can be anything uPy understands.
+        // EXCEPTION: Can call Python code (on custom instances) and therefore raise.
+        catch_exception!(unsafe { ffi::mp_obj_is_true } => { obj })
+    }
+}
+
+//
+// # Converting plain data into `Obj`.
+//
+
+impl From<bool> for Obj {
+    fn from(val: bool) -> Self {
+        if val {
+            Obj::const_true()
+        } else {
+            Obj::const_false()
+        }
+    }
+}
+
+impl TryFrom<i32> for Obj {
+    type Error = Error;
+
+    fn try_from(val: i32) -> Result<Self, Self::Error> {
+        // `mp_obj_new_int` accepts a `mp_int_t` argument, which is word-sized. We
+        // primarily target 32-bit architecture, and therefore keep the primary signed
+        // conversion type as `i32`, but convert through `into()` if the types differ.
+
+        // EXCEPTION: Can raise if `val` is larger than smallint and allocation fails.
+        catch_exception!(unsafe { ffi::mp_obj_new_int } => { val.into() })
+    }
+}
+
+impl TryFrom<i64> for Obj {
+    type Error = Error;
+
+    fn try_from(val: i64) -> Result<Self, Self::Error> {
+        // Because `mp_obj_new_int_from_ll` allocates even if `val` fits into small-int,
+        // we try to go through `mp_obj_new_int` first.
+        match i32::try_from(val) {
+            Ok(smaller_val) => smaller_val.try_into(),
+            // EXCEPTION: Will raise if allocation fails.
+            Err(_) => catch_exception!(unsafe { ffi::mp_obj_new_int_from_ll } => { val }),
+        }
+    }
+}
+
+impl TryFrom<u32> for Obj {
+    type Error = Error;
+
+    fn try_from(val: u32) -> Result<Self, Self::Error> {
+        // `mp_obj_new_int_from_uint` accepts a `mp_uint_t` argument, which is
+        // word-sized. We primarily target 32-bit architecture, and therefore keep
+        // the primary unsigned conversion type as `u32`, but convert through `into()`
+        // if the types differ.
+
+        // EXCEPTION: Can raise if `val` is larger than smallint and allocation fails.
+        catch_exception!(unsafe { ffi::mp_obj_new_int_from_uint } => { val.into() })
+    }
+}
+
+impl TryFrom<u64> for Obj {
+    type Error = Error;
+
+    fn try_from(val: u64) -> Result<Self, Self::Error> {
+        // Because `mp_obj_new_int_from_ull` allocates even if `val` fits into
+        // small-int, we try to go through `mp_obj_new_int_from_uint` first.
+        match u32::try_from(val) {
+            Ok(smaller_val) => smaller_val.try_into(),
+            // EXCEPTION: Will raise if allocation fails.
+            Err(_) => catch_exception!(unsafe { ffi::mp_obj_new_int_from_ull } => { val }),
+        }
+    }
+}
+
+/// Byte slices are converted into `bytes` MicroPython objects, by allocating
+/// new space on the heap and copying.
+impl TryFrom<&[u8]> for Obj {
+    type Error = Error;
+
+    fn try_from(val: &[u8]) -> Result<Self, Self::Error> {
+        // SAFETY:
+        //  - Should work with any data
+        // EXCEPTION: Will raise if allocation fails.
+        catch_exception!(unsafe { ffi::mp_obj_new_bytes } => { val.as_ptr(), val.len() })
+    }
+}
+
+/// String slices are converted into `str` MicroPython objects. Strings that are
+/// already interned will turn up as QSTRs, strings not found in the QSTR pool
+/// will be allocated on the heap and copied.
+impl TryFrom<&str> for Obj {
+    type Error = Error;
+
+    fn try_from(val: &str) -> Result<Self, Self::Error> {
+        // SAFETY:
+        //  - `str` is guaranteed to be UTF-8.
+        // EXCEPTION: Will raise if allocation fails.
+        catch_exception!(unsafe { ffi::mp_obj_new_str } => { val.as_ptr().cast(), val.len() })
+    }
+}
+
+impl TryFrom<(Obj, Obj)> for Obj {
+    type Error = Error;
+
+    fn try_from(val: (Obj, Obj)) -> Result<Self, Self::Error> {
+        // SAFETY:
+        //  - Should work with any micropython objects.
+        // EXCEPTION: Will raise if allocation fails.
+        let values = [val.0, val.1];
+        let obj = catch_exception!(unsafe { ffi::mp_obj_new_tuple } => { 2, values.as_ptr() })?;
+        if obj.is_null() {
+            Err(Error::AllocationFailed)
+        } else {
+            Ok(obj)
+        }
+    }
+}
+
+impl TryFrom<(Obj, Obj, Obj)> for Obj {
+    type Error = Error;
+
+    fn try_from(val: (Obj, Obj, Obj)) -> Result<Self, Self::Error> {
+        // SAFETY:
+        //  - Should work with any micropython objects.
+        // EXCEPTION: Will raise if allocation fails.
+        let values = [val.0, val.1, val.2];
+        let obj = catch_exception!(unsafe { ffi::mp_obj_new_tuple } => { 3, values.as_ptr() })?;
+        if obj.is_null() {
+            Err(Error::AllocationFailed)
+        } else {
+            Ok(obj)
+        }
+    }
+}
+
+//
+// # Additional conversions based on the methods above.
+//
+
+impl From<u8> for Obj {
+    fn from(val: u8) -> Self {
+        // `u8` will fit into smallint so no error should happen here.
+        Obj::small_int(val as i16)
+    }
+}
+
+impl From<i8> for Obj {
+    fn from(val: i8) -> Self {
+        Obj::small_int(val as i16)
+    }
+}
+
+impl From<u16> for Obj {
+    fn from(val: u16) -> Self {
+        // `u16` will fit into smallint so no error should happen here.
+        Obj::small_int(val as i16)
+    }
+}
+
+impl From<i16> for Obj {
+    fn from(val: i16) -> Self {
+        Obj::small_int(val)
+    }
+}
+
+impl TryFrom<usize> for Obj {
+    type Error = Error;
+
+    fn try_from(val: usize) -> Result<Self, Self::Error> {
+        // Willingly truncate the bits on 128-bit architectures.
+        (val as u64).try_into()
+    }
+}
+
+impl TryFrom<Obj> for u8 {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        let val = i32::try_from(obj)?;
+        let this = Self::try_from(val)?;
+        Ok(this)
+    }
+}
+
+impl TryFrom<Obj> for u16 {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        let val = i32::try_from(obj)?;
+        let this = Self::try_from(val)?;
+        Ok(this)
+    }
+}
+
+impl TryFrom<Obj> for usize {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        // TODO: Support full range.
+        let val = i64::try_from(obj)?;
+        let this = Self::try_from(val)?;
+        Ok(this)
+    }
+}
+
+impl<T> From<Option<T>> for Obj
+where
+    T: Into<Obj>,
+{
+    fn from(val: Option<T>) -> Self {
+        match val {
+            Some(v) => v.into(),
+            None => Self::const_none(),
+        }
+    }
+}
+
+impl Obj {
+    /// Conversion to Rust types with typed `None`.
+    pub fn try_into_option<T>(self) -> Result<Option<T>, Error>
+    where
+        T: TryFrom<Obj>,
+        <T as TryFrom<Obj>>::Error: Into<Error>,
+    {
+        if self == Obj::const_none() {
+            return Ok(None);
+        }
+        match self.try_into() {
+            Ok(x) => Ok(Some(x)),
+            Err(e) => Err(e.into()),
+        }
+    }
+}
+
+impl Obj {
+    pub fn is_bytes(self) -> bool {
+        unsafe {
+            ffi::mp_type_bytes.is_type_of(self)
+                || ffi::mp_type_bytearray.is_type_of(self)
+                || ffi::mp_type_memoryview.is_type_of(self)
+        }
+    }
+
+    pub fn is_str(self) -> bool {
+        let is_type_str = unsafe { ffi::mp_type_str.is_type_of(self) };
+        is_type_str || self.is_qstr()
+    }
+
+    pub fn type_<'a>(self) -> Option<&'a super::typ::Type> {
+        if self.is_ptr() {
+            // SAFETY:
+            // Safe for pointers, for as long as MicroPython behaves sanely.
+            // We assume that:
+            // * The pointer is a valid MicroPython object, which has `ObjBase` as its first
+            //   element.
+            // * The type pointer points to a valid type object.
+            // * The pointee has a 'static lifetime, i.e., either is ROM-based, or GC
+            //   allocated.
+            let base = self.as_ptr() as *const ObjBase;
+            unsafe { (*base).type_.as_ref() }
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_small_int() {
+        assert_eq!(Obj::small_int(0).small_int_value(), 0);
+        assert_eq!(Obj::small_int(10).small_int_value(), 10);
+        assert_eq!(Obj::small_int(-1).small_int_value(), -1);
+        assert_eq!(Obj::small_int(i16::MAX).small_int_value(), i16::MAX as isize);
+        assert_eq!(Obj::small_int(i16::MIN).small_int_value(), i16::MIN as isize);
+    }
+
+    #[test]
+    fn test_try_small_int() {
+        assert_eq!(Obj::try_small_int(0).map(Obj::small_int_value), Ok(0));
+        assert_eq!(Obj::try_small_int(isize::MAX), Err(()));
+        assert_eq!(Obj::try_small_int(isize::MIN), Err(()));
+        assert_eq!(
+            Obj::try_small_int(0xc000_0000u32 as isize).map(Obj::small_int_value),
+            Ok(0xc000_0000u32 as isize)
+        );
+        assert_eq!(Obj::try_small_int((0xc000_0000u32 as isize) - 1), Err(()));
+        assert_eq!(
+            Obj::try_small_int(0x3fff_ffffu32 as isize).map(Obj::small_int_value),
+            Ok(0x3fff_ffffu32 as isize)
+        );
+        assert_eq!(Obj::try_small_int((0x3fff_ffffu32 as isize) + 1), Err(()))
+    }
+}

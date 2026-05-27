@@ -1,12 +1,15 @@
-use crate::micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr};
+use crate::micropython::qstr::Qstr;
+use micropython::{
+    error::Error, map::Map, module::Module, obj::Obj, obj_fn_1, obj_fn_kw, obj_module,
+};
 
 #[cfg(feature = "dbg_console")]
 use crate::{
-    error::Error,
-    micropython::{buffer::StrBuffer, util},
     trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel},
     util::logger::init_rust_logging,
 };
+#[cfg(feature = "dbg_console")]
+use micropython::{buffer::StrBuffer, util};
 
 #[cfg(feature = "dbg_console")]
 fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {

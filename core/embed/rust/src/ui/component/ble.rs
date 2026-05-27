@@ -87,14 +87,11 @@ where
 #[cfg(feature = "micropython")]
 mod micropython {
     use super::*;
-    use crate::{
-        error::Error,
-        micropython::obj::Obj,
-        ui::layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED},
-        },
+    use crate::ui::layout::{
+        obj::ComponentMsgObj,
+        result::{CANCELLED, CONFIRMED},
     };
+    use ::micropython::{Error, Obj};
     impl<T> ComponentMsgObj for BLEHandler<T>
     where
         T: ComponentMsgObj,

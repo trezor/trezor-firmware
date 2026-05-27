@@ -1,7 +1,6 @@
 use heapless::Vec;
 
 use crate::{
-    error::{self},
     strutil::TString,
     time::Duration,
     translations::TR,
@@ -18,6 +17,7 @@ use crate::{
         layout::util::PropsList,
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::Button,
@@ -89,14 +89,14 @@ pub fn new_confirm_summary(
     verb_cancel: Option<TString<'static>>,
     back_button: bool,
     external_menu: bool,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     if external_menu
         && (account_title.is_some()
             || account_paragraphs.is_some()
             || extra_title.is_some()
             || extra_paragraphs.is_some())
     {
-        return Err(error::Error::NotImplementedError);
+        return Err(Error::NotImplementedError);
     }
     // Summary
     let mut summary_paragraphs = ParagraphVecShort::new();
@@ -241,7 +241,7 @@ pub fn new_confirm_summary(
     .with_page_limit(1)
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let mut res = SwipeFlow::new(&ConfirmSummaryWithMenu::Summary)?;
+    let mut res = SwipeFlow::new(&ConfirmSummaryWithMenu::Summary);
     res.add_page(&ConfirmSummaryWithMenu::Summary, content_summary)?
         .add_page(&ConfirmSummaryWithMenu::Menu, content_menu)?
         .add_page(&ConfirmSummaryWithMenu::ExtraInfo, content_extra)?

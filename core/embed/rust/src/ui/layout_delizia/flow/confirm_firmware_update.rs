@@ -1,5 +1,4 @@
 use crate::{
-    error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -14,6 +13,7 @@ use crate::{
         geometry::Direction,
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
@@ -60,7 +60,7 @@ impl FlowController for ConfirmFirmwareUpdate {
 pub fn new_confirm_firmware_update(
     description: TString<'static>,
     fingerprint: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
     let content_intro = Frame::left_aligned(
         TR::firmware_update__title.into(),
@@ -100,7 +100,7 @@ pub fn new_confirm_firmware_update(
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?;
+    let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro);
     res.add_page(&ConfirmFirmwareUpdate::Intro, content_intro)?
         .add_page(&ConfirmFirmwareUpdate::Menu, content_menu)?
         .add_page(&ConfirmFirmwareUpdate::Fingerprint, content_fingerprint)?

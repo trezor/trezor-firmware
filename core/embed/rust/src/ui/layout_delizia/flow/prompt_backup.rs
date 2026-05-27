@@ -1,5 +1,4 @@
 use crate::{
-    error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -14,6 +13,7 @@ use crate::{
         geometry::Direction,
     },
 };
+use micropython::Error;
 
 use super::super::{
     component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
@@ -56,7 +56,7 @@ impl FlowController for PromptBackup {
     }
 }
 
-pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
+pub fn new_prompt_backup() -> Result<SwipeFlow, Error> {
     let title: TString = TR::backup__title_create_wallet_backup.into();
     let text_intro: TString = TR::backup__it_should_be_backed_up.into();
 
@@ -99,7 +99,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&PromptBackup::Intro)?;
+    let mut res = SwipeFlow::new(&PromptBackup::Intro);
     res.add_page(&PromptBackup::Intro, content_intro)?
         .add_page(&PromptBackup::Menu, content_menu)?
         .add_page(&PromptBackup::SkipBackupIntro, content_skip_intro)?
