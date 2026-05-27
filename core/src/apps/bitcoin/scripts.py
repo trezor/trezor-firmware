@@ -120,16 +120,50 @@ def output_derive_script(address: str, coin: CoinInfo) -> AnyBytes:
     raise DataError("Invalid address type")
 
 
+def _is_namecoin_inner_script(script: AnyBytes) -> bool:
+    # Accept the four inner-script shapes that namecoin-core's wallet
+    # produces for name outputs today (see src/wallet/rpc/walletnames.cpp
+    # honouring wallet.m_default_address_type):
+    #
+    #   P2PKH  : 0x76 0xa9 0x14 <20 bytes> 0x88 0xac   (25 bytes)
+    #   P2SH   : 0xa9 0x14 <20 bytes> 0x87             (23 bytes; also
+    #            covers P2SH-P2WPKH, whose scriptPubKey is a plain P2SH)
+    #   P2WPKH : 0x00 0x14 <20 bytes>                  (22 bytes)
+    #   P2WSH  : 0x00 0x20 <32 bytes>                  (34 bytes)
+    #
+    # Taproot (witness v1, 0x51 0x20 ...) is rejected: NMC mainnet taproot
+    # deployment state has not been verified upstream.
+    n = len(script)
+    if n == 25 and script[0] == 0x76 and script[1] == 0xA9 and script[2] == 0x14:
+        return script[23] == 0x88 and script[24] == 0xAC
+    if n == 23 and script[0] == 0xA9 and script[1] == 0x14 and script[22] == 0x87:
+        return True
+    if n == 22 and script[0] == 0x00 and script[1] == 0x14:
+        return True
+    if n == 34 and script[0] == 0x00 and script[1] == 0x20:
+        return True
+    return False
+
+
 def output_derive_name_op_script(
     name_op: NamecoinOp, address: str, coin: CoinInfo
 ) -> AnyBytes:
-    """Wrap a standard inner P2PKH/P2SH address script with a Namecoin name-op prelude.
+    """Wrap a standard inner address script with a Namecoin name-op prelude.
 
-    Namecoin consensus permits any inner script type, but namecoin-core's
-    wallet only produces P2PKH and P2SH name outputs today and Trezor's NMC
-    coin def reflects that (segwit=false, taproot=false, bech32_prefix=null,
-    cashaddr_prefix=null). Widening to segwit/taproot inner scripts for NMC
-    would require BIP-173 prefix work and is a separate change.
+    Namecoin consensus permits any inner script type for a name output, and
+    namecoin-core's wallet produces P2PKH, P2SH, P2SH-P2WPKH or P2WPKH inner
+    scripts depending on wallet.m_default_address_type (see
+    src/wallet/rpc/walletnames.cpp). This entry point therefore accepts the
+    four script shapes that namecoin-core's wallet emits today:
+
+      * P2PKH  (OP_DUP OP_HASH160 <20> ... OP_EQUALVERIFY OP_CHECKSIG)
+      * P2SH   (OP_HASH160 <20> ... OP_EQUAL; covers P2SH-P2WPKH too)
+      * P2WPKH (witness v0, 20-byte program)
+      * P2WSH  (witness v0, 32-byte program)
+
+    Taproot inner scripts (witness v1) are rejected: NMC mainnet taproot
+    deployment state has not been verified and would land as a separate
+    change.
     """
     from trezor.enums import NameOpKind
 
@@ -140,12 +174,12 @@ def output_derive_name_op_script(
 
     address_script = output_derive_script(address, coin)
 
-    # Defensive: output_derive_script on a coin with no segwit/cashaddr can
-    # only return P2PKH (starts with OP_DUP=0x76) or P2SH (starts with
-    # OP_HASH160=0xa9). Reject anything else so we never silently wrap a
-    # script type Namecoin's wallet would not produce today.
-    if len(address_script) == 0 or address_script[0] not in (0x76, 0xA9):
-        raise DataError("name op requires P2PKH or P2SH inner script")
+    # Defensive: only accept the four inner-script shapes that namecoin-core's
+    # wallet actually produces today. Anything else (notably witness v1 /
+    # taproot, future witness versions, bare multisig, or a malformed script)
+    # is rejected so the device never silently wraps an unexpected script.
+    if not _is_namecoin_inner_script(address_script):
+        raise DataError("name op requires P2PKH, P2SH or P2WPKH/P2WSH inner script")
 
     kind = name_op.kind
     if kind == NameOpKind.NAME_NEW:
