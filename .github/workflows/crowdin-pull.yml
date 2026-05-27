@@ -24,7 +24,6 @@ concurrency:
 
 jobs:
   crowdin-pull-and-pr:
-    if: github.ref_name == 'main'  # run only when dispatched from main
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -74,6 +73,7 @@ jobs:
             [no changelog]
           title: "Crowdin translations update"
           body: "Automated update of translations pulled from Crowdin."
+          draft: true
           branch: ci/crowdin-sync-${{ github.ref_name }}-${{ github.run_id }}
           base: ${{ github.ref_name }}
           labels: translations
