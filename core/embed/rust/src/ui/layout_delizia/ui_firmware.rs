@@ -166,7 +166,7 @@ impl FirmwareUI for UIDelizia {
         hold: bool,
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        const CONFIRM_VALUE_INTRO_MARGIN: usize = 24;
+        const CONFIRM_VALUE_INTRO_MARGIN: u8 = 24;
         ConfirmValue::new(
             title,
             value.try_into()?,

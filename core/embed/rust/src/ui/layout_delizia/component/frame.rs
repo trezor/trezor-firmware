@@ -94,7 +94,7 @@ pub struct Frame<T> {
     footer_update_fn: Option<fn(&T, &mut EventCtx, &mut Footer<'static>)>,
     swipe: SwipeConfig,
     horizontal_swipe: HorizontalSwipe,
-    margin: usize,
+    margin: u8,
     #[cfg(feature = "ui_debug")]
     has_menu: bool,
     #[cfg(feature = "ui_debug")]
@@ -331,7 +331,7 @@ where
         }
     }
 
-    pub fn with_margin(mut self, margin: usize) -> Self {
+    pub fn with_margin(mut self, margin: u8) -> Self {
         self.margin = margin;
         self
     }
@@ -442,17 +442,12 @@ fn frame_event(
     header.event(ctx, event)
 }
 
-fn frame_place(
-    header: &mut Header,
-    footer: &mut Option<Footer>,
-    bounds: Rect,
-    margin: usize,
-) -> Rect {
+fn frame_place(header: &mut Header, footer: &mut Option<Footer>, bounds: Rect, margin: u8) -> Rect {
     let header_area = header.place(bounds);
     let mut content_area = bounds
         .inset(Insets::top(header_area.height().max(TITLE_HEIGHT)))
         .inset(Insets::top(theme::SPACING))
-        .inset(Insets::top(margin as i16));
+        .inset(Insets::top(margin.into()));
 
     if let Some(footer) = footer {
         // FIXME: spacer at the bottom might be applied also for usage without footer
@@ -460,7 +455,7 @@ fn frame_place(
         content_area = content_area.inset(Insets::bottom(theme::SPACING));
         let (remaining, footer_area) = content_area.split_bottom(footer.height());
         footer.place(footer_area);
-        content_area = remaining.inset(Insets::bottom(margin as i16));
+        content_area = remaining.inset(Insets::bottom(margin.into()));
     }
     content_area
 }

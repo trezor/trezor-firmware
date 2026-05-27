@@ -74,7 +74,7 @@ pub struct ConfirmActionOptions {
     pub swipe_up: bool,
     pub page_limit: Option<u16>,
     pub page_counter: bool,
-    pub frame_margin: usize,
+    pub frame_margin: u8,
 }
 
 impl ConfirmActionOptions {
@@ -114,7 +114,7 @@ impl ConfirmActionOptions {
         self
     }
 
-    pub fn with_frame_margin(mut self, frame_margin: usize) -> Self {
+    pub fn with_frame_margin(mut self, frame_margin: u8) -> Self {
         self.frame_margin = frame_margin;
         self
     }
