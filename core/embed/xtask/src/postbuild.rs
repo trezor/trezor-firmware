@@ -102,6 +102,9 @@ pub fn sign_binary(
 
     let mut cmd = process::Command::new(header_tool);
 
+    // Rehash the header with the correct signature and keys
+    cmd.arg("-h");
+
     if use_dev_keys {
         // Use dev keys for signing
         cmd.arg("-D");
