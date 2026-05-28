@@ -29,7 +29,7 @@
 - [Legacy](legacy/index.md)
     - [Firmware format](legacy/firmware-format.md)
 - [Python](python/index.md)
-  - [trezorlib](python/trezorlib.md)
+  - [trezorlib](../../python/README.md)
 - [Common](common/index.md)
   - [Protocol V1](common/protocol_v1/index.md)
     - [Sessions](common/protocol_v1/sessions.md)

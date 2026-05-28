@@ -82,7 +82,7 @@ NIST256P1 public keys.
 ## SignTx
 
 > The following may contain imprecise/obsolete information. Refer to
-[Bitcoin signing flow](communication/bitcoin-signing.md) for more relevant
+[Bitcoin signing flow](bitcoin-signing.md) for more relevant
 information.
 
 Signing a transaction is a little bit complicated. The reason is that
