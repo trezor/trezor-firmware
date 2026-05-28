@@ -23,7 +23,7 @@ Welcome to the Trezor Firmware repository. This repository is so called _monorep
 
 ## Contribute
 
-See [CONTRIBUTING.md](https://github.com/trezor/trezor-firmware/tree/main/CONTRIBUTING.md).
+See [CONTRIBUTING.md](misc/contributing.md).
 
 Also please have a look at the docs, either in the `docs` folder or at  [docs.trezor.io](https://docs.trezor.io) before contributing. The [misc](misc/index.md) chapter should be read in particular because it contains some useful assorted knowledge.
 

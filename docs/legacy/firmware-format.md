@@ -37,7 +37,7 @@ Signature verification:
 
 ## V2 Header
 
-This header has the same format as [Model T Firmware Header](../model-t/boot.md#firmware-header),
+This header has the same format as [Model T Firmware Header](../core/misc/boot.md#firmware-header),
 however due to different signature scheme the `sigmask` and `sig` fields are zeroed and part of the
 reserved space is used for T1-specific fields `sig1`-`sig3`, `sigindex1-sigindex3`. Total length of
 v2 header is always 1024 bytes.
