@@ -14,6 +14,8 @@ PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
 
 def compact_size(n: int) -> bytes:
+    if n < 0 or n > 0xFFFF_FFFF_FFFF_FFFF:
+        raise ValueError("compact_size supports integers in range 0..2^64-1")
     if n < 253:
         return n.to_bytes(1, "little")
     elif n < 0x1_0000:
