@@ -315,9 +315,12 @@ if TYPE_CHECKING:
         ABI_UINT16 = 14
         ABI_UINT8 = 15
         ABI_BOOL = 16
-        ABI_BYTES32 = 17
-        ABI_BYTES = 20
-        ABI_STRING = 21
+        ABI_BYTES32 = 20
+        ABI_BYTES16 = 21
+        ABI_BYTES8 = 22
+        ABI_BYTES4 = 23
+        ABI_BYTES = 30
+        ABI_STRING = 31
 
     class EthereumERC7730FieldFormatterType(IntEnum):
         FORMATTER_ADDRESS_NAME = 0
