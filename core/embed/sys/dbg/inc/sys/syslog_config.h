@@ -49,7 +49,7 @@
 #endif
 
 #ifndef SYSLOG_touch_driver_MAX_LOG_LEVEL
-#define SYSLOG_touch_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#define SYSLOG_touch_driver_MAX_LOG_LEVEL LOG_LEVEL_DBG
 #endif
 
 #ifndef SYSLOG_touch_debug_MAX_LOG_LEVEL

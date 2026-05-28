@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma GCC optimize("O0")
 
 #include <trezor_bsp.h>
 #include <trezor_model.h>
@@ -636,7 +637,6 @@ void display_refresh_rate_config(void) {
 
 #ifdef USE_SUSPEND
 void display_suspend(display_wakeup_params_t *wakeup_params) {
-#if TOUCH_WAKEUP_ENABLED == 1
   display_driver_t *drv = &g_display_driver;
 
   memset(wakeup_params, 0, sizeof(display_wakeup_params_t));
@@ -657,14 +657,9 @@ void display_suspend(display_wakeup_params_t *wakeup_params) {
   }
 
   memcpy(wakeup_params, &drv->wakeup_params, sizeof(display_wakeup_params_t));
-#else
-  wakeup_params->backlight_level = display_get_backlight();
-  display_deinit(DISPLAY_RESET_CONTENT);
-#endif  // TOUCH_WAKEUP_ENABLED
 }
 
 void display_resume(const display_wakeup_params_t *wakeup_params) {
-#if TOUCH_WAKEUP_ENABLED == 1
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
@@ -692,10 +687,14 @@ void display_resume(const display_wakeup_params_t *wakeup_params) {
 cleanup:
   display_deinit(DISPLAY_RESET_CONTENT);
   return;
-#else
-  display_init(DISPLAY_RESET_CONTENT);
-  display_set_backlight(wakeup_params->backlight_level);
-#endif  // TOUCH_WAKEUP_ENABLED
+}
+
+void display_panel_suspend(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (drv->initialized && !drv->suspended) {
+    panel_suspend(drv);
+  }
 }
 #endif  // USE_SUSPEND
 

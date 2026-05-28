@@ -47,6 +47,8 @@ void touch_suspend(void);
 // The function resumes touch controller's normal functionality as it was
 // before suspension.
 void touch_resume(void);
+
+void touch_sleep(void);
 #endif  // USE_SUSPEND
 
 // Powers on/off the touch controller
