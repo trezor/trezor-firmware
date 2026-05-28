@@ -1,7 +1,10 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-if utils.INTERNAL_MODEL in ("T2T1",):  # pylint: disable=internal-model-tuple-comparison
+if (
+    utils.INTERNAL_MODEL in ("T2T1",)  # pylint: disable=internal-model-tuple-comparison
+    and not utils.BITCOIN_ONLY
+):
     from trezor.crypto import bip39
     from trezor.enums import AmountUnit, OutputScriptType
     from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
