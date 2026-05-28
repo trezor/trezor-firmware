@@ -28,8 +28,9 @@ def get_translations_dir() -> Path:
 
     env_dir = os.environ.get("TREZOR_TRANSLATIONS_DIR")
     if env_dir:
-        if legacy.is_dir():
-            return Path(env_dir)
+        env_dir = Path(env_dir)
+        if env_dir.is_dir():
+            return env_dir
     else:
         # Legacy: translations living in the firmware repo
         legacy = ROOT / "core" / "translations"
