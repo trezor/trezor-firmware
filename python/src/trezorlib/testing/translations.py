@@ -28,12 +28,13 @@ def get_translations_dir() -> Path:
 
     env_dir = os.environ.get("TREZOR_TRANSLATIONS_DIR")
     if env_dir:
-        return Path(env_dir)
-
-    # Legacy: translations living in the firmware repo
-    legacy = ROOT / "core" / "translations"
-    if legacy.is_dir():
-        return legacy
+        if legacy.is_dir():
+            return Path(env_dir)
+    else:
+        # Legacy: translations living in the firmware repo
+        legacy = ROOT / "core" / "translations"
+        if legacy.is_dir():
+            return legacy
 
     raise FileNotFoundError(
         "Translations directory not found. Set TREZOR_TRANSLATIONS_DIR environment variable."
