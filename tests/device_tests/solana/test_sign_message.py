@@ -23,6 +23,7 @@ ED25519_PRIV_SIZE = 32
         pytest.param(0, "Hello, 🌍! Spëcial châräctérs.", id="utf-8"),
         pytest.param(0, "Much " + "much " * 42 + "longer message.", id="long"),
         pytest.param(2, "Multi-party agreement.", id="multi"),
+        pytest.param(64, "Large multi-party agreement.", id="large-multi"),
     ],
 )
 def test_sign_verify(session: Session, n_cosigners: int, message: str) -> None:
