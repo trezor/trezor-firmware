@@ -1572,7 +1572,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     back_button: bool = False,
     ///     footer: tuple[str, bool] | None = None,
     ///     external_menu: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm a generic piece of information on the screen.
     ///     The value can either be human readable text (`is_data=False`)
     ///     or something else - like an address or a blob of data.
@@ -1589,7 +1589,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Similar to `confirm_value`, but only the first page is shown.
     ///     This function is intended as a building block for a higher level `confirm_blob`
     ///     abstraction which can paginate the blob, show just the first page
@@ -2064,7 +2064,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Homescreen for locked device."""
     Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
 
-    /// def show_mismatch(*, title: str) -> LayoutObj[UiResult]:
+    /// def show_mismatch(*, title: str) -> LayoutContext[UiResult]:
     ///     """Warning of receiving address mismatch."""
     Qstr::MP_QSTR_show_mismatch => obj_fn_kw!(0, new_show_mismatch).as_obj(),
 
@@ -2096,7 +2096,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     value: Sequence[PropertyType] | str,
     ///     subtitle: str | None = None,
-    /// ) -> LayoutObj[None]:
+    /// ) -> LayoutContext[None]:
     ///     """Show a list of key-value pairs, or a monospace string."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),
 
@@ -2165,7 +2165,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
 
-    /// def confirm_cancel() -> LayoutObj[UiResult]:
+    /// def confirm_cancel() -> LayoutContext[UiResult]:
     ///     """Ask the user to confirm the cancellation (or cancel the cancellation and go back to
     ///     the previous flow)"""
     Qstr::MP_QSTR_confirm_cancel => obj_fn_kw!(0, new_confirm_cancel).as_obj(),

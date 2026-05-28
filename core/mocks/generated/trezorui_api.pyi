@@ -198,7 +198,7 @@ def confirm_value(
     back_button: bool = False,
     footer: tuple[str, bool] | None = None,
     external_menu: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm a generic piece of information on the screen.
     The value can either be human readable text (`is_data=False`)
     or something else - like an address or a blob of data.
@@ -216,7 +216,7 @@ def confirm_value_intro(
     verb_cancel: str | None = None,
     hold: bool = False,
     chunkify: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Similar to `confirm_value`, but only the first page is shown.
     This function is intended as a building block for a higher level `confirm_blob`
     abstraction which can paginate the blob, show just the first page
@@ -733,7 +733,7 @@ def show_lockscreen(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_mismatch(*, title: str) -> LayoutObj[UiResult]:
+def show_mismatch(*, title: str) -> LayoutContext[UiResult]:
     """Warning of receiving address mismatch."""
 
 
@@ -768,7 +768,7 @@ def show_properties(
     title: str,
     value: Sequence[PropertyType] | str,
     subtitle: str | None = None,
-) -> LayoutObj[None]:
+) -> LayoutContext[None]:
     """Show a list of key-value pairs, or a monospace string."""
 
 
@@ -845,7 +845,7 @@ def show_warning(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def confirm_cancel() -> LayoutObj[UiResult]:
+def confirm_cancel() -> LayoutContext[UiResult]:
     """Ask the user to confirm the cancellation (or cancel the cancellation and go back to
     the previous flow)"""
 

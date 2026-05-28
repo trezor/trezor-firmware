@@ -47,7 +47,7 @@ class Details:
 
     @classmethod
     def from_layout(
-        cls, name: str, layout_factory: Callable[[], trezorui_api.LayoutObj[T]]
+        cls, name: str, layout_factory: Callable[[], trezorui_api.LayoutContext[T]]
     ) -> Self:
         """IMPORTANT: `layout_factory()` MUST create a new layout on each invocation."""
 

@@ -387,15 +387,16 @@ async def show_address(
 
         # User pressed left cancel button, show mismatch dialogue.
         else:
-            result = await interact(
-                trezorui_api.show_mismatch(title=mismatch_title),
-                None,
-                raise_on_cancel=None,
-            )
-            assert result in (CONFIRMED, CANCELLED)
-            # Right button aborts action, left goes back to showing address.
-            if result is CONFIRMED:
-                raise ActionCancelled
+            with trezorui_api.show_mismatch(title=mismatch_title) as layout:
+                result = await interact(
+                    layout,
+                    None,
+                    raise_on_cancel=None,
+                )
+                assert result in (CONFIRMED, CANCELLED)
+                # Right button aborts action, left goes back to showing address.
+                if result is CONFIRMED:
+                    raise ActionCancelled
 
 
 async def show_pubkey(
@@ -683,17 +684,18 @@ async def confirm_output(
         )
 
         try:
-            await interact(
-                trezorui_api.confirm_value(
-                    title=amount_title,
-                    value=amount,
-                    description=None,
-                    verb_cancel="^",
-                    verb=TR.buttons__confirm,
-                ),
-                "confirm_output",
-                br_code,
-            )
+            with trezorui_api.confirm_value(
+                title=amount_title,
+                value=amount,
+                description=None,
+                verb_cancel="^",
+                verb=TR.buttons__confirm,
+            ) as layout:
+                await interact(
+                    layout,
+                    "confirm_output",
+                    br_code,
+                )
         except ActionCancelled:
             # if the user cancels here, go back to confirm_value
             continue
@@ -754,7 +756,7 @@ async def confirm_blob_intro(
     return False
 
 
-def confirm_blob(
+async def confirm_blob(
     br_name: str,
     title: str,
     data: StrOrBytes,
@@ -768,11 +770,11 @@ def confirm_blob(
     extra_confirmation_if_not_read: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = True,
-) -> Awaitable[None]:
+) -> None:
     if description and ":" not in description:
         description += ":"
 
-    layout = trezorui_api.confirm_value(
+    with trezorui_api.confirm_value(
         title=title,
         description=description,
         value=data,
@@ -780,20 +782,20 @@ def confirm_blob(
         verb_cancel=verb_cancel or "",
         hold=hold,
         chunkify=chunkify,
-    )
+    ) as layout:
 
-    if ask_pagination and layout.page_count() > 1:
-        assert not hold
-        return _confirm_ask_pagination(
-            br_name,
-            title,
-            data,
-            description or "",
-            br_code,
-            extra_confirmation_if_not_read,
-        )
-    else:
-        return raise_if_not_confirmed(layout, br_name, br_code)
+        if ask_pagination and layout.page_count() > 1:
+            assert not hold
+            return await _confirm_ask_pagination(
+                br_name,
+                title,
+                data,
+                description or "",
+                br_code,
+                extra_confirmation_if_not_read,
+            )
+        else:
+            return await raise_if_not_confirmed(layout, br_name, br_code)
 
 
 async def _confirm_ask_pagination(
@@ -937,7 +939,7 @@ def confirm_properties(
     )
 
 
-def confirm_value(
+async def confirm_value(
     title: str,
     value: str,
     description: str | None,
@@ -952,29 +954,30 @@ def confirm_value(
     chunkify: bool = False,
     chunkify_info: bool = False,
     cancel: bool = False,
-) -> Awaitable[None]:
+) -> None:
     """General confirmation dialog, used by many other confirm_* functions."""
 
     if description and value:
         description += ":"
 
     if not info_items:
-        return raise_if_not_confirmed(
-            trezorui_api.confirm_value(
-                title=title,
-                value=value,
-                description=description,
-                verb=verb or TR.buttons__hold_to_confirm,
-                verb_cancel=verb_cancel or "",
-                info=False,
-                hold=hold,
-                is_data=is_data,
-                chunkify=chunkify,
-                cancel=cancel,
-            ),
-            br_name,
-            br_code,
-        )
+        with trezorui_api.confirm_value(
+            title=title,
+            value=value,
+            description=description,
+            verb=verb or TR.buttons__hold_to_confirm,
+            verb_cancel=verb_cancel or "",
+            info=False,
+            hold=hold,
+            is_data=is_data,
+            chunkify=chunkify,
+            cancel=cancel,
+        ) as layout:
+            return await raise_if_not_confirmed(
+                layout,
+                br_name,
+                br_code,
+            )
 
     from trezor.ui.layouts.menu import Details, Menu, confirm_with_menu
 
@@ -988,7 +991,7 @@ def confirm_value(
 
     def item_factory(
         info_title: str, info_value: str
-    ) -> Callable[[], trezorui_api.LayoutObj]:
+    ) -> Callable[[], trezorui_api.LayoutContext]:
         return lambda: trezorui_api.confirm_value(
             title=info_title,
             value=info_value,
@@ -1003,7 +1006,7 @@ def confirm_value(
         Details.from_layout(name or "", item_factory(name or "", value or ""))
         for name, value, _is_data in info_items
     )
-    return confirm_with_menu(main, menu, br_name, br_code)
+    return await confirm_with_menu(main, menu, br_name, br_code)
 
 
 def confirm_total(
@@ -1996,37 +1999,39 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    address_layout = trezorui_api.confirm_value(
+    address_ctx = trezorui_api.confirm_value(
         title=TR.modify_amount__title,
         value=address,
         verb=TR.buttons__continue,
         description=f"{TR.words__address}:",
     )
 
-    modify_layout = trezorui_api.confirm_modify_output(
+    modify_ctx = trezorui_api.confirm_modify_output(
         sign=sign,
         amount_change=amount_change,
         amount_new=amount_new,
     )
 
-    send_button_request = True
-    while True:
-        await raise_if_not_confirmed(
-            address_layout,
-            "modify_output" if send_button_request else None,
-            ButtonRequestType.ConfirmOutput,
-        )
-        try:
+    with address_ctx as address_layout, modify_ctx as modify_layout:
+
+        send_button_request = True
+        while True:
             await raise_if_not_confirmed(
-                modify_layout,
+                address_layout,
                 "modify_output" if send_button_request else None,
                 ButtonRequestType.ConfirmOutput,
             )
-        except ActionCancelled:
-            send_button_request = False
-            continue
-        else:
-            break
+            try:
+                await raise_if_not_confirmed(
+                    modify_layout,
+                    "modify_output" if send_button_request else None,
+                    ButtonRequestType.ConfirmOutput,
+                )
+            except ActionCancelled:
+                send_button_request = False
+                continue
+            else:
+                break
 
 
 def confirm_modify_fee(
@@ -2090,7 +2095,7 @@ async def confirm_signverify(
 ) -> None:
     br_name = "verify_message" if verify else "sign_message"
 
-    message_layout = trezorui_api.confirm_value(
+    with trezorui_api.confirm_value(
         title=TR.sign_message__confirm_message,
         description=None,
         value=message,
@@ -2098,38 +2103,38 @@ async def confirm_signverify(
         verb_cancel="^",
         hold=not verify,
         chunkify=chunkify,
-    )
+    ) as message_layout:
 
-    # Allowing to go back from the second screen
-    while True:
-        await confirm_blob(
-            br_name,
-            TR.sign_message__confirm_address,
-            address,
-            verb=TR.buttons__continue,
-            br_code=BR_CODE_OTHER,
-        )
-        try:
-            if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
-                await raise_if_not_confirmed(
-                    message_layout,
-                    br_name,
-                    BR_CODE_OTHER,
-                )
+        # Allowing to go back from the second screen
+        while True:
+            await confirm_blob(
+                br_name,
+                TR.sign_message__confirm_address,
+                address,
+                verb=TR.buttons__continue,
+                br_code=BR_CODE_OTHER,
+            )
+            try:
+                if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
+                    await raise_if_not_confirmed(
+                        message_layout,
+                        br_name,
+                        BR_CODE_OTHER,
+                    )
+                else:
+                    await confirm_blob(
+                        br_name,
+                        TR.sign_message__confirm_message,
+                        message,
+                        verb=None,
+                        verb_cancel="^",
+                        ask_pagination=True,
+                        extra_confirmation_if_not_read=not verify,
+                    )
+            except ActionCancelled:
+                continue
             else:
-                await confirm_blob(
-                    br_name,
-                    TR.sign_message__confirm_message,
-                    message,
-                    verb=None,
-                    verb_cancel="^",
-                    ask_pagination=True,
-                    extra_confirmation_if_not_read=not verify,
-                )
-        except ActionCancelled:
-            continue
-        else:
-            break
+                break
 
 
 def error_popup(
