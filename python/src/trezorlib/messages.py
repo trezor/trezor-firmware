@@ -357,9 +357,12 @@ class EthereumABIType(IntEnum):
     ABI_UINT16 = 14
     ABI_UINT8 = 15
     ABI_BOOL = 16
-    ABI_BYTES32 = 17
-    ABI_BYTES = 20
-    ABI_STRING = 21
+    ABI_BYTES32 = 20
+    ABI_BYTES16 = 21
+    ABI_BYTES8 = 22
+    ABI_BYTES4 = 23
+    ABI_BYTES = 30
+    ABI_STRING = 31
 
 
 class EthereumERC7730FieldFormatterType(IntEnum):
@@ -4809,7 +4812,7 @@ class EthereumABIValueInfo(protobuf.MessageType):
 class EthereumERC7730Path(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("path", "uint32", repeated=True, required=False, default=None),
+        1: protobuf.Field("path", "sint32", repeated=True, required=False, default=None),
         2: protobuf.Field("container_path", "EthereumERC7730ContainerPath", repeated=False, required=False, default=None),
     }
 

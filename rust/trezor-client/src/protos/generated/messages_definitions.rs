@@ -1357,7 +1357,7 @@ impl ::protobuf::reflect::ProtobufValue for EthereumABIValueInfo {
 pub struct EthereumERC7730Path {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730Path.path)
-    pub path: ::std::vec::Vec<u32>,
+    pub path: ::std::vec::Vec<i32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730Path.container_path)
     pub container_path: ::std::option::Option<::protobuf::EnumOrUnknown<EthereumERC7730ContainerPath>>,
     // special fields
@@ -1430,10 +1430,10 @@ impl ::protobuf::Message for EthereumERC7730Path {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    is.read_repeated_packed_uint32_into(&mut self.path)?;
+                    is.read_repeated_packed_sint32_into(&mut self.path)?;
                 },
                 8 => {
-                    self.path.push(is.read_uint32()?);
+                    self.path.push(is.read_sint32()?);
                 },
                 16 => {
                     self.container_path = ::std::option::Option::Some(is.read_enum_or_unknown()?);
@@ -1451,7 +1451,7 @@ impl ::protobuf::Message for EthereumERC7730Path {
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
         for value in &self.path {
-            my_size += ::protobuf::rt::uint32_size(1, *value);
+            my_size += ::protobuf::rt::sint32_size(1, *value);
         };
         if let Some(v) = self.container_path {
             my_size += ::protobuf::rt::int32_size(2, v.value());
@@ -1463,7 +1463,7 @@ impl ::protobuf::Message for EthereumERC7730Path {
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         for v in &self.path {
-            os.write_uint32(1, *v)?;
+            os.write_sint32(1, *v)?;
         };
         if let Some(v) = self.container_path {
             os.write_enum(2, ::protobuf::EnumOrUnknown::value(&v))?;
@@ -2427,11 +2427,17 @@ pub enum EthereumABIType {
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_BOOL)
     ABI_BOOL = 16,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_BYTES32)
-    ABI_BYTES32 = 17,
+    ABI_BYTES32 = 20,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_BYTES16)
+    ABI_BYTES16 = 21,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_BYTES8)
+    ABI_BYTES8 = 22,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_BYTES4)
+    ABI_BYTES4 = 23,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_BYTES)
-    ABI_BYTES = 20,
+    ABI_BYTES = 30,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_STRING)
-    ABI_STRING = 21,
+    ABI_STRING = 31,
 }
 
 impl ::protobuf::Enum for EthereumABIType {
@@ -2460,9 +2466,12 @@ impl ::protobuf::Enum for EthereumABIType {
             14 => ::std::option::Option::Some(EthereumABIType::ABI_UINT16),
             15 => ::std::option::Option::Some(EthereumABIType::ABI_UINT8),
             16 => ::std::option::Option::Some(EthereumABIType::ABI_BOOL),
-            17 => ::std::option::Option::Some(EthereumABIType::ABI_BYTES32),
-            20 => ::std::option::Option::Some(EthereumABIType::ABI_BYTES),
-            21 => ::std::option::Option::Some(EthereumABIType::ABI_STRING),
+            20 => ::std::option::Option::Some(EthereumABIType::ABI_BYTES32),
+            21 => ::std::option::Option::Some(EthereumABIType::ABI_BYTES16),
+            22 => ::std::option::Option::Some(EthereumABIType::ABI_BYTES8),
+            23 => ::std::option::Option::Some(EthereumABIType::ABI_BYTES4),
+            30 => ::std::option::Option::Some(EthereumABIType::ABI_BYTES),
+            31 => ::std::option::Option::Some(EthereumABIType::ABI_STRING),
             _ => ::std::option::Option::None
         }
     }
@@ -2487,6 +2496,9 @@ impl ::protobuf::Enum for EthereumABIType {
             "ABI_UINT8" => ::std::option::Option::Some(EthereumABIType::ABI_UINT8),
             "ABI_BOOL" => ::std::option::Option::Some(EthereumABIType::ABI_BOOL),
             "ABI_BYTES32" => ::std::option::Option::Some(EthereumABIType::ABI_BYTES32),
+            "ABI_BYTES16" => ::std::option::Option::Some(EthereumABIType::ABI_BYTES16),
+            "ABI_BYTES8" => ::std::option::Option::Some(EthereumABIType::ABI_BYTES8),
+            "ABI_BYTES4" => ::std::option::Option::Some(EthereumABIType::ABI_BYTES4),
             "ABI_BYTES" => ::std::option::Option::Some(EthereumABIType::ABI_BYTES),
             "ABI_STRING" => ::std::option::Option::Some(EthereumABIType::ABI_STRING),
             _ => ::std::option::Option::None
@@ -2512,6 +2524,9 @@ impl ::protobuf::Enum for EthereumABIType {
         EthereumABIType::ABI_UINT8,
         EthereumABIType::ABI_BOOL,
         EthereumABIType::ABI_BYTES32,
+        EthereumABIType::ABI_BYTES16,
+        EthereumABIType::ABI_BYTES8,
+        EthereumABIType::ABI_BYTES4,
         EthereumABIType::ABI_BYTES,
         EthereumABIType::ABI_STRING,
     ];
@@ -2543,8 +2558,11 @@ impl ::protobuf::EnumFull for EthereumABIType {
             EthereumABIType::ABI_UINT8 => 15,
             EthereumABIType::ABI_BOOL => 16,
             EthereumABIType::ABI_BYTES32 => 17,
-            EthereumABIType::ABI_BYTES => 18,
-            EthereumABIType::ABI_STRING => 19,
+            EthereumABIType::ABI_BYTES16 => 18,
+            EthereumABIType::ABI_BYTES8 => 19,
+            EthereumABIType::ABI_BYTES4 => 20,
+            EthereumABIType::ABI_BYTES => 21,
+            EthereumABIType::ABI_STRING => 22,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -2727,11 +2745,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\x0b24.hw.trezor.messages.definitions.EthereumABITupleInfoR\x05\
     tuple\x12J\n\x05array\x18\x04\x20\x01(\x0b24.hw.trezor.messages.definiti\
     ons.EthereumABIValueInfoR\x05array\"\x8e\x01\n\x13EthereumERC7730Path\
-    \x12\x12\n\x04path\x18\x01\x20\x03(\rR\x04path\x12c\n\x0econtainer_path\
-    \x18\x02\x20\x01(\x0e2<.hw.trezor.messages.definitions.EthereumERC7730Co\
-    ntainerPathR\rcontainerPath\"\x94\x03\n\x18EthereumERC7730FieldInfo\x12G\
-    \n\x04path\x18\x01\x20\x02(\x0b23.hw.trezor.messages.definitions.Ethereu\
-    mERC7730PathR\x04path\x12\x14\n\x05label\x18\x02\x20\x02(\tR\x05label\
+    \x12\x12\n\x04path\x18\x01\x20\x03(\x11R\x04path\x12c\n\x0econtainer_pat\
+    h\x18\x02\x20\x01(\x0e2<.hw.trezor.messages.definitions.EthereumERC7730C\
+    ontainerPathR\rcontainerPath\"\x94\x03\n\x18EthereumERC7730FieldInfo\x12\
+    G\n\x04path\x18\x01\x20\x02(\x0b23.hw.trezor.messages.definitions.Ethere\
+    umERC7730PathR\x04path\x12\x14\n\x05label\x18\x02\x20\x02(\tR\x05label\
     \x12_\n\tformatter\x18\x03\x20\x02(\x0e2A.hw.trezor.messages.definitions\
     .EthereumERC7730FieldFormatterTypeR\tformatter\x12R\n\ntoken_path\x18\
     \x04\x20\x01(\x0b23.hw.trezor.messages.definitions.EthereumERC7730PathR\
@@ -2747,7 +2765,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x03(\x0b28.hw.trezor.messages.definitions.EthereumERC7730FieldInfoR\
     \x10fieldDefinitions*i\n\x0eDefinitionType\x12\x14\n\x10ETHEREUM_NETWORK\
     \x10\0\x12\x12\n\x0eETHEREUM_TOKEN\x10\x01\x12\x10\n\x0cSOLANA_TOKEN\x10\
-    \x02\x12\x1b\n\x17ETHEREUM_DISPLAY_FORMAT\x10\x03*\xd5\x02\n\x0fEthereum\
+    \x02\x12\x1b\n\x17ETHEREUM_DISPLAY_FORMAT\x10\x03*\x86\x03\n\x0fEthereum\
     ABIType\x12\x0f\n\x0bABI_ADDRESS\x10\0\x12\x0f\n\x0bABI_UINT256\x10\x01\
     \x12\x0f\n\x0bABI_UINT248\x10\x02\x12\x0f\n\x0bABI_UINT160\x10\x03\x12\
     \x0f\n\x0bABI_UINT128\x10\x04\x12\x0f\n\x0bABI_UINT120\x10\x05\x12\x0f\n\
@@ -2755,14 +2773,15 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     T72\x10\x08\x12\x0e\n\nABI_UINT64\x10\t\x12\x0e\n\nABI_UINT48\x10\n\x12\
     \x0e\n\nABI_UINT40\x10\x0b\x12\x0e\n\nABI_UINT32\x10\x0c\x12\x0e\n\nABI_\
     UINT24\x10\r\x12\x0e\n\nABI_UINT16\x10\x0e\x12\r\n\tABI_UINT8\x10\x0f\
-    \x12\x0c\n\x08ABI_BOOL\x10\x10\x12\x0f\n\x0bABI_BYTES32\x10\x11\x12\r\n\
-    \tABI_BYTES\x10\x14\x12\x0e\n\nABI_STRING\x10\x15*\x85\x01\n!EthereumERC\
-    7730FieldFormatterType\x12\x1a\n\x16FORMATTER_ADDRESS_NAME\x10\0\x12\x14\
-    \n\x10FORMATTER_AMOUNT\x10\x01\x12\x1a\n\x16FORMATTER_TOKEN_AMOUNT\x10\
-    \x02\x12\x12\n\x0eFORMATTER_UNIT\x10\x03*;\n\x1cEthereumERC7730Container\
-    Path\x12\x08\n\x04FROM\x10\x01\x12\t\n\x05VALUE\x10\x02\x12\x06\n\x02TO\
-    \x10\x03B?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageDefini\
-    tions\
+    \x12\x0c\n\x08ABI_BOOL\x10\x10\x12\x0f\n\x0bABI_BYTES32\x10\x14\x12\x0f\
+    \n\x0bABI_BYTES16\x10\x15\x12\x0e\n\nABI_BYTES8\x10\x16\x12\x0e\n\nABI_B\
+    YTES4\x10\x17\x12\r\n\tABI_BYTES\x10\x1e\x12\x0e\n\nABI_STRING\x10\x1f*\
+    \x85\x01\n!EthereumERC7730FieldFormatterType\x12\x1a\n\x16FORMATTER_ADDR\
+    ESS_NAME\x10\0\x12\x14\n\x10FORMATTER_AMOUNT\x10\x01\x12\x1a\n\x16FORMAT\
+    TER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFORMATTER_UNIT\x10\x03*;\n\x1cEthe\
+    reumERC7730ContainerPath\x12\x08\n\x04FROM\x10\x01\x12\t\n\x05VALUE\x10\
+    \x02\x12\x06\n\x02TO\x10\x03B?\n#com.satoshilabs.trezor.lib.protobufB\
+    \x18TrezorMessageDefinitions\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

@@ -92,9 +92,14 @@ enum EthereumABIType {
     ABI_UINT16 = 14;
     ABI_UINT8 = 15;
     ABI_BOOL = 16;
-    ABI_BYTES32 = 17;
-    ABI_BYTES = 20;
-    ABI_STRING = 21;
+    ABI_BYTES32 = 20;
+    ABI_BYTES16 = 21;
+    ABI_BYTES8 = 22;
+    ABI_BYTES4 = 23;
+
+    // dynamic types
+    ABI_BYTES = 30;
+    ABI_STRING = 31;
 }
 
 /**
@@ -150,7 +155,7 @@ enum EthereumERC7730ContainerPath {
  */
 message EthereumERC7730Path {
     // Exactly one of the following should be set:
-    repeated uint32 path = 1;  // eg. (0,) is encoded as [0], (1, 2) is encoded as [1, 2], etc.
+    repeated sint32 path = 1;  // eg. (0,) is encoded as [0], (1, 2) is encoded as [1, 2], etc.
     optional EthereumERC7730ContainerPath container_path = 2;
 }
 
