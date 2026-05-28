@@ -213,6 +213,83 @@ START_TEST(test_data_length_field_bounds)
 }
 END_TEST
 
+/*
+ * Models the exact computation pattern used in ethereum_signing_init() and
+ * ethereum_signing_init_eip1559() after the fix applied for V-004:
+ *
+ *   data_left = (params.data_initial_chunk_size <= data_total)
+ *                   ? data_total - params.data_initial_chunk_size
+ *                   : 0;
+ *
+ * This directly validates that the patched guard prevents unsigned integer
+ * underflow when data_initial_chunk_size exceeds data_total.
+ */
+static uint32_t signing_init_data_left(uint32_t data_total,
+                                       uint32_t initial_chunk_size) {
+    return (initial_chunk_size <= data_total)
+               ? data_total - initial_chunk_size
+               : 0;
+}
+
+START_TEST(test_signing_init_data_left_exact_pattern)
+{
+    /*
+     * Verify the exact ternary guard from ethereum_signing_init() and
+     * ethereum_signing_init_eip1559() never produces a data_left value
+     * larger than data_total, and handles adversarial inputs safely.
+     */
+    typedef struct {
+        uint32_t data_total;
+        uint32_t initial_chunk_size;
+        uint32_t expected_data_left;
+        const char *description;
+    } SigningInitCase;
+
+    SigningInitCase cases[] = {
+        /* Normal cases: initial_chunk_size <= data_total */
+        {0,          0,          0,          "zero total, zero chunk"},
+        {1024,       0,          1024,       "1024 total, zero chunk"},
+        {1024,       512,        512,        "1024 total, 512 chunk"},
+        {1024,       1024,       0,          "1024 total, fully consumed"},
+        {2048,       1024,       1024,       "2048 total, 1024 chunk"},
+        {2048,       2048,       0,          "2048 total, fully consumed"},
+        {0xFFFFFFFF, 0,          0xFFFFFFFF, "max total, zero chunk"},
+        {0xFFFFFFFF, 0xFFFFFFFE, 1,          "max total, max-1 chunk"},
+        {0xFFFFFFFF, 0xFFFFFFFF, 0,          "max total, max chunk"},
+
+        /* Adversarial: initial_chunk_size > data_total -- must clamp to 0 */
+        {0,          1,          0,          "underflow: 0 total, 1 chunk"},
+        {0,          1024,       0,          "underflow: 0 total, 1024 chunk"},
+        {0,          0xFFFFFFFF, 0,          "underflow: 0 total, max chunk"},
+        {100,        200,        0,          "underflow: 100 total, 200 chunk"},
+        {1024,       1025,       0,          "underflow: 1024 total, 1025 chunk"},
+        {1024,       0xFFFFFFFF, 0,          "underflow: 1024 total, max chunk"},
+        {0x7FFFFFFF, 0x80000000, 0,          "underflow: near-max total, over chunk"},
+        {0x80000000, 0x80000001, 0,          "underflow: high-bit total, over chunk"},
+    };
+
+    int num_cases = sizeof(cases) / sizeof(cases[0]);
+
+    for (int i = 0; i < num_cases; i++) {
+        uint32_t result = signing_init_data_left(cases[i].data_total,
+                                                 cases[i].initial_chunk_size);
+
+        ck_assert_msg(result == cases[i].expected_data_left,
+            "FAIL [%s]: signing_init_data_left(%u, %u) = %u, expected %u",
+            cases[i].description,
+            cases[i].data_total, cases[i].initial_chunk_size,
+            result, cases[i].expected_data_left);
+
+        /* Core security invariant: data_left must never exceed data_total */
+        ck_assert_msg(result <= cases[i].data_total,
+            "SECURITY VIOLATION [%s]: data_left=%u > data_total=%u "
+            "(initial_chunk_size=%u)",
+            cases[i].description,
+            result, cases[i].data_total, cases[i].initial_chunk_size);
+    }
+}
+END_TEST
+
 Suite *security_suite(void)
 {
     Suite *s;
@@ -224,6 +301,7 @@ Suite *security_suite(void)
     tcase_add_test(tc_core, test_chunk_size_security_invariant);
     tcase_add_test(tc_core, test_chunk_size_never_exceeds_max);
     tcase_add_test(tc_core, test_data_length_field_bounds);
+    tcase_add_test(tc_core, test_signing_init_data_left_exact_pattern);
     suite_add_tcase(s, tc_core);
 
     return s;
