@@ -212,6 +212,17 @@ impl CLibrary {
                 .collect::<Vec<_>>()
                 .join(";")
         );
+
+        // Export linked libraries (so the top-level crate can re-export them)
+        println!(
+            "cargo::metadata=public_c_extlibs={}",
+            self.get_external_libs()
+                .into_iter()
+                .map(|lib| lib.to_string())
+                .collect::<Vec<_>>()
+                .join(";")
+        );
+
         Ok(())
     }
 }

@@ -152,21 +152,24 @@ impl CLibrary {
         let this_lib = links_name()?;
         let package_name = package_name()?;
 
-        // `--whole-archive` forces the linker to include all object files
+        // `+whole-archive` forces the linker to include all object files
         // from the specified archive, even if they are not referenced by
         // any other object file. This is necessary for linking symbols that
         // are not referenced but expected to be present at runtime
         // (e.g., image headers, PRODTEST_CLI_CMD() handlers ).
         //
-        // `--whole-archive` flag also helps with cyclic dependencies,
-        // that we have between `upymod`, `rtl` and `sys` crates
-        println!("cargo:rustc-link-arg=-Wl,--whole-archive");
-        println!("cargo:rustc-link-arg=-l{this_lib}");
-        for dep in self.get_libs() {
-            println!("cargo:rustc-link-arg=-l{}", dep);
-        }
-        println!("cargo:rustc-link-arg=-Wl,--no-whole-archive");
+        // `+whole-archive` also helps with cyclic dependencies,
+        // that we have between `upymod`, `rtl` and `sys` crates.
+        // Using `rustc-link-lib` keeps the whole-archive selection scoped
+        // to each archive instead of toggling global linker state.
+        std::iter::once(this_lib.as_str())
+            .chain(self.get_libs())
+            .for_each(|dep| println!("cargo:rustc-link-lib=static:+whole-archive={dep}"));
 
+        self.get_external_libs()
+            .into_iter()
+            .for_each(|dep| println!("cargo:rustc-link-arg=-l{dep}"));
+        
         if has_feature("emulator") {
             println!("cargo:rustc-link-lib=c");
             println!("cargo:rustc-link-lib=m");

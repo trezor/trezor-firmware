@@ -44,6 +44,11 @@ pub struct CLibrary {
     // to this library and libraries imported from other crates.
     libs: Vec<String>,
 
+    // List of external libraries that this library depends on, which must be
+    // linked when building the final binary. This includes libraries imported 
+    // from other crates and libraries imported via `pkg-config`.
+    external_libs: Vec<String>,
+
     // Builder for generating Rust bindings to this library.
     builder: Option<bindgen::Builder>,
 }
@@ -61,6 +66,7 @@ impl CLibrary {
             private_attrs: CompileAttrs::default(),
             public_attrs: CompileAttrs::default(),
             libs: Vec::new(),
+            external_libs: Vec::new(),
             builder: None,
         }
     }
@@ -351,6 +357,7 @@ impl CLibrary {
         &self.public_attrs
     }
 
+
     /// Imports an external library using `pkg-config`.
     ///
     /// # Parameters
@@ -378,11 +385,37 @@ impl CLibrary {
         });
 
         extlib.libs.iter().for_each(|lib| {
-            self.add_lib(lib);
+            self.add_external_lib(lib);
         });
 
         Ok(())
     }
+
+    /// Adds an external library to the list of dependencies for this library.
+    /// 
+    /// This function is used internally to track external libraries that must be 
+    /// linked when building the final binary.
+    /// 
+    /// # Parameters
+    /// 
+    /// - `lib`: The name of the external library to add.
+    fn add_external_lib(&mut self, lib: &str) {
+        if !self.external_libs.contains(&lib.to_string()) {
+            self.external_libs.push(lib.to_string());
+        }
+    }
+
+    /// Returns an iterator over the external libraries that this library depends on, 
+    /// which must be linked when using this library.
+    ///
+    /// This includes both libraries added directly to this library and libraries imported from other crates.
+    ///
+    /// # Returns
+    ///
+    /// An iterator of library names as string slices.
+    pub fn get_external_libs(&self) -> impl IntoIterator<Item = &str> {
+        self.external_libs.iter().map(|s| s.as_str())
+    }    
 
     /// Adds a library to the list of dependencies for this library.
     ///
@@ -433,6 +466,12 @@ impl CLibrary {
 
         for library_name in public_libs.split(';').filter(|lib| !lib.is_empty()) {
             self.add_lib(library_name);
+        }
+
+        let public_extlibs = library_metadata(&lib_name, "EXTLIBS")?;
+
+        for library_name in public_extlibs.split(';').filter(|lib| !lib.is_empty()) {
+            self.add_external_lib(library_name);
         }
 
         Ok(())
