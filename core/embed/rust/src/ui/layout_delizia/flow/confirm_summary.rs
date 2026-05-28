@@ -88,7 +88,7 @@ pub fn new_confirm_summary(
         .with_pages(|summary_pages| summary_pages + 1);
 
     // Hold to confirm
-    let content_hold = Frame::new(
+    let content_hold = Frame::with_header(
         Header::left_aligned(TR::send__sign_transaction.into()).with_menu_button(),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
@@ -125,7 +125,7 @@ pub fn new_confirm_summary(
     }
     menu = menu.cancel_item(verb_cancel.unwrap_or(TR::send__cancel_sign.into()));
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned(TString::empty()).with_cancel_button(),
         menu,
     )
@@ -137,7 +137,7 @@ pub fn new_confirm_summary(
     });
 
     // CancelTap
-    let content_cancel_tap = Frame::new(
+    let content_cancel_tap = Frame::with_header(
         Header::left_aligned(TR::send__cancel_sign.into()).with_cancel_button(),
         PromptScreen::new_tap_to_cancel(),
     )

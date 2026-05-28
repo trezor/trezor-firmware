@@ -55,7 +55,7 @@ pub fn new_request_passphrase(
     prompt_empty: TString<'static>,
     max_len: usize,
 ) -> Result<SwipeFlow, error::Error> {
-    let content_confirm_empty = Frame::new(
+    let content_confirm_empty = Frame::with_header(
         Header::left_aligned(prompt_empty),
         PromptScreen::new_yes_or_no(),
     )

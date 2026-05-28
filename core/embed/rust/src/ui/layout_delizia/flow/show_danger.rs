@@ -68,7 +68,7 @@ pub fn new_show_danger(
         Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, value).with_top_padding(EXTRA_PADDING),
     ]
     .into_paragraphs();
-    let content_message = Frame::new(
+    let content_message = Frame::with_header(
         Header::left_aligned(title).with_menu_button().with_danger(),
         SwipeContent::new(paragraphs),
     )
@@ -77,7 +77,7 @@ pub fn new_show_danger(
     // .one_button_request(ButtonRequestCode::Warning, br_name);
 
     // Menu
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty()
             .item(theme::ICON_CANCEL, verb_cancel)
@@ -86,7 +86,7 @@ pub fn new_show_danger(
     .map(super::util::map_to_choice);
 
     // Cancelled
-    let content_cancelled = Frame::new(
+    let content_cancelled = Frame::with_header(
         Header::left_aligned(TR::words__title_done.into())
             .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREY_DARK),
         StatusScreen::new_neutral_timeout(done_title),

@@ -61,14 +61,14 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     let text_intro: TString = TR::backup__it_should_be_backed_up.into();
 
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text_intro));
-    let content_intro = Frame::new(
+    let content_intro = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),
         SwipeContent::new(paragraphs),
     )
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(TR::backup__title_skip.into()),
     )
@@ -82,7 +82,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
         ),
     ])
     .into_paragraphs();
-    let content_skip_intro = Frame::new(
+    let content_skip_intro = Frame::with_header(
         Header::left_aligned(TR::backup__title_skip.into()).with_cancel_button(),
         SwipeContent::new(paragraphs_skip_intro),
     )
@@ -90,7 +90,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Up, SwipeSettings::Default)
     .map_to_button_msg();
 
-    let content_skip_confirm = Frame::new(
+    let content_skip_confirm = Frame::with_header(
         Header::left_aligned(TR::backup__title_skip.into()).with_cancel_button(),
         SwipeContent::new(PromptScreen::new_tap_to_cancel()),
     )

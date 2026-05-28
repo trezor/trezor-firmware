@@ -175,7 +175,7 @@ pub fn new_continue_recovery_homepage(
         Some(TR::instructions__enter_next_share.into())
     };
 
-    let content_main = Frame::new(
+    let content_main = Frame::with_header(
         Header::left_aligned(title.into())
             .with_subtitle(TR::words__instructions.into())
             .with_menu_button(),
@@ -194,7 +194,7 @@ pub fn new_continue_recovery_homepage(
         Paragraph::new(&theme::TEXT_WARNING, TR::recovery__progress_will_be_lost),
     ])
     .into_paragraphs();
-    let content_cancel_intro = Frame::new(
+    let content_cancel_intro = Frame::with_header(
         Header::left_aligned(cancel_title.into()).with_cancel_button(),
         SwipeContent::new(paragraphs_cancel),
     )
@@ -205,7 +205,7 @@ pub fn new_continue_recovery_homepage(
         "abort_recovery".into(),
     ));
 
-    let content_cancel_confirm = Frame::new(
+    let content_cancel_confirm = Frame::with_header(
         Header::left_aligned(cancel_title.into()).with_cancel_button(),
         SwipeContent::new(PromptScreen::new_tap_to_cancel()),
     )
@@ -214,7 +214,7 @@ pub fn new_continue_recovery_homepage(
     .map(super::util::map_to_confirm);
 
     let res = if show_instructions {
-        let content_menu = Frame::new(
+        let content_menu = Frame::with_header(
             Header::left_aligned(TString::empty()).with_cancel_button(),
             VerticalMenu::empty().cancel_item(cancel_btn.into()),
         )
@@ -225,7 +225,7 @@ pub fn new_continue_recovery_homepage(
             .add_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?;
         res
     } else if pages.is_some() {
-        let content_menu = Frame::new(
+        let content_menu = Frame::with_header(
             Header::left_aligned(TString::empty()).with_cancel_button(),
             VerticalMenu::empty()
                 .item(
@@ -241,7 +241,7 @@ pub fn new_continue_recovery_homepage(
             TR::recovery__more_shares_needed.into(),
         );
         let n_remaining_shares = pages.as_ref().unwrap().len() as u16 / 2;
-        let content_remaining_shares = Frame::new(
+        let content_remaining_shares = Frame::with_header(
             Header::left_aligned(TR::recovery__title_remaining_shares.into()).with_cancel_button(),
             SwipeContent::new(SwipePage::vertical(pages.unwrap().into_paragraphs())),
         )
@@ -278,7 +278,7 @@ pub fn new_continue_recovery_homepage(
             )?;
         res
     } else {
-        let content_menu = Frame::new(
+        let content_menu = Frame::with_header(
             Header::left_aligned(TString::empty()).with_cancel_button(),
             VerticalMenu::empty().cancel_item(cancel_btn.into()),
         )
