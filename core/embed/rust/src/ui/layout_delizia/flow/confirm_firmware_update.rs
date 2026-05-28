@@ -62,14 +62,14 @@ pub fn new_confirm_firmware_update(
     fingerprint: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
-    let content_intro = Frame::new(
+    let content_intro = Frame::with_header(
         Header::left_aligned(TR::firmware_update__title.into()).with_menu_button(),
         SwipeContent::new(paragraphs),
     )
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned(TString::empty()).with_cancel_button(),
         VerticalMenu::empty()
             .item(
@@ -82,13 +82,13 @@ pub fn new_confirm_firmware_update(
 
     let paragraphs_fingerprint =
         Paragraphs::new(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, fingerprint));
-    let content_fingerprint = Frame::new(
+    let content_fingerprint = Frame::with_header(
         Header::left_aligned(TR::firmware_update__title_fingerprint.into()).with_cancel_button(),
         SwipeContent::new(paragraphs_fingerprint),
     )
     .map_to_button_msg();
 
-    let content_confirm = Frame::new(
+    let content_confirm = Frame::with_header(
         Header::left_aligned(TR::firmware_update__title.into()).with_menu_button(),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )

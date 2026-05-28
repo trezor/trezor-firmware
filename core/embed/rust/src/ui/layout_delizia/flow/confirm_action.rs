@@ -346,7 +346,7 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
         header = header.with_subtitle(subtitle);
     }
 
-    let mut content = Frame::new(header, content)
+    let mut content = Frame::with_header(header, content)
         .with_margin(options.frame_margin)
         .with_swipeup_footer(strings.footer_description)
         .with_vertical_pages();
@@ -455,7 +455,8 @@ fn create_menu(
     menu = menu.cancel_item(menu_strings.verb_cancel);
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
 
-    let content_menu = Frame::new(Header::left_aligned("".into()).with_cancel_button(), menu);
+    let content_menu =
+        Frame::with_header(Header::left_aligned("".into()).with_cancel_button(), menu);
 
     let content_menu = content_menu.map(move |msg| match msg {
         VerticalMenuChoiceMsg::Selected(i) => {
@@ -496,7 +497,7 @@ fn create_confirm(
     if let Some(subtitle) = subtitle {
         header = header.with_subtitle(subtitle);
     }
-    let content_confirm = Frame::new(header, SwipeContent::new(prompt))
+    let content_confirm = Frame::with_header(header, SwipeContent::new(prompt))
         .with_footer(prompt_action, None)
         .with_swipe(Direction::Down, SwipeSettings::Default);
 

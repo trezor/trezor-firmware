@@ -109,7 +109,7 @@ pub fn new_receive(
         extra_font: &theme::TEXT_DEMIBOLD,
     }
     .into_paragraphs();
-    let content_address = Frame::new(
+    let content_address = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),
         SwipeContent::new(SwipePage::vertical(paragraphs)),
     )
@@ -121,7 +121,7 @@ pub fn new_receive(
     .with_pages(|address_pages| address_pages + 1);
 
     // Tap
-    let content_tap = Frame::new(
+    let content_tap = Frame::with_header(
         Header::left_aligned(title),
         SwipeContent::new(PromptScreen::new_tap_to_confirm()),
     )
@@ -130,7 +130,7 @@ pub fn new_receive(
     .map(super::util::map_to_confirm);
 
     // Menu
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty()
             .item(theme::ICON_QR_CODE, TR::address__qr_code.into())
@@ -143,7 +143,7 @@ pub fn new_receive(
     .map(super::util::map_to_choice);
 
     // QrCode
-    let content_qr = Frame::new(
+    let content_qr = Frame::with_header(
         Header::left_aligned(title).with_cancel_button(),
         qr.map(|s| Qr::new(s, case_sensitive))?
             .with_border(QR_BORDER),
@@ -160,7 +160,7 @@ pub fn new_receive(
     let content_account = ad.map(|_| Some(FlowMsg::Cancelled));
 
     // Cancel
-    let content_cancel_info = Frame::new(
+    let content_cancel_info = Frame::with_header(
         Header::left_aligned(cancel_title.into()).with_cancel_button(),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
@@ -171,7 +171,7 @@ pub fn new_receive(
     .map_to_button_msg();
 
     // CancelTap
-    let content_cancel_tap = Frame::new(
+    let content_cancel_tap = Frame::with_header(
         Header::left_aligned(cancel_title.into()).with_cancel_button(),
         PromptScreen::new_tap_to_cancel(),
     )

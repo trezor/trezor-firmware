@@ -58,12 +58,12 @@ impl AddressDetails {
             para.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, p));
         }
         let result = Self {
-            details: Frame::new(
+            details: Frame::with_header(
                 Header::left_aligned(details_title).with_cancel_button(),
                 para.into_paragraphs(),
             )
             .with_horizontal_pages(),
-            xpub_view: Frame::new(
+            xpub_view: Frame::with_header(
                 Header::left_aligned(" \n ".into()).with_cancel_button(),
                 Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, "").into_paragraphs(),
             )

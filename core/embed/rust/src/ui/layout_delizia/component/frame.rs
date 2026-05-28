@@ -109,7 +109,7 @@ where
     T: Component + Paginate,
 {
     #[inline(never)]
-    pub const fn new(header: Header, content: T) -> Self {
+    pub const fn with_header(header: Header, content: T) -> Self {
         Self {
             bounds: Rect::zero(),
             content,

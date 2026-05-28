@@ -79,7 +79,7 @@ pub fn new_request_number(
         count as u16,
         description,
     )?;
-    let content_number_input = Frame::new(
+    let content_number_input = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),
         SwipeContent::new(number_input_dialog),
     )
@@ -91,14 +91,14 @@ pub fn new_request_number(
         }
     });
 
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned(TString::empty()).with_cancel_button(),
         VerticalMenu::empty().item(theme::ICON_CHEVRON_RIGHT, TR::buttons__more_info.into()),
     )
     .map(super::util::map_to_choice);
 
     let updatable_info = UpdatableMoreInfo::new(info_closure);
-    let content_info = Frame::new(
+    let content_info = Frame::with_header(
         Header::left_aligned(TString::empty()).with_cancel_button(),
         SwipeContent::new(updatable_info),
     )

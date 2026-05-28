@@ -104,7 +104,7 @@ pub fn new_confirm_fido(
     CRED_SELECTED.store(0, Ordering::Relaxed);
 
     let header = Header::left_aligned(title).with_menu_button();
-    let content_intro = Frame::new(
+    let content_intro = Frame::with_header(
         header,
         SwipeContent::new(Paragraphs::new(Paragraph::new::<TString>(
             &theme::TEXT_MAIN_GREY_LIGHT,
@@ -127,7 +127,7 @@ pub fn new_confirm_fido(
     let header = Header::left_aligned(TR::fido__title_select_credential.into())
         .with_subtitle(TR::fido__title_for_authentication.into())
         .with_menu_button();
-    let content_choose_credential = Frame::new(
+    let content_choose_credential = Frame::with_header(
         header,
         SwipeContent::new(SwipePage::vertical(PagedVerticalMenu::new(
             num_accounts,
@@ -156,7 +156,7 @@ pub fn new_confirm_fido(
     } else {
         header.with_cancel_button()
     };
-    let content_details = Frame::new(
+    let content_details = Frame::with_header(
         header,
         SwipeContent::new(FidoCredential::new(icon_name, app_name, get_account)),
     )
@@ -164,12 +164,12 @@ pub fn new_confirm_fido(
     .map_to_button_msg();
 
     let header = Header::left_aligned(title).with_menu_button();
-    let content_tap = Frame::new(header, PromptScreen::new_tap_to_confirm())
+    let content_tap = Frame::with_header(header, PromptScreen::new_tap_to_confirm())
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::Default)
         .map(super::util::map_to_confirm);
 
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(TR::buttons__cancel.into()),
     )

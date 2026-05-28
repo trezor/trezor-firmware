@@ -69,7 +69,7 @@ fn footer_update_fn(
 }
 
 pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
-    let content_slider = Frame::new(
+    let content_slider = Frame::with_header(
         Header::left_aligned(TR::brightness__title.into())
             .with_subtitle(TR::homescreen__settings_subtitle.into())
             .with_cancel_button(),

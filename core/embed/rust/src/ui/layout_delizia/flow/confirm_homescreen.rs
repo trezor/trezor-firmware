@@ -53,7 +53,7 @@ pub fn new_confirm_homescreen(
     title: TString<'static>,
     image: CachedJpeg,
 ) -> Result<SwipeFlow, error::Error> {
-    let content_homescreen = Frame::new(
+    let content_homescreen = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),
         SwipeContent::new(image),
     )
@@ -62,13 +62,13 @@ pub fn new_confirm_homescreen(
     // Homescreen + Tap to confirm
     .with_pages(|_| 2);
 
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned(TString::empty()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(TR::buttons__cancel.into()),
     )
     .map(super::util::map_to_choice);
 
-    let content_confirm = Frame::new(
+    let content_confirm = Frame::with_header(
         Header::left_aligned(TR::homescreen__title_set.into()).with_menu_button(),
         SwipeContent::new(PromptScreen::new_tap_to_confirm()),
     )

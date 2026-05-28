@@ -88,7 +88,7 @@ pub fn new_show_share_words(
     let paragraphs_spacing = 8;
     let title = TR::reset__recovery_wallet_backup_title.into();
 
-    let content_instruction = Frame::new(
+    let content_instruction = Frame::with_header(
         Header::left_aligned(title).with_subtitle(TR::words__instructions.into()),
         SwipeContent::new(
             instructions_paragraphs
@@ -101,7 +101,7 @@ pub fn new_show_share_words(
     .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
     .with_pages(move |_| nwords + 2);
 
-    let content_words = Frame::new(
+    let content_words = Frame::with_header(
         Header::left_aligned(title).with_subtitle(subtitle),
         InternallySwipableContent::new(ShareWords::new(share_words_vec, subtitle)),
     )
@@ -113,7 +113,7 @@ pub fn new_show_share_words(
     .register_footer_update_fn(footer_updating_func)
     .map_to_button_msg();
 
-    let content_confirm = Frame::new(
+    let content_confirm = Frame::with_header(
         Header::left_aligned(text_confirm),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
@@ -121,7 +121,7 @@ pub fn new_show_share_words(
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let content_check_backup_intro = Frame::new(
+    let content_check_backup_intro = Frame::with_header(
         Header::left_aligned(TR::reset__check_wallet_backup_title.into()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,

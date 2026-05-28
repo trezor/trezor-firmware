@@ -106,7 +106,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         Paragraph::new(&theme::TEXT_SUB_GREY_LIGHT, TR::reset__tos_link),
     ])
     .into_paragraphs();
-    let content_intro = Frame::new(
+    let content_intro = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),
         SwipeContent::new(paragraphs),
     )
@@ -114,7 +114,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     .map_to_button_msg()
     .one_button_request(br);
 
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned(TString::empty()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(cancel_btn_text),
     )
@@ -126,7 +126,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
             .add_page(&ConfirmResetRecover::Menu, content_menu)?;
         res
     } else {
-        let content_confirm = Frame::new(
+        let content_confirm = Frame::with_header(
             Header::left_aligned(TR::reset__title_create_wallet.into()).with_menu_button(),
             SwipeContent::new(PromptScreen::new_hold_to_confirm()),
         )

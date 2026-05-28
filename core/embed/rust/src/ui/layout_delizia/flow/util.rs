@@ -222,7 +222,7 @@ impl ConfirmValue {
             header = header.with_cancel_button();
         }
         let page = SwipeContent::new(SwipePage::vertical(paragraphs));
-        let mut frame = Frame::new(header, page);
+        let mut frame = Frame::with_header(header, page);
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
         }
@@ -417,7 +417,7 @@ impl ShowInfoParams {
             header = header.with_menu_button()
         }
 
-        let mut frame = Frame::new(
+        let mut frame = Frame::with_header(
             header,
             SwipeContent::new(SwipePage::vertical(paragraphs.into_paragraphs())),
         );
@@ -494,7 +494,7 @@ where
 }
 
 pub fn dummy_page() -> impl Component<Msg = FlowMsg> + Swipable + MaybeTrace {
-    Frame::new(
+    Frame::with_header(
         Header::left_aligned(TString::empty()),
         VerticalMenu::empty(),
     )

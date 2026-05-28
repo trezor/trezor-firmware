@@ -69,14 +69,14 @@ impl FlowController for ShowTutorial {
 }
 
 pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
-    let content_step_welcome = Frame::new(
+    let content_step_welcome = Frame::with_header(
         Header::left_aligned(TR::tutorial__welcome_safe5.into()),
         SwipeContent::new(PromptScreen::new_tap_to_start()),
     )
     .with_footer(TR::instructions__tap_to_continue.into(), None)
     .map(super::util::map_to_confirm);
 
-    let content_step_begin = Frame::new(
+    let content_step_begin = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_lets_begin.into()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
@@ -86,7 +86,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
-    let content_step_navigation = Frame::new(
+    let content_step_navigation = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_easy_navigation.into()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
@@ -97,7 +97,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map_to_button_msg();
 
-    let content_step_menu = Frame::new(
+    let content_step_menu = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_handy_menu.into())
             .with_menu_button()
             .button_styled(theme::button_warning_low()),
@@ -110,7 +110,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map_to_button_msg();
 
-    let content_step_hold = Frame::new(
+    let content_step_hold = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_hold.into()),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
@@ -118,7 +118,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let content_step_done = Frame::new(
+    let content_step_done = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_well_done.into()),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
@@ -128,7 +128,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty()
             .item(theme::ICON_CHEVRON_RIGHT, TR::tutorial__did_you_know.into())
@@ -137,7 +137,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     )
     .map(super::util::map_to_choice);
 
-    let content_did_you_know = Frame::new(
+    let content_did_you_know = Frame::with_header(
         Header::left_aligned("".into()).with_cancel_button(),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
@@ -146,7 +146,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     )
     .map_to_button_msg();
 
-    let content_hold_to_exit = Frame::new(
+    let content_hold_to_exit = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_hold.into()),
         SwipeContent::new(PromptScreen::new_hold_to_confirm_danger()),
     )

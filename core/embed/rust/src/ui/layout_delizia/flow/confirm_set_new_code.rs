@@ -73,14 +73,14 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
         )
     };
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
-    let content_intro = Frame::new(
+    let content_intro = Frame::with_header(
         Header::left_aligned(title.into()).with_menu_button(),
         SwipeContent::new(paragraphs),
     )
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
-    let content_menu = Frame::new(
+    let content_menu = Frame::with_header(
         Header::left_aligned("".into()).with_cancel_button(),
         VerticalMenu::empty().cancel_item(cancel_menu_item.into()),
     )
@@ -98,7 +98,7 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
         ]
     })
     .into_paragraphs();
-    let content_cancel_intro = Frame::new(
+    let content_cancel_intro = Frame::with_header(
         Header::left_aligned(cancel.into()).with_cancel_button(),
         SwipeContent::new(paragraphs_cancel_intro),
     )
@@ -109,7 +109,7 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
     }))
     .map_to_button_msg();
 
-    let content_cancel_confirm = Frame::new(
+    let content_cancel_confirm = Frame::with_header(
         Header::left_aligned(cancel.into()).with_cancel_button(),
         SwipeContent::new(PromptScreen::new_tap_to_cancel()),
     )
