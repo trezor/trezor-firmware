@@ -108,7 +108,8 @@ static void drivers_init(void) {
 #endif
 
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status = haptic_init();
+  UNUSED(status);
 #endif
 
 #ifdef USE_POWER_MANAGER
