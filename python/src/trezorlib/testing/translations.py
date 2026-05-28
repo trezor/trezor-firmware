@@ -19,11 +19,18 @@ ROOT = HERE.parent.parent.parent.parent
 
 
 def get_translations_dir() -> Path:
-    """Return the translations directory.
+    """
+    Return the translations directory.
 
     Searches in the following order:
     1. Environment variable TREZOR_TRANSLATIONS_DIR (explicit override)
     2. Legacy location relative to firmware repo root
+
+    Raises:
+        FileNotFoundError: If the translations directory cannot be found.
+
+    Returns:
+        Path: Path to the translations directory.
     """
 
     env_dir = os.environ.get("TREZOR_TRANSLATIONS_DIR")
@@ -56,6 +63,17 @@ def prepare_blob(
     model: models.TrezorModel,
     version: translations.VersionTuple | tuple[int, int, int] | None = None,
 ) -> translations.TranslationsBlob:
+    """
+    Prepare a translation blob for a given language and device model.
+
+    Args:
+        lang_or_def: Language identifier, JSON definition, or path to JSON file.
+        model: Trezor device model.
+        version: Optional version tuple.
+
+    Returns:
+        TranslationsBlob: The prepared translation blob.
+    """
     order = translations.order_from_json(json.loads(ORDER_FILE.read_text()))
     if isinstance(lang_or_def, str):
         lang_or_def = get_lang_json(lang_or_def)
@@ -72,6 +90,15 @@ def prepare_blob(
 
 
 def sign_blob(blob: translations.TranslationsBlob) -> bytes:
+    """
+    Sign a translation blob using the developer private keys.
+
+    Args:
+        blob: The translation blob to sign.
+
+    Returns:
+        bytes: The signed blob as bytes.
+    """
     # build 0-item Merkle proof
     digest = sha256(b"\x00" + blob.header_bytes).digest()
     signature = cosi.sign_with_privkeys(digest, common.PRIVATE_KEYS_DEV)
@@ -87,11 +114,29 @@ def build_and_sign_blob(
     lang_or_def: translations.JsonDef | Path | str,
     session: DebugSession,
 ) -> bytes:
+    """
+    Prepare and sign a translation blob for a given language and session.
+
+    Args:
+        lang_or_def: Language identifier, JSON definition, or path to JSON file.
+        session: DebugSession object.
+
+    Returns:
+        bytes: The signed translation blob.
+    """
     blob = prepare_blob(lang_or_def, session.model, session.version)
     return sign_blob(blob)
 
 
 def set_language(session: DebugSession, lang: str, *, force: bool = False) -> None:
+    """
+    Set the device language for a given session.
+
+    Args:
+        session: DebugSession object.
+        lang: Language code (e.g., 'en', 'cs').
+        force: If True, force setting the language even if already set.
+    """
     if lang.startswith("en"):
         language_data = b""
     else:
@@ -105,6 +150,16 @@ def set_language(session: DebugSession, lang: str, *, force: bool = False) -> No
 
 
 def check_language(session: DebugSession, lang: str) -> None:
+    """
+    Assert that the device language matches the expected language.
+
+    Args:
+        session: DebugSession object.
+        lang: Expected language code.
+
+    Raises:
+        RuntimeError: If the device language does not match.
+    """
     with session.test_ctx:
         language = session.features.language
         assert isinstance(language, str)
@@ -117,6 +172,12 @@ def check_language(session: DebugSession, lang: str) -> None:
 
 
 def get_language() -> str:
+    """
+    Get the current language code.
+
+    Returns:
+        str: The current language code.
+    """
     for lang in LANGUAGES:
         if _CURRENT_TRANSLATION.TR == TRANSLATIONS[lang]:
             return lang
@@ -124,6 +185,18 @@ def get_language() -> str:
 
 
 def get_lang_json(lang: str) -> translations.JsonDef:
+    """
+    Load the JSON definition for a given language.
+
+    Args:
+        lang: Language code.
+
+    Returns:
+        JsonDef: The loaded JSON definition.
+
+    Raises:
+        AssertionError: If the language is not available.
+    """
     assert lang in LANGUAGES
     lang_json = json.loads((TRANSLATIONS_DIR / f"{lang}.json").read_text())
     if (fonts_safe3 := lang_json.get("fonts", {}).get("##Safe3")) is not None:
@@ -133,14 +206,32 @@ def get_lang_json(lang: str) -> translations.JsonDef:
 
 
 class Translation:
+    """
+    Represents a translation for a specific language.
+
+    Provides methods for translating keys, formatting, and generating regex patterns.
+    """
+
     FORMAT_STR_RE = re.compile(r"\\{\d+\\}")
 
     def __init__(self, lang: str) -> None:
+        """
+        Initialize a Translation object.
+
+        Args:
+            lang: Language code.
+        """
         self.lang = lang
         self.lang_json = get_lang_json(lang)
 
     @property
     def translations(self) -> dict[str, str | dict[str, str]]:
+        """
+        Get the translations dictionary.
+
+        Returns:
+            dict[str, str | dict[str, str]]: The translations dictionary.
+        """
         return self.lang_json["translations"]
 
     def _translate_raw(self, key: str, _stacklevel: int = 0) -> str:
@@ -171,14 +262,48 @@ class Translation:
         raise KeyError(key)
 
     def translate(self, key: str, _stacklevel: int = 0) -> str:
+        """
+        Get the translated string for a key.
+
+        Args:
+            key: Translation key.
+            _stacklevel: Internal stacklevel for warnings.
+
+        Returns:
+            str: The translated string.
+        """
         return self._translate_raw(key, _stacklevel=_stacklevel + 1).strip()
 
     def as_regexp(self, key: str, _stacklevel: int = 0) -> re.Pattern:
+        """
+        Get a regular expression pattern for a translation key.
+
+        Args:
+            key: Translation key.
+            _stacklevel: Internal stacklevel for warnings.
+
+        Returns:
+            re.Pattern: The compiled regular expression.
+        """
         tr = self.translate(key, _stacklevel=_stacklevel + 1)
         re_safe = re.escape(tr)
         return re.compile(self.FORMAT_STR_RE.sub(r".*?", re_safe))
 
     def format(self, key: str, *args: t.Any, **kwargs: t.Any) -> str:
+        """
+        Format a translation string with arguments.
+
+        Args:
+            key: Translation key.
+            *args: Positional arguments for formatting.
+            **kwargs: Keyword arguments for formatting.
+
+        Returns:
+            str: The formatted translation string.
+
+        Raises:
+            ValueError: If formatting fails.
+        """
         tr = self.translate(key)
         try:
             return tr.format(*args, **kwargs)
@@ -194,18 +319,60 @@ _CURRENT_TRANSLATION.LAYOUT = LayoutType.Bolt
 
 
 def translate(key: str, _stacklevel: int = 0) -> str:
+    """
+    Translate a key using the current translation.
+
+    Args:
+        key: Translation key.
+        _stacklevel: Internal stacklevel for warnings.
+
+    Returns:
+        str: The translated string.
+    """
     return _CURRENT_TRANSLATION.TR.translate(key, _stacklevel=_stacklevel + 1)
 
 
 def regexp(key: str) -> re.Pattern:
+    """
+    Get a regular expression pattern for a translation key.
+
+    Args:
+        key: Translation key.
+
+    Returns:
+        re.Pattern: The compiled regular expression.
+    """
     return _CURRENT_TRANSLATION.TR.as_regexp(key, _stacklevel=1)
 
 
 def format(key: str, *args: t.Any, **kwargs: t.Any) -> str:
+    """
+    Format a translation string with arguments.
+
+    Args:
+        key: Translation key.
+        *args: Positional arguments for formatting.
+        **kwargs: Keyword arguments for formatting.
+
+    Returns:
+        str: The formatted translation string.
+    """
     return _CURRENT_TRANSLATION.TR.format(key, *args, **kwargs)
 
 
 def __getattr__(key: str) -> str:
+    """
+    Allow attribute-style access to translations.
+
+    Args:
+        key: Translation key.
+
+    Returns:
+        str: The translated string.
+
+    Raises:
+        AttributeError: If the translation key is not found.
+    """
     try:
         return translate(key, _stacklevel=1)
     except KeyError as e:
