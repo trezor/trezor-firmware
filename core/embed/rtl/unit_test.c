@@ -21,13 +21,25 @@
 
 #include <rtl/unit_test.h>
 
+unit_test_t g_ut = {0};
+
+#ifdef TREZOR_EMULATOR
+
+unit_test_t* unit_test_get_records(void) {
+  // Returns an empty list.
+  // TODO: Fix when unit tests are implemented.
+  return &g_ut;
+}
+
+#else
+
 extern unit_test_record_t _unit_test_section_start;
 extern unit_test_record_t _unit_test_section_end;
-
-unit_test_t g_ut = {0};
 
 unit_test_t* unit_test_get_records(void) {
   g_ut.unit_test_array = &_unit_test_section_start;
   g_ut.unit_test_count = &_unit_test_section_end - &_unit_test_section_start;
   return &g_ut;
 }
+
+#endif

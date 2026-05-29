@@ -75,6 +75,17 @@ static const uint8_t * const SECMON_KEYS[] = {
 };
 #endif
 
+static int popcount(uint32_t value) {
+  int count = 0;
+  while (value != 0) {
+    if ((value & 1) != 0) {
+      count++;
+    }
+    value >>= 1;
+  }
+  return count;
+}
+
 static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n,
                               const uint8_t *const *pub, uint8_t sigmask,
                               ed25519_public_key res) {
@@ -85,7 +96,7 @@ static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n,
   sigmask &= ((1 << sig_n) - 1);
 
   // remove if number of set bits in sigmask is not equal to sig_m
-  if (__builtin_popcount(sigmask) != sig_m) return secfalse;
+  if (popcount(sigmask) != sig_m) return secfalse;
 
   ed25519_public_key keys[sig_m];
   int j = 0;

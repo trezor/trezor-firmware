@@ -14,13 +14,18 @@ default).
 ## Building and flashing
 
 Follow the [normal build instructions](../build/embedded.md) however pass
-`TREZOR_MODEL=DISC1` to `make`:
+`-m d001` to `xtask`:
 
 ```
 # build firmware images
-make build_boardloader build_bootloader build_firmware TREZOR_MODEL=DISC1
+xtask build boardloader -m d001 --bootloader-devel
+xtask build bootloader -m d001 --bootloader-devel
+xtask build firmware -m d001 --bootloader-devel
+
 # use openocd to flash everything through st-link
-make flash
+xtask flash boardloader -m d001
+xtask flash bootlaoder -m d002
+xtask flash firmware -m d002
 ```
 
 Reset board after command finishes.

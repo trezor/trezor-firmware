@@ -1,0 +1,16 @@
+{
+    "type": "cppdbg",
+    "request": "launch",
+    "program": "${tfTools.executablePath}",
+    "args": [
+        "-m",
+        "main"
+    ],
+    "cwd": "${workspaceFolder}/core/src",
+    "linux": {
+        "MIMode": "gdb",
+        "miDebuggerPath": "gdb"
+    },
+    "MIMode": "lldb",
+    "stopAtEntry": true
+}
