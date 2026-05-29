@@ -21,17 +21,17 @@ inputs:
   build-bootloader:
     description: 'Build bootloader before unix emulator build'
     required: false
-    default: 'true'
+    default: 'false'
 runs:
   using: 'composite'
   steps:
     - uses: ./.github/actions/environment
 
-    - run: nix-shell --run "uv run make -C core build_bootloader_emu"
+    - run: nix-shell --run "uv run make -C core build_bootloader_emu TREZOR_MODEL=${{ inputs.model }}"
       if: inputs.build-bootloader == 'true'
       shell: sh
 
-    - run: nix-shell --run "uv run make -C core build_unix_frozen"
+    - run: nix-shell --run "uv run make -C core build_unix_frozen TREZOR_MODEL=${{ inputs.model }}"
       shell: sh
 
     - id: prepare_binary
