@@ -220,7 +220,7 @@ SOURCE_MOD += [
     'embed/io/translations/translations.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/strutils.c',
-    'embed/sec/image/boot_image.c',
+    'embed/sec/image/stm32/boot_image.c',
     'embed/sec/image/image.c',
     'embed/sec/rsod/rsod_special.c',
     'vendor/micropython/lib/uzlib/adler32.c',
