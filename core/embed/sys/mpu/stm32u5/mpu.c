@@ -40,7 +40,7 @@
 #define MPUX_TYPE_FLASH_DATA 3
 #define MPUX_TYPE_SRAM_CODE 4
 
-const static struct {
+static const struct {
   uint32_t xn;    // executable
   uint32_t attr;  // attribute index
   uint32_t sh;    // shareable
