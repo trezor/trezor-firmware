@@ -375,6 +375,7 @@ bool backlight_set(uint8_t val) {
   // DMA callback
   drv->requested_level_limited = requested_level_limited;
 
+#if 0
   // Perform gamma correction of the requested level
   drv->requested_level_corrected = backlight_gamma_correct(
       drv->requested_level_limited, INPUT_OFFSET, BACKLIGHT_MAX_LEVEL,
@@ -388,6 +389,13 @@ bool backlight_set(uint8_t val) {
   // of PWM regulation of the step)
   drv->requested_step_duty_cycle =
       (uint8_t)(drv->requested_level_corrected % USTEPS_PER_STEP);
+#else
+  // Simplified mapping without gamma correction
+  drv->requested_step = (uint8_t)((drv->requested_level_limited * MAX_STEPS) / BACKLIGHT_MAX_LEVEL);
+
+  // No PWM regulation of the step
+  drv->requested_step_duty_cycle = 0;
+#endif
 
   // Requested level is below INPUT_OFFSET => shutdown backlight
   if (drv->requested_level_limited < INPUT_OFFSET) {

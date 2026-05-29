@@ -102,6 +102,38 @@ static void prodtest_display_set_backlight(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+// WIP: luminance measurement — not intended for main branch
+static void prodtest_display_luminance(cli_t* cli) {
+  const char* color = cli_arg(cli, "color");
+  uint32_t level = 0;
+
+  if (color[0] != 'B' && color[0] != 'W') {
+    cli_error_arg(cli, "Expecting color 'B' (black) or 'W' (white).");
+    return;
+  }
+
+  if (!cli_arg_uint32(cli, "level", &level) || level > 255) {
+    cli_error_arg(cli, "Expecting backlight level in range 0-255 (100%%).");
+    return;
+  }
+
+  if (cli_arg_count(cli) > 2) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (color[0] == 'W') {
+    screen_prodtest_bars("W", 1);
+  } else {
+    screen_prodtest_bars("", 0);
+  }
+
+  cli_trace(cli, "Setting backlight to %d...", level);
+  display_set_backlight((uint8_t)level);
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -130,4 +162,11 @@ PRODTEST_CLI_CMD(
   .func = prodtest_display_set_backlight,
   .info = "Set the display backlight level",
   .args = "<level>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "display-luminance",
+  .func = prodtest_display_luminance,
+  .info = "Show solid color screen and set backlight level for luminance measurement",
+  .args = "<color> <level>"
 );
