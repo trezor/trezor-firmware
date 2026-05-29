@@ -104,12 +104,13 @@ impl Homescreen {
     }
 
     fn render_loader<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.loader.render(target);
         TR::progress__locking_device.map_translated(|t| {
             shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t, fonts::FONT_NORMAL)
                 .with_align(Alignment::Center)
-                .with_fg(theme::FG);
+                .with_fg(theme::FG)
+                .render(target);
         });
-        self.loader.render(target)
     }
 
     pub fn set_paint_notification(&mut self) {
