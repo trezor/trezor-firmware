@@ -248,7 +248,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Removidas todas as conexões."
+      "Eckhart": "Removidos todos os dispositivos."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -266,7 +266,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Conexão removida."
+      "Eckhart": "Dispositivo removido."
     },
     "ble__host_info": {
       "Bolt": "",
@@ -547,7 +547,7 @@
     "cardano__voting_purpose": "Objetivo da votação",
     "cardano__warning": "Aviso",
     "cardano__weight": "Peso",
-    "cardano__withdrawal_for_address_template": "Confirmar retirada para endereço de {0}",
+    "cardano__withdrawal_for_address_template": "Confirmar saque para endereço de {0}",
     "cardano__x_of_y_signatures_template": "Requer {0} de {1} assinaturas.",
     "coinjoin__access_account": "Acessar sua conta coinjoin?",
     "coinjoin__do_not_disconnect": "Não desconecte o seu Trezor!",
@@ -826,7 +826,7 @@
       "Delizia": "Aprovando quantia ilimitada de {0}.",
       "Eckhart": "Aprovando quantia ilimitada de {0}."
     },
-    "ethereum__calldata_suffix": "",
+    "ethereum__calldata_suffix": "Sufixo calldata",
     "ethereum__confirm_contract": "Confirmar contrato",
     "ethereum__contract_address": "Endereço de contr. do provedor",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
@@ -847,7 +847,7 @@
     "ethereum__new_contract": "Novo contrato será implantado",
     "ethereum__no_message_field": "Sem campo de mensagem",
     "ethereum__priority_fee": "Taxa de prioridade máx.",
-    "ethereum__redeem": "",
+    "ethereum__redeem": "Resgatar",
     "ethereum__redeem_amount": "Quantia para resgate",
     "ethereum__redeem_from": "Resgatar de",
     "ethereum__reward_tokens": "Tokens de recompensa",
@@ -931,16 +931,16 @@
     },
     "ethereum__unknown_token": "Token desconhecido",
     "ethereum__valid_signature": "A assinatura é válida.",
-    "ethereum__vault_claim_intro": "Revise os detalhes para resgate de recompensas.",
-    "ethereum__vault_claim_to": "",
+    "ethereum__vault_claim_intro": "Resgatar recompensas de Merkl.xyz",
+    "ethereum__vault_claim_to": "Resgatar para",
     "ethereum__vault_deposit_intro": "Revise os detalhes para depósito no cofre.",
     "ethereum__vault_redeem_intro": "Revise os detalhes para resgatar do cofre.",
-    "ethereum__vault_redeem_to": "",
-    "ethereum__vault_withdraw_intro": "Revise os detalhes para retirar do cofre.",
-    "ethereum__withdraw": "Retirada",
-    "ethereum__withdraw_amount": "",
-    "ethereum__withdraw_from": "Retirar de",
-    "ethereum__withdraw_to": "",
+    "ethereum__vault_redeem_to": "Resgatar para",
+    "ethereum__vault_withdraw_intro": "Revise os detalhes para sacar do cofre.",
+    "ethereum__withdraw": "Sacar",
+    "ethereum__withdraw_amount": "Quantia para saque",
+    "ethereum__withdraw_from": "Sacar de",
+    "ethereum__withdraw_to": "Sacar para",
     "experimental_mode__enable": "Ativar recursos experimentais?",
     "experimental_mode__only_for_dev": "Apenas para desenvolvedores e beta testers!",
     "experimental_mode__title": "Modo experimental",
@@ -1654,12 +1654,12 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Acessar carteira com frase secreta"
+      "Eckhart": "Acessar carteira com Frase Secreta"
     },
     "passphrase__access_wallet": {
-      "Bolt": "Acessar carteira com frase secreta?",
-      "Caesar": "Acessar carteira com frase secreta?",
-      "Delizia": "Acessar carteira com frase secreta?",
+      "Bolt": "Acessar carteira com Frase Secreta?",
+      "Caesar": "Acessar carteira com Frase Secreta?",
+      "Delizia": "Acessar carteira com Frase Secreta?",
       "Eckhart": ""
     },
     "passphrase__always_on_device": "Inserir a frase secreta sempre no Trezor?",
@@ -1957,7 +1957,7 @@
       "Bolt": "Carteira recuperada com sucesso",
       "Caesar": "Carteira recuperada com sucesso",
       "Delizia": "Carteira recuperada com sucesso.",
-      "Eckhart": "Carteira recuperada com sucesso"
+      "Eckhart": "Carteira recuperada com sucesso."
     },
     "recovery__wanna_cancel_dry_run": "Deseja mesmo cancelar a verificação do backup?",
     "recovery__wanna_cancel_recovery": {
@@ -2084,7 +2084,12 @@
       "Eckhart": ""
     },
     "reset__create_x_of_y_multi_share_backup_template": "Você deseja criar um backup multi-share {0} de {1}?",
-    "reset__finished_verifying_group_template": "Você concluiu a verificação dos seus shares de recuperação para o grupo {0}.",
+    "reset__finished_verifying_group_template": {
+      "Bolt": "Você concluiu a verificação dos seus shares de recuperação para o grupo {0}.",
+      "Caesar": "Você concluiu a verificação dos seus shares de recuperação para o grupo {0}.",
+      "Delizia": "Grupo {0} verificado",
+      "Eckhart": "Você concluiu a verificação dos seus shares de recuperação para o grupo {0}."
+    },
     "reset__finished_verifying_shares": {
       "Bolt": "Você concluiu a verificação dos seus shares de recuperação.",
       "Caesar": "Você concluiu a verificação dos seus shares de recuperação.",
@@ -2109,7 +2114,12 @@
       "Delizia": "Cada grupo tem um número definido de shares e seu próprio limite mínimo. Nos próximos passos, você definirá os números de shares e os limites mínimos.",
       "Eckhart": "Cada grupo tem um número definido de shares e seu próprio limite mínimo. Nos próximos passos, você definirá os números de shares e os limites mínimos."
     },
-    "reset__group_share_checked_successfully_template": "Grupo {0} - Share {1} verificado com sucesso.",
+    "reset__group_share_checked_successfully_template": {
+      "Bolt": "Grupo {0} - Share {1} verificado com sucesso.",
+      "Caesar": "Grupo {0} - Share {1} verificado com sucesso.",
+      "Delizia": "Grupo {0} - Share {1} verificado",
+      "Eckhart": "Grupo {0} - Share {1} verificado com sucesso."
+    },
     "reset__group_share_title_template": {
       "Bolt": "Grupo {0} - Share {1}",
       "Caesar": "Grupo {0} - Share {1}",
@@ -2262,14 +2272,14 @@
     "reset__slip39_checklist_more_info_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "O limite mínimo define qual o menor número de shares necessário para recuperar sua carteira.",
-      "Eckhart": "O limite mínimo define qual o menor número de shares necessário para recuperar sua carteira."
+      "Delizia": "O limite mínimo define quantos shares bastam para recuperar sua carteira.",
+      "Eckhart": "O limite mínimo define quantos shares bastam para recuperar sua carteira."
     },
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Se você definir como {0} de {1} cotas, precisará de {0} shares do backup para recuperar sua carteira.",
-      "Eckhart": "Se você definir como {0} de {1} cotas, precisará de {0} shares do backup para recuperar sua carteira."
+      "Delizia": "Se você definir como {0} de {1} shares, o número de shares necessário para recuperar sua carteira será {0}.",
+      "Eckhart": "Se você definir como {0} de {1} shares, o número de shares necessário para recuperar sua carteira será {0}."
     },
     "reset__slip39_checklist_num_groups": "Número de grupos",
     "reset__slip39_checklist_num_groups_x_template": "Número de grupos: {0}",

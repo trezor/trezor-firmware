@@ -801,7 +801,7 @@
       "Delizia": "Povolujete neomezené množství {0}.",
       "Eckhart": "Povolujete neomezené množství {0}."
     },
-    "ethereum__calldata_suffix": "Dodatečná data",
+    "ethereum__calldata_suffix": "Dodatečná calldata",
     "ethereum__confirm_contract": "Potvrdit kontrakt",
     "ethereum__contract_address": "Adresa kontraktu poskytovatele",
     "ethereum__data_size_template": "Velikost: {0} bajtů",
@@ -1170,9 +1170,9 @@
       "Eckhart": "LED"
     },
     "lockscreen__tap_to_connect": {
-      "Bolt": "Připojte se klepnutím",
+      "Bolt": "Připojte ho klepnutím",
       "Caesar": "",
-      "Delizia": "Připojte se klepnutím",
+      "Delizia": "Připojte ho klepnutím",
       "Eckhart": ""
     },
     "lockscreen__tap_to_unlock": {
@@ -2343,9 +2343,9 @@
       "Eckhart": ""
     },
     "sd_card__card_required": {
-      "Bolt": "Vyžadována SD karta.",
+      "Bolt": "Je potřeba SD karta.",
       "Caesar": "",
-      "Delizia": "Vyžadována SD karta.",
+      "Delizia": "Je potřeba SD karta.",
       "Eckhart": ""
     },
     "sd_card__disable": {
