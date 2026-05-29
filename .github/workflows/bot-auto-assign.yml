@@ -9,8 +9,8 @@ permissions:
 
 jobs:
   auto-assign:
-    # run only in 'trezor/trezor-firmware' repository
-    if: github.repository == 'trezor/trezor-firmware'
+    # run only in 'trezor/trezor-firmware' repository, skipped for bots
+    if: github.repository == 'trezor/trezor-firmware' && !endsWith(github.event.pull_request.user.login, '[bot]')
     runs-on: ubuntu-latest
     steps:
       - name: Assign PR author to PR
