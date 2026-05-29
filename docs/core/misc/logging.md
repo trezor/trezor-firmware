@@ -6,19 +6,19 @@ Logging in the Trezor firmware is centralized so that all log records from all f
 {sec.msec} {module_name} {log_level} {message}
 ```
 
-All log records are written to the debug console, which can be configured using the `DBG_CONSOLE` argument when building the firmware. If the debug console is disabled, all logging is disabled as well (i.e. in production builds).
+All log records are written to the debug console, which can be configured using the `--dbg-console` argument when building the firmware. If the debug console is disabled, all logging is disabled as well (i.e. in production builds).
 
 Example:
 
 ```
-make build_firmware TREZOR_MODEL=T3W1 DBG_CONSOLE=VCP
+xtask build firmware -m t3w1 --dbg-console=vcp
 ```
 
-The following options are supported for the `DBG_CONSOLE` argument:
+The following options are supported for the `--dbg-console` argument:
 
-* VCP - outputs logs to the USB VCP console
-* SWO - outputs logs to the SWO interface (requires STLink)
-* SYSTEMVIEW - outputs logs using JLink and Segger SystemView
+* vcp - outputs logs to the USB VCP console
+* swo - outputs logs to the SWO interface (requires STLink)
+* systemview - outputs logs using JLink and Segger SystemView
 
 In the firmware emulator, all these logging backends are replaced with regular stderr output.
 
@@ -97,8 +97,8 @@ These settings determine which modules and log levels are compiled into the firm
 
 ## Notes on non-blocking behavior
 
-When the logging backend is configured to use USB VCP (`DBG_CONSOLE=VCP`), all writes to the debug console are non-blocking by default. This may result in partial or lost messages, because the USB VCP internal buffer can fill quickly when the logging rate is high.
+When the logging backend is configured to use USB VCP (`--dbg-console=vcp`), all writes to the debug console are non-blocking by default. This may result in partial or lost messages, because the USB VCP internal buffer can fill quickly when the logging rate is high.
 
-This default behavior can be overridden by setting the `BLOCK_ON_VCP` build argument. However, when logging from an interrupt context, writes to USB VCP remain non-blocking regardless of this setting.
+This default behavior can be overridden by setting the `--block-on-vcp` build argument. However, when logging from an interrupt context, writes to USB VCP remain non-blocking regardless of this setting.
 
-When the logging backend is set to `SWO` or `SYSTEMVIEW`, writes are always blocking, ensuring that messages are never lost.
+When the logging backend is set to `swo` or `systemview`, writes are always blocking, ensuring that messages are never lost.

@@ -91,8 +91,8 @@ sram_region_t g_sram_regions[] = {
 void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv) {
   const size_t block_size = TZ_SRAM_ALIGNMENT;
 
-  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
-  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(start, TZ_SRAM_ALIGNMENT), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, TZ_SRAM_ALIGNMENT), "TZ alignment");
 
   uint32_t end = start + size;
 
@@ -125,8 +125,8 @@ void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv) {
 void tz_set_sram_unsecure(uint32_t start, uint32_t size, bool unsecure) {
   const size_t block_size = TZ_SRAM_ALIGNMENT;
 
-  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
-  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(start, TZ_SRAM_ALIGNMENT), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, TZ_SRAM_ALIGNMENT), "TZ alignment");
 
   uint32_t end = start + size;
 
@@ -200,8 +200,8 @@ flash_region_t g_flash_regions[] = {
 void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
   const size_t block_size = TZ_FLASH_ALIGNMENT;
 
-  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
-  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(start, TZ_FLASH_ALIGNMENT), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, TZ_FLASH_ALIGNMENT), "TZ alignment");
 
   uint32_t end = start + size;
 
@@ -234,8 +234,8 @@ void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
 void tz_set_flash_unsecure(uint32_t start, uint32_t size, bool unsecure) {
   const size_t block_size = TZ_FLASH_ALIGNMENT;
 
-  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
-  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(start, TZ_FLASH_ALIGNMENT), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, TZ_FLASH_ALIGNMENT), "TZ alignment");
 
   uint32_t end = start + size;
 
