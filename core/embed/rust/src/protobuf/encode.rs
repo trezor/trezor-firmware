@@ -64,8 +64,8 @@ impl Encoder {
 
             let field_key = {
                 let prim_type = field.get_type().primitive_type();
-                let prim_type = prim_type as u64;
-                let field_tag = field.tag as u64;
+                let prim_type = u64::from(prim_type);
+                let field_tag = u64::from(field.tag);
                 field_tag << 3 | prim_type
             };
 

@@ -217,7 +217,7 @@ impl Component for Loader {
             let active_color = style.active;
             let background_color = style.background_color;
 
-            let end = 360.0 * progress as f32 / 1000.0;
+            let end = 360.0 * f32::from(progress) / 1000.0;
             let start = 0.0;
 
             render_loader(

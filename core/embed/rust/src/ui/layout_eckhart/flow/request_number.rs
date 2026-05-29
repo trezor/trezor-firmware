@@ -69,7 +69,7 @@ pub fn new_request_number(
     // wrap the closure for obtaining MoreInfo text and call it with NUM_DISPLAYED
     let info_closure = move || {
         let curr_number = NUM_DISPLAYED.load(Ordering::Relaxed);
-        info_closure(curr_number as u32)
+        info_closure(u32::from(curr_number))
     };
 
     let content_input =

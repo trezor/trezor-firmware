@@ -159,7 +159,7 @@ impl Component for Slip39Input {
 
             // Initial position for drawing the icons
             let mut cursor = area.center().ofs(Offset::x(-self.width() / 2));
-            let visible_icons = input_len.saturating_sub(last.is_some() as usize);
+            let visible_icons = input_len.saturating_sub(usize::from(last.is_some()));
 
             for _ in 0..visible_icons {
                 ToifImage::new(cursor, Self::ICON.toif)

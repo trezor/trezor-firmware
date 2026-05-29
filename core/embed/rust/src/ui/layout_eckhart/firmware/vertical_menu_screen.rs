@@ -150,8 +150,9 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
             if let Some(displacement) = self.inertia.advance(ctx) {
                 let current = self.menu.get_offset();
                 // Perform addition in a wider type and clamp to the valid offset range
-                let new_offset_i32 = current as i32 + displacement as i32;
-                let new_offset = new_offset_i32.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
+                let new_offset_i32 = i32::from(current) + i32::from(displacement);
+                let new_offset =
+                    new_offset_i32.clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16;
                 self.menu.set_offset(new_offset);
 
                 // If we hit a boundary, stop coasting
@@ -363,7 +364,7 @@ impl InertiaState {
         if let Some(prev_time) = self.last_move_time {
             let dt_ms = now.saturating_duration_since(prev_time).to_millis() as f32;
             if dt_ms > 0.0 {
-                let delta = (offset - self.last_offset) as f32;
+                let delta = f32::from(offset - self.last_offset);
                 let instant_velocity = delta / dt_ms;
                 // Exponential moving average
                 self.velocity = self.velocity * (1.0 - Self::VELOCITY_SMOOTHING)
@@ -414,10 +415,10 @@ impl InertiaState {
         // Apply velocity to get fractional displacement
         let displacement = self.velocity * dt_ms + self.remainder;
         // Clamp to i16 range before truncation to avoid saturating cast surprises
-        let displacement = displacement.clamp(i16::MIN as f32, i16::MAX as f32);
+        let displacement = displacement.clamp(f32::from(i16::MIN), f32::from(i16::MAX));
         // Split into integer part (to apply) and fractional remainder (to accumulate)
         let int_displacement = displacement as i16;
-        self.remainder = displacement - int_displacement as f32;
+        self.remainder = displacement - f32::from(int_displacement);
 
         // Apply friction: v *= friction^dt
         // First-order Taylor: a^dt ≈ 1 + dt*ln(a)

@@ -306,7 +306,7 @@ impl SmpReceiver {
                 let received_len = self.rx_msg_len + len;
 
                 // the first two bytes of rx_msg are the length field
-                let msg_len = ((self.rx_msg[0] as u16) << 8) | (self.rx_msg[1] as u16);
+                let msg_len = (u16::from(self.rx_msg[0]) << 8) | u16::from(self.rx_msg[1]);
 
                 // too long? (received_len - 2) > msg_len
                 if received_len.saturating_sub(2) > msg_len as usize {

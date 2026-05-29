@@ -255,7 +255,7 @@ impl Component for FuelGauge {
 impl crate::trace::Trace for FuelGauge {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("FuelGauge");
-        t.int("soc", self.soc as i64);
+        t.int("soc", i64::from(self.soc));
     }
 }
 
