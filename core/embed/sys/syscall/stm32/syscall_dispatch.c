@@ -1023,7 +1023,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
     default:
-      system_exit_fatal("Invalid syscall", __FILE__, __LINE__);
+      system_exit_fatal("Invalid syscall", __FILE_NAME__, __LINE__);
       break;
   }
 }

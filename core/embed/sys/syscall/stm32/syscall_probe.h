@@ -46,9 +46,9 @@ void handle_access_violation(const char *file, int line);
 
 // Exits the current application task with an fatal error
 // with the message "Access violation".
-#define apptask_access_violation()               \
-  do {                                           \
-    handle_access_violation(__FILE__, __LINE__); \
+#define apptask_access_violation()                    \
+  do {                                                \
+    handle_access_violation(__FILE_NAME__, __LINE__); \
   } while (0)
 
 #endif  // KERNEL
