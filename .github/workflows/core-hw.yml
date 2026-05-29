@@ -47,7 +47,6 @@ jobs:
         --durations=50
         --session-timeout 19800
       TT_UHUB_PORT: 1
-      QUIET_MODE: 1
     timeout-minutes: 360  # 6h CI job timeout
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # actions/checkout@v4.3.1
@@ -56,7 +55,7 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build-xtask/artifacts/latest/firmware.bin"
       - run: nix-shell --run "uv run trezorctl list"
       - run: nix-shell --run "uv run trezorctl get-features"
       - run: |
@@ -91,7 +90,6 @@ jobs:
       DISABLE_OPTIGA: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2B1' && '1' || '0' }}
       TT_UHUB_PORT: 1
-      QUIET_MODE: 1
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # actions/checkout@v4.3.1
         with:
@@ -101,7 +99,7 @@ jobs:
           full-deps: "true"
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build-xtask/artifacts/latest/firmware.bin"
       - run: nix-shell --run "uv run trezorctl list"
       - run: nix-shell --run "uv run trezorctl get-features"
       - run: |
