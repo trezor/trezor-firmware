@@ -12,8 +12,8 @@ data = coverage.CoverageData(result_filename)
 
 
 def to_preprocessed_path(py_path: Path) -> Path:
-    # Remap <prefix>/src/<rel>.py → <prefix>/build/unix/src/<rel>.i so coverage
-    # reports against the preprocessed source actually compiled into the frozen
+    # Remap <prefix>/src/<rel>.py → <prefix>/build-xtask/artifacts/latest/mpy-files/<rel>.i
+    # so coverage reports against the preprocessed source actually compiled into the frozen
     # build (dead feature-flag branches already rewritten to `if False:`).
     # Fall back to the original .py path when no .i exists (e.g. unfrozen
     # debug-only modules loaded directly from src/).
@@ -23,7 +23,11 @@ def to_preprocessed_path(py_path: Path) -> Path:
     src_index = path_parts.index("src")
     prefix = path_parts[:src_index]
     rest = path_parts[src_index + 1 :]
-    i_path = Path(*prefix) / "build/unix/src" / Path(*rest).with_suffix(".i")
+    i_path = (
+        Path(*prefix)
+        / "build-xtask/artifacts/latest/mpy-files"
+        / Path(*rest).with_suffix(".i")
+    )
     return i_path if os.path.exists(i_path) else py_path
 
 

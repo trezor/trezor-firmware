@@ -35,7 +35,7 @@ BINDIR = ROOT / "tests" / "emulators"
 _SHARED_TROPIC_MODELS: Dict[str, TropicModel] = {}
 
 LOCAL_BUILD_PATHS = {
-    "core": ROOT / "core" / "build" / "unix" / "trezor-emu-core",
+    "core": ROOT / "core" / "build-xtask" / "artifacts" / "latest" / "firmware-emu",
     "legacy": ROOT / "legacy" / "firmware" / "trezor.elf",
 }
 
