@@ -50,7 +50,6 @@ FEATURES_WANTED = [
     "dma2d",
     "haptic",
     "input",
-    "ipc",
     "kernel_mode",
     "optiga",
     "power_manager",
@@ -83,7 +82,7 @@ if not TREZOR_MODEL in ['T3W1', 'D002']:
     FEATURES_WANTED += ["secure_mode"]
 
 if TREZOR_MODEL in ['T3W1'] and EXTAPP_SUPPORT:
-    FEATURES_WANTED += ["app_loading"]
+    FEATURES_WANTED += ["app_loading", "ipc"]
 
 if DISABLE_OPTIGA:
     # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
