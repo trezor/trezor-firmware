@@ -23,11 +23,11 @@ jobs:
     runs-on:
       - self-hosted
       # FIXME runner4 with t2b1 does not work at the moment
-      - ${{ matrix.model == 'T2B1' && 'runner3' || matrix.model == 'T3T1' && 'hw-t3t1' || 'hw-t2t1' }}
+      - ${{ matrix.model == 'T2B1' && 'runner3' || matrix.model == 'T3T1' && 'hw-t3t1' || matrix.model == 'T3B1' && 'hw-t3b1' || matrix.model == 'T3W1' && 'hw-t3w1' || 'hw-t2t1' }}
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T2B1, T3T1]
+        model: [T2T1, T2B1, T3B1, T3T1, T3W1]
         coins: [universal, btconly]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
@@ -35,6 +35,7 @@ jobs:
       PYTEST_TIMEOUT: 600  # 10m single test timeout
       PYOPT: 0
       DISABLE_OPTIGA: 1
+      DISABLE_TROPIC: 1
       STORAGE_INSECURE_TESTING_MODE: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2T1' && '0' || '1' }}
       # TODO: enable SD-related tests after fixing #4924
@@ -76,17 +77,19 @@ jobs:
     runs-on:
       - self-hosted
       # FIXME runner4 with t2b1 does not work at the moment
-      - ${{ matrix.model == 'T2B1' && 'runner3' || matrix.model == 'T3T1' && 'hw-t3t1' || 'hw-t2t1' }}
+      - ${{ matrix.model == 'T2B1' && 'runner3' || matrix.model == 'T3T1' && 'hw-t3t1' || matrix.model == 'T3B1' && 'hw-t3b1' || matrix.model == 'T3W1' && 'hw-t3w1' || 'hw-t2t1' }}
     if: false # FIXME https://github.com/trezor/trezor-firmware/issues/3128
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T2B1, T3T1]
+        model: [T2T1, T2B1, T3B1, T3T1, T3W1]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       PYTEST_TIMEOUT: 1200
       PYOPT: 0
       DISABLE_OPTIGA: 1
+      DISABLE_TROPIC: 1
+      STORAGE_INSECURE_TESTING_MODE: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2T1' && '0' || '1' }}
       TT_UHUB_PORT: all
     steps:
