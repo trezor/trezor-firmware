@@ -180,8 +180,6 @@ class LegacyFirmware(SanityCheckedStruct):
     expected format of firmware binary for Trezor One version 1.8.0, which can be installed
     by both the older and the newer bootloader."""
 
-    magic: bytes
-    code_length: int
     key_indexes: list[int]
     reserved: bytes
     signatures: list[bytes]
@@ -191,8 +189,8 @@ class LegacyFirmware(SanityCheckedStruct):
 
     # fmt: off
     SUBCON = c.Struct(
-        "magic" / c.Const(b"TRZR"),
-        "code_length" / c.Rebuild(c.Int32ul, c.len_(c.this.code)),
+        "_magic" / c.Const(b"TRZR"),
+        "_code_length" / c.Rebuild(c.Int32ul, c.len_(c.this.code)),
         "key_indexes" / c.Int8ul[consts.V1_SIGNATURE_SLOTS],  # pylint: disable=E1136
         "flags" / c.BitStruct(
             "reserved" / c.BitsInteger(7),
@@ -200,7 +198,7 @@ class LegacyFirmware(SanityCheckedStruct):
         ),
         "reserved" / Reserved(52),
         "signatures" / c.Bytes(64)[consts.V1_SIGNATURE_SLOTS],
-        "code" / c.Bytes(c.this.code_length),
+        "code" / c.Bytes(c.this._code_length),
         c.Terminated,
 
         "embedded_v2" / c.RestreamData(c.this.code, c.Optional(LegacyV2Firmware.SUBCON)),
