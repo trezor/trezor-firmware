@@ -49,6 +49,8 @@ class Details:
     def from_layout(
         cls, name: str, layout_factory: Callable[[], trezorui_api.LayoutObj[T]]
     ) -> Self:
+        """IMPORTANT: `layout_factory()` MUST create a new layout on each invocation."""
+
         async def _interact() -> T:
             with layout_factory() as obj:
                 # details' layout is de-allocated after interact() returns.
