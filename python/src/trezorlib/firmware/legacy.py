@@ -180,14 +180,17 @@ class LegacyFirmware(SanityCheckedStruct):
     expected format of firmware binary for Trezor One version 1.8.0, which can be installed
     by both the older and the newer bootloader."""
 
-    magic: bytes
-    code_length: int
     key_indexes: list[int]
     reserved: bytes
     signatures: list[bytes]
     code: bytes
+    magic: bytes = field(default=b"TRZR")
+    code_length: int = field(default=-1)  # overwritten by __post_init__
     flags: dict[str, t.Any] = field(default_factory=dict)
     embedded_v2: LegacyV2Firmware | None = subcon(LegacyV2Firmware, default=None)
+
+    def __post_init__(self) -> None:
+        self.code_length = len(self.code)
 
     # fmt: off
     SUBCON = c.Struct(
