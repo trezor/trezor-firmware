@@ -23,6 +23,8 @@ import pytest
 from tests.emulators import LOCAL_BUILD_PATHS, ROOT, TROPIC_MODEL_CONFIGFILE
 from trezorlib._internal.emulator import CoreEmulator
 
+from . import model_only
+
 BUILD_PATH = LOCAL_BUILD_PATHS["core"]
 TROPIC_BOOT_CONFIGS_DIR = TROPIC_MODEL_CONFIGFILE.parent / "tropic_boot_configs"
 CORE_SRC_DIR = ROOT / "core" / "src"
@@ -35,6 +37,7 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
+@model_only("T3W1")
 @pytest.mark.parametrize(
     "config_file,expect_failure",
     [
