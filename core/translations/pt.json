@@ -1654,12 +1654,12 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Acessar Carteira com frase secreta"
+      "Eckhart": "Acessar carteira com Frase Secreta"
     },
     "passphrase__access_wallet": {
-      "Bolt": "Acessar Carteira com frase secreta?",
-      "Caesar": "Acessar Carteira com frase secreta?",
-      "Delizia": "Acessar Carteira com frase secreta?",
+      "Bolt": "Acessar carteira com Frase Secreta?",
+      "Caesar": "Acessar carteira com Frase Secreta?",
+      "Delizia": "Acessar carteira com Frase Secreta?",
       "Eckhart": ""
     },
     "passphrase__always_on_device": "Inserir a frase secreta sempre no Trezor?",

@@ -2187,7 +2187,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Vérifions rapidement le Fragment #{0}."
+      "Eckhart": "Vérifions rapidement le Fragment {0}."
     },
     "reset__check_share_title_template": {
       "Bolt": "Vérifier fragm. n°{0}",

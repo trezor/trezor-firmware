@@ -243,7 +243,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Conexiones eliminadas."
+      "Eckhart": "Dispositivos eliminados."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -261,7 +261,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Conexión eliminada."
+      "Eckhart": "Dispositivo eliminado."
     },
     "ble__host_info": {
       "Bolt": "",
@@ -916,7 +916,7 @@
     },
     "ethereum__unknown_token": "Token desconocido",
     "ethereum__valid_signature": "La firma es válida.",
-    "ethereum__vault_claim_intro": "Verifica los detalles para reclamar las recompensas.",
+    "ethereum__vault_claim_intro": "Reclamar recompensas de Merkl.xyz",
     "ethereum__vault_claim_to": "Reclamar en",
     "ethereum__vault_deposit_intro": "Verifica los detalles para depositar en la bóveda.",
     "ethereum__vault_redeem_intro": "Verifica los detalles para redimir de la bóveda.",
@@ -1624,12 +1624,12 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Acceder a la billetera con passphrase"
+      "Eckhart": "Acceder a la billetera con Passphrase"
     },
     "passphrase__access_wallet": {
-      "Bolt": "¿Ir a la billetera passphr.?",
-      "Caesar": "¿Ir a la billetera passphr.?",
-      "Delizia": "¿Ir a la billetera passphr.?",
+      "Bolt": "¿Acceder a la billetera Passphrase?",
+      "Caesar": "¿Acceder a la billetera Passphrase?",
+      "Delizia": "¿Acceder a la billetera Passphrase?",
       "Eckhart": ""
     },
     "passphrase__always_on_device": "¿Introducir siempre la passphrase en Trezor?",
@@ -1994,7 +1994,12 @@
       "Eckhart": ""
     },
     "reset__create_x_of_y_multi_share_backup_template": "¿Quieres crear {0} de {1} c. seg. de múltiples fragmentos?",
-    "reset__finished_verifying_group_template": "Has verificado tus fragmentos de recuperación del grupo {0}.",
+    "reset__finished_verifying_group_template": {
+      "Bolt": "Has verificado tus fragmentos de recuperación del grupo {0}.",
+      "Caesar": "Has verificado tus fragmentos de recuperación del grupo {0}.",
+      "Delizia": "Grupo {0} verificado",
+      "Eckhart": "Has verificado tus fragmentos de recuperación del grupo {0}."
+    },
     "reset__finished_verifying_shares": {
       "Bolt": "Has verificado tus fragmentos de recuperación.",
       "Caesar": "Has verificado tus fragmentos de recuperación.",
@@ -2019,7 +2024,12 @@
       "Delizia": "Cada grupo tiene un núm. de fragmentos y su propio umbral. En los siguientes pasos, ajustarás el núm. de fragmentos y los umbrales.",
       "Eckhart": "Cada grupo tiene un núm. de fragmentos y su propio umbral. En los siguientes pasos, ajustarás el núm. de fragmentos y los umbrales."
     },
-    "reset__group_share_checked_successfully_template": "Grupo {0} - Frag. {1} verificado con éxito.",
+    "reset__group_share_checked_successfully_template": {
+      "Bolt": "Grupo {0} - Frag. {1} verificado con éxito.",
+      "Caesar": "Grupo {0} - Frag. {1} verificado con éxito.",
+      "Delizia": "Grupo {0} - Frag. {1} verificado",
+      "Eckhart": "Grupo {0} - Frag. {1} verificado con éxito."
+    },
     "reset__group_share_title_template": {
       "Bolt": "Grupo {0} - Frag. {1}",
       "Caesar": "Grupo {0} - Frag. {1}",

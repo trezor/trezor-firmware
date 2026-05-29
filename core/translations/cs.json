@@ -1170,9 +1170,9 @@
       "Eckhart": "LED"
     },
     "lockscreen__tap_to_connect": {
-      "Bolt": "Připojte se klepnutím",
+      "Bolt": "Připojte ho klepnutím",
       "Caesar": "",
-      "Delizia": "Připojte se klepnutím",
+      "Delizia": "Připojte ho klepnutím",
       "Eckhart": ""
     },
     "lockscreen__tap_to_unlock": {
@@ -2343,9 +2343,9 @@
       "Eckhart": ""
     },
     "sd_card__card_required": {
-      "Bolt": "Vyžadována SD karta.",
+      "Bolt": "Je potřeba SD karta.",
       "Caesar": "",
-      "Delizia": "Vyžadována SD karta.",
+      "Delizia": "Je potřeba SD karta.",
       "Eckhart": ""
     },
     "sd_card__disable": {
