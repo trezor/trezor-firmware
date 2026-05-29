@@ -349,14 +349,18 @@ async def try_confirm_staking_transaction(
         from .layout import confirm_claim_recipient, confirm_claim_transaction
 
         total_amount = 0
+        recipient = instructions[0].recipient_account[0]
         for withdraw in instructions:
             if signer_public_key != withdraw.withdrawal_authority[0]:
                 return False
             if is_address_reference(withdraw.recipient_account):
                 return False
-            if signer_public_key != withdraw.recipient_account[0]:
-                await confirm_claim_recipient(withdraw.recipient_account[0], chunkify)
+            if recipient != withdraw.recipient_account[0]:
+                return False
             total_amount += withdraw.lamports
+
+        if recipient != signer_public_key:
+            await confirm_claim_recipient(recipient)
 
         await confirm_claim_transaction(
             fee=fee,
