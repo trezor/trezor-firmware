@@ -10,7 +10,7 @@ from trezor.wire import DataError, ProcessError
 from apps.common.writers import write_compact_size
 
 from .. import addresses, common, multisig, scripts, writers
-from ..common import SigHashType, ecdsa_sign, input_is_external
+from ..common import ExternalInputType, SigHashType, ecdsa_sign, input_is_external
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import helpers
@@ -193,10 +193,7 @@ class Bitcoin:
             if input_is_external(txi):
                 node = None
                 self.external.add(i)
-                if txi.witness or txi.script_sig:
-                    self.presigned.add(i)
-                    writers.write_tx_input_check(h_presigned_inputs_check, txi)
-                await self.process_external_input(txi)
+                await self.process_external_input(txi, i, h_presigned_inputs_check)
             else:
                 node = self.keychain.derive(txi.address_n)
                 await self.process_internal_input(txi, node)
@@ -352,12 +349,22 @@ class Bitcoin:
 
         await self.approver.add_internal_input(txi, node)
 
-    async def process_external_input(self, txi: TxInput) -> None:
+    async def process_external_input(
+        self,
+        txi: TxInput,
+        i: int,
+        h_presigned_inputs_check: HashWriter,
+    ) -> None:
         assert txi.script_pubkey is not None  # checked in sanitize_tx_input
 
         self.approver.add_external_input(txi)
 
-        if txi.ownership_proof:
+        input_type = ExternalInputType.from_input(txi)
+        if input_type == ExternalInputType.PRESIGNED:
+            self.presigned.add(i)
+            writers.write_tx_input_check(h_presigned_inputs_check, txi)
+        elif input_type == ExternalInputType.HAS_OWNERSHIP_PROOF:
+            assert txi.ownership_proof is not None  # implied by input_type
             if not verify_nonownership(
                 txi.ownership_proof,
                 txi.script_pubkey,
@@ -366,6 +373,10 @@ class Bitcoin:
                 self.coin,
             ):
                 raise DataError("Invalid external input")
+        elif input_type == ExternalInputType.UNVERIFIED:
+            pass  # admission policy enforced by self.approver
+        else:
+            raise RuntimeError("Unknown external input type")
 
     async def process_original_input(
         self, txi: TxInput, script_pubkey: AnyBytes
