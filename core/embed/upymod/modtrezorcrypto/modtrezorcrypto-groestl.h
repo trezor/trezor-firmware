@@ -87,7 +87,7 @@ STATIC mp_obj_t mod_trezorcrypto_Groestl512_digest(mp_obj_t self) {
   memcpy(&ctx, &(o->ctx), sizeof(GROESTL512_CTX));
   groestl512_Final(&ctx, (uint8_t *)hash.buf);
   memzero(&ctx, sizeof(GROESTL512_CTX));
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
+  return mp_obj_new_bytes_from_vstr(&hash);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Groestl512_digest_obj,
                                  mod_trezorcrypto_Groestl512_digest);
@@ -115,9 +115,9 @@ STATIC const mp_rom_map_elem_t
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Groestl512_locals_dict,
                             mod_trezorcrypto_Groestl512_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_Groestl512_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_Groestl512,
-    .make_new = mod_trezorcrypto_Groestl512_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Groestl512_locals_dict,
-};
+STATIC MP_DEFINE_CONST_OBJ_TYPE(
+    mod_trezorcrypto_Groestl512_type,
+    MP_QSTR_Groestl512,
+    MP_TYPE_FLAG_NONE,
+    make_new, mod_trezorcrypto_Groestl512_make_new,
+    locals_dict, &mod_trezorcrypto_Groestl512_locals_dict);

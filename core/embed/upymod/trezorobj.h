@@ -33,7 +33,7 @@ static inline mp_int_t trezor_obj_get_int(mp_obj_t obj) {
   if (MP_OBJ_IS_SMALL_INT(obj)) {
     mp_int_t i = MP_OBJ_SMALL_INT_VALUE(obj);
     return i;
-  } else if (MP_OBJ_IS_TYPE(obj, &mp_type_int)) {
+  } else if (mp_obj_is_int(obj)) {
     mp_int_t i = 0;
     mp_obj_int_t *self = MP_OBJ_TO_PTR(obj);
     if (!mpz_as_int_checked(&self->mpz, &i)) {
@@ -57,7 +57,7 @@ static inline mp_uint_t trezor_obj_get_uint(mp_obj_t obj) {
     }
     mp_uint_t u = i;
     return u;
-  } else if (MP_OBJ_IS_TYPE(obj, &mp_type_int)) {
+  } else if (mp_obj_is_int(obj)) {
     mp_uint_t u = 0;
     mp_obj_int_t *self = MP_OBJ_TO_PTR(obj);
     if (!mpz_as_uint_checked(&self->mpz, &u)) {
@@ -96,7 +96,7 @@ static inline uint64_t trezor_obj_get_uint64(mp_const_obj_t obj) {
     }
     mp_uint_t u = i;
     return u;
-  } else if (MP_OBJ_IS_TYPE(obj, &mp_type_int)) {
+  } else if (mp_obj_is_int(obj)) {
     uint64_t u = 0;
     mp_obj_int_t *self = MP_OBJ_TO_PTR(obj);
     if (self->mpz.neg != 0) {

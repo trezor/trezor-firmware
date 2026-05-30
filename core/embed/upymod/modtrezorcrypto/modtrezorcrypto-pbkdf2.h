@@ -141,7 +141,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
   } else {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid PRF"));
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
+  return mp_obj_new_bytes_from_vstr(&out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2_key_obj,
                                  mod_trezorcrypto_Pbkdf2_key);
@@ -167,9 +167,9 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_Pbkdf2_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Pbkdf2_locals_dict,
                             mod_trezorcrypto_Pbkdf2_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_Pbkdf2_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_Pbkdf2,
-    .make_new = mod_trezorcrypto_Pbkdf2_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Pbkdf2_locals_dict,
-};
+STATIC MP_DEFINE_CONST_OBJ_TYPE(
+    mod_trezorcrypto_Pbkdf2_type,
+    MP_QSTR_Pbkdf2,
+    MP_TYPE_FLAG_NONE,
+    make_new, mod_trezorcrypto_Pbkdf2_make_new,
+    locals_dict, &mod_trezorcrypto_Pbkdf2_locals_dict);

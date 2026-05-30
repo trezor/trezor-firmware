@@ -110,7 +110,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
   vstr_init_len(&vstr, in.len);
   chacha20poly1305_encrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
   o->plen += in.len;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_encrypt);
@@ -130,7 +130,7 @@ mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish(mp_obj_t self) {
   vstr_t mac = {0};
   vstr_init_len(&mac, 16);
   rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &mac);
+  return mp_obj_new_bytes_from_vstr(&mac);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish_obj,
@@ -172,7 +172,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
   vstr_init_len(&vstr, in.len);
   chacha20poly1305_decrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
   o->plen += in.len;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_decrypt);
@@ -250,18 +250,14 @@ STATIC MP_DEFINE_CONST_DICT(
     mod_trezorcrypto_ChaCha20Poly1305Decrypt_locals_dict,
     mod_trezorcrypto_ChaCha20Poly1305Decrypt_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_ChaCha20Poly1305Encrypt_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_chacha20poly1305_encrypt,
-    .make_new = mod_trezorcrypto_ChaCha20Poly1305_make_new,
-    .locals_dict =
-        (void *)&mod_trezorcrypto_ChaCha20Poly1305Encrypt_locals_dict,
-};
+STATIC MP_DEFINE_CONST_OBJ_TYPE(
+    mod_trezorcrypto_ChaCha20Poly1305Encrypt_type,
+    MP_QSTR_chacha20poly1305_encrypt, MP_TYPE_FLAG_NONE, make_new,
+    mod_trezorcrypto_ChaCha20Poly1305_make_new, locals_dict,
+    &mod_trezorcrypto_ChaCha20Poly1305Encrypt_locals_dict);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_ChaCha20Poly1305Decrypt_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_chacha20poly1305_decrypt,
-    .make_new = mod_trezorcrypto_ChaCha20Poly1305_make_new,
-    .locals_dict =
-        (void *)&mod_trezorcrypto_ChaCha20Poly1305Decrypt_locals_dict,
-};
+STATIC MP_DEFINE_CONST_OBJ_TYPE(
+    mod_trezorcrypto_ChaCha20Poly1305Decrypt_type,
+    MP_QSTR_chacha20poly1305_decrypt, MP_TYPE_FLAG_NONE, make_new,
+    mod_trezorcrypto_ChaCha20Poly1305_make_new, locals_dict,
+    &mod_trezorcrypto_ChaCha20Poly1305Decrypt_locals_dict);

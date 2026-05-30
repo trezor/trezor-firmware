@@ -118,9 +118,9 @@ fn main() -> Result<()> {
         lib.add_sources_in_dir(
             mpy_dir,
             [
-                "extmod/modubinascii.c",
+                "extmod/modbinascii.c",
                 "extmod/moductypes.c",
-                "extmod/moduheapq.c",
+                "extmod/modheapq.c",
                 "extmod/modutimeq.c",
                 "extmod/utime_mphal.c",
                 "shared/timeutils/timeutils.c",
@@ -157,7 +157,7 @@ fn main() -> Result<()> {
                 "py/modstruct.c",
                 "py/modsys.c",
                 "py/modthread.c",
-                "py/moduerrno.c",
+                "py/moderrno.c",
                 "py/mpprint.c",
                 "py/mpstate.c",
                 "py/mpz.c",
@@ -241,7 +241,7 @@ fn main() -> Result<()> {
                 mpy_dir,
                 [
                     "extmod/vfs_posix_file.c",
-                    "extmod/moduos.c",
+                    "extmod/modos.c",
                     "py/emitnarm.c",
                     "py/emitnative.c",
                     "py/emitnthumb.c",
@@ -275,7 +275,7 @@ fn main() -> Result<()> {
                     "shared/runtime/interrupt_char.c",
                     "shared/runtime/pyexec.c",
                     "shared/runtime/stdout_helpers.c",
-                    // "shared/runtime/gchelper_m3.s", // This file is added later
+                    // "shared/runtime/gchelper_thumb2.s", // This file is added later
                 ],
             );
         } else {
@@ -304,7 +304,7 @@ fn main() -> Result<()> {
         if cfg!(not(feature = "emulator")) {
             // This file must not be preprocessed in MpyBuilder so it is added here
             // after the build_genhdr step
-            lib.add_sources_in_dir(mpy_dir, ["shared/runtime/gchelper_m3.s"]);
+            lib.add_sources_in_dir(mpy_dir, ["shared/runtime/gchelper_thumb2.s"]);
         }
 
         Ok(())
@@ -464,6 +464,13 @@ impl<'a> MpyBuilder<'a> {
         // moduledefs.collected.h and store them in moduledefs.h, which can
         // be included directly in firmware.
         self.build_moduledefs(&moduledefs_collected)?;
+
+        // Extract all MP_REGISTER_ROOT_POINTER entries from preprocessed
+        // .upydef files and generate root_pointers.h. This is a new requirement
+        // since MicroPython >= 1.20: py/mpstate.h includes
+        // genhdr/root_pointers.h to declare the registered root pointers.
+        let root_pointers_collected = self.build_root_pointers_collected(&upydefs)?;
+        self.build_root_pointers(&root_pointers_collected)?;
 
         // Combine qstrdefs.collected.h with additional headers into
         // qstrdefs.combined.h. During this process, Q(xxx) is converted to
@@ -644,6 +651,36 @@ impl<'a> MpyBuilder<'a> {
         let inputs = [tool, moduledefs_collected.to_path_buf()];
         xbuild::run_command_to_file(&mut cmd, &inputs, &output)
             .context("Failed to build moduledefs")?;
+
+        Ok(output)
+    }
+
+    fn build_root_pointers_collected(&self, upydef_files: &[PathBuf]) -> Result<PathBuf> {
+        let output = self.genhdr_dir.join("root_pointers.collected.h");
+        let mut cmd = std::process::Command::new("sh");
+        cmd.arg("-c")
+            .arg(r#"out="$1"; shift; grep -h '^MP_REGISTER_ROOT_POINTER' "$@" > "$out""#)
+            .arg("sh")
+            .arg(&output)
+            .args(upydef_files);
+
+        let inputs = upydef_files.iter().collect::<Vec<_>>();
+        xbuild::run_command(&mut cmd, &inputs, [&output])
+            .context("Failed to build root_pointers collected")?;
+
+        Ok(output)
+    }
+
+    fn build_root_pointers(&self, root_pointers_collected: &Path) -> Result<PathBuf> {
+        let output = self.genhdr_dir.join("root_pointers.h");
+
+        let mut cmd = std::process::Command::new("python3");
+        let tool = self.mpy_dir.join("py/make_root_pointers.py");
+        cmd.arg(&tool).arg(root_pointers_collected);
+
+        let inputs = [tool, root_pointers_collected.to_path_buf()];
+        xbuild::run_command_to_file(&mut cmd, &inputs, &output)
+            .context("Failed to build root_pointers")?;
 
         Ok(output)
     }

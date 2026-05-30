@@ -58,7 +58,7 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_ping(mp_obj_t message) {
 
   memcpy(result.buf, msg_in, message_b.len);
 
-  return mp_obj_new_str_from_vstr(&mp_type_str, &result);
+  return mp_obj_new_str_from_vstr(&result);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_ping_obj,
                                  mod_trezorcrypto_tropic_ping);
@@ -115,7 +115,7 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
   }
 
   sig.len = sizeof(ed25519_signature);
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
+  return mp_obj_new_bytes_from_vstr(&sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_tropic_sign_obj,
                                  mod_trezorcrypto_tropic_sign);
@@ -165,7 +165,7 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_get_user_data(mp_obj_t index) {
   }
 
   data.len = data_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &data);
+  return mp_obj_new_bytes_from_vstr(&data);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_get_user_data_obj,
                                  mod_trezorcrypto_tropic_get_user_data);

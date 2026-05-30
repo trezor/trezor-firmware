@@ -305,10 +305,10 @@ SOURCE_MOD += [
 ]
 
 SOURCE_MICROPYTHON = [
-    'vendor/micropython/extmod/modubinascii.c',
+    'vendor/micropython/extmod/modbinascii.c',
     'vendor/micropython/extmod/moductypes.c',
-    'vendor/micropython/extmod/moduheapq.c',
-    'vendor/micropython/extmod/moduos.c',
+    'vendor/micropython/extmod/modheapq.c',
+    'vendor/micropython/extmod/modos.c',
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/shared/readline/readline.c',
@@ -354,7 +354,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/modstruct.c',
     'vendor/micropython/py/modsys.c',
     'vendor/micropython/py/modthread.c',
-    'vendor/micropython/py/moduerrno.c',
+    'vendor/micropython/py/moderrno.c',
     'vendor/micropython/py/mpprint.c',
     'vendor/micropython/py/mpstate.c',
     'vendor/micropython/py/mpz.c',

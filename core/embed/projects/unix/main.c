@@ -71,7 +71,7 @@ STATIC void stderr_print_strn(void *env, const char *str, size_t len) {
 #ifdef USE_DBG_CONSOLE
   dbg_console_write(str, len);
 #endif
-  mp_uos_dupterm_tx_strn(str, len);
+  mp_os_dupterm_tx_strn(str, len);
 }
 
 const mp_print_t mp_stderr_print = {NULL, stderr_print_strn};
@@ -123,7 +123,7 @@ STATIC int execute_from_lexer(int source_kind, const void *source,
       lex = mp_lexer_new_from_str_len(MP_QSTR__lt_stdin_gt_, vstr->buf,
                                       vstr->len, false);
     } else if (source_kind == LEX_SRC_FILENAME) {
-      lex = mp_lexer_new_from_file((const char *)source);
+      lex = mp_lexer_new_from_file(qstr_from_str((const char *)source));
     } else {  // LEX_SRC_STDIN
       lex = mp_lexer_new_from_fd(MP_QSTR__lt_stdin_gt_, 0, false);
     }
@@ -440,14 +440,18 @@ reimport:
     exit(handle_uncaught_exception(nlr.ret_val) & 0xff);
   }
 
-  if (mp_obj_is_package(mod) && !subpkg_tried) {
+  // mp_obj_is_package() was removed after v1.19.1; a module is a package if it
+  // has a __path__ attribute. Mirror upstream ports/unix/main.c handling.
+  mp_obj_t package_dest[2];
+  mp_load_method_protected(mod, MP_QSTR___path__, package_dest, true);
+  if (package_dest[0] != MP_OBJ_NULL && !subpkg_tried) {
     subpkg_tried = true;
     vstr_t vstr;
     int len = strlen(modname);
     vstr_init(&vstr, len + sizeof(".__main__"));
     vstr_add_strn(&vstr, modname, len);
     vstr_add_strn(&vstr, ".__main__", sizeof(".__main__") - 1);
-    import_args[0] = mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
+    import_args[0] = mp_obj_new_str_from_vstr(&vstr);
     goto reimport;
   }
 
@@ -537,7 +541,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
         vstr_init(&vstr, home_l + (p1 - p - 1) + 1);
         vstr_add_strn(&vstr, home, home_l);
         vstr_add_strn(&vstr, p + 1, p1 - p - 1);
-        path_items[i] = mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
+        path_items[i] = mp_obj_new_str_from_vstr(&vstr);
       } else {
         path_items[i] = mp_obj_new_str_via_qstr(p, p1 - p);
       }

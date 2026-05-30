@@ -84,8 +84,8 @@ STATIC const mp_rom_map_elem_t mod_trezorapp_AppTask_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorapp_AppTask_locals_dict,
                             mod_trezorapp_AppTask_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorapp_AppTask_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_AppTask,
-    .locals_dict = (void *)&mod_trezorapp_AppTask_locals_dict,
-};
+STATIC MP_DEFINE_CONST_OBJ_TYPE(
+    mod_trezorapp_AppTask_type,
+    MP_QSTR_AppTask,
+    MP_TYPE_FLAG_NONE,
+    locals_dict, &mod_trezorapp_AppTask_locals_dict);

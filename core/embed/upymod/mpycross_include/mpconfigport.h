@@ -26,6 +26,11 @@
 
 // options to control how MicroPython is built
 
+// MicroPython dropped the STATIC macro from py/mpconfig.h after v1.19.1.
+#ifndef STATIC
+#define STATIC static
+#endif
+
 #define MICROPY_ALLOC_PATH_MAX (PATH_MAX)
 #define MICROPY_PERSISTENT_CODE_LOAD (0)
 #define MICROPY_PERSISTENT_CODE_SAVE (1)

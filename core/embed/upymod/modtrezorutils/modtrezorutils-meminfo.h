@@ -410,11 +410,13 @@ void dump_instance(FILE *out, const mp_obj_instance_t *obj) {
 
 void dump_type(FILE *out, const mp_obj_type_t *type) {
   print_type(out, "type", qstr_str(type->name), type, false);
-  fprintf(out, ",\n\"locals\": \"%p\"", type->locals_dict);
-  fprintf(out, ",\n\"parent\": \"%p\"},\n", type->parent);
+  fprintf(out, ",\n\"locals\": \"%p\"",
+          (void *)MP_OBJ_TYPE_GET_SLOT_OR_NULL(type, locals_dict));
+  fprintf(out, ",\n\"parent\": \"%p\"},\n",
+          (void *)MP_OBJ_TYPE_GET_SLOT_OR_NULL(type, parent));
 
-  dump_value(out, type->parent);
-  dump_value(out, type->locals_dict);
+  dump_value(out, MP_OBJ_TYPE_GET_SLOT_OR_NULL(type, parent));
+  dump_value(out, MP_OBJ_TYPE_GET_SLOT_OR_NULL(type, locals_dict));
 }
 
 void dump_list(FILE *out, const mp_obj_list_t *list) {
@@ -482,7 +484,7 @@ void dump_set(FILE *out, const mp_obj_set_t *set) {
 void dump_protomsg(FILE *out, const mp_obj_protomsg_t *value) {
   mp_obj_t name[2] = {MP_OBJ_NULL, MP_OBJ_NULL};
   mp_obj_type_t *type = protobuf_debug_msg_type();
-  type->attr((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
+  MP_OBJ_TYPE_GET_SLOT(type, attr)((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
 
   print_type(out, "protomsg", NULL, value, false);
   fprintf(out, ",\n\"message_name\": ");
@@ -494,7 +496,7 @@ void dump_protomsg(FILE *out, const mp_obj_protomsg_t *value) {
 void dump_protodef(FILE *out, const mp_obj_t *value) {
   mp_obj_t name[2] = {MP_OBJ_NULL, MP_OBJ_NULL};
   mp_obj_type_t *type = protobuf_debug_msg_def_type();
-  type->attr((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
+  MP_OBJ_TYPE_GET_SLOT(type, attr)((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
 
   print_type(out, "protodef", NULL, value, false);
   fprintf(out, ",\n\"message_name\": ");

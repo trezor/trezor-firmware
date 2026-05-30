@@ -129,7 +129,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt(mp_obj_t self, mp_obj_t data) {
     o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_encrypt_obj,
                                  mod_trezorcrypto_AesGcm_encrypt);
@@ -174,7 +174,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt_finish(mp_obj_t self) {
     o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &tag);
+  return mp_obj_new_bytes_from_vstr(&tag);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_AesGcm_encrypt_finish_obj,
                                  mod_trezorcrypto_AesGcm_encrypt_finish);
@@ -221,7 +221,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt(mp_obj_t self, mp_obj_t data) {
     o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_decrypt_obj,
                                  mod_trezorcrypto_AesGcm_decrypt);
@@ -330,16 +330,12 @@ STATIC const mp_rom_map_elem_t
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_AesGcmDecrypt_locals_dict,
                             mod_trezorcrypto_AesGcmDecrypt_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_AesGcmEncrypt_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_aesgcm_encrypt,
-    .make_new = mod_trezorcrypto_AesGcm_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_AesGcmEncrypt_locals_dict,
-};
+STATIC MP_DEFINE_CONST_OBJ_TYPE(
+    mod_trezorcrypto_AesGcmEncrypt_type, MP_QSTR_aesgcm_encrypt,
+    MP_TYPE_FLAG_NONE, make_new, mod_trezorcrypto_AesGcm_make_new, locals_dict,
+    &mod_trezorcrypto_AesGcmEncrypt_locals_dict);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_AesGcmDecrypt_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_aesgcm_decrypt,
-    .make_new = mod_trezorcrypto_AesGcm_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_AesGcmDecrypt_locals_dict,
-};
+STATIC MP_DEFINE_CONST_OBJ_TYPE(
+    mod_trezorcrypto_AesGcmDecrypt_type, MP_QSTR_aesgcm_decrypt,
+    MP_TYPE_FLAG_NONE, make_new, mod_trezorcrypto_AesGcm_make_new, locals_dict,
+    &mod_trezorcrypto_AesGcmDecrypt_locals_dict);

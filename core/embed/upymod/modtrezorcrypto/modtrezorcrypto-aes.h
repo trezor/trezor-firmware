@@ -158,7 +158,7 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
                     aes_ctr_cbuf_inc, &(o->encrypt_ctx));
       break;
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 
 /// def encrypt(self, data: AnyBytes) -> bytes:
@@ -207,9 +207,9 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_AES_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_AES_locals_dict,
                             mod_trezorcrypto_AES_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_AES_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_AES,
-    .make_new = mod_trezorcrypto_AES_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_AES_locals_dict,
-};
+STATIC MP_DEFINE_CONST_OBJ_TYPE(
+    mod_trezorcrypto_AES_type,
+    MP_QSTR_AES,
+    MP_TYPE_FLAG_NONE,
+    make_new, mod_trezorcrypto_AES_make_new,
+    locals_dict, &mod_trezorcrypto_AES_locals_dict);

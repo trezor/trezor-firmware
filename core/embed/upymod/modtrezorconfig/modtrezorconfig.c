@@ -340,7 +340,7 @@ STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to get value from storage."));
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
                                            mod_trezorconfig_get);
@@ -526,5 +526,10 @@ const mp_obj_module_t mp_module_trezorconfig = {
 };
 
 MP_REGISTER_MODULE(MP_QSTR_trezorconfig, mp_module_trezorconfig);
+
+// MicroPython dropped the MICROPY_PORT_ROOT_POINTERS hook after v1.19.1; root
+// pointers are now registered per-source via MP_REGISTER_ROOT_POINTER and
+// collected into genhdr/root_pointers.h.
+MP_REGISTER_ROOT_POINTER(mp_obj_t trezorconfig_ui_wait_callback);
 
 #endif  // MICROPY_PY_TREZORCONFIG

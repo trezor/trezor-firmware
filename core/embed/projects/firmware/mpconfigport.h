@@ -33,6 +33,20 @@
 #ifndef __INCLUDED_MPCONFIGPORT_H
 #define __INCLUDED_MPCONFIGPORT_H
 
+// MicroPython dropped the STATIC macro (#define STATIC static) from
+// py/mpconfig.h after v1.19.1. Trezor's C modules still use STATIC, so keep
+// providing it here. Guarded so debug builds can override with -DSTATIC= .
+#ifndef STATIC
+#define STATIC static
+#endif
+
+// m_new_obj_with_finaliser() was removed from py/misc.h after v1.19.1.
+// Trezor's modules still use it (allocate GC memory with a finaliser), so keep
+// providing it. m_malloc_with_finaliser() is still available upstream.
+#ifndef m_new_obj_with_finaliser
+#define m_new_obj_with_finaliser(type) ((type *)(m_malloc_with_finaliser(sizeof(type))))
+#endif
+
 // frozen modules
 #define MICROPY_MODULE_FROZEN_MPY   (1)
 #define MICROPY_QSTR_EXTRA_POOL     (mp_qstr_frozen_const_pool)

@@ -44,7 +44,7 @@ STATIC mp_obj_t mod_trezorcrypto_mcu_get_certificate(void) {
   }
 
   cert.len = cert_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &cert);
+  return mp_obj_new_bytes_from_vstr(&cert);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_mcu_get_certificate_obj,
                                  mod_trezorcrypto_mcu_get_certificate);
@@ -66,7 +66,7 @@ STATIC mp_obj_t mod_trezorcrypto_mcu_sign(mp_obj_t challenge) {
   }
 
   sig.len = MCU_ATTESTATION_SIG_SIZE;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
+  return mp_obj_new_bytes_from_vstr(&sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_mcu_sign_obj,
                                  mod_trezorcrypto_mcu_sign);
