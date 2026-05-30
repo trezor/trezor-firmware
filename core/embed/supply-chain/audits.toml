@@ -2,3 +2,9 @@
 # cargo-vet audits file
 
 [audits]
+
+[[trusted.regex]]
+criteria = "safe-to-deploy"
+user-id = 189 # Andrew Gallant (BurntSushi)
+start = "2019-02-27"
+end = "2027-05-30"
