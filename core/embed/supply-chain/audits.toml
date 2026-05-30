@@ -1,7 +1,26 @@
 
 # cargo-vet audits file
 
-[audits]
+[[audits.cty]]
+who = "matejcik <ja@matejcik.cz>"
+criteria = "safe-to-deploy"
+version = "0.2.2"
+
+[[audits.stable_deref_trait]]
+who = "matejcik <ja@matejcik.cz>"
+criteria = "safe-to-deploy"
+version = "1.2.1"
+notes = "Reviewed at 1.2.0; 1.2.1 diff treated as equivalent."
+
+[[audits.ufmt-write]]
+who = "matejcik <ja@matejcik.cz>"
+criteria = "safe-to-deploy"
+version = "0.1.0"
+
+[[audits.zeroize]]
+who = ["matejcik <ja@matejcik.cz>", "Martin Milata <martin@martinmilata.cz>"]
+criteria = "safe-to-deploy"
+version = "1.8.2"
 
 [[trusted.regex]]
 criteria = "safe-to-deploy"
