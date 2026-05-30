@@ -100,10 +100,6 @@ criteria = "safe-to-deploy"
 version = "0.6.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.cty]]
-version = "0.2.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.easer]]
 version = "0.3.0"
 criteria = "safe-to-deploy"
@@ -240,10 +236,6 @@ criteria = "safe-to-deploy"
 version = "0.9.8"
 criteria = "safe-to-deploy"
 
-[[exemptions.stable_deref_trait]]
-version = "1.2.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.static-alloc]]
 version = "0.2.6"
 criteria = "safe-to-deploy"
@@ -294,10 +286,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.ufmt-macros]]
 version = "0.3.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.ufmt-write]]
-version = "0.1.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.unicode-ident]]
