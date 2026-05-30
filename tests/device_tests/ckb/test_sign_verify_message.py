@@ -5,7 +5,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("core")]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("t3w1")]
 
 MAINNET_ADDRESS_0 = (
     "ckb1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsq"

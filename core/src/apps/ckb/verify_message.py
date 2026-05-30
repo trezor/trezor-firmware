@@ -15,7 +15,7 @@ async def verify_message(msg: CKBVerifyMessage) -> Success:
 
     from apps.common.signverify import decode_message
 
-    from .helpers import message_digest, encode_address, get_lock_script_arg
+    from .helpers import encode_address, get_lock_script_arg, message_digest
 
     address = msg.address
     signature = msg.signature

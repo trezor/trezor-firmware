@@ -22,7 +22,7 @@ async def sign_message(msg: CKBSignMessage, keychain: Keychain) -> CKBMessageSig
     from apps.common.paths import address_n_to_str, validate_path
     from apps.common.signverify import decode_message
 
-    from .helpers import message_digest, encode_address, get_lock_script_arg
+    from .helpers import encode_address, get_lock_script_arg, message_digest
 
     address_n = msg.address_n
     message = msg.message

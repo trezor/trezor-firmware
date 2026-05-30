@@ -147,6 +147,8 @@ def sign_tx(
         if res.details is None:
             raise ValueError("Device response missing request details")
         idx = res.details.request_index
+        if idx is None:
+            raise ValueError("Device response missing request_index")
 
         if res.request_type == CKBTxRequestType.TXINPUT:
             res = session.call(

@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, TextIO
 
 import click
 
@@ -137,7 +137,7 @@ def sign_tx(
     address: str,
     coin: str,
     chunkify: bool,
-    json_file,
+    json_file: TextIO,
 ) -> str:
     """Sign CKB transaction from JSON file."""
     import json
@@ -147,32 +147,42 @@ def sign_tx(
 
     inputs = []
     for inp in tx_data.get("inputs", []):
-        inputs.append(ckb.create_cell_input(
-            tx_hash=inp["tx_hash"],
-            index=inp["index"],
-            since=inp.get("since", 0),
-        ))
+        inputs.append(
+            ckb.create_cell_input(
+                tx_hash=inp["tx_hash"],
+                index=inp["index"],
+                since=inp.get("since", 0),
+            )
+        )
 
     outputs = []
     for out in tx_data.get("outputs", []):
-        outputs.append(ckb.create_cell_output(
-            capacity=out["capacity"],
-            lock_code_hash=out["lock_code_hash"],
-            lock_hash_type=out["lock_hash_type"],
-            lock_args=out["lock_args"],
-            type_code_hash=out.get("type_code_hash"),
-            type_hash_type=out.get("type_hash_type"),
-            type_args=out.get("type_args"),
-            data=bytes.fromhex(out["data"].removeprefix("0x")) if out.get("data") else None,
-        ))
+        outputs.append(
+            ckb.create_cell_output(
+                capacity=out["capacity"],
+                lock_code_hash=out["lock_code_hash"],
+                lock_hash_type=out["lock_hash_type"],
+                lock_args=out["lock_args"],
+                type_code_hash=out.get("type_code_hash"),
+                type_hash_type=out.get("type_hash_type"),
+                type_args=out.get("type_args"),
+                data=(
+                    bytes.fromhex(out["data"].removeprefix("0x"))
+                    if out.get("data")
+                    else None
+                ),
+            )
+        )
 
     cell_deps = []
     for dep in tx_data.get("cell_deps", []):
-        cell_deps.append(ckb.create_cell_dep(
-            tx_hash=dep["tx_hash"],
-            index=dep["index"],
-            dep_type=dep["dep_type"],
-        ))
+        cell_deps.append(
+            ckb.create_cell_dep(
+                tx_hash=dep["tx_hash"],
+                index=dep["index"],
+                dep_type=dep["dep_type"],
+            )
+        )
 
     fee = tx_data.get("fee")
 
@@ -187,7 +197,11 @@ def sign_tx(
         chunkify=chunkify,
     )
 
-    if result.serialized is None or result.serialized.signature is None or result.serialized.tx_hash is None:
+    if (
+        result.serialized is None
+        or result.serialized.signature is None
+        or result.serialized.tx_hash is None
+    ):
         raise click.ClickException("Device did not return signature data")
 
     return (

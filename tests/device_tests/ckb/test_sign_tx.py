@@ -8,7 +8,7 @@ from trezorlib.tools import parse_path
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowConfirmAllWarnings
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("core")]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("t3w1")]
 
 
 def _build_sign_tx_components(parameters):
@@ -33,9 +33,11 @@ def _build_sign_tx_components(parameters):
             type_code_hash=out.get("type_code_hash"),
             type_hash_type=out.get("type_hash_type"),
             type_args=out.get("type_args"),
-            data=bytes.fromhex(out["data"].removeprefix("0x"))
-            if out.get("data")
-            else None,
+            data=(
+                bytes.fromhex(out["data"].removeprefix("0x"))
+                if out.get("data")
+                else None
+            ),
         )
         for out in parameters["outputs"]
     ]
@@ -386,7 +388,9 @@ def test_sign_tx_zero_outputs(session: Session):
         )
     ]
 
-    with pytest.raises(TrezorFailure, match="Transaction must have at least one output"):
+    with pytest.raises(
+        TrezorFailure, match="Transaction must have at least one output"
+    ):
         ckb.sign_tx(
             session,
             parse_path("m/44h/309h/0h/0/0"),

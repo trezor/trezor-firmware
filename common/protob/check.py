@@ -31,6 +31,8 @@ for fn in sorted(glob(os.path.join(MYDIR, "messages-*.proto"))):
             prefix = "NEM"
         elif prefix == "Webauthn":
             prefix = "WebAuthn"
+        elif prefix == "Ckb":
+            prefix = "CKB"
         for line in f:
             line = line.strip().split(" ")
             if line[0] not in ("enum", "message"):

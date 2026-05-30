@@ -132,7 +132,6 @@ def get_features() -> Features:
             Capability.Stellar,
             Capability.Tezos,
             Capability.Tron,
-            Capability.CKB,
             Capability.U2F,
             Capability.Shamir,
             Capability.ShamirGroups,
@@ -149,6 +148,9 @@ def get_features() -> Features:
                     Capability.EOS,
                 ]
             )
+
+        if utils.INTERNAL_MODEL == "T3W1":
+            f.capabilities.append(Capability.CKB)
 
     if utils.USE_HAPTIC:
         f.haptic_feedback = storage_device.get_haptic_feedback()

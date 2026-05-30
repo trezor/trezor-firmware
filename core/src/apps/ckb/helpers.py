@@ -1,9 +1,13 @@
 """CKB helper functions."""
 
+from typing import TYPE_CHECKING
 from ubinascii import unhexlify
 
+from trezor.crypto.bech32 import Encoding, bech32_encode, convertbits
 from trezor.crypto.hashlib import blake2b
-from trezor.crypto.bech32 import bech32_encode, Encoding, convertbits
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
 
 # System script code_hash for secp256k1_blake160_sighash_all
 # Same on both Mainnet and Testnet
@@ -19,7 +23,7 @@ HRP_MAINNET = "ckb"
 HRP_TESTNET = "ckt"
 
 
-def message_digest(message: bytes) -> bytes:
+def message_digest(message: "AnyBytes") -> bytes:
     """Blake2b with CKB personal and message prefix."""
     h = blake2b(outlen=32, personal=b"ckb-default-hash")
     h.update(b"Nervos Message:")
@@ -37,23 +41,22 @@ def get_lock_script_arg(public_key: bytes) -> bytes:
     return h.digest()[:20]
 
 
-def encode_address(args: bytes, network: str) -> str:
+def encode_address(args: "AnyBytes", network: str) -> str:
     """Encode default secp256k1_blake160 lock script to Bech32m address."""
     return encode_address_full(CODE_HASH_SECP256K1_BLAKE160, HASH_TYPE, args, network)
 
 
 def encode_address_full(
-    code_hash: bytes, hash_type: int, args: bytes, network: str
+    code_hash: "AnyBytes", hash_type: int, args: "AnyBytes", network: str
 ) -> str:
     """
     Encode any lock script to Bech32m address using CKB2021 Full format.
     Supports any lock script (secp256k1, omnilock, etc.)
     """
-    payload_bytes = bytes([0x00]) + code_hash + bytes([hash_type]) + args
+    payload_bytes = bytes([0x00]) + bytes(code_hash) + bytes([hash_type]) + bytes(args)
 
     payload_5bit = convertbits(payload_bytes, 8, 5)
 
     hrp = HRP_MAINNET if network == "Mainnet" else HRP_TESTNET
 
     return bech32_encode(hrp, payload_5bit, Encoding.BECH32M)
-

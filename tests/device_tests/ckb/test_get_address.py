@@ -7,7 +7,7 @@ from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("core")]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("t3w1")]
 
 
 @parametrize_using_common_fixtures("ckb/get_address.json")

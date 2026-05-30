@@ -1,0 +1,1 @@
+Added Nervos CKB support to trezorlib client and `trezorctl ckb` CLI commands.

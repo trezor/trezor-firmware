@@ -1,0 +1,1 @@
+Skip CKB messages in T1B1 protobuf build (not supported on legacy firmware).

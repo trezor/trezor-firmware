@@ -9,17 +9,19 @@ from trezor.wire import DataError
 from apps.common import paths
 from apps.common.keychain import with_slip44_keychain
 
-from . import CURVE, PATTERN, SLIP44_ID
-from . import helpers
+from . import CURVE, PATTERN, SLIP44_ID, helpers
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import (
-        CKBSignTx,
-        CKBTxRequest,
+        CKBCellDep,
         CKBCellInput,
         CKBCellOutput,
-        CKBCellDep,
+        CKBSignTx,
+        CKBTxRequest,
     )
+
     from apps.common.keychain import Keychain
 
 
@@ -43,12 +45,12 @@ def _serialize_uint64_le(value: int) -> bytes:
     return value.to_bytes(8, "little")
 
 
-def _serialize_bytes(data: bytes) -> bytes:
+def _serialize_bytes(data: "AnyBytes") -> bytes:
     """Serialize variable-length bytes (Molecule Bytes type).
 
     Bytes format: length (4 bytes LE) | data
     """
-    return _serialize_uint32_le(len(data)) + data
+    return _serialize_uint32_le(len(data)) + bytes(data)
 
 
 def _serialize_cell_input(cell_input: "CKBCellInput") -> bytes:
@@ -69,7 +71,7 @@ def _serialize_cell_input(cell_input: "CKBCellInput") -> bytes:
     return since_bytes + tx_hash + index
 
 
-def _serialize_script(code_hash: bytes, hash_type: int, args: bytes) -> bytes:
+def _serialize_script(code_hash: "AnyBytes", hash_type: int, args: "AnyBytes") -> bytes:
     """
     Serialize Script in Molecule format (dynamic size table).
 
@@ -162,7 +164,7 @@ def _serialize_cell_dep(cell_dep: "CKBCellDep") -> bytes:
         raise DataError("Invalid CKB dep_type")
     index = _serialize_uint32_le(cell_dep.index)
     dep_type = bytes([cell_dep.dep_type])
-    return tx_hash + index + dep_type
+    return bytes(tx_hash) + index + dep_type
 
 
 def _serialize_vec_fixed(items: list[bytes]) -> bytes:
@@ -230,9 +232,7 @@ def _compute_raw_tx_hash(
 
     header_deps_bytes = _serialize_uint32_le(0)  # empty FixVec
 
-    inputs_bytes = _serialize_vec_fixed(
-        [_serialize_cell_input(inp) for inp in inputs]
-    )
+    inputs_bytes = _serialize_vec_fixed([_serialize_cell_input(inp) for inp in inputs])
 
     outputs_bytes = _serialize_vec_dynamic(
         [_serialize_cell_output(out) for out in outputs]
@@ -343,15 +343,15 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     from trezor import TR
     from trezor.enums import CKBTxRequestType
     from trezor.messages import (
+        CKBTxAckCellDep,
+        CKBTxAckInput,
+        CKBTxAckOutput,
         CKBTxRequest,
         CKBTxRequestDetails,
         CKBTxRequestSerialized,
-        CKBTxAckInput,
-        CKBTxAckOutput,
-        CKBTxAckCellDep,
     )
-    from trezor.wire.context import call
     from trezor.ui.layouts import show_continue_in_app
+    from trezor.wire.context import call
 
     from .layout import (
         require_confirm_output,
@@ -409,7 +409,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
 
         output = ack.output
         outputs.append(output)
-        outputs_data.append(output.data or b"")
+        outputs_data.append(bytes(output.data) if output.data else b"")
 
         is_change = (
             output.lock_args == sender_lock_args
