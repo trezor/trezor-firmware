@@ -28,7 +28,7 @@ from ..helpers.utils import derive_public_key
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from enum import IntEnum
-    from typing import Any, Awaitable, ClassVar
+    from typing import Any, Awaitable
 
     from trezor.enums import CardanoAddressType
 
@@ -99,7 +99,9 @@ class Signer:
     user confirmation and serialization of the tx item.
     """
 
-    SIGNING_MODE_TITLE: ClassVar[str]
+    @property
+    def signing_mode_title(self) -> str:
+        raise NotImplementedError
 
     def __init__(
         self,
@@ -266,7 +268,7 @@ class Signer:
         validate_network_info(msg.network_id, msg.protocol_magic)
 
     async def _show_tx_init(self) -> None:
-        self.should_show_details = await layout.show_tx_init(self.SIGNING_MODE_TITLE)
+        self.should_show_details = await layout.show_tx_init(self.signing_mode_title)
 
         if not self._is_network_id_verifiable():
             await layout.warn_tx_network_unverifiable()
