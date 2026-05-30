@@ -790,7 +790,7 @@ def confirm_address(
     info_title: str | None = None,
 ) -> Awaitable[None]:
     return confirm_value(
-        title,
+        TR.words__send,
         address,
         description or "",
         br_name or "confirm_address",
