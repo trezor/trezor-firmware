@@ -22,7 +22,9 @@ class PoolOwnerSigner(Signer):
     staking key in the list of pool owners.
     """
 
-    SIGNING_MODE_TITLE = TR.cardano__confirming_pool_registration
+    @property
+    def signing_mode_title(self) -> str:
+        return TR.cardano__confirming_pool_registration
 
     def _validate_tx_init(self) -> None:
         msg = self.msg  # local_cache_attribute

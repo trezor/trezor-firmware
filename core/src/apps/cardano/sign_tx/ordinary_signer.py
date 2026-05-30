@@ -19,7 +19,9 @@ class OrdinarySigner(Signer):
     controlled by 1852' keys, dealing with staking and minting/burning tokens.
     """
 
-    SIGNING_MODE_TITLE = TR.cardano__confirming_transaction
+    @property
+    def signing_mode_title(self) -> str:
+        return TR.cardano__confirming_transaction
 
     def __init__(
         self,
@@ -78,7 +80,7 @@ class OrdinarySigner(Signer):
         # for OrdinarySigner, we do not show the prompt to choose level of details
         if self.suite_tx_type is SuiteTxType.NOT_SUITE_TX:
             self.should_show_details = await layout.show_tx_init(
-                self.SIGNING_MODE_TITLE
+                self.signing_mode_title
             )
         else:
             self.should_show_details = False

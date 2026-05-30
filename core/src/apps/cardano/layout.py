@@ -75,7 +75,6 @@ CERTIFICATE_TYPE_NAMES = {
 
 BRT_Other = ButtonRequestType.Other  # global_import_cache
 
-CVOTE_REWARD_ELIGIBILITY_WARNING = TR.cardano__reward_eligibility_warning
 
 _DEFAULT_MAX_DISPLAYED_CHUNK_SIZE = 56
 
@@ -447,7 +446,9 @@ async def show_cvote_registration_payment_credentials(
         payment_credential, intro_text, purpose="cvote_reg_payment_address"
     )
     if show_both_credentials or show_payment_warning:
-        extra_text = CVOTE_REWARD_ELIGIBILITY_WARNING if show_payment_warning else None
+        extra_text = (
+            TR.cardano__reward_eligibility_warning if show_payment_warning else None
+        )
         await _show_credential(
             stake_credential,
             intro_text,
@@ -1008,7 +1009,7 @@ async def confirm_cvote_registration_payment_address(
         (TR.cardano__rewards_go_to, payment_address, True),
     ]
     if should_show_payment_warning:
-        props.append((None, CVOTE_REWARD_ELIGIBILITY_WARNING, None))
+        props.append((None, TR.cardano__reward_eligibility_warning, None))
     await confirm_properties(
         "confirm_cvote_registration_payment_address",
         title=TR.cardano__confirm_transaction,

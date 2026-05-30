@@ -14,7 +14,9 @@ class MultisigSigner(Signer):
     The multisig signing mode only allows signing with multisig (and minting) keys.
     """
 
-    SIGNING_MODE_TITLE = TR.cardano__confirming_a_multisig_transaction
+    @property
+    def signing_mode_title(self) -> str:
+        return TR.cardano__confirming_a_multisig_transaction
 
     def _validate_tx_init(self) -> None:
         msg = self.msg  # local_cache_attribute

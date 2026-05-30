@@ -16,7 +16,9 @@ class PlutusSigner(Signer):
     validation rules are less strict, but more tx items/warnings are shown to the user.
     """
 
-    SIGNING_MODE_TITLE = TR.cardano__confirming_a_plutus_transaction
+    @property
+    def signing_mode_title(self) -> str:
+        return TR.cardano__confirming_a_plutus_transaction
 
     async def _show_tx_init(self) -> None:
         await super()._show_tx_init()
