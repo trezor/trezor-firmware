@@ -1,4 +1,5 @@
 import pytest
+from cryptography import x509
 
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
@@ -158,6 +159,28 @@ def test_authenticate_device_invalid_range_offset(
                 size=0,
             )
         )
+
+
+@pytest.mark.models(skip=["safe3", "safe5"], reason="Not using Tropic")
+def test_certificate_subject_serial_numbers_match(
+    session: Session, challenge: bytes
+) -> None:
+    if not session.features.bootloader_locked:
+        pytest.xfail("unlocked bootloader")
+
+    proof = device.authenticate(session, challenge)
+
+    def serial_number(cert_der: bytes) -> str:
+        cert = x509.load_der_x509_certificate(cert_der)
+        attrs = cert.subject.get_attributes_for_oid(x509.oid.NameOID.SERIAL_NUMBER)
+        assert attrs
+        return attrs[0].value
+
+    optiga_sn = serial_number(proof.optiga_certificates[0])
+    tropic_sn = serial_number(proof.tropic_certificates[0])
+    mcu_sn = serial_number(proof.mcu_certificates[0])
+
+    assert optiga_sn == tropic_sn == mcu_sn
 
 
 def test_authenticate_device_unexpected(
