@@ -103,17 +103,9 @@ __attribute__((naked)) unsigned int nlr_push(nlr_buf_t *nlr) {
     return 0; // needed to silence compiler warning
 }
 
-__attribute__((used)) unsigned int nlr_push_tail(nlr_buf_t *nlr) {
-    nlr_buf_t **top = &MP_STATE_THREAD(nlr_top);
-    nlr->prev = *top;
-    *top = nlr;
-    return 0; // normal return
-}
-
-void nlr_pop(void) {
-    nlr_buf_t **top = &MP_STATE_THREAD(nlr_top);
-    *top = (*top)->prev;
-}
+// nlr_push_tail() and nlr_pop() are provided by py/nlr.c since MicroPython
+// v1.23 (the arch-independent part of the NLR split); defining them here too
+// would cause multiple-definition link errors.
 
 NORETURN __attribute__((naked)) void nlr_jump(void *val) {
     nlr_buf_t **top_ptr = &MP_STATE_THREAD(nlr_top);
