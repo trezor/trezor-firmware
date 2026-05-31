@@ -823,7 +823,10 @@ impl<'a> MpyBuilder<'a> {
         cmd.args(["-j", &parallel_job_count.to_string()])
             .args(["-C", &source_dir.to_string_lossy()])
             .arg(format!("BUILD={}", &build_dir.to_string_lossy()))
-            .arg(format!("PROG={}", &mpy_cross.to_string_lossy()))
+            // PROG must be relative to BUILD: since v1.23 the mpy-cross link
+            // target is `$(BUILD)/$(PROG)`, so an absolute PROG would be
+            // concatenated onto BUILD (doubling the path, breaking -Map=$@.map).
+            .arg("PROG=mpy-cross")
             .env("INC", format!("-I{}", &mpycross_include.to_string_lossy()));
 
         let cmd_output = cmd

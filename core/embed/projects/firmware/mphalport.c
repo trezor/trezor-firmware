@@ -37,10 +37,13 @@ int mp_hal_stdin_rx_chr(void) {
 #endif
 }
 
-void mp_hal_stdout_tx_strn(const char *str, size_t len) {
+mp_uint_t mp_hal_stdout_tx_strn(const char *str, size_t len) {
 #ifdef USE_DBG_CONSOLE
   dbg_console_write(str, len);
 #endif
+  // Upstream changed the return type to mp_uint_t (number of bytes written)
+  // after v1.19.1.
+  return len;
 }
 
 // Dummy implementation required by ports/stm32/gccollect.c.
