@@ -32,22 +32,16 @@ TROPIC_ROOT_PUBLIC_KEY = {
 
 
 def verify_cert_chain(certs, model_name):
-    for cert, ca_cert in zip(certs, certs[1:]):
+    for i, (cert, ca_cert) in enumerate(zip(certs, certs[1:])):
         assert cert.issuer == ca_cert.subject
 
         ca_basic_constraints = ca_cert.extensions.get_extension_for_class(
             ext.BasicConstraints
         ).value
         assert ca_basic_constraints.ca is True
-
-        try:
-            basic_constraints = cert.extensions.get_extension_for_class(
-                ext.BasicConstraints
-            ).value
-            if basic_constraints.ca:
-                assert basic_constraints.path_length < ca_basic_constraints.path_length
-        except ext.ExtensionNotFound:
-            pass
+        if ca_basic_constraints is not None:
+            # It is assumed that certs[0] is not a CA
+            assert i <= ca_basic_constraints.path_length
 
         ski = ca_cert.extensions.get_extension_for_class(ext.SubjectKeyIdentifier).value
         aki = cert.extensions.get_extension_for_class(ext.AuthorityKeyIdentifier).value
