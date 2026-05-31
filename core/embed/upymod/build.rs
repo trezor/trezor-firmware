@@ -275,6 +275,10 @@ fn main() -> Result<()> {
                     "shared/runtime/interrupt_char.c",
                     "shared/runtime/pyexec.c",
                     "shared/runtime/stdout_helpers.c",
+                    // py/nlr.c holds the arch-independent NLR jump-callback
+                    // helpers (nlr_push/pop_jump_callback), used by
+                    // py/builtinimport.c since v1.23.
+                    "py/nlr.c",
                     // "shared/runtime/gchelper_thumb2.s", // This file is added later
                 ],
             );

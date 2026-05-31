@@ -345,7 +345,8 @@ void dump_closure(FILE *out, const mp_obj_closure_t *closure) {
   for (size_t i = 0; i < closure->n_closed; ++i) {
     // XXX this is unimportant to track properly, hopefully
     size += find_allocated_size(closure->closed[i]);
-    assert(mp_obj_is_type(closure->closed[i], &mp_type_cell));
+    // mp_type_cell became `static` upstream (v1.23), so it can no longer be
+    // referenced from here; the sanity assert is dropped.
   }
   (void)size;
   print_type(out, "closure", NULL, closure, false);
@@ -601,7 +602,12 @@ void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
     dump_tuple(out, value);
   }
 
-  else if (is_set_or_frozenset(value)) {
+  // is_set_or_frozenset() became `static` upstream (v1.23); inline the check.
+  else if (mp_obj_is_type(value, &mp_type_set)
+#if MICROPY_PY_BUILTINS_FROZENSET
+           || mp_obj_is_type(value, &mp_type_frozenset)
+#endif
+  ) {
     dump_set(out, value);
   }
 
