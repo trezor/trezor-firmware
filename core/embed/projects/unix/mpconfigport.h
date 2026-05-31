@@ -120,6 +120,9 @@
 #define MICROPY_PY_BUILTINS_STR_PARTITION (1)
 #define MICROPY_PY_BUILTINS_STR_SPLITLINES (0)
 #define MICROPY_PY_BUILTINS_MEMORYVIEW (1)
+// v1.23 routes binascii.hexlify/unhexlify through bytes.hex()/fromhex(), which
+// require MICROPY_PY_BUILTINS_BYTES_HEX (off by default at CORE rom level).
+#define MICROPY_PY_BUILTINS_BYTES_HEX (1)
 #define MICROPY_PY_BUILTINS_FROZENSET (0)
 #define MICROPY_PY_BUILTINS_SLICE_ATTRS (1)
 #define MICROPY_PY_BUILTINS_SLICE_INDICES (0)
