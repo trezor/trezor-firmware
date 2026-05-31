@@ -66,7 +66,7 @@ class TestNemTransfer(unittest.TestCase):
             unhexlify(
                 "8d07f90fb4bbe7715fa327c926770166a11be2e494a970605f2e12557f66c9b9"
             ),
-            bytearray("Good luck!"),
+            bytearray(b"Good luck!"),
             False,
         )
         self.assertEqual(
@@ -125,7 +125,7 @@ class TestNemTransfer(unittest.TestCase):
             unhexlify(
                 "994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324"
             ),
-            bytearray("sending you 3 pairs of paddles\n"),
+            bytearray(b"sending you 3 pairs of paddles\n"),
             False,
         )
 
@@ -163,7 +163,7 @@ class TestNemTransfer(unittest.TestCase):
             unhexlify(
                 "f85ab43dad059b9d2331ddacc384ad925d3467f03207182e01296bacfb242d01"
             ),
-            bytearray("enjoy! :)"),
+            bytearray(b"enjoy! :)"),
             False,
         )
         serialize_mosaic(t, "imre.g", "tokens", 1)
