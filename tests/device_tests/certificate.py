@@ -49,6 +49,17 @@ def verify_cert_chain(certs, model_name):
         except ext.ExtensionNotFound:
             pass
 
+        try:
+            ski = ca_cert.extensions.get_extension_for_class(
+                ext.SubjectKeyIdentifier
+            ).value
+            aki = cert.extensions.get_extension_for_class(
+                ext.AuthorityKeyIdentifier
+            ).value
+            assert aki.key_identifier == ski.key_identifier
+        except ext.ExtensionNotFound:
+            pass
+
         ca_public_key = ca_cert.public_key()
         if isinstance(ca_public_key, ed25519.Ed25519PublicKey):
             ca_public_key.verify(
@@ -86,6 +97,20 @@ def check_signature_optiga(
         certs[-1].signature_algorithm_parameters,
     )
 
+    # Verify the authority key identifier in the last certificate.
+    try:
+        aki = (
+            certs[-1]
+            .extensions.get_extension_for_class(ext.AuthorityKeyIdentifier)
+            .value
+        )
+        assert (
+            aki.key_identifier
+            == ext.SubjectKeyIdentifier.from_public_key(root_public_key).key_identifier
+        )
+    except ext.ExtensionNotFound:
+        pass
+
     verify_cert_chain(certs, model.internal_name)
 
     # Verify the signature of the challenge.
@@ -111,6 +136,20 @@ def check_signature_tropic(
         certs[-1].signature,
         certs[-1].tbs_certificate_bytes,
     )
+
+    # Verify the authority key identifier in the last certificate.
+    try:
+        aki = (
+            certs[-1]
+            .extensions.get_extension_for_class(ext.AuthorityKeyIdentifier)
+            .value
+        )
+        assert (
+            aki.key_identifier
+            == ext.SubjectKeyIdentifier.from_public_key(root_public_key).key_identifier
+        )
+    except ext.ExtensionNotFound:
+        pass
 
     verify_cert_chain(certs, model.internal_name)
 
