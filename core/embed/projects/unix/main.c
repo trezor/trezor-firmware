@@ -748,4 +748,4 @@ void nlr_jump_fail(void *val) {
   exit(1);
 }
 
-MP_REGISTER_MODULE(MP_QSTR_uos, mp_module_uos);
+MP_REGISTER_MODULE(MP_QSTR_uos, mp_module_os);

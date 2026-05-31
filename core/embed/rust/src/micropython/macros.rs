@@ -120,17 +120,16 @@ macro_rules! obj_type {
         unsafe {
             use $crate::micropython::ffi;
 
-            let name = $name.to_u16();
+            // Default metatype is `type`. Accessing the extern static needs unsafe.
+            #[allow(unused_mut)]
+            #[allow(unused_assignments)]
+            let mut base_type: *const ffi::mp_obj_type_t = &ffi::mp_type_type;
+            $(base_type = $base.as_mp_type();)?
 
             #[allow(unused_mut)]
             #[allow(unused_assignments)]
-            let mut base_type: &'static ffi::mp_obj_type_t = &ffi::mp_type_type;
-            $(base_type = &$base;)?
-
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut attr: ffi::mp_attr_fun_t = None;
-            $(attr = Some($attr_fn);)?
+            let mut make_new: ffi::mp_make_new_fun_t = None;
+            $(make_new = Some($make_new_fn);)?
 
             #[allow(unused_mut)]
             #[allow(unused_assignments)]
@@ -139,37 +138,27 @@ macro_rules! obj_type {
 
             #[allow(unused_mut)]
             #[allow(unused_assignments)]
-            let mut make_new: ffi::mp_make_new_fun_t = None;
-            $(make_new = Some($make_new_fn);)?
+            let mut attr: ffi::mp_attr_fun_t = None;
+            $(attr = Some($attr_fn);)?
 
             // TODO: This is safe only if we pass in `Dict` with fixed `Map` (created by
             // `Map::fixed()`, usually through `obj_map!`), because only then will
             // MicroPython treat `locals_dict` as immutable, and make the mutable cast safe.
             #[allow(unused_mut)]
             #[allow(unused_assignments)]
-            let mut locals_dict = ::core::ptr::null_mut();
+            let mut locals_dict: *mut ffi::mp_obj_dict_t = ::core::ptr::null_mut();
             $(locals_dict = $locals as *const _ as *mut _;)?
 
-            ffi::mp_obj_type_t {
-                base: ffi::mp_obj_base_t {
-                    type_: base_type,
-                },
-                flags: 0,
-                name,
-                print: None,
+            // Since MicroPython v1.20 `mp_obj_type_t` stores methods in a trailing
+            // `slots[]` array; `Type::new` packs the slots (see `typ.rs`).
+            $crate::micropython::typ::Type::new(
+                $name.to_u16(),
+                base_type,
                 make_new,
                 call,
-                unary_op: None,
-                binary_op: None,
                 attr,
-                subscr: None,
-                getiter: None,
-                iternext: None,
-                buffer_p: ffi::mp_buffer_p_t { get_buffer: None },
-                protocol: ::core::ptr::null(),
-                parent: ::core::ptr::null(),
                 locals_dict,
-            }
+            )
         }
     }};
 }

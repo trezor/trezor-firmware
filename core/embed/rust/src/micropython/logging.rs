@@ -20,7 +20,11 @@ fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
         if let Ok(iface_obj) = kwargs.get(Qstr::MP_QSTR_iface) {
             if iface_obj != Obj::const_none() {
                 let iface_type = iface_obj.type_().ok_or(Error::TypeError)?;
-                let iface_prefix = uformat!(len: 128, "\x1b[93m[{}]\x1b[0m ", iface_type.name());
+                let iface_prefix = uformat!(
+                    len: 128,
+                    "\x1b[93m[{}]\x1b[0m ",
+                    Qstr::from(iface_type.name).as_str()
+                );
                 syslog_write_chunk(iface_prefix.as_ref(), false);
             }
         }

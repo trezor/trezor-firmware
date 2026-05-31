@@ -7,6 +7,7 @@ use super::{
     gc::{Gc, GcBox},
     obj::Obj,
     runtime::catch_exception,
+    typ::IsTypeOf,
 };
 
 pub type List = ffi::mp_obj_list_t;

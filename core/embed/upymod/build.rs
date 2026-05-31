@@ -629,7 +629,7 @@ impl<'a> MpyBuilder<'a> {
         let output = self.genhdr_dir.join("moduledefs.collected.h");
         let mut cmd = std::process::Command::new("sh");
         cmd.arg("-c")
-            .arg(r#"out="$1"; shift; grep '^MP_REGISTER_MODULE' "$@" > "$out""#)
+            .arg(r#"out="$1"; shift; grep -E '^MP_REGISTER_(EXTENSIBLE_)?MODULE' "$@" > "$out""#)
             .arg("sh")
             .arg(&output)
             .args(upydef_files);

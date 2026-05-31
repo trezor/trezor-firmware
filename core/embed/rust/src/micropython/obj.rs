@@ -5,7 +5,7 @@ use core::{
 
 use crate::error::Error;
 
-use super::{ffi, runtime::catch_exception};
+use super::{ffi, runtime::catch_exception, typ::IsTypeOf};
 
 pub type Obj = ffi::mp_obj_t;
 pub type ObjBase = ffi::mp_obj_base_t;
@@ -457,7 +457,7 @@ impl Obj {
         is_type_str || self.is_qstr()
     }
 
-    pub fn type_<'a>(self) -> Option<&'a super::typ::Type> {
+    pub fn type_<'a>(self) -> Option<&'a ffi::mp_obj_type_t> {
         if self.is_ptr() {
             // SAFETY:
             // Safe for pointers, for as long as MicroPython behaves sanely.

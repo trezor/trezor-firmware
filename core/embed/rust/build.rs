@@ -316,6 +316,12 @@ fn generate_micropython_bindings() {
         .new_type_alias("mp_obj_t")
         .allowlist_type("mp_obj_type_t")
         .allowlist_type("mp_obj_base_t")
+        // Slot function-pointer types used by `obj_type!` / `Type::new`. Since
+        // v1.20 these are no longer direct fields of mp_obj_type_t, so bindgen
+        // does not pull them in transitively; allowlist them explicitly.
+        .allowlist_type("mp_make_new_fun_t")
+        .allowlist_type("mp_call_fun_t")
+        .allowlist_type("mp_attr_fun_t")
         .allowlist_function("mp_obj_new_int")
         .allowlist_function("mp_obj_new_int_from_ll")
         .allowlist_function("mp_obj_new_int_from_ull")
