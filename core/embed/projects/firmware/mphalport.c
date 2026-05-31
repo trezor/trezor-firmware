@@ -21,11 +21,17 @@
 
 #include "py/mphal.h"
 
+#include <trezor_bsp.h>  // for the CMSIS __WFI() intrinsic
 #include <sys/systick.h>
 
 #ifdef USE_DBG_CONSOLE
 #include <sys/dbg_console.h>
 #endif
+
+// Wrapper around the CMSIS __WFI intrinsic so it can be called from vendored
+// MicroPython sources (e.g. py/scheduler.c via MICROPY_EVENT_POLL_HOOK) that
+// do not include the MCU core headers.
+void mp_hal_wait_for_interrupt(void) { __WFI(); }
 
 int mp_hal_stdin_rx_chr(void) {
 #ifdef USE_DBG_CONSOLE

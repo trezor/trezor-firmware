@@ -153,7 +153,9 @@ int main_func(uint32_t cmd, void *arg) {
 
   // Execute the main script
   LOG_INF("Executing main script");
-  pyexec_frozen_module("main.py");
+  // v1.23 added an allow_keyboard_interrupt parameter; firmware has no REPL
+  // keyboard input, so disable it.
+  pyexec_frozen_module("main.py", false);
 
   // Clean up
   LOG_INF("Main script finished, cleaning up");

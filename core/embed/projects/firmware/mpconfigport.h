@@ -217,7 +217,8 @@ typedef long mp_off_t;
     do { \
         extern void mp_handle_pending(bool); \
         mp_handle_pending(true); \
-        __WFI(); \
+        extern void mp_hal_wait_for_interrupt(void); \
+        mp_hal_wait_for_interrupt(); \
     } while (0);
 
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
