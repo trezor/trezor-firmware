@@ -5,6 +5,7 @@ from trezor.wire import ProcessError
 
 from .transaction import Transaction
 from .transaction.instructions import (
+    _STAKE_PROGRAM_ID,
     _SYSTEM_PROGRAM_ID,
     AssociatedTokenAccountProgramCreateInstruction,
     Instruction,
@@ -298,6 +299,9 @@ async def try_confirm_staking_transaction(
         from .layout import confirm_stake_transaction, confirm_stake_withdrawer
 
         create, init, delegate = instructions
+        if base58.encode(create.owner) != _STAKE_PROGRAM_ID:
+            return False
+
         if signer_public_key != create.funding_account[0]:
             return False
         if signer_public_key != create.base:
@@ -360,7 +364,7 @@ async def try_confirm_staking_transaction(
             total_amount += withdraw.lamports
 
         if recipient != signer_public_key:
-            await confirm_claim_recipient(recipient)
+            await confirm_claim_recipient(recipient, chunkify)
 
         await confirm_claim_transaction(
             fee=fee,
