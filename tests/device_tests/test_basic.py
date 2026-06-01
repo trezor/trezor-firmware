@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
@@ -59,3 +61,14 @@ def test_device_id_different(client: Client):
 
     # Device ID must be fresh after every reset
     assert id1 != id2
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_not_initialized(session: Session):
+    resp = session.call_raw(messages.GetPublicKey(address_n=[0]))
+    resp = messages.Failure.ensure_isinstance(resp)
+    expected = (
+        messages.FailureType.NotInitialized,
+        messages.FailureType.InvalidSession,
+    )
+    assert resp.code == expected[session.test_ctx.is_thp()]
