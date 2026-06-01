@@ -935,6 +935,12 @@ def get_instruction(
                         None,
                     ),
                     UIProperty(
+                        "owner",
+                        None,
+                        "Owner",
+                        None,
+                    ),
+                    UIProperty(
                         "lamports",
                         None,
                         "Deposit",
@@ -1086,6 +1092,12 @@ def get_instruction(
                         None,
                         "created_account",
                         "Create account",
+                        None,
+                    ),
+                    UIProperty(
+                        "owner",
+                        None,
+                        "Owner",
                         None,
                     ),
                     UIProperty(
@@ -1363,6 +1375,12 @@ def get_instruction(
                         "space",
                         None,
                         "Data size",
+                        None,
+                    ),
+                    UIProperty(
+                        "owner",
+                        None,
+                        "Owner",
                         None,
                     ),
                 ),
