@@ -44,6 +44,7 @@ byteorder = "1.4"
 rusb = "0.9"
 
 hex = { version = "0.4", default-features = false, features = ["std"] }
+serde_json = { version = "1", optional = true }
 thiserror = "2.0"
 tracing = "0.1"
 
@@ -60,7 +61,7 @@ default = ["bitcoin", "ethereum", "solana"]
 
 # Client implementations
 bitcoin = ["dep:bitcoin", "unicode-normalization"]
-ethereum = []
+ethereum = ["dep:serde_json"]
 
 # Just bindings to the Trezor protobufs
 cardano = []
