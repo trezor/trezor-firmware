@@ -881,7 +881,7 @@ impl FirmwareUI for UIBolt {
             theme::BG,
         );
         new_show_modal(
-            title,
+            Some(title),
             TString::empty(),
             description,
             (!button.is_empty()).then_some(button),
@@ -1015,7 +1015,7 @@ impl FirmwareUI for UIBolt {
             theme::BG,
         );
         new_show_modal(
-            title,
+            Some(title),
             TString::empty(),
             description,
             button_text,
@@ -1089,7 +1089,7 @@ impl FirmwareUI for UIBolt {
         let layout = RootComponent::new(
             IconDialog::new(
                 icon,
-                title,
+                Some(title),
                 Button::cancel_confirm(
                     Button::with_icon(theme::ICON_BACK),
                     Button::with_text(button).styled(theme::button_reset()),
@@ -1253,7 +1253,7 @@ impl FirmwareUI for UIBolt {
             theme::BG,
         );
         new_show_modal(
-            title,
+            Some(title),
             TString::empty(),
             description,
             (!button.is_empty()).then_some(button),
@@ -1290,7 +1290,7 @@ impl FirmwareUI for UIBolt {
             return Err(Error::ValueError(c"Non-empty title is required"));
         }
         new_show_modal(
-            title.unwrap_or(TString::empty()),
+            title,
             value,
             description,
             (!button.is_empty()).then_some(button),
@@ -1312,7 +1312,7 @@ impl FirmwareUI for UIBolt {
 
 #[allow(clippy::too_many_arguments)]
 fn new_show_modal(
-    title: TString<'static>,
+    title: Option<TString<'static>>,
     value: TString<'static>,
     description: TString<'static>,
     button: Option<TString<'static>>,
