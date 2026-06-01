@@ -92,14 +92,15 @@ async def backup_device(msg: BackupDevice) -> Success:
     from trezor.messages import Success
 
     from apps.common import backup, mnemonic
+    from apps.common.seed import raise_if_not_initialized
 
     # do this early before we show any UI
     # the homescreen will clear the flag right after its own UI is gone
     repeated_backup_enabled = backup.repeated_backup_enabled()
     is_repeated_backup = repeated_backup_enabled and not storage_device.needs_backup()
 
-    if not storage_device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    raise_if_not_initialized()
+
     if not storage_device.needs_backup() and not repeated_backup_enabled:
         raise wire.ProcessError("Seed already backed up")
 

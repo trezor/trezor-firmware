@@ -10,10 +10,10 @@ async def get_next_u2f_counter(msg: GetNextU2FCounter) -> NextU2FCounter:
     from trezor.enums import ButtonRequestType
     from trezor.messages import NextU2FCounter
     from trezor.ui.layouts import confirm_action
-    from trezor.wire import NotInitialized
 
-    if not storage_device.is_initialized():
-        raise NotInitialized("Device is not initialized")
+    from apps.common.seed import raise_if_not_initialized
+
+    raise_if_not_initialized()
 
     await confirm_action(
         "get_u2f_counter",

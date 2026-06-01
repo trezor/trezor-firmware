@@ -422,8 +422,9 @@ async def handle_LockDevice(msg: LockDevice) -> Success:
 
 
 async def handle_SetBusy(msg: SetBusy) -> Success:
-    if not storage_device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    from apps.common.seed import raise_if_not_initialized
+
+    raise_if_not_initialized()
 
     if msg.expiry_ms:
         import utime

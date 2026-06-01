@@ -38,10 +38,9 @@ async def _set_salt(salt: bytes, salt_tag: bytes, stage: bool = False) -> None:
 
 
 async def sd_protect(msg: SdProtect) -> Success:
-    from trezor.wire import NotInitialized
+    from apps.common.seed import raise_if_not_initialized
 
-    if not storage_device.is_initialized():
-        raise NotInitialized("Device is not initialized")
+    raise_if_not_initialized()
 
     if msg.operation == SdProtectOperationType.ENABLE:
         return await _sd_protect_enable(msg)

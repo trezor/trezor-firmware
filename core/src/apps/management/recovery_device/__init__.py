@@ -50,9 +50,11 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
         if storage_device.is_initialized():
             raise wire.UnexpectedMessage("Already initialized")
     elif recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
-        if not storage_device.is_initialized():
-            raise wire.NotInitialized("Device is not initialized")
-        elif recovery_type is RecoveryType.DryRun:
+        from apps.common.seed import raise_if_not_initialized
+
+        raise_if_not_initialized()
+
+        if recovery_type is RecoveryType.DryRun:
             if storage_device.no_backup():
                 raise wire.ProcessError("Dry-run not available for seedless devices")
             elif storage_device.needs_backup() or storage_device.unfinished_backup():
