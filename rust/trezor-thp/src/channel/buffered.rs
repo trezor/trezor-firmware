@@ -1,6 +1,6 @@
 use crate::{
     ChannelIO,
-    channel::{APP_HEADER_LEN, PacketInResult},
+    channel::{APP_HEADER_LEN, PacketInResult, SEND_BUFFER_OVERHEAD},
     error::Result,
 };
 
@@ -66,7 +66,7 @@ impl<C: ChannelIO> Buffered<C> {
     }
 
     pub fn message_in(&mut self, session_id: u8, message_type: u16, message: &[u8]) -> Result<()> {
-        let mut send_buffer = vec![0; message.len() + C::BUFFER_OVERHEAD];
+        let mut send_buffer = vec![0; message.len() + SEND_BUFFER_OVERHEAD];
         let res = self.channel.message_in_from(
             session_id,
             message_type,

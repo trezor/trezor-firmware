@@ -38,7 +38,11 @@ const HANDSHAKE_BUFFER_DTH_LEN: usize = max(
     2 * PUBKEY_LEN + 2 * TAG_LEN + CHECKSUM_LEN, // HandshakeInitiationResponse
 );
 
-const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
+pub const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
+
+/// Required size of the send buffer in addition to serialized message length.
+/// Session ID (1B) + message type (2B) + AEAD tag (16B).
+pub const SEND_BUFFER_OVERHEAD: usize = APP_HEADER_LEN + TAG_LEN;
 
 /// Used during channel allocation on broadcast channel.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -672,9 +676,6 @@ impl PacketInResult {
 /// to be passed along every call. You can wrap the channel in [`buffered::Buffered`] to
 /// handle the buffers for you.
 pub trait ChannelIO {
-    /// Session ID (1B) + message type (2B) + AEAD tag (16B).
-    const BUFFER_OVERHEAD: usize = APP_HEADER_LEN + TAG_LEN;
-
     /// Pass incoming packet into a channel.
     ///
     /// Please note the caller should first check whether channel ID matches.
@@ -736,8 +737,8 @@ pub trait ChannelIO {
 
     /// Submit message for channel to encrypt and fragment into packets.
     ///
-    /// The length of `send_buffer` must be at least [`Self::BUFFER_OVERHEAD`] more
-    /// than the message length.
+    /// The length of `send_buffer` must be at least [`SEND_BUFFER_OVERHEAD`] more than
+    /// the message length.
     ///
     /// Returns [`Error::NotReady`] if the channel hasn't finished sending the previous message
     /// (did not send all fragments or did not receive valid ACK), or if the channel is
@@ -901,6 +902,10 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     }
 }
 
+/// The maximum number of transport payload retransmissions that the sender should attempt.
+/// Defined in the specification, applications are free to use lower number.
+pub const MAX_RETRANSMISSION_COUNT: u8 = 50;
+
 /// Returns how many milliseconds to wait for an ACK for a given retransmission attempt.
 /// First timeout (0th retry) is after 200ms till ~3.52s.
 ///
@@ -908,7 +913,6 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
 /// you are free to use different function. It is recommended to measure the duration between
 /// sending last packet and receiving an ACK ("ack_latency") and add it to this number.
 pub fn retransmit_after_ms(retry: u8) -> u32 {
-    const MAX_RETRANSMISSION_COUNT: u8 = 50;
     let retry: u32 = retry.min(MAX_RETRANSMISSION_COUNT - 1).into();
 
     10300 - 1010000 / retry.saturating_add(100)
