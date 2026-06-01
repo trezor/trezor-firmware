@@ -32,6 +32,12 @@ TROPIC_ROOT_PUBLIC_KEY = {
 
 
 def verify_cert_chain(certs, model_name):
+    # Verify that the common name matches the Trezor model.
+    common_name = certs[0].subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[
+        0
+    ]
+    assert common_name.value.startswith(model_name)
+
     for i, (cert, ca_cert) in enumerate(zip(certs, certs[1:])):
         assert cert.issuer == ca_cert.subject
 
@@ -68,10 +74,6 @@ def verify_cert_chain(certs, model_name):
                 cert.tbs_certificate_bytes,
                 cert.signature_algorithm_parameters,
             )
-
-    # Verify that the common name matches the Trezor model.
-    common_name = cert.subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[0]
-    assert common_name.value.startswith(model_name)
 
 
 def check_signature_optiga(
