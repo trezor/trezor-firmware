@@ -39,9 +39,8 @@ def verify_cert_chain(certs, model_name):
             ext.BasicConstraints
         ).value
         assert ca_basic_constraints.ca is True
-        if ca_basic_constraints is not None:
-            # It is assumed that certs[0] is not a CA
-            assert i <= ca_basic_constraints.path_length
+        # It is assumed that certs[0] is not a CA
+        assert i <= ca_basic_constraints.path_length
 
         try:
             ski = ca_cert.extensions.get_extension_for_class(
