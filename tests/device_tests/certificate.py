@@ -31,7 +31,19 @@ TROPIC_ROOT_PUBLIC_KEY = {
 }
 
 
-def verify_cert_chain(certs, model_name):
+def verify_cert_chain(certs, model_name, root_public_key):
+    def verify_cert_signature(public_key, cert):
+        if isinstance(public_key, ed25519.Ed25519PublicKey):
+            public_key.verify(cert.signature, cert.tbs_certificate_bytes)
+        elif isinstance(public_key, ec.EllipticCurvePublicKey):
+            public_key.verify(
+                cert.signature,
+                cert.tbs_certificate_bytes,
+                cert.signature_algorithm_parameters,
+            )
+        else:
+            raise ValueError("Unsupported public key type")
+
     # Verify that the common name matches the Trezor model.
     common_name = certs[0].subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[
         0
@@ -59,38 +71,10 @@ def verify_cert_chain(certs, model_name):
         except ext.ExtensionNotFound:
             pass
 
-        ca_public_key = ca_cert.public_key()
-        if isinstance(ca_public_key, ed25519.Ed25519PublicKey):
-            ca_public_key.verify(
-                cert.signature,
-                cert.tbs_certificate_bytes,
-            )
-        else:
-            ca_public_key.verify(
-                cert.signature,
-                cert.tbs_certificate_bytes,
-                cert.signature_algorithm_parameters,
-            )
-
-
-def check_signature_optiga(
-    signature: bytes,
-    certificate_chain: Sequence[bytes],
-    model: TrezorModel,
-    data: bytes,
-) -> None:
-    certs = [x509.load_der_x509_certificate(cert) for cert in certificate_chain]
-    assert len(certs) >= 2  # at least one root and one device cert from Optiga
+        verify_cert_signature(ca_cert.public_key(), cert)
 
     # Verify the last certificate in the certificate chain against trust anchor.
-    root_public_key = ec.EllipticCurvePublicKey.from_encoded_point(
-        ec.SECP256R1(), OPTIGA_ROOT_PUBLIC_KEY[model]
-    )
-    root_public_key.verify(
-        certs[-1].signature,
-        certs[-1].tbs_certificate_bytes,
-        certs[-1].signature_algorithm_parameters,
-    )
+    verify_cert_signature(root_public_key, certs[-1])
 
     # Verify the authority key identifier in the last certificate.
     try:
@@ -106,7 +90,20 @@ def check_signature_optiga(
     except ext.ExtensionNotFound:
         pass
 
-    verify_cert_chain(certs, model.internal_name)
+
+def check_signature_optiga(
+    signature: bytes,
+    certificate_chain: Sequence[bytes],
+    model: TrezorModel,
+    data: bytes,
+) -> None:
+    certs = [x509.load_der_x509_certificate(cert) for cert in certificate_chain]
+    assert len(certs) >= 2  # at least one root and one device cert from Optiga
+
+    root_public_key = ec.EllipticCurvePublicKey.from_encoded_point(
+        ec.SECP256R1(), OPTIGA_ROOT_PUBLIC_KEY[model]
+    )
+    verify_cert_chain(certs, model.internal_name, root_public_key)
 
     # Verify the signature of the challenge.
     certs[0].public_key().verify(signature, data, ec.ECDSA(hashes.SHA256()))
@@ -123,30 +120,10 @@ def check_signature_tropic(
     # If this fails, make sure the emulator was built with DISABLE_TROPIC=0
     assert len(certs) >= 2  # at least one root and one device cert from Tropic
 
-    # Verify the last certificate in the certificate chain against trust anchor.
     root_public_key = ed25519.Ed25519PublicKey.from_public_bytes(
         TROPIC_ROOT_PUBLIC_KEY[model]
     )
-    root_public_key.verify(
-        certs[-1].signature,
-        certs[-1].tbs_certificate_bytes,
-    )
-
-    # Verify the authority key identifier in the last certificate.
-    try:
-        aki = (
-            certs[-1]
-            .extensions.get_extension_for_class(ext.AuthorityKeyIdentifier)
-            .value
-        )
-        assert (
-            aki.key_identifier
-            == ext.SubjectKeyIdentifier.from_public_key(root_public_key).key_identifier
-        )
-    except ext.ExtensionNotFound:
-        pass
-
-    verify_cert_chain(certs, model.internal_name)
+    verify_cert_chain(certs, model.internal_name, root_public_key)
 
     # Verify the signature of the challenge.
     certs[0].public_key().verify(signature, bytearray(data))
