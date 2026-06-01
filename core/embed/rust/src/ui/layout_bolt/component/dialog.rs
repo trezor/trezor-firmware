@@ -88,7 +88,7 @@ where
 }
 
 pub struct IconDialog<U> {
-    image: Child<BlendedImage>,
+    image: Option<Child<BlendedImage>>,
     paragraphs: Paragraphs<ParagraphVecShort<'static>>,
     controls: Child<U>,
 }
@@ -97,15 +97,21 @@ impl<U> IconDialog<U>
 where
     U: Component,
 {
-    pub fn new(icon: BlendedImage, title: impl Into<TString<'static>>, controls: U) -> Self {
+    pub fn new(
+        icon: BlendedImage,
+        title: Option<impl Into<TString<'static>>>,
+        controls: U,
+    ) -> Self {
+        let (image, paragraphs) = if let Some(title) = title {
+            let title = Paragraph::new(&theme::TEXT_DEMIBOLD, title).centered();
+            let para = ParagraphVecShort::from_iter([title]);
+            (Some(Child::new(icon)), para)
+        } else {
+            (None, ParagraphVecShort::new())
+        };
         Self {
-            image: Child::new(icon),
-            paragraphs: Paragraphs::new(ParagraphVecShort::from_iter([Paragraph::new(
-                &theme::TEXT_DEMIBOLD,
-                title,
-            )
-            .centered()]))
-            .with_placement(
+            image,
+            paragraphs: Paragraphs::new(paragraphs).with_placement(
                 LinearPlacement::vertical()
                     .align_at_center()
                     .with_spacing(Self::VALUE_SPACE),
@@ -138,13 +144,13 @@ where
     pub fn new_shares(lines: [impl Into<TString<'static>>; 4], controls: U) -> Self {
         let [l0, l1, l2, l3] = lines;
         Self {
-            image: Child::new(BlendedImage::new(
+            image: Some(Child::new(BlendedImage::new(
                 theme::IMAGE_BG_CIRCLE,
                 theme::IMAGE_FG_SUCCESS,
                 theme::SUCCESS_COLOR,
                 theme::FG,
                 theme::BG,
-            )),
+            ))),
             paragraphs: ParagraphVecShort::from_iter([
                 Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l0).centered(),
                 Paragraph::new(&theme::TEXT_DEMIBOLD, l1).centered(),
@@ -176,9 +182,14 @@ where
         let controls_area = self.controls.place(bounds);
         let content_area = bounds.inset(Insets::bottom(controls_area.height()));
 
-        let (image_area, content_area) = content_area.split_top(Self::ICON_AREA_HEIGHT);
+        let content_area = if let Some(image) = &mut self.image {
+            let (image_area, content_area) = content_area.split_top(Self::ICON_AREA_HEIGHT);
+            image.place(image_area);
+            content_area
+        } else {
+            content_area
+        };
 
-        self.image.place(image_area);
         self.paragraphs.place(content_area);
         bounds
     }
@@ -189,7 +200,9 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.image.render(target);
+        if let Some(image) = &self.image {
+            image.render(target);
+        }
         self.paragraphs.render(target);
         self.controls.render(target);
     }
@@ -202,7 +215,9 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("IconDialog");
-        t.child("image", &self.image);
+        if let Some(image) = &self.image {
+            t.child("image", image);
+        }
         t.child("content", &self.paragraphs);
         t.child("controls", &self.controls);
     }
