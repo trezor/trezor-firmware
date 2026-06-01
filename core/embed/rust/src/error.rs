@@ -2,7 +2,11 @@ use core::{convert::Infallible, ffi::CStr, num::TryFromIntError};
 
 #[cfg(feature = "micropython")]
 use {
-    crate::micropython::{ffi, obj::Obj, qstr::Qstr},
+    crate::micropython::{
+        exception::{self, new_exception, new_exception_arg_from, new_exception_args},
+        obj::Obj,
+        qstr::Qstr,
+    },
     core::convert::TryInto,
 };
 
@@ -49,44 +53,24 @@ impl Error {
             // SAFETY: First argument is a reference to a valid exception type.
             // EXCEPTION: Sensibly, `new_exception_*` does not raise.
             match self {
-                Error::TypeError => ffi::mp_obj_new_exception(&ffi::mp_type_TypeError),
-                Error::OutOfRange => ffi::mp_obj_new_exception(&ffi::mp_type_OverflowError),
-                Error::MissingKwargs => ffi::mp_obj_new_exception(&ffi::mp_type_TypeError),
-                Error::AllocationFailed => ffi::mp_obj_new_exception(&ffi::mp_type_MemoryError),
-                Error::IndexError => ffi::mp_obj_new_exception(&ffi::mp_type_IndexError),
+                Error::TypeError => new_exception(exception::TypeError),
+                Error::OutOfRange => new_exception(exception::OverflowError),
+                Error::MissingKwargs => new_exception(exception::TypeError),
+                Error::AllocationFailed => new_exception(exception::MemoryError),
+                Error::IndexError => new_exception(exception::IndexError),
                 Error::CaughtException(obj) => obj,
-                Error::KeyError(key) => {
-                    ffi::mp_obj_new_exception_args(&ffi::mp_type_KeyError, 1, &key)
-                }
-                Error::ValueError(msg) => {
-                    if let Ok(msg) = msg.try_into() {
-                        ffi::mp_obj_new_exception_args(&ffi::mp_type_ValueError, 1, &msg)
-                    } else {
-                        ffi::mp_obj_new_exception(&ffi::mp_type_ValueError)
-                    }
-                }
-                Error::ValueErrorParam(msg, param) => {
-                    if let Ok(msg) = msg.try_into() {
-                        let args = [msg, param];
-                        ffi::mp_obj_new_exception_args(&ffi::mp_type_ValueError, 2, args.as_ptr())
-                    } else {
-                        ffi::mp_obj_new_exception(&ffi::mp_type_ValueError)
-                    }
-                }
+                Error::KeyError(key) => new_exception_arg_from(exception::KeyError, key),
+                Error::ValueError(msg) => new_exception_arg_from(exception::ValueError, msg),
+                Error::ValueErrorParam(msg, param) => match msg.try_into() {
+                    Ok(msg) => new_exception_args(exception::ValueError, &[msg, param]),
+                    _ => new_exception(exception::ValueError),
+                },
                 Error::AttributeError(attr) => {
-                    ffi::mp_obj_new_exception_args(&ffi::mp_type_AttributeError, 1, &attr.into())
+                    new_exception_arg_from(exception::AttributeError, attr)
                 }
-                Error::EOFError => ffi::mp_obj_new_exception(&ffi::mp_type_EOFError),
-                Error::RuntimeError(msg) => {
-                    if let Ok(msg) = msg.try_into() {
-                        ffi::mp_obj_new_exception_args(&ffi::mp_type_RuntimeError, 1, &msg)
-                    } else {
-                        ffi::mp_obj_new_exception(&ffi::mp_type_RuntimeError)
-                    }
-                }
-                Error::NotImplementedError => {
-                    ffi::mp_obj_new_exception(&ffi::mp_type_NotImplementedError)
-                }
+                Error::EOFError => new_exception(exception::EOFError),
+                Error::RuntimeError(msg) => new_exception_arg_from(exception::RuntimeError, msg),
+                Error::NotImplementedError => new_exception(exception::NotImplementedError),
             }
         }
     }
