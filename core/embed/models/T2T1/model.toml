@@ -6,6 +6,7 @@ features = [
     "pvd",
     "secure_mode",
     "layout_bolt",
+    "display_rgb565",
 
     # Legacy coin support
     "decred",

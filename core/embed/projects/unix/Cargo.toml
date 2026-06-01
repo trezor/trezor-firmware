@@ -89,7 +89,7 @@ consumption_mask = ["sec/consumption_mask"]
 dev_keys = ["trezor_lib/dev_keys"]
 display = ["io/display"]
 dma2d = ["io/dma2d", "trezor_lib/dma2d"]
-framebuffer = ["io/framebuffer"]
+framebuffer = ["io/framebuffer", "trezor_lib/framebuffer"]
 haptic = ["io/haptic", "upymod/haptic", "trezor_lib/haptic"]
 hash_processor = ["sec/hash_processor"]
 iwdg = ["sec/iwdg"]
@@ -118,62 +118,40 @@ decred = ["upymod/decred"]
 eos = ["rtl/eos", "upymod/eos"]
 nem = ["rtl/nem", "upymod/nem"]
 
+display_mono = ["trezor_lib/display_mono"]
+display_rgb565 = ["trezor_lib/display_rgb565"]
+display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
+
 layout_bolt = [
     "trezor_lib/layout_bolt",
     "upymod/layout_bolt",
-    "trezor_lib/display_rgb565",
     "trezor_lib/ui_blurring",
     "trezor_lib/ui_jpeg",
-    ]
-
-layout_bolt_d001 = [
-    "trezor_lib/layout_bolt",
-    "upymod/layout_bolt",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgb565",
-    "trezor_lib/ui_blurring",
-    "trezor_lib/ui_jpeg",
-    ]
-
-layout_bolt_d002 = [
-    "trezor_lib/layout_bolt",
-    "upymod/layout_bolt",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgba8888",
-    "trezor_lib/ui_blurring",
-    "trezor_lib/ui_jpeg",
-    ]
+]
 
 layout_caesar = [
     "trezor_lib/layout_caesar",
     "upymod/layout_caesar",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_mono",
-    ]
+]
 
 layout_delizia = [
     "trezor_lib/layout_delizia",
     "upymod/layout_delizia",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgb565",
     "trezor_lib/ui_blurring",
     "trezor_lib/ui_image_buffer",
     "trezor_lib/ui_overlay",
     "trezor_lib/ui_jpeg",
     "trezor_lib/ui_font_kerning",
-    ]
+]
 
 layout_eckhart = [
     "trezor_lib/layout_eckhart",
     "upymod/layout_eckhart",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgba8888",
     "trezor_lib/ui_blurring",
     "trezor_lib/ui_image_buffer",
-    "trezor_lib/ui_color_32bit",
     "trezor_lib/ui_overlay",
     "trezor_lib/ui_jpeg",
     "trezor_lib/ui_font_kerning",
     "trezor_lib/hw_jpeg_decoder",
     "io/hw_jpeg_decoder",
-    ]
+]

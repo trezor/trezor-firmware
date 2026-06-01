@@ -13,4 +13,5 @@ features = [
     "secure_mode",
     "tamper",
     "layout_caesar",
+    "display_mono",
 ]
