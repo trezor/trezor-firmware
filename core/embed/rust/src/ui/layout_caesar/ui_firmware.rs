@@ -1366,7 +1366,7 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_warning(
-        _title: TString<'static>,
+        _title: Option<TString<'static>>,
         button: TString<'static>,
         value: TString<'static>,
         description: TString<'static>,

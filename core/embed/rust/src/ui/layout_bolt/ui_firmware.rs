@@ -1271,7 +1271,7 @@ impl FirmwareUI for UIBolt {
     }
 
     fn show_warning(
-        title: TString<'static>,
+        title: Option<TString<'static>>,
         button: TString<'static>,
         value: TString<'static>,
         description: TString<'static>,
@@ -1286,7 +1286,7 @@ impl FirmwareUI for UIBolt {
             theme::BG,
         );
         new_show_modal(
-            title,
+            title.unwrap_or(TString::empty()),
             value,
             description,
             (!button.is_empty()).then_some(button),

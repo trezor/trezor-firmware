@@ -1546,7 +1546,7 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_warning(
-        title: TString<'static>,
+        title: Option<TString<'static>>,
         button: TString<'static>,
         value: TString<'static>,
         description: TString<'static>,
@@ -1575,14 +1575,13 @@ impl FirmwareUI for UIEckhart {
             ActionBar::new_single(Button::with_text(button))
         };
         let screen = TextScreen::new(paragraphs).with_action_bar(action_bar);
-        let screen = if title.is_empty() {
-            screen
-        } else {
-            screen.with_header(
+        let screen = match title {
+            None => screen,
+            Some(title) => screen.with_header(
                 Header::new(title)
                     .with_icon(theme::ICON_INFO, color)
                     .with_text_style(style),
-            )
+            ),
         };
         let layout = LayoutObj::new(screen)?;
         Ok(layout)

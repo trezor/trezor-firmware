@@ -1274,7 +1274,7 @@ extern "C" fn new_show_wait_text(message: Obj) -> Obj {
 
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
         let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
         let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
@@ -2155,7 +2155,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def show_warning(
     ///     *,
-    ///     title: str,
+    ///     title: str | None,
     ///     button: str,
     ///     value: str = "",
     ///     description: str = "",
