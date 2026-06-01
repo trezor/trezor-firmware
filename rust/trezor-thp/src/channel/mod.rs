@@ -38,7 +38,7 @@ const HANDSHAKE_BUFFER_DTH_LEN: usize = max(
     2 * PUBKEY_LEN + 2 * TAG_LEN + CHECKSUM_LEN, // HandshakeInitiationResponse
 );
 
-const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
+pub const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
 /// Used during channel allocation on broadcast channel.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -900,6 +900,10 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     }
 }
 
+/// The maximum number of transport payload retransmissions that the sender should attempt.
+/// Defined in the specification, applications are free to use lower number.
+pub const MAX_RETRANSMISSION_COUNT: u8 = 50;
+
 /// Returns how many milliseconds to wait for an ACK for a given retransmission attempt.
 /// First timeout (0th retry) is after 200ms till ~3.52s.
 ///
@@ -907,7 +911,6 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
 /// you are free to use different function. It is recommended to measure the duration between
 /// sending last packet and receiving an ACK ("ack_latency") and add it to this number.
 pub fn retransmit_after_ms(retry: u8) -> u32 {
-    const MAX_RETRANSMISSION_COUNT: u8 = 50;
     let retry: u32 = retry.min(MAX_RETRANSMISSION_COUNT - 1).into();
 
     10300 - 1010000 / retry.saturating_add(100)
