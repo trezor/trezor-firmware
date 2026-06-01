@@ -120,13 +120,16 @@ if utils.USE_THP:
                 ctx.cache.set_bool(APP_COMMON_DERIVE_CARDANO, True)
                 derive_and_store_secrets(ctx, passphrase)
 
-else:
+else:  # v1 protocol
+
     if utils.BITCOIN_ONLY:
         # === Bitcoin-only variant ===
         # We use the simple version of `get_seed` that never needs to derive anything else.
 
         @cache.stored_async(APP_COMMON_SEED)
         async def get_seed() -> bytes:
+            raise_if_not_initialized()
+
             passphrase = await get_passphrase_legacy()
             return mnemonic.get_seed(passphrase=passphrase)
 
