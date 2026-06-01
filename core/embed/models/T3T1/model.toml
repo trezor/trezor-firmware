@@ -13,6 +13,7 @@ features = [
     "secure_mode",
     "tamper",
     "layout_delizia",
+    "display_rgb565",
 ]
 
 [project_overrides.bootloader]

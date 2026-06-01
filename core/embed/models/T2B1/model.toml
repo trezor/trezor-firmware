@@ -10,4 +10,5 @@ features = [
     "secure_mode",
     "ui_empty_lock",
     "layout_caesar",
+    "display_mono",
 ]

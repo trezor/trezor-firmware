@@ -15,5 +15,6 @@ features = [
     "secure_aes",
     "tamper",
     "framebuffer",
-    "layout_bolt_d002",
+    "layout_bolt",
+    "display_rgba8888",
 ]
