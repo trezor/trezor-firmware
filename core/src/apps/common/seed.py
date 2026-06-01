@@ -86,10 +86,10 @@ if utils.USE_THP:
             if msg.passphrase is not None and msg.on_device:
                 raise DataError("Passphrase provided when it shouldn't be!")
 
+            raise_if_not_initialized()
+
             if ctx.cache.is_set(APP_COMMON_SEED):
                 raise Exception("Seed is already set!")
-
-            raise_if_not_initialized()
 
             passphrase = await get_passphrase(msg)
             common_seed = mnemonic.get_seed(passphrase)
