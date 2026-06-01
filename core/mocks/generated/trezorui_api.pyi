@@ -834,7 +834,7 @@ def show_wait_text(message: str, /) -> LayoutObj[None]:
 # rust/src/ui/api/firmware_micropython.rs
 def show_warning(
     *,
-    title: str,
+    title: str | None,
     button: str,
     value: str = "",
     description: str = "",

@@ -464,7 +464,7 @@ pub trait FirmwareUI {
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_warning(
-        title: TString<'static>,
+        title: Option<TString<'static>>,
         button: TString<'static>,
         value: TString<'static>,
         description: TString<'static>,

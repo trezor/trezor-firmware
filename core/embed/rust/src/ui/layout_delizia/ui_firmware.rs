@@ -1233,7 +1233,7 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn show_warning(
-        title: TString<'static>,
+        title: Option<TString<'static>>,
         button: TString<'static>,
         value: TString<'static>,
         description: TString<'static>,
@@ -1253,20 +1253,23 @@ impl FirmwareUI for UIDelizia {
             .into_paragraphs(),
         );
 
-        let frame = if title.is_empty() {
-            if danger {
-                // Disallow showing "dangerous" warning with no header.
-                return Err(Error::ValueError(c"Non-empty title is required"));
+        let frame = match title {
+            None => {
+                if danger {
+                    // Disallow showing "dangerous" warning with no header.
+                    return Err(Error::ValueError(c"Non-empty title is required"));
+                }
+                Frame::content(content)
             }
-            Frame::content(content)
-        } else {
-            let header = Header::left_aligned(title);
-            let header = if danger {
-                header.with_danger_icon()
-            } else {
-                header.with_warning_low_icon()
-            };
-            Frame::with_header(header, content)
+            Some(title) => {
+                let header = Header::left_aligned(title);
+                let header = if danger {
+                    header.with_danger_icon()
+                } else {
+                    header.with_warning_low_icon()
+                };
+                Frame::with_header(header, content)
+            }
         };
         let frame = if danger {
             frame.with_tap_footer(action)
