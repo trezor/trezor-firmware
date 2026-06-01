@@ -240,16 +240,10 @@ impl Trezor {
                     return Err(Error::UnsupportedNetwork);
                 }
                 protos::MessageType::MessageType_PassphraseRequest => {
-                    let pr: protos::PassphraseRequest = resp.into_message()?;
-                    if pr._on_device() {
-                        let mut ack = protos::PassphraseAck::new();
-                        ack.set_on_device(true);
-                        resp = self.call_raw(ack)?;
-                    } else {
-                        let mut ack = protos::PassphraseAck::new();
-                        ack.set_passphrase(String::new());
-                        resp = self.call_raw(ack)?;
-                    }
+                    let _: protos::PassphraseRequest = resp.into_message()?;
+                    let mut ack = protos::PassphraseAck::new();
+                    ack.set_on_device(true);
+                    resp = self.call_raw(ack)?;
                 }
                 protos::MessageType::MessageType_EthereumTypedDataStructRequest => {
                     let sr: protos::EthereumTypedDataStructRequest = resp.into_message()?;
@@ -377,12 +371,15 @@ fn strip_array_suffix(type_name: &str) -> String {
 }
 
 fn encode_uint_be(s: &str, byte_len: usize) -> Vec<u8> {
+    let byte_len = byte_len.min(32);
     let mut buf = [0u8; 32];
     let hex_str = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X"));
     if let Some(hex_str) = hex_str {
-        let decoded = hex::decode(hex_str).unwrap_or_default();
-        let start = 32usize.saturating_sub(decoded.len());
-        buf[start..start + decoded.len()].copy_from_slice(&decoded);
+        if let Ok(decoded) = hex::decode(hex_str) {
+            let len = decoded.len().min(32);
+            let start = 32 - len;
+            buf[start..start + len].copy_from_slice(&decoded[..len]);
+        }
     } else if let Ok(n) = s.parse::<u128>() {
         buf[16..].copy_from_slice(&n.to_be_bytes());
     }
@@ -390,6 +387,7 @@ fn encode_uint_be(s: &str, byte_len: usize) -> Vec<u8> {
 }
 
 fn encode_int_be(s: &str, byte_len: usize) -> Vec<u8> {
+    let byte_len = byte_len.min(32);
     let n = s.parse::<i128>().unwrap_or(0);
     let mut buf = if n < 0 { [0xffu8; 32] } else { [0u8; 32] };
     buf[16..].copy_from_slice(&n.to_be_bytes());
