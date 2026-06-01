@@ -5,12 +5,12 @@ if TYPE_CHECKING:
 
 
 async def apply_flags(msg: ApplyFlags) -> Success:
-    import storage.device
     from storage.device import set_flags
     from trezor.messages import Success
-    from trezor.wire import NotInitialized
 
-    if not storage.device.is_initialized():
-        raise NotInitialized("Device is not initialized")
+    from apps.common.seed import raise_if_not_initialized
+
+    raise_if_not_initialized()
+
     set_flags(msg.flags)
     return Success(message="Flags applied")

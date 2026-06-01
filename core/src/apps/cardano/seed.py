@@ -151,8 +151,9 @@ async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychai
     from trezor.enums import CardanoDerivationType
     from trezor.wire import context
 
-    if not device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    from apps.common.seed import raise_if_not_initialized
+
+    raise_if_not_initialized()
 
     if derivation_type == CardanoDerivationType.LEDGER:
         seed = await get_seed()

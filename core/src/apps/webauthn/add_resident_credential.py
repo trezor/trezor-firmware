@@ -5,16 +5,17 @@ if TYPE_CHECKING:
 
 
 async def add_resident_credential(msg: WebAuthnAddResidentCredential) -> Success:
-    import storage.device as storage_device
     from trezor import TR, wire
     from trezor.messages import Success
     from trezor.ui.layouts.fido import confirm_fido, credential_warning
 
+    from apps.common.seed import raise_if_not_initialized
+
     from .credential import Fido2Credential
     from .resident_credentials import store_resident_credential
 
-    if not storage_device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+    raise_if_not_initialized()
+
     if not msg.credential_id:
         raise wire.ProcessError("Missing credential ID parameter.")
 

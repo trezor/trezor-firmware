@@ -50,13 +50,13 @@ def _validate_homescreen(homescreen: AnyBytes) -> None:
 
 async def apply_settings(msg: ApplySettings) -> Success:
     from trezor.messages import Success
-    from trezor.wire import NotInitialized, ProcessError
+    from trezor.wire import ProcessError
 
     from apps.common import safety_checks
     from apps.common.lock_manager import reload_settings_from_storage
+    from apps.common.seed import raise_if_not_initialized
 
-    if not storage_device.is_initialized():
-        raise NotInitialized("Device is not initialized")
+    raise_if_not_initialized()
 
     homescreen = msg.homescreen  # local_cache_attribute
     homescreen_length = msg.homescreen_length  # local_cache_attribute

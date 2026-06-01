@@ -9,16 +9,14 @@ if TYPE_CHECKING:
 
 
 async def change_wipe_code(msg: ChangeWipeCode) -> Success:
-    from storage.device import is_initialized
     from trezor import config
     from trezor.messages import Success
     from trezor.ui.layouts import show_success, wipe_code_pin_not_set_popup
-    from trezor.wire import NotInitialized
 
     from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
+    from apps.common.seed import raise_if_not_initialized
 
-    if not is_initialized():
-        raise NotInitialized("Device is not initialized")
+    raise_if_not_initialized()
 
     # Confirm that user wants to set or remove the wipe code.
     has_wipe_code = config.has_wipe_code()
