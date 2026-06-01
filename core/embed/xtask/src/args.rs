@@ -272,7 +272,7 @@ pub struct BuildArgs {
     pub source_lines: Option<bool>,
 
     /// Optimize MicroPython bytecode
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    #[arg(long, num_args = 0..=1, default_missing_value = "true", overrides_with = "pyopt")]
     pub pyopt: Option<bool>,
 
     /// Enable Micropython memory performance measurements

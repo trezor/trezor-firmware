@@ -242,7 +242,7 @@ build_firmware: ## build firmware with frozen modules
 	xtask build firmware $(XTASK_BUILD_OPTS)
 
 build_unix: ## build unix port
-	xtask build firmware --emulator $(XTASK_BUILD_OPTS)
+	xtask build firmware --emulator $(XTASK_BUILD_OPTS) --pyopt=false
 
 build_unix_frozen: ## build unix port with frozen modules
 	xtask build firmware --emulator --frozen $(XTASK_BUILD_OPTS)
