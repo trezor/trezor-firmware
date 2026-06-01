@@ -37,6 +37,10 @@
               "display_name": "Create account"
             },
             {
+              "parameter": "owner",
+              "display_name": "Owner"
+            },
+            {
               "parameter": "lamports",
               "display_name": "Deposit"
             },
@@ -148,6 +152,10 @@
             {
               "account": "created_account",
               "display_name": "Create account"
+            },
+            {
+              "parameter": "owner",
+              "display_name": "Owner"
             },
             {
               "parameter": "lamports",
@@ -350,6 +358,10 @@
             {
               "parameter": "space",
               "display_name": "Data size"
+            },
+            {
+              "parameter": "owner",
+              "display_name": "Owner"
             }
           ]
         },
