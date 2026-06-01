@@ -73,7 +73,7 @@ consumption_mask = ["sec/consumption_mask"]
 dbg_console = ["sys/dbg_console", "trezor_lib/dbg_console"]
 dma2d = ["io/dma2d", "trezor_lib/dma2d"]
 display = ["io/display"]
-framebuffer = ["io/framebuffer"]
+framebuffer = ["io/framebuffer", "trezor_lib/framebuffer"]
 haptic = ["io/haptic", "trezor_lib/haptic"]
 hash_processor = ["sec/hash_processor"]
 hw_revision = ["sec/hw_revision"]
@@ -111,39 +111,12 @@ touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
 tropic = ["sec/tropic", "trezor_lib/tropic"]
 
 
-layout_bolt_d001 = [
-    "trezor_lib/layout_bolt",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgb565",
-]
+display_mono = ["trezor_lib/display_mono"]
+display_rgb565 = ["trezor_lib/display_rgb565"]
+display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
 
-layout_bolt_d002 = [
-    "trezor_lib/layout_bolt",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgba8888",
-    "trezor_lib/ui_color_32bit",
-]
-
-layout_bolt = ["trezor_lib/layout_bolt", "trezor_lib/display_rgb565"]
-
-layout_caesar = [
-    "trezor_lib/layout_caesar",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_mono",
-]
-
-layout_delizia = [
-    # "trezor_lib/layout_delizia" is not implemented for prodtest
-    "trezor_lib/layout_bolt",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgb565",
-    "trezor_lib/ui_font_kerning",
-]
-
-layout_eckhart = [
-    "trezor_lib/layout_eckhart",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgba8888",
-    "trezor_lib/ui_color_32bit",
-    "trezor_lib/ui_font_kerning",
-]
+layout_bolt = ["trezor_lib/layout_bolt"]
+layout_caesar = ["trezor_lib/layout_caesar"]
+# "trezor_lib/layout_delizia" is not implemented for prodtest; reuse bolt
+layout_delizia = ["trezor_lib/layout_bolt", "trezor_lib/ui_font_kerning"]
+layout_eckhart = ["trezor_lib/layout_eckhart", "trezor_lib/ui_font_kerning"]

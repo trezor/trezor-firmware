@@ -28,4 +28,5 @@ features = [
     "thp",
     "touch_wakeup",
     "layout_eckhart",
+    "display_rgba8888",
 ]

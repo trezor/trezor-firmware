@@ -6,5 +6,6 @@ features = [
     "pvd",
     "framebuffer",
     "secure_mode",
-    "layout_bolt_d001",
+    "layout_bolt",
+    "display_rgb565",
 ]
