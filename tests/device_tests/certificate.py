@@ -5,29 +5,18 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec, ed25519
 from cryptography.x509 import extensions as ext
 
-from trezorlib import models
+from trezorlib import _root_keys, models
 from trezorlib.models import TrezorModel
 
 OPTIGA_ROOT_PUBLIC_KEY = {
-    models.T2B1: bytes.fromhex(
-        "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
-    ),
-    models.T3T1: bytes.fromhex(
-        "04e48b69cd7962068d3cca3bcc6b1747ef496c1e28b5529e34ad7295215ea161dbe8fb08ae0479568f9d2cb07630cb3e52f4af0692102da5873559e45e9fa72959"
-    ),
-    models.T3B1: bytes.fromhex(
-        "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
-    ),
-    models.T3W1: bytes.fromhex(
-        "0423bf3b9859e851a40820d6c142074f495fd7d2714064e26cc5abcb09bff287b4ca835f861c5da427221adc8f5c009925fee638d1ee4d8a85cb2e0754b6069576"
-    ),
+    models.T2B1: bytes.fromhex(_root_keys.T2B1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
+    models.T3T1: bytes.fromhex(_root_keys.T3T1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
+    models.T3B1: bytes.fromhex(_root_keys.T3B1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
+    models.T3W1: bytes.fromhex(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
 }
 
 TROPIC_ROOT_PUBLIC_KEY = {
-    models.T3W1: bytes.fromhex(
-        # This is `DEV_AUTH_ROOT_DEBUG_ED25519` from `hsm_keys.json`
-        "04e3856182309678a15767451f931ed86617b1d25462afcbddc81dc80bfc1661"
-    ),
+    models.T3W1: bytes.fromhex(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_ED25519_HEX),
 }
 
 
