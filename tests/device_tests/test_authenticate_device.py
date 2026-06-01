@@ -163,12 +163,12 @@ def test_authenticate_device_invalid_range_offset(
 
 @pytest.mark.models(skip=["safe3", "safe5"], reason="Not using Tropic")
 def test_certificate_subject_serial_numbers_match(
-    session: Session, challenge: bytes
+    session: Session,
 ) -> None:
     if not session.features.bootloader_locked:
         pytest.xfail("unlocked bootloader")
 
-    proof = device.authenticate(session, challenge)
+    proof = device.authenticate(session, b"")
 
     def serial_number(cert_der: bytes) -> str:
         cert = x509.load_der_x509_certificate(cert_der)
