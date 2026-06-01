@@ -1366,13 +1366,17 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_warning(
-        _title: Option<TString<'static>>,
+        title: Option<TString<'static>>,
         button: TString<'static>,
         value: TString<'static>,
         description: TString<'static>,
         _allow_cancel: bool,
-        _danger: bool,
+        danger: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
+        if danger && title.is_none() {
+            // Disallow showing "dangerous" warning with no header.
+            return Err(Error::ValueError(c"Non-empty title is required"));
+        }
         let get_page = move |page_index| {
             assert!(page_index == 0);
 

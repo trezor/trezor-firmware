@@ -1576,7 +1576,13 @@ impl FirmwareUI for UIEckhart {
         };
         let screen = TextScreen::new(paragraphs).with_action_bar(action_bar);
         let screen = match title {
-            None => screen,
+            None => {
+                if danger {
+                    // Disallow showing "dangerous" warning with no header.
+                    return Err(Error::ValueError(c"Non-empty title is required"));
+                }
+                screen
+            }
             Some(title) => screen.with_header(
                 Header::new(title)
                     .with_icon(theme::ICON_INFO, color)

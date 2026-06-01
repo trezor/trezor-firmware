@@ -1276,7 +1276,7 @@ impl FirmwareUI for UIBolt {
         value: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        _danger: bool,
+        danger: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let icon = BlendedImage::new(
             theme::IMAGE_BG_OCTAGON,
@@ -1285,6 +1285,10 @@ impl FirmwareUI for UIBolt {
             theme::FG,
             theme::BG,
         );
+        if danger && title.is_none() {
+            // Disallow showing "dangerous" warning with no header.
+            return Err(Error::ValueError(c"Non-empty title is required"));
+        }
         new_show_modal(
             title.unwrap_or(TString::empty()),
             value,
