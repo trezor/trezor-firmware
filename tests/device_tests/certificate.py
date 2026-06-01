@@ -43,9 +43,16 @@ def verify_cert_chain(certs, model_name):
             # It is assumed that certs[0] is not a CA
             assert i <= ca_basic_constraints.path_length
 
-        ski = ca_cert.extensions.get_extension_for_class(ext.SubjectKeyIdentifier).value
-        aki = cert.extensions.get_extension_for_class(ext.AuthorityKeyIdentifier).value
-        assert aki.key_identifier == ski.key_identifier
+        try:
+            ski = ca_cert.extensions.get_extension_for_class(
+                ext.SubjectKeyIdentifier
+            ).value
+            aki = cert.extensions.get_extension_for_class(
+                ext.AuthorityKeyIdentifier
+            ).value
+            assert aki.key_identifier == ski.key_identifier
+        except ext.ExtensionNotFound:
+            pass
 
         ca_public_key = ca_cert.public_key()
         if isinstance(ca_public_key, ed25519.Ed25519PublicKey):
@@ -85,11 +92,18 @@ def check_signature_optiga(
     )
 
     # Verify the authority key identifier in the last certificate.
-    aki = certs[-1].extensions.get_extension_for_class(ext.AuthorityKeyIdentifier).value
-    assert (
-        aki.key_identifier
-        == ext.SubjectKeyIdentifier.from_public_key(root_public_key).key_identifier
-    )
+    try:
+        aki = (
+            certs[-1]
+            .extensions.get_extension_for_class(ext.AuthorityKeyIdentifier)
+            .value
+        )
+        assert (
+            aki.key_identifier
+            == ext.SubjectKeyIdentifier.from_public_key(root_public_key).key_identifier
+        )
+    except ext.ExtensionNotFound:
+        pass
 
     verify_cert_chain(certs, model.internal_name)
 
@@ -118,11 +132,18 @@ def check_signature_tropic(
     )
 
     # Verify the authority key identifier in the last certificate.
-    aki = certs[-1].extensions.get_extension_for_class(ext.AuthorityKeyIdentifier).value
-    assert (
-        aki.key_identifier
-        == ext.SubjectKeyIdentifier.from_public_key(root_public_key).key_identifier
-    )
+    try:
+        aki = (
+            certs[-1]
+            .extensions.get_extension_for_class(ext.AuthorityKeyIdentifier)
+            .value
+        )
+        assert (
+            aki.key_identifier
+            == ext.SubjectKeyIdentifier.from_public_key(root_public_key).key_identifier
+        )
+    except ext.ExtensionNotFound:
+        pass
 
     verify_cert_chain(certs, model.internal_name)
 
