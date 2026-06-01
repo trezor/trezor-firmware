@@ -192,16 +192,72 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let width = text.map(|c| style.font.text_width(c));
-                let height = style.font.text_height();
-                let start_of_baseline = self.area.center()
-                    + Offset::new(-width / 2, height / 2)
-                    + Offset::y(Self::BASELINE_OFFSET);
-                text.map(|text| {
-                    shape::Text::new(start_of_baseline, text, style.font)
-                        .with_fg(style.text_color)
-                        .render(target);
-                });
+                let available_width = self.area.width();
+                let text_fits_single_line =
+                    text.map(|t| style.font.text_width(t) <= available_width);
+                if text_fits_single_line {
+                    // Single line rendering (original behavior)
+                    let width = text.map(|c| style.font.text_width(c));
+                    let height = style.font.text_height();
+                    let start_of_baseline = self.area.center()
+                        + Offset::new(-width / 2, height / 2)
+                        + Offset::y(Self::BASELINE_OFFSET);
+                    text.map(|t| {
+                        shape::Text::new(start_of_baseline, t, style.font)
+                            .with_fg(style.text_color)
+                            .render(target);
+                    });
+                } else {
+                    // Two line rendering with word splitting
+                    let line_height = style.font.text_height();
+                    let line_space = crate::ui::layout_bolt::constant::LINE_SPACE;
+                    let total_height = line_height * 2 + line_space;
+                    // y offset from area center to first line baseline
+                    let first_baseline_y =
+                        -total_height / 2 + line_height + Self::BASELINE_OFFSET;
+
+                    text.map(|t| {
+                        // Try to split at word boundary first
+                        let first_line = style.font.longest_prefix(available_width, t);
+                        let (line1, line2) = if first_line.is_empty() {
+                            // No word boundary found, break the word
+                            let broken = style
+                                .font
+                                .longest_prefix_break_words(available_width, t);
+                            (broken, t[broken.len()..].trim_start())
+                        } else {
+                            (first_line, t[first_line.len()..].trim_start())
+                        };
+
+                        // Render first line centered
+                        let w1 = style.font.text_width(line1);
+                        let pos1 = self.area.center()
+                            + Offset::new(-w1 / 2, first_baseline_y);
+                        shape::Text::new(pos1, line1, style.font)
+                            .with_fg(style.text_color)
+                            .render(target);
+
+                        // Render second line centered (truncated if too long)
+                        let line2_display = if style.font.text_width(line2)
+                            > available_width
+                        {
+                            style
+                                .font
+                                .longest_prefix_break_words(available_width, line2)
+                        } else {
+                            line2
+                        };
+                        let w2 = style.font.text_width(line2_display);
+                        let pos2 = self.area.center()
+                            + Offset::new(
+                                -w2 / 2,
+                                first_baseline_y + line_height + line_space,
+                            );
+                        shape::Text::new(pos2, line2_display, style.font)
+                            .with_fg(style.text_color)
+                            .render(target);
+                    });
+                }
             }
             ButtonContent::Icon(icon) => {
                 shape::ToifImage::new(self.area.center(), icon.toif)
