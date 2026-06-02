@@ -9,7 +9,6 @@ if utils.USE_THP:
     from storage import cache_thp
     from trezor.wire import context
     from trezor.wire.thp.channel import Channel
-    from trezor.wire.thp.channel_manager import create_new_channel
     from trezor.wire.thp.interface_context import ThpContext
     from trezor.wire.thp.memory_manager import ThpBuffer
     from trezor.wire.thp.session_context import SessionContext
@@ -20,19 +19,36 @@ if utils.USE_THP:
         from trezor import protobuf
         from trezor.wire import WireInterface
 
+    class MockChannel:
+        def __init__(
+            self,
+            channel_id: int,
+            iface_ctx: InterfaceContext,
+            buffers: tuple[ThpBuffer, ThpBuffer],
+        ) -> None:
+            self.iface = iface_ctx
+            self.channel_id = channel_id
+
+        def channel_id_bytes(self):
+            return self.channel_id.to_bytes(2, "big")
+
+    NEXT_CHANNEL_ID = 0x0FFF
+
     def create_context() -> SessionContext:
         mock_iface = MockHID()
         channel = get_new_channel(mock_iface)
         session_cache = cache_thp.create_or_replace_session(
-            channel.channel_cache, session_id=b"\x01"
+            channel.channel_id_bytes(), session_id=b"\x01"
         )
         return SessionContext(channel, session_cache)
 
     def get_new_channel(iface: WireInterface) -> Channel:
-        channel_cache = create_new_channel(iface)
+        global NEXT_CHANNEL_ID
+        # channel_cache = create_new_channel(iface)
         thp_ctx = ThpContext(iface)
         (iface_ctx,) = thp_ctx._iface_ctxs
-        return Channel(channel_cache, iface_ctx, (ThpBuffer(), ThpBuffer()))
+        NEXT_CHANNEL_ID += 1
+        return MockChannel(NEXT_CHANNEL_ID, iface_ctx, (ThpBuffer(), ThpBuffer()))
 
     def _encrypt_patch() -> patch:
         return patch(Channel, "_encrypt", lambda self, buffer, noise_payload_len: None)

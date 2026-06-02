@@ -42,11 +42,9 @@ class UnexpectedMessageException(Exception):
 
     Utility exception to inform the session handler that the current workflow
     should be aborted and a new one started as if `msg` was the first message.
-
-    If `msg` is `None`, the event loop should be restarted.
     """
 
-    def __init__(self, msg: Message | None) -> None:
+    def __init__(self, msg: Message) -> None:
         super().__init__()
         self.msg = msg
 
@@ -155,7 +153,7 @@ def try_get_ctx_ids() -> tuple[AnyBytes, AnyBytes] | None:
         except NoWireContext:
             return None
         if isinstance(ctx, GenericSessionContext):
-            ids = (ctx.channel_id, ctx.session_id.to_bytes(1, "big"))
+            ids = (ctx.channel_id.to_bytes(2, "big"), ctx.session_id.to_bytes(1, "big"))
     return ids
 
 

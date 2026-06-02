@@ -5,15 +5,12 @@ use crate::{
     alternating_bit::SyncBits,
     channel::{
         HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, MAX_ALLOC_RESPONSE_LEN,
-        MAX_DEVICE_PROPERTIES_LEN, Nonce, PacketInResult, PairingState, ReceiveState,
+        MAX_DEVICE_PROPERTIES_LEN, Nonce, PacketInResult, PairingState, Phase, ReceiveState,
         noise::NoiseHandshake,
     },
     credential::CredentialStore,
     fragment::{Fragmenter, Reassembler},
-    header::{
-        BROADCAST_CHANNEL_ID, HandshakeMessage, Header, channel_id_valid, parse_cb_channel,
-        parse_u16,
-    },
+    header::{BROADCAST_CHANNEL_ID, HandshakeMessage, Header, parse_cb_channel_length, parse_u16},
     util::prepare_zeroed,
 };
 
@@ -236,16 +233,12 @@ where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
-        let Ok((cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
-            // parse_cb_channel already writes to log
+        let Ok((cb, channel_id, length)) = parse_cb_channel_length(packet_buffer) else {
+            // parse_cb_channel_length already writes to log
             return PacketInResult::ignore(Error::malformed_data());
         };
-        if !channel_id_valid(channel_id) {
-            log::warn!("Invalid channel id {:04x}.", channel_id);
-            return PacketInResult::ignore(Error::malformed_data());
-        }
         if channel_id != BROADCAST_CHANNEL_ID && !cb.is_codec_v1() {
-            return PacketInResult::route(channel_id);
+            return PacketInResult::route(channel_id, length);
         }
         PacketInResult::from_result(self.handle_broadcast(packet_buffer))
     }
@@ -480,7 +473,9 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         log::debug!("[{:04x}] Handshake complete.", self.channel_id());
         Ok(match self.state {
             HandshakeState::Finished { pairing_state } => {
-                self.channel.pairing_state = pairing_state;
+                self.channel.phase = Phase::PairingCredential {
+                    handshake_pairing_state: pairing_state,
+                };
                 self.channel
             }
             _ => return Err(Error::unexpected_input()),
