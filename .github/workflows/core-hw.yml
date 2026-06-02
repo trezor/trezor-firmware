@@ -40,10 +40,12 @@ jobs:
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2T1' && '0' || '1' }}
       # TODO: enable SD-related tests after fixing #4924
       # Disable authenticity test since it requires DISABLE_OPTIGA=0
+      # Disable Evolu tests since they require Optiga
+      # Disable telemetry test, fails because there's no battery
       # 5.5h pytest global timeout
       TESTOPTS: >-
         -m 'not sd_card'
-        -k 'not test_authenticate_device'
+        -k 'not test_authenticate_device and not evolu and not test_telemetry'
         --durations=50
         --session-timeout 19800
       TT_UHUB_PORT: all
@@ -63,8 +65,10 @@ jobs:
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
       - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build-xtask/artifacts/latest/firmware.bin"
-      - run: nix-shell --run "uv run trezorctl list"
-      - run: nix-shell --run "uv run trezorctl get-features"
+      - run: |
+          nix-shell --run "uv run trezorctl list"
+          nix-shell --run "uv run trezorctl get-features"
+        if: matrix.model != 'T3W1'  # gets stuck on models with THP
       - run: |
           nix-shell --arg hardwareTest true --run "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
           nix-shell --run "uv run pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS"

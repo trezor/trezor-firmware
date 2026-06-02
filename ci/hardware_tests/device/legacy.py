@@ -42,7 +42,7 @@ class TrezorOne(Device):
             self.wait(5)
             self.touch("right", "click")
         self.wait(15)
-        return self.check_model("Trezor 1")
+        print(self.check_model("Trezor 1"))
 
     def _enter_bootloader(self):
         self.power_off()
