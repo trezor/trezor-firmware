@@ -18,7 +18,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "emulator") {
         lib.add_source("app_loader/unix/elf_loader.c");
     } else if cfg!(feature = "mcu_stm32") {
-        lib.add_source("app_loader/stm32/app_loader.c");
+        lib.add_source("app_loader/stm32/elf_loader.c");
     } else {
         bail_unsupported!();
     }

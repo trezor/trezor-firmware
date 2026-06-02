@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#ifdef USE_APPLETS
+#if defined(USE_APPLETS) && defined(KERNEL_MODE)
 #include <sys/applet.h>
 #endif
 
@@ -38,7 +38,7 @@ secbool secure_aes_init(void);
 
 // Sets the applet to be used for AES operation
 // with unprivileged key (XORK_SN).
-#ifdef USE_APPLETS
+#if defined(USE_APPLETS) && defined(KERNEL_MODE)
 void secure_aes_set_applet(applet_t* applet);
 #endif
 

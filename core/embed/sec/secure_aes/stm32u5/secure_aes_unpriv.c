@@ -106,7 +106,7 @@ __attribute((no_stack_protector)) void saes_unpriv_callback(void) {
 // -----------------------------------------------------------------------
 // Code running privileged mode
 
-#ifdef USE_APPLETS
+#if defined(USE_APPLETS) && defined(KERNEL_MODE)
 
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
@@ -182,4 +182,4 @@ secbool secure_aes_unpriv_encrypt(const uint8_t *input, size_t size,
 
   return retval;
 }
-#endif  // USE_APPLETS
+#endif  // USE_APPLETS && KERNEL_MODE
