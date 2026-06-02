@@ -230,6 +230,7 @@ if utils.USE_N4W1:
 
     class RetryWrite(Exception):
         def __init__(self, msg: str) -> None:
+            super().__init__(msg)
             self.msg = msg
 
     class _N4W1Backup:

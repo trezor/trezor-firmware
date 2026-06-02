@@ -47,7 +47,7 @@ class UnexpectedMessageException(Exception):
     """
 
     def __init__(self, msg: Message | None) -> None:
-        super().__init__()
+        super().__init__(msg.type)
         self.msg = msg
 
 
