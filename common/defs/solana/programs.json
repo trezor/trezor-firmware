@@ -1226,6 +1226,10 @@
               "display_name": "Allowance"
             },
             {
+              "account": "source_account",
+              "display_name": "From"
+            },
+            {
               "account": "owner",
               "display_name": "Owner",
               "default_value_to_hide": "signer"
@@ -1868,6 +1872,10 @@
             {
               "parameter": "amount",
               "display_name": "Allowance"
+            },
+            {
+              "account": "source_account",
+              "display_name": "From"
             },
             {
               "account": "owner",
