@@ -11,6 +11,7 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer},
+        util::split_two_lines,
     },
 };
 
@@ -217,16 +218,17 @@ impl Button {
                         -total_height / 2 + line_height + Self::BASELINE_OFFSET;
 
                     text.map(|t| {
-                        // Try to split at word boundary first
-                        let first_line = style.font.longest_prefix(available_width, t);
-                        let (line1, line2) = if first_line.is_empty() {
-                            // No word boundary found, break the word
+                        let (line1, line2) = split_two_lines(t, style.font, available_width);
+
+                        // If split_two_lines couldn't find a word boundary,
+                        // it returns ("", full_text). In that case, break the word.
+                        let (line1, line2) = if line1.is_empty() {
                             let broken = style
                                 .font
                                 .longest_prefix_break_words(available_width, t);
                             (broken, t[broken.len()..].trim_start())
                         } else {
-                            (first_line, t[first_line.len()..].trim_start())
+                            (line1, line2)
                         };
 
                         // Render first line centered
@@ -237,23 +239,14 @@ impl Button {
                             .with_fg(style.text_color)
                             .render(target);
 
-                        // Render second line centered (truncated if too long)
-                        let line2_display = if style.font.text_width(line2)
-                            > available_width
-                        {
-                            style
-                                .font
-                                .longest_prefix_break_words(available_width, line2)
-                        } else {
-                            line2
-                        };
-                        let w2 = style.font.text_width(line2_display);
+                        // Render second line centered
+                        let w2 = style.font.text_width(line2);
                         let pos2 = self.area.center()
                             + Offset::new(
                                 -w2 / 2,
                                 first_baseline_y + line_height + line_space,
                             );
-                        shape::Text::new(pos2, line2_display, style.font)
+                        shape::Text::new(pos2, line2, style.font)
                             .with_fg(style.text_color)
                             .render(target);
                     });
