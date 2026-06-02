@@ -1271,7 +1271,7 @@ impl FirmwareUI for UIDelizia {
                 Frame::with_header(header, content)
             }
         };
-        let frame = if danger {
+        let frame = if danger || title.is_none() {
             frame.with_tap_footer(action)
         } else {
             frame.with_swipeup_footer(action)
