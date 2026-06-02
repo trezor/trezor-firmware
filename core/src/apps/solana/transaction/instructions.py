@@ -2508,9 +2508,15 @@ def get_instruction(
                         None,
                     ),
                     UIProperty(
+                        "number_of_signers",
+                        None,
+                        "Threshold",
+                        None,
+                    ),
+                    UIProperty(
                         None,
                         "signer_accounts",
-                        "Required signers",
+                        "Signers",
                         None,
                     ),
                 ),
@@ -3369,9 +3375,15 @@ def get_instruction(
                         None,
                     ),
                     UIProperty(
+                        "number_of_signers",
+                        None,
+                        "Threshold",
+                        None,
+                    ),
+                    UIProperty(
                         None,
                         "signer_accounts",
-                        "Required signers",
+                        "Signers",
                         None,
                     ),
                 ),
