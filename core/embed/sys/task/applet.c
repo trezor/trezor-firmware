@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if defined(USE_APPLETS) && defined(KERNEL_MODE)
+
 #include <trezor_rtl.h>
 
 #include <sys/applet.h>
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
-
-#ifdef USE_APPLETS
 
 void applet_init(applet_t* applet, const applet_privileges_t* privileges,
                  applet_unload_cb_t unload_cb) {
@@ -65,4 +65,4 @@ applet_t* applet_active(void) {
   return (applet_t*)task->applet;
 }
 
-#endif  // USE_APPLETS
+#endif  // USE_APPLETS && KERNEL_MODE

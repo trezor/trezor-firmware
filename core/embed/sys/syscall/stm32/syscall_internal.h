@@ -21,7 +21,6 @@
 
 #include <trezor_types.h>
 
-#include <sys/applet.h>
 #include <sys/syscall.h>
 #include <sys/syscall_numbers.h>
 
