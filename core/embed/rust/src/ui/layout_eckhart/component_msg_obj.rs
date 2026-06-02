@@ -1,5 +1,7 @@
 use num_traits::ToPrimitive;
 
+#[cfg(feature = "app_loading")]
+use super::firmware::{LongContentScreen, LongContentScreenMsg};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
@@ -16,11 +18,10 @@ use crate::{
 
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
-    Homescreen, HomescreenMsg, LongContentScreen, LongContentScreenMsg, MnemonicInput,
-    MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard, PinKeyboardMsg, ProgressScreen,
-    SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg, SelectWordScreen,
-    SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg, TextScreen, TextScreenMsg,
-    ValueInput, ValueInputScreen, ValueInputScreenMsg,
+    Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
+    PinKeyboardMsg, ProgressScreen, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
+    SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
+    TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -110,6 +111,7 @@ where
     }
 }
 
+#[cfg(feature = "app_loading")]
 impl<'a, F> ComponentMsgObj for LongContentScreen<'a, F>
 where
     F: Fn(&[u8], u16),

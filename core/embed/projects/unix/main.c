@@ -688,7 +688,10 @@ MP_NOINLINE int main_(int argc, char **argv) {
 uint32_t ipc_buffer[8192];  // !@# for tests
 
 int coreapp_emu(int argc, char **argv) {
+#if USE_IPC
   ipc_register(2, ipc_buffer, sizeof(ipc_buffer));  // !@# test
+#endif
+
 #if MICROPY_PY_THREAD
   mp_thread_init();
 #endif

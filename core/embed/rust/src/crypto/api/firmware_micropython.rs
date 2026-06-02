@@ -1,25 +1,28 @@
+use crate::micropython::{
+    macros::{obj_fn_kw, obj_module},
+    map::Map,
+    module::Module,
+    obj::Obj,
+    qstr::Qstr,
+};
+#[cfg(feature = "app_loading")]
 use crate::{
     error::Error,
-    micropython::{
-        list::List,
-        macros::{obj_fn_kw, obj_module},
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
-    },
+    micropython::{list::List, util},
 };
-
+#[cfg(feature = "app_loading")]
 use core::mem::MaybeUninit;
+#[cfg(feature = "app_loading")]
 use rkyv::{
     api::low::to_bytes_in_with_alloc,
     rancor::Failure,
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
+#[cfg(feature = "app_loading")]
 use trezor_structs::{ArchivedSlice, ArchivedTrezorCryptoEnum, String, TrezorCryptoResult};
 
+#[cfg(feature = "app_loading")]
 extern "C" fn new_deserialize_crypto_message(
     n_args: usize,
     args: *const Obj,
@@ -173,6 +176,16 @@ extern "C" fn new_deserialize_crypto_message(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_deserialize_crypto_message(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
+    unimplemented!()
+}
+
+#[cfg(feature = "app_loading")]
 extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
@@ -224,6 +237,11 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
         Ok(Obj::const_none())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_send_crypto_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
 }
 
 #[no_mangle]

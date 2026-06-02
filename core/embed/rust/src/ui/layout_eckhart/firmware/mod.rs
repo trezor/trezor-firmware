@@ -10,6 +10,7 @@ mod hint;
 mod hold_to_confirm;
 mod homescreen;
 mod keyboard;
+#[cfg(feature = "app_loading")]
 mod long_screen;
 mod progress_screen;
 mod qr_screen;
@@ -42,6 +43,7 @@ pub use keyboard::{
     string::{StringInput, StringInputMsg, StringKeyboard, StringKeyboardMsg},
     word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
+#[cfg(feature = "app_loading")]
 pub use long_screen::{LongContentScreen, LongContentScreenMsg};
 pub use progress_screen::ProgressScreen;
 pub use qr_screen::{QrMsg, QrScreen};

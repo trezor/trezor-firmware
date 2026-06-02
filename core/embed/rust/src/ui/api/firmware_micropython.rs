@@ -33,9 +33,10 @@ use crate::{
         ModelUI,
     },
 };
-use heapless::Vec;
-
+#[cfg(feature = "app_loading")]
 use core::mem::MaybeUninit;
+use heapless::Vec;
+#[cfg(feature = "app_loading")]
 use rkyv::{
     api::low::to_bytes_in_with_alloc,
     option::ArchivedOption,
@@ -43,6 +44,7 @@ use rkyv::{
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
+#[cfg(feature = "app_loading")]
 use trezor_structs::{ArchivedStrSlice, ArchivedTrezorProgressEnum, TrezorUiResult};
 
 #[cfg(feature = "backlight")]
@@ -1314,6 +1316,7 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+#[cfg(feature = "app_loading")]
 extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
@@ -1343,6 +1346,12 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_process_ipc_message(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
+}
+
+#[cfg(feature = "app_loading")]
 extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
@@ -1391,6 +1400,12 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_send_ui_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
+}
+
+#[cfg(feature = "app_loading")]
 extern "C" fn new_deserialize_progress_message(
     n_args: usize,
     args: *const Obj,
@@ -1446,6 +1461,15 @@ extern "C" fn new_deserialize_progress_message(
         Ok(result)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_deserialize_progress_message(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
+    unimplemented!()
 }
 
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {

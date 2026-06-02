@@ -82,6 +82,7 @@ impl FirmwareUI for UIDelizia {
         Ok(flow)
     }
 
+    #[cfg(feature = "app_loading")]
     fn confirm_long(
         _title: TString<'static>,
         _pages: usize,
@@ -1302,6 +1303,7 @@ impl FirmwareUI for UIDelizia {
         Ok(flow)
     }
 
+    #[cfg(feature = "app_loading")]
     fn process_ipc_message(
         _data: &[u8],
         _request_cb: impl Fn(&[u8], u16) + 'static,

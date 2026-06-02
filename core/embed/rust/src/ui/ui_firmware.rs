@@ -40,6 +40,7 @@ pub trait FirmwareUI {
         external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[cfg(feature = "app_loading")]
     fn confirm_long(
         title: TString<'static>,
         pages: usize,
@@ -499,6 +500,7 @@ pub trait FirmwareUI {
     /// # Returns
     /// A Result containing the layout object or an error if deserialization
     /// fails
+    #[cfg(feature = "app_loading")]
     fn process_ipc_message(
         data: &[u8],
         request_cb: impl Fn(&[u8], u16) + 'static,

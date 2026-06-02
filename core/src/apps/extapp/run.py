@@ -284,7 +284,10 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 if isinstance(msg.data, (bytes, bytearray))
                 else str(msg.data)
             )
-            response = Failure(code=message_id, message=err_message) # pyright: ignore [reportArgumentType]
+            response = Failure(
+                code=message_id,  # pyright: ignore [reportArgumentType]
+                message=err_message,
+            )
             ack = await context.call(response, ExtAppMessage)
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
