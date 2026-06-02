@@ -1076,20 +1076,20 @@
     "instructions__shares_continue_with_x_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Continue with Share #{0}",
+      "Delizia": "Continue with share {0}",
       "Eckhart": ""
     },
     "instructions__shares_start_with_1": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Start with share #1",
-      "Eckhart": "Start with share #1"
+      "Delizia": "Start with share 1",
+      "Eckhart": "Start with share 1"
     },
     "instructions__shares_start_with_x_template": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Start with Share #{0}"
+      "Eckhart": "Start with share {0}"
     },
     "instructions__swipe_down": "Swipe down",
     "instructions__swipe_horizontally": "Swipe horizontally",
@@ -1805,7 +1805,7 @@
     "recovery__check_dry_run": {
       "Bolt": "Check your backup?",
       "Caesar": "Check your backup?",
-      "Delizia": "Check your backup?",
+      "Delizia": "Let's do a wallet backup check.",
       "Eckhart": "Let's do a wallet backup check."
     },
     "recovery__cursor_will_change": {
@@ -1814,19 +1814,10 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "recovery__dry_run_backup_not_on_this_device": "Wallet backup not on this device",
     "recovery__dry_run_bip39_valid_match": "The entered wallet backup is valid and matches the one in this device.",
-    "recovery__dry_run_bip39_valid_mismatch": "The entered wallet backup is valid but does not match the one in the device.",
-    "recovery__dry_run_invalid_backup_entered": "Invalid wallet backup entered",
-    "recovery__dry_run_slip39_valid_all_shares": "All shares are valid and belong to the backup in this device",
-    "recovery__dry_run_slip39_valid_match": "The entered recovery shares are valid and match what is currently in the device.",
-    "recovery__dry_run_slip39_valid_mismatch": {
-      "Bolt": "The entered recovery shares are valid but do not match what is currently in the device.",
-      "Caesar": "The entered recovery shares are valid but do not match what is currently in the device.",
-      "Delizia": "The entered wallet backup is valid but doesn't match the one on this device.",
-      "Eckhart": "The entered wallet backup is valid but doesn't match the one on this device."
-    },
-    "recovery__dry_run_slip39_valid_share": "Entered share is valid and belongs to the backup in the device",
+    "recovery__dry_run_bip39_valid_mismatch": "The entered wallet backup is valid but does not match the one in this device.",
+    "recovery__dry_run_slip39_valid_match": "The entered recovery shares are valid and match what is in this device.",
+    "recovery__dry_run_slip39_valid_mismatch": "The entered recovery shares are valid but do not match what is in this device.",
     "recovery__enter_any_share": "Enter any share",
     "recovery__enter_backup": "Enter your backup.",
     "recovery__enter_different_share": "Enter a different share.",
@@ -1856,20 +1847,15 @@
       "Delizia": "Share already entered",
       "Eckhart": "Share already entered. Enter a different share."
     },
-    "recovery__share_does_not_match": "Share doesn't match",
+    "recovery__share_does_not_match": "Share does not match",
     "recovery__share_from_another_multi_share_backup": "You have entered a share from a different backup.",
     "recovery__share_from_group_entered_template": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Share #{0} from Group #{1} entered."
+      "Eckhart": "Share {0} of group {1} entered."
     },
-    "recovery__share_num_template": {
-      "Bolt": "Share {0}",
-      "Caesar": "Share {0}",
-      "Delizia": "Share {0}",
-      "Eckhart": "Share #{0}"
-    },
+    "recovery__share_num_template": "Share {0}",
     "recovery__start_entering": "Start entering",
     "recovery__title": "Recover wallet",
     "recovery__title_cancel_dry_run": "Cancel backup check",
@@ -1971,21 +1957,21 @@
       "Eckhart": "Check backup"
     },
     "reset__check_group_share_title_template": {
-      "Bolt": "Check gr. {0} - share {1}",
+      "Bolt": "Share {1} of group {0}",
       "Caesar": "",
-      "Delizia": "Check gr. {0} - share {1}",
-      "Eckhart": "Check group {0} - share {1}"
+      "Delizia": "Share {1} of group {0}",
+      "Eckhart": "Share {1} of group {0}"
     },
     "reset__check_share_backup_template": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Let's do a quick check of Share #{0}."
+      "Eckhart": "Let's do a quick check of share {0}."
     },
     "reset__check_share_title_template": {
-      "Bolt": "Check share #{0}",
+      "Bolt": "Check share {0}",
       "Caesar": "",
-      "Delizia": "Check share #{0}",
+      "Delizia": "Check share {0}",
       "Eckhart": ""
     },
     "reset__check_wallet_backup_title": "Check wallet backup",
@@ -1996,8 +1982,8 @@
       "Eckhart": "Continue with the next share"
     },
     "reset__continue_with_share_template": {
-      "Bolt": "Continue with share #{0}.",
-      "Caesar": "Continue with share #{0}.",
+      "Bolt": "Continue with share {0}.",
+      "Caesar": "Continue with share {0}.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2033,17 +2019,12 @@
       "Eckhart": "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds."
     },
     "reset__group_share_checked_successfully_template": {
-      "Bolt": "Group {0} - Share {1} checked successfully.",
-      "Caesar": "Group {0} - Share {1} checked successfully.",
-      "Delizia": "Group {0} - Share {1} verified",
-      "Eckhart": "Group {0} - Share {1} checked successfully."
+      "Bolt": "Share {1} of group {0} checked successfully.",
+      "Caesar": "Share {1} of group {0} checked successfully.",
+      "Delizia": "Share {1} of group {0} verified",
+      "Eckhart": "Share {1} of group {0} checked successfully."
     },
-    "reset__group_share_title_template": {
-      "Bolt": "Group {0} - Share {1}",
-      "Caesar": "Group {0} - Share {1}",
-      "Delizia": "Group {0} - Share {1}",
-      "Eckhart": "Group #{0} - Share #{1}"
-    },
+    "reset__group_share_title_template": "Share {1} of group {0}",
     "reset__incorrect_word_selected": {
       "Bolt": "",
       "Caesar": "",
@@ -2079,10 +2060,10 @@
     "reset__never_make_digital_copy": "Never put your backup anywhere digital.",
     "reset__num_of_share_holders_template": "{0} people or locations will each hold one share.",
     "reset__num_of_shares_advanced_info_template": {
-      "Bolt": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.",
+      "Bolt": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form group {1}.",
       "Caesar": "",
-      "Delizia": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.",
-      "Eckhart": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}."
+      "Delizia": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form group {1}.",
+      "Eckhart": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form group {1}."
     },
     "reset__num_of_shares_basic_info_template": {
       "Bolt": "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet.",
@@ -2102,7 +2083,7 @@
       "Delizia": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
       "Eckhart": "Each backup share is a sequence of {0} words.\nStore each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
     },
-    "reset__num_shares_for_group_template": "The required number of shares to form Group {0}.",
+    "reset__num_shares_for_group_template": "The required number of shares to form group {0}.",
     "reset__number_of_shares_info": {
       "Bolt": "",
       "Caesar": "= total number of shares used for wallet backup.",
@@ -2123,7 +2104,7 @@
     },
     "reset__recovery_share_description": "A recovery share is a list of words you wrote down when setting up your Trezor.",
     "reset__recovery_share_number": "Your wallet backup consists of 1 to 16 shares.",
-    "reset__recovery_share_title_template": "Recovery share #{0}",
+    "reset__recovery_share_title_template": "Recovery share {0}",
     "reset__recovery_wallet_backup_title": "Wallet backup",
     "reset__repeat_for_all_shares": "Repeat for all shares.",
     "reset__required_number_of_groups": {
@@ -2148,13 +2129,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Select word #{0} from\nShare #{1}"
+      "Eckhart": "Select word {0} from\nshare {1}"
     },
     "reset__select_word_template": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Select word #{0} from your wallet backup"
+      "Eckhart": "Select word {0} from your wallet backup"
     },
     "reset__select_word_x_of_y_template": {
       "Bolt": "Select word {0} of {1}:",
@@ -2169,16 +2150,16 @@
       "Eckhart": ""
     },
     "reset__share_checked_successfully_template": {
-      "Bolt": "Share #{0} checked successfully.",
-      "Caesar": "Share #{0} checked successfully.",
+      "Bolt": "Share {0} checked successfully.",
+      "Caesar": "Share {0} checked successfully.",
       "Delizia": "",
       "Eckhart": ""
     },
     "reset__share_completed_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Share #{0} completed.",
-      "Eckhart": "Share #{0} completed."
+      "Delizia": "Share {0} completed.",
+      "Eckhart": "Share {0} completed."
     },
     "reset__share_words_first": "Write down the first word from the backup.",
     "reset__share_words_title": "Standard backup",
@@ -2301,7 +2282,7 @@
     },
     "reset__title_shamir_backup": "Multi-share backup",
     "reset__to_form_group_template": {
-      "Bolt": "to form Group {0}.",
+      "Bolt": "to form group {0}.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2313,10 +2294,10 @@
       "Eckhart": "More at trezor.io/tos"
     },
     "reset__total_number_of_shares_in_group_template": {
-      "Bolt": "Set the total number of shares in Group {0}.",
+      "Bolt": "Set the total number of shares in group {0}.",
       "Caesar": "",
-      "Delizia": "Set the total number of shares in Group {0}.",
-      "Eckhart": "Set the total number of shares in Group {0}."
+      "Delizia": "Set the total number of shares in group {0}.",
+      "Eckhart": "Set the total number of shares in group {0}."
     },
     "reset__use_your_backup": {
       "Bolt": "Use your backup when you need to recover your wallet.",
