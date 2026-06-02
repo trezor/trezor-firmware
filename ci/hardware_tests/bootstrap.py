@@ -18,21 +18,16 @@ def main(model: str, file: str = None):
     tt = TrezorCore(hub_vendor=HUB_VENDOR, device_port=os.getenv("TT_UHUB_PORT"))
 
     if model == "T1B1":
-        # tt.power_off()
-        path = t1.update_firmware(file)
-    elif model == "T2T1":
-        # t1.power_off()
-        path = tt.update_firmware(file, "Trezor T")
-    elif model in ("T2B1", "T3B1"):
-        path = tt.update_firmware(file, "Safe 3")
-    elif model == "T3T1":
-        path = tt.update_firmware(file, "Safe 5")
-    elif model == "T3W1":
-        path = tt.update_firmware(file, "Safe 7")
+        t1.update_firmware(file)
     else:
-        raise ValueError("Unknown Trezor model.")
-
-    print(path)
+        model_name = {
+            "T2T1": "Trezor T",
+            "T2B1": "Safe 3",
+            "T3B1": "Safe 3",
+            "T3T1": "Safe 5",
+            "T3W1": "Safe 7",
+        }[model]
+        tt.update_firmware(file, model_name)
 
 
 if __name__ == "__main__":

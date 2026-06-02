@@ -27,4 +27,7 @@ class TrezorCore(Device):
 
         # after firmware-update finishes wait for reboot
         self.wait(15)
-        return self.check_model(model_name)
+
+        # THP gets stuck on get-features
+        if model_name != "Safe 7":
+            print(self.check_model(model_name))
