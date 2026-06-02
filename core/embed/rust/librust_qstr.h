@@ -591,14 +591,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__cancel_dry_run;
   MP_QSTR_recovery__check_dry_run;
   MP_QSTR_recovery__cursor_will_change;
-  MP_QSTR_recovery__dry_run_backup_not_on_this_device;
   MP_QSTR_recovery__dry_run_bip39_valid_match;
   MP_QSTR_recovery__dry_run_bip39_valid_mismatch;
-  MP_QSTR_recovery__dry_run_invalid_backup_entered;
-  MP_QSTR_recovery__dry_run_slip39_valid_all_shares;
   MP_QSTR_recovery__dry_run_slip39_valid_match;
   MP_QSTR_recovery__dry_run_slip39_valid_mismatch;
-  MP_QSTR_recovery__dry_run_slip39_valid_share;
   MP_QSTR_recovery__enter_any_share;
   MP_QSTR_recovery__enter_backup;
   MP_QSTR_recovery__enter_different_share;
