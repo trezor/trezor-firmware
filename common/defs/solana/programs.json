@@ -1155,8 +1155,12 @@
               "display_name": "Initialize multisig"
             },
             {
+              "parameter": "number_of_signers",
+              "display_name": "Threshold"
+            },
+            {
               "account": "signer_accounts",
-              "display_name": "Required signers"
+              "display_name": "Signers"
             }
           ]
         },
@@ -1803,8 +1807,12 @@
               "display_name": "Init multisig"
             },
             {
+              "parameter": "number_of_signers",
+              "display_name": "Threshold"
+            },
+            {
               "account": "signer_accounts",
-              "display_name": "Required signers"
+              "display_name": "Signers"
             }
           ]
         },
