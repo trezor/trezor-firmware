@@ -83,7 +83,7 @@ translations_style_check: ## Check that translation files are properly formatted
 
 yaml_check: ## check yaml formatting
 	@echo [YAML-STYLE-CHECK]
-	yamllint .
+	yamllint --strict .
 
 editor_check: ## check editorconfig formatting
 	@echo [EDITORCONFIG-STYLE-CHECK]
