@@ -1,0 +1,1 @@
+Solana: show each instruction's program id when displaying details for unknown programs instead of a generic "Unsupported program" label.
