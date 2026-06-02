@@ -447,9 +447,12 @@ class mailbox(Syscall[T]):
         if not self.is_empty():
             value = self.value
             self.clear()
-            # XXX self.value is of type T | object, but we are returning it as T
-            # what we want to say is `assert isinstance(value, T)` but that doesn't work
-            return value  # type: ignore [Type "T@mailbox | object" is not assignable to type "T@mailbox"]
+            if isinstance(value, BaseException):
+                raise value
+            else:
+                # XXX self.value is of type T | object, but we are returning it as T
+                # what we want to say is `assert isinstance(value, T)` but that doesn't work
+                return value  # type: ignore [Type "T@mailbox | object" is not assignable to type "T@mailbox"]
 
         # otherwise, wait for a value
         try:
