@@ -2603,6 +2603,12 @@ def get_instruction(
                     ),
                     UIProperty(
                         None,
+                        "source_account",
+                        "From",
+                        None,
+                    ),
+                    UIProperty(
+                        None,
                         "owner",
                         "Owner",
                         "signer",
@@ -3454,6 +3460,12 @@ def get_instruction(
                         "amount",
                         None,
                         "Allowance",
+                        None,
+                    ),
+                    UIProperty(
+                        None,
+                        "source_account",
+                        "From",
                         None,
                     ),
                     UIProperty(
