@@ -179,7 +179,6 @@ pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
     } else {
         // TODO: proper error type
         Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
-
     }
 }
 
