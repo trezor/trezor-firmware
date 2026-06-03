@@ -220,6 +220,35 @@ enum {
   READSTATE_READING,
 };
 
+struct msg_read_state_t {
+  char read_state;
+  uint8_t msg_encoded[MSG_IN_ENCODED_SIZE];
+  uint16_t msg_id;
+  uint32_t msg_encoded_size;
+  uint32_t msg_pos;
+  const pb_msgdesc_t *fields;
+};
+
+static struct msg_read_state_t msg_read_state_normal = {
+    READSTATE_IDLE, {0}, 0xFFFF, 0, 0, 0};
+
+#if DEBUG_LINK
+static struct msg_read_state_t msg_read_state_debug = {
+    READSTATE_IDLE, {0}, 0xFFFF, 0, 0, 0};
+#endif
+
+static struct msg_read_state_t *msg_get_read_state(char type) {
+  if (type == 'n') {
+    return &msg_read_state_normal;
+  }
+#if DEBUG_LINK
+  if (type == 'd') {
+    return &msg_read_state_debug;
+  }
+#endif
+  return 0;
+}
+
 void msg_process(char type, uint16_t msg_id, const pb_msgdesc_t *fields,
                  uint8_t *msg_encoded, uint32_t msg_encoded_size) {
   static uint8_t msg_decoded[MSG_IN_DECODED_SIZE] __attribute__((aligned(8)));
@@ -234,56 +263,61 @@ void msg_process(char type, uint16_t msg_id, const pb_msgdesc_t *fields,
 }
 
 void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
-  static char read_state = READSTATE_IDLE;
-  static uint8_t msg_encoded[MSG_IN_ENCODED_SIZE];
-  static uint16_t msg_id = 0xFFFF;
-  static uint32_t msg_encoded_size = 0;
-  static uint32_t msg_pos = 0;
-  static const pb_msgdesc_t *fields = 0;
+  struct msg_read_state_t *state = msg_get_read_state(type);
+
+  if (!state) return;
 
   if (len != USB_PACKET_SIZE) return;
 
-  if (read_state == READSTATE_IDLE) {
+  if (state->read_state == READSTATE_IDLE) {
     if (buf[0] != '?' || buf[1] != '#' ||
         buf[2] != '#') {  // invalid start - discard
       return;
     }
-    msg_id = (buf[3] << 8) + buf[4];
-    msg_encoded_size =
+    state->msg_id = (buf[3] << 8) + buf[4];
+    state->msg_encoded_size =
         ((uint32_t)buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
 
-    fields = MessageFields(type, 'i', msg_id);
-    if (!fields) {  // unknown message
+    state->fields = MessageFields(type, 'i', state->msg_id);
+    if (!state->fields) {  // unknown message
       fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
                       _("Unknown message"));
       return;
     }
-    if (msg_encoded_size > MSG_IN_ENCODED_SIZE) {  // message is too big :(
+    if (state->msg_encoded_size > MSG_IN_ENCODED_SIZE) {  // message is too big :(
       fsm_sendFailure(FailureType_Failure_DataError, _("Message too big"));
       return;
     }
 
-    read_state = READSTATE_READING;
+    state->read_state = READSTATE_READING;
 
-    memcpy(msg_encoded, buf + MSG_HEADER_SIZE, len - MSG_HEADER_SIZE);
-    msg_pos = len - MSG_HEADER_SIZE;
-  } else if (read_state == READSTATE_READING) {
+    memcpy(state->msg_encoded, buf + MSG_HEADER_SIZE, len - MSG_HEADER_SIZE);
+    state->msg_pos = len - MSG_HEADER_SIZE;
+  } else if (state->read_state == READSTATE_READING) {
     if (buf[0] != '?') {  // invalid contents
-      read_state = READSTATE_IDLE;
+      state->read_state = READSTATE_IDLE;
+      state->msg_pos = 0;
+      state->msg_id = 0xFFFF;
+      state->msg_encoded_size = 0;
+      state->fields = 0;
       return;
     }
     /* raw data starts at buf + 1 with len - 1 bytes */
     buf++;
-    len = MIN(len - 1, MSG_IN_ENCODED_SIZE - msg_pos);
+    len = MIN(len - 1, MSG_IN_ENCODED_SIZE - state->msg_pos);
 
-    memcpy(msg_encoded + msg_pos, buf, len);
-    msg_pos += len;
+    memcpy(state->msg_encoded + state->msg_pos, buf, len);
+    state->msg_pos += len;
   }
 
-  if (msg_pos >= msg_encoded_size) {
-    msg_process(type, msg_id, fields, msg_encoded, msg_encoded_size);
-    msg_pos = 0;
-    read_state = READSTATE_IDLE;
+  if (state->msg_pos >= state->msg_encoded_size) {
+    msg_process(type, state->msg_id, state->fields, state->msg_encoded,
+                state->msg_encoded_size);
+    state->msg_pos = 0;
+    state->msg_id = 0xFFFF;
+    state->msg_encoded_size = 0;
+    state->fields = 0;
+    state->read_state = READSTATE_IDLE;
   }
 }
 
