@@ -42,7 +42,6 @@ const MAX_INTERFACES: usize = 2;
 // Channel limits, shared across interfaces.
 const MAX_CHANNELS_OPENING: usize = 4;
 const MAX_CHANNELS_APPDATA: usize = 10;
-const MAX_CHANNELS_ANY: usize = MAX_CHANNELS_OPENING + MAX_CHANNELS_APPDATA;
 
 const CANNOT_UNLOCK: Error = Error::ThpError(c"THP state locked");
 const CHANNEL_NOT_FOUND: Error = Error::ThpError(c"Channel not found");
@@ -67,23 +66,21 @@ static CHANNEL_ID_COUNTER: Lazy<ChannelIdAllocator> =
 struct ThpContext {
     /// Muxes handles broadcast messages, channel allocation, CodecV1 responses.
     ifaces: LinearMap<u8, TrezorMux, MAX_INTERFACES>,
-    /// Channels in the opening phase. Elements are larger than appdata channels
-    /// due to the Noise handshake state and an internal buffer that needs
-    /// to fit MAX_CREDENTIAL_LEN + 48 bytes.
-    /// These channels are not exposed to python except for retransmission
-    /// handling.
-    channel_opening: LinearMap<(u8, u16), TrezorChannelOpen, MAX_CHANNELS_OPENING>,
+    /// Channels in the opening phase, with associated timing data, indexed by
+    /// (iface_num, channel_id). Unlike application data channels,
+    /// their messages are handled internally and not passed to python.
+    /// Size note: these are larger than appdata channels due to the Noise
+    /// handshake state and an internal buffer that needs to fit
+    /// MAX_CREDENTIAL_LEN + 48 bytes.
+    channel_opening: LinearMap<(u8, u16), (TrezorChannelOpen, ChannelTiming), MAX_CHANNELS_OPENING>,
     /// Channels in the pairing, credential, or encrypted transport phase.
-    channel_appdata: LinearMap<(u8, u16), TrezorChannel, MAX_CHANNELS_APPDATA>,
+    /// Maps `(iface_num, channel_id) -> (channel_data, timing_data)`.
+    channel_appdata: LinearMap<(u8, u16), (TrezorChannel, ChannelTiming), MAX_CHANNELS_APPDATA>,
     /// Whenever a channel is closed during send/receive error, python needs to
     /// be notified in order to delete the associated sessions. This queue holds
     /// the IDs of such channels. Only channels in encrypted transport state are
     /// affected because other channels don't have sessions.
     channel_closed: Deque<(u8, u16), MAX_CHANNELS_APPDATA>,
-    /// Timing data associated with channels. Used to compute retransmission
-    /// timeouts, channel preemption, and which channel to replace when at
-    /// full capacity.
-    timing: LinearMap<u16, ChannelTiming, MAX_CHANNELS_ANY>,
     /// Sort of logical clock that is increased every time
     /// [`ChannelTiming::last_usage`] is increased.
     last_usage_counter: u32,
@@ -96,7 +93,6 @@ impl ThpContext {
             channel_opening: LinearMap::new(),
             channel_appdata: LinearMap::new(),
             channel_closed: Deque::new(),
-            timing: LinearMap::new(),
             last_usage_counter: 0,
         }
     }
@@ -182,30 +178,16 @@ impl ThpContext {
             TrezorCredentialVerifier::new(iface_num, channel_id),
         )?;
 
-        if let Some(cid) = Self::lru_needs_closing(&self.channel_opening, &self.timing) {
-            self.channel_close(iface_num, cid);
+        if let Some((ifn, cid)) = Self::lru_needs_closing(&self.channel_opening) {
+            self.channel_close(ifn, cid);
         }
         Self::insert_channel(
             self.channel_opening.as_mut_view(),
             iface_num,
             channel_id,
             channel,
+            ChannelTiming::new(Instant::now()),
         );
-
-        let res = self
-            .timing
-            .insert(channel_id, ChannelTiming::new(Instant::now()));
-        if res.is_err() {
-            // This should never happen because the number of elements in `timing` is equal
-            // to `channel_opening`+`channel_appdata` and if it was full
-            // we just freed up one slot. If it happens anyway, continue in degraded mode
-            // instead of panicking - retransmission won't work & `lru_needs_closing` will
-            // return it first.
-            log::error!(
-                "[{:04x}] Cannot create timing information, retransmissions disabled.",
-                channel_id
-            );
-        }
         self.channel_update_last_usage(channel_id);
         Ok(())
     }
@@ -219,7 +201,7 @@ impl ThpContext {
         packet_buffer: &[u8],
         credential_fn: Obj,
     ) -> Result<TrezorInResult, Error> {
-        let channel = self
+        let (channel, timing) = self
             .channel_opening
             .get_mut(&(iface_num, channel_id))
             .ok_or(CHANNEL_NOT_FOUND)?;
@@ -241,16 +223,12 @@ impl ThpContext {
         let pir = channel.packet_in(packet_buffer, &mut []);
         channel.credential_verifier().verify_fn = Obj::const_none();
         if pir.got_ack() {
-            if let Some(t) = self.timing.get_mut(&channel_id) {
-                t.read_ack(Instant::now());
-            }
+            timing.read_ack(Instant::now());
         }
         if pir.got_message() && channel.sending_retry() == Some(0) {
             // Internal state machine accepted incoming message, and prepared outgoing one.
             // Update last_write as if message_in was called.
-            if let Some(t) = self.timing.get_mut(&channel_id) {
-                t.update_last_write(Instant::now());
-            }
+            timing.update_last_write(Instant::now());
         }
         let res = match pir {
             PacketInResult::Accepted { .. } => TrezorInResult::None,
@@ -269,19 +247,19 @@ impl ThpContext {
             }
         };
         if channel.handshake_done() {
-            let channel = unwrap!(self.channel_opening.remove(&(iface_num, channel_id)));
+            let (channel, timing) = unwrap!(self.channel_opening.remove(&(iface_num, channel_id)));
             let channel = channel.complete()?;
 
-            if let Some(cid) = Self::lru_needs_closing(&self.channel_appdata, &self.timing) {
-                self.channel_close(iface_num, cid);
+            if let Some((ifn, cid)) = Self::lru_needs_closing(&self.channel_appdata) {
+                self.channel_close(ifn, cid);
             }
             Self::insert_channel(
                 self.channel_appdata.as_mut_view(),
                 iface_num,
                 channel_id,
                 channel,
+                timing,
             );
-
             self.channel_update_last_usage(channel_id);
         }
         Ok(res)
@@ -298,19 +276,24 @@ impl ThpContext {
         packet_buffer: &[u8],
         receive_buffer: &mut [u8],
     ) -> Result<TrezorInResult, Error> {
-        let channel = self.lookup_channel_mut(iface_num, channel_id)?;
+        let (channel, timing) = self.lookup_channel_mut(iface_num, channel_id)?;
         let pir = channel.packet_in(packet_buffer, receive_buffer);
         let res = match pir {
             PacketInResult::Accepted {
                 ack_received,
                 message_ready,
                 ..
-            } => match (message_ready, ack_received) {
-                (true, true) => TrezorInResult::MessageReadyAck,
-                (true, false) => TrezorInResult::MessageReady,
-                (false, true) => TrezorInResult::Ack,
-                _ => TrezorInResult::None,
-            },
+            } => {
+                if ack_received {
+                    timing.read_ack(Instant::now());
+                }
+                match (message_ready, ack_received) {
+                    (true, true) => TrezorInResult::MessageReadyAck,
+                    (true, false) => TrezorInResult::MessageReady,
+                    (false, true) => TrezorInResult::Ack,
+                    _ => TrezorInResult::None,
+                }
+            }
             PacketInResult::Ignored { .. } => TrezorInResult::None,
             PacketInResult::Failed { .. } | PacketInResult::TransportError { .. } => {
                 self.channel_close(iface_num, channel_id);
@@ -320,11 +303,6 @@ impl ThpContext {
                 return Err(Error::ThpError(c"Unexpected PacketInResult"));
             }
         };
-        if pir.got_ack() {
-            if let Some(t) = self.timing.get_mut(&channel_id) {
-                t.read_ack(Instant::now());
-            }
-        }
         Ok(res)
     }
 
@@ -339,7 +317,7 @@ impl ThpContext {
         }
         let mut written = false;
         let mut failed = None;
-        for ((ifn, _cid), channel) in self.channel_opening.iter_mut() {
+        for ((ifn, _cid), (channel, _t)) in self.channel_opening.iter_mut() {
             if *ifn != iface_num {
                 continue;
             }
@@ -366,7 +344,7 @@ impl ThpContext {
         send_buffer: &[u8],
         packet_buffer: &mut [u8],
     ) -> Result<bool, Error> {
-        let channel = self.lookup_channel_mut(iface_num, channel_id)?;
+        let (channel, _timing) = self.lookup_channel_mut(iface_num, channel_id)?;
         let res = channel.packet_out(packet_buffer, send_buffer);
         if channel.is_failed() {
             self.channel_close(iface_num, channel_id);
@@ -388,7 +366,7 @@ impl ThpContext {
         channel_id: u16,
         receive_buffer: &mut [u8],
     ) -> Result<(u8, u16, usize), Error> {
-        let channel = self.lookup_channel_mut(iface_num, channel_id)?;
+        let (channel, _timing) = self.lookup_channel_mut(iface_num, channel_id)?;
         let (sid, message_type, message) = channel.message_out(receive_buffer)?;
         Ok((sid, message_type, message.len()))
     }
@@ -404,11 +382,9 @@ impl ThpContext {
         plaintext_len: usize,
         send_buffer: &mut [u8],
     ) -> Result<(), Error> {
-        let channel = self.lookup_channel_mut(iface_num, channel_id)?;
+        let (channel, timing) = self.lookup_channel_mut(iface_num, channel_id)?;
         channel.message_in(plaintext_len, send_buffer)?;
-        if let Some(t) = self.timing.get_mut(&channel_id) {
-            t.update_last_write(Instant::now());
-        }
+        timing.update_last_write(Instant::now());
         Ok(())
     }
 
@@ -416,10 +392,10 @@ impl ThpContext {
     /// the time limit. Returns false if the maximum retransmission attempts
     /// have been exceeded, true otherwise.
     pub fn message_retransmit(&mut self, iface_num: u8, channel_id: u16) -> Result<bool, Error> {
-        let retry = if let Some(ch) = self.channel_appdata.get_mut(&(iface_num, channel_id)) {
+        let retry = if let Some((ch, _t)) = self.channel_appdata.get_mut(&(iface_num, channel_id)) {
             ch.message_retransmit()?;
             ch.sending_retry()
-        } else if let Some(ch) = self.channel_opening.get_mut(&(iface_num, channel_id)) {
+        } else if let Some((ch, _t)) = self.channel_opening.get_mut(&(iface_num, channel_id)) {
             ch.message_retransmit()?;
             ch.sending_retry()
         } else {
@@ -450,20 +426,20 @@ impl ThpContext {
     pub fn message_out_ready(&self, iface_num: u8) -> Option<u16> {
         self.channel_appdata
             .iter()
-            .filter(|&((ifn, _cid), _ch)| *ifn == iface_num)
-            .find_map(|((_ifn, cid), ch)| ch.message_out_ready().then_some(*cid))
+            .filter(|&((ifn, _cid), _cht)| *ifn == iface_num)
+            .find_map(|((_ifn, cid), (ch, _t))| ch.message_out_ready().then_some(*cid))
     }
 
     // Returns handshake hash of a channel.
     pub fn handshake_hash(&self, iface_num: u8, channel_id: u16) -> Result<&[u8], Error> {
-        let ch = self.lookup_channel(iface_num, channel_id)?;
-        Ok(ch.handshake_hash())
+        let (channel, _timing) = self.lookup_channel(iface_num, channel_id)?;
+        Ok(channel.handshake_hash())
     }
 
     // Returns host's static public key.
     pub fn remote_static_pubkey(&self, iface_num: u8, channel_id: u16) -> Result<&[u8], Error> {
-        let ch = self.lookup_channel(iface_num, channel_id)?;
-        Ok(ch.remote_static_pubkey())
+        let (channel, _timing) = self.lookup_channel(iface_num, channel_id)?;
+        Ok(channel.remote_static_pubkey())
     }
 
     // Returns information for a channel:
@@ -475,18 +451,16 @@ impl ThpContext {
         iface_num: u8,
         channel_id: u16,
     ) -> Result<(Option<u32>, Option<u8>), Error> {
-        let channel = self.lookup_channel(iface_num, channel_id)?;
+        let (channel, timing) = self.lookup_channel(iface_num, channel_id)?;
         let pairing_state = match channel.phase() {
             Phase::PairingCredential {
                 handshake_pairing_state,
             } => Some(handshake_pairing_state.into()),
             Phase::EncryptedTransport => None,
         };
-        let last_write_age_ms = self
-            .timing
-            .get(&channel_id)
-            .and_then(|t| t.last_write_age(Instant::now()))
-            .map(|t| t.to_millis());
+        let last_write_age_ms = timing
+            .last_write_age(Instant::now())
+            .map(|duration| duration.to_millis());
         Ok((last_write_age_ms, pairing_state))
     }
 
@@ -497,7 +471,7 @@ impl ThpContext {
     /// is returned so that micropython app can migrate the channel's sessions.
     pub fn channel_paired(&mut self, iface_num: u8, channel_id: u16) -> Result<Option<u16>, Error> {
         log::debug!("[{:04x}] Pairing/credential phase complete.", channel_id);
-        let channel = self.lookup_channel_mut(iface_num, channel_id)?;
+        let (channel, _timing) = self.lookup_channel_mut(iface_num, channel_id)?;
         if channel.is_encrypted_transport() {
             log::error!(
                 "[{:04x}] Channel is already in encrypted transport state!",
@@ -513,13 +487,13 @@ impl ThpContext {
         let old_channel_id = self
             .channel_appdata
             .iter()
-            .find(|&((ifn, cid), ch)| {
+            .find(|&((ifn, cid), (ch, _t))| {
                 *ifn == iface_num
                     && *cid != channel_id
                     && ch.is_encrypted_transport()
                     && ch.remote_static_pubkey() == &host_key
             })
-            .map(|(_, ch)| ch.channel_id());
+            .map(|(_, (ch, _t))| ch.channel_id());
         if let Some(cid) = old_channel_id {
             self.channel_close(iface_num, cid);
         }
@@ -536,7 +510,7 @@ impl ThpContext {
     /// Remove a channel and any associated state.
     pub fn channel_close(&mut self, iface_num: u8, channel_id: u16) {
         log::debug!("[{:04x}] Closing channel.", channel_id);
-        if let Some(ch) = self.channel_appdata.remove(&(iface_num, channel_id)) {
+        if let Some((ch, _t)) = self.channel_appdata.remove(&(iface_num, channel_id)) {
             // Pairing/credential channels don't need notification
             // because they don't have sessions.
             if ch.is_encrypted_transport() {
@@ -546,7 +520,6 @@ impl ThpContext {
         } else {
             self.channel_opening.remove(&(iface_num, channel_id));
         }
-        self.timing.remove(&channel_id);
         // Delete credential from the credential queue.
         if let Some(mut aux) = THP_AUX.try_lock() {
             aux.delete_credential(iface_num, channel_id);
@@ -566,7 +539,6 @@ impl ThpContext {
             .retain(|&(_ifn, cid), _ch| Some(cid) == exclude);
         self.channel_opening.clear();
         self.channel_closed.clear();
-        self.timing.retain(|&cid, _ch| Some(cid) == exclude);
         if let Some(mut aux) = THP_AUX.try_lock() {
             aux.delete_credential_all();
         }
@@ -587,9 +559,19 @@ impl ThpContext {
 
     /// Update the `last_usage` logical timestamp of a channel.
     pub fn channel_update_last_usage(&mut self, channel_id: u16) {
-        if let Some(t) = self.timing.get_mut(&channel_id) {
+        if let Some(timing) = self
+            .channel_appdata
+            .iter_mut()
+            .filter_map(|((_ifn, cid), (_ch, t))| (*cid == channel_id).then_some(t))
+            .chain(
+                self.channel_opening
+                    .iter_mut()
+                    .filter_map(|((_ifn, cid), (_ch, t))| (*cid == channel_id).then_some(t)),
+            )
+            .next()
+        {
             self.last_usage_counter = self.last_usage_counter.wrapping_add(1);
-            t.update_last_usage(self.last_usage_counter);
+            timing.update_last_usage(self.last_usage_counter);
         }
     }
 
@@ -607,22 +589,18 @@ impl ThpContext {
         let sending = self
             .channel_appdata
             .iter()
-            .filter_map(|((ifn, _cid), ch)| (*ifn == iface_num).then_some(ch))
-            .filter_map(|ch| ch.sending_retry().map(|retry| (ch.channel_id(), retry)))
+            .filter_map(|((ifn, _cid), cht)| (*ifn == iface_num).then_some(cht))
+            .filter_map(|(ch, t)| ch.sending_retry().map(|retry| (ch.channel_id(), retry, t)))
             .chain(
                 self.channel_opening
                     .iter()
-                    .filter_map(|((ifn, _cid), ch)| (*ifn == iface_num).then_some(ch))
-                    .filter_map(|ch| ch.sending_retry().map(|retry| (ch.channel_id(), retry))),
+                    .filter_map(|((ifn, _cid), cht)| (*ifn == iface_num).then_some(cht))
+                    .filter_map(|(ch, t)| {
+                        ch.sending_retry().map(|retry| (ch.channel_id(), retry, t))
+                    }),
             );
-        for (channel_id, retry) in sending {
-            let timeout_ms = self
-                .timing
-                .get(&channel_id)
-                .map(|t| t.timeout_from_now(now, retry).to_millis());
-            let Some(timeout_ms) = timeout_ms else {
-                continue;
-            };
+        for (channel_id, retry, timing) in sending {
+            let timeout_ms = timing.timeout_from_now(now, retry).to_millis();
             earliest = match (earliest, timeout_ms) {
                 // No result yet - update.
                 (None, t) => Some((channel_id, t)),
@@ -638,7 +616,7 @@ impl ThpContext {
     /// Ask the host to try again later because the receive buffer is used by
     /// another channel.
     pub fn send_transport_busy(&mut self, iface_num: u8, channel_id: u16) -> Result<(), Error> {
-        let channel = self.lookup_channel_mut(iface_num, channel_id)?;
+        let (channel, _timing) = self.lookup_channel_mut(iface_num, channel_id)?;
         channel.send_error(TransportError::TransportBusy);
         Ok(())
     }
@@ -646,7 +624,7 @@ impl ThpContext {
     /// Abort ongoing handshakes because Trezor's static key is not available.
     pub fn send_device_locked(&mut self, iface_num: u8) -> Result<(), Error> {
         let mut first_err = None;
-        for ((ifn, _cid), ch) in self.channel_opening.iter_mut() {
+        for ((ifn, _cid), (ch, _t)) in self.channel_opening.iter_mut() {
             if *ifn != iface_num {
                 continue;
             }
@@ -671,7 +649,7 @@ impl ThpContext {
             .try_into()
             .map_err(|_| Error::ThpError(c"Invalid key length"))?;
         let mut first_err = None;
-        for ((ifn, cid), ch) in self.channel_opening.iter_mut() {
+        for ((ifn, _cid), (ch, t)) in self.channel_opening.iter_mut() {
             if *ifn != iface_num {
                 continue;
             }
@@ -680,7 +658,7 @@ impl ThpContext {
                     first_err.get_or_insert(e);
                 }
                 // Outgoing message is now ready, update last_write.
-                if let (Some(0), Some(t)) = (ch.sending_retry(), self.timing.get_mut(cid)) {
+                if let Some(0) = ch.sending_retry() {
                     t.update_last_write(Instant::now());
                 }
             }
@@ -693,14 +671,18 @@ impl ThpContext {
         &mut self,
         iface_num: u8,
         channel_id: u16,
-    ) -> Result<&mut TrezorChannel, Error> {
+    ) -> Result<&mut (TrezorChannel, ChannelTiming), Error> {
         self.channel_appdata
             .get_mut(&(iface_num, channel_id))
             .ok_or(CHANNEL_NOT_FOUND)
     }
 
     // Look up channel in pairing/credential/encrypted-transport phase by its id.
-    fn lookup_channel(&self, iface_num: u8, channel_id: u16) -> Result<&TrezorChannel, Error> {
+    fn lookup_channel(
+        &self,
+        iface_num: u8,
+        channel_id: u16,
+    ) -> Result<&(TrezorChannel, ChannelTiming), Error> {
         self.channel_appdata
             .get(&(iface_num, channel_id))
             .ok_or(CHANNEL_NOT_FOUND)
@@ -709,26 +691,30 @@ impl ThpContext {
     // Returns None if `channels` is not full, or ID of its least recently used
     // channel otherwise.
     fn lru_needs_closing<T, const N: usize>(
-        channels: &LinearMap<(u8, u16), T, N>,
-        timing: &LinearMap<u16, ChannelTiming, MAX_CHANNELS_ANY>,
-    ) -> Option<u16> {
+        channels: &LinearMap<(u8, u16), (T, ChannelTiming), N>,
+    ) -> Option<(u8, u16)> {
         if !channels.is_full() {
             return None;
         }
-        let cid = least_recently_used(&mut channels.keys(), timing.as_view());
-        assert!(cid.is_some());
-        cid
+        let ifncid = least_recently_used(
+            &mut channels
+                .iter()
+                .map(|((ifn, cid), (_ch, t))| ((*ifn, *cid), t)),
+        );
+        assert!(ifncid.is_some());
+        ifncid
     }
 
     // Insert a channel into `LinearMap`. Panic if it is full or the ID is not
     // unique.
     fn insert_channel<T>(
-        channels: &mut LinearMapView<(u8, u16), T>,
+        channels: &mut LinearMapView<(u8, u16), (T, ChannelTiming)>,
         iface_num: u8,
         channel_id: u16,
         channel: T,
+        timing: ChannelTiming,
     ) {
-        let res = channels.insert((iface_num, channel_id), channel);
+        let res = channels.insert((iface_num, channel_id), (channel, timing));
         // should not panic since a slot was freed up before calling this function
         let res = unwrap!(res);
         // should not panic as we don't expect duplicate ids
@@ -911,14 +897,14 @@ impl Auxiliary {
     pub fn host_keys_copy_from(
         &mut self,
         iface_num: u8,
-        channels: &LinearMapView<(u8, u16), TrezorChannel>,
+        channels: &LinearMapView<(u8, u16), (TrezorChannel, ChannelTiming)>,
     ) {
         self.host_keys.clear();
         self.host_keys.extend(
             channels
                 .iter()
-                .filter(|&((ifn, _cid), ch)| *ifn == iface_num && ch.is_encrypted_transport())
-                .map(|(_, ch)| *ch.remote_static_pubkey()),
+                .filter(|&((ifn, _cid), (ch, _t))| *ifn == iface_num && ch.is_encrypted_transport())
+                .map(|(_, (ch, _t))| *ch.remote_static_pubkey()),
         );
     }
 

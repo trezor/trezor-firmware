@@ -1,7 +1,5 @@
 use crate::time::{Duration, Instant};
 
-use heapless::linear_map::LinearMapView;
-
 use trezor_thp::channel::retransmit_after_ms;
 
 const MAX_LATENCY_MS: Duration = Duration::from_millis(800);
@@ -85,99 +83,63 @@ impl ChannelTiming {
 
 // Returns ID of the least recently used channel in the `channels` iterator.
 pub fn least_recently_used(
-    channels: &mut dyn Iterator<Item = &(u8, u16)>,
-    timing: &LinearMapView<u16, ChannelTiming>,
-) -> Option<u16> {
+    channels: &mut dyn Iterator<Item = ((u8, u16), &ChannelTiming)>,
+) -> Option<(u8, u16)> {
     let mut oldest = None;
-    for (_ifn, channel_id) in channels {
-        let Some(last_used) = timing.get(channel_id).map(|t| t.last_usage()) else {
-            // If a channel is missing from timing for some reason (it shouldn't),
-            // return it immediately, it will be closed by the caller.
-            return Some(*channel_id);
-        };
+    for (idx, timing) in channels {
+        let last_used = timing.last_usage();
         match oldest {
             None => {
-                oldest = Some((*channel_id, last_used));
+                oldest = Some((idx, last_used));
             }
-            Some((_oldest_cid, oldest_val)) if last_used < oldest_val => {
-                oldest = Some((*channel_id, last_used));
+            Some((_oldest_idx, oldest_val)) if last_used < oldest_val => {
+                oldest = Some((idx, last_used));
             }
             _ => {}
         }
     }
-    oldest.map(|(cid, _)| cid)
+    oldest.map(|(idx, _)| idx)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use heapless::{LinearMap, Vec};
+    use heapless::Vec;
     use trezor_thp::channel::MAX_RETRANSMISSION_COUNT;
 
-    fn make_map(
-        channels: &[(u16, u32)],
-    ) -> (Vec<(u8, u16), 16>, LinearMap<u16, ChannelTiming, 16>) {
+    fn make_map(channels: &[(u16, u32)]) -> Vec<((u8, u16), ChannelTiming), 16> {
         let mut chans = Vec::new();
-        let mut timing = LinearMap::new();
-
         for (ch, last_used) in channels {
-            chans.push((255, *ch)).unwrap();
             let mut t = ChannelTiming::new(Instant::now());
             t.update_last_usage(*last_used);
-            timing.insert(*ch, t).unwrap();
+            chans.push(((255, *ch), t)).unwrap();
         }
+        chans
+    }
 
-        (chans, timing)
+    fn it(
+        chans: &[((u8, u16), ChannelTiming)],
+    ) -> impl Iterator<Item = ((u8, u16), &ChannelTiming)> {
+        chans
+            .iter()
+            .map(|((ifn, cid), timing)| ((*ifn, *cid), timing))
     }
 
     #[test]
     fn test_lru_no_channels() {
-        let (_, timing) = make_map(&[(1, 2), (3, 4), (5, 1)]);
-        assert_eq!(least_recently_used(&mut [].iter(), timing.as_view()), None);
+        assert_eq!(least_recently_used(&mut it(&[])), None);
     }
 
     #[test]
     fn test_lru_simple() {
-        let (chans, timing) = make_map(&[(7, 7)]);
-        assert_eq!(
-            least_recently_used(&mut chans.iter(), timing.as_view()),
-            Some(7)
-        );
+        let chans = make_map(&[(7, 7)]);
+        assert_eq!(least_recently_used(&mut it(&chans)), Some((255, 7)));
 
-        let (chans, timing) = make_map(&[(1, 2), (3, 4), (5, 1)]);
-        assert_eq!(
-            least_recently_used(&mut chans.iter(), timing.as_view()),
-            Some(5)
-        );
+        let chans = make_map(&[(1, 2), (3, 4), (5, 1)]);
+        assert_eq!(least_recently_used(&mut it(&chans)), Some((255, 5)));
 
-        let (chans, timing) = make_map(&[(5, 100), (3, 400), (1, 200), (6, 50), (8, 600)]);
-        assert_eq!(
-            least_recently_used(&mut chans.iter(), timing.as_view()),
-            Some(6)
-        );
-    }
-
-    #[test]
-    fn test_lru_timing_missing() {
-        let (_, timing) = make_map(&[(1, 2), (3, 4), (5, 1)]);
-        assert_eq!(
-            least_recently_used(&mut [(254, 17)].iter(), timing.as_view()),
-            Some(17)
-        );
-        assert_eq!(
-            least_recently_used(
-                &mut [(254, 1), (254, 3), (254, 5), (254, 17)].iter(),
-                timing.as_view()
-            ),
-            Some(17)
-        );
-        assert_eq!(
-            least_recently_used(
-                &mut [(254, 7), (254, 1), (254, 3), (254, 5)].iter(),
-                timing.as_view()
-            ),
-            Some(7)
-        );
+        let chans = make_map(&[(5, 100), (3, 400), (1, 200), (6, 50), (8, 600)]);
+        assert_eq!(least_recently_used(&mut it(&chans)), Some((255, 6)));
     }
 
     #[test]
