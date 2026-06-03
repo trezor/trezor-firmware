@@ -74,6 +74,7 @@ static uint32_t msg_out_start = 0;
 static uint32_t msg_out_end = 0;
 static uint32_t msg_out_cur = 0;
 static uint8_t msg_out[MSG_OUT_BUFFER_SIZE];
+static uint32_t msg_out_drops = 0;
 _Static_assert(MSG_OUT_BUFFER_SIZE % USB_PACKET_SIZE == 0,
                "MSG_OUT_BUFFER_SIZE");
 
@@ -83,6 +84,7 @@ static uint32_t msg_debug_out_start = 0;
 static uint32_t msg_debug_out_end = 0;
 static uint32_t msg_debug_out_cur = 0;
 static uint8_t msg_debug_out[MSG_DEBUG_OUT_BUFFER_SIZE];
+static uint32_t msg_debug_out_drops = 0;
 _Static_assert(MSG_DEBUG_OUT_BUFFER_SIZE % USB_PACKET_SIZE == 0,
                "MSG_DEBUG_OUT_BUFFER_SIZE");
 
@@ -90,6 +92,17 @@ _Static_assert(MSG_DEBUG_OUT_BUFFER_SIZE % USB_PACKET_SIZE == 0,
 
 static inline void msg_out_append(uint8_t c) {
   if (msg_out_cur == 0) {
+    uint32_t next_end =
+        (msg_out_end + 1) % (MSG_OUT_BUFFER_SIZE / USB_PACKET_SIZE);
+    if (next_end == msg_out_start) {
+      msg_out_drops++;
+      if ((msg_out_drops & (msg_out_drops - 1)) == 0) {
+        debugLog(0, "", "msg_out: drop due to full queue");
+        debugInt(msg_out_drops);
+      }
+      msg_out_start =
+          (msg_out_start + 1) % (MSG_OUT_BUFFER_SIZE / USB_PACKET_SIZE);
+    }
     msg_out[msg_out_end * USB_PACKET_SIZE] = '?';
     msg_out_cur = 1;
   }
@@ -105,6 +118,17 @@ static inline void msg_out_append(uint8_t c) {
 
 static inline void msg_debug_out_append(uint8_t c) {
   if (msg_debug_out_cur == 0) {
+    uint32_t next_end =
+        (msg_debug_out_end + 1) % (MSG_DEBUG_OUT_BUFFER_SIZE / USB_PACKET_SIZE);
+    if (next_end == msg_debug_out_start) {
+      msg_debug_out_drops++;
+      if ((msg_debug_out_drops & (msg_debug_out_drops - 1)) == 0) {
+        debugLog(0, "", "msg_debug_out: drop due to full queue");
+        debugInt(msg_debug_out_drops);
+      }
+      msg_debug_out_start = (msg_debug_out_start + 1) %
+                            (MSG_DEBUG_OUT_BUFFER_SIZE / USB_PACKET_SIZE);
+    }
     msg_debug_out[msg_debug_out_end * USB_PACKET_SIZE] = '?';
     msg_debug_out_cur = 1;
   }
@@ -220,6 +244,29 @@ enum {
   READSTATE_READING,
 };
 
+#if DEBUG_LOG
+static void debug_log_packet(const char *tag, const uint8_t *buf, uint32_t len) {
+  static const char hex[] = "0123456789ABCDEF";
+  char line[16 * 3];
+
+  debugLog(0, "", tag);
+  for (uint32_t i = 0; i < len; i += 16) {
+    uint32_t count = MIN((uint32_t)16, len - i);
+    uint32_t pos = 0;
+    for (uint32_t j = 0; j < count; j++) {
+      uint8_t b = buf[i + j];
+      line[pos++] = hex[b >> 4];
+      line[pos++] = hex[b & 0x0F];
+      if (j + 1 < count) {
+        line[pos++] = ' ';
+      }
+    }
+    line[pos] = '\0';
+    debugLog(0, "", line);
+  }
+}
+#endif
+
 struct msg_read_state_t {
   char read_state;
   uint8_t msg_encoded[MSG_IN_ENCODED_SIZE];
@@ -273,6 +320,11 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
 
   if (len != USB_PACKET_SIZE) return;
 
+#if DEBUG_LOG
+  debug_log_packet(type == 'n' ? "msg_read[n]: packet" : "msg_read[d]: packet",
+                   buf, len);
+#endif
+
   if (state->read_state == READSTATE_IDLE) {
     if (buf[0] != '?' || buf[1] != '#' ||
         buf[2] != '#') {  // invalid start - discard
@@ -281,9 +333,6 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
     state->msg_id = (buf[3] << 8) + buf[4];
     state->msg_encoded_size =
         ((uint32_t)buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
-
-    debugLog(0, "", type == 'n' ? "msg_read[n]: new msg id" : "msg_read[d]: new msg id");
-    debugInt((uint32_t)state->msg_id);
 
     state->fields = MessageFields(type, 'i', state->msg_id);
     if (!state->fields) {  // unknown message
@@ -341,7 +390,6 @@ const uint8_t *msg_out_data(void) {
   if (msg_out_start == msg_out_end) return 0;
   uint8_t *data = msg_out + (msg_out_start * USB_PACKET_SIZE);
   msg_out_start = (msg_out_start + 1) % (MSG_OUT_BUFFER_SIZE / USB_PACKET_SIZE);
-  debugLog(0, "", "msg_out_data");
   return data;
 }
 
@@ -352,7 +400,6 @@ const uint8_t *msg_debug_out_data(void) {
   uint8_t *data = msg_debug_out + (msg_debug_out_start * USB_PACKET_SIZE);
   msg_debug_out_start =
       (msg_debug_out_start + 1) % (MSG_DEBUG_OUT_BUFFER_SIZE / USB_PACKET_SIZE);
-  debugLog(0, "", "msg_debug_out_data");
   return data;
 }
 
@@ -397,6 +444,10 @@ void msg_read_tiny(const uint8_t *buf, int len) {
     return;
   }
 
+#if DEBUG_LOG
+  debug_log_packet("msg_tiny: packet", buf, (uint32_t)len);
+#endif
+
   const pb_msgdesc_t *fields = NULL;
   uint16_t msg_id = (buf[3] << 8) + buf[4];
   switch (msg_id) {
@@ -425,6 +476,8 @@ void msg_read_tiny(const uint8_t *buf, int len) {
 #endif
     default:
       // Ignore unexpected messages.
+      debugLog(0, "", "msg_tiny: unsupported msg id");
+      debugInt((uint32_t)msg_id);
       return;
   }
 
@@ -444,8 +497,12 @@ void msg_read_tiny(const uint8_t *buf, int len) {
   pb_istream_t stream = pb_istream_from_buffer(buf + MSG_HEADER_SIZE, msg_size);
   bool status = pb_decode(&stream, fields, msg_tiny);
   if (status) {
+    debugLog(0, "", "msg_tiny: decode ok");
+    debugInt((uint32_t)msg_id);
     msg_tiny_id = msg_id;
   } else {
+    debugLog(0, "", "msg_tiny: decode failed");
+    debugInt((uint32_t)msg_id);
     fsm_sendFailure(FailureType_Failure_DataError, stream.errmsg);
     msg_tiny_id = 0xFFFF;
   }
