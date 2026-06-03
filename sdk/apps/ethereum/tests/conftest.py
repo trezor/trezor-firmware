@@ -172,8 +172,8 @@ class SetupParams:
     unfinished_backup: bool | None = None
     experimental: bool = False
     label: str = "test"
-    extapp_path: str | None = None
-    extapp_instance_id: int | None = None
+    trezorapp_path: str | None = None
+    trezorapp_instance_id: int | None = None
 
     @classmethod
     def from_request(cls, request: pytest.FixtureRequest) -> SetupParams:
@@ -211,18 +211,18 @@ class SetupParams:
             if self.experimental:
                 apply_settings(session, experimental_features=True)
 
-        if not self.extapp_path:
-            raise ValueError("--extapp option must be provided")
-        path = Path(self.extapp_path)
+        if not self.trezorapp_path:
+            raise ValueError("--app option must be provided")
+        path = Path(self.trezorapp_path)
         if not path.exists():
             raise FileNotFoundError(f"External app not found: {path}")
-        self.extapp_instance_id = debuglink.load_extapp(session, path)
+        self.extapp_instance_id = debuglink.load_trezorapp(session, path)
 
 
 @pytest.fixture(scope="function")
 def setup_params(request: pytest.FixtureRequest) -> SetupParams:
     params = SetupParams.from_request(request)
-    params.extapp_path = request.config.getoption("extapp")
+    params.trezorapp_path = request.config.getoption("app")
     return params
 
 
@@ -474,9 +474,9 @@ def pytest_addoption(parser: "Parser") -> None:
         help="File path for verbose logging",
     )
     parser.addoption(
-        "--extapp",
+        "--app",
         action="store",
-        help="Path to the external application to load",
+        help="Path to the application to load",
     )
 
 

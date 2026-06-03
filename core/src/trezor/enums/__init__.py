@@ -724,7 +724,7 @@ if TYPE_CHECKING:
         BenchmarkResult = 9103
         TelemetryGet = 1100
         Telemetry = 1101
-        ExtAppLoad = 9200
-        ExtAppLoaded = 9201
-        ExtAppMessage = 9202
-        ExtAppResponse = 9203
+        TrezorAppLoad = 9200
+        TrezorAppLoaded = 9201
+        TrezorAppMessage = 9202
+        TrezorAppResponse = 9203

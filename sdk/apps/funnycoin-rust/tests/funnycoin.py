@@ -17,7 +17,7 @@
 import io
 from typing import TYPE_CHECKING, Any
 
-from trezorlib.messages import ExtAppMessage, ExtAppResponse, Failure
+from trezorlib.messages import TrezorAppMessage, TrezorAppResponse, Failure
 from trezorlib import exceptions, protobuf
 
 from .generated import messages as funnycoin_messages
@@ -63,7 +63,7 @@ def call_ext(
     buf = io.BytesIO()
     protobuf.dump_message(buf, msg_data)
 
-    msg = ExtAppMessage(
+    msg = TrezorAppMessage(
         instance_id=instance_id,
         message_id=message_id(msg_data),
         data=buf.getvalue(),
@@ -72,7 +72,7 @@ def call_ext(
         raise exceptions.InvalidSessionError(session.id)
     with session:
         resp = session.client._call(
-            session, msg, expect=ExtAppResponse, timeout=timeout
+            session, msg, expect=TrezorAppResponse, timeout=timeout
         )
         buf = io.BytesIO(resp.data)
 

@@ -15,7 +15,7 @@ pub fn device_tests(args: UploadArgs) -> Result<()> {
         .args([
             "run",
             "pytest",
-            &format!("--extapp={}", binary.display()),
+            &format!("--app={}", binary.display()),
             "--ui=test",
             "--verbose",
         ])

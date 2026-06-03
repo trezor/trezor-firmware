@@ -228,10 +228,10 @@ def setup_params(request: pytest.FixtureRequest) -> SetupParams:
 def instance_id(
     setup_params: SetupParams, _prepared_test_ctx: TrezorTestContext
 ) -> int:
-    """Returns instance_id of the loaded external app."""
-    if setup_params.extapp_instance_id is None:
-        raise RuntimeError("External app was not loaded during test setup")
-    return setup_params.extapp_instance_id
+    """Returns instance_id of the loaded application."""
+    if setup_params.app_instance_id is None:
+        raise RuntimeError("Application was not loaded during test setup")
+    return setup_params.trezorapp_instance_id
 
 
 @pytest.fixture(scope="function")
@@ -445,9 +445,9 @@ def pytest_addoption(parser: "Parser") -> None:
         help="File path for verbose logging",
     )
     parser.addoption(
-        "--extapp",
+        "--app",
         action="store",
-        help="Path to the external application to load",
+        help="Path to the application to load",
     )
 
 

@@ -18,7 +18,7 @@ import io
 import re
 from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple, Callable
 
-from trezorlib.messages import ExtAppMessage, ExtAppResponse, Failure
+from trezorlib.messages import TrezorAppMessage, TrezorAppResponse, Failure
 from trezorlib import exceptions, protobuf
 from trezorlib.tools import prepare_message_bytes
 
@@ -66,7 +66,7 @@ def call_ext(
     buf = io.BytesIO()
     protobuf.dump_message(buf, msg_data)
 
-    msg = ExtAppMessage(
+    msg = TrezorAppMessage(
         instance_id=instance_id,
         message_id=message_id(msg_data),
         data=buf.getvalue(),
@@ -75,7 +75,7 @@ def call_ext(
         raise exceptions.InvalidSessionError(session.id)
     with session:
         resp = session.client._call(
-            session, msg, expect=ExtAppResponse, timeout=timeout
+            session, msg, expect=TrezorAppResponse, timeout=timeout
         )
         buf = io.BytesIO(resp.data)
 
@@ -615,8 +615,8 @@ def sign_typed_data_hash(
 
 
 def resp_filter(msg: protobuf.MessageType) -> protobuf.MessageType:
-    """Decode ExtAppResponse payload into concrete generated message instance."""
-    if isinstance(msg, ExtAppResponse):
+    """Decode TrezorAppResponse payload into concrete generated message instance."""
+    if isinstance(msg, TrezorAppResponse):
         message_type_cls = message_type(msg.message_id)
         return protobuf.load_message(io.BytesIO(msg.data), message_type_cls)
     else:

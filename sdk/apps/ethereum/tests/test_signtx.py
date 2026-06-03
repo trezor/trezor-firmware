@@ -331,7 +331,7 @@ def test_data_streaming(session: Session, instance_id: int):
         expected_responses += [message_filters.EthereumTxRequest(data_length=None)]
 
         client.set_resp_mapping(
-            trezor_messages.ExtAppResponse, ethereum_ext.resp_filter
+            trezor_messages.TrezorAppResponse, ethereum_ext.resp_filter
         )
         client.set_expected_responses(expected_responses)
 

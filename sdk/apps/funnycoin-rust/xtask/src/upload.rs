@@ -17,7 +17,7 @@ pub fn upload(args: UploadArgs) -> Result<u64> {
     );
 
     let output = process::Command::new("uv")
-        .args(["run", "trezorctl", "extapp", "load"])
+        .args(["run", "trezorctl", "trezorapp", "load"])
         .arg(&binary)
         .output()
         .context("Failed to spawn `trezorctl`")?;

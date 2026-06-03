@@ -15,7 +15,7 @@ pub fn device_tests(args: DeviceTestArgs) -> Result<()> {
         .args([
             "run",
             "pytest",
-            &format!("--extapp={}", binary.display()),
+            &format!("--app={}", binary.display()),
             &format!("--lang={}", args.lang.name()),
             "--ui=test",
             "--verbose",

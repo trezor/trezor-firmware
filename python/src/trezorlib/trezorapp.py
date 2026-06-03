@@ -31,11 +31,11 @@ def load(session: "Session", data: bytes) -> int:
     """
     hash = sha256(data).digest()
     resp = session.call(
-        messages.ExtAppLoad(hash=hash, size=len(data)),
+        messages.TrezorAppLoad(hash=hash, size=len(data)),
     )
     while isinstance(resp, messages.DataChunkRequest):
         chunk = data[resp.data_offset : resp.data_offset + resp.data_length]
         resp = session.call(messages.DataChunkAck(data_chunk=chunk))
 
-    resp = messages.ExtAppLoaded.ensure_isinstance(resp)
+    resp = messages.TrezorAppLoaded.ensure_isinstance(resp)
     return resp.instance_id
