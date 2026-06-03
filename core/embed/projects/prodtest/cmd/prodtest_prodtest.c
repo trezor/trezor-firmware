@@ -48,6 +48,15 @@ static void prodtest_prodtest_intro(cli_t* cli) {
   cli_trace(cli, "");
 }
 
+static void prodtest_prodtest_model(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_ok(cli, "%s", MODEL_INTERNAL_NAME);
+}
+
 static void prodtest_prodtest_version(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -132,6 +141,13 @@ PRODTEST_CLI_CMD(
   .name = "$intro",
   .func = prodtest_prodtest_intro,
   .info = "",
+  .args = "",
+);
+
+PRODTEST_CLI_CMD(
+  .name = "prodtest-model",
+  .func = prodtest_prodtest_model,
+  .info = "Retrieve the internal model name",
   .args = "",
 );
 
