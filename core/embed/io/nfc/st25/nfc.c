@@ -73,6 +73,35 @@ typedef struct {
   rfalNfcDiscoverParam disc_params;
 } st25_driver_t;
 
+static const rfalNfcDiscoverParam default_disc_params = {
+    .compMode = RFAL_COMPLIANCE_MODE_NFC,
+    .devLimit = 1u,
+    .nfcfBR = RFAL_BR_212,
+    .ap2pBR = RFAL_BR_424,
+    .maxBR = RFAL_BR_KEEP,
+    .isoDepFS = RFAL_ISODEP_FSXI_256,
+    .nfcDepLR = RFAL_NFCDEP_LR_254,
+    // P2P communication data
+    .nfcid3 = {0x01, 0xFE, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A},
+    .GB = {0x46, 0x66, 0x6d, 0x01, 0x01, 0x11, 0x02, 0x02, 0x07, 0x80,
+           0x03, 0x02, 0x00, 0x03, 0x04, 0x01, 0x32, 0x07, 0x01, 0x03},
+    .GBLen = 20,
+    .p2pNfcaPrio = true,
+    .wakeupEnabled = false,
+    .wakeupConfigDefault = true,
+    .wakeupConfig = {0},
+    .wakeupPollBefore = false,
+    .wakeupNPolls = 1U,
+    .totalDuration = 1000U,
+    .techs2Find =
+        RFAL_NFC_POLL_TECH_A | RFAL_NFC_POLL_TECH_B | RFAL_NFC_POLL_TECH_V,
+    .techs2Bail = RFAL_NFC_TECH_NONE,
+    .propNfc = {0},
+    .lmConfigPA = {0},
+    .lmConfigPF = {{0}, {0}},
+    .notifyCb = NULL,
+};
+
 static st25_driver_t g_st25_driver = {
     .initialized = false,
     .rfal_initialized = false,
@@ -92,13 +121,6 @@ typedef struct {
     };
   };
 } nfc_device_header_t2t_t;
-
-// P2P communication data
-static const uint8_t nfcid3[] = {0x01, 0xFE, 0x03, 0x04, 0x05,
-                                 0x06, 0x07, 0x08, 0x09, 0x0A};
-static const uint8_t gb[] = {0x46, 0x66, 0x6d, 0x01, 0x01, 0x11, 0x02,
-                             0x02, 0x07, 0x80, 0x03, 0x02, 0x00, 0x03,
-                             0x04, 0x01, 0x32, 0x07, 0x01, 0x03};
 
 // NFC-A CE config
 // 4-byte UIDs with first byte 0x08 would need random number for the subsequent
@@ -129,12 +151,7 @@ static nfc_status_t nfc_transcieve_blocking(uint8_t *tx_buf,
                                             uint8_t **rx_buf,
                                             uint16_t **rcv_len, uint32_t fwt);
 
-// static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev);
-
-// Register NFC technology (or several) to be explored by NFC state machine
-// use this function before activating the state machine with
-// nfc_start_discovery()
-static nfc_status_t nfc_register_tech(const nfc_tech_t tech);
+static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev);
 
 nfc_status_t nfc_init() {
   st25_driver_t *drv = &g_st25_driver;
@@ -227,9 +244,6 @@ nfc_status_t nfc_init() {
   ReturnCode ret;
   ret = rfalNfcInitialize();
 
-  // Set default discovery parameters
-  rfalNfcDefaultDiscParams(&drv->disc_params);
-
   if (ret != RFAL_ERR_NONE) {
     goto cleanup;
   }
@@ -241,9 +255,7 @@ nfc_status_t nfc_init() {
   drv->rfal_initialized = true;
   drv->initialized = true;
   drv->card_connected = false;
-
-  nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B | NFC_POLLER_TECH_F |
-                    NFC_POLLER_TECH_V);
+  memcpy(&drv->disc_params, &default_disc_params, sizeof(drv->disc_params));
 
   if (!nfc_poll_init()) {
     goto cleanup;
@@ -283,6 +295,8 @@ void nfc_deinit(void) {
   memset(drv, 0, sizeof(st25_driver_t));
 }
 
+// Should be used only to overwrite default configuration in order to run
+// card emulation, the default configuration is good for reader mode.
 static nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
   st25_driver_t *drv = &g_st25_driver;
 
@@ -290,33 +304,18 @@ static nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
     return NFC_NOT_INITIALIZED;
   }
 
+  // Set default discovery parameters
+  rfalNfcDefaultDiscParams(&drv->disc_params);
+
+  // Set user defined discovery parameters
   drv->disc_params.devLimit = 1;
-  memcpy(&drv->disc_params.nfcid3, nfcid3, sizeof(nfcid3));
-  memcpy(&drv->disc_params.GB, gb, sizeof(gb));
-  drv->disc_params.GBLen = sizeof(gb);
+  memcpy(&drv->disc_params.nfcid3, default_disc_params.nfcid3,
+         sizeof(default_disc_params.nfcid3));
+  memcpy(&drv->disc_params.GB, default_disc_params.GB,
+         sizeof(default_disc_params.GB));
+  drv->disc_params.GBLen = sizeof(default_disc_params.GB);
   drv->disc_params.p2pNfcaPrio = true;
   drv->disc_params.totalDuration = 1000U;
-
-  if (rfalNfcGetState() != RFAL_NFC_STATE_IDLE) {
-    return NFC_ERROR;
-  }
-
-  // Set general discovery parameters.
-  if (tech & NFC_POLLER_TECH_A) {
-    drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_A;
-  }
-
-  if (tech & NFC_POLLER_TECH_B) {
-    drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_B;
-  }
-
-  if (tech & NFC_POLLER_TECH_F) {
-    drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_F;
-  }
-
-  if (tech & NFC_POLLER_TECH_V) {
-    drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_V;
-  }
 
   if (tech & NFC_CARD_EMU_TECH_A) {
     card_emulation_init(ce_nfcf_nfcid2);
@@ -356,11 +355,20 @@ static nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
   return NFC_OK;
 }
 
-nfc_status_t nfc_start_discovery(void) {
+nfc_status_t nfc_start_discovery(nfc_discovery_type_t discovery_type) {
   st25_driver_t *drv = &g_st25_driver;
 
   if (!drv->initialized) {
     return NFC_NOT_INITIALIZED;
+  }
+
+  if (discovery_type == NFC_DISCOVERY_TYPE_CARD_EMULATION) {
+    nfc_status_t status = nfc_register_tech(NFC_CARD_EMU_TECH_A);
+    if (status != NFC_OK) {
+      return status;
+    }
+  } else {
+    memcpy(&drv->disc_params, &default_disc_params, sizeof(drv->disc_params));
   }
 
   ReturnCode err;

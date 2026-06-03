@@ -25,12 +25,8 @@
 #define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
 typedef enum {
-  NFC_POLLER_TECH_A = 0x1,
-  NFC_POLLER_TECH_B = 0x1 << 1,
-  NFC_POLLER_TECH_F = 0x1 << 2,
-  NFC_POLLER_TECH_V = 0x1 << 3,
-  NFC_CARD_EMU_TECH_A = 0x1 << 4,
-  NFC_CARD_EMU_TECH_F = 0x1 << 5,
+  NFC_CARD_EMU_TECH_A = 0x1 << 0,
+  NFC_CARD_EMU_TECH_F = 0x1 << 1,
 } nfc_tech_t;
 
 typedef enum {
