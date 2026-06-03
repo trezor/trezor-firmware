@@ -265,7 +265,11 @@ void msg_process(char type, uint16_t msg_id, const pb_msgdesc_t *fields,
 void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
   struct msg_read_state_t *state = msg_get_read_state(type);
 
-  if (!state) return;
+  if (!state) {
+    debugLog(0, "", "msg_read_common: unknown channel type");
+    debugInt((uint32_t)type);
+    return;
+  }
 
   if (len != USB_PACKET_SIZE) return;
 
@@ -278,23 +282,33 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
     state->msg_encoded_size =
         ((uint32_t)buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
 
+    debugLog(0, "", type == 'n' ? "msg_read[n]: new msg id" : "msg_read[d]: new msg id");
+    debugInt((uint32_t)state->msg_id);
+
     state->fields = MessageFields(type, 'i', state->msg_id);
     if (!state->fields) {  // unknown message
+      debugLog(0, "", type == 'n' ? "msg_read[n]: UNKNOWN msg id" : "msg_read[d]: UNKNOWN msg id");
+      debugInt((uint32_t)state->msg_id);
       fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
                       _("Unknown message"));
       return;
     }
     if (state->msg_encoded_size > MSG_IN_ENCODED_SIZE) {  // message is too big :(
+      debugLog(0, "", "msg_read: msg too big");
+      debugInt(state->msg_encoded_size);
       fsm_sendFailure(FailureType_Failure_DataError, _("Message too big"));
       return;
     }
 
+    debugLog(0, "", type == 'n' ? "msg_read[n]: IDLE->READING" : "msg_read[d]: IDLE->READING");
     state->read_state = READSTATE_READING;
 
     memcpy(state->msg_encoded, buf + MSG_HEADER_SIZE, len - MSG_HEADER_SIZE);
     state->msg_pos = len - MSG_HEADER_SIZE;
   } else if (state->read_state == READSTATE_READING) {
     if (buf[0] != '?') {  // invalid contents
+      debugLog(0, "", type == 'n' ? "msg_read[n]: bad continuation, reset" : "msg_read[d]: bad continuation, reset");
+      debugInt((uint32_t)state->msg_id);
       state->read_state = READSTATE_IDLE;
       state->msg_pos = 0;
       state->msg_id = 0xFFFF;
@@ -311,6 +325,8 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
   }
 
   if (state->msg_pos >= state->msg_encoded_size) {
+    debugLog(0, "", type == 'n' ? "msg_read[n]: complete, processing" : "msg_read[d]: complete, processing");
+    debugInt((uint32_t)state->msg_id);
     msg_process(type, state->msg_id, state->fields, state->msg_encoded,
                 state->msg_encoded_size);
     state->msg_pos = 0;
