@@ -131,7 +131,7 @@ static void prodtest_touch_test(cli_t* cli) {
     cli_ok(cli, "%d %d", x, y);
   } else {
     if (!cli_aborted(cli)) {
-      cli_error(cli, PRODTEST_ERR_TOUCH_QUADRANT_TIMEOUT, "");
+      cli_error(cli, PRODTEST_ERR_TOUCH_QUADRANT_TIMEOUT, "Timeout");
     }
   }
 
@@ -190,7 +190,7 @@ static void prodtest_touch_test_custom(cli_t* cli) {
 
   while (true) {
     if (ticks_expired(expire_time)) {
-      cli_error(cli, PRODTEST_ERR_TOUCH_CUSTOM_TIMEOUT, "");
+      cli_error(cli, PRODTEST_ERR_TOUCH_CUSTOM_TIMEOUT, "Timeout");
       break;
     }
 
