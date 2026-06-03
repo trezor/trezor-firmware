@@ -55,6 +55,7 @@ criteria = "safe-to-deploy"
 [[exemptions.bitflags]]
 version = "2.11.0"
 criteria = "safe-to-deploy"
+notes = "forbid-unsafe"
 
 [[exemptions.bstr]]
 version = "1.12.1"
@@ -103,6 +104,7 @@ criteria = "safe-to-deploy"
 [[exemptions.easer]]
 version = "0.3.0"
 criteria = "safe-to-deploy"
+notes = "no-unsafe"
 
 [[exemptions.eyre]]
 version = "0.6.12"
@@ -123,6 +125,7 @@ criteria = "safe-to-deploy"
 [[exemptions.hash32]]
 version = "0.3.1"
 criteria = "safe-to-deploy"
+notes = "skimmed"
 
 [[exemptions.hashbrown]]
 version = "0.14.2"
@@ -143,6 +146,7 @@ criteria = "safe-to-deploy"
 [[exemptions.itertools]]
 version = "0.13.0"
 criteria = "safe-to-deploy"
+notes = "unsafe-reviewed"
 
 [[exemptions.itoa]]
 version = "1.0.17"
@@ -191,6 +195,7 @@ criteria = "safe-to-deploy"
 [[exemptions.pareen]]
 version = "0.3.3"
 criteria = "safe-to-deploy"
+notes = "no-unsafe"
 
 [[exemptions.pathdiff]]
 version = "0.2.3"
@@ -199,6 +204,7 @@ criteria = "safe-to-deploy"
 [[exemptions.qrcodegen]]
 version = "1.8.0"
 criteria = "safe-to-deploy"
+notes = "forbid-unsafe"
 
 [[exemptions.regex-automata]]
 version = "0.4.14"
@@ -243,6 +249,7 @@ criteria = "safe-to-deploy"
 [[exemptions.syn]]
 version = "1.0.109"
 criteria = "safe-to-deploy"
+notes = "compile-time-unsafe unsafe-reviewed"
 
 [[exemptions.syn]]
 version = "2.0.117"
@@ -287,10 +294,12 @@ criteria = "safe-to-deploy"
 [[exemptions.ufmt-macros]]
 version = "0.3.0"
 criteria = "safe-to-deploy"
+notes = "compile-time-unsafe unsafe-reviewed"
 
 [[exemptions.unicode-ident]]
 version = "1.0.24"
 criteria = "safe-to-deploy"
+notes = "compile-time-unsafe skimmed"
 
 [[exemptions.unsize]]
 version = "1.1.0"
