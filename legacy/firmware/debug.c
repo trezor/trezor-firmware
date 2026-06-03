@@ -22,6 +22,11 @@
 #include "trezor.h"
 #include "util.h"
 
+#if EMULATOR
+#include <string.h>
+#include <unistd.h>
+#endif
+
 #if DEBUG_LOG
 
 void oledDebug(const char *line) {
@@ -46,7 +51,13 @@ void debugLog(int level, const char *bucket, const char *text) {
   (void)level;
   (void)bucket;
 #if EMULATOR
-  puts(text);
+  if (text) {
+    size_t len = strlen(text);
+    if (len > 0) {
+      (void)write(STDOUT_FILENO, text, len);
+    }
+  }
+  (void)write(STDOUT_FILENO, "\n", 1);
 #else
   oledDebug(text);
 #endif
