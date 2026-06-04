@@ -322,16 +322,17 @@ async def handle_SetAutoLockUSB() -> None:
     min_ms = storage_device.AUTOLOCK_DELAY_USB_MIN_MS
     max_ms = storage_device.AUTOLOCK_DELAY_USB_MAX_MS
 
-    auto_lock_delay_ms = await interact(
-        trezorui_api.request_duration(
-            title=TR.auto_lock__title,
-            duration_ms=duration_ms,
-            min_ms=min_ms,
-            max_ms=max_ms,
-            description=TR.auto_lock__description,
-        ),
-        br_name=None,
-    )
+    with trezorui_api.request_duration(
+        title=TR.auto_lock__title,
+        duration_ms=duration_ms,
+        min_ms=min_ms,
+        max_ms=max_ms,
+        description=TR.auto_lock__description,
+    ) as layout:
+        auto_lock_delay_ms = await interact(
+            layout,
+            br_name=None,
+        )
     # Necessary for the style check not to raise type error
     assert isinstance(auto_lock_delay_ms, int)
     settings = ApplySettings(
@@ -351,16 +352,17 @@ async def handle_SetAutoLockBattery() -> None:
     min_ms = storage_device.AUTOLOCK_DELAY_BATT_MIN_MS
     max_ms = storage_device.AUTOLOCK_DELAY_BATT_MAX_MS
 
-    auto_lock_delay_ms = await interact(
-        trezorui_api.request_duration(
-            title=TR.auto_lock__title,
-            duration_ms=duration_ms,
-            min_ms=min_ms,
-            max_ms=max_ms,
-            description=TR.auto_lock__description,
-        ),
-        br_name=None,
-    )
+    with trezorui_api.request_duration(
+        title=TR.auto_lock__title,
+        duration_ms=duration_ms,
+        min_ms=min_ms,
+        max_ms=max_ms,
+        description=TR.auto_lock__description,
+    ) as layout:
+        auto_lock_delay_ms = await interact(
+            layout,
+            br_name=None,
+        )
     # Necessary for the style check not to raise type error
     assert isinstance(auto_lock_delay_ms, int)
     settings = ApplySettings(
@@ -411,15 +413,16 @@ async def handle_SetDeviceName() -> None:
 
     utils.ensure(storage_device.is_initialized())
 
-    label = await interact(
-        trezorui_api.request_string(
-            prompt=TR.device_name__enter,
-            max_len=storage_device.LABEL_MAXLENGTH,
-            allow_empty=True,
-            prefill=storage_device.get_label(),
-        ),
-        "device_name",
-    )
+    with trezorui_api.request_string(
+        prompt=TR.device_name__enter,
+        max_len=storage_device.LABEL_MAXLENGTH,
+        allow_empty=True,
+        prefill=storage_device.get_label(),
+    ) as layout:
+        label = await interact(
+            layout,
+            "device_name",
+        )
     # Necessary for the style check not to raise type error
     assert isinstance(label, str)
     await apply_settings(ApplySettings(label=label))

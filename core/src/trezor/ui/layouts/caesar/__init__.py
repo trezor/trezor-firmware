@@ -224,15 +224,16 @@ def lock_time_disabled_warning() -> Awaitable[ui.UiResult]:
     )
 
 
-def confirm_homescreen(image: AnyBytes) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_homescreen(
-            title=TR.homescreen__title_set,
-            image=image,
-        ),
-        "set_homesreen",
-        ButtonRequestType.ProtectCall,
-    )
+async def confirm_homescreen(image: AnyBytes) -> None:
+    with trezorui_api.confirm_homescreen(
+        title=TR.homescreen__title_set,
+        image=image,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "set_homesreen",
+            ButtonRequestType.ProtectCall,
+        )
 
 
 async def confirm_change_label(
@@ -2160,12 +2161,10 @@ def error_popup(
 
 
 def request_passphrase_on_host() -> None:
-    draw_simple(
-        trezorui_api.show_simple(
-            title=None,
-            text=TR.passphrase__please_enter,
-        )
-    )
+    with trezorui_api.show_simple(
+        title=None, text=TR.passphrase__please_enter
+    ) as layout:
+        draw_simple(layout)
 
 
 def show_wait_text(message: str) -> None:
@@ -2173,16 +2172,17 @@ def show_wait_text(message: str) -> None:
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
-    result = await interact(
-        trezorui_api.request_passphrase(
-            prompt=TR.passphrase__title_enter,
-            prompt_empty=TR.passphrase__continue_with_empty_passphrase,
-            max_len=max_len,
-        ),
-        "passphrase_device",
-        ButtonRequestType.PassphraseEntry,
-        raise_on_cancel=ActionCancelled("Passphrase entry cancelled"),
-    )
+    with trezorui_api.request_passphrase(
+        prompt=TR.passphrase__title_enter,
+        prompt_empty=TR.passphrase__continue_with_empty_passphrase,
+        max_len=max_len,
+    ) as layout:
+        result = await interact(
+            layout,
+            "passphrase_device",
+            ButtonRequestType.PassphraseEntry,
+            raise_on_cancel=ActionCancelled("Passphrase entry cancelled"),
+        )
     assert isinstance(result, str)
     return result
 
@@ -2204,17 +2204,18 @@ async def request_pin_on_device(
     else:
         attempts = f"{attempts_remaining} {TR.pin__tries_left}"
 
-    result = await interact(
-        trezorui_api.request_pin(
-            prompt=prompt,
-            attempts=attempts,
-            allow_cancel=allow_cancel,
-            wrong_pin=wrong_pin,
-        ),
-        "pin_device",
-        ButtonRequestType.PinEntry,
-        raise_on_cancel=wire.PinCancelled,
-    )
+    with trezorui_api.request_pin(
+        prompt=prompt,
+        attempts=attempts,
+        allow_cancel=allow_cancel,
+        wrong_pin=wrong_pin,
+    ) as layout:
+        result = await interact(
+            layout,
+            "pin_device",
+            ButtonRequestType.PinEntry,
+            raise_on_cancel=wire.PinCancelled,
+        )
 
     return result  # type: ignore ["UiResult" is not assignable to "str"]
 
@@ -2377,14 +2378,15 @@ async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
     await show_success("success_pin", msg_screen)
 
 
-def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_firmware_update(
-            description=description, fingerprint=fingerprint
-        ),
-        "firmware_update",
-        BR_CODE_OTHER,
-    )
+async def confirm_firmware_update(description: str, fingerprint: str) -> None:
+    with trezorui_api.confirm_firmware_update(
+        description=description, fingerprint=fingerprint
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "firmware_update",
+            BR_CODE_OTHER,
+        )
 
 
 def create_details(name: str, value: list[StrPropertyType] | str) -> Details:

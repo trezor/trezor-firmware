@@ -15,7 +15,7 @@ from ..common import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
-    from typing import Any, Awaitable, Coroutine, Iterable, NoReturn, Sequence, TypeVar
+    from typing import Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
     from trezor.messages import StellarAsset
 
@@ -143,11 +143,14 @@ async def prompt_recovery_check(recovery_type: RecoveryType) -> None:
 
 
 async def show_wallet_created_success() -> None:
-    await interact(
-        trezorui_api.show_success(title=TR.backup__new_wallet_created, button=""),
-        "backup_device",
-        ButtonRequestType.ResetDevice,
-    )
+    with trezorui_api.show_success(
+        title=TR.backup__new_wallet_created, button=""
+    ) as layout:
+        await interact(
+            layout,
+            "backup_device",
+            ButtonRequestType.ResetDevice,
+        )
 
 
 async def prompt_backup() -> bool:
@@ -217,9 +220,7 @@ def lock_time_disabled_warning() -> Awaitable[None]:
     )
 
 
-def confirm_homescreen(
-    image: AnyBytes,
-) -> Awaitable[None]:
+async def confirm_homescreen(image: AnyBytes) -> None:
 
     from trezor import workflow
 
@@ -227,14 +228,15 @@ def confirm_homescreen(
     # in order to display the new homescreen image.
     workflow.close_others()
 
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_homescreen(
-            title=TR.homescreen__title_set,
-            image=image,
-        ),
-        "set_homesreen",
-        ButtonRequestType.ProtectCall,
-    )
+    with trezorui_api.confirm_homescreen(
+        title=TR.homescreen__title_set,
+        image=image,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "set_homesreen",
+            ButtonRequestType.ProtectCall,
+        )
 
 
 async def confirm_change_label(
@@ -461,23 +463,24 @@ def show_danger(
     )
 
 
-def show_success(
+async def show_success(
     br_name: str | None,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     time_ms: int = 0,
-) -> Coroutine[Any, Any, None]:
-    return raise_if_not_confirmed(
-        trezorui_api.show_success(
-            title=content,
-            button=button or "",
-            description=subheader or "",
-            time_ms=time_ms,
-        ),
-        br_name,
-        ButtonRequestType.Success,
-    )
+) -> None:
+    with trezorui_api.show_success(
+        title=content,
+        button=button or "",
+        description=subheader or "",
+        time_ms=time_ms,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            br_name,
+            ButtonRequestType.Success,
+        )
 
 
 def show_continue_in_app(content: str) -> None:
@@ -2143,38 +2146,37 @@ def error_popup(
 
 
 def request_passphrase_on_host() -> None:
-    draw_simple(
-        trezorui_api.show_simple(
-            title=None,
-            text=TR.passphrase__please_enter,
-        )
-    )
+    with trezorui_api.show_simple(
+        title=None, text=TR.passphrase__please_enter
+    ) as layout:
+        draw_simple(layout)
 
 
 def show_wait_text(message: str) -> None:
     draw_simple(trezorui_api.show_wait_text(message))
 
 
-def request_passphrase_on_device(max_len: int) -> Awaitable[str]:
-    result = interact(
-        trezorui_api.request_passphrase(
-            prompt=TR.passphrase__title_enter,
-            prompt_empty=TR.passphrase__continue_with_empty_passphrase,
-            max_len=max_len,
-        ),
-        "passphrase_device",
-        ButtonRequestType.PassphraseEntry,
-        raise_on_cancel=ActionCancelled("Passphrase entry cancelled"),
-    )
+async def request_passphrase_on_device(max_len: int) -> str:
+    with trezorui_api.request_passphrase(
+        prompt=TR.passphrase__title_enter,
+        prompt_empty=TR.passphrase__continue_with_empty_passphrase,
+        max_len=max_len,
+    ) as layout:
+        result = await interact(
+            layout,
+            "passphrase_device",
+            ButtonRequestType.PassphraseEntry,
+            raise_on_cancel=ActionCancelled("Passphrase entry cancelled"),
+        )
     return result  # type: ignore ["UiResult" is not assignable to "str"]
 
 
-def request_pin_on_device(
+async def request_pin_on_device(
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
     wrong_pin: bool = False,
-) -> Awaitable[str]:
+) -> str:
     from trezor.wire import PinCancelled
 
     if attempts_remaining is None:
@@ -2184,17 +2186,18 @@ def request_pin_on_device(
     else:
         attempts = f"{attempts_remaining} {TR.pin__tries_left}"
 
-    result = interact(
-        trezorui_api.request_pin(
-            prompt=prompt,
-            attempts=attempts,
-            allow_cancel=allow_cancel,
-            wrong_pin=wrong_pin,
-        ),
-        "pin_device",
-        ButtonRequestType.PinEntry,
-        raise_on_cancel=PinCancelled,
-    )
+    with trezorui_api.request_pin(
+        prompt=prompt,
+        attempts=attempts,
+        allow_cancel=allow_cancel,
+        wrong_pin=wrong_pin,
+    ) as layout:
+        result = await interact(
+            layout,
+            "pin_device",
+            ButtonRequestType.PinEntry,
+            raise_on_cancel=PinCancelled,
+        )
     return result  # type: ignore ["UiResult" is not assignable to "str"]
 
 
@@ -2302,14 +2305,15 @@ async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
     await show_success("success_pin", msg_screen)
 
 
-def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_firmware_update(
-            description=description, fingerprint=fingerprint
-        ),
-        "firmware_update",
-        BR_CODE_OTHER,
-    )
+async def confirm_firmware_update(description: str, fingerprint: str) -> None:
+    with trezorui_api.confirm_firmware_update(
+        description=description, fingerprint=fingerprint
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "firmware_update",
+            BR_CODE_OTHER,
+        )
 
 
 async def set_brightness(current: int | None = None) -> None:

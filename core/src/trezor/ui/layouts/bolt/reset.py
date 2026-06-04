@@ -113,42 +113,38 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    num_input = trezorui_api.request_number(
+    with trezorui_api.request_number(
         title=title,
         count=count,
         min_count=min_count,
         max_count=max_count,
         description=None,
         more_info_callback=description,
-    )
+    ) as num_input:
+        while True:
+            result = await interact(
+                num_input,
+                br_name,
+                ButtonRequestType.ResetDevice,
+                raise_on_cancel=None,
+            )
+            if __debug__:
+                if not isinstance(result, tuple):
+                    # DebugLink currently can't send number of shares and it doesn't
+                    # change the counter either so just use the initial value.
+                    result = result, count
+            status, value = result
 
-    while True:
-        result = await interact(
-            num_input,
-            br_name,
-            ButtonRequestType.ResetDevice,
-            raise_on_cancel=None,
-        )
-        if __debug__:
-            if not isinstance(result, tuple):
-                # DebugLink currently can't send number of shares and it doesn't
-                # change the counter either so just use the initial value.
-                result = result, count
-        status, value = result
+            if status == CONFIRMED:
+                assert isinstance(value, int)
+                return value
 
-        if status == CONFIRMED:
-            assert isinstance(value, int)
-            return value
-
-        await interact(
-            trezorui_api.show_simple(
+            with trezorui_api.show_simple(
                 title=None,
                 text=info(value),
                 button=TR.buttons__ok_i_understand,
-            ),
-            None,
-            raise_on_cancel=None,
-        )
+            ) as layout:
+                await interact(layout, None, raise_on_cancel=None)
 
 
 def slip39_prompt_threshold(

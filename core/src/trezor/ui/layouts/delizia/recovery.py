@@ -110,24 +110,25 @@ async def continue_recovery(
     show_instructions: bool = False,
     remaining_shares_info: "RemainingSharesInfo | None" = None,
 ) -> bool:
-    result = await interact(
-        trezorui_api.continue_recovery_homepage(
-            text=text,
-            subtext=subtext,
-            button=None,
-            recovery_type=recovery_type,
-            show_instructions=show_instructions,
-            remaining_shares=(
-                format_remaining_shares_info(remaining_shares_info)
-                if remaining_shares_info
-                else None
-            ),
+    with trezorui_api.continue_recovery_homepage(
+        text=text,
+        subtext=subtext,
+        button=None,
+        recovery_type=recovery_type,
+        show_instructions=show_instructions,
+        remaining_shares=(
+            format_remaining_shares_info(remaining_shares_info)
+            if remaining_shares_info
+            else None
         ),
-        None,
-        ButtonRequestType.Other,
-        raise_on_cancel=None,
-    )
-    return result is CONFIRMED
+    ) as layout:
+        result = await interact(
+            layout,
+            None,
+            ButtonRequestType.Other,
+            raise_on_cancel=None,
+        )
+        return result is CONFIRMED
 
 
 async def show_invalid_mnemonic(word_count: int) -> None:

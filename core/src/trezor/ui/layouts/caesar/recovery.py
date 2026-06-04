@@ -129,30 +129,30 @@ async def continue_recovery(
     if subtext:
         text += f"\n\n{subtext}"
 
-    homepage = trezorui_api.continue_recovery_homepage(
+    with trezorui_api.continue_recovery_homepage(
         text=text,
         subtext=None,
         button=button_label,
         recovery_type=recovery_type,
         show_instructions=show_instructions,
         remaining_shares=None,
-    )
-    while True:
-        result = await interact(
-            homepage,
-            "recovery",
-            ButtonRequestType.RecoveryHomepage,
-            raise_on_cancel=None,
-        )
-        if result is trezorui_api.CONFIRMED:
-            return True
+    ) as homepage:
+        while True:
+            result = await interact(
+                homepage,
+                "recovery",
+                ButtonRequestType.RecoveryHomepage,
+                raise_on_cancel=None,
+            )
+            if result is trezorui_api.CONFIRMED:
+                return True
 
-        try:
-            await _confirm_abort(recovery_type != RecoveryType.NormalRecovery)
-        except ActionCancelled:
-            pass
-        else:
-            return False
+            try:
+                await _confirm_abort(recovery_type != RecoveryType.NormalRecovery)
+            except ActionCancelled:
+                pass
+            else:
+                return False
 
 
 async def show_invalid_mnemonic(word_count: int) -> None:
