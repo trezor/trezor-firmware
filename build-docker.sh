@@ -129,6 +129,12 @@ fi
 
 VARIANTS=("${variants[@]}")
 
+# A single override suffix cannot safely represent both variants at once.
+if [ -n "${DIRSUFFIX_OVERRIDE:-}" ] && [ "$OPT_BUILD_NORMAL" -eq 1 ] && [ "$OPT_BUILD_BITCOINONLY" -eq 1 ]; then
+  echo "DIRSUFFIX_OVERRIDE requires selecting exactly one variant (--skip-normal or --skip-bitcoinonly)."
+  exit 1
+fi
+
 TAG="$1"
 COMMIT_HASH="$(git rev-parse "$TAG")"
 PRODUCTION=${PRODUCTION:-1}
@@ -151,8 +157,7 @@ fi
 tag_clean="${TAG//[^a-zA-Z0-9]/_}"
 SNAPSHOT_NAME="${CONTAINER_NAME}__${tag_clean}"
 
-mkdir -p build/core build/legacy
-mkdir -p build/core-bitcoinonly build/legacy-bitcoinonly
+mkdir -p build
 
 # if not initializing, does the image exist?
 if [ $INIT -eq 0 ] && ! $DOCKER image inspect $SNAPSHOT_NAME > /dev/null; then
@@ -260,6 +265,7 @@ for TREZOR_MODEL in ${MODELS[@]}; do
 
     DIRSUFFIX=${BITCOIN_ONLY/1/-bitcoinonly}
     DIRSUFFIX=${DIRSUFFIX/0/}
+    DIRSUFFIX=${DIRSUFFIX_OVERRIDE:-$DIRSUFFIX}
     DIRSUFFIX="-${TREZOR_MODEL}${DIRSUFFIX}"
 
     MAKE_TARGETS=""
@@ -484,13 +490,14 @@ echo "Fingerprints:"
 # Display core and legacy fingerprints (if built)
 for VARIANT in core legacy; do
   for MODEL in ${MODELS[@]}; do
-    for DIRSUFFIX in "" "-bitcoinonly"; do
+    for DIRSUFFIX in "" "-bitcoinonly" $DIRSUFFIX_OVERRIDE; do
       BUILD_DIR=build/${VARIANT}-${MODEL}${DIRSUFFIX}
       for file in $BUILD_DIR/*/*.fingerprint; do
         if [ -f "$file" ]; then
           origfile="${file%.fingerprint}"
           fingerprint=$(tr -d '\n' < $file)
-          echo "$fingerprint $origfile"
+          chunkified_fingerprint=$(echo "$fingerprint" | sed 's/.\{4\}/& /g')
+          echo -e "\033[1m$chunkified_fingerprint\033[0m $origfile"
         fi
       done
     done
