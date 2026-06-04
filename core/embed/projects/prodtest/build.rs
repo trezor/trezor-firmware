@@ -44,6 +44,7 @@ fn main() -> Result<()> {
                 "prodtest_tamper.c",
                 "prodtest_sbu.c",
                 "prodtest_secure_channel.c",
+                "prodtest_syslog.c",
                 "prodtest_telemetry.c",
                 "prodtest_touch.c",
                 "prodtest_tropic.c",
