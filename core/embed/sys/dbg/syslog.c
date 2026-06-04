@@ -266,35 +266,3 @@ void syslog_tsh_error(ts_t status, const char* file, int line) {
   syslog_printf(&source, LOG_LEVEL_ERR, "%s at %s:%d", ts_string(status), file,
                 line);
 }
-
-#ifdef TREZOR_PRODTEST
-
-#include <rtl/cli.h>
-
-#include "prodtest_error_codes.h"
-
-static void prodtest_set_log_filter(cli_t* cli) {
-  const char* filter = cli_arg(cli, "filter");
-  size_t filter_len = strlen(filter);
-
-  if (filter_len == 0) {
-    cli_error_arg(cli, "Expecting filter string.");
-    return;
-  }
-
-  if (cli_arg_count(cli) > 1) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  if (!syslog_set_filter(filter, filter_len)) {
-    cli_error(cli, PRODTEST_ERR_SYSLOG_FILTER_SET, "Failed to set log filter.");
-  }
-
-  cli_ok(cli, "");
-}
-
-PRODTEST_CLI_CMD(.name = "log-filter", .func = prodtest_set_log_filter,
-                 .info = "Set logging filter", .args = "<filter>");
-
-#endif  // TREZOR_PRODTEST
