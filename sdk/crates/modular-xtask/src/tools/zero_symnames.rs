@@ -9,7 +9,10 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
-    let keep_names: HashSet<String> = keep_names.into_iter().map(|s| s.as_ref().to_string()).collect();
+    let keep_names: HashSet<String> = keep_names
+        .into_iter()
+        .map(|s| s.as_ref().to_string())
+        .collect();
 
     let mut data = std::fs::read(elf_path)
         .with_context(|| format!("Failed to read ELF: {}", elf_path.display()))?;

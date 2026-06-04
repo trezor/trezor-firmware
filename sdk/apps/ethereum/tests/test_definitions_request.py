@@ -3,7 +3,6 @@ from __future__ import annotations
 from binascii import hexlify
 from typing import Callable
 
-from trezorlib import messages as trezor_messages
 from trezorlib.debuglink import DebugSession as Session
 
 from . import definitions, ethereum_ext
@@ -147,7 +146,9 @@ def test_definition_request_not_sent(session: Session, instance_id: int) -> None
         assert_all_seen()
 
 
-def test_definition_request_with_display_format(session: Session, instance_id: int) -> None:
+def test_definition_request_with_display_format(
+    session: Session, instance_id: int
+) -> None:
     # When we reply to EthereumDefinitionRequest with a valid display format,
     # the firmware performs clear signing using the provided display format.
 
@@ -182,7 +183,9 @@ def test_definition_request_with_display_format(session: Session, instance_id: i
         assert len(token_requests) == 1  # WETH requested, built in USDT not requested
 
 
-def test_definition_request_with_invalid_display_format(session: Session, instance_id: int) -> None:
+def test_definition_request_with_invalid_display_format(
+    session: Session, instance_id: int
+) -> None:
     # A definition whose tuple claims an extra field causes the firmware to fail parsing it
     # and reverting to blind signing.
 
@@ -227,7 +230,8 @@ def test_definition_request_with_invalid_display_format(session: Session, instan
                 InputFlowConfirmAllWarnings(session, on_page=on_page).get()
             )
             sign_tx(
-                session, instance_id,
+                session,
+                instance_id,
                 **param_getter(supports_definition_request=True),
                 definition_provider=_make_display_format_definition_provider(
                     display_format_requests, token_requests, bad_display_format
@@ -262,7 +266,8 @@ def test_definition_request_two_tokens(session: Session, instance_id: int) -> No
                 InputFlowConfirmAllWarnings(session, on_page=on_page).get()
             )
             sign_tx(
-                session, instance_id,
+                session,
+                instance_id,
                 **param_getter(
                     data=UNISWAP_WETH_WETH2_CALLDATA,
                     supports_definition_request=True,

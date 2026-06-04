@@ -5,9 +5,10 @@ from typing import Optional, Protocol
 
 from ecdsa import NIST256p, SigningKey
 
-from .generated import messages as ethereum_messages
 from trezorlib.client import Session
 from trezorlib.testing.common import compact_size
+
+from .generated import messages as ethereum_messages
 
 
 class _HashLike(Protocol):

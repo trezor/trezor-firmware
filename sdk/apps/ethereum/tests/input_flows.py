@@ -19,10 +19,7 @@ from trezorlib.debuglink import DebugLink, DebugSession, LayoutContent, LayoutTy
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import multipage_content
 from trezorlib.testing import translations as TR
-from trezorlib.testing.common import (
-    BRGeneratorType,
-    swipe_if_necessary,
-)
+from trezorlib.testing.common import BRGeneratorType, swipe_if_necessary
 
 B = trezor_messages.ButtonRequestType
 

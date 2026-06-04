@@ -602,20 +602,14 @@ fn validate_value(field: &FieldType, value: &[u8]) -> Result<()> {
 
     // Type-specific checks
     match field.data_type {
-        x if x == DataType::Bool as i32 => {
-            if value != [0x00] && value != [0x01] {
-                return Err(Error::DataError("Invalid boolean value"));
-            }
+        x if (x == DataType::Bool as i32 && value != [0x00] && value != [0x01]) => {
+            return Err(Error::DataError("Invalid boolean value"));
         }
-        x if x == DataType::Address as i32 => {
-            if value.len() != 20 {
-                return Err(Error::DataError("Invalid address length"));
-            }
+        x if (x == DataType::Address as i32 && value.len() != 20) => {
+            return Err(Error::DataError("Invalid address length"));
         }
-        x if x == DataType::String as i32 => {
-            if core::str::from_utf8(value).is_err() {
-                return Err(Error::DataError("Invalid UTF-8 string"));
-            }
+        x if (x == DataType::String as i32 && core::str::from_utf8(value).is_err()) => {
+            return Err(Error::DataError("Invalid UTF-8 string"));
         }
         _ => {}
     }

@@ -18,13 +18,13 @@ from __future__ import annotations
 
 import logging
 import os
+import subprocess
+import sys
 import typing as t
 from dataclasses import asdict, dataclass
 from enum import IntEnum
 from pathlib import Path
-import sys
 
-import subprocess
 import pytest
 import xdist
 from _pytest.python import IdMaker
@@ -34,10 +34,10 @@ from trezorlib import client as client_module
 from trezorlib import debuglink, log, messages, models
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.device import apply_settings
-from trezorlib.transport import enumerate_devices, get_transport
-from trezorlib.transport.ble import BleTransport
 from trezorlib.testing import translations
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
+from trezorlib.transport import enumerate_devices, get_transport
+from trezorlib.transport.ble import BleTransport
 
 from . import ui_tests
 
@@ -47,6 +47,7 @@ if t.TYPE_CHECKING:
     from _pytest.mark import Mark
     from _pytest.nodes import Node
     from _pytest.terminal import TerminalReporter
+
     from trezorlib.client import Session
 
 

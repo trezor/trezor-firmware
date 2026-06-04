@@ -3,9 +3,9 @@ use std::process;
 
 use crate::{args::UploadArgs, helpers};
 
-pub fn upload(args: UploadArgs) -> Result<u64> {
+pub fn upload(args: &UploadArgs) -> Result<u64> {
     let binary =
-        helpers::artifacts_dir(args.model, args.lang, args.emulator)?.join(format!("{}.elf", &args.app));
+        helpers::artifacts_dir(args.model, args.emulator)?.join(format!("{}.elf", &args.project));
 
     let binary = binary
         .canonicalize()
@@ -17,7 +17,14 @@ pub fn upload(args: UploadArgs) -> Result<u64> {
     );
 
     let output = process::Command::new("uv")
-        .args(["run", "trezorctl", "extapp", "load"])
+        .args([
+            "--directory",
+            &args.project,
+            "run",
+            "trezorctl",
+            "extapp",
+            "load",
+        ])
         .arg(&binary)
         .output()
         .context("Failed to spawn `trezorctl`")?;

@@ -4,16 +4,12 @@ from hashlib import sha256
 
 import pytest
 
-from . import ethereum_ext
-
 from trezorlib import models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from .generated import messages as ethereum_messages
-
-
+from . import ethereum_ext
 from .definitions import (
     make_eth_display_format,
     make_eth_network,
@@ -21,6 +17,7 @@ from .definitions import (
     make_payload,
     sign_payload,
 )
+from .generated import messages as ethereum_messages
 from .test_definitions import (
     DEFAULT_ERC20_PARAMS,
     ERC20_FAKE_ADDRESS,
