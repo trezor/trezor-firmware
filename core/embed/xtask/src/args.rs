@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use std::process;
 use modular_xtask::args::Cmd as ModularCmd;
+use std::process;
 
 pub use crate::model::Model;
 
