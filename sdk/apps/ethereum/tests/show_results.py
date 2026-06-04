@@ -13,11 +13,7 @@ from urllib.parse import unquote
 
 import click
 
-from ui_tests.common import (
-    SCREENS_DIR,
-    TestResult,
-    write_fixtures_complete,
-)
+from ui_tests.common import SCREENS_DIR, TestResult, write_fixtures_complete
 from ui_tests.reporting import testreport
 
 ROOT = Path(__file__).resolve().parent.parent

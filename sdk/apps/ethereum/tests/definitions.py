@@ -4,8 +4,9 @@ import io
 import typing as t
 from hashlib import sha256
 
-from trezorlib import cosi, protobuf, definitions
+from trezorlib import cosi, definitions, protobuf
 from trezorlib.testing.common import PRIVATE_KEYS_DEV
+
 from .generated import messages as ethereum_messages
 
 

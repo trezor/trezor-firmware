@@ -1,7 +1,9 @@
-use anyhow::Result;
+use anyhow::{Result, ensure};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use std::process;
+
+use crate::helpers;
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Model {
@@ -35,12 +37,11 @@ pub enum LogLevel {
 
 impl Model {
     /// Returns feature name corresponding to the model
-    pub fn feature_name(self) -> String {
+    pub fn feature_name(self) -> &'static str {
         match self {
             Model::T3T1 => "model_t3t1",
             Model::T3W1 => "model_t3w1",
         }
-        .into()
     }
 
     /// Returns the Rust target triple for the building firmware for hardware target
@@ -60,22 +61,17 @@ impl Model {
 }
 
 impl Language {
-    /// Returns the name of the language
-    pub fn name(self) -> String {
-        match self {
-            Language::EN => "en".into(),
-            Language::CS => "cs".into(),
-        }
-    }
-
     /// Returns feature name corresponding to the language
-    pub fn feature_name(self) -> String {
-        format!("lang_{}", self.name())
+    pub fn feature_name(self) -> &'static str {
+        match self {
+            Language::EN => "lang_en",
+            Language::CS => "lang_cs",
+        }
     }
 }
 
 impl LogLevel {
-    pub fn feature_name(self) -> String {
+    pub fn feature_name(self) -> &'static str {
         match self {
             LogLevel::Error => "log_level_error",
             LogLevel::Warn => "log_level_warn",
@@ -83,7 +79,6 @@ impl LogLevel {
             LogLevel::Debug => "log_level_debug",
             LogLevel::Trace => "log_level_trace",
         }
-        .into()
     }
 }
 
@@ -108,29 +103,33 @@ pub enum Cmd {
     /// Run unit tests of specified package
     UnitTests(UnitTestArgs),
     /// Run device tests of specified package
-    DeviceTests(DeviceTestArgs),
+    DeviceTests(DeviceTestsArgs),
     /// Clean build artifacts
     Clean,
     /// Format code with rustfmt
     Fmt,
     /// Upload firmware to device
     Upload(UploadArgs),
+    /// Run Python style tools
+    PyStyle(PyStyleArgs),
+    /// Run Python style checks
+    PyStyleCheck(PyStyleArgs),
 }
 
 #[derive(Args, Debug, Clone)]
 #[command(
-    override_usage = "xtask build --model <MODEL> --language <LANGUAGE> --log_level <LOG_LEVEL> [OPTIONS]"
+    override_usage = "xtask build --project <PROJECT> --model <MODEL> --language <LANGUAGE> --log_level <LOG_LEVEL> [OPTIONS]"
 )]
 pub struct BuildArgs {
-    #[arg(default_value = "ethereum")]
-    pub app: String,
+    #[arg(long, short = 'p', ignore_case = true, default_value = "")]
+    pub project: String,
 
     /// Build target model
     #[arg(long, short = 'm', ignore_case = true, default_value = "t3w1")]
     pub model: Model,
 
     /// Build target language
-    #[arg(long, short = 'l', ignore_case = true, default_value = "en")]
+    #[arg(long, ignore_case = true, default_value = "en")]
     pub lang: Language,
 
     /// Log level for the built firmware
@@ -155,7 +154,7 @@ pub struct BuildArgs {
 
 impl BuildArgs {
     /// Resolves the list of cargo features to enable based on the provided cli arguments
-    pub fn resolve_features(&self) -> Result<Vec<String>> {
+    pub fn resolve_features(&self) -> Result<Vec<&'static str>> {
         let mut features = vec![
             self.model.feature_name(),
             self.lang.feature_name(),
@@ -163,15 +162,15 @@ impl BuildArgs {
         ];
 
         if self.emulator {
-            features.push("emulator".into());
+            features.push("emulator");
         }
 
         if self.debug {
-            features.push("debug".into());
+            features.push("debug");
         }
 
         if !self.production {
-            features.push("dev_keys".into());
+            features.push("dev_keys");
         }
 
         Ok(features)
@@ -180,18 +179,44 @@ impl BuildArgs {
     // Configures the cargo command with the appropriate arguments and features
     // based on the provided cli arguments
     pub fn configure_cargo(&self, cmd: &mut process::Command) -> Result<()> {
-        let features = self.resolve_features()?;
+        if helpers::is_workspace()? {
+            ensure!(
+                !self.project.is_empty(),
+                "Project name must be specified when running in a workspace"
+            );
+            cmd.arg("-p").arg(&self.project);
+        }
 
+        let features = self.resolve_features()?;
         cmd.args(["--features", &features.join(",")]);
 
-        if !self.debug {
-            cmd.arg("--release");
-            cmd.arg("-Zbuild-std=core,alloc");
+        if self.debug {
+            cmd.arg("--profile").arg("debug-fw");
+        } else {
+            cmd.arg("--profile")
+                .arg("release-fw")
+                .arg("-Zbuild-std=core,alloc");
         }
 
         if !self.emulator {
+            let linker_script = if helpers::is_workspace()? {
+                format!("{}/memory.x", self.project)
+            } else {
+                "memory.x".into()
+            };
             cmd.args(["--target", self.model.target_triple()]);
-        } else {
+            cmd.env(
+                "RUSTFLAGS",
+                &format!(
+                    "-C relocation-model=ropi-rwpi \
+                     -C link-arg=-T{} \
+                     -C link-arg=--emit-relocs \
+                     -C link-arg=-z \
+                     -C link-arg=max-page-size=0x20 \
+                     -C link-arg=--no-dynamic-linker",
+                    linker_script
+                ),
+            );
         }
 
         if self.verbose {
@@ -203,14 +228,19 @@ impl BuildArgs {
 }
 
 #[derive(Args, Debug)]
-// #[command(override_usage = "xtask build --model <MODEL> --language <LANGUAGE> [OPTIONS]")]
+#[command(
+    override_usage = "cargo xtask unit-tests --project <PROJECT> --model <MODEL> --language <LANGUAGE> [OPTIONS]"
+)]
 pub struct UnitTestArgs {
+    #[arg(long, short = 'p', ignore_case = true, default_value = "")]
+    pub project: String,
+
     /// Build target model
     #[arg(long, short = 'm', ignore_case = true, default_value = "t3w1")]
     pub model: Model,
 
     /// Build target language
-    #[arg(long, short = 'l', ignore_case = true, default_value = "en")]
+    #[arg(long, ignore_case = true, default_value = "en")]
     pub lang: Language,
 
     /// Test to run (defaults to all tests in the package)
@@ -219,34 +249,28 @@ pub struct UnitTestArgs {
 }
 
 #[derive(Args, Debug)]
-#[command(override_usage = "xtask upload --model <MODEL> --lang <LANGUAGE> [OPTIONS]")]
+#[command(override_usage = "cargo xtask upload --project <PROJECT> --model <MODEL> [OPTIONS]")]
 pub struct UploadArgs {
-    #[arg(default_value = "ethereum")]
-    pub app: String,
+    #[arg(long, short = 'p', ignore_case = true, default_value = "")]
+    pub project: String,
 
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
 
-    #[arg(long, short = 'l', ignore_case = true)]
-    pub lang: Language,
-
     #[arg(long, short = 'e')]
     pub emulator: bool,
 }
 
 #[derive(Args, Debug)]
-// #[command(override_usage = "xtask build --model <MODEL> --language <LANGUAGE> [OPTIONS]")]
-pub struct DeviceTestArgs {
-    #[arg(default_value = "ethereum")]
-    pub app: String,
+#[command(
+    override_usage = "cargo xtask device-tests --project <PROJECT> --model <MODEL> [OPTIONS]"
+)]
+pub struct DeviceTestsArgs {
+    #[arg(long, short = 'p', ignore_case = true, default_value = "")]
+    pub project: String,
 
-    /// Build target model
-    #[arg(long, short = 'm', ignore_case = true, default_value = "t3w1")]
+    #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
-
-    /// Build target language
-    #[arg(long, short = 'l', ignore_case = true, default_value = "en")]
-    pub lang: Language,
 
     #[arg(long, short = 'e')]
     pub emulator: bool,
@@ -254,4 +278,11 @@ pub struct DeviceTestArgs {
     /// Test to run (defaults to all tests in the package)
     #[arg(long, short = 't', default_value = "")]
     pub test: String,
+}
+
+#[derive(Args, Debug)]
+#[command(override_usage = "cargo xtask py-style --project <PROJECT>")]
+pub struct PyStyleArgs {
+    #[arg(long, short = 'p', default_value = "")]
+    pub project: String,
 }

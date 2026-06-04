@@ -17,8 +17,8 @@
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
-from .common import parametrize_using_common_fixtures
 from . import ethereum_ext
+from .common import parametrize_using_common_fixtures
 from .input_flows import InputFlowShowAddressQRCode
 
 

@@ -10,9 +10,9 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from . import definitions, ethereum_ext
+from .generated import messages as ethereum_messages
 from .input_flows import InputFlowConfirmAllWarnings
 from .test_sign_typed_data import DATA as TYPED_DATA
-from .generated import messages as ethereum_messages
 
 ERC20_OPERATION = "a9059cbb000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000123"
 ERC20_BUILTIN_TOKEN = "0xdac17f958d2ee523a2206206994597c13d831ec7"  # USDT
@@ -65,7 +65,10 @@ def test_slip44_external(session: Session, instance_id: int) -> None:
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/66666h/0h/0/0"), chain_id=66666)
     ethereum_ext.sign_tx(
-        session, instance_id, **params, definitions=definitions.make_eth_defs(network, None)
+        session,
+        instance_id,
+        **params,
+        definitions=definitions.make_eth_defs(network, None),
     )
 
 
@@ -75,7 +78,10 @@ def test_slip44_cross_sign(session: Session, instance_id: int) -> None:
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/60h/0h/0/0"), chain_id=999)
     ethereum_ext.sign_tx(
-        session, instance_id, **params, definitions=definitions.make_eth_defs(network, None)
+        session,
+        instance_id,
+        **params,
+        definitions=definitions.make_eth_defs(network, None),
     )
 
 
@@ -86,7 +92,10 @@ def test_slip44_external_disallowed(session: Session, instance_id: int) -> None:
     params.update(n=parse_path("m/44h/55555h/0h/0/0"), chain_id=66666)
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         ethereum_ext.sign_tx(
-            session, instance_id, **params, definitions=definitions.make_eth_defs(network, None)
+            session,
+            instance_id,
+            **params,
+            definitions=definitions.make_eth_defs(network, None),
         )
 
 
@@ -97,7 +106,10 @@ def test_chain_id_mismatch(session: Session, instance_id: int) -> None:
     params.update(chain_id=55555)
     with pytest.raises(TrezorFailure, match="Network definition mismatch"):
         ethereum_ext.sign_tx(
-            session, instance_id, **params, definitions=definitions.make_eth_defs(network, None)
+            session,
+            instance_id,
+            **params,
+            definitions=definitions.make_eth_defs(network, None),
         )
 
 
@@ -111,7 +123,10 @@ def test_definition_does_not_override_builtin(
     params.update(n=parse_path("m/44h/66666h/0h/0/0"), chain_id=1)
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         ethereum_ext.sign_tx(
-            session, instance_id, **params, definitions=definitions.make_eth_defs(network, None)
+            session,
+            instance_id,
+            **params,
+            definitions=definitions.make_eth_defs(network, None),
         )
 
     # TODO: test that the builtin definition will not show different symbol
@@ -140,7 +155,10 @@ def test_external_token(session: Session, instance_id: int) -> None:
     params = DEFAULT_ERC20_PARAMS.copy()
     params.update(to=ERC20_FAKE_ADDRESS)
     ethereum_ext.sign_tx(
-        session, instance_id, **params, definitions=definitions.make_eth_defs(None, token)
+        session,
+        instance_id,
+        **params,
+        definitions=definitions.make_eth_defs(None, token),
     )
     # TODO check that FakeTok symbol is shown
 
@@ -154,7 +172,10 @@ def test_external_chain_without_token(session: Session, instance_id: int) -> Non
         params = DEFAULT_ERC20_PARAMS.copy()
         params.update(to=ERC20_BUILTIN_TOKEN, chain_id=66666)
         ethereum_ext.sign_tx(
-            session, instance_id, **params, definitions=definitions.make_eth_defs(network, None)
+            session,
+            instance_id,
+            **params,
+            definitions=definitions.make_eth_defs(network, None),
         )
         # TODO check that UNKN token is used, FAKE network
 
@@ -168,7 +189,10 @@ def test_external_chain_token_ok(session: Session, instance_id: int) -> None:
     params = DEFAULT_ERC20_PARAMS.copy()
     params.update(to=ERC20_FAKE_ADDRESS, chain_id=66666)
     ethereum_ext.sign_tx(
-        session, instance_id, **params, definitions=definitions.make_eth_defs(network, token)
+        session,
+        instance_id,
+        **params,
+        definitions=definitions.make_eth_defs(network, token),
     )
     # TODO check that FakeTok is used, FAKE network
 
@@ -186,7 +210,10 @@ def test_external_chain_token_mismatch(session: Session, instance_id: int) -> No
         params = DEFAULT_ERC20_PARAMS.copy()
         params.update(to=ERC20_FAKE_ADDRESS, chain_id=66666)
         ethereum_ext.sign_tx(
-            session, instance_id, **params, definitions=definitions.make_eth_defs(network, token)
+            session,
+            instance_id,
+            **params,
+            definitions=definitions.make_eth_defs(network, token),
         )
         # TODO check that UNKN is used for token, FAKE for network
 
@@ -195,7 +222,11 @@ def _call_getaddress(
     session: Session, instance_id: int, slip44: int, network: bytes | None
 ) -> None:
     ethereum_ext.get_address(
-        session, instance_id, parse_path(f"m/44h/{slip44}h/0h"), show_display=False, encoded_network=network
+        session,
+        instance_id,
+        parse_path(f"m/44h/{slip44}h/0h"),
+        show_display=False,
+        encoded_network=network,
     )
 
 
@@ -203,7 +234,11 @@ def _call_signmessage(
     session: Session, instance_id: int, slip44: int, network: bytes | None
 ) -> None:
     ethereum_ext.sign_message(
-        session, instance_id, parse_path(f"m/44h/{slip44}h/0h"), b"hello", encoded_network=network
+        session,
+        instance_id,
+        parse_path(f"m/44h/{slip44}h/0h"),
+        b"hello",
+        encoded_network=network,
     )
 
 
@@ -211,7 +246,8 @@ def _call_sign_typed_data(
     session: Session, instance_id: int, slip44: int, network: bytes | None
 ) -> None:
     ethereum_ext.sign_typed_data(
-        session, instance_id,
+        session,
+        instance_id,
         parse_path(f"m/44h/{slip44}h/0h/0/0"),
         TYPED_DATA,
         metamask_v4_compat=True,
@@ -223,7 +259,8 @@ def _call_sign_typed_data_hash(
     session: Session, instance_id: int, slip44: int, network: bytes | None
 ) -> None:
     ethereum_ext.sign_typed_data_hash(
-        session, instance_id,
+        session,
+        instance_id,
         parse_path(f"m/44h/{slip44}h/0h/0/0"),
         b"\x00" * 32,
         b"\xff" * 32,
@@ -257,7 +294,9 @@ def test_method_def_missing(
 
 
 @pytest.mark.parametrize("method", METHODS)
-def test_method_external(session: Session, instance_id: int, method: MethodType) -> None:
+def test_method_external(
+    session: Session, instance_id: int, method: MethodType
+) -> None:
     # calling a method with a slip44 that has an external definition will work
     network = definitions.encode_eth_network(slip44=66666)
     method(session, instance_id, 66666, network)
@@ -457,7 +496,8 @@ def _sign_tx_with_display_format(
                 InputFlowConfirmAllWarnings(session, on_page=on_page).get()
             )
         ethereum_ext.sign_tx(
-            session, instance_id,
+            session,
+            instance_id,
             **sign_tx_params,
             definitions=ethereum_messages.Definitions(
                 encoded_display_format=definitions.encode_eth_display_format(
@@ -503,7 +543,8 @@ def test_clear_signing_with_definition_and_token(
         absent={"UNKN"},
     )
     _sign_tx_with_display_format(
-        session, instance_id,
+        session,
+        instance_id,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
         token=WETH_TOKEN_DEFINITION,
         on_page=on_page,
@@ -522,7 +563,8 @@ def test_clear_signing_builtin_token_no_override(
         absent={"FAKE USDT"},
     )
     _sign_tx_with_display_format(
-        session, instance_id,
+        session,
+        instance_id,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
         token=USDT_TOKEN_DEFINITION,
         on_page=on_page,
@@ -537,7 +579,8 @@ def test_clear_signing_without_token(session: Session, instance_id: int) -> None
         absent={"WETH", "USDT"},
     )
     _sign_tx_with_display_format(
-        session, instance_id,
+        session,
+        instance_id,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
         sign_tx_params=get_clear_signing_sign_tx_params(UNISWAP_WETH_WETH2_CALLDATA),
         on_page=on_page,
@@ -555,7 +598,8 @@ def test_clear_signing_with_definition_without_token(
         absent={"WETH"},
     )
     _sign_tx_with_display_format(
-        session, instance_id,
+        session,
+        instance_id,
         UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
         on_page=on_page,
     )
@@ -596,5 +640,7 @@ def test_clear_signing_with_mismatched_definition(
             UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN", "WETH", "USDT"}
         )
     )
-    _sign_tx_with_display_format(session, instance_id, bad_display_format, on_page=on_page)
+    _sign_tx_with_display_format(
+        session, instance_id, bad_display_format, on_page=on_page
+    )
     assert_all_seen()

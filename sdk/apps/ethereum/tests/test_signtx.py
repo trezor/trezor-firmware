@@ -16,12 +16,13 @@
 
 from __future__ import annotations
 
+import typing as t
 from itertools import product
 
 import pytest
-import typing as t
 
-from trezorlib import device, exceptions, messages as trezor_messages
+from trezorlib import device, exceptions
+from trezorlib import messages as trezor_messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import MessageFilter
 from trezorlib.exceptions import TrezorFailure
@@ -29,14 +30,14 @@ from trezorlib.tools import parse_path, unharden
 
 from . import ethereum_ext
 from .common import parametrize_using_common_fixtures
-from .generated import messages as ethereum_messages
 from .definitions import encode_eth_network
+from .generated import messages as ethereum_messages
 from .input_flows import (
     InputFlowConfirmAllWarnings,
+    InputFlowSignTxData,
     InputFlowSignTxGoBackFromSummary,
     InputFlowSignTxShowFeeInfo,
     InputFlowSignTxStaking,
-    InputFlowSignTxData,
 )
 
 if t.TYPE_CHECKING:
@@ -311,9 +312,9 @@ def test_data_streaming(session: Session, instance_id: int):
                 code=trezor_messages.ButtonRequestType.SignTx, name=n
             )
 
-        br_protect = trezor_messages.ButtonRequest(
-            code=trezor_messages.ButtonRequestType.ProtectCall
-        )
+        # br_protect = trezor_messages.ButtonRequest(
+        #     code=trezor_messages.ButtonRequestType.ProtectCall
+        # )
 
         def tx_request(l):
             return message_filters.EthereumTxRequest(
@@ -715,10 +716,7 @@ def test_signtx_payment_req(
 def test_signtx_payment_req_long_value(session: Session, instance_id: int):
     from trezorlib import btc, misc
 
-    from .payment_req import (
-        CoinPurchaseMemo,
-        make_payment_request,
-    )
+    from .payment_req import CoinPurchaseMemo, make_payment_request
 
     purchase_memo = CoinPurchaseMemo(
         amount="0.0123456789123456789 BTC",

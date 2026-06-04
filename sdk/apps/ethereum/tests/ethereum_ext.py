@@ -16,12 +16,11 @@
 
 import io
 import re
-from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple, Callable
+from typing import TYPE_CHECKING, Any, AnyStr, Callable, Dict, List, Optional, Tuple
 
-from trezorlib.messages import TrezorAppMessage, TrezorAppResponse, Failure
 from trezorlib import exceptions, protobuf
+from trezorlib.messages import Failure, TrezorAppMessage, TrezorAppResponse
 from trezorlib.tools import prepare_message_bytes
-
 
 from .generated import messages as ethereum_messages
 
@@ -88,7 +87,7 @@ def call_ext(
             idx = expect_ids.index(resp.message_id)
 
             return protobuf.load_message(buf, expect[idx])
-        except Exception as _e:
+        except Exception:
             raise exceptions.TrezorFailure(
                 failure=Failure(message="Unexpected response type")
             )
@@ -313,7 +312,10 @@ def _ethereum_sign_loop(
                 session,
                 instance_id,
                 msg_data=ack,
-                expect=[ethereum_messages.TxRequest, ethereum_messages.DefinitionRequest],
+                expect=[
+                    ethereum_messages.TxRequest,
+                    ethereum_messages.DefinitionRequest,
+                ],
             )
         else:
             raise AssertionError("Unknown Ethereum request")
@@ -373,7 +375,13 @@ def sign_tx(
     )
 
     return _ethereum_sign_loop(
-        session, instance_id, ethereum_messages.SignTx, response, data, chain_id, definition_provider
+        session,
+        instance_id,
+        ethereum_messages.SignTx,
+        response,
+        data,
+        chain_id,
+        definition_provider,
     )
 
 
