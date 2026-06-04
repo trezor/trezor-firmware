@@ -1,6 +1,5 @@
 mcu = "stm32u58"
 default_board = "revB"
-emulator_board = "unix"
 
 features = [
     "consumption_mask",

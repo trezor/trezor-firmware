@@ -19,7 +19,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_define("FRAMEBUFFER", Some("1"));
     }
 
-    if cfg!(feature = "display_unix") {
+    if cfg!(feature = "emulator") {
+        // The emulator reuses the emulated board's display configuration (panel,
+        // framebuffer) but always builds the unix driver instead of the HW one.
         add_driver_unix(lib)?;
     } else if cfg!(feature = "display_ltdc_dsi") {
         add_driver_ltdc_dsi(lib)?;

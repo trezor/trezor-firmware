@@ -18,7 +18,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_define("USE_TOUCH_WAKEUP", Some("1"));
     }
 
-    if cfg!(feature = "touch_unix") {
+    if cfg!(feature = "emulator") {
+        // The emulator always builds the unix touch driver instead of the HW one.
         lib.add_source("touch/unix/touch.c");
     } else if cfg!(feature = "touch_ft3168") {
         lib.add_define("TOUCH_WAKEUP_ENABLED", Some("0"));

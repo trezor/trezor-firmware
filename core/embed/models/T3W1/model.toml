@@ -1,6 +1,5 @@
 mcu = "stm32u5g"
 default_board = "revC"
-emulator_board = "unix"
 secmon = true
 bootloader_header_tool = "headertool_pq"
 

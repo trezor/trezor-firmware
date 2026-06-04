@@ -1,4 +1,5 @@
 header = "T3W1/boards/trezor_t3w1_revA.h"
+emulator_header = "T3W1/boards/t3w1-unix.h"
 
 [display]
 driver = "io/display_ltdc_dsi"

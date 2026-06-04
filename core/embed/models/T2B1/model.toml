@@ -1,6 +1,5 @@
 mcu = "stm32f427"
 default_board = "rev10"
-emulator_board = "unix"
 
 features = [
     "consumption_mask",

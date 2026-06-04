@@ -1,4 +1,5 @@
 header = "T3B1/boards/trezor_t3b1_revB.h"
+emulator_header = "T3B1/boards/t3b1-unix.h"
 
 [display]
 driver = "io/display_vg2864"
