@@ -1171,6 +1171,10 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "apps/thp/*.py")?;
         }
 
+        if cfg!(feature = "app_loading") {
+            files.add(src, "apps/trezorapp/*.py")?;
+        }
+
         if cfg!(feature = "universal_fw") {
             files.add(src, "apps/common/definitions.py")?;
             files.add(src, "apps/common/definitions_constants.py")?;

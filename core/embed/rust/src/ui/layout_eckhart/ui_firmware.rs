@@ -2006,7 +2006,7 @@ impl FirmwareUI for UIEckhart {
                 danger,
             } => Ok((
                 Self::show_warning(
-                    tstr_from_archived_borrowed_str(title),
+                    Some(tstr_from_archived_borrowed_str(title)),
                     tstr_from_archived_borrowed_str(verb),
                     tstr_from_archived_borrowed_str(content),
                     TString::empty(),

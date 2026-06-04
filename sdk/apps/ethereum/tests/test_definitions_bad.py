@@ -4,7 +4,6 @@ from hashlib import sha256
 
 import pytest
 
-from trezorlib import models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -222,40 +221,37 @@ def test_bad_type(session: Session, instance_id: int) -> None:
     cases = [
         (ethereum_messages.DefinitionType.TOKEN, make_eth_token(), _fails_network),
         (ethereum_messages.DefinitionType.NETWORK, make_eth_network(), _fails_token),
+        (
+            ethereum_messages.DefinitionType.DISPLAY_FORMAT,
+            make_eth_display_format(),
+            _fails_network,
+        ),
+        (
+            ethereum_messages.DefinitionType.DISPLAY_FORMAT,
+            make_eth_display_format(),
+            _fails_token,
+        ),
+        (
+            ethereum_messages.DefinitionType.TOKEN,
+            make_eth_token(),
+            _fails_display_format,
+        ),
+        (
+            ethereum_messages.DefinitionType.NETWORK,
+            make_eth_network(),
+            _fails_display_format,
+        ),
+        (
+            ethereum_messages.DefinitionType.TOKEN,
+            make_eth_token(),
+            _fails_display_format_via_request,
+        ),
+        (
+            ethereum_messages.DefinitionType.NETWORK,
+            make_eth_network(),
+            _fails_display_format_via_request,
+        ),
     ]
-    if session.model in models.CORE_MODELS:
-        cases += [
-            (
-                ethereum_messages.DefinitionType.DISPLAY_FORMAT,
-                make_eth_display_format(),
-                _fails_network,
-            ),
-            (
-                ethereum_messages.DefinitionType.DISPLAY_FORMAT,
-                make_eth_display_format(),
-                _fails_token,
-            ),
-            (
-                ethereum_messages.DefinitionType.TOKEN,
-                make_eth_token(),
-                _fails_display_format,
-            ),
-            (
-                ethereum_messages.DefinitionType.NETWORK,
-                make_eth_network(),
-                _fails_display_format,
-            ),
-            (
-                ethereum_messages.DefinitionType.TOKEN,
-                make_eth_token(),
-                _fails_display_format_via_request,
-            ),
-            (
-                ethereum_messages.DefinitionType.NETWORK,
-                make_eth_network(),
-                _fails_display_format_via_request,
-            ),
-        ]
     for data_type, message, check in cases:
         payload = make_payload(data_type=data_type, message=message)
         proof, signature = sign_payload(payload, [])
@@ -287,40 +283,37 @@ def test_protobuf_mismatch(session: Session, instance_id: int) -> None:
     cases = [
         (ethereum_messages.DefinitionType.NETWORK, make_eth_token(), _fails_network),
         (ethereum_messages.DefinitionType.TOKEN, make_eth_network(), _fails_token),
+        (
+            ethereum_messages.DefinitionType.NETWORK,
+            make_eth_display_format(),
+            _fails_network,
+        ),
+        (
+            ethereum_messages.DefinitionType.TOKEN,
+            make_eth_display_format(),
+            _fails_token,
+        ),
+        (
+            ethereum_messages.DefinitionType.DISPLAY_FORMAT,
+            make_eth_token(),
+            _fails_display_format,
+        ),
+        (
+            ethereum_messages.DefinitionType.DISPLAY_FORMAT,
+            make_eth_network(),
+            _fails_display_format,
+        ),
+        (
+            ethereum_messages.DefinitionType.DISPLAY_FORMAT,
+            make_eth_token(),
+            _fails_display_format_via_request,
+        ),
+        (
+            ethereum_messages.DefinitionType.DISPLAY_FORMAT,
+            make_eth_network(),
+            _fails_display_format_via_request,
+        ),
     ]
-    if session.model in models.CORE_MODELS:
-        cases += [
-            (
-                ethereum_messages.DefinitionType.NETWORK,
-                make_eth_display_format(),
-                _fails_network,
-            ),
-            (
-                ethereum_messages.DefinitionType.TOKEN,
-                make_eth_display_format(),
-                _fails_token,
-            ),
-            (
-                ethereum_messages.DefinitionType.DISPLAY_FORMAT,
-                make_eth_token(),
-                _fails_display_format,
-            ),
-            (
-                ethereum_messages.DefinitionType.DISPLAY_FORMAT,
-                make_eth_network(),
-                _fails_display_format,
-            ),
-            (
-                ethereum_messages.DefinitionType.DISPLAY_FORMAT,
-                make_eth_token(),
-                _fails_display_format_via_request,
-            ),
-            (
-                ethereum_messages.DefinitionType.DISPLAY_FORMAT,
-                make_eth_network(),
-                _fails_display_format_via_request,
-            ),
-        ]
     for data_type, message, check in cases:
         payload = make_payload(data_type=data_type, message=message)
         proof, signature = sign_payload(payload, [])
