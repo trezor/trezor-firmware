@@ -6,6 +6,7 @@ BUILD_DIR = build-xtask/artifacts/latest
 TREZOR_MODEL ?= T3W1
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
+XTASK_BUILD_OPTS ?=
 
 ifeq ($(PRODUCTION),1)
 ifeq ($(BOOTLOADER_DEVEL),1)
@@ -29,7 +30,7 @@ MULTICORE ?= "auto"
 RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
 
 # Please only add options used by CI, otherwise just run xtask directly.
-XTASK_BUILD_OPTS = --model $(TREZOR_MODEL)
+XTASK_BUILD_OPTS += --model $(TREZOR_MODEL)
 ifeq ($(ADDRESS_SANITIZER),1)
 XTASK_BUILD_OPTS += --asan
 endif
