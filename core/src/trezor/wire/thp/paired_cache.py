@@ -54,7 +54,7 @@ def cache_host_info(mac_addr: AnyBytes | None, host_name: str, app_name: str) ->
         return
 
     from trezor.messages import ThpPairedCacheEntry
-    from trezor.strings import trim_str
+    from trezor.utils import truncate_utf8
 
     entries = load()
     for e in entries:
@@ -69,8 +69,8 @@ def cache_host_info(mac_addr: AnyBytes | None, host_name: str, app_name: str) ->
             # skip writing to flash if this MAC address is already cached
             return
 
-    host_name = trim_str(host_name, max_bytes=32)
-    app_name = trim_str(app_name, max_bytes=32)
+    host_name = truncate_utf8(host_name, max_bytes=32)
+    app_name = truncate_utf8(app_name, max_bytes=32)
     entries.append(
         ThpPairedCacheEntry(mac_addr=mac_addr, host_name=host_name, app_name=app_name)
     )

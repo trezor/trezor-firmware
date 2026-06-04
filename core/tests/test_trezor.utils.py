@@ -51,6 +51,26 @@ class TestUtils(unittest.TestCase):
             utils.truncate_utf8("\u1234\u5678", 7), "\u1234\u5678"
         )  # b'\xe1\x88\xb4\xe5\x99\xb8
 
+        # test ASCII
+        self.assertEqual(utils.truncate_utf8("123", 4), "123")
+        self.assertEqual(utils.truncate_utf8("123", 3), "123")
+        self.assertEqual(utils.truncate_utf8("123", 2), "12")
+        self.assertEqual(utils.truncate_utf8("123", 1), "1")
+        self.assertEqual(utils.truncate_utf8("123", 0), "")
+
+        # test non-ASCII
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 10), "➀➁➂")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 9), "➀➁➂")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 8), "➀➁")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 7), "➀➁")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 6), "➀➁")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 5), "➀")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 4), "➀")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 3), "➀")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 2), "")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 1), "")
+        self.assertEqual(utils.truncate_utf8("➀➁➂", 0), "")
+
     def test_firmware_hash(self):
         if utils.INTERNAL_MODEL in (  # pylint: disable=internal-model-tuple-comparison
             "D002",
