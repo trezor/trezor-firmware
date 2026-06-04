@@ -3,10 +3,10 @@ use core::{mem, str};
 use heapless::Vec;
 
 use crate::{
-    crypto::{cosi, ed25519, merkle::merkle_root, sha256},
     error::{value_error, Error},
     io::InputStream,
 };
+use trezor_crypto::{cosi, ed25519, merkle::merkle_root, sha256};
 
 use super::{public_keys, translated_string::TranslatedString};
 
