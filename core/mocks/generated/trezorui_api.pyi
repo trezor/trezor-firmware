@@ -261,7 +261,7 @@ def confirm_firmware_update(
     *,
     description: str,
     fingerprint: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Ask whether to update firmware, optionally show fingerprint."""
 
 
@@ -270,7 +270,7 @@ def confirm_homescreen(
     *,
     title: str,
     image: AnyBytes,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm homescreen."""
 
 
@@ -378,7 +378,7 @@ def continue_recovery_homepage(
     recovery_type: RecoveryType,
     show_instructions: bool = False,  # unused on bolt
     remaining_shares: Iterable[tuple[str, str]] | None = None,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Device recovery homescreen."""
 
 
@@ -473,7 +473,7 @@ def request_number(
     max_count: int,
     description: str | None = None,
     more_info_callback: Callable[[int], str] | None = None,
-) -> LayoutObj[tuple[UiResult, int]]:
+) -> LayoutContext[tuple[UiResult, int]]:
     """Number input with + and - buttons, optional static description and optional dynamic
     description."""
 
@@ -486,7 +486,7 @@ def request_duration(
     min_ms: int,
     max_ms: int,
     description: str | None = None,
-) -> LayoutObj[tuple[UiResult, int]]:
+) -> LayoutContext[tuple[UiResult, int]]:
     """Duration input with + and - buttons, optional static description. """
 
 
@@ -498,7 +498,7 @@ def request_pin(
     allow_cancel: bool = True,
     wrong_pin: bool = False,
     last_attempt: bool = False,
-) -> LayoutObj[str | UiResult]:
+) -> LayoutContext[str | UiResult]:
     """Request pin on device."""
 
 
@@ -508,7 +508,7 @@ def request_passphrase(
     prompt: str,
     prompt_empty: str,
     max_len: int,
-) -> LayoutObj[str | UiResult]:
+) -> LayoutContext[str | UiResult]:
     """Passphrase input keyboard."""
 
 
@@ -519,7 +519,7 @@ def request_string(
     max_len: int,
     allow_empty: bool,
     prefill: str | None,
-) -> LayoutObj[str | UiResult]:
+) -> LayoutContext[str | UiResult]:
     """Label input keyboard."""
 
 
@@ -810,7 +810,7 @@ def show_simple(
     text: str,
     title: str | None = None,
     button: str | None = None,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Simple dialog with text. TT: optional button."""
 
 
@@ -822,7 +822,7 @@ def show_success(
     description: str = "",
     allow_cancel: bool = False,
     time_ms: int = 0,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Success modal. No buttons shown when `button` is empty string."""
 
 

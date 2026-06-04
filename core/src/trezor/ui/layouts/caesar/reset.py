@@ -139,18 +139,18 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    num_input = trezorui_api.request_number(
+    with trezorui_api.request_number(
         title=title,
         count=count,
         min_count=min_count,
         max_count=max_count,
-    )
+    ) as num_input:
 
-    result = await interact(
-        num_input,
-        br_name,
-        ButtonRequestType.ResetDevice,
-    )
+        result = await interact(
+            num_input,
+            br_name,
+            ButtonRequestType.ResetDevice,
+        )
 
     if __debug__:
         if isinstance(result, str):

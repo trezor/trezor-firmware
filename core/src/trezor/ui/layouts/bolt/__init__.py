@@ -206,15 +206,16 @@ def lock_time_disabled_warning() -> Awaitable[None]:
     )
 
 
-def confirm_homescreen(image: AnyBytes) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_homescreen(
-            title=TR.homescreen__title_set,
-            image=image,
-        ),
-        "set_homesreen",
-        ButtonRequestType.ProtectCall,
-    )
+async def confirm_homescreen(image: AnyBytes) -> None:
+    with trezorui_api.confirm_homescreen(
+        title=TR.homescreen__title_set,
+        image=image,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "set_homesreen",
+            ButtonRequestType.ProtectCall,
+        )
 
 
 async def confirm_change_label(
@@ -466,23 +467,24 @@ def show_danger(
     )
 
 
-def show_success(
+async def show_success(
     br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
-) -> Awaitable[None]:
+) -> None:
     button = button or TR.buttons__continue  # def_arg
-    return raise_if_not_confirmed(
-        trezorui_api.show_success(
-            title=content,
-            description=subheader or "",
-            button=button,
-            allow_cancel=False,
-        ),
-        br_name,
-        ButtonRequestType.Success,
-    )
+    with trezorui_api.show_success(
+        title=content,
+        description=subheader or "",
+        button=button,
+        allow_cancel=False,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            br_name,
+            ButtonRequestType.Success,
+        )
 
 
 def show_continue_in_app(content: str) -> None:
@@ -2135,12 +2137,10 @@ def error_popup(
 
 
 def request_passphrase_on_host() -> None:
-    draw_simple(
-        trezorui_api.show_simple(
-            title=None,
-            text=TR.passphrase__please_enter,
-        )
-    )
+    with trezorui_api.show_simple(
+        title=None, text=TR.passphrase__please_enter
+    ) as layout:
+        draw_simple(layout)
 
 
 def show_wait_text(message: str) -> None:
@@ -2148,18 +2148,19 @@ def show_wait_text(message: str) -> None:
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
-    result = await interact(
-        trezorui_api.request_passphrase(
-            prompt=TR.passphrase__title_enter,
-            prompt_empty=TR.passphrase__continue_with_empty_passphrase,
-            max_len=max_len,
-        ),
-        "passphrase_device",
-        ButtonRequestType.PassphraseEntry,
-        raise_on_cancel=ActionCancelled("Passphrase entry cancelled"),
-    )
-    assert isinstance(result, str)
-    return result
+    with trezorui_api.request_passphrase(
+        prompt=TR.passphrase__title_enter,
+        prompt_empty=TR.passphrase__continue_with_empty_passphrase,
+        max_len=max_len,
+    ) as layout:
+        result = await interact(
+            layout,
+            "passphrase_device",
+            ButtonRequestType.PassphraseEntry,
+            raise_on_cancel=ActionCancelled("Passphrase entry cancelled"),
+        )
+        assert isinstance(result, str)
+        return result
 
 
 async def request_pin_on_device(
@@ -2177,18 +2178,19 @@ async def request_pin_on_device(
     else:
         attempts = f"{attempts_remaining} {TR.pin__tries_left}"
 
-    result = await interact(
-        trezorui_api.request_pin(
-            prompt=prompt,
-            attempts=attempts,
-            allow_cancel=allow_cancel,
-            wrong_pin=wrong_pin,
-        ),
-        "pin_device",
-        ButtonRequestType.PinEntry,
-        raise_on_cancel=PinCancelled,
-    )
-    return result  # type: ignore ["UiResult" is not assignable to "str"]
+    with trezorui_api.request_pin(
+        prompt=prompt,
+        attempts=attempts,
+        allow_cancel=allow_cancel,
+        wrong_pin=wrong_pin,
+    ) as layout:
+        result = await interact(
+            layout,
+            "pin_device",
+            ButtonRequestType.PinEntry,
+            raise_on_cancel=PinCancelled,
+        )
+        return result  # type: ignore ["UiResult" is not assignable to "str"]
 
 
 async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:

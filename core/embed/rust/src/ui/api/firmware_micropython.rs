@@ -1631,7 +1631,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     description: str,
     ///     fingerprint: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Ask whether to update firmware, optionally show fingerprint."""
     Qstr::MP_QSTR_confirm_firmware_update => obj_fn_kw!(0, new_confirm_firmware_update).as_obj(),
 
@@ -1639,7 +1639,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     image: AnyBytes,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm homescreen."""
     Qstr::MP_QSTR_confirm_homescreen => obj_fn_kw!(0, new_confirm_homescreen).as_obj(),
 
@@ -1741,7 +1741,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     recovery_type: RecoveryType,
     ///     show_instructions: bool = False,  # unused on bolt
     ///     remaining_shares: Iterable[tuple[str, str]] | None = None,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Device recovery homescreen."""
     Qstr::MP_QSTR_continue_recovery_homepage => obj_fn_kw!(0, new_continue_recovery_homepage).as_obj(),
 
@@ -1828,7 +1828,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     max_count: int,
     ///     description: str | None = None,
     ///     more_info_callback: Callable[[int], str] | None = None,
-    /// ) -> LayoutObj[tuple[UiResult, int]]:
+    /// ) -> LayoutContext[tuple[UiResult, int]]:
     ///     """Number input with + and - buttons, optional static description and optional dynamic
     ///     description."""
     Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
@@ -1840,7 +1840,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     min_ms: int,
     ///     max_ms: int,
     ///     description: str | None = None,
-    /// ) -> LayoutObj[tuple[UiResult, int]]:
+    /// ) -> LayoutContext[tuple[UiResult, int]]:
     ///     """Duration input with + and - buttons, optional static description. """
     Qstr::MP_QSTR_request_duration => obj_fn_kw!(0, new_request_duration).as_obj(),
 
@@ -1851,7 +1851,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     allow_cancel: bool = True,
     ///     wrong_pin: bool = False,
     ///     last_attempt: bool = False,
-    /// ) -> LayoutObj[str | UiResult]:
+    /// ) -> LayoutContext[str | UiResult]:
     ///     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
 
@@ -1860,7 +1860,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     prompt: str,
     ///     prompt_empty: str,
     ///     max_len: int,
-    /// ) -> LayoutObj[str | UiResult]:
+    /// ) -> LayoutContext[str | UiResult]:
     ///     """Passphrase input keyboard."""
     Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
 
@@ -1870,7 +1870,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     max_len: int,
     ///     allow_empty: bool,
     ///     prefill: str | None,
-    /// ) -> LayoutObj[str | UiResult]:
+    /// ) -> LayoutContext[str | UiResult]:
     ///     """Label input keyboard."""
     Qstr::MP_QSTR_request_string => obj_fn_kw!(0, new_request_string).as_obj(),
 
@@ -2134,7 +2134,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     text: str,
     ///     title: str | None = None,
     ///     button: str | None = None,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Simple dialog with text. TT: optional button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
 
@@ -2145,7 +2145,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     description: str = "",
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Success modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
 

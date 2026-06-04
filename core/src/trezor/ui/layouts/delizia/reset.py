@@ -154,19 +154,20 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    result = await interact(
-        trezorui_api.request_number(
-            title=title,
-            count=count,
-            min_count=min_count,
-            max_count=max_count,
-            description=description,
-            more_info_callback=info,
-        ),
-        br_name,
-        ButtonRequestType.ResetDevice,
-        raise_on_cancel=None,
-    )
+    with trezorui_api.request_number(
+        title=title,
+        count=count,
+        min_count=min_count,
+        max_count=max_count,
+        description=description,
+        more_info_callback=info,
+    ) as layout:
+        result = await interact(
+            layout,
+            br_name,
+            ButtonRequestType.ResetDevice,
+            raise_on_cancel=None,
+        )
 
     if __debug__ and result is CONFIRMED:
         # sent by debuglink. debuglink does not change the number of shares anyway

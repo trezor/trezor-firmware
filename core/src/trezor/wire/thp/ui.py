@@ -96,14 +96,12 @@ async def show_nfc_screen() -> UiResult:
     from trezor.ui.layouts.common import interact
     from trezorui_api import show_simple
 
-    return await interact(
-        show_simple(
-            title=None,
-            text=TR.thp__nfc_text,
-            button=TR.buttons__cancel,
-        ),
-        br_name=None,
-    )
+    with show_simple(
+        title=None,
+        text=TR.thp__nfc_text,
+        button=TR.buttons__cancel,
+    ) as layout:
+        return await interact(layout, br_name=None)
 
 
 async def show_qr_code_screen(qr_code_str: str) -> UiResult:
