@@ -1,6 +1,6 @@
 use heapless::Vec;
 
-use super::{ed25519, ffi, Error};
+use super::{Error, ed25519, ffi};
 
 const MAX_PUBKEYS: usize = 3;
 

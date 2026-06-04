@@ -4,7 +4,7 @@ use zeroize::Zeroize as _;
 
 use super::{
     ffi,
-    memory::{init_ctx, Memory},
+    memory::{Memory, init_ctx},
 };
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;

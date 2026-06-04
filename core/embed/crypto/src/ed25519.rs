@@ -1,4 +1,4 @@
-use super::{ffi, Error};
+use super::{Error, ffi};
 
 pub type Signature = ffi::ed25519_signature;
 pub const SIGNATURE_SIZE: usize = core::mem::size_of::<Signature>();

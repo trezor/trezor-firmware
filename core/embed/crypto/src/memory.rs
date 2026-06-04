@@ -1,6 +1,6 @@
 use core::{marker::PhantomPinned, mem::MaybeUninit, pin::Pin};
 
-use zeroize::{zeroize_flat_type, Zeroize};
+use zeroize::{Zeroize, zeroize_flat_type};
 
 /// Wrapper for a memory used as a context by C functions. Its purpose is to be
 /// !Unpin, thus prevent moves when accessed through a Pin. We want to avoid

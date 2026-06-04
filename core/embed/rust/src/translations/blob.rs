@@ -6,7 +6,7 @@ use crate::{
     error::{value_error, Error},
     io::InputStream,
 };
-use trezor_crypto::{cosi, ed25519, merkle::merkle_root, sha256};
+use crypto::{cosi, ed25519, merkle::merkle_root, sha256};
 
 use super::{public_keys, translated_string::TranslatedString};
 

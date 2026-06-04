@@ -6,7 +6,9 @@ pub(crate) fn __fatal_error(msg: &str, file: &str, line: u32) -> ! {
     #[cfg(test)]
     panic!("FATAL ERROR: {:?} at {}:{}", msg, file, line);
     #[cfg(not(test))]
-    unsafe { __fatal_error_rust(msg, file, line) }
+    unsafe {
+        __fatal_error_rust(msg, file, line)
+    }
 }
 
 pub(crate) trait UnwrapOrFatalError<T> {
@@ -30,7 +32,6 @@ impl<T, E> UnwrapOrFatalError<T> for Result<T, E> {
         }
     }
 }
-
 
 macro_rules! unwrap {
     ($e:expr, $msg:expr) => {{

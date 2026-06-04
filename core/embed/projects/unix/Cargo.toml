@@ -13,6 +13,7 @@ trezor_lib.workspace = true
 io.workspace = true
 sec.workspace = true
 sys.workspace = true
+crypto.workspace = true
 rtl.workspace = true
 models.workspace = true
 upymod.workspace = true
@@ -112,7 +113,7 @@ model_t3w1 = [
 # --------------------------------------------------------------------------
 
 asan = ["models/asan"]
-benchmark = ["upymod/benchmark", "rtl/aes_gcm"]
+benchmark = ["upymod/benchmark", "crypto/aes_gcm"]
 clippy = ["trezor_lib/clippy"]
 dbg_console = ["sys/dbg_console", "trezor_lib/dbg_console"]
 debug = ["trezor_lib/debug"]
@@ -144,8 +145,9 @@ default = [
     "io/secure_mode",
     "io/usb_iface_wire",
     "sec/rdi",
-    "rtl/secp256k1_zkp",
-    "rtl/aes_gcm",
+    "crypto/aes_gcm",
+    "crypto/secp256k1_zkp",
+    "crypto/with_new_crates", # only for transitional period
 
     "trezor_lib/with_new_crates", # only for transitional period
     "trezor_lib/with_upymod", # only for transitional period
@@ -194,7 +196,7 @@ suspend = ["io/suspend"]
 storage_hw_key = ["sec/storage_hw_key"]
 tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry", "upymod/telemetry", "trezor_lib/telemetry"]
-thp = ["upymod/thp", "rtl/aes_gcm"]
+thp = ["upymod/thp", "crypto/aes_gcm"]
 touch = ["io/touch", "upymod/touch", "trezor_lib/touch"]
 touch_wakeup = ["io/touch_wakeup", "upymod/touch_wakeup", "trezor_lib/touch_wakeup"]
 tropic = ["sec/tropic", "upymod/tropic", "trezor_lib/tropic"]

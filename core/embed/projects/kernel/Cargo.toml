@@ -12,6 +12,7 @@ xbuild.workspace = true
 io.workspace = true
 sec.workspace = true
 sys.workspace = true
+crypto.workspace = true
 rtl.workspace = true
 models.workspace = true
 trezor_lib.workspace = true
@@ -168,7 +169,8 @@ default = [
     "sec/rdi",
     "sec/storage",
     "models/kernel",
-    "rtl/aes_gcm",
+    "crypto/aes_gcm",
+    "crypto/with_new_crates", # only for transitional period
     "trezor_lib/with_new_crates", # only for transitional period
     ]
 
