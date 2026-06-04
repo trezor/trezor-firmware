@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, bail};
 use std::process;
 
 use crate::{
@@ -139,25 +139,16 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
         features.push("frozen".into());
     }
 
-    // Board and model-intrinsic features from TOML config
+    // Board and model-intrinsic features from TOML config. The emulator emulates
+    // the same board it would build for on real hardware (`default_board`, or an
+    // explicit `--board`); only the configuration header differs.
     let model_config = args.model.config()?;
-    let board_id = if args.emulator {
-        model_config
-            .emulator_board
-            .as_deref()
-            .ok_or_else(|| anyhow!("Model {} has no emulator board", args.model.model_id()))?
-            .to_string()
-    } else {
-        args.board
-            .clone()
-            .unwrap_or_else(|| model_config.default_board.clone())
-    };
-    let board_features = config::resolve_board_features(
-        args.model.model_id(),
-        &model_config,
-        &board_id,
-        args.component,
-    )?;
+    let board_id = args
+        .board
+        .clone()
+        .unwrap_or_else(|| model_config.default_board.clone());
+    let board_features =
+        config::resolve_board_features(&model_config, &board_id, args.component, args.emulator)?;
     let mut board_feat = board_features.features;
     if args.disable_optiga {
         board_feat.retain(|f| f != "optiga");

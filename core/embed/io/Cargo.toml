@@ -101,9 +101,9 @@ framebuffer = []
 
 # Drivers below that always need framebuffer pull it in implicitly,
 # so any project selecting them via the board peripheral chain doesn't have
-# to also advertise `framebuffer` in its target.toml. display_unix and
-# display_st7789 support both modes — the model.toml decides.
-display_unix = []
+# to also advertise `framebuffer` in its target.toml. display_st7789 supports
+# both modes — the model.toml decides.
+# The emulator's unix driver is selected by display/build.rs (not a feature).
 display_ltdc_dsi = ["framebuffer"]
 display_st7789 = []
 display_vg2864 = ["framebuffer"]
@@ -114,9 +114,4 @@ display_panel_stm32u5a9j_dk = []
 display_panel_t2t1 = []
 display_panel_lx154a2482 = []
 display_panel_vg2864 = []
-
-touch_unix = []
-
-
-
 

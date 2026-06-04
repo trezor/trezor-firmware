@@ -13,7 +13,6 @@ pub struct ModelConfig {
     pub model_id: String,
     pub mcu: String,
     pub default_board: String,
-    pub emulator_board: Option<String>,
     pub features: Vec<String>,
     #[serde(default)]
     pub secmon: bool,
@@ -70,6 +69,10 @@ pub struct Peripheral {
 
 pub struct BoardConfig {
     pub header: String,
+    /// Header with the emulator configuration for this board. Present only for
+    /// boards that support being emulated; selected instead of `header` when
+    /// building the emulator.
+    pub emulator_header: Option<String>,
     pub peripherals: Vec<Peripheral>,
 }
 
@@ -98,9 +101,14 @@ impl BoardConfig {
             .ok_or_else(|| anyhow!("Board config missing 'header' field"))?
             .to_string();
 
+        let emulator_header = table
+            .get("emulator_header")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
         let mut peripherals = Vec::new();
         for (key, val) in table {
-            if key == "header" {
+            if key == "header" || key == "emulator_header" {
                 continue;
             }
             let periph_table = val
@@ -119,6 +127,7 @@ impl BoardConfig {
 
         Ok(BoardConfig {
             header,
+            emulator_header,
             peripherals,
         })
     }
@@ -171,6 +180,7 @@ pub fn resolve_board_features(
     model_config: &ModelConfig,
     board_id: &str,
     component: Component,
+    emulator: bool,
 ) -> Result<BoardFeatures> {
     let board_config = BoardConfig::load(&model_config.model_id, board_id)?;
     let target_profile = TargetProfile::load(component)?;
@@ -210,8 +220,21 @@ pub fn resolve_board_features(
     // MCU feature
     features.push(model_config.mcu_feature());
 
+    // The emulator reuses the emulated board's feature set but swaps in the
+    // board's emulator configuration header.
+    let board_header = if emulator {
+        board_config.emulator_header.ok_or_else(|| {
+            anyhow!(
+                "Board '{board_id}' of model '{}' does not support emulation (missing 'emulator_header')",
+                model_config.model_id
+            )
+        })?
+    } else {
+        board_config.header
+    };
+
     Ok(BoardFeatures {
         features,
-        board_header: board_config.header,
+        board_header,
     })
 }
