@@ -32,7 +32,7 @@
 // last-used value. Never fill a gap left by a retired code.
 //
 // Module registry:
-//   Framework CLI  :     1 –     9  (defined in cli.h, not here)
+//   Framework CLI  :     0 –   999  (defined in cli.h, not here)
 //   backup-ram     :  1000 –  1999
 //   ble            :  2000 –  2999
 //   bootloader     :  3000 –  3999

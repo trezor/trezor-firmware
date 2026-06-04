@@ -41,14 +41,14 @@ typedef struct cli cli_t;
 /** Framework-level error codes used internally by the CLI engine.
  *  Command handlers must use prodtest_error_t codes from
  *  prodtest_error_codes.h instead of these. */
-#define CLI_ERROR_INVALID_CMD 1
-#define CLI_ERROR_INVALID_ARG 2
-#define CLI_ERROR_ABORT 3
-#define CLI_ERROR_FATAL 4
-#define CLI_ERROR_TIMEOUT 5
-#define CLI_ERROR_LOCKED 6
-#define CLI_ERROR_NODATA 7
-#define CLI_ERROR_INVALID_CRC 8
+#define CLI_ERROR_INVALID_CMD 10
+#define CLI_ERROR_INVALID_ARG 11
+#define CLI_ERROR_ABORT 12
+#define CLI_ERROR_FATAL 13
+#define CLI_ERROR_TIMEOUT 14
+#define CLI_ERROR_LOCKED 15
+#define CLI_ERROR_NODATA 16
+#define CLI_ERROR_INVALID_CRC 17
 
 /** CLI command handler routine prototype */
 typedef void (*cli_cmd_handler_t)(cli_t* cli);

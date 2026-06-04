@@ -3,35 +3,35 @@
   "prodtest_version": "0.3.8.0",
   "framework_codes": [
     {
-      "code": 1,
+      "code": 10,
       "name": "CLI_ERROR_INVALID_CMD"
     },
     {
-      "code": 2,
+      "code": 11,
       "name": "CLI_ERROR_INVALID_ARG"
     },
     {
-      "code": 3,
+      "code": 12,
       "name": "CLI_ERROR_ABORT"
     },
     {
-      "code": 4,
+      "code": 13,
       "name": "CLI_ERROR_FATAL"
     },
     {
-      "code": 5,
+      "code": 14,
       "name": "CLI_ERROR_TIMEOUT"
     },
     {
-      "code": 6,
+      "code": 15,
       "name": "CLI_ERROR_LOCKED"
     },
     {
-      "code": 7,
+      "code": 16,
       "name": "CLI_ERROR_NODATA"
     },
     {
-      "code": 8,
+      "code": 17,
       "name": "CLI_ERROR_INVALID_CRC"
     }
   ],
