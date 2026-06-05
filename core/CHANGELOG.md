@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Improved EVM address chunking.  [#6601]
 - [T3W1] Made cancel option consistent across screens.  [#6707]
+- Use "Speed up transaction" wording for replace-by-fee signing confirmation.
 
 ### Fixed
 - Updated translations in Cardano flow.  [#5723]
