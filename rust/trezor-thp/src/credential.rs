@@ -38,7 +38,4 @@ impl CredentialStore for NullCredentialStore {
 pub trait CredentialVerifier {
     /// Validate given protobuf-encoded credential.
     fn verify(&self, remote_static_pubkey: &[u8], credential: &[u8]) -> PairingState;
-
-    /// Return protobuf-encoded device properties to be used in `ChannelAllocationResponse` message.
-    fn device_properties(&self) -> &[u8];
 }

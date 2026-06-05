@@ -7,7 +7,7 @@ pub mod curve25519;
 pub mod ed25519;
 mod ffi;
 pub mod hmac;
-mod memory;
+pub mod memory;
 pub mod merkle;
 pub mod sha256;
 pub mod sha512;
@@ -32,5 +32,32 @@ impl From<Error> for crate::error::Error {
             Error::InvalidParams => value_error!(c"Invalid cryptographic parameters"),
             Error::InvalidContext => value_error!(c"Invalid cryptographic context"),
         }
+    }
+}
+
+/// Constant time bytestring comparison for two arrays of the same length.
+pub fn consteq<const N: usize>(a: &[u8; N], b: &[u8; N]) -> bool {
+    let mut diff: u8 = 0;
+    for i in 0..N {
+        diff |= a[i] ^ b[i];
+    }
+    diff == 0
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_consteq() {
+        assert!(consteq(&[], &[]));
+        assert!(consteq(&[0u8; 256], &[0u8; 256]));
+        assert!(consteq(&[0xffu8; 256], &[0xffu8; 256]));
+        assert!(consteq(b"0123456789abcdef", b"0123456789abcdef"));
+
+        assert!(!consteq(&[0u8; 256], &[0xffu8; 256]));
+        assert!(!consteq(&[0xffu8; 256], &[0u8; 256]));
+        assert!(!consteq(b"0123456789abcdef", b"123456789abcdef0"));
+        assert!(!consteq(b"0000000000000000", b"0000000000000001"));
     }
 }
