@@ -116,6 +116,7 @@ typedef struct {
 #ifdef TREZOR_EMULATOR
   lt_dev_posix_tcp_t device;
 #endif
+  lt_ret_t init_ret;
 } tropic_driver_t;
 
 static tropic_driver_t g_tropic_driver = {0};
@@ -457,9 +458,12 @@ bool tropic_init(void) {
   // Initialize crypto context
   drv->handle.l3.crypto_ctx = &drv->crypto_ctx;
 
-  if (lt_init(&drv->handle) != LT_OK) {
+  lt_ret_t ret = lt_init(&drv->handle);
+  if (ret != LT_OK) {
+    drv->init_ret = ret;
     return false;
   }
+  drv->init_ret = LT_OK;
   drv->initialized = true;
 
   return true;
@@ -479,6 +483,17 @@ lt_handle_t *tropic_get_handle(void) {
   }
 
   return &drv->handle;
+}
+
+bool tropic_get_init_error(lt_ret_t *ret) {
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  if (!drv->initialized && drv->init_ret != LT_OK) {
+    *ret = drv->init_ret;
+    return true;
+  }
+
+  return false;
 }
 
 bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
