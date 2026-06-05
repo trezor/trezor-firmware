@@ -3,7 +3,7 @@ use owo_colors::OwoColorize;
 use std::process;
 
 use crate::{
-    args::{BuildArgs, Component, TestArgs},
+    args::{BuildArgs, Project, TestArgs},
     artifacts, helpers, memusage, postbuild, prebuild,
 };
 
@@ -91,10 +91,10 @@ pub fn fmt() -> Result<()> {
 fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
     if !args.emulator {
         // Recursively build dependencies (Firmware -> Kernel -> Secmon)
-        if let Some(dependency) = args.component.dependency(args.model)? {
+        if let Some(dependency) = args.project.dependency(args.model)? {
             build_impl(
                 BuildArgs {
-                    component: dependency,
+                    project: dependency,
                     ..args.clone()
                 },
                 true,
@@ -103,12 +103,12 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
     }
 
     // Prebuild steps
-    if matches!(args.component, Component::Firmware) {
+    if matches!(args.project, Project::Firmware) {
         prebuild::update_templates()?;
         prebuild::update_translations()?;
     }
 
-    // Build the component
+    // Build the project
     run_cargo_subcommand("build", &args)?;
 
     let elf = helpers::elf_path(&args)?;
@@ -120,14 +120,14 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
 
         // For hardware targets, we need to convert the ELF file into a raw
         // binary before signing it.
-        let bin = postbuild::elf_to_bin(&elf, args.component, &model_config, use_dev_keys)?;
+        let bin = postbuild::elf_to_bin(&elf, args.project, &model_config, use_dev_keys)?;
 
         // Sign the binary except for those that don't have headers
-        if !matches!(args.component, Component::Boardloader | Component::Kernel) {
-            postbuild::sign_binary(&bin, args.component, &model_config, use_dev_keys)?;
+        if !matches!(args.project, Project::Boardloader | Project::Kernel) {
+            postbuild::sign_binary(&bin, args.project, &model_config, use_dev_keys)?;
         }
 
-        if args.component == Component::Firmware {
+        if args.project == Project::Firmware {
             let firwmare_cc_json = bin.with_extension("cc.json");
             let kernel_cc_json = bin.with_file_name("kernel").with_extension("cc.json");
             let secmon_cc_json = bin.with_file_name("secmon").with_extension("cc.json");
@@ -139,9 +139,9 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
         }
 
         // Copy the final binary to the `pub` directory
-        if !matches!(args.component, Component::Secmon | Component::Kernel) {
-            let version_file = helpers::get_version_file(args.component)?;
-            postbuild::publish_artifact(&bin, args.component, args.model, &version_file, None)?;
+        if !matches!(args.project, Project::Secmon | Project::Kernel) {
+            let version_file = helpers::get_version_file(args.project)?;
+            postbuild::publish_artifact(&bin, args.project, args.model, &version_file, None)?;
         }
     }
 
@@ -151,7 +151,7 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
     // Print memory usage
     if !args.emulator && !is_dependency {
         let mapfile = elf
-            .with_file_name(args.component.binary_name())
+            .with_file_name(args.project.binary_name())
             .with_extension("map");
         memusage::print_memusage(&mapfile)?;
     }
@@ -167,8 +167,8 @@ fn run_cargo_subcommand(subcommand: &str, args: &BuildArgs) -> Result<()> {
     args.configure_cargo(&mut cmd)
         .context(format!("Failed to construct {} command", subcommand))?;
 
-    let component_name = format!("{:?}", args.component).to_lowercase();
-    println!("xtask: Running {} on `{}`", subcommand, component_name);
+    let project_name = format!("{:?}", args.project).to_lowercase();
+    println!("xtask: Running {} on `{}`", subcommand, project_name);
     println!("{}", command_args_to_string(&cmd).bold().dimmed());
 
     let status = cmd

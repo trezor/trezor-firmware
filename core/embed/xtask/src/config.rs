@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 
-use crate::args::Component;
+use crate::args::Project;
 use crate::helpers::workspace_dir;
 
 #[derive(Deserialize)]
@@ -17,7 +17,7 @@ pub struct ModelConfig {
     #[serde(default)]
     pub secmon: bool,
     #[serde(default)]
-    pub targets: HashMap<String, ModelTargetOverride>,
+    pub project_overrides: HashMap<String, ModelProjectOverride>,
     /// Signing tool for bootloader/bootloader_ci. Defaults to "headertool".
     #[serde(default)]
     pub bootloader_header_tool: Option<String>,
@@ -134,7 +134,7 @@ impl BoardConfig {
 }
 
 #[derive(Deserialize)]
-pub struct TargetProfile {
+pub struct ProjectProfile {
     pub uses: Vec<String>,
     pub elf_sections: Vec<String>,
     /// Body sections used when the model has secmon and the binary needs a
@@ -151,22 +151,22 @@ pub struct TargetProfile {
     pub split_part2_sections: Option<Vec<String>>,
 }
 
-impl TargetProfile {
-    pub fn load(component: Component) -> Result<Self> {
-        let pkg = component.package_name(false);
+impl ProjectProfile {
+    pub fn load(project: Project) -> Result<Self> {
+        let pkg = project.package_name(false);
         let path = workspace_dir()?
             .join("projects")
             .join(pkg)
-            .join("target.toml");
+            .join("project.toml");
         let content = std::fs::read_to_string(&path)
-            .with_context(|| format!("Failed to read target profile: {}", path.display()))?;
+            .with_context(|| format!("Failed to read project profile: {}", path.display()))?;
         toml::from_str(&content)
-            .with_context(|| format!("Failed to parse target profile: {}", path.display()))
+            .with_context(|| format!("Failed to parse project profile: {}", path.display()))
     }
 }
 
 #[derive(Deserialize, Default, Clone)]
-pub struct ModelTargetOverride {
+pub struct ModelProjectOverride {
     #[serde(default)]
     pub exclude: Vec<String>,
 }
@@ -179,27 +179,31 @@ pub struct BoardFeatures {
 pub fn resolve_board_features(
     model_config: &ModelConfig,
     board_id: &str,
-    component: Component,
+    project: Project,
     emulator: bool,
 ) -> Result<BoardFeatures> {
     let board_config = BoardConfig::load(&model_config.model_id, board_id)?;
-    let target_profile = TargetProfile::load(component)?;
-    let pkg = component.package_name(false);
-    let model_override = model_config.targets.get(pkg).cloned().unwrap_or_default();
+    let project_profile = ProjectProfile::load(project)?;
+    let pkg = project.package_name(false);
+    let model_override = model_config
+        .project_overrides
+        .get(pkg)
+        .cloned()
+        .unwrap_or_default();
 
-    let uses: HashSet<&str> = target_profile.uses.iter().map(|s| s.as_str()).collect();
+    let uses: HashSet<&str> = project_profile.uses.iter().map(|s| s.as_str()).collect();
     let exclude: HashSet<&str> = model_override.exclude.iter().map(|s| s.as_str()).collect();
 
     let mut features = Vec::new();
 
-    // Model-intrinsic features filtered by target profile then model exceptions
+    // Model-intrinsic features filtered by project profile then model exceptions
     for f in &model_config.features {
         if uses.contains(f.as_str()) && !exclude.contains(f.as_str()) {
             features.push(f.clone());
         }
     }
 
-    // Board peripheral features filtered by target profile then model exceptions
+    // Board peripheral features filtered by project profile then model exceptions
     for periph in &board_config.peripherals {
         if uses.contains(periph.name.as_str()) && !exclude.contains(periph.name.as_str()) {
             features.push(periph.name.clone());

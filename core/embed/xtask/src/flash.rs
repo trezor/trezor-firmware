@@ -9,22 +9,22 @@ use crate::{
     helpers,
 };
 
-/// Flashes the specified component to the device using OpenOCD.
+/// Flashes the specified project to the device using OpenOCD.
 pub fn flash(args: FlashArgs) -> Result<()> {
     ensure!(
-        args.component.flashable(),
+        args.project.flashable(),
         "Flashing is not supported for `{}`",
-        args.component.binary_name()
+        args.project.binary_name()
     );
 
     let binary =
-        helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.component.binary_name()));
+        helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()));
 
     let binary = binary
         .canonicalize()
         .with_context(|| format!("Failed to locate `{}` for flashing", binary.display()))?;
 
-    let flash_start = args.component.flash_start_symbol()?;
+    let flash_start = args.project.flash_start_symbol()?;
     let memory_ld = args.model.model_memory_ld()?;
     let address = helpers::read_symbol(&memory_ld, flash_start)?;
 
