@@ -11,6 +11,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_sources_with_attrs(
             [
                 "nfc/st25/nfc.c",
+                "nfc/st25/nfc_poll.c",
                 "nfc/st25/ndef.c",
                 "nfc/st25/card_emulation.c",
                 "nfc/st25/rfal002/source/st25r3916/rfal_rfst25r3916.c",
