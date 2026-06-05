@@ -216,8 +216,8 @@ class SetupParams:
             raise ValueError("--app option must be provided")
         path = Path(self.trezorapp_path)
         if not path.exists():
-            raise FileNotFoundError(f"External app not found: {path}")
-        self.extapp_instance_id = debuglink.load_trezorapp(session, path)
+            raise FileNotFoundError(f"Modular app not found: {path}")
+        self.trezorapp_instance_id = debuglink.load_trezorapp(session, path)
 
 
 @pytest.fixture(scope="function")
@@ -231,10 +231,10 @@ def setup_params(request: pytest.FixtureRequest) -> SetupParams:
 def instance_id(
     setup_params: SetupParams, _prepared_test_ctx: TrezorTestContext
 ) -> int:
-    """Returns instance_id of the loaded external app."""
-    if setup_params.extapp_instance_id is None:
-        raise RuntimeError("External app was not loaded during test setup")
-    return setup_params.extapp_instance_id
+    """Returns instance_id of the loaded modular app."""
+    if setup_params.trezorapp_instance_id is None:
+        raise RuntimeError("Modular app was not loaded during test setup")
+    return setup_params.trezorapp_instance_id
 
 
 @pytest.fixture(scope="function")
