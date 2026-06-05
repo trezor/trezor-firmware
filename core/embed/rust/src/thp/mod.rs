@@ -86,6 +86,8 @@ struct ThpContext {
     /// Sort of logical clock that is increased every time
     /// [`ChannelTiming::last_usage`] is increased.
     last_usage_counter: u32,
+    /// Allows simulating timeouts in unit tests without actually waiting.
+    now_instant: Option<Instant>,
 }
 
 impl ThpContext {
@@ -96,6 +98,7 @@ impl ThpContext {
             channel_appdata: LinearMap::new(),
             channel_closed: Deque::new(),
             last_usage_counter: 0,
+            now_instant: None,
         }
     }
 
@@ -183,12 +186,13 @@ impl ThpContext {
         if let Some((ifn, cid)) = Self::lru_needs_closing(&self.channel_opening) {
             self.channel_close(ifn, cid);
         }
+        let timing = ChannelTiming::new(self.now());
         Self::insert_channel(
             self.channel_opening.as_mut_view(),
             iface_num,
             channel_id,
             channel,
-            ChannelTiming::new(Instant::now()),
+            timing,
         );
         self.channel_update_last_usage(channel_id);
         Ok(())
@@ -203,6 +207,7 @@ impl ThpContext {
         packet_buffer: &[u8],
         credential_fn: Obj,
     ) -> Result<TrezorInResult, Error> {
+        let now = self.now();
         let (channel, timing) = self
             .channel_opening
             .get_mut(&(iface_num, channel_id))
@@ -225,12 +230,12 @@ impl ThpContext {
         let pir = channel.packet_in(packet_buffer, &mut []);
         channel.credential_verifier().verify_fn = Obj::const_none();
         if pir.got_ack() {
-            timing.read_ack(Instant::now());
+            timing.read_ack(now);
         }
         if pir.got_message() && channel.sending_retry() == Some(0) {
             // Internal state machine accepted incoming message, and prepared outgoing one.
             // Update last_write as if message_in was called.
-            timing.update_last_write(Instant::now());
+            timing.update_last_write(now);
         }
         let res = match pir {
             PacketInResult::Accepted { .. } => TrezorInResult::None,
@@ -278,6 +283,7 @@ impl ThpContext {
         packet_buffer: &[u8],
         receive_buffer: &mut [u8],
     ) -> Result<TrezorInResult, Error> {
+        let now = self.now();
         let (channel, timing) = self.lookup_channel_mut(iface_num, channel_id)?;
         let pir = channel.packet_in(packet_buffer, receive_buffer);
         let res = match pir {
@@ -287,7 +293,7 @@ impl ThpContext {
                 ..
             } => {
                 if ack_received {
-                    timing.read_ack(Instant::now());
+                    timing.read_ack(now);
                 }
                 match (message_ready, ack_received) {
                     (true, true) => TrezorInResult::MessageReadyAck,
@@ -384,9 +390,10 @@ impl ThpContext {
         plaintext_len: usize,
         send_buffer: &mut [u8],
     ) -> Result<(), Error> {
+        let now = self.now();
         let (channel, timing) = self.lookup_channel_mut(iface_num, channel_id)?;
         channel.message_in(plaintext_len, send_buffer)?;
-        timing.update_last_write(Instant::now());
+        timing.update_last_write(now);
         Ok(())
     }
 
@@ -454,7 +461,7 @@ impl ThpContext {
     ) -> Result<(Option<u32>, Phase), Error> {
         let (channel, timing) = self.lookup_channel(iface_num, channel_id)?;
         let last_write_age_ms = timing
-            .last_write_age(Instant::now())
+            .last_write_age(self.now())
             .map(|duration| duration.to_millis());
         Ok((last_write_age_ms, channel.phase()))
     }
@@ -577,7 +584,7 @@ impl ThpContext {
     /// The ID can belong to a channel in handshake state, which is not
     /// otherwise exposed to micropython.
     pub fn next_timeout(&self, iface_num: u8) -> Result<Option<(u16, u32)>, Error> {
-        let now = Instant::now();
+        let now = self.now();
         let mut earliest: Option<(u16, u32)> = None;
         // Get iterator of tuples (channel_id, retry) for channels that are
         // currently sending.
@@ -640,6 +647,7 @@ impl ThpContext {
         iface_num: u8,
         local_static_privkey: &[u8],
     ) -> Result<(), Error> {
+        let now = self.now();
         let key = local_static_privkey
             .try_into()
             .map_err(|_| Error::ThpError(c"Invalid key length"))?;
@@ -654,7 +662,7 @@ impl ThpContext {
                 }
                 // Outgoing message is now ready, update last_write.
                 if let Some(0) = ch.sending_retry() {
-                    t.update_last_write(Instant::now());
+                    t.update_last_write(now);
                 }
             }
         }
@@ -730,6 +738,10 @@ impl ThpContext {
             result = CHANNEL_ID_COUNTER.get();
         }
         result
+    }
+
+    fn now(&self) -> Instant {
+        self.now_instant.unwrap_or_else(Instant::now)
     }
 }
 
