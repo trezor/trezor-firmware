@@ -23,9 +23,14 @@ fn main() -> Result<()> {
 
     // Board header is resolved by xtask from the selected board's TOML and
     // passed here so the correct revision header is used regardless of which
-    // board revision is active.
+    // board revision is active. When building outside xtask (rust-analyzer or a
+    // bare `cargo` invocation) the variable is unset, so fall back to the
+    // model's default board header to keep the build working.
     println!("cargo:rerun-if-env-changed=TREZOR_BOARD_HEADER");
-    let board_header_path = std::env::var("TREZOR_BOARD_HEADER")?;
+    let board_header_path = match std::env::var("TREZOR_BOARD_HEADER") {
+        Ok(path) => path,
+        Err(_) => default_board_header(model_id)?,
+    };
     let board_header = format!("\"{}\"", board_header_path);
 
     xbuild::build(|lib| {
@@ -175,6 +180,55 @@ fn main() -> Result<()> {
 
         Ok(())
     })
+}
+
+/// Default board header for a model, used as a fallback when xtask does not
+/// provide `TREZOR_BOARD_HEADER` (e.g. rust-analyzer or a bare `cargo` build).
+///
+/// Reads the model's `default_board` from `<model>/model.toml` and that board's
+/// `header` (or `emulator_header` for an emulator build) from
+/// `<model>/boards/<default_board>.toml`, so the tomls stay the single source of
+/// truth. Returns "" for an unselected model; that case is rejected later by the
+/// model dispatch in `main`.
+fn default_board_header(model_id: &str) -> Result<String> {
+    if model_id.is_empty() {
+        return Ok(String::new());
+    }
+
+    let model_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR")?).join(model_id);
+
+    let read_toml = |path: &std::path::Path| -> Result<toml::Value> {
+        println!("cargo:rerun-if-changed={}", path.display());
+        let content = std::fs::read_to_string(path)?;
+        Ok(toml::from_str(&content)?)
+    };
+
+    let model = read_toml(&model_dir.join("model.toml"))?;
+    let default_board = model
+        .get("default_board")
+        .and_then(toml::Value::as_str)
+        .ok_or_else(|| color_eyre::eyre::eyre!("{model_id}/model.toml missing 'default_board'"))?;
+
+    let board = read_toml(
+        &model_dir
+            .join("boards")
+            .join(format!("{default_board}.toml")),
+    )?;
+    // Mirror xtask: an emulator build uses the board's emulator configuration
+    // header instead of the on-hardware one.
+    let header_key = if cfg!(feature = "emulator") {
+        "emulator_header"
+    } else {
+        "header"
+    };
+    let header = board
+        .get(header_key)
+        .and_then(toml::Value::as_str)
+        .ok_or_else(|| {
+            color_eyre::eyre::eyre!("{model_id}/boards/{default_board}.toml missing '{header_key}'")
+        })?;
+
+    Ok(header.to_string())
 }
 
 fn model_to_num(model: &str) -> u32 {
