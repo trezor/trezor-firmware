@@ -682,14 +682,10 @@ class DebugLink:
             wait_type = None
         return LayoutContent(self.state(wait_type=wait_type).tokens)
 
-    def wait_layout(self, wait_for_external_change: bool = False) -> LayoutContent:
+    def wait_layout(self) -> LayoutContent:
         # Next layout change will be caused by external event
         # (e.g. device being auto-locked or as a result of device_handler.run_with_session(xxx))
         # and not by our debug actions/decisions.
-        # Resetting the debug state so we wait for the next layout change
-        # (and do not return the current state).
-        if wait_for_external_change:
-            self.reset_debug_events()
 
         obj = self._call(
             messages.DebugLinkGetState(wait_layout=DebugWaitType.NEXT_LAYOUT),
@@ -737,11 +733,6 @@ class DebugLink:
                 ),
                 wait=False,
             )
-
-    def reset_debug_events(self) -> None:
-        # Only supported on TT and above certain version
-        if (self.model is not models.T1B1) and not self.legacy_debug:
-            self._call(messages.DebugLinkResetDebugEvents(), expect=messages.Success)
 
     def synchronize_at(
         self, layout_text: str | list[str], timeout: float = 5
