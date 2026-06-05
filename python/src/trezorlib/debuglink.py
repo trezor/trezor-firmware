@@ -622,7 +622,7 @@ class DebugLink:
         msg = self.mapping.decode(msg_type, msg_bytes)
 
         # Collapse tokens to make log use less lines.
-        if isinstance(msg, (messages.DebugLinkState, messages.DebugLinkLayout)):
+        if isinstance(msg, messages.DebugLinkState):
             msg.tokens = ["".join(msg.tokens)]
 
         return msg
