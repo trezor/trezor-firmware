@@ -413,6 +413,12 @@ def _print_auth_data(signature: bytes, certificates: t.Sequence[bytes]) -> None:
     is_flag=True,
     help="Do not check intermediate certificates against the online whitelist/CRL.",
 )
+@click.option(
+    "-d",
+    "--devel",
+    is_flag=True,
+    help="Allow devices provisioned with development keys.",
+)
 @with_session(seedless=True)
 def authenticate(
     session: "Session",
@@ -422,6 +428,7 @@ def authenticate(
     mldsa44_root: t.BinaryIO | None,
     raw: bool | None,
     offline: bool | None,
+    devel: bool | None,
 ) -> None:
     """Verify the authenticity of the device.
 
@@ -431,6 +438,8 @@ def authenticate(
     authenticity. By default, it will also check the public keys against a
     whitelist or CRL downloaded from Trezor servers. You can skip this check
     with the --offline option.
+
+    Development devices are rejected unless the --devel option is given.
     """
     if hex_challenge is None:
         hex_challenge = secrets.token_hex(32)
@@ -508,6 +517,7 @@ def authenticate(
             ed25519_root_pubkey=ed25519_root_bytes,
             mldsa44_root_pubkey=mldsa44_root_bytes,
             allowlist=allowlist,
+            allow_development_devices=devel,
         )
     except authentication.DeviceNotAuthentic:
         click.echo("Device is not authentic.")
