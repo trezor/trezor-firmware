@@ -103,7 +103,6 @@ DATA = {
 @pytest.mark.models("core")
 def test_ethereum_sign_typed_data_show_more_button(session: Session):
     with session.test_ctx as client:
-        client.watch_layout()
         IF = InputFlowEIP712ShowMore(client)
         client.set_input_flow(IF.get())
         ethereum.sign_typed_data(
@@ -117,7 +116,6 @@ def test_ethereum_sign_typed_data_show_more_button(session: Session):
 @pytest.mark.models("core")
 def test_ethereum_sign_typed_data_cancel(session: Session):
     with session.test_ctx as client, pytest.raises(exceptions.Cancelled):
-        client.watch_layout()
         IF = InputFlowEIP712Cancel(client)
         client.set_input_flow(IF.get())
         ethereum.sign_typed_data(

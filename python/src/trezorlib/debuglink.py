@@ -748,15 +748,6 @@ class DebugLink:
                 raise RuntimeError("Timeout waiting for layout")
             time.sleep(0.1)
 
-    def watch_layout(self, watch: bool) -> None:
-        """Enable or disable watching layouts.
-        If disabled, wait_layout will not work.
-
-        The message is missing on T1. Use `TrezorClientDebugLink.watch_layout` for
-        cross-version compatibility.
-        """
-        self._call(messages.DebugLinkWatchLayout(watch=watch), expect=messages.Success)
-
     def encode_pin(self, pin: str, matrix: str | None = None) -> str:
         """Transform correct PIN according to the displayed matrix."""
         if matrix is None:
@@ -1530,19 +1521,6 @@ class TrezorTestContext:
 
     def ping(self, message: str) -> str:
         return self.client.ping(message)
-
-    def watch_layout(self, watch: bool = True) -> None:
-        """Enable or disable watching layout changes.
-
-        Since trezor-core v2.3.2, it is necessary to call `watch_layout()` before
-        using `debug.wait_layout()`, otherwise layout changes are not reported.
-        """
-        if self.version >= (2, 3, 2):
-            # version check is necessary because otherwise we cannot reliably detect
-            # whether and where to wait for reply:
-            # - T1 reports unknown debuglink messages on the wirelink
-            # - TT < 2.3.0 does not reply to unknown debuglink messages due to a bug
-            self.debug.watch_layout(watch)
 
     def use_pin_sequence(self, pins: t.Iterable[str]) -> None:
         """Respond to PIN prompts from device with the provided PINs.

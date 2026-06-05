@@ -79,7 +79,6 @@ def recover(session: Session, mnemonic: str):
     with session.test_ctx as client:
         IF = InputFlowBip39Recovery(session, words)
         client.set_input_flow(IF.get())
-        client.watch_layout()
         device.recover(
             session,
             pin_protection=False,

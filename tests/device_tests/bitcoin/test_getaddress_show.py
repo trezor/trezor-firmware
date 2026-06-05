@@ -277,7 +277,6 @@ def test_show_multisig_xpubs(
             IF = InputFlowShowMultisigXPUBs(session, address, xpubs, i)
             client.set_input_flow(IF.get())
             session.debug.synchronize_at("Homescreen")
-            client.watch_layout()
             btc.get_address(
                 session,
                 "Bitcoin",

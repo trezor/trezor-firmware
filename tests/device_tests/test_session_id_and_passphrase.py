@@ -445,7 +445,6 @@ def test_hide_passphrase_from_host(test_ctx: TrezorTestContext):
             else:
                 raise KeyError
 
-        test_ctx.watch_layout()
         test_ctx.set_input_flow(input_flow)
         test_ctx.set_expected_responses(
             [
@@ -490,7 +489,6 @@ def test_hide_passphrase_from_host(test_ctx: TrezorTestContext):
             assert passphrase in test_ctx.debug.read_layout().text_content()
             test_ctx.debug.press_yes()
 
-        test_ctx.watch_layout()
         test_ctx.set_input_flow(input_flow)
         test_ctx.set_expected_responses(
             [
