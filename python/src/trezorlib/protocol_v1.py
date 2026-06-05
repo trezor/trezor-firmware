@@ -229,6 +229,12 @@ class NullPairing(pairing.PairingController):
     def state(self) -> pairing.ControllerLifecycle:
         return pairing.ControllerLifecycle.FINISHED
 
+    def __enter__(self) -> None:
+        pass
+
+    def __exit__(self, exc_type: t.Any, exc_val: t.Any, exc_tb: t.Any) -> None:
+        pass
+
     @property
     def methods(self) -> t.Collection[type[pairing.PairingMethod]]:
         return (pairing.SkipPairing,)

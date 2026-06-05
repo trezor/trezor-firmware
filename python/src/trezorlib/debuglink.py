@@ -1430,7 +1430,8 @@ class TrezorTestContext:
         self.client = self._get_client()
 
         if self.client.is_connected():
-            self.client.pairing.skip()
+            with self.client.pairing:
+                self.client.pairing.skip()
         self.sync_responses()
 
     def reset_debug_features(self) -> None:

@@ -100,22 +100,23 @@ class PairingController:
         else:
             raise ValueError(f"Invalid state: {state}")
 
-    def _maybe_open(self) -> None:
+    def __enter__(self) -> None:
         if self.opened:
-            return
+            raise RuntimeError("PairingController is already open")
         self.opened = True
         self.client.connect()
         self.session.__enter__()
 
-    def _maybe_close(self) -> None:
+    def __exit__(self, exc_type: t.Any, exc_val: t.Any, exc_tb: t.Any) -> None:
         if not self.opened:
-            return
+            raise RuntimeError("PairingController is already closed")
         self.opened = False
-        self.session.__exit__(None, None, None)
+        self.session.__exit__(exc_type, exc_val, exc_tb)
 
     def start(self) -> None:
         self.state.abort_if_failed()
-        self._maybe_open()
+        if not self.opened:
+            raise RuntimeError("PairingController is not open")
         if self.state is not ControllerLifecycle.INITIAL:
             return
         self.session.call(
@@ -159,12 +160,10 @@ class PairingController:
         if not _no_call:
             self._call(messages.ThpEndRequest(), expect=messages.ThpEndResponse)
         self.state = ControllerLifecycle.FINISHED
-        self._maybe_close()
 
     def abort(self) -> None:
         self.state = ControllerLifecycle.FAILED
         self.channel.close()
-        self._maybe_close()
 
     def _check_state(self, required_state: ControllerLifecycle) -> None:
         if self.state != required_state:
@@ -386,37 +385,38 @@ def default_pairing_flow(
     code_entry_callback: t.Callable[[], str] | None = None,
     request_credential: bool = True,
 ) -> Credential | None:
-    # make sure a channel has been established
-    pairing.client.connect()
-    # no need to pair if auto-connected
-    if pairing.is_paired():
-        return
+    with pairing:
+        # make sure a channel has been established
+        pairing.client.connect()
+        # no need to pair if auto-connected
+        if pairing.is_paired():
+            return
 
-    # we currently can't get a credential if pairing is skipped
-    if not request_credential and SkipPairing in pairing.methods:
-        pairing.skip()
-        return None
+        # we currently can't get a credential if pairing is skipped
+        if not request_credential and SkipPairing in pairing.methods:
+            pairing.skip()
+            return None
 
-    if CodeEntry not in pairing.methods:
-        raise NotImplementedError(
-            "CodeEntry pairing method not supported by the device."
-        )
+        if CodeEntry not in pairing.methods:
+            raise NotImplementedError(
+                "CodeEntry pairing method not supported by the device."
+            )
 
-    if code_entry_callback is None:
-        raise TrezorException(
-            "code_entry_callback is required when the device is not paired"
-        )
+        if code_entry_callback is None:
+            raise TrezorException(
+                "code_entry_callback is required when the device is not paired"
+            )
 
-    method = CodeEntry(pairing)
-    code = code_entry_callback()
-    method.send_code(code)
+        method = CodeEntry(pairing)
+        code = code_entry_callback()
+        method.send_code(code)
 
-    assert pairing.state is ControllerLifecycle.PAIRING_COMPLETED
+        assert pairing.state is ControllerLifecycle.PAIRING_COMPLETED
 
-    if request_credential:
-        credential = pairing.request_credential()
-    else:
-        credential = None
+        if request_credential:
+            credential = pairing.request_credential()
+        else:
+            credential = None
 
-    pairing.finish()
-    return credential
+        pairing.finish()
+        return credential
