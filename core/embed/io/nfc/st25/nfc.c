@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef KERNEL_MODE
+#define KERNEL_MODE
+#endif
 #ifdef KERNEL_MODE
 
 #include <trezor_bsp.h>
@@ -30,6 +33,7 @@
 #include "card_emulation.h"
 #include "ndef.h"
 #include "nfc_internal.h"
+#include "nfc_poll.h"
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
 #include "rfal_nfca.h"
@@ -54,21 +58,19 @@
 // NFC-F PAD0
 #define LM_PAD0 0x00U
 
-typedef enum {
-  NFC_STATE_ACTIVE,
-  NFC_STATE_NOT_ACTIVE,
-} nfc_state_t;
+// Interval to poll NFC device if still present (ms)
+#define NFC_POLLING_INTERVAL_MS 300
 
 typedef struct {
   bool initialized;
+  bool rfal_initialized;
+  bool card_connected;
   // SPI driver
   SPI_HandleTypeDef hspi;
   // NFC IRQ pin callback
   void (*nfc_irq_callback)(void);
   EXTI_HandleTypeDef hEXTI;
   rfalNfcDiscoverParam disc_params;
-  bool rfal_initialized;
-  nfc_state_t last_nfc_state;
 } st25_driver_t;
 
 static st25_driver_t g_st25_driver = {
@@ -127,7 +129,12 @@ static nfc_status_t nfc_transcieve_blocking(uint8_t *tx_buf,
                                             uint8_t **rx_buf,
                                             uint16_t **rcv_len, uint32_t fwt);
 
-static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev);
+// static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev);
+
+// Register NFC technology (or several) to be explored by NFC state machine
+// use this function before activating the state machine with
+// nfc_start_discovery()
+static nfc_status_t nfc_register_tech(const nfc_tech_t tech);
 
 nfc_status_t nfc_init() {
   st25_driver_t *drv = &g_st25_driver;
@@ -232,9 +239,15 @@ nfc_status_t nfc_init() {
   NVIC_EnableIRQ(NFC_EXTI_INTERRUPT_NUM);
 
   drv->rfal_initialized = true;
-
   drv->initialized = true;
-  drv->last_nfc_state = NFC_STATE_NOT_ACTIVE;
+  drv->card_connected = false;
+
+  nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B | NFC_POLLER_TECH_F |
+                    NFC_POLLER_TECH_V);
+
+  if (!nfc_poll_init()) {
+    goto cleanup;
+  }
 
   return NFC_OK;
 
@@ -246,13 +259,8 @@ cleanup:
 void nfc_deinit(void) {
   st25_driver_t *drv = &g_st25_driver;
 
-  if (drv->rfal_initialized) {
-    // Deactivate rfal STM (Disconnects active devices)
-    rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_IDLE);
-    while (rfalNfcGetState() != RFAL_NFC_STATE_IDLE) {
-      rfalNfcWorker();
-    }
-  }
+  nfc_stop_discovery();
+  nfc_poll_deinit();
 
   HAL_EXTI_ClearConfigLine(&drv->hEXTI);
   NVIC_DisableIRQ(NFC_EXTI_INTERRUPT_NUM);
@@ -275,7 +283,7 @@ void nfc_deinit(void) {
   memset(drv, 0, sizeof(st25_driver_t));
 }
 
-nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
+static nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
   st25_driver_t *drv = &g_st25_driver;
 
   if (drv->initialized == false) {
@@ -348,7 +356,7 @@ nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
   return NFC_OK;
 }
 
-nfc_status_t nfc_activate_stm(void) {
+nfc_status_t nfc_start_discovery(void) {
   st25_driver_t *drv = &g_st25_driver;
 
   if (!drv->initialized) {
@@ -364,8 +372,9 @@ nfc_status_t nfc_activate_stm(void) {
   return NFC_OK;
 }
 
-nfc_status_t nfc_deactivate_stm(void) {
+nfc_status_t nfc_stop_discovery(void) {
   st25_driver_t *drv = &g_st25_driver;
+  drv->card_connected = false;
 
   if (!drv->initialized) {
     return NFC_OK;
@@ -383,111 +392,11 @@ nfc_status_t nfc_deactivate_stm(void) {
   return NFC_OK;
 }
 
-nfc_status_t nfc_get_event(nfc_event_t *event) {
+// Deactivate the currently activated NFC device and put RFAL state machine
+// back to discovery state.
+nfc_status_t nfc_restart_discovery(void) {
   st25_driver_t *drv = &g_st25_driver;
-
-  *event = NFC_NO_EVENT;
-
-  if (!drv->initialized) {
-    return NFC_NOT_INITIALIZED;
-  }
-
-  rfalNfcDevice *nfc_device;
-
-  // Run RFAL worker periodically
-  rfalNfcWorker();
-
-  rfalNfcState rfal_state = rfalNfcGetState();
-
-  nfc_state_t cur_nfc_state = NFC_STATE_NOT_ACTIVE;
-
-  if (rfalNfcIsDevActivated(rfal_state)) {
-    cur_nfc_state = NFC_STATE_ACTIVE;
-  }
-
-  if (cur_nfc_state != drv->last_nfc_state) {
-    switch (cur_nfc_state) {
-      case NFC_STATE_ACTIVE:
-        *event = NFC_EVENT_ACTIVATED;
-        break;
-
-      case NFC_STATE_NOT_ACTIVE:
-        *event = NFC_EVENT_DEACTIVATED;
-        break;
-
-      default:
-        *event = NFC_NO_EVENT;
-    }
-
-    drv->last_nfc_state = cur_nfc_state;
-  }
-
-  if (cur_nfc_state == NFC_STATE_ACTIVE) {
-    rfalNfcGetActiveDevice(&nfc_device);
-
-    // Perform immediate mandatory actions for certain technology (Placeholder)
-    switch (nfc_device->type) {
-      case RFAL_NFC_LISTEN_TYPE_NFCA:
-
-        switch (nfc_device->dev.nfca.type) {
-          case RFAL_NFCA_T1T:
-            break;
-          case RFAL_NFCA_T4T:
-            break;
-          case RFAL_NFCA_T4T_NFCDEP:
-            break;
-          case RFAL_NFCA_NFCDEP:
-            break;
-          default:
-            break;
-        }
-
-      case RFAL_NFC_LISTEN_TYPE_NFCB:
-        break;
-
-      case RFAL_NFC_LISTEN_TYPE_NFCF:
-        break;
-
-      case RFAL_NFC_LISTEN_TYPE_NFCV:
-        break;
-
-      case RFAL_NFC_LISTEN_TYPE_ST25TB:
-        break;
-
-      case RFAL_NFC_LISTEN_TYPE_AP2P:
-      case RFAL_NFC_POLL_TYPE_AP2P:
-        break;
-
-      // Card emulators must respond to reader commands promptly. Once
-      // activated, the RFAL worker is called multiple times until back-to-back
-      // communication with the reader finishes. This can prolong the
-      // nfc_get_event() service time compared to standard reader mode.
-      case RFAL_NFC_POLL_TYPE_NFCA:
-      case RFAL_NFC_POLL_TYPE_NFCF:
-
-        if (nfc_device->rfInterface == RFAL_NFC_INTERFACE_NFCDEP) {
-          // not supported yet
-        } else {
-          nfc_card_emulator_loop(nfc_device);
-          rfalNfcDeactivate(
-              RFAL_NFC_DEACTIVATE_DISCOVERY);  // Automatically deactivate
-        }
-
-        // No event in CE mode, activation/deactivation handled automatically
-        *event = NFC_NO_EVENT;
-
-        break;
-
-      default:
-        break;
-    }
-  }
-
-  return NFC_OK;
-}
-
-nfc_status_t nfc_dev_deactivate(void) {
-  st25_driver_t *drv = &g_st25_driver;
+  drv->card_connected = false;
 
   if (!drv->initialized) {
     return NFC_NOT_INITIALIZED;
@@ -498,27 +407,90 @@ nfc_status_t nfc_dev_deactivate(void) {
   return NFC_OK;
 }
 
+void nfc_get_state(nfc_state_t *state) {
+  if (rfalNfcIsDevActivated(rfalNfcGetState())) {
+    *state = (nfc_state_t){.connected = true};
+  } else {
+    *state = (nfc_state_t){.connected = false};
+  }
+}
+
+bool nfc_is_connected() {
+  st25_driver_t *drv = &g_st25_driver;
+  return drv->card_connected;
+}
+
+bool nfc_identify(void) {
+  st25_driver_t *drv = &g_st25_driver;
+  nfc_dev_info_t dev_info;
+  nfc_status_t status = nfc_dev_read_info(&dev_info);
+  if (status != NFC_OK) {
+    return false;
+  }
+
+  if (dev_info.type == NFC_DEV_TYPE_A || dev_info.type == NFC_DEV_TYPE_B ||
+      dev_info.type == NFC_DEV_TYPE_V) {
+    drv->card_connected = true;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool nfc_check_connection() {
+  static uint32_t last_check_time = 0;
+  if (!ticks_expired(last_check_time + NFC_POLLING_INTERVAL_MS)) {
+    return true;
+  }
+  last_check_time = ticks();
+
+  nfc_dev_info_t dev_info;
+  nfc_status_t status = nfc_dev_read_info(&dev_info);
+
+  if (status != NFC_OK) {
+    return false;
+  }
+
+  if (dev_info.interface == NFC_DEV_INTERFACE_ISODEP) {
+    uint8_t tx_read_1b[] = {0x00, 0xB0, 0x00, 0x00, 0x01};
+    uint8_t *rx_dummy = NULL;
+    uint16_t *rx_dummy_len = NULL;
+    status = nfc_transceive(tx_read_1b, sizeof(tx_read_1b), &rx_dummy,
+                            &rx_dummy_len);
+    return status == NFC_OK;
+  }
+
+  switch (dev_info.type) {
+    case NFC_DEV_TYPE_A:
+      uint8_t rxBuf[20];
+      uint16_t rxLen = sizeof(rxBuf);
+      ReturnCode err = rfalT2TPollerRead(0x00, rxBuf, sizeof(rxBuf), &rxLen);
+      return err == RFAL_ERR_NONE;
+    case NFC_DEV_TYPE_B:
+    case NFC_DEV_TYPE_V:
+    default:
+      return false;
+  }
+}
+
 nfc_status_t nfc_transceive(const uint8_t *tx_data, uint16_t tx_data_len,
-                            uint8_t *rx_data, uint16_t *rx_data_len) {
+                            uint8_t **rx_data, uint16_t **rx_data_len) {
   st25_driver_t *drv = &g_st25_driver;
 
   if (drv->initialized == false) {
     return NFC_NOT_INITIALIZED;
   }
 
-  if (rfalNfcGetState() != RFAL_NFC_STATE_IDLE) {
-    return NFC_ERROR;
+  rfalNfcState state = rfalNfcGetState();
+  if (state != RFAL_NFC_STATE_ACTIVATED &&
+      state != RFAL_NFC_STATE_DATAEXCHANGE_DONE) {
+    return NFC_WRONG_STATE;
   }
 
-  ReturnCode err;
-  err = nfc_transcieve_blocking((uint8_t *)tx_data, tx_data_len, &rx_data,
-                                &rx_data_len, RFAL_FWT_NONE);
+  nfc_status_t err = nfc_transcieve_blocking(
+      (uint8_t *)tx_data, tx_data_len, rx_data, rx_data_len, RFAL_FWT_NONE);
 
-  if (err != RFAL_ERR_NONE) {
-    return NFC_ERROR;
-  }
-
-  return NFC_OK;
+  return err;
 }
 
 nfc_status_t nfc_dev_write_ndef_uri(void) {
@@ -544,7 +516,9 @@ nfc_status_t nfc_dev_write_ndef_uri(void) {
 nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
   if (rfalNfcIsDevActivated(rfalNfcGetState())) {
     rfalNfcDevice *nfc_device;
-    rfalNfcGetActiveDevice(&nfc_device);
+    if (rfalNfcGetActiveDevice(&nfc_device) != RFAL_ERR_NONE) {
+      return NFC_ERROR;
+    }
 
     // Resolve device type
     switch (nfc_device->type) {
@@ -566,9 +540,41 @@ nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
       case RFAL_NFC_LISTEN_TYPE_AP2P:
         dev_info->type = NFC_DEV_TYPE_AP2P;
         break;
+      case RFAL_NFC_POLL_TYPE_NFCA:
+        dev_info->type = NFC_DEV_TYPE_POLL_TYPE_A;
+        break;
+      case RFAL_NFC_POLL_TYPE_NFCF:
+        dev_info->type = NFC_DEV_TYPE_POLL_TYPE_F;
+        break;
       default:
         dev_info->type = NFC_DEV_TYPE_UNKNOWN;
         break;
+    }
+
+    switch (nfc_device->rfInterface) {
+      case RFAL_NFC_INTERFACE_RF:
+        dev_info->interface = NFC_DEV_INTERFACE_RF;
+        break;
+      case RFAL_NFC_INTERFACE_ISODEP:
+        dev_info->interface = NFC_DEV_INTERFACE_ISODEP;
+        break;
+      case RFAL_NFC_INTERFACE_NFCDEP:
+        dev_info->interface = NFC_DEV_INTERFACE_NFCDEP;
+        break;
+      default:
+        dev_info->interface = NFC_DEV_INTERFACE_UNKNOWN;
+    }
+
+    // For poll mode, run the card emulator loop to handle the
+    // communication until the peer device deactivates.
+    if (dev_info->type == NFC_DEV_TYPE_POLL_TYPE_A ||
+        dev_info->type == NFC_DEV_TYPE_POLL_TYPE_F) {
+      if (dev_info->interface == NFC_DEV_INTERFACE_NFCDEP) {
+        // not supported yet
+      } else {
+        nfc_card_emulator_loop(nfc_device);
+      }
+      return NFC_ERROR;  // Automatically deactivate
     }
 
     dev_info->uid_len = nfc_device->nfcidLen;
@@ -677,6 +683,12 @@ static nfc_status_t nfc_transcieve_blocking(uint8_t *tx_buf,
       rfalNfcWorker();
       err = rfalNfcDataExchangeGetStatus();
     } while (err == RFAL_ERR_BUSY);
+  } else {
+    if (err == RFAL_ERR_WRONG_STATE) {
+      return NFC_WRONG_STATE;
+    } else if (err == RFAL_ERR_PARAM) {
+      return NFC_PARAM;
+    }
   }
 
   if (err != RFAL_ERR_NONE) {
