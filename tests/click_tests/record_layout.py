@@ -64,7 +64,6 @@ def get_client(conn):
     client = get_client_orig(conn)
     DEBUGLINK = debuglink.DebugLink(client.transport.find_debug())
     DEBUGLINK.open()
-    DEBUGLINK.watch_layout(True)
     return client
 
 
@@ -278,7 +277,6 @@ for best results.
         main()
     finally:
         if DEBUGLINK is not None:
-            DEBUGLINK.watch_layout(False)
             DEBUGLINK.close()
             echo("\n# ========== test cases ==========\n")
             for call in CALLS_DONE:

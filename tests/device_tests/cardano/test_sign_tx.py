@@ -162,7 +162,6 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
 
     with session.test_ctx as client:
         if input_flow is not None:
-            client.watch_layout()
             client.set_input_flow(input_flow(client))
 
         return cardano.sign_tx(

@@ -97,7 +97,6 @@ def _check_ping_screen_texts(session: Session, title: str, right_button: str) ->
         right_button = "-"
 
     with session.test_ctx as client:
-        client.watch_layout(True)
         client.set_input_flow(ping_input_flow(session, title, right_button))
         ping = session.call(messages.Ping(message="ahoj!", button_protection=True))
         assert ping == messages.Success(message="ahoj!")

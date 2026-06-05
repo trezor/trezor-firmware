@@ -60,7 +60,6 @@ class InputFlowBase:
         self.layout_type = client.layout_type
 
     def get(self) -> Callable[[], BRGeneratorType]:
-        self.client.watch_layout(True)
 
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):

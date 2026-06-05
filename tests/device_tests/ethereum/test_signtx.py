@@ -94,7 +94,6 @@ def _do_test_signtx(
 ):
     with session.test_ctx as client:
         if input_flow:
-            client.watch_layout()
             client.set_input_flow(input_flow)
         sig_v, sig_r, sig_s = ethereum.sign_tx(
             session,
@@ -531,14 +530,12 @@ def test_signtx_data_pagination(session: Session, scroll: bool, size: int):
     # test pagination
     flow = InputFlowEthereumSignTxData(session, scroll=scroll, cancel=False)
     with session.test_ctx as client:
-        client.watch_layout()
         client.set_input_flow(flow.get())
         _sign_tx_call()
 
     # test cancellation
     flow = InputFlowEthereumSignTxData(session, scroll=scroll, cancel=True)
     with client, pytest.raises(exceptions.Cancelled):
-        client.watch_layout()
         client.set_input_flow(flow.get())
         _sign_tx_call()
 

@@ -29,6 +29,7 @@ from trezorlib.messages import (
     BackupAvailability,
     BackupType,
     CardanoDerivationType,
+    DebugLinkWatchLayout,
     RecoveryStatus,
     Success,
 )
@@ -451,8 +452,9 @@ def test_upgrade_shamir_recovery(
         BackgroundDeviceHandler(emu.client) as device_handler,
     ):
         assert emu.client.features.recovery_status == RecoveryStatus.Nothing
-        emu.client.watch_layout(True)
         debug = device_handler.debuglink()
+        if (2, 3, 2) <= debug.version <= (2, 8, 5):
+            debug._call(DebugLinkWatchLayout(watch=True), expect=Success)
 
         device_handler.run_with_session(
             device.recover, seedless=True, pin_protection=False
@@ -480,7 +482,6 @@ def test_upgrade_shamir_recovery(
         assert device_id == emu.client.features.device_id
         assert emu.client.features.recovery_status == RecoveryStatus.Recovery
         debug = emu.client.debug
-        emu.client.watch_layout(True)
 
         layout = debug.read_layout()
         if (
