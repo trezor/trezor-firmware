@@ -40,7 +40,6 @@ fn do_main() -> Result<(), trezor_client::Error> {
                 bip32::ChildNumber::from_hardened_idx(0).unwrap(),
             ]
             .into(),
-            trezor_client::protos::InputScriptType::SPENDADDRESS,
             Network::Testnet,
             true,
         )?,
