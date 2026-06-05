@@ -11,7 +11,6 @@ impl Trezor {
     pub fn get_public_key(
         &mut self,
         path: &bip32::DerivationPath,
-        script_type: InputScriptType,
         network: Network,
         show_display: bool,
     ) -> Result<TrezorResponse<'_, bip32::Xpub, protos::PublicKey>> {
@@ -19,7 +18,6 @@ impl Trezor {
         req.address_n = utils::convert_path(path);
         req.set_show_display(show_display);
         req.set_coin_name(utils::coin_name(network)?);
-        req.set_script_type(script_type);
         self.call(req, Box::new(|_, m| Ok(m.xpub().parse()?)))
     }
 
