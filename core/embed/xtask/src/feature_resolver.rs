@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use std::process;
 
 use crate::{
-    args::{BuildArgs, Component, ConsoleType, ResolvedBuild},
+    args::{BuildArgs, ConsoleType, Project, ResolvedBuild},
     config, helpers,
 };
 
@@ -33,11 +33,11 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
             features.push("asan".into());
         }
     } else {
-        match (args.component, args.dbg_console) {
-            (Component::Firmware, Some(_)) => features.push("dbg_console".into()),
-            (Component::Secmon, Some(ConsoleType::Vcp)) => (),
-            (Component::Boardloader, Some(ConsoleType::Vcp)) => (),
-            (Component::Prodtest, Some(ConsoleType::Vcp)) => (),
+        match (args.project, args.dbg_console) {
+            (Project::Firmware, Some(_)) => features.push("dbg_console".into()),
+            (Project::Secmon, Some(ConsoleType::Vcp)) => (),
+            (Project::Boardloader, Some(ConsoleType::Vcp)) => (),
+            (Project::Prodtest, Some(ConsoleType::Vcp)) => (),
             (_, Some(ConsoleType::Vcp)) => features.push("dbg_console_vcp".into()),
             (_, Some(ConsoleType::Swo)) => features.push("dbg_console_swo".into()),
             (_, Some(ConsoleType::SystemView)) => features.push("dbg_console_sysview".into()),
@@ -47,7 +47,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
 
     let pyopt = args.pyopt.unwrap_or(true);
 
-    if args.component == Component::Firmware {
+    if args.project == Project::Firmware {
         if pyopt {
             features.push("pyopt".into());
         } else {
@@ -88,8 +88,8 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
     }
 
     if matches!(
-        args.component,
-        Component::Secmon | Component::Kernel | Component::Firmware
+        args.project,
+        Project::Secmon | Project::Kernel | Project::Firmware
     ) {
         if !args.btc_only {
             features.push("universal_fw".into());
@@ -112,8 +112,8 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
     }
 
     if matches!(
-        args.component,
-        Component::Firmware | Component::Bootloader | Component::Prodtest
+        args.project,
+        Project::Firmware | Project::Bootloader | Project::Prodtest
     ) {
         if args.perf_overlay {
             features.push("ui_performance_overlay".into());
@@ -129,13 +129,13 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
         }
     }
 
-    if matches!(args.component, Component::Kernel) {
+    if matches!(args.project, Project::Kernel) {
         if args.debug_link.unwrap_or(!pyopt) {
             features.push("debuglink".into());
         }
     }
 
-    if args.component == Component::Firmware && (args.frozen || !args.emulator) {
+    if args.project == Project::Firmware && (args.frozen || !args.emulator) {
         features.push("frozen".into());
     }
 
@@ -148,7 +148,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
         .clone()
         .unwrap_or_else(|| model_config.default_board.clone());
     let board_features =
-        config::resolve_board_features(&model_config, &board_id, args.component, args.emulator)?;
+        config::resolve_board_features(&model_config, &board_id, args.project, args.emulator)?;
     let mut board_feat = board_features.features;
     if args.disable_optiga {
         board_feat.retain(|f| f != "optiga");
@@ -176,7 +176,7 @@ pub fn configure_cargo(args: &BuildArgs, cmd: &mut process::Command) -> Result<(
     let resolved = resolve_features(args)?;
     let mut rebuild_std = false;
 
-    cmd.args(["--package", args.component.package_name(args.emulator)]);
+    cmd.args(["--package", args.project.package_name(args.emulator)]);
     cmd.args(["--features", &resolved.features.join(",")]);
     cmd.args(["--profile", args.profile_name()]);
     cmd.env("TREZOR_BOARD_HEADER", &resolved.board_header);

@@ -6,93 +6,93 @@ use std::{
 };
 
 use crate::{
-    args::Component,
-    config::{ModelConfig, TargetProfile},
+    args::Project,
+    config::{ModelConfig, ProjectProfile},
     helpers,
     model::Model,
 };
 
 /// Extracts appropriate sections from the ELF file and creates a raw unsigned binary.
-/// Section lists are read from the component's `target.toml`; model-specific split
+/// Section lists are read from the project's `project.toml`; model-specific split
 /// behaviour is controlled by `model_config`.
 pub fn elf_to_bin(
     source: &Path,
-    component: Component,
+    project: Project,
     model_config: &ModelConfig,
     use_dev_keys: bool,
 ) -> Result<PathBuf> {
-    let target_profile = TargetProfile::load(component)?;
+    let project_profile = ProjectProfile::load(project)?;
 
-    match component {
-        Component::Firmware => {
+    match project {
+        Project::Firmware => {
             if model_config.is_stm32f4() {
                 // STM32F4 firmware flash is non-contiguous — two banks separated
                 // by the storage area must be extracted and concatenated.
                 // Part1 uses the same elf_sections as the flat (non-split) path.
-                let pad_to = target_profile
+                let pad_to = project_profile
                     .split_pad_to
                     .as_deref()
-                    .ok_or_else(|| anyhow::anyhow!("firmware target.toml missing split_pad_to"))?;
+                    .ok_or_else(|| anyhow::anyhow!("firmware project.toml missing split_pad_to"))?;
                 let part2_sections =
-                    target_profile
+                    project_profile
                         .split_part2_sections
                         .as_ref()
                         .ok_or_else(|| {
-                            anyhow::anyhow!("firmware target.toml missing split_part2_sections")
+                            anyhow::anyhow!("firmware project.toml missing split_part2_sections")
                         })?;
                 let part1 = objcopy_ex(
                     source,
                     "part1",
-                    &target_profile.elf_sections,
+                    &project_profile.elf_sections,
                     ["--pad-to", pad_to],
                 )?;
                 let part2 = objcopy_ex(source, "part2", part2_sections, [] as [&str; 0])?;
                 concat_files(part1.with_extension("ubin"), [part1, part2])
             } else {
-                objcopy(source, &target_profile.elf_sections)
+                objcopy(source, &project_profile.elf_sections)
             }
         }
 
-        Component::Prodtest => {
+        Project::Prodtest => {
             if model_config.secmon {
                 // On secmon models prodtest is a secmon-signed body with a plain
                 // vendor header prepended. The body is signed before concatenation.
                 let body_sections =
-                    target_profile
+                    project_profile
                         .secmon_body_sections
                         .as_ref()
                         .ok_or_else(|| {
-                            anyhow::anyhow!("prodtest target.toml missing secmon_body_sections")
+                            anyhow::anyhow!("prodtest project.toml missing secmon_body_sections")
                         })?;
                 let header_sections =
-                    target_profile
+                    project_profile
                         .secmon_header_sections
                         .as_ref()
                         .ok_or_else(|| {
-                            anyhow::anyhow!("prodtest target.toml missing secmon_header_sections")
+                            anyhow::anyhow!("prodtest project.toml missing secmon_header_sections")
                         })?;
                 let body_bin = objcopy_ex(source, "body.bin", body_sections, [] as [&str; 0])?;
-                sign_binary(&body_bin, component, model_config, use_dev_keys)?;
+                sign_binary(&body_bin, project, model_config, use_dev_keys)?;
                 let header_bin =
                     objcopy_ex(source, "header.bin", header_sections, [] as [&str; 0])?;
                 concat_files(source.with_extension("bin"), [header_bin, body_bin])
             } else {
-                objcopy(source, &target_profile.elf_sections)
+                objcopy(source, &project_profile.elf_sections)
             }
         }
 
-        _ => objcopy(source, &target_profile.elf_sections),
+        _ => objcopy(source, &project_profile.elf_sections),
     }
 }
 
 pub fn sign_binary(
     binary: &Path,
-    component: Component,
+    project: Project,
     model_config: &ModelConfig,
     use_dev_keys: bool,
 ) -> Result<()> {
-    let header_tool = match component {
-        Component::Bootloader | Component::BootloaderCi => model_config
+    let header_tool = match project {
+        Project::Bootloader | Project::BootloaderCi => model_config
             .bootloader_header_tool
             .as_deref()
             .unwrap_or("headertool"),
@@ -262,11 +262,11 @@ pub fn merge_compile_commands(inputs: &[&Path], output: &Path) -> Result<()> {
 }
 
 /// Copies a built binary to `artifacts/pub`.
-/// The filename includes the component, model, version, git revision,
+/// The filename includes the project, model, version, git revision,
 /// and dirty state, for example `bootloader-T3W1-2.1.17-9e4bbc68-dirty.bin`.
 pub fn publish_artifact(
     binary: &Path,
-    component: Component,
+    project: Project,
     model: Model,
     version_file: &Path,
     prefix: Option<&str>,
@@ -279,7 +279,7 @@ pub fn publish_artifact(
     let name = format!(
         "{}{}-{}-{}-{}{}.bin",
         prefix,
-        component.binary_name(),
+        project.binary_name(),
         model.model_id(),
         &helpers::parse_version_file(version_file)?,
         &helpers::git_revision()?[..8],

@@ -5,11 +5,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::args::{BuildArgs, Component, Model};
+use crate::args::{BuildArgs, Model, Project};
 
 /// Returns the path to the built ELF file for the given build arguments.
 pub fn elf_path(args: &BuildArgs) -> Result<PathBuf> {
-    let elf_name = args.component.package_name(args.emulator);
+    let elf_name = args.project.package_name(args.emulator);
     Ok(profile_dir(args)?.join(elf_name))
 }
 
@@ -178,10 +178,10 @@ fn parse_address(value: &str) -> Result<u32> {
     }
 }
 
-pub fn get_version_file(component: Component) -> Result<PathBuf> {
+pub fn get_version_file(project: Project) -> Result<PathBuf> {
     Ok(workspace_dir()?
         .join("projects")
-        .join(component.binary_name())
+        .join(project.binary_name())
         .join("version.h"))
 }
 

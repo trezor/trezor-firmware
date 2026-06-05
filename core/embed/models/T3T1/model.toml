@@ -15,5 +15,5 @@ features = [
     "layout_delizia",
 ]
 
-[targets.bootloader]
+[project_overrides.bootloader]
 exclude = ["haptic"]

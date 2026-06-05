@@ -101,7 +101,7 @@ framebuffer = []
 
 # Drivers below that always need framebuffer pull it in implicitly,
 # so any project selecting them via the board peripheral chain doesn't have
-# to also advertise `framebuffer` in its target.toml. display_st7789 supports
+# to also advertise `framebuffer` in its project.toml. display_st7789 supports
 # both modes — the model.toml decides.
 # The emulator's unix driver is selected by display/build.rs (not a feature).
 display_ltdc_dsi = ["framebuffer"]
