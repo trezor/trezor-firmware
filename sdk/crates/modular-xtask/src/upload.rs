@@ -22,7 +22,7 @@ pub fn upload(args: &UploadArgs) -> Result<u64> {
             &args.project,
             "run",
             "trezorctl",
-            "extapp",
+            "trezorapp",
             "load",
         ])
         .arg(&binary)
