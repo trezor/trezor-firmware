@@ -302,5 +302,6 @@ if not utils.BITCOIN_ONLY:
     CKBTxAckOutput = 5505
     CKBTxAckCellDep = 5506
     CKBSignMessage = 5507
-    CKBVerifyMessage = 5509
     CKBMessageSignature = 5508
+    CKBVerifyMessage = 5509
+    CKBTxAckWitness = 5510

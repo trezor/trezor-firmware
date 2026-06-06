@@ -177,8 +177,9 @@ trezor_message_impl! {
     CKBTxAckOutput => MessageType_CKBTxAckOutput,
     CKBTxAckCellDep => MessageType_CKBTxAckCellDep,
     CKBSignMessage => MessageType_CKBSignMessage,
-    CKBVerifyMessage => MessageType_CKBVerifyMessage,
     CKBMessageSignature => MessageType_CKBMessageSignature,
+    CKBVerifyMessage => MessageType_CKBVerifyMessage,
+    CKBTxAckWitness => MessageType_CKBTxAckWitness,
 }
 
 #[cfg(feature = "eos")]

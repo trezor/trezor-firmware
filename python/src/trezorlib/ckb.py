@@ -105,6 +105,8 @@ def sign_tx(
     inputs: list["messages.CKBCellInput"],
     outputs: list["messages.CKBCellOutput"],
     cell_deps: list["messages.CKBCellDep"] | None = None,
+    witnesses: list["messages.CKBTxAckWitness"] | None = None,
+    sign_group_input_indices: list[int] | None = None,
     network: str = "Mainnet",
     fee: int | None = None,
     chunkify: bool = False,
@@ -118,6 +120,12 @@ def sign_tx(
         inputs: List of cell inputs to spend
         outputs: List of cell outputs to create
         cell_deps: List of cell dependencies (optional)
+        witnesses: Full witness vector as CKBTxAckWitness items; the signing
+            witness carries ``witness_args``, others carry ``raw``. When omitted,
+            a single lock-script group is assumed (advanced txs such as Nervos
+            DAO must pass an explicit vector).
+        sign_group_input_indices: Inputs of the group to sign, first index holds
+            the signature. Defaults to every input.
         network: "Mainnet" or "Testnet"
         fee: Transaction fee in shannons (optional)
         chunkify: Display addresses in chunks
@@ -129,6 +137,11 @@ def sign_tx(
 
     if cell_deps is None:
         cell_deps = []
+    if witnesses is None:
+        witnesses = [create_witness_args()]
+        witnesses += [create_witness_raw() for _ in range(max(0, len(inputs) - 1))]
+    if sign_group_input_indices is None:
+        sign_group_input_indices = list(range(len(inputs)))
 
     res = session.call(
         messages.CKBSignTx(
@@ -137,6 +150,8 @@ def sign_tx(
             inputs_count=len(inputs),
             outputs_count=len(outputs),
             cell_deps_count=len(cell_deps),
+            witnesses_count=len(witnesses),
+            sign_group_input_indices=sign_group_input_indices,
             fee=fee,
             chunkify=chunkify,
         ),
@@ -165,6 +180,8 @@ def sign_tx(
                 messages.CKBTxAckCellDep(cell_dep=cell_deps[idx]),
                 expect=messages.CKBTxRequest,
             )
+        elif res.request_type == CKBTxRequestType.TXWITNESS:
+            res = session.call(witnesses[idx], expect=messages.CKBTxRequest)
         else:
             raise ValueError(f"Unknown request type: {res.request_type}")
 
@@ -233,3 +250,23 @@ def create_cell_dep(
         index=index,
         dep_type=dep_type,
     )
+
+
+def create_witness_args(
+    lock_size: int = 65,
+    input_type: bytes | None = None,
+    output_type: bytes | None = None,
+) -> "messages.CKBTxAckWitness":
+    """Build the signing witness for a lock-script group (the device blanks its lock field)."""
+    return messages.CKBTxAckWitness(
+        witness_args=messages.CKBWitnessArgs(
+            lock_size=lock_size,
+            input_type=input_type,
+            output_type=output_type,
+        )
+    )
+
+
+def create_witness_raw(raw: bytes = b"") -> "messages.CKBTxAckWitness":
+    """Build a non-signing (same-group or trailing) witness from its raw bytes."""
+    return messages.CKBTxAckWitness(raw=raw)

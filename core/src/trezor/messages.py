@@ -2035,6 +2035,8 @@ if TYPE_CHECKING:
         cell_deps_count: "int"
         fee: "int | None"
         chunkify: "bool | None"
+        witnesses_count: "int | None"
+        sign_group_input_indices: "list[int]"
 
         def __init__(
             self,
@@ -2043,9 +2045,11 @@ if TYPE_CHECKING:
             inputs_count: "int",
             outputs_count: "int",
             address_n: "list[int] | None" = None,
+            sign_group_input_indices: "list[int] | None" = None,
             cell_deps_count: "int | None" = None,
             fee: "int | None" = None,
             chunkify: "bool | None" = None,
+            witnesses_count: "int | None" = None,
         ) -> None:
             pass
 
@@ -2141,6 +2145,40 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["CKBTxAckCellDep"]:
+            return isinstance(msg, cls)
+
+    class CKBWitnessArgs(protobuf.MessageType):
+        lock_size: "int"
+        input_type: "AnyBytes | None"
+        output_type: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            lock_size: "int | None" = None,
+            input_type: "AnyBytes | None" = None,
+            output_type: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CKBWitnessArgs"]:
+            return isinstance(msg, cls)
+
+    class CKBTxAckWitness(protobuf.MessageType):
+        witness_args: "CKBWitnessArgs | None"
+        raw: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            witness_args: "CKBWitnessArgs | None" = None,
+            raw: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CKBTxAckWitness"]:
             return isinstance(msg, cls)
 
     class CipherKeyValue(protobuf.MessageType):

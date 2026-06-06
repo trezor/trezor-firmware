@@ -141,6 +141,8 @@ def test_sign_tx_streaming_protocol(session: Session):
         if not session.debug.legacy_debug:
             client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
 
+        witnesses = [ckb.create_witness_args(), ckb.create_witness_raw()]
+
         res = session.call(
             messages.CKBSignTx(
                 address_n=address_n,
@@ -148,6 +150,8 @@ def test_sign_tx_streaming_protocol(session: Session):
                 inputs_count=len(inputs),
                 outputs_count=len(outputs),
                 cell_deps_count=len(cell_deps),
+                witnesses_count=len(witnesses),
+                sign_group_input_indices=list(range(len(inputs))),
                 fee=fee,
                 chunkify=True,
             ),
@@ -184,6 +188,16 @@ def test_sign_tx_streaming_protocol(session: Session):
                 messages.CKBTxRequestType.TXCELLDEP,
                 1,
                 messages.CKBTxAckCellDep(cell_dep=cell_deps[1]),
+            ),
+            (
+                messages.CKBTxRequestType.TXWITNESS,
+                0,
+                witnesses[0],
+            ),
+            (
+                messages.CKBTxRequestType.TXWITNESS,
+                1,
+                witnesses[1],
             ),
         ]
 

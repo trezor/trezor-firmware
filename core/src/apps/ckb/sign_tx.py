@@ -273,49 +273,69 @@ def _compute_raw_tx_hash(
 
 def _compute_sighash_all(
     tx_hash: bytes,
-    witness_for_group: bytes,
-    other_witnesses: list[bytes],
+    witnesses: list[bytes],
+    group_indices: list[int],
+    inputs_count: int,
 ) -> bytes:
     """
-    Compute sighash_all for signing.
+    Compute sighash_all exactly as the secp256k1_blake160 lock script does.
 
-    The sighash_all covers:
-    1. transaction hash
-    2. first witness in the group (with signature placeholder)
-    3. other witnesses in the same group (if any)
+    The preimage hashes, in order:
+    1. the raw transaction hash
+    2. the first witness of the signing group (its lock field already blanked)
+    3. the remaining witnesses of the same group, skipping any whose index is
+       absent from the on-chain witness vector (matching the lock script's
+       ITEM_MISSING break)
+    4. all trailing witnesses (index >= number of inputs)
     """
     h = blake2b(outlen=32, personal=b"ckb-default-hash")
-
     h.update(tx_hash)
 
-    witness_len = len(witness_for_group)
-    h.update(_serialize_uint64_le(witness_len))
-    h.update(witness_for_group)
+    first = witnesses[group_indices[0]]
+    h.update(_serialize_uint64_le(len(first)))
+    h.update(first)
 
-    for witness in other_witnesses:
+    for idx in group_indices[1:]:
+        if idx < len(witnesses):
+            witness = witnesses[idx]
+            h.update(_serialize_uint64_le(len(witness)))
+            h.update(witness)
+
+    for idx in range(inputs_count, len(witnesses)):
+        witness = witnesses[idx]
         h.update(_serialize_uint64_le(len(witness)))
         h.update(witness)
 
     return h.digest()
 
 
-def _create_witness_args_with_placeholder() -> bytes:
+def _build_witness_args(
+    lock_size: int,
+    input_type: "AnyBytes | None",
+    output_type: "AnyBytes | None",
+) -> bytes:
     """
-    Create WitnessArgs with 65-byte zero placeholder in lock field.
+    Build a Molecule WitnessArgs table with the lock field filled by ``lock_size``
+    zero bytes (the signature placeholder hashed into the sighash_all preimage).
 
-    WitnessArgs table:
-    - lock: Option<Bytes> - 65-byte placeholder
-    - input_type: Option<Bytes> - None
-    - output_type: Option<Bytes> - None
+    WitnessArgs table (each field is a BytesOpt):
+    - lock: Some(lock_size zero bytes)
+    - input_type: Some(input_type) when provided, otherwise None
+    - output_type: Some(output_type) when provided, otherwise None
     """
-    lock_bytes = bytes(SIGNATURE_PLACEHOLDER_SIZE)
-    lock_serialized = _serialize_bytes(lock_bytes)
+    lock_serialized = _serialize_bytes(bytes(lock_size))
+    input_type_serialized = (
+        _serialize_bytes(input_type) if input_type is not None else b""
+    )
+    output_type_serialized = (
+        _serialize_bytes(output_type) if output_type is not None else b""
+    )
 
     header_size = 4 + (3 * 4)  # 16 bytes
     offset_lock = header_size
     offset_input_type = offset_lock + len(lock_serialized)
-    offset_output_type = offset_input_type  # empty
-    total_size = offset_output_type
+    offset_output_type = offset_input_type + len(input_type_serialized)
+    total_size = offset_output_type + len(output_type_serialized)
 
     result = bytearray()
     result.extend(_serialize_uint32_le(total_size))
@@ -323,8 +343,30 @@ def _create_witness_args_with_placeholder() -> bytes:
     result.extend(_serialize_uint32_le(offset_input_type))
     result.extend(_serialize_uint32_le(offset_output_type))
     result.extend(lock_serialized)
+    result.extend(input_type_serialized)
+    result.extend(output_type_serialized)
 
     return bytes(result)
+
+
+def _validate_sign_group(
+    group_indices: list[int], inputs_count: int, witnesses_count: int
+) -> None:
+    """Validate the host-declared signing group against the transaction shape."""
+    if not group_indices:
+        raise DataError("Empty signing group")
+
+    prev = -1
+    for idx in group_indices:
+        if idx <= prev:
+            raise DataError("Signing group indices must be sorted and unique")
+        if idx >= inputs_count:
+            raise DataError("Signing group index out of range")
+        prev = idx
+
+    # The first group input holds the signature, so its witness must exist.
+    if group_indices[0] >= witnesses_count:
+        raise DataError("Signing witness index out of range")
 
 
 @with_slip44_keychain(PATTERN, slip44_id=SLIP44_ID, curve=CURVE)
@@ -337,8 +379,9 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     2. Request inputs one by one
     3. Request outputs one by one (with user confirmation)
     4. Request cell_deps
-    5. Compute sighash and sign
-    6. Return signature
+    5. Request witnesses (when witnesses_count is provided)
+    6. Compute sighash_all and sign
+    7. Return signature
     """
     from trezor import TR
     from trezor.enums import CKBTxRequestType
@@ -346,6 +389,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         CKBTxAckCellDep,
         CKBTxAckInput,
         CKBTxAckOutput,
+        CKBTxAckWitness,
         CKBTxRequest,
         CKBTxRequestDetails,
         CKBTxRequestSerialized,
@@ -470,19 +514,48 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         cell_deps=cell_deps,
     )
 
-    # Create witness placeholder and compute sighash
-    witness_placeholder = _create_witness_args_with_placeholder()
+    # The host declares the witnesses and signing group; the device never guesses.
+    if msg.witnesses_count is None:
+        raise DataError("Missing witnesses_count")
+    if not msg.sign_group_input_indices:
+        raise DataError("Missing sign_group_input_indices")
 
-    # All inputs processed by Trezor Suite belong to the same account and share the
-    # same lock script. Thus, they form a single lock script group. The CKB node's
-    # sighash_all logic will iterate over all inputs in the group and hash their
-    # corresponding witnesses (padding with empty witnesses if not present).
-    other_witnesses = [b""] * (msg.inputs_count - 1) if msg.inputs_count > 1 else []
+    group_indices = sorted(msg.sign_group_input_indices)
+    _validate_sign_group(group_indices, msg.inputs_count, msg.witnesses_count)
+
+    signing_index = group_indices[0]
+    witnesses: list[bytes] = []
+    for i in range(msg.witnesses_count):
+        req = CKBTxRequest(
+            request_type=CKBTxRequestType.TXWITNESS,
+            details=CKBTxRequestDetails(request_index=i),
+        )
+        ack = await call(req, CKBTxAckWitness)
+        if i == signing_index:
+            # Built on-device so we control the sighash bytes; only lock is blanked.
+            args = ack.witness_args
+            if args is None:
+                raise DataError("Missing WitnessArgs for signing witness")
+            lock_size = (
+                args.lock_size
+                if args.lock_size is not None
+                else SIGNATURE_PLACEHOLDER_SIZE
+            )
+            if lock_size != SIGNATURE_PLACEHOLDER_SIZE:
+                raise DataError("Unexpected lock size for signing witness")
+            witnesses.append(
+                _build_witness_args(lock_size, args.input_type, args.output_type)
+            )
+        else:
+            if ack.witness_args is not None:
+                raise DataError("Unexpected WitnessArgs for non-signing witness")
+            witnesses.append(bytes(ack.raw) if ack.raw is not None else b"")
 
     sighash = _compute_sighash_all(
         tx_hash=tx_hash,
-        witness_for_group=witness_placeholder,
-        other_witnesses=other_witnesses,
+        witnesses=witnesses,
+        group_indices=group_indices,
+        inputs_count=msg.inputs_count,
     )
 
     # Confirm total

@@ -2352,6 +2352,10 @@ pub struct CKBSignTx {
     pub fee: ::std::option::Option<u64>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.chunkify)
     pub chunkify: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.witnesses_count)
+    pub witnesses_count: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.sign_group_input_indices)
+    pub sign_group_input_indices: ::std::vec::Vec<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSignTx.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2499,8 +2503,27 @@ impl CKBSignTx {
         self.chunkify = ::std::option::Option::Some(v);
     }
 
+    // optional uint32 witnesses_count = 8;
+
+    pub fn witnesses_count(&self) -> u32 {
+        self.witnesses_count.unwrap_or(0)
+    }
+
+    pub fn clear_witnesses_count(&mut self) {
+        self.witnesses_count = ::std::option::Option::None;
+    }
+
+    pub fn has_witnesses_count(&self) -> bool {
+        self.witnesses_count.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_witnesses_count(&mut self, v: u32) {
+        self.witnesses_count = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut fields = ::std::vec::Vec::with_capacity(9);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -2536,6 +2559,16 @@ impl CKBSignTx {
             "chunkify",
             |m: &CKBSignTx| { &m.chunkify },
             |m: &mut CKBSignTx| { &mut m.chunkify },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "witnesses_count",
+            |m: &CKBSignTx| { &m.witnesses_count },
+            |m: &mut CKBSignTx| { &mut m.witnesses_count },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "sign_group_input_indices",
+            |m: &CKBSignTx| { &m.sign_group_input_indices },
+            |m: &mut CKBSignTx| { &mut m.sign_group_input_indices },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSignTx>(
             "CKBSignTx",
@@ -2588,6 +2621,15 @@ impl ::protobuf::Message for CKBSignTx {
                 56 => {
                     self.chunkify = ::std::option::Option::Some(is.read_bool()?);
                 },
+                64 => {
+                    self.witnesses_count = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                74 => {
+                    is.read_repeated_packed_uint32_into(&mut self.sign_group_input_indices)?;
+                },
+                72 => {
+                    self.sign_group_input_indices.push(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2621,6 +2663,12 @@ impl ::protobuf::Message for CKBSignTx {
         if let Some(v) = self.chunkify {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.witnesses_count {
+            my_size += ::protobuf::rt::uint32_size(8, v);
+        }
+        for value in &self.sign_group_input_indices {
+            my_size += ::protobuf::rt::uint32_size(9, *value);
+        };
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2648,6 +2696,12 @@ impl ::protobuf::Message for CKBSignTx {
         if let Some(v) = self.chunkify {
             os.write_bool(7, v)?;
         }
+        if let Some(v) = self.witnesses_count {
+            os.write_uint32(8, v)?;
+        }
+        for v in &self.sign_group_input_indices {
+            os.write_uint32(9, *v)?;
+        };
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2672,6 +2726,8 @@ impl ::protobuf::Message for CKBSignTx {
         self.cell_deps_count = ::std::option::Option::None;
         self.fee = ::std::option::Option::None;
         self.chunkify = ::std::option::Option::None;
+        self.witnesses_count = ::std::option::Option::None;
+        self.sign_group_input_indices.clear();
         self.special_fields.clear();
     }
 
@@ -2684,6 +2740,8 @@ impl ::protobuf::Message for CKBSignTx {
             cell_deps_count: ::std::option::Option::None,
             fee: ::std::option::Option::None,
             chunkify: ::std::option::Option::None,
+            witnesses_count: ::std::option::Option::None,
+            sign_group_input_indices: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3635,6 +3693,432 @@ impl ::protobuf::reflect::ProtobufValue for CKBTxAckCellDep {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBWitnessArgs)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBWitnessArgs {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBWitnessArgs.lock_size)
+    pub lock_size: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBWitnessArgs.input_type)
+    pub input_type: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBWitnessArgs.output_type)
+    pub output_type: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBWitnessArgs.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBWitnessArgs {
+    fn default() -> &'a CKBWitnessArgs {
+        <CKBWitnessArgs as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBWitnessArgs {
+    pub fn new() -> CKBWitnessArgs {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 lock_size = 1;
+
+    pub fn lock_size(&self) -> u32 {
+        self.lock_size.unwrap_or(65u32)
+    }
+
+    pub fn clear_lock_size(&mut self) {
+        self.lock_size = ::std::option::Option::None;
+    }
+
+    pub fn has_lock_size(&self) -> bool {
+        self.lock_size.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_lock_size(&mut self, v: u32) {
+        self.lock_size = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes input_type = 2;
+
+    pub fn input_type(&self) -> &[u8] {
+        match self.input_type.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_input_type(&mut self) {
+        self.input_type = ::std::option::Option::None;
+    }
+
+    pub fn has_input_type(&self) -> bool {
+        self.input_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_input_type(&mut self, v: ::std::vec::Vec<u8>) {
+        self.input_type = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_input_type(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.input_type.is_none() {
+            self.input_type = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.input_type.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_input_type(&mut self) -> ::std::vec::Vec<u8> {
+        self.input_type.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes output_type = 3;
+
+    pub fn output_type(&self) -> &[u8] {
+        match self.output_type.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_output_type(&mut self) {
+        self.output_type = ::std::option::Option::None;
+    }
+
+    pub fn has_output_type(&self) -> bool {
+        self.output_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_output_type(&mut self, v: ::std::vec::Vec<u8>) {
+        self.output_type = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_output_type(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.output_type.is_none() {
+            self.output_type = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.output_type.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_output_type(&mut self) -> ::std::vec::Vec<u8> {
+        self.output_type.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "lock_size",
+            |m: &CKBWitnessArgs| { &m.lock_size },
+            |m: &mut CKBWitnessArgs| { &mut m.lock_size },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "input_type",
+            |m: &CKBWitnessArgs| { &m.input_type },
+            |m: &mut CKBWitnessArgs| { &mut m.input_type },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "output_type",
+            |m: &CKBWitnessArgs| { &m.output_type },
+            |m: &mut CKBWitnessArgs| { &mut m.output_type },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBWitnessArgs>(
+            "CKBWitnessArgs",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBWitnessArgs {
+    const NAME: &'static str = "CKBWitnessArgs";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.lock_size = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                18 => {
+                    self.input_type = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.output_type = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.lock_size {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.input_type.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.output_type.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.lock_size {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.input_type.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.output_type.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBWitnessArgs {
+        CKBWitnessArgs::new()
+    }
+
+    fn clear(&mut self) {
+        self.lock_size = ::std::option::Option::None;
+        self.input_type = ::std::option::Option::None;
+        self.output_type = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBWitnessArgs {
+        static instance: CKBWitnessArgs = CKBWitnessArgs {
+            lock_size: ::std::option::Option::None,
+            input_type: ::std::option::Option::None,
+            output_type: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBWitnessArgs {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBWitnessArgs").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBWitnessArgs {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBWitnessArgs {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBTxAckWitness)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBTxAckWitness {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxAckWitness.witness_args)
+    pub witness_args: ::protobuf::MessageField<CKBWitnessArgs>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxAckWitness.raw)
+    pub raw: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxAckWitness.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBTxAckWitness {
+    fn default() -> &'a CKBTxAckWitness {
+        <CKBTxAckWitness as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBTxAckWitness {
+    pub fn new() -> CKBTxAckWitness {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes raw = 2;
+
+    pub fn raw(&self) -> &[u8] {
+        match self.raw.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_raw(&mut self) {
+        self.raw = ::std::option::Option::None;
+    }
+
+    pub fn has_raw(&self) -> bool {
+        self.raw.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_raw(&mut self, v: ::std::vec::Vec<u8>) {
+        self.raw = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_raw(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.raw.is_none() {
+            self.raw = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.raw.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_raw(&mut self) -> ::std::vec::Vec<u8> {
+        self.raw.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CKBWitnessArgs>(
+            "witness_args",
+            |m: &CKBTxAckWitness| { &m.witness_args },
+            |m: &mut CKBTxAckWitness| { &mut m.witness_args },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "raw",
+            |m: &CKBTxAckWitness| { &m.raw },
+            |m: &mut CKBTxAckWitness| { &mut m.raw },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxAckWitness>(
+            "CKBTxAckWitness",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBTxAckWitness {
+    const NAME: &'static str = "CKBTxAckWitness";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.witness_args)?;
+                },
+                18 => {
+                    self.raw = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.witness_args.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.raw.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.witness_args.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.raw.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBTxAckWitness {
+        CKBTxAckWitness::new()
+    }
+
+    fn clear(&mut self) {
+        self.witness_args.clear();
+        self.raw = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBTxAckWitness {
+        static instance: CKBTxAckWitness = CKBTxAckWitness {
+            witness_args: ::protobuf::MessageField::none(),
+            raw: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBTxAckWitness {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBTxAckWitness").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBTxAckWitness {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBTxAckWitness {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.ckb.CKBTxRequestType)
 pub enum CKBTxRequestType {
@@ -3646,6 +4130,8 @@ pub enum CKBTxRequestType {
     TXCELLDEP = 2,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.ckb.CKBTxRequestType.TXFINISHED)
     TXFINISHED = 3,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.ckb.CKBTxRequestType.TXWITNESS)
+    TXWITNESS = 4,
 }
 
 impl ::protobuf::Enum for CKBTxRequestType {
@@ -3661,6 +4147,7 @@ impl ::protobuf::Enum for CKBTxRequestType {
             1 => ::std::option::Option::Some(CKBTxRequestType::TXOUTPUT),
             2 => ::std::option::Option::Some(CKBTxRequestType::TXCELLDEP),
             3 => ::std::option::Option::Some(CKBTxRequestType::TXFINISHED),
+            4 => ::std::option::Option::Some(CKBTxRequestType::TXWITNESS),
             _ => ::std::option::Option::None
         }
     }
@@ -3671,6 +4158,7 @@ impl ::protobuf::Enum for CKBTxRequestType {
             "TXOUTPUT" => ::std::option::Option::Some(CKBTxRequestType::TXOUTPUT),
             "TXCELLDEP" => ::std::option::Option::Some(CKBTxRequestType::TXCELLDEP),
             "TXFINISHED" => ::std::option::Option::Some(CKBTxRequestType::TXFINISHED),
+            "TXWITNESS" => ::std::option::Option::Some(CKBTxRequestType::TXWITNESS),
             _ => ::std::option::Option::None
         }
     }
@@ -3680,6 +4168,7 @@ impl ::protobuf::Enum for CKBTxRequestType {
         CKBTxRequestType::TXOUTPUT,
         CKBTxRequestType::TXCELLDEP,
         CKBTxRequestType::TXFINISHED,
+        CKBTxRequestType::TXWITNESS,
     ];
 }
 
@@ -3735,28 +4224,36 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     hType\x12\x1b\n\ttype_args\x18\x07\x20\x01(\x0cR\x08typeArgs\x12\x12\n\
     \x04data\x18\x08\x20\x01(\x0cR\x04data\"V\n\nCKBCellDep\x12\x17\n\x07tx_\
     hash\x18\x01\x20\x02(\x0cR\x06txHash\x12\x14\n\x05index\x18\x02\x20\x02(\
-    \rR\x05index\x12\x19\n\x08dep_type\x18\x03\x20\x02(\rR\x07depType\"\xe3\
-    \x01\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
+    \rR\x05index\x12\x19\n\x08dep_type\x18\x03\x20\x02(\rR\x07depType\"\xc5\
+    \x02\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
     \x12\x18\n\x07network\x18\x02\x20\x02(\tR\x07network\x12!\n\x0cinputs_co\
     unt\x18\x03\x20\x02(\rR\x0binputsCount\x12#\n\routputs_count\x18\x04\x20\
     \x02(\rR\x0coutputsCount\x12)\n\x0fcell_deps_count\x18\x05\x20\x01(\r:\
     \x010R\rcellDepsCount\x12\x10\n\x03fee\x18\x06\x20\x01(\x04R\x03fee\x12\
-    \x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"\xf2\x01\n\x0cCKBT\
-    xRequest\x12K\n\x0crequest_type\x18\x01\x20\x01(\x0e2(.hw.trezor.message\
-    s.ckb.CKBTxRequestTypeR\x0brequestType\x12E\n\x07details\x18\x02\x20\x01\
-    (\x0b2+.hw.trezor.messages.ckb.CKBTxRequestDetailsR\x07details\x12N\n\ns\
-    erialized\x18\x03\x20\x01(\x0b2..hw.trezor.messages.ckb.CKBTxRequestSeri\
-    alizedR\nserialized\":\n\x13CKBTxRequestDetails\x12#\n\rrequest_index\
-    \x18\x01\x20\x01(\rR\x0crequestIndex\"O\n\x16CKBTxRequestSerialized\x12\
-    \x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\n\x07tx_hash\
-    \x18\x02\x20\x01(\x0cR\x06txHash\"K\n\rCKBTxAckInput\x12:\n\x05input\x18\
-    \x01\x20\x02(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\x05input\"O\n\
-    \x0eCKBTxAckOutput\x12=\n\x06output\x18\x01\x20\x02(\x0b2%.hw.trezor.mes\
-    sages.ckb.CKBCellOutputR\x06output\"P\n\x0fCKBTxAckCellDep\x12=\n\x08cel\
-    l_dep\x18\x01\x20\x02(\x0b2\".hw.trezor.messages.ckb.CKBCellDepR\x07cell\
-    Dep*L\n\x10CKBTxRequestType\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TXOU\
-    TPUT\x10\x01\x12\r\n\tTXCELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\x10\x03B7\
-    \n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessageCKB\
+    \x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\x12'\n\x0fwitnesses\
+    _count\x18\x08\x20\x01(\rR\x0ewitnessesCount\x127\n\x18sign_group_input_\
+    indices\x18\t\x20\x03(\rR\x15signGroupInputIndices\"\xf2\x01\n\x0cCKBTxR\
+    equest\x12K\n\x0crequest_type\x18\x01\x20\x01(\x0e2(.hw.trezor.messages.\
+    ckb.CKBTxRequestTypeR\x0brequestType\x12E\n\x07details\x18\x02\x20\x01(\
+    \x0b2+.hw.trezor.messages.ckb.CKBTxRequestDetailsR\x07details\x12N\n\nse\
+    rialized\x18\x03\x20\x01(\x0b2..hw.trezor.messages.ckb.CKBTxRequestSeria\
+    lizedR\nserialized\":\n\x13CKBTxRequestDetails\x12#\n\rrequest_index\x18\
+    \x01\x20\x01(\rR\x0crequestIndex\"O\n\x16CKBTxRequestSerialized\x12\x1c\
+    \n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\n\x07tx_hash\x18\
+    \x02\x20\x01(\x0cR\x06txHash\"K\n\rCKBTxAckInput\x12:\n\x05input\x18\x01\
+    \x20\x02(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\x05input\"O\n\x0eCK\
+    BTxAckOutput\x12=\n\x06output\x18\x01\x20\x02(\x0b2%.hw.trezor.messages.\
+    ckb.CKBCellOutputR\x06output\"P\n\x0fCKBTxAckCellDep\x12=\n\x08cell_dep\
+    \x18\x01\x20\x02(\x0b2\".hw.trezor.messages.ckb.CKBCellDepR\x07cellDep\"\
+    q\n\x0eCKBWitnessArgs\x12\x1f\n\tlock_size\x18\x01\x20\x01(\r:\x0265R\
+    \x08lockSize\x12\x1d\n\ninput_type\x18\x02\x20\x01(\x0cR\tinputType\x12\
+    \x1f\n\x0boutput_type\x18\x03\x20\x01(\x0cR\noutputType\"n\n\x0fCKBTxAck\
+    Witness\x12I\n\x0cwitness_args\x18\x01\x20\x01(\x0b2&.hw.trezor.messages\
+    .ckb.CKBWitnessArgsR\x0bwitnessArgs\x12\x10\n\x03raw\x18\x02\x20\x01(\
+    \x0cR\x03raw*[\n\x10CKBTxRequestType\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\
+    \n\x08TXOUTPUT\x10\x01\x12\r\n\tTXCELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\
+    \x10\x03\x12\r\n\tTXWITNESS\x10\x04B7\n#com.satoshilabs.trezor.lib.proto\
+    bufB\x10TrezorMessageCKB\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3774,7 +4271,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(15);
+            let mut messages = ::std::vec::Vec::with_capacity(17);
             messages.push(CKBGetAddress::generated_message_descriptor_data());
             messages.push(CKBAddress::generated_message_descriptor_data());
             messages.push(CKBSignMessage::generated_message_descriptor_data());
@@ -3790,6 +4287,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(CKBTxAckInput::generated_message_descriptor_data());
             messages.push(CKBTxAckOutput::generated_message_descriptor_data());
             messages.push(CKBTxAckCellDep::generated_message_descriptor_data());
+            messages.push(CKBWitnessArgs::generated_message_descriptor_data());
+            messages.push(CKBTxAckWitness::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(1);
             enums.push(CKBTxRequestType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(

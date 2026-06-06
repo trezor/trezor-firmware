@@ -198,6 +198,7 @@ class CKBTxRequestType(IntEnum):
     TXOUTPUT = 1
     TXCELLDEP = 2
     TXFINISHED = 3
+    TXWITNESS = 4
 
 
 class BackupType(IntEnum):
@@ -788,8 +789,9 @@ class MessageType(IntEnum):
     CKBTxAckOutput = 5505
     CKBTxAckCellDep = 5506
     CKBSignMessage = 5507
-    CKBVerifyMessage = 5509
     CKBMessageSignature = 5508
+    CKBVerifyMessage = 5509
+    CKBTxAckWitness = 5510
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -3297,6 +3299,8 @@ class CKBSignTx(protobuf.MessageType):
         5: protobuf.Field("cell_deps_count", "uint32", repeated=False, required=False, default=0),
         6: protobuf.Field("fee", "uint64", repeated=False, required=False, default=None),
         7: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        8: protobuf.Field("witnesses_count", "uint32", repeated=False, required=False, default=None),
+        9: protobuf.Field("sign_group_input_indices", "uint32", repeated=True, required=False, default=None),
     }
 
     def __init__(
@@ -3306,17 +3310,21 @@ class CKBSignTx(protobuf.MessageType):
         inputs_count: "int",
         outputs_count: "int",
         address_n: Optional[Sequence["int"]] = None,
+        sign_group_input_indices: Optional[Sequence["int"]] = None,
         cell_deps_count: Optional["int"] = 0,
         fee: Optional["int"] = None,
         chunkify: Optional["bool"] = None,
+        witnesses_count: Optional["int"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.sign_group_input_indices: Sequence["int"] = sign_group_input_indices if sign_group_input_indices is not None else []
         self.network = network
         self.inputs_count = inputs_count
         self.outputs_count = outputs_count
         self.cell_deps_count = cell_deps_count
         self.fee = fee
         self.chunkify = chunkify
+        self.witnesses_count = witnesses_count
 
 
 class CKBTxRequest(protobuf.MessageType):
@@ -3410,6 +3418,43 @@ class CKBTxAckCellDep(protobuf.MessageType):
         cell_dep: "CKBCellDep",
     ) -> None:
         self.cell_dep = cell_dep
+
+
+class CKBWitnessArgs(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("lock_size", "uint32", repeated=False, required=False, default=65),
+        2: protobuf.Field("input_type", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("output_type", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        lock_size: Optional["int"] = 65,
+        input_type: Optional["bytes"] = None,
+        output_type: Optional["bytes"] = None,
+    ) -> None:
+        self.lock_size = lock_size
+        self.input_type = input_type
+        self.output_type = output_type
+
+
+class CKBTxAckWitness(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5510
+    FIELDS = {
+        1: protobuf.Field("witness_args", "CKBWitnessArgs", repeated=False, required=False, default=None),
+        2: protobuf.Field("raw", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        witness_args: Optional["CKBWitnessArgs"] = None,
+        raw: Optional["bytes"] = None,
+    ) -> None:
+        self.witness_args = witness_args
+        self.raw = raw
 
 
 class CipherKeyValue(protobuf.MessageType):
