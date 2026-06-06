@@ -17,7 +17,7 @@ from trezor.pin import (
     ignore_nonpin_loader_messages,
     show_pin_timeout,
 )
-from trezor.ui.layouts.homescreen import Lockscreen
+from trezor.ui.layouts.homescreen import run_lockscreen
 
 from apps.common.request_pin import can_lock_device, verify_user_pin
 
@@ -55,11 +55,7 @@ def enforce_welcome_screen_duration() -> None:
 if not utils.USE_POWER_MANAGER:
 
     async def pin_unlock_sequence() -> None:
-        with Lockscreen(
-            label=storage.device.get_label(),
-            bootscreen=True,
-        ) as lockscreen:
-            await lockscreen.get_result()
+        await run_lockscreen(label=storage.device.get_label(), bootscreen=True)
         await verify_user_pin()
 
 else:
@@ -72,11 +68,7 @@ else:
 
     async def pin_unlock_sequence() -> None:
         while True:
-            with Lockscreen(
-                label=storage.device.get_label(),
-                bootscreen=True,
-            ) as lockscreen:
-                await lockscreen.get_result()
+            await run_lockscreen(label=storage.device.get_label(), bootscreen=True)
             res = await loop.race(verify_user_pin(), wait_for_suspend())
             if res is _SUSPEND_MARKER:
                 # make some delay for the suspend
