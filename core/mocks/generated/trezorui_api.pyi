@@ -623,7 +623,7 @@ def show_homescreen(
     notification: tuple[str, int, bool] | None = None,
     lockable: bool,
     skip_first_paint: bool,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Idle homescreen."""
 
 
@@ -728,7 +728,7 @@ def show_lockscreen(
     bootscreen: bool,
     skip_first_paint: bool,
     coinjoin_authorized: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Homescreen for locked device."""
 
 
@@ -744,7 +744,7 @@ def show_progress(
     indeterminate: bool = False,
     title: str | None = None,
     danger: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Show progress loader. Please note that the number of lines reserved on screen for
     description is determined at construction time. If you want multiline descriptions
     make sure the initial description has at least that amount of lines."""
@@ -757,7 +757,7 @@ def show_progress_coinjoin(
     indeterminate: bool = False,
     time_ms: int = 0,
     skip_first_paint: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
     time_ms timeout is passed."""
 

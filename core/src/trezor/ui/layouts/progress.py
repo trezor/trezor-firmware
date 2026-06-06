@@ -41,14 +41,14 @@ def progress(
     if description is None:
         description = TR.progress__please_wait  # def_arg
 
-    return ui.ProgressLayout(
-        layout=trezorui_api.show_progress(
-            description=description,
-            title=title,
-            indeterminate=indeterminate,
-            danger=danger,
-        )
+    ctx = trezorui_api.show_progress(
+        description=description,
+        title=title,
+        indeterminate=indeterminate,
+        danger=danger,
     )
+    # TODO: use explicit scope for progress layout
+    return ui.ProgressLayout(layout=ctx.__enter__())
 
 
 def bitcoin_progress(message: str) -> ui.ProgressLayout:
@@ -56,9 +56,9 @@ def bitcoin_progress(message: str) -> ui.ProgressLayout:
 
 
 def coinjoin_progress(message: str) -> ui.ProgressLayout:
-    return ui.ProgressLayout(
-        layout=trezorui_api.show_progress_coinjoin(title=message, indeterminate=False)
-    )
+    ctx = trezorui_api.show_progress_coinjoin(title=message, indeterminate=False)
+    # TODO: use explicit scope for progress layout
+    return ui.ProgressLayout(layout=ctx.__enter__())
 
 
 def pin_progress(

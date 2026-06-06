@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Iterator, ParamSpec, Tuple, TypeVar
 
     from trezor import loop
-    from typing_extensions import Self
 
     P = ParamSpec("P")
     R = TypeVar("R")
@@ -55,15 +54,14 @@ class UsbAwareLayout(ui.Layout):
         yield self.usb_checker_task()
 
 
-class HomescreenBase(UsbAwareLayout):
-    RENDER_INDICATOR: object | None = None
-
-    def __init__(self, layout: trezorui_api.LayoutObj[trezorui_api.UiResult]) -> None:
-        super().__init__(layout=layout)
-        self.should_resume = self._should_resume()
-
-    def _should_resume(self) -> bool:
-        return storage_cache.homescreen_shown is self.RENDER_INDICATOR
+class HomescreenLayout(UsbAwareLayout):
+    def __init__(
+        self,
+        layout: trezorui_api.LayoutObj[trezorui_api.UiResult],
+        render_indicator: object,
+    ) -> None:
+        super().__init__(layout)
+        self.render_indicator = render_indicator
 
     def _paint(self) -> None:
         self.layout.paint()
@@ -71,96 +69,107 @@ class HomescreenBase(UsbAwareLayout):
     def _first_paint(self) -> None:
         if not self.should_resume:
             super()._first_paint()
-            storage_cache.homescreen_shown = self.RENDER_INDICATOR
+            storage_cache.homescreen_shown = self.render_indicator
         else:
             self._paint()
 
-    def __enter__(self) -> Self:
-        self.layout.__enter__()
-        return self
+
+class HomescreenBase:
+
+    RENDER_INDICATOR: object | None = None
+
+    def __init__(self, ctx: trezorui_api.LayoutContext[trezorui_api.UiResult]) -> None:
+        self.ctx = ctx
+
+    @classmethod
+    def _should_resume(cls) -> bool:
+        return storage_cache.homescreen_shown is cls.RENDER_INDICATOR
+
+    def __enter__(self) -> HomescreenLayout:
+        layout = HomescreenLayout(self.ctx.__enter__(), self.RENDER_INDICATOR)
+        layout.should_resume = self._should_resume()
+        return layout
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Drop internal Rust root component."""
-        self.layout.__exit__(exc_type, exc_val, exc_tb)
+        self.ctx.__exit__(exc_type, exc_val, exc_tb)
 
 
 class Homescreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.HOMESCREEN_ON
 
-    def __init__(
-        self,
-        label: str | None,
-        notification: Tuple[str, int, bool] | None,
-        lockable: bool,
-    ) -> None:
-        super().__init__(
-            layout=_retry_with_gc(
-                trezorui_api.show_homescreen,
-                label=label or utils.MODEL_FULL_NAME,
-                notification=notification,
-                lockable=lockable,
-                skip_first_paint=self._should_resume(),
-            )
+
+async def run_homescreen(
+    label: str | None,
+    notification: Tuple[str, int, bool] | None,
+    lockable: bool,
+) -> ui.UiResult:
+
+    with Homescreen(
+        _retry_with_gc(
+            trezorui_api.show_homescreen,
+            label=label or utils.MODEL_FULL_NAME,
+            notification=notification,
+            lockable=lockable,
+            skip_first_paint=Homescreen._should_resume(),
         )
+    ) as layout:
+        return await layout.get_result()
 
 
 class Lockscreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.LOCKSCREEN_ON
 
-    def __init__(
-        self,
-        label: str | None,
-        bootscreen: bool = False,
-        coinjoin_authorized: bool = False,
-    ) -> None:
-        self.bootscreen = bootscreen
-        self.backlight_level = ui.BacklightLevels.LOW
+
+async def run_lockscreen(
+    label: str | None,
+    bootscreen: bool = False,
+    coinjoin_authorized: bool = False,
+) -> ui.UiResult:
+
+    skip = not bootscreen and Lockscreen._should_resume()
+    with Lockscreen(
+        _retry_with_gc(
+            trezorui_api.show_lockscreen,
+            label=label,
+            bootscreen=bootscreen,
+            skip_first_paint=skip,
+            coinjoin_authorized=coinjoin_authorized,
+        )
+    ) as layout:
+        layout.backlight_level = ui.BacklightLevels.LOW
         if bootscreen:
-            self.backlight_level = ui.BacklightLevels.NORMAL
+            layout.backlight_level = ui.BacklightLevels.NORMAL
+        layout.should_resume = skip
 
-        skip = (
-            not bootscreen and storage_cache.homescreen_shown is self.RENDER_INDICATOR
-        )
-        super().__init__(
-            layout=_retry_with_gc(
-                trezorui_api.show_lockscreen,
-                label=label,
-                bootscreen=bootscreen,
-                skip_first_paint=skip,
-                coinjoin_authorized=coinjoin_authorized,
-            ),
-        )
-        self.should_resume = skip
-
-    async def get_result(self) -> Any:
-        result = await super().get_result()
-        if self.bootscreen:
+        result = await layout.get_result()
+        if bootscreen:
             # todo: should this be repaint()?
-            self.request_complete_repaint()
+            layout.request_complete_repaint()
         return result
 
 
 class Busyscreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.BUSYSCREEN_ON
 
-    def __init__(self, delay_ms: int) -> None:
-        super().__init__(
-            layout=_retry_with_gc(
-                trezorui_api.show_progress_coinjoin,
-                title=TR.coinjoin__waiting_for_others,
-                indeterminate=True,
-                time_ms=delay_ms,
-                skip_first_paint=self._should_resume(),
-            )
-        )
 
-    async def get_result(self) -> Any:
+async def run_busyscreen(delay_ms: int) -> ui.UiResult:
+    with Busyscreen(
+        _retry_with_gc(
+            trezorui_api.show_progress_coinjoin,
+            title=TR.coinjoin__waiting_for_others,
+            indeterminate=True,
+            time_ms=delay_ms,
+            skip_first_paint=Busyscreen._should_resume(),
+        )
+    ) as layout:
         from trezor.wire import context
 
         from apps.common.lock_manager import set_homescreen
 
+        result = await layout.get_result()
+
         # Handle timeout.
-        result = await super().get_result()
         assert result == trezorui_api.CANCELLED
         context.cache_delete(APP_COMMON_BUSY_DEADLINE_MS)
         set_homescreen()

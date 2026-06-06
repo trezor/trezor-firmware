@@ -1964,7 +1964,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     notification: tuple[str, int, bool] | None = None,
     ///     lockable: bool,
     ///     skip_first_paint: bool,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Idle homescreen."""
     Qstr::MP_QSTR_show_homescreen => obj_fn_kw!(0, new_show_homescreen).as_obj(),
 
@@ -2060,7 +2060,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     bootscreen: bool,
     ///     skip_first_paint: bool,
     ///     coinjoin_authorized: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Homescreen for locked device."""
     Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
 
@@ -2074,7 +2074,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     indeterminate: bool = False,
     ///     title: str | None = None,
     ///     danger: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Show progress loader. Please note that the number of lines reserved on screen for
     ///     description is determined at construction time. If you want multiline descriptions
     ///     make sure the initial description has at least that amount of lines."""
@@ -2086,7 +2086,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     indeterminate: bool = False,
     ///     time_ms: int = 0,
     ///     skip_first_paint: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
     ///     time_ms timeout is passed."""
     Qstr::MP_QSTR_show_progress_coinjoin => obj_fn_kw!(0, new_show_progress_coinjoin).as_obj(),

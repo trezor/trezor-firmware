@@ -5,7 +5,7 @@ import storage.device
 import trezorui_api
 from trezor import config, utils, wire
 from trezor.enums import MessageType
-from trezor.ui.layouts.homescreen import Busyscreen, Homescreen, Lockscreen
+from trezor.ui.layouts.homescreen import run_busyscreen, run_homescreen, run_lockscreen
 from trezorui_api import NotificationLevel
 
 from apps.base import busy_expiry_ms
@@ -14,8 +14,7 @@ from apps.common.lock_manager import lock_device
 
 
 async def busyscreen() -> None:
-    with Busyscreen(busy_expiry_ms()) as obj:
-        await obj.get_result()
+    await run_busyscreen(busy_expiry_ms())
 
 
 async def homescreen() -> None:
@@ -66,12 +65,9 @@ async def homescreen() -> None:
             False,
         )
 
-    with Homescreen(
-        label=label,
-        notification=notification,
-        lockable=config.has_pin(),
-    ) as obj:
-        res = await obj.get_result()
+    res = await run_homescreen(
+        label=label, notification=notification, lockable=config.has_pin()
+    )
 
     if utils.INTERNAL_MODEL == "T3W1":
         if res is trezorui_api.INFO:
@@ -88,11 +84,11 @@ async def _lockscreen(screensaver: bool = False) -> None:
     # Only show the lockscreen UI if the device can in fact be locked, or if it is
     # and OLED device (in which case the lockscreen is a screensaver).
     if can_lock_device() or screensaver:
-        with Lockscreen(
+        await run_lockscreen(
             label=storage.device.get_label(),
             coinjoin_authorized=is_set_any_session(MessageType.AuthorizeCoinJoin),
-        ) as obj:
-            await obj.get_result()
+        )
+
     # Otherwise proceed directly to unlock() call. If the device is already unlocked,
     # it should be a no-op storage-wise, but it resets the internal configuration
     # to an unlocked state.
