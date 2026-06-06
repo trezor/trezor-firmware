@@ -133,48 +133,43 @@ async def handle_device_menu() -> None:
             about_items.append((TR.sn__title, serial_no, True))
         about_items.append((TR.words__made_in, "Ostrava, Czechia", False))
 
-        menu_result = await interact(
-            trezorui_api.show_device_menu(
-                init_submenu_idx=init_submenu_idx,
-                backup_failed=backup_failed,
-                backup_needed=backup_needed,
-                ble_enabled=ble_enabled,
-                paired_devices=paired_devices,
-                connected_idx=connected_idx,
-                pin_enabled=config.has_pin() if is_initialized else None,
-                auto_lock=get_auto_lock_delay(),
-                wipe_code_enabled=(
-                    config.has_wipe_code()
-                    if (is_initialized and config.has_pin())
-                    else None
-                ),
-                backup_check_allowed=backup_finished,
-                device_name=(
-                    (storage_device.get_label() or utils.MODEL_FULL_NAME)
-                    if is_initialized
-                    else None
-                ),
-                brightness=TR.brightness__title if is_initialized else None,
-                tap_to_wake_enabled=(
-                    storage_device.get_tap_to_wake()
-                    if tap_to_wake_configurable
-                    else None
-                ),
-                haptics_enabled=(
-                    storage_device.get_haptic_feedback()
-                    if haptic_configurable
-                    else None
-                ),
-                led_enabled=(
-                    storage_device.get_rgb_led() if led_configurable else None
-                ),
-                about_items=about_items,
-                production_year=production_year,
+        with trezorui_api.show_device_menu(
+            init_submenu_idx=init_submenu_idx,
+            backup_failed=backup_failed,
+            backup_needed=backup_needed,
+            ble_enabled=ble_enabled,
+            paired_devices=paired_devices,
+            connected_idx=connected_idx,
+            pin_enabled=config.has_pin() if is_initialized else None,
+            auto_lock=get_auto_lock_delay(),
+            wipe_code_enabled=(
+                config.has_wipe_code()
+                if (is_initialized and config.has_pin())
+                else None
             ),
-            br_name=None,
-            raise_on_cancel=None,
-            layout_type=UsbAwareLayout,
-        )
+            backup_check_allowed=backup_finished,
+            device_name=(
+                (storage_device.get_label() or utils.MODEL_FULL_NAME)
+                if is_initialized
+                else None
+            ),
+            brightness=TR.brightness__title if is_initialized else None,
+            tap_to_wake_enabled=(
+                storage_device.get_tap_to_wake() if tap_to_wake_configurable else None
+            ),
+            haptics_enabled=(
+                storage_device.get_haptic_feedback() if haptic_configurable else None
+            ),
+            led_enabled=(storage_device.get_rgb_led() if led_configurable else None),
+            about_items=about_items,
+            production_year=production_year,
+        ) as layout:
+            menu_result = await interact(
+                layout,
+                br_name=None,
+                raise_on_cancel=None,
+                layout_type=UsbAwareLayout,
+            )
 
         if not isinstance(menu_result, tuple) or len(menu_result) != 3:
             raise RuntimeError(f"Unknown menu {menu_result}")

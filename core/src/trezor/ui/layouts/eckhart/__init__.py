@@ -75,10 +75,9 @@ def confirm_action(
     )
 
 
-def confirm_reset_device(recovery: bool = False) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_reset_device(recovery=recovery), None
-    )
+async def confirm_reset_device(recovery: bool = False) -> None:
+    with trezorui_api.confirm_reset_device(recovery=recovery) as layout:
+        return await raise_if_not_confirmed(layout, None)
 
 
 async def prompt_recovery_check(recovery_type: RecoveryType) -> None:
@@ -112,12 +111,13 @@ async def show_wallet_created_success() -> None:
 
 
 async def prompt_backup() -> bool:
-    result = await interact(
-        trezorui_api.prompt_backup(),
-        "backup_device",
-        ButtonRequestType.ResetDevice,
-        raise_on_cancel=None,
-    )
+    with trezorui_api.prompt_backup() as layout:
+        result = await interact(
+            layout,
+            "backup_device",
+            ButtonRequestType.ResetDevice,
+            raise_on_cancel=None,
+        )
     return result is CONFIRMED
 
 
@@ -330,23 +330,21 @@ async def show_pubkey(
     br_name: str = "show_pubkey",
 ) -> None:
 
-    await raise_if_not_confirmed(
-        trezorui_api.flow_get_pubkey(
-            pubkey=pubkey,
-            title=title or TR.address__public_key,
-            subtitle=account,
-            description=None,
-            hint=warning,
-            chunkify=False,
-            pubkey_qr=pubkey,
-            case_sensitive=True,
-            account=account,
-            path=path,
-            br_name=br_name,
-            br_code=ButtonRequestType.PublicKey,
-        ),
-        None,
-    )
+    with trezorui_api.flow_get_pubkey(
+        pubkey=pubkey,
+        title=title or TR.address__public_key,
+        subtitle=account,
+        description=None,
+        hint=warning,
+        chunkify=False,
+        pubkey_qr=pubkey,
+        case_sensitive=True,
+        account=account,
+        path=path,
+        br_name=br_name,
+        br_code=ButtonRequestType.PublicKey,
+    ) as layout:
+        await raise_if_not_confirmed(layout, None)
 
     show_continue_in_app(TR.address__public_key_confirmed)
 
@@ -2071,14 +2069,14 @@ async def confirm_modify_output(
                 break
 
 
-def confirm_modify_fee(
+async def confirm_modify_fee(
     title: str,
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
     fee_rate_amount: str | None = None,
-) -> Awaitable[None]:
-    fee_layout = trezorui_api.confirm_modify_fee(
+) -> None:
+    fee_ctx = trezorui_api.confirm_modify_fee(
         title=title,
         sign=sign,
         user_fee_change=user_fee_change,
@@ -2088,22 +2086,22 @@ def confirm_modify_fee(
     items: list[StrPropertyType] = []
     if fee_rate_amount:
         items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, True))
-    info_layout = trezorui_api.show_info_with_cancel(
+    info_ctx = trezorui_api.show_info_with_cancel(
         title=TR.confirm_total__title_fee,
         items=items,
     )
-    return with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)
+    with fee_ctx as fee_layout, info_ctx as info_layout:
+        return await with_info(
+            fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx
+        )
 
 
-def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_coinjoin(
-            max_rounds=str(max_rounds),
-            max_feerate=max_fee_per_vbyte,
-        ),
-        "coinjoin_final",
-        BR_CODE_OTHER,
-    )
+async def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> None:
+    with trezorui_api.confirm_coinjoin(
+        max_rounds=str(max_rounds),
+        max_feerate=max_fee_per_vbyte,
+    ) as layout:
+        return await raise_if_not_confirmed(layout, "coinjoin_final", BR_CODE_OTHER)
 
 
 # TODO cleanup @ redesign
@@ -2246,7 +2244,8 @@ def request_passphrase_on_host() -> None:
 
 
 def show_wait_text(message: str) -> None:
-    draw_simple(trezorui_api.show_wait_text(message))
+    with trezorui_api.show_wait_text(message) as layout:
+        draw_simple(layout)
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
@@ -2353,14 +2352,13 @@ async def pin_wipe_code_exists_popup(
     )
 
 
-def confirm_set_new_code(
-    is_wipe_code: bool,
-) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.flow_confirm_set_new_code(is_wipe_code=is_wipe_code),
-        "set_wipe_code" if is_wipe_code else "set_pin",
-        BR_CODE_OTHER,
-    )
+async def confirm_set_new_code(is_wipe_code: bool) -> None:
+    with trezorui_api.flow_confirm_set_new_code(is_wipe_code=is_wipe_code) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "set_wipe_code" if is_wipe_code else "set_pin",
+            BR_CODE_OTHER,
+        )
 
 
 def confirm_change_pin(
@@ -2412,21 +2410,15 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
         )
 
 
-def set_brightness(current: int | None = None) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.set_brightness(current=current),
-        "set_brightness",
-        BR_CODE_OTHER,
-    )
+async def set_brightness(current: int | None = None) -> None:
+    with trezorui_api.set_brightness(current=current) as layout:
+        return await raise_if_not_confirmed(layout, "set_brightness", BR_CODE_OTHER)
 
 
-def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
+async def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> None:
     """Showing users how to interact with the device."""
-    return raise_if_not_confirmed(
-        trezorui_api.tutorial(),
-        "tutorial",
-        br_code,
-    )
+    with trezorui_api.tutorial() as layout:
+        return await raise_if_not_confirmed(layout, "tutorial", br_code)
 
 
 def create_details(

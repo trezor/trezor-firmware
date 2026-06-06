@@ -66,13 +66,13 @@ def confirm_action(
     )
 
 
-def confirm_single(
+async def confirm_single(
     br_name: str,
     title: str,
     description: str,
     description_param: str | None = None,
     verb: str | None = None,
-) -> Awaitable[None]:
+) -> None:
     description_param = description_param or ""
 
     # Placeholders are coming from translations in form of {0}
@@ -80,23 +80,27 @@ def confirm_single(
     assert template_str in description
 
     begin, _separator, end = description.partition(template_str)
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_emphasized(
-            title=title,
-            items=(begin, (True, description_param), end),
-            verb=verb,
-        ),
-        br_name,
-        ButtonRequestType.ProtectCall,
-    )
+    with trezorui_api.confirm_emphasized(
+        title=title,
+        items=(begin, (True, description_param), end),
+        verb=verb,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout, br_name, ButtonRequestType.ProtectCall
+        )
 
 
-def confirm_reset_device(recovery: bool = False) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_reset_device(recovery=recovery),
-        "recover_device" if recovery else "setup_device",
-        (ButtonRequestType.ProtectCall if recovery else ButtonRequestType.ResetDevice),
-    )
+async def confirm_reset_device(recovery: bool = False) -> None:
+    with trezorui_api.confirm_reset_device(recovery=recovery) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "recover_device" if recovery else "setup_device",
+            (
+                ButtonRequestType.ProtectCall
+                if recovery
+                else ButtonRequestType.ResetDevice
+            ),
+        )
 
 
 async def prompt_recovery_check(recovery_type: RecoveryType) -> None:
@@ -325,18 +329,19 @@ async def show_address(
         details_title = title
 
     while True:
-        result = await interact(
-            trezorui_api.confirm_address(
-                title=title,
-                address=address,
-                address_label=network or None,
-                info_button=True,
-                chunkify=chunkify,
-            ),
-            br_name if send_button_request else None,
-            br_code,
-            raise_on_cancel=None,
-        )
+        with trezorui_api.confirm_address(
+            title=title,
+            address=address,
+            address_label=network or None,
+            info_button=True,
+            chunkify=chunkify,
+        ) as layout:
+            result = await interact(
+                layout,
+                br_name if send_button_request else None,
+                br_code,
+                raise_on_cancel=None,
+            )
 
         send_button_request = False
 
@@ -1968,16 +1973,16 @@ async def confirm_modify_output(
             return
 
 
-def confirm_modify_fee(
+async def confirm_modify_fee(
     title: str,
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
     fee_rate_amount: str | None = None,
-) -> Awaitable[None]:
+) -> None:
     from ..properties import with_colon
 
-    fee_layout = trezorui_api.confirm_modify_fee(
+    fee_ctx = trezorui_api.confirm_modify_fee(
         title=title,
         sign=sign,
         user_fee_change=user_fee_change,
@@ -1987,22 +1992,22 @@ def confirm_modify_fee(
     items: list[StrPropertyType] = []
     if fee_rate_amount:
         items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, None))
-    info_layout = trezorui_api.show_info_with_cancel(
+    info_ctx = trezorui_api.show_info_with_cancel(
         title=TR.confirm_total__title_fee,
         items=with_colon(items),
     )
-    return with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)
+    with fee_ctx as fee_layout, info_ctx as info_layout:
+        return await with_info(
+            fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx
+        )
 
 
-def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_coinjoin(
-            max_rounds=str(max_rounds),
-            max_feerate=max_fee_per_vbyte,
-        ),
-        "coinjoin_final",
-        BR_CODE_OTHER,
-    )
+async def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> None:
+    with trezorui_api.confirm_coinjoin(
+        max_rounds=str(max_rounds),
+        max_feerate=max_fee_per_vbyte,
+    ) as layout:
+        return await raise_if_not_confirmed(layout, "coinjoin_final", BR_CODE_OTHER)
 
 
 # TODO cleanup @ redesign
@@ -2144,7 +2149,8 @@ def request_passphrase_on_host() -> None:
 
 
 def show_wait_text(message: str) -> None:
-    draw_simple(trezorui_api.show_wait_text(message))
+    with trezorui_api.show_wait_text(message) as layout:
+        draw_simple(layout)
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
@@ -2249,9 +2255,7 @@ async def pin_wipe_code_exists_popup(
     )
 
 
-def confirm_set_new_code(
-    is_wipe_code: bool,
-) -> Awaitable[None]:
+async def confirm_set_new_code(is_wipe_code: bool) -> None:
     if is_wipe_code:
         title = TR.wipe_code__title_settings
         description = TR.wipe_code__turn_on
@@ -2263,18 +2267,15 @@ def confirm_set_new_code(
         information = TR.pin__info
         br_name = "set_pin"
 
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_emphasized(
-            title=title,
-            items=(
-                (True, description + "\n\n"),
-                information,
-            ),
-            verb=TR.buttons__turn_on,
+    with trezorui_api.confirm_emphasized(
+        title=title,
+        items=(
+            (True, description + "\n\n"),
+            information,
         ),
-        br_name,
-        BR_CODE_OTHER,
-    )
+        verb=TR.buttons__turn_on,
+    ) as layout:
+        return await raise_if_not_confirmed(layout, br_name, BR_CODE_OTHER)
 
 
 def confirm_change_pin(
@@ -2338,8 +2339,5 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
 
 
 async def set_brightness(current: int | None = None) -> None:
-    await interact(
-        trezorui_api.set_brightness(current=current),
-        "set_brightness",
-        BR_CODE_OTHER,
-    )
+    with trezorui_api.set_brightness(current=current) as layout:
+        await interact(layout, "set_brightness", BR_CODE_OTHER)
