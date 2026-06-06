@@ -6,14 +6,14 @@ if TYPE_CHECKING:
     from trezorui_api import UiResult
 
 
-def confirm_pairing(
+async def confirm_pairing(
     br_name: str,
     title: str,
     app_name: str | None,
     host_name: str | None,
     short_text: str,
     long_text: str,
-) -> Awaitable[None]:
+) -> None:
     from trezor.ui.layouts.common import raise_if_not_confirmed
     from trezorui_api import confirm_thp_pairing
 
@@ -24,10 +24,8 @@ def confirm_pairing(
         args = (app_name or host_name or "(unknown)",)
         description = short_text
 
-    return raise_if_not_confirmed(
-        confirm_thp_pairing(title=title, description=description, args=args),
-        br_name=br_name,
-    )
+    with confirm_thp_pairing(title=title, description=description, args=args) as layout:
+        return await raise_if_not_confirmed(layout, br_name=br_name)
 
 
 def show_autoconnect_credential_confirmation_screen(
@@ -81,14 +79,12 @@ async def show_code_entry_screen(
     from trezor.ui.layouts.common import interact
     from trezorui_api import show_thp_pairing_code
 
-    return await interact(
-        show_thp_pairing_code(
-            title=TR.thp__code_title,
-            description=TR.thp__code_entry.format(host_name),
-            code=code_entry_str,
-        ),
-        br_name=None,
-    )
+    with show_thp_pairing_code(
+        title=TR.thp__code_title,
+        description=TR.thp__code_entry.format(host_name),
+        code=code_entry_str,
+    ) as layout:
+        return await interact(layout, br_name=None)
 
 
 async def show_nfc_screen() -> UiResult:

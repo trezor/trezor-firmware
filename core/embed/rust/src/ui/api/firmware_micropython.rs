@@ -1600,7 +1600,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     max_rounds: str,
     ///     max_feerate: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm coinjoin authorization."""
     Qstr::MP_QSTR_confirm_coinjoin => obj_fn_kw!(0, new_confirm_coinjoin).as_obj(),
 
@@ -1609,7 +1609,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     items: Iterable[str | tuple[bool, str]],
     ///     verb: str | None = None,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm formatted text that has been pre-split in python. For tuples
     ///     the first component is a bool indicating whether this part is emphasized."""
     Qstr::MP_QSTR_confirm_emphasized => obj_fn_kw!(0, new_confirm_emphasized).as_obj(),
@@ -1620,7 +1620,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     app_name: str,
     ///     icon_name: str | None,
     ///     accounts: Sequence[str | None],
-    /// ) -> LayoutObj[int | UiResult]:
+    /// ) -> LayoutContext[int | UiResult]:
     ///     """FIDO confirmation.
     ///
     ///     Returns page index in case of confirmation and CANCELLED otherwise.
@@ -1650,7 +1650,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     user_fee_change: str,
     ///     total_fee_new: str,
     ///     fee_rate_amount: str | None,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Decrease or increase transaction fee."""
     Qstr::MP_QSTR_confirm_modify_fee => obj_fn_kw!(0, new_confirm_modify_fee).as_obj(),
 
@@ -1659,7 +1659,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     sign: int,
     ///     amount_change: str,
     ///     amount_new: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Decrease or increase output amount."""
     Qstr::MP_QSTR_confirm_modify_output => obj_fn_kw!(0, new_confirm_modify_output).as_obj(),
 
@@ -1688,7 +1688,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     the value is to be rendered as binary with monospace font, False otherwise."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
-    /// def confirm_reset_device(recovery: bool) -> LayoutObj[UiResult]:
+    /// def confirm_reset_device(recovery: bool) -> LayoutContext[UiResult]:
     ///     """Confirm TOS before creating wallet creation or wallet recovery."""
     Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
 
@@ -1748,7 +1748,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def flow_confirm_set_new_code(
     ///     *,
     ///     is_wipe_code: bool,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm new PIN/wipe code setup with an option to cancel action."""
     Qstr::MP_QSTR_flow_confirm_set_new_code => obj_fn_kw!(0, new_flow_confirm_set_new_code).as_obj(),
 
@@ -1785,7 +1785,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     path: str | None,
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Get public key."""
     Qstr::MP_QSTR_flow_get_pubkey => obj_fn_kw!(0, new_flow_get_pubkey).as_obj(),
 
@@ -1794,11 +1794,11 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     verb: str,
     ///     items: Sequence[str],
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Show multiple texts, each on its own page. TR specific."""
     Qstr::MP_QSTR_multiple_pages_texts => obj_fn_kw!(0, new_multiple_pages_texts).as_obj(),
 
-    /// def prompt_backup() -> LayoutObj[UiResult]:
+    /// def prompt_backup() -> LayoutContext[UiResult]:
     ///     """Strongly recommend user to do a backup."""
     Qstr::MP_QSTR_prompt_backup => obj_fn_0!(new_prompt_backup).as_obj(),
 
@@ -1901,7 +1901,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     For unlocking a repeated backup, select between 20 and 33."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
-    /// def set_brightness(*, current: int | None = None) -> LayoutObj[UiResult]:
+    /// def set_brightness(*, current: int | None = None) -> LayoutContext[UiResult]:
     ///     """Show the brightness configuration dialog."""
     Qstr::MP_QSTR_set_brightness => obj_fn_kw!(0, new_set_brightness).as_obj(),
 
@@ -1987,7 +1987,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     led_enabled: bool | None,
     ///     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
     ///     production_year: str | None,
-    /// ) -> LayoutObj[UiResult | tuple[int, int | None, int]]:
+    /// ) -> LayoutContext[UiResult | tuple[int, int | None, int]]:
     ///     """Show the device menu. Result is either CANCELLED or a tuple (action, action_arg, parent_menu_id)."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
 
@@ -1995,7 +1995,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     description: str,
     ///     device_name: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Pairing device: first screen (device name).
     ///     Returns if BLEEvent::PairingRequest is received."""
     Qstr::MP_QSTR_show_pairing_device_name => obj_fn_kw!(0, new_show_pairing_device_name).as_obj(),
@@ -2005,12 +2005,12 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     code: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """BLE pairing: second screen (pairing code).
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
     Qstr::MP_QSTR_show_ble_pairing_code => obj_fn_kw!(0, new_show_ble_pairing_code).as_obj(),
 
-    /// def wait_ble_host_confirmation() -> LayoutObj[UiResult]:
+    /// def wait_ble_host_confirmation() -> LayoutContext[UiResult]:
     ///     """Pairing device: third screen (waiting for host confirmation).
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
     Qstr::MP_QSTR_wait_ble_host_confirmation => obj_fn_kw!(0, new_wait_ble_host_confirmation).as_obj(),
@@ -2020,7 +2020,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     args: Iterable[str],
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """THP pairing: first screen (host and app names)."""
     Qstr::MP_QSTR_confirm_thp_pairing => obj_fn_kw!(0, new_confirm_thp_pairing).as_obj(),
 
@@ -2029,7 +2029,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     code: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """THP pairing: second screen (pairing code)."""
     Qstr::MP_QSTR_show_thp_pairing_code => obj_fn_kw!(0, new_show_thp_pairing_code).as_obj(),
 
@@ -2149,7 +2149,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Success modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
 
-    /// def show_wait_text(message: str, /) -> LayoutObj[None]:
+    /// def show_wait_text(message: str, /) -> LayoutContext[None]:
     ///     """Show single-line text in the middle of the screen."""
     Qstr::MP_QSTR_show_wait_text => obj_fn_1!(new_show_wait_text).as_obj(),
 
@@ -2170,7 +2170,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     the previous flow)"""
     Qstr::MP_QSTR_confirm_cancel => obj_fn_kw!(0, new_confirm_cancel).as_obj(),
 
-    /// def tutorial() -> LayoutObj[UiResult]:
+    /// def tutorial() -> LayoutContext[UiResult]:
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, new_tutorial).as_obj(),
 

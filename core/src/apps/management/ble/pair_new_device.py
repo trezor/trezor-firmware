@@ -39,29 +39,26 @@ async def pair_new_device() -> None:
     label = ble.start_advertising(False, label)
     result = None
     try:
-        code = await interact(
-            trezorui_api.show_pairing_device_name(
-                description=TR.thp__pair_name,
-                device_name=label,
-            ),
-            None,
-        )
+        with trezorui_api.show_pairing_device_name(
+            description=TR.thp__pair_name,
+            device_name=label,
+        ) as layout:
+            code = await interact(layout, None)
         if not isinstance(code, int):
             raise ActionCancelled
 
-        result = await interact(
-            trezorui_api.show_ble_pairing_code(
-                title=TR.ble__pairing_title,
-                description=TR.ble__pairing_match,
-                code=f"{code:0>6}",
-            ),
-            None,
-        )
+        with trezorui_api.show_ble_pairing_code(
+            title=TR.ble__pairing_title,
+            description=TR.ble__pairing_match,
+            code=f"{code:0>6}",
+        ) as layout:
+            result = await interact(layout, None)
         if result is CONFIRMED:
             ble.allow_pairing(code)
 
         # wait for the host code confirmation
-        await interact(trezorui_api.wait_ble_host_confirmation(), None)
+        with trezorui_api.wait_ble_host_confirmation() as layout:
+            await interact(layout, None)
     finally:
         if result is not CONFIRMED:
             ble.reject_pairing()

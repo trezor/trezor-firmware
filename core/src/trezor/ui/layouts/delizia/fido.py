@@ -13,13 +13,13 @@ async def confirm_fido(
     accounts: list[str | None],
 ) -> int:
     """Webauthn confirmation for one or more credentials."""
-    confirm = trezorui_api.confirm_fido(
+    with trezorui_api.confirm_fido(
         title=header,
         app_name=app_name,
         icon_name=icon_name,
         accounts=accounts,
-    )
-    result = await interact(confirm, "confirm_fido", ButtonRequestType.Other)
+    ) as confirm:
+        result = await interact(confirm, "confirm_fido", ButtonRequestType.Other)
 
     if __debug__ and result is trezorui_api.CONFIRMED:
         # debuglink will directly inject a CONFIRMED message which we need to handle

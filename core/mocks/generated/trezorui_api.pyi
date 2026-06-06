@@ -228,7 +228,7 @@ def confirm_coinjoin(
     *,
     max_rounds: str,
     max_feerate: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm coinjoin authorization."""
 
 
@@ -238,7 +238,7 @@ def confirm_emphasized(
     title: str,
     items: Iterable[str | tuple[bool, str]],
     verb: str | None = None,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm formatted text that has been pre-split in python. For tuples
     the first component is a bool indicating whether this part is emphasized."""
 
@@ -250,7 +250,7 @@ def confirm_fido(
     app_name: str,
     icon_name: str | None,
     accounts: Sequence[str | None],
-) -> LayoutObj[int | UiResult]:
+) -> LayoutContext[int | UiResult]:
     """FIDO confirmation.
     Returns page index in case of confirmation and CANCELLED otherwise.
     """
@@ -282,7 +282,7 @@ def confirm_modify_fee(
     user_fee_change: str,
     total_fee_new: str,
     fee_rate_amount: str | None,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Decrease or increase transaction fee."""
 
 
@@ -292,7 +292,7 @@ def confirm_modify_output(
     sign: int,
     amount_change: str,
     amount_new: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Decrease or increase output amount."""
 
 
@@ -324,7 +324,7 @@ def confirm_properties(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def confirm_reset_device(recovery: bool) -> LayoutObj[UiResult]:
+def confirm_reset_device(recovery: bool) -> LayoutContext[UiResult]:
     """Confirm TOS before creating wallet creation or wallet recovery."""
 
 
@@ -386,7 +386,7 @@ def continue_recovery_homepage(
 def flow_confirm_set_new_code(
     *,
     is_wipe_code: bool,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm new PIN/wipe code setup with an option to cancel action."""
 
 
@@ -425,7 +425,7 @@ def flow_get_pubkey(
     path: str | None,
     br_code: ButtonRequestType,
     br_name: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Get public key."""
 
 
@@ -435,12 +435,12 @@ def multiple_pages_texts(
     title: str,
     verb: str,
     items: Sequence[str],
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Show multiple texts, each on its own page. TR specific."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def prompt_backup() -> LayoutObj[UiResult]:
+def prompt_backup() -> LayoutContext[UiResult]:
     """Strongly recommend user to do a backup."""
 
 
@@ -554,7 +554,7 @@ def select_word_count(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def set_brightness(*, current: int | None = None) -> LayoutObj[UiResult]:
+def set_brightness(*, current: int | None = None) -> LayoutContext[UiResult]:
     """Show the brightness configuration dialog."""
 
 
@@ -647,7 +647,7 @@ def show_device_menu(
     led_enabled: bool | None,
     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
     production_year: str | None,
-) -> LayoutObj[UiResult | tuple[int, int | None, int]]:
+) -> LayoutContext[UiResult | tuple[int, int | None, int]]:
     """Show the device menu. Result is either CANCELLED or a tuple (action, action_arg, parent_menu_id)."""
 
 
@@ -656,7 +656,7 @@ def show_pairing_device_name(
     *,
     description: str,
     device_name: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Pairing device: first screen (device name).
     Returns if BLEEvent::PairingRequest is received."""
 
@@ -667,13 +667,13 @@ def show_ble_pairing_code(
     title: str,
     description: str,
     code: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """BLE pairing: second screen (pairing code).
     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def wait_ble_host_confirmation() -> LayoutObj[UiResult]:
+def wait_ble_host_confirmation() -> LayoutContext[UiResult]:
     """Pairing device: third screen (waiting for host confirmation).
     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
 
@@ -684,7 +684,7 @@ def confirm_thp_pairing(
     title: str,
     description: str,
     args: Iterable[str],
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """THP pairing: first screen (host and app names)."""
 
 
@@ -694,7 +694,7 @@ def show_thp_pairing_code(
     title: str,
     description: str,
     code: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """THP pairing: second screen (pairing code)."""
 
 
@@ -827,7 +827,7 @@ def show_success(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_wait_text(message: str, /) -> LayoutObj[None]:
+def show_wait_text(message: str, /) -> LayoutContext[None]:
     """Show single-line text in the middle of the screen."""
 
 
@@ -851,7 +851,7 @@ def confirm_cancel() -> LayoutContext[UiResult]:
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def tutorial() -> LayoutObj[UiResult]:
+def tutorial() -> LayoutContext[UiResult]:
     """Show user how to interact with the device."""
 
 

@@ -115,14 +115,17 @@ def confirm_single(
     )
 
 
-def confirm_reset_device(
-    recovery: bool = False,
-) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_reset_device(recovery=recovery),
-        "recover_device" if recovery else "setup_device",
-        ButtonRequestType.ProtectCall if recovery else ButtonRequestType.ResetDevice,
-    )
+async def confirm_reset_device(recovery: bool = False) -> None:
+    with trezorui_api.confirm_reset_device(recovery=recovery) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "recover_device" if recovery else "setup_device",
+            (
+                ButtonRequestType.ProtectCall
+                if recovery
+                else ButtonRequestType.ResetDevice
+            ),
+        )
 
 
 async def prompt_recovery_check(recovery_type: RecoveryType) -> None:
@@ -150,12 +153,8 @@ async def prompt_backup() -> bool:
     br_name = "backup_device"
     br_code = ButtonRequestType.ResetDevice
 
-    result = await interact(
-        trezorui_api.prompt_backup(),
-        br_name,
-        br_code,
-        raise_on_cancel=None,
-    )
+    with trezorui_api.prompt_backup() as layout:
+        result = await interact(layout, br_name, br_code, raise_on_cancel=None)
     if result is CONFIRMED:
         return True
 
@@ -704,9 +703,10 @@ async def confirm_output(
             return
 
 
-def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[ui.UiResult]:
+async def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> ui.UiResult:
     """Showing users how to interact with the device."""
-    return interact(trezorui_api.tutorial(), "tutorial", br_code)
+    with trezorui_api.tutorial() as layout:
+        return await interact(layout, "tutorial", br_code)
 
 
 async def should_show_more(
@@ -2035,35 +2035,31 @@ async def confirm_modify_output(
                 break
 
 
-def confirm_modify_fee(
+async def confirm_modify_fee(
     title: str,
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
     fee_rate_amount: str | None = None,
-) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_modify_fee(
-            title=title,
-            sign=sign,
-            user_fee_change=user_fee_change,
-            total_fee_new=total_fee_new,
-            fee_rate_amount=fee_rate_amount,
-        ),
-        "modify_fee",
-        ButtonRequestType.SignTx,
-    )
+) -> None:
+    with trezorui_api.confirm_modify_fee(
+        title=title,
+        sign=sign,
+        user_fee_change=user_fee_change,
+        total_fee_new=total_fee_new,
+        fee_rate_amount=fee_rate_amount,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout, "modify_fee", ButtonRequestType.SignTx
+        )
 
 
-def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_coinjoin(
-            max_rounds=str(max_rounds),
-            max_feerate=max_fee_per_vbyte,
-        ),
-        "coinjoin_final",
-        BR_CODE_OTHER,
-    )
+async def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> None:
+    with trezorui_api.confirm_coinjoin(
+        max_rounds=str(max_rounds),
+        max_feerate=max_fee_per_vbyte,
+    ) as layout:
+        return await raise_if_not_confirmed(layout, "coinjoin_final", BR_CODE_OTHER)
 
 
 # TODO cleanup @ redesign
@@ -2168,7 +2164,8 @@ def request_passphrase_on_host() -> None:
 
 
 def show_wait_text(message: str) -> None:
-    draw_simple(trezorui_api.show_wait_text(message))
+    with trezorui_api.show_wait_text(message) as layout:
+        draw_simple(layout)
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
@@ -2236,22 +2233,17 @@ def confirm_reenter_pin(is_wipe_code: bool = False) -> Awaitable[None]:
     )
 
 
-def _confirm_multiple_pages_texts(
+async def _confirm_multiple_pages_texts(
     br_name: str,
     title: str,
     items: list[str],
     verb: str,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.multiple_pages_texts(
-            title=title,
-            verb=verb,
-            items=items,
-        ),
-        br_name,
-        br_code,
-    )
+) -> None:
+    with trezorui_api.multiple_pages_texts(
+        title=title, verb=verb, items=items
+    ) as layout:
+        return await raise_if_not_confirmed(layout, br_name, br_code)
 
 
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
@@ -2300,9 +2292,7 @@ async def pin_wipe_code_exists_popup(
     )
 
 
-async def confirm_set_new_code(
-    is_wipe_code: bool,
-) -> None:
+async def confirm_set_new_code(is_wipe_code: bool) -> None:
     if is_wipe_code:
         title = TR.wipe_code__title_settings
         description = TR.wipe_code__turn_on
