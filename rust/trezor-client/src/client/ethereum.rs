@@ -1,4 +1,4 @@
-use super::{handle_interaction, Trezor};
+use super::Trezor;
 use crate::{
     error::Result,
     protos::{self, ethereum_sign_tx_eip1559::EthereumAccessList, EthereumTxRequest},
@@ -30,31 +30,23 @@ impl Trezor {
     pub fn ethereum_get_address(&mut self, path: Vec<u32>) -> Result<String> {
         let mut req = protos::EthereumGetAddress::new();
         req.address_n = path;
-        let address = handle_interaction(
-            self.call(req, Box::new(|_, m: protos::EthereumAddress| Ok(m.address().into())))?,
-        )?;
-        Ok(address)
+        let m: protos::EthereumAddress = self.call(req)?;
+        Ok(m.address().into())
     }
 
     pub fn ethereum_sign_message(&mut self, message: Vec<u8>, path: Vec<u32>) -> Result<Signature> {
         let mut req = protos::EthereumSignMessage::new();
         req.address_n = path;
         req.set_message(message);
-        let signature = handle_interaction(self.call(
-            req,
-            Box::new(|_, m: protos::EthereumMessageSignature| {
-                let signature = m.signature();
-                if signature.len() != 65 {
-                    return Err(Error::MalformedSignature);
-                }
-                let r = signature[0..32].try_into().unwrap();
-                let s = signature[32..64].try_into().unwrap();
-                let v = signature[64] as u64;
-                Ok(Signature { r, s, v })
-            }),
-        )?)?;
-
-        Ok(signature)
+        let m: protos::EthereumMessageSignature = self.call(req)?;
+        let signature = m.signature();
+        if signature.len() != 65 {
+            return Err(Error::MalformedSignature);
+        }
+        let r = signature[0..32].try_into().unwrap();
+        let s = signature[32..64].try_into().unwrap();
+        let v = signature[64] as u64;
+        Ok(Signature { r, s, v })
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -85,16 +77,13 @@ impl Trezor {
         req.set_data_length(data.len() as u32);
         req.set_data_initial_chunk(data.splice(..std::cmp::min(1024, data.len()), []).collect());
 
-        let mut resp =
-            handle_interaction(self.call(req, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?)?;
+        let mut resp: protos::EthereumTxRequest = self.call(req)?;
 
         while resp.data_length() > 0 {
             let mut ack = protos::EthereumTxAck::new();
             ack.set_data_chunk(data.splice(..std::cmp::min(1024, data.len()), []).collect());
 
-            resp = handle_interaction(
-                self.call(ack, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?,
-            )?;
+            resp = self.call(ack)?;
         }
 
         convert_signature(&resp, chain_id)
@@ -142,16 +131,13 @@ impl Trezor {
         req.set_data_length(data.len() as u32);
         req.set_data_initial_chunk(data.splice(..std::cmp::min(1024, data.len()), []).collect());
 
-        let mut resp =
-            handle_interaction(self.call(req, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?)?;
+        let mut resp: protos::EthereumTxRequest = self.call(req)?;
 
         while resp.data_length() > 0 {
             let mut ack = protos::EthereumTxAck::new();
             ack.set_data_chunk(data.splice(..std::cmp::min(1024, data.len()), []).collect());
 
-            resp = handle_interaction(
-                self.call(ack, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?,
-            )?;
+            resp = self.call(ack)?;
         }
 
         convert_signature(&resp, chain_id)

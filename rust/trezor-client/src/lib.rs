@@ -30,10 +30,7 @@ mod flows {
     pub(crate) mod sign_tx;
 }
 
-pub use client::{
-    ButtonRequest, ButtonRequestType, EntropyRequest, Features, PassphraseRequest,
-    PinMatrixRequest, PinMatrixRequestType, Trezor, TrezorResponse, WordCount,
-};
+pub use client::Trezor;
 pub use error::{Error, Result};
 pub use messages::TrezorMessage;
 
@@ -148,12 +145,9 @@ mod tests {
     use bitcoin::{bip32::DerivationPath, hex::FromHex};
     use serial_test::serial;
 
-    use crate::{
-        client::handle_interaction,
-        protos::{
-            debug_link_decision::DebugButton, DebugLinkDecision, DebugLinkGetState, DebugLinkState,
-            IdentityType,
-        },
+    use crate::protos::{
+        debug_link_decision::DebugButton, DebugLinkDecision, DebugLinkGetState, DebugLinkState,
+        IdentityType,
     };
 
     use super::*;
@@ -193,8 +187,7 @@ mod tests {
                     // DebugLinkDecision has no response; send fire-and-forget then poll
                     // state (which returns when the firmware has processed the decision).
                     let _ = debuglink.send_message(req.clone());
-                    let _ = debuglink
-                        .call(DebugLinkGetState::new(), Box::new(|_, m: DebugLinkState| Ok(m)));
+                    let _ = debuglink.call::<_, DebugLinkState>(DebugLinkGetState::new());
                 }
             });
             let res = f();
@@ -234,7 +227,7 @@ mod tests {
         let address = emulator
             .get_address(&path, InputScriptType::SPENDADDRESS, bitcoin::Network::Testnet, false)
             .expect("Failed to get address");
-        assert_eq!(address.ok().unwrap().to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
+        assert_eq!(address.to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
     }
 
     #[test]
@@ -255,13 +248,10 @@ mod tests {
         let curve_name = "secp256k1".to_owned();
 
         let response = with_auto_approve(|| {
-            handle_interaction(
-                emulator
-                    .get_ecdh_session_key(ident, peer_public_key, curve_name)
-                    .expect("Failed to get ECDH shared secret"),
-            )
-        })
-        .unwrap();
+            emulator
+                .get_ecdh_session_key(ident, peer_public_key, curve_name)
+                .expect("Failed to get ECDH shared secret")
+        });
 
         let expected_session_key = Vec::from_hex("048125883b086746244b0d2c548860ecc723346e14c87e51dc7ba32791bc780d132dbd814fbee77134f318afac6ad6db3c5334efe6a8798628a1038195b96e82e2").unwrap();
         assert_eq!(response.session_key(), &expected_session_key);

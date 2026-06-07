@@ -283,29 +283,12 @@ impl<'a> SignTxProgress<'a> {
         }
     }
 
-    /// Manually provide a TxAck message to the device.
+    /// Provide additional PSBT information to the device.
     ///
     /// This method will panic if `finished()` returned true,
     /// so it should always be checked in advance.
-    pub fn ack_msg(
-        self,
-        ack: protos::TxAck,
-    ) -> Result<TrezorResponse<'a, SignTxProgress<'a>, protos::TxRequest>> {
+    pub fn ack_psbt(&mut self, psbt: &psbt::Psbt, network: Network) -> Result<()> {
         assert!(!self.finished());
-
-        self.client.call(ack, Box::new(|c, m| Ok(SignTxProgress::new(c, m))))
-    }
-
-    /// Provide additional PSBT information to the device.
-    ///
-    /// This method will panic if `apply()` returned true,
-    /// so it should always be checked in advance.
-    pub fn ack_psbt(
-        self,
-        psbt: &psbt::Psbt,
-        network: Network,
-    ) -> Result<TrezorResponse<'a, SignTxProgress<'a>, protos::TxRequest>> {
-        assert!(self.req.request_type() != TxRequestType::TXFINISHED);
 
         let ack = match self.req.request_type() {
             TxRequestType::TXINPUT => ack_input_request(&self.req, psbt),
@@ -317,6 +300,7 @@ impl<'a> SignTxProgress<'a> {
             TxRequestType::TXPAYMENTREQ => unimplemented!(),
             TxRequestType::TXFINISHED => unreachable!(),
         }?;
-        self.ack_msg(ack)
+        self.req = self.client.call(ack)?;
+        Ok(())
     }
 }
