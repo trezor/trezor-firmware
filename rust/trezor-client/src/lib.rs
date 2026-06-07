@@ -142,7 +142,12 @@ mod tests {
         thread,
     };
 
-    use bitcoin::{bip32::DerivationPath, hex::FromHex};
+    use bitcoin::{
+        bip32::{DerivationPath, Fingerprint},
+        hex::FromHex,
+        psbt,
+    };
+    use hex_lit::hex;
     use serial_test::serial;
 
     use crate::protos::{
@@ -287,5 +292,47 @@ mod tests {
         assert_eq!(signature.r.len(), 32);
         assert_eq!(signature.s.len(), 32);
         assert_eq!(signature.v, 38);
+    }
+
+    fn unsigned_psbt(raw_tx: &[u8]) -> psbt::Psbt {
+        use bitcoin::{consensus::deserialize, psbt, ScriptBuf, Transaction, Witness};
+
+        let mut unsigned: Transaction = deserialize(&raw_tx).unwrap();
+        for txi in &mut unsigned.input {
+            txi.script_sig = ScriptBuf::new();
+            txi.witness = Witness::new();
+        }
+        psbt::Psbt::from_unsigned_tx(unsigned).unwrap()
+    }
+
+    #[test]
+    #[serial]
+    fn test_bitcoin_signtx_one_one_fee() {
+        use std::str::FromStr;
+
+        use bitcoin::{consensus::deserialize, network::Network, Address};
+
+        let mut emulator = init_emulator();
+
+        let fpr = Fingerprint::from_hex("5c9e228d").unwrap();
+        let deriv = DerivationPath::from_str("m/44h/0h/5h/0/9").unwrap();
+        let pubkey = emulator.get_public_key(&deriv, Network::Bitcoin, false).unwrap().to_pub();
+
+        let addr = Address::p2pkh(pubkey, Network::Bitcoin);
+        assert_eq!(addr.to_string(), "1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p");
+
+        // Sign mainnet tx b893aeed4b12227b6f5348d7f6cb84ba2cda2ba70a41933a25f363b9d2fc2cf9
+
+        let raw_tx = hex!("0100000001b5f59e2273c85b93aa9deff9bba5d7deace78610d3b0fb892a7ba6d86f36ac0d000000006b483045022100dd4dd136a70371bc9884c3c51fd52f4aed9ab8ee98f3ac7367bb19e6538096e702200c56be09c4359fc7eb494b4bdf8f2b72706b0575c4021373345b593e9661c7b6012103d7f3a07085bee09697cf03125d5c8760dfed65403dba787f1d1d8b1251af2cbeffffffff0148c40000000000001976a91419140511436e947448be994ab7fda9f98623e68e88ac00000000");
+        let mut psbt = unsigned_psbt(&raw_tx);
+
+        // Previous mainnet tx 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5,
+
+        let raw_orig_tx = hex!("0100000001dacfb5828cd2434f29d237968d4c785b8e12d6d45108df91a2fc09cc26f7f9eb000000006b4830450221009deff16fa96f178b429a8a816ca08762fd5fd2972e0090c878b36a56898ce553022055caab6afe0ed050e6dfbf91af9541166b17bda4ade447c08077902a9992f19b012102187fc04e6004c9bbe63178bc3fb3d3d6fd747f127ade47753c6f2dab37a3ac85ffffffff02f4f90000000000001976a914afbbf5e4c1315ec9f5e96428986660130dbee7b888ac05d70200000000001976a9143f1cccd6cc6174f2ac6454081d66444dc39a02bc88ac00000000");
+        psbt.inputs[0].non_witness_utxo = Some(deserialize(&raw_orig_tx).unwrap());
+        psbt.inputs[0].bip32_derivation.insert(pubkey.0, (fpr, deriv));
+
+        let signed_tx = with_auto_approve(|| emulator.sign_tx(&psbt, Network::Bitcoin).unwrap());
+        assert_eq!(signed_tx, raw_tx);
     }
 }
