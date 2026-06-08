@@ -11,6 +11,9 @@ on:
         required: true
         default: "[\"T1B1\",\"T2B1\",\"T2T1\",\"T3B1\",\"T3T1\",\"T3W1\"]"
 
+permissions:
+  contents: read        # for actions/checkout
+
 # [Device tests](../tests/device-tests.md) that run against an actual physical Trezors.
 # The device needs to have special bootloader, found in `core/embed/projects/bootloader_ci`, that
 # makes it possible to flash firmware without confirmation on the touchscreen.
@@ -93,7 +96,7 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build-xtask/artifacts/latest/firmware.bin"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
       - run: |
           nix-shell --run "uv run trezorctl list"
           nix-shell --run "uv run trezorctl get-features"
@@ -143,7 +146,7 @@ jobs:
           full-deps: "true"
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build-xtask/artifacts/latest/firmware.bin"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
       - run: nix-shell --run "uv run trezorctl list"
       - run: nix-shell --run "uv run trezorctl get-features"
       - run: |
