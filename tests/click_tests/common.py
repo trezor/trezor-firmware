@@ -5,8 +5,7 @@ import typing as t
 from enum import Enum
 
 from trezorlib.debuglink import LayoutType
-
-from .. import translations as TR
+from trezorlib.testing import translations as TR
 
 if t.TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
