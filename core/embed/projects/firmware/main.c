@@ -132,10 +132,6 @@ int main_func(uint32_t cmd, void *arg) {
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
-#ifdef USE_TROPIC
-  ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
-#endif
-
   LOG_INF("Preparing stack");
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.

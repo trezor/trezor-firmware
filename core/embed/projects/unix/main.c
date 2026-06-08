@@ -497,10 +497,6 @@ MP_NOINLINE int main_(int argc, char **argv) {
   mp_pystack_init(pystack, &pystack[MP_ARRAY_SIZE(pystack)]);
 #endif
 
-#ifdef USE_TROPIC
-  ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
-#endif
-
   mp_init();
 
 #if MICROPY_ENABLE_COMPILER && MICROPY_ENABLE_SOURCE_LINE
