@@ -9,7 +9,7 @@ if utils.USE_THP:
     from storage import cache_thp
     from trezor.wire import context
     from trezor.wire.thp.channel import Channel
-    from trezor.wire.thp.interface_context import ThpContext
+    from trezor.wire.thp.interface_context import InterfaceContext, ThpContext
     from trezor.wire.thp.memory_manager import ThpBuffer
     from trezor.wire.thp.session_context import SessionContext
 
@@ -42,7 +42,7 @@ if utils.USE_THP:
         )
         return SessionContext(channel, session_cache)
 
-    def get_new_channel(iface: WireInterface) -> Channel:
+    def get_new_channel(iface: WireInterface) -> MockChannel:
         global NEXT_CHANNEL_ID
         # channel_cache = create_new_channel(iface)
         thp_ctx = ThpContext(iface)

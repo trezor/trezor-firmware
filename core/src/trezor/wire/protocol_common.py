@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import loop, protobuf, utils
+from trezor import loop, protobuf
 
 if __debug__:
     from trezor import log
@@ -209,16 +209,6 @@ class ButtonRequestHandler:
             ack_callback()
 
 
-if utils.USE_THP:
-    from trezorthp import (
-        ThpError,  # type: ignore [Type "type[Exception]" is not assignable to type "type[ThpError]"]
-    )
-else:
-
-    class ThpError(Exception):
-        pass
-
-
 class ContinueOnErrors(ButtonRequestHandler):
     """Handle I/O from host, while ignoring errors."""
 
@@ -247,10 +237,13 @@ class ContinueOnErrors(ButtonRequestHandler):
             except ChannelPreemptedException:
                 # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
                 pass
-            except ThpError as e:
-                # ignore codec errors
-                if __debug__:
-                    log.exception(__name__, e)
+            except Exception as e:
+                if e.__class__.__name__ == "ThpError":
+                    # ignore codec errors
+                    if __debug__:
+                        log.exception(__name__, e)
+                else:
+                    raise
 
     def __enter__(self) -> None:
         assert self._prev_handler is None

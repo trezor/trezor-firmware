@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Coroutine, Generic, Type, TypeVar
 
     from trezor.wire.thp.channel import Channel
+    from trezor.wire.thp.interface_context import InterfaceContext
 
     T = TypeVar("T")
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
@@ -109,10 +110,11 @@ if utils.USE_THP:
     THP_BUFFERS_PROVIDER = Provider((ThpBuffer(), ThpBuffer()))
 
     if __debug__:
-        _THP_IFACES = []
+        _THP_IFACES: list[InterfaceContext] = []
 
         def find_thp_channel(channel_id: AnyBytes) -> Channel | None:
-            """Used by `DebugLinkGetPairingInfo` (only for tests)."""
+            """Used by `DebugLinkGetPairingInfo` (only for tests). Currently only
+            works with channels that have active workflow (e.g. pairing)."""
             for ifctx in _THP_IFACES:
                 if (
                     ifctx.active_channel
@@ -128,8 +130,7 @@ if utils.USE_THP:
     async def handle_session_thp(*ifaces: WireInterface) -> None:
         ctx = ThpContext(*ifaces)
         if __debug__:
-            _THP_IFACES.clear()
-            _THP_IFACES.extend(ctx._iface_ctxs)
+            _THP_IFACES[:] = ctx._iface_ctxs
 
         try:
             # wait until channel activity (on any interface)

@@ -20,7 +20,7 @@ def _new_channel(client) -> Channel:
 
 
 def test_concurrent_handshakes(client: Client) -> None:
-    MAX = 4
+    MAX = 4  # See `MAX_CHANNELS_OPENING` in core/embed/rust/src/thp/mod.rs
     channels = []
 
     # Start the handshake for MAX+1 channels
@@ -78,7 +78,7 @@ def test_concurrent_handshakes_busy_retries(client: Client) -> None:
 
 
 def test_concurrent_channels(test_ctx: TrezorTestContext) -> None:
-    MAX = 10
+    MAX = 10  # See `MAX_CHANNELS_APPDATA` in core/embed/rust/src/thp/mod.rs
     channels = []
 
     # Open MAX+1 channels

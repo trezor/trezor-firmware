@@ -38,7 +38,7 @@ class GenericSessionContext(Context):
         if __debug__:
             log.debug(
                 __name__,
-                "handle - start (channel_id: %04x, session_id: %d)",
+                "handle - start (channel_id (bytes): %04x, session_id: %d)",
                 self.channel_id,
                 self.session_id,
                 iface=self.iface,
