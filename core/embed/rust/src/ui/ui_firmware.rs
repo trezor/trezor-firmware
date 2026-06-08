@@ -92,6 +92,7 @@ pub trait FirmwareUI {
     fn confirm_coinjoin(
         max_rounds: TString<'static>,
         max_feerate: TString<'static>,
+        max_coordinator_fee_pct: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_emphasized(

@@ -42358,6 +42358,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__x_of_y_signatures_template, Self::cardano__x_of_y_signatures_template),
         (Qstr::MP_QSTR_coinjoin__access_account, Self::coinjoin__access_account),
         (Qstr::MP_QSTR_coinjoin__do_not_disconnect, Self::coinjoin__do_not_disconnect),
+        (Qstr::MP_QSTR_coinjoin__max_coordinator_fee_pct, Self::coinjoin__max_coordinator_fee_pct),
         (Qstr::MP_QSTR_coinjoin__max_mining_fee, Self::coinjoin__max_mining_fee),
         (Qstr::MP_QSTR_coinjoin__max_rounds, Self::coinjoin__max_rounds),
         (Qstr::MP_QSTR_coinjoin__title, Self::coinjoin__title),
