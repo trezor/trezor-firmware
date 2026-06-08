@@ -654,6 +654,7 @@ fn generate_crypto_bindings() {
         .allowlist_function("hmac_sha256_Final")
         // sha256
         .allowlist_var("SHA256_DIGEST_LENGTH")
+        .allowlist_var("SHA256_BLOCK_LENGTH")
         .allowlist_type("SHA256_CTX")
         .no_copy("SHA256_CTX")
         .allowlist_function("sha256_Init")
@@ -661,6 +662,7 @@ fn generate_crypto_bindings() {
         .allowlist_function("sha256_Final")
         // sha512
         .allowlist_var("SHA512_DIGEST_LENGTH")
+        .allowlist_var("SHA512_BLOCK_LENGTH")
         .allowlist_type("SHA512_CTX")
         .no_copy("SHA512_CTX")
         .allowlist_function("sha512_Init")
