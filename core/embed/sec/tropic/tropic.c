@@ -497,15 +497,11 @@ static lt_ret_t lt_r_mem_data_read_retry(lt_handle_t *h,
 static secbool tropic_ensure_i_config(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  lt_config_obj_addr_t cfg_to_check[] = {
-      TR01_CFG_SENSORS_IDX,
-  };
-
-  for (int8_t i = 0; i < sizeof(cfg_to_check) / sizeof(cfg_to_check[0]); i++) {
-    uint32_t expected = tropic_configs_irreversible.obj[cfg_to_check[i]];
+  for (int8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
+    uint32_t expected = tropic_configs_irreversible.obj[i];
     uint32_t current = 0;
     if (TROPIC_RETRY_COMMAND(lt_i_config_read(
-            &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], &current)) !=
+            &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) !=
         LT_OK) {
       return secfalse;
     }
@@ -521,7 +517,7 @@ static secbool tropic_ensure_i_config(void) {
     for (uint8_t j = 0; j < 32; j++) {  // Tropic cfg objects are 32-bit
       if (to_flip & BIT(j)) {
         if (TROPIC_RETRY_COMMAND(lt_i_config_write(
-                &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], j)) !=
+                &drv->handle, TROPIC_CONFIG_ADDRS[i], j)) !=
             LT_OK) {
           return secfalse;
         }
@@ -530,7 +526,7 @@ static secbool tropic_ensure_i_config(void) {
 
     current = 0;
     if (TROPIC_RETRY_COMMAND(lt_i_config_read(
-            &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], &current)) !=
+            &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) !=
         LT_OK) {
       return secfalse;
     }
@@ -545,20 +541,15 @@ static secbool tropic_ensure_i_config(void) {
 static secbool tropic_ensure_r_config(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  lt_config_obj_addr_t cfg_to_check[] = {
-      TR01_CFG_START_UP_IDX,
-      TR01_CFG_SENSORS_IDX,
-  };
-
   uint32_t current = 0;
   uint32_t diff = 0;
-  for (int8_t i = 0; i < sizeof(cfg_to_check) / sizeof(cfg_to_check[0]); i++) {
+  for (int8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
     if (TROPIC_RETRY_COMMAND(lt_r_config_read(
-            &drv->handle, TROPIC_CONFIG_ADDRS[cfg_to_check[i]], &current)) !=
+            &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) !=
         LT_OK) {
       return secfalse;
     }
-    diff |= current ^ tropic_configs_reversible.obj[cfg_to_check[i]];
+    diff |= current ^ tropic_configs_reversible.obj[i];
   }
 
   if (diff == 0) {
