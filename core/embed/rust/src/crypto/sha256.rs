@@ -7,6 +7,7 @@ use super::{
     memory::{init_ctx, Memory},
 };
 
+pub const BLOCK_SIZE: usize = ffi::SHA256_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
