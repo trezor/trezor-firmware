@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '15 23 * * *'  # every day @ 23:15
   workflow_dispatch:
+    inputs:
+      models_json:
+        description: models as a JSON list
+        type: string
+        required: true
+        default: "[\"T1B1\",\"T2B1\",\"T2T1\",\"T3B1\",\"T3T1\",\"T3W1\"]"
 
 # [Device tests](../tests/device-tests.md) that run against an actual physical Trezors.
 # The device needs to have special bootloader, found in `core/embed/projects/bootloader_ci`, that
@@ -18,8 +24,31 @@ on:
 # skipped.
 # See also: https://github.com/trezor/trezor-firmware/issues/1371
 jobs:
+  param:
+    name: Determine pipeline parameters
+    runs-on: ubuntu-latest
+    outputs:
+      core_models: ${{ steps.set_vars.outputs.core_models }}
+      run_legacy: ${{ steps.set_vars.outputs.run_legacy }}
+    steps:
+      - id: set_vars
+        name: Set variables
+        env:
+          MODELS: ${{ github.event_name == 'workflow_dispatch' && inputs.models_json || '["T1B1","T2B1","T2T1","T3B1","T3T1","T3W1"]' }}
+        run: |
+          echo "models_json: $MODELS"
+          CORE_MODELS=`echo $MODELS | jq -cM '[.[] | select(. != "T1B1")]'`
+          echo core_models=$CORE_MODELS >> $GITHUB_OUTPUT
+          if echo $MODELS | grep -q '"T1B1"'; then
+            echo run_legacy=1 >> $GITHUB_OUTPUT
+          else
+            echo run_legacy=0 >> $GITHUB_OUTPUT
+          fi
+          cat $GITHUB_OUTPUT
+
   core_device_test:
     name: Device tests
+    needs: param
     runs-on:
       - self-hosted
       # FIXME runner4 with t2b1 does not work at the moment
@@ -27,7 +56,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T2B1, T3B1, T3T1, T3W1]
+        model: ${{ fromJSON(needs.param.outputs.core_models) }}
         coins: [universal, btconly]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
@@ -85,6 +114,7 @@ jobs:
 
   core_monero_test:
     name: Monero tests
+    needs: param
     runs-on:
       - self-hosted
       # FIXME runner4 with t2b1 does not work at the moment
@@ -93,7 +123,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T2B1, T3B1, T3T1, T3W1]
+        model: ${{ fromJSON(needs.param.outputs.core_models) }}
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       PYTEST_TIMEOUT: 1200
@@ -130,9 +160,11 @@ jobs:
 
   legacy_device_test:
     name: Device tests T1B1
+    needs: param
     runs-on:
       - self-hosted
       - hw-t1b1
+    if: needs.param.outputs.run_legacy == '1'
     strategy:
       fail-fast: false
       matrix:
