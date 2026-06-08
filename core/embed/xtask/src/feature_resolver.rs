@@ -40,7 +40,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
             (Project::Prodtest, Some(ConsoleType::Vcp)) => (),
             (_, Some(ConsoleType::Vcp)) => features.push("dbg_console_vcp".into()),
             (_, Some(ConsoleType::Swo)) => features.push("dbg_console_swo".into()),
-            (_, Some(ConsoleType::SystemView)) => features.push("dbg_console_sysview".into()),
+            (_, Some(ConsoleType::SystemView)) => features.push("dbg_console_system_view".into()),
             (_, None) => (),
         }
     }
