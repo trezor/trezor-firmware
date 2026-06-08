@@ -9,6 +9,8 @@ KEY_REQUIRED_UNLOCK: object
 FAILED: object
 MAX_CREDENTIAL_LEN: int
 MAX_DEVICE_PROPERTIES_LEN: int
+APP_HEADER_LEN: int
+SEND_BUFFER_OVERHEAD: int
 
 
 # rust/src/thp/micropython.rs

@@ -18,6 +18,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_;
   MP_QSTR_ACK;
   MP_QSTR_ALERT;
+  MP_QSTR_APP_HEADER_LEN;
   MP_QSTR_ATTACHED;
   MP_QSTR_AttachType;
   MP_QSTR_BACK;
@@ -61,6 +62,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_RemovePin;
   MP_QSTR_RemoveWipeCode;
   MP_QSTR_ReviewFailedBackup;
+  MP_QSTR_SEND_BUFFER_OVERHEAD;
   MP_QSTR_SUCCESS;
   MP_QSTR_SWIPE_DOWN;
   MP_QSTR_SWIPE_LEFT;
