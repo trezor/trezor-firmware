@@ -612,6 +612,7 @@ class TR:
     pin__disabled: str = "PIN protection\nturned off."
     pin__enabled: str = "PIN protection\nturned on."
     pin__enter: str = "Enter PIN"
+    pin__enter_current: str = "Enter current PIN"
     pin__enter_new: str = "Enter new PIN"
     pin__entered_not_valid: str = "The PIN you have entered is not valid."
     pin__info: str = "PIN will be required to access this device."

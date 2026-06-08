@@ -704,6 +704,7 @@ pub enum TranslatedString {
     pin__disabled = 451,  // "PIN protection\nturned off."
     pin__enabled = 452,  // {"Bolt": "PIN protection\nturned on.", "Caesar": "PIN protection\nturned on.", "Delizia": "PIN protection\nturned on.", "Eckhart": ""}
     pin__enter = 453,  // "Enter PIN"
+    pin__enter_current = 1234,  // "Enter current PIN"
     pin__enter_new = 454,  // "Enter new PIN"
     pin__entered_not_valid = 455,  // "The PIN you have entered is not valid."
     pin__info = 456,  // {"Bolt": "PIN will be required to access this device.", "Caesar": "PIN will be required to access this device.", "Delizia": "PIN will be required to access this device.", "Eckhart": "The PIN will be required to access this device."}
@@ -42212,6 +42213,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__disabled, Self::pin__disabled),
         (Qstr::MP_QSTR_pin__enabled, Self::pin__enabled),
         (Qstr::MP_QSTR_pin__enter, Self::pin__enter),
+        (Qstr::MP_QSTR_pin__enter_current, Self::pin__enter_current),
         (Qstr::MP_QSTR_pin__enter_new, Self::pin__enter_new),
         (Qstr::MP_QSTR_pin__entered_not_valid, Self::pin__entered_not_valid),
         (Qstr::MP_QSTR_pin__info, Self::pin__info),

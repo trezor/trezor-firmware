@@ -32,7 +32,7 @@ async def change_wipe_code(msg: ChangeWipeCode) -> Success:
         raise RuntimeError  # should be unreachable
 
     # Get the unlocking PIN.
-    pin, salt = await request_pin_and_sd_salt(TR.pin__enter)
+    pin, salt = await request_pin_and_sd_salt(TR.pin__enter_current)
 
     if not msg.remove:
         # Pre-check the entered PIN.
