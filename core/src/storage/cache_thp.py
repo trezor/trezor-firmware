@@ -2,11 +2,16 @@ import builtins
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_common import CHANNEL_ID, SESSION_ID, SESSION_STATE, DataCache
+from storage.cache_common import (
+    CHANNEL_ID,
+    LAST_USAGE,
+    SESSION_ID,
+    SESSION_STATE,
+    DataCache,
+)
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Sequence
 
 # THP specific constants
 _MAX_SESSIONS_COUNT = const(20)
@@ -19,22 +24,7 @@ _ALLOCATED_STATE = const(1)
 _SEEDLESS_STATE = const(2)
 
 
-class ThpDataCache(DataCache):
-
-    def __init__(self) -> None:
-        self.last_usage = 0
-        super().__init__()
-
-    @property
-    def channel_id(self) -> bytes:
-        return self.get(CHANNEL_ID) or b""
-
-    def clear(self) -> None:
-        self.last_usage = 0
-        super().clear()
-
-
-class SessionThpCache(ThpDataCache):
+class SessionThpCache(DataCache):
     def __init__(self) -> None:
         from trezor import utils
 
@@ -43,6 +33,7 @@ class SessionThpCache(ThpDataCache):
                 2,  # CHANNEL_ID
                 1,  # SESSION_ID
                 1,  # SESSION_STATE
+                4,  # LAST_USAGE
                 64,  # APP_COMMON_SEED
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
@@ -53,6 +44,7 @@ class SessionThpCache(ThpDataCache):
                 2,  # CHANNEL_ID
                 1,  # SESSION_ID
                 1,  # SESSION_STATE
+                4,  # LAST_USAGE
                 64,  # APP_COMMON_SEED
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
@@ -67,6 +59,14 @@ class SessionThpCache(ThpDataCache):
     @property
     def session_id(self) -> bytes:
         return self.get(SESSION_ID) or b""
+
+    @property
+    def channel_id(self) -> bytes:
+        return self.get(CHANNEL_ID) or b""
+
+    @property
+    def last_usage(self) -> int:
+        return self.get_int(LAST_USAGE) or 0
 
     def clear(self) -> None:
         super().clear()
@@ -95,7 +95,7 @@ def update_channel_last_used(channel_id: AnyBytes) -> None:
 def update_session_last_used(channel_id: AnyBytes, session_id: AnyBytes) -> None:
     for session in _SESSIONS:
         if session.channel_id == channel_id and session.session_id == session_id:
-            session.last_usage = _get_usage_counter_and_increment()
+            session.set_int(LAST_USAGE, _get_usage_counter_and_increment())
             update_channel_last_used(channel_id)
             return
 
@@ -145,7 +145,7 @@ def create_or_replace_session(channel_id: bytes, session_id: bytes) -> SessionTh
     _SESSIONS[index].clear()
     _SESSIONS[index].set(CHANNEL_ID, channel_id)
     _SESSIONS[index].set(SESSION_ID, session_id)
-    _SESSIONS[index].last_usage = _get_usage_counter_and_increment()
+    _SESSIONS[index].set_int(LAST_USAGE, _get_usage_counter_and_increment())
     update_channel_last_used(channel_id)
 
     _SESSIONS[index].set_int(SESSION_STATE, _ALLOCATED_STATE)
@@ -168,7 +168,7 @@ def _get_next_session_index() -> int:
     idx = _get_unallocated_session_index()
     if idx is not None:
         return idx
-    return _get_least_recently_used_item(_SESSIONS, max_count=_MAX_SESSIONS_COUNT)
+    return _get_least_recently_used_session()
 
 
 def _get_unallocated_session_index() -> int | None:
@@ -181,12 +181,12 @@ def _get_unallocated_session_index() -> int | None:
     return None
 
 
-def _get_least_recently_used_item(list: Sequence[ThpDataCache], max_count: int) -> int:
+def _get_least_recently_used_session() -> int:
     lru_counter = _usage_counter + 1
     lru_item_index = 0
-    for i in range(max_count):
-        if list[i].last_usage < lru_counter:
-            lru_counter = list[i].last_usage
+    for i in range(_MAX_SESSIONS_COUNT):
+        if _SESSIONS[i].last_usage < lru_counter:
+            lru_counter = _SESSIONS[i].last_usage
             lru_item_index = i
     return lru_item_index
 
@@ -218,7 +218,7 @@ def clear_all() -> None:
 
     from trezorthp import channel_close_all
 
-    channel_close_all(None)
+    channel_close_all()
 
 
 def clear_all_except_one_session_keys(excluded: tuple[AnyBytes, AnyBytes]) -> None:
@@ -226,7 +226,7 @@ def clear_all_except_one_session_keys(excluded: tuple[AnyBytes, AnyBytes]) -> No
 
     from trezorthp import channel_close_all
 
-    channel_close_all(int.from_bytes(cid, "big"))
+    channel_close_all(exclude_channel_id=int.from_bytes(cid, "big"))
 
     for session in _SESSIONS:
         if session.channel_id != cid or session.session_id != sid:
@@ -234,4 +234,4 @@ def clear_all_except_one_session_keys(excluded: tuple[AnyBytes, AnyBytes]) -> No
         else:
             s_last_usage = session.last_usage
             session.clear()
-            session.last_usage = s_last_usage
+            session.set_int(LAST_USAGE, s_last_usage)
