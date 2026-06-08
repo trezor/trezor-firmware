@@ -367,6 +367,18 @@ class Certificate:
     def signature_algorithm_oid(self) -> ObjectIdentifier:
         return self.cert.signature_algorithm_oid
 
+    def subject_common_name(self) -> str | None:
+        attrs = self.cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+        if len(attrs) > 1:
+            raise ValueError("Certificate has multiple common name attributes.")
+        return str(attrs[0].value) if attrs else None
+
+    def subject_serial_number(self) -> str | None:
+        attrs = self.cert.subject.get_attributes_for_oid(NameOID.SERIAL_NUMBER)
+        if len(attrs) > 1:
+            raise ValueError("Certificate has multiple serial number attributes.")
+        return str(attrs[0].value) if attrs else None
+
     def _check_ca_extensions(self) -> bool:
         """Check that this certificate is a valid Trezor CA.
 
@@ -451,6 +463,19 @@ class Certificate:
         return False
 
 
+class AuthenticationResult(t.NamedTuple):
+    """The outcome of verifying a single AuthenticateDevice certificate chain.
+
+    `root` is the matched trust anchor (or None when an explicit `root_pubkey` was
+    supplied). `common_name` and `serial_number` are taken from the subject of the
+    end-entity (device) certificate.
+    """
+
+    root: RootCertificate | None
+    common_name: str | None
+    serial_number: str | None
+
+
 def verify_authentication_response(
     challenge: bytes,
     signature: bytes,
@@ -459,13 +484,15 @@ def verify_authentication_response(
     allowlist: AllowList | None,
     allow_development_devices: bool = False,
     root_pubkey: bytes | PublicKey | None = None,
-) -> RootCertificate | None:
+) -> AuthenticationResult:
     """Evaluate the response to an AuthenticateDevice call.
 
     Performs all steps and logs their results via the logging facility. (The log can be
     accessed via the `LOG` object in this module.)
 
-    When done, raises DeviceNotAuthentic if the device is not authentic.
+    When done, raises DeviceNotAuthentic if the device is not authentic. Otherwise
+    returns an `AuthenticationResult` describing the matched root and the device
+    certificate's subject.
 
     The optional argument `root_pubkey` allows you to specify a root public key either
     as a `PublicKey` object or as a byte-string.
@@ -486,6 +513,9 @@ def verify_authentication_response(
     except Exception:
         LOG.error("Failed to parse device certificate.")
         raise DeviceNotAuthentic
+
+    device_common_name = cert.subject_common_name()
+    device_serial_number = cert.subject_serial_number()
 
     try:
         cert.public_key.verify_message(signature=signature, message=challenge_bytes)
@@ -566,7 +596,7 @@ def verify_authentication_response(
     if failed:
         raise DeviceNotAuthentic
 
-    return root
+    return AuthenticationResult(root, device_common_name, device_serial_number)
 
 
 @workflow()
@@ -585,7 +615,7 @@ def authenticate_device(
 
     resp = device.authenticate(session, challenge)
 
-    optiga_root = verify_authentication_response(
+    optiga_auth_result = verify_authentication_response(
         challenge,
         resp.optiga_signature,
         resp.optiga_certificates,
@@ -594,15 +624,17 @@ def authenticate_device(
         root_pubkey=p256_root_pubkey,
     )
 
+    results = [optiga_auth_result]
+
     if (
-        getattr(optiga_root, "ed25519_pubkey", None) is not None
+        getattr(optiga_auth_result.root, "ed25519_pubkey", None) is not None
         or ed25519_root_pubkey is not None
     ):
         if not resp.tropic_signature:
             LOG.error("Missing Tropic signature.")
             raise DeviceNotAuthentic
 
-        tropic_root = verify_authentication_response(
+        tropic_auth_result = verify_authentication_response(
             challenge,
             resp.tropic_signature,
             resp.tropic_certificates,
@@ -611,19 +643,17 @@ def authenticate_device(
             root_pubkey=ed25519_root_pubkey,
         )
 
-        if optiga_root is not tropic_root:
-            LOG.error("Certificates issued by different root authorities.")
-            raise DeviceNotAuthentic
+        results.append(tropic_auth_result)
 
     if (
-        getattr(optiga_root, "mldsa44_pubkey", None) is not None
+        getattr(optiga_auth_result.root, "mldsa44_pubkey", None) is not None
         or mldsa44_root_pubkey is not None
     ):
         if not resp.mcu_signature:
             LOG.error("Missing MCU signature.")
             raise DeviceNotAuthentic
 
-        mcu_root = verify_authentication_response(
+        mcu_auth_result = verify_authentication_response(
             challenge,
             resp.mcu_signature,
             resp.mcu_certificates,
@@ -632,6 +662,34 @@ def authenticate_device(
             root_pubkey=mldsa44_root_pubkey,
         )
 
-        if optiga_root is not mcu_root:
-            LOG.error("Certificates issued by different root authorities.")
-            raise DeviceNotAuthentic
+        results.append(mcu_auth_result)
+
+    # All chains must be issued by the same root authority. Chains rooted in different built-in
+    # authorities and any mix of custom and built-in roots are rejected; chains rooted entirely in
+    # custom keys (all None) are accepted as the caller's deliberate choice.
+    if len(set(r.root for r in results)) != 1:
+        LOG.error("Certificates issued by different root authorities.")
+        raise DeviceNotAuthentic
+
+    # All chains must share the same serial number and common name, and the common name
+    # must identify the model reported in the device's features.
+
+    if len(set(r.serial_number for r in results)) != 1:
+        LOG.error("Device certificates have inconsistent serial numbers.")
+        raise DeviceNotAuthentic
+
+    common_names = set(r.common_name for r in results)
+    if len(common_names) != 1:
+        LOG.error("Device certificates have inconsistent common names.")
+        raise DeviceNotAuthentic
+
+    common_name = common_names.pop()
+    if common_name is None or not common_name.startswith(
+        session.model.internal_name + " "
+    ):
+        LOG.error(
+            "Device certificate common name %s does not match model %s.",
+            common_name,
+            session.model.internal_name,
+        )
+        raise DeviceNotAuthentic
