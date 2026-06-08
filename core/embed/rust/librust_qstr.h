@@ -297,6 +297,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_code;
   MP_QSTR_coinjoin__access_account;
   MP_QSTR_coinjoin__do_not_disconnect;
+  MP_QSTR_coinjoin__max_coordinator_fee_pct;
   MP_QSTR_coinjoin__max_mining_fee;
   MP_QSTR_coinjoin__max_rounds;
   MP_QSTR_coinjoin__title;
@@ -477,6 +478,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_lockscreen__title_locked;
   MP_QSTR_lockscreen__title_not_connected;
   MP_QSTR_lockscreen__unlock;
+  MP_QSTR_max_coordinator_fee_pct;
   MP_QSTR_max_count;
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;

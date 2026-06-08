@@ -22,6 +22,7 @@ async def authorize_coinjoin(
     from trezor import TR
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
+    from trezor.strings import format_amount
     from trezor.ui.layouts import confirm_coinjoin, confirm_metadata
     from trezor.wire import DataError
 
@@ -65,7 +66,10 @@ async def authorize_coinjoin(
         msg.max_fee_per_kvbyte / 1000, coin, include_shortcut=True
     )
 
-    await confirm_coinjoin(msg.max_rounds, max_fee_per_vbyte)
+    max_coordinator_fee_pct = (
+        format_amount(msg.max_coordinator_fee_rate, FEE_RATE_DECIMALS) + "%"
+    )
+    await confirm_coinjoin(msg.max_rounds, max_fee_per_vbyte, max_coordinator_fee_pct)
 
     validation_path = msg.address_n + [0] * BIP32_WALLET_DEPTH
     await validate_path(

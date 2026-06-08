@@ -1254,5 +1254,6 @@
   "1252": "ethereum__to",
   "1253": "ethereum__calldata_digest",
   "1254": "pin__reenter_new_description",
-  "1255": "ethereum__eip_712_empty_domain"
+  "1255": "ethereum__eip_712_empty_domain",
+  "1256": "coinjoin__max_coordinator_fee_pct"
 }

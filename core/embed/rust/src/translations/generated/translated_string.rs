@@ -1624,6 +1624,7 @@ pub enum TranslatedString {
     tron__owner_address = 1238,  // "Owner address"
     #[cfg(feature = "universal_fw")]
     ethereum__eip_712_empty_domain = 1239,  // "dApp did not identify itself!"
+    coinjoin__max_coordinator_fee_pct = 1240,  // "Max coordinator fee"
 }
 
 impl TranslatedString {
@@ -2871,6 +2872,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4173,6 +4175,7 @@ impl TranslatedString {
                 19414,
                 19427,
                 19456,
+                19475,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5417,6 +5420,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6719,6 +6723,7 @@ impl TranslatedString {
                 19414,
                 19427,
                 19456,
+                19475,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7963,6 +7968,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9265,6 +9271,7 @@ impl TranslatedString {
                 19414,
                 19427,
                 19456,
+                19475,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10509,6 +10516,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11811,6 +11819,7 @@ impl TranslatedString {
                 19414,
                 19427,
                 19456,
+                19475,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13056,6 +13065,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14365,6 +14375,7 @@ impl TranslatedString {
                 17302,
                 17315,
                 17344,
+                17363,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15609,6 +15620,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16918,6 +16930,7 @@ impl TranslatedString {
                 17302,
                 17315,
                 17344,
+                17363,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18162,6 +18175,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19471,6 +19485,7 @@ impl TranslatedString {
                 17302,
                 17315,
                 17344,
+                17363,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20715,6 +20730,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22024,6 +22040,7 @@ impl TranslatedString {
                 17302,
                 17315,
                 17344,
+                17363,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23269,6 +23286,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24544,6 +24562,7 @@ impl TranslatedString {
                 18931,
                 18944,
                 18973,
+                18992,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25788,6 +25807,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27063,6 +27083,7 @@ impl TranslatedString {
                 18931,
                 18944,
                 18973,
+                18992,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28307,6 +28328,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29582,6 +29604,7 @@ impl TranslatedString {
                 18931,
                 18944,
                 18973,
+                18992,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30826,6 +30849,7 @@ impl TranslatedString {
                 "",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32101,6 +32125,7 @@ impl TranslatedString {
                 18931,
                 18944,
                 18973,
+                18992,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33346,6 +33371,7 @@ impl TranslatedString {
                 "This is NOT your address",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34608,6 +34634,7 @@ impl TranslatedString {
                 20239,
                 20252,
                 20281,
+                20300,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35852,6 +35879,7 @@ impl TranslatedString {
                 "This is NOT your address",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37114,6 +37142,7 @@ impl TranslatedString {
                 20239,
                 20252,
                 20281,
+                20300,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38358,6 +38387,7 @@ impl TranslatedString {
                 "This is NOT your address",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39620,6 +39650,7 @@ impl TranslatedString {
                 20239,
                 20252,
                 20281,
+                20300,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40864,6 +40895,7 @@ impl TranslatedString {
                 "This is NOT your address",
                 "Owner address",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42126,6 +42158,7 @@ impl TranslatedString {
                 20239,
                 20252,
                 20281,
+                20300,
             ];
 
         }
@@ -42521,6 +42554,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__x_of_y_signatures_template, Self::cardano__x_of_y_signatures_template),
         (Qstr::MP_QSTR_coinjoin__access_account, Self::coinjoin__access_account),
         (Qstr::MP_QSTR_coinjoin__do_not_disconnect, Self::coinjoin__do_not_disconnect),
+        (Qstr::MP_QSTR_coinjoin__max_coordinator_fee_pct, Self::coinjoin__max_coordinator_fee_pct),
         (Qstr::MP_QSTR_coinjoin__max_mining_fee, Self::coinjoin__max_mining_fee),
         (Qstr::MP_QSTR_coinjoin__max_rounds, Self::coinjoin__max_rounds),
         (Qstr::MP_QSTR_coinjoin__title, Self::coinjoin__title),
