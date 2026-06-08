@@ -140,7 +140,7 @@ def channel_close(iface_num: int, channel_id: int) -> None:
 
 
 # rust/src/thp/micropython.rs
-def channel_close_all(exclude_channel_id: int | None) -> None:
+def channel_close_all(*, exclude_channel_id: int | None = None) -> None:
     """
     Closes all channels on all interfaces. If `exclude_channel_id` is not None, it
     will be left as the only channel.
