@@ -175,12 +175,15 @@ impl FirmwareUI for UIBolt {
     fn confirm_coinjoin(
         max_rounds: TString<'static>,
         max_feerate: TString<'static>,
+        max_coordinator_fee_pct: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_rounds),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
             Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_mining_fee),
             Paragraph::new(&theme::TEXT_MONO, max_feerate),
+            Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_coordinator_fee_pct),
+            Paragraph::new(&theme::TEXT_MONO, max_coordinator_fee_pct),
         ]);
 
         let layout = RootComponent::new(Frame::left_aligned(
