@@ -228,6 +228,7 @@ def confirm_coinjoin(
     *,
     max_rounds: str,
     max_feerate: str,
+    max_coordinator_fee_pct: str,
 ) -> LayoutContext[UiResult]:
     """Confirm coinjoin authorization."""
 

@@ -269,6 +269,7 @@ class TR:
     cardano__x_of_y_signatures_template: str = "Requires {0} out of {1} signatures."
     coinjoin__access_account: str = "Access your coinjoin account?"
     coinjoin__do_not_disconnect: str = "Do not disconnect your Trezor!"
+    coinjoin__max_coordinator_fee_pct: str = "Max coordinator fee"
     coinjoin__max_mining_fee: str = "Max mining fee"
     coinjoin__max_rounds: str = "Max rounds"
     coinjoin__title: str = "Authorize coinjoin"

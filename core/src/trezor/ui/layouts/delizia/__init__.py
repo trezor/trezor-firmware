@@ -2059,10 +2059,13 @@ async def confirm_modify_fee(
         )
 
 
-async def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> None:
+async def confirm_coinjoin(
+    max_rounds: int, max_fee_per_vbyte: str, max_coordinator_fee_pct: str
+) -> None:
     with trezorui_api.confirm_coinjoin(
         max_rounds=str(max_rounds),
         max_feerate=max_fee_per_vbyte,
+        max_coordinator_fee_pct=max_coordinator_fee_pct,
     ) as layout:
         return await raise_if_not_confirmed(layout, "coinjoin_final", BR_CODE_OTHER)
 

@@ -215,15 +215,19 @@ impl FirmwareUI for UICaesar {
     fn confirm_coinjoin(
         max_rounds: TString<'static>,
         max_feerate: TString<'static>,
+        max_coordinator_fee_pct: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // Decreasing bottom padding between paragraphs to fit one screen
         let paragraphs = Paragraphs::new([
+            // Decreasing bottom padding between paragraphs to fit one screen:
             Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_rounds).with_bottom_padding(2),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
             Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_mining_fee)
                 .with_bottom_padding(2)
                 .no_break(),
             Paragraph::new(&theme::TEXT_MONO, max_feerate).with_bottom_padding(2),
+            // Shown in a separate screen:
+            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_coordinator_fee_pct),
+            Paragraph::new(&theme::TEXT_MONO, max_coordinator_fee_pct),
         ]);
 
         content_in_button_page(

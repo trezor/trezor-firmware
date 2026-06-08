@@ -153,6 +153,7 @@ impl FirmwareUI for UIEckhart {
     fn confirm_coinjoin(
         max_rounds: TString<'static>,
         max_feerate: TString<'static>,
+        max_coordinator_fee_pct: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_rounds)
@@ -163,7 +164,12 @@ impl FirmwareUI for UIEckhart {
             Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_mining_fee)
                 .with_bottom_padding(theme::PROP_INNER_SPACING)
                 .no_break(),
-            Paragraph::new(&theme::TEXT_MONO_LIGHT, max_feerate),
+            Paragraph::new(&theme::TEXT_MONO_LIGHT, max_feerate)
+                .with_bottom_padding(theme::PROPS_SPACING),
+            Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_coordinator_fee_pct)
+                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .no_break(),
+            Paragraph::new(&theme::TEXT_MONO_LIGHT, max_coordinator_fee_pct),
         ])
         .with_placement(LinearPlacement::vertical());
 

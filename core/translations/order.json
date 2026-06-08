@@ -1238,5 +1238,6 @@
   "1236": "tron__claim_voting_rewards",
   "1237": "address__warning_not_yours",
   "1238": "tron__owner_address",
-  "1239": "ethereum__eip_712_empty_domain"
+  "1239": "ethereum__eip_712_empty_domain",
+  "1240": "coinjoin__max_coordinator_fee_pct"
 }
