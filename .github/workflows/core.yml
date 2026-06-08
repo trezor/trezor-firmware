@@ -260,8 +260,6 @@ jobs:
         if: matrix.asan == 'noasan'
       - run: nix-shell --run "uv run make -C core -f Makefile.scons test_rust"
       - run: nix-shell --run "uv run make -C core clippy"
-      - run: nix-shell --run "uv run make -C core audit_rust"
-      - run: nix-shell --run "uv run make -C core vet_rust"
 
   core_rust_client_test:
     name: Rust trezor-client tests
@@ -852,6 +850,17 @@ jobs:
           popd
           tree
           aws s3 sync --only-show-errors emulators s3://data.trezor.io/dev/firmware/emu-branches/$branch_name
+
+  rust_deps_check:
+    name: Rust dependencies check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make -C core audit_rust"
+      - run: nix-shell --run "uv run make -C core vet_rust"
 
   # Connect
   # TODO: core_connect_test
