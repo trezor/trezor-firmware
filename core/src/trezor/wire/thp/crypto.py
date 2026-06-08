@@ -8,7 +8,7 @@ from storage import device
 HARDENED = const(0x8000_0000)
 
 
-def derive_static_key_pair() -> tuple[bytes, bytes]:
+def _derive_static_key_pair() -> tuple[bytes, bytes]:
     node_int = HARDENED | int.from_bytes(b"\x00THP", "big")
     node = bip32.from_seed(device.get_device_secret(), "curve25519")
     node.derive(node_int)
@@ -21,6 +21,11 @@ def derive_static_key_pair() -> tuple[bytes, bytes]:
     return trezor_static_private_key, trezor_static_public_key
 
 
+def get_trezor_static_private_key() -> bytes:
+    private_key, _ = _derive_static_key_pair()
+    return private_key
+
+
 def get_trezor_static_public_key() -> bytes:
-    _, public_key = derive_static_key_pair()
+    _, public_key = _derive_static_key_pair()
     return public_key

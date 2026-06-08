@@ -9,7 +9,7 @@ from trezor.loop import race, wait
 from ..protocol_common import ChannelPreemptedException
 from . import get_encoded_device_properties
 from .channel import TREZOR_STATE_PAIRED, TREZOR_STATE_UNPAIRED, Channel
-from .crypto import derive_static_key_pair
+from .crypto import get_trezor_static_private_key
 
 if __debug__:
     from trezor import log
@@ -382,7 +382,7 @@ class InterfaceContext:
 
     def handle_handshake_key(self, try_to_unlock: bool) -> None:
         if config.is_unlocked():
-            trezor_static_privkey, _trezor_static_pubkey = derive_static_key_pair()
+            trezor_static_privkey = get_trezor_static_private_key()
             trezorthp.handshake_key(self._iface.iface_num(), trezor_static_privkey)
         elif not try_to_unlock:
             trezorthp.handshake_key(self._iface.iface_num(), None)
@@ -406,7 +406,7 @@ class InterfaceContext:
             # Register the unlock prompt with the workflow management system
             # (in order to avoid immediately respawning the lockscreen task)
             await workflow.spawn(unlock_device())
-            trezor_static_privkey, _trezor_static_pubkey = derive_static_key_pair()
+            trezor_static_privkey = get_trezor_static_private_key()
         except Exception as e:
             if __debug__:
                 log.exception(__name__, e)

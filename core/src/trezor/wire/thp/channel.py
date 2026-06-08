@@ -33,7 +33,7 @@ TREZOR_STATE_UNPAIRED = const(0x00)
 TREZOR_STATE_PAIRED = const(0x01)
 TREZOR_STATE_PAIRED_AUTOCONNECT = const(0x02)
 
-EMPTY_BUFFER = memoryview(bytearray())
+EMPTY_BUFFER = memoryview(b"")
 
 
 class Channel:

@@ -28,34 +28,34 @@ async def handle_received_message(channel: Channel) -> None:
         await channel.write(error_message, e.session_id)
 
 
-async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel) -> None:
+async def _handle_state_ENCRYPTED_TRANSPORT(channel: Channel) -> None:
     if __debug__:
-        log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.iface)
+        log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=channel.iface)
 
-    session_id, message = await ctx.read()
-    if session_id not in ctx.sessions:
+    session_id, message = await channel.read()
+    if session_id not in channel.sessions:
 
-        s = session_manager.get_session_from_cache(ctx, session_id)
+        s = session_manager.get_session_from_cache(channel, session_id)
 
         if s is None:
-            s = SeedlessSessionContext(ctx, session_id)
+            s = SeedlessSessionContext(channel, session_id)
 
-        ctx.sessions[session_id] = s
+        channel.sessions[session_id] = s
 
-    elif ctx.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
+    elif channel.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
         raise ThpUnallocatedSessionError(session_id)
 
-    s = ctx.sessions[session_id]
+    s = channel.sessions[session_id]
     update_session_last_used(
         s.channel_id.to_bytes(2, "big"), s.session_id.to_bytes(1, "big")
     )
     await s.handle(message)
 
 
-async def _handle_pairing(ctx: Channel) -> None:
+async def _handle_pairing(channel: Channel) -> None:
     from .pairing_context import PairingContext
 
-    ctx.connection_context = PairingContext(ctx)
+    channel.connection_context = PairingContext(channel)
 
-    _session_id, message = await ctx.read()
-    await ctx.connection_context.handle(message)
+    _session_id, message = await channel.read()
+    await channel.connection_context.handle(message)

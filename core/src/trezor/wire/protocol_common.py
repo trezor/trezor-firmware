@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import loop, protobuf, utils
+from trezor import loop, protobuf
 
 if __debug__:
     from trezor import log
@@ -248,16 +248,6 @@ class ButtonRequestHandler:
                 self.pending = False
                 log.info(__name__, "ButtonRequest acked: %s", br.name)
             ack_callback()
-
-
-if utils.USE_THP:
-    from trezorthp import (
-        ThpError,  # type: ignore [Type "type[Exception]" is not assignable to type "type[ThpError]"]
-    )
-else:
-
-    class ThpError(Exception):
-        pass
 
 
 class ContinueOnErrors(ButtonRequestHandler):

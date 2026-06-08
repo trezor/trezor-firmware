@@ -87,5 +87,5 @@ def get_encoded_device_properties(iface: WireInterface) -> AnyBytes:
     length = protobuf.encoded_length(props)
     encoded_properties = bytearray(length)
     protobuf.encode(encoded_properties, props)
-    assert length <= MAX_DEVICE_PROPERTIES_LEN
+    utils.ensure(length <= MAX_DEVICE_PROPERTIES_LEN)
     return encoded_properties
