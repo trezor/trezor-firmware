@@ -8,7 +8,9 @@ use crate::{
         buffer::{get_buffer, get_buffer_mut},
         exception,
         list::List,
-        macros::{attr_tuple, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_module, obj_type},
+        macros::{
+            attr_tuple, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_kw, obj_fn_var, obj_module, obj_type,
+        },
         map::Map,
         module::Module,
         obj::Obj,
@@ -220,16 +222,19 @@ extern "C" fn thp_channel_close(iface_num: Obj, channel_id: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn thp_channel_close_all(exclude_channel_id: Obj) -> Obj {
-    let block = || {
-        let exclude_channel_id: Option<u16> = exclude_channel_id.try_into_option()?;
+extern "C" fn thp_channel_close_all(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let exclude_channel_id: Option<u16> = kwargs
+            .get(Qstr::MP_QSTR_exclude_channel_id)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
 
         let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
         thp.channel_close_all(exclude_channel_id);
         Ok(Obj::const_none())
     };
 
-    unsafe { util::try_or_raise(block) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn thp_channel_update_last_usage(channel_id: Obj) -> Obj {
@@ -501,14 +506,14 @@ pub static mp_module_trezorthp: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_channel_close => obj_fn_2!(thp_channel_close).as_obj(),
 
-    /// def channel_close_all(exclude_channel_id: int | None) -> None:
+    /// def channel_close_all(*, exclude_channel_id: int | None = None) -> None:
     ///     """
     ///     Closes all channels on all interfaces. If `exclude_channel_id` is not None, it
     ///     will be left as the only channel.
     ///     Please note the closed channels are not returned by `channel_get_closed()`.
     ///     Caller is responsible for deleting all relevant sessions manually.
     ///     """
-    Qstr::MP_QSTR_channel_close_all => obj_fn_1!(thp_channel_close_all).as_obj(),
+    Qstr::MP_QSTR_channel_close_all => obj_fn_kw!(0, thp_channel_close_all).as_obj(),
 
     /// def channel_update_last_usage(channel_id: int):
     ///     """
