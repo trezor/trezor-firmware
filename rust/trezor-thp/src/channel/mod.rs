@@ -40,6 +40,10 @@ const HANDSHAKE_BUFFER_DTH_LEN: usize = max(
 
 pub const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
+/// Required size of the send buffer in addition to serialized message length.
+/// Session ID (1B) + message type (2B) + AEAD tag (16B).
+pub const SEND_BUFFER_OVERHEAD: usize = APP_HEADER_LEN + TAG_LEN;
+
 /// Used during channel allocation on broadcast channel.
 #[derive(Copy, Clone, PartialEq, Eq)]
 struct Nonce([u8; NONCE_LEN as _]);
@@ -671,9 +675,6 @@ impl PacketInResult {
 /// to be passed along every call. You can wrap the channel in [`buffered::Buffered`] to
 /// handle the buffers for you.
 pub trait ChannelIO {
-    /// Session ID (1B) + message type (2B) + AEAD tag (16B).
-    const BUFFER_OVERHEAD: usize = APP_HEADER_LEN + TAG_LEN;
-
     /// Pass incoming packet into a channel.
     ///
     /// Please note the caller should first check whether channel ID matches.
@@ -735,8 +736,8 @@ pub trait ChannelIO {
 
     /// Submit message for channel to encrypt and fragment into packets.
     ///
-    /// The length of `send_buffer` must be at least [`Self::BUFFER_OVERHEAD`] more
-    /// than the message length.
+    /// The length of `send_buffer` must be at least [`SEND_BUFFER_OVERHEAD`] more than
+    /// the message length.
     ///
     /// Returns [`Error::NotReady`] if the channel hasn't finished sending the previous message
     /// (did not send all fragments or did not receive valid ACK), or if the channel is
