@@ -1,4 +1,6 @@
-use trezor_thp::channel::{APP_HEADER_LEN, MAX_CREDENTIAL_LEN, MAX_DEVICE_PROPERTIES_LEN};
+use trezor_thp::channel::{
+    APP_HEADER_LEN, MAX_CREDENTIAL_LEN, MAX_DEVICE_PROPERTIES_LEN, SEND_BUFFER_OVERHEAD,
+};
 
 use crate::{
     error::Error,
@@ -374,6 +376,12 @@ pub static mp_module_trezorthp: Module = obj_module! {
 
     /// MAX_DEVICE_PROPERTIES_LEN: int
     Qstr::MP_QSTR_MAX_DEVICE_PROPERTIES_LEN => Obj::small_int(MAX_DEVICE_PROPERTIES_LEN as u16),
+
+    /// APP_HEADER_LEN: int
+    Qstr::MP_QSTR_APP_HEADER_LEN => Obj::small_int(APP_HEADER_LEN as u16),
+
+    /// SEND_BUFFER_OVERHEAD: int
+    Qstr::MP_QSTR_SEND_BUFFER_OVERHEAD => Obj::small_int(SEND_BUFFER_OVERHEAD as u16),
 
     /// def init(iface_num: int, device_properties: AnyBytes) -> None:
     ///     """
