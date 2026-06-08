@@ -233,8 +233,11 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
     let block = move |_args: &[Obj], kwargs: &Map| {
         let max_rounds: TString = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
         let max_feerate: TString = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
+        let max_coordinator_fee_pct: TString = kwargs
+            .get(Qstr::MP_QSTR_max_coordinator_fee_pct)?
+            .try_into()?;
 
-        let layout = ModelUI::confirm_coinjoin(max_rounds, max_feerate)?;
+        let layout = ModelUI::confirm_coinjoin(max_rounds, max_feerate, max_coordinator_fee_pct)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1582,6 +1585,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     max_rounds: str,
     ///     max_feerate: str,
+    ///     max_coordinator_fee_pct: str,
     /// ) -> LayoutContext[UiResult]:
     ///     """Confirm coinjoin authorization."""
     Qstr::MP_QSTR_confirm_coinjoin => obj_fn_kw!(0, new_confirm_coinjoin).as_obj(),

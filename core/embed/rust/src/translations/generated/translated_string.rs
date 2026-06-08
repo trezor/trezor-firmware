@@ -1659,6 +1659,7 @@ pub enum TranslatedString {
     pin__reenter_new_description = 1254,  // {"Bolt": "", "Caesar": "", "Delizia": "Re-enter new PIN.", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
     ethereum__eip_712_empty_domain = 1255,  // "dApp did not identify itself!"
+    coinjoin__max_coordinator_fee_pct = 1256,  // "Max coordinator fee"
 }
 
 impl TranslatedString {
@@ -2922,6 +2923,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4183,6 +4185,7 @@ impl TranslatedString {
                 18980,
                 18980,
                 19009,
+                19028,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5443,6 +5446,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6704,6 +6708,7 @@ impl TranslatedString {
                 18980,
                 18980,
                 19009,
+                19028,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7964,6 +7969,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9225,6 +9231,7 @@ impl TranslatedString {
                 18980,
                 18980,
                 19009,
+                19028,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10485,6 +10492,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11746,6 +11754,7 @@ impl TranslatedString {
                 18980,
                 18980,
                 19009,
+                19028,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13007,6 +13016,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14268,6 +14278,7 @@ impl TranslatedString {
                 16771,
                 16771,
                 16800,
+                16819,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15528,6 +15539,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16789,6 +16801,7 @@ impl TranslatedString {
                 16771,
                 16771,
                 16800,
+                16819,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18049,6 +18062,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19310,6 +19324,7 @@ impl TranslatedString {
                 16771,
                 16771,
                 16800,
+                16819,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20570,6 +20585,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21831,6 +21847,7 @@ impl TranslatedString {
                 16771,
                 16771,
                 16800,
+                16819,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23092,6 +23109,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "Re-enter new PIN.",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24353,6 +24371,7 @@ impl TranslatedString {
                 18853,
                 18870,
                 18899,
+                18918,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25613,6 +25632,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "Re-enter new PIN.",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26874,6 +26894,7 @@ impl TranslatedString {
                 18853,
                 18870,
                 18899,
+                18918,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28134,6 +28155,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "Re-enter new PIN.",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29395,6 +29417,7 @@ impl TranslatedString {
                 18853,
                 18870,
                 18899,
+                18918,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30655,6 +30678,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "Re-enter new PIN.",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31916,6 +31940,7 @@ impl TranslatedString {
                 18853,
                 18870,
                 18899,
+                18918,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33177,6 +33202,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34438,6 +34464,7 @@ impl TranslatedString {
                 20231,
                 20231,
                 20260,
+                20279,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35698,6 +35725,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36959,6 +36987,7 @@ impl TranslatedString {
                 20231,
                 20231,
                 20260,
+                20279,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38219,6 +38248,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39480,6 +39510,7 @@ impl TranslatedString {
                 20231,
                 20231,
                 20260,
+                20279,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40740,6 +40771,7 @@ impl TranslatedString {
                 "ERC-8213 digest",
                 "",
                 "dApp did not identify itself!",
+                "Max coordinator fee",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42001,6 +42033,7 @@ impl TranslatedString {
                 20231,
                 20231,
                 20260,
+                20279,
             ];
 
         }
@@ -42396,6 +42429,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__x_of_y_signatures_template, Self::cardano__x_of_y_signatures_template),
         (Qstr::MP_QSTR_coinjoin__access_account, Self::coinjoin__access_account),
         (Qstr::MP_QSTR_coinjoin__do_not_disconnect, Self::coinjoin__do_not_disconnect),
+        (Qstr::MP_QSTR_coinjoin__max_coordinator_fee_pct, Self::coinjoin__max_coordinator_fee_pct),
         (Qstr::MP_QSTR_coinjoin__max_mining_fee, Self::coinjoin__max_mining_fee),
         (Qstr::MP_QSTR_coinjoin__max_rounds, Self::coinjoin__max_rounds),
         (Qstr::MP_QSTR_coinjoin__title, Self::coinjoin__title),
