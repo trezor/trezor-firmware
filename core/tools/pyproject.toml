@@ -17,6 +17,7 @@ lsgen = "trezor_core_tools.lsgen:main"
 hash_signer = "trezor_core_tools.hash_signer:main"
 combine_firmware = "trezor_core_tools.combine_firmware:main"
 bootloader_hashes = "trezor_core_tools.bootloader_hashes:main"
+verify_signed_firmware = "trezor_core_tools.verify_signed_firmware:main"
 
 [build-system]
 requires = ["flit_core >= 3.11,<5"]

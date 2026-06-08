@@ -54,6 +54,11 @@ bash build-docker.sh --models=T3T1 core/v2.8.3  # build only for Trezor Safe 5
 The result won't be bit-by-bit identical with the official images because the
 official images are signed while local builds aren't.
 
+The manual steps below zero out the signature and compare hashes, which keeps the
+verification dependent only on standard tools. Trezor developers can alternatively use
+the `verify_signed_firmware` tool (in `core/tools`) to automate this zero-signature
+comparison across all image formats.
+
 ### Trezor T and the Safe family
 
 You can use `trezorctl` to download the official firmware image for your device:
