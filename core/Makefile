@@ -143,6 +143,9 @@ test_emu_persistence_ui: ## run persistence tests with UI testing
 	$(PYTEST) $(TESTPATH)/persistence_tests $(TESTOPTS) \
 		--ui=test --ui-check-missing --do-master-diff --lang=$(TEST_LANG)
 
+test_emu_upgrade: ## run upgrade tests
+	$(PYTEST) $(TESTPATH)/upgrade_tests $(TESTOPTS) --lang=$(TEST_LANG)
+
 test_emu_ui: ## run ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
 		--ui=test --ui-check-missing --do-master-diff \

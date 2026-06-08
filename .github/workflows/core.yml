@@ -436,7 +436,7 @@ jobs:
         with:
           full-deps: "true"
       - run: nix-shell --arg fullDeps true --run "tests/download_emulators.sh ${{ matrix.model }}"
-      - run: nix-shell --arg fullDeps true --run "uv run pytest tests/upgrade_tests"
+      - run: nix-shell --arg fullDeps true --run "uv run make -C core test_emu_upgrade"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-test-upgrade-${{ matrix.model }}-${{ matrix.asan }}
