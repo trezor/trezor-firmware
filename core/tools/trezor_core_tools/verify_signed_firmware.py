@@ -126,9 +126,7 @@ def verify_pair(unsigned: Path, signed: Path) -> bool:
             return False
 
     if unsigned.samefile(signed):
-        bad(
-            "both arguments are the SAME file -- cannot verify a signing round-trip against itself"
-        )
+        bad("both arguments are the SAME file")
         return False
 
     u = unsigned.read_bytes()
