@@ -32,7 +32,7 @@ from ..transport.udp import UdpTransport
 LOG = logging.getLogger(__name__)
 
 TROPIC_MODEL_WAIT_TIME = 10
-EMULATOR_WAIT_TIME = 60
+EMULATOR_WAIT_TIME = 30
 _RUNNING_PIDS = set()
 
 
