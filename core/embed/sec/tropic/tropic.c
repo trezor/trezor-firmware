@@ -113,6 +113,7 @@ static lt_ret_t lt_init_retry(lt_handle_t *tropic_handle) {
   lt_ret_t ret = lt_init(tropic_handle);
   for (int i = 0; i < TROPIC_MAX_RETRIES - 1 && is_retryable(ret); i++) {
     tropic01_reset();
+    lt_deinit(tropic_handle);
     ret = lt_init(tropic_handle);
   }
   return ret;
