@@ -72,7 +72,7 @@ def sign_registration_request(
     return {
         "certificates": ",".join([cert.hex() for cert in response.certificate_chain]),
         "signature": response.signature.hex(),
-        "rotation_index": response.rotation_index
+        "rotation_index": response.rotation_index,
     }
 
 
