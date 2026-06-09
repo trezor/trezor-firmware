@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Tuple
 
     from trezor.messages import EvoluRegistrationRequest, EvoluSignRegistrationRequest
 
@@ -86,7 +85,7 @@ def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
 
 def _get_signature(
     challenge_bytes: AnyBytes, size_bytes: bytes
-) -> Tuple[bytes, int | None]:
+) -> tuple[bytes, int | None]:
     from storage.device import get_delegated_identity_key_rotation_index
     from trezor import utils, wire
     from trezor.crypto import optiga
