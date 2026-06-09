@@ -7,7 +7,7 @@ if utils.USE_THP:
     import thp_common
     from mock_wire_interface import MockHID
     from storage import cache, cache_thp
-    from storage.cache_common import CHANNEL_STATE, SESSION_STATE, DataCache
+    from storage.cache_common import SESSION_STATE, DataCache
     from trezor.wire.thp import ChannelState
     from trezor.wire.thp.session_context import SessionContext
 

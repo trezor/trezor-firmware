@@ -112,7 +112,7 @@ class InterfaceContext:
         self._rx_packet_buf = bytearray(iface.RX_PACKET_LEN)
         self._tx_packet_buf = bytearray(iface.TX_PACKET_LEN)
 
-        # IDs hannels that would like to become active but will get error instead.
+        # IDs of channels that would like to become active but will get error instead.
         self.inactive_channels: set[int] = set()
 
         trezorthp.init(
