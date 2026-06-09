@@ -28,94 +28,94 @@
       "address": "0x08",
       "setting": {
         "ptrng0_test_dis": {
-          "value": true,
+          "value": false,
           "bit": 0,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "ptrng1_test_dis": {
-          "value": true,
+          "value": false,
           "bit": 1,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "oscillator_mon_dis": {
-          "value": true,
+          "value": false,
           "bit": 2,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "shield_dis": {
-          "value": true,
+          "value": false,
           "bit": 3,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "voltage_mon_dis": {
-          "value": true,
+          "value": false,
           "bit": 4,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "glitch_det_dis": {
-          "value": true,
+          "value": false,
           "bit": 5,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "temp_sens_dis": {
-          "value": true,
+          "value": false,
           "bit": 6,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "laser_det_dis": {
-          "value": true,
+          "value": false,
           "bit": 7,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "em_pulse_det_dis": {
-          "value": true,
+          "value": false,
           "bit": 8,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "cpu_alert_dis": {
-          "value": true,
+          "value": false,
           "bit": 9,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "pin_verif_bit_flip_dis": {
-          "value": true,
+          "value": false,
           "bit": 10,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "scb_bit_flip_dis": {
-          "value": true,
+          "value": false,
           "bit": 11,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "cpb_bit_flip_dis": {
-          "value": true,
+          "value": false,
           "bit": 12,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "ecc_bit_flip_dis": {
-          "value": true,
+          "value": false,
           "bit": 13,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "r_mem_bit_flip_dis": {
-          "value": true,
+          "value": false,
           "bit": 14,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "ekdb_bit_flip_dis": {
-          "value": true,
+          "value": false,
           "bit": 15,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "i_mem_bit_flip_dis": {
-          "value": true,
+          "value": false,
           "bit": 16,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         },
         "platform_bit_flip_dis": {
-          "value": true,
+          "value": false,
           "bit": 17,
-          "comment": "no_action"
+          "comment": "enter_alarm_mode"
         }
       }
     },

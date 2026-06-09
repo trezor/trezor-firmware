@@ -1670,6 +1670,23 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
               i_config.obj[i], i * 0x08);
   }
 
+  cli_trace(cli, "");
+  cli_trace(cli, "=== Configuration Version ===");
+  uint8_t read_value = 0;
+  uint16_t read_length = 0;
+  ret = lt_r_mem_data_read(tropic_get_handle(), TROPIC_CONFIG_VERSION_SLOT,
+                           &read_value, sizeof(read_value), &read_length);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_r_mem_data_read()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+  if (read_length != 1) {
+    cli_error(cli, CLI_ERROR, "Unexpected length of configuration version data");
+    return;
+  }
+  cli_trace(cli, "Configuration version: %d", read_value);
+
   cli_ok(cli, "");
 }
 

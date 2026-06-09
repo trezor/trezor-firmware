@@ -70,6 +70,7 @@ static const uint8_t
         {0x19, 0x08, 0x0b, 0x10, 0x09}, {0x19, 0x08, 0x13, 0x09, 0x2c},
         {0x19, 0x09, 0x10, 0x0b, 0x04}, {0x19, 0x0a, 0x08, 0x10, 0x10},
         {0x19, 0x0a, 0x1f, 0x0f, 0x2c}, {0x19, 0x0c, 0x03, 0x0d, 0x38},
+        {0x19, 0x04, 0x09, 0x0c, 0x07}
 };
 
 // clang-format off
@@ -432,7 +433,21 @@ lt_ret_t lt_mac_and_destroy_retry(lt_handle_t *tropic_handle,
 
 lt_ret_t lt_read_whole_R_config_retry(lt_handle_t *tropic_handle,
                                       struct lt_config_t *config) {
-  return TROPIC_RETRY_COMMAND(lt_read_whole_R_config(tropic_handle, config));
+  if (tropic_handle == NULL || config == NULL) {
+    return LT_PARAM_ERR;
+  }
+
+  // We cannot simply use lt_read_whole_R_config() because it pulls the cfg_desc_table and causes RAM overflow.
+  // TODO: once the cfg_desc_table is made const and can be pulled without RAM overflow, switch to using lt_read_whole_R_config() instead of this implementation.
+  for (uint8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
+    lt_ret_t ret = TROPIC_RETRY_COMMAND(lt_r_config_read(
+        tropic_handle, TROPIC_CONFIG_ADDRS[i], &config->obj[i]));
+    if (ret != LT_OK) {
+      return ret;
+    }
+  }
+
+  return LT_OK;
 }
 
 static lt_ret_t lt_erase_and_write_R_config(lt_handle_t *tropic_handle,
@@ -514,6 +529,9 @@ static secbool tropic_ensure_i_config(void) {
 
     // Bits that are currently 1 but are expected to be 0: flip them.
     uint32_t to_flip = ~expected & current;
+    if (to_flip == 0) {
+      continue;
+    }
     for (uint8_t j = 0; j < 32; j++) {  // Tropic cfg objects are 32-bit
       if (to_flip & BIT(j)) {
         if (TROPIC_RETRY_COMMAND(lt_i_config_write(
@@ -541,18 +559,12 @@ static secbool tropic_ensure_i_config(void) {
 static secbool tropic_ensure_r_config(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  uint32_t current = 0;
-  uint32_t diff = 0;
-  for (int8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
-    if (TROPIC_RETRY_COMMAND(lt_r_config_read(
-            &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) !=
-        LT_OK) {
-      return secfalse;
-    }
-    diff |= current ^ tropic_configs_reversible.obj[i];
+  struct lt_config_t current = {0};
+  if (lt_read_whole_R_config_retry(&drv->handle, &current) != LT_OK) {
+    return secfalse;
   }
 
-  if (diff == 0) {
+  if (memcmp(&current, &tropic_configs_reversible, sizeof(current)) == 0) {
     return sectrue;
   }
 
