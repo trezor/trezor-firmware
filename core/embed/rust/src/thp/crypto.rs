@@ -2,7 +2,7 @@ use trezor_thp::channel::{Backend, Cipher, Hash, U8Array, DH};
 
 use zeroize::{Zeroize, Zeroizing};
 
-use crate::crypto::{aesgcm, consteq, curve25519, memory::init_ctx, sha256};
+use crate::crypto::{aesgcm, curve25519, memory::init_ctx, sha256};
 
 // Array wrapper that zeroizes on `drop()`. Can't use zeroizing directly due to
 // the orphan rule.
@@ -91,7 +91,7 @@ impl Cipher for TrezorCryptoAesGcm {
         let (in_out, tag_out) = out.split_at_mut(plaintext.len());
         in_out.copy_from_slice(plaintext);
 
-        init_ctx!(aesgcm::AesGcm, ctx, key.as_slice(), &full_nonce);
+        init_ctx!(aesgcm::AesGcmEncrypt, ctx, key.as_slice(), &full_nonce);
         let mut ctx = unwrap!(ctx);
         unwrap!(ctx.encrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
@@ -116,7 +116,7 @@ impl Cipher for TrezorCryptoAesGcm {
         let (in_out, tag_out) =
             in_out[..plaintext_len + aesgcm::TAG_SIZE].split_at_mut(plaintext_len);
 
-        init_ctx!(aesgcm::AesGcm, ctx, key.as_slice(), &full_nonce);
+        init_ctx!(aesgcm::AesGcmEncrypt, ctx, key.as_slice(), &full_nonce);
         let mut ctx = unwrap!(ctx);
         unwrap!(ctx.encrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
@@ -141,14 +141,11 @@ impl Cipher for TrezorCryptoAesGcm {
         let (ciphertext, tag) = unwrap!(ciphertext.split_last_chunk::<{ aesgcm::TAG_SIZE }>());
         out.copy_from_slice(ciphertext);
 
-        init_ctx!(aesgcm::AesGcm, ctx, key.as_slice(), &full_nonce);
+        init_ctx!(aesgcm::AesGcmDecrypt, ctx, key.as_slice(), &full_nonce);
         let mut ctx = unwrap!(ctx);
         unwrap!(ctx.decrypt_in_place(out));
         unwrap!(ctx.auth(ad));
-        let computed_tag = unwrap!(ctx.finish());
-        if !consteq(&computed_tag, tag) {
-            return Err(());
-        }
+        ctx.finish(tag).map_err(|_| ())?;
 
         Ok(())
     }
@@ -169,14 +166,11 @@ impl Cipher for TrezorCryptoAesGcm {
         let in_out = &mut in_out[..ciphertext_len];
         let (in_out, tag) = unwrap!(in_out.split_last_chunk_mut::<{ aesgcm::TAG_SIZE }>());
 
-        init_ctx!(aesgcm::AesGcm, ctx, key.as_slice(), &full_nonce);
+        init_ctx!(aesgcm::AesGcmDecrypt, ctx, key.as_slice(), &full_nonce);
         let mut ctx = unwrap!(ctx);
         unwrap!(ctx.decrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
-        let computed_tag = unwrap!(ctx.finish());
-        if !consteq(&computed_tag, tag) {
-            return Err(());
-        }
+        ctx.finish(tag).map_err(|_| ())?;
 
         Ok(in_out.len())
     }

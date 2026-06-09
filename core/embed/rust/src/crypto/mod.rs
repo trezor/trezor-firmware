@@ -22,6 +22,8 @@ pub enum Error {
     InvalidParams,
     // State precondition check failed (possibly raised by C implementation)
     InvalidContext,
+    // Authentication failed (e.g. AEAD tag mismatch)
+    AuthenticationFailed,
 }
 
 impl From<Error> for crate::error::Error {
@@ -31,12 +33,13 @@ impl From<Error> for crate::error::Error {
             Error::InvalidEncoding => value_error!(c"Invalid key or signature encoding"),
             Error::InvalidParams => value_error!(c"Invalid cryptographic parameters"),
             Error::InvalidContext => value_error!(c"Invalid cryptographic context"),
+            Error::AuthenticationFailed => value_error!(c"Authentication failed"),
         }
     }
 }
 
 /// Constant time bytestring comparison for two arrays of the same length.
-pub fn consteq<const N: usize>(a: &[u8; N], b: &[u8; N]) -> bool {
+fn consteq<const N: usize>(a: &[u8; N], b: &[u8; N]) -> bool {
     let mut diff: u8 = 0;
     for i in 0..N {
         diff |= a[i] ^ b[i];
