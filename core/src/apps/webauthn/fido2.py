@@ -630,15 +630,15 @@ async def _show_error_popup(
     button: str = "",
     timeout_ms: int = 0,
 ) -> None:
-    popup = error_popup(
+    with error_popup(
         title,
         description,
         subtitle,
         description_param,
         button=button,
         timeout_ms=timeout_ms,
-    )
-    await Layout(popup).get_result()
+    ) as popup:
+        await Layout(popup).get_result()
 
 
 async def _confirm_bogus_app(title: str) -> None:

@@ -9,19 +9,16 @@ from apps.common import backup_types
 from ..common import interact
 
 if TYPE_CHECKING:
-    from typing import Awaitable
-
     from trezor.enums import RecoveryType
 
     from apps.management.recovery_device.layout import RemainingSharesInfo
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
-    count = await interact(
-        trezorui_api.select_word_count(recovery_type=recovery_type),
-        "recovery_word_count",
-        ButtonRequestType.MnemonicWordCount,
-    )
+    with trezorui_api.select_word_count(recovery_type=recovery_type) as layout:
+        count = await interact(
+            layout, "recovery_word_count", ButtonRequestType.MnemonicWordCount
+        )
     assert isinstance(count, (int, str))
     return int(count)
 
@@ -86,31 +83,27 @@ def format_remaining_shares_info(
     return pages
 
 
-def show_remaining_shares(
+async def show_remaining_shares(
     pages: list[tuple[str, str]],
-) -> Awaitable[trezorui_api.UiResult]:
-    return interact(
-        trezorui_api.show_remaining_shares(pages=pages),
-        "show_shares",
-        ButtonRequestType.Other,
-    )
+) -> trezorui_api.UiResult:
+    with trezorui_api.show_remaining_shares(pages=pages) as layout:
+        return await interact(layout, "show_shares", ButtonRequestType.Other)
 
 
-def show_group_share_success(
-    share_index: int, group_index: int
-) -> Awaitable[ui.UiResult]:
-    return interact(
-        trezorui_api.show_group_share_success(
-            lines=[
-                TR.recovery__you_have_entered,
-                TR.recovery__share_num_template.format(share_index + 1),
-                TR.words__from,
-                TR.recovery__group_num_template.format(group_index + 1),
-            ],
-        ),
-        "share_success",
-        ButtonRequestType.Other,
-    )
+async def show_group_share_success(share_index: int, group_index: int) -> ui.UiResult:
+    with trezorui_api.show_group_share_success(
+        lines=[
+            TR.recovery__you_have_entered,
+            TR.recovery__share_num_template.format(share_index + 1),
+            TR.words__from,
+            TR.recovery__group_num_template.format(group_index + 1),
+        ],
+    ) as layout:
+        return await interact(
+            layout,
+            "share_success",
+            ButtonRequestType.Other,
+        )
 
 
 async def _confirm_abort(dry_run: bool = False) -> None:
@@ -227,25 +220,22 @@ async def show_group_threshold() -> None:
     )
 
 
-def show_recovery_warning(
+async def show_recovery_warning(
     br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[ui.UiResult]:
+) -> ui.UiResult:
     button = button or TR.buttons__try_again  # def_arg
 
-    return interact(
-        trezorui_api.show_warning(
-            title=content,
-            description=subheader or "",
-            button=button,
-            allow_cancel=False,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.show_warning(
+        title=content,
+        description=subheader or "",
+        button=button,
+        allow_cancel=False,
+    ) as layout:
+        return await interact(layout, br_name, br_code)
 
 
 async def show_dry_run_result(result: bool, is_slip39: bool) -> None:

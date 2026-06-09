@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
 
     from trezor.enums import ButtonRequestType
-    from trezorui_api import LayoutObj, UiResult  # noqa: F401
+    from trezorui_api import LayoutContext, LayoutObj, UiResult  # noqa: F401
 
     T = TypeVar("T", covariant=True)
     ButtonRequestMsg = tuple[ButtonRequestType, str] | None

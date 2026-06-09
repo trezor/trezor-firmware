@@ -266,15 +266,13 @@ if utils.USE_N4W1:
                     import trezorui_api
                     from trezor.ui.layouts.common import raise_if_not_confirmed
 
-                    await raise_if_not_confirmed(
-                        trezorui_api.show_warning(
-                            title=TR.words__important,
-                            button=TR.buttons__continue,
-                            description=exc.msg,
-                            danger=True,
-                        ),
-                        br_name="backup_retry",
-                    )
+                    with trezorui_api.show_warning(
+                        title=TR.words__important,
+                        button=TR.buttons__continue,
+                        description=exc.msg,
+                        danger=True,
+                    ) as layout:
+                        await raise_if_not_confirmed(layout, br_name="backup_retry")
                     # wait for a new N4W1 tag
                     continue
 

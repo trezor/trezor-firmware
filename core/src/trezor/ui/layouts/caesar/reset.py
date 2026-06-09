@@ -48,15 +48,16 @@ async def show_share_words(
             br_code=br_code,
         )
 
-        result = await interact(
-            trezorui_api.show_share_words(
-                words=share_words,
-                title=None,
-            ),
-            br_name,
-            br_code,
-            raise_on_cancel=None,
-        )
+        with trezorui_api.show_share_words(
+            words=share_words,
+            title=None,
+        ) as layout:
+            result = await interact(
+                layout,
+                br_name,
+                br_code,
+                raise_on_cancel=None,
+            )
         if result is CONFIRMED:
             break
 
@@ -84,28 +85,26 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    result = await interact(
-        trezorui_api.select_word(
-            title="",
-            description=TR.reset__select_word_x_of_y_template.format(
-                checked_index + 1, count
-            ),
-            words=(words[0].lower(), words[1].lower(), words[2].lower()),
+    with trezorui_api.select_word(
+        title="",
+        description=TR.reset__select_word_x_of_y_template.format(
+            checked_index + 1, count
         ),
-        None,
-    )
+        words=(words[0].lower(), words[1].lower(), words[2].lower()),
+    ) as layout:
+        result = await interact(layout, None)
     if __debug__ and isinstance(result, str):
         return result
     assert isinstance(result, int) and 0 <= result <= 2
     return words[result]
 
 
-def slip39_show_checklist(
+async def slip39_show_checklist(
     step: int,
     advanced: bool,
     count: int | None = None,
     threshold: int | None = None,
-) -> Awaitable[None]:
+) -> None:
     items = (
         (
             TR.reset__slip39_checklist_num_shares,
@@ -120,16 +119,15 @@ def slip39_show_checklist(
         )
     )
 
-    return raise_if_not_confirmed(
-        trezorui_api.show_checklist(
-            title=TR.reset__slip39_checklist_title,
-            button=TR.buttons__continue,
-            active=step,
-            items=items,
-        ),
-        "slip39_checklist",
-        ButtonRequestType.ResetDevice,
-    )
+    with trezorui_api.show_checklist(
+        title=TR.reset__slip39_checklist_title,
+        button=TR.buttons__continue,
+        active=step,
+        items=items,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout, "slip39_checklist", ButtonRequestType.ResetDevice
+        )
 
 
 async def _prompt_number(
