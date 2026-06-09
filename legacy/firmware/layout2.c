@@ -733,17 +733,28 @@ void layoutConfirmNondefaultLockTime(uint32_t lock_time,
 }
 
 void layoutAuthorizeCoinJoin(const CoinInfo *coin, uint64_t max_rounds,
-                             uint32_t max_fee_per_kvbyte) {
-  char str_max_rounds[32] = {0};
-  char str_fee_rate[32] = {0};
-  bn_format_amount(max_rounds, NULL, NULL, 0, str_max_rounds,
-                   sizeof(str_max_rounds));
-  formatFeeRate(max_fee_per_kvbyte, str_fee_rate, sizeof(str_fee_rate),
-                coin->has_segwit);
-  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-                    _("Authorize coinjoin"), _("Maximum rounds:"),
-                    str_max_rounds, _("Maximum mining fee:"), str_fee_rate,
-                    NULL, NULL);
+                             uint32_t max_fee_per_kvbyte,
+                             uint32_t max_coordinator_fee_rate, int page) {
+  if (page == 0) {
+    char str_max_rounds[32] = {0};
+    char str_fee_rate[32] = {0};
+    bn_format_amount(max_rounds, NULL, NULL, 0, str_max_rounds,
+                     sizeof(str_max_rounds));
+    formatFeeRate(max_fee_per_kvbyte, str_fee_rate, sizeof(str_fee_rate),
+                  coin->has_segwit);
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
+                      _("Authorize coinjoin"), _("Maximum rounds:"),
+                      str_max_rounds, _("Maximum mining fee:"), str_fee_rate,
+                      NULL, NULL);
+  } else {
+    char str_coord_fee_rate[32] = {0};
+    // The coordination fee rate is in units of 10^-6 percent.
+    bn_format_amount(max_coordinator_fee_rate, NULL, "%", FEE_RATE_DECIMALS,
+                     str_coord_fee_rate, sizeof(str_coord_fee_rate));
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
+                      _("Authorize coinjoin"), _("Maximum coordinator"),
+                      _("fee rate:"), str_coord_fee_rate, NULL, NULL, NULL);
+  }
 }
 
 void layoutConfirmCoinjoinAccess(void) {

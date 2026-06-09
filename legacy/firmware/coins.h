@@ -26,6 +26,16 @@
 #include "bip32.h"
 #include "hasher.h"
 
+// Number of decimal places used to express CoinJoin fee rates and the
+// corresponding multiplier (10^FEE_RATE_DECIMALS).
+#define FEE_RATE_DECIMALS 6
+#define FEE_RATE_MULTIPLIER 1000000
+
+// Sanity check to ensure FEE_RATE_MULTIPLIER is approximately equal to
+// 10^FEE_RATE_DECIMALS, where 332/100 approximates log2(10).
+_Static_assert(FEE_RATE_MULTIPLIER >> (FEE_RATE_DECIMALS * 332 / 100) == 1,
+               "FEE_RATE_MULTIPLIER does not equal 10^FEE_RATE_DECIMALS");
+
 typedef struct _CoinInfo {
   const char *coin_name;
   const char *coin_shortcut;
