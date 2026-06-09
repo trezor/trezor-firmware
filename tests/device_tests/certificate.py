@@ -2,7 +2,7 @@ from typing import Sequence
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import ec, ed25519
+from cryptography.hazmat.primitives.asymmetric import ec, ed25519, mldsa
 from cryptography.x509 import extensions as ext
 
 from trezorlib import _root_keys, models
@@ -19,6 +19,10 @@ TROPIC_ROOT_PUBLIC_KEY = {
     models.T3W1: bytes.fromhex(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_ED25519_HEX),
 }
 
+MCU_ROOT_PUBLIC_KEY = {
+    models.T3W1: bytes.fromhex(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_MLDSA44_HEX),
+}
+
 
 def verify_cert_chain(certs, model_name, root_public_key):
     def verify_cert_signature(public_key, cert):
@@ -30,6 +34,8 @@ def verify_cert_chain(certs, model_name, root_public_key):
                 cert.tbs_certificate_bytes,
                 cert.signature_algorithm_parameters,
             )
+        elif isinstance(public_key, mldsa.MLDSA44PublicKey):
+            public_key.verify(cert.signature, cert.tbs_certificate_bytes)
         else:
             raise ValueError("Unsupported public key type")
 
@@ -96,6 +102,23 @@ def check_signature_optiga(
 
     # Verify the signature of the challenge.
     certs[0].public_key().verify(signature, data, ec.ECDSA(hashes.SHA256()))
+
+
+def check_signature_mcu(
+    signature: bytes,
+    certificate_chain: Sequence[bytes],
+    model: TrezorModel,
+    data: bytes,
+) -> None:
+    certs = [x509.load_der_x509_certificate(cert) for cert in certificate_chain]
+    assert len(certs) >= 1
+
+    root_public_key = mldsa.MLDSA44PublicKey.from_public_bytes(
+        MCU_ROOT_PUBLIC_KEY[model]
+    )
+    verify_cert_chain(certs, model.internal_name, root_public_key)
+
+    certs[0].public_key().verify(signature, data)
 
 
 def check_signature_tropic(
