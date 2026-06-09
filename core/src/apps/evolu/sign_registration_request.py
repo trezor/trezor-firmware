@@ -95,25 +95,17 @@ def _get_signature(
 
     from .common import get_public_key
 
-    rotation_index = get_delegated_identity_key_rotation_index()
-    public_key = get_public_key(rotation_index)
+    rotation_index = get_delegated_identity_key_rotation_index() or 0
+    public_key = get_public_key()
 
-    header = b"EvoluSignRegistrationRequestV1:"
-    if rotation_index is None or rotation_index == 0:
-        components = [
-            header,
-            public_key,
-            challenge_bytes,
-            size_bytes,
-        ]
-    else:
-        components = [
-            header,
-            public_key,
-            rotation_index.to_bytes(BYTES_IN_UINT32, "big"),
-            challenge_bytes,
-            size_bytes,
-        ]
+    header = b"EvoluSignRegistrationRequestV2:"
+    components = [
+        header,
+        public_key,
+        challenge_bytes,
+        size_bytes,
+        rotation_index.to_bytes(BYTES_IN_UINT32, "big"),
+    ]
 
     hash_writer = utils.HashWriter(sha256())
     for component in components:
