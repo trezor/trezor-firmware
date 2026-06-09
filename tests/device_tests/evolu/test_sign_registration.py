@@ -12,28 +12,18 @@ from .common import get_delegated_identity_key, get_invalid_proof, get_proof
 pytestmark = pytest.mark.models("core")
 
 
-def signing_buffer(private_key: bytes, challenge: bytes, size: int) -> bytes:
-    public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
-    components = [
-        b"EvoluSignRegistrationRequestV1:",
-        public_key.to_string("uncompressed"),
-        challenge,
-        size.to_bytes(4, "big"),
-    ]
-    return b"".join((compact_size(len(comp)) + comp) for comp in components)
-
-
-def signing_buffer_more_indices(
-    private_key: bytes, rotation_index: int, challenge: bytes, size: int
+def signing_buffer(
+    private_key: bytes, challenge: bytes, size: int, rotation_index: int | None = None
 ) -> bytes:
     public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
     components = [
         b"EvoluSignRegistrationRequestV1:",
         public_key.to_string("uncompressed"),
-        rotation_index.to_bytes(4, "big"),
         challenge,
         size.to_bytes(4, "big"),
     ]
+    if rotation_index is not None:
+        components.append(rotation_index.to_bytes(4, "big"))
     return b"".join((compact_size(len(comp)) + comp) for comp in components)
 
 
@@ -255,9 +245,7 @@ def test_evolu_sign_request_with_different_rotation_indices(
     if (rotation_index or 0) == 0:
         data = signing_buffer(delegated_identity_key, challenge, size)
     else:
-        data = signing_buffer_more_indices(
-            delegated_identity_key, rotation_index, challenge, size
-        )
+        data = signing_buffer(delegated_identity_key, challenge, size, rotation_index)
 
     check_signature_optiga(
         response.signature, response.certificate_chain, client.model, data
