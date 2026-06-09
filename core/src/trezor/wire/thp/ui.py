@@ -105,15 +105,13 @@ async def show_qr_code_screen(qr_code_str: str) -> UiResult:
     from trezor.ui.layouts.common import interact
     from trezorui_api import show_address_details
 
-    return await interact(
-        show_address_details(  # noqa
-            qr_title=TR.thp__qr_title,
-            address=qr_code_str,
-            case_sensitive=True,
-            details_title="",
-            account="",
-            path="",
-            xpubs=[],
-        ),
-        br_name=None,
-    )
+    with show_address_details(
+        qr_title=TR.thp__qr_title,
+        address=qr_code_str,
+        case_sensitive=True,
+        details_title="",
+        account="",
+        path="",
+        xpubs=[],
+    ) as layout:
+        return await interact(layout, br_name=None)

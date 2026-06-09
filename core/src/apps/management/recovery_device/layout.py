@@ -378,15 +378,13 @@ else:
                     share = await _read_share()
                     break
                 except RetryRead as exc:
-                    await raise_if_not_confirmed(
-                        trezorui_api.show_warning(
-                            title=TR.words__important,
-                            button=TR.buttons__continue,
-                            description=exc.msg,
-                            danger=True,
-                        ),
-                        br_name="recovery_retry",
-                    )
+                    with trezorui_api.show_warning(
+                        title=TR.words__important,
+                        button=TR.buttons__continue,
+                        description=exc.msg,
+                        danger=True,
+                    ) as layout:
+                        await raise_if_not_confirmed(layout, br_name="recovery_retry")
                     # wait for a new N4W1 tag
                     continue
 

@@ -22,11 +22,10 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
-    count = await interact(
-        trezorui_api.select_word_count(recovery_type=recovery_type),
-        "recovery_word_count",
-        ButtonRequestType.MnemonicWordCount,
-    )
+    with trezorui_api.select_word_count(recovery_type=recovery_type) as layout:
+        count = await interact(
+            layout, "recovery_word_count", ButtonRequestType.MnemonicWordCount
+        )
     assert isinstance(count, (int, str))
     return int(count)
 
@@ -92,18 +91,15 @@ def format_remaining_shares_info(
 
 
 async def show_group_share_success(share_index: int, group_index: int) -> None:
-    await raise_if_not_confirmed(
-        trezorui_api.show_group_share_success(
-            lines=[
-                f"{TR.recovery__share_from_group_entered_template.format(share_index + 1, group_index + 1)}",
-                "",
-                "",
-                "",
-            ],
-        ),
-        "share_success",
-        ButtonRequestType.Other,
-    )
+    with trezorui_api.show_group_share_success(
+        lines=[
+            f"{TR.recovery__share_from_group_entered_template.format(share_index + 1, group_index + 1)}",
+            "",
+            "",
+            "",
+        ],
+    ) as layout:
+        await raise_if_not_confirmed(layout, "share_success", ButtonRequestType.Other)
 
 
 async def continue_recovery(
@@ -179,18 +175,15 @@ async def show_recovery_warning(
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
-    await raise_if_not_confirmed(
-        trezorui_api.show_warning(
-            title=subheader or TR.words__important,
-            value=content or "",
-            button=button or TR.buttons__continue,
-            description="",
-            danger=True,
-            allow_cancel=False,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.show_warning(
+        title=subheader or TR.words__important,
+        value=content or "",
+        button=button or TR.buttons__continue,
+        description="",
+        danger=True,
+        allow_cancel=False,
+    ) as layout:
+        await raise_if_not_confirmed(layout, br_name, br_code)
 
 
 async def show_dry_run_result(result: bool, is_slip39: bool) -> None:
@@ -226,12 +219,10 @@ if utils.USE_N4W1:
         import trezorui_api
         from trezor.enums import BackupMethod
 
-        index = await interact(
-            trezorui_api.select_word(
-                title=title,
-                description=description,
-                words=(TR.backup__type_n4w1, TR.backup__type_wordlist, ""),
-            ),
-            br_name="choose_method",
-        )
+        with trezorui_api.select_word(
+            title=title,
+            description=description,
+            words=(TR.backup__type_n4w1, TR.backup__type_wordlist, ""),
+        ) as layout:
+            index = await interact(layout, br_name="choose_method")
         return (BackupMethod.N4W1, BackupMethod.Display)[index]

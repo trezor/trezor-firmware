@@ -9,11 +9,11 @@ from ..common import interact, raise_if_not_confirmed
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
 
-def show_share_words(
+async def show_share_words(
     share_words: Sequence[str],
     share_index: int | None = None,
     group_index: int | None = None,
-) -> Awaitable[None]:
+) -> None:
     if share_index is None:
         title = TR.reset__recovery_wallet_backup_title
     elif group_index is None:
@@ -23,14 +23,13 @@ def show_share_words(
             group_index + 1, share_index + 1
         )
 
-    return raise_if_not_confirmed(
-        trezorui_api.show_share_words(
-            words=share_words,
-            title=title,
-        ),
-        "backup_words",
-        ButtonRequestType.ResetDevice,
-    )
+    with trezorui_api.show_share_words(
+        words=share_words,
+        title=title,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout, "backup_words", ButtonRequestType.ResetDevice
+        )
 
 
 async def select_word(
@@ -56,28 +55,26 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    result = await interact(
-        trezorui_api.select_word(
-            title=title,
-            description=TR.reset__select_word_x_of_y_template.format(
-                checked_index + 1, count
-            ),
-            words=(words[0], words[1], words[2]),
+    with trezorui_api.select_word(
+        title=title,
+        description=TR.reset__select_word_x_of_y_template.format(
+            checked_index + 1, count
         ),
-        None,
-    )
+        words=(words[0], words[1], words[2]),
+    ) as layout:
+        result = await interact(layout, None)
     if __debug__ and isinstance(result, str):
         return result
     assert isinstance(result, int) and 0 <= result <= 2
     return words[result]
 
 
-def slip39_show_checklist(
+async def slip39_show_checklist(
     step: int,
     advanced: bool,
     count: int | None = None,
     threshold: int | None = None,
-) -> Awaitable[None]:
+) -> None:
     items = (
         (
             TR.reset__slip39_checklist_set_num_shares,
@@ -92,16 +89,15 @@ def slip39_show_checklist(
         )
     )
 
-    return raise_if_not_confirmed(
-        trezorui_api.show_checklist(
-            title=TR.reset__slip39_checklist_title,
-            button=TR.buttons__continue,
-            active=step,
-            items=items,
-        ),
-        "slip39_checklist",
-        ButtonRequestType.ResetDevice,
-    )
+    with trezorui_api.show_checklist(
+        title=TR.reset__slip39_checklist_title,
+        button=TR.buttons__continue,
+        active=step,
+        items=items,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout, "slip39_checklist", ButtonRequestType.ResetDevice
+        )
 
 
 async def _prompt_number(
@@ -275,33 +271,29 @@ def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> Awaitable[int]
     )
 
 
-def show_intro_backup(num_of_words: int | None) -> Awaitable[None]:
+async def show_intro_backup(num_of_words: int | None) -> None:
     if num_of_words is not None:
         description = TR.backup__info_single_share_backup.format(num_of_words)
     else:
         description = TR.backup__info_multi_share_backup
 
-    return raise_if_not_confirmed(
-        trezorui_api.show_info(
-            title="",
-            description=description,
-            button=(TR.buttons__continue, True),
-        ),
-        "backup_intro",
-        ButtonRequestType.ResetDevice,
-    )
+    with trezorui_api.show_info(
+        title="",
+        description=description,
+        button=(TR.buttons__continue, True),
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout, "backup_intro", ButtonRequestType.ResetDevice
+        )
 
 
-def show_warning_backup() -> Awaitable[trezorui_api.UiResult]:
-    return interact(
-        trezorui_api.show_info(
-            title=TR.reset__never_make_digital_copy,
-            description="",
-            button=(TR.buttons__ok_i_understand, True),
-        ),
-        "backup_warning",
-        ButtonRequestType.ResetDevice,
-    )
+async def show_warning_backup() -> trezorui_api.UiResult:
+    with trezorui_api.show_info(
+        title=TR.reset__never_make_digital_copy,
+        description="",
+        button=(TR.buttons__ok_i_understand, True),
+    ) as layout:
+        return await interact(layout, "backup_warning", ButtonRequestType.ResetDevice)
 
 
 async def show_success_backup() -> None:
@@ -314,24 +306,21 @@ async def show_success_backup() -> None:
     )
 
 
-def show_reset_warning(
+async def show_reset_warning(
     br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[trezorui_api.UiResult]:
+) -> trezorui_api.UiResult:
     button = button or TR.buttons__try_again  # def_arg
-    return interact(
-        trezorui_api.show_warning(
-            title=subheader or "",
-            description=content,
-            button=button,
-            allow_cancel=False,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.show_warning(
+        title=subheader or "",
+        description=content,
+        button=button,
+        allow_cancel=False,
+    ) as layout:
+        return await interact(layout, br_name, br_code)
 
 
 async def show_share_confirmation_success(

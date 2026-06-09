@@ -208,15 +208,13 @@ async def handle_ReviewFailedBackup() -> None:
     backup_failed = is_initialized and storage_device.unfinished_backup()
     utils.ensure(backup_failed)
 
-    await raise_if_not_confirmed(
-        trezorui_api.show_warning(
-            title=TR.homescreen__title_backup_failed,
-            button=TR.words__wipe,
-            description=TR.wipe__start_again,
-            danger=True,
-        ),
-        "prompt_device_wipe",
-    )
+    with trezorui_api.show_warning(
+        title=TR.homescreen__title_backup_failed,
+        button=TR.words__wipe,
+        description=TR.wipe__start_again,
+        danger=True,
+    ) as layout:
+        await raise_if_not_confirmed(layout, "prompt_device_wipe")
     await wipe_device(WipeDevice())
     raise ExitDeviceMenu  # return to homescreen
 
@@ -237,16 +235,14 @@ async def handle_PairDevice() -> None:
 
     # Show warning if Bluetooth is not enabled
     if not ble.get_enabled():
-        await interact(
-            trezorui_api.show_warning(
-                title=TR.words__important,
-                description=TR.ble__must_be_enabled,
-                button=TR.buttons__turn_on,
-                allow_cancel=True,
-                danger=False,
-            ),
-            "enable_bluetooth",
-        )
+        with trezorui_api.show_warning(
+            title=TR.words__important,
+            description=TR.ble__must_be_enabled,
+            button=TR.buttons__turn_on,
+            allow_cancel=True,
+            danger=False,
+        ) as layout:
+            await interact(layout, "enable_bluetooth")
         ble_enable(True)
 
     hostname_map = {e.mac_addr: e for e in paired_cache.load()}

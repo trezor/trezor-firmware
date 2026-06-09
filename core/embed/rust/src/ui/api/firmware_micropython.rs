@@ -1888,7 +1888,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     words: Iterable[str],
-    /// ) -> LayoutObj[int]:
+    /// ) -> LayoutContext[int]:
     ///     """Select mnemonic word from three possibilities - seed check after backup. The
     ///     iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
@@ -1896,7 +1896,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def select_word_count(
     ///     *,
     ///     recovery_type: RecoveryType,
-    /// ) -> LayoutObj[int | str | UiResult]:  # TR returns str
+    /// ) -> LayoutContext[int | str | UiResult]:  # TR returns str
     ///     """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
     ///     For unlocking a repeated backup, select between 20 and 33."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
@@ -1914,7 +1914,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     account: str | None,
     ///     path: str | None,
     ///     xpubs: Sequence[tuple[str, str]],
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Show address details - QR code, account, path, cosigner xpubs."""
     Qstr::MP_QSTR_show_address_details => obj_fn_kw!(0, new_show_address_details).as_obj(),
 
@@ -1924,7 +1924,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     items: Iterable[str],
     ///     active: int,
     ///     button: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Checklist of backup steps. Active index is highlighted, previous items have check
     ///     mark next to them. Limited to 3 items."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
@@ -1936,7 +1936,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     value: str = "",
     ///     menu_title: str | None = None,
     ///     verb_cancel: str | None = None,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Warning modal that makes it easier to cancel than to continue."""
     Qstr::MP_QSTR_show_danger => obj_fn_kw!(0, new_show_danger).as_obj(),
 
@@ -1947,14 +1947,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     description: str = "",
     ///     allow_cancel: bool = True,
     ///     time_ms: int = 0,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Error modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_error => obj_fn_kw!(0, new_show_error).as_obj(),
 
     /// def show_group_share_success(
     ///     *,
     ///     lines: Iterable[str],
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Shown after successfully finishing a group."""
     Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
 
@@ -2040,7 +2040,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     button: tuple[str, bool] | None = None,
     ///     time_ms: int = 0,
     ///     external_menu: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Info screen."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
@@ -2050,7 +2050,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     items: list[StrPropertyType],
     ///     horizontal: bool = False,
     ///     chunkify: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Show metadata for outgoing transaction with a 'close' button."""
     Qstr::MP_QSTR_show_info_with_cancel => obj_fn_kw!(0, new_show_info_with_cancel).as_obj(),
 
@@ -2103,7 +2103,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_remaining_shares(
     ///     *,
     ///     pages: Iterable[tuple[str, str]],
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
     Qstr::MP_QSTR_show_remaining_shares => obj_fn_kw!(0, new_show_remaining_shares).as_obj(),
 
@@ -2111,7 +2111,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     words: Iterable[str],
     ///     title: str | None = None,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Show mnemonic for backup."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
@@ -2124,7 +2124,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     text_footer: str | None,
     ///     text_confirm: str,
     ///     text_check: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Show mnemonic for wallet backup preceded by an instruction screen and followed by a
     ///     confirmation screen."""
     Qstr::MP_QSTR_show_share_words_extended => obj_fn_kw!(0, new_show_share_words_extended).as_obj(),
@@ -2161,7 +2161,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     description: str = "",
     ///     allow_cancel: bool = True,
     ///     danger: bool = False,  # unused on bolt
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
 

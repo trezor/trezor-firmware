@@ -6,7 +6,7 @@ from trezor.ui import Layout
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Awaitable, Iterator
+    from typing import Any, Iterator
 
     from trezor.wire.context import Context
     from typing_extensions import Self
@@ -61,9 +61,9 @@ class N4W1Context:
             res = await ctx.call(req, DebugLinkN4W1Response)
             self.rx.put(res)
 
-    def confirm_connect(
+    async def confirm_connect(
         self, *, title: str, description: str, button: str, br_name: str | None
-    ) -> Awaitable[None]:
+    ) -> None:
         """Show a layout waiting for N4W1 connection, allowing cancellation."""
 
         from trezor import TR
@@ -89,18 +89,18 @@ class N4W1Context:
                 yield from super().create_tasks()
                 yield _task()
 
-        main = show_info(
+        with show_info(
             title=title,
             description=description,
             button=(button, False),
             external_menu=True,
-        )
-        return confirm_with_menu(
-            main,
-            Menu.root(cancel=TR.buttons__cancel),
-            br_name=br_name,
-            layout_type=_Connect,
-        )
+        ) as main:
+            return await confirm_with_menu(
+                main,
+                Menu.root(cancel=TR.buttons__cancel),
+                br_name=br_name,
+                layout_type=_Connect,
+            )
 
 
 ctx = N4W1Context()

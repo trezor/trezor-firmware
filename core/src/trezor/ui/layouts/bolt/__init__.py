@@ -156,22 +156,23 @@ async def prompt_backup() -> bool:
     return result is CONFIRMED
 
 
-def confirm_path_warning(path: str, path_type: str | None = None) -> Awaitable[None]:
+async def confirm_path_warning(path: str, path_type: str | None = None) -> None:
     title = (
         TR.addr_mismatch__wrong_derivation_path
         if not path_type
         else f"{TR.words__unknown} {path_type.lower()}."
     )
-    return raise_if_not_confirmed(
-        trezorui_api.show_warning(
-            title=title,
-            value=path,
-            description=TR.words__continue_anyway_question,
-            button=TR.buttons__continue,
-        ),
-        "path_warning",
-        br_code=ButtonRequestType.UnknownDerivationPath,
-    )
+    with trezorui_api.show_warning(
+        title=title,
+        value=path,
+        description=TR.words__continue_anyway_question,
+        button=TR.buttons__continue,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "path_warning",
+            br_code=ButtonRequestType.UnknownDerivationPath,
+        )
 
 
 def confirm_multisig_warning() -> Awaitable[None]:
@@ -361,19 +362,16 @@ async def show_address(
                 )
                 return result
 
-            result = await interact(
-                trezorui_api.show_address_details(
-                    qr_title=title,
-                    address=address if address_qr is None else address_qr,
-                    case_sensitive=case_sensitive,
-                    details_title=details_title,
-                    account=account,
-                    path=path,
-                    xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-                ),
-                None,
-                raise_on_cancel=None,
-            )
+            with trezorui_api.show_address_details(
+                qr_title=title,
+                address=address if address_qr is None else address_qr,
+                case_sensitive=case_sensitive,
+                details_title=details_title,
+                account=account,
+                path=path,
+                xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
+            ) as layout:
+                result = await interact(layout, None, raise_on_cancel=None)
             assert result is CANCELLED
 
         else:
@@ -421,39 +419,32 @@ async def show_error_and_raise(
     exc: ExceptionType = ActionCancelled,
 ) -> NoReturn:
     button = button or TR.buttons__try_again  # def_arg
-    await interact(
-        trezorui_api.show_error(
-            title=subheader or "",
-            description=content,
-            button=button,
-            allow_cancel=False,
-        ),
-        br_name,
-        BR_CODE_OTHER,
-        raise_on_cancel=None,
-    )
+    with trezorui_api.show_error(
+        title=subheader or "",
+        description=content,
+        button=button,
+        allow_cancel=False,
+    ) as layout:
+        await interact(layout, br_name, BR_CODE_OTHER, raise_on_cancel=None)
     # always raise regardless of result
     raise exc
 
 
-def show_warning(
+async def show_warning(
     br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[None]:
+) -> None:
     button = button or TR.buttons__continue  # def_arg
-    return raise_if_not_confirmed(
-        trezorui_api.show_warning(
-            title=content,
-            description=subheader or "",
-            button=button,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.show_warning(
+        title=content,
+        description=subheader or "",
+        button=button,
+    ) as layout:
+        return await raise_if_not_confirmed(layout, br_name, br_code)
 
 
 def show_danger(
@@ -965,7 +956,7 @@ def confirm_total(
     )
 
 
-def _confirm_summary(
+async def _confirm_summary(
     amount: str | None,
     amount_label: str | None,
     fee: str,
@@ -977,7 +968,7 @@ def _confirm_summary(
     extra_title: str | None = None,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
-) -> Awaitable[None]:
+) -> None:
     from ..properties import with_colon
 
     title = title or TR.words__title_summary  # def_arg
@@ -1001,11 +992,11 @@ def _confirm_summary(
         info_props_colon.extend(account_items_colon)
     if extra_items_colon:
         info_props_colon.extend(extra_items_colon)
-    info_layout = trezorui_api.show_info_with_cancel(
+    with trezorui_api.show_info_with_cancel(
         title=extra_title if extra_title else TR.words__title_information,
         items=info_props_colon,
-    )
-    return with_info(total_layout, info_layout, br_name, br_code)
+    ) as info_layout:
+        return await with_info(total_layout, info_layout, br_name, br_code)
 
 
 async def confirm_trade(
@@ -2043,7 +2034,7 @@ async def confirm_signverify(
         address_title = TR.sign_message__confirm_address
         br_name = "sign_message"
 
-    address_layout = trezorui_api.confirm_address(
+    address_ctx = trezorui_api.confirm_address(
         title=address_title,
         address=address,
         address_label=None,
@@ -2065,29 +2056,34 @@ async def confirm_signverify(
         )
     )
 
-    info_layout = trezorui_api.show_info_with_cancel(
+    info_ctx = trezorui_api.show_info_with_cancel(
         title=TR.words__title_information,
         items=with_colon(items),
         horizontal=True,
     )
 
-    while True:
-        try:
-            await with_info(address_layout, info_layout, br_name, br_code=BR_CODE_OTHER)
-            break
-        except ActionCancelled:
-            with trezorui_api.show_mismatch(title=TR.addr_mismatch__mismatch) as layout:
-                result = await interact(
-                    layout,
-                    None,
-                    raise_on_cancel=None,
+    with address_ctx as address_layout, info_ctx as info_layout:
+        while True:
+            try:
+                await with_info(
+                    address_layout, info_layout, br_name, br_code=BR_CODE_OTHER
                 )
-                assert result in (CONFIRMED, CANCELLED)
-                # Right button aborts action, left goes back to showing address.
-                if result is CONFIRMED:
-                    raise ActionCancelled
-                else:
-                    continue
+                break
+            except ActionCancelled:
+                with trezorui_api.show_mismatch(
+                    title=TR.addr_mismatch__mismatch
+                ) as layout:
+                    result = await interact(
+                        layout,
+                        None,
+                        raise_on_cancel=None,
+                    )
+                    assert result in (CONFIRMED, CANCELLED)
+                    # Right button aborts action, left goes back to showing address.
+                    if result is CONFIRMED:
+                        raise ActionCancelled
+                    else:
+                        continue
 
     with trezorui_api.confirm_value(
         title=TR.sign_message__confirm_message,
@@ -2125,7 +2121,7 @@ def error_popup(
     *,
     button: str = "",
     timeout_ms: int = 0,
-) -> ui.LayoutObj[None]:
+) -> ui.LayoutContext[ui.UiResult]:
     if not button and not timeout_ms:
         raise ValueError("Either button or timeout_ms must be set")
 
@@ -2138,7 +2134,7 @@ def error_popup(
         time_ms=timeout_ms,
         allow_cancel=False,
     )
-    return layout  # type: ignore ["LayoutObj[UiResult]" is not assignable to "LayoutObj[None]"]
+    return layout
 
 
 def request_passphrase_on_host() -> None:
@@ -2204,33 +2200,29 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
     pass
 
 
-def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
+async def pin_mismatch_popup(is_wipe_code: bool = False) -> None:
     title = TR.wipe_code__wipe_code_mismatch if is_wipe_code else TR.pin__pin_mismatch
     br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
     description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
-    return interact(
-        error_popup(
-            title,
-            description,
-            button=TR.buttons__try_again,
-        ),
-        br_name,
-        BR_CODE_OTHER,
-        raise_on_cancel=None,
-    )
+    with error_popup(
+        title,
+        description,
+        button=TR.buttons__try_again,
+    ) as layout:
+        # result is ignored
+        await interact(layout, br_name, BR_CODE_OTHER, raise_on_cancel=None)
 
 
-def wipe_code_same_as_pin_popup() -> Awaitable[None]:
-    return interact(
-        error_popup(
-            TR.wipe_code__invalid,
-            TR.wipe_code__diff_from_pin,
-            button=TR.buttons__try_again,
-        ),
-        "wipe_code_same_as_pin",
-        BR_CODE_OTHER,
-        raise_on_cancel=None,
-    )
+async def wipe_code_same_as_pin_popup() -> None:
+    with error_popup(
+        TR.wipe_code__invalid,
+        TR.wipe_code__diff_from_pin,
+        button=TR.buttons__try_again,
+    ) as layout:
+        # result is ignored
+        await interact(
+            layout, "wipe_code_same_as_pin", BR_CODE_OTHER, raise_on_cancel=None
+        )
 
 
 async def wipe_code_pin_not_set_popup(
