@@ -135,7 +135,7 @@ impl Cipher for TrezorCryptoAesGcm {
     ) -> Result<(), ()> {
         assert!(ciphertext.len().checked_sub(aesgcm::TAG_SIZE) == Some(out.len()));
 
-        let mut full_nonce = [0u8; 12];
+        let mut full_nonce = [0u8; Self::NONCE_SIZE];
         full_nonce[4..].copy_from_slice(&nonce.to_be_bytes());
 
         let (ciphertext, tag) = unwrap!(ciphertext.split_last_chunk::<{ aesgcm::TAG_SIZE }>());
@@ -163,7 +163,7 @@ impl Cipher for TrezorCryptoAesGcm {
         assert!(ciphertext_len <= in_out.len());
         assert!(ciphertext_len >= aesgcm::TAG_SIZE);
 
-        let mut full_nonce = [0u8; 12];
+        let mut full_nonce = [0u8; Self::NONCE_SIZE];
         full_nonce[4..].copy_from_slice(&nonce.to_be_bytes());
 
         let in_out = &mut in_out[..ciphertext_len];
