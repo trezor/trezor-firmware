@@ -37,6 +37,7 @@ from pathlib import Path
 import click
 
 from trezorlib._internal import firmware_headers as fh
+from trezorlib.firmware import FirmwareHeader, SecmonHeader
 
 # ---- pretty output -------------------------------------------------------
 _TTY = sys.stdout.isatty()
@@ -59,18 +60,18 @@ def info(msg: str) -> None:
 
 
 # ---- trezorlib glue ------------------------------------------------------
-def parse_any(data: bytes):
+def parse_any(data: bytes) -> fh.SignableImageProto | fh.BootloaderV2Image:
     """Parse any supported image. parse_image() doesn't dispatch TRZQ, so do it here."""
     if data[:4] == b"TRZQ":
         return fh.BootloaderV2Image.parse(data)
     return fh.parse_image(data)
 
 
-def _zero_cosi_header(h) -> None:
+def _zero_cosi_header(h: FirmwareHeader | SecmonHeader) -> None:
     """Zero the signature fields of a CoSi firmware/secmon/bootloader header."""
     h.signature = b"\x00" * 64
     h.sigmask = 0
-    if hasattr(h, "v1_signatures"):  # firmware / legacy bootloader headers
+    if not isinstance(h, SecmonHeader):
         h.v1_signatures = [b"\x00" * 64] * len(h.v1_signatures)
         h.v1_key_indexes = [0] * len(h.v1_key_indexes)
 
