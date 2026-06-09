@@ -12,7 +12,9 @@ from .common import get_delegated_identity_key, get_invalid_proof, get_proof
 pytestmark = pytest.mark.models("core")
 
 
-def signing_buffer(private_key: bytes, challenge: bytes, size: int) -> bytes:
+def signing_buffer(
+    private_key: bytes, challenge: bytes, size: int, rotation_index: int | None = None
+) -> bytes:
     public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
     components = [
         b"EvoluSignRegistrationRequestV1:",
@@ -20,6 +22,8 @@ def signing_buffer(private_key: bytes, challenge: bytes, size: int) -> bytes:
         challenge,
         size.to_bytes(4, "big"),
     ]
+    if rotation_index is not None:
+        components.append(rotation_index.to_bytes(4, "big"))
     return b"".join((compact_size(len(comp)) + comp) for comp in components)
 
 
@@ -238,7 +242,17 @@ def test_evolu_sign_request_with_different_rotation_indices(
         proof=proof,
     )
 
-    data = signing_buffer(delegated_identity_key, challenge, size)
+    if (rotation_index or 0) == 0:
+        data = signing_buffer(delegated_identity_key, challenge, size)
+    else:
+        data = signing_buffer(delegated_identity_key, challenge, size, rotation_index)
+
     check_signature_optiga(
         response.signature, response.certificate_chain, client.model, data
     )
+
+    if rotation_index is None:
+        assert response.rotation_index is None
+    else:
+        assert response.rotation_index is not None
+        assert response.rotation_index == rotation_index

@@ -60,7 +60,7 @@ def sign_registration_request(
     proof: str,
     challenge: str,
     size: int,
-) -> dict[str, str]:
+) -> dict[str, str | int | None]:
     """Sign a registration request for this device to be registered at the Quota Manager server."""
 
     response = evolu.sign_registration_request(
@@ -72,6 +72,7 @@ def sign_registration_request(
     return {
         "certificates": ",".join([cert.hex() for cert in response.certificate_chain]),
         "signature": response.signature.hex(),
+        "rotation_index": response.rotation_index,
     }
 
 
