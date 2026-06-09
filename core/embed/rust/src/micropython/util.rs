@@ -161,7 +161,7 @@ pub fn get_slice(obj: Obj, offset: u16, len: u16) -> Result<Obj, Error> {
     let stop = Obj::small_int(offset.checked_add(len).ok_or(Error::OutOfRange)?);
     let step = Obj::small_int(1);
     catch_exception(|| unsafe {
-        let osl = ffi::mp_obj_new_slice(start, stop, step);
-        ffi::mp_obj_subscr(obj, osl, Obj::const_sentinel())
+        let slice_obj = ffi::mp_obj_new_slice(start, stop, step);
+        ffi::mp_obj_subscr(obj, slice_obj, Obj::const_sentinel())
     })
 }
