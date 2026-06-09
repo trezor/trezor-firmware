@@ -44,11 +44,14 @@
 #![allow(internal_features)]
 #![allow(dead_code)]
 #![feature(core_intrinsics)]
-#![cfg_attr(all(feature = "debug", not(feature = "test")), feature(lang_items))]
+#![cfg_attr(
+    all(feature = "debug", not(feature = "test")),
+    feature(lang_items)
+)]
 
-#[cfg(feature = "debug")]
+#[cfg(all(feature = "debug", feature = "alloc"))]
 extern crate alloc;
-#[cfg(feature = "debug")]
+#[cfg(all(feature = "debug", feature = "alloc"))]
 use alloc::boxed::Box;
 
 mod critical_section;
@@ -82,7 +85,10 @@ pub struct Align<T>(
 // Re-export UI archived types
 pub use ui::{ArchivedTrezorUiEnum, ArchivedTrezorUiResult};
 
-#[cfg_attr(any(feature = "debug", feature = "test"), derive(Debug))]
+#[cfg_attr(
+    any(all(feature = "debug", feature = "alloc"), feature = "test"),
+    derive(Debug)
+)]
 pub enum Error {
     ApiError(ApiError),
     ServiceError,
@@ -92,7 +98,7 @@ pub enum Error {
     InvalidMessage,
     InvalidArgument,
     ValueError(&'static str),
-    #[cfg(feature = "debug")]
+    #[cfg(all(feature = "debug", feature = "alloc"))]
     Context {
         context: &'static str,
         source: Box<Error>,
@@ -111,7 +117,7 @@ impl Error {
             Self::InvalidMessage => 6,
             Self::InvalidArgument => 7,
             Self::ValueError(_) => 8,
-            #[cfg(feature = "debug")]
+            #[cfg(all(feature = "debug", feature = "alloc"))]
             Self::Context { source, .. } => source.code(),
         }
     }
@@ -126,7 +132,7 @@ impl Error {
             Self::DataError(msg) => msg,
             Self::ValueError(msg) => msg,
             Self::Cancelled => "",
-            #[cfg(feature = "debug")]
+            #[cfg(all(feature = "debug", feature = "alloc"))]
             Self::Context { source, .. } => source.message(),
         }
     }
@@ -141,24 +147,24 @@ impl Error {
             Self::InvalidMessage => "InvalidMessage",
             Self::InvalidArgument => "InvalidArgument",
             Self::ValueError(_) => "ValueError",
-            #[cfg(feature = "debug")]
+            #[cfg(all(feature = "debug", feature = "alloc"))]
             Self::Context { source, .. } => source.error_type(),
         }
     }
 
-    #[cfg(feature = "debug")]
+    #[cfg(all(feature = "debug", feature = "alloc"))]
     pub fn context(self, context: &'static str) -> Self {
         Error::Context {
             context,
             source: Box::new(self),
         }
     }
-    #[cfg(not(feature = "debug"))]
+    #[cfg(not(all(feature = "debug", feature = "alloc")))]
     pub fn context(self, _context: &'static str) -> Self {
         self
     }
 
-    #[cfg(feature = "debug")]
+    #[cfg(all(feature = "debug", feature = "alloc"))]
     pub fn source(&self) -> Option<&Error> {
         match self {
             Error::Context { source, .. } => Some(&*source),
@@ -167,7 +173,7 @@ impl Error {
     }
 }
 
-#[cfg(feature = "debug")]
+#[cfg(all(feature = "debug", feature = "alloc"))]
 impl ufmt::uDisplay for Error {
     fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
     where
@@ -200,7 +206,7 @@ impl ufmt::uDisplay for Error {
     }
 }
 
-#[cfg(not(feature = "debug"))]
+#[cfg(not(all(feature = "debug", feature = "alloc")))]
 impl ufmt::uDisplay for Error {
     fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
     where
@@ -283,8 +289,7 @@ pub unsafe extern "C" fn applet_main(
     }
 }
 
-#[cfg(feature = "debug")]
-#[cfg(not(feature = "test"))]
+#[cfg(all(feature = "debug", not(feature = "test")))]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
     let msg = info.message().as_str().unwrap_or("PANIC");
@@ -300,15 +305,13 @@ fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
     low_level_api::system_exit_fatal(msg, file, line);
 }
 
-#[cfg(feature = "debug")]
-#[cfg(not(feature = "test"))]
+#[cfg(all(feature = "debug", not(feature = "test")))]
 #[lang = "eh_personality"]
 fn eh_personality() -> ! {
     loop {}
 }
 
-#[cfg(feature = "debug")]
-#[cfg(not(feature = "test"))]
+#[cfg(all(feature = "debug", not(feature = "test")))]
 #[unsafe(no_mangle)]
 unsafe extern "C" fn _Unwind_Resume() {
     unsafe { core::intrinsics::unreachable() };

@@ -4,10 +4,20 @@
 //! ```
 
 // Re-export the archived types for convenience
+#[cfg(not(feature = "alloc"))]
+use core::mem::MaybeUninit;
+
 pub use rkyv::Archived;
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
+#[cfg(feature = "alloc")]
 use rkyv::to_bytes;
+#[cfg(not(feature = "alloc"))]
+use rkyv::{
+    api::low::to_bytes_in_with_alloc,
+    ser::{allocator::SubAllocator, writer::Buffer},
+    util::Align,
+};
 use trezor_structs::TrezorCryptoEnum;
 pub use trezor_structs::{String, TrezorCryptoResult};
 
@@ -35,8 +45,21 @@ pub use crate::mock::{Keccak256, Sha3_256, Sha256, Sha512};
 type CryptoResult = Result<TrezorCryptoResult>;
 
 fn ipc_crypto_call<'a>(value: &TrezorCryptoEnum<'a>) -> CryptoResult {
+    #[cfg(feature = "alloc")]
     let bytes = unwrap!(to_bytes::<Failure>(value));
-    let message = IpcMessage::new(value.id() as _, &bytes);
+
+    #[cfg(not(feature = "alloc"))]
+    let mut out = Align([MaybeUninit::<u8>::uninit(); 2000]);
+    #[cfg(not(feature = "alloc"))]
+    let mut arena = [MaybeUninit::<u8>::uninit(); 2000];
+    #[cfg(not(feature = "alloc"))]
+    let bytes = unwrap!(to_bytes_in_with_alloc::<_, _, Failure>(
+        value,
+        Buffer::from(&mut *out),
+        SubAllocator::new(&mut arena),
+    ));
+
+    let message = IpcMessage::new(value.id() as _, bytes.as_ref());
     let result = services_or_die().call(
         CoreIpcService::Crypto,
         &message,
@@ -45,9 +68,13 @@ fn ipc_crypto_call<'a>(value: &TrezorCryptoEnum<'a>) -> CryptoResult {
     )?;
 
     // Safe validation using bytecheck before accessing archived data
+    #[cfg(feature = "alloc")]
     let archived = unwrap!(rkyv::access::<Archived<TrezorCryptoResult>, Failure>(
         result.data()
     ));
+    #[cfg(not(feature = "alloc"))]
+    let archived = unsafe { rkyv::access_unchecked::<Archived<TrezorCryptoResult>>(result.data()) };
+
     let deserialized = unwrap!(deserialize::<TrezorCryptoResult, Failure>(archived));
     Ok(deserialized)
 }
