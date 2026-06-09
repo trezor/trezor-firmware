@@ -149,6 +149,7 @@ enum ReceiveState<R: Role> {
 /// 2. Pairing phase
 /// 3. Credential phase
 /// 4. Encrypted transport phase
+///
 /// Channel in handshake phase has distinct type and a [`ChannelOpen::complete()`]
 /// method to obtain channel in pairing or credential phase. In pairing and credential
 /// phase peers exchange protobuf messages, and by exchanging `EndRequest` and `EndResponse`,
