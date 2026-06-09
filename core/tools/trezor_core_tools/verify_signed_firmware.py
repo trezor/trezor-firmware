@@ -158,7 +158,7 @@ def verify_pair(unsigned: Path, signed: Path) -> bool:
 
     if nu == ns:
         digest = hashlib.sha256(ns).hexdigest()
-        ok(f"identical except signature fields  (normalized sha256 {digest[:16]}…)")
+        ok(f"identical except signature fields, normalized sha256: {digest}")
     else:
         bad(
             "content differs OUTSIDE the signature fields -- signed binary does NOT match!"
