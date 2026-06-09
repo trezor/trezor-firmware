@@ -305,3 +305,4 @@ if not utils.BITCOIN_ONLY:
     CKBMessageSignature = 5508
     CKBVerifyMessage = 5509
     CKBTxAckWitness = 5510
+    CKBTxAckPrevMeta = 5511

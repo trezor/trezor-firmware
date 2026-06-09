@@ -212,6 +212,8 @@ def _compute_raw_tx_hash(
     outputs: list["CKBCellOutput"],
     outputs_data: list[bytes],
     cell_deps: list["CKBCellDep"],
+    version: int = 0,
+    header_deps: list[bytes] | None = None,
 ) -> bytes:
     """
     Compute the raw transaction hash (without witnesses).
@@ -219,18 +221,29 @@ def _compute_raw_tx_hash(
     RawTransaction table:
     - version: uint32
     - cell_deps: CellDepVec (FixVec)
-    - header_deps: Byte32Vec (FixVec, empty)
+    - header_deps: Byte32Vec (FixVec)
     - inputs: CellInputVec (FixVec)
     - outputs: CellOutputVec (DynVec)
     - outputs_data: BytesVec (DynVec)
+
+    ``version`` and ``header_deps`` default to the values used by transactions
+    this device builds (0 and empty); they are parameterized so the same routine
+    can recompute the hash of an arbitrary previous transaction for trustless
+    fee verification.
     """
-    version_bytes = _serialize_uint32_le(0)
+    version_bytes = _serialize_uint32_le(version)
 
     cell_deps_bytes = _serialize_vec_fixed(
         [_serialize_cell_dep(dep) for dep in cell_deps]
     )
 
-    header_deps_bytes = _serialize_uint32_le(0)  # empty FixVec
+    if header_deps:
+        for header in header_deps:
+            if len(header) != 32:
+                raise DataError("CKB header_dep must be 32 bytes")
+        header_deps_bytes = _serialize_vec_fixed([bytes(h) for h in header_deps])
+    else:
+        header_deps_bytes = _serialize_uint32_le(0)  # empty FixVec
 
     inputs_bytes = _serialize_vec_fixed([_serialize_cell_input(inp) for inp in inputs])
 
@@ -369,6 +382,95 @@ def _validate_sign_group(
         raise DataError("Signing witness index out of range")
 
 
+async def _verify_prev_tx_capacities(tx_hash: bytes) -> list[int]:
+    """
+    Stream a previous transaction, recompute its hash, and return the capacities
+    of its outputs.
+
+    The CKB sighash commits to the input OutPoints but not to the capacities of
+    the cells being spent, so a host could otherwise lie to the screen about the
+    fee. To verify trustlessly the device re-serializes the whole previous
+    RawTransaction (the only data the tx_hash commits to) with the same routine
+    it uses for the current tx and checks the hash against the OutPoint. Only
+    then is the spent capacity trusted. This mirrors Bitcoin legacy prevtx
+    streaming.
+    """
+    from trezor.enums import CKBTxRequestType
+    from trezor.messages import (
+        CKBTxAckCellDep,
+        CKBTxAckInput,
+        CKBTxAckOutput,
+        CKBTxAckPrevMeta,
+        CKBTxRequest,
+        CKBTxRequestDetails,
+    )
+    from trezor.wire.context import call
+
+    meta = await call(
+        CKBTxRequest(
+            request_type=CKBTxRequestType.TXPREVMETA,
+            details=CKBTxRequestDetails(tx_hash=tx_hash),
+        ),
+        CKBTxAckPrevMeta,
+    )
+
+    prev_inputs: list["CKBCellInput"] = []
+    for i in range(meta.inputs_count):
+        ack_in = await call(
+            CKBTxRequest(
+                request_type=CKBTxRequestType.TXPREVINPUT,
+                details=CKBTxRequestDetails(request_index=i, tx_hash=tx_hash),
+            ),
+            CKBTxAckInput,
+        )
+        if ack_in.input is None:
+            raise DataError("Missing previous transaction input")
+        prev_inputs.append(ack_in.input)
+
+    prev_outputs: list["CKBCellOutput"] = []
+    prev_outputs_data: list[bytes] = []
+    for i in range(meta.outputs_count):
+        ack_out = await call(
+            CKBTxRequest(
+                request_type=CKBTxRequestType.TXPREVOUTPUT,
+                details=CKBTxRequestDetails(request_index=i, tx_hash=tx_hash),
+            ),
+            CKBTxAckOutput,
+        )
+        if ack_out.output is None:
+            raise DataError("Missing previous transaction output")
+        prev_outputs.append(ack_out.output)
+        prev_outputs_data.append(
+            bytes(ack_out.output.data) if ack_out.output.data else b""
+        )
+
+    prev_cell_deps: list["CKBCellDep"] = []
+    for i in range(meta.cell_deps_count or 0):
+        ack_dep = await call(
+            CKBTxRequest(
+                request_type=CKBTxRequestType.TXPREVCELLDEP,
+                details=CKBTxRequestDetails(request_index=i, tx_hash=tx_hash),
+            ),
+            CKBTxAckCellDep,
+        )
+        if ack_dep.cell_dep is None:
+            raise DataError("Missing previous transaction cell_dep")
+        prev_cell_deps.append(ack_dep.cell_dep)
+
+    recomputed = _compute_raw_tx_hash(
+        inputs=prev_inputs,
+        outputs=prev_outputs,
+        outputs_data=prev_outputs_data,
+        cell_deps=prev_cell_deps,
+        version=meta.version,
+        header_deps=[bytes(h) for h in meta.header_deps],
+    )
+    if recomputed != tx_hash:
+        raise DataError("Previous transaction hash mismatch")
+
+    return [out.capacity for out in prev_outputs]
+
+
 @with_slip44_keychain(PATTERN, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     """
@@ -398,6 +500,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     from trezor.wire.context import call
 
     from .layout import (
+        require_confirm_fee_over_threshold,
         require_confirm_output,
         require_confirm_testnet,
         require_confirm_total,
@@ -439,6 +542,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     outputs: list["CKBCellOutput"] = []
     outputs_data: list[bytes] = []
     send_amount = 0
+    total_out = 0
     has_external_output = False
     is_change_flags: list[bool] = []
 
@@ -454,6 +558,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         output = ack.output
         outputs.append(output)
         outputs_data.append(bytes(output.data) if output.data else b"")
+        total_out += output.capacity
 
         is_change = (
             output.lock_args == sender_lock_args
@@ -506,13 +611,30 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
             raise DataError("Missing cell_dep data")
         cell_deps.append(ack.cell_dep)
 
-    # Compute transaction hash
+    # Compute transaction hash. This also validates the structural lengths of
+    # inputs, outputs, and cell_deps before the (more expensive) previous-tx
+    # streaming below, so malformed data fails fast.
     tx_hash = _compute_raw_tx_hash(
         inputs=inputs,
         outputs=outputs,
         outputs_data=outputs_data,
         cell_deps=cell_deps,
     )
+
+    # Verify each input's capacity trustlessly by streaming its previous tx.
+    # Cache by tx_hash so a funding tx spent by several inputs is streamed once.
+    prev_tx_capacities: dict[bytes, list[int]] = {}
+    total_in = 0
+    for inp in inputs:
+        prev_hash = bytes(inp.previous_output_tx_hash)
+        capacities = prev_tx_capacities.get(prev_hash)
+        if capacities is None:
+            capacities = await _verify_prev_tx_capacities(prev_hash)
+            prev_tx_capacities[prev_hash] = capacities
+        index = inp.previous_output_index
+        if index >= len(capacities):
+            raise DataError("Input previous_output_index out of range")
+        total_in += capacities[index]
 
     # The host declares the witnesses and signing group; the device never guesses.
     if msg.witnesses_count is None:
@@ -558,8 +680,14 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         inputs_count=msg.inputs_count,
     )
 
-    # Confirm total
-    fee = msg.fee or 0
+    # Fee comes from the trustlessly verified input capacities, never the host.
+    if total_in < total_out:
+        raise DataError("Inputs do not cover outputs")
+    fee = total_in - total_out
+
+    # Anchor the high-fee warning to total_out (all outputs, including change);
+    # a consolidation is almost all change, so a smaller base would over-warn.
+    await require_confirm_fee_over_threshold(fee, total_out)
     await require_confirm_total(send_amount + fee, fee)
 
     # Sign and output CKB native format: [R(32) | S(32) | recovery_id(1)]

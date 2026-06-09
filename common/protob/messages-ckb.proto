@@ -118,10 +118,11 @@ message CKBSignTx {
     required uint32 inputs_count = 3;                   // number of cell inputs
     required uint32 outputs_count = 4;                  // number of cell outputs
     optional uint32 cell_deps_count = 5 [default = 0];  // number of cell dependencies
-    optional uint64 fee = 6;                            // transaction fee in shannons
-    optional bool chunkify = 7;                         // display addresses in chunks
-    optional uint32 witnesses_count = 8;               // length of the on-chain witness vector; required, the device rejects the request if absent
-    repeated uint32 sign_group_input_indices = 9;      // input indices forming the lock-script group to sign (required, sorted; first index holds the signature)
+    optional bool chunkify = 6;                         // display addresses in chunks
+    optional uint32 witnesses_count =
+        7;  // length of the on-chain witness vector; required, the device rejects the request if absent
+    repeated uint32 sign_group_input_indices =
+        8;  // input indices forming the lock-script group to sign (required, sorted; first index holds the signature)
 }
 
 /**
@@ -137,7 +138,9 @@ message CKBTxRequest {
 }
 
 /**
- * Type of transaction data requested
+ * Type of transaction data requested.
+ * The TXPREV* variants stream a previous transaction so the device can recompute
+ * its hash, match it against an input OutPoint, and read the spent capacity.
  */
 enum CKBTxRequestType {
     TXINPUT = 0;
@@ -145,6 +148,10 @@ enum CKBTxRequestType {
     TXCELLDEP = 2;
     TXFINISHED = 3;
     TXWITNESS = 4;
+    TXPREVMETA = 5;     // previous-tx header: version, item counts, header_deps
+    TXPREVINPUT = 6;    // previous-tx input, answered with CKBTxAckInput
+    TXPREVOUTPUT = 7;   // previous-tx output, answered with CKBTxAckOutput (carries data)
+    TXPREVCELLDEP = 8;  // previous-tx cell dep, answered with CKBTxAckCellDep
 }
 
 /**
@@ -152,7 +159,8 @@ enum CKBTxRequestType {
  * @embed
  */
 message CKBTxRequestDetails {
-    optional uint32 request_index = 1;
+    optional uint32 request_index = 1;  // item index within the current or previous tx
+    optional bytes tx_hash = 2;         // when set, the item belongs to this previous transaction
 }
 
 /**
@@ -189,15 +197,31 @@ message CKBTxAckCellDep {
 }
 
 /**
+ * Acknowledge: Provide the header of a previous transaction.
+ * The device uses these counts to drive TXPREVINPUT/TXPREVOUTPUT/TXPREVCELLDEP
+ * requests, then re-serializes the previous RawTransaction and checks its hash
+ * against the spending input's OutPoint before trusting the output capacity.
+ * @next CKBTxRequest
+ */
+message CKBTxAckPrevMeta {
+    required uint32 version = 1;                        // RawTransaction version of the previous tx
+    required uint32 inputs_count = 2;                   // number of cell inputs in the previous tx
+    required uint32 outputs_count = 3;                  // number of cell outputs in the previous tx
+    optional uint32 cell_deps_count = 4 [default = 0];  // number of cell deps in the previous tx
+    repeated bytes header_deps = 5;                     // 32-byte header dep hashes, usually empty
+}
+
+/**
  * Structured WitnessArgs for the signing witness of a lock-script group.
  * The device serializes the Molecule WitnessArgs itself and blanks the lock
  * field with `lock_size` zero bytes for the sighash_all preimage.
  * @embed
  */
 message CKBWitnessArgs {
-    optional uint32 lock_size = 1 [default = 65];  // size of the lock field (signature placeholder), must match the signature length
-    optional bytes input_type = 2;                 // WitnessArgs.input_type contents; unset means None
-    optional bytes output_type = 3;                // WitnessArgs.output_type contents; unset means None
+    optional uint32 lock_size = 1
+        [default = 65];              // size of the lock field (signature placeholder), must match the signature length
+    optional bytes input_type = 2;   // WitnessArgs.input_type contents; unset means None
+    optional bytes output_type = 3;  // WitnessArgs.output_type contents; unset means None
 }
 
 /**

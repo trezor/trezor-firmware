@@ -180,6 +180,7 @@ trezor_message_impl! {
     CKBMessageSignature => MessageType_CKBMessageSignature,
     CKBVerifyMessage => MessageType_CKBVerifyMessage,
     CKBTxAckWitness => MessageType_CKBTxAckWitness,
+    CKBTxAckPrevMeta => MessageType_CKBTxAckPrevMeta,
 }
 
 #[cfg(feature = "eos")]

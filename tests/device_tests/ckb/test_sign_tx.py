@@ -7,24 +7,13 @@ from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowConfirmAllWarnings
+from . import prevtx
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("t3w1")]
 
 
-def _build_sign_tx_components(parameters):
-    address_n = parse_path(parameters["path"])
-    network = parameters.get("network", "Mainnet")
-
-    inputs = [
-        ckb.create_cell_input(
-            tx_hash=inp["tx_hash"],
-            index=inp["index"],
-            since=inp.get("since", 0),
-        )
-        for inp in parameters["inputs"]
-    ]
-
-    outputs = [
+def _build_outputs(parameters):
+    return [
         ckb.create_cell_output(
             capacity=out["capacity"],
             lock_code_hash=out["lock_code_hash"],
@@ -42,6 +31,22 @@ def _build_sign_tx_components(parameters):
         for out in parameters["outputs"]
     ]
 
+
+def _outputs_data(outputs):
+    return [bytes(o.data) if o.data else b"" for o in outputs]
+
+
+def _build_sign_tx_components(parameters):
+    """Build a signable tx whose inputs are backed by synthetic previous txs.
+
+    The device verifies input capacities by re-hashing each previous tx, so we
+    synthesize a previous tx per input and point the input's OutPoint at it. The
+    capacities are chosen so the verified fee equals the fixture's declared fee.
+    """
+    address_n = parse_path(parameters["path"])
+    network = parameters.get("network", "Mainnet")
+
+    outputs = _build_outputs(parameters)
     cell_deps = [
         ckb.create_cell_dep(
             tx_hash=dep["tx_hash"],
@@ -51,13 +56,32 @@ def _build_sign_tx_components(parameters):
         for dep in parameters.get("cell_deps", [])
     ]
 
-    return address_n, network, inputs, outputs, cell_deps, parameters.get("fee")
+    fee = parameters.get("fee")
+    total_out = sum(o.capacity for o in outputs)
+    total_in_needed = total_out + (fee or 0)
+
+    raw_inputs = parameters["inputs"]
+    n = len(raw_inputs)
+    # First input covers the bulk; the rest carry 1 shannon each so every input
+    # references a distinct, positive-capacity previous output.
+    caps = [total_in_needed - (n - 1)] + [1] * (n - 1)
+
+    inputs = []
+    prev_txs = {}
+    for i, (raw, cap) in enumerate(zip(raw_inputs, caps)):
+        prev, prev_hash = prevtx.synth_prev_tx([cap], salt=i)
+        prev_txs[prev_hash] = prev
+        inputs.append(
+            ckb.create_cell_input(tx_hash=prev_hash, index=0, since=raw.get("since", 0))
+        )
+
+    return address_n, network, inputs, outputs, cell_deps, prev_txs
 
 
 @parametrize_using_common_fixtures("ckb/sign_tx.json")
 def test_sign_tx(session: Session, parameters, result):
-    address_n, network, inputs, outputs, cell_deps, fee = _build_sign_tx_components(
-        parameters
+    address_n, network, inputs, outputs, cell_deps, prev_txs = (
+        _build_sign_tx_components(parameters)
     )
 
     with session.test_ctx as client:
@@ -71,8 +95,8 @@ def test_sign_tx(session: Session, parameters, result):
             outputs=outputs,
             cell_deps=cell_deps,
             network=network,
-            fee=fee,
             chunkify=True,
+            prev_txs=prev_txs,
         )
 
     sig = resp.serialized.signature
@@ -83,28 +107,18 @@ def test_sign_tx(session: Session, parameters, result):
     assert len(sig) == 65
     assert len(tx_hash) == 32
 
-    if "tx_hash" in result:
-        assert tx_hash.hex() == result["tx_hash"]
-    if "signature" in result:
-        assert sig.hex() == result["signature"]
+    # The device must hash exactly the transaction we sent; check it against an
+    # independent host-side serialization rather than a stored golden value
+    # (the inputs are synthesized, so the old recorded hashes no longer apply).
+    expected = prevtx.raw_tx_hash(inputs, outputs, _outputs_data(outputs), cell_deps)
+    assert tx_hash == expected
 
 
 def test_sign_tx_streaming_protocol(session: Session):
     parameters = {
         "path": "m/44'/309'/0'/0/0",
         "network": "Mainnet",
-        "inputs": [
-            {
-                "tx_hash": "1111111111111111111111111111111111111111111111111111111111111111",
-                "index": 0,
-                "since": 0,
-            },
-            {
-                "tx_hash": "2222222222222222222222222222222222222222222222222222222222222222",
-                "index": 1,
-                "since": 0,
-            },
-        ],
+        "inputs": [{"since": 0}, {"since": 0}],
         "outputs": [
             {
                 "capacity": 10000000000,
@@ -125,16 +139,11 @@ def test_sign_tx_streaming_protocol(session: Session):
                 "index": 0,
                 "dep_type": 1,
             },
-            {
-                "tx_hash": "4444444444444444444444444444444444444444444444444444444444444444",
-                "index": 1,
-                "dep_type": 1,
-            },
         ],
         "fee": 1000,
     }
-    address_n, network, inputs, outputs, cell_deps, fee = _build_sign_tx_components(
-        parameters
+    address_n, network, inputs, outputs, cell_deps, prev_txs = (
+        _build_sign_tx_components(parameters)
     )
 
     with session.test_ctx as client:
@@ -152,70 +161,158 @@ def test_sign_tx_streaming_protocol(session: Session):
                 cell_deps_count=len(cell_deps),
                 witnesses_count=len(witnesses),
                 sign_group_input_indices=list(range(len(inputs))),
-                fee=fee,
                 chunkify=True,
             ),
             expect=messages.CKBTxRequest,
         )
 
-        expected_steps = [
-            (
-                messages.CKBTxRequestType.TXINPUT,
-                0,
-                messages.CKBTxAckInput(input=inputs[0]),
-            ),
-            (
-                messages.CKBTxRequestType.TXINPUT,
-                1,
-                messages.CKBTxAckInput(input=inputs[1]),
-            ),
-            (
-                messages.CKBTxRequestType.TXOUTPUT,
-                0,
-                messages.CKBTxAckOutput(output=outputs[0]),
-            ),
-            (
-                messages.CKBTxRequestType.TXOUTPUT,
-                1,
-                messages.CKBTxAckOutput(output=outputs[1]),
-            ),
-            (
-                messages.CKBTxRequestType.TXCELLDEP,
-                0,
-                messages.CKBTxAckCellDep(cell_dep=cell_deps[0]),
-            ),
-            (
-                messages.CKBTxRequestType.TXCELLDEP,
-                1,
-                messages.CKBTxAckCellDep(cell_dep=cell_deps[1]),
-            ),
-            (
-                messages.CKBTxRequestType.TXWITNESS,
-                0,
-                witnesses[0],
-            ),
-            (
-                messages.CKBTxRequestType.TXWITNESS,
-                1,
-                witnesses[1],
-            ),
-        ]
-
-        for request_type, request_index, ack in expected_steps:
-            assert res.request_type == request_type
+        RT = messages.CKBTxRequestType
+        seen = []
+        while res.request_type != RT.TXFINISHED:
             assert res.details is not None
-            assert res.details.request_index == request_index
-            assert res.serialized is None
-
+            rt = res.request_type
+            seen.append(rt)
+            idx = res.details.request_index
+            if rt == RT.TXINPUT:
+                ack = messages.CKBTxAckInput(input=inputs[idx])
+            elif rt == RT.TXOUTPUT:
+                ack = messages.CKBTxAckOutput(output=outputs[idx])
+            elif rt == RT.TXCELLDEP:
+                ack = messages.CKBTxAckCellDep(cell_dep=cell_deps[idx])
+            elif rt == RT.TXWITNESS:
+                ack = witnesses[idx]
+            elif rt == RT.TXPREVMETA:
+                prev = prev_txs[bytes(res.details.tx_hash)]
+                ack = messages.CKBTxAckPrevMeta(
+                    version=prev.version,
+                    inputs_count=len(prev.inputs),
+                    outputs_count=len(prev.outputs),
+                    cell_deps_count=len(prev.cell_deps),
+                    header_deps=prev.header_deps,
+                )
+            elif rt == RT.TXPREVINPUT:
+                prev = prev_txs[bytes(res.details.tx_hash)]
+                ack = messages.CKBTxAckInput(input=prev.inputs[idx])
+            elif rt == RT.TXPREVOUTPUT:
+                prev = prev_txs[bytes(res.details.tx_hash)]
+                ack = messages.CKBTxAckOutput(output=prev.outputs[idx])
+            elif rt == RT.TXPREVCELLDEP:
+                prev = prev_txs[bytes(res.details.tx_hash)]
+                ack = messages.CKBTxAckCellDep(cell_dep=prev.cell_deps[idx])
+            else:
+                raise AssertionError(f"unexpected request type {rt}")
             res = session.call(ack, expect=messages.CKBTxRequest)
 
-    assert res.request_type == messages.CKBTxRequestType.TXFINISHED
+    # The current tx is streamed first, then the previous txs are verified, then
+    # the witnesses are requested.
+    assert seen.index(RT.TXINPUT) < seen.index(RT.TXPREVMETA)
+    assert seen.index(RT.TXPREVMETA) < seen.index(RT.TXWITNESS)
+    assert RT.TXPREVOUTPUT in seen
+
     assert res.details is None
     assert res.serialized is not None
-    assert res.serialized.signature is not None
-    assert res.serialized.tx_hash is not None
     assert len(res.serialized.signature) == 65
     assert len(res.serialized.tx_hash) == 32
+
+
+def test_sign_tx_rejects_tampered_prev_tx(session: Session):
+    # The host claims an input OutPoint but supplies a previous tx that hashes to
+    # something else (here: a different capacity). The device must refuse.
+    outputs = _build_outputs(
+        {
+            "outputs": [
+                {
+                    "capacity": 10000000000,
+                    "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                    "lock_hash_type": 1,
+                    "lock_args": "abcdef0123456789abcdef0123456789abcdef01",
+                }
+            ]
+        }
+    )
+    _, claimed_hash = prevtx.synth_prev_tx([10000001000])
+    tampered_prev, _ = prevtx.synth_prev_tx([99999999999])
+    inputs = [ckb.create_cell_input(tx_hash=claimed_hash, index=0)]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match="Previous transaction hash mismatch"):
+            ckb.sign_tx(
+                session,
+                parse_path("m/44h/309h/0h/0/0"),
+                inputs=inputs,
+                outputs=outputs,
+                network="Mainnet",
+                chunkify=True,
+                prev_txs={claimed_hash: tampered_prev},
+            )
+
+
+def test_sign_tx_rejects_inputs_below_outputs(session: Session):
+    outputs = _build_outputs(
+        {
+            "outputs": [
+                {
+                    "capacity": 10000000000,
+                    "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                    "lock_hash_type": 1,
+                    "lock_args": "abcdef0123456789abcdef0123456789abcdef01",
+                }
+            ]
+        }
+    )
+    # Input supplies less capacity than the outputs require.
+    prev, prev_hash = prevtx.synth_prev_tx([9000000000])
+    inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=0)]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match="Inputs do not cover outputs"):
+            ckb.sign_tx(
+                session,
+                parse_path("m/44h/309h/0h/0/0"),
+                inputs=inputs,
+                outputs=outputs,
+                network="Mainnet",
+                chunkify=True,
+                prev_txs={prev_hash: prev},
+            )
+
+
+def test_sign_tx_high_fee_warns_and_signs(session: Session):
+    # Fee far above 10 % of the sent amount: the warning flow is exercised and
+    # the transaction still signs once confirmed.
+    outputs = _build_outputs(
+        {
+            "outputs": [
+                {
+                    "capacity": 10000000000,
+                    "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                    "lock_hash_type": 1,
+                    "lock_args": "abcdef0123456789abcdef0123456789abcdef01",
+                }
+            ]
+        }
+    )
+    fee = 5000000000  # 50 % of the sent amount
+    prev, prev_hash = prevtx.synth_prev_tx([10000000000 + fee])
+    inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=0)]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        resp = ckb.sign_tx(
+            session,
+            parse_path("m/44h/309h/0h/0/0"),
+            inputs=inputs,
+            outputs=outputs,
+            network="Mainnet",
+            chunkify=True,
+            prev_txs={prev_hash: prev},
+        )
+    assert len(resp.serialized.signature) == 65
 
 
 def test_sign_tx_invalid_path(session: Session):
@@ -298,7 +395,6 @@ def test_sign_tx_invalid_input_tx_hash_length(session: Session):
                 inputs=inputs,
                 outputs=outputs,
                 network="Mainnet",
-                fee=1000,
                 chunkify=True,
             )
 
@@ -329,7 +425,6 @@ def test_sign_tx_invalid_output_code_hash_length(session: Session):
                 inputs=inputs,
                 outputs=outputs,
                 network="Mainnet",
-                fee=1000,
                 chunkify=True,
             )
 
@@ -368,7 +463,6 @@ def test_sign_tx_invalid_cell_dep_tx_hash_length(session: Session):
                 outputs=outputs,
                 cell_deps=cell_deps,
                 network="Mainnet",
-                fee=1000,
                 chunkify=True,
             )
 

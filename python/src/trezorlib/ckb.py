@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, AnyStr
+from typing import TYPE_CHECKING, Any, AnyStr, NamedTuple
 
 from . import exceptions, messages
 from .tools import prepare_message_bytes, workflow
@@ -28,6 +28,43 @@ if TYPE_CHECKING:
     from .tools import Address
 
 DEFAULT_BIP32_PATH = "m/44'/309'/0'/0/0"
+
+
+class CkbPrevTx(NamedTuple):
+    """A previous transaction streamed to the device for trustless fee checks.
+
+    The device re-serializes these fields, recomputes the tx hash, and matches it
+    against the spending input's OutPoint before trusting an output's capacity.
+    """
+
+    version: int
+    inputs: list["messages.CKBCellInput"]
+    outputs: list["messages.CKBCellOutput"]
+    cell_deps: list["messages.CKBCellDep"]
+    header_deps: list[bytes]
+
+
+def _normalize_tx_hash(tx_hash: bytes | str) -> bytes:
+    if isinstance(tx_hash, str):
+        return bytes.fromhex(tx_hash.removeprefix("0x"))
+    return bytes(tx_hash)
+
+
+def create_prev_tx(
+    outputs: list["messages.CKBCellOutput"],
+    inputs: list["messages.CKBCellInput"] | None = None,
+    cell_deps: list["messages.CKBCellDep"] | None = None,
+    version: int = 0,
+    header_deps: list[bytes] | None = None,
+) -> CkbPrevTx:
+    """Build a CkbPrevTx; outputs are mandatory, everything else defaults empty."""
+    return CkbPrevTx(
+        version=version,
+        inputs=inputs or [],
+        outputs=outputs,
+        cell_deps=cell_deps or [],
+        header_deps=header_deps or [],
+    )
 
 
 def get_address(*args: Any, **kwargs: Any) -> str:
@@ -108,8 +145,8 @@ def sign_tx(
     witnesses: list["messages.CKBTxAckWitness"] | None = None,
     sign_group_input_indices: list[int] | None = None,
     network: str = "Mainnet",
-    fee: int | None = None,
     chunkify: bool = False,
+    prev_txs: dict[bytes | str, CkbPrevTx] | None = None,
 ) -> "messages.CKBTxRequest":
     """
     Sign a CKB transaction using streaming protocol.
@@ -127,8 +164,10 @@ def sign_tx(
         sign_group_input_indices: Inputs of the group to sign, first index holds
             the signature. Defaults to every input.
         network: "Mainnet" or "Testnet"
-        fee: Transaction fee in shannons (optional)
         chunkify: Display addresses in chunks
+        prev_txs: Map of input ``previous_output_tx_hash`` to the previous
+            transaction, used by the device to verify input capacities. Required
+            for every distinct tx hash referenced by ``inputs``.
 
     Returns:
         CKBTxRequest with signature and tx_hash when TXFINISHED
@@ -137,6 +176,16 @@ def sign_tx(
 
     if cell_deps is None:
         cell_deps = []
+    prev_tx_map = {_normalize_tx_hash(k): v for k, v in (prev_txs or {}).items()}
+
+    def _get_prev_tx(tx_hash: bytes | None) -> CkbPrevTx:
+        if tx_hash is None:
+            raise ValueError("Device requested previous tx without a tx_hash")
+        key = _normalize_tx_hash(tx_hash)
+        if key not in prev_tx_map:
+            raise ValueError(f"Missing previous tx for {key.hex()}")
+        return prev_tx_map[key]
+
     if witnesses is None:
         witnesses = [create_witness_args()]
         witnesses += [create_witness_raw() for _ in range(max(0, len(inputs) - 1))]
@@ -152,7 +201,6 @@ def sign_tx(
             cell_deps_count=len(cell_deps),
             witnesses_count=len(witnesses),
             sign_group_input_indices=sign_group_input_indices,
-            fee=fee,
             chunkify=chunkify,
         ),
         expect=messages.CKBTxRequest,
@@ -161,7 +209,23 @@ def sign_tx(
     while res.request_type != CKBTxRequestType.TXFINISHED:
         if res.details is None:
             raise ValueError("Device response missing request details")
-        idx = res.details.request_index
+        details = res.details
+
+        if res.request_type == CKBTxRequestType.TXPREVMETA:
+            prev = _get_prev_tx(details.tx_hash)
+            res = session.call(
+                messages.CKBTxAckPrevMeta(
+                    version=prev.version,
+                    inputs_count=len(prev.inputs),
+                    outputs_count=len(prev.outputs),
+                    cell_deps_count=len(prev.cell_deps),
+                    header_deps=prev.header_deps,
+                ),
+                expect=messages.CKBTxRequest,
+            )
+            continue
+
+        idx = details.request_index
         if idx is None:
             raise ValueError("Device response missing request_index")
 
@@ -182,6 +246,24 @@ def sign_tx(
             )
         elif res.request_type == CKBTxRequestType.TXWITNESS:
             res = session.call(witnesses[idx], expect=messages.CKBTxRequest)
+        elif res.request_type == CKBTxRequestType.TXPREVINPUT:
+            prev = _get_prev_tx(details.tx_hash)
+            res = session.call(
+                messages.CKBTxAckInput(input=prev.inputs[idx]),
+                expect=messages.CKBTxRequest,
+            )
+        elif res.request_type == CKBTxRequestType.TXPREVOUTPUT:
+            prev = _get_prev_tx(details.tx_hash)
+            res = session.call(
+                messages.CKBTxAckOutput(output=prev.outputs[idx]),
+                expect=messages.CKBTxRequest,
+            )
+        elif res.request_type == CKBTxRequestType.TXPREVCELLDEP:
+            prev = _get_prev_tx(details.tx_hash)
+            res = session.call(
+                messages.CKBTxAckCellDep(cell_dep=prev.cell_deps[idx]),
+                expect=messages.CKBTxRequest,
+            )
         else:
             raise ValueError(f"Unknown request type: {res.request_type}")
 

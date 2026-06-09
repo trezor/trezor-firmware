@@ -2033,7 +2033,6 @@ if TYPE_CHECKING:
         inputs_count: "int"
         outputs_count: "int"
         cell_deps_count: "int"
-        fee: "int | None"
         chunkify: "bool | None"
         witnesses_count: "int | None"
         sign_group_input_indices: "list[int]"
@@ -2047,7 +2046,6 @@ if TYPE_CHECKING:
             address_n: "list[int] | None" = None,
             sign_group_input_indices: "list[int] | None" = None,
             cell_deps_count: "int | None" = None,
-            fee: "int | None" = None,
             chunkify: "bool | None" = None,
             witnesses_count: "int | None" = None,
         ) -> None:
@@ -2077,11 +2075,13 @@ if TYPE_CHECKING:
 
     class CKBTxRequestDetails(protobuf.MessageType):
         request_index: "int | None"
+        tx_hash: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             request_index: "int | None" = None,
+            tx_hash: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -2145,6 +2145,28 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["CKBTxAckCellDep"]:
+            return isinstance(msg, cls)
+
+    class CKBTxAckPrevMeta(protobuf.MessageType):
+        version: "int"
+        inputs_count: "int"
+        outputs_count: "int"
+        cell_deps_count: "int"
+        header_deps: "list[AnyBytes]"
+
+        def __init__(
+            self,
+            *,
+            version: "int",
+            inputs_count: "int",
+            outputs_count: "int",
+            header_deps: "list[AnyBytes] | None" = None,
+            cell_deps_count: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CKBTxAckPrevMeta"]:
             return isinstance(msg, cls)
 
     class CKBWitnessArgs(protobuf.MessageType):

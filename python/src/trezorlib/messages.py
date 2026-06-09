@@ -199,6 +199,10 @@ class CKBTxRequestType(IntEnum):
     TXCELLDEP = 2
     TXFINISHED = 3
     TXWITNESS = 4
+    TXPREVMETA = 5
+    TXPREVINPUT = 6
+    TXPREVOUTPUT = 7
+    TXPREVCELLDEP = 8
 
 
 class BackupType(IntEnum):
@@ -792,6 +796,7 @@ class MessageType(IntEnum):
     CKBMessageSignature = 5508
     CKBVerifyMessage = 5509
     CKBTxAckWitness = 5510
+    CKBTxAckPrevMeta = 5511
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -3297,10 +3302,9 @@ class CKBSignTx(protobuf.MessageType):
         3: protobuf.Field("inputs_count", "uint32", repeated=False, required=True),
         4: protobuf.Field("outputs_count", "uint32", repeated=False, required=True),
         5: protobuf.Field("cell_deps_count", "uint32", repeated=False, required=False, default=0),
-        6: protobuf.Field("fee", "uint64", repeated=False, required=False, default=None),
-        7: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
-        8: protobuf.Field("witnesses_count", "uint32", repeated=False, required=False, default=None),
-        9: protobuf.Field("sign_group_input_indices", "uint32", repeated=True, required=False, default=None),
+        6: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        7: protobuf.Field("witnesses_count", "uint32", repeated=False, required=False, default=None),
+        8: protobuf.Field("sign_group_input_indices", "uint32", repeated=True, required=False, default=None),
     }
 
     def __init__(
@@ -3312,7 +3316,6 @@ class CKBSignTx(protobuf.MessageType):
         address_n: Optional[Sequence["int"]] = None,
         sign_group_input_indices: Optional[Sequence["int"]] = None,
         cell_deps_count: Optional["int"] = 0,
-        fee: Optional["int"] = None,
         chunkify: Optional["bool"] = None,
         witnesses_count: Optional["int"] = None,
     ) -> None:
@@ -3322,7 +3325,6 @@ class CKBSignTx(protobuf.MessageType):
         self.inputs_count = inputs_count
         self.outputs_count = outputs_count
         self.cell_deps_count = cell_deps_count
-        self.fee = fee
         self.chunkify = chunkify
         self.witnesses_count = witnesses_count
 
@@ -3351,14 +3353,17 @@ class CKBTxRequestDetails(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("request_index", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("tx_hash", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         request_index: Optional["int"] = None,
+        tx_hash: Optional["bytes"] = None,
     ) -> None:
         self.request_index = request_index
+        self.tx_hash = tx_hash
 
 
 class CKBTxRequestSerialized(protobuf.MessageType):
@@ -3418,6 +3423,32 @@ class CKBTxAckCellDep(protobuf.MessageType):
         cell_dep: "CKBCellDep",
     ) -> None:
         self.cell_dep = cell_dep
+
+
+class CKBTxAckPrevMeta(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5511
+    FIELDS = {
+        1: protobuf.Field("version", "uint32", repeated=False, required=True),
+        2: protobuf.Field("inputs_count", "uint32", repeated=False, required=True),
+        3: protobuf.Field("outputs_count", "uint32", repeated=False, required=True),
+        4: protobuf.Field("cell_deps_count", "uint32", repeated=False, required=False, default=0),
+        5: protobuf.Field("header_deps", "bytes", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        version: "int",
+        inputs_count: "int",
+        outputs_count: "int",
+        header_deps: Optional[Sequence["bytes"]] = None,
+        cell_deps_count: Optional["int"] = 0,
+    ) -> None:
+        self.header_deps: Sequence["bytes"] = header_deps if header_deps is not None else []
+        self.version = version
+        self.inputs_count = inputs_count
+        self.outputs_count = outputs_count
+        self.cell_deps_count = cell_deps_count
 
 
 class CKBWitnessArgs(protobuf.MessageType):
