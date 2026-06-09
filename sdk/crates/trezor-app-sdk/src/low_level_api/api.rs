@@ -56,14 +56,14 @@ impl ApiError {
     }
 }
 
-#[cfg(feature = "debug")]
+#[cfg(all(feature = "debug", feature = "alloc"))]
 impl core::fmt::Display for ApiError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.message())
     }
 }
 
-#[cfg(feature = "debug")]
+#[cfg(all(feature = "debug", feature = "alloc"))]
 impl core::error::Error for ApiError {}
 
 /// Initialize the global API singleton from getter function pointer
