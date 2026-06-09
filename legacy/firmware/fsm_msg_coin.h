@@ -714,7 +714,7 @@ void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg) {
 
   const size_t MAX_COORDINATOR_LEN = 36;
   const uint64_t MAX_ROUNDS = 500;
-  const uint64_t MAX_COORDINATOR_FEE_RATE = 5 * FEE_RATE_DECIMALS;  // 5 %
+  const uint64_t MAX_COORDINATOR_FEE_RATE = 5 * FEE_RATE_MULTIPLIER;  // 5 %
 
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) {
@@ -784,11 +784,14 @@ void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg) {
     return;
   }
 
-  layoutAuthorizeCoinJoin(coin, msg->max_rounds, msg->max_fee_per_kvbyte);
-  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-    layoutHome();
-    return;
+  for (int page = 0; page < 2; ++page) {
+    layoutAuthorizeCoinJoin(coin, msg->max_rounds, msg->max_fee_per_kvbyte,
+                            msg->max_coordinator_fee_rate, page);
+    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return;
+    }
   }
 
   bool path_warning_shown = false;

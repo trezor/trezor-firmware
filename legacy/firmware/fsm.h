@@ -30,9 +30,6 @@
 #include "messages-stellar.pb.h"
 #include "messages.pb.h"
 
-// CoinJoin fee rate multiplier.
-#define FEE_RATE_DECIMALS (1000000)
-
 // message functions
 
 void fsm_sendSuccess(const char *text);

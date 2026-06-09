@@ -2599,7 +2599,7 @@ static bool coinjoin_confirm_tx(void) {
   uint64_t our_coordination_fee =
       MIN(coinjoin_request.fee_rate,
           coinjoin_authorization.max_coordinator_fee_rate) *
-      coinjoin_coordination_fee_base / FEE_RATE_DECIMALS / 100;
+      coinjoin_coordination_fee_base / FEE_RATE_MULTIPLIER / 100;
 
   // Total fees that the user is paying.
   uint64_t our_fees = 0;

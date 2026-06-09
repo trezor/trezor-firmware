@@ -80,7 +80,8 @@ void layoutConfirmUnverifiedExternalInputs(void);
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled);
 void layoutAuthorizeCoinJoin(const CoinInfo *coin, uint64_t max_rounds,
-                             uint32_t max_fee_per_kvbyte);
+                             uint32_t max_fee_per_kvbyte,
+                             uint32_t max_coordinator_fee_rate, int page);
 void layoutConfirmCoinjoinAccess(void);
 void layoutVerifyAddress(const CoinInfo *coin, const char *address);
 void layoutCipherKeyValue(bool encrypt, const char *key);
