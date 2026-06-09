@@ -139,12 +139,12 @@ def verify_pair(unsigned: Path, signed: Path) -> bool:
         return False
 
     try:
-        meta = parse_any(s)
+        img = parse_any(s)
     except Exception as e:  # noqa: BLE001
         bad(f"could not parse signed image (magic={s[:4]!r}): {type(e).__name__}: {e}")
         return False
     info(
-        f"type: {getattr(meta, 'NAME', '?')} ({s[:4].decode('ascii', 'replace')})   size: {len(s)} B"
+        f"type: {getattr(img, 'NAME', '?')} ({s[:4].decode('ascii', 'replace')})   size: {len(s)} B"
     )
 
     okall = True
@@ -186,14 +186,13 @@ def verify_pair(unsigned: Path, signed: Path) -> bool:
 
     # ---- CHECK 3: signature authenticity -----------------------------------
     try:
-        fw = parse_any(s)
-        if not fw.signature_present():
+        if not img.signature_present():
             bad("no signature present in the signed file")
             okall = False
         else:
-            fw.verify()  # production keys; raises on bad signature or bad hashes
+            img.verify()  # production keys; raises on bad signature or bad hashes
             ok(
-                f"signature is GENUINE -- verified against production keys ({getattr(fw, 'NAME', 'image')})"
+                f"signature is GENUINE -- verified against production keys ({getattr(img, 'NAME', 'image')})"
             )
     except Exception as e:  # noqa: BLE001
         bad(
