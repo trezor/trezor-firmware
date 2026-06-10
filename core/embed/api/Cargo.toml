@@ -1,0 +1,21 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2024"
+links = "api"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+models.workspace = true
+rtl.workspace = true
+sec.workspace = true
+io.workspace = true
+
+[features]
+
+test = []
+
+default = ["io/ipc"]
