@@ -12,11 +12,14 @@ if not utils.BITCOIN_ONLY:
         Atomic,
         CalldataReader,
         DirtyAddress,
+        Dynamic,
+        NonCanonicalLayout,
         OutOfBounds,
         Tuple,
         ValueOverflow,
         parse_address,
         parse_bool,
+        parse_bytes,
         parse_bytes32,
         parse_string,
         parse_uint24,
@@ -417,6 +420,95 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         with self.assertRaises(OutOfBounds):
             nested_array_parser.parse(CalldataReader(memoryview(payload_fail)), 0)
+
+    # --- Step 2: non-canonical (non-forward-streamable) layouts are rejected ---
+
+    def _parse_sequence(self, definitions, data, start=0):
+        # Parse top-level params the way DisplayFormat.parse_calldata does:
+        # one shared reader, each definition parsed at an increasing offset.
+        reader = CalldataReader(memoryview(data))
+        offset = start
+        parsed = []
+        for definition in definitions:
+            value, consumed = definition.parse(reader, offset)
+            parsed.append(value)
+            offset += consumed
+        return parsed
+
+    def test_noncanonical_reversed_dynamic_tails(self):
+        # Two `bytes` params whose tails are laid out in reverse order. A
+        # random-access decoder accepts this, but it cannot be served by a
+        # forward-only stream, so we reject it.
+        buf = bytearray(192)
+
+        def w(off, val):
+            buf[off : off + 32] = to_bytes(val)
+
+        w(0, 128)  # param0 -> blob at offset 128
+        w(32, 64)  # param1 -> blob at offset 64 (before param0's tail!)
+        w(64, 2)
+        buf[96:98] = b"\xaa\xbb"  # param1's blob
+        w(128, 2)
+        buf[160:162] = b"\xcc\xdd"  # param0's blob
+
+        with self.assertRaises(NonCanonicalLayout):
+            self._parse_sequence(
+                (Dynamic(parse_bytes), Dynamic(parse_bytes)), bytes(buf)
+            )
+
+    def test_canonical_adjacent_dynamic_ok(self):
+        # Boundary case: param1's tail starts exactly where param0's tail ends.
+        # `seek_forward` allows target == frontier, so this must NOT be rejected.
+        buf = bytearray(192)
+
+        def w(off, val):
+            buf[off : off + 32] = to_bytes(val)
+
+        w(0, 64)  # param0 -> blob0 at offset 64
+        w(64, 32)
+        buf[96:128] = bytes(range(32))  # blob0 data, ends exactly at 128
+        w(32, 128)  # param1 -> blob1 at offset 128 (== frontier)
+        w(128, 2)
+        buf[160:162] = b"\x01\x02"
+
+        parsed = self._parse_sequence(
+            (Dynamic(parse_bytes), Dynamic(parse_bytes)), bytes(buf)
+        )
+        self.assertEqual(parsed, [bytes(range(32)), b"\x01\x02"])
+
+    def test_noncanonical_dynamic_struct_backward_pointer(self):
+        # A dynamic struct whose pointer points backward into already-read data.
+        dynamic_struct = Tuple((parse_uint256,), is_dynamic=True)
+        data = memoryview(SEVEN_RANDOM_BYTES + to_bytes(0) + to_bytes(123))
+        with self.assertRaises(NonCanonicalLayout):
+            dynamic_struct.parse(CalldataReader(data), len(SEVEN_RANDOM_BYTES))
+
+    def test_noncanonical_array_elements_out_of_order(self):
+        # Array of dynamic structs whose element pointers are in reverse order:
+        # element 0 points past element 1's body, so reading element 1 would
+        # require seeking backward.
+        array_parser = Array(Tuple((parse_address, parse_string), is_dynamic=False))
+
+        addr1 = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        addr2 = unhexlify("71c7656ec7ab88b098defb751b7401b5f6d8976f")
+
+        def pack_struct(addr, text):
+            addr_bytes = b"\x00" * (32 - 20) + addr
+            text_bytes = text.encode("utf-8") + b"\x00" * (32 - len(text))
+            return addr_bytes + to_bytes(64) + to_bytes(len(text)) + text_bytes
+
+        s0 = pack_struct(addr1, "first")
+        s1 = pack_struct(addr2, "second")
+        payload = (
+            to_bytes(32)  # array pointer
+            + to_bytes(2)  # array length
+            + to_bytes(192)  # element 0 -> body+192 (the later struct)
+            + to_bytes(64)  # element 1 -> body+64 (the earlier struct)
+            + s0
+            + s1
+        )
+        with self.assertRaises(NonCanonicalLayout):
+            array_parser.parse(CalldataReader(memoryview(payload)), 0)
 
 
 if __name__ == "__main__":
