@@ -75,6 +75,15 @@ class OutOfBounds(InvalidFunctionCall):
     pass
 
 
+class NonCanonicalLayout(InvalidFunctionCall):
+    """Raised when the calldata is not in canonical ABI layout, i.e. a dynamic
+    pointer points backward or into already-consumed data. Such encodings cannot
+    be served by a forward-only stream, so we reject them (and fall back to
+    blind signing) even though a random-access decoder would accept them."""
+
+    pass
+
+
 class InvalidFormatDefinition(ClearSigningFailed):
     """Raised when we fail to format data according to the definitions,
     if for example the parsed calldata has other types than what
@@ -426,17 +435,30 @@ class CalldataReader:
     def __init__(self, data: memoryview) -> None:
         self._data = data
         self.position = 0
+        # Highest byte offset consumed so far. Dynamic pointers (tail jumps) must
+        # target at or past this, so that the calldata could be served by a
+        # forward-only stream; pointing backward means a non-canonical layout.
+        self.frontier = 0
 
     def __len__(self) -> int:
         return len(self._data)
 
     def seek(self, offset: int) -> None:
-        # TODO: random-access seek is temporary. Once parsing is reworked to a
-        # forward-only pass over a streamed buffer, this will be removed (or
-        # restricted to forward-only) and arbitrary backward seeks will go away.
+        # TODO: backward seek is temporary. It is only used to re-read head slots
+        # of the frame currently being parsed (a bounded region). Once parsing
+        # runs over a streamed buffer, that region will be held in a small head
+        # buffer and this arbitrary seek will go away; `seek_forward` stays.
         if not 0 <= offset <= len(self._data):
             raise OutOfBounds
         self.position = offset
+
+    def seek_forward(self, offset: int) -> None:
+        """Seek used for dynamic-pointer dereferences (tail jumps). The target
+        must not point into already-consumed data, i.e. the layout must be
+        forward-streamable."""
+        if offset < self.frontier:
+            raise NonCanonicalLayout
+        self.seek(offset)
 
     def read(self, length: int) -> memoryview:
         end = self.position + length
@@ -444,6 +466,8 @@ class CalldataReader:
             raise OutOfBounds
         chunk = self._data[self.position : end]
         self.position = end
+        if end > self.frontier:
+            self.frontier = end
         return chunk
 
     def read_word(self) -> memoryview:
@@ -510,7 +534,7 @@ class Atomic(ABIValue):
 def _read_dynamic_data(reader: CalldataReader, pointer: int) -> memoryview:
     """Read a variable-length blob located at `pointer` in the calldata,
     encoded as a 32-byte length prefix followed by `length` bytes of data."""
-    reader.seek(pointer)
+    reader.seek_forward(pointer)
     length = reader.read_uint()
     return reader.read(length)
 
@@ -551,6 +575,7 @@ class Tuple(ABIValue):
             reader.seek(offset)
             base_offset = reader.read_uint()
             consumed = 32  # dynamic structs just consume the pointer
+            reader.seek_forward(base_offset)  # tail jump to the tuple body
 
         if base_offset + self.static_size > len(reader):
             raise OutOfBounds
@@ -589,7 +614,7 @@ class Array(ABIValue):
         return self._parse_body(reader, array_pointer), 32
 
     def _parse_body(self, reader: CalldataReader, array_start: int) -> ListValue:
-        reader.seek(array_start)
+        reader.seek_forward(array_start)  # tail jump to the array body
         array_length = reader.read_uint()
         array_heads_end = array_start + 32 + (array_length * 32)
         if array_heads_end > len(reader):
@@ -612,6 +637,7 @@ class Array(ABIValue):
                 reader.seek(p)
                 element_pointer = reader.read_uint()
                 element_absolute_pointer = array_start + 32 + element_pointer
+                reader.seek_forward(element_absolute_pointer)  # tail jump to elem
                 data, _ = self.element_definition.parse(
                     reader, element_absolute_pointer
                 )
