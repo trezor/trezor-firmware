@@ -1549,8 +1549,8 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
             chip_id.silicon_rev[1], chip_id.silicon_rev[2],
             chip_id.silicon_rev[3]);
 
-#ifdef ABAB
-  if (strncmp((char*)chip_id.silicon_rev, "ABAB", 4) != 0) {
+#ifdef ACAB
+  if (strncmp((char*)chip_id.silicon_rev, "ACAB", 4) != 0) {
     cli_error(cli, CLI_ERROR, "Wrong tropic chip silicon revision");
     return;
   }
