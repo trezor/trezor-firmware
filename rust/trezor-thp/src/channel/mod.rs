@@ -70,6 +70,7 @@ impl Nonce {
 }
 
 /// Sent by device after successful handshake to indicate whether pairing is required.
+#[cfg_attr(any(test, debug_assertions), derive(Debug))]
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PairingState {
@@ -157,6 +158,7 @@ enum ReceiveState<R: Role> {
 /// encrypted transport phase can also use protobuf messages, their meaning is generally
 /// different than in the other phases.
 /// Application can use this enum to distinguish the context.
+#[cfg_attr(any(test, debug_assertions), derive(Debug))]
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Phase {
