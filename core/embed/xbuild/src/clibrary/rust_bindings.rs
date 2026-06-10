@@ -1,11 +1,18 @@
 use bindgen;
 use color_eyre::{Result, eyre::WrapErr};
+use std::path::PathBuf;
 
 use super::CLibrary;
 
 use crate::helpers::{links_name, path_from_env};
 
 impl CLibrary {
+    /// Sets the output path for the generated Rust bindings.
+    /// If not set, it defaults to `OUT_DIR/links_name.rs`.
+    pub fn set_rust_bindings_output(&mut self, output_path: PathBuf) {
+        self.builder_output = Some(output_path);
+    }
+
     /// Configures the bindgen builder with the provided function, allowing
     /// users to customize the generation of Rust bindings. The function takes
     /// a `bindgen::Builder` as input and returns a modified builder.
@@ -35,7 +42,11 @@ impl CLibrary {
             attrs.remove_flag("-mcmse");
             attrs.remove_flag("-fsingle-precision-constant");
 
-            let out_file = path_from_env("OUT_DIR")?.join(links_name()? + ".rs");
+            let out_file = self
+                .builder_output
+                .clone()
+                .unwrap_or(path_from_env("OUT_DIR")?.join(links_name()? + ".rs"));
+
             let tmp_out_file = out_file.with_extension("rs.tmp");
 
             builder
