@@ -6,11 +6,6 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-#define ESC_COLOR_GREEN "\e[32m"
-#define ESC_COLOR_RED "\e[31m"
-#define ESC_COLOR_GRAY "\e[37m"
-#define ESC_COLOR_RESET "\e[39m"
-
 #define CLI_CRC_PREFIX "checked-"
 #define CLI_CRC_LENGTH 8
 

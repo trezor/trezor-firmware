@@ -17,9 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KERNEL_MODE
-#define KERNEL_MODE
-#endif
 #ifdef KERNEL_MODE
 
 #include <trezor_bsp.h>
