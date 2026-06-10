@@ -21,6 +21,7 @@ pub use helpers::cargo_target_dir;
 pub use helpers::derive_output_path;
 pub use helpers::emit_rerun_if_changed;
 pub use helpers::is_rust_analyzer;
+pub use helpers::path_from_env;
 
 pub use parallel::optimal_parallel_job_count;
 pub use parallel::run_parallel;
