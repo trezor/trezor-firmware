@@ -26,6 +26,11 @@
 // Newlib
 #if defined(__NEWLIB__)
 #define HAVE_EXPLICIT_BZERO 1
+// explicit_bzero() is available in newlib, but its declaration in
+// <strings.h> may be hidden depending on the active feature-test macros (for
+// example when compiling in a strict C mode). Provide a declaration here to
+// avoid missing-prototype or implicit-declaration diagnostics.
+void explicit_bzero(void *, size_t);
 #endif
 
 // FreeBSD version 11.0 or later.

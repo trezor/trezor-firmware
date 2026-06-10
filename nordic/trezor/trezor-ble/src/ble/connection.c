@@ -27,6 +27,8 @@
 
 #include <zephyr/logging/log.h>
 
+#include <ncs_version.h>
+
 #include "ble_internal.h"
 
 #define LOG_MODULE_NAME ble_connection
@@ -47,11 +49,18 @@ static void show_params(struct bt_conn *conn) {
   struct bt_conn_info info;
   if (bt_conn_get_info(conn, &info) == 0 && info.type == BT_CONN_TYPE_LE) {
     const struct bt_conn_le_info *le = &info.le;
-    /* Bluetooth units: interval = 1.25 ms, timeout = 10 ms */
-    uint32_t interval_ms = le->interval * 125 / 100;  // 1.25 ms units → ms
-    uint32_t timeout_ms = le->timeout * 10;           // 10 ms units  → ms
+    /* interval_us was added in Zephyr 4.x (NCS 3.x), where the 1.25 ms-unit
+     * `interval` field is deprecated. Normalize to microseconds so the rest is
+     * version-independent. timeout stays in 10 ms units on both. */
+#if NCS_VERSION_NUMBER < 0x030300
+    uint32_t interval_us = (uint32_t)le->interval * 1250;  // 1.25 ms units → us
+#else
+    uint32_t interval_us = le->interval_us;
+#endif
+    uint32_t interval_ms = interval_us / 1000;
+    uint32_t timeout_ms = le->timeout * 10;  // 10 ms units → ms
     LOG_INF("Conn params: interval=%u.%02u ms, latency=%u, timeout=%u ms",
-            interval_ms, (le->interval * 125) % 100, le->latency, timeout_ms);
+            interval_ms, (interval_us / 10) % 100, le->latency, timeout_ms);
   }
 }
 

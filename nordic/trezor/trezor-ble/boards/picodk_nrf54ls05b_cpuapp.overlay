@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2025 Trezor Company s.r.o.
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * trezor-ble application devicetree glue for the picodk (nRF54LS05B) board.
+ *
+ * This maps the trezor-ble app's required devicetree contract onto the picodk
+ * peripherals. The equivalent definitions for the t3w1 board live in its board
+ * .dts (boards/arm/t3w1_revA_nrf52832/t3w1_revA_nrf52832.dts) and overlay.
+ *
+ * The app requires:
+ *   - chosen  trezor,trz-uart          UART to the main Trezor SoC
+ *   - alias   spi-master               SPIM controller
+ *   - label   trezor_spi_dev           SPI device (CS sourced from controller)
+ *   - aliases spi-ready / spi-request  SPI handshake GPIOs
+ *   - aliases stay-in-bootloader / reserved-output  control GPIOs
+ *
+ * The UART/SPI instances reuse what the picodk board already enables (uart20,
+ * spi21). The four handshake/control GPIOs below use PLACEHOLDER pins.
+ *
+ *  >>> TODO: set output_0/output_1/input_0/input_1 to the ACTUAL pins wired
+ *  >>> between the picodk and the Trezor main SoC. Wrong pins build fine but
+ *  >>> break SPI handshaking and bootloader entry at runtime.
+ */
+
+/ {
+	chosen {
+		/* Shares uart20 with the console, as t3w1 shares uart0. */
+		trezor,trz-uart = &uart20;
+	};
+
+	outputs {
+		compatible = "gpio-leds";
+		output_0: output_0 {
+			gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;   /* TODO: real pin (reserved-output) */
+		};
+		output_1: output_1 {
+			gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;   /* TODO: real pin (spi-request) */
+		};
+	};
+
+	inputs {
+		compatible = "gpio-keys";
+		input_0: input_0 {
+			gpios = <&gpio0 7 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;  /* TODO: real pin (stay-in-bootloader) */
+		};
+		input_1: input_1 {
+			gpios = <&gpio0 8 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;  /* TODO: real pin (spi-ready) */
+		};
+	};
+
+	aliases {
+		spi-master = &spi21;
+		spi-ready = &input_1;
+		spi-request = &output_1;
+		stay-in-bootloader = &input_0;
+		reserved-output = &output_0;
+	};
+};
+
+/* Add the trezor_spi_dev label the app looks up via DT_NODELABEL(). The picodk
+ * board already declares this node as reg_my_spi_master under &spi21; this adds
+ * the second label the shared code expects. */
+&spi21 {
+	trezor_spi_dev: spi-dev-a@0 {
+		reg = <0>;
+	};
+};

@@ -30,6 +30,8 @@
 #include <signals/signals.h>
 #include <trz_comm/trz_comm.h>
 
+#include <ncs_version.h>
+
 #include "trz_comm_internal.h"
 
 #define LOG_MODULE_NAME trz_comm_spi
@@ -54,6 +56,12 @@ static const struct spi_config spi_cfg = {
         {
             .gpio = SPI_CS_GPIOS_DT_SPEC_GET(DT_NODELABEL(trezor_spi_dev)),
             .delay = 0,
+/* struct spi_cs_control gained the cs_is_gpio member in Zephyr 4.x (NCS 3.x). */
+#if NCS_VERSION_NUMBER < 0x030300
+            /* NCS 2.9: struct spi_cs_control has no cs_is_gpio member. */
+#else
+            .cs_is_gpio = true,
+#endif
         },
 };
 
