@@ -7,7 +7,7 @@ edition = "2024"
 
 
 [dependencies]
-trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
+trezor-app-sdk = { path = "../../crates/trezor-app-sdk", features = ["alloc"] }
 emballoc = "0.3.0"
 prost = { version = "0.14.1", default-features = false, features = ["derive"] }
 ufmt = { version = "0.2.0", default-features = false }
@@ -44,7 +44,7 @@ log_level_trace = ['trezor-app-sdk/log_level_trace']
 # --------------------------------------------------------------------------
 # Selectable features
 # --------------------------------------------------------------------------
-emulator = ['trezor-app-sdk/debug']
+emulator = []
 test = ["dev_keys", 'trezor-app-sdk/test', 'trezor-app-sdk/log_level_trace']
 debug = ['trezor-app-sdk/debug']
 

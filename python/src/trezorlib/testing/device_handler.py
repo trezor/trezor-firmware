@@ -47,7 +47,6 @@ class BackgroundDeviceHandler:
         self.client = client
         self.client.ui = NullUI
         self.client.app.button_callback = self.client.ui.button_request
-        self.client.watch_layout(True)
         self.client.debug.input_wait_type = DebugWaitType.CURRENT_LAYOUT
 
     def get_session(self, *args: t.Any, **kwargs: t.Any) -> None:
