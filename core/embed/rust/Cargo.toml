@@ -68,6 +68,7 @@ test = [
     "button",
     "cc",
     "crypto",
+    "dbg_console",
     "dma2d",
     "debug",
     "glob",
