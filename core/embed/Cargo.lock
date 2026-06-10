@@ -89,6 +89,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
+name = "api"
+version = "0.1.0"
+dependencies = [
+ "color-eyre",
+ "io",
+ "models",
+ "rtl",
+ "sec",
+ "xbuild",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -426,6 +438,7 @@ checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 name = "firmware"
 version = "0.0.0"
 dependencies = [
+ "api",
  "color-eyre",
  "io",
  "models",
@@ -1351,6 +1364,7 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 name = "unix"
 version = "0.0.0"
 dependencies = [
+ "api",
  "color-eyre",
  "io",
  "models",

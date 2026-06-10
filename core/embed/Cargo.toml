@@ -8,6 +8,7 @@ members = [
     "sec",
     "io",
     "upymod",
+    "api",
     "rust",
     "rust-staticlib",
     "projects/boardloader",
@@ -105,6 +106,7 @@ sys = { path = "sys" }
 sec = { path = "sec" }
 io = { path = "io" }
 upymod = { path = "upymod" }
+api = { path = "api" }
 trezor_lib = { path = "rust", default-features = false }
 trezor-structs = { version = "0.1.0", path = "../../sdk/crates/trezor-structs", default-features = false }
 
