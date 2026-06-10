@@ -416,8 +416,45 @@ class BindingContext:
 # https://eips.ethereum.org/EIPS/eip-7730#structured-data-format-specification
 
 
+class CalldataReader:
+    """Reader over the calldata argument bytes.
+
+    All calldata access goes through this interface so that the backing storage
+    can later be turned into an incremental, forward-only stream. For now it is
+    backed by a full in-memory buffer and still allows arbitrary `seek`."""
+
+    def __init__(self, data: memoryview) -> None:
+        self._data = data
+        self.position = 0
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def seek(self, offset: int) -> None:
+        # TODO: random-access seek is temporary. Once parsing is reworked to a
+        # forward-only pass over a streamed buffer, this will be removed (or
+        # restricted to forward-only) and arbitrary backward seeks will go away.
+        if not 0 <= offset <= len(self._data):
+            raise OutOfBounds
+        self.position = offset
+
+    def read(self, length: int) -> memoryview:
+        end = self.position + length
+        if length < 0 or end > len(self._data):
+            raise OutOfBounds
+        chunk = self._data[self.position : end]
+        self.position = end
+        return chunk
+
+    def read_word(self) -> memoryview:
+        return self.read(32)
+
+    def read_uint(self) -> int:
+        return int.from_bytes(self.read_word(), "big")
+
+
 class ABIValue:
-    def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
+    def parse(self, reader: CalldataReader, offset: int) -> tuple[AnyValue, int]:
         raise NotImplementedError
 
     @staticmethod
@@ -465,21 +502,17 @@ class Atomic(ABIValue):
     def __init__(self, parser: Parser) -> None:
         self.parser = parser
 
-    def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
-        if offset + 32 > len(raw_data):
-            raise OutOfBounds
-        return self.parser(raw_data[offset : offset + 32]), 32
+    def parse(self, reader: CalldataReader, offset: int) -> tuple[AnyValue, int]:
+        reader.seek(offset)
+        return self.parser(reader.read_word()), 32
 
 
-def _read_dynamic_data(raw_data: memoryview, pointer: int) -> memoryview:
-    """Read a variable-length blob located at `pointer` in `raw_data`,
+def _read_dynamic_data(reader: CalldataReader, pointer: int) -> memoryview:
+    """Read a variable-length blob located at `pointer` in the calldata,
     encoded as a 32-byte length prefix followed by `length` bytes of data."""
-    if pointer + 32 > len(raw_data):
-        raise OutOfBounds
-    length = int.from_bytes(raw_data[pointer : pointer + 32], "big")
-    if pointer + 32 + length > len(raw_data):
-        raise OutOfBounds
-    return raw_data[pointer + 32 : pointer + 32 + length]
+    reader.seek(pointer)
+    length = reader.read_uint()
+    return reader.read(length)
 
 
 class Dynamic(ABIValue):
@@ -491,11 +524,10 @@ class Dynamic(ABIValue):
     def __init__(self, parser: Parser) -> None:
         self.parser = parser
 
-    def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
-        if offset + 32 > len(raw_data):
-            raise OutOfBounds
-        pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-        data = _read_dynamic_data(raw_data, pointer)
+    def parse(self, reader: CalldataReader, offset: int) -> tuple[AnyValue, int]:
+        reader.seek(offset)
+        pointer = reader.read_uint()
+        data = _read_dynamic_data(reader, pointer)
         return self.parser(data), 32
 
 
@@ -511,34 +543,32 @@ class Tuple(ABIValue):
         self.is_dynamic = is_dynamic
         self.static_size = len(fields) * 32
 
-    def parse(self, raw_data: memoryview, offset: int) -> tuple[TupleValue, int]:
+    def parse(self, reader: CalldataReader, offset: int) -> tuple[TupleValue, int]:
         if not self.is_dynamic:
             base_offset = offset
             consumed = self.static_size
         else:
-            if offset + 32 > len(raw_data):
-                raise OutOfBounds
-            pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-            base_offset = pointer
+            reader.seek(offset)
+            base_offset = reader.read_uint()
             consumed = 32  # dynamic structs just consume the pointer
 
-        if base_offset + self.static_size > len(raw_data):
+        if base_offset + self.static_size > len(reader):
             raise OutOfBounds
 
         value: list[Value] = [None] * len(self.fields)
 
         for i, parser in enumerate(self.fields):
             field_head_pos = base_offset + (i * 32)
-            raw_field = raw_data[field_head_pos : field_head_pos + 32]
+            reader.seek(field_head_pos)
             if parser not in DYNAMIC_DATA_PARSERS:
-                v = parser(raw_field)
+                v = parser(reader.read_word())
                 if isinstance(v, (tuple, list)):
                     # Tuple or Array inside a Tuple
                     raise NotImplementedError
                 value[i] = v
             else:
-                field_pointer = base_offset + int.from_bytes(raw_field, "big")
-                raw_field = _read_dynamic_data(raw_data, field_pointer)
+                field_pointer = base_offset + reader.read_uint()
+                raw_field = _read_dynamic_data(reader, field_pointer)
                 v = parser(raw_field)
                 if isinstance(v, (tuple, list)):
                     # Tuple or Array inside a Tuple
@@ -553,39 +583,37 @@ class Array(ABIValue):
     def __init__(self, element_definition: ABIValue) -> None:
         self.element_definition = element_definition
 
-    def parse(self, raw_data: memoryview, offset: int) -> tuple[ListValue, int]:
-        if offset + 32 > len(raw_data):
-            raise OutOfBounds
-        array_pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-        return self._parse_body(raw_data, array_pointer), 32
+    def parse(self, reader: CalldataReader, offset: int) -> tuple[ListValue, int]:
+        reader.seek(offset)
+        array_pointer = reader.read_uint()
+        return self._parse_body(reader, array_pointer), 32
 
-    def _parse_body(self, raw_data: memoryview, array_start: int) -> ListValue:
-        if array_start + 32 > len(raw_data):
-            raise OutOfBounds
-        array_length = int.from_bytes(raw_data[array_start : array_start + 32], "big")
+    def _parse_body(self, reader: CalldataReader, array_start: int) -> ListValue:
+        reader.seek(array_start)
+        array_length = reader.read_uint()
         array_heads_end = array_start + 32 + (array_length * 32)
-        if array_heads_end > len(raw_data):
+        if array_heads_end > len(reader):
             raise OutOfBounds
 
         value = []
 
         for i in range(array_length):
             p = array_start + 32 + (i * 32)
-            if p + 32 > len(raw_data):
-                raise OutOfBounds
             if isinstance(self.element_definition, Atomic):
                 # atomic types are encoded in place
-                data, _ = self.element_definition.parse(raw_data, p)
+                data, _ = self.element_definition.parse(reader, p)
             elif isinstance(self.element_definition, Array):
                 # inner arrays: element head is a relative offset to the inner array body
-                element_pointer = int.from_bytes(raw_data[p : p + 32], "big")
+                reader.seek(p)
+                element_pointer = reader.read_uint()
                 inner_array_start = array_start + 32 + element_pointer
-                data = self.element_definition._parse_body(raw_data, inner_array_start)
+                data = self.element_definition._parse_body(reader, inner_array_start)
             else:
-                element_pointer = int.from_bytes(raw_data[p : p + 32], "big")
+                reader.seek(p)
+                element_pointer = reader.read_uint()
                 element_absolute_pointer = array_start + 32 + element_pointer
                 data, _ = self.element_definition.parse(
-                    raw_data, element_absolute_pointer
+                    reader, element_absolute_pointer
                 )
             value.append(data)
 
@@ -701,9 +729,10 @@ class DisplayFormat:
     ]:
         parameters: list[AnyValue] = []
 
+        reader = CalldataReader(calldata)
         offset = 0
         for parameter_definition in self.parameter_definitions:
-            value, consumed = parameter_definition.parse(calldata, offset)
+            value, consumed = parameter_definition.parse(reader, offset)
             parameters.append(value)
             offset += consumed
 

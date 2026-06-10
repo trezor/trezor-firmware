@@ -10,6 +10,7 @@ if not utils.BITCOIN_ONLY:
     from apps.ethereum.clear_signing import (
         Array,
         Atomic,
+        CalldataReader,
         DirtyAddress,
         OutOfBounds,
         Tuple,
@@ -43,7 +44,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         data = memoryview(valid_payload)
 
         atomic_addr = Atomic(parse_address)
-        parsed, consumed = atomic_addr.parse(data, 0)
+        parsed, consumed = atomic_addr.parse(CalldataReader(data), 0)
 
         assert parsed == addr_bytes
         assert consumed == 32
@@ -58,21 +59,23 @@ class TestEthereumClearSigning(unittest.TestCase):
         atomic_addr = Atomic(parse_address)
 
         with self.assertRaises(DirtyAddress):
-            atomic_addr.parse(data, 0)
+            atomic_addr.parse(CalldataReader(data), 0)
 
     def test_address_parsing_insufficient_data(self):
         short_data = memoryview(b"\x00" * 20)  # Only 20 bytes provided
         atomic_addr = Atomic(parse_address)
 
         with self.assertRaises(OutOfBounds):
-            atomic_addr.parse(short_data, 0)
+            atomic_addr.parse(CalldataReader(short_data), 0)
 
     def test_uint24_parsing(self):
         atomic_uint24 = Atomic(parse_uint24)
 
         val_int = 1_000_000  # fits in 24 bits
         data = memoryview(FIVE_RANDOM_BYTES + to_bytes(val_int) + SEVEN_RANDOM_BYTES)
-        parsed, consumed = atomic_uint24.parse(data, len(FIVE_RANDOM_BYTES))
+        parsed, consumed = atomic_uint24.parse(
+            CalldataReader(data), len(FIVE_RANDOM_BYTES)
+        )
         self.assertEqual(parsed, val_int)
         self.assertEqual(consumed, 32)
 
@@ -81,14 +84,16 @@ class TestEthereumClearSigning(unittest.TestCase):
             FIVE_RANDOM_BYTES + to_bytes(invalid_val) + SEVEN_RANDOM_BYTES
         )
         with self.assertRaises(ValueOverflow):
-            atomic_uint24.parse(invalid_data, len(FIVE_RANDOM_BYTES))
+            atomic_uint24.parse(CalldataReader(invalid_data), len(FIVE_RANDOM_BYTES))
 
     def test_uint160_parsing(self):
         atomic_uint160 = Atomic(parse_uint160)
 
         val_int = 2**159 + 5  # fits in 160 bits
         data = memoryview(SEVEN_RANDOM_BYTES + to_bytes(val_int) + FIVE_RANDOM_BYTES)
-        parsed, consumed = atomic_uint160.parse(data, len(SEVEN_RANDOM_BYTES))
+        parsed, consumed = atomic_uint160.parse(
+            CalldataReader(data), len(SEVEN_RANDOM_BYTES)
+        )
         self.assertEqual(parsed, val_int)
         self.assertEqual(consumed, 32)
 
@@ -97,24 +102,28 @@ class TestEthereumClearSigning(unittest.TestCase):
             SEVEN_RANDOM_BYTES + to_bytes(invalid_val) + FIVE_RANDOM_BYTES
         )
         with self.assertRaises(ValueOverflow):
-            atomic_uint160.parse(invalid_data, len(SEVEN_RANDOM_BYTES))
+            atomic_uint160.parse(CalldataReader(invalid_data), len(SEVEN_RANDOM_BYTES))
 
     def test_bool_parsing(self):
         atomic_bool = Atomic(parse_bool)
 
         data_true = memoryview(FIVE_RANDOM_BYTES + to_bytes(1) + SEVEN_RANDOM_BYTES)
-        parsed, consumed = atomic_bool.parse(data_true, len(FIVE_RANDOM_BYTES))
+        parsed, consumed = atomic_bool.parse(
+            CalldataReader(data_true), len(FIVE_RANDOM_BYTES)
+        )
         self.assertEqual(parsed, True)
         self.assertEqual(consumed, 32)
 
         data_false = memoryview(SEVEN_RANDOM_BYTES + to_bytes(0) + FIVE_RANDOM_BYTES)
-        parsed, consumed = atomic_bool.parse(data_false, len(SEVEN_RANDOM_BYTES))
+        parsed, consumed = atomic_bool.parse(
+            CalldataReader(data_false), len(SEVEN_RANDOM_BYTES)
+        )
         self.assertEqual(parsed, False)
         self.assertEqual(consumed, 32)
 
         invalid_data = memoryview(FIVE_RANDOM_BYTES + to_bytes(2) + SEVEN_RANDOM_BYTES)
         with self.assertRaises(ValueOverflow):
-            atomic_bool.parse(invalid_data, len(FIVE_RANDOM_BYTES))
+            atomic_bool.parse(CalldataReader(invalid_data), len(FIVE_RANDOM_BYTES))
 
     def test_uint256_max(self):
         atomic_uint256 = Atomic(parse_uint256)
@@ -123,7 +132,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         max_uint = (2**256) - 1
         data = memoryview(SEVEN_RANDOM_BYTES + to_bytes(max_uint) + FIVE_RANDOM_BYTES)
 
-        parsed, consumed = atomic_uint256.parse(data, len(SEVEN_RANDOM_BYTES))
+        parsed, consumed = atomic_uint256.parse(
+            CalldataReader(data), len(SEVEN_RANDOM_BYTES)
+        )
         self.assertEqual(parsed, max_uint)
         self.assertEqual(consumed, 32)
 
@@ -143,7 +154,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         data = memoryview(FIVE_RANDOM_BYTES + payload + SEVEN_RANDOM_BYTES)
 
-        parsed, consumed = static_struct.parse(data, len(FIVE_RANDOM_BYTES))
+        parsed, consumed = static_struct.parse(
+            CalldataReader(data), len(FIVE_RANDOM_BYTES)
+        )
 
         self.assertEqual(parsed, (addr_bytes, u160_val, True))
         self.assertEqual(consumed, 96)
@@ -167,7 +180,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         data = memoryview(FIVE_RANDOM_BYTES + payload + SEVEN_RANDOM_BYTES)
 
         with self.assertRaises(ValueOverflow):
-            static_struct.parse(data, len(FIVE_RANDOM_BYTES))
+            static_struct.parse(CalldataReader(data), len(FIVE_RANDOM_BYTES))
 
     def test_dynamic_struct_valid(self):
         dynamic_struct = Tuple((parse_address, parse_string), is_dynamic=True)
@@ -200,7 +213,9 @@ class TestEthereumClearSigning(unittest.TestCase):
             + struct_payload
         )
 
-        parsed, consumed = dynamic_struct.parse(data, len(SEVEN_RANDOM_BYTES))
+        parsed, consumed = dynamic_struct.parse(
+            CalldataReader(data), len(SEVEN_RANDOM_BYTES)
+        )
 
         self.assertEqual(parsed, (addr, text))
         self.assertEqual(consumed, 32)  # only the initial pointer is consumed
@@ -213,7 +228,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         data = memoryview(payload)
 
         with self.assertRaises(OutOfBounds):
-            dynamic_struct.parse(data, 0)
+            dynamic_struct.parse(CalldataReader(data), 0)
 
     def test_array_of_addresses_valid(self):
         address_array_parser = Array(Atomic(parse_address))
@@ -236,7 +251,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         data = memoryview(FIVE_RANDOM_BYTES + payload + SEVEN_RANDOM_BYTES)
 
-        parsed, consumed = address_array_parser.parse(data, len(FIVE_RANDOM_BYTES))
+        parsed, consumed = address_array_parser.parse(
+            CalldataReader(data), len(FIVE_RANDOM_BYTES)
+        )
 
         self.assertEqual(parsed, [addr1, addr2])
         self.assertEqual(consumed, 32)
@@ -262,7 +279,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         data = memoryview(payload)
 
         with self.assertRaises(DirtyAddress):
-            address_array_parser.parse(data, 0)
+            address_array_parser.parse(CalldataReader(data), 0)
 
     def test_array_of_dynamic_structs(self):
         array_parser = Array(
@@ -308,7 +325,7 @@ class TestEthereumClearSigning(unittest.TestCase):
 
         data = memoryview(payload)
 
-        parsed, consumed = array_parser.parse(data, 0)
+        parsed, consumed = array_parser.parse(CalldataReader(data), 0)
 
         self.assertEqual(parsed, [(addr1, text1), (addr2, text2)])
         self.assertEqual(consumed, 32)
@@ -318,12 +335,14 @@ class TestEthereumClearSigning(unittest.TestCase):
 
         b32 = bytes(range(32))
         data = memoryview(FIVE_RANDOM_BYTES + b32 + SEVEN_RANDOM_BYTES)
-        parsed, consumed = atomic_bytes32.parse(data, len(FIVE_RANDOM_BYTES))
+        parsed, consumed = atomic_bytes32.parse(
+            CalldataReader(data), len(FIVE_RANDOM_BYTES)
+        )
         self.assertEqual(parsed, b32)
         self.assertEqual(consumed, 32)
 
         with self.assertRaises(OutOfBounds):
-            atomic_bytes32.parse(memoryview(b"\x00" * 20), 0)
+            atomic_bytes32.parse(CalldataReader(memoryview(b"\x00" * 20)), 0)
 
     def test_array_of_arrays_of_bytes32(self):
         # bytes32[][] = [[b0, b1], [b2]]
@@ -358,7 +377,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         data = memoryview(SEVEN_RANDOM_BYTES + payload + FIVE_RANDOM_BYTES)
 
-        parsed, consumed = nested_array_parser.parse(data, len(SEVEN_RANDOM_BYTES))
+        parsed, consumed = nested_array_parser.parse(
+            CalldataReader(data), len(SEVEN_RANDOM_BYTES)
+        )
         self.assertEqual(parsed, [[b0, b1], [b2]])
         self.assertEqual(consumed, 32)
 
@@ -368,7 +389,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         # outer array pointer points beyond the data
         payload = to_bytes(9999)
         with self.assertRaises(OutOfBounds):
-            nested_array_parser.parse(memoryview(payload), 0)
+            nested_array_parser.parse(CalldataReader(memoryview(payload)), 0)
 
         # inner array length overruns the data — test both sides of the border
 
@@ -381,7 +402,9 @@ class TestEthereumClearSigning(unittest.TestCase):
             + to_bytes(0)  # inner[0] length = 0 → empty
         )
         data = memoryview(SEVEN_RANDOM_BYTES + payload_ok + FIVE_RANDOM_BYTES)
-        parsed, consumed = nested_array_parser.parse(data, len(SEVEN_RANDOM_BYTES))
+        parsed, consumed = nested_array_parser.parse(
+            CalldataReader(data), len(SEVEN_RANDOM_BYTES)
+        )
         self.assertEqual(parsed, [[]])
         self.assertEqual(consumed, 32)
 
@@ -393,7 +416,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             + to_bytes(1)  # inner[0] length = 1 — one element claimed but no data
         )
         with self.assertRaises(OutOfBounds):
-            nested_array_parser.parse(memoryview(payload_fail), 0)
+            nested_array_parser.parse(CalldataReader(memoryview(payload_fail)), 0)
 
 
 if __name__ == "__main__":
