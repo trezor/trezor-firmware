@@ -1,5 +1,5 @@
 use trezor_thp::channel::{
-    APP_HEADER_LEN, MAX_CREDENTIAL_LEN, MAX_DEVICE_PROPERTIES_LEN, SEND_BUFFER_OVERHEAD,
+    Phase, APP_HEADER_LEN, MAX_CREDENTIAL_LEN, MAX_DEVICE_PROPERTIES_LEN, SEND_BUFFER_OVERHEAD,
 };
 
 use crate::{
@@ -175,9 +175,15 @@ extern "C" fn thp_channel_info(iface_num: Obj, channel_id: Obj) -> Obj {
 
         let thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
 
-        let (last_write_age_ms, pairing_state) = thp.channel_info(iface_num, channel_id)?;
+        let (last_write_age_ms, phase) = thp.channel_info(iface_num, channel_id)?;
         let hash = thp.handshake_hash(iface_num, channel_id)?;
         let remote_static_pubkey = thp.remote_static_pubkey(iface_num, channel_id)?;
+        let pairing_state: Option<u8> = match phase {
+            Phase::PairingCredential {
+                handshake_pairing_state,
+            } => Some(handshake_pairing_state.into()),
+            Phase::EncryptedTransport => None,
+        };
 
         let credential = {
             let aux = THP_AUX.try_lock().ok_or(CANNOT_UNLOCK)?;

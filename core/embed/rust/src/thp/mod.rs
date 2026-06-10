@@ -1,5 +1,7 @@
 mod crypto;
 pub mod micropython;
+#[cfg(test)]
+mod tests;
 mod time;
 
 use crate::{error::Error, micropython::obj::Obj, time::Instant};
@@ -34,9 +36,9 @@ type TrezorChannel = Channel<TrezorCrypto>;
 
 type PubKey = [u8; PUBKEY_LEN];
 
-#[cfg(not(feature = "ble"))]
+#[cfg(not(any(test, feature = "ble")))]
 const MAX_INTERFACES: usize = 1;
-#[cfg(feature = "ble")]
+#[cfg(any(test, feature = "ble"))]
 const MAX_INTERFACES: usize = 2;
 
 // Channel limits, shared across interfaces.
@@ -444,24 +446,17 @@ impl ThpContext {
 
     // Returns information for a channel:
     // - duration between now and the last time a (non-ACK) packet has been sent
-    // - paring state result of handshake (only channels in pairing+credential
-    //   phase, channels in encrypted transport return None)
+    // - phase of the channel, possibly with initial pairing state
     pub fn channel_info(
         &self,
         iface_num: u8,
         channel_id: u16,
-    ) -> Result<(Option<u32>, Option<u8>), Error> {
+    ) -> Result<(Option<u32>, Phase), Error> {
         let (channel, timing) = self.lookup_channel(iface_num, channel_id)?;
-        let pairing_state = match channel.phase() {
-            Phase::PairingCredential {
-                handshake_pairing_state,
-            } => Some(handshake_pairing_state.into()),
-            Phase::EncryptedTransport => None,
-        };
         let last_write_age_ms = timing
             .last_write_age(Instant::now())
             .map(|duration| duration.to_millis());
-        Ok((last_write_age_ms, pairing_state))
+        Ok((last_write_age_ms, channel.phase()))
     }
 
     /// Indicate that a pairing+credential phase was successfully finished,
@@ -814,6 +809,7 @@ impl CredentialVerifier for TrezorCredentialVerifier {
 
 /// Result of `InterfaceContext::packet_in` and
 /// `InterfaceContext::packet_in_channel`.
+#[cfg_attr(test, derive(Debug))]
 enum TrezorInResult {
     /// Either a valid packet was consumed, or malformed one was ignored. No
     /// further action required.
@@ -830,7 +826,7 @@ enum TrezorInResult {
     Failed,
     /// Handshake packet requires Trezor's static key. Micropython needs to call
     /// either `InterfaceContext::send_device_locked()` or
-    /// `InterfaceContext::static_key()`.
+    /// `InterfaceContext::handshake_static_key()`.
     KeyRequired { try_to_unlock: bool },
     /// Incoming message is ready on a channel, `InterfaceContext::message_out`
     /// should be called. Does not contain ACK bit.

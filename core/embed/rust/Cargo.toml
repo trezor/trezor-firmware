@@ -82,6 +82,7 @@ test = [
     "thp",
     "touch",
     "translations",
+    "trezor-thp?/use_std",
     "ui",
     "ui_jpeg",
     "ui_font_kerning",
