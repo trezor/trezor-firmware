@@ -47,9 +47,10 @@ const DEVICE_KEY: &[u8; PRIVKEY_LEN] = &[0u8; PRIVKEY_LEN];
 const DEVICE_PROPERTIES: &[u8] =
     b"\x0a\x04\x54\x32\x57\x31\x10\x00\x18\x02\x20\x00\x28\x02\x28\x01";
 
+// Set environment variable RUST_LOG=<level> to enable logging, e.g. RUST_LOG=trace.
 fn setup() {
     SETUP.call_once(|| {
-        env_logger::init_from_env(env_logger::Env::default().filter_or("RUST_LOG", "info"));
+        env_logger::init_from_env(env_logger::Env::default().filter_or("RUST_LOG", "off"));
     })
 }
 
@@ -119,6 +120,10 @@ impl<C: CredentialVerifier, B: Backend> ChannelIO for WithKey<C, B> {
 
     fn message_retransmit(&mut self) -> Result<()> {
         self.channel.message_retransmit()
+    }
+
+    fn channel_id(&self) -> u16 {
+        self.channel.channel_id()
     }
 }
 
