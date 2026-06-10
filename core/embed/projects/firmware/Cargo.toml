@@ -16,6 +16,7 @@ sys.workspace = true
 rtl.workspace = true
 models.workspace = true
 upymod.workspace = true
+api.workspace = true
 
 [features]
 
@@ -113,7 +114,11 @@ thp = ["upymod/thp", "rtl/aes_gcm"]
 tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry", "upymod/telemetry", "trezor_lib/telemetry"]
 touch = ["io/touch", "upymod/touch", "trezor_lib/touch"]
-touch_wakeup = ["io/touch_wakeup", "upymod/touch_wakeup", "trezor_lib/touch_wakeup"]
+touch_wakeup = [
+    "io/touch_wakeup",
+    "upymod/touch_wakeup",
+    "trezor_lib/touch_wakeup",
+]
 tropic = ["sec/tropic", "upymod/tropic", "trezor_lib/tropic"]
 
 # Legacy coin support (T2T1 only)
