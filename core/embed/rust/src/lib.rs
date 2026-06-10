@@ -108,6 +108,12 @@ pub fn main() -> i32 {
         }
         rust_tests_c_setup();
     }
+
+    match std::env::var("RUST_LOG") {
+        Ok(s) if s != "0" => crate::util::logger::init_rust_logging(0),
+        _ => eprintln!("Set RUST_LOG=1 to enable logs."),
+    }
+
     // Call the Rust test harness main function
     // The function panics if any test fails.
     // Asserting that it returns () to ensure that if a future Rust version

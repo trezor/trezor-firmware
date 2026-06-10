@@ -11,6 +11,9 @@ use core::{
 
 use crate::trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel};
 
+#[cfg(test)]
+const MAX_MESSAGE_LEN: usize = 512;
+#[cfg(not(test))]
 const MAX_MESSAGE_LEN: usize = 128;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -46,11 +49,15 @@ impl Log for SysLogger {
 
         let mut msg = Vec::<u8, MAX_MESSAGE_LEN>::new();
         // Might still get partial message on error.
-        let _ = msg.write_fmt(*record.args());
+        let res = msg.write_fmt(*record.args());
 
         // SAFETY: passed to C which doesn't care about UTF-8
         let text = unsafe { str::from_utf8_unchecked(&msg) };
-        syslog_write_chunk(text, true);
+        syslog_write_chunk(text, res.is_ok());
+
+        if res.is_err() {
+            syslog_write_chunk("(message truncated)", true);
+        }
     }
 
     fn flush(&self) {}
