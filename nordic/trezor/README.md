@@ -1,7 +1,8 @@
 # Trezor BLE Gateway
 
 Welcome to the **Trezor BLE Gateway** project!
-This repository contains the source code and instructions to build and flash the application onto the `t3w1_nrf52833` board.
+This repository contains the source code and instructions to build and flash the
+application.
 
 ## Table of Contents
 
@@ -11,6 +12,7 @@ This repository contains the source code and instructions to build and flash the
     - [Launch the nRF Shell](#launch-the-nrf-shell)
     - [Initialize the Workspace](#initialize-the-workspace)
     - [Update nRF Connect SDK Modules](#update-nrf-connect-sdk-modules)
+    - [Selecting the nRF Connect SDK version](#selecting-the-nrf-connect-sdk-version)
     - [Build the Application](#build-the-application)
     - [Flash the Application](#flash-the-application)
 - [Contributing](#contributing)
@@ -29,7 +31,15 @@ Follow these steps to set up the project on your local machine.
 
 ### Install the toolchain
 
-Using nrfutil, install the required toolchain for the nRF Connect SDK:
+Using nrfutil, install the toolchain for the nRF Connect SDK. The project
+defaults to **NCS v3.3.0**; install the matching toolchain:
+```sh
+nrfutil toolchain-manager install --ncs-version v3.3.0
+```
+
+The regulatory-frozen build still uses **NCS v2.9.0**. If you need to switch to
+it (see [Selecting the SDK version](#selecting-the-nrf-connect-sdk-version)),
+install that toolchain as well:
 ```sh
 nrfutil toolchain-manager install --ncs-version v2.9.0
 ```
@@ -55,6 +65,48 @@ Update the modules:
 ```sh
 west update
 ```
+
+### Selecting the nRF Connect SDK version
+
+The workspace ships two manifests, sharing a single checkout:
+
+| Manifest            | SDK        | Role                              |
+|---------------------|------------|-----------------------------------|
+| `west.yml`          | NCS v3.3.0 | **Default** (used by `west init`) |
+| `west-ncs2.9.yml`   | NCS v2.9.0 | Regulatory-frozen, occasional     |
+
+`west init -l ./trezor` selects `west.yml` (3.3.0). To switch the active
+manifest, change it and re-run `west update` in the same workspace:
+
+```sh
+# Drop to the frozen 2.9.x SDK
+west config manifest.file west-ncs2.9.yml
+west update
+
+# Return to the default 3.3.x SDK
+west config manifest.file west.yml
+west update
+```
+
+Each board is tied to one SDK — build the matching board for the active manifest:
+
+| Manifest          | SDK        | Board to build                |
+| `west-ncs2.9.yml` | NCS v2.9.0 | `t3w1_revA_nrf52832`          |
+
+
+Notes:
+- Only one SDK is checked out at a time, so always rebuild with
+  `--pristine=always` after switching.
+- Switch the toolchain to match the manifest (`nrfutil toolchain-manager
+  launch --shell` with the corresponding NCS version), or builds will fail in
+  confusing ways.
+- SDK differences in application **code** are handled with `<ncs_version.h>`,
+  writing for the current default (3.3) and gating the older SDK as the
+  exception: `#if NCS_VERSION_NUMBER < 0x030300  /* NCS 2.9 */ … #else … #endif`.
+- Board/SoC differences in **Kconfig and devicetree** go in
+  `boards/<board>.{conf,overlay}` (auto-merged by Zephyr for the matching board).
+  Since each board targets a single SDK, this also covers version-specific
+  config/DT without a separate version gate.
 
 
 ## Recommended build methods
