@@ -29,6 +29,10 @@ impl<C: ChannelIO> Buffered<C> {
         }
     }
 
+    pub fn packet_len(&self) -> usize {
+        self.packet_len
+    }
+
     pub fn set_packet_len(&mut self, packet_len: usize) {
         self.packet_len = packet_len;
     }

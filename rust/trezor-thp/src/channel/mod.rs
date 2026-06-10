@@ -70,6 +70,7 @@ impl Nonce {
 }
 
 /// Sent by device after successful handshake to indicate whether pairing is required.
+#[cfg_attr(any(test, debug_assertions), derive(Debug))]
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PairingState {
@@ -157,6 +158,7 @@ enum ReceiveState<R: Role> {
 /// encrypted transport phase can also use protobuf messages, their meaning is generally
 /// different than in the other phases.
 /// Application can use this enum to distinguish the context.
+#[cfg_attr(any(test, debug_assertions), derive(Debug))]
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Phase {
@@ -205,10 +207,6 @@ impl<R: Role, B: Backend> Channel<R, B> {
 
     fn noise(&mut self) -> Result<&mut NoiseCiphers<B>> {
         self.noise.as_mut().ok_or_else(Error::unexpected_input)
-    }
-
-    pub fn channel_id(&self) -> u16 {
-        self.channel_id
     }
 
     pub fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
@@ -762,6 +760,9 @@ pub trait ChannelIO {
         send_buffer[3..plaintext_len].copy_from_slice(message);
         self.message_in(plaintext_len, send_buffer)
     }
+
+    /// Get channel identifier, or `BROADCAST_CHANNEL_ID` for muxes.
+    fn channel_id(&self) -> u16;
 }
 
 impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
@@ -899,6 +900,10 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         fragmenter.reset();
         *retry = retry.saturating_add(1);
         Ok(())
+    }
+
+    fn channel_id(&self) -> u16 {
+        self.channel_id
     }
 }
 

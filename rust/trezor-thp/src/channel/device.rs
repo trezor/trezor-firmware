@@ -270,6 +270,10 @@ where
     fn message_retransmit(&mut self) -> Result<(), Error> {
         Ok(())
     }
+
+    fn channel_id(&self) -> u16 {
+        BROADCAST_CHANNEL_ID
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -451,10 +455,6 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         })
     }
 
-    pub fn channel_id(&self) -> u16 {
-        self.channel.channel_id
-    }
-
     pub fn sending_retry(&self) -> Option<u8> {
         self.channel.sending_retry()
     }
@@ -554,6 +554,10 @@ where
 
     fn message_retransmit(&mut self) -> Result<(), Error> {
         self.channel.message_retransmit()
+    }
+
+    fn channel_id(&self) -> u16 {
+        self.channel.channel_id()
     }
 }
 
