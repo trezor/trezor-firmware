@@ -4,21 +4,18 @@ version = "0.1.0"
 edition = "2024"
 links = "api"
 
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+models.workspace = true
+rtl.workspace = true
+sec.workspace = true
+io.workspace = true
 
 [features]
+
 test = []
 
-# [dependencies]
-# cty = "0.2.2"
-# heapless = { version = "0.9.2", default-features = false }
-# zeroize = { version = "1.8.2", default-features = false, features = ["derive"] }
-
-[build-dependencies]
-bindgen.workspace = true
-xbuild.workspace = true
-cc.workspace = true
-glob = "0.3.3"
-
-# [dev-dependencies]
-# hex = "0.4.3"
-# rand = { version = "0.10.1", default-features = false }
+default = ["io/ipc"]

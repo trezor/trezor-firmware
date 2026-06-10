@@ -92,9 +92,11 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 name = "api"
 version = "0.1.0"
 dependencies = [
- "bindgen",
- "cc",
- "glob",
+ "color-eyre",
+ "io",
+ "models",
+ "rtl",
+ "sec",
  "xbuild",
 ]
 
@@ -1325,6 +1327,7 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 name = "unix"
 version = "0.0.0"
 dependencies = [
+ "api",
  "color-eyre",
  "io",
  "models",
