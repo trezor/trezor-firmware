@@ -253,6 +253,9 @@ if DEBUGLINK:
     features.append('ui_debug')
     features.append('ui_debug_overlay')
 
+if BOOTLOADER_DEVEL:
+    features.append('ui_dev_overlay')
+
 if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
     profile = 'dev'
 else:

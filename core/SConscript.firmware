@@ -940,6 +940,8 @@ if UI_PERFORMANCE_OVERLAY:
     features.append('ui_performance_overlay')
 if not PRODUCTION:
     features.append('dev_keys')
+if BOOTLOADER_DEVEL:
+    features.append('ui_dev_overlay')
 
 
 rust = tools.add_rust_lib(
