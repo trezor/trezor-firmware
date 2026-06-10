@@ -1682,7 +1682,8 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
     return;
   }
   if (read_length != 1) {
-    cli_error(cli, CLI_ERROR, "Unexpected length of configuration version data");
+    cli_error(cli, CLI_ERROR,
+              "Unexpected length of configuration version data");
     return;
   }
   cli_trace(cli, "Configuration version: %d", read_value);

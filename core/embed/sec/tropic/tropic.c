@@ -70,8 +70,7 @@ static const uint8_t
         {0x19, 0x08, 0x0b, 0x10, 0x09}, {0x19, 0x08, 0x13, 0x09, 0x2c},
         {0x19, 0x09, 0x10, 0x0b, 0x04}, {0x19, 0x0a, 0x08, 0x10, 0x10},
         {0x19, 0x0a, 0x1f, 0x0f, 0x2c}, {0x19, 0x0c, 0x03, 0x0d, 0x38},
-        {0x19, 0x04, 0x09, 0x0c, 0x07}
-};
+        {0x19, 0x04, 0x09, 0x0c, 0x07}};
 
 // clang-format off
 // Temporary address table for config objects, ordered to match lt_config_t.obj[].
@@ -437,8 +436,11 @@ lt_ret_t lt_read_whole_R_config_retry(lt_handle_t *tropic_handle,
     return LT_PARAM_ERR;
   }
 
-  // We cannot simply use lt_read_whole_R_config() because it pulls the cfg_desc_table and causes RAM overflow.
-  // TODO: once the cfg_desc_table is made const and can be pulled without RAM overflow, switch to using lt_read_whole_R_config() instead of this implementation.
+  // We cannot simply use lt_read_whole_R_config() because it pulls the
+  // cfg_desc_table and causes RAM overflow.
+  // TODO: once the cfg_desc_table is made const and can be pulled without RAM
+  // overflow, switch to using lt_read_whole_R_config() instead of this
+  // implementation.
   for (uint8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
     lt_ret_t ret = TROPIC_RETRY_COMMAND(lt_r_config_read(
         tropic_handle, TROPIC_CONFIG_ADDRS[i], &config->obj[i]));
@@ -516,8 +518,7 @@ static secbool tropic_ensure_i_config(void) {
     uint32_t expected = tropic_configs_irreversible.obj[i];
     uint32_t current = 0;
     if (TROPIC_RETRY_COMMAND(lt_i_config_read(
-            &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) !=
-        LT_OK) {
+            &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) != LT_OK) {
       return secfalse;
     }
 
@@ -535,8 +536,7 @@ static secbool tropic_ensure_i_config(void) {
     for (uint8_t j = 0; j < 32; j++) {  // Tropic cfg objects are 32-bit
       if (to_flip & BIT(j)) {
         if (TROPIC_RETRY_COMMAND(lt_i_config_write(
-                &drv->handle, TROPIC_CONFIG_ADDRS[i], j)) !=
-            LT_OK) {
+                &drv->handle, TROPIC_CONFIG_ADDRS[i], j)) != LT_OK) {
           return secfalse;
         }
       }
@@ -544,8 +544,7 @@ static secbool tropic_ensure_i_config(void) {
 
     current = 0;
     if (TROPIC_RETRY_COMMAND(lt_i_config_read(
-            &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) !=
-        LT_OK) {
+            &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) != LT_OK) {
       return secfalse;
     }
     if (current != expected) {

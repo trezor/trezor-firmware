@@ -56,10 +56,6 @@
 #include "py/runtime.h"
 #include "py/stackctrl.h"
 
-#ifdef USE_TROPIC
-#include <sec/tropic.h>
-#endif
-
 // Command line options, with their defaults
 STATIC bool compile_only = false;
 STATIC uint emit_opt = MP_EMIT_OPT_NONE;

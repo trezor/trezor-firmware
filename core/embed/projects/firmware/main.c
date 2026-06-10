@@ -64,10 +64,6 @@ extern const void nrf_app_size;
 
 #endif
 
-#ifdef USE_TROPIC
-#include <sec/tropic.h>
-#endif
-
 LOG_DECLARE(coreapp_main)
 
 int main_func(uint32_t cmd, void *arg) {
