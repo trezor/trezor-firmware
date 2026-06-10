@@ -24,7 +24,16 @@
 
 #include <zephyr/logging/log.h>
 
+#include <ncs_version.h>
+
 #include "ble_internal.h"
+
+/* BT_LE_ADV_OPT_CONNECTABLE was renamed to BT_LE_ADV_OPT_CONN in Zephyr 4.x
+ * (NCS 3.x). The code below uses the current name; alias it back for the
+ * legacy NCS 2.9 SDK. */
+#if NCS_VERSION_NUMBER < 0x030300
+#define BT_LE_ADV_OPT_CONN BT_LE_ADV_OPT_CONNECTABLE
+#endif
 
 #define LOG_MODULE_NAME ble_advertising
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
@@ -184,7 +193,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
     advertising_setup_wl();
     LOG_INF("Advertising with whitelist");
 
-    uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE |
+    uint32_t options = BT_LE_ADV_OPT_CONN | BT_LE_ADV_OPT_SCANNABLE |
                        BT_LE_ADV_OPT_FILTER_CONN |
                        BT_LE_ADV_OPT_FILTER_SCAN_REQ;
     if (static_addr) {
@@ -203,7 +212,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
 
     manufacturer_data[2] |= ADV_FLAG_PAIRING;
 
-    uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE;
+    uint32_t options = BT_LE_ADV_OPT_CONN | BT_LE_ADV_OPT_SCANNABLE;
     if (static_addr) {
       LOG_ERR("Advertising with static ADDR");
       options |= BT_LE_ADV_OPT_USE_IDENTITY;

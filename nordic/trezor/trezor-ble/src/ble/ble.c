@@ -31,6 +31,7 @@
 #include <zephyr/settings/settings.h>
 
 #include <app_version.h>
+#include <ncs_version.h>
 
 #include "ble_internal.h"
 
@@ -167,7 +168,14 @@ static int ble_configure_tx_power(int8_t tx_power_level, struct bt_conn *conn) {
   struct net_buf *buf, *rsp = NULL;
   int err;
 
+  /* bt_hci_cmd_create(opcode, param_len) was replaced by
+   * bt_hci_cmd_alloc(timeout) in Zephyr 4.x (NCS 3.x); the opcode is now passed
+   * only to bt_hci_cmd_send_sync() below. */
+#if NCS_VERSION_NUMBER < 0x030300
   buf = bt_hci_cmd_create(BT_HCI_OP_VS_WRITE_TX_POWER_LEVEL, sizeof(*cp));
+#else
+  buf = bt_hci_cmd_alloc(K_FOREVER);
+#endif
   if (!buf) {
     LOG_ERR("Unable to allocate command buffer for TX power");
     return -ENOMEM;
