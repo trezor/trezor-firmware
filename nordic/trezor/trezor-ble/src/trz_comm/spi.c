@@ -56,9 +56,10 @@ static const struct spi_config spi_cfg = {
         {
             .gpio = SPI_CS_GPIOS_DT_SPEC_GET(DT_NODELABEL(trezor_spi_dev)),
             .delay = 0,
-/* struct spi_cs_control gained the cs_is_gpio member in Zephyr 4.x (NCS 3.x). */
+/* struct spi_cs_control gained the cs_is_gpio member in Zephyr 4.x (NCS 3.x).
+ */
 #if NCS_VERSION_NUMBER < 0x030300
-            /* NCS 2.9: struct spi_cs_control has no cs_is_gpio member. */
+/* NCS 2.9: struct spi_cs_control has no cs_is_gpio member. */
 #else
             .cs_is_gpio = true,
 #endif
