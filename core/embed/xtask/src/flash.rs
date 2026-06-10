@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    args::{FlashArgs, FlashEraseArgs, FlashSection},
+    args::{FlashArgs, FlashEraseArgs, FlashSection, ResetArgs},
     helpers,
 };
 
@@ -74,6 +74,25 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
     Ok(())
 }
 
+/// Reset connected MCU using OpenOCD.
+pub fn reset(args: ResetArgs) -> Result<()> {
+    let instr = build_reset_instruction();
+    let model_config = args.model.config()?;
+
+    let status = process::Command::new("openocd")
+        .args(["-f", "interface/stlink.cfg"])
+        .args(["-c", "transport select hla_swd"])
+        .args(["-f", model_config.openocd_target()?])
+        .arg("-c")
+        .arg(instr)
+        .status()
+        .context("Failed to spawn `openocd`")?;
+
+    ensure!(status.success(), "`openocd` failed with status: {status}");
+
+    Ok(())
+}
+
 fn build_flash_write_instruction(binary: &Path, address: u32) -> String {
     format!(
         "init; reset halt; flash write_image erase {} 0x{:X}; exit",
@@ -116,6 +135,10 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 
     instr.push_str("exit");
     Ok(instr)
+}
+
+fn build_reset_instruction() -> String {
+    format!("init; reset; exit")
 }
 
 #[cfg(test)]
