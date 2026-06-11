@@ -567,10 +567,21 @@ static secbool tropic_ensure_r_config(void) {
     return sectrue;
   }
 
-  return lt_erase_and_write_R_config_retry(&drv->handle,
-                                           &tropic_configs_reversible) == LT_OK
-             ? sectrue
-             : secfalse;
+  if (lt_erase_and_write_R_config_retry(&drv->handle,
+                                        &tropic_configs_reversible) != LT_OK) {
+    return secfalse;
+  }
+
+  current = (struct lt_config_t){0};
+  if (lt_read_whole_R_config_retry(&drv->handle, &current) != LT_OK) {
+    return secfalse;
+  }
+
+  if (memcmp(&current, &tropic_configs_reversible, sizeof(current)) != 0) {
+    return secfalse;
+  }
+
+  return sectrue;
 }
 
 secbool tropic_ensure_configuration(void) {
