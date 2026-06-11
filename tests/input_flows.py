@@ -1814,17 +1814,31 @@ def get_mnemonic(debug: DebugLink) -> Generator[None, "messages.ButtonRequest", 
 
 
 class InputFlowBip39Backup(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(
+        self,
+        client: Client,
+        method: messages.BackupMethod = messages.BackupMethod.Display,
+    ):
         super().__init__(client)
         self.mnemonic = None
+        self.method = method
 
     def input_flow_common(self) -> BRGeneratorType:
-        # 1. Backup intro
-        # 2. Backup warning
-        yield from click_through(self.debug, screens=2, code=B.ResetDevice)
-
         # mnemonic phrases and rest
-        self.mnemonic = yield from get_mnemonic(self.debug)
+        if self.method is messages.BackupMethod.Display:
+            # 1. Backup intro
+            # 2. Backup warning
+            yield from click_through(self.debug, screens=2, code=B.ResetDevice)
+            self.mnemonic = yield from get_mnemonic(self.debug)
+        elif self.method is messages.BackupMethod.N4W1:
+            assert (yield).name == "backup_write"
+            self.mnemonic = n4w1_handle_write(self.debug).decode()
+            br = yield
+            assert br.name == "success_backup"
+            assert br.code == B.Success
+            self.debug.press_yes()
+        else:
+            raise RuntimeError
 
 
 class InputFlowBip39ResetBackup(InputFlowBase):
@@ -2246,14 +2260,20 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
 
 class InputFlowSlip39CustomBackup(InputFlowBase):
     def __init__(
-        self, client: Client | DebugSession, share_count: int, repeated: bool = False
+        self,
+        client: Client | DebugSession,
+        share_count: int,
+        repeated: bool = False,
+        backup_method: messages.BackupMethod = messages.BackupMethod.Display,
     ):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.share_count = share_count
         self.repeated = repeated
+        self.backup_method = backup_method
 
     def input_flow_bolt(self) -> BRGeneratorType:
+        assert self.backup_method is messages.BackupMethod.Display
         if self.repeated:
             yield
             self.debug.press_yes()
@@ -2276,6 +2296,7 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
+        assert self.backup_method is messages.BackupMethod.Display
         if self.repeated:
             yield
             self.debug.press_yes()
@@ -2298,6 +2319,7 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        assert self.backup_method is messages.BackupMethod.Display
         if self.repeated:
             yield
             self.debug.press_yes()
@@ -2324,18 +2346,27 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
             yield
             self.debug.press_yes()
 
-        if self.share_count > 1:
-            yield  # Checklist
-            self.debug.press_yes()
-        else:
-            yield  # Backup intro
-            self.debug.press_yes()
+        if self.backup_method is messages.BackupMethod.Display:
+            if self.share_count > 1:
+                yield  # Checklist
+                self.debug.press_yes()
+            else:
+                yield  # Backup intro
+                self.debug.press_yes()
 
-        yield  # Confirm show seeds
-        self.debug.press_yes()
+            yield  # Confirm show seeds
+            self.debug.press_yes()
+        elif self.backup_method is messages.BackupMethod.N4W1:
+            if self.share_count > 1:
+                assert (yield).name == "warning_shamir_backup"
+                self.debug.press_yes()
+        else:
+            raise RuntimeError
 
         # Mnemonic phrases
-        self.mnemonics = yield from load_N_shares(self.debug, self.share_count)
+        self.mnemonics = yield from load_N_shares(
+            self.debug, self.share_count, self.backup_method
+        )
 
         br = yield  # Confirm backup
         assert br.code == B.Success
@@ -2344,29 +2375,44 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
 
 def load_5_groups_5_shares(
     debug: DebugLink,
+    backup_method: messages.BackupMethod = messages.BackupMethod.Display,
 ) -> Generator[None, "messages.ButtonRequest", list[str]]:
     mnemonics: list[str] = []
 
     for _g in range(5):
         for _s in range(5):
-            # Phrase screen
-            mnemonic = yield from read_and_confirm_mnemonic(debug)
-            assert mnemonic is not None
+            if backup_method is messages.BackupMethod.Display:
+                # Phrase screen
+                mnemonic = yield from read_and_confirm_mnemonic(debug)
+                assert mnemonic is not None
+            elif backup_method is messages.BackupMethod.N4W1:
+                assert (yield).name == "backup_write"
+                mnemonic = n4w1_handle_write(debug).decode()
+            else:
+                raise RuntimeError
             mnemonics.append(mnemonic)
-            # Confirm continue to next
-            yield from swipe_if_necessary(debug, B.Success)
-            debug.press_yes()
+            if backup_method is messages.BackupMethod.Display:
+                # Confirm continue to next
+                yield from swipe_if_necessary(debug, B.Success)
+                debug.press_yes()
 
     return mnemonics
 
 
 class InputFlowSlip39AdvancedBackup(InputFlowBase):
-    def __init__(self, client: Client | DebugSession, click_info: bool):
+    def __init__(
+        self,
+        client: Client | DebugSession,
+        click_info: bool,
+        backup_method: messages.BackupMethod = messages.BackupMethod.Display,
+    ):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
+        self.backup_method = backup_method
 
     def input_flow_bolt(self) -> BRGeneratorType:
+        assert self.backup_method is messages.BackupMethod.Display
         assert (yield).name == "backup_intro"
         self.debug.press_yes()
         assert (yield).name == "slip39_checklist"
@@ -2407,6 +2453,7 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
+        assert self.backup_method is messages.BackupMethod.Display
         yield  # 1. Backup intro
         self.debug.press_yes()
         yield  # 2. Checklist
@@ -2432,13 +2479,16 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         self.debug.press_yes()
 
         # Mnemonic phrases - show & confirm shares for all groups
-        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+        self.mnemonics = yield from load_5_groups_5_shares(
+            self.debug, self.backup_method
+        )
 
         br = yield  # Confirm backup
         assert br.code == B.Success
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        assert self.backup_method is messages.BackupMethod.Display
         assert (yield).name == "backup_intro"
         self.debug.swipe_up()
         assert (yield).name == "slip39_checklist"
@@ -2475,8 +2525,9 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        assert (yield).name == "backup_intro"
-        self.debug.press_yes()
+        if self.backup_method is messages.BackupMethod.Display:
+            assert (yield).name == "backup_intro"
+            self.debug.press_yes()
         assert (yield).name == "slip39_checklist"
         self.debug.press_yes()
         assert (yield).name == "slip39_groups"
@@ -2500,11 +2551,14 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
             if self.click_info:
                 click_info_button_delizia_eckhart(self.debug)
             self.debug.press_yes()
-        assert (yield).name == "backup_warning"
-        self.debug.press_yes()
+        if self.backup_method is messages.BackupMethod.Display:
+            assert (yield).name == "backup_warning"
+            self.debug.press_yes()
 
         # Mnemonic phrases - show & confirm shares for all groups
-        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+        self.mnemonics = yield from load_5_groups_5_shares(
+            self.debug, self.backup_method
+        )
 
         br = yield  # Confirm backup
         assert br.code == B.Success
