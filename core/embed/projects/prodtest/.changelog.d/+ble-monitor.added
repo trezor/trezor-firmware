@@ -1,0 +1,1 @@
+Add `ble-monitor` command for monitoring BLE connect/disconnect/pairing events, with interactive pairing confirmation and runtime advertising-mode switching.
