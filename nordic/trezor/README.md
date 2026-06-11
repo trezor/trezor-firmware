@@ -94,12 +94,8 @@ west update
 Each board is tied to one SDK — build the matching board for the active manifest:
 
 | Manifest          | SDK        | Board to build                |
-|-------------------|------------|-------------------------------|
-| `west.yml`        | NCS v3.3.0 | `picodk/nrf54ls05b/cpuapp`    |
 | `west-ncs2.9.yml` | NCS v2.9.0 | `t3w1_revA_nrf52832`          |
 
-The nRF54L (picodk) is not supported on NCS 2.9, so it can only be built under
-the default manifest.
 
 Notes:
 - Only one SDK is checked out at a time, so always rebuild with
@@ -124,14 +120,6 @@ To be invoked from nix-shell in nordic/trezor folder.
 ```sh
 ./scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -d -s
 ./scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -p -s
-```
-
-For the `picodk` (nRF54LS05B) board, first make sure the default NCS v3.3.0
-manifest and toolchain are active (see
-[Selecting the nRF Connect SDK version](#selecting-the-nrf-connect-sdk-version)):
-```sh
-./scripts/build_sign_flash.sh -b picodk/nrf54ls05b/cpuapp -d -s
-./scripts/build_sign_flash.sh -b picodk/nrf54ls05b/cpuapp -p -s
 ```
 
 ## Alternative build methods
@@ -164,13 +152,6 @@ Build the application for the t3w1_revA_nrf52832 board:
 
 ```sh
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild -- -DOVERLAY_CONFIG=debug.conf
-```
-
-To build for the `picodk` (nRF54LS05B) board, switch to the default NCS v3.3.0
-manifest first (see [Selecting the nRF Connect SDK version](#selecting-the-nrf-connect-sdk-version)):
-
-```sh
-west build ./trezor-ble -b picodk/nrf54ls05b/cpuapp --sysbuild -- -DOVERLAY_CONFIG=debug.conf
 ```
 
 
