@@ -615,6 +615,7 @@ ALL_DISPLAY_FORMATS.append(
 
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/lifi/calldata-LIFIDiamond.json
 LIFI_ADDRESS = unhexlify("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE")
+# Chains where the LiFi diamond is deployed at the canonical LIFI_ADDRESS.
 LIFI_CHAINS = [
     1,
     10,
@@ -628,8 +629,6 @@ LIFI_CHAINS = [
     250,
     252,
     288,
-    324,
-    1088,
     1284,
     1285,
     5000,
@@ -640,16 +639,21 @@ LIFI_CHAINS = [
     42170,
     42220,
     43114,
-    59144,
     81457,
-    167004,
     534352,
     1313161554,
     1666600000,
 ]
+# Chains where the LiFi diamond is deployed at a non-canonical address.
+LIFI_ALT_DEPLOYMENTS = [
+    (324, unhexlify("341e94069f53234fe6dabef707ad424830525715")),  # zkSync Era
+    (1088, unhexlify("24ca98fb6972f5ee05f0db00595c7f68d9fafd68")),  # Metis
+    (59144, unhexlify("de1e598b81620773454588b85d6b5d4eec32573e")),  # Linea
+    (167004, unhexlify("3a9a5dba8fe1c4da98187ce4755701bca182f63b")),
+]
 
 LIFI_CONTEXT = BindingContext(
-    [(chain, LIFI_ADDRESS) for chain in LIFI_CHAINS],
+    [(chain, LIFI_ADDRESS) for chain in LIFI_CHAINS] + LIFI_ALT_DEPLOYMENTS,
 )
 
 LIFI_NATIVE_CURRENCY_ADDRESSES = [
@@ -758,7 +762,7 @@ ALL_DISPLAY_FORMATS.append(
             ),
             FieldDefinition(
                 (3,),  # _receiver
-                "Recipient",
+                "Receiver",
                 AddressNameFormatter,
             ),
         ],
@@ -799,7 +803,7 @@ ALL_DISPLAY_FORMATS.append(
         field_definitions=[
             FieldDefinition(
                 ContainerPath.Value,  # @.value
-                "Amount to Send",
+                "Amount to send",
                 AmountFormatter,
             ),
             FieldDefinition(
@@ -855,7 +859,7 @@ ALL_DISPLAY_FORMATS.append(
             ),
             FieldDefinition(
                 (4,),  # _minAmountOut
-                "Minimum to receive",
+                "Minimum to Receive",
                 TokenAmountFormatter(token_path=(5, 3)),  # _swapData.receivingAssetId
             ),
             FieldDefinition(
@@ -911,7 +915,7 @@ ALL_DISPLAY_FORMATS.append(
             ),
             FieldDefinition(
                 (3,),  # _receiver
-                "Recipient",
+                "Receiver",
                 AddressNameFormatter,
             ),
         ],
@@ -1007,7 +1011,7 @@ ALL_DISPLAY_FORMATS.append(
                     0,
                     4,
                 ),  # _swapData.[0].fromAmount
-                "Amount info",
+                "Amount to Send",
                 TokenAmountFormatter(
                     token_path=(5, 0, 2),  # _swapData.[0].sendingAssetId
                     native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
@@ -1015,7 +1019,7 @@ ALL_DISPLAY_FORMATS.append(
             ),
             FieldDefinition(
                 (4,),  # _minAmount,
-                "Minimum Amount to receive",
+                "Minimum to Receive",
                 TokenAmountFormatter(
                     token_path=(5, -1, 3),  # # _swapData.[-1].receivingAssetId
                     native_currency_address=LIFI_NATIVE_CURRENCY_ADDRESSES,
