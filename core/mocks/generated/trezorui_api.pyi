@@ -89,7 +89,7 @@ class LayoutObj(Generic[T]):
 
 
 # rust/src/ui/api/firmware_micropython.rs
-class LayoutContext(Generic[T]):
+class LayoutContext(Protocol[T]):
     """Scopes the lifetime of a Rust-based layout object."""
     def __enter__(self) -> LayoutObj[T]:
         """Enters a context manager (checking the root component is not dropped)."""
@@ -623,7 +623,7 @@ def show_homescreen(
     notification: tuple[str, int, bool] | None = None,
     lockable: bool,
     skip_first_paint: bool,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Idle homescreen."""
 
 
@@ -728,7 +728,7 @@ def show_lockscreen(
     bootscreen: bool,
     skip_first_paint: bool,
     coinjoin_authorized: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Homescreen for locked device."""
 
 
