@@ -110,12 +110,31 @@ def _do_test_signtx(
             chunkify=chunkify,
             payment_req=parameters.get("payment_req"),
         )
+        br_names = [
+            m.name
+            for m in client.actual_responses
+            if isinstance(m, messages.ButtonRequest)
+        ]
 
     expected_v = 2 * parameters["chain_id"] + 35
     assert sig_v in (expected_v, expected_v + 1)
     assert sig_r.hex() == result["sig_r"]
     assert sig_s.hex() == result["sig_s"]
     assert sig_v == result["sig_v"]
+
+    # Optionally assert whether the tx was clear-signed or blind-signed.
+    # Clear signing is the only flow that emits the "confirm_contract" button
+    # request (the provider / intent / contract-properties screens); the blind
+    # fallback never does. Opt-in per fixture via the "signing" field.
+    expected_signing = parameters.get("signing")
+    if expected_signing is not None and not session.debug.legacy_debug:
+        clear_signed = "confirm_contract" in br_names
+        if expected_signing == "clear":
+            assert clear_signed, f"Expected clear signing, got requests: {br_names}"
+        elif expected_signing == "blind":
+            assert not clear_signed, f"Expected blind signing, got requests: {br_names}"
+        else:
+            raise ValueError(f"Invalid 'signing' value: {expected_signing!r}")
 
 
 # Data taken from sign_tx_eip1559.json["tests"][0]
