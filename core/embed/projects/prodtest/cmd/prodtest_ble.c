@@ -339,6 +339,10 @@ static void prodtest_ble_monitor(cli_t* cli) {
     return;
   }
 
+  if (strlen(name) == 0) {
+    name = "Trezor BLE";
+  }
+
   if (!ensure_ble_init(cli)) {
     return;
   }
@@ -636,7 +640,7 @@ PRODTEST_CLI_CMD(
   .name = "ble-monitor",
   .func = prodtest_ble_monitor,
   .info = "Advertise and monitor BLE events (connect/disconnect/pairing), confirming pairing requests interactively. Press CTRL+C to stop",
-  .args = "<name>"
+  .args = "[<name>]"
 );
 
 

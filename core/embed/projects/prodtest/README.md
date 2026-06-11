@@ -277,9 +277,9 @@ While the loop runs, the advertising mode can be changed by sending a single cha
 
 When a pairing request arrives, the 6-digit pairing code is displayed and the command waits for the operator to confirm it: send `y` to accept the pairing (`ble_allow_pairing`) or `n` to reject it (`ble_reject_pairing`). The loop runs until interrupted with CTRL+C, after which advertising is stopped.
 
-`ble-monitor <name>`
+`ble-monitor [<name>]`
 
-* `name` - The advertising name to use.
+* `name` - The advertising name to use. Defaults to `Trezor BLE` if omitted or empty.
 
 Example:
 ```
