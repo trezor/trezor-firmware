@@ -184,6 +184,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_tamper.c',
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
     'embed/projects/prodtest/cmd/prodtest_secure_channel.c',
+    'embed/projects/prodtest/cmd/prodtest_syslog.c',
     'embed/projects/prodtest/cmd/prodtest_telemetry.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
     'embed/projects/prodtest/cmd/prodtest_tropic.c',

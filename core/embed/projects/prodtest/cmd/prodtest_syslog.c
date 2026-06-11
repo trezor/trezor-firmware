@@ -17,42 +17,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef USE_TAMPER
+#ifdef USE_DBG_CONSOLE
 
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <sec/tamper.h>
+#include <sys/logging.h>
+#include <sys/syslog.h>
 
 #include "prodtest_error_codes.h"
 
-static void prodtest_tamper_read(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
+static void prodtest_set_log_filter(cli_t* cli) {
+  const char* filter = cli_arg(cli, "filter");
+  size_t filter_len = strlen(filter);
+
+  if (filter_len == 0) {
+    cli_error_arg(cli, "Expecting filter string.");
+    return;
+  }
+
+  if (cli_arg_count(cli) > 1) {
     cli_error_arg_count(cli);
     return;
   }
 
-  bool init_ok = tamper_init();
-
-  if (!init_ok) {
-    cli_error(cli, PRODTEST_ERR_TAMPER_INIT,
-              "Cannot initialize tamper driver.");
+  if (!syslog_set_filter(filter, filter_len)) {
+    cli_error(cli, PRODTEST_ERR_SYSLOG_FILTER_SET, "Failed to set log filter.");
     return;
   }
 
-  uint8_t val = tamper_external_read();
-
-  cli_ok(cli, "%d", val);
+  cli_ok(cli, "");
 }
 
 // clang-format off
 
 PRODTEST_CLI_CMD(
-  .name = "tamper-read",
-  .func = prodtest_tamper_read,
-  .info = "Read current status of external tamper inputs",
-  .args = ""
+  .name = "log-filter",
+  .func = prodtest_set_log_filter,
+  .info = "Set logging filter",
+  .args = "<filter>"
 );
 
-
-#endif
+#endif  // USE_DBG_CONSOLE

@@ -21,6 +21,8 @@
 
 #include <rtl/cli.h>
 
+#include "prodtest_error_codes.h"
+
 #define CHALLENGE_SIZE 16
 
 bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
