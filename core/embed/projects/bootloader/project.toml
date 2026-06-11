@@ -17,6 +17,7 @@ uses = [
     "layout_caesar",
     "layout_delizia",
     "layout_eckhart",
+    "layout_eckhart_lx200d2406a",
     "lockable_bootloader",
     "mcu_attestation",
     "nrf",

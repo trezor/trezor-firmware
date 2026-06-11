@@ -147,3 +147,10 @@ layout_eckhart = [
     "trezor_lib/ui_color_32bit",
     "trezor_lib/ui_font_kerning",
 ]
+
+layout_eckhart_lx200d2406a = [
+    "trezor_lib/layout_eckhart",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_rgb565",
+    "trezor_lib/ui_font_kerning",
+]

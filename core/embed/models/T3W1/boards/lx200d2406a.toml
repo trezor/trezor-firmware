@@ -1,11 +1,11 @@
-header = "T3W1/boards/trezor_t3w1_revB.h"
+header = "T3W1/boards/trezor_t3w1_lx200d2406a.h"
 emulator_header = "T3W1/boards/t3w1-unix.h"
 
 [display]
 driver = "io/display_ltdc_dsi"
-panel = "io/display_panel_lx250a2401a"
+panel = "io/display_panel_lx200d2406a"
 
-[layout_eckhart]
+[layout_eckhart_lx200d2406a]
 
 [backlight]
 driver = "io/backlight_tps61062"

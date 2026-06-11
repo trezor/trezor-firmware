@@ -181,3 +181,15 @@ layout_eckhart = [
     "io/hw_jpeg_decoder",
 
 ]
+
+layout_eckhart_lx200d2406a = [
+    "trezor_lib/layout_eckhart",
+    "upymod/layout_eckhart",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_rgb565",
+    "trezor_lib/ui_blurring",
+    "trezor_lib/ui_image_buffer",
+    "trezor_lib/ui_overlay",
+    "trezor_lib/ui_jpeg",
+    "trezor_lib/ui_font_kerning",
+]

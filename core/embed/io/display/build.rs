@@ -54,6 +54,17 @@ fn set_panel_lx250a2401a(lib: &mut CLibrary) {
     ]);
 }
 
+fn set_panel_lx200d2406a(lib: &mut CLibrary) {
+    lib.add_defines([
+        ("USE_RGB_COLORS", Some("1")),
+        ("DISPLAY_RESX", Some("240")),
+        ("DISPLAY_RESY", Some("320")),
+        ("TERMINAL_FONT_SCALE", Some("1")),
+        ("TERMINAL_X_PADDING", Some("4")),
+        ("TERMINAL_Y_PADDING", Some("8")),
+    ]);
+}
+
 fn set_panel_stm32u5a9j_dk(lib: &mut CLibrary) {
     lib.add_defines([
         ("UI_COLOR_32BIT", Some("1")),
@@ -91,6 +102,8 @@ fn set_panel_vg2864(lib: &mut CLibrary) {
 fn add_driver_unix(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "display_panel_lx250a2401a") {
         set_panel_lx250a2401a(lib);
+    } else if cfg!(feature = "display_panel_lx200d2406a") {
+        set_panel_lx200d2406a(lib);
     } else if cfg!(feature = "display_panel_stm32u5a9j_dk") {
         set_panel_stm32u5a9j_dk(lib);
     } else if cfg!(feature = "display_panel_lx154a2482") {
@@ -111,18 +124,27 @@ fn add_driver_ltdc_dsi(lib: &mut CLibrary) -> Result<()> {
         lib.add_sources([
             "display/ltdc_dsi/display_driver.c",
             "display/ltdc_dsi/display_fb.c",
-            "display/ltdc_dsi/display_fb_rgb888.c",
             "display/fb_queue/fb_queue.c",
         ]);
         if cfg!(feature = "display_panel_lx250a2401a") {
             set_panel_lx250a2401a(lib);
             lib.add_sources([
+                "display/ltdc_dsi/display_fb_rgb888.c",
                 "display/ltdc_dsi/panels/lx250a2401a/lx250a2401a.c",
                 "display/ltdc_dsi/display_gfxmmu.c",
             ]);
         } else if cfg!(feature = "display_panel_stm32u5a9j_dk") {
             set_panel_stm32u5a9j_dk(lib);
-            lib.add_source("display/ltdc_dsi/panels/stm32u5a9j-dk/stm32u5a9j-dk.c");
+            lib.add_sources([
+                "display/ltdc_dsi/display_fb_rgb888.c",
+                "display/ltdc_dsi/panels/stm32u5a9j-dk/stm32u5a9j-dk.c",
+            ]);
+        } else if cfg!(feature = "display_panel_lx200d2406a") {
+            set_panel_lx200d2406a(lib);
+            lib.add_sources([
+                "display/ltdc_dsi/display_fb_rgb565.c",
+                "display/ltdc_dsi/panels/lx200d2406a/lx200d2406a.c",
+            ]);
         } else {
             bail_unsupported!();
         }

@@ -242,11 +242,13 @@ bool panel_init(display_driver_t *drv) {
     return false;
   }
 
-  ret = HAL_DSI_ShortWrite(&drv->hlcd_dsi, 0, DSI_DCS_SHORT_PKT_WRITE_P0, 0x2C,
-                           0);
-  if (ret != HAL_OK) {
-    return false;
-  }
+  // ret = HAL_DSI_ShortWrite(&drv->hlcd_dsi, 0, DSI_DCS_SHORT_PKT_WRITE_P0, 0x2C,
+  //                          0);
+  // if (ret != HAL_OK) {
+  //   return false;
+  // }
+
+  systick_delay_ms(20);
 
   return true;
 }

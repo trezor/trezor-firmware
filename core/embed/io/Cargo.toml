@@ -110,6 +110,7 @@ display_vg2864 = ["framebuffer"]
 display_stm32f429i_disc1 = ["framebuffer"]
 
 display_panel_lx250a2401a = []
+display_panel_lx200d2406a = []
 display_panel_stm32u5a9j_dk = []
 display_panel_t2t1 = []
 display_panel_lx154a2482 = []

@@ -5,6 +5,8 @@ emulator_header = "T3W1/boards/t3w1-unix.h"
 driver = "io/display_ltdc_dsi"
 panel = "io/display_panel_lx250a2401a"
 
+[layout_eckhart]
+
 [backlight]
 driver = "io/backlight_tps61062"
 

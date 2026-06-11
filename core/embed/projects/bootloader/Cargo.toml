@@ -132,3 +132,9 @@ layout_eckhart = [
     "trezor_lib/display_rgba8888",
     "trezor_lib/ui_color_32bit",
     ]
+
+layout_eckhart_lx200d2406a = [
+    "trezor_lib/layout_eckhart",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_rgb565",
+    ]
