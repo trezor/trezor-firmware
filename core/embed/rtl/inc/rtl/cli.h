@@ -45,10 +45,7 @@ typedef struct cli cli_t;
 #define CLI_ERROR_INVALID_ARG 11
 #define CLI_ERROR_ABORT 12
 #define CLI_ERROR_FATAL 13
-#define CLI_ERROR_TIMEOUT 14
-#define CLI_ERROR_LOCKED 15
-#define CLI_ERROR_NODATA 16
-#define CLI_ERROR_INVALID_CRC 17
+#define CLI_ERROR_INVALID_CRC 14
 
 /** CLI command handler routine prototype */
 typedef void (*cli_cmd_handler_t)(cli_t* cli);

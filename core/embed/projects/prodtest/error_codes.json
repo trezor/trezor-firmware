@@ -20,18 +20,6 @@
     },
     {
       "code": 14,
-      "name": "CLI_ERROR_TIMEOUT"
-    },
-    {
-      "code": 15,
-      "name": "CLI_ERROR_LOCKED"
-    },
-    {
-      "code": 16,
-      "name": "CLI_ERROR_NODATA"
-    },
-    {
-      "code": 17,
       "name": "CLI_ERROR_INVALID_CRC"
     }
   ],
