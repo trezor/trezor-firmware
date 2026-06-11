@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    args::{FlashArgs, FlashEraseArgs, FlashSection},
+    args::{FlashArgs, FlashEraseArgs, FlashSection, ResetArgs},
     helpers,
 };
 
@@ -66,6 +66,26 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
         .args(["-f", model_config.openocd_target()?])
         .arg("-c")
         .arg(instr)
+        .status()
+        .context("Failed to spawn `openocd`")?;
+
+    ensure!(status.success(), "`openocd` failed with status: {status}");
+
+    Ok(())
+}
+
+/// Resets the connected device using OpenOCD.
+pub fn reset(args: ResetArgs) -> Result<()> {
+    let model_config = args.model.config()?;
+
+    println!("Resetting `{:?}`", args.model);
+
+    let status = process::Command::new("openocd")
+        .args(["-f", "interface/stlink.cfg"])
+        .args(["-c", "transport select hla_swd"])
+        .args(["-f", model_config.openocd_target()?])
+        .arg("-c")
+        .arg("init; reset; exit")
         .status()
         .context("Failed to spawn `openocd`")?;
 

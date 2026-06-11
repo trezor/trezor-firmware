@@ -141,6 +141,8 @@ pub enum Cmd {
     Flash(FlashArgs),
     /// Erase flash or part of it using OpenOCD
     FlashErase(FlashEraseArgs),
+    /// Reset the connected device using OpenOCD
+    Reset(ResetArgs),
     /// Upload firmware to device
     Upload(UploadArgs),
     /// Combine multiple firmware projects into a single binary for flashing
@@ -321,6 +323,13 @@ pub struct FlashEraseArgs {
     #[arg(default_value = "all")]
     pub section: FlashSection,
 
+    /// Target model
+    #[arg(long, short = 'm', ignore_case = true)]
+    pub model: Model,
+}
+
+#[derive(Args, Debug)]
+pub struct ResetArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,

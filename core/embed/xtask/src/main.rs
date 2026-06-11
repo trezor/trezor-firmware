@@ -18,6 +18,7 @@ fn main() -> Result<()> {
         Cmd::Fmt => cargo::fmt(),
         Cmd::Flash(args) => flash::flash(args),
         Cmd::FlashErase(args) => flash::flash_erase(args),
+        Cmd::Reset(args) => flash::reset(args),
         Cmd::Upload(args) => upload::upload(args),
         Cmd::Combine(args) => combine::combine(args),
     }
