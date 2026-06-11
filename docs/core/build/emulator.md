@@ -3,13 +3,11 @@
 > **Hint**:
 Using emulator as described here is useful during firmware development. If you intend to use the emulator without modifying the firmware, you might be looking for [Trezor User Env](https://github.com/trezor/trezor-user-env/tree/master).
 
-First clone, initialize submodules, install `uv` and enter the `uv` shell as
-defined [here](index.md). **Do not forget you need to be in a `uv` shell
-environment!**
+Complete the setup (nix-shell + uv) described in [index.md](index.md) before proceeding.
 
-## Dependencies
+### Manual Requirements Installation
 
-Install the required packages, depending on your operating system.
+If you prefer not to use nix-shell, install the following dependencies manually:
 
 * __Debian/Ubuntu__:
 
@@ -35,19 +33,7 @@ sudo zypper install scons libSDL2-devel libSDL2_image-devel
 sudo pacman -S scons sdl2 sdl2_image clang-devel
 ```
 
-* __NixOS__:
-
-There is a `shell.nix` file in the root of the project. Just run the following **before** entering the `core` directory:
-
-```sh
-nix-shell
-```
-
 * __Mac OS X__:
-
-_Consider using [Nix](https://nixos.org/download.html). With Nix all you need to do is `nix-shell`._
-
-For other users:
 
 ```sh
 brew install scons sdl2 sdl2_image pkg-config llvm
@@ -55,23 +41,16 @@ brew install scons sdl2 sdl2_image pkg-config llvm
 
 * __Windows__: not supported yet, sorry.
 
-## Protobuf Compiler
+You will also need the protocol buffer compiler `protoc`. [Follow the installation instructions for your system](https://grpc.io/docs/protoc-installation/).
 
-The protocol buffer compiler `protoc` is needed to (unsurprisingly) compile protocol buffer files. [Follow the installation instructions for your system](https://grpc.io/docs/protoc-installation/).
-
-## Rust
-
-You will require Rust and Cargo. The currently supported version is 1.96 nightly. The
-recommended way to install both is with [`rustup`](https://rustup.rs/). Make sure you
-are up to date:
+And Rust (currently 1.96 nightly) via [`rustup`](https://rustup.rs/):
 
 ```sh
 rustup default nightly
 rustup update
 ```
 
-The [bindgen crate](https://rust-lang.github.io/rust-bindgen/requirements.html)
-requires libclang for generating MicroPython FFI.
+The [bindgen crate](https://rust-lang.github.io/rust-bindgen/requirements.html) requires libclang for generating MicroPython FFI.
 
 ## Build
 
