@@ -272,6 +272,11 @@
       "module": "ble"
     },
     {
+      "code": 2023,
+      "name": "PRODTEST_ERR_BLE_MONITOR_ENTER_PAIRING_MODE",
+      "module": "ble"
+    },
+    {
       "code": 3010,
       "name": "PRODTEST_ERR_BOOTLOADER_NO_AUTH_HEADER",
       "module": "bootloader"

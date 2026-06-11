@@ -32,7 +32,16 @@
 
 #include "prodtest_error_codes.h"
 
+// When set, the BLE monitoring loop (ble-monitor) is the sole consumer of BLE
+// events and handles pairing confirmation manually, so the periodic timer must
+// not drain the event queue nor auto-accept pairing requests.
+static volatile bool g_ble_monitor_active = false;
+
 void ble_timer_cb(void* context) {
+  if (g_ble_monitor_active) {
+    return;
+  }
+
   ble_event_t e = {0};
 
   bool event_received = ble_get_event(&e);
@@ -280,6 +289,177 @@ static void prodtest_ble_unpair(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+// Blocks until the operator sends 'y'/'n' (case-insensitive) over the CLI or
+// the command is aborted. Returns true on confirmation, false on rejection or
+// abort.
+static bool prodtest_ble_wait_confirmation(cli_t* cli) {
+  while (!cli_aborted(cli)) {
+    char ch = 0;
+    if (cli->read(cli->callback_context, &ch, 1) == 1) {
+      if (ch == 'y' || ch == 'Y') {
+        return true;
+      }
+      if (ch == 'n' || ch == 'N') {
+        return false;
+      }
+    }
+  }
+
+  return false;
+}
+
+// Applies the requested advertising mode and traces the outcome.
+static void prodtest_ble_apply_mode(cli_t* cli, ble_mode_t mode,
+                                    const uint8_t* name, size_t name_len) {
+  switch (mode) {
+    case BLE_MODE_PAIRING:
+      cli_trace(cli, ble_enter_pairing_mode(name, name_len)
+                         ? "Pairing mode."
+                         : "Could not enter pairing mode.");
+      break;
+
+    case BLE_MODE_CONNECTABLE:
+      cli_trace(cli, ble_switch_on() ? "Connectable mode."
+                                     : "Could not enter connectable mode.");
+      break;
+
+    case BLE_MODE_OFF:
+    default:
+      cli_trace(cli, ble_switch_off() ? "Advertising off."
+                                      : "Could not switch off advertising.");
+      break;
+  }
+}
+
+static void prodtest_ble_monitor(cli_t* cli) {
+  const char* name = cli_arg(cli, "name");
+
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (strlen(name) == 0) {
+    name = "Trezor BLE";
+  }
+
+  if (!ensure_ble_init(cli)) {
+    return;
+  }
+
+  uint16_t name_len =
+      strlen(name) > BLE_ADV_NAME_LEN ? BLE_ADV_NAME_LEN : strlen(name);
+
+  ble_set_static_mac(true);
+  if (!ble_enter_pairing_mode((const uint8_t*)name, name_len)) {
+    cli_error(cli, PRODTEST_ERR_BLE_MONITOR_ENTER_PAIRING_MODE,
+              "Could not start advertising.");
+    return;
+  }
+
+  // Take over event handling from the periodic timer so pairing requests are
+  // confirmed manually instead of being auto-accepted.
+  g_ble_monitor_active = true;
+
+  char adv_name[BLE_ADV_NAME_LEN + 1] = {0};
+  ble_get_advertising_name(adv_name, sizeof(adv_name));
+
+  // Mode advertising is (re)started with; starts in pairing mode (above).
+  ble_mode_t mode = BLE_MODE_PAIRING;
+
+  cli_trace(cli, "Advertising as '%s'.", adv_name);
+  cli_trace(cli, "Monitoring BLE events. Controls:");
+  cli_trace(cli,
+            "  p = pairing mode, c = connectable mode, o = advertising off");
+  cli_trace(cli, "  CTRL+C = stop");
+
+  while (!cli_aborted(cli)) {
+    // Handle operator mode-change commands.
+    char ch = 0;
+    if (cli->read(cli->callback_context, &ch, 1) == 1) {
+      switch (ch) {
+        case 'p':
+        case 'P':
+          mode = BLE_MODE_PAIRING;
+          prodtest_ble_apply_mode(cli, mode, (const uint8_t*)name, name_len);
+          break;
+        case 'c':
+        case 'C':
+          mode = BLE_MODE_CONNECTABLE;
+          prodtest_ble_apply_mode(cli, mode, (const uint8_t*)name, name_len);
+          break;
+        case 'o':
+        case 'O':
+          mode = BLE_MODE_OFF;
+          prodtest_ble_apply_mode(cli, mode, (const uint8_t*)name, name_len);
+          break;
+        default:
+          break;
+      }
+    }
+
+    ble_event_t e = {0};
+    if (!ble_get_event(&e)) {
+      continue;
+    }
+
+    switch (e.type) {
+      case BLE_CONNECTED:
+        cli_trace(cli, "Connected.");
+        break;
+
+      case BLE_DISCONNECTED:
+        cli_trace(cli, "Disconnected.");
+        // Advertising stops on disconnect, restart it in the selected mode.
+        if (mode != BLE_MODE_OFF) {
+          prodtest_ble_apply_mode(cli, mode, (const uint8_t*)name, name_len);
+        }
+        break;
+
+      case BLE_CONNECTION_CHANGED:
+        cli_trace(cli, "Connection changed.");
+        break;
+
+      case BLE_PAIRING_REQUEST:
+        cli_trace(cli, "Pairing requested, code: %.*s", BLE_PAIRING_CODE_LEN,
+                  (const char*)e.data);
+        cli_trace(cli, "Confirm pairing? [y/n]");
+
+        if (prodtest_ble_wait_confirmation(cli)) {
+          ble_allow_pairing(e.data);
+          cli_trace(cli, "Pairing confirmed.");
+        } else if (!cli_aborted(cli)) {
+          ble_reject_pairing();
+          cli_trace(cli, "Pairing rejected.");
+        }
+        break;
+
+      case BLE_PAIRING_COMPLETED:
+        cli_trace(cli, "Pairing completed.");
+        break;
+
+      case BLE_PAIRING_CANCELLED:
+        cli_trace(cli, "Pairing cancelled.");
+        break;
+
+      case BLE_PAIRING_NOT_NEEDED:
+        cli_trace(cli, "Pairing not needed.");
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  g_ble_monitor_active = false;
+
+  // Stop advertising and disconnect.
+  ble_switch_off();
+
+  cli_trace(cli, "Monitoring stopped.");
+  cli_ok(cli, "");
+}
+
 static void prodtest_ble_radio_test_cmd(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -454,6 +634,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_ble_unpair,
   .info = "Unpair device on given index. Use ble-get-bonds to get the index",
   .args = "<index>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "ble-monitor",
+  .func = prodtest_ble_monitor,
+  .info = "Advertise and monitor BLE events (connect/disconnect/pairing), confirming pairing requests interactively. Press CTRL+C to stop",
+  .args = "[<name>]"
 );
 
 
