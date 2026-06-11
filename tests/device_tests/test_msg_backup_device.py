@@ -48,13 +48,15 @@ FLOW_ADAPTERS = [normal, try_to_cancel()]
 @pytest.mark.models("core")  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 @pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
-def test_backup_bip39(session: Session, adapt_flow: "FlowAdapter"):
+def test_backup_bip39(
+    session: Session, adapt_flow: "FlowAdapter", backup_method: messages.BackupMethod
+):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
-        IF = InputFlowBip39Backup(session)
+        IF = InputFlowBip39Backup(session, method=backup_method)
         client.set_input_flow(adapt_flow(session, IF.get()))
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
     assert IF.mnemonic == MNEMONIC12
     session.refresh_features()
@@ -82,7 +84,10 @@ SLIP39_BASIC_IDS = [
     ids=SLIP39_BASIC_IDS,
 )
 def test_backup_slip39_basic(
-    session: Session, click_info: bool, adapt_flow: "FlowAdapter"
+    session: Session,
+    click_info: bool,
+    adapt_flow: "FlowAdapter",
+    backup_method: messages.BackupMethod,
 ):
     if click_info and session.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
@@ -90,9 +95,9 @@ def test_backup_slip39_basic(
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicBackup(session, click_info)
+        IF = InputFlowSlip39BasicBackup(session, click_info, method=backup_method)
         client.set_input_flow(adapt_flow(session, IF.get()))
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
     session.refresh_features()
     assert session.features.initialized is True
@@ -111,13 +116,15 @@ def test_backup_slip39_basic(
 @pytest.mark.models("core")
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
 @pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
-def test_backup_slip39_single(session: Session, adapt_flow: "FlowAdapter"):
+def test_backup_slip39_single(
+    session: Session, adapt_flow: "FlowAdapter", backup_method: messages.BackupMethod
+):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
-        IF = InputFlowBip39Backup(session)
+        IF = InputFlowBip39Backup(session, method=backup_method)
         client.set_input_flow(adapt_flow(session, IF.get()))
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
     assert session.features.initialized is True
     assert (
@@ -147,7 +154,10 @@ SLIP39_ADVANCED_IDS = [
     ids=SLIP39_ADVANCED_IDS,
 )
 def test_backup_slip39_advanced(
-    session: Session, click_info: bool, adapt_flow: "FlowAdapter"
+    session: Session,
+    click_info: bool,
+    adapt_flow: "FlowAdapter",
+    backup_method: messages.BackupMethod,
 ):
     if click_info and session.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
@@ -155,9 +165,11 @@ def test_backup_slip39_advanced(
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedBackup(session, click_info)
+        IF = InputFlowSlip39AdvancedBackup(
+            session, click_info, backup_method=backup_method
+        )
         client.set_input_flow(adapt_flow(session, IF.get()))
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
     session.refresh_features()
     assert session.features.initialized is True
@@ -194,15 +206,24 @@ SLIP39_CUSTOM_IDS = [
     ids=SLIP39_CUSTOM_IDS,
 )
 def test_backup_slip39_custom(
-    session: Session, share_threshold: int, share_count: int, adapt_flow: "FlowAdapter"
+    session: Session,
+    share_threshold: int,
+    share_count: int,
+    adapt_flow: "FlowAdapter",
+    backup_method: messages.BackupMethod,
 ):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
-        IF = InputFlowSlip39CustomBackup(session, share_count)
+        IF = InputFlowSlip39CustomBackup(
+            session, share_count, backup_method=backup_method
+        )
         client.set_input_flow(adapt_flow(session, IF.get()))
         device.backup(
-            session, group_threshold=1, groups=[(share_threshold, share_count)]
+            session,
+            group_threshold=1,
+            groups=[(share_threshold, share_count)],
+            backup_method=backup_method,
         )
 
     session.refresh_features()
@@ -222,7 +243,7 @@ def test_backup_slip39_custom(
 
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(no_backup=True)
-def test_no_backup_fails(session: Session):
+def test_no_backup_fails(session: Session, backup_method: messages.BackupMethod):
     session.ensure_unlocked()
     assert session.features.initialized is True
     assert session.features.no_backup is True
@@ -232,12 +253,12 @@ def test_no_backup_fails(session: Session):
 
     # backup attempt should fail because no_backup=True
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
 
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(needs_backup=True)
-def test_interrupt_backup_fails(session: Session):
+def test_interrupt_backup_fails(session: Session, backup_method: messages.BackupMethod):
     session.ensure_unlocked()
     assert session.features.initialized is True
     assert session.features.backup_availability == messages.BackupAvailability.Required
@@ -245,7 +266,7 @@ def test_interrupt_backup_fails(session: Session):
     assert session.features.no_backup is False
 
     # start backup
-    resp = session.call_raw(messages.BackupDevice())
+    resp = session.call_raw(messages.BackupDevice(backup_method=backup_method))
     assert isinstance(resp, messages.ButtonRequest)
 
     # interrupt backup
@@ -274,4 +295,4 @@ def test_interrupt_backup_fails(session: Session):
 
     # Second attempt at backup should fail
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
