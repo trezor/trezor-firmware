@@ -2,10 +2,7 @@
 
 Welcome to the **Trezor BLE Gateway** project!
 This repository contains the source code and instructions to build and flash the
-application. Two boards are supported, each tied to a specific nRF Connect SDK:
-the `t3w1_revA_nrf52832` board on the regulatory-frozen **NCS v2.9.0**, and the
-`picodk` (nRF54LS05B) board on the default **NCS v3.3.0** — see
-[Selecting the nRF Connect SDK version](#selecting-the-nrf-connect-sdk-version).
+application.
 
 ## Table of Contents
 
