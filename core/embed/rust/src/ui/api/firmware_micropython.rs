@@ -1462,7 +1462,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
     ///         """Exits a context manager (dropping the root component)."""
     ///
-    /// class LayoutContext(Generic[T]):
+    /// class LayoutContext(Protocol[T]):
     ///     """Scopes the lifetime of a Rust-based layout object."""
     ///
     ///     def __enter__(self) -> LayoutObj[T]:
@@ -1964,7 +1964,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     notification: tuple[str, int, bool] | None = None,
     ///     lockable: bool,
     ///     skip_first_paint: bool,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Idle homescreen."""
     Qstr::MP_QSTR_show_homescreen => obj_fn_kw!(0, new_show_homescreen).as_obj(),
 
@@ -2060,7 +2060,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     bootscreen: bool,
     ///     skip_first_paint: bool,
     ///     coinjoin_authorized: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Homescreen for locked device."""
     Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
 
