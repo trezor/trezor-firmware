@@ -266,6 +266,41 @@ ble-unpair 1
 OK
 ```
 
+### ble-monitor
+Starts advertising under the given name and enters a monitoring loop that reports BLE connect, disconnect and pairing events as `#` traces. Advertising is automatically restarted after a disconnect (in the currently selected mode) so the device keeps accepting new connections.
+
+While the loop runs, the advertising mode can be changed by sending a single character:
+
+* `p` - pairing mode (advertise and accept new pairings)
+* `c` - connectable mode (advertise to bonded devices only)
+* `o` - advertising off
+
+When a pairing request arrives, the 6-digit pairing code is displayed and the command waits for the operator to confirm it: send `y` to accept the pairing (`ble_allow_pairing`) or `n` to reject it (`ble_reject_pairing`). The loop runs until interrupted with CTRL+C, after which advertising is stopped.
+
+`ble-monitor <name>`
+
+* `name` - The advertising name to use.
+
+Example:
+```
+ble-monitor TrezorTest
+# Initializing the BLE...
+# Advertising as 'TrezorTest'.
+# Monitoring BLE events. Controls:
+#   p = pairing mode, c = connectable mode, o = advertising off
+#   CTRL+C = stop
+# Connected.
+# Pairing requested, code: 123456
+# Confirm pairing? [y/n]
+y
+# Pairing confirmed.
+# Pairing completed.
+# Disconnected.
+# Pairing mode.
+# Monitoring stopped.
+OK
+```
+
 ### ble-radio-test
 Runs radio test proxy-client. It requires special nRF radio test firmware, see https://docs.nordicsemi.com/bundle/sdk_nrf5_v17.0.2/page/nrf_radio_test_example.html for usage.
 
