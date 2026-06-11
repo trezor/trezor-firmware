@@ -23,6 +23,7 @@
 
 #include <rtl/cli.h>
 #include <sec/fwutils.h>
+#include <sys/systick.h>
 
 #include "prodtest_error_codes.h"
 
@@ -116,6 +117,15 @@ static void prodtest_mem_read(cli_t* cli) {
   cli_ok_hexdata(cli, mem_buffer, mem_buffer_len);
 }
 
+static void prodtest_uptime(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_ok(cli, "%u", systick_ms());
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -157,5 +167,12 @@ PRODTEST_CLI_CMD(
   .name = "prodtest-mem-read",
   .func = prodtest_mem_read,
   .info = "Read data from RAM buffer",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "prodtest-uptime",
+  .func = prodtest_uptime,
+  .info = "Get the device uptime in milliseconds",
   .args = ""
 );

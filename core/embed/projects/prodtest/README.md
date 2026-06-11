@@ -806,6 +806,15 @@ prodtest-mem-read
 OK 01020304
 ```
 
+### prodtest-uptime
+Returns the device uptime (time elapsed since the last boot) in milliseconds.
+
+Example:
+```
+prodtest-uptime
+OK 123456
+```
+
 ### secrets-init
 Generates random secrets and stores them in the protected storage.
 
