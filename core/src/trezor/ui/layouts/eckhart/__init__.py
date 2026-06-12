@@ -892,21 +892,19 @@ async def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> None:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-    if subtitle:
-        title += ": " + subtitle
+    menu = Menu.root(cancel=TR.buttons__cancel)
 
     with trezorui_api.confirm_properties(
         title=title,
+        subtitle=subtitle,
         items=list(props),
         hold=hold,
         verb=verb,
+        external_menu=True,
     ) as layout:
-        return await raise_if_not_confirmed(
-            layout,
-            br_name,
-            br_code,
-        )
+        await confirm_with_menu(layout, menu, br_name, br_code)
 
 
 async def confirm_total(
