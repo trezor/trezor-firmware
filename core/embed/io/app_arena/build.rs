@@ -1,7 +1,7 @@
 use xbuild::{CLibrary, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
-    lib.add_include("app_loader/inc");
+    lib.add_include("app_arena/inc");
 
     // USE_APP_LOADING is defined in sys layer
 
@@ -9,16 +9,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_define("THREAD_LOCAL", Some("__attribute__((section(\".tls\")))"));
     }
 
-    lib.add_sources([
-        "app_loader/app_arena.c",
-        "app_loader/app_task.c",
-        "app_loader/app_cache.c",
-    ]);
+    lib.add_source("app_arena/app_arena.c");
 
     if cfg!(feature = "emulator") {
-        lib.add_source("app_loader/unix/elf_loader.c");
-    } else if cfg!(feature = "mcu_stm32") {
-        lib.add_source("app_loader/stm32/elf_loader.c");
+        lib.add_source("app_arena/unix/xbin_loader.c");
+    } else if cfg!(feature = "mcu_stm32u5") {
+        lib.add_sources(["app_arena/stm32u5/xbin_loader.c"]);
     } else {
         bail_unsupported!();
     }

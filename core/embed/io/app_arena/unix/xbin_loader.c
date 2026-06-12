@@ -19,23 +19,52 @@
 
 #include <trezor_rtl.h>
 
-#include <io/elf_loader.h>
+#include <sys/applet.h>
 #include <sys/coreapp.h>
 #include <sys/logging.h>
+#include <sys/systask.h>
+
+#include "../xbin_loader.h"
 
 #include <dlfcn.h>
 #include <unistd.h>
 
-LOG_DECLARE(elf_loader)
+LOG_DECLARE(xbin_loader)
 
-static void elf_applet_unload(applet_t* applet) {
-  if (applet->handle != NULL) {
-    // Unload dynamic library
-    dlclose(applet->handle);
-  }
+const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
+  TSH_DECLARE;
+  const xbin_header_t* retval = NULL;
+
+  TSH_CHECK(image != NULL, TS_EINVAL);
+  TSH_CHECK(image_size >= sizeof(xbin_header_t), TS_EINVAL);
+
+  const xbin_header_t* header = (const xbin_header_t*)image;
+
+  TSH_CHECK(header->magic == XBIN_HEADER_MAGIC, TS_EINVAL);
+  TSH_CHECK(header->size >= sizeof(xbin_header_t), TS_EINVAL);
+  TSH_CHECK(header->size <= image_size, TS_EINVAL);
+  TSH_CHECK(header->abi_version == 0, TS_EINVAL);
+  TSH_CHECK(header->payload_type == XBIN_TARGET_X86_64, TS_EINVAL);
+  TSH_CHECK(header->payload_size == image_size - header->size, TS_EINVAL);
+
+  retval = header;
+
+cleanup:
+  return retval;
 }
 
-ts_t write_to_file(const char* filename, const void* elf_ptr, size_t elf_size) {
+ts_t xbin_verify_signature(const xbin_header_t* header, const void* proof,
+                           size_t proof_size) {
+  TSH_DECLARE;
+
+  // TODO !@# verify signature as soons as the signing scheme is defined
+
+  // cleanup:
+  TSH_RETURN;
+}
+
+static ts_t write_to_file(const char* filename, const void* elf_ptr,
+                          size_t elf_size) {
   TSH_DECLARE;
 
   FILE* f = fopen(filename, "wb");
@@ -52,19 +81,28 @@ cleanup:
   TSH_RETURN;
 }
 
-ts_t elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
+static void xbin_applet_unload(applet_t* applet) {
+  if (applet->handle != NULL) {
+    // Unload dynamic library
+    dlclose(applet->handle);
+  }
+}
+
+ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
+                         size_t rwmem_size, applet_t* applet) {
   TSH_DECLARE;
   ts_t status;
 
   applet_privileges_t privileges = {0};
 
-  applet_init(applet, &privileges, elf_applet_unload);
+  applet_init(applet, &privileges, xbin_applet_unload);
 
   const char* filename = "/tmp/trezor_ext_app.so";
 
-  // Copy the image to the temporary file that will be
-  // unlinked just after it's loaded
-  status = write_to_file(filename, elf_ptr, elf_size);
+  // Copy the embedded elf image to the temporary file that
+  // we can load with dlopen
+  const void* payload = (const uint8_t*)header + header->size;
+  status = write_to_file(filename, payload, header->payload_size);
   TSH_CHECK_OK(status);
 
   applet->handle = dlopen(filename, RTLD_NOW);
