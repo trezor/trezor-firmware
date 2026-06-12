@@ -470,6 +470,8 @@ if TYPE_CHECKING:
         FreezeBalanceV2Contract = 54
         UnfreezeBalanceV2Contract = 55
         WithdrawExpireUnfreezeContract = 56
+        DelegateResourceContract = 57
+        UnDelegateResourceContract = 58
 
     class MessageType(IntEnum):
         Initialize = 0
@@ -761,6 +763,8 @@ if TYPE_CHECKING:
         TronUnfreezeBalanceV2Contract = 2208
         TronWithdrawUnfreeze = 2209
         TronVoteWitnessContract = 2210
+        TronDelegateResourceContract = 2211
+        TronUnDelegateResourceContract = 2212
         TronWithdrawBalance = 2213
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
