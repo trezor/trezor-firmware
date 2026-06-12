@@ -36,7 +36,7 @@ pub fn flash(args: FlashArgs) -> Result<()> {
 
     let flash_instruction = build_flash_write_instruction(&binary, address);
 
-    run_openocd_command(args.model, &flash_instruction)
+    run_openocd(args.model, &flash_instruction)
 }
 
 /// Erase specified flash section using OpenOCD. The section boundaries are determined
@@ -47,18 +47,18 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
         .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
     let instr = build_flash_erase_instruction(&content, args.section)?;
 
-    run_openocd_command(args.model, &instr)
+    run_openocd(args.model, &instr)
 }
 
 /// Resets the connected device using OpenOCD.
 pub fn reset(args: ResetArgs) -> Result<()> {
     println!("Resetting `{:?}`", args.model);
 
-    run_openocd_command(args.model, "init; reset; exit")
+    run_openocd(args.model, "init; reset; exit")
 }
 
-/// Runs a single OpenOCD command against the connected device for the given model.
-fn run_openocd_command(model: Model, command: &str) -> Result<()> {
+/// Runs OpenOCD instructions against the connected device for the given model.
+fn run_openocd(model: Model, instructions: &str) -> Result<()> {
     let model_config = model.config()?;
 
     let status = process::Command::new("openocd")
@@ -66,7 +66,7 @@ fn run_openocd_command(model: Model, command: &str) -> Result<()> {
         .args(["-c", "transport select hla_swd"])
         .args(["-f", model_config.openocd_target()?])
         .arg("-c")
-        .arg(command)
+        .arg(instructions)
         .status()
         .context("Failed to spawn `openocd`")?;
 
