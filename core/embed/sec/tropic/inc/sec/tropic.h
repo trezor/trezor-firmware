@@ -70,6 +70,7 @@ void tropic_deinit(void);
 #ifdef TREZOR_PRODTEST
 #include "libtropic.h"
 lt_handle_t* tropic_get_handle(void);
+bool tropic_get_init_error(lt_ret_t* ret);
 
 lt_ret_t tropic_custom_session_start(cli_t* cli,
                                      lt_pkey_index_t pairing_key_index);
