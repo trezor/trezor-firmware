@@ -1,3 +1,29 @@
+.PHONY: help \
+	style_check style \
+	pystyle_check pystyle_quick_check pystyle \
+	changelog_check changelog_style \
+	translations_style translations_style_check \
+	yaml_check editor_check \
+	cstyle_check cstyle \
+	protostyle protostyle_check \
+	defs_check \
+	ruststyle ruststyle_check \
+	typecheck pyright \
+	mocks mocks_check \
+	templates templates_check \
+	solana_templates solana_templates_check \
+	icons icons_check \
+	protobuf protobuf_check \
+	docs_summary_check \
+	vendorheader vendorheader_check \
+	bootloader_hashes bootloader_hashes_check \
+	lsgen lsgen_check \
+	tropic_model_config tropic_model_config_check \
+	hsm_keys hsm_keys_check \
+	certs certs_check \
+	gen gen_check \
+	uvlock_check
+
 ## help commands:
 
 help: ## show this help
@@ -199,9 +225,15 @@ hsm_keys:
 hsm_keys_check:
 	./core/tools/generate_hsm_keys.py --check
 
-gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config hsm_keys ## regenerate auto-generated files from sources
+certs:
+	./core/tools/generate_certificates.py
 
-gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check hsm_keys_check ## check validity of auto-generated files
+certs_check:
+	./core/tools/generate_certificates.py --check
+
+gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config hsm_keys certs ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check hsm_keys_check certs_check ## check validity of auto-generated files
 
 uvlock_check: ## check that uv.lock is up to date
 	@echo [UVLOCK-CHECK]

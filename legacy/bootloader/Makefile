@@ -1,3 +1,5 @@
+.PHONY: all
+
 NAME  = bootloader-unaligned
 
 OBJS += startup.o

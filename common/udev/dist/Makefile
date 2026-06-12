@@ -1,3 +1,5 @@
+.PHONY: all shell
+
 VOL_MOUNT = -v $(shell pwd):/release
 IMAGETAG  = trezor-udev-build-env
 
