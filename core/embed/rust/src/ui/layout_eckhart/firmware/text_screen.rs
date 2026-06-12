@@ -15,6 +15,7 @@ use crate::ui::util::Pager;
 
 const SUBTITLE_HEIGHT: i16 = 44;
 const SUBTITLE_DOUBLE_HEIGHT: i16 = 76;
+const SUBTITLE_TRIPLE_HEIGHT: i16 = 108;
 
 /// Full-screen component for rendering text.
 ///
@@ -293,16 +294,24 @@ fn place_textscreen(
 
     // 2) Subtitle
     let mut content_footer_area = subtitle.map_or(rest, |s| {
-        let subtitle_height = if let LayoutFit::OutOfBounds { .. } = s.text().map(|text| {
-            TextLayout::new(theme::TEXT_MEDIUM_EXTRA_LIGHT)
-                .with_bounds(
-                    Rect::from_size(Offset::new(rest.width(), SUBTITLE_HEIGHT)).inset(SIDE_INSETS),
-                )
-                .fit_text(text)
-        }) {
+        let fits = |height: i16| {
+            !matches!(
+                s.text().map(|text| {
+                    TextLayout::new(theme::TEXT_MEDIUM_EXTRA_LIGHT)
+                        .with_bounds(
+                            Rect::from_size(Offset::new(rest.width(), height)).inset(SIDE_INSETS),
+                        )
+                        .fit_text(text)
+                }),
+                LayoutFit::OutOfBounds { .. }
+            )
+        };
+        let subtitle_height = if fits(SUBTITLE_HEIGHT) {
+            SUBTITLE_HEIGHT
+        } else if fits(SUBTITLE_DOUBLE_HEIGHT) {
             SUBTITLE_DOUBLE_HEIGHT
         } else {
-            SUBTITLE_HEIGHT
+            SUBTITLE_TRIPLE_HEIGHT
         };
         let (subtitle_area, rest) = rest.split_top(subtitle_height);
         s.place(subtitle_area.inset(SIDE_INSETS));
