@@ -8,3 +8,5 @@ TriggerSmartContract = 31
 FreezeBalanceV2Contract = 54
 UnfreezeBalanceV2Contract = 55
 WithdrawExpireUnfreezeContract = 56
+DelegateResourceContract = 57
+UnDelegateResourceContract = 58

@@ -489,6 +489,8 @@ class TronRawContractType(IntEnum):
     FreezeBalanceV2Contract = 54
     UnfreezeBalanceV2Contract = 55
     WithdrawExpireUnfreezeContract = 56
+    DelegateResourceContract = 57
+    UnDelegateResourceContract = 58
 
 
 class MessageType(IntEnum):
@@ -778,6 +780,8 @@ class MessageType(IntEnum):
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    TronDelegateResourceContract = 2211
+    TronUnDelegateResourceContract = 2212
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -9320,6 +9324,58 @@ class TronWithdrawUnfreeze(protobuf.MessageType):
         owner_address: "bytes",
     ) -> None:
         self.owner_address = owner_address
+
+
+class TronDelegateResourceContract(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2211
+    FIELDS = {
+        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("resource", "TronResourceCode", repeated=False, required=False, default=TronResourceCode.BANDWIDTH),
+        3: protobuf.Field("balance", "uint64", repeated=False, required=True),
+        4: protobuf.Field("receiver_address", "bytes", repeated=False, required=True),
+        5: protobuf.Field("lock", "bool", repeated=False, required=False, default=None),
+        6: protobuf.Field("lock_period", "uint64", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        owner_address: "bytes",
+        balance: "int",
+        receiver_address: "bytes",
+        resource: Optional["TronResourceCode"] = TronResourceCode.BANDWIDTH,
+        lock: Optional["bool"] = None,
+        lock_period: Optional["int"] = None,
+    ) -> None:
+        self.owner_address = owner_address
+        self.balance = balance
+        self.receiver_address = receiver_address
+        self.resource = resource
+        self.lock = lock
+        self.lock_period = lock_period
+
+
+class TronUnDelegateResourceContract(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2212
+    FIELDS = {
+        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("resource", "TronResourceCode", repeated=False, required=False, default=TronResourceCode.BANDWIDTH),
+        3: protobuf.Field("balance", "uint64", repeated=False, required=True),
+        4: protobuf.Field("receiver_address", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        owner_address: "bytes",
+        balance: "int",
+        receiver_address: "bytes",
+        resource: Optional["TronResourceCode"] = TronResourceCode.BANDWIDTH,
+    ) -> None:
+        self.owner_address = owner_address
+        self.balance = balance
+        self.receiver_address = receiver_address
+        self.resource = resource
 
 
 class TronSignature(protobuf.MessageType):

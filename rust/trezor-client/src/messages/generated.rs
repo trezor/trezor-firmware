@@ -338,6 +338,8 @@ trezor_message_impl! {
     TronUnfreezeBalanceV2Contract => MessageType_TronUnfreezeBalanceV2Contract,
     TronWithdrawUnfreeze => MessageType_TronWithdrawUnfreeze,
     TronVoteWitnessContract => MessageType_TronVoteWitnessContract,
+    TronDelegateResourceContract => MessageType_TronDelegateResourceContract,
+    TronUnDelegateResourceContract => MessageType_TronUnDelegateResourceContract,
 }
 
 #[cfg(feature = "webauthn")]
