@@ -7384,6 +7384,50 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TronWithdrawUnfreeze"]:
             return isinstance(msg, cls)
 
+    class TronDelegateResourceContract(protobuf.MessageType):
+        owner_address: "AnyBytes"
+        resource: "TronResourceCode"
+        balance: "int"
+        receiver_address: "AnyBytes"
+        lock: "bool | None"
+        lock_period: "int | None"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+            balance: "int",
+            receiver_address: "AnyBytes",
+            resource: "TronResourceCode | None" = None,
+            lock: "bool | None" = None,
+            lock_period: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronDelegateResourceContract"]:
+            return isinstance(msg, cls)
+
+    class TronUnDelegateResourceContract(protobuf.MessageType):
+        owner_address: "AnyBytes"
+        resource: "TronResourceCode"
+        balance: "int"
+        receiver_address: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+            balance: "int",
+            receiver_address: "AnyBytes",
+            resource: "TronResourceCode | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronUnDelegateResourceContract"]:
+            return isinstance(msg, cls)
+
     class TronSignature(protobuf.MessageType):
         signature: "AnyBytes"
 

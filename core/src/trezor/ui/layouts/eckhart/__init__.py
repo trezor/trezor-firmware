@@ -901,12 +901,10 @@ def confirm_properties(
     verb: str | None = None,
 ) -> Awaitable[None]:
 
-    if subtitle:
-        title += ": " + subtitle
-
     return raise_if_not_confirmed(
         trezorui_api.confirm_properties(
             title=title,
+            subtitle=subtitle,
             items=list(props),
             hold=hold,
             verb=verb,

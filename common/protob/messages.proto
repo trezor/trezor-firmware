@@ -379,6 +379,8 @@ enum MessageType {
     MessageType_TronUnfreezeBalanceV2Contract = 2208 [(wire_in) = true];
     MessageType_TronWithdrawUnfreeze = 2209 [(wire_in) = true];
     MessageType_TronVoteWitnessContract = 2210 [(wire_in) = true];
+    MessageType_TronDelegateResourceContract = 2211 [(wire_in) = true];
+    MessageType_TronUnDelegateResourceContract = 2212 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

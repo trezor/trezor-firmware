@@ -1000,6 +1000,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__continue_anyway;
   MP_QSTR_words__continue_anyway_question;
   MP_QSTR_words__continue_with;
+  MP_QSTR_words__delegate;
   MP_QSTR_words__deposit;
   MP_QSTR_words__device;
   MP_QSTR_words__disabled;
@@ -1011,6 +1012,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__fee_limit;
   MP_QSTR_words__forget;
   MP_QSTR_words__from;
+  MP_QSTR_words__from_title;
   MP_QSTR_words__important;
   MP_QSTR_words__instructions;
   MP_QSTR_words__intent;
@@ -1061,6 +1063,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__token;
   MP_QSTR_words__transaction_fee;
   MP_QSTR_words__try_again;
+  MP_QSTR_words__undelegate;
   MP_QSTR_words__unknown;
   MP_QSTR_words__unlimited;
   MP_QSTR_words__unlocked;
@@ -1205,9 +1208,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__contract;
   MP_QSTR_eos__cpu;
   MP_QSTR_eos__creator;
-  MP_QSTR_eos__delegate;
   MP_QSTR_eos__delete_auth;
-  MP_QSTR_eos__from;
   MP_QSTR_eos__link_auth;
   MP_QSTR_eos__memo;
   MP_QSTR_eos__name;
@@ -1227,7 +1228,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__to;
   MP_QSTR_eos__transfer;
   MP_QSTR_eos__type;
-  MP_QSTR_eos__undelegate;
   MP_QSTR_eos__unlink_auth;
   MP_QSTR_eos__update_auth;
   MP_QSTR_eos__vote_for_producers;
@@ -1513,6 +1513,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_tezos__submit_ballot;
   MP_QSTR_tezos__submit_proposal;
   MP_QSTR_tezos__submit_proposals;
+  MP_QSTR_tron__delegate_resource;
+  MP_QSTR_tron__lock_period;
+  MP_QSTR_tron__lockperiod_blocks;
+  MP_QSTR_tron__lockperiod_time;
+  MP_QSTR_tron__undelegate_resource;
   MP_QSTR_u2f__get;
   MP_QSTR_u2f__set_template;
   MP_QSTR_u2f__title_get;
