@@ -417,6 +417,13 @@ lt_ret_t lt_ecc_key_erase_retry(lt_handle_t *tropic_handle,
   return TROPIC_RETRY_COMMAND(lt_ecc_key_erase(tropic_handle, ecc_slot));
 }
 
+lt_ret_t lt_r_mem_data_write_retry(lt_handle_t *tropic_handle,
+                                   const uint16_t udata_slot, uint8_t *data,
+                                   const uint16_t size) {
+  return TROPIC_RETRY_COMMAND(
+      lt_r_mem_data_write(tropic_handle, udata_slot, data, size));
+}
+
 lt_ret_t lt_r_mem_data_erase_retry(lt_handle_t *tropic_handle,
                                    const uint16_t udata_slot) {
   return TROPIC_RETRY_COMMAND(lt_r_mem_data_erase(tropic_handle, udata_slot));
@@ -481,25 +488,6 @@ lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t *tropic_handle,
                                            const struct lt_config_t *config) {
   return TROPIC_RETRY_COMMAND(
       lt_erase_and_write_R_config(tropic_handle, config));
-}
-
-static lt_ret_t lt_r_mem_data_erase_write(lt_handle_t *h,
-                                          const uint16_t udata_slot,
-                                          uint8_t *data, const uint16_t size) {
-  lt_ret_t ret = lt_r_mem_data_erase(h, udata_slot);
-  if (ret != LT_OK) {
-    return ret;
-  }
-
-  return lt_r_mem_data_write(h, udata_slot, data, size);
-}
-
-static lt_ret_t lt_r_mem_data_erase_write_retry(lt_handle_t *h,
-                                                const uint16_t udata_slot,
-                                                uint8_t *data,
-                                                const uint16_t size) {
-  return TROPIC_RETRY_COMMAND(
-      lt_r_mem_data_erase_write(h, udata_slot, data, size));
 }
 
 static lt_ret_t lt_r_mem_data_read_retry(lt_handle_t *h,
@@ -596,22 +584,36 @@ secbool tropic_ensure_configuration(void) {
     return secfalse;
   }
 
-  tropic_config_t config = tropic_get_configuration(chip_id.batch_id);
+  tropic_config_t config = {0};
+  if (!tropic_get_configuration(chip_id.batch_id, &config)) {
+    return secfalse;
+  }
 
-  uint8_t set_version = 0;
+  uint8_t set_version = UINT8_MAX;
   uint16_t data_read_size = 0;
   lt_ret_t ret = lt_r_mem_data_read_retry(
       &g_tropic_driver.handle, TROPIC_CONFIG_VERSION_SLOT, &set_version,
       sizeof(set_version), &data_read_size);
   if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
-    set_version = 0;
-    // TODO: let's write it if unset
+    // The slot is empty, which means the config has never been set. We will set
+    // it according to the batch_id.
+    set_version = UINT8_MAX;
   } else if (ret != LT_OK || data_read_size != sizeof(set_version)) {
     return secfalse;
   }
 
   if (set_version == config.version) {
     return sectrue;  // the set version is the expected one. We are done.
+  }
+
+  if (set_version != UINT8_MAX) {
+    // If the version is set, we unset it before erasing the configuration, to
+    // make sure that if the process is interrupted in the middle, the device
+    // will not boot with a possibly incompatible config.
+    if (lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
+                                  TROPIC_CONFIG_VERSION_SLOT) != LT_OK) {
+      return secfalse;
+    }
   }
 
   if (tropic_ensure_i_config(&config.irreversible) != sectrue) {
@@ -624,9 +626,9 @@ secbool tropic_ensure_configuration(void) {
 
   uint8_t new_version = config.version;
 
-  ret = lt_r_mem_data_erase_write_retry(&g_tropic_driver.handle,
-                                        TROPIC_CONFIG_VERSION_SLOT,
-                                        &new_version, sizeof(new_version));
+  ret = lt_r_mem_data_write_retry(&g_tropic_driver.handle,
+                                  TROPIC_CONFIG_VERSION_SLOT, &new_version,
+                                  sizeof(new_version));
   if (ret != LT_OK) {
     return secfalse;
   }
@@ -642,7 +644,7 @@ secbool tropic_ensure_configuration(void) {
   return sectrue;
 }
 
-tropic_config_t tropic_get_configuration(uint8_t *batch_id) {
+secbool tropic_get_configuration(uint8_t *batch_id, tropic_config_t *config) {
   uint8_t config_version = 0;
   // Find the version of config that belongs to the batch_id.
   // Version 0 is default.
@@ -659,13 +661,14 @@ tropic_config_t tropic_get_configuration(uint8_t *batch_id) {
   // return the config with the corresponding version.
   for (size_t i = 0; i < tropic_number_of_config_versions; i++) {
     if (tropic_configs[i].version == config_version) {
-      return tropic_configs[i];
+      *config = tropic_configs[i];
+      return sectrue;
     }
   }
 
   // Unreachable, because every batch_id is assigned a version at the beginning
   // of this function
-  return tropic_configs[0];
+  return secfalse;
 }
 
 #ifdef TREZOR_EMULATOR
@@ -833,6 +836,17 @@ void tropic_random_buffer_time(uint32_t *time_ms) {
 }
 
 #ifdef USE_STORAGE
+
+static lt_ret_t lt_r_mem_data_erase_write(lt_handle_t *h,
+                                          const uint16_t udata_slot,
+                                          uint8_t *data, const uint16_t size) {
+  lt_ret_t ret = lt_r_mem_data_erase(h, udata_slot);
+  if (ret != LT_OK) {
+    return ret;
+  }
+
+  return lt_r_mem_data_write(h, udata_slot, data, size);
+}
 
 // Defined in tropic01.c
 void tropic_set_ui_progress(tropic_ui_progress_t f);

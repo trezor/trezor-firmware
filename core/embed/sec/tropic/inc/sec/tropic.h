@@ -109,7 +109,7 @@ lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t* tropic_handle,
 
 secbool tropic_ensure_configuration(void);
 
-tropic_config_t tropic_get_configuration(uint8_t* batch_id);
+secbool tropic_get_configuration(uint8_t* batch_id, tropic_config_t* config);
 
 typedef secbool (*tropic_ui_progress_t)(void);
 

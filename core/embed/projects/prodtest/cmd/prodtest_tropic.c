@@ -173,7 +173,11 @@ static tropic_config_t prodtest_tropic_get_configuration(cli_t* cli) {
               lt_ret_verbose(ret));
   }
 
-  return tropic_get_configuration(chip_id.batch_id);
+  tropic_config_t config = {0};
+  if (!tropic_get_configuration(chip_id.batch_id, &config)) {
+    cli_error(cli, CLI_ERROR, "tropic_get_configuration() failed");
+  }
+  return config;
 }
 
 tropic_locked_status get_tropic_locked_status(cli_t* cli) {
