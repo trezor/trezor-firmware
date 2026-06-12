@@ -163,6 +163,7 @@ def test_xdr(session: Session, parameters, result):
     tx, operations = stellar.from_envelope(envelope)
     tx.address_n = parse_path(parameters["address_n"])
     tx_expected, operations_expected = parameters_to_proto(session, parameters)
+    tx_expected.payment_req = None  # payment requests are not encoded in XDR
     assert tx == tx_expected
     for expected, actual in zip(operations_expected, operations):
         assert expected == actual
