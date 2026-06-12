@@ -1444,68 +1444,101 @@ access_violation:
 
 #ifdef USE_APP_LOADING
 
-ts_t app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id) {
-  if (!probe_read_access(hash, sizeof(*hash))) {
+ts_t app_arena_get_info__verified(app_arena_info_t *info) {
+  if (!probe_write_access(info, sizeof(*info))) {
     goto access_violation;
   }
 
-  if (!probe_write_access(task_id, sizeof(*task_id))) {
-    goto access_violation;
-  }
+  return app_arena_get_info(info);
 
-  return app_task_spawn(hash, task_id);
 access_violation:
   apptask_access_violation();
   return TS_EACCES;
 }
 
-ts_t app_task_get_pminfo__verified(systask_id_t task_id,
-                                   systask_postmortem_t *pminfo) {
+ts_t app_arena_create_image__verified(app_image_handle_t *handle) {
+  if (!probe_write_access(handle, sizeof(*handle))) {
+    goto access_violation;
+  }
+
+  return app_arena_create_image(handle);
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_arena_get_image_by_index__verified(size_t idx,
+                                            app_image_handle_t *handle) {
+  if (!probe_write_access(handle, sizeof(*handle))) {
+    goto access_violation;
+  }
+
+  return app_arena_get_image_by_index(idx, handle);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_image_get_info__verified(app_image_handle_t handle,
+                                  app_image_info_t *info) {
+  if (!probe_write_access(info, sizeof(*info))) {
+    goto access_violation;
+  }
+
+  return app_image_get_info(handle, info);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_image_write_chunk__verified(app_image_handle_t handle,
+                                     const void *data, size_t size) {
+  if (!probe_read_access(data, size)) {
+    goto access_violation;
+  }
+
+  return app_image_write_chunk(handle, data, size);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_image_verify__verified(app_image_handle_t handle, const void *proof,
+                                size_t proof_size) {
+  if (!probe_read_access(proof, proof_size)) {
+    goto access_violation;
+  }
+
+  return app_image_verify(handle, proof, proof_size);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_image_run__verified(app_image_handle_t handle, systask_id_t *task_id) {
+  if (!probe_write_access(task_id, sizeof(*task_id))) {
+    goto access_violation;
+  }
+
+  return app_image_run(handle, task_id);
+
+access_violation:
+
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_image_get_pminfo__verified(app_image_handle_t handle,
+                                    systask_postmortem_t *pminfo) {
   if (!probe_write_access(pminfo, sizeof(*pminfo))) {
     goto access_violation;
   }
 
-  return app_task_get_pminfo(task_id, pminfo);
-access_violation:
-  apptask_access_violation();
-  return TS_EACCES;
-}
-
-ts_t app_task_get_id__verified(const app_hash_t *hash, systask_id_t *task_id) {
-  if (!probe_read_access(hash, sizeof(*hash))) {
-    goto access_violation;
-  }
-
-  if (!probe_write_access(task_id, sizeof(*task_id))) {
-    goto access_violation;
-  }
-
-  return app_task_get_id(hash, task_id);
-access_violation:
-  apptask_access_violation();
-  return TS_EACCES;
-}
-
-app_cache_handle_t app_cache_create_image__verified(const app_hash_t *hash,
-                                                    size_t image_size) {
-  if (!probe_read_access(hash, sizeof(*hash))) {
-    goto access_violation;
-  }
-
-  return app_cache_create_image(hash, image_size);
-
-access_violation:
-  apptask_access_violation();
-  return APP_CACHE_INVALID_HANDLE;
-}
-
-ts_t app_cache_write_image__verified(app_cache_handle_t handle,
-                                     uintptr_t offset, const void *data,
-                                     size_t data_size) {
-  if (!probe_read_access(data, data_size)) {
-    goto access_violation;
-  }
-  return app_cache_write_image(handle, offset, data, data_size);
+  return app_image_get_pminfo(handle, pminfo);
 
 access_violation:
   apptask_access_violation();

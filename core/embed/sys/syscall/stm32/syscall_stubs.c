@@ -970,46 +970,60 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
 
 #ifdef USE_APP_LOADING
 
-#include <io/app_loader.h>
+#include <io/app_arena.h>
 
-ts_t app_task_spawn(const app_hash_t *hash, systask_id_t *task_id) {
-  return ts_make(syscall_invoke2((uint32_t)hash, (uint32_t)task_id,
-                                 SYSCALL_APP_TASK_SPAWN));
+ts_t app_arena_get_info(app_arena_info_t *info) {
+  return ts_make(syscall_invoke1((uint32_t)info, SYSCALL_APP_ARENA_GET_INFO));
 }
 
-bool app_task_is_running(systask_id_t task_id) {
-  return (bool)syscall_invoke1((uint32_t)task_id, SYSCALL_APP_TASK_IS_RUNNING);
+ts_t app_arena_clear_event(void) {
+  return ts_make(syscall_invoke0(SYSCALL_APP_ARENA_CLEAR_EVENT));
 }
 
-ts_t app_task_get_pminfo(systask_id_t task_id, systask_postmortem_t *pminfo) {
-  return ts_make(syscall_invoke2((uint32_t)task_id, (uint32_t)pminfo,
-                                 SYSCALL_APP_TASK_GET_PMINFO));
+ts_t app_arena_create_image(app_image_handle_t *handle) {
+  return ts_make(
+      syscall_invoke1((uint32_t)handle, SYSCALL_APP_ARENA_CREATE_IMAGE));
 }
 
-void app_task_unload(systask_id_t task_id) {
-  syscall_invoke1((uint32_t)task_id, SYSCALL_APP_TASK_UNLOAD);
+ts_t app_arena_get_image_by_index(size_t idx, app_image_handle_t *handle) {
+  return ts_make(syscall_invoke2((uint32_t)idx, (uint32_t)handle,
+                                 SYSCALL_APP_ARENA_GET_IMAGE_BY_INDEX));
 }
 
-app_cache_handle_t app_cache_create_image(const app_hash_t *hash, size_t size) {
-  return (app_cache_handle_t)syscall_invoke2((uint32_t)hash, (uint32_t)size,
-                                             SYSCALL_APP_CACHE_CREATE_IMAGE);
+ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t *info) {
+  return ts_make(syscall_invoke2((uint32_t)handle, (uint32_t)info,
+                                 SYSCALL_APP_IMAGE_GET_INFO));
 }
 
-ts_t app_cache_write_image(app_cache_handle_t handle, uintptr_t offset,
-                           const void *data, size_t data_size) {
-  return ts_make(syscall_invoke4((uint32_t)handle, (uint32_t)offset,
-                                 (uint32_t)data, data_size,
-                                 SYSCALL_APP_CACHE_WRITE_IMAGE));
+ts_t app_image_write_chunk(app_image_handle_t handle, const void *data,
+                           size_t size) {
+  return ts_make(syscall_invoke3((uint32_t)handle, (uint32_t)data, size,
+                                 SYSCALL_APP_IMAGE_WRITE_CHUNK));
 }
 
-ts_t app_cache_finalize_image(app_cache_handle_t handle, bool accept) {
-  return ts_make(syscall_invoke2((uint32_t)handle, (uint32_t)accept,
-                                 SYSCALL_APP_CACHE_FINALIZE_IMAGE));
+ts_t app_image_verify(app_image_handle_t handle, const void *proof,
+                      size_t proof_size) {
+  return ts_make(syscall_invoke3((uint32_t)handle, (uint32_t)proof, proof_size,
+                                 SYSCALL_APP_IMAGE_VERIFY));
 }
 
-ts_t app_task_get_id(const app_hash_t *hash, systask_id_t *task_id) {
-  return ts_make(syscall_invoke2((uint32_t)hash, (uint32_t)task_id,
-                                 SYSCALL_APP_TASK_GET_ID));
+ts_t app_image_delete(app_image_handle_t handle) {
+  return ts_make(syscall_invoke1((uint32_t)handle, SYSCALL_APP_IMAGE_DELETE));
+}
+
+ts_t app_image_run(app_image_handle_t handle, systask_id_t *task_id) {
+  return ts_make(syscall_invoke2((uint32_t)handle, (uint32_t)task_id,
+                                 SYSCALL_APP_IMAGE_RUN));
+}
+
+ts_t app_image_stop(app_image_handle_t handle) {
+  return ts_make(syscall_invoke1((uint32_t)handle, SYSCALL_APP_IMAGE_STOP));
+}
+
+ts_t app_image_get_pminfo(app_image_handle_t handle,
+                          systask_postmortem_t *pminfo) {
+  return ts_make(syscall_invoke2((uint32_t)handle, (uint32_t)pminfo,
+                                 SYSCALL_APP_IMAGE_GET_PMINFO));
 }
 
 #endif
