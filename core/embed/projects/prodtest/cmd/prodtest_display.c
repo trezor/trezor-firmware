@@ -102,6 +102,77 @@ static void prodtest_display_set_backlight(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+// State for multi-chunk image receive
+static size_t image_offset = 0;
+static display_fb_info_t image_fb = {0};
+
+bool prodtest_display_transfer_active(void) { return image_fb.ptr != NULL; }
+
+// Receive raw RGB565 image data in chunks and display it.
+//   display-image begin           -- start transfer, returns width/height/stride
+//   display-image chunk <hex>     -- append hex-encoded pixel bytes
+//   display-image end             -- refresh display
+static void prodtest_display_image(cli_t* cli) {
+  if (cli_arg_count(cli) < 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char* phase = cli_arg(cli, "phase");
+
+  if (0 == strcmp(phase, "begin")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    if (!display_get_frame_buffer(&image_fb)) {
+      cli_error(cli, CLI_ERROR, "Cannot get frame buffer");
+      return;
+    }
+
+    image_offset = 0;
+    cli_ok(cli, "width=%d height=%d stride=%d size=%u", DISPLAY_RESX,
+           DISPLAY_RESY, (int)image_fb.stride, (unsigned)image_fb.size);
+
+  } else if (0 == strcmp(phase, "chunk")) {
+    if (cli_arg_count(cli) < 2) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    if (image_fb.ptr == NULL) {
+      cli_error(cli, CLI_ERROR, "Transfer not started. Use 'begin' first.");
+      return;
+    }
+
+    size_t chunk_len = 0;
+    if (!cli_arg_hex(cli, "hex-data", (uint8_t*)image_fb.ptr + image_offset,
+                     image_fb.size - image_offset, &chunk_len)) {
+      cli_error_arg(cli, "Expecting hex-encoded pixel data.");
+      return;
+    }
+
+    image_offset += chunk_len;
+    cli_ok(cli, "%u %u", (unsigned)chunk_len, (unsigned)image_offset);
+
+  } else if (0 == strcmp(phase, "end")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    display_refresh();
+    cli_ok(cli, "displayed %u bytes", (unsigned)image_offset);
+
+    image_offset = 0;
+    image_fb.ptr = NULL;
+
+  } else {
+    cli_error(cli, CLI_ERROR, "Unknown phase '%s' (begin|chunk|end)", phase);
+  }
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -130,4 +201,11 @@ PRODTEST_CLI_CMD(
   .func = prodtest_display_set_backlight,
   .info = "Set the display backlight level",
   .args = "<level>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "display-image",
+  .func = prodtest_display_image,
+  .info = "Show a raw RGB565 image (begin|chunk <hex>|end)",
+  .args = "<phase> [<hex-data>]"
 );

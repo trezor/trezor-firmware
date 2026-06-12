@@ -112,6 +112,47 @@ Convert a JPG image to a C array that can be embedded into the firmware.
 
 (TODO could we replace it with xxd -i?)
 
+### `display_image_converter.py`
+
+Converts a regular image into a sequence of `display-image begin/chunk/end`
+commands for prodtest.
+
+Example:
+
+`python core/tools/display_image_converter.py input.png --width 240 --height 320 > upload.txt`
+
+Then paste `upload.txt` content into the prodtest CLI session.
+
+You can also send commands directly to a connected prodtest CLI tty:
+
+`python core/tools/display_image_converter.py input.png --width 240 --height 320 --tty /dev/ttyACM1`
+
+### `display_image_upload.py`
+
+Uploads an image to prodtest over serial by issuing `display-image begin/chunk/end`
+commands directly (no manual copy/paste).  Uses pipelined transfers (`--window`) for
+speed and reports a clear error when the device disconnects mid-transfer (firmware
+crash / RSOD).
+
+Example:
+
+`python core/tools/display_image_upload.py input.png --port /dev/ttyACM1 --width 240 --height 320`
+
+On macOS use `/dev/cu.*` instead of `/dev/tty.*` (the tool warns if you forget).
+
+### `display_image_slideshow.py`
+
+Sends a directory of images to prodtest one by one as a slideshow, with a configurable
+pause between each image.  The serial port is kept open for the entire run.
+
+Example:
+
+`python core/tools/display_image_slideshow.py images/ --port /dev/ttyACM1 --width 240 --height 320`
+
+Key options: `--delay 5` changes the pause between images (default: 10 s), `--loop`
+cycles indefinitely, `--backlight LEVEL` sets the display backlight (0–255) before the
+slideshow starts.
+
 ### `make_cmakelists.py`
 
 Generate a CMakeLists.txt file for the core.
