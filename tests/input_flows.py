@@ -1793,23 +1793,20 @@ class InputFlowEthereumSignTxStaking(InputFlowBase):
         yield from self.ETH.confirm_tx_staking(info=True)
 
 
-def get_mnemonic(
-    debug: DebugLink,
-    confirm_success: bool = True,
-) -> Generator[None, "messages.ButtonRequest", str]:
+def get_mnemonic(debug: DebugLink) -> Generator[None, "messages.ButtonRequest", str]:
+    """Used for BIP39 or SLIP-39 1-of-1 backup."""
     # mnemonic phrases
     mnemonic = yield from read_and_confirm_mnemonic(debug)
 
-    is_slip39 = len(mnemonic.split()) in (20, 33)
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Caesar) or is_slip39:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
         br = yield  # confirm recovery share check
         assert br.code == B.Success
+        assert br.name == "success_share_confirm"
         debug.press_yes()
 
-    if confirm_success:
-        br = yield
-        assert br.code == B.Success
-
+    br = yield
+    assert br.code == B.Success
+    assert br.name == "success_backup"
     debug.press_yes()
 
     assert mnemonic is not None
@@ -1817,10 +1814,9 @@ def get_mnemonic(
 
 
 class InputFlowBip39Backup(InputFlowBase):
-    def __init__(self, client: Client, confirm_success: bool = True):
+    def __init__(self, client: Client):
         super().__init__(client)
         self.mnemonic = None
-        self.confirm_success = confirm_success
 
     def input_flow_common(self) -> BRGeneratorType:
         # 1. Backup intro
@@ -1828,7 +1824,7 @@ class InputFlowBip39Backup(InputFlowBase):
         yield from click_through(self.debug, screens=2, code=B.ResetDevice)
 
         # mnemonic phrases and rest
-        self.mnemonic = yield from get_mnemonic(self.debug, self.confirm_success)
+        self.mnemonic = yield from get_mnemonic(self.debug)
 
 
 class InputFlowBip39ResetBackup(InputFlowBase):
