@@ -52,39 +52,46 @@ def json_to_markdown(json_filename: Path, md_filename: Path) -> None:
     with open(md_filename, "w") as md_file:
         print(HEADER, file=md_file)
 
-        for config_name, config in data.items():
-            print(f"# {config_name.replace('_', ' ').upper()}", file=md_file)
-            for category, details in config.items():
-                address = details["address"]
-                print(f"## {category.upper()} ({address})", file=md_file)
-                if "uap" not in category:
-                    value_lines = [["Setting", "Value"]]
-                    for value_name, values in details["setting"].items():
-                        bit = values["bit"]
-                        val = "1" if values["value"] else "0"
-                        comment = values.get("comment", "")
-                        comment = f"({comment})" if comment else ""
-                        value_lines.append(
-                            [
-                                f"{value_name.upper()} (bit {bit})",
-                                f"{val} {comment.upper()}",
-                            ]
-                        )
-                    print_value_lines(value_lines, md_file)
-
-                else:
-                    value_lines = [["Setting"] + [f"Pairing Key {i}" for i in range(4)]]
-                    for value_name in details["setting"]["pairing_key_0"].keys():
-                        value_line = [f"{value_name.upper()}"]
-                        for key in range(4):
-                            values = details["setting"][f"pairing_key_{key}"][
-                                value_name
-                            ]
+        for config_version in data:
+            for config_name, config in config_version.items():
+                if config_name == "version":
+                    print(f"# VERSION {config}", file=md_file)
+                    continue
+                print(f"## {config_name.replace('_', ' ').upper()}", file=md_file)
+                for category, details in config.items():
+                    address = details["address"]
+                    print(f"### {category.upper()} ({address})", file=md_file)
+                    if "uap" not in category:
+                        value_lines = [["Setting", "Value"]]
+                        for value_name, values in details["setting"].items():
                             bit = values["bit"]
-                            value = "1" if values["value"] else "0"
-                            value_line.append(f"{value} (bit {bit})")
-                        value_lines.append(value_line)
-                    print_value_lines(value_lines, md_file)
+                            val = "1" if values["value"] else "0"
+                            comment = values.get("comment", "")
+                            comment = f"({comment})" if comment else ""
+                            value_lines.append(
+                                [
+                                    f"{value_name.upper()} (bit {bit})",
+                                    f"{val} {comment.upper()}",
+                                ]
+                            )
+                        print_value_lines(value_lines, md_file)
+
+                    else:
+                        value_lines = [
+                            ["Setting"] + [f"Pairing Key {i}" for i in range(4)]
+                        ]
+                        for value_name in details["setting"]["pairing_key_0"].keys():
+                            value_line = [f"{value_name.upper()}"]
+                            for key in range(4):
+                                values = details["setting"][f"pairing_key_{key}"][
+                                    value_name
+                                ]
+                                bit = values["bit"]
+                                value = "1" if values["value"] else "0"
+                                value_line.append(f"{value} (bit {bit})")
+                            value_lines.append(value_line)
+                        print_value_lines(value_lines, md_file)
+            print("", file=md_file)
 
 
 @click.command()

@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libtropic.h>
+#include <sec/tropic_configs.h>
 <%
 def all_except(selected_bits: list[int]) -> str:
     result = 0xFFFFFFFF
@@ -57,8 +57,8 @@ import json
 in_filename = ROOT / "core" / "embed" / "sec" / "tropic" / "config" / "tropic_configs.json"
 with open(in_filename, "r") as f:
     configs = json.load(f)
-reversible_config = configs["reversible_configuration"]
-irreversible_config = configs["irreversible_configuration"]
+reversible_config = configs[0]["reversible_configuration"]
+irreversible_config = configs[0]["irreversible_configuration"]
 i_names = [category for category in irreversible_config.keys() if not('uap' in category)]
 r_names = [category for category in reversible_config.keys() if not('uap' in category)]
 
@@ -70,25 +70,34 @@ r_uap_names = [category for category in reversible_config.keys() if 'uap' in cat
 // `docs/core/misc/tropic_configs.md` for more details.
 
 // clang-format off
-const struct lt_config_t tropic_configs_irreversible = {
-    .obj = {
+const tropic_config_t tropic_configs[] = {
+% for cfg_version in configs:
+    {
+        .version = ${cfg_version["version"]},
+        .irreversible = {
+            .obj = {
 % for category in i_names:
-        ${all_except([c['bit'] for c in irreversible_config[category]["setting"].values() if not(c['value'])])}
+                ${all_except([c['bit'] for c in cfg_version["irreversible_configuration"][category]["setting"].values() if not(c['value'])])}
 % endfor
 % for category in i_uap_names:
-        ${uap_all_except(configs, category)}
-%endfor
-    }
-};
-
-const struct lt_config_t tropic_configs_reversible = {
-    .obj = {
+                ${uap_all_except(cfg_version, category)}
+% endfor
+            }
+        },
+        .reversible = {
+            .obj = {
 % for category in r_names:
-        ${bits([c['bit'] for c in reversible_config[category]["setting"].values() if c['value']])}
+                ${bits([c['bit'] for c in cfg_version["reversible_configuration"][category]["setting"].values() if c['value']])}
 % endfor
 % for category in r_uap_names:
-        ${uap_bits(configs, category)}
-%endfor
-    }
+                ${uap_bits(cfg_version, category)}
+% endfor
+            }
+        },
+    },
+% endfor
 };
 // clang-format on
+
+const size_t tropic_number_of_config_versions =
+    sizeof(tropic_configs) / sizeof(tropic_configs[0]);

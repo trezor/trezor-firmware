@@ -21,6 +21,11 @@
 
 #include <libtropic.h>
 
-// Declare the configurations as extern
-extern const struct lt_config_t tropic_configs_irreversible;
-extern const struct lt_config_t tropic_configs_reversible;
+typedef struct {
+  uint8_t version;
+  struct lt_config_t irreversible;
+  struct lt_config_t reversible;
+} tropic_config_t;
+
+extern const size_t tropic_number_of_config_versions;
+extern const tropic_config_t tropic_configs[];

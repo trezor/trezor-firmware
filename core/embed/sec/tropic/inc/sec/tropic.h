@@ -23,6 +23,7 @@
 #include <sec/storage.h>
 #endif
 #include <rtl/cli.h>
+#include <sec/tropic_configs.h>
 #include <trezor_types.h>
 
 #include "ed25519-donna/ed25519.h"
@@ -43,7 +44,6 @@
 
 // Slot reserved for the version of Tropic configuration
 #define TROPIC_CONFIG_VERSION_SLOT 6
-#define TROPIC_CONFIG_VERSION 0x01
 
 // Pairing key used by prodtest to inject the privileged and unprivileged
 // pairing keys.
@@ -108,6 +108,8 @@ lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t* tropic_handle,
 #endif  // KERNEL_MODE
 
 secbool tropic_ensure_configuration(void);
+
+tropic_config_t tropic_get_configuration(uint8_t* batch_id);
 
 typedef secbool (*tropic_ui_progress_t)(void);
 

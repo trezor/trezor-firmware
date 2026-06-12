@@ -165,6 +165,18 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
   }
 }
 
+static tropic_config_t prodtest_tropic_get_configuration(cli_t* cli) {
+  uint8_t batch_id[5] = {0};
+  lt_ret_t ret = lt_get_info_chip_id(tropic_get_handle(),
+                                     &(lt_chip_id_t){.batch_id = batch_id});
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "lt_get_info_chip_id() failed with error '%s'",
+              lt_ret_verbose(ret));
+  }
+
+  return tropic_get_configuration(batch_id);
+}
+
 tropic_locked_status get_tropic_locked_status(cli_t* cli) {
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
@@ -192,6 +204,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     }
   }
 
+  tropic_config_t config = prodtest_tropic_get_configuration(cli);
+
   struct lt_config_t configuration_read = {0};
 
   ret = lt_read_whole_R_config(tropic_handle, &configuration_read);
@@ -202,8 +216,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(&tropic_configs_reversible, (uint8_t*)&configuration_read,
-             sizeof(tropic_configs_reversible)) != 0) {
+  if (memcmp(&config.reversible, (uint8_t*)&configuration_read,
+             sizeof(config.reversible)) != 0) {
     cli_trace(cli,
               "The reversible configuration read does not match the expected "
               "reversible configuration.");
@@ -218,8 +232,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(&tropic_configs_irreversible, (uint8_t*)&configuration_read,
-             sizeof(tropic_configs_irreversible)) != 0) {
+  if (memcmp(&config.irreversible, (uint8_t*)&configuration_read,
+             sizeof(config.irreversible)) != 0) {
     cli_trace(cli,
               "The irreversible configuration read does not match the expected "
               "irreversible configuration.");
@@ -239,7 +253,7 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
               lt_ret_verbose(ret));
     return TROPIC_LOCKED_ERROR;
   }
-  uint8_t config_version = TROPIC_CONFIG_VERSION;
+  uint8_t config_version = config.version;
   if (read_length != sizeof(config_version) || read_value != config_version) {
     cli_trace(cli, "Config version mismatch.");
     return TROPIC_LOCKED_FALSE;
@@ -785,6 +799,8 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
+  tropic_config_t config = prodtest_tropic_get_configuration(cli);
+
   struct lt_config_t configuration_read = {0};
   lt_handle_t* tropic_handle = tropic_get_handle();
 
@@ -795,7 +811,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = lt_write_whole_R_config(tropic_handle, &tropic_configs_reversible);
+  ret = lt_write_whole_R_config(tropic_handle, &config.reversible);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`lt_write_whole_R_config()` failed with error '%s'",
@@ -811,13 +827,13 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (memcmp(&tropic_configs_reversible, (uint8_t*)&configuration_read,
-             sizeof(tropic_configs_reversible)) != 0) {
+  if (memcmp(&config.reversible, (uint8_t*)&configuration_read,
+             sizeof(config.reversible)) != 0) {
     cli_error(cli, CLI_ERROR, "Reversible configuration mismatch after write.");
     return;
   }
 
-  ret = lt_write_whole_I_config(tropic_handle, &tropic_configs_irreversible);
+  ret = lt_write_whole_I_config(tropic_handle, &config.irreversible);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`lt_write_whole_I_config()` failed with error '%s'",
@@ -833,14 +849,14 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (memcmp(&tropic_configs_irreversible, (uint8_t*)&configuration_read,
-             sizeof(tropic_configs_irreversible)) != 0) {
+  if (memcmp(&config.irreversible, (uint8_t*)&configuration_read,
+             sizeof(config.irreversible)) != 0) {
     cli_error(cli, CLI_ERROR,
               "Irreversible configuration mismatch after write.");
     return;
   }
 
-  uint8_t config_version = TROPIC_CONFIG_VERSION;
+  uint8_t config_version = config.version;
   ret = lt_r_mem_data_write(tropic_get_handle(), TROPIC_CONFIG_VERSION_SLOT,
                             &config_version, sizeof(config_version));
   if (ret != LT_OK) {

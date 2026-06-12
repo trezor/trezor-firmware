@@ -11,7 +11,7 @@ debug_random_value: !!binary |
 i_config:
   cfg_debug: 4294967294
   cfg_gpo: 4294967295
-  cfg_sensors: 4294705152
+  cfg_sensors: 4294967295
   cfg_sleep_mode: 4294967295
   cfg_start_up: 4294967289
   cfg_uap_ecc_key_erase: 4278124286
