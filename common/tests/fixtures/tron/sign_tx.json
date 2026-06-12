@@ -1104,6 +1104,300 @@
       "result": {
         "signature": "460fe864e1367df5c5b35e1c4a71588af06fd20337d2323b5c69fc6f31f1f9961374e0fb942aede50bbcdfebedadcb8f542c4b3188563d1c56fba3d52d59286b1B"
       }
+    },
+    {
+      "name": "Delegate_Energy_with_lock_default_period",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "66f5",
+          "ref_block_hash": "8f8142c7157dc54c",
+          "expiration": 1781261643000,
+          "timestamp": 1781257984314
+        },
+        "contract": {
+          "_message_type": "TronDelegateResourceContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "resource": "ENERGY",
+          "balance": 1000000,
+          "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+          "lock": true,
+          "lock_period": 86400
+        },
+        "raw_data_hex": "0a0266f522088f8142c7157dc54c40f8d9dedbeb335a77083912730a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e7472616374123a0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58100118c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f28013080a30570bab2ffd9eb33",
+        "raw": {
+          "visible": false,
+          "txID": "103605661c49e3bc35909c0f59a1b044057c7c6166e242266fbe174f4f71ddd7",
+          "raw_data_hex": "0a0266f522088f8142c7157dc54c40f8d9dedbeb335a77083912730a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e7472616374123a0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58100118c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f28013080a30570bab2ffd9eb33",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "balance": 1000000,
+                    "resource": "ENERGY",
+                    "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+                    "lock": true,
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "lock_period": 86400
+                  },
+                  "type_url": "type.googleapis.com/protocol.DelegateResourceContract"
+                },
+                "type": "DelegateResourceContract"
+              }
+            ],
+            "ref_block_bytes": "66f5",
+            "ref_block_hash": "8f8142c7157dc54c",
+            "expiration": 1781261643000,
+            "timestamp": 1781257984314
+          }
+        }
+      },
+      "result": {
+        "signature": "a5f63ccd2987772bba930a30ceb9afa71ed86646a5de8f4c61119262d26312b47ae1b14b338f2125fb729cb71fd9a69bd79407ac0a5cb530dbfaf4fdf1fb2fb51C"
+      }
+    },
+    {
+      "name": "Delegate_Energy_with_lock_no_period",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "5c1a",
+          "ref_block_hash": "17c5a464f19f4fb6",
+          "expiration": 1781253222000,
+          "timestamp": 1781249563856
+        },
+        "contract": {
+          "_message_type": "TronDelegateResourceContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "resource": "ENERGY",
+          "balance": 1000000,
+          "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+          "lock": true
+        },
+        "raw_data_hex": "0a025c1a220817c5a464f19f4fb640f0dcdcd7eb335a730839126f0a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e747261637412360a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58100118c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f280170d0b9fdd5eb33",
+        "raw": {
+          "visible": false,
+          "txID": "660a6abab18e55a65a535425a80f553e1c430ba06cd559aaaac7e65de6ff2315",
+          "raw_data_hex": "0a025c1a220817c5a464f19f4fb640f0dcdcd7eb335a730839126f0a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e747261637412360a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58100118c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f280170d0b9fdd5eb33",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "balance": 1000000,
+                    "resource": "ENERGY",
+                    "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+                    "lock": true,
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58"
+                  },
+                  "type_url": "type.googleapis.com/protocol.DelegateResourceContract"
+                },
+                "type": "DelegateResourceContract"
+              }
+            ],
+            "ref_block_bytes": "5c1a",
+            "ref_block_hash": "17c5a464f19f4fb6",
+            "expiration": 1781253222000,
+            "timestamp": 1781249563856
+          }
+        }
+      },
+      "result": {
+        "signature": "c05c95aabc04b7e6063928379ef1a843fba63556880255697503b39c6bc51fa34427cca7a6030d0971aa0cb3c18dbf548c3f49439456a9e057ca14fff7648fff1C"
+      }
+    },
+    {
+      "name": "Delegate_Energy",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "5c22",
+          "ref_block_hash": "7fbe4c8e28c4be67",
+          "expiration": 1781253246000,
+          "timestamp": 1781249588466
+        },
+        "contract": {
+          "_message_type": "TronDelegateResourceContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "resource": "ENERGY",
+          "balance": 1000000,
+          "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f"
+        },
+        "raw_data_hex": "0a025c2222087fbe4c8e28c4be6740b098ded7eb335a710839126d0a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e747261637412340a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58100118c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f70f2f9fed5eb33",
+        "raw": {
+          "visible": false,
+          "txID": "3e657fd5a1d85c161ddab09b50d81f3cd0c73c8097b262a6dae2cd870f7d701a",
+          "raw_data_hex": "0a025c2222087fbe4c8e28c4be6740b098ded7eb335a710839126d0a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e747261637412340a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58100118c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f70f2f9fed5eb33",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "balance": 1000000,
+                    "resource": "ENERGY",
+                    "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58"
+                  },
+                  "type_url": "type.googleapis.com/protocol.DelegateResourceContract"
+                },
+                "type": "DelegateResourceContract"
+              }
+            ],
+            "ref_block_bytes": "5c22",
+            "ref_block_hash": "7fbe4c8e28c4be67",
+            "expiration": 1781253246000,
+            "timestamp": 1781249588466
+          }
+        }
+      },
+      "result": {
+        "signature": "f97c4162cbc8d3761ff85761ffaf23ace493037ce55b0a5276585ccb3fdcf813251bc6480eda6843ea13d9fbe35c4aa084e66c2e1371160dfb8dae06a2c7c2631B"
+      }
+    },
+    {
+      "name": "Delegate_Bandwidth",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "f369",
+          "ref_block_hash": "72bad941dfc6ff17",
+          "expiration": 1781172009000,
+          "timestamp": 1781168350883
+        },
+        "contract": {
+          "_message_type": "TronDelegateResourceContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "balance": 1000000,
+          "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f"
+        },
+        "raw_data_hex": "0a02f369220872bad941dfc6ff1740a8f0ffb0eb335a6f0839126b0a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e747261637412320a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5818c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f70a3cda0afeb33",
+        "raw": {
+          "visible": false,
+          "txID": "d69f0ffa7a484d648bab90362e3f7672ff73f06a5075df2096d96e1bb812011c",
+          "raw_data_hex": "0a02f369220872bad941dfc6ff1740a8f0ffb0eb335a6f0839126b0a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e747261637412320a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5818c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f70a3cda0afeb33",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "balance": 1000000,
+                    "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58"
+                  },
+                  "type_url": "type.googleapis.com/protocol.DelegateResourceContract"
+                },
+                "type": "DelegateResourceContract"
+              }
+            ],
+            "ref_block_bytes": "f369",
+            "ref_block_hash": "72bad941dfc6ff17",
+            "expiration": 1781172009000,
+            "timestamp": 1781168350883
+          }
+        }
+      },
+      "result": {
+        "signature": "390e587ef879d512bb211854b07341ddfdc385f783698524750d7255c77309bb5401dc47ac4746b9013100729eebd33ebe58b1bbb035c698a8678dd1143b9efa1C"
+      }
+    },
+    {
+      "name": "Delegate_Energy_with_lock_period",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "96fd",
+          "ref_block_hash": "01173b845095f921",
+          "expiration": 1781298903000,
+          "timestamp": 1781295243256
+        },
+        "contract": {
+          "_message_type": "TronDelegateResourceContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "resource": "ENERGY",
+          "balance": 1000000,
+          "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+          "lock": true,
+          "lock_period": 123456
+        },
+        "raw_data_hex": "0a0296fd220801173b845095f92140d8efc0edeb335a77083912730a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e7472616374123a0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58100118c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f280130c0c40770f8bfe1ebeb33",
+        "raw": {
+          "visible": false,
+          "txID": "8a8e6b50aca0dd1ca53392e1df99dc842aa18395564a1959b492049262506f4f",
+          "raw_data_hex": "0a0296fd220801173b845095f92140d8efc0edeb335a77083912730a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e7472616374123a0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58100118c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f280130c0c40770f8bfe1ebeb33",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "balance": 1000000,
+                    "resource": "ENERGY",
+                    "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+                    "lock": true,
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "lock_period": 123456
+                  },
+                  "type_url": "type.googleapis.com/protocol.DelegateResourceContract"
+                },
+                "type": "DelegateResourceContract"
+              }
+            ],
+            "ref_block_bytes": "96fd",
+            "ref_block_hash": "01173b845095f921",
+            "expiration": 1781298903000,
+            "timestamp": 1781295243256
+          }
+        }
+      },
+      "result": {
+        "signature": "f68796ebbf5c9306c2e6468e5a7c030b7325b704d5a62350b378199af7b35b24461c44bb5ffb894626505bf0403152a6c6955897a1005486c54d0fba9fb88e101C"
+      }
+    },
+    {
+      "name": "Undelegate_Bandwidth",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "f37d",
+          "ref_block_hash": "96f8f7fefcf225a1",
+          "expiration": 1781169669000,
+          "timestamp": 1781168410623
+        },
+        "contract": {
+          "_message_type": "TronUnDelegateResourceContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "balance": 1000000,
+          "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f"
+        },
+        "raw_data_hex": "0a02f37d220896f8f7fefcf225a1408887f1afeb335a71083a126d0a37747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e44656c65676174655265736f75726365436f6e747261637412320a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5818c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f70ff9fa4afeb33",
+        "raw": {
+          "visible": false,
+          "txID": "690ace4bea2eb210140fc95be26ef09b6d9df4d4cc9a631919acba0b8a29a5fb",
+          "raw_data_hex": "0a02f37d220896f8f7fefcf225a1408887f1afeb335a71083a126d0a37747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e44656c65676174655265736f75726365436f6e747261637412320a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5818c0843d221541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f70ff9fa4afeb33",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "balance": 1000000,
+                    "receiver_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58"
+                  },
+                  "type_url": "type.googleapis.com/protocol.UnDelegateResourceContract"
+                },
+                "type": "UnDelegateResourceContract"
+              }
+            ],
+            "ref_block_bytes": "f37d",
+            "ref_block_hash": "96f8f7fefcf225a1",
+            "expiration": 1781169669000,
+            "timestamp": 1781168410623
+          }
+        }
+      },
+      "result": {
+        "signature": "c53e9f67de5b57834e22603934ca3d35a15d0186e37e761c59163c66fccfa74f1dba4129f6f0ca4a6aedf963cb50031569d9d044bf4eab7cc3507f5461b1f7e71C"
+      }
     }
   ]
 }
