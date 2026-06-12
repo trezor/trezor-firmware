@@ -717,20 +717,8 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "eos__delegate": {
-      "Bolt": "Delegar",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "eos__delete_auth": {
       "Bolt": "Excluir autorização",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
-    "eos__from": {
-      "Bolt": "De",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -845,12 +833,6 @@
     },
     "eos__type": {
       "Bolt": "Tipo",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
-    "eos__undelegate": {
-      "Bolt": "Revogar delegação",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -3511,6 +3493,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "words__delegate": {
+      "Bolt": "Delegar",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__deposit": "Depósito",
     "words__device": "Dispositivo",
     "words__disabled": {
@@ -3538,6 +3526,12 @@
       "Bolt": "do",
       "Caesar": "do",
       "Delizia": "do",
+      "Eckhart": ""
+    },
+    "words__from_title": {
+      "Bolt": "De",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": ""
     },
     "words__function": "Função",
@@ -3678,6 +3672,12 @@
       "Caesar": "",
       "Delizia": "Tente novamente.",
       "Eckhart": "Tente novamente"
+    },
+    "words__undelegate": {
+      "Bolt": "Revogar delegação",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "words__unknown": "Desconhecido",
     "words__unlimited": "Ilimitado",

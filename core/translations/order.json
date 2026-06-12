@@ -1284,5 +1284,13 @@
   "1282": "stellar__token_contract",
   "1283": "stellar__transfer_token",
   "1284": "backup__info_multi_group_backup",
-  "1285": "backup__info_n_of_m_template"
+  "1285": "backup__info_n_of_m_template",
+  "1286": "tron__delegate_resource",
+  "1287": "tron__lock_period",
+  "1288": "tron__lockperiod_blocks",
+  "1289": "tron__lockperiod_time",
+  "1290": "tron__undelegate_resource",
+  "1291": "words__delegate",
+  "1292": "words__from_title",
+  "1293": "words__undelegate"
 }

@@ -687,20 +687,8 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "eos__delegate": {
-      "Bolt": "Delegovat",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "eos__delete_auth": {
       "Bolt": "Odstranit ověření",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
-    "eos__from": {
-      "Bolt": "Od",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -815,12 +803,6 @@
     },
     "eos__type": {
       "Bolt": "Typ",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
-    "eos__undelegate": {
-      "Bolt": "Zrušit delegaci",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -3391,6 +3373,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "words__delegate": {
+      "Bolt": "Delegovat",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__deposit": "Vklad",
     "words__device": "Zařízení",
     "words__disabled": {
@@ -3418,6 +3406,12 @@
       "Bolt": "ze",
       "Caesar": "ze",
       "Delizia": "ze",
+      "Eckhart": ""
+    },
+    "words__from_title": {
+      "Bolt": "Od",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": ""
     },
     "words__function": "Funkce",
@@ -3558,6 +3552,12 @@
       "Caesar": "",
       "Delizia": "Zkuste to znovu.",
       "Eckhart": "Zkusit znovu"
+    },
+    "words__undelegate": {
+      "Bolt": "Zrušit delegaci",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "words__unknown": "Neznámé",
     "words__unlimited": "Bez limitu",
