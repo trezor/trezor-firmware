@@ -1,7 +1,7 @@
 use xbuild::{Result, build_mods};
 
-#[path = "app_loader/build.rs"]
-mod app_loader;
+#[path = "app_arena/build.rs"]
+mod app_arena;
 #[path = "backlight/build.rs"]
 mod backlight;
 #[path = "ble/build.rs"]
@@ -46,7 +46,7 @@ fn main() -> Result<()> {
         build_mods!(
             lib,
             [
-                app_loader if cfg!(feature = "app_loading"),
+                app_arena if cfg!(feature = "app_loading"),
                 backlight if cfg!(feature = "backlight"),
                 ble if cfg!(feature = "ble"),
                 button if cfg!(feature = "button"),
