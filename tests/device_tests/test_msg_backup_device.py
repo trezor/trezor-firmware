@@ -115,12 +115,7 @@ def test_backup_slip39_single(session: Session, adapt_flow: "FlowAdapter"):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
-        IF = InputFlowBip39Backup(
-            session,
-            confirm_success=(
-                session.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart)
-            ),
-        )
+        IF = InputFlowBip39Backup(session)
         client.set_input_flow(adapt_flow(session, IF.get()))
         device.backup(session)
 
