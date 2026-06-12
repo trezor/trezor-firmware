@@ -166,15 +166,14 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
 }
 
 static tropic_config_t prodtest_tropic_get_configuration(cli_t* cli) {
-  uint8_t batch_id[5] = {0};
-  lt_ret_t ret = lt_get_info_chip_id(tropic_get_handle(),
-                                     &(lt_chip_id_t){.batch_id = batch_id});
+  lt_chip_id_t chip_id = {0};
+  lt_ret_t ret = lt_get_info_chip_id(tropic_get_handle(), &chip_id);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "lt_get_info_chip_id() failed with error '%s'",
               lt_ret_verbose(ret));
   }
 
-  return tropic_get_configuration(batch_id);
+  return tropic_get_configuration(chip_id.batch_id);
 }
 
 tropic_locked_status get_tropic_locked_status(cli_t* cli) {
