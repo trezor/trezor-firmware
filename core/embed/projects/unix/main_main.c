@@ -98,7 +98,7 @@ static void drivers_init(void) {
 #endif
 
 #ifdef USE_TROPIC
-  tropic_init();
+  ensure_true(tropic_init(), "Failed to initialize Tropic driver");
 #endif
 
   usb_configure(NULL);
