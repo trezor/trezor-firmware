@@ -131,6 +131,7 @@ static const char* log_level_str(log_level_t level) {
 
 bool syslog_start_record(const log_source_t* source, log_level_t level) {
   syslog_t* syslog = &g_syslog;
+  static uint32_t prev_ticks = 0;
 
   if (syslog_filter_match(source, level)) {
     // Prepare a record header
@@ -150,11 +151,16 @@ bool syslog_start_record(const log_source_t* source, log_level_t level) {
     irq_unlock(irq_key);
 #endif
 
+    char delta_str[12] = {0};
+    snprintf_(delta_str, sizeof(delta_str), "+%" PRIu32, ticks - prev_ticks);
+    prev_ticks = ticks;
+
     int name_len = (int)MIN(source->name_len, INT32_MAX);
 
-    dbg_console_printf("%s%" PRIu32 ".%03" PRIu32 " " ESC_COLOR_SOURCE
+    dbg_console_printf("%s%" PRIu32 ".%03" PRIu32 " [%5s] " ESC_COLOR_SOURCE
                        "%.*s" ESC_COLOR_NORMAL " %s ",
-                       eol, seconds, msec, name_len, source->name, level_str);
+                       eol, seconds, msec, delta_str, name_len, source->name,
+                       level_str);
 
     return true;
   } else {
