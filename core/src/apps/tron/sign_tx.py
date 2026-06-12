@@ -93,6 +93,20 @@ async def process_contract(
 
     from .helpers import get_encoded_address
 
+    # https://github.com/tronprotocol/java-tron/blob/1691fddbd4f8df35df31713cc7772273d7d03360/actuator/src/main/java/org/tron/core/actuator/DelegateResourceActuator.java#L149
+    _MINIMUM_DELEGATION_BALANCE = const(1_000_000)  # 1 TRX in SUN
+    # Network parameter valuegetMaxDelegateLockPeriod = 864000 (30D) via api.trongrid.io/wallet/getchainparameters
+    # But we're leaving room for future changes since network will reject invalid values anyway.
+    # 1 block per 3 seconds = 20 blocks per minute.
+    _MAX_LOCK_PERIOD_BLOCKS = const(365 * 24 * 60 * 20)
+    # Network defined. Not a protobuff default. (proto3 doesn't support [default = 81400] and Tron uses proto3)
+    _DEFAULT_LOCK_PERIOD_BLOCKS = const(
+        86400
+    )  # 3 days. TRON's default lock period when lock is true but period unspecified.
+
+    # Every Tron contract carries an `owner_address` (proto field 1). Encode it
+    # and compare against the signing address once here so any contract branch
+    # can reuse `is_different_owner`.
     owner_address_bytes = getattr(contract, "owner_address", None)
     owner_address = (
         get_encoded_address(owner_address_bytes)
@@ -102,11 +116,14 @@ async def process_contract(
     is_different_owner = owner_address is not None and owner_address != signer_address
 
     if messages.TronTransferContract.is_type_of(contract):
-        from .layout import confirm_trx_transfer
 
-        contract_type = TronRawContractType.TransferContract
+        # Contract specific validation
         if contract.amount > _INT64_MAX:
             raise DataError("Tron: invalid transfer amount")
+        contract_type = TronRawContractType.TransferContract
+
+        from .layout import confirm_trx_transfer
+
         await confirm_trx_transfer(contract, account_details, chunkify)
 
     elif messages.TronTriggerSmartContract.is_type_of(contract):
@@ -174,10 +191,84 @@ async def process_contract(
         )
 
     elif messages.TronVoteWitnessContract.is_type_of(contract):
+
+        # Contract specific validation
         if len(contract.votes) > 9:
             raise DataError("Tron: too many votes")
+
         contract_type = TronRawContractType.VoteWitnessContract
         await layout.confirm_votes(contract)
+
+    elif messages.TronDelegateResourceContract.is_type_of(contract):
+
+        raw_lock_period = contract.lock_period  # local_cache_attribute
+        lock = contract.lock  # local_cache_attribute
+
+        lock_period = None
+        # Contract specific validation
+        if lock:
+            lock_period = (
+                raw_lock_period
+                if raw_lock_period not in (None, 0)
+                else _DEFAULT_LOCK_PERIOD_BLOCKS
+            )
+            assert lock_period is not None
+            if lock_period > _MAX_LOCK_PERIOD_BLOCKS:
+                raise DataError("Tron: Invalid lock period (Max 365d)")
+        elif raw_lock_period is not None:
+            # Tron technically allows this (rejects the lock, encodes the value) but we would rather the host not send inconsistent values.
+            raise DataError("Tron: lock_period should not be set when lock is false")
+        if contract.balance < _MINIMUM_DELEGATION_BALANCE:
+            raise DataError("Tron: Amount too low (Min 1 TRX)")
+
+        from trezor.enums import TronResourceCode
+
+        contract_type = TronRawContractType.DelegateResourceContract
+
+        await layout.confirm_delegate_resource(
+            receiver_address=contract.receiver_address,
+            balance=contract.balance,
+            resource=contract.resource,
+            lock_period=lock_period,
+        )
+
+        # Match proto3 encoding: omit fields that equal their default values
+        contract = messages.TronDelegateResourceContract(
+            owner_address=contract.owner_address,
+            receiver_address=contract.receiver_address,
+            balance=contract.balance,
+            resource=(
+                None
+                if contract.resource == TronResourceCode.BANDWIDTH
+                else contract.resource
+            ),
+            lock=lock or None,
+            lock_period=raw_lock_period if lock else None,
+        )
+
+    elif messages.TronUnDelegateResourceContract.is_type_of(contract):
+        from trezor.enums import TronResourceCode
+
+        contract_type = TronRawContractType.UnDelegateResourceContract
+
+        await layout.confirm_undelegate_resource(
+            receiver_address=contract.receiver_address,
+            balance=contract.balance,
+            resource=contract.resource,
+        )
+
+        # Match proto3 encoding: omit fields that equal their default values
+        contract = messages.TronUnDelegateResourceContract(
+            owner_address=contract.owner_address,
+            receiver_address=contract.receiver_address,
+            balance=contract.balance,
+            resource=(
+                None
+                if contract.resource == TronResourceCode.BANDWIDTH
+                else contract.resource
+            ),
+        )
+
     else:
         raise DataError("Tron: contract type unknown")
 

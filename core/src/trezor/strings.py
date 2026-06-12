@@ -153,3 +153,13 @@ def format_timestamp(timestamp: int) -> str:
     # that is used internally.
     d = utime.gmtime2000(timestamp - _SECONDS_1970_TO_2000)
     return f"{d[0]}-{d[1]:02d}-{d[2]:02d} {d[3]:02d}:{d[4]:02d}:{d[5]:02d}"
+
+
+def chunkify_number(number: int, chunk_size: int = 3) -> str:
+    # Group digits from the right in chunks of `chunk_size`, separated by spaces.
+    # e.g. 123456 => "123 456", 1234 => "1 234"
+    digits = str(number)
+    chunks = []
+    for i in range(len(digits), 0, -chunk_size):
+        chunks.append(digits[max(0, i - chunk_size) : i])
+    return " ".join(reversed(chunks))

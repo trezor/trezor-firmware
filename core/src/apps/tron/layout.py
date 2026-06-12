@@ -2,7 +2,8 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 import trezor.ui.layouts as layouts
-from trezor import TR, strings
+from trezor import TR
+from trezor.strings import chunkify_number, format_amount
 
 from .helpers import get_encoded_address
 
@@ -20,15 +21,35 @@ def format_trx_amount(amount: int) -> str:
     # 1 SUN = 0.000001 TRX
     _TRX_AMOUNT_DECIMALS = const(6)
 
-    return f"{strings.format_amount(amount, _TRX_AMOUNT_DECIMALS)} TRX"
+    return f"{format_amount(amount, _TRX_AMOUNT_DECIMALS)} TRX"
 
 
 def format_token_amount(amount: int, token_decimals: int, token_symbol: str) -> str:
-    return f"{strings.format_amount(amount, token_decimals)} {token_symbol}"
+    return f"{format_amount(amount, token_decimals)} {token_symbol}"
 
 
 def format_energy_amount(amount: int) -> str:
-    return f"{strings.format_amount(amount, 0)} SUN"
+    return f"{format_amount(amount, 0)} SUN"
+
+
+def format_blocks_as_time(blocks: int) -> str:
+
+    # Tron gives each SR 3 seconds to produce a block.
+    total_seconds = blocks * 3
+
+    days, rem = divmod(total_seconds, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+    parts = []
+    if days:
+        parts.append(f"{days}d")
+    if hours:
+        parts.append(f"{hours}h")
+    if minutes:
+        parts.append(f"{minutes}m")
+    if seconds:
+        parts.append(f"{seconds}s")
+    return " ".join(parts)
 
 
 async def confirm_trx_transfer(
@@ -188,6 +209,86 @@ async def confirm_claim(
         intro_question=intro_question,
         account=account_details[0],
         account_path=account_details[1],
+    )
+
+
+async def confirm_delegate_resource(
+    receiver_address: AnyBytes,
+    balance: int,
+    resource: int,
+    lock_period: int | None,
+) -> None:
+    from trezor.enums import TronResourceCode
+    from trezor.ui.layouts import confirm_address, confirm_properties
+
+    title = TR.tron__delegate_resource
+    br_name = "tron/delegate"
+
+    await confirm_address(
+        title=title,
+        description=TR.words__recipient,
+        address=get_encoded_address(receiver_address),
+        chunkify=True,
+        br_name=f"{br_name}/recipient",
+    )
+
+    await confirm_properties(
+        br_name=f"{br_name}/resource",
+        title=title,
+        props=[
+            (TR.words__amount, format_trx_amount(balance), False),
+            (
+                TR.words__resource,
+                "Energy" if resource == TronResourceCode.ENERGY else "Bandwidth",
+                False,
+            ),
+        ],
+        hold=lock_period is None,
+    )
+    if lock_period:
+        await confirm_properties(
+            br_name=f"{br_name}/lock_period",
+            title=title,
+            subtitle=TR.tron__lock_period,
+            props=[
+                (TR.tron__lockperiod_time, format_blocks_as_time(lock_period), True),
+                (TR.tron__lockperiod_blocks, chunkify_number(lock_period), True),
+            ],
+            hold=True,
+        )
+
+
+async def confirm_undelegate_resource(
+    receiver_address: AnyBytes,
+    balance: int,
+    resource: int,
+) -> None:
+    from trezor.enums import TronResourceCode
+    from trezor.ui.layouts import confirm_address, confirm_properties
+
+    title = TR.tron__undelegate_resource
+    br_name = "tron/undelegate"
+
+    await confirm_address(
+        title=title,
+        description=TR.words__from_title,
+        address=get_encoded_address(receiver_address),
+        chunkify=True,
+        br_name=f"{br_name}/from_address",
+    )
+
+    await confirm_properties(
+        title=title,
+        props=[
+            (TR.words__amount, format_trx_amount(balance), False),
+            (
+                TR.words__resource,
+                "Energy" if resource == TronResourceCode.ENERGY else "Bandwidth",
+                False,
+            ),
+        ],
+        br_name=f"{br_name}/resource",
+        hold=True,
     )
 
 
