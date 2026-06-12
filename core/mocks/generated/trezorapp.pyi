@@ -5,58 +5,127 @@ from buffer_types import *
 # upymod/modtrezorapp/modtrezorapp-image.h
 class AppImage:
     """
-    Application image image.
+    Third-party application loaded or running in the app arena,
+    a RAM region reserved for application images.
     """
 
-    def write(self, offset: int, data: AnyBytes) -> None:
+    def get_handle(self) -> int
         """
-        Writes data to the application image at the specified offset.
-        """
-
-    def finalize(self, accept: bool) -> None:
-        """
-        Finalizes loading of the application image. If `accept` is true,
-        the image is marked as loaded and will be available for execution.
-        If `accept` is false, the image is discarded.
+        Returns the image internal unique handle.
         """
 
-
-# upymod/modtrezorapp/modtrezorapp-task.h
-class AppTask:
-    """
-    App task structure.
-    """
-
-    def __init__(self, task_id: int) -> None:
+    def get_task_id(self) -> int:
         """
-        Creates an app task object for the given internal task ID.
-        """
-
-    def id(self) -> int:
-        """
-        Returns the task id.
+        Gets the task ID associated with the application image.
         """
 
     def is_running(self) -> bool:
         """
-        Returns whether the application is still running.
+        Checks if the application image is currently running.
         """
 
-    def unload(self) -> None:
+    def is_verified(self) -> bool:
         """
-        Unloads the application associated with this task.
+        Checks if the application image has been verified.
+        """
+
+    def get_id(self) -> str:
+        """
+        Returns the ID of the application image.
+        """
+
+    def get_version(self) -> tuple[int, int]:
+        """
+        Returns the version of the application image as a tuple (major, minor).
+        """
+
+    def get_hash(self) -> bytes:
+        """
+        Returns the hash of the application image.
+        """
+
+    def write_chunk(self, data: AnyBytes) -> None:
+        """
+        Writes a chunk of image data into app-arena memory.
+        Allowed only while the image is in the loading state.
+        Call verify() after all chunks are written.
+        """
+
+    def verify(self, merkle_proof: AnyBytes) -> None:
+        """
+        Validates image integrity and verifies its signature.
+        If verification succeeds, the image transitions to the
+        verified state.
+        """
+
+    def delete(self) -> None:
+        """
+        Deletes the application and releases its resources.
+        If the image is currently running, it is stopped before
+        deletion. After deletion, the AppImage object is invalid
+        and must not be used.
+        """
+
+    def run(self) -> int:
+        """
+        Runs the loaded application image. Only verified images
+        are runnable. If the image is already running,
+        this operation has no effect.
+        """
+
+    def stop(self) -> None:
+        """
+        Stops the running application image. If the image is not running,
+        this operation has no effect.
         """
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def spawn_task(app_hash: AnyBytes) -> AppTask:
+def create_image() -> AppImage:
     """
-    Spawns an application task from the app cache.
+    Creates a new empty application image. The returned handle
+    can be used to load the image content and run it.
     """
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def create_image(app_hash: AnyBytes, size: int) -> AppImage:
+def get_image_by_index(idx: int) -> AppImage | None:
     """
-    Creates a new application image in the app cache.
+    Returns the app image at the specified index in the app arena list.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def get_image_by_handle(handle: int) -> AppImage:
+    """
+    Returns the application image with the specified handle.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def clear_event() -> None:
+    """
+    Clears the pending event on the app arena, if any.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def get_image_count() -> int:
+    """
+    Returns the number of application images currently
+    loaded in the app arena.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def get_mem_total() -> int:
+    """
+    Returns the total memory available in the app arena.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def get_mem_free() -> int:
+    """
+    Returns the free memory available in the app arena.
     """

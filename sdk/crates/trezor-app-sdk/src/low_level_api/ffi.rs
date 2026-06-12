@@ -246,6 +246,6 @@ impl Default for trezor_api_v1_t {
         }
     }
 }
-pub const SYSHANDLE__IPC0: u32 = 11;
+pub const SYSHANDLE__IPC0: u32 = 12;
 pub type trezor_api_getter_t =
     ::core::option::Option<unsafe extern "C" fn(version: u32) -> *mut cty::c_void>;
