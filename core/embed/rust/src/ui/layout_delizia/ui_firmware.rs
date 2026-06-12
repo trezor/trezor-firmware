@@ -451,13 +451,17 @@ impl FirmwareUI for UIDelizia {
         items: Obj,
         hold: bool,
         _verb: Option<TString<'static>>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(items)?;
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+            if external_menu {
+                ConfirmActionExtra::ExternalMenu
+            } else {
+                ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new())
+            },
             ConfirmActionStrings::new(title, subtitle, None, hold.then_some(title)),
             ConfirmActionOptions::new().with_hold(hold),
         )?;
@@ -1239,6 +1243,8 @@ impl FirmwareUI for UIDelizia {
         description: TString<'static>,
         _allow_cancel: bool,
         danger: bool,
+        _footer: Option<TString<'static>>,
+        _external_menu: Option<bool>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let action = if button.is_empty() {
             None

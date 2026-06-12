@@ -1000,6 +1000,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__continue_anyway;
   MP_QSTR_words__continue_anyway_question;
   MP_QSTR_words__continue_with;
+  MP_QSTR_words__delegate;
   MP_QSTR_words__deposit;
   MP_QSTR_words__device;
   MP_QSTR_words__disabled;
@@ -1021,7 +1022,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__manage;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;
+  MP_QSTR_words__network;
   MP_QSTR_words__no;
+  MP_QSTR_words__nonce;
   MP_QSTR_words__not_recommended;
   MP_QSTR_words__note;
   MP_QSTR_words__off;
@@ -1058,7 +1061,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__title_success;
   MP_QSTR_words__title_summary;
   MP_QSTR_words__title_threshold;
+  MP_QSTR_words__to;
   MP_QSTR_words__token;
+  MP_QSTR_words__transaction_details;
   MP_QSTR_words__transaction_fee;
   MP_QSTR_words__try_again;
   MP_QSTR_words__unknown;
@@ -1131,9 +1136,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__message_text;
   MP_QSTR_cardano__multisig_path;
   MP_QSTR_cardano__nested_scripts_template;
-  MP_QSTR_cardano__network;
   MP_QSTR_cardano__no_output_tx;
-  MP_QSTR_cardano__nonce;
   MP_QSTR_cardano__other;
   MP_QSTR_cardano__path;
   MP_QSTR_cardano__pledge;
@@ -1205,7 +1208,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__contract;
   MP_QSTR_eos__cpu;
   MP_QSTR_eos__creator;
-  MP_QSTR_eos__delegate;
   MP_QSTR_eos__delete_auth;
   MP_QSTR_eos__from;
   MP_QSTR_eos__link_auth;
@@ -1224,7 +1226,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__sell_ram;
   MP_QSTR_eos__sender;
   MP_QSTR_eos__threshold;
-  MP_QSTR_eos__to;
   MP_QSTR_eos__transfer;
   MP_QSTR_eos__type;
   MP_QSTR_eos__undelegate;
@@ -1233,6 +1234,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__vote_for_producers;
   MP_QSTR_eos__vote_for_proxy;
   MP_QSTR_eos__voter;
+  MP_QSTR_ethereum__all_evms;
+  MP_QSTR_ethereum__amount_sent;
   MP_QSTR_ethereum__approve;
   MP_QSTR_ethereum__approve_amount_allowance;
   MP_QSTR_ethereum__approve_chain_id;
@@ -1244,14 +1247,23 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__approve_revoke_from;
   MP_QSTR_ethereum__approve_to;
   MP_QSTR_ethereum__approve_unlimited_template;
+  MP_QSTR_ethereum__authorization;
   MP_QSTR_ethereum__calldata_suffix;
   MP_QSTR_ethereum__confirm_contract;
   MP_QSTR_ethereum__contract_address;
   MP_QSTR_ethereum__data_size_template;
+  MP_QSTR_ethereum__delegating;
+  MP_QSTR_ethereum__delegation;
   MP_QSTR_ethereum__deposit_amount;
   MP_QSTR_ethereum__deposit_to;
   MP_QSTR_ethereum__eip_7702;
-  MP_QSTR_ethereum__eip_7702_title;
+  MP_QSTR_ethereum__eip_7702_authorization_intro_title;
+  MP_QSTR_ethereum__eip_7702_authorization_signed;
+  MP_QSTR_ethereum__eip_7702_delegation_intro_title;
+  MP_QSTR_ethereum__eip_7702_delegation_signed;
+  MP_QSTR_ethereum__eip_7702_revocation_intro_template;
+  MP_QSTR_ethereum__eip_7702_revocation_transaction_completion;
+  MP_QSTR_ethereum__eip_7702_smart_account_contract_info;
   MP_QSTR_ethereum__gas_limit;
   MP_QSTR_ethereum__gas_price;
   MP_QSTR_ethereum__interaction_contract;
@@ -1263,6 +1275,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__redeem;
   MP_QSTR_ethereum__redeem_amount;
   MP_QSTR_ethereum__redeem_from;
+  MP_QSTR_ethereum__revocation;
   MP_QSTR_ethereum__reward_tokens;
   MP_QSTR_ethereum__rewards_claim;
   MP_QSTR_ethereum__show_full_array;

@@ -1277,6 +1277,8 @@ impl FirmwareUI for UIBolt {
         description: TString<'static>,
         allow_cancel: bool,
         danger: bool,
+        _footer: Option<TString<'static>>,
+        _external_menu: Option<bool>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let icon = BlendedImage::new(
             theme::IMAGE_BG_OCTAGON,

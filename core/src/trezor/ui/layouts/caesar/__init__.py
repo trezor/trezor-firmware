@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
     from typing import Awaitable, Callable, Iterable, NoReturn, Sequence
 
-    from trezor.messages import StellarAsset
+    from trezor.messages import EthereumSignAuth7702, StellarAsset
 
     from ..common import ExceptionType, PropertyType, StrPropertyType
     from ..menu import Details
@@ -1454,6 +1454,100 @@ if not utils.BITCOIN_ONLY:
             ),
             br_name=f"{br_name}/summary",
             br_code=br_code,
+        )
+
+    async def confirm_ethereum_revocation_7702(
+        msg: EthereumSignAuth7702,
+        account: str,
+        account_path: str,
+        network_name: str,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, interact_with_menu
+
+        description = TR.ethereum__eip_7702_revocation_intro_template.format(account)
+
+        await confirm_action(
+            "ethereum/auth7702/revoke",
+            f"{TR.ethereum__eip_7702} {TR.ethereum__revocation}",
+            action=description,
+            verb=TR.buttons__continue,
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
+
+        account_properties: list[StrPropertyType] = [
+            (TR.words__account, account, None),
+            (TR.address_details__derivation_path, account_path, None),
+            (TR.words__nonce, str(msg.nonce), None),
+        ]
+
+        menu_items = [
+            create_details(TR.address_details__account_info, account_properties),
+        ]
+
+        await interact_with_menu(
+            trezorui_api.confirm_properties(
+                title=f"{TR.ethereum__eip_7702} {TR.ethereum__revocation}",
+                items=[
+                    (TR.ethereum__approve_revoke_from, account, False),
+                    (TR.words__network, network_name, False),
+                ],
+                hold=True,
+                external_menu=True,
+            ),
+            Menu.root(menu_items, TR.buttons__cancel),
+            "ethereum/auth7702/revoke_details",
+            ButtonRequestType.ConfirmOutput,
+        )
+
+    async def confirm_ethereum_auth_7702(
+        msg: EthereumSignAuth7702,
+        account: str,
+        account_path: str,
+        delegate_name: str,
+        network_name: str,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, interact_with_menu
+
+        await show_danger(
+            "ethereum/auth7702/warning",
+            TR.ethereum__eip_7702_authorization_intro_title,
+        )
+        await show_danger(
+            "ethereum/auth7702/warning_funds",
+            TR.words__know_what_your_doing,
+        )
+
+        contract_details: list[StrPropertyType] = [
+            (TR.ethereum__interaction_contract, msg.delegate, True)
+        ]
+
+        account_properties: list[StrPropertyType] = [
+            (TR.words__account, account, None),
+            (TR.address_details__derivation_path, account_path, None),
+            (TR.words__nonce, str(msg.nonce), None),
+        ]
+
+        menu_items = [
+            create_details(TR.address_details__account_info, account_properties),
+            create_details(
+                TR.ethereum__eip_7702_smart_account_contract_info, contract_details
+            ),
+        ]
+
+        await interact_with_menu(
+            trezorui_api.confirm_properties(
+                title=f"{TR.ethereum__eip_7702} {TR.ethereum__authorization}",
+                items=[
+                    (TR.ethereum__delegating, account, False),
+                    (TR.words__to, delegate_name, False),
+                    (TR.words__network, network_name, False),
+                ],
+                hold=True,
+                external_menu=True,
+            ),
+            Menu.root(menu_items, TR.buttons__cancel),
+            "ethereum/auth7702/details",
+            ButtonRequestType.ConfirmOutput,
         )
 
     def confirm_solana_unknown_token_warning() -> Awaitable[None]:

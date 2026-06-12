@@ -1280,9 +1280,25 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
         let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
         let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
         let danger: bool = kwargs.get_or(Qstr::MP_QSTR_danger, false)?;
+        let footer: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_footer)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let external_menu: Option<bool> = kwargs
+            .get(Qstr::MP_QSTR_external_menu)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
 
-        let layout =
-            ModelUI::show_warning(title, button, value, description, allow_cancel, danger)?;
+        let layout = ModelUI::show_warning(
+            title,
+            button,
+            value,
+            description,
+            allow_cancel,
+            danger,
+            footer,
+            external_menu,
+        )?;
         Ok(layout.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -2161,6 +2177,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     description: str = "",
     ///     allow_cancel: bool = True,
     ///     danger: bool = False,  # unused on bolt
+    ///     footer: str | None = None,  # only used on eckhart
+    ///     external_menu: bool | None = None,  # only used on eckhart
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),

@@ -557,28 +557,44 @@ def test_signtx_staking(
     "ethereum/sign_tx_staking_data_error.json",
     "ethereum/sign_tx_error.json",
 )
-def test_signtx_error(session: Session, parameters: dict, result: dict):
+def test_signtx_error(
+    request: pytest.FixtureRequest,
+    session: Session,
+    parameters: dict,
+    result: dict,
+):
     if not parameters.get("safety_checks", True):
         device.apply_settings(
             session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
         )
 
+    test_id = request.node.callspec.id
+
     # result not needed
     with pytest.raises(TrezorFailure, match=r"DataError"):
-        ethereum.sign_tx(
-            session,
-            n=parse_path(parameters["path"]),
-            nonce=int(parameters["nonce"], 16),
-            gas_price=int(parameters["gas_price"], 16),
-            gas_limit=int(parameters["gas_limit"], 16),
-            to=parameters["to_address"],
-            value=int(parameters["value"], 16),
-            data=bytes.fromhex(parameters["data"]),
-            chain_id=parameters["chain_id"],
-            tx_type=parameters["tx_type"],
-            definitions=None,
-            chunkify=False,
-        )
+        if test_id.startswith("eip_7702"):
+            ethereum.sign_auth_7702(
+                session,
+                parse_path(parameters["path"]),
+                parameters["nonce"],
+                parameters["chain_id"],
+                parameters["delegate"],
+            )
+        else:
+            ethereum.sign_tx(
+                session,
+                n=parse_path(parameters["path"]),
+                nonce=int(parameters["nonce"], 16),
+                gas_price=int(parameters["gas_price"], 16),
+                gas_limit=int(parameters["gas_limit"], 16),
+                to=parameters["to_address"],
+                value=int(parameters["value"], 16),
+                data=bytes.fromhex(parameters["data"]),
+                chain_id=parameters["chain_id"],
+                tx_type=parameters["tx_type"],
+                definitions=None,
+                chunkify=False,
+            )
 
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking_eip1559.json")

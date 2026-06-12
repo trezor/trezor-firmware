@@ -1372,6 +1372,8 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         _allow_cancel: bool,
         danger: bool,
+        _footer: Option<TString<'static>>,
+        _external_menu: Option<bool>,
     ) -> Result<Gc<LayoutObj>, Error> {
         if danger && title.is_none() {
             // Disallow showing "dangerous" warning with no header.

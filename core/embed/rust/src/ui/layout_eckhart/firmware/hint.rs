@@ -89,6 +89,11 @@ impl<'a> Hint<'a> {
         Self::from_content(HintContent::Instruction(instruction_component))
     }
 
+    pub fn new_text_only_footer<T: Into<TString<'static>>>(text: T) -> Self {
+        let instruction_component = Instruction::new(text.into(), theme::GREY, None, None);
+        Self::from_content(HintContent::Instruction(instruction_component))
+    }
+
     pub fn new_page_counter() -> Self {
         Self::from_content(HintContent::PageCounter(PageCounter::new()))
     }

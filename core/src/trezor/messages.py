@@ -4288,6 +4288,44 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDefinitions"]:
             return isinstance(msg, cls)
 
+    class EthereumSignAuth7702(protobuf.MessageType):
+        address_n: "list[int]"
+        chain_id: "int"
+        delegate: "str"
+        nonce: "int"
+
+        def __init__(
+            self,
+            *,
+            chain_id: "int",
+            delegate: "str",
+            nonce: "int",
+            address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumSignAuth7702"]:
+            return isinstance(msg, cls)
+
+    class EthereumAuth7702Signature(protobuf.MessageType):
+        signature_v: "int"
+        signature_r: "AnyBytes"
+        signature_s: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            signature_v: "int",
+            signature_r: "AnyBytes",
+            signature_s: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumAuth7702Signature"]:
+            return isinstance(msg, cls)
+
     class EthereumAccessList(protobuf.MessageType):
         address: "str"
         storage_keys: "list[AnyBytes]"

@@ -840,6 +840,8 @@ def show_warning(
     description: str = "",
     allow_cancel: bool = True,
     danger: bool = False,  # unused on bolt
+    footer: str | None = None,  # only used on eckhart
+    external_menu: bool | None = None,  # only used on eckhart
 ) -> LayoutObj[UiResult]:
     """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
 

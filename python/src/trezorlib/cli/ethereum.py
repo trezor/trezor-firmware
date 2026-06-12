@@ -641,3 +641,36 @@ def sign_typed_data_hash(
         "signature": f"0x{ret.signature.hex()}",
     }
     return output
+
+
+@cli.command()
+@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option(
+    "-i",
+    "--nonce",
+    type=int,
+    help="Transaction counter (required for offline signing)",
+    required=True,
+)
+@click.option(
+    "-c",
+    "--chain-id",
+    type=int,
+    default=1,
+    help="EIP-155 chain id (replay protection)",
+    required=True,
+)
+@click.argument("delegate")
+@with_session
+def sign_auth_7702(
+    session: "Session", address: str, nonce: int, chain_id: int, delegate: str
+) -> Dict[str, str]:
+    """Sign an EIP 7702 delegation authorization."""
+    address_n = tools.parse_path(address)
+    ret = ethereum.sign_auth_7702(session, address_n, nonce, chain_id, delegate)
+    output = {
+        "v": str(ret.signature_v),
+        "r": f"0x{ret.signature_r.hex()}",
+        "s": f"0x{ret.signature_s.hex()}",
+    }
+    return output
