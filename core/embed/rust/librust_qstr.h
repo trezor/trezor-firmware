@@ -312,6 +312,15 @@ static void _librust_qstrs(void) {
   MP_QSTR_coveragedata;
   MP_QSTR_current;
   MP_QSTR_danger;
+  MP_QSTR_darkfi__authorize_spend;
+  MP_QSTR_darkfi__export_full_viewing_key;
+  MP_QSTR_darkfi__export_fvk_warning;
+  MP_QSTR_darkfi__spend_hook;
+  MP_QSTR_darkfi__spend_recipient;
+  MP_QSTR_darkfi__spend_token;
+  MP_QSTR_darkfi__spend_user_data;
+  MP_QSTR_darkfi__spend_value;
+  MP_QSTR_darkfi__transaction_id;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
   MP_QSTR_debug;

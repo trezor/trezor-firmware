@@ -1232,5 +1232,14 @@
   "1230": "words__made_in",
   "1231": "solana__app_domain",
   "1232": "solana__offchain_is_multisig",
-  "1233": "words__comm_continue"
+  "1233": "words__comm_continue",
+  "1234": "darkfi__authorize_spend",
+  "1235": "darkfi__export_full_viewing_key",
+  "1236": "darkfi__export_fvk_warning",
+  "1237": "darkfi__spend_hook",
+  "1238": "darkfi__spend_recipient",
+  "1239": "darkfi__spend_token",
+  "1240": "darkfi__spend_user_data",
+  "1241": "darkfi__spend_value",
+  "1242": "darkfi__transaction_id"
 }

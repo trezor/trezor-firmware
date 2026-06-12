@@ -297,3 +297,9 @@ if not utils.BITCOIN_ONLY:
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    DarkfiGetAddress = 2300
+    DarkfiAddress = 2301
+    DarkfiGetFullViewingKey = 2302
+    DarkfiFullViewingKey = 2303
+    DarkfiSignSpendAuth = 2304
+    DarkfiSpendAuthSignature = 2305

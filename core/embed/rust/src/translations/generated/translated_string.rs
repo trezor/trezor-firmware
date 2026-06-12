@@ -1628,6 +1628,15 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     solana__offchain_is_multisig = 1232,  // "The following message requires multiple signers."
     words__comm_continue = 1233,  // "Communication with your connected device failed. It's safe to continue."
+    darkfi__authorize_spend = 1234,  // "Authorize spend"
+    darkfi__export_full_viewing_key = 1235,  // "Export Full Viewing Key"
+    darkfi__export_fvk_warning = 1236,  // "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds."
+    darkfi__spend_hook = 1237,  // "Spend hook"
+    darkfi__spend_recipient = 1238,  // "Recipient"
+    darkfi__spend_token = 1239,  // "Token"
+    darkfi__spend_user_data = 1240,  // "User data"
+    darkfi__spend_value = 1241,  // "Value"
+    darkfi__transaction_id = 1242,  // "Transaction ID"
 }
 
 impl TranslatedString {
@@ -2869,6 +2878,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4108,6 +4126,15 @@ impl TranslatedString {
                 19880,
                 19928,
                 19999,
+                20014,
+                20037,
+                20147,
+                20157,
+                20166,
+                20171,
+                20180,
+                20185,
+                20199,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5346,6 +5373,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6585,6 +6621,15 @@ impl TranslatedString {
                 19880,
                 19928,
                 19999,
+                20014,
+                20037,
+                20147,
+                20157,
+                20166,
+                20171,
+                20180,
+                20185,
+                20199,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7823,6 +7868,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9062,6 +9116,15 @@ impl TranslatedString {
                 19880,
                 19928,
                 19999,
+                20014,
+                20037,
+                20147,
+                20157,
+                20166,
+                20171,
+                20180,
+                20185,
+                20199,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10300,6 +10363,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11539,6 +11611,15 @@ impl TranslatedString {
                 19880,
                 19928,
                 19999,
+                20014,
+                20037,
+                20147,
+                20157,
+                20166,
+                20171,
+                20180,
+                20185,
+                20199,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12778,6 +12859,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14017,6 +14107,15 @@ impl TranslatedString {
                 17814,
                 17862,
                 17933,
+                17948,
+                17971,
+                18081,
+                18091,
+                18100,
+                18105,
+                18114,
+                18119,
+                18133,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15255,6 +15354,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16494,6 +16602,15 @@ impl TranslatedString {
                 17814,
                 17862,
                 17933,
+                17948,
+                17971,
+                18081,
+                18091,
+                18100,
+                18105,
+                18114,
+                18119,
+                18133,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17732,6 +17849,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18971,6 +19097,15 @@ impl TranslatedString {
                 17814,
                 17862,
                 17933,
+                17948,
+                17971,
+                18081,
+                18091,
+                18100,
+                18105,
+                18114,
+                18119,
+                18133,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20209,6 +20344,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21448,6 +21592,15 @@ impl TranslatedString {
                 17814,
                 17862,
                 17933,
+                17948,
+                17971,
+                18081,
+                18091,
+                18100,
+                18105,
+                18114,
+                18119,
+                18133,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22687,6 +22840,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23926,6 +24088,15 @@ impl TranslatedString {
                 19234,
                 19282,
                 19353,
+                19368,
+                19391,
+                19501,
+                19511,
+                19520,
+                19525,
+                19534,
+                19539,
+                19553,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25164,6 +25335,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26403,6 +26583,15 @@ impl TranslatedString {
                 19234,
                 19282,
                 19353,
+                19368,
+                19391,
+                19501,
+                19511,
+                19520,
+                19525,
+                19534,
+                19539,
+                19553,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27641,6 +27830,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28880,6 +29078,15 @@ impl TranslatedString {
                 19234,
                 19282,
                 19353,
+                19368,
+                19391,
+                19501,
+                19511,
+                19520,
+                19525,
+                19534,
+                19539,
+                19553,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30118,6 +30325,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31357,6 +31573,15 @@ impl TranslatedString {
                 19234,
                 19282,
                 19353,
+                19368,
+                19391,
+                19501,
+                19511,
+                19520,
+                19525,
+                19534,
+                19539,
+                19553,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32596,6 +32821,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33835,6 +34069,15 @@ impl TranslatedString {
                 20588,
                 20636,
                 20707,
+                20722,
+                20745,
+                20855,
+                20865,
+                20874,
+                20879,
+                20888,
+                20893,
+                20907,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35073,6 +35316,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36312,6 +36564,15 @@ impl TranslatedString {
                 20588,
                 20636,
                 20707,
+                20722,
+                20745,
+                20855,
+                20865,
+                20874,
+                20879,
+                20888,
+                20893,
+                20907,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37550,6 +37811,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38789,6 +39059,15 @@ impl TranslatedString {
                 20588,
                 20636,
                 20707,
+                20722,
+                20745,
+                20855,
+                20865,
+                20874,
+                20879,
+                20888,
+                20893,
+                20907,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40027,6 +40306,15 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Authorize spend",
+                "Export Full Viewing Key",
+                "The Full Viewing Key reveals your entire transaction history to whoever holds it, but cannot spend your funds.",
+                "Spend hook",
+                "Recipient",
+                "Token",
+                "User data",
+                "Value",
+                "Transaction ID",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41266,6 +41554,15 @@ impl TranslatedString {
                 20588,
                 20636,
                 20707,
+                20722,
+                20745,
+                20855,
+                20865,
+                20874,
+                20879,
+                20888,
+                20893,
+                20907,
             ];
 
         }
@@ -41667,6 +41964,15 @@ impl TranslatedString {
         (Qstr::MP_QSTR_confirm_total__fee_rate, Self::confirm_total__fee_rate),
         (Qstr::MP_QSTR_confirm_total__title_fee, Self::confirm_total__title_fee),
         (Qstr::MP_QSTR_confirm_total__title_sending_from, Self::confirm_total__title_sending_from),
+        (Qstr::MP_QSTR_darkfi__authorize_spend, Self::darkfi__authorize_spend),
+        (Qstr::MP_QSTR_darkfi__export_full_viewing_key, Self::darkfi__export_full_viewing_key),
+        (Qstr::MP_QSTR_darkfi__export_fvk_warning, Self::darkfi__export_fvk_warning),
+        (Qstr::MP_QSTR_darkfi__spend_hook, Self::darkfi__spend_hook),
+        (Qstr::MP_QSTR_darkfi__spend_recipient, Self::darkfi__spend_recipient),
+        (Qstr::MP_QSTR_darkfi__spend_token, Self::darkfi__spend_token),
+        (Qstr::MP_QSTR_darkfi__spend_user_data, Self::darkfi__spend_user_data),
+        (Qstr::MP_QSTR_darkfi__spend_value, Self::darkfi__spend_value),
+        (Qstr::MP_QSTR_darkfi__transaction_id, Self::darkfi__transaction_id),
         #[cfg(feature = "debug")]
         (Qstr::MP_QSTR_debug__loading_seed, Self::debug__loading_seed),
         #[cfg(feature = "debug")]

@@ -380,6 +380,14 @@ enum MessageType {
     MessageType_TronWithdrawUnfreeze = 2209 [(wire_in) = true];
     MessageType_TronVoteWitnessContract = 2210 [(wire_in) = true];
 
+    // DarkFi
+    MessageType_DarkfiGetAddress = 2300 [(wire_in) = true];
+    MessageType_DarkfiAddress = 2301 [(wire_out) = true];
+    MessageType_DarkfiGetFullViewingKey = 2302 [(wire_in) = true];
+    MessageType_DarkfiFullViewingKey = 2303 [(wire_out) = true];
+    MessageType_DarkfiSignSpendAuth = 2304 [(wire_in) = true];
+    MessageType_DarkfiSpendAuthSignature = 2305 [(wire_out) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];

@@ -184,6 +184,14 @@ def _find_message_handler_module(msg_type: int) -> str:
         if __debug__ and msg_type == MessageType.DebugMoneroDiagRequest:
             return "apps.monero.diag"
 
+        # darkfi
+        if msg_type == MessageType.DarkfiGetAddress:
+            return "apps.darkfi.get_address"
+        if msg_type == MessageType.DarkfiGetFullViewingKey:
+            return "apps.darkfi.get_fvk"
+        if msg_type == MessageType.DarkfiSignSpendAuth:
+            return "apps.darkfi.sign_spend_auth"
+
         # nem
         if msg_type == MessageType.NEMGetAddress:
             return "apps.nem.get_address"

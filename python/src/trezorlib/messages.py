@@ -778,6 +778,12 @@ class MessageType(IntEnum):
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    DarkfiGetAddress = 2300
+    DarkfiAddress = 2301
+    DarkfiGetFullViewingKey = 2302
+    DarkfiFullViewingKey = 2303
+    DarkfiSignSpendAuth = 2304
+    DarkfiSpendAuthSignature = 2305
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -3261,6 +3267,140 @@ class PaymentNotification(protobuf.MessageType):
         payment_req: Optional["PaymentRequest"] = None,
     ) -> None:
         self.payment_req = payment_req
+
+
+class DarkfiGetAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2300
+    FIELDS = {
+        1: protobuf.Field("account", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+        3: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        account: Optional["int"] = None,
+        show_display: Optional["bool"] = None,
+        chunkify: Optional["bool"] = None,
+    ) -> None:
+        self.account = account
+        self.show_display = show_display
+        self.chunkify = chunkify
+
+
+class DarkfiAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2301
+    FIELDS = {
+        1: protobuf.Field("pk_d", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        pk_d: "bytes",
+    ) -> None:
+        self.pk_d = pk_d
+
+
+class DarkfiGetFullViewingKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2302
+    FIELDS = {
+        1: protobuf.Field("account", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        account: Optional["int"] = None,
+    ) -> None:
+        self.account = account
+
+
+class DarkfiFullViewingKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2303
+    FIELDS = {
+        1: protobuf.Field("ak", "bytes", repeated=False, required=True),
+        2: protobuf.Field("nk", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        ak: "bytes",
+        nk: "bytes",
+    ) -> None:
+        self.ak = ak
+        self.nk = nk
+
+
+class DarkfiSpendDetails(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("value", "uint64", repeated=False, required=True),
+        2: protobuf.Field("token_id", "bytes", repeated=False, required=True),
+        3: protobuf.Field("recipient", "bytes", repeated=False, required=True),
+        4: protobuf.Field("spend_hook", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("user_data", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        value: "int",
+        token_id: "bytes",
+        recipient: "bytes",
+        spend_hook: Optional["bytes"] = None,
+        user_data: Optional["bytes"] = None,
+    ) -> None:
+        self.value = value
+        self.token_id = token_id
+        self.recipient = recipient
+        self.spend_hook = spend_hook
+        self.user_data = user_data
+
+
+class DarkfiSignSpendAuth(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2304
+    FIELDS = {
+        1: protobuf.Field("account", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("alpha", "bytes", repeated=False, required=True),
+        3: protobuf.Field("sighash", "bytes", repeated=False, required=True),
+        4: protobuf.Field("details", "DarkfiSpendDetails", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        alpha: "bytes",
+        sighash: "bytes",
+        account: Optional["int"] = None,
+        details: Optional["DarkfiSpendDetails"] = None,
+    ) -> None:
+        self.alpha = alpha
+        self.sighash = sighash
+        self.account = account
+        self.details = details
+
+
+class DarkfiSpendAuthSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2305
+    FIELDS = {
+        1: protobuf.Field("commit", "bytes", repeated=False, required=True),
+        2: protobuf.Field("rk", "bytes", repeated=False, required=True),
+        3: protobuf.Field("response", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        commit: "bytes",
+        rk: "bytes",
+        response: "bytes",
+    ) -> None:
+        self.commit = commit
+        self.rk = rk
+        self.response = response
 
 
 class Initialize(protobuf.MessageType):

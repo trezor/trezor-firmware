@@ -211,6 +211,9 @@ if EVERYTHING:
         'vendor/trezor-crypto/monero/base58.c',
         'vendor/trezor-crypto/monero/serialize.c',
         'vendor/trezor-crypto/monero/xmr.c',
+        'vendor/trezor-crypto/pallas.c',
+        'vendor/trezor-crypto/pallas_poseidon.c',
+        'vendor/trezor-crypto/pallas_drk.c',
     ]
 
 # libsecp256k1-zkp
@@ -813,6 +816,9 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Monero*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/darkfi/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Darkfi*.py'))
 
         if TREZOR_MODEL == "T2T1":
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
