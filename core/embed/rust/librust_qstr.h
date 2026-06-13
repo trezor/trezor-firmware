@@ -112,6 +112,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address__title_receive_address;
   MP_QSTR_address__title_refund_address;
   MP_QSTR_address__title_yours;
+  MP_QSTR_address__warning_not_yours;
   MP_QSTR_address__xpub;
   MP_QSTR_address_details__account_info;
   MP_QSTR_address_details__derivation_path;
@@ -1508,6 +1509,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_tezos__submit_ballot;
   MP_QSTR_tezos__submit_proposal;
   MP_QSTR_tezos__submit_proposals;
+  MP_QSTR_tron__claim_unfrozen_balance;
+  MP_QSTR_tron__claim_voting_rewards;
+  MP_QSTR_tron__owner_address;
   MP_QSTR_u2f__get;
   MP_QSTR_u2f__set_template;
   MP_QSTR_u2f__title_get;

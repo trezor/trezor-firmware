@@ -7384,6 +7384,20 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TronWithdrawUnfreeze"]:
             return isinstance(msg, cls)
 
+    class TronWithdrawBalance(protobuf.MessageType):
+        owner_address: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronWithdrawBalance"]:
+            return isinstance(msg, cls)
+
     class TronSignature(protobuf.MessageType):
         signature: "AnyBytes"
 

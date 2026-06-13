@@ -426,6 +426,7 @@ if TYPE_CHECKING:
     class TronRawContractType(IntEnum):
         TransferContract = 1
         VoteWitnessContract = 4
+        WithdrawBalanceContract = 13
         TriggerSmartContract = 31
         FreezeBalanceV2Contract = 54
         UnfreezeBalanceV2Contract = 55
@@ -716,6 +717,7 @@ if TYPE_CHECKING:
         TronUnfreezeBalanceV2Contract = 2208
         TronWithdrawUnfreeze = 2209
         TronVoteWitnessContract = 2210
+        TronWithdrawBalance = 2213
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

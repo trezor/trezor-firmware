@@ -1233,5 +1233,9 @@
   "1231": "solana__app_domain",
   "1232": "solana__offchain_is_multisig",
   "1233": "words__comm_continue",
-  "1234": "address__title_cosigner_template"
+  "1234": "address__title_cosigner_template",
+  "1235": "tron__claim_unfrozen_balance",
+  "1236": "tron__claim_voting_rewards",
+  "1237": "address__warning_not_yours",
+  "1238": "tron__owner_address"
 }

@@ -57,6 +57,7 @@ message TronSignTx {
  * @next TronFreezeBalanceV2Contract
  * @next TronUnfreezeBalanceV2Contract
  * @next TronWithdrawUnfreeze
+ * @next TronWithdrawBalance
  */
 message TronContractRequest {}
 
@@ -130,6 +131,15 @@ message TronWithdrawUnfreeze {
     required bytes owner_address = 1;  // Address to claim all unfrozen TRX.
 }
 
+/**
+ * Request: Claim voting rewards (WithdrawBalanceContract)
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/4c726956542b8dff5a4bd5c54aa07cd9da257d08/core/contract/balance_contract.proto#L28
+message TronWithdrawBalance {
+    required bytes owner_address = 1;
+}
+
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/common.proto#L9C1-L13C2
 // Staking/Unstaking can not happen just for TRON_POWER:
 // https://developers.tron.network/reference/freezebalancev2-1
@@ -171,6 +181,7 @@ message TronRawTransaction {
         enum TronRawContractType {
             TransferContract = 1;
             VoteWitnessContract = 4;
+            WithdrawBalanceContract = 13;
             TriggerSmartContract = 31;
             FreezeBalanceV2Contract = 54;
             UnfreezeBalanceV2Contract = 55;
