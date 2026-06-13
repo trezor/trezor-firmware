@@ -135,7 +135,11 @@ async def process_contract(
 
     elif messages.TronWithdrawUnfreeze.is_type_of(contract):
         contract_type = TronRawContractType.WithdrawExpireUnfreezeContract
-        await layout.confirm_withdraw_unfreeze(contract.owner_address)
+        await layout.confirm_withdraw_unfreeze(contract.owner_address, account_details)
+
+    elif messages.TronWithdrawBalance.is_type_of(contract):
+        contract_type = TronRawContractType.WithdrawBalanceContract
+        await layout.confirm_withdraw_balance(contract.owner_address, account_details)
 
     elif messages.TronVoteWitnessContract.is_type_of(contract):
         if len(contract.votes) > 9:
