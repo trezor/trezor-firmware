@@ -1820,6 +1820,42 @@ if not utils.BITCOIN_ONLY:
                 description=amount_description or TR.words__amount,
             )
 
+    async def confirm_tron_claim(
+        title: str,
+        intro_question: str,
+        account: str | None,
+        account_path: str | None,
+        br_name: str = "tron/claim",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, interact_with_menu
+
+        menu_items = []
+        account_properties = _get_account_info_items(account, account_path)
+        if account_properties:
+            menu_items.append(
+                create_details(
+                    TR.address_details__account_info,
+                    account_properties,
+                    title=TR.address_details__account_info,
+                    subtitle=TR.send__send_from,
+                )
+            )
+        with trezorui_api.confirm_action(
+            title=title,
+            action=intro_question,
+            description=None,
+            hold=True,
+            external_menu=True,
+            cancel=False,
+        ) as layout:
+            await interact_with_menu(
+                layout,
+                Menu.root(menu_items, TR.send__cancel_sign),
+                br_name,
+                br_code,
+            )
+
     async def confirm_tron_summary(
         title: str | None,
         amount: str | None,
