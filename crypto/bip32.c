@@ -204,7 +204,10 @@ int hdnode_private_ckd_bip32(HDNode *inout, uint32_t i) {
   }
 #endif
 
-  if (inout->depth == UINT32_MAX) {
+  // Note: Due to serialization format in BIP32, the depth of the extended key
+  // must fit into one byte. Thus, keys of depth greater than 255 cannot be
+  // serialized.
+  if (inout->depth >= 255) {
     return 0;
   }
 
@@ -293,7 +296,10 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i) {
     return 0;
   }
 
-  if (inout->depth == UINT32_MAX) {
+  // Note: Due to serialization format in BIP32, the depth of the extended key
+  // must fit into one byte. Thus, keys of depth greater than 255 cannot be
+  // serialized.
+  if (inout->depth >= 255) {
     return 0;
   }
 
