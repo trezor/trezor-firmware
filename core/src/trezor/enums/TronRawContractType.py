@@ -4,6 +4,7 @@
 
 TransferContract = 1
 VoteWitnessContract = 4
+WithdrawBalanceContract = 13
 TriggerSmartContract = 31
 FreezeBalanceV2Contract = 54
 UnfreezeBalanceV2Contract = 55

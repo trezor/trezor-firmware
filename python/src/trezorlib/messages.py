@@ -485,6 +485,7 @@ class TronResourceCode(IntEnum):
 class TronRawContractType(IntEnum):
     TransferContract = 1
     VoteWitnessContract = 4
+    WithdrawBalanceContract = 13
     TriggerSmartContract = 31
     FreezeBalanceV2Contract = 54
     UnfreezeBalanceV2Contract = 55
@@ -778,6 +779,7 @@ class MessageType(IntEnum):
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    TronWithdrawBalance = 2213
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -9310,6 +9312,20 @@ class TronUnfreezeBalanceV2Contract(protobuf.MessageType):
 
 class TronWithdrawUnfreeze(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2209
+    FIELDS = {
+        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        owner_address: "bytes",
+    ) -> None:
+        self.owner_address = owner_address
+
+
+class TronWithdrawBalance(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2213
     FIELDS = {
         1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
     }
