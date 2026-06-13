@@ -45,10 +45,8 @@ async def sign_spend_auth(msg: DarkfiSignSpendAuth) -> DarkfiSpendAuthSignature:
     await confirm_blob(
         "darkfi_sighash",
         TR.darkfi__transaction_id,
-        sighash,
-        verb=TR.buttons__hold_to_confirm,
+        hexlify(sighash).decode(),
         hold=True,
-        chunkify=True,
     )
 
     sk = await account_spend_key(msg.account)
