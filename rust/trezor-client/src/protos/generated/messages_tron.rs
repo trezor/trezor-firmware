@@ -2516,6 +2516,167 @@ impl ::protobuf::reflect::ProtobufValue for TronWithdrawUnfreeze {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.tron.TronWithdrawBalance)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct TronWithdrawBalance {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronWithdrawBalance.owner_address)
+    pub owner_address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.tron.TronWithdrawBalance.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a TronWithdrawBalance {
+    fn default() -> &'a TronWithdrawBalance {
+        <TronWithdrawBalance as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl TronWithdrawBalance {
+    pub fn new() -> TronWithdrawBalance {
+        ::std::default::Default::default()
+    }
+
+    // required bytes owner_address = 1;
+
+    pub fn owner_address(&self) -> &[u8] {
+        match self.owner_address.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_owner_address(&mut self) {
+        self.owner_address = ::std::option::Option::None;
+    }
+
+    pub fn has_owner_address(&self) -> bool {
+        self.owner_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_owner_address(&mut self, v: ::std::vec::Vec<u8>) {
+        self.owner_address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_owner_address(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.owner_address.is_none() {
+            self.owner_address = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.owner_address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_owner_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.owner_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "owner_address",
+            |m: &TronWithdrawBalance| { &m.owner_address },
+            |m: &mut TronWithdrawBalance| { &mut m.owner_address },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TronWithdrawBalance>(
+            "TronWithdrawBalance",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for TronWithdrawBalance {
+    const NAME: &'static str = "TronWithdrawBalance";
+
+    fn is_initialized(&self) -> bool {
+        if self.owner_address.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.owner_address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.owner_address.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.owner_address.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> TronWithdrawBalance {
+        TronWithdrawBalance::new()
+    }
+
+    fn clear(&mut self) {
+        self.owner_address = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static TronWithdrawBalance {
+        static instance: TronWithdrawBalance = TronWithdrawBalance {
+            owner_address: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for TronWithdrawBalance {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("TronWithdrawBalance").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for TronWithdrawBalance {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for TronWithdrawBalance {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.tron.TronSignature)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct TronSignature {
@@ -3493,6 +3654,8 @@ pub mod tron_raw_transaction {
             TransferContract = 1,
             // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.VoteWitnessContract)
             VoteWitnessContract = 4,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.WithdrawBalanceContract)
+            WithdrawBalanceContract = 13,
             // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.TriggerSmartContract)
             TriggerSmartContract = 31,
             // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.FreezeBalanceV2Contract)
@@ -3514,6 +3677,7 @@ pub mod tron_raw_transaction {
                 match value {
                     1 => ::std::option::Option::Some(TronRawContractType::TransferContract),
                     4 => ::std::option::Option::Some(TronRawContractType::VoteWitnessContract),
+                    13 => ::std::option::Option::Some(TronRawContractType::WithdrawBalanceContract),
                     31 => ::std::option::Option::Some(TronRawContractType::TriggerSmartContract),
                     54 => ::std::option::Option::Some(TronRawContractType::FreezeBalanceV2Contract),
                     55 => ::std::option::Option::Some(TronRawContractType::UnfreezeBalanceV2Contract),
@@ -3526,6 +3690,7 @@ pub mod tron_raw_transaction {
                 match str {
                     "TransferContract" => ::std::option::Option::Some(TronRawContractType::TransferContract),
                     "VoteWitnessContract" => ::std::option::Option::Some(TronRawContractType::VoteWitnessContract),
+                    "WithdrawBalanceContract" => ::std::option::Option::Some(TronRawContractType::WithdrawBalanceContract),
                     "TriggerSmartContract" => ::std::option::Option::Some(TronRawContractType::TriggerSmartContract),
                     "FreezeBalanceV2Contract" => ::std::option::Option::Some(TronRawContractType::FreezeBalanceV2Contract),
                     "UnfreezeBalanceV2Contract" => ::std::option::Option::Some(TronRawContractType::UnfreezeBalanceV2Contract),
@@ -3537,6 +3702,7 @@ pub mod tron_raw_transaction {
             const VALUES: &'static [TronRawContractType] = &[
                 TronRawContractType::TransferContract,
                 TronRawContractType::VoteWitnessContract,
+                TronRawContractType::WithdrawBalanceContract,
                 TronRawContractType::TriggerSmartContract,
                 TronRawContractType::FreezeBalanceV2Contract,
                 TronRawContractType::UnfreezeBalanceV2Contract,
@@ -3554,10 +3720,11 @@ pub mod tron_raw_transaction {
                 let index = match self {
                     TronRawContractType::TransferContract => 0,
                     TronRawContractType::VoteWitnessContract => 1,
-                    TronRawContractType::TriggerSmartContract => 2,
-                    TronRawContractType::FreezeBalanceV2Contract => 3,
-                    TronRawContractType::UnfreezeBalanceV2Contract => 4,
-                    TronRawContractType::WithdrawExpireUnfreezeContract => 5,
+                    TronRawContractType::WithdrawBalanceContract => 2,
+                    TronRawContractType::TriggerSmartContract => 3,
+                    TronRawContractType::FreezeBalanceV2Contract => 4,
+                    TronRawContractType::UnfreezeBalanceV2Contract => 5,
+                    TronRawContractType::WithdrawExpireUnfreezeContract => 6,
                 };
                 Self::enum_descriptor().value_by_index(index)
             }
@@ -3671,27 +3838,28 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x07balance\x18\x02\x20\x02(\x04R\x07balance\x12P\n\x08resource\x18\x03\
     \x20\x01(\x0e2).hw.trezor.messages.tron.TronResourceCode:\tBANDWIDTHR\
     \x08resource\";\n\x14TronWithdrawUnfreeze\x12#\n\rowner_address\x18\x01\
-    \x20\x02(\x0cR\x0cownerAddress\"-\n\rTronSignature\x12\x1c\n\tsignature\
-    \x18\x01\x20\x02(\x0cR\tsignature\"\x95\x06\n\x12TronRawTransaction\x12&\
-    \n\x0fref_block_bytes\x18\x01\x20\x02(\x0cR\rrefBlockBytes\x12$\n\x0eref\
-    _block_hash\x18\x04\x20\x02(\x0cR\x0crefBlockHash\x12\x1e\n\nexpiration\
-    \x18\x08\x20\x02(\x04R\nexpiration\x12\x12\n\x04data\x18\n\x20\x01(\x0cR\
-    \x04data\x12W\n\x08contract\x18\x0b\x20\x03(\x0b2;.hw.trezor.messages.tr\
-    on.TronRawTransaction.TronRawContractR\x08contract\x12\x1c\n\ttimestamp\
-    \x18\x0e\x20\x02(\x04R\ttimestamp\x12\x1b\n\tfee_limit\x18\x12\x20\x01(\
-    \x04R\x08feeLimit\x1a\xe8\x03\n\x0fTronRawContract\x12c\n\x04type\x18\
-    \x01\x20\x02(\x0e2O.hw.trezor.messages.tron.TronRawTransaction.TronRawCo\
-    ntract.TronRawContractTypeR\x04type\x12j\n\tparameter\x18\x02\x20\x02(\
-    \x0b2L.hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRa\
-    wParameterR\tparameter\x1aC\n\x10TronRawParameter\x12\x19\n\x08type_url\
-    \x18\x01\x20\x02(\tR\x07typeUrl\x12\x14\n\x05value\x18\x02\x20\x02(\x0cR\
-    \x05value\"\xbe\x01\n\x13TronRawContractType\x12\x14\n\x10TransferContra\
-    ct\x10\x01\x12\x17\n\x13VoteWitnessContract\x10\x04\x12\x18\n\x14Trigger\
-    SmartContract\x10\x1f\x12\x1b\n\x17FreezeBalanceV2Contract\x106\x12\x1d\
-    \n\x19UnfreezeBalanceV2Contract\x107\x12\"\n\x1eWithdrawExpireUnfreezeCo\
-    ntract\x108*-\n\x10TronResourceCode\x12\r\n\tBANDWIDTH\x10\0\x12\n\n\x06\
-    ENERGY\x10\x01B8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessage\
-    Tron\
+    \x20\x02(\x0cR\x0cownerAddress\":\n\x13TronWithdrawBalance\x12#\n\rowner\
+    _address\x18\x01\x20\x02(\x0cR\x0cownerAddress\"-\n\rTronSignature\x12\
+    \x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\"\xb2\x06\n\x12TronRa\
+    wTransaction\x12&\n\x0fref_block_bytes\x18\x01\x20\x02(\x0cR\rrefBlockBy\
+    tes\x12$\n\x0eref_block_hash\x18\x04\x20\x02(\x0cR\x0crefBlockHash\x12\
+    \x1e\n\nexpiration\x18\x08\x20\x02(\x04R\nexpiration\x12\x12\n\x04data\
+    \x18\n\x20\x01(\x0cR\x04data\x12W\n\x08contract\x18\x0b\x20\x03(\x0b2;.h\
+    w.trezor.messages.tron.TronRawTransaction.TronRawContractR\x08contract\
+    \x12\x1c\n\ttimestamp\x18\x0e\x20\x02(\x04R\ttimestamp\x12\x1b\n\tfee_li\
+    mit\x18\x12\x20\x01(\x04R\x08feeLimit\x1a\x85\x04\n\x0fTronRawContract\
+    \x12c\n\x04type\x18\x01\x20\x02(\x0e2O.hw.trezor.messages.tron.TronRawTr\
+    ansaction.TronRawContract.TronRawContractTypeR\x04type\x12j\n\tparameter\
+    \x18\x02\x20\x02(\x0b2L.hw.trezor.messages.tron.TronRawTransaction.TronR\
+    awContract.TronRawParameterR\tparameter\x1aC\n\x10TronRawParameter\x12\
+    \x19\n\x08type_url\x18\x01\x20\x02(\tR\x07typeUrl\x12\x14\n\x05value\x18\
+    \x02\x20\x02(\x0cR\x05value\"\xdb\x01\n\x13TronRawContractType\x12\x14\n\
+    \x10TransferContract\x10\x01\x12\x17\n\x13VoteWitnessContract\x10\x04\
+    \x12\x1b\n\x17WithdrawBalanceContract\x10\r\x12\x18\n\x14TriggerSmartCon\
+    tract\x10\x1f\x12\x1b\n\x17FreezeBalanceV2Contract\x106\x12\x1d\n\x19Unf\
+    reezeBalanceV2Contract\x107\x12\"\n\x1eWithdrawExpireUnfreezeContract\
+    \x108*-\n\x10TronResourceCode\x12\r\n\tBANDWIDTH\x10\0\x12\n\n\x06ENERGY\
+    \x10\x01B8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageTron\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3709,7 +3877,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(15);
+            let mut messages = ::std::vec::Vec::with_capacity(16);
             messages.push(TronGetAddress::generated_message_descriptor_data());
             messages.push(TronAddress::generated_message_descriptor_data());
             messages.push(TronSignTx::generated_message_descriptor_data());
@@ -3720,6 +3888,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(TronFreezeBalanceV2Contract::generated_message_descriptor_data());
             messages.push(TronUnfreezeBalanceV2Contract::generated_message_descriptor_data());
             messages.push(TronWithdrawUnfreeze::generated_message_descriptor_data());
+            messages.push(TronWithdrawBalance::generated_message_descriptor_data());
             messages.push(TronSignature::generated_message_descriptor_data());
             messages.push(TronRawTransaction::generated_message_descriptor_data());
             messages.push(tron_vote_witness_contract::TronVote::generated_message_descriptor_data());

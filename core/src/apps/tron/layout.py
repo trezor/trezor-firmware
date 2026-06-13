@@ -149,7 +149,18 @@ async def confirm_freeze_operations(
     )
 
 
-async def confirm_withdraw_unfreeze(owner_address: AnyBytes) -> None:
+def _account_info_items(
+    account_details: tuple[str | None, str],
+) -> tuple[tuple[str, str | None, None], ...]:
+    return (
+        (TR.words__account, account_details[0], None),
+        (TR.address_details__derivation_path, account_details[1], None),
+    )
+
+
+async def confirm_withdraw_unfreeze(
+    owner_address: AnyBytes, account_details: tuple[str | None, str]
+) -> None:
     from trezor.ui.layouts import confirm_value
 
     await confirm_value(
@@ -158,7 +169,24 @@ async def confirm_withdraw_unfreeze(owner_address: AnyBytes) -> None:
         description="",
         chunkify=True,
         hold=True,
-        br_name="tron/claim",
+        br_name="tron/claim_unfreeze",
+        info_items=_account_info_items(account_details),
+    )
+
+
+async def confirm_withdraw_balance(
+    owner_address: AnyBytes, account_details: tuple[str | None, str]
+) -> None:
+    from trezor.ui.layouts import confirm_value
+
+    await confirm_value(
+        title=TR.ethereum__staking_claim_address,
+        value=get_encoded_address(owner_address),
+        description="",
+        chunkify=True,
+        hold=True,
+        br_name="tron/claim_rewards",
+        info_items=_account_info_items(account_details),
     )
 
 
