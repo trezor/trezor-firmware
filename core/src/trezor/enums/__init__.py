@@ -73,6 +73,7 @@ if TYPE_CHECKING:
         PAYTOWITNESS = 4
         PAYTOP2SHWITNESS = 5
         PAYTOTAPROOT = 6
+        PAYTONAMECOINOP = 7
 
     class DecredStakingSpendType(IntEnum):
         SSGen = 0
@@ -87,6 +88,11 @@ if TYPE_CHECKING:
     class MultisigPubkeysOrder(IntEnum):
         PRESERVED = 0
         LEXICOGRAPHIC = 1
+
+    class NameOpKind(IntEnum):
+        NAME_NEW = 0
+        NAME_FIRSTUPDATE = 1
+        NAME_UPDATE = 2
 
     class RequestType(IntEnum):
         TXINPUT = 0

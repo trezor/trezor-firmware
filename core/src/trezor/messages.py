@@ -59,6 +59,7 @@ if TYPE_CHECKING:
     from trezor.enums import NEMModificationType  # noqa: F401
     from trezor.enums import NEMMosaicLevy  # noqa: F401
     from trezor.enums import NEMSupplyChangeType  # noqa: F401
+    from trezor.enums import NameOpKind  # noqa: F401
     from trezor.enums import OutputScriptType  # noqa: F401
     from trezor.enums import PinMatrixRequestType  # noqa: F401
     from trezor.enums import RecoveryDeviceInputMethod  # noqa: F401
@@ -366,6 +367,28 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["CoinPurchaseMemo"]:
+            return isinstance(msg, cls)
+
+    class NamecoinOp(protobuf.MessageType):
+        kind: "NameOpKind"
+        commitment_hash: "AnyBytes | None"
+        name: "AnyBytes | None"
+        value: "AnyBytes | None"
+        rand: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            kind: "NameOpKind",
+            commitment_hash: "AnyBytes | None" = None,
+            name: "AnyBytes | None" = None,
+            value: "AnyBytes | None" = None,
+            rand: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NamecoinOp"]:
             return isinstance(msg, cls)
 
     class MultisigRedeemScriptType(protobuf.MessageType):
@@ -688,6 +711,7 @@ if TYPE_CHECKING:
         orig_hash: "AnyBytes | None"
         orig_index: "int | None"
         payment_req_index: "int | None"
+        namecoin_op: "NamecoinOp | None"
 
         def __init__(
             self,
@@ -701,6 +725,7 @@ if TYPE_CHECKING:
             orig_hash: "AnyBytes | None" = None,
             orig_index: "int | None" = None,
             payment_req_index: "int | None" = None,
+            namecoin_op: "NamecoinOp | None" = None,
         ) -> None:
             pass
 

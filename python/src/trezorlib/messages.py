@@ -78,6 +78,7 @@ class OutputScriptType(IntEnum):
     PAYTOWITNESS = 4
     PAYTOP2SHWITNESS = 5
     PAYTOTAPROOT = 6
+    PAYTONAMECOINOP = 7
 
 
 class DecredStakingSpendType(IntEnum):
@@ -95,6 +96,12 @@ class AmountUnit(IntEnum):
 class MultisigPubkeysOrder(IntEnum):
     PRESERVED = 0
     LEXICOGRAPHIC = 1
+
+
+class NameOpKind(IntEnum):
+    NAME_NEW = 0
+    NAME_FIRSTUPDATE = 1
+    NAME_UPDATE = 2
 
 
 class RequestType(IntEnum):
@@ -1125,6 +1132,32 @@ class CoinPurchaseMemo(protobuf.MessageType):
         self.mac = mac
 
 
+class NamecoinOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("kind", "NameOpKind", repeated=False, required=True),
+        2: protobuf.Field("commitment_hash", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("name", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("rand", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        kind: "NameOpKind",
+        commitment_hash: Optional["bytes"] = None,
+        name: Optional["bytes"] = None,
+        value: Optional["bytes"] = None,
+        rand: Optional["bytes"] = None,
+    ) -> None:
+        self.kind = kind
+        self.commitment_hash = commitment_hash
+        self.name = name
+        self.value = value
+        self.rand = rand
+
+
 class MultisigRedeemScriptType(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
@@ -1528,6 +1561,7 @@ class TxOutput(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False, default=None),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False, default=None),
+        13: protobuf.Field("namecoin_op", "NamecoinOp", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1542,6 +1576,7 @@ class TxOutput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
+        namecoin_op: Optional["NamecoinOp"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -1552,6 +1587,7 @@ class TxOutput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.namecoin_op = namecoin_op
 
 
 class PrevTx(protobuf.MessageType):
@@ -2039,6 +2075,7 @@ class TxOutputType(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False, default=None),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False, default=None),
+        13: protobuf.Field("namecoin_op", "NamecoinOp", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2053,6 +2090,7 @@ class TxOutputType(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
+        namecoin_op: Optional["NamecoinOp"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -2063,6 +2101,7 @@ class TxOutputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.namecoin_op = namecoin_op
 
 
 class TxAckInputWrapper(protobuf.MessageType):

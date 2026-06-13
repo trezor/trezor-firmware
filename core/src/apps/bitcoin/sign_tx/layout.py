@@ -5,7 +5,7 @@ from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
-from trezor.ui.layouts import confirm_metadata
+from trezor.ui.layouts import confirm_blob, confirm_metadata
 
 from apps.common.paths import address_n_to_str
 
@@ -70,6 +70,10 @@ async def confirm_output(
 
     from . import omni
 
+    if output.script_type == OutputScriptType.PAYTONAMECOINOP:
+        await confirm_namecoin_op(output, coin, amount_unit)
+        return
+
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
         data = output.op_return_data
         assert data is not None
@@ -126,6 +130,108 @@ async def confirm_output(
         )
 
     await layout
+
+
+async def confirm_namecoin_op(
+    output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
+) -> None:
+    """Op-specific confirmation screens for the three Namecoin name-op kinds.
+
+    Composed from existing confirm_value / confirm_blob primitives so the
+    layout works across all device models that support Namecoin (T1B1,
+    T2T1) without introducing a new UI component.
+    """
+    from trezor.enums import NameOpKind
+
+    assert output.address is not None
+    assert output.namecoin_op is not None
+    op = output.namecoin_op
+    kind = op.kind
+    address_short = addresses.address_short(coin, output.address)
+    amount = format_coin_amount(output.amount, coin, amount_unit)
+
+    if kind == NameOpKind.NAME_NEW:
+        title = "Namecoin: name_new"
+        assert op.commitment_hash is not None
+        await confirm_blob(
+            "confirm_namecoin_op",
+            title,
+            op.commitment_hash,
+            description="Commitment",
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
+        await layouts.confirm_value(
+            title,
+            address_short,
+            "Recipient",
+            "confirm_namecoin_op",
+            ButtonRequestType.ConfirmOutput,
+            verb=TR.buttons__confirm,
+            chunkify=True,
+        )
+        await layouts.confirm_value(
+            title,
+            amount,
+            "Amount",
+            "confirm_namecoin_op",
+            ButtonRequestType.ConfirmOutput,
+            verb=TR.buttons__confirm,
+        )
+        await confirm_metadata(
+            "confirm_namecoin_op",
+            title,
+            "name_firstupdate must follow within ~36 hours to claim this name.",
+            verb=TR.buttons__confirm,
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
+        return
+
+    if kind == NameOpKind.NAME_FIRSTUPDATE:
+        title = "Namecoin: register name"
+    elif kind == NameOpKind.NAME_UPDATE:
+        title = "Namecoin: update name"
+    else:
+        raise RuntimeError  # checked in _sanitize_tx_output
+
+    assert op.name is not None
+    assert op.value is not None
+    # bytes(...) accepts AnyBytes (bytes / bytearray / memoryview) uniformly
+    # so the type-checker sees a concrete bytes object before .decode().
+    name_text = bytes(op.name).decode("utf-8", errors="backslashreplace")
+    value_text = bytes(op.value).decode("utf-8", errors="backslashreplace")
+
+    await confirm_blob(
+        "confirm_namecoin_op",
+        title,
+        name_text,
+        description="Name",
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
+    await confirm_blob(
+        "confirm_namecoin_op",
+        title,
+        value_text,
+        description="Value",
+        br_code=ButtonRequestType.ConfirmOutput,
+        ask_pagination=True,
+    )
+    await layouts.confirm_value(
+        title,
+        address_short,
+        "Recipient",
+        "confirm_namecoin_op",
+        ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__confirm,
+        chunkify=True,
+    )
+    await layouts.confirm_value(
+        title,
+        amount,
+        "Amount",
+        "confirm_namecoin_op",
+        ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__confirm,
+    )
 
 
 async def confirm_decred_sstx_submission(

@@ -952,6 +952,13 @@ class Bitcoin:
             assert txo.op_return_data is not None  # checked in _sanitize_tx_output
             return scripts.output_script_paytoopreturn(txo.op_return_data)
 
+        if txo.script_type == OutputScriptType.PAYTONAMECOINOP:
+            assert txo.namecoin_op is not None  # checked in _sanitize_tx_output
+            assert txo.address is not None  # checked in _sanitize_tx_output
+            return scripts.output_derive_name_op_script(
+                txo.namecoin_op, txo.address, self.coin
+            )
+
         if txo.address_n:
             # change output
             try:
