@@ -21,13 +21,13 @@
 
 #include "memzero.h"
 #include "pallas.h"
-#include "trezorobj.h"
+#include "../trezorobj.h"
 
 /// package: trezorcrypto.pallas
 
 // Helper: read a buffer argument and require exactly `expected` bytes.
 STATIC void pallas_get_fixed(mp_obj_t obj, mp_buffer_info_t *buf,
-                             size_t expected, const char *what) {
+                             size_t expected, mp_rom_error_text_t what) {
   mp_get_buffer_raise(obj, buf, MP_BUFFER_READ);
   if (buf->len != expected) {
     mp_raise_ValueError(what);
