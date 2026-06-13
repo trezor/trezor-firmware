@@ -982,11 +982,16 @@ async def confirm_value(
 
     from trezor.ui.layouts.menu import Details, Menu, confirm_with_menu
 
-    main = trezorui_api.confirm_with_info(
+    main = trezorui_api.confirm_value(
         title=title,
-        items=((value, False),),
+        value=value,
+        description=description,
         verb=verb or TR.buttons__confirm,
-        verb_info=INFO_ICON,
+        verb_cancel=verb_cancel or "",
+        hold=hold,
+        is_data=is_data,
+        chunkify=chunkify,
+        cancel=cancel,
         external_menu=True,
     )
 
