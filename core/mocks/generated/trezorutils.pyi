@@ -24,9 +24,8 @@ def telemetry_get() -> tuple[int, int, int, int] | None:
 def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
     """
     Compares the private information in `sec` with public, user-provided
-    information in `pub`.  Runs in constant time, corresponding to a length
-    of `pub`.  Can access memory behind valid length of `sec`, caller is
-    expected to avoid any invalid memory access.
+    information in `pub`.  Runs in constant time, corresponding to the
+    length of `pub`.
     """
 
 
