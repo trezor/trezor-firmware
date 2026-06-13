@@ -28,11 +28,12 @@ Therefore, we do not show any fees to the user on the device. The host applicati
 
 - [X] Generate addresses for Receiving `TRX` or other tokens.
 - [X] `TransferContract`: Sending `TRX`
-- [X] `TriggerSmartContract`: Send `USDT`, `USDD`, etc.
+- [X] `TriggerSmartContract`: Send `USDT`, `USDD`, etc., Interact with any smart contract.
 - [X] `FreezeBalanceV2`: Stake `TRX` to get more `Bandwidth` or `Energy`
 - [X] `UnfreezeBalanceV2`: Unstake frozen `TRX`
 - [X] `WithdrawExpireUnfreeze`: Claim Unstaked `TRX` past their lock-up period
 - [X] `VoteWitnessContract`: Vote using earned TRON Power.
+- [X] `WithdrawBalanceContract`: Claim Voting rewards.
 
 ### Notes
 
