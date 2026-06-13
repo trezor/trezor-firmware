@@ -34,6 +34,43 @@
       "result": {
         "expected_signature": "90093762546ad274def9b20ca6c441564193f2c7213cac704aefc6b7d65ebb315415fa7528728279a6688e2c99aa572d5af17b21a15a1d06b94e03df4ce53205"
       }
+    },
+    {
+      "description": "Multiple unknown programs",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq",
+            "E9yCRPT8A2AyuEaMPwk2Mi9iJFDoQVMoExyYvKQuNhyN",
+            "3JUnusNfX8BZx6Gio4kLx1JHg9mHodSW9NbSnqwYwk1s"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 2,
+              "accounts": [0, 1],
+              "data": "04deadbeef"
+            },
+            {
+              "program_index": 3,
+              "accounts": [0, 1],
+              "data": "04c0ffeeee"
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "c53b5ff26839df02ce781da299ef625f50a627ef58a97738e53102946b1847b76ca34e464d4dc7b6f21cc4a30a088619f15dca538cd2f8d42ce1f094c382b40b"
+      }
     }
   ]
 }

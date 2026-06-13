@@ -298,6 +298,16 @@ async def confirm_unsupported_program_confirm(
 ) -> None:
     title = f"{instruction_index}/{instructions_count}: {instruction.ui_name}"
 
+    # Show the program id on its own screen so the user can tell which program
+    # this is; putting a 44-char base58 in the header overflows the layout.
+    await confirm_address(
+        title=title,
+        address=instruction.program_id,
+        verb=TR.buttons__continue,
+        br_name="unsupported_program",
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
+
     return await confirm_unsupported_instruction_details(
         instruction, title, signer_path, signer_public_key
     )
