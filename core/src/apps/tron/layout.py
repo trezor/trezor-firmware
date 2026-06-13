@@ -149,16 +149,31 @@ async def confirm_freeze_operations(
     )
 
 
-async def confirm_withdraw_unfreeze(owner_address: AnyBytes) -> None:
-    from trezor.ui.layouts import confirm_value
+async def confirm_claim(
+    owner_address: str | None,
+    account_details: tuple[str | None, str],
+    intro_question: str,
+) -> None:
 
-    await confirm_value(
-        title=TR.ethereum__staking_claim_address,
-        value=get_encoded_address(owner_address),
-        description="",
-        chunkify=True,
-        hold=True,
-        br_name="tron/claim",
+    title = TR.ethereum__staking_claim
+
+    # When the owner address differs from the signing address, confirm it first
+    # (with a warning footer) so the final screen is the hold-to-confirm action.
+    if owner_address is not None:
+        await layouts.confirm_address(
+            title=title,
+            description=TR.tron__owner_address,
+            address=owner_address,
+            verb=TR.buttons__continue,
+            footer=(TR.address__warning_not_yours, True),
+            chunkify=True,
+        )
+
+    await layouts.confirm_tron_claim(
+        title=title,
+        intro_question=intro_question,
+        account=account_details[0],
+        account_path=account_details[1],
     )
 
 

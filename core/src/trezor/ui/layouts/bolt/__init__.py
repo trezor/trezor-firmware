@@ -1705,6 +1705,33 @@ if not utils.BITCOIN_ONLY:
                 description=amount_description or TR.words__amount,
             )
 
+    async def confirm_tron_claim(
+        title: str,
+        intro_question: str,
+        account: str | None,
+        account_path: str | None,
+        br_name: str = "tron/claim",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> None:
+        account_properties: list[StrPropertyType] = []
+        if account:
+            account_properties.append((TR.words__account, account, None))
+        if account_path:
+            account_properties.append(
+                (TR.address_details__derivation_path, account_path, None)
+            )
+        await confirm_value(
+            title=title,
+            value=intro_question,
+            description="",
+            br_name=br_name,
+            br_code=br_code,
+            is_data=False,
+            hold=True,
+            info_items=account_properties,
+            info_title=TR.address_details__account_info,
+        )
+
     async def confirm_tron_summary(
         title: str | None,
         amount: str | None,
