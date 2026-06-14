@@ -2018,6 +2018,132 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PaymentNotification"]:
             return isinstance(msg, cls)
 
+    class DarkfiGetAddress(protobuf.MessageType):
+        account: "int | None"
+        show_display: "bool | None"
+        chunkify: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            account: "int | None" = None,
+            show_display: "bool | None" = None,
+            chunkify: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DarkfiGetAddress"]:
+            return isinstance(msg, cls)
+
+    class DarkfiAddress(protobuf.MessageType):
+        pk_d: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            pk_d: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DarkfiAddress"]:
+            return isinstance(msg, cls)
+
+    class DarkfiGetFullViewingKey(protobuf.MessageType):
+        account: "int | None"
+
+        def __init__(
+            self,
+            *,
+            account: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DarkfiGetFullViewingKey"]:
+            return isinstance(msg, cls)
+
+    class DarkfiFullViewingKey(protobuf.MessageType):
+        ak: "AnyBytes"
+        nk: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            ak: "AnyBytes",
+            nk: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DarkfiFullViewingKey"]:
+            return isinstance(msg, cls)
+
+    class DarkfiSpendDetails(protobuf.MessageType):
+        value: "int"
+        token_id: "AnyBytes"
+        recipient: "AnyBytes | None"
+        spend_hook: "AnyBytes | None"
+        user_data: "AnyBytes | None"
+        decimals: "int | None"
+        symbol: "str | None"
+
+        def __init__(
+            self,
+            *,
+            value: "int",
+            token_id: "AnyBytes",
+            recipient: "AnyBytes | None" = None,
+            spend_hook: "AnyBytes | None" = None,
+            user_data: "AnyBytes | None" = None,
+            decimals: "int | None" = None,
+            symbol: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DarkfiSpendDetails"]:
+            return isinstance(msg, cls)
+
+    class DarkfiSignSpendAuth(protobuf.MessageType):
+        account: "int | None"
+        alpha: "AnyBytes"
+        sighash: "AnyBytes"
+        details: "DarkfiSpendDetails | None"
+
+        def __init__(
+            self,
+            *,
+            alpha: "AnyBytes",
+            sighash: "AnyBytes",
+            account: "int | None" = None,
+            details: "DarkfiSpendDetails | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DarkfiSignSpendAuth"]:
+            return isinstance(msg, cls)
+
+    class DarkfiSpendAuthSignature(protobuf.MessageType):
+        commit: "AnyBytes"
+        rk: "AnyBytes"
+        response: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            commit: "AnyBytes",
+            rk: "AnyBytes",
+            response: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DarkfiSpendAuthSignature"]:
+            return isinstance(msg, cls)
+
     class Initialize(protobuf.MessageType):
         session_id: "AnyBytes | None"
         derive_cardano: "bool | None"

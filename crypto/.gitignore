@@ -6,4 +6,5 @@ tests/aestst
 tests/libtrezor-crypto.so
 tests/test_check
 tests/test_openssl
+tests/test_pallas
 tests/test_speed

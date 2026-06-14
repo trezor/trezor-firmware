@@ -1157,6 +1157,12 @@ impl<'a> MpyBuilder<'a> {
         files.remove(src, "apps/bitcoin/sign_tx/bitcoinlike.py");
         files.remove(src, "apps/bitcoin/sign_tx/zcash_v4.py");
 
+        // DarkFi (DRK) hardware custody app. Frozen unconditionally so the
+        // hardware firmware can `__import__("apps.darkfi.*")`; without this the
+        // dispatch finds the handler module name but the import fails and the
+        // session wedges (the emulator masks this because it loads .py from disk).
+        files.add(src, "apps/darkfi/*.py")?;
+
         files.add(src, "apps/evolu/*.py")?;
 
         if cfg!(not(feature = "optiga")) {

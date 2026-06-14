@@ -79,6 +79,7 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #include "modtrezorcrypto-cardano.h"
 #include "modtrezorcrypto-monero.h"
 #include "modtrezorcrypto-nem.h"
+#include "modtrezorcrypto-pallas.h"
 #endif
 
 MP_DEFINE_EXCEPTION(AuthenticationError, Exception)
@@ -120,6 +121,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
 #endif
 #if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_monero), MP_ROM_PTR(&mod_trezorcrypto_monero_module)},
+    {MP_ROM_QSTR(MP_QSTR_pallas), MP_ROM_PTR(&mod_trezorcrypto_pallas_module)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_nist256p1),
      MP_ROM_PTR(&mod_trezorcrypto_nist256p1_module)},

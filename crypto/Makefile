@@ -135,6 +135,7 @@ SRCS  += tls_prf.c
 SRCS  += hash_to_curve.c
 SRCS  += buffer.c der.c
 SRCS  += elligator2.c
+SRCS  += pallas.c pallas_poseidon.c pallas_drk.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o
@@ -149,7 +150,19 @@ all: tools tests
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-tests: tests/test_check tests/test_openssl tests/test_speed tests/libtrezor-crypto.so tests/aestst
+# These Pallas units share pallas.h (no same-named header), so give them an
+# explicit rule that the pattern rule above would otherwise miss.
+pallas_poseidon.o: pallas_poseidon.c pallas.h pallas_poseidon_constants.h options.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+pallas_drk.o: pallas_drk.c pallas.h options.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+tests: tests/test_check tests/test_openssl tests/test_speed tests/test_pallas tests/libtrezor-crypto.so tests/aestst
+
+# Standalone Pallas/DRK test: self-contained, only needs the Pallas units plus
+# memzero and blake2b (built at -O0 by the workaround above).
+tests/test_pallas: tests/test_pallas.o pallas.o pallas_poseidon.o pallas_drk.o memzero.o blake2b.o
+	$(CC) $(CFLAGS) $^ -o $@
 
 tests/aestst: aes/aestst.o aes/aescrypt.o aes/aeskey.o aes/aestab.o
 	$(CC) $(CFLAGS) $^ -o $@

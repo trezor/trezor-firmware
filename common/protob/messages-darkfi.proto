@@ -1,0 +1,149 @@
+syntax = "proto2";
+package hw.trezor.messages.darkfi;
+
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageDarkfi";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
+/**
+ * DarkFi (DRK) hardware custody, Orchard-style key separation.
+ *
+ * The account spend key `sk` is derived on-device using DarkFi's own
+ * hierarchical-deterministic scheme (crypto/hd.rs) from the device's BIP-39
+ * seed: `sk = HD_account(seed, account)`. It never leaves the device. Because
+ * the same scheme runs in the DarkFi software wallet, one mnemonic restores the
+ * identical keys on the device and in `drk`. From `sk` the device derives:
+ *
+ *   ask  = ToScalar(Expand(sk, 0x06))   spend-auth secret  (device-only)
+ *   ak   = ask * NullifierK             spend-auth pubkey   (in FVK)
+ *   nk   = ToBase(Expand(sk, 0x07))     nullifier key       (in FVK)
+ *   ivk  = poseidon([ak_x, ak_y, nk])   incoming view key  (a stock SecretKey)
+ *   pk_d = ivk * NullifierK             address / transmission key
+ *
+ * The host imports the Full Viewing Key (ak, nk) once and runs entirely on view
+ * material: it scans (derives ivk, decrypts notes), computes nullifiers (ivk),
+ * and builds Burn proofs. It cannot spend: spend authorization is a randomized
+ * Schnorr signature by `ask`, produced only by DarkfiSignSpendAuth below.
+ *
+ * `ak`, `rk` and `pk_d` all live on the NullifierK fixed base — the same
+ * generator as PublicKey and schnorr.rs — so the spend authorization is a stock
+ * DarkFi Schnorr signature accepted by the unchanged on-chain verifier.
+ */
+
+/**
+ * Request: Ask device for the DarkFi transmission key (address) for an account.
+ * @start
+ * @next DarkfiAddress
+ * @next Failure
+ */
+message DarkfiGetAddress {
+    optional uint32 account = 1;     // DarkFi HD account index (hardened)
+    optional bool show_display = 2;  // optionally show pk_d on the device screen
+    optional bool chunkify = 3;      // display the key in chunks of 4 characters
+}
+
+/**
+ * Response: DarkFi transmission key pk_d = ivk * NullifierK.
+ *
+ * `pk_d` is the 32-byte compressed Pallas point (DarkFi GroupEncoding). The
+ * canonical bs58check address string (`[prefix||pk_d||blake3(...)[:4]]`) is
+ * assembled host-side, since BLAKE3 is not available in device firmware.
+ * @end
+ */
+message DarkfiAddress {
+    required bytes pk_d = 1;  // 32-byte compressed transmission key
+}
+
+/**
+ * Request: Export the Full Viewing Key (ak, nk) to bootstrap a watch-only host.
+ *
+ * This is the one operation, besides signing, that requires an unlocked device
+ * and an explicit on-screen confirmation, because the FVK lets the holder see
+ * the entire transaction history of the account (but not spend).
+ * @start
+ * @next DarkfiFullViewingKey
+ * @next Failure
+ */
+message DarkfiGetFullViewingKey {
+    optional uint32 account = 1;  // DarkFi HD account index (hardened)
+}
+
+/**
+ * Response: the DarkFi Full Viewing Key.
+ *
+ * `ak` is the 32-byte compressed spend-auth public key; `nk` is the 32-byte
+ * little-endian nullifier key (a base-field element). Together they let the
+ * host derive ivk and pk_d and scan/prove without spend authority.
+ * @end
+ */
+message DarkfiFullViewingKey {
+    required bytes ak = 1;  // 32-byte compressed spend-auth pubkey
+    required bytes nk = 2;  // 32-byte LE nullifier key
+}
+
+/**
+ * Human-readable spend summary shown to the user before authorizing a spend.
+ *
+ * These are cleartext values the host provides for display. They are shown
+ * alongside the sighash that is actually signed, so the user sees what the host
+ * claims the transaction does. NOTE: full trustless binding of these fields to
+ * the signed sighash requires the device to recompute the transaction sighash
+ * from its components, which is future work; today the device additionally
+ * displays the raw sighash so a host cannot silently sign a different message
+ * than the one shown.
+ * @embed
+ */
+message DarkfiSpendDetails {
+    required uint64 value = 1;        // coin value (smallest indivisible unit)
+    required bytes token_id = 2;      // 32-byte LE token id (pallas::Base)
+    optional bytes recipient = 3;     // 32-byte compressed pk_d of the recipient
+                                      // (omitted for atomic swaps, where the spent
+                                      // value has no single payable recipient)
+    optional bytes spend_hook = 4;    // 32-byte LE spend hook (FuncId), 0 if none
+    optional bytes user_data = 5;     // 32-byte LE user data, 0 if none
+    optional uint32 decimals = 6;     // display: decimal places for `value` (DRK uses 8)
+    optional string symbol = 7;       // display: token symbol/alias, e.g. "DRK"
+}
+
+/**
+ * Request: Produce a randomized Schnorr spend-authorization signature.
+ *
+ * The host supplies the account (to re-derive ask on-device), the spend
+ * randomizer `alpha` (a base-field element), the transaction sighash to sign,
+ * and an optional human-readable spend summary for on-screen confirmation. The
+ * device shows value/token/recipient and the raw sighash, asks the user to
+ * confirm, then returns (commit, rk, response).
+ *
+ * Nonce note: the device produces a *deterministic* signature whose nonce is
+ * H(rsk || sighash) with rsk = ask + alpha (matching darkfi_sdk schnorr.rs
+ * byte-for-byte). This is safe against nonce reuse because the sighash is bound
+ * into the nonce and `alpha` re-randomizes the secret per spend. The HOST MUST
+ * therefore supply a freshly sampled `alpha` for every spend (as the stock drk
+ * wallet does); reusing an `alpha` across two *different* sighashes is still
+ * safe, but a unique `alpha` per spend is required for the re-randomization
+ * (rk) semantics the on-chain Burn proof constrains.
+ * @start
+ * @next DarkfiSpendAuthSignature
+ * @next Failure
+ */
+message DarkfiSignSpendAuth {
+    optional uint32 account = 1;              // DarkFi HD account index (hardened)
+    required bytes alpha = 2;                 // 32-byte LE spend randomizer (base field), unique per spend
+    required bytes sighash = 3;               // transaction sighash (message to sign)
+    optional DarkfiSpendDetails details = 4;  // shown to the user before signing
+}
+
+/**
+ * Response: the randomized spend-authorization signature.
+ *
+ * `commit` and `rk` are 32-byte compressed Pallas points; `response` is a
+ * 32-byte LE scalar. The signature verifies against `rk = ak + [alpha]*NullifierK
+ * = (ask + alpha)*NullifierK`, which is what the corresponding Burn proof
+ * constrains as a public input, using the stock DarkFi Schnorr verifier.
+ * @end
+ */
+message DarkfiSpendAuthSignature {
+    required bytes commit = 1;    // 32-byte compressed nonce commitment R
+    required bytes rk = 2;        // 32-byte compressed randomized verification key
+    required bytes response = 3;  // 32-byte LE scalar s
+}

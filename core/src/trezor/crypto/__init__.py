@@ -19,7 +19,7 @@ except Exception:
 from trezor import utils
 
 if not utils.BITCOIN_ONLY:
-    from trezorcrypto import cardano, monero, nem  # noqa: F401
+    from trezorcrypto import cardano, monero, nem, pallas  # noqa: F401
 
 if utils.USE_OPTIGA:
     from trezorcrypto import optiga  # noqa: F401
