@@ -1,6 +1,6 @@
 //! # Error Handling
 
-use crate::{client::InteractionType, protos, transport::error::Error as TransportError};
+use crate::{protos, transport::error::Error as TransportError};
 
 /// Trezor result type. Aliased to [`std::result::Result`] with the error type
 /// set to [`Error`].
@@ -42,9 +42,6 @@ pub enum Error {
     /// A failure message was returned by the device.
     #[error("failure received: code={:?} message=\"{}\"", .0.code(), .0.message())]
     FailureResponse(protos::Failure),
-    /// An unexpected interaction request was returned by the device.
-    #[error("unexpected interaction request: {0:?}")]
-    UnexpectedInteractionRequest(InteractionType),
     /// The given Bitcoin network is not supported.
     #[error("given network is not supported")]
     UnsupportedNetwork,
