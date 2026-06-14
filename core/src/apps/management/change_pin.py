@@ -36,7 +36,9 @@ async def change_pin(msg: ChangePin) -> Success:
         raise RuntimeError  # should be unreachable
 
     # get old pin
-    curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)
+    curpin, salt = await request_pin_and_sd_salt(
+        TR.pin__enter_current if config.has_pin() else TR.pin__enter
+    )
 
     # check the entered pin before getting new pin
     if config.has_pin():

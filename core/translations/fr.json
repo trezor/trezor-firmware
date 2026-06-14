@@ -1876,6 +1876,7 @@
       "Eckhart": ""
     },
     "pin__enter": "Saisir le PIN",
+    "pin__enter_current": "",
     "pin__enter_new": "Entrez le nouveau PIN",
     "pin__entered_not_valid": "Le PIN que vous avez entré n'est pas valide.",
     "pin__info": "Le code PIN sera requis pour accéder à cet appareil.",
