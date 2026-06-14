@@ -572,32 +572,26 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         if not is_change:
             has_external_output = True
 
-    self_send_shown = False
     for i, output in enumerate(outputs):
-        if not is_change_flags[i]:
-            show = True
-        elif not has_external_output and not self_send_shown:
-            show = True
-            self_send_shown = True
-        else:
-            show = False
+        # Hide change only when a separate external recipient is shown.
+        if is_change_flags[i] and has_external_output:
+            continue
 
-        if show:
-            send_amount += output.capacity
-            address = helpers.encode_address_full(
-                output.lock_code_hash,
-                output.lock_hash_type,
-                output.lock_args,
-                msg.network,
-            )
-            if output.type_code_hash is not None:
-                await require_confirm_type_script()
+        send_amount += output.capacity
+        address = helpers.encode_address_full(
+            output.lock_code_hash,
+            output.lock_hash_type,
+            output.lock_args,
+            msg.network,
+        )
+        if output.type_code_hash is not None:
+            await require_confirm_type_script()
 
-            await require_confirm_output(
-                address,
-                output.capacity,
-                chunkify=bool(msg.chunkify),
-            )
+        await require_confirm_output(
+            address,
+            output.capacity,
+            chunkify=bool(msg.chunkify),
+        )
 
     # Collect cell_deps
     cell_deps: list["CKBCellDep"] = []
