@@ -35,6 +35,20 @@ Generate a vendor header binary from a json description.
 
 Combine a flashable image from a boardloader, bootloader, and firmware.
 
+### `verify_signed_firmware`
+
+Lives in `trezor_core_tools/verify_signed_firmware.py` and is exposed as a CLI tool by
+the same name.
+
+Given an unsigned image and the signed one returned from the signing service, it
+confirms the two are identical except in the signature-carrying fields and that the
+signature verifies against the production keys. It auto-detects the image type, so it
+handles firmware (`TRZV`), secmon (`TSEC`), and bootloader formats (`TRZB`, `TRZQ`).
+
+Use `verify_signed_firmware --help` for the full usage. The most common form is
+`verify_signed_firmware unsigned.bin signed.bin`; with no arguments it scans the
+current directory for `*-signed.bin` pairs.
+
 ## Everything else
 
 ### `codegen`
