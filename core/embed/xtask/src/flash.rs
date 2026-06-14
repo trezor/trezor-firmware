@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    args::{FlashArgs, FlashEraseArgs, FlashSection},
+    args::{FlashArgs, FlashEraseArgs, FlashSection, Model, ResetArgs},
     helpers,
 };
 
@@ -35,20 +35,8 @@ pub fn flash(args: FlashArgs) -> Result<()> {
     );
 
     let flash_instruction = build_flash_write_instruction(&binary, address);
-    let model_config = args.model.config()?;
 
-    let status = process::Command::new("openocd")
-        .args(["-f", "interface/stlink.cfg"])
-        .args(["-c", "transport select hla_swd"])
-        .args(["-f", model_config.openocd_target()?])
-        .arg("-c")
-        .arg(flash_instruction)
-        .status()
-        .context("Failed to spawn `openocd`")?;
-
-    ensure!(status.success(), "`openocd` failed with status: {status}");
-
-    Ok(())
+    run_openocd(args.model, &flash_instruction)
 }
 
 /// Erase specified flash section using OpenOCD. The section boundaries are determined
@@ -58,14 +46,27 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
     let content = fs::read_to_string(&mem_ld)
         .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
     let instr = build_flash_erase_instruction(&content, args.section)?;
-    let model_config = args.model.config()?;
+
+    run_openocd(args.model, &instr)
+}
+
+/// Resets the connected device using OpenOCD.
+pub fn reset(args: ResetArgs) -> Result<()> {
+    println!("Resetting `{:?}`", args.model);
+
+    run_openocd(args.model, "init; reset; exit")
+}
+
+/// Runs OpenOCD instructions against the connected device for the given model.
+fn run_openocd(model: Model, instructions: &str) -> Result<()> {
+    let model_config = model.config()?;
 
     let status = process::Command::new("openocd")
         .args(["-f", "interface/stlink.cfg"])
         .args(["-c", "transport select hla_swd"])
         .args(["-f", model_config.openocd_target()?])
         .arg("-c")
-        .arg(instr)
+        .arg(instructions)
         .status()
         .context("Failed to spawn `openocd`")?;
 
