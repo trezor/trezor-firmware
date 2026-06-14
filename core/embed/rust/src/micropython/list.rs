@@ -16,22 +16,23 @@ impl List {
         // SAFETY: Although `values` are copied into the new list and not mutated,
         // `mp_obj_new_list` is taking them through a mut pointer.
         // EXCEPTION: Will raise if allocation fails.
-        catch_exception(|| unsafe {
-            let list = ffi::mp_obj_new_list(values.len(), values.as_ptr() as *mut Obj);
-            Gc::from_raw(list.as_ptr().cast())
-        })
+        let list = catch_exception!(unsafe { ffi::mp_obj_new_list } => { values.len(), values.as_ptr() as *mut Obj })?;
+        // SAFETY: `list` is a freshly created list
+        Ok(unsafe { Gc::from_raw(list.as_ptr().cast()) })
     }
 
     pub fn with_capacity(capacity: usize) -> Result<GcBox<Self>, Error> {
         // EXCEPTION: Will raise if allocation fails.
-        catch_exception(|| unsafe {
-            let list = ffi::mp_obj_new_list(capacity, ptr::null_mut());
-            // By default, the new list will have its len set to n. We want to preallocate
-            // to a specific size and then use append() to add items, so we reset len to 0.
+        let list =
+            catch_exception!(unsafe { ffi::mp_obj_new_list } => { capacity, ptr::null_mut() })?;
+        // By default, the new list will have its len set to n. We want to preallocate
+        // to a specific size and then use append() to add items, so we reset len to 0.
+        unsafe {
+            // SAFETY: setting the length of the list to 0 is safe
             ffi::mp_obj_list_set_len(list, 0);
             // SAFETY: list is freshly allocated so we are still its unique owner.
-            GcBox::from_raw(list.as_ptr().cast())
-        })
+            Ok(GcBox::from_raw(list.as_ptr().cast()))
+        }
     }
 
     pub fn from_iter<T, E>(iter: impl Iterator<Item = T>) -> Result<GcBox<List>, Error>
@@ -64,9 +65,8 @@ impl List {
             // SAFETY: self is borrowed mutably.
             let list = self.as_mut_obj();
             // EXCEPTION: Will raise if allocation fails.
-            catch_exception(|| {
-                ffi::mp_obj_list_append(list, value);
-            })
+            catch_exception!(ffi::mp_obj_list_append => { list, value })?;
+            Ok(())
         }
     }
 
