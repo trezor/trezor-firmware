@@ -1,0 +1,172 @@
+diff --git a/core/embed/Cargo.lock b/core/embed/Cargo.lock
+index 8deb18f38e..92e92396ab 100644
+--- a/core/embed/Cargo.lock
++++ b/core/embed/Cargo.lock
+@@ -88,6 +88,16 @@ version = "1.0.102"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+ 
++[[package]]
++name = "api"
++version = "0.1.0"
++dependencies = [
++ "bindgen",
++ "cc",
++ "glob",
++ "xbuild",
++]
++
+ [[package]]
+ name = "autocfg"
+ version = "1.5.1"
+@@ -426,6 +436,7 @@ checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
+ name = "firmware"
+ version = "0.0.0"
+ dependencies = [
++ "api",
+  "color-eyre",
+  "io",
+  "models",
+diff --git a/core/embed/Cargo.toml b/core/embed/Cargo.toml
+index abc6f3b259..ae5fe86c11 100644
+--- a/core/embed/Cargo.toml
++++ b/core/embed/Cargo.toml
+@@ -8,6 +8,7 @@ members = [
+     "sec",
+     "io",
+     "upymod",
++    "api",
+     "rust",
+     "rust-staticlib",
+     "projects/boardloader",
+@@ -87,6 +88,7 @@ sys = { path = "sys" }
+ sec = { path = "sec" }
+ io = { path = "io" }
+ upymod = { path = "upymod" }
++api = { path = "api" }
+ trezor_lib = { path = "rust", default-features = false }
+ trezor-structs = { version = "0.1.0", path = "../../sdk/crates/trezor-structs", default-features = false }
+ 
+diff --git a/core/embed/projects/firmware/Cargo.toml b/core/embed/projects/firmware/Cargo.toml
+index caeb6ac7a4..c9ae970211 100644
+--- a/core/embed/projects/firmware/Cargo.toml
++++ b/core/embed/projects/firmware/Cargo.toml
+@@ -16,6 +16,7 @@ sys.workspace = true
+ rtl.workspace = true
+ models.workspace = true
+ upymod.workspace = true
++api.workspace = true
+ 
+ [features]
+ 
+@@ -113,7 +114,11 @@ thp = ["upymod/thp", "rtl/aes_gcm"]
+ tamper = ["sec/tamper"]
+ telemetry = ["sec/telemetry", "upymod/telemetry", "trezor_lib/telemetry"]
+ touch = ["io/touch", "upymod/touch", "trezor_lib/touch"]
+-touch_wakeup = ["io/touch_wakeup", "upymod/touch_wakeup", "trezor_lib/touch_wakeup"]
++touch_wakeup = [
++    "io/touch_wakeup",
++    "upymod/touch_wakeup",
++    "trezor_lib/touch_wakeup",
++]
+ tropic = ["sec/tropic", "upymod/tropic", "trezor_lib/tropic"]
+ 
+ # Legacy coin support (T2T1 only)
+diff --git a/core/embed/projects/firmware/build.rs b/core/embed/projects/firmware/build.rs
+index 24ba61283f..70bb4c2149 100644
+--- a/core/embed/projects/firmware/build.rs
++++ b/core/embed/projects/firmware/build.rs
+@@ -20,7 +20,7 @@ fn main() -> Result<()> {
+         }
+ 
+         if cfg!(feature = "app_loading") {
+-            lib.add_source("../../api/trezor_api_v1_impl.c");
++            lib.import_lib("api")?;
+         }
+ 
+         if cfg!(feature = "force_bootloader_upgrade") {
+diff --git a/core/embed/projects/unix/build.rs b/core/embed/projects/unix/build.rs
+index 64590def26..cc324e66be 100644
+--- a/core/embed/projects/unix/build.rs
++++ b/core/embed/projects/unix/build.rs
+@@ -4,6 +4,9 @@ fn main() -> Result<()> {
+     xbuild::build_and_link("firmware", |lib| {
+         lib.import_lib("io")?;
+         lib.import_lib("upymod")?;
++        if cfg!(feature = "app_loading") {
++            lib.import_lib("api")?;
++        }
+ 
+         lib.add_includes(["."]);
+ 
+@@ -11,10 +14,6 @@ fn main() -> Result<()> {
+ 
+         lib.add_sources(["main.c", "main_main.c"]);
+ 
+-        if cfg!(feature = "app_loading") {
+-            lib.add_source("../../api/trezor_api_v1_impl.c");
+-        }
+-
+         Ok(())
+     })
+ }
+diff --git a/core/embed/rust/build.rs b/core/embed/rust/build.rs
+index f8f3a626e4..308f4bd1ec 100644
+--- a/core/embed/rust/build.rs
++++ b/core/embed/rust/build.rs
+@@ -1,9 +1,5 @@
+-#[cfg(feature = "app_loading")]
+-use bindgen::EnumVariation;
+ #[cfg(all(feature = "test", not(feature = "with_new_crates")))]
+ use std::ffi::OsStr;
+-#[cfg(feature = "app_loading")]
+-use std::fs;
+ #[cfg(not(feature = "with_new_crates"))]
+ use std::process::Command;
+ use std::{env, path::PathBuf};
+@@ -675,45 +671,6 @@ fn generate_crypto_bindings() {
+         .unwrap();
+ }
+ 
+-#[cfg(feature = "app_loading")]
+-fn generate_api_bindings() {
+-    let out_path = env::var("OUT_DIR").unwrap();
+-    let out_file = PathBuf::from(&out_path).join("api.rs");
+-
+-    let api_header_path = "../api/trezor_api.h";
+-
+-    println!("cargo:rerun-if-changed={}", api_header_path);
+-    println!("cargo:rerun-if-env-changed=TREZOR_API_RS_OUT");
+-
+-    prepare_bindings()
+-        .header(api_header_path)
+-        .use_core()
+-        .no_debug(".*")
+-        .no_copy(".*")
+-        .derive_default(true)
+-        .default_enum_style(EnumVariation::Rust {
+-            non_exhaustive: false,
+-        })
+-        .raw_line("#![allow(non_snake_case)]")
+-        .raw_line("#![allow(non_camel_case_types)]")
+-        .raw_line("#![allow(non_upper_case_globals)]")
+-        .raw_line("#![allow(dead_code)]")
+-        .allowlist_type("trezor_api_v1_t")
+-        .allowlist_type("trezor_api_getter_t")
+-        .allowlist_type("sysevents_t")
+-        .allowlist_type("syshandle_mask_t")
+-        .allowlist_var("SYSHANDLE__IPC0")
+-        .generate()
+-        .expect("Unable to generate bindings")
+-        .write_to_file(&out_file)
+-        .expect("Unable to write bindings to file");
+-
+-    // Export for cross-target ABI check
+-    if let Ok(dst) = env::var("TREZOR_API_RS_OUT") {
+-        fs::copy(&out_file, &dst).unwrap_or_else(|e| panic!("failed to copy api.rs to {dst}: {e}"));
+-    }
+-}
+-
+ fn is_firmware() -> bool {
+     let target = env::var("TARGET").unwrap();
+     target.starts_with("thumbv7") || target.starts_with("thumbv8")

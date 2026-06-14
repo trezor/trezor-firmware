@@ -784,6 +784,10 @@ class MessageType(IntEnum):
     BenchmarkResult = 9103
     TelemetryGet = 1100
     Telemetry = 1101
+    TrezorAppLoad = 9200
+    TrezorAppLoaded = 9201
+    TrezorAppMessage = 9202
+    TrezorAppResponse = 9203
 
 
 class BenchmarkListNames(protobuf.MessageType):
@@ -9136,6 +9140,77 @@ class ThpPairedCacheEntry(protobuf.MessageType):
         self.mac_addr = mac_addr
         self.host_name = host_name
         self.app_name = app_name
+
+
+class TrezorAppLoad(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9200
+    FIELDS = {
+        1: protobuf.Field("hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("size", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hash: "bytes",
+        size: "int",
+    ) -> None:
+        self.hash = hash
+        self.size = size
+
+
+class TrezorAppLoaded(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9201
+    FIELDS = {
+        1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        instance_id: "int",
+    ) -> None:
+        self.instance_id = instance_id
+
+
+class TrezorAppMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9202
+    FIELDS = {
+        1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("message_id", "uint32", repeated=False, required=True),
+        3: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        instance_id: "int",
+        message_id: "int",
+        data: "bytes",
+    ) -> None:
+        self.instance_id = instance_id
+        self.message_id = message_id
+        self.data = data
+
+
+class TrezorAppResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9203
+    FIELDS = {
+        1: protobuf.Field("message_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("data", "bytes", repeated=False, required=True),
+        3: protobuf.Field("finished", "bool", repeated=False, required=False, default=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        message_id: "int",
+        data: "bytes",
+        finished: Optional["bool"] = False,
+    ) -> None:
+        self.message_id = message_id
+        self.data = data
+        self.finished = finished
 
 
 class TronGetAddress(protobuf.MessageType):

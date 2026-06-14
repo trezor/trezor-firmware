@@ -998,6 +998,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       app_task_unload(task_id);
     } break;
 
+    case SYSCALL_APP_TASK_GET_ID: {
+      const app_hash_t *hash = (const app_hash_t *)args[0];
+      systask_id_t *task_id = (systask_id_t *)args[1];
+      ts_t status = app_task_get_id(hash, task_id);
+      args[0] = ts_code(status);
+    } break;
+
     case SYSCALL_APP_CACHE_CREATE_IMAGE: {
       const app_hash_t *hash = (const app_hash_t *)args[0];
       size_t image_size = (size_t)args[1];

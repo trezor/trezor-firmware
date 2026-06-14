@@ -1,0 +1,65 @@
+syntax = "proto2";
+package hw.trezor.messages.trezorapps;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "MessageTrezorApp";
+
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
+
+/**
+ * Request: Load an external application onto the device.
+ *
+ * If the app is present in the app cache, it will be loaded into memory.
+ * Otherwise, a DataChunkRequest flow will be initiated to download the app
+ * into Trezor.
+ *
+ * @start
+ * @next TrezorAppLoaded
+ * @next DataChunkRequest
+ */
+message TrezorAppLoad {
+    /// Hash of the app to load
+    required bytes hash = 1;
+    /// Size of the app to load
+    required uint32 size = 2;
+}
+
+/**
+ * Response: External application loaded
+ * @end
+ */
+message TrezorAppLoaded {
+    /// Instance ID of the loaded app, referred to in TrezorAppRun
+    required uint32 instance_id = 1;
+}
+
+/**
+ * Request: Run a workflow in an external application.
+ *
+ * @start
+ * @next TrezorAppResponse
+ */
+message TrezorAppMessage {
+    /// Instance ID of a loaded external application, result of TrezorAppLoad.
+    required uint32 instance_id = 1;
+    /// Message ID to pass to the external app.
+    required uint32 message_id = 2;
+    /// Data to pass to the external app.
+    required bytes data = 3;
+}
+
+/**
+ * Response: Response of a workflow in the external application.
+ * @next TrezorAppMessage
+ */
+message TrezorAppResponse {
+    /// Message ID of the response.
+    required uint32 message_id = 1;
+    /// Data returned by the external application.
+    required bytes data = 2;
+    /// Indicator whether the workflow is finished.
+    optional bool finished = 3 [default = false];
+}

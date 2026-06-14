@@ -7216,6 +7216,72 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ThpPairedCacheEntry"]:
             return isinstance(msg, cls)
 
+    class TrezorAppLoad(protobuf.MessageType):
+        hash: "AnyBytes"
+        size: "int"
+
+        def __init__(
+            self,
+            *,
+            hash: "AnyBytes",
+            size: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppLoad"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppLoaded(protobuf.MessageType):
+        instance_id: "int"
+
+        def __init__(
+            self,
+            *,
+            instance_id: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppLoaded"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppMessage(protobuf.MessageType):
+        instance_id: "int"
+        message_id: "int"
+        data: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            instance_id: "int",
+            message_id: "int",
+            data: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppMessage"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppResponse(protobuf.MessageType):
+        message_id: "int"
+        data: "AnyBytes"
+        finished: "bool"
+
+        def __init__(
+            self,
+            *,
+            message_id: "int",
+            data: "AnyBytes",
+            finished: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppResponse"]:
+            return isinstance(msg, cls)
+
     class TronGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"

@@ -33,7 +33,19 @@ use crate::{
         ModelUI,
     },
 };
+#[cfg(feature = "app_loading")]
+use core::mem::MaybeUninit;
 use heapless::Vec;
+#[cfg(feature = "app_loading")]
+use rkyv::{
+    api::low::to_bytes_in_with_alloc,
+    option::ArchivedOption,
+    rancor::Failure,
+    ser::{allocator::SubAllocator, writer::Buffer},
+    util::Align,
+};
+#[cfg(feature = "app_loading")]
+use trezor_structs::{ArchivedStrSlice, ArchivedTrezorProgressEnum, TrezorUiResult};
 
 #[cfg(feature = "backlight")]
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
@@ -1304,6 +1316,162 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+#[cfg(feature = "app_loading")]
+extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+
+        let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+
+        let request_callback: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_request_cb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let request_cb = request_callback.map(|cb| {
+            move |bytes: &[u8], idx: u16| {
+                cb.call_with_n_args(&[bytes.try_into().unwrap(), idx.try_into().unwrap()])
+                    .unwrap();
+            }
+        });
+        let (main_layout, br_code, br_name) =
+            ModelUI::process_ipc_message(data, request_cb.unwrap())?;
+        Ok((
+            main_layout.into(),
+            Obj::try_from(u32::try_from(br_code)?)?,
+            br_name,
+        )
+            .try_into()?)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_process_ipc_message(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
+}
+
+#[cfg(feature = "app_loading")]
+extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
+
+        let ipc_callback: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_ipc_cb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let ipc_cb = unwrap!(ipc_callback.map(|cb| {
+            move |bytes: &[u8]| {
+                unwrap!(cb.call_with_n_args(&[unwrap!(bytes.try_into())]));
+            }
+        }));
+
+        // Map MicroPython UiResult object to Rust enum for serialization
+        let msg = if obj == CONFIRMED.as_obj() {
+            TrezorUiResult::Confirmed
+        } else if obj == CANCELLED.as_obj() {
+            TrezorUiResult::Cancelled
+        } else if obj == BACK.as_obj() {
+            TrezorUiResult::Back
+        } else if obj == INFO.as_obj() {
+            TrezorUiResult::Info
+        } else if let Ok(val) = u32::try_from(obj) {
+            TrezorUiResult::Integer(val)
+        } else {
+            return Err(Error::TypeError);
+        };
+
+        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
+        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
+
+        let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
+            &msg,
+            Buffer::from(&mut *out),
+            SubAllocator::new(&mut arena),
+        )
+        .unwrap();
+
+        //Send the response back via the ipc_cb callback
+        ipc_cb(bytes.as_ref());
+
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_send_ui_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
+}
+
+#[cfg(feature = "app_loading")]
+extern "C" fn new_deserialize_progress_message(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+
+        let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+
+        fn obj_from_archived_borrowed_str_option(
+            s: &ArchivedOption<ArchivedStrSlice>,
+        ) -> Result<Obj, Error> {
+            match s.as_ref() {
+                Some(s) => Ok(Obj::try_from(s.as_str())?),
+                None => Ok(Obj::const_none()),
+            }
+        }
+
+        // Deserialize the rkyv archived data directly from the static buffer
+        let archived = unsafe { rkyv::access_unchecked::<ArchivedTrezorProgressEnum>(data) };
+
+        // Access the archived data zero-copy using safe Deref access
+        let result: Obj = match archived {
+            ArchivedTrezorProgressEnum::Init {
+                description,
+                title,
+                indeterminate,
+                danger,
+            } => {
+                let description = description
+                    .as_ref()
+                    .map(|d| Obj::try_from(d.as_str()))
+                    .unwrap_or(Ok(Obj::const_none()))?;
+                let title = obj_from_archived_borrowed_str_option(title)?;
+
+                (
+                    description,
+                    title,
+                    Obj::try_from(*indeterminate)?,
+                    Obj::try_from(*danger)?,
+                )
+                    .try_into()?
+            }
+            ArchivedTrezorProgressEnum::Update { description, value } => {
+                let description = obj_from_archived_borrowed_str_option(description)?;
+                let value = Obj::try_from(value.to_native())?;
+                (description, value).try_into()?
+            }
+            ArchivedTrezorProgressEnum::End => Obj::const_none(),
+        };
+
+        Ok(result)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_deserialize_progress_message(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
+    unimplemented!()
+}
+
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
         let buffer = data.try_into()?;
@@ -1397,6 +1565,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///         def ble_event(self, event: int, data: bytes) -> LayoutState | None:
     ///             """Receive a BLE events."""
     ///
+    ///     if utils.USE_IPC:
+    ///         def ipc_event(self, id: int, data: bytes) -> LayoutState | None:
+    ///             """Signal an incoming IPC message."""
+    ///
     ///     if utils.USE_POWER_MANAGER:
     ///         def pm_event(self, flags: int) -> LayoutState | None:
     ///             """Receive a power management event with packed flags."""
@@ -1444,6 +1616,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///
     ///     def button_request(self) -> tuple[ButtonRequestType, str] | None:
     ///         """Return (code, type) of button request made during the last event or timer pass."""
+    ///
+    ///     def set_ipc_data(self) -> bytes | None:
+    ///         """Return (id, data) of the received IPC response."""
     ///
     ///     def get_transition_out(self) -> AttachType:
     ///         """Return the transition type."""
@@ -2173,6 +2348,29 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def tutorial() -> LayoutContext[UiResult]:
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, new_tutorial).as_obj(),
+
+    /// def process_ipc_message(
+    ///     *,
+    ///     data: bytes,
+    ///     request_cb: Callable[[bytes, int], None] | None = None,
+    /// ) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
+    ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+    Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
+
+    /// def send_ui_result(
+    ///     *,
+    ///     result: UiResult | int | str | None,
+    ///     ipc_cb: Callable[[bytes], None] | None = None,
+    /// ) -> None:
+    ///     """Serialize a UI result into bytes and send it via the ipc_cb callback.."""
+    Qstr::MP_QSTR_send_ui_result => obj_fn_kw!(0, new_send_ui_result).as_obj(),
+
+    /// def deserialize_progress_message(
+    ///     *,
+    ///     data: bytes,
+    /// ) -> Obj:
+    ///     """Deserialize a progress message from bytes and return it as a MicroPython object."""
+    Qstr::MP_QSTR_deserialize_progress_message => obj_fn_kw!(0, new_deserialize_progress_message).as_obj(),
 
     /// class BacklightLevels:
     ///     """Backlight levels. Values dynamically update based on user settings."""

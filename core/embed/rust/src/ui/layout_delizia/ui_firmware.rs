@@ -82,6 +82,15 @@ impl FirmwareUI for UIDelizia {
         Ok(flow)
     }
 
+    #[cfg(feature = "app_loading")]
+    fn confirm_long(
+        _title: TString<'static>,
+        _pages: usize,
+        _request_cb: impl Fn(&[u8], u16) + 'static,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+    }
+
     fn confirm_address(
         _title: TString<'static>,
         _address: Obj,
@@ -1292,5 +1301,13 @@ impl FirmwareUI for UIDelizia {
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::show_tutorial::new_show_tutorial()?;
         Ok(flow)
+    }
+
+    #[cfg(feature = "app_loading")]
+    fn process_ipc_message(
+        _data: &[u8],
+        _request_cb: impl Fn(&[u8], u16) + 'static,
+    ) -> Result<(Gc<LayoutObj>, i32, Obj), Error> {
+        Err::<_, Error>(Error::NotImplementedError)
     }
 }

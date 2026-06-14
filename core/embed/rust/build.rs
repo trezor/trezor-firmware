@@ -1,9 +1,8 @@
 #[cfg(all(feature = "test", not(feature = "with_new_crates")))]
 use std::ffi::OsStr;
-use std::{env, path::PathBuf};
-
 #[cfg(not(feature = "with_new_crates"))]
 use std::process::Command;
+use std::{env, path::PathBuf};
 
 fn main() {
     // hide warning: unexpected `cfg` condition name: `rust_analyzer` in ffi.rs
@@ -659,7 +658,9 @@ fn generate_crypto_bindings() {
         .no_copy("SHA512_CTX")
         .allowlist_function("sha512_Init")
         .allowlist_function("sha512_Update")
-        .allowlist_function("sha512_Final");
+        .allowlist_function("sha512_Final")
+        // sha3
+        .allowlist_function("sha3_256");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

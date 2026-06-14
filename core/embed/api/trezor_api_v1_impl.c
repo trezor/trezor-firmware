@@ -26,6 +26,29 @@ ssize_t dbg_console_write(const void* data, size_t data_size) {
 }
 #endif
 
+const trezor_crypto_v1_t trezor_crypto_v1 = {
+    .ed25519_cosi_combine_publickeys = ed25519_cosi_combine_publickeys,
+    .ed25519_sign_open = ed25519_sign_open,
+    .sha3_256_Init = sha3_256_Init,
+    .sha3_512_Init = sha3_512_Init,
+    .sha3_Update = sha3_Update,
+    .sha3_Final = sha3_Final,
+    .keccak_Final = keccak_Final,
+    .sha256_Init = sha256_Init,
+    .sha256_Update = sha256_Update,
+    .sha256_Final = sha256_Final,
+    .sha512_Init = sha512_Init,
+    .sha512_Update = sha512_Update,
+    .sha512_Final = sha512_Final,
+    .hmac_sha256_Init = hmac_sha256_Init,
+    .hmac_sha256_Update = hmac_sha256_Update,
+    .hmac_sha256_Final = hmac_sha256_Final,
+    .ecdsa_recover_pub_from_sig = ecdsa_recover_pub_from_sig,
+    .ecdsa_verify_digest = ecdsa_verify_digest,
+    .secp256k1 = &secp256k1,
+    .nist256p1 = &nist256p1,
+};
+
 const trezor_api_v1_t trezor_api_v1 = {
     .system_exit = system_exit,
     .system_exit_error = system_exit_error,
@@ -34,13 +57,14 @@ const trezor_api_v1_t trezor_api_v1 = {
     .system_exit_fatal_ex = system_exit_fatal_ex,
     .systick_ms = systick_ms,
     .sysevents_poll = sysevents_poll,
-    .syshandle_read = syshandle_read,
+    // .syshandle_read = syshandle_read,
     .dbg_console_write = dbg_console_write,
     .ipc_register = ipc_register,
     .ipc_unregister = ipc_unregister,
     .ipc_try_receive = ipc_try_receive,
     .ipc_message_free = ipc_message_free,
     .ipc_send = ipc_send,
+    .trezor_crypto_v1 = &trezor_crypto_v1,
 };
 
 const void* coreapp_api_get(uint32_t version) {

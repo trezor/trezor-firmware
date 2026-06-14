@@ -8,6 +8,7 @@ members = [
     "sec",
     "io",
     "upymod",
+    "api",
     "rust",
     "rust-staticlib",
     "projects/boardloader",
@@ -58,12 +59,21 @@ cfg-if = "1.0"
 cty = "0.2.2"
 easer = { version = "0.3.0", default-features = false, features = ["libm"] }
 heapless = { version = "0.9.2", features = ["ufmt"], default-features = false }
-log = { version = "0.4.29", features = ["max_level_trace", "release_max_level_off"] }
+log = { version = "0.4.29", features = [
+    "max_level_trace",
+    "release_max_level_off",
+] }
 minicbor = { version = "1.0.0", default-features = false }
 num-derive = "0.4.2"
-num-traits = { version = "0.2.19", default-features = false, features = ["libm"] }
-pareen = { version = "0.3.3", path = "../../rust/pareen", default-features = false, features = ["libm", "easer"] }
+num-traits = { version = "0.2.19", default-features = false, features = [
+    "libm",
+] }
+pareen = { version = "0.3.3", path = "../../rust/pareen", default-features = false, features = [
+    "libm",
+    "easer",
+] }
 qrcodegen = { version = "1.8.0", path = "../vendor/QR-Code-generator/rust-no-heap" }
+rkyv = { version = "0.8.0", default-features = false, features = ["bytecheck"] }
 spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 static-alloc = "0.2.6"
 trezor-tjpgdec = { version = "0.1.0", path = "../../rust/trezor-tjpgdec" }
@@ -78,16 +88,22 @@ sys = { path = "sys" }
 sec = { path = "sec" }
 io = { path = "io" }
 upymod = { path = "upymod" }
+api = { path = "api" }
 trezor_lib = { path = "rust", default-features = false }
+trezor-structs = { version = "0.1.0", path = "../../sdk/crates/trezor-structs", default-features = false }
 
 # xbuild and xtask dependencies
 
 anyhow = "1.0"
-bindgen = { version = "0.72.1", default-features = false, features = ["runtime"] }
+bindgen = { version = "0.72.1", default-features = false, features = [
+    "runtime",
+] }
 cargo_metadata = "0.23.1"
 cc = "1.0.69"
 clap = { version = "4.6.0", default-features = false }
-color-eyre = { version = "0.6.5", default-features = false, features = ["track-caller"] }
+color-eyre = { version = "0.6.5", default-features = false, features = [
+    "track-caller",
+] }
 glob = "0.3.0"
 globset = "0.4.18"
 hex = "0.4.3"

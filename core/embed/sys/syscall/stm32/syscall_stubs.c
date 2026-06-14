@@ -1007,6 +1007,11 @@ ts_t app_cache_finalize_image(app_cache_handle_t handle, bool accept) {
                                  SYSCALL_APP_CACHE_FINALIZE_IMAGE));
 }
 
+ts_t app_task_get_id(const app_hash_t *hash, systask_id_t *task_id) {
+  return ts_make(syscall_invoke2((uint32_t)hash, (uint32_t)task_id,
+                                 SYSCALL_APP_TASK_GET_ID));
+}
+
 #endif
 
 #endif  // KERNEL_MODE

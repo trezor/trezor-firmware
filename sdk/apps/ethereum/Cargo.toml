@@ -1,0 +1,54 @@
+cargo-features = ["panic-immediate-abort"]
+
+[package]
+name = "ethereum"
+version = "0.1.0"
+edition = "2024"
+
+
+[dependencies]
+trezor-app-sdk = { path = "../../crates/trezor-app-sdk", features = ["alloc"] }
+emballoc = "0.3.0"
+prost = { version = "0.14.1", default-features = false, features = ["derive"] }
+ufmt = { version = "0.2.0", default-features = false }
+primitive-types = { version = "0.14.0", default-features = false }
+
+[build-dependencies]
+prost-build = "0.14.1"
+serde = { version = "=1.0.145", features = ["derive"] }
+serde_json = "1"
+
+
+[features]
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+model_t3t1 = []
+model_t3w1 = []
+
+# --------------------------------------------------------------------------
+# Language features
+# --------------------------------------------------------------------------
+lang_en = []
+lang_cs = []
+
+# --------------------------------------------------------------------------
+# Log level features
+# --------------------------------------------------------------------------
+log_level_error = ['trezor-app-sdk/log_level_error']
+log_level_warn = ['trezor-app-sdk/log_level_warn']
+log_level_info = ['trezor-app-sdk/log_level_info']
+log_level_debug = ['trezor-app-sdk/log_level_debug']
+log_level_trace = ['trezor-app-sdk/log_level_trace']
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+emulator = []
+test = ["dev_keys", 'trezor-app-sdk/test', 'trezor-app-sdk/log_level_trace']
+debug = ['trezor-app-sdk/debug']
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+dev_keys = []

@@ -87,6 +87,7 @@ async def sign_tx(
 
     # have the user confirm signing
     await paths.validate_path(keychain, msg.address_n)
+
     sender_bytes = keychain.derive(msg.address_n).ethereum_pubkeyhash()
     gas_price = int.from_bytes(msg.gas_price, "big")
     gas_limit = int.from_bytes(msg.gas_limit, "big")
