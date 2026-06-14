@@ -539,7 +539,7 @@ def select_word(
     title: str,
     description: str,
     words: Iterable[str],
-) -> LayoutObj[int]:
+) -> LayoutContext[int]:
     """Select mnemonic word from three possibilities - seed check after backup. The
     iterable must be of exact size. Returns index in range `0..3`."""
 
@@ -548,7 +548,7 @@ def select_word(
 def select_word_count(
     *,
     recovery_type: RecoveryType,
-) -> LayoutObj[int | str | UiResult]:  # TR returns str
+) -> LayoutContext[int | str | UiResult]:  # TR returns str
     """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
     For unlocking a repeated backup, select between 20 and 33."""
 
@@ -568,7 +568,7 @@ def show_address_details(
     account: str | None,
     path: str | None,
     xpubs: Sequence[tuple[str, str]],
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Show address details - QR code, account, path, cosigner xpubs."""
 
 
@@ -579,7 +579,7 @@ def show_checklist(
     items: Iterable[str],
     active: int,
     button: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Checklist of backup steps. Active index is highlighted, previous items have check
     mark next to them. Limited to 3 items."""
 
@@ -592,7 +592,7 @@ def show_danger(
     value: str = "",
     menu_title: str | None = None,
     verb_cancel: str | None = None,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Warning modal that makes it easier to cancel than to continue."""
 
 
@@ -604,7 +604,7 @@ def show_error(
     description: str = "",
     allow_cancel: bool = True,
     time_ms: int = 0,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Error modal. No buttons shown when `button` is empty string."""
 
 
@@ -612,7 +612,7 @@ def show_error(
 def show_group_share_success(
     *,
     lines: Iterable[str],
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Shown after successfully finishing a group."""
 
 
@@ -706,7 +706,7 @@ def show_info(
     button: tuple[str, bool] | None = None,
     time_ms: int = 0,
     external_menu: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Info screen."""
 
 
@@ -717,7 +717,7 @@ def show_info_with_cancel(
     items: list[StrPropertyType],
     horizontal: bool = False,
     chunkify: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Show metadata for outgoing transaction with a 'close' button."""
 
 
@@ -776,7 +776,7 @@ def show_properties(
 def show_remaining_shares(
     *,
     pages: Iterable[tuple[str, str]],
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
 
 
@@ -785,7 +785,7 @@ def show_share_words(
     *,
     words: Iterable[str],
     title: str | None = None,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Show mnemonic for backup."""
 
 
@@ -799,7 +799,7 @@ def show_share_words_extended(
     text_footer: str | None,
     text_confirm: str,
     text_check: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Show mnemonic for wallet backup preceded by an instruction screen and followed by a
     confirmation screen."""
 
@@ -840,7 +840,7 @@ def show_warning(
     description: str = "",
     allow_cancel: bool = True,
     danger: bool = False,  # unused on bolt
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
 
 

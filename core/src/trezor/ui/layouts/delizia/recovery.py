@@ -18,11 +18,10 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
-    count = await interact(
-        trezorui_api.select_word_count(recovery_type=recovery_type),
-        "recovery_word_count",
-        ButtonRequestType.MnemonicWordCount,
-    )
+    with trezorui_api.select_word_count(recovery_type=recovery_type) as layout:
+        count = await interact(
+            layout, "recovery_word_count", ButtonRequestType.MnemonicWordCount
+        )
     assert isinstance(count, (int, str))
     return int(count)
 
@@ -88,18 +87,15 @@ def format_remaining_shares_info(
 
 
 async def show_group_share_success(share_index: int, group_index: int) -> None:
-    await raise_if_not_confirmed(
-        trezorui_api.show_group_share_success(
-            lines=[
-                TR.recovery__you_have_entered,
-                TR.recovery__share_num_template.format(share_index + 1),
-                TR.words__from,
-                TR.recovery__group_num_template.format(group_index + 1),
-            ],
-        ),
-        "share_success",
-        ButtonRequestType.Other,
-    )
+    with trezorui_api.show_group_share_success(
+        lines=[
+            TR.recovery__you_have_entered,
+            TR.recovery__share_num_template.format(share_index + 1),
+            TR.words__from,
+            TR.recovery__group_num_template.format(group_index + 1),
+        ],
+    ) as layout:
+        await raise_if_not_confirmed(layout, "share_success", ButtonRequestType.Other)
 
 
 async def continue_recovery(
@@ -178,17 +174,14 @@ async def show_recovery_warning(
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
     button = button or TR.buttons__try_again  # def_arg
-    await raise_if_not_confirmed(
-        trezorui_api.show_warning(
-            title=content or TR.words__warning,
-            value=subheader or "",
-            button=button,
-            description="",
-            danger=True,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.show_warning(
+        title=content or TR.words__warning,
+        value=subheader or "",
+        button=button,
+        description="",
+        danger=True,
+    ) as layout:
+        await raise_if_not_confirmed(layout, br_name, br_code)
 
 
 async def show_dry_run_result(result: bool, is_slip39: bool) -> None:

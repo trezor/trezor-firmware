@@ -369,19 +369,16 @@ async def show_address(
                 )
                 return result
 
-            result = await interact(
-                trezorui_api.show_address_details(
-                    qr_title="",  # unused on this model
-                    address=address if address_qr is None else address_qr,
-                    case_sensitive=case_sensitive,
-                    details_title="",  # unused on this model
-                    account=account,
-                    path=path,
-                    xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-                ),
-                None,
-                raise_on_cancel=None,
-            )
+            with trezorui_api.show_address_details(
+                qr_title="",  # unused on this model
+                address=address if address_qr is None else address_qr,
+                case_sensitive=case_sensitive,
+                details_title="",  # unused on this model
+                account=account,
+                path=path,
+                xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
+            ) as layout:
+                result = await interact(layout, None, raise_on_cancel=None)
             # Can only go back from the address details.
             assert result is CANCELLED
 
@@ -465,7 +462,7 @@ async def show_error_and_raise(
     raise exc
 
 
-def show_warning(
+async def show_warning(
     br_name: str,
     content: str,
     subheader: str | None = None,
@@ -473,7 +470,7 @@ def show_warning(
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
     exc: ExceptionType | None = ActionCancelled,
-) -> Awaitable[ui.UiResult]:
+) -> ui.UiResult:
     from trezor import translations
 
     button = button or TR.buttons__continue  # def_arg
@@ -485,36 +482,33 @@ def show_warning(
     if content and subheader and translations.get_language() == "en-US":
         content = content + "\n"
 
-    return interact(
-        trezorui_api.show_warning(
-            title="",
-            button=button,
-            value=content,
-            description=subheader or "",
-        ),
-        br_name,
-        br_code,
-        raise_on_cancel=exc,
-    )
+    with trezorui_api.show_warning(
+        title="",
+        button=button,
+        value=content,
+        description=subheader or "",
+    ) as layout:
+        return await interact(layout, br_name, br_code, raise_on_cancel=exc)
 
 
-def show_danger(
+async def show_danger(
     br_name: str,
     content: str,
     title: str | None = None,
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[None]:
+) -> None:
     title = title or TR.words__warning
     verb_cancel = verb_cancel or TR.buttons__cancel
-    return raise_if_not_confirmed(
-        trezorui_api.show_danger(
-            title=title,
-            description=content,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.show_danger(
+        title=title,
+        description=content,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            br_name,
+            br_code,
+        )
 
 
 def show_success(
@@ -2142,7 +2136,7 @@ def error_popup(
     *,
     button: str = "",
     timeout_ms: int = 0,
-) -> trezorui_api.LayoutObj[trezorui_api.UiResult]:
+) -> trezorui_api.LayoutContext[trezorui_api.UiResult]:
     if button:
         raise NotImplementedError("Button not implemented")
 
@@ -2246,17 +2240,17 @@ async def _confirm_multiple_pages_texts(
         return await raise_if_not_confirmed(layout, br_name, br_code)
 
 
-def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
+async def pin_mismatch_popup(is_wipe_code: bool = False) -> None:
     description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
     br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
-    layout = show_warning(
+    # result is ignored
+    await show_warning(
         br_name,
         description,
         TR.pin__please_check_again,
         TR.buttons__check_again,
         br_code=BR_CODE_OTHER,
     )
-    return layout  # type: ignore ["UiResult" is not assignable to "None"]
 
 
 def wipe_code_same_as_pin_popup() -> Awaitable[None]:

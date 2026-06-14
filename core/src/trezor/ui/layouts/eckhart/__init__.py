@@ -357,42 +357,39 @@ async def show_error_and_raise(
     exc: ExceptionType = ActionCancelled,
 ) -> NoReturn:
     button = button or TR.buttons__try_again  # def_arg
-    await interact(
-        trezorui_api.show_error(
-            title=subheader or "",
-            description=content,
-            button=button,
-            allow_cancel=False,
-        ),
-        br_name,
-        BR_CODE_OTHER,
-        raise_on_cancel=None,
-    )
+    with trezorui_api.show_error(
+        title=subheader or "",
+        description=content,
+        button=button,
+        allow_cancel=False,
+    ) as layout:
+        await interact(layout, br_name, BR_CODE_OTHER, raise_on_cancel=None)
     raise exc
 
 
-def show_warning(
+async def show_warning(
     br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[None]:
+) -> None:
     button = button or TR.words__continue_anyway  # def_arg
-    return raise_if_not_confirmed(
-        trezorui_api.show_warning(
-            title=TR.words__important,
-            button=button,
-            description=content,
-            value=subheader or "",
-            danger=True,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.show_warning(
+        title=TR.words__important,
+        button=button,
+        description=content,
+        value=subheader or "",
+        danger=True,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            br_name,
+            br_code,
+        )
 
 
-def show_danger(
+async def show_danger(
     br_name: str,
     content: str,
     value: str | None = None,
@@ -400,20 +397,17 @@ def show_danger(
     menu_title: str | None = None,
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[None]:
+) -> None:
     title = title or TR.words__warning
     verb_cancel = verb_cancel or TR.buttons__cancel
-    return raise_if_not_confirmed(
-        trezorui_api.show_danger(
-            title=title,
-            description=content,
-            value=(value or ""),
-            menu_title=menu_title,
-            verb_cancel=verb_cancel,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.show_danger(
+        title=title,
+        description=content,
+        value=(value or ""),
+        menu_title=menu_title,
+        verb_cancel=verb_cancel,
+    ) as layout:
+        return await raise_if_not_confirmed(layout, br_name, br_code)
 
 
 async def show_success(
@@ -1209,7 +1203,7 @@ if not utils.BITCOIN_ONLY:
                 verb=TR.buttons__continue,
             )
         else:
-            main_layout = trezorui_api.confirm_with_info(
+            main_ctx = trezorui_api.confirm_with_info(
                 title=title,
                 subtitle=(
                     TR.ethereum__approve_revoke_from
@@ -1220,12 +1214,13 @@ if not utils.BITCOIN_ONLY:
                 verb=TR.buttons__continue,
                 verb_info=TR.ethereum__contract_address,
             )
-            info_layout = trezorui_api.show_info_with_cancel(
+            info_ctx = trezorui_api.show_info_with_cancel(
                 title=title,
                 items=[("", recipient_addr, True)],
                 chunkify=chunkify,
             )
-            await with_info(main_layout, info_layout, br_name, br_code)
+            with main_ctx as main_layout, info_ctx as info_layout:
+                await with_info(main_layout, info_layout, br_name, br_code)
 
         if isinstance(total_amount, AboveThreshold):
             await show_warning(
@@ -2221,7 +2216,7 @@ def error_popup(
     *,
     button: str = "",
     timeout_ms: int = 0,
-) -> ui.LayoutObj[ui.UiResult]:
+) -> ui.LayoutContext[ui.UiResult]:
     if not button and not timeout_ms:
         raise ValueError("Either button or timeout_ms must be set")
 
@@ -2302,32 +2297,28 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
     pass
 
 
-def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:
+async def pin_mismatch_popup(is_wipe_code: bool = False) -> None:
     description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
     button = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter
     br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
 
-    return interact(
-        error_popup(
-            TR.words__important,
-            description,
-            button=button,
-        ),
-        br_name,
-        BR_CODE_OTHER,
-    )
+    with error_popup(
+        TR.words__important,
+        description,
+        button=button,
+    ) as layout:
+        # result is ignored
+        await interact(layout, br_name, BR_CODE_OTHER)
 
 
-def wipe_code_same_as_pin_popup() -> Awaitable[ui.UiResult]:
-    return interact(
-        error_popup(
-            TR.words__important,
-            TR.wipe_code__diff_from_pin,
-            button=TR.buttons__try_again,
-        ),
-        "wipe_code_same_as_pin",
-        BR_CODE_OTHER,
-    )
+async def wipe_code_same_as_pin_popup() -> None:
+    with error_popup(
+        TR.words__important,
+        TR.wipe_code__diff_from_pin,
+        button=TR.buttons__try_again,
+    ) as layout:
+        # result is ignored
+        await interact(layout, "wipe_code_same_as_pin", BR_CODE_OTHER)
 
 
 async def wipe_code_pin_not_set_popup(
