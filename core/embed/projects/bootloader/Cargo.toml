@@ -75,7 +75,7 @@ consumption_mask = ["sec/consumption_mask"]
 dbg_console = ["sys/dbg_console"]
 display = ["io/display"]
 dma2d = ["io/dma2d", "trezor_lib/dma2d"]
-framebuffer = ["io/framebuffer"]
+framebuffer = ["io/framebuffer", "trezor_lib/framebuffer"]
 haptic = ["io/haptic", "trezor_lib/haptic"]
 hash_processor = ["sec/hash_processor"]
 iwdg = ["sec/iwdg"]
@@ -96,39 +96,11 @@ touch = ["io/touch", "trezor_lib/touch"]
 touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
 ui_empty_lock = ["trezor_lib/ui_empty_lock"]
 
-layout_bolt_d001 = [
-    "trezor_lib/layout_bolt",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgb565",
-]
+display_mono = ["trezor_lib/display_mono"]
+display_rgb565 = ["trezor_lib/display_rgb565"]
+display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
 
-layout_bolt_d002 = [
-    "trezor_lib/layout_bolt",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgba8888",
-    "trezor_lib/ui_color_32bit",
-]
-
-layout_bolt = [
-    "trezor_lib/layout_bolt",
-    "trezor_lib/display_rgb565",
-    ]
-
-layout_caesar = [
-    "trezor_lib/layout_caesar",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_mono",
-    ]
-
-layout_delizia = [
-    "trezor_lib/layout_delizia",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgb565",
-    ]
-
-layout_eckhart = [
-    "trezor_lib/layout_eckhart",
-    "trezor_lib/framebuffer",
-    "trezor_lib/display_rgba8888",
-    "trezor_lib/ui_color_32bit",
-    ]
+layout_bolt = ["trezor_lib/layout_bolt"]
+layout_caesar = ["trezor_lib/layout_caesar"]
+layout_delizia = ["trezor_lib/layout_delizia"]
+layout_eckhart = ["trezor_lib/layout_eckhart"]
