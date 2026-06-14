@@ -59,7 +59,7 @@ def _parse(text: str) -> dict[str, str]:
 def oracle_keys(oracle: str, mnemonic: str, account: int) -> dict[str, str]:
     out = subprocess.run(
         [oracle, "keys", "--mnemonic", mnemonic, "--account", str(account)],
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True, text=True, timeout=30,
     ).stdout
     return _parse(out)
 
@@ -68,7 +68,7 @@ def oracle_sign(oracle: str, mnemonic: str, account: int, alpha: str, sighash: s
     out = subprocess.run(
         [oracle, "sign", "--mnemonic", mnemonic, "--account", str(account),
          "--alpha", alpha, "--sighash", sighash],
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True, text=True, timeout=30,
     ).stdout
     return _parse(out)
 

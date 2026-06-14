@@ -18,10 +18,11 @@ async def sign_spend_auth(msg: DarkfiSignSpendAuth) -> DarkfiSpendAuthSignature:
     )
     from trezor.wire import DataError
 
-    from . import account_spend_key
+    from . import DEFAULT_ACCOUNT, account_spend_key
 
     alpha = msg.alpha
     sighash = msg.sighash
+    account = msg.account if msg.account is not None else DEFAULT_ACCOUNT
 
     if len(alpha) != 32:
         raise DataError("Invalid alpha length")
@@ -39,8 +40,11 @@ async def sign_spend_auth(msg: DarkfiSignSpendAuth) -> DarkfiSpendAuthSignature:
             amount_str = format_amount(details.value, details.decimals)
         else:
             amount_str = str(details.value)
-        if details.symbol:
-            amount_str = f"{amount_str} {details.symbol}"
+        # Treat an empty symbol the same as a missing one, so the token-id
+        # fallback below still fires instead of showing a bare amount.
+        symbol = details.symbol.strip() if details.symbol else None
+        if symbol:
+            amount_str = f"{amount_str} {symbol}"
 
         await confirm_value(
             TR.darkfi__authorize_spend,
@@ -54,7 +58,7 @@ async def sign_spend_auth(msg: DarkfiSignSpendAuth) -> DarkfiSpendAuthSignature:
         # Extra cleartext context (token id, and any spend hook / user data) that
         # is meaningful only as hex; shown after the headline amount.
         props: list[tuple[str, str | bytes | None, bool | None]] = []
-        if details.symbol is None:
+        if symbol is None:
             props.append((TR.darkfi__spend_token, hexlify(details.token_id), True))
         if details.spend_hook and details.spend_hook != bytes(32):
             props.append((TR.darkfi__spend_hook, hexlify(details.spend_hook), True))
@@ -79,6 +83,14 @@ async def sign_spend_auth(msg: DarkfiSignSpendAuth) -> DarkfiSpendAuthSignature:
                 br_name="darkfi_spend_recipient",
             )
 
+    # Show which DarkFi account is being spent from, so a host cannot sign from
+    # an unexpected account without the user noticing.
+    await confirm_properties(
+        "darkfi_spend_account",
+        TR.darkfi__authorize_spend,
+        ((TR.words__account, str(account), False),),
+    )
+
     # Always show the exact message being signed, so a malicious host cannot
     # display benign details while signing a different sighash.
     await confirm_blob(
@@ -88,7 +100,7 @@ async def sign_spend_auth(msg: DarkfiSignSpendAuth) -> DarkfiSpendAuthSignature:
         hold=True,
     )
 
-    sk = await account_spend_key(msg.account)
+    sk = await account_spend_key(account)
     ask = pallas.derive_ask(sk)
 
     commit, rk, response = pallas.sign_spend_auth(ask, alpha, sighash)

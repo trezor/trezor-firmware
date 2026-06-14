@@ -3339,9 +3339,11 @@ class DarkfiSpendDetails(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("value", "uint64", repeated=False, required=True),
         2: protobuf.Field("token_id", "bytes", repeated=False, required=True),
-        3: protobuf.Field("recipient", "bytes", repeated=False, required=True),
+        3: protobuf.Field("recipient", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("spend_hook", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("user_data", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("decimals", "uint32", repeated=False, required=False, default=None),
+        7: protobuf.Field("symbol", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3349,15 +3351,19 @@ class DarkfiSpendDetails(protobuf.MessageType):
         *,
         value: "int",
         token_id: "bytes",
-        recipient: "bytes",
+        recipient: Optional["bytes"] = None,
         spend_hook: Optional["bytes"] = None,
         user_data: Optional["bytes"] = None,
+        decimals: Optional["int"] = None,
+        symbol: Optional["str"] = None,
     ) -> None:
         self.value = value
         self.token_id = token_id
         self.recipient = recipient
         self.spend_hook = spend_hook
         self.user_data = user_data
+        self.decimals = decimals
+        self.symbol = symbol
 
 
 class DarkfiSignSpendAuth(protobuf.MessageType):

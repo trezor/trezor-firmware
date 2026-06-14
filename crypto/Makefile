@@ -157,6 +157,7 @@ pallas_poseidon.o: pallas_poseidon.c pallas.h pallas_poseidon_constants.h option
 pallas_drk.o: pallas_drk.c pallas.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
+.PHONY: tests
 tests: tests/test_check tests/test_openssl tests/test_speed tests/test_pallas tests/libtrezor-crypto.so tests/aestst
 
 # Standalone Pallas/DRK test: self-contained, only needs the Pallas units plus
@@ -206,7 +207,7 @@ secp256k1-zkp.o:
 
 clean:
 	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o monero/*.o
-	rm -f tests/*.o tests/test_check tests/test_speed tests/test_openssl tests/libtrezor-crypto.so tests/aestst
+	rm -f tests/*.o tests/test_check tests/test_speed tests/test_openssl tests/test_pallas tests/libtrezor-crypto.so tests/aestst
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 	rm -f fuzzer/*.o fuzzer/fuzzer
 	rm -f secp256k1-zkp.o precomputed_ecmult.o precomputed_ecmult_gen.o

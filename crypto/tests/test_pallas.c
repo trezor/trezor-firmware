@@ -8,7 +8,7 @@
  * (recorded in doc/src/dev/trezor_drk_test_vectors.md).
  *
  * Build (no external deps):
- *   cc -I. -I.. -O2 tests/test_pallas.c pallas.c memzero.c -o tests/test_pallas
+ *   cc -I. -I.. -O2 tests/test_pallas.c pallas.c pallas_poseidon.c pallas_drk.c memzero.c blake2b.c -o tests/test_pallas
  */
 
 #include <stdio.h>

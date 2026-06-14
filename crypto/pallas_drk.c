@@ -59,6 +59,8 @@ static void drk_blake2b_personal(const char *domain, size_t outlen,
     blake2b_Update(&S, parts[i], lens[i]);
   }
   blake2b_Final(&S, out, outlen);
+  memzero(&S, sizeof(S));
+  memzero(personal, sizeof(personal));
 }
 
 // --- HD derivation (hd.rs) ---------------------------------------------
@@ -232,9 +234,22 @@ int pallas_spend_auth_verify_full(const pallas_point *commit_pt,
                                   const uint8_t rk_enc[32],
                                   const uint8_t response[32],
                                   const uint8_t *msg, size_t msg_len) {
+  // Bind the hashed encodings to the points actually used in the group
+  // equation: hashing commit_enc/rk_enc but checking commit_pt/rk_pt would let
+  // a mismatched tuple verify against a challenge over different bytes.
+  uint8_t commit_calc[32], rk_calc[32];
+  pallas_point_to_bytes(commit_pt, commit_calc);
+  pallas_point_to_bytes(rk_pt, rk_calc);
+  if (memcmp(commit_calc, commit_enc, 32) != 0 ||
+      memcmp(rk_calc, rk_enc, 32) != 0) {
+    memzero(commit_calc, sizeof(commit_calc));
+    memzero(rk_calc, sizeof(rk_calc));
+    return 0;
+  }
+
   // challenge = ToScalar(H(commit || rk || msg))
   uint8_t challenge[32];
-  const uint8_t *parts[3] = {commit_enc, rk_enc, msg};
+  const uint8_t *parts[3] = {commit_calc, rk_calc, msg};
   size_t lens[3] = {32, 32, msg_len};
   schnorr_hash_to_scalar(parts, lens, 3, challenge);
 
@@ -253,6 +268,8 @@ int pallas_spend_auth_verify_full(const pallas_point *commit_pt,
   memzero(&lhs, sizeof(lhs));
   memzero(&crk, sizeof(crk));
   memzero(&rhs, sizeof(rhs));
+  memzero(commit_calc, sizeof(commit_calc));
+  memzero(rk_calc, sizeof(rk_calc));
   return ok;
 }
 

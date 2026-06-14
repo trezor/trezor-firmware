@@ -48,6 +48,12 @@ message DarkfiGetAddress {
  * `pk_d` is the 32-byte compressed Pallas point (DarkFi GroupEncoding). The
  * canonical bs58check address string (`[prefix||pk_d||blake3(...)[:4]]`) is
  * assembled host-side, since BLAKE3 is not available in device firmware.
+ *
+ * The fields in the DarkFi response messages (here, DarkfiFullViewingKey and
+ * DarkfiSpendAuthSignature) are deliberately `required`: although proto2
+ * `required` is discouraged in general because it complicates schema evolution,
+ * a breaking wire change is acceptable for this security-critical interface, and
+ * the strict contract guarantees the host always receives every field.
  * @end
  */
 message DarkfiAddress {

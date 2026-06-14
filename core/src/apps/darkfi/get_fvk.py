@@ -8,9 +8,11 @@ async def get_fvk(msg: DarkfiGetFullViewingKey) -> DarkfiFullViewingKey:
     from trezor import TR
     from trezor.crypto import pallas
     from trezor.messages import DarkfiFullViewingKey
-    from trezor.ui.layouts import confirm_action
+    from trezor.ui.layouts import confirm_action, confirm_properties
 
-    from . import account_spend_key
+    from . import DEFAULT_ACCOUNT, account_spend_key
+
+    account = msg.account if msg.account is not None else DEFAULT_ACCOUNT
 
     # Exporting the FVK reveals the account's entire transaction history to the
     # holder (but not the ability to spend). Require an explicit confirmation.
@@ -21,7 +23,14 @@ async def get_fvk(msg: DarkfiGetFullViewingKey) -> DarkfiFullViewingKey:
         verb=TR.buttons__confirm,
     )
 
-    sk = await account_spend_key(msg.account)
+    # Make clear which account's view key is leaving the device.
+    await confirm_properties(
+        "darkfi_export_fvk_account",
+        TR.darkfi__export_full_viewing_key,
+        ((TR.words__account, str(account), False),),
+    )
+
+    sk = await account_spend_key(account)
 
     ask = pallas.derive_ask(sk)
     ak = pallas.spend_auth_pubkey(ask)
