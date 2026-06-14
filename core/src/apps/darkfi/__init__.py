@@ -1,8 +1,3 @@
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    pass
-
 # DarkFi derives its spend keys with its own hierarchical-deterministic scheme
 # (see crypto/hd.rs) rooted directly at the BIP-39 seed, *not* via a BIP-32
 # path. The device therefore needs the raw seed, and a DarkFi account index.

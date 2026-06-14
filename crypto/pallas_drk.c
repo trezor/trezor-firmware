@@ -142,6 +142,37 @@ static void schnorr_hash_to_scalar(const uint8_t *const parts[],
   memzero(wide, sizeof(wide));
 }
 
+// Randomized Schnorr spend-authorization signature.
+//
+// Nonce design (deterministic, on purpose): the per-signature nonce is
+//
+//     mask = ToScalar(H("DarkFi:Schnorr", rsk || msg))
+//
+// derived from the secret `rsk` and the message, with no device randomness.
+// This reproduces darkfi_sdk::crypto::schnorr::SchnorrSecret::sign
+// (src/sdk/src/crypto/schnorr.rs) byte-for-byte, which is what lets the host
+// oracle and the cross-repo reference vectors assert the device output bit-for-
+// bit. It is *not* an oversight that no RNG is read here.
+//
+// Why this is safe against the classic nonce-reuse key-leak (two signatures
+// that share a nonce but differ in challenge reveal the secret as
+// x = (s1 - s2)/(e1 - e2)):
+//   1. `msg` is bound into the nonce, so two *different* messages can never
+//      share a nonce; the only collision is signing the identical (rsk, msg)
+//      twice, which yields the identical (harmless) signature.
+//   2. `rsk = ask + alpha` already includes the per-spend randomizer `alpha`,
+//      which the host samples freshly for every spend (Orchard-style key
+//      re-randomization). So even re-signing the same sighash uses a fresh
+//      `rsk`, hence a fresh nonce.
+// Equivalently, this is the RFC 6979 / Ed25519 hedge of folding the secret into
+// the nonce hash, minus any RNG to attack.
+//
+// What this does NOT defend against is differential fault analysis on a device
+// signing the *same* (rsk, msg) twice under a glitch. Hedging the nonce with
+// fresh entropy (mask = ToScalar(H(rsk || rng || msg))) would close that and
+// stays on-chain-valid (the verifier accepts any well-formed nonce), but it
+// would break byte-exact SDK reproduction and is therefore left as future work;
+// see common/protob/messages-darkfi.proto for the consumer-facing note.
 void pallas_spend_auth_sign_full(const uint8_t ask[32], const uint8_t alpha[32],
                                  const uint8_t *msg, size_t msg_len,
                                  pallas_point *commit_pt, pallas_point *rk_pt,

@@ -94,11 +94,15 @@ message DarkfiFullViewingKey {
  * @embed
  */
 message DarkfiSpendDetails {
-    required uint64 value = 1;        // coin value (smallest unit)
+    required uint64 value = 1;        // coin value (smallest indivisible unit)
     required bytes token_id = 2;      // 32-byte LE token id (pallas::Base)
-    required bytes recipient = 3;     // 32-byte compressed pk_d of the recipient
+    optional bytes recipient = 3;     // 32-byte compressed pk_d of the recipient
+                                      // (omitted for atomic swaps, where the spent
+                                      // value has no single payable recipient)
     optional bytes spend_hook = 4;    // 32-byte LE spend hook (FuncId), 0 if none
     optional bytes user_data = 5;     // 32-byte LE user data, 0 if none
+    optional uint32 decimals = 6;     // display: decimal places for `value` (DRK uses 8)
+    optional string symbol = 7;       // display: token symbol/alias, e.g. "DRK"
 }
 
 /**
@@ -109,13 +113,22 @@ message DarkfiSpendDetails {
  * and an optional human-readable spend summary for on-screen confirmation. The
  * device shows value/token/recipient and the raw sighash, asks the user to
  * confirm, then returns (commit, rk, response).
+ *
+ * Nonce note: the device produces a *deterministic* signature whose nonce is
+ * H(rsk || sighash) with rsk = ask + alpha (matching darkfi_sdk schnorr.rs
+ * byte-for-byte). This is safe against nonce reuse because the sighash is bound
+ * into the nonce and `alpha` re-randomizes the secret per spend. The HOST MUST
+ * therefore supply a freshly sampled `alpha` for every spend (as the stock drk
+ * wallet does); reusing an `alpha` across two *different* sighashes is still
+ * safe, but a unique `alpha` per spend is required for the re-randomization
+ * (rk) semantics the on-chain Burn proof constrains.
  * @start
  * @next DarkfiSpendAuthSignature
  * @next Failure
  */
 message DarkfiSignSpendAuth {
     optional uint32 account = 1;              // DarkFi HD account index (hardened)
-    required bytes alpha = 2;                 // 32-byte LE spend randomizer (base field)
+    required bytes alpha = 2;                 // 32-byte LE spend randomizer (base field), unique per spend
     required bytes sighash = 3;               // transaction sighash (message to sign)
     optional DarkfiSpendDetails details = 4;  // shown to the user before signing
 }

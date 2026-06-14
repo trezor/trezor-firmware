@@ -57,3 +57,26 @@ transaction modeling and is future work.
   - recompute the tx sighash and assert it matches before signing,
   - then the displayed `DarkfiSpendDetails` are cryptographically bound to the
     signature.
+
+## 3. Deterministic spend-auth nonce (by design; fault-injection hardening is future work)
+
+The spend-authorization nonce is derived deterministically as
+`mask = ToScalar(H("DarkFi:Schnorr", rsk || sighash))` with `rsk = ask + alpha`,
+matching `darkfi_sdk::crypto::schnorr` byte-for-byte (see the long comment on
+`pallas_spend_auth_sign_full` in `crypto/pallas_drk.c`). This is what lets the
+host oracle and `crypto/tests/test_pallas.c` assert the device output bit-for-bit.
+
+- **Why it is safe vs nonce reuse:** the `sighash` is bound into the nonce (so
+  two *different* messages never share a nonce), and `alpha` re-randomizes `rsk`
+  per spend (the host samples a fresh `alpha` for every spend). The only nonce
+  collision is re-signing the identical `(rsk, sighash)`, which yields the
+  identical, harmless signature. This is the RFC 6979 / Ed25519 hedge without an
+  RNG to attack.
+- **What it does not defend:** differential fault analysis against a device
+  coerced into signing the same `(rsk, sighash)` twice under a glitch. A hedged
+  nonce `H(rsk || rng || sighash)` would close this and remains on-chain-valid
+  (the verifier accepts any well-formed nonce), but it would break byte-exact SDK
+  reproduction, so it is intentionally deferred.
+- **Future work:** optionally hedge the nonce with device entropy and relax the
+  oracle/reference-vector check from byte-equality to signature-validity, or hedge
+  in both the SDK and firmware to keep parity.

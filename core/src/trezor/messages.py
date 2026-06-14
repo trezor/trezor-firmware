@@ -2083,18 +2083,22 @@ if TYPE_CHECKING:
     class DarkfiSpendDetails(protobuf.MessageType):
         value: "int"
         token_id: "AnyBytes"
-        recipient: "AnyBytes"
+        recipient: "AnyBytes | None"
         spend_hook: "AnyBytes | None"
         user_data: "AnyBytes | None"
+        decimals: "int | None"
+        symbol: "str | None"
 
         def __init__(
             self,
             *,
             value: "int",
             token_id: "AnyBytes",
-            recipient: "AnyBytes",
+            recipient: "AnyBytes | None" = None,
             spend_hook: "AnyBytes | None" = None,
             user_data: "AnyBytes | None" = None,
+            decimals: "int | None" = None,
+            symbol: "str | None" = None,
         ) -> None:
             pass
 
