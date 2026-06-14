@@ -11,6 +11,7 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer},
+        util::split_two_lines,
     },
 };
 
@@ -192,16 +193,64 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let width = text.map(|c| style.font.text_width(c));
-                let height = style.font.text_height();
-                let start_of_baseline = self.area.center()
-                    + Offset::new(-width / 2, height / 2)
-                    + Offset::y(Self::BASELINE_OFFSET);
-                text.map(|text| {
-                    shape::Text::new(start_of_baseline, text, style.font)
-                        .with_fg(style.text_color)
-                        .render(target);
-                });
+                let available_width = self.area.width();
+                let text_fits_single_line =
+                    text.map(|t| style.font.text_width(t) <= available_width);
+                if text_fits_single_line {
+                    // Single line rendering (original behavior)
+                    let width = text.map(|c| style.font.text_width(c));
+                    let height = style.font.text_height();
+                    let start_of_baseline = self.area.center()
+                        + Offset::new(-width / 2, height / 2)
+                        + Offset::y(Self::BASELINE_OFFSET);
+                    text.map(|t| {
+                        shape::Text::new(start_of_baseline, t, style.font)
+                            .with_fg(style.text_color)
+                            .render(target);
+                    });
+                } else {
+                    // Two line rendering with word splitting
+                    let line_height = style.font.text_height();
+                    let line_space = crate::ui::layout_bolt::constant::LINE_SPACE;
+                    let total_height = line_height * 2 + line_space;
+                    // y offset from area center to first line baseline
+                    let first_baseline_y =
+                        -total_height / 2 + line_height + Self::BASELINE_OFFSET;
+
+                    text.map(|t| {
+                        let (line1, line2) = split_two_lines(t, style.font, available_width);
+
+                        // If split_two_lines couldn't find a word boundary,
+                        // it returns ("", full_text). In that case, break the word.
+                        let (line1, line2) = if line1.is_empty() {
+                            let broken = style
+                                .font
+                                .longest_prefix_break_words(available_width, t);
+                            (broken, t[broken.len()..].trim_start())
+                        } else {
+                            (line1, line2)
+                        };
+
+                        // Render first line centered
+                        let w1 = style.font.text_width(line1);
+                        let pos1 = self.area.center()
+                            + Offset::new(-w1 / 2, first_baseline_y);
+                        shape::Text::new(pos1, line1, style.font)
+                            .with_fg(style.text_color)
+                            .render(target);
+
+                        // Render second line centered
+                        let w2 = style.font.text_width(line2);
+                        let pos2 = self.area.center()
+                            + Offset::new(
+                                -w2 / 2,
+                                first_baseline_y + line_height + line_space,
+                            );
+                        shape::Text::new(pos2, line2, style.font)
+                            .with_fg(style.text_color)
+                            .render(target);
+                    });
+                }
             }
             ButtonContent::Icon(icon) => {
                 shape::ToifImage::new(self.area.center(), icon.toif)
