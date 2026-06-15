@@ -70,6 +70,28 @@ void usb_power_init(void) {
   HAL_PWREx_EnableUSBHSTranceiverSupply();
   __HAL_RCC_PWR_CLK_DISABLE();
 }
+#elif defined(USE_USB_FS) || defined(USE_USB_HS_IN_FS)
+void usb_power_init(void) {
+  __HAL_RCC_PWR_CLK_ENABLE();
+  // Enable VDDUSB (the full-speed peripheral has no separate HS PHY supply)
+  HAL_PWREx_EnableVddUSB();
+  __HAL_RCC_PWR_CLK_DISABLE();
+
+  // Configure the HSI48 clock recovery system (CRS). HSI48 (already enabled
+  // during the secure clock init) and the CRS configuration live in the
+  // secure RCC domain, so they are set up here in the secure monitor rather
+  // than in the non-secure kernel. The CRS trims HSI48 against the USB SOF
+  // once the (non-secure) kernel starts the USB peripheral.
+  __HAL_RCC_CRS_CLK_ENABLE();
+  RCC_CRSInitTypeDef crs_init = {0};
+  crs_init.Prescaler = RCC_CRS_SYNC_DIV1;
+  crs_init.Source = RCC_CRS_SYNC_SOURCE_USB;
+  crs_init.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
+  crs_init.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000, 1000);
+  crs_init.ErrorLimitValue = RCC_CRS_ERRORLIMIT_DEFAULT;
+  crs_init.HSI48CalibrationValue = RCC_CRS_HSI48CALIBRATION_DEFAULT;
+  HAL_RCCEx_CRSConfig(&crs_init);
+}
 #else
 #error Not implemented
 #endif

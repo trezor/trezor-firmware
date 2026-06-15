@@ -128,7 +128,9 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     /* Enable USB FS Clocks */
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
-#ifdef STM32U5
+#if defined(STM32U5) && defined(SECURE_MODE)
+    // If not in secure mode, this initialization is done
+    // in secure monitor
 
     /* Enable VDDUSB */
     __HAL_RCC_PWR_CLK_ENABLE();
