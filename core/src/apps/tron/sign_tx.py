@@ -88,7 +88,7 @@ async def process_contract(
     _MAX_LOCK_PERIOD = const(365 * 24 * 60 * 20)
     # Network defined. Not a protobuff default. (proto3 doesn't support [default = 81400] and Tron uses proto3)
     _DEFAULT_LOCK_PERIOD = const(
-        81400
+        86400
     )  # 3 days. TRON's default lock period when lock is true but period unspecified.
 
     if messages.TronTransferContract.is_type_of(contract):
@@ -164,10 +164,17 @@ async def process_contract(
         lockPeriod = None
         # Contract specific validation
         if contract.lock:
-            lockPeriod = contract.lock_period if contract.lock_period else _DEFAULT_LOCK_PERIOD
+            lockPeriod = (
+                contract.lock_period
+                if contract.lock_period not in (None, 0)
+                else _DEFAULT_LOCK_PERIOD
+            )
             assert lockPeriod is not None
             if lockPeriod > _MAX_LOCK_PERIOD:
-                raise DataError("Tron: Invalid lock period (Max 365D)")
+                raise DataError("Tron: Invalid lock period (Max 365d)")
+        elif contract.lock_period is None:
+            # Tron technically allows this (rejects the lock, encodes the value) but we would rather the host not send inconsistent values.
+            raise DataError("Tron: lock_period should not be set when lock is false")
         if contract.balance < _MINIMUM_DELEGATION_BALANCE:
             raise DataError("Tron: Amount too low (Min 1 TRX)")
 

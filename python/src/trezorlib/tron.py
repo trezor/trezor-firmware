@@ -15,6 +15,8 @@ if TYPE_CHECKING:
         messages.TronUnfreezeBalanceV2Contract,
         messages.TronWithdrawUnfreeze,
         messages.TronVoteWitnessContract,
+        messages.TronDelegateResourceContract,
+        messages.TronUnDelegateResourceContract,
     ]
 
 DEFAULT_BIP32_PATH = "m/44h/195h/0h/0/0"
