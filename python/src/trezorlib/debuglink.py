@@ -86,7 +86,7 @@ class LayoutType(Enum):
             return cls.Bolt
         if model in (models.T2B1, models.T3B1):
             return cls.Caesar
-        if model in (models.T3T1,):
+        if model in (models.T3T1, models.T3T2):
             return cls.Delizia
         if model in (models.T3W1,):
             return cls.Eckhart
@@ -103,7 +103,7 @@ class LayoutType(Enum):
             return cls.Bolt
         if internal_name in (models.T2B1.internal_name, models.T3B1.internal_name):
             return cls.Caesar
-        if internal_name in (models.T3T1.internal_name,):
+        if internal_name in (models.T3T1.internal_name, models.T3T2.internal_name):
             return cls.Delizia
         if internal_name in (models.T3W1.internal_name,):
             return cls.Eckhart
