@@ -23,7 +23,12 @@ _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_codelen = _image_flash_end - ADDR(.flash);
+/* `_codelen` is the firmware-signed length (covers the secmon header + body);
+   `_secmon_codelen` is the secmon-signed body length. On non-secmon models the
+   `.secmon_header`/`.padding` sections are empty, so `_codelen` is unchanged and
+   `_secmon_codelen` is unused. */
+_codelen = _image_flash_end - ADDR(.secmon_header);
+_secmon_codelen = _image_flash_end - ADDR(.padding);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {
@@ -32,6 +37,15 @@ SECTIONS {
 
   .header : ALIGN(4) {
     KEEP(*(.header));
+  } >FLASH AT>FLASH
+
+  .secmon_header : ALIGN(CODE_ALIGNMENT) {
+    KEEP(*(.secmon_header));
+  } >FLASH AT>FLASH
+
+  .padding : ALIGN(4) {
+    . = ALIGN(4);
+    . = ALIGN(CODE_ALIGNMENT);
   } >FLASH AT>FLASH
 
   .flash : ALIGN(CODE_ALIGNMENT) {

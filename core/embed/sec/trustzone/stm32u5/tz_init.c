@@ -89,7 +89,9 @@ static void tz_configure_sau(void) {
   SET_REGION(4, NONSECURE_RAM1_START,  NONSECURE_RAM1_SIZE, 0);
   SET_REGION(5, NONSECURE_RAM2_START,  NONSECURE_RAM2_SIZE, 0);
   SET_REGION(6, PERIPH_BASE_NS,        SIZE_256M,           0);
+#if defined STM32U5A9xx || defined STM32U5G9xx
   SET_REGION(7, GFXMMU_VIRTUAL_BUFFERS_BASE_NS, SIZE_16M,   0);
+#endif
   // clang-format on
 
   SAU->CTRL = SAU_CTRL_ENABLE_Msk;
@@ -277,8 +279,10 @@ void tz_init(void) {
       GTZC_PERIPH_ICACHE_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_DCACHE1_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+#if defined STM32U5A9xx || defined STM32U5G9xx
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_DCACHE2_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+#endif
 
   // Set all interrupts as non-secure
   for (int i = 0; i < 512; i++) {
@@ -292,8 +296,10 @@ void tz_init(void) {
   SYSCFG->SECCFGR |= SYSCFG_SECCFGR_FPUSEC | SYSCFG_SECCFGR_CLASSBSEC |
                      SYSCFG_SECCFGR_SYSCFGSEC;
 
+#if defined STM32U5A9xx || defined STM32U5G9xx
   // Disable chaching of SRAM in DCACHE2 (used only by GPU which we do not use)
   SYSCFG->CFGR1 &= ~SYSCFG_CFGR1_SRAMCACHED;
+#endif
 
   // All RCC peripherals secure by default
   const uint32_t RCC_SECCFGR_ALL_BITS =
