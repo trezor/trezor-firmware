@@ -24,6 +24,11 @@ pub fn print_memusage(mapfile: &Path) -> Result<()> {
     let regions = parse_memory_regions(&content)?;
     let sections = parse_output_sections(&content)?;
 
+    // Some images (e.g. the boot_ucb bootloader) are zero-padded to fill their
+    // whole flash region. The linker exports `__flash_padding_size` so we can
+    // report real content usage instead of a misleading 100%.
+    let flash_padding = parse_symbol_value(&content, "__flash_padding_size");
+
     println!(
         "xtask: Memory usage from `{}`",
         mapfile
@@ -37,7 +42,19 @@ pub fn print_memusage(mapfile: &Path) -> Result<()> {
     );
 
     for region in regions {
-        let used = used_bytes_for_region(&region, &sections);
+        let mut used = used_bytes_for_region(&region, &sections);
+
+        // Exclude the fixed-size image padding from the reported usage so the
+        // figure reflects real content. The padding only applies to the FLASH
+        // region the image is linked into.
+        let mut note = String::new();
+        if region.name == "FLASH"
+            && let Some(padding) = flash_padding
+        {
+            used = used.saturating_sub(padding);
+            note = format!("  (+{} padding)", format_bytes(padding));
+        }
+
         let percent = if region.length == 0 {
             0.0
         } else {
@@ -45,15 +62,31 @@ pub fn print_memusage(mapfile: &Path) -> Result<()> {
         };
 
         println!(
-            "{:<16} {:>12} {:>12} {:>7.2}%",
+            "{:<16} {:>12} {:>12} {:>7.2}%{}",
             region.name,
             format_bytes(used),
             format_bytes(region.length),
-            percent
+            percent,
+            note
         );
     }
 
     Ok(())
+}
+
+/// Parses the value of a symbol assignment from the map file, i.e. a line of
+/// the form `0x<value>  <name> = ...`.
+fn parse_symbol_value(content: &str, name: &str) -> Option<u64> {
+    for line in content.lines() {
+        let mut parts = line.split_whitespace();
+        let (Some(value), Some(symbol)) = (parts.next(), parts.next()) else {
+            continue;
+        };
+        if symbol == name && parts.next() == Some("=") {
+            return parse_hex(value).ok();
+        }
+    }
+    None
 }
 
 /// Parses the memory regions from the "Memory Configuration" part of
@@ -287,7 +320,9 @@ fn format_bytes(value: u64) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_memory_regions, parse_output_sections, used_bytes_for_region};
+    use super::{
+        parse_memory_regions, parse_output_sections, parse_symbol_value, used_bytes_for_region,
+    };
 
     #[test]
     fn counts_runtime_and_load_addresses() {
@@ -318,5 +353,43 @@ Linker script and memory map
 
         assert_eq!(used_bytes_for_region(flash, &sections), 0x1a0);
         assert_eq!(used_bytes_for_region(ram, &sections), 0x60);
+    }
+
+    #[test]
+    fn parses_padding_symbol_value() {
+        // Symbol assignment lines look like this in the map file.
+        let map = r#"
+Linker script and memory map
+
+                0x000018e4                        __flash_padding_size = (_bootloader_code_end - __flash_padding_start)
+                0x0c03c000                        _bootloader_code_end = .
+"#;
+
+        assert_eq!(
+            parse_symbol_value(map, "__flash_padding_size"),
+            Some(0x18e4)
+        );
+        assert_eq!(
+            parse_symbol_value(map, "_bootloader_code_end"),
+            Some(0x0c03c000)
+        );
+        // A symbol that is not present yields None (no padding to subtract).
+        assert_eq!(parse_symbol_value(map, "__missing_symbol"), None);
+    }
+
+    #[test]
+    fn padding_symbol_does_not_confuse_section_parsing() {
+        // A symbol line (leading whitespace, no leading '.') must not be picked
+        // up as an output section.
+        let map = r#"
+Linker script and memory map
+
+.flash          0x0c016000     0x1f5d0
+                0x000018e4                        __flash_padding_size = 0x18e4
+"#;
+
+        let sections = parse_output_sections(map).expect("sections should parse");
+        assert_eq!(sections.len(), 1);
+        assert_eq!(sections[0].address, 0x0c016000);
     }
 }
