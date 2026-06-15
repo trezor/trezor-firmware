@@ -81,6 +81,15 @@ T3T1 = TrezorModel(
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
+T3T2 = TrezorModel(
+    name="T3T2",
+    internal_name="T3T2",
+    minimum_version=(2, 3, 0),
+    vendors=VENDORS,
+    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
+    default_mapping=mapping.DEFAULT_MAPPING,
+)
+
 T3B1 = TrezorModel(
     name="Safe 3",
     internal_name="T3B1",
@@ -138,7 +147,7 @@ TREZOR_DISC2 = DISC2
 TREZOR_DISC3 = DISC3
 
 LEGACY_MODELS = frozenset({T1B1})
-CORE_MODELS = frozenset({T2T1, T2B1, T3T1, T3B1, T3W1, DISC1, DISC2, DISC3})
+CORE_MODELS = frozenset({T2T1, T2B1, T3T1, T3T2, T3B1, T3W1, DISC1, DISC2, DISC3})
 ALL_MODELS = LEGACY_MODELS | CORE_MODELS
 
 
