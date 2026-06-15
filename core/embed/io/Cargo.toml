@@ -91,11 +91,17 @@ backlight_tps61043 = []
 backlight_tps61062 = []
 backlight_pin = []
 
-touch_ft6x36_t2t1 = []
-touch_ft6x36_t3t1 = []
+# touch drivers
+touch_ft6x36 = []
 touch_ft3168 = []
 touch_stmpe811 = []
 touch_sitronix = []
+
+# touch panels (coordinate correction); selected alongside the driver by the
+# board TOML, mirroring the display driver/panel split below.
+touch_panel_t2t1 = []
+touch_panel_lx154a2422cpt23 = []
+touch_panel_lx250a2410a = []
 
 framebuffer = []
 

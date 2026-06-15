@@ -10,6 +10,7 @@ driver = "io/backlight_tps61062"
 
 [touch]
 driver = "io/touch_ft3168"
+panel = "io/touch_panel_lx250a2410a"
 
 [button]
 
