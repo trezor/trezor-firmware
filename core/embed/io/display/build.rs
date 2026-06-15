@@ -44,6 +44,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
 fn set_panel_lx250a2401a(lib: &mut CLibrary) {
     lib.add_defines([
+        ("DISPLAY_PANEL_LX250A2401A", Some("1")),
         ("UI_COLOR_32BIT", Some("1")),
         ("USE_RGB_COLORS", Some("1")),
         ("DISPLAY_RESX", Some("380")),
@@ -56,6 +57,7 @@ fn set_panel_lx250a2401a(lib: &mut CLibrary) {
 
 fn set_panel_stm32u5a9j_dk(lib: &mut CLibrary) {
     lib.add_defines([
+        ("DISPLAY_PANEL_STM32U5A9J_DK", Some("1")),
         ("UI_COLOR_32BIT", Some("1")),
         ("USE_RGB_COLORS", Some("1")),
         ("DISPLAY_RESX", Some("240")),
@@ -65,6 +67,7 @@ fn set_panel_stm32u5a9j_dk(lib: &mut CLibrary) {
 
 fn set_panel_lx154a2482(lib: &mut CLibrary) {
     lib.add_defines([
+        ("DISPLAY_PANEL_LX154A2482", Some("1")),
         ("USE_RGB_COLORS", Some("1")),
         ("DISPLAY_RESX", Some("240")),
         ("DISPLAY_RESY", Some("240")),
@@ -73,6 +76,7 @@ fn set_panel_lx154a2482(lib: &mut CLibrary) {
 
 fn set_panel_t2t1(lib: &mut CLibrary) {
     lib.add_defines([
+        ("DISPLAY_PANEL_T2T1", Some("1")),
         ("USE_RGB_COLORS", Some("1")),
         ("DISPLAY_RESX", Some("240")),
         ("DISPLAY_RESY", Some("240")),
