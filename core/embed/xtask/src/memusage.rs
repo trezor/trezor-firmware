@@ -10,9 +10,23 @@ struct MemoryRegion {
 
 #[derive(Debug, Clone)]
 struct OutputSection {
+    name: String,
     address: u64,
     size: u64,
     load_address: Option<u64>,
+}
+
+/// Returns true for zero-initialized / reserved sections (`.bss`, `.stack`,
+/// `.heap`). These are NOBITS: they occupy RAM but carry no bytes in the flash
+/// image. GNU ld nonetheless reports a `load address` for them (the LMA cursor
+/// continues past the preceding `AT>FLASH` `.data` section), which must NOT be
+/// counted as flash usage — otherwise a large reserved stack inflates the
+/// reported figure well beyond the real image size.
+fn is_nobits_section(name: &str) -> bool {
+    const NOBITS: [&str; 3] = [".bss", ".stack", ".heap"];
+    NOBITS
+        .iter()
+        .any(|prefix| name == *prefix || name.starts_with(&format!("{prefix}.")))
 }
 
 /// Prints a table of memory usage by region, based on the contents of
@@ -198,7 +212,7 @@ fn parse_output_sections(content: &str) -> Result<Vec<OutputSection>> {
         }
 
         let mut parts = line.split_whitespace();
-        let Some(_name) = parts.next() else {
+        let Some(name) = parts.next() else {
             continue;
         };
         let Some(address) = parts.next() else {
@@ -224,6 +238,7 @@ fn parse_output_sections(content: &str) -> Result<Vec<OutputSection>> {
         }
 
         sections.push(OutputSection {
+            name: name.to_string(),
             address,
             size,
             load_address,
@@ -246,8 +261,12 @@ fn used_bytes_for_region(region: &MemoryRegion, sections: &[OutputSection]) -> u
             ranges.push(range);
         }
 
+        // A NOBITS section (.bss/.stack/.heap) carries no bytes in the flash
+        // image; its reported load address is a phantom from the LMA cursor and
+        // must not be counted as flash usage.
         if let Some(load_address) = section.load_address
             && load_address != section.address
+            && !is_nobits_section(&section.name)
             && let Some(range) =
                 intersect_range(load_address, section.size, region.origin, region_end)
         {
@@ -375,6 +394,40 @@ Linker script and memory map
         );
         // A symbol that is not present yields None (no padding to subtract).
         assert_eq!(parse_symbol_value(map, "__missing_symbol"), None);
+    }
+
+    #[test]
+    fn ignores_nobits_load_addresses() {
+        // `.bss` and `.stack` are NOBITS: they live in RAM but the linker
+        // reports a flash `load address` for them. That phantom LMA (here a
+        // huge 64 KB stack) must not be counted as flash usage.
+        let map = r#"
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00010000         xr
+RAM              0x20000000         0x00020000         rw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+.flash          0x08000000       0x100
+.data           0x20000000        0x20 load address 0x08000100
+.bss            0x20000020        0x40 load address 0x08000120
+.stack          0x20000060     0x10000 load address 0x08000120
+"#;
+
+        let regions = parse_memory_regions(map).expect("memory regions should parse");
+        let sections = parse_output_sections(map).expect("sections should parse");
+
+        let flash = regions.iter().find(|r| r.name == "FLASH").unwrap();
+        let ram = regions.iter().find(|r| r.name == "RAM").unwrap();
+
+        // Flash: .flash (0x100) + .data load image (0x20); the .bss/.stack
+        // phantom LMAs are excluded.
+        assert_eq!(used_bytes_for_region(flash, &sections), 0x120);
+        // RAM: .data + .bss + .stack VMAs are all counted as usual.
+        assert_eq!(used_bytes_for_region(ram, &sections), 0x10060);
     }
 
     #[test]
