@@ -98,7 +98,7 @@ def generate(env):
             r"-e 's/from typing import/# &/'",
         ]
 
-        MODELS = ["T2T1", "T2B1", "T3T1", "T3B1", "T3W1"]
+        MODELS = ["T2T1", "T2B1", "T3T1", "T3B1", "T3W1", "D001", "D002"]
 
         for internal_model in MODELS:
             model_matches = env["TREZOR_MODEL"] == internal_model
