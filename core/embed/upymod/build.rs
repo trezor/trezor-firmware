@@ -836,11 +836,8 @@ impl<'a> MpyBuilder<'a> {
         };
 
         // Run parallel compilation of .py files to .mpy using mpy-cross
-        let mut mpy_files = xbuild::run_parallel(py_files.as_paths(), compile_func)
+        let mpy_files = xbuild::run_parallel_preserve_order(py_files.as_paths(), compile_func)
             .context("Failed to build frozen modules")?;
-
-        // Sort .mpy files by their path to ensure deterministic order in the generated C file
-        mpy_files.sort_by_key(|mpy_file| mpy_file.display().to_string());
 
         // Build C file from mpy modules
         let mut cmd = std::process::Command::new("python3");
@@ -989,6 +986,9 @@ impl<'a> MpyBuilder<'a> {
             .collect())
     }
 
+    // Please add often imported files first. When a module is loaded, micropython (as of 1.28)
+    // performs linear search in the list of all modules (`mp_frozen_names`). Universal firmware
+    // has over 400 modules and we import often due to the session restarts.
     fn get_py_files(&self) -> Result<InputFiles> {
         let mut files = InputFiles::new();
 

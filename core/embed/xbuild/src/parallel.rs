@@ -75,6 +75,27 @@ where
     result_rx.iter().collect::<Result<Vec<A>>>()
 }
 
+/// Like [`run_parallel()`] but the results are sorted to match their corresponding unit.
+pub fn run_parallel_preserve_order<U, A>(
+    units: impl IntoIterator<Item = U>,
+    func: impl Fn(&U) -> Result<A> + Send + Sync,
+) -> Result<Vec<A>>
+where
+    U: Send + Sync,
+    A: Send,
+{
+    let wrapped_func = move |arg: &(usize, U)| -> Result<(usize, A)> {
+        let (i, u) = arg;
+        let a = func(u)?;
+        Ok((*i, a))
+    };
+    let enumerated = units.into_iter().enumerate();
+    let mut outputs = run_parallel(enumerated, wrapped_func)?;
+    outputs.sort_by_key(|(i, _a)| *i);
+    let result = outputs.into_iter().map(move |(_i, a)| a).collect();
+    Ok(result)
+}
+
 // Determines the optimal number of parallel jobs based on
 // environment variable and system capabilities.
 pub fn optimal_parallel_job_count(unit_count: usize) -> usize {

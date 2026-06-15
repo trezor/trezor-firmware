@@ -23,6 +23,7 @@ pub use helpers::is_rust_analyzer;
 
 pub use parallel::optimal_parallel_job_count;
 pub use parallel::run_parallel;
+pub use parallel::run_parallel_preserve_order;
 
 pub use trezor::build;
 pub use trezor::build_and_link;

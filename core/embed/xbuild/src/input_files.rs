@@ -3,7 +3,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use color_eyre::{Result, eyre::WrapErr};
+use color_eyre::{
+    Result,
+    eyre::{WrapErr, bail},
+};
 
 use globset::Glob;
 
@@ -27,6 +30,7 @@ impl InputFiles {
         let base = base.as_ref();
         let normalized_filter = filter.trim_start_matches('/');
         let search_dirs = filter_search_dirs(base, filter)?;
+        let mut new_files = Vec::new();
 
         for dir in search_dirs {
             if !dir.exists() {
@@ -51,12 +55,16 @@ impl InputFiles {
                     continue;
                 }
 
-                self.files.push(path);
+                new_files.push(path);
             }
         }
 
-        self.files.sort();
-        self.files.dedup();
+        // We want to return the files in the order they were [`add()`]-ed but within single call
+        // the files get sorted to make [`fs::read_dir()`] reproducible. Check for duplicates too.
+        new_files.sort();
+        self.check_duplicates(&new_files)
+            .with_context(|| format!("Duplicate file in {}", base.display()))?;
+        self.files.append(&mut new_files);
 
         Ok(())
     }
@@ -82,6 +90,17 @@ impl InputFiles {
     /// Returns an iterator over the input files as `&Path`.
     pub fn as_path_refs(&self) -> impl Iterator<Item = &Path> {
         self.files.iter().map(PathBuf::as_path)
+    }
+
+    fn check_duplicates(&self, new_files: &[PathBuf]) -> Result<()> {
+        let mut files_copy = self.files.clone();
+        files_copy.extend_from_slice(new_files);
+        files_copy.sort();
+        files_copy.dedup();
+        if files_copy.len() != self.files.len() + new_files.len() {
+            bail!("Adding duplicate file");
+        }
+        Ok(())
     }
 }
 
