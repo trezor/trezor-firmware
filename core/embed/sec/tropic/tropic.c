@@ -510,14 +510,14 @@ static secbool tropic_ensure_i_config(
       return secfalse;
     }
 
-    // Bits that are expected to be 1 but are already 0: cannot recover.
-    uint32_t irrecoverable = expected & ~current;
-    if (irrecoverable != 0) {
-      return secfalse;
-    }
+    // I-config bits are one-way: we can only change 1 -> 0. If this config
+    // expects a bit to be 1 but the chip already has it at 0, the device has
+    // previously applied a stricter configuration.
+    // Accept this for downgrade compatibility. The device remains in the
+    // stricter state.
 
     // Bits that are currently 1 but are expected to be 0: flip them.
-    uint32_t to_flip = ~expected & current;
+    uint32_t to_flip = (~expected & current);
     if (to_flip == 0) {
       continue;
     }
@@ -535,7 +535,8 @@ static secbool tropic_ensure_i_config(
             &drv->handle, TROPIC_CONFIG_ADDRS[i], &current)) != LT_OK) {
       return secfalse;
     }
-    if (current != expected) {
+    // Check if any bits that should be 0 are still 1
+    if ((~expected & current) != 0) {
       return secfalse;
     }
   }
@@ -638,6 +639,18 @@ secbool tropic_ensure_configuration(void) {
                                  sizeof(set_version), &data_read_size);
   if (ret != LT_OK || data_read_size != sizeof(new_version) ||
       set_version != new_version) {
+    return secfalse;
+  }
+
+  // We also need to restart the chip for the changes to take effect.
+#ifndef TREZOR_EMULATOR
+  tropic01_reset();
+#endif
+  tropic_deinit();
+  if (!tropic_init()) {
+    return secfalse;
+  }
+  if (!tropic_wait_for_ready(NULL)) {
     return secfalse;
   }
 

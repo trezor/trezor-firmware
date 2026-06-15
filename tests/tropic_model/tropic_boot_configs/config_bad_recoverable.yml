@@ -3,7 +3,7 @@ debug_random_value: !!binary |
 i_config:
   cfg_debug: 4294967295
   cfg_gpo: 4294967295
-  cfg_sensors: 4294967295
+  cfg_sensors: 4294445184
   cfg_sleep_mode: 4294967295
   cfg_start_up: 4294967295
   cfg_uap_ecc_key_erase: 4294967295
@@ -44,7 +44,7 @@ i_pairing_keys:
 r_config:
   cfg_debug: 4294967295
   cfg_gpo: 4294967295
-  cfg_sensors: 4294967295
+  cfg_sensors: 4294705152
   cfg_sleep_mode: 4294967295
   cfg_start_up: 4294967295
   cfg_uap_ecc_key_erase: 4294967295

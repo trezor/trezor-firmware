@@ -12,7 +12,7 @@ i_config:
   cfg_uap_ecc_key_store: 4278124284
   cfg_uap_ecdsa_sign: 4278124284
   cfg_uap_eddsa_sign: 4278124284
-  cfg_uap_i_config_read: 4294967038
+  cfg_uap_i_config_read: 0
   cfg_uap_i_config_write: 4294967038
   cfg_uap_mac_and_destroy: 4278123772
   cfg_uap_mcounter_get: 4278124286
