@@ -21,7 +21,6 @@
 
 #include <trezor_rtl.h>
 
-#include <io/power_manager.h>
 #include <rtl/cli.h>
 #include <sec/backup_ram.h>
 #include <sys/systick.h>
