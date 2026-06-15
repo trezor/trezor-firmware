@@ -9,7 +9,8 @@ panel = "io/display_panel_t2t1"
 driver = "io/backlight_tps61043"
 
 [touch]
-driver = "io/touch_ft6x36_t2t1"
+driver = "io/touch_ft6x36"
+panel = "io/touch_panel_t2t1"
 
 [sd_card]
 
