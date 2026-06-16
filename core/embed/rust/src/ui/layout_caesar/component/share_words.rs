@@ -25,7 +25,7 @@ const WORD_X_OFFSET: i16 = 25;
 const NUMBER_FONT: Font = fonts::FONT_DEMIBOLD;
 const WORD_FONT: Font = fonts::FONT_BIG;
 const INFO_TOP_OFFSET: i16 = 20;
-const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
+const MAX_WORDS: usize = 72; // extended BIP-39 mnemonic: 3x24 words
 
 /// Showing the given share words.
 pub struct ShareWords<'a> {

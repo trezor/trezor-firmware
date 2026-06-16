@@ -77,7 +77,7 @@ fn footer_updating_func(
 }
 
 pub fn new_show_share_words(
-    share_words_vec: Vec<TString<'static>, 33>,
+    share_words_vec: Vec<TString<'static>, 72>,
     subtitle: TString<'static>,
     instructions_paragraphs: ParagraphVecShort<'static>,
     text_footer: Option<TString<'static>>,

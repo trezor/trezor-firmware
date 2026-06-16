@@ -1442,14 +1442,14 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_share_words(
-        _words: heapless::Vec<TString<'static>, 33>,
+        _words: heapless::Vec<TString<'static>, 72>,
         _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_share_words_extended(
-        words: heapless::Vec<TString<'static>, 33>,
+        words: heapless::Vec<TString<'static>, 72>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,
         instructions_verb: Option<TString<'static>>,

@@ -16,12 +16,28 @@ def process_bip39(words: str) -> bytes:
     """
     Receives single mnemonic and processes it. Returns what is then stored
     in the storage, which is the mnemonic itself for BIP-39.
+
+    For extended mnemonics (36/54/72 words), validates each of the 3
+    concatenated BIP-39 sub-phrases independently.
     """
     from trezor.crypto import bip39
     from trezor.errors import MnemonicError
 
-    if not bip39.check(words):
-        raise MnemonicError
+    word_list = words.split(" ")
+    word_count = len(word_list)
+
+    if word_count in (36, 54, 72):
+        # Extended mnemonic: 3 concatenated standard BIP-39 phrases
+        sub_len = word_count // 3
+        for i in range(3):
+            sub_phrase = " ".join(word_list[i * sub_len : (i + 1) * sub_len])
+            if not bip39.check(sub_phrase):
+                raise MnemonicError
+    else:
+        # Standard BIP-39
+        if not bip39.check(words):
+            raise MnemonicError
+
     return words.encode()
 
 

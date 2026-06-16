@@ -18,7 +18,7 @@ use ufmt::uwrite;
 const WORDS_PER_PAGE: usize = 4;
 const TOP_PADDING_OFFSET: i16 = 13;
 const WORD_FONT: Font = fonts::FONT_MONO;
-const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
+const MAX_WORDS: usize = 72; // extended BIP-39 mnemonic: 3x24 words
 
 /// Showing the given share words.
 pub struct ShareWords<'a> {

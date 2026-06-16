@@ -195,6 +195,12 @@ if not utils.BITCOIN_ONLY:
         from trezor.enums import BackupType
 
         if get_backup_type() == BackupType.Bip39:
+            # Cardano Icarus derivation needs mnemonic_to_bits (max 24 words);
+            # extended mnemonics (36/54/72 words) are unsupported, so skip them.
+            word_count = len(secret.decode().split())
+            if word_count > 24:
+                return
+
             try:
                 binary_mnemonic = bip39.mnemonic_to_bits(secret.decode())
             except ValueError:

@@ -22,7 +22,7 @@ use super::super::{
     fonts, theme,
 };
 
-const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
+const MAX_WORDS: usize = 72; // extended BIP-39 mnemonic: 3x24 words
 type IndexVec = Vec<u8, MAX_WORDS>;
 
 /// Full-screen component for rendering ShareWords.
@@ -49,7 +49,7 @@ impl<'a> ShareWordsScreen<'a> {
     const WORD_Y_OFFSET: i16 = 80 - Self::SUBTITLE_HEIGHT; // vertical distance from the subtitle
     const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_EXTRA_LIGHT;
 
-    pub fn new(share_words_vec: Vec<TString<'static>, 33>, show_back_button: bool) -> Self {
+    pub fn new(share_words_vec: Vec<TString<'static>, MAX_WORDS>, show_back_button: bool) -> Self {
         let content = ShareWords::new(share_words_vec);
 
         let right_button = Button::with_text(TR::buttons__continue.into());

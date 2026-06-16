@@ -33,8 +33,8 @@ pub struct SelectWordCountScreen {
 }
 
 impl SelectWordCountScreen {
-    const DESCRIPTION_HEIGHT: i16 = 71;
-    const KEYPAD_HEIGHT: i16 = 334;
+    const DESCRIPTION_HEIGHT: i16 = 50;
+    const KEYPAD_HEIGHT: i16 = 374;
 
     pub fn new_multi_share(description: TString<'static>) -> Self {
         Self::new(description, ValueKeypad::new_multi_share())
@@ -99,7 +99,7 @@ impl crate::trace::Trace for SelectWordCountScreen {
     }
 }
 
-const MAX_KEYS: usize = 5;
+const MAX_KEYS: usize = 8;
 pub struct ValueKeypad {
     cancel: Button,
     keys: Vec<Button, MAX_KEYS>,
@@ -109,13 +109,15 @@ pub struct ValueKeypad {
 }
 
 impl ValueKeypad {
+    const COLS: usize = 3;
     const ROWS: usize = 3;
-    const BUTTON_SIZE: Offset = Offset::new(138, 130);
-    const CANCEL_BUTTON_INDEX: usize = 2;
+    const BUTTON_SIZE: Offset = Offset::new(100, 110);
+    /// Cancel sits in the last grid cell (bottom-right) for the 8-key layout.
+    const CANCEL_BUTTON_INDEX: usize = 8;
 
     pub fn new_single_share() -> Self {
-        const NUMBERS: [u32; 5] = [12, 20, 18, 24, 33];
-        const LABELS: [&str; 5] = ["12", "20", "18", "24", "33"];
+        const NUMBERS: [u32; 8] = [12, 18, 20, 24, 33, 36, 54, 72];
+        const LABELS: [&str; 8] = ["12", "18", "20", "24", "33", "36", "54", "72"];
         Self::new(&LABELS, &NUMBERS)
     }
 
@@ -123,18 +125,6 @@ impl ValueKeypad {
         const NUMBERS: [u32; 2] = [20, 33];
         const LABELS: [&str; 2] = ["20", "33"];
         Self::new(&LABELS, &NUMBERS)
-    }
-
-    /// Convert key index to grid cell index.
-    fn key_2_grid_cell(key: usize) -> usize {
-        // Make sure the key is within bounds.
-        debug_assert!(key < MAX_KEYS);
-        // Key with index 2 must be mapped after the cancel button.
-        if key < Self::CANCEL_BUTTON_INDEX {
-            key
-        } else {
-            key + 1
-        }
     }
 
     fn new(labels: &[&'static str], numbers: &[u32]) -> Self {
@@ -164,43 +154,41 @@ impl ValueKeypad {
         }
     }
 
+    /// Compute button rect for a 3x3 grid cell index (0..=8).
+    /// Cells are laid out row-by-row:
+    ///   0 | 1 | 2
+    ///   3 | 4 | 5
+    ///   6 | 7 | 8
     fn get_button_border(&self, idx: usize) -> Rect {
-        // Make sure the key is within bounds.
         debug_assert!(idx <= MAX_KEYS);
-        match idx {
-            0 => Rect::from_top_left_and_size(self.area.top_left(), Self::BUTTON_SIZE),
-            1 => Rect::from_center_and_size(
-                self.area
-                    .left_center()
-                    .ofs(Offset::x(Self::BUTTON_SIZE.x / 2)),
-                Self::BUTTON_SIZE,
-            ),
-            2 => Rect::from_bottom_left_and_size(self.area.bottom_left(), Self::BUTTON_SIZE),
-            3 => Rect::from_top_right_and_size(self.area.top_right(), Self::BUTTON_SIZE),
-            4 => Rect::from_center_and_size(
-                self.area
-                    .right_center()
-                    .ofs(Offset::x(-Self::BUTTON_SIZE.x / 2)),
-                Self::BUTTON_SIZE,
-            ),
-            5 => Rect::from_bottom_right_and_size(self.area.bottom_right(), Self::BUTTON_SIZE),
-            _ => Rect::zero(), // Default case for out-of-range indices.
-        }
+
+        let col = (idx % Self::COLS) as i16;
+        let row = (idx / Self::COLS) as i16;
+
+        // Equal column / row spacing across the area.
+        let col_step = self.area.width() / Self::COLS as i16;
+        let row_step = self.area.height() / Self::ROWS as i16;
+
+        // Center the button inside its cell.
+        let cx = self.area.x0 + col * col_step + col_step / 2;
+        let cy = self.area.y0 + row * row_step + row_step / 2;
+
+        Rect::from_center_and_size(
+            crate::ui::geometry::Point::new(cx, cy),
+            Self::BUTTON_SIZE,
+        )
     }
 
     fn get_touch_expand(&self, idx: usize) -> Insets {
-        debug_assert!(idx <= MAX_KEYS); // Ensure the index is within bounds.
+        debug_assert!(idx <= MAX_KEYS);
 
-        let vertical_spacing = (self.area.height() - Self::BUTTON_SIZE.y * Self::ROWS as i16)
-            / (Self::ROWS as i16 - 1);
+        // Equal touch padding to fill the gap between buttons.
+        let col_step = self.area.width() / Self::COLS as i16;
+        let row_step = self.area.height() / Self::ROWS as i16;
+        let h_pad = (col_step - Self::BUTTON_SIZE.x) / 2;
+        let v_pad = (row_step - Self::BUTTON_SIZE.y) / 2;
 
-        if idx.is_multiple_of(Self::ROWS) {
-            Insets::bottom(vertical_spacing / 2)
-        } else if idx % Self::ROWS == Self::ROWS - 1 {
-            Insets::top(vertical_spacing / 2)
-        } else {
-            Insets::new(vertical_spacing / 2, 0, vertical_spacing / 2, 0)
-        }
+        Insets::new(v_pad, h_pad, v_pad, h_pad)
     }
 }
 
@@ -208,29 +196,55 @@ impl Component for ValueKeypad {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.area = if self.keys.len() < 3 {
-            // One column
+        // Multi-share recovery (only 2 word counts) uses a centered single
+        // column to match the original UX. Single-share recovery has 8 word
+        // counts and uses a 3x3 grid (8 keys + cancel in last cell).
+        let multi = self.keys.len() < 3;
+
+        self.area = if multi {
+            // One narrow column centered
             Rect::from_center_and_size(
                 bounds.center(),
                 Offset::new(Self::BUTTON_SIZE.x, bounds.height()),
             )
         } else {
-            // Two columns
-            bounds.inset(Insets::sides(42))
+            // Full grid area with horizontal padding
+            bounds.inset(Insets::sides(20))
         };
 
-        for i in 0..self.keys.len() {
-            let cell = Self::key_2_grid_cell(i);
-            let border = self.get_button_border(cell);
-            let touch_expand = self.get_touch_expand(cell);
-            self.keys[i].place(border);
-            self.keys[i].set_expanded_touch_area(touch_expand);
+        if multi {
+            // 3 vertical cells: key0, key1, cancel
+            let col_step = self.area.height() / 3;
+            for i in 0..self.keys.len() {
+                let cy = self.area.y0 + i as i16 * col_step + col_step / 2;
+                let rect = Rect::from_center_and_size(
+                    crate::ui::geometry::Point::new(self.area.center().x, cy),
+                    Self::BUTTON_SIZE,
+                );
+                self.keys[i].place(rect);
+                self.keys[i]
+                    .set_expanded_touch_area(Insets::new(8, 0, 8, 0));
+            }
+            let cancel_cy = self.area.y0 + 2 * col_step + col_step / 2;
+            let cancel_rect = Rect::from_center_and_size(
+                crate::ui::geometry::Point::new(self.area.center().x, cancel_cy),
+                Self::BUTTON_SIZE,
+            );
+            self.cancel.place(cancel_rect);
+            self.cancel
+                .set_expanded_touch_area(Insets::new(8, 0, 8, 0));
+        } else {
+            for i in 0..self.keys.len() {
+                let border = self.get_button_border(i);
+                let touch_expand = self.get_touch_expand(i);
+                self.keys[i].place(border);
+                self.keys[i].set_expanded_touch_area(touch_expand);
+            }
+            self.cancel
+                .place(self.get_button_border(Self::CANCEL_BUTTON_INDEX));
+            self.cancel
+                .set_expanded_touch_area(self.get_touch_expand(Self::CANCEL_BUTTON_INDEX));
         }
-
-        self.cancel
-            .place(self.get_button_border(Self::CANCEL_BUTTON_INDEX));
-        self.cancel
-            .set_expanded_touch_area(self.get_touch_expand(Self::CANCEL_BUTTON_INDEX));
 
         bounds
     }

@@ -17,7 +17,7 @@ use heapless::Vec;
 
 use super::{super::component::swipe_content::SwipeAttachAnimation, theme};
 
-const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
+const MAX_WORDS: usize = 72; // extended BIP-39 mnemonic: 3x24 words
 
 type IndexVec = Vec<u8, MAX_WORDS>;
 

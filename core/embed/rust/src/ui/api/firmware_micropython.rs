@@ -1182,7 +1182,7 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
 
-        let words: Vec<TString, 33> = util::iter_into_vec(words)?;
+        let words: Vec<TString, 72> = util::iter_into_vec(words)?;
 
         let layout = ModelUI::show_share_words(words, title)?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -1213,7 +1213,7 @@ extern "C" fn new_show_share_words_extended(
         let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
         let text_check: TString = kwargs.get(Qstr::MP_QSTR_text_check)?.try_into()?;
 
-        let words: Vec<TString, 33> = util::iter_into_vec(words)?;
+        let words: Vec<TString, 72> = util::iter_into_vec(words)?;
 
         let layout = ModelUI::show_share_words_extended(
             words,

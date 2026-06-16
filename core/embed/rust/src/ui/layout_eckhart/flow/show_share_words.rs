@@ -59,7 +59,7 @@ impl FlowController for ShowShareWords {
 }
 
 pub fn new_show_share_words_flow(
-    words: Vec<TString<'static>, 33>,
+    words: Vec<TString<'static>, 72>,
     subtitle: TString<'static>,
     instructions_paragraphs: Option<ParagraphVecShort<'static>>,
     instructions_verb: Option<TString<'static>>,

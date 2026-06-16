@@ -5,7 +5,7 @@ from trezor.enums import BackupType
 if TYPE_CHECKING:
     from trezor.crypto.slip39 import Share
 
-_BIP39_WORD_COUNTS = (12, 18, 24)
+_BIP39_WORD_COUNTS = (12, 18, 24, 36, 54, 72)
 _SLIP39_WORD_COUNTS = (20, 33)
 
 

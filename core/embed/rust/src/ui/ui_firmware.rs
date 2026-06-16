@@ -431,14 +431,14 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_share_words(
-        words: Vec<TString<'static>, 33>,
+        words: Vec<TString<'static>, 72>,
         title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     // TODO: merge with `show_share_words` instead of having specific version for
     // Delizia/Eckhart UI
     fn show_share_words_extended(
-        words: Vec<TString<'static>, 33>,
+        words: Vec<TString<'static>, 72>,
         subtitle: Option<TString<'static>>,
         instructions: Obj, // TODO: replace Obj
         instructions_verb: Option<TString<'static>>,

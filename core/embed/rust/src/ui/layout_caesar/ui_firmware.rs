@@ -1307,7 +1307,7 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_share_words(
-        words: heapless::Vec<TString<'static>, 33>,
+        words: heapless::Vec<TString<'static>, 72>,
         _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let cancel_btn = Some(ButtonDetails::up_arrow_icon());
@@ -1323,7 +1323,7 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_share_words_extended(
-        _words: heapless::Vec<TString<'static>, 33>,
+        _words: heapless::Vec<TString<'static>, 72>,
         _subtitle: Option<TString<'static>>,
         _instructions: Obj,
         _instructions_verb: Option<TString<'static>>,
