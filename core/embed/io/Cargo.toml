@@ -91,6 +91,7 @@ usb = []
 backlight_tps61043 = []
 backlight_tps61062 = []
 backlight_pin = []
+backlight_pwm = []
 
 touch_none = []
 touch_ft6x36 = ["sys/i2c_bus"]

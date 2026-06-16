@@ -25,6 +25,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         } else {
             bail_unsupported!();
         }
+    } else if cfg!(feature = "backlight_pwm") {
+        if cfg!(feature = "mcu_stm32") {
+            lib.add_source("backlight/stm32/backlight_pwm.c");
+        } else {
+            bail_unsupported!();
+        }
     } else {
         bail_unsupported!();
     }
