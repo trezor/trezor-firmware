@@ -2516,6 +2516,676 @@ impl ::protobuf::reflect::ProtobufValue for TronWithdrawUnfreeze {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.tron.TronDelegateResourceContract)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct TronDelegateResourceContract {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronDelegateResourceContract.owner_address)
+    pub owner_address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronDelegateResourceContract.resource)
+    pub resource: ::std::option::Option<::protobuf::EnumOrUnknown<TronResourceCode>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronDelegateResourceContract.balance)
+    pub balance: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronDelegateResourceContract.receiver_address)
+    pub receiver_address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronDelegateResourceContract.lock)
+    pub lock: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronDelegateResourceContract.lock_period)
+    pub lock_period: ::std::option::Option<u64>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.tron.TronDelegateResourceContract.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a TronDelegateResourceContract {
+    fn default() -> &'a TronDelegateResourceContract {
+        <TronDelegateResourceContract as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl TronDelegateResourceContract {
+    pub fn new() -> TronDelegateResourceContract {
+        ::std::default::Default::default()
+    }
+
+    // required bytes owner_address = 1;
+
+    pub fn owner_address(&self) -> &[u8] {
+        match self.owner_address.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_owner_address(&mut self) {
+        self.owner_address = ::std::option::Option::None;
+    }
+
+    pub fn has_owner_address(&self) -> bool {
+        self.owner_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_owner_address(&mut self, v: ::std::vec::Vec<u8>) {
+        self.owner_address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_owner_address(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.owner_address.is_none() {
+            self.owner_address = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.owner_address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_owner_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.owner_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional .hw.trezor.messages.tron.TronResourceCode resource = 2;
+
+    pub fn resource(&self) -> TronResourceCode {
+        match self.resource {
+            Some(e) => e.enum_value_or(TronResourceCode::BANDWIDTH),
+            None => TronResourceCode::BANDWIDTH,
+        }
+    }
+
+    pub fn clear_resource(&mut self) {
+        self.resource = ::std::option::Option::None;
+    }
+
+    pub fn has_resource(&self) -> bool {
+        self.resource.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_resource(&mut self, v: TronResourceCode) {
+        self.resource = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // required uint64 balance = 3;
+
+    pub fn balance(&self) -> u64 {
+        self.balance.unwrap_or(0)
+    }
+
+    pub fn clear_balance(&mut self) {
+        self.balance = ::std::option::Option::None;
+    }
+
+    pub fn has_balance(&self) -> bool {
+        self.balance.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_balance(&mut self, v: u64) {
+        self.balance = ::std::option::Option::Some(v);
+    }
+
+    // required bytes receiver_address = 4;
+
+    pub fn receiver_address(&self) -> &[u8] {
+        match self.receiver_address.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_receiver_address(&mut self) {
+        self.receiver_address = ::std::option::Option::None;
+    }
+
+    pub fn has_receiver_address(&self) -> bool {
+        self.receiver_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_receiver_address(&mut self, v: ::std::vec::Vec<u8>) {
+        self.receiver_address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_receiver_address(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.receiver_address.is_none() {
+            self.receiver_address = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.receiver_address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_receiver_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.receiver_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bool lock = 5;
+
+    pub fn lock(&self) -> bool {
+        self.lock.unwrap_or(false)
+    }
+
+    pub fn clear_lock(&mut self) {
+        self.lock = ::std::option::Option::None;
+    }
+
+    pub fn has_lock(&self) -> bool {
+        self.lock.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_lock(&mut self, v: bool) {
+        self.lock = ::std::option::Option::Some(v);
+    }
+
+    // optional uint64 lock_period = 6;
+
+    pub fn lock_period(&self) -> u64 {
+        self.lock_period.unwrap_or(0)
+    }
+
+    pub fn clear_lock_period(&mut self) {
+        self.lock_period = ::std::option::Option::None;
+    }
+
+    pub fn has_lock_period(&self) -> bool {
+        self.lock_period.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_lock_period(&mut self, v: u64) {
+        self.lock_period = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "owner_address",
+            |m: &TronDelegateResourceContract| { &m.owner_address },
+            |m: &mut TronDelegateResourceContract| { &mut m.owner_address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "resource",
+            |m: &TronDelegateResourceContract| { &m.resource },
+            |m: &mut TronDelegateResourceContract| { &mut m.resource },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "balance",
+            |m: &TronDelegateResourceContract| { &m.balance },
+            |m: &mut TronDelegateResourceContract| { &mut m.balance },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "receiver_address",
+            |m: &TronDelegateResourceContract| { &m.receiver_address },
+            |m: &mut TronDelegateResourceContract| { &mut m.receiver_address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "lock",
+            |m: &TronDelegateResourceContract| { &m.lock },
+            |m: &mut TronDelegateResourceContract| { &mut m.lock },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "lock_period",
+            |m: &TronDelegateResourceContract| { &m.lock_period },
+            |m: &mut TronDelegateResourceContract| { &mut m.lock_period },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TronDelegateResourceContract>(
+            "TronDelegateResourceContract",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for TronDelegateResourceContract {
+    const NAME: &'static str = "TronDelegateResourceContract";
+
+    fn is_initialized(&self) -> bool {
+        if self.owner_address.is_none() {
+            return false;
+        }
+        if self.balance.is_none() {
+            return false;
+        }
+        if self.receiver_address.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.owner_address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                16 => {
+                    self.resource = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                24 => {
+                    self.balance = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                34 => {
+                    self.receiver_address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                40 => {
+                    self.lock = ::std::option::Option::Some(is.read_bool()?);
+                },
+                48 => {
+                    self.lock_period = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.owner_address.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.resource {
+            my_size += ::protobuf::rt::int32_size(2, v.value());
+        }
+        if let Some(v) = self.balance {
+            my_size += ::protobuf::rt::uint64_size(3, v);
+        }
+        if let Some(v) = self.receiver_address.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
+        if let Some(v) = self.lock {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.lock_period {
+            my_size += ::protobuf::rt::uint64_size(6, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.owner_address.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.resource {
+            os.write_enum(2, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.balance {
+            os.write_uint64(3, v)?;
+        }
+        if let Some(v) = self.receiver_address.as_ref() {
+            os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.lock {
+            os.write_bool(5, v)?;
+        }
+        if let Some(v) = self.lock_period {
+            os.write_uint64(6, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> TronDelegateResourceContract {
+        TronDelegateResourceContract::new()
+    }
+
+    fn clear(&mut self) {
+        self.owner_address = ::std::option::Option::None;
+        self.resource = ::std::option::Option::None;
+        self.balance = ::std::option::Option::None;
+        self.receiver_address = ::std::option::Option::None;
+        self.lock = ::std::option::Option::None;
+        self.lock_period = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static TronDelegateResourceContract {
+        static instance: TronDelegateResourceContract = TronDelegateResourceContract {
+            owner_address: ::std::option::Option::None,
+            resource: ::std::option::Option::None,
+            balance: ::std::option::Option::None,
+            receiver_address: ::std::option::Option::None,
+            lock: ::std::option::Option::None,
+            lock_period: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for TronDelegateResourceContract {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("TronDelegateResourceContract").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for TronDelegateResourceContract {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for TronDelegateResourceContract {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.tron.TronUnDelegateResourceContract)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct TronUnDelegateResourceContract {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronUnDelegateResourceContract.owner_address)
+    pub owner_address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronUnDelegateResourceContract.resource)
+    pub resource: ::std::option::Option<::protobuf::EnumOrUnknown<TronResourceCode>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronUnDelegateResourceContract.balance)
+    pub balance: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronUnDelegateResourceContract.receiver_address)
+    pub receiver_address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.tron.TronUnDelegateResourceContract.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a TronUnDelegateResourceContract {
+    fn default() -> &'a TronUnDelegateResourceContract {
+        <TronUnDelegateResourceContract as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl TronUnDelegateResourceContract {
+    pub fn new() -> TronUnDelegateResourceContract {
+        ::std::default::Default::default()
+    }
+
+    // required bytes owner_address = 1;
+
+    pub fn owner_address(&self) -> &[u8] {
+        match self.owner_address.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_owner_address(&mut self) {
+        self.owner_address = ::std::option::Option::None;
+    }
+
+    pub fn has_owner_address(&self) -> bool {
+        self.owner_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_owner_address(&mut self, v: ::std::vec::Vec<u8>) {
+        self.owner_address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_owner_address(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.owner_address.is_none() {
+            self.owner_address = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.owner_address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_owner_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.owner_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional .hw.trezor.messages.tron.TronResourceCode resource = 2;
+
+    pub fn resource(&self) -> TronResourceCode {
+        match self.resource {
+            Some(e) => e.enum_value_or(TronResourceCode::BANDWIDTH),
+            None => TronResourceCode::BANDWIDTH,
+        }
+    }
+
+    pub fn clear_resource(&mut self) {
+        self.resource = ::std::option::Option::None;
+    }
+
+    pub fn has_resource(&self) -> bool {
+        self.resource.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_resource(&mut self, v: TronResourceCode) {
+        self.resource = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // required uint64 balance = 3;
+
+    pub fn balance(&self) -> u64 {
+        self.balance.unwrap_or(0)
+    }
+
+    pub fn clear_balance(&mut self) {
+        self.balance = ::std::option::Option::None;
+    }
+
+    pub fn has_balance(&self) -> bool {
+        self.balance.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_balance(&mut self, v: u64) {
+        self.balance = ::std::option::Option::Some(v);
+    }
+
+    // required bytes receiver_address = 4;
+
+    pub fn receiver_address(&self) -> &[u8] {
+        match self.receiver_address.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_receiver_address(&mut self) {
+        self.receiver_address = ::std::option::Option::None;
+    }
+
+    pub fn has_receiver_address(&self) -> bool {
+        self.receiver_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_receiver_address(&mut self, v: ::std::vec::Vec<u8>) {
+        self.receiver_address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_receiver_address(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.receiver_address.is_none() {
+            self.receiver_address = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.receiver_address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_receiver_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.receiver_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "owner_address",
+            |m: &TronUnDelegateResourceContract| { &m.owner_address },
+            |m: &mut TronUnDelegateResourceContract| { &mut m.owner_address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "resource",
+            |m: &TronUnDelegateResourceContract| { &m.resource },
+            |m: &mut TronUnDelegateResourceContract| { &mut m.resource },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "balance",
+            |m: &TronUnDelegateResourceContract| { &m.balance },
+            |m: &mut TronUnDelegateResourceContract| { &mut m.balance },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "receiver_address",
+            |m: &TronUnDelegateResourceContract| { &m.receiver_address },
+            |m: &mut TronUnDelegateResourceContract| { &mut m.receiver_address },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TronUnDelegateResourceContract>(
+            "TronUnDelegateResourceContract",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for TronUnDelegateResourceContract {
+    const NAME: &'static str = "TronUnDelegateResourceContract";
+
+    fn is_initialized(&self) -> bool {
+        if self.owner_address.is_none() {
+            return false;
+        }
+        if self.balance.is_none() {
+            return false;
+        }
+        if self.receiver_address.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.owner_address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                16 => {
+                    self.resource = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                24 => {
+                    self.balance = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                34 => {
+                    self.receiver_address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.owner_address.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.resource {
+            my_size += ::protobuf::rt::int32_size(2, v.value());
+        }
+        if let Some(v) = self.balance {
+            my_size += ::protobuf::rt::uint64_size(3, v);
+        }
+        if let Some(v) = self.receiver_address.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.owner_address.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.resource {
+            os.write_enum(2, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.balance {
+            os.write_uint64(3, v)?;
+        }
+        if let Some(v) = self.receiver_address.as_ref() {
+            os.write_bytes(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> TronUnDelegateResourceContract {
+        TronUnDelegateResourceContract::new()
+    }
+
+    fn clear(&mut self) {
+        self.owner_address = ::std::option::Option::None;
+        self.resource = ::std::option::Option::None;
+        self.balance = ::std::option::Option::None;
+        self.receiver_address = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static TronUnDelegateResourceContract {
+        static instance: TronUnDelegateResourceContract = TronUnDelegateResourceContract {
+            owner_address: ::std::option::Option::None,
+            resource: ::std::option::Option::None,
+            balance: ::std::option::Option::None,
+            receiver_address: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for TronUnDelegateResourceContract {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("TronUnDelegateResourceContract").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for TronUnDelegateResourceContract {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for TronUnDelegateResourceContract {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.tron.TronSignature)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct TronSignature {
@@ -3501,6 +4171,10 @@ pub mod tron_raw_transaction {
             UnfreezeBalanceV2Contract = 55,
             // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.WithdrawExpireUnfreezeContract)
             WithdrawExpireUnfreezeContract = 56,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.DelegateResourceContract)
+            DelegateResourceContract = 57,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.UnDelegateResourceContract)
+            UnDelegateResourceContract = 58,
         }
 
         impl ::protobuf::Enum for TronRawContractType {
@@ -3518,6 +4192,8 @@ pub mod tron_raw_transaction {
                     54 => ::std::option::Option::Some(TronRawContractType::FreezeBalanceV2Contract),
                     55 => ::std::option::Option::Some(TronRawContractType::UnfreezeBalanceV2Contract),
                     56 => ::std::option::Option::Some(TronRawContractType::WithdrawExpireUnfreezeContract),
+                    57 => ::std::option::Option::Some(TronRawContractType::DelegateResourceContract),
+                    58 => ::std::option::Option::Some(TronRawContractType::UnDelegateResourceContract),
                     _ => ::std::option::Option::None
                 }
             }
@@ -3530,6 +4206,8 @@ pub mod tron_raw_transaction {
                     "FreezeBalanceV2Contract" => ::std::option::Option::Some(TronRawContractType::FreezeBalanceV2Contract),
                     "UnfreezeBalanceV2Contract" => ::std::option::Option::Some(TronRawContractType::UnfreezeBalanceV2Contract),
                     "WithdrawExpireUnfreezeContract" => ::std::option::Option::Some(TronRawContractType::WithdrawExpireUnfreezeContract),
+                    "DelegateResourceContract" => ::std::option::Option::Some(TronRawContractType::DelegateResourceContract),
+                    "UnDelegateResourceContract" => ::std::option::Option::Some(TronRawContractType::UnDelegateResourceContract),
                     _ => ::std::option::Option::None
                 }
             }
@@ -3541,6 +4219,8 @@ pub mod tron_raw_transaction {
                 TronRawContractType::FreezeBalanceV2Contract,
                 TronRawContractType::UnfreezeBalanceV2Contract,
                 TronRawContractType::WithdrawExpireUnfreezeContract,
+                TronRawContractType::DelegateResourceContract,
+                TronRawContractType::UnDelegateResourceContract,
             ];
         }
 
@@ -3558,6 +4238,8 @@ pub mod tron_raw_transaction {
                     TronRawContractType::FreezeBalanceV2Contract => 3,
                     TronRawContractType::UnfreezeBalanceV2Contract => 4,
                     TronRawContractType::WithdrawExpireUnfreezeContract => 5,
+                    TronRawContractType::DelegateResourceContract => 6,
+                    TronRawContractType::UnDelegateResourceContract => 7,
                 };
                 Self::enum_descriptor().value_by_index(index)
             }
@@ -3671,27 +4353,39 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x07balance\x18\x02\x20\x02(\x04R\x07balance\x12P\n\x08resource\x18\x03\
     \x20\x01(\x0e2).hw.trezor.messages.tron.TronResourceCode:\tBANDWIDTHR\
     \x08resource\";\n\x14TronWithdrawUnfreeze\x12#\n\rowner_address\x18\x01\
-    \x20\x02(\x0cR\x0cownerAddress\"-\n\rTronSignature\x12\x1c\n\tsignature\
-    \x18\x01\x20\x02(\x0cR\tsignature\"\x95\x06\n\x12TronRawTransaction\x12&\
-    \n\x0fref_block_bytes\x18\x01\x20\x02(\x0cR\rrefBlockBytes\x12$\n\x0eref\
-    _block_hash\x18\x04\x20\x02(\x0cR\x0crefBlockHash\x12\x1e\n\nexpiration\
+    \x20\x02(\x0cR\x0cownerAddress\"\x8f\x02\n\x1cTronDelegateResourceContra\
+    ct\x12#\n\rowner_address\x18\x01\x20\x02(\x0cR\x0cownerAddress\x12P\n\
+    \x08resource\x18\x02\x20\x01(\x0e2).hw.trezor.messages.tron.TronResource\
+    Code:\tBANDWIDTHR\x08resource\x12\x18\n\x07balance\x18\x03\x20\x02(\x04R\
+    \x07balance\x12)\n\x10receiver_address\x18\x04\x20\x02(\x0cR\x0freceiver\
+    Address\x12\x12\n\x04lock\x18\x05\x20\x01(\x08R\x04lock\x12\x1f\n\x0bloc\
+    k_period\x18\x06\x20\x01(\x04R\nlockPeriod\"\xdc\x01\n\x1eTronUnDelegate\
+    ResourceContract\x12#\n\rowner_address\x18\x01\x20\x02(\x0cR\x0cownerAdd\
+    ress\x12P\n\x08resource\x18\x02\x20\x01(\x0e2).hw.trezor.messages.tron.T\
+    ronResourceCode:\tBANDWIDTHR\x08resource\x12\x18\n\x07balance\x18\x03\
+    \x20\x02(\x04R\x07balance\x12)\n\x10receiver_address\x18\x04\x20\x02(\
+    \x0cR\x0freceiverAddress\"-\n\rTronSignature\x12\x1c\n\tsignature\x18\
+    \x01\x20\x02(\x0cR\tsignature\"\xd3\x06\n\x12TronRawTransaction\x12&\n\
+    \x0fref_block_bytes\x18\x01\x20\x02(\x0cR\rrefBlockBytes\x12$\n\x0eref_b\
+    lock_hash\x18\x04\x20\x02(\x0cR\x0crefBlockHash\x12\x1e\n\nexpiration\
     \x18\x08\x20\x02(\x04R\nexpiration\x12\x12\n\x04data\x18\n\x20\x01(\x0cR\
     \x04data\x12W\n\x08contract\x18\x0b\x20\x03(\x0b2;.hw.trezor.messages.tr\
     on.TronRawTransaction.TronRawContractR\x08contract\x12\x1c\n\ttimestamp\
     \x18\x0e\x20\x02(\x04R\ttimestamp\x12\x1b\n\tfee_limit\x18\x12\x20\x01(\
-    \x04R\x08feeLimit\x1a\xe8\x03\n\x0fTronRawContract\x12c\n\x04type\x18\
+    \x04R\x08feeLimit\x1a\xa6\x04\n\x0fTronRawContract\x12c\n\x04type\x18\
     \x01\x20\x02(\x0e2O.hw.trezor.messages.tron.TronRawTransaction.TronRawCo\
     ntract.TronRawContractTypeR\x04type\x12j\n\tparameter\x18\x02\x20\x02(\
     \x0b2L.hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRa\
     wParameterR\tparameter\x1aC\n\x10TronRawParameter\x12\x19\n\x08type_url\
     \x18\x01\x20\x02(\tR\x07typeUrl\x12\x14\n\x05value\x18\x02\x20\x02(\x0cR\
-    \x05value\"\xbe\x01\n\x13TronRawContractType\x12\x14\n\x10TransferContra\
+    \x05value\"\xfc\x01\n\x13TronRawContractType\x12\x14\n\x10TransferContra\
     ct\x10\x01\x12\x17\n\x13VoteWitnessContract\x10\x04\x12\x18\n\x14Trigger\
     SmartContract\x10\x1f\x12\x1b\n\x17FreezeBalanceV2Contract\x106\x12\x1d\
     \n\x19UnfreezeBalanceV2Contract\x107\x12\"\n\x1eWithdrawExpireUnfreezeCo\
-    ntract\x108*-\n\x10TronResourceCode\x12\r\n\tBANDWIDTH\x10\0\x12\n\n\x06\
-    ENERGY\x10\x01B8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessage\
-    Tron\
+    ntract\x108\x12\x1c\n\x18DelegateResourceContract\x109\x12\x1e\n\x1aUnDe\
+    legateResourceContract\x10:*-\n\x10TronResourceCode\x12\r\n\tBANDWIDTH\
+    \x10\0\x12\n\n\x06ENERGY\x10\x01B8\n#com.satoshilabs.trezor.lib.protobuf\
+    B\x11TrezorMessageTron\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3709,7 +4403,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(15);
+            let mut messages = ::std::vec::Vec::with_capacity(17);
             messages.push(TronGetAddress::generated_message_descriptor_data());
             messages.push(TronAddress::generated_message_descriptor_data());
             messages.push(TronSignTx::generated_message_descriptor_data());
@@ -3720,6 +4414,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(TronFreezeBalanceV2Contract::generated_message_descriptor_data());
             messages.push(TronUnfreezeBalanceV2Contract::generated_message_descriptor_data());
             messages.push(TronWithdrawUnfreeze::generated_message_descriptor_data());
+            messages.push(TronDelegateResourceContract::generated_message_descriptor_data());
+            messages.push(TronUnDelegateResourceContract::generated_message_descriptor_data());
             messages.push(TronSignature::generated_message_descriptor_data());
             messages.push(TronRawTransaction::generated_message_descriptor_data());
             messages.push(tron_vote_witness_contract::TronVote::generated_message_descriptor_data());

@@ -387,7 +387,7 @@ impl FirmwareUI for UIEckhart {
 
     fn confirm_properties(
         title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
         verb: Option<TString<'static>>,
@@ -405,7 +405,7 @@ impl FirmwareUI for UIEckhart {
         .with_placement(LinearPlacement::vertical());
 
         let flow =
-            flow::new_confirm_with_menu(title, None, paragraphs, None, verb, hold, None, None)?;
+            flow::new_confirm_with_menu(title, subtitle, paragraphs, None, verb, hold, None, None)?;
         Ok(flow)
     }
 

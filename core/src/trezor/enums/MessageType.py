@@ -297,3 +297,5 @@ if not utils.BITCOIN_ONLY:
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    TronDelegateResourceContract = 2211
+    TronUnDelegateResourceContract = 2212

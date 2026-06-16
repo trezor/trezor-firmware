@@ -89,7 +89,7 @@ async def confirm_action_delegate(msg: EosActionDelegate) -> None:
 
     await _confirm_properties(
         "confirm_delegate",
-        TR.eos__delegate,
+        TR.words__delegate,
         props,
     )
 
@@ -108,7 +108,7 @@ async def confirm_action_sellram(msg: EosActionSellRam) -> None:
 async def confirm_action_undelegate(msg: EosActionUndelegate) -> None:
     await _confirm_properties(
         "confirm_undelegate",
-        TR.eos__undelegate,
+        TR.words__undelegate,
         (
             (TR.eos__sender, eos_name_to_string(msg.sender), True),
             (TR.eos__receiver, eos_name_to_string(msg.receiver), True),
@@ -162,7 +162,7 @@ async def confirm_action_voteproducer(msg: EosActionVoteProducer) -> None:
 
 async def confirm_action_transfer(msg: EosActionTransfer, account: str) -> None:
     props = [
-        (TR.eos__from, eos_name_to_string(msg.sender), True),
+        (TR.words__from_title, eos_name_to_string(msg.sender), True),
         (TR.eos__to, eos_name_to_string(msg.receiver), True),
         (TR.words__amount, eos_asset_to_string(msg.quantity), True),
         (TR.eos__contract, account, True),
