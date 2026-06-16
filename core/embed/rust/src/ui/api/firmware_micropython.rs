@@ -1525,7 +1525,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     prompt_screen: bool = False,
     ///     prompt_title: str | None = None,
     ///     external_menu: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
 
@@ -1537,7 +1537,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb: str | None = None,
     ///     info_button: bool = False,
     ///     chunkify: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm address."""
     Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
 
@@ -1548,7 +1548,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     sell_amount: str | None,
     ///     buy_amount: str,
     ///     back_button: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """A general way to confirm a "trade", which consists of
     ///     two amounts - one that is sold and what that is bought."""
     Qstr::MP_QSTR_confirm_trade => obj_fn_kw!(0, new_confirm_trade).as_obj(),
@@ -1670,7 +1670,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     button_style_confirm: bool = False,
     ///     hold: bool = False,
     ///     items: Iterable[tuple[StrOrBytes, bool]],
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm long content with the possibility to go back from any page.
     ///     Meant to be used with confirm_with_info on UI Bolt and Caesar."""
     Qstr::MP_QSTR_confirm_more => obj_fn_kw!(0, new_confirm_more).as_obj(),
@@ -1683,7 +1683,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     hold: bool = False,
     ///     verb: str | None = None,
     ///     external_menu: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
     ///     the value is to be rendered as binary with monospace font, False otherwise."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
@@ -1706,7 +1706,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb_cancel: str | None = None,
     ///     back_button: bool = False,
     ///     external_menu: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm summary of a transaction.
     ///
     ///     account_items and extra_items need to be:
@@ -1727,7 +1727,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb_info: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     external_menu: bool = False,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling. In Delizia, the button is placed in
     ///     context menu."""

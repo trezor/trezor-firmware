@@ -50,15 +50,14 @@ async def confirm_fido(
 async def confirm_fido_reset() -> bool:
     from trezor import TR
 
-    confirm = ui.Layout(
-        trezorui_api.confirm_action(
-            title=TR.fido__title_reset,
-            action=TR.fido__erase_credentials,
-            description=TR.words__really_wanna,
-            reverse=True,
-        )
-    )
-    return (await confirm.get_result()) is trezorui_api.CONFIRMED
+    with trezorui_api.confirm_action(
+        title=TR.fido__title_reset,
+        action=TR.fido__erase_credentials,
+        description=TR.words__really_wanna,
+        reverse=True,
+    ) as layout:
+        confirm = ui.Layout(layout)
+        return (await confirm.get_result()) is trezorui_api.CONFIRMED
 
 
 async def credential_warning(br_name: str, content: str) -> None:
