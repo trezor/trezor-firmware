@@ -1,7 +1,7 @@
 # Modular App Build & Test Toolkit
 
-This crate provides a robust workflow for building, testing, and analyzing modular applications—especially those targeting embedded hardware.  
-**Do not use pure Cargo for these tasks.**  
+This crate provides a robust workflow for building, testing, and analyzing modular applications—especially those targeting embedded hardware.
+**Do not use pure Cargo for these tasks.**
 Always use `cargo xtask ...` commands, as they create proper Cargo invocations and workflows, which can be quite complex.
 
 ---
@@ -12,10 +12,10 @@ Always use `cargo xtask ...` commands, as they create proper Cargo invocations a
 - **ARM binutils** (for cross-compilation)
 - **Python** (for test orchestration and result processing)
 
-> **Note:**  
+> **Note:**
 > While Nix is not a strict prerequisite, entering the provided Nix shell (`nix-shell`) will ensure all dependencies are available and correctly configured.
 
-Additionally, the environment includes **uv** for Python-related tasks.  
+Additionally, the environment includes **uv** for Python-related tasks.
 `uv` requires a `.venv` virtual environment to be created, but you do not need to activate it manually—`xtask` will call `uv run` commands as needed.
 
 ---
@@ -79,13 +79,13 @@ cargo xtask <command> [options]
 
 ## Common Arguments
 
-- `--project` (or `-p`): The workspace member (app) to build or test.  
+- `--project` (or `-p`): The workspace member (app) to build or test.
   **Note:** You should specify the application crate; do not build `xtask` itself.
 - `--model` (e.g., `t3w1`, `t3t1`): Model-specific translations/definitions (e.g., tokens)
 - `--lang`: Selects language for the binary
 - `--log-level`: Sets the log level for the built firmware (e.g., `error`, `warn`, `info`, `debug`, `trace`)
 - `--emulator`: Build or run for the emulator target instead of hardware
-- `--debug`: Enables debug symbols, custom panic handler, and error context chaining  
+- `--debug`: Enables debug symbols, custom panic handler, and error context chaining
   **Note:** This significantly increases binary size and is not recommended for hardware (may cause insufficient memory).
 
 ---
@@ -105,8 +105,8 @@ cargo xtask <command> [options]
 ```sh
 nix-shell
 cargo xtask build -p funnycoin --model t3w1 --lang en --log-level trace --emulator
-cargo xtask unit-tests -p funnycoin --model t3t1 --lang cs 
-cargo xtask clippy 
+cargo xtask unit-tests -p funnycoin --model t3t1 --lang cs
+cargo xtask clippy
 cargo xtask device-tests -p funnycoin -m t3w1
 cargo xtask py-style-check
 ```
