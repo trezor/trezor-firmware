@@ -657,7 +657,7 @@ secbool tropic_ensure_configuration(void) {
   return sectrue;
 }
 
-secbool tropic_get_configuration(uint8_t *batch_id, tropic_config_t *config) {
+secbool tropic_get_configuration(const uint8_t *batch_id, tropic_config_t *config) {
   uint8_t config_version = 0;
   // Find the version of config that belongs to the batch_id.
   // Version 0 is default.
