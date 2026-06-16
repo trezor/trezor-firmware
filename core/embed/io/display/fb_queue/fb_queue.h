@@ -19,12 +19,20 @@
 
 #pragma once
 
+// Pulled in for the board-provided FRAME_BUFFER_COUNT (via TREZOR_BOARD).
+// `fb_queue_t` embeds an array sized by FRAME_BUFFER_COUNT and is part of the
+// shared display driver state, so every translation unit must see the same
+// value - resolve it here rather than relying on include order.
+#include <trezor_bsp.h>
 #include <trezor_types.h>
 
 // Number of frame buffers used (1 or 2)
 // If 1 buffer is selected, some animations may not
 // be so smooth but the memory usage is lower.
+// Can be overridden per board/model in the board header.
+#ifndef FRAME_BUFFER_COUNT
 #define FRAME_BUFFER_COUNT 2
+#endif
 
 // Each frame buffer can be in one of the following states:
 typedef struct {
