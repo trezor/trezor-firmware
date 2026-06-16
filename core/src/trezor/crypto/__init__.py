@@ -16,6 +16,12 @@ try:
 except Exception:
     pass
 
+# SPHINCS+ is only compiled into the firmware on models with CKB (T3W1).
+try:
+    from trezorcrypto import sphincsplus  # noqa: F401
+except Exception:
+    pass
+
 from trezor import utils
 
 if not utils.BITCOIN_ONLY:
