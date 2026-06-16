@@ -63,7 +63,7 @@
 #define TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE 0xfffffffe
 
 static const uint8_t
-    TROPIC_BATCHES_TO_FIX[][LT_MEMBER_SIZE(lt_chip_id_t, batch_id)] = {
+    TROPIC_BATCHES_V1[][LT_MEMBER_SIZE(lt_chip_id_t, batch_id)] = {
         {0x19, 0x07, 0x11, 0x11, 0x07}, {0x19, 0x07, 0x1f, 0x0a, 0x04},
         {0x19, 0x08, 0x0b, 0x10, 0x09}, {0x19, 0x08, 0x13, 0x09, 0x2c},
         {0x19, 0x09, 0x10, 0x0b, 0x04}, {0x19, 0x0a, 0x08, 0x10, 0x10},
@@ -661,10 +661,10 @@ secbool tropic_get_configuration(const uint8_t *batch_id, tropic_config_t *confi
   // Find the version of config that belongs to the batch_id.
   // Version 0 is default.
   for (size_t i = 0;
-       i < sizeof(TROPIC_BATCHES_TO_FIX) / sizeof(TROPIC_BATCHES_TO_FIX[0]);
+       i < sizeof(TROPIC_BATCHES_V1) / sizeof(TROPIC_BATCHES_V1[0]);
        i++) {
-    if (memcmp(batch_id, TROPIC_BATCHES_TO_FIX[i],
-               sizeof(TROPIC_BATCHES_TO_FIX[0])) == 0) {
+    if (memcmp(batch_id, TROPIC_BATCHES_V1[i],
+               sizeof(TROPIC_BATCHES_V1[0])) == 0) {
       config_version = 1;
       break;
     }
