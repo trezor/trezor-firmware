@@ -28,6 +28,10 @@ const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_7_2;
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct TrezorAppLoad {
     // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.id)
+    pub id: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.version)
+    pub version: ::std::vec::Vec<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.hash)
     pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.size)
@@ -48,12 +52,48 @@ impl TrezorAppLoad {
         ::std::default::Default::default()
     }
 
-    // required bytes hash = 1;
+    // required string id = 1;
+
+    pub fn id(&self) -> &str {
+        match self.id.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_id(&mut self) {
+        self.id = ::std::option::Option::None;
+    }
+
+    pub fn has_id(&self) -> bool {
+        self.id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_id(&mut self, v: ::std::string::String) {
+        self.id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_id(&mut self) -> &mut ::std::string::String {
+        if self.id.is_none() {
+            self.id = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_id(&mut self) -> ::std::string::String {
+        self.id.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required bytes hash = 3;
 
     pub fn hash(&self) -> &[u8] {
         match self.hash.as_ref() {
             Some(v) => v,
-            None => &[],
+            None => b"",
         }
     }
 
@@ -84,7 +124,7 @@ impl TrezorAppLoad {
         self.hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // required uint32 size = 2;
+    // required uint32 size = 4;
 
     pub fn size(&self) -> u32 {
         self.size.unwrap_or(0)
@@ -104,8 +144,18 @@ impl TrezorAppLoad {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "id",
+            |m: &TrezorAppLoad| { &m.id },
+            |m: &mut TrezorAppLoad| { &mut m.id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "version",
+            |m: &TrezorAppLoad| { &m.version },
+            |m: &mut TrezorAppLoad| { &mut m.version },
+        ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "hash",
             |m: &TrezorAppLoad| { &m.hash },
@@ -128,6 +178,9 @@ impl ::protobuf::Message for TrezorAppLoad {
     const NAME: &'static str = "TrezorAppLoad";
 
     fn is_initialized(&self) -> bool {
+        if self.id.is_none() {
+            return false;
+        }
         if self.hash.is_none() {
             return false;
         }
@@ -141,9 +194,18 @@ impl ::protobuf::Message for TrezorAppLoad {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.hash = ::std::option::Option::Some(is.read_bytes()?);
+                    self.id = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    is.read_repeated_packed_uint32_into(&mut self.version)?;
                 },
                 16 => {
+                    self.version.push(is.read_uint32()?);
+                },
+                26 => {
+                    self.hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                32 => {
                     self.size = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 tag => {
@@ -158,11 +220,17 @@ impl ::protobuf::Message for TrezorAppLoad {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.id.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        for value in &self.version {
+            my_size += ::protobuf::rt::uint32_size(2, *value);
+        };
         if let Some(v) = self.hash.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
+            my_size += ::protobuf::rt::bytes_size(3, &v);
         }
         if let Some(v) = self.size {
-            my_size += ::protobuf::rt::uint32_size(2, v);
+            my_size += ::protobuf::rt::uint32_size(4, v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -170,11 +238,17 @@ impl ::protobuf::Message for TrezorAppLoad {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.id.as_ref() {
+            os.write_string(1, v)?;
+        }
+        for v in &self.version {
+            os.write_uint32(2, *v)?;
+        };
         if let Some(v) = self.hash.as_ref() {
-            os.write_bytes(1, v)?;
+            os.write_bytes(3, v)?;
         }
         if let Some(v) = self.size {
-            os.write_uint32(2, v)?;
+            os.write_uint32(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -193,6 +267,8 @@ impl ::protobuf::Message for TrezorAppLoad {
     }
 
     fn clear(&mut self) {
+        self.id = ::std::option::Option::None;
+        self.version.clear();
         self.hash = ::std::option::Option::None;
         self.size = ::std::option::Option::None;
         self.special_fields.clear();
@@ -200,6 +276,8 @@ impl ::protobuf::Message for TrezorAppLoad {
 
     fn default_instance() -> &'static TrezorAppLoad {
         static instance: TrezorAppLoad = TrezorAppLoad {
+            id: ::std::option::Option::None,
+            version: ::std::vec::Vec::new(),
             hash: ::std::option::Option::None,
             size: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
@@ -850,16 +928,17 @@ impl ::protobuf::reflect::ProtobufValue for TrezorAppResponse {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x18messages-trezorapp.proto\x12\x1dhw.trezor.messages.trezorapps\x1a\
-    \roptions.proto\"7\n\rTrezorAppLoad\x12\x12\n\x04hash\x18\x01\x20\x02(\
-    \x0cR\x04hash\x12\x12\n\x04size\x18\x02\x20\x02(\rR\x04size\"2\n\x0fTrez\
-    orAppLoaded\x12\x1f\n\x0binstance_id\x18\x01\x20\x02(\rR\ninstanceId\"f\
-    \n\x10TrezorAppMessage\x12\x1f\n\x0binstance_id\x18\x01\x20\x02(\rR\nins\
-    tanceId\x12\x1d\n\nmessage_id\x18\x02\x20\x02(\rR\tmessageId\x12\x12\n\
-    \x04data\x18\x03\x20\x02(\x0cR\x04data\"i\n\x11TrezorAppResponse\x12\x1d\
-    \n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\x12\x12\n\x04data\x18\x02\
-    \x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\x03\x20\x01(\x08:\x05false\
-    R\x08finishedB;\n#com.satoshilabs.trezor.lib.protobufB\x10MessageTrezorA\
-    pp\x80\xa6\x1d\x01\
+    \roptions.proto\"c\n\rTrezorAppLoad\x12\x0e\n\x02id\x18\x01\x20\x02(\tR\
+    \x02id\x12\x18\n\x07version\x18\x02\x20\x03(\rR\x07version\x12\x14\n\x04\
+    hash\x18\x03\x20\x02(\x0c:\0R\x04hash\x12\x12\n\x04size\x18\x04\x20\x02(\
+    \rR\x04size\"2\n\x0fTrezorAppLoaded\x12\x1f\n\x0binstance_id\x18\x01\x20\
+    \x02(\rR\ninstanceId\"f\n\x10TrezorAppMessage\x12\x1f\n\x0binstance_id\
+    \x18\x01\x20\x02(\rR\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\x02(\
+    \rR\tmessageId\x12\x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"i\n\x11T\
+    rezorAppResponse\x12\x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\
+    \x12\x12\n\x04data\x18\x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\
+    \x03\x20\x01(\x08:\x05falseR\x08finishedB;\n#com.satoshilabs.trezor.lib.\
+    protobufB\x10MessageTrezorApp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

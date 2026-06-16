@@ -9145,16 +9145,22 @@ class ThpPairedCacheEntry(protobuf.MessageType):
 class TrezorAppLoad(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9200
     FIELDS = {
-        1: protobuf.Field("hash", "bytes", repeated=False, required=True),
-        2: protobuf.Field("size", "uint32", repeated=False, required=True),
+        1: protobuf.Field("id", "string", repeated=False, required=True),
+        2: protobuf.Field("version", "uint32", repeated=True, required=False, default=None),
+        3: protobuf.Field("hash", "bytes", repeated=False, required=True),
+        4: protobuf.Field("size", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        id: "str",
         hash: "bytes",
         size: "int",
+        version: Optional[Sequence["int"]] = None,
     ) -> None:
+        self.version: Sequence["int"] = version if version is not None else []
+        self.id = id
         self.hash = hash
         self.size = size
 
