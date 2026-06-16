@@ -446,7 +446,7 @@ lt_ret_t lt_read_whole_R_config_retry(lt_handle_t *tropic_handle,
   // TODO: once the cfg_desc_table is made const and can be pulled without RAM
   // overflow, switch to using lt_read_whole_R_config() instead of this
   // implementation.
-  for (uint8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
+  for (size_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
     lt_ret_t ret = TROPIC_RETRY_COMMAND(lt_r_config_read(
         tropic_handle, TROPIC_CONFIG_ADDRS[i], &config->obj[i]));
     if (ret != LT_OK) {
@@ -464,7 +464,7 @@ static lt_ret_t lt_erase_and_write_R_config(lt_handle_t *tropic_handle,
     return ret;
   }
 
-  for (uint8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
+  for (size_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
     ret = TROPIC_RETRY_COMMAND(lt_r_config_write(
         tropic_handle, TROPIC_CONFIG_ADDRS[i], config->obj[i]));
     if (ret != LT_OK) {
@@ -520,7 +520,7 @@ static secbool tropic_ensure_i_config(
     if (to_flip == 0) {
       continue;
     }
-    for (uint8_t j = 0; j < 32; j++) {  // Tropic cfg objects are 32-bit
+    for (size_t j = 0; j < 32; j++) {  // Tropic cfg objects are 32-bit
       if (to_flip & BIT(j)) {
         if (TROPIC_RETRY_COMMAND(lt_i_config_write(
                 &drv->handle, TROPIC_CONFIG_ADDRS[i], j)) != LT_OK) {
