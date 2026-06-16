@@ -40,6 +40,7 @@ from .firmware_headers import (
     chunkify,
     format_container,
 )
+from .import util
 
 Ed25519Signature = bytes
 Ed25519PublicPoint = bytes
@@ -81,6 +82,9 @@ class TlvTable(SanityCheckedStruct):
         "length" / c.Int16ul,
         "entries" / c.FixedSized(c.this.length - 4, c.GreedyRange(TlvEntry.SUBCON)),
     )
+
+    def _update_length(self) -> None:
+        self.length = sum(len(entry.build()) for entry in self.entries) + 4
 
     def build(self) -> bytes:
         entries_len = sum(len(entry.build()) for entry in self.entries)
@@ -133,7 +137,10 @@ class NrfHeader(SanityCheckedStruct):
         "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int16ul, c.Int32ul),
         "_hdr_known_end" / c.Tell,
         "_trailing_data"
-        / c.Bytes(c.this.hdr_size - c.this._hdr_known_end + c.this._start_offset),
+        / c.Default(
+            c.Bytes(c.this.hdr_size - c.this._hdr_known_end + c.this._start_offset),
+            b"\x00" * (c.this.hdr_size - c.this._hdr_known_end + c.this._start_offset),
+        ),
     )
 
     @property
@@ -144,6 +151,45 @@ class NrfHeader(SanityCheckedStruct):
     def trailing_data(self, value: bytes):
         self._trailing_data = value
         self.hdr_size = len(self.build())
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        version: tuple[int, int, int, int],
+        header_size: int,
+        flags: int = 0,
+        padding_byte: bytes = b"\x00",
+    ) -> Self:
+        # explicitly build the subcon without providing trailing_data
+        header_empty = cls.SUBCON.build(
+            dict(
+                load_addr=0,
+                hdr_size=header_size,
+                protected_tlv_size=0,
+                img_size=0,
+                flags=flags,
+                version=version,
+            )
+        )
+        # re-parsing will pick out the default value
+        reparsed = cls.SUBCON.parse(header_empty)
+        assert reparsed is not None
+
+        # ...which we can use to figure out the correct length
+        padding_bytes = bytearray(padding_byte * len(reparsed["_trailing_data"]))
+        # XXX hack to get binary identical with imgtool:
+        padding_bytes[0:4] = b"\x00\x00\x00\x00"
+        return cls(
+            magic = IMAGE_MAGIC,
+            load_addr=0,
+            hdr_size=header_size,
+            protected_tlv_size=0,
+            img_size=0,
+            flags=flags,
+            version=version,
+            _trailing_data=bytes(padding_bytes),
+        )
 
 
 class NrfImage(SanityCheckedStruct):
@@ -177,6 +223,10 @@ class NrfImage(SanityCheckedStruct):
 
     def build(self) -> bytes:
         self.header.img_size = len(self.img_data)
+        self.header.protected_tlv_size = len(self.protected_tlv.build())
+        self._update_digest()
+        self.protected_tlv._update_length()
+        self.unprotected_tlv._update_length()
         return super().build()
 
     def _verify_integrity(self) -> None:
@@ -184,6 +234,9 @@ class NrfImage(SanityCheckedStruct):
         assert self.unprotected_tlv.magic == TlvTableType.UNPROTECTED
         assert len(self.protected_tlv.build()) == self.header.protected_tlv_size
         assert self.trailer == b""
+
+    def _update_digest(self) -> None:
+        self.unprotected_tlv[TlvType.SHA256] = self.digest()
 
     def digest(self) -> bytes:
         hasher = hashlib.sha256()
@@ -195,7 +248,7 @@ class NrfImage(SanityCheckedStruct):
 
     @property
     def model(self) -> fw_models.Model:
-        return fw_models.Model(self.protected_tlv[TlvType.TREZOR_MODEL])
+        return fw_models.Model(self.protected_tlv[TlvType.TREZOR_MODEL]) # Will this work as expected?
 
     @property
     def sigmask(self) -> int:
@@ -208,6 +261,7 @@ class NrfImage(SanityCheckedStruct):
 
     def insert_sigmask(self, sigmask: int) -> None:
         self.sigmask = sigmask
+        self._update_digest()
 
     def set_signatures(self, signatures: tuple[bytes, bytes]) -> None:
         self.unprotected_tlv[TlvType.SIGNATURE1] = signatures[0]
@@ -264,9 +318,11 @@ def _verify(
     selected_keys = [key for i, key in enumerate(keys) if sigmask & (1 << i)]
     if len(selected_keys) != 2:
         raise ValueError("Sigmask does not specify two keys.")
-    ed25519.checkvalid(signature_1, digest, selected_keys[0])
-    ed25519.checkvalid(signature_2, digest, selected_keys[1])
-
+    try:
+        ed25519.checkvalid(signature_1, digest, selected_keys[0])
+        ed25519.checkvalid(signature_2, digest, selected_keys[1])
+    except ed25519.SignatureMismatch as e:
+        raise util.InvalidSignatureError("Invalid signature") from e
 
 def _format_header(header: NrfHeader) -> str:
     header_dict = asdict(header)
