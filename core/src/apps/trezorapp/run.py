@@ -22,8 +22,6 @@ if TYPE_CHECKING:
     from trezorio import IpcMessage
     from typing import NoReturn
 
-_SYSTASK_ID_EXTAPP = const(2)
-
 _SERVICE_LIFECYCLE = const(0)
 _SERVICE_UI = const(1)
 _SERVICE_WIRE_START = const(2)
@@ -62,21 +60,23 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
     instance_ids = get_sessionless_cache().get(cc.APP_EXTAPP_IDS)
     if instance_ids is None:
         raise DataError(f"Invalid instance ID: {request.instance_id}")
-    task_id, instance_id = ustruct.unpack("<BI", instance_ids)
+    image_handle, instance_id = ustruct.unpack("<BI", instance_ids)
     if instance_id != request.instance_id:
         raise DataError(f"Invalid instance ID: {request.instance_id}")
 
-    task = app.AppTask(task_id)
-    if not task.is_running():
+    image = app.get_image_by_handle(image_handle)
+    if not image.is_running():
         raise DataError(f"Task not running: {request.instance_id}")
 
     def die(exception: Exception) -> NoReturn:
-        task.unload()
+        image.stop()  # TODO or image.delete ???
         raise exception
+
+    task_id = image.get_task_id()
 
     try:
         io.ipc_send(
-            _SYSTASK_ID_EXTAPP,
+            task_id,
             fn_id(_SERVICE_WIRE_START, request.message_id),
             request.data,
         )
@@ -86,16 +86,16 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
     progress_obj: ProgressLayout | None = None
 
     def request_callback(data: bytes, id: int = 0) -> None:
-        io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UTIL, id), data)
+        io.ipc_send(task_id, fn_id(_SERVICE_UTIL, id), data)
 
     def crypto_resp_cb(data: bytes) -> None:
-        io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_CRYPTO, 0), data)
+        io.ipc_send(task_id, fn_id(_SERVICE_CRYPTO, 0), data)
 
     def ui_resp_cb(data: bytes) -> None:
-        io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UI, 0), data)
+        io.ipc_send(task_id, fn_id(_SERVICE_UI, 0), data)
 
     while True:
-        if not task.is_running():
+        if not image.is_running():
             raise DataError(f"Task stopped: {request.instance_id}")
         try:
             msg: IpcMessage = await loop.wait(
@@ -221,7 +221,7 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
             io.ipc_send(
-                _SYSTASK_ID_EXTAPP,
+                task_id,
                 fn_id(_SERVICE_WIRE_CONTINUE, ack.message_id),
                 ack.data,
             )
@@ -271,7 +271,7 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
             # Serialize and send the result back
             try:
                 io.ipc_send(
-                    _SYSTASK_ID_EXTAPP,
+                    task_id,
                     fn_id(_SERVICE_PROGRESS, message_id),
                     b"",
                 )
@@ -292,7 +292,7 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
             io.ipc_send(
-                _SYSTASK_ID_EXTAPP,
+                task_id,
                 fn_id(_SERVICE_WIRE_START, ack.message_id),
                 ack.data,
             )

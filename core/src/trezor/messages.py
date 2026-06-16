@@ -7217,14 +7217,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class TrezorAppLoad(protobuf.MessageType):
+        id: "str"
+        version: "list[int]"
         hash: "AnyBytes"
         size: "int"
 
         def __init__(
             self,
             *,
+            id: "str",
             hash: "AnyBytes",
             size: "int",
+            version: "list[int] | None" = None,
         ) -> None:
             pass
 

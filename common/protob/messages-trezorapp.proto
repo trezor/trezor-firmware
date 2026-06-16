@@ -21,10 +21,14 @@ option (include_in_bitcoin_only) = true;
  * @next DataChunkRequest
  */
 message TrezorAppLoad {
-    /// Hash of the app to load
-    required bytes hash = 1;
+    // Application id
+    required string id = 1;
+    // Minimal required version
+    repeated uint32 version = 2;
+    /// Hash of the app to load (optional)
+    required bytes hash = 3 [default = ''];
     /// Size of the app to load
-    required uint32 size = 2;
+    required uint32 size = 4;
 }
 
 /**
