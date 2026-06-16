@@ -105,7 +105,7 @@ void display_deinit(display_content_mode_t mode) {
   // Ensure that the ready frame buffer is transferred to
   // the display controller
   display_ensure_refreshed();
-#ifdef FRAMEBUFFER
+#if defined(FRAMEBUFFER) && defined(DISPLAY_TE_INTERRUPT_NUM)
   // Disable periodical interrupt
   NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 #endif

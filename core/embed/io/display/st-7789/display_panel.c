@@ -192,13 +192,15 @@ void display_panel_preserve_inversion(void) { t2t1_preserve_inversion(); }
 #endif
 
 void display_panel_init(void) {
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
+  HAL_GPIO_WritePin(DISPLAY_RST_PORT, DISPLAY_RST_PIN,
+                    GPIO_PIN_RESET);  // LCD_RST
   // wait 10 milliseconds. only needs to be low for 10 microseconds.
   // my dev display module ties display reset and touch panel reset together.
   // keeping this low for max(display_reset_time, ctpm_reset_time) aids
   // development and does not hurt.
   HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);  // LCD_RST/PC14
+  HAL_GPIO_WritePin(DISPLAY_RST_PORT, DISPLAY_RST_PIN,
+                    GPIO_PIN_SET);  // LCD_RST
   // max wait time for hardware reset is 120 milliseconds
   // (experienced display flakiness using only 5ms wait before sending commands)
   HAL_Delay(120);

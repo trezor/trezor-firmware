@@ -126,25 +126,13 @@ void display_fb_clear(void) {
 
 #ifndef BOARDLOADER
 
-// Callback called when the background copying is done
-// It's called from the IRQ context
-static void bg_copy_callback(void) {
+static void bg_copy_callback(void);
+
+// Starts copying the next ready frame buffer to the display, if one is queued
+// and no copy is already in progress. Called from an IRQ context or with
+// interrupts locked.
+static void start_fb_copy(void) {
   display_driver_t *drv = &g_display_driver;
-
-  drv->update_pending = 2;
-
-  fb_queue_put(&drv->empty_frames, fb_queue_take(&drv->ready_frames));
-}
-
-// Interrupt routing handling TE signal
-static void display_te_interrupt_handler(void) {
-  display_driver_t *drv = &g_display_driver;
-
-  __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
-
-  if (drv->update_pending > 0) {
-    drv->update_pending--;
-  }
 
   if (!fb_queue_peeked(&drv->ready_frames)) {
     int16_t fb_idx = fb_queue_peek(&drv->ready_frames);
@@ -158,6 +146,36 @@ static void display_te_interrupt_handler(void) {
   }
 }
 
+// Callback called when the background copying is done
+// It's called from the IRQ context
+static void bg_copy_callback(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  fb_queue_put(&drv->empty_frames, fb_queue_take(&drv->ready_frames));
+
+#ifdef DISPLAY_TE_PIN
+  drv->update_pending = 2;
+#else
+  // Without a tearing-effect signal, copies are not retriggered by the TE
+  // interrupt, so chain directly to the next queued frame (if any).
+  start_fb_copy();
+#endif
+}
+
+#ifdef DISPLAY_TE_PIN
+// Interrupt routing handling TE signal
+static void display_te_interrupt_handler(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+
+  if (drv->update_pending > 0) {
+    drv->update_pending--;
+  }
+
+  start_fb_copy();
+}
+
 void DISPLAY_TE_INTERRUPT_HANDLER(void) {
   IRQ_LOG_ENTER();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
@@ -165,6 +183,7 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
   mpu_restore(mpu_mode);
   IRQ_LOG_EXIT();
 }
+#endif
 #endif
 
 bool display_get_frame_buffer(display_fb_info_t *fb) {
@@ -205,6 +224,7 @@ static void copy_fb_to_display(uint8_t index) {
   mpu_set_active_fb(NULL, 0);
 }
 
+#ifdef DISPLAY_TE_PIN
 static void wait_for_te_signal(void) {
   // sync with the panel refresh
   while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
@@ -212,6 +232,7 @@ static void wait_for_te_signal(void) {
   while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
   }
 }
+#endif
 #endif
 
 void display_refresh(void) {
@@ -234,8 +255,18 @@ void display_refresh(void) {
   // Mark the buffer ready to switch to
   fb_queue_put(&drv->ready_frames, fb_queue_take(&drv->empty_frames));
 
+#ifndef DISPLAY_TE_PIN
+  // Without a tearing-effect signal there is no interrupt to trigger the
+  // copy, so kick it off here (no-op if a copy is already in progress).
+  irq_key_t irq_key = irq_lock();
+  start_fb_copy();
+  irq_unlock(irq_key);
+#endif
+
 #else  // BOARDLOADER
+#ifdef DISPLAY_TE_PIN
   wait_for_te_signal();
+#endif
   int16_t fb_idx = fb_queue_take(&drv->empty_frames);
   if (fb_idx >= 0) {
     copy_fb_to_display(fb_idx);
