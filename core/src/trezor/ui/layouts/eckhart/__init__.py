@@ -35,7 +35,7 @@ BACK = trezorui_api.BACK
 INFO = trezorui_api.INFO
 
 
-def confirm_action(
+async def confirm_action(
     br_name: str,
     title: str,
     action: str | None = None,
@@ -51,28 +51,29 @@ def confirm_action(
     br_code: ButtonRequestType = BR_CODE_OTHER,
     prompt_screen: bool = False,
     prompt_title: str | None = None,
-) -> Awaitable[None]:
+) -> None:
     if description is not None and description_param is not None:
         description = description.format(description_param)
 
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_action(
-            title=title,
-            action=action,
-            description=description,
-            subtitle=subtitle,
-            verb=verb,
-            verb_cancel=verb_cancel,
-            hold=hold,
-            hold_danger=hold_danger,
-            reverse=reverse,
-            prompt_screen=prompt_screen,
-            prompt_title=prompt_title or title,
-        ),
-        br_name,
-        br_code,
-        exc,
-    )
+    with trezorui_api.confirm_action(
+        title=title,
+        action=action,
+        description=description,
+        subtitle=subtitle,
+        verb=verb,
+        verb_cancel=verb_cancel,
+        hold=hold,
+        hold_danger=hold_danger,
+        reverse=reverse,
+        prompt_screen=prompt_screen,
+        prompt_title=prompt_title or title,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            br_name,
+            br_code,
+            exc,
+        )
 
 
 async def confirm_reset_device(recovery: bool = False) -> None:
@@ -885,7 +886,7 @@ async def confirm_value(
         )
 
 
-def confirm_properties(
+async def confirm_properties(
     br_name: str,
     title: str,
     props: Iterable[PropertyType],
@@ -893,24 +894,25 @@ def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
-) -> Awaitable[None]:
+) -> None:
 
     if subtitle:
         title += ": " + subtitle
 
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_properties(
-            title=title,
-            items=list(props),
-            hold=hold,
-            verb=verb,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.confirm_properties(
+        title=title,
+        items=list(props),
+        hold=hold,
+        verb=verb,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            br_name,
+            br_code,
+        )
 
 
-def confirm_total(
+async def confirm_total(
     total_amount: str | None,
     fee_amount: str,
     title: str | None = None,
@@ -922,30 +924,31 @@ def confirm_total(
     back_button: bool = False,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
-) -> Awaitable[ui.UiResult]:
+) -> ui.UiResult:
     title = title or TR.words__send  # def_arg
     total_label = total_label or TR.send__total_amount  # def_arg
     fee_label = fee_label or TR.send__incl_transaction_fee  # def_arg
 
-    return interact(
-        trezorui_api.confirm_summary(
-            amount=total_amount,
-            amount_label=total_label,
-            fee=fee_amount,
-            fee_label=fee_label,
-            title=title,
-            account_title=account_title,
-            account_items=account_items,
-            extra_items=fee_items,
-            extra_title=TR.confirm_total__title_fee,
-            back_button=back_button,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.confirm_summary(
+        amount=total_amount,
+        amount_label=total_label,
+        fee=fee_amount,
+        fee_label=fee_label,
+        title=title,
+        account_title=account_title,
+        account_items=account_items,
+        extra_items=fee_items,
+        extra_title=TR.confirm_total__title_fee,
+        back_button=back_button,
+    ) as layout:
+        return await interact(
+            layout,
+            br_name,
+            br_code,
+        )
 
 
-def _confirm_summary(
+async def _confirm_summary(
     amount: str | None,
     amount_label: str | None,
     fee: str,
@@ -958,36 +961,37 @@ def _confirm_summary(
     back_button: bool = False,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
-) -> Awaitable[None]:
+) -> None:
     title = title or TR.words__send  # def_arg
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_summary(
-            amount=amount,
-            amount_label=amount_label,
-            fee=fee,
-            fee_label=fee_label,
-            title=title,
-            account_items=list(account_items) if account_items else None,
-            account_title=account_title,
-            extra_items=list(extra_items) if extra_items else None,
-            extra_title=extra_title or None,
-            back_button=back_button,
-        ),
-        br_name,
-        br_code,
-    )
+    with trezorui_api.confirm_summary(
+        amount=amount,
+        amount_label=amount_label,
+        fee=fee,
+        fee_label=fee_label,
+        title=title,
+        account_items=list(account_items) if account_items else None,
+        account_title=account_title,
+        extra_items=list(extra_items) if extra_items else None,
+        extra_title=extra_title or None,
+        back_button=back_button,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            br_name,
+            br_code,
+        )
 
 
-def confirm_trade(
+async def confirm_trade(
     title: str,
     subtitle: str,
     trade: Trade,
     extra_menu_items: list[tuple[str, str]],
     back_button: bool,
-) -> Awaitable[ui.UiResult]:
+) -> ui.UiResult:
     from trezor.ui.layouts.menu import Menu, interact_with_menu
 
-    trade_layout = trezorui_api.confirm_trade(
+    trade_ctx = trezorui_api.confirm_trade(
         title=title,
         subtitle=subtitle,
         sell_amount=trade.sell_amount,
@@ -1007,7 +1011,8 @@ def confirm_trade(
         menu_items.append(create_details(k, v))
     menu = Menu.root(menu_items, TR.send__cancel_sign)
 
-    return interact_with_menu(trade_layout, menu, "confirm_trade")
+    with trade_ctx as trade_layout:
+        return await interact_with_menu(trade_layout, menu, "confirm_trade")
 
 
 if not utils.BITCOIN_ONLY:
@@ -1304,17 +1309,18 @@ if not utils.BITCOIN_ONLY:
             TR.ethereum__confirm_contract,
             properties,
         )
-        await raise_if_not_confirmed(
-            trezorui_api.confirm_summary(
-                amount=None,
-                amount_label=None,
-                fee=maximum_fee,
-                fee_label=TR.send__maximum_fee,
-                extra_items=None,
-                extra_title=None,
-            ),
-            br_name="confirm_ethereum_tx",
-        )
+        with trezorui_api.confirm_summary(
+            amount=None,
+            amount_label=None,
+            fee=maximum_fee,
+            fee_label=TR.send__maximum_fee,
+            extra_items=None,
+            extra_title=None,
+        ) as layout:
+            await raise_if_not_confirmed(
+                layout,
+                br_name="confirm_ethereum_tx",
+            )
 
     async def confirm_ethereum_vault_tx(
         title: str,
@@ -1346,76 +1352,92 @@ if not utils.BITCOIN_ONLY:
                 )
             )
 
-        steps = [
-            lambda: interact_with_menu(
-                trezorui_api.confirm_action(
-                    title=title,
-                    action=intro_question,
-                    description=None,
-                    external_menu=True,
-                    cancel=False,
-                ),
-                Menu.root(menu_items, TR.send__cancel_sign),
-                f"{br_name}/intro",
-                br_code,
-            ),
-            lambda: interact_with_menu(
-                trezorui_api.confirm_with_info(
-                    title=title,
-                    subtitle=verb,
-                    items=[(vault_str, True)],
-                    verb=TR.buttons__continue,
-                ),
-                Menu.root(menu_items, TR.send__cancel_sign),
-                f"{br_name}/vault_name",
-                br_code,
-            ),
-            lambda: interact_with_menu(
-                trezorui_api.confirm_properties(
-                    title=title,
-                    items=[
-                        (amount_label, amount, False),
-                        (TR.words__chain, chain, False),
-                    ],
-                    hold=False,
-                    verb=TR.buttons__continue,
-                ),
-                Menu.root(menu_items, TR.send__cancel_sign),
-                f"{br_name}/amount",
-                br_code,
-            ),
-        ]
-        if extra_data is not None:
-            steps.append(
-                lambda: interact_with_menu(
-                    trezorui_api.confirm_properties(
-                        title=title,
-                        items=[(TR.ethereum__calldata_suffix, extra_data, True)],
-                        hold=False,
-                        verb=TR.buttons__continue,
-                    ),
+        async def _step1() -> trezorui_api.UiResult:
+            with trezorui_api.confirm_action(
+                title=title,
+                action=intro_question,
+                description=None,
+                external_menu=True,
+                cancel=False,
+            ) as layout:
+                return await interact_with_menu(
+                    layout,
                     Menu.root(menu_items, TR.send__cancel_sign),
-                    f"{br_name}/extra_data",
+                    f"{br_name}/intro",
                     br_code,
                 )
-            )
-        steps.append(
-            lambda: interact_with_menu(
-                trezorui_api.confirm_summary(
-                    amount=None,
-                    amount_label=None,
-                    fee=maximum_fee,
-                    fee_label=TR.send__maximum_fee,
-                    extra_title=TR.confirm_total__title_fee,
-                    extra_items=list(info_items),
+
+        async def _step2() -> trezorui_api.UiResult:
+            with trezorui_api.confirm_with_info(
+                title=title,
+                subtitle=verb,
+                items=[(vault_str, True)],
+                verb=TR.buttons__continue,
+            ) as layout:
+                return await interact_with_menu(
+                    layout,
+                    Menu.root(menu_items, TR.send__cancel_sign),
+                    f"{br_name}/vault_name",
+                    br_code,
+                )
+
+        async def _step3() -> trezorui_api.UiResult:
+            with trezorui_api.confirm_properties(
+                title=title,
+                items=[
+                    (amount_label, amount, False),
+                    (TR.words__chain, chain, False),
+                ],
+                hold=False,
+                verb=TR.buttons__continue,
+            ) as layout:
+                return await interact_with_menu(
+                    layout,
+                    Menu.root(menu_items, TR.send__cancel_sign),
+                    f"{br_name}/amount",
+                    br_code,
+                )
+
+        steps = [_step1, _step2, _step3]
+
+        if extra_data is not None:
+
+            async def _step4() -> trezorui_api.UiResult:
+                with trezorui_api.confirm_properties(
                     title=title,
-                    back_button=False,
-                ),
-                Menu.root(menu_items, TR.send__cancel_sign),
-                f"{br_name}/summary",
-                br_code,
-            )
-        )
+                    items=[(TR.ethereum__calldata_suffix, extra_data, True)],
+                    hold=False,
+                    verb=TR.buttons__continue,
+                ) as layout:
+                    return await interact_with_menu(
+                        layout,
+                        Menu.root(menu_items, TR.send__cancel_sign),
+                        f"{br_name}/extra_data",
+                        br_code,
+                    )
+
+            steps.append(_step4)
+
+        async def _step5() -> trezorui_api.UiResult:
+            with trezorui_api.confirm_summary(
+                amount=None,
+                amount_label=None,
+                fee=maximum_fee,
+                fee_label=TR.send__maximum_fee,
+                extra_title=TR.confirm_total__title_fee,
+                extra_items=list(info_items),
+                title=title,
+                back_button=False,
+            ) as layout:
+                return await interact_with_menu(
+                    layout,
+                    Menu.root(menu_items, TR.send__cancel_sign),
+                    f"{br_name}/summary",
+                    br_code,
+                )
+
+        steps.append(_step5)
+
         await confirm_linear_flow(*steps)
 
     async def confirm_ethereum_vault_claim(
@@ -1443,48 +1465,57 @@ if not utils.BITCOIN_ONLY:
                     subtitle=TR.send__send_from,
                 )
             )
-        await confirm_linear_flow(
-            lambda: interact_with_menu(
-                trezorui_api.confirm_action(
-                    title=title,
-                    action=intro_question,
-                    description=None,
-                    external_menu=True,
-                    cancel=False,
-                ),
-                Menu.root(menu_items, TR.send__cancel_sign),
-                f"{br_name}/intro",
-                br_code,
-            ),
-            lambda: interact_with_menu(
-                trezorui_api.confirm_properties(
-                    title=title,
-                    items=[
-                        (TR.ethereum__reward_tokens, token_list, False),
-                    ],
-                    hold=False,
-                    verb=TR.buttons__continue,
-                ),
-                Menu.root(menu_items, TR.send__cancel_sign),
-                f"{br_name}/tokens",
-                br_code,
-            ),
-            lambda: interact_with_menu(
-                trezorui_api.confirm_summary(
-                    amount=None,
-                    amount_label=None,
-                    fee=maximum_fee,
-                    fee_label=TR.send__maximum_fee,
-                    extra_title=TR.confirm_total__title_fee,
-                    extra_items=list(info_items),
-                    title=title,
-                    back_button=False,
-                ),
-                Menu.root(menu_items, TR.send__cancel_sign),
-                f"{br_name}/summary",
-                br_code,
-            ),
-        )
+
+        async def _step1() -> trezorui_api.UiResult:
+            with trezorui_api.confirm_action(
+                title=title,
+                action=intro_question,
+                description=None,
+                external_menu=True,
+                cancel=False,
+            ) as layout:
+                return await interact_with_menu(
+                    layout,
+                    Menu.root(menu_items, TR.send__cancel_sign),
+                    f"{br_name}/intro",
+                    br_code,
+                )
+
+        async def _step2() -> trezorui_api.UiResult:
+            with trezorui_api.confirm_properties(
+                title=title,
+                items=[
+                    (TR.ethereum__reward_tokens, token_list, False),
+                ],
+                hold=False,
+                verb=TR.buttons__continue,
+            ) as layout:
+                return await interact_with_menu(
+                    layout,
+                    Menu.root(menu_items, TR.send__cancel_sign),
+                    f"{br_name}/tokens",
+                    br_code,
+                )
+
+        async def _step3() -> trezorui_api.UiResult:
+            with trezorui_api.confirm_summary(
+                amount=None,
+                amount_label=None,
+                fee=maximum_fee,
+                fee_label=TR.send__maximum_fee,
+                extra_title=TR.confirm_total__title_fee,
+                extra_items=list(info_items),
+                title=title,
+                back_button=False,
+            ) as layout:
+                return await interact_with_menu(
+                    layout,
+                    Menu.root(menu_items, TR.send__cancel_sign),
+                    f"{br_name}/summary",
+                    br_code,
+                )
+
+        await confirm_linear_flow(_step1, _step2, _step3)
 
     async def confirm_ethereum_staking_tx(
         title: str,
@@ -1966,16 +1997,17 @@ if not utils.BITCOIN_ONLY:
             item_list.append((TR.words__address, address, True))
             item_list.append((f"\n{TR.words__votes}", f"{vote_count}", False))
 
-        await raise_if_not_confirmed(
-            trezorui_api.confirm_properties(
-                title=TR.words__review,
-                subtitle=TR.words__voting,
-                items=item_list,
-                hold=True,
-            ),
-            br_name="tron/vote",
-            br_code=ButtonRequestType.SignTx,
-        )
+        with trezorui_api.confirm_properties(
+            title=TR.words__review,
+            subtitle=TR.words__voting,
+            items=item_list,
+            hold=True,
+        ) as layout:
+            await raise_if_not_confirmed(
+                layout,
+                br_name="tron/vote",
+                br_code=ButtonRequestType.SignTx,
+            )
 
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:

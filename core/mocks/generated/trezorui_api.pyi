@@ -148,7 +148,7 @@ def confirm_action(
     prompt_screen: bool = False,
     prompt_title: str | None = None,
     external_menu: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm action."""
 
 
@@ -161,7 +161,7 @@ def confirm_address(
     verb: str | None = None,
     info_button: bool = False,
     chunkify: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm address."""
 
 
@@ -173,7 +173,7 @@ def confirm_trade(
     sell_amount: str | None,
     buy_amount: str,
     back_button: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """A general way to confirm a "trade", which consists of
     two amounts - one that is sold and what that is bought."""
 
@@ -304,7 +304,7 @@ def confirm_more(
     button_style_confirm: bool = False,
     hold: bool = False,
     items: Iterable[tuple[StrOrBytes, bool]],
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm long content with the possibility to go back from any page.
     Meant to be used with confirm_with_info on UI Bolt and Caesar."""
 
@@ -318,7 +318,7 @@ def confirm_properties(
     hold: bool = False,
     verb: str | None = None,
     external_menu: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
     the value is to be rendered as binary with monospace font, False otherwise."""
 
@@ -343,7 +343,7 @@ def confirm_summary(
     verb_cancel: str | None = None,
     back_button: bool = False,
     external_menu: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm summary of a transaction.
     account_items and extra_items need to be:
      * a list (on Eckhart and Caesar)
@@ -363,7 +363,7 @@ def confirm_with_info(
     verb_info: str | None = None,
     verb_cancel: str | None = None,
     external_menu: bool = False,
-) -> LayoutObj[UiResult]:
+) -> LayoutContext[UiResult]:
     """Confirm given items but with third button. Always single page
     without scrolling. In Delizia, the button is placed in
     context menu."""
