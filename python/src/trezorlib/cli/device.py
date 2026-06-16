@@ -231,7 +231,13 @@ def recover(
 
 
 @cli.command()
-@click.option("-t", "--strength", type=click.Choice(["128", "192", "256"]))
+@click.option(
+    "-t",
+    "--strength",
+    type=click.Choice(["128", "192", "256", "384", "576", "768"]),
+    help="Entropy strength in bits. 384/576/768 generate extended BIP-39 "
+    "mnemonics (36/54/72 words) required by SPHINCS+ post-quantum signing.",
+)
 @click.option("-r", "--passphrase-protection", is_flag=True)
 @click.option("-p", "--pin-protection", is_flag=True)
 @click.option("-l", "--label")

@@ -250,8 +250,28 @@ def _seed_from_entropy(
     strength: int,
     backup_type: messages.BackupType,
 ) -> bytes:
-    entropy = hashlib.sha256(internal_entropy + external_entropy).digest()
-    secret = entropy[: strength // 8]
+    strength_bytes = strength // 8
+
+    if strength_bytes <= 32:
+        entropy = hashlib.sha256(internal_entropy + external_entropy).digest()
+        secret = entropy[:strength_bytes]
+    else:
+        # Extended (384/576/768): 3 sub-secrets, each from its own internal-
+        # entropy slice + domain separator. Must match the firmware's
+        # reset_device._compute_secret_from_entropy so host and device agree.
+        if len(internal_entropy) != strength_bytes:
+            raise ValueError(
+                "internal_entropy length must match strength for extended"
+            )
+        sub_strength = strength_bytes // 3
+        parts = []
+        for i in range(3):
+            sub_int = internal_entropy[i * sub_strength : (i + 1) * sub_strength]
+            ehash = hashlib.sha256(
+                sub_int + external_entropy + bytes([i])
+            ).digest()
+            parts.append(ehash[:sub_strength])
+        secret = b"".join(parts)
 
     if len(secret) * 8 != strength:
         raise ValueError("Entropy length mismatch")
@@ -260,7 +280,17 @@ def _seed_from_entropy(
         import mnemonic
 
         bip39 = mnemonic.Mnemonic("english")
-        words = bip39.to_mnemonic(secret)
+        if strength_bytes <= 32:
+            words = bip39.to_mnemonic(secret)
+        else:
+            # Extended mnemonic: 3 concatenated standard BIP-39 phrases
+            sub_len = strength_bytes // 3
+            sub_phrases = []
+            for i in range(3):
+                sub_phrases.append(
+                    bip39.to_mnemonic(secret[i * sub_len : (i + 1) * sub_len])
+                )
+            words = " ".join(sub_phrases)
         seed = bip39.to_seed(words, passphrase="")
     elif is_slip39_backup_type(backup_type):
         import shamir_mnemonic
