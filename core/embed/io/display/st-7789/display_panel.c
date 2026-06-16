@@ -32,6 +32,11 @@
 #define PANEL_INIT_SEQ lx154a2482_init_seq
 #define PANEL_ROTATE lx154a2482_rotate
 #define PANEL_REINIT lx154a2482_init_seq
+#elif defined(DISPLAY_PANEL_DEM240320B1)
+#include "panels/dem240320b1.h"
+#define PANEL_INIT_SEQ dem240320b1_init_seq
+#define PANEL_ROTATE dem240320b1_rotate
+#define PANEL_REINIT dem240320b1_init_seq
 #elif defined(DISPLAY_PANEL_LHS200KB_IF21)
 #include "panels/lhs200kb-if21.h"
 #define PANEL_INIT_SEQ lhs200kb_if21_init_seq
