@@ -672,7 +672,7 @@ secbool tropic_get_configuration(uint8_t *batch_id, tropic_config_t *config) {
   }
 
   // return the config with the corresponding version.
-  for (size_t i = 0; i < tropic_number_of_config_versions; i++) {
+  for (size_t i = 0; i < tropic_config_count; i++) {
     if (tropic_configs[i].version == config_version) {
       *config = tropic_configs[i];
       return sectrue;

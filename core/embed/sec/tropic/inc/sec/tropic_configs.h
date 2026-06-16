@@ -27,5 +27,5 @@ typedef struct {
   struct lt_config_t reversible;
 } tropic_config_t;
 
-extern const size_t tropic_number_of_config_versions;
+extern const size_t tropic_config_count;
 extern const tropic_config_t tropic_configs[];

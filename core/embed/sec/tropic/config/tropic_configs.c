@@ -161,5 +161,5 @@ const tropic_config_t tropic_configs[] = {
 };
 // clang-format on
 
-const size_t tropic_number_of_config_versions =
+const size_t tropic_config_count =
     sizeof(tropic_configs) / sizeof(tropic_configs[0]);
