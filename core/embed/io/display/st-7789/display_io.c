@@ -38,18 +38,31 @@ void display_io_init_gpio(void) {
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
 
   GPIO_InitTypeDef GPIO_InitStructure;
 
-  // LCD_RST/PC14
+#ifdef DISPLAY_PWR_PIN
+  // Enable the display power supply (load switch) before reset
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Alternate = 0;
-  GPIO_InitStructure.Pin = GPIO_PIN_14;
+  GPIO_InitStructure.Pin = DISPLAY_PWR_PIN;
+  HAL_GPIO_WritePin(DISPLAY_PWR_PORT, DISPLAY_PWR_PIN, GPIO_PIN_SET);
+  HAL_GPIO_Init(DISPLAY_PWR_PORT, &GPIO_InitStructure);
+#endif
+
+  // LCD_RST
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Alternate = 0;
+  GPIO_InitStructure.Pin = DISPLAY_RST_PIN;
   // default to keeping display in reset
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+  HAL_GPIO_WritePin(DISPLAY_RST_PORT, DISPLAY_RST_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(DISPLAY_RST_PORT, &GPIO_InitStructure);
 
 #ifdef DISPLAY_TE_PIN
   // LCD_FMARK (tearing effect)
@@ -65,8 +78,11 @@ void display_io_init_gpio(void) {
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStructure.Alternate = GPIO_AF12_FMC;
-  //                       LCD_CS/PD7   LCD_RS/PD11   LCD_RD/PD4   LCD_WR/PD5
-  GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_11 | GPIO_PIN_4 | GPIO_PIN_5;
+  // LCD_RS / D/C
+  GPIO_InitStructure.Pin = DISPLAY_DC_PIN;
+  HAL_GPIO_Init(DISPLAY_DC_PORT, &GPIO_InitStructure);
+  //                       LCD_CS/PD7   LCD_RD/PD4   LCD_WR/PD5
+  GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_4 | GPIO_PIN_5;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
   //                       LCD_D0/PD14   LCD_D1/PD15   LCD_D2/PD0   LCD_D3/PD1
   GPIO_InitStructure.Pin = GPIO_PIN_14 | GPIO_PIN_15 | GPIO_PIN_0 | GPIO_PIN_1;
@@ -135,8 +151,8 @@ void display_io_init_fmc(void) {
   mpu_restore(mpu_mode);
 }
 
-#ifdef DISPLAY_TE_INTERRUPT_HANDLER
 void display_io_init_te_interrupt(void) {
+#ifdef DISPLAY_TE_INTERRUPT_HANDLER
   EXTI_HandleTypeDef EXTI_Handle = {0};
   EXTI_ConfigTypeDef EXTI_Config = {0};
   EXTI_Config.GPIOSel = DISPLAY_TE_INTERRUPT_GPIOSEL;
@@ -148,7 +164,7 @@ void display_io_init_te_interrupt(void) {
   // setup interrupt for tearing effect pin
   NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-}
 #endif
+}
 
 #endif  // KERNEL_MODE

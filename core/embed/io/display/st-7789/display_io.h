@@ -31,8 +31,17 @@ void display_io_init_te_interrupt(void);
 #define FMC_BANK1 0x60000000U
 #endif
 
+// The board header must provide the display reset and data/command (RS) pins.
+// DISPLAY_DC_PORT/PIN is the GPIO routed to an FMC address line and
+// DISPLAY_MEMORY_PIN selects which external FMC address line (A<n>) drives D/C.
+#if !defined(DISPLAY_RST_PORT) || !defined(DISPLAY_RST_PIN) || \
+    !defined(DISPLAY_DC_PORT) || !defined(DISPLAY_DC_PIN) ||   \
+    !defined(DISPLAY_MEMORY_PIN)
+#error \
+    "Board header must define DISPLAY_RST_PORT/PIN, DISPLAY_DC_PORT/PIN and DISPLAY_MEMORY_PIN"
+#endif
+
 #define DISPLAY_MEMORY_BASE FMC_BANK1
-#define DISPLAY_MEMORY_PIN 16
 
 #ifdef DISPLAY_I8080_16BIT_DW
 #define DISPLAY_ADDR_SHIFT 2
