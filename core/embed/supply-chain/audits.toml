@@ -12,6 +12,12 @@ criteria = "safe-to-deploy"
 version = "1.2.1"
 notes = "Reviewed at 1.2.0; 1.2.1 diff treated as equivalent."
 
+[[audits.trezor-noise-protocol]]
+who = "Martin Milata <martin@martinmilata.cz>"
+criteria = "safe-to-deploy"
+version = "0.2.1"
+notes = "I am the maintainer of the crate, which is a fork based on noise-protocol-0.2.0. I am not a cryptography expert. The original crate has no unsafe code, nor filesystem or network access. It closely follows the structure of the Noise Protocol Framework specification."
+
 [[audits.ufmt-write]]
 who = "matejcik <ja@matejcik.cz>"
 criteria = "safe-to-deploy"
@@ -21,6 +27,12 @@ version = "0.1.0"
 who = ["matejcik <ja@matejcik.cz>", "Martin Milata <martin@martinmilata.cz>"]
 criteria = "safe-to-deploy"
 version = "1.8.2"
+
+[[audits.zeroize_derive]]
+who = "Martin Milata <martin@martinmilata.cz>"
+criteria = "safe-to-deploy"
+delta = "1.4.2 -> 1.4.3"
+notes = "There are no semantic changes, only formatting and metadata."
 
 [[trusted.regex]]
 criteria = "safe-to-deploy"
