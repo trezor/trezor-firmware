@@ -23,7 +23,6 @@
 #include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
-
 #include <sys/systick.h>
 
 #include "hmac.h"
