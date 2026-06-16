@@ -119,6 +119,10 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
             features.push("ui_performance_overlay".into());
         }
 
+        if !pyopt {
+            features.push("ui_debug_overlay".into());
+        }
+
         if args.debug_link.unwrap_or(!pyopt) {
             features.push("debuglink".into());
             features.push("ui_debug".into());
