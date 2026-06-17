@@ -30,6 +30,7 @@
 
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
+#include <sec/telemetry.h>
 
 #include "ecdsa.h"
 #include "memzero.h"
@@ -117,6 +118,8 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
               lt_ret_verbose(ret));
     return;
   }
+
+  telemetry_update_tropic_batch(chip_id.batch_id);
 
   cli_trace(cli, "Silicon revision: %c%c%c%c", chip_id.silicon_rev[0],
             chip_id.silicon_rev[1], chip_id.silicon_rev[2],

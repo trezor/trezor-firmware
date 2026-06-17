@@ -22,6 +22,7 @@
 
 #include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
+#include <sec/telemetry.h>
 #include <sec/tropic.h>
 #include <sys/systick.h>
 
@@ -131,6 +132,9 @@ static bool is_retryable(lt_ret_t ret) {
     for (int TROPIC_RETRY_COMMAND_i = 0;                                  \
          TROPIC_RETRY_COMMAND_i < TROPIC_MAX_RETRIES - 1;                 \
          TROPIC_RETRY_COMMAND_i++) {                                      \
+      if (TROPIC_RETRY_COMMAND_res == LT_L1_CHIP_ALARM_MODE) {            \
+        telemetry_update_tropic_alarms(1);                                \
+      }                                                                   \
       if (!is_retryable(TROPIC_RETRY_COMMAND_res)) {                      \
         break;                                                            \
       }                                                                   \
@@ -584,6 +588,8 @@ secbool tropic_ensure_configuration(void) {
     return secfalse;
   }
 
+  telemetry_update_tropic_batch(chip_id.batch_id);
+
   tropic_config_t config = {0};
   if (!tropic_get_configuration(chip_id.batch_id, &config)) {
     return secfalse;
@@ -656,15 +662,15 @@ secbool tropic_ensure_configuration(void) {
   return sectrue;
 }
 
-secbool tropic_get_configuration(const uint8_t *batch_id, tropic_config_t *config) {
+secbool tropic_get_configuration(const uint8_t *batch_id,
+                                 tropic_config_t *config) {
   uint8_t config_version = 0;
   // Find the version of config that belongs to the batch_id.
   // Version 0 is default.
   for (size_t i = 0;
-       i < sizeof(TROPIC_BATCHES_V1) / sizeof(TROPIC_BATCHES_V1[0]);
-       i++) {
-    if (memcmp(batch_id, TROPIC_BATCHES_V1[i],
-               sizeof(TROPIC_BATCHES_V1[0])) == 0) {
+       i < sizeof(TROPIC_BATCHES_V1) / sizeof(TROPIC_BATCHES_V1[0]); i++) {
+    if (memcmp(batch_id, TROPIC_BATCHES_V1[i], sizeof(TROPIC_BATCHES_V1[0])) ==
+        0) {
       config_version = 1;
       break;
     }

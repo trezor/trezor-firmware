@@ -23,9 +23,10 @@
 
 #include <sec/backup_ram.h>
 #include <sec/telemetry.h>
+#include <string.h>
 
 // Versioning for persisted telemetry structure
-#define TELEMETRY_DATA_VERSION 0x0001
+#define TELEMETRY_DATA_VERSION 0x0002
 
 typedef struct {
   uint16_t version;
@@ -53,8 +54,17 @@ static bool telemetry_write(const telemetry_t* data) {
                           data, sizeof(*data));
 }
 
-static void telemetry_init_record(void) {
-  telemetry_t telemetry;
+static bool is_zero(const uint8_t* data, size_t size) {
+  for (size_t i = 0; i < size; i++) {
+    if (data[i] != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static void telemetry_init_record(telemetry_t* out) {
+  telemetry_t telemetry = {0};
   telemetry.version = TELEMETRY_DATA_VERSION;
   telemetry.initialized = 1;
   telemetry.reserved = 0;
@@ -62,7 +72,12 @@ static void telemetry_init_record(void) {
   telemetry.data.max_temp_c = -500.0f;
   telemetry.data.battery_errors.all = 0;
   telemetry.data.battery_cycles = 0.0f;
+  memset(telemetry.data.tropic_batch, 0, sizeof(telemetry.data.tropic_batch));
+  telemetry.data.tropic_alarms = 0;
   telemetry_write(&telemetry);
+  if (out != NULL) {
+    *out = telemetry;
+  }
 }
 
 void telemetry_update_battery_temp(float temp_c) {
@@ -70,7 +85,7 @@ void telemetry_update_battery_temp(float temp_c) {
   bool have = telemetry_read(&telemetry) && telemetry.initialized == 1;
 
   if (!have) {
-    telemetry_init_record();
+    telemetry_init_record(&telemetry);
   }
 
   bool changed = false;
@@ -93,7 +108,7 @@ void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
   bool have = telemetry_read(&telemetry) && telemetry.initialized == 1;
 
   if (!have) {
-    telemetry_init_record();
+    telemetry_init_record(&telemetry);
   }
 
   // Only update and write if some of OUR flags are set
@@ -109,11 +124,48 @@ void telemetry_update_battery_cycles(float battery_cycles_inc) {
   bool have = telemetry_read(&telemetry) && telemetry.initialized == 1;
 
   if (!have) {
-    telemetry_init_record();
+    telemetry_init_record(&telemetry);
   }
 
   if (battery_cycles_inc > 0.0f) {
     telemetry.data.battery_cycles += battery_cycles_inc;
+    telemetry_write(&telemetry);
+  }
+}
+
+void telemetry_update_tropic_batch(const uint8_t* tropic_batch) {
+  telemetry_t telemetry;
+  bool have = telemetry_read(&telemetry) && telemetry.initialized == 1;
+
+  if (!have) {
+    telemetry_init_record(&telemetry);
+  }
+
+  if (tropic_batch != NULL &&
+      !is_zero(tropic_batch, TELEMETRY_TROPIC_BATCH_SIZE) &&
+      is_zero(telemetry.data.tropic_batch,
+              sizeof(telemetry.data.tropic_batch))) {
+    memcpy(telemetry.data.tropic_batch, tropic_batch,
+           sizeof(telemetry.data.tropic_batch));
+    telemetry_write(&telemetry);
+  }
+}
+
+void telemetry_update_tropic_alarms(uint32_t tropic_alarms_add) {
+  telemetry_t telemetry;
+  bool have = telemetry_read(&telemetry) && telemetry.initialized == 1;
+
+  if (!have) {
+    telemetry_init_record(&telemetry);
+  }
+
+  bool changed = false;
+  if (tropic_alarms_add != 0) {
+    telemetry.data.tropic_alarms += tropic_alarms_add;
+    changed = true;
+  }
+
+  if (changed) {
     telemetry_write(&telemetry);
   }
 }
@@ -129,6 +181,6 @@ bool telemetry_get(telemetry_data_t* out) {
   return true;
 }
 
-void telemetry_reset(void) { telemetry_init_record(); }
+void telemetry_reset(void) { telemetry_init_record(NULL); }
 
 #endif

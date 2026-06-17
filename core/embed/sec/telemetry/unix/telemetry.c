@@ -20,6 +20,7 @@
 #ifdef SECURE_MODE
 
 #include <sec/telemetry.h>
+#include <string.h>
 #include <trezor_types.h>
 
 bool telemetry_get(telemetry_data_t* out) {
@@ -27,6 +28,10 @@ bool telemetry_get(telemetry_data_t* out) {
   out->max_temp_c = 35.0f;
   out->battery_errors.all = 0;
   out->battery_cycles = 30.00f;
+  const uint8_t tropic_batch[TELEMETRY_TROPIC_BATCH_SIZE] = {0x12, 0x34, 0x56,
+                                                             0x78, 0x9A};
+  memcpy(out->tropic_batch, tropic_batch, sizeof(out->tropic_batch));
+  out->tropic_alarms = 5;
   return true;
 }
 
@@ -35,6 +40,14 @@ void telemetry_reset(void) {
 }
 
 void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
+  // No-op for emulator
+}
+
+void telemetry_update_tropic_batch(const uint8_t* tropic_batch) {
+  // No-op for emulator
+}
+
+void telemetry_update_tropic_alarms(uint32_t tropic_alarms_add) {
   // No-op for emulator
 }
 

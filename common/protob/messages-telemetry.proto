@@ -27,4 +27,6 @@ message Telemetry {
     optional sint32 max_temp_c = 2;      // Maximum recorded battery temperature in milli-Celsius
     optional uint32 battery_errors = 3;  // Bitfield of battery errors
     optional uint32 battery_cycles = 4;  // Total battery milli-cycles
+    optional bytes tropic_batch = 5;     // Tropic chip batch number
+    optional uint32 tropic_alarms = 6;   // Total number of Tropic alarms
 }

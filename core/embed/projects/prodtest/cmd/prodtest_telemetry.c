@@ -41,9 +41,13 @@ static void prodtest_telemetry(cli_t* cli) {
   int32_t min_temp = (int32_t)(data.min_temp_c * 1000.0f);
   int32_t max_temp = (int32_t)(data.max_temp_c * 1000.0f);
   int32_t battery_cycles = (int32_t)(data.battery_cycles * 1000.0f);
+  uint32_t tropic_alarms = data.tropic_alarms;
 
-  cli_ok(cli, "%d %d 0x%02X %d", min_temp, max_temp, data.battery_errors.all,
-         battery_cycles);
+  cli_ok(cli, "%d %d 0x%02X %d %02X%02X%02X%02X%02X %u", min_temp, max_temp,
+         data.battery_errors.all, battery_cycles,
+         (unsigned)data.tropic_batch[0], (unsigned)data.tropic_batch[1],
+         (unsigned)data.tropic_batch[2], (unsigned)data.tropic_batch[3],
+         (unsigned)data.tropic_batch[4], (unsigned)tropic_alarms);
 }
 
 static void prodtest_telemetry_reset(cli_t* cli) {

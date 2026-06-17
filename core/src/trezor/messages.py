@@ -6408,6 +6408,8 @@ if TYPE_CHECKING:
         max_temp_c: "int | None"
         battery_errors: "int | None"
         battery_cycles: "int | None"
+        tropic_batch: "AnyBytes | None"
+        tropic_alarms: "int | None"
 
         def __init__(
             self,
@@ -6416,6 +6418,8 @@ if TYPE_CHECKING:
             max_temp_c: "int | None" = None,
             battery_errors: "int | None" = None,
             battery_cycles: "int | None" = None,
+            tropic_batch: "AnyBytes | None" = None,
+            tropic_alarms: "int | None" = None,
         ) -> None:
             pass
 

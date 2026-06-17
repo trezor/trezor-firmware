@@ -29,3 +29,6 @@ def test_basic(session: Session):
     assert res.min_temp_c <= res.max_temp_c
     assert res.battery_errors is not None
     assert res.battery_cycles is not None
+    assert res.tropic_batch is not None
+    assert len(res.tropic_batch) == 5
+    assert res.tropic_alarms is not None

@@ -48,7 +48,7 @@
 // Minimum temperature that counts as valid data
 #define NPM1300_NTC_TEMP_VALID_MIN (-80.0)
 
-// Minimum temperature that counts as valid data
+// Maximum temperature that counts as valid data
 #define NPM1300_NTC_TEMP_VALID_MAX (100.0)
 
 // Minimum battery voltage that counts as valid data

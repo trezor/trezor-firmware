@@ -8238,6 +8238,8 @@ class Telemetry(protobuf.MessageType):
         2: protobuf.Field("max_temp_c", "sint32", repeated=False, required=False, default=None),
         3: protobuf.Field("battery_errors", "uint32", repeated=False, required=False, default=None),
         4: protobuf.Field("battery_cycles", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("tropic_batch", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("tropic_alarms", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8247,11 +8249,15 @@ class Telemetry(protobuf.MessageType):
         max_temp_c: Optional["int"] = None,
         battery_errors: Optional["int"] = None,
         battery_cycles: Optional["int"] = None,
+        tropic_batch: Optional["bytes"] = None,
+        tropic_alarms: Optional["int"] = None,
     ) -> None:
         self.min_temp_c = min_temp_c
         self.max_temp_c = max_temp_c
         self.battery_errors = battery_errors
         self.battery_cycles = battery_cycles
+        self.tropic_batch = tropic_batch
+        self.tropic_alarms = tropic_alarms
 
 
 class TezosGetAddress(protobuf.MessageType):

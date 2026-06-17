@@ -1610,19 +1610,21 @@ OK 2025 07 03 14 23 00 4
 Retrieves stored telemetry data, including minimum and maximum recorded battery temperatures, battery error flags, and battery cycle count.
 
 Response format:
-`OK <min_temp_c> <max_temp_c> <battery_errors> <battery_cycles>`
+`OK <min_temp_c> <max_temp_c> <battery_errors> <battery_cycles> <tropic_batch> <tropic_alarms>`
 
 - `min_temp_c`: Minimum temperature in millidegrees Celsius (°C × 1000)
 - `max_temp_c`: Maximum temperature in millidegrees Celsius (°C × 1000)
 - `battery_errors`: Battery error flags as hexadecimal
 - `battery_cycles`: Battery cycles in millicycles (cycles × 1000)
+- `tropic_batch`: The 5-byte batch number of the Tropic chip as a hexadecimal string
+- `tropic_alarms`: The cumulative number of alarms that the Tropic chip raised
 
 If telemetry data is not available (not yet initialized), the command returns an error.
 
 Example:
 ```
 telemetry-read
-OK 18500 42300 0x00 12450
+OK 18500 42300 0x00 12450 12345678 10
 ```
 
 ### telemetry-reset
