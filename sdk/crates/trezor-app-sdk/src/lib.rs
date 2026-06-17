@@ -44,10 +44,7 @@
 #![allow(internal_features)]
 #![allow(dead_code)]
 #![feature(core_intrinsics)]
-#![cfg_attr(
-    all(feature = "debug", not(feature = "test")),
-    feature(lang_items)
-)]
+#![cfg_attr(all(feature = "debug", not(feature = "test")), feature(lang_items))]
 
 #[cfg(all(feature = "debug", feature = "alloc"))]
 extern crate alloc;
@@ -66,6 +63,7 @@ pub mod crypto;
 pub mod log;
 pub mod print;
 pub mod service;
+pub mod structs;
 pub mod ui;
 pub mod util;
 
@@ -316,8 +314,3 @@ fn eh_personality() -> ! {
 unsafe extern "C" fn _Unwind_Resume() {
     unsafe { core::intrinsics::unreachable() };
 }
-
-#[cfg(not(feature = "test"))]
-#[cfg(not(target_os = "none"))]
-#[unsafe(no_mangle)]
-pub extern "C" fn main() {}

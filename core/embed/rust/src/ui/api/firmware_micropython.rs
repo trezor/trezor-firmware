@@ -45,7 +45,7 @@ use rkyv::{
     util::Align,
 };
 #[cfg(feature = "app_loading")]
-use trezor_structs::{ArchivedStrSlice, ArchivedTrezorProgressEnum, TrezorUiResult};
+use trezor_app_sdk::structs::{ArchivedStrSlice, ArchivedTrezorProgressEnum, TrezorUiResult};
 
 #[cfg(feature = "backlight")]
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};

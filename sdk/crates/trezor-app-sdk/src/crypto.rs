@@ -18,8 +18,8 @@ use rkyv::{
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
-use trezor_structs::TrezorCryptoEnum;
-pub use trezor_structs::{String, TrezorCryptoResult};
+use crate::structs::TrezorCryptoEnum;
+pub use crate::structs::{String, TrezorCryptoResult};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;

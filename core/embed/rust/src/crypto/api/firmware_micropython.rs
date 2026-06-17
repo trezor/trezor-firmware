@@ -20,7 +20,9 @@ use rkyv::{
     util::Align,
 };
 #[cfg(feature = "app_loading")]
-use trezor_structs::{ArchivedSlice, ArchivedTrezorCryptoEnum, String, TrezorCryptoResult};
+use trezor_app_sdk::structs::{
+    ArchivedSlice, ArchivedTrezorCryptoEnum, String, TrezorCryptoResult,
+};
 
 #[cfg(feature = "app_loading")]
 extern "C" fn new_deserialize_crypto_message(

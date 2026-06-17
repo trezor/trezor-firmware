@@ -32,12 +32,13 @@ use rkyv::{
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
-use trezor_structs::{ArchivedUtilEnum, TrezorUiEnum};
-pub use trezor_structs::{Property, StrExt, StrSlice, TrezorProgressEnum, TrezorUiResult};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
 use crate::service::{CoreIpcService, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler};
+pub use crate::structs::{
+    ArchivedUtilEnum, Property, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult, StrExt,
+};
 use crate::util::Timeout;
 use crate::{unwrap, Error};
 
