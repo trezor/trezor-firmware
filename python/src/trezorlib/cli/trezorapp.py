@@ -41,17 +41,35 @@ def cli() -> None:
 @click.argument(
     "app_path", type=click.Path(exists=True, dir_okay=False, path_type=Path)
 )
+@click.option(
+    "--min-version",
+    type=str,
+    help="Minimum required version of the app in the format 'major.minor'.",
+)
+@click.option(
+    "--force-reload",
+    is_flag=True,
+    default=False,
+    help="Force reload of the app even if it is already loaded.",
+)
 @with_session()
-def load(session: "Session", app_path: Path) -> None:
+def load(
+    session: "Session", min_version: str | None, app_path: Path, force_reload: bool
+) -> None:
     """Load an external application onto the device.
 
     Example:
-        trezorctl trezorapp load ./sdk/apps/funnycoin-rust/target/debug/libfunnycoin_rust.so
+        trezorctl trezorapp load --min-version 0.1 ethereum.bin
     """
     try:
-        app_bytes = app_path.read_bytes()
-        app_hash = trezorapp.load(session, app_bytes)
-        click.echo(f"Loaded app hash: {app_hash:064x}")
+        version = None
+        if min_version is not None:
+            version = tuple(map(int, min_version.split(".")))
+            assert len(version) == 2, "Version must be in the format 'major.minor'"
+
+        app_binary = app_path.read_bytes()
+        instance_id = trezorapp.load(session, app_binary, b"", version, force_reload)
+        click.echo(f"App loaded with instance ID: {instance_id}")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
