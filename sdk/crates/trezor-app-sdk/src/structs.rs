@@ -1,8 +1,8 @@
-#![no_std]
-
+use rkyv::munge::munge;
+use rkyv::rancor::Fallible;
+use rkyv::ser::Writer;
 use rkyv::{
-    munge::munge, rancor::Fallible, ser::Writer, Archive, ArchiveUnsized, Deserialize, Place,
-    Portable, RelPtr, Serialize, SerializeUnsized,
+    Archive, ArchiveUnsized, Deserialize, Place, Portable, RelPtr, Serialize, SerializeUnsized,
 };
 
 /// Fixed-capacity byte string for `no_std`, serialized as `[u8; N] + len`.
