@@ -143,10 +143,19 @@ jobs:
       - name: Show fingerprints
         run: |
           tree _artifacts
-          for file in _artifacts/*/*/*.fingerprint
-          do
-            echo "\`$(tr -d '\n' < $file)\` ${file%.fingerprint}" >> $GITHUB_STEP_SUMMARY
-          done
+          COMMIT_HASH=$(git rev-parse HEAD)
+          fingerprints_file="_artifacts/${COMMIT_HASH}.fingerprints"
+          master_file="_artifacts/${COMMIT_HASH}.master"
+          if [ -f "$fingerprints_file" ]; then
+            {
+              echo '```'
+              cat "$fingerprints_file"
+              if [ -f "$master_file" ]; then
+                cat "$master_file"
+              fi
+              echo '```'
+            } >> $GITHUB_STEP_SUMMARY
+          fi
           cat $GITHUB_STEP_SUMMARY
         if: always()
 
