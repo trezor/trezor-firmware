@@ -454,7 +454,8 @@ impl ThpContext {
     }
 
     /// Returns channel ID of a channel with application message ready to be
-    /// decrypted. TODO debug only, delete XXX
+    /// decrypted.
+    #[cfg(feature = "debug")]
     pub fn message_out_ready(&self, iface_num: u8) -> Option<u16> {
         self.channel_appdata
             .iter()

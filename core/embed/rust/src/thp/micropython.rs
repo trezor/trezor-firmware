@@ -30,9 +30,12 @@ extern "C" fn thp_init(iface_num: Obj, device_properties: Obj) -> Obj {
 
         let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
         thp.add_interface(iface_num, device_properties)?;
-        if log::log_enabled!(log::Level::Error) && thp.message_out_ready(iface_num).is_some() {
+
+        #[cfg(feature = "debug")]
+        if thp.message_out_ready(iface_num).is_some() {
             log::error!("Message ready from previous event loop session but buffer is lost, waiting for retransmission.");
         }
+
         Ok(Obj::const_none())
     };
 
