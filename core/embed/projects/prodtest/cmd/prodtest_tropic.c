@@ -563,7 +563,7 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
     goto cleanup;
   }
 
-  uint8_t output[sizeof(unprivileged_private) + NOISE_TAG_SIZE] = {0};
+  uint8_t output[sizeof(unprivileged_private) + NOISE_KK1_TAG_SIZE] = {0};
   if (!secure_channel_encrypt((uint8_t*)unprivileged_private,
                               sizeof(unprivileged_private), tropic_public,
                               sizeof(curve25519_key), output)) {
@@ -592,7 +592,7 @@ static void prodtest_tropic_get_fido_masking_key(cli_t* cli) {
     goto cleanup;
   }
 
-  uint8_t output[sizeof(fido_masking_key) + NOISE_TAG_SIZE] = {0};
+  uint8_t output[sizeof(fido_masking_key) + NOISE_KK1_TAG_SIZE] = {0};
   if (!secure_channel_encrypt(fido_masking_key, sizeof(fido_masking_key), NULL,
                               0, output)) {
     // `secure_channel_handshake_2()` might not have been called
