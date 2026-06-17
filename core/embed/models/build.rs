@@ -296,7 +296,7 @@ fn define_model_t3b1(lib: &mut CLibrary, board_header: &str) -> Result<()> {
             Some("\"T3B1/unit_properties_content.h\""),
         ),
         ("HW_MODEL", Some(model_to_num("T3B1").to_string().as_str())),
-        ("HW_REVISION", Some("0")),
+        ("HW_REVISION", Some("66")), // B
         ("USE_OEM_KEYS_CHECK", Some("1")),
     ]);
 
