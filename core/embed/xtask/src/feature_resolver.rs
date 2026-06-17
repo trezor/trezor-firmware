@@ -66,14 +66,6 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
             features.push("log_stack_usage".into());
         }
 
-        if args.block_on_vcp {
-            features.push("block_on_vcp".into());
-        }
-
-        if args.apps {
-            features.push("app_loading".into());
-        }
-
         if args.mem_perf {
             features.push("memperf".into());
         }
@@ -84,6 +76,16 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
 
         if args.n4w1 {
             features.push("n4w1".into());
+        }
+    }
+
+    if matches!(args.project, Project::Firmware | Project::Kernel) {
+        if args.block_on_vcp {
+            features.push("block_on_vcp".into());
+        }
+
+        if args.apps {
+            features.push("app_loading".into());
         }
     }
 
