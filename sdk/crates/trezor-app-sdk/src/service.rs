@@ -3,12 +3,11 @@ use core::marker::PhantomData;
 use ufmt::derive::uDebug;
 
 use crate::ipc::{IpcInbox, IpcMessage, RemoteSysTask};
+use crate::structs::ArchivedUtilEnum;
 use crate::sysevent::SysEvents;
 use crate::util::Timeout;
 
 pub const CORE_SERVICE_REMOTE: RemoteSysTask = RemoteSysTask::CoreApp;
-
-use trezor_structs::ArchivedUtilEnum;
 
 // ============================================================================
 // Trait-based Call Abstraction

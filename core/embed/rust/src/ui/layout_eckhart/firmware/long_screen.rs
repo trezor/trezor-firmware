@@ -22,7 +22,7 @@ use rkyv::{
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
-use trezor_structs::UtilEnum;
+use trezor_app_sdk::structs::UtilEnum;
 
 use super::{constant::SCREEN, theme, ActionBar, ActionBarMsg, Header, Hint};
 
