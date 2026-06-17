@@ -577,42 +577,46 @@ async def confirm_payment_request(
         ) as obj:
             await raise_if_not_confirmed(obj, "confirm_payment_request")
 
-    menu_items = []
-    if recipient_address is not None:
-        menu_items.append(
-            create_details(TR.address__title_provider_address, recipient_address)
-        )
-    for refund in refunds:
-        refund_account_items: list[StrPropertyType] = [("", refund.address, None)]
-        if refund.account:
-            refund_account_items.append((TR.words__account, refund.account, None))
-        if refund.account_path:
-            refund_account_items.append(
-                (TR.address_details__derivation_path, refund.account_path, None)
+    async def _task() -> None:
+        menu_items = []
+        if recipient_address is not None:
+            menu_items.append(
+                create_details(TR.address__title_provider_address, recipient_address)
             )
-        menu_items.append(
-            create_details(
-                TR.address__title_refund_address,
-                refund_account_items,
+        for refund in refunds:
+            refund_account_items: list[StrPropertyType] = [("", refund.address, None)]
+            if refund.account:
+                refund_account_items.append((TR.words__account, refund.account, None))
+            if refund.account_path:
+                refund_account_items.append(
+                    (TR.address_details__derivation_path, refund.account_path, None)
+                )
+            menu_items.append(
+                create_details(
+                    TR.address__title_refund_address,
+                    refund_account_items,
+                )
             )
-        )
-    if menu_items:
-        menu = Menu.root(menu_items)
+        if menu_items:
+            menu = Menu.root(menu_items)
 
-        with trezorui_api.confirm_with_info(
-            title=title,
-            items=[(TR.words__provider, True), (recipient_name, False)],
-            verb=TR.buttons__continue,
-            verb_info=INFO_ICON,
-            external_menu=True,
-        ) as main_layout:
-            await confirm_with_menu(main_layout, menu, "confirm_payment_request")
-    else:
-        await confirm_properties(
-            "confirm_payment_request",
-            title,
-            [(TR.words__provider, recipient_name, True)],
-        )
+            with trezorui_api.confirm_with_info(
+                title=title,
+                items=[(TR.words__provider, True), (recipient_name, False)],
+                verb=TR.buttons__continue,
+                verb_info=INFO_ICON,
+                external_menu=True,
+            ) as main_layout:
+                await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+        else:
+            await confirm_properties(
+                "confirm_payment_request",
+                title,
+                [(TR.words__provider, recipient_name, True)],
+            )
+
+    # Allow GC to free the objects allocated above.
+    await _task()
 
     for trade in trades:
         await confirm_trade(
