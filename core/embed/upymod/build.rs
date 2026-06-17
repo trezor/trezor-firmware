@@ -988,7 +988,12 @@ impl<'a> MpyBuilder<'a> {
 
     // Please add often imported files first. When a module is loaded, micropython (as of 1.28)
     // performs linear search in the list of all modules (`mp_frozen_names`). Universal firmware
-    // has over 400 modules and we import often due to the session restarts.
+    // has over 400 modules and we import often due to the session restarts. Generally:
+    // 1. storage.*
+    // 2. trezor.* except enums
+    // 3. apps.common.*
+    // 4. trezor.enums.*
+    // 5. everything else
     fn get_py_files(&self) -> Result<InputFiles> {
         let mut files = InputFiles::new();
 
@@ -999,6 +1004,24 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(not(feature = "ble")) {
             files.remove(src, "ble.py");
+        }
+
+        files.add(src.join("storage"), "*.py")?;
+
+        if cfg!(not(feature = "sd_card")) {
+            files.remove(src, "storage/sd_salt.py");
+        }
+
+        if cfg!(feature = "pyopt") {
+            files.remove(src, "storage/debug.py");
+        }
+
+        if cfg!(feature = "thp") {
+            files.remove(src, "storage/cache_codec.py");
+            files.remove(src, "storage/cache_codec_keys.py");
+        } else {
+            files.remove(src, "storage/cache_thp.py");
+            files.remove(src, "storage/cache_thp_keys.py");
         }
 
         files.add(src.join("trezor"), "*.py")?;
@@ -1052,22 +1075,14 @@ impl<'a> MpyBuilder<'a> {
             files.add(src.join("trezor/power_management"), "*.py")?;
         }
 
-        files.add(src.join("storage"), "*.py")?;
+        files.add(src, "apps/*.py")?;
+        files.add(src, "apps/common/*.py")?;
+
+        files.remove(src, "apps/common/definitions.py");
+        files.remove(src, "apps/common/definitions_constants.py");
 
         if cfg!(not(feature = "sd_card")) {
-            files.remove(src, "storage/sd_salt.py");
-        }
-
-        if cfg!(feature = "pyopt") {
-            files.remove(src, "storage/debug.py");
-        }
-
-        if cfg!(feature = "thp") {
-            files.remove(src, "storage/cache_codec.py");
-            files.remove(src, "storage/cache_codec_keys.py");
-        } else {
-            files.remove(src, "storage/cache_thp.py");
-            files.remove(src, "storage/cache_thp_keys.py");
+            files.remove(src, "apps/common/sdcard.py");
         }
 
         let enums = &src.join("trezor/enums");
@@ -1094,16 +1109,6 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(not(feature = "thp")) {
             files.remove(enums, "Thp*.py");
-        }
-
-        files.add(src, "apps/*.py")?;
-        files.add(src, "apps/common/*.py")?;
-
-        files.remove(src, "apps/common/definitions.py");
-        files.remove(src, "apps/common/definitions_constants.py");
-
-        if cfg!(not(feature = "sd_card")) {
-            files.remove(src, "apps/common/sdcard.py");
         }
 
         if cfg!(not(feature = "pyopt")) {
@@ -1172,6 +1177,8 @@ impl<'a> MpyBuilder<'a> {
         }
 
         if cfg!(feature = "universal_fw") {
+            files.add(src, "apps/webauthn/*.py")?;
+
             files.add(src, "apps/common/definitions.py")?;
             files.add(src, "apps/common/definitions_constants.py")?;
             files.add(src, "trezor/enums/DefinitionType.py")?;
@@ -1225,8 +1232,6 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "trezor/enums/Tezos*.py")?;
 
             files.add(src, "apps/zcash/*.py")?;
-
-            files.add(src, "apps/webauthn/*.py")?;
 
             if cfg!(feature = "decred") {
                 files.add(src, "apps/bitcoin/sign_tx/decred.py")?;
