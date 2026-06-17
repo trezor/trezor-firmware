@@ -1038,7 +1038,7 @@ class TR:
     tutorial__title_skip: str = "Skip tutorial"
     tutorial__title_tutorial_complete: str = "Tutorial complete"
     tutorial__title_well_done: str = "Well done!"
-    tutorial__tropic_info: str = "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."
+    tutorial__tropic_info: str = "TROPIC01 is a next-gen secure element chip designed for transparent and auditable hardware security."
     tutorial__use_trezor: str = "Use Trezor by\nclicking the left and right buttons.\n\rContinue right."
     tutorial__welcome_press_right: str = "Welcome to Trezor. Press right to continue."
     tutorial__welcome_safe5: str = "Welcome to\nTrezor Safe 5"
