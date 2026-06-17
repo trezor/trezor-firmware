@@ -185,6 +185,12 @@ pub fn get_version_file(project: Project) -> Result<PathBuf> {
         .join("version.h"))
 }
 
+pub fn command_args_to_string(cmd: &std::process::Command) -> String {
+    let mut parts = vec![cmd.get_program().to_string_lossy().into_owned()];
+    parts.extend(cmd.get_args().map(|arg| arg.to_string_lossy().into_owned()));
+    parts.join(" ")
+}
+
 #[cfg(test)]
 mod tests {
     use super::{parse_address, parse_version_file, read_symbol_from_content};
