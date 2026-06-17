@@ -197,7 +197,7 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
     goto cleanup;
   }
 
-  uint8_t output[sizeof(mcu_public) + NOISE_TAG_SIZE] = {0};
+  uint8_t output[sizeof(mcu_public) + NOISE_KK1_TAG_SIZE] = {0};
   if (!secure_channel_encrypt(mcu_public, sizeof(mcu_public), NULL, 0,
                               output)) {
     // `secure_channel_handshake_2()` might not have been called
