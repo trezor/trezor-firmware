@@ -17,8 +17,7 @@ pub fn device_tests(args: &DeviceTestsArgs) -> Result<()> {
         helpers::standalone_project_name()?
     };
 
-    let binary =
-        helpers::artifacts_dir(args.model, args.emulator)?.join(format!("{}.elf", &app));
+    let binary = helpers::artifacts_dir(args.model, args.emulator)?.join(format!("{}.elf", &app));
 
     let binary = binary
         .canonicalize()

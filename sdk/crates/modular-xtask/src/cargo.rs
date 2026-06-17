@@ -3,13 +3,17 @@ use std::{ffi::OsStr, process};
 
 use crate::{
     args::{BuildArgs, UnitTestArgs},
-    arm, helpers, postbuild, tools,
+    binary, helpers, postbuild, tools,
 };
 
 pub fn build(args: &BuildArgs) -> Result<()> {
     // Build the component
     run_cargo_subcommand("build", args, None::<&[&str]>)?;
-    let orig = helpers::elf_path(args)?;
+    
+    let elf_path = helpers::elf_path(args)?;
+    let app_package = helpers::app_package(&args.project)?;
+
+    let bin_path = binary::convert_elf_to_bin(&elf_path, &app_package)?;
 
     let app = if helpers::is_workspace()? {
         args.project.clone()
@@ -19,34 +23,8 @@ pub fn build(args: &BuildArgs) -> Result<()> {
 
     println!("app is: {}", app);
 
-    if !args.emulator && !args.debug {
-        nm(args)?;
-        let tmp = arm::objcopy(
-            &orig,
-            "min",
-            [
-                "--remove-section=.rel.text",
-                "--remove-section=.debug*",
-                "--remove-section=.rel.debug*",
-                "--strip-debug",
-                "--discard-locals",
-            ],
-        )?;
-
-        postbuild::zero_symnames(&tmp, ["applet_main"], true)?;
-
-        let min = arm::objcopy(&tmp, "", ["--strip-unneeded"])?;
-        arm::size(&min, ["-A"])?;
-        arm::size(&min, ["-B"])?;
-
-        arm::print_elf_sections(&min)?;
-
-        postbuild::publish_artifact(&min, &app, args.model, args.emulator)?;
-    } else {
-        run_cargo_subcommand("size", &args, Some(&["-A"]))?;
-        run_cargo_subcommand("size", &args, Some(&["-B"]))?;
-        postbuild::publish_artifact(&orig, &app, args.model, args.emulator)?;
-    };
+    postbuild::publish_artifact(&elf_path, &app, args.model, args.emulator)?;
+    postbuild::publish_artifact(&bin_path, &app, args.model, args.emulator)?;
 
     Ok(())
 }

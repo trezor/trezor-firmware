@@ -1,7 +1,8 @@
 pub mod args;
-pub mod arm;
+pub mod armv8m;
 pub mod cargo;
 pub mod device_tests;
+pub mod binary;
 pub mod helpers;
 pub mod postbuild;
 pub mod pystyle;

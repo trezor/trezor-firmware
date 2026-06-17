@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, anyhow, ensure};
-use cargo_metadata::MetadataCommand;
+use cargo_metadata::{MetadataCommand, Package};
 use std::path::{Path, PathBuf};
 
 use crate::args::{BuildArgs, Model};
@@ -64,6 +64,20 @@ pub fn is_workspace() -> Result<bool> {
     } else {
         Ok(true)
     }
+}
+
+pub fn app_package(package_name: &str) -> Result<Package> {
+    let metadata = MetadataCommand::new()
+        .no_deps()
+        .exec()
+        .context("Failed to read cargo metadata")?;
+
+    // Find the package with the specified name
+    metadata
+        .packages
+        .into_iter()
+        .find(|p| p.name == package_name)
+        .ok_or_else(|| anyhow!("Package '{}' not found in the workspace", package_name))
 }
 
 pub fn standalone_project_name() -> Result<String> {
@@ -132,33 +146,6 @@ pub fn git_modified() -> Result<bool> {
     Ok(modified)
 }
 
-/// Parses a version file and returns the version string in the format "major.minor.patch".
-pub fn parse_version_file(file_name: &Path) -> Result<String> {
-    let content = std::fs::read_to_string(file_name)
-        .with_context(|| format!("Failed to read version file: {}", file_name.display()))?;
-
-    let parse_symbol = |symbol_name: &str| -> Result<String> {
-        let prefix = format!("#define {symbol_name} ");
-
-        for line in content.lines() {
-            if let Some(value) = line.strip_prefix(&prefix) {
-                return Ok(value.trim().to_string());
-            }
-        }
-
-        Err(anyhow!(
-            "Failed to parse version from file: {}",
-            file_name.display()
-        ))
-    };
-
-    let major = parse_symbol("VERSION_MAJOR")?;
-    let minor = parse_symbol("VERSION_MINOR")?;
-    let patch = parse_symbol("VERSION_PATCH")?;
-
-    Ok(format!("{}.{}.{}", major, minor, patch))
-}
-
 pub fn command_args_to_string(cmd: &std::process::Command) -> String {
     let envs: Vec<_> = cmd
         .get_envs()
@@ -182,41 +169,5 @@ pub fn command_args_to_string(cmd: &std::process::Command) -> String {
         format!("{} {}", envs.join(" "), parts.join(" "))
     } else {
         parts.join(" ")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::parse_version_file;
-    use std::fs;
-
-    #[test]
-    fn parses_version_file_symbols() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("version.h");
-        fs::write(
-            &path,
-            "#define VERSION_MAJOR 2\n#define VERSION_MINOR 8\n#define VERSION_PATCH 1\n",
-        )
-        .unwrap();
-
-        let version = parse_version_file(&path).unwrap();
-
-        assert_eq!(version, "2.8.1");
-    }
-
-    #[test]
-    fn errors_when_version_symbol_is_missing() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("version.h");
-        fs::write(&path, "#define VERSION_MAJOR 2\n#define VERSION_MINOR 8\n").unwrap();
-
-        let error = parse_version_file(&path).unwrap_err();
-
-        assert!(
-            error
-                .to_string()
-                .contains("Failed to parse version from file")
-        );
     }
 }
