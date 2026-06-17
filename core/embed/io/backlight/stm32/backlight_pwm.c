@@ -24,7 +24,7 @@
 
 #include <io/backlight.h>
 
-#include <math.h>
+#include "../backlight_gamma.h"
 
 // The backlight is built from several LED strings sharing a common anode. Each
 // string returns through its own MCU pin acting as a low-side switch, so the
@@ -64,24 +64,6 @@ static backlight_driver_t g_backlight_driver = {
     .initialized = false,
 };
 
-// Applies gamma correction to a brightness input value and scales it to the
-// PWM compare range.
-//
-//   OUT = ( ( (max(IN, in_offset) - in_offset) / (in_max - in_offset) ) ^
-//         gamma_exp) * out_max
-static inline uint32_t gamma_correction(uint8_t in, uint8_t in_offset,
-                                        uint8_t in_max, float gamma_exp,
-                                        uint32_t out_max) {
-  float out;
-
-  out = (float)(MAX(in, in_offset) - in_offset) /
-        (in_max - in_offset);  // Input normalization to <0;1>
-  out = powf(out, gamma_exp);  // Gamma correction
-  out = out * out_max;         // Output denormalization to <0;out_max>
-
-  return (uint32_t)out;
-}
-
 bool backlight_init(backlight_action_t action, float gamma_exp) {
   backlight_driver_t *drv = &g_backlight_driver;
 
@@ -100,14 +82,11 @@ bool backlight_init(backlight_action_t action, float gamma_exp) {
     uint32_t arr = BACKLIGHT_PWM_TIM->ARR;
     uint32_t ccr = __HAL_TIM_GET_COMPARE(&tim, g_pwm_channels[0]);
     // The compare register holds a gamma-corrected PWM duty (see
-    // backlight_set / backlight_gamma_correct), so invert the gamma curve to
-    // recover the original linear brightness level. Feeding the raw duty in as
-    // if it were linear would gamma-correct it a second time.
-    float duty = (float)ccr / (arr + 1);    // normalize duty to <0;1>
-    float linear = powf(duty, 1.0f / gamma_exp);  // invert gamma correction
-    uint32_t level =
-        (uint32_t)(INPUT_OFFSET + linear * (BACKLIGHT_MAX_LEVEL - INPUT_OFFSET));
-    initial_level = MIN(level, BACKLIGHT_MAX_LEVEL);
+    // backlight_set), so invert the gamma curve to recover the original linear
+    // brightness level. Feeding the raw duty in as if it were linear would
+    // gamma-correct it again.
+    initial_level = backlight_gamma_uncorrect(
+        ccr, INPUT_OFFSET, BACKLIGHT_MAX_LEVEL, gamma_exp, arr + 1);
   }
 
   memset(drv, 0, sizeof(backlight_driver_t));
@@ -212,8 +191,8 @@ bool backlight_set(uint8_t val) {
 
   uint32_t pulse = 0;
   if (level >= INPUT_OFFSET) {
-    pulse = gamma_correction(level, INPUT_OFFSET, BACKLIGHT_MAX_LEVEL,
-                             drv->gamma_exp, BACKLIGHT_PWM_TIM_PERIOD);
+    pulse = backlight_gamma_correct(level, INPUT_OFFSET, BACKLIGHT_MAX_LEVEL,
+                                    drv->gamma_exp, BACKLIGHT_PWM_TIM_PERIOD);
   }
 
   // The channels drive a shared-anode backlight in lockstep, so their duty
