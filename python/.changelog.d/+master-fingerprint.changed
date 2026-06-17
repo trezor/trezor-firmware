@@ -1,0 +1,1 @@
+firmware-fingerprint.py now labels the fingerprint with the image's SLIP-26 model and purpose ("<model>_<purpose>: HEX") and supports vendor headers and new-style PQ bootloader images.

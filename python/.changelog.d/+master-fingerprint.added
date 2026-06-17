@@ -1,0 +1,1 @@
+Added master-fingerprint.py tool, which computes a master fingerprint over a set of labeled firmware fingerprints.
