@@ -9,6 +9,7 @@ if not utils.BITCOIN_ONLY:
 
     from apps.solana.predefined_transaction import is_predefined_token_transfer
     from apps.solana.transaction.instruction import Instruction
+    from apps.solana.types import AddressType
 
 % for program in programs["programs"]:
 ${getProgramId(program)} = "${program["id"]}"
@@ -44,20 +45,30 @@ def create_mock_instruction(
     return instruction
 
 
+def create_account(address, is_reference=False):
+    # direct address: (pubkey, type); ALT reference: (table_address, index, type)
+    if is_reference:
+        return (base58.decode(address), 0, AddressType.AddressRw)
+    return (base58.decode(address), AddressType.AddressRw)
+
+
 def create_transfer_token_instruction(
     program_id=TOKEN_PROGRAM_ID,
     instruction_id=TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED,
     token_mint="GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
     destination_account="92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx",
     owner="14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+    destination_is_reference=False,
 ):
     return create_mock_instruction(
         program_id,
         instruction_id,
         {
-            "token_mint": (base58.decode(token_mint),),
-            "destination_account": (base58.decode(destination_account),),
-            "owner": (base58.decode(owner),),
+            "token_mint": create_account(token_mint),
+            "destination_account": create_account(
+                destination_account, destination_is_reference
+            ),
+            "owner": create_account(owner),
         },
     )
 
@@ -71,9 +82,9 @@ def create_create_token_account_instruction(
         ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
         ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
         {
-            "token_mint": (base58.decode(token_mint),),
-            "associated_token_account": (base58.decode(associated_token_account),),
-            "spl_token": (base58.decode(spl_token),),
+            "token_mint": create_account(token_mint),
+            "associated_token_account": create_account(associated_token_account),
+            "spl_token": create_account(spl_token),
         },
     )
 
@@ -198,6 +209,15 @@ class TestSolanaPredefinedTransactions(unittest.TestCase):
             [
                 create_transfer_token_instruction(),
                 create_create_token_account_instruction(),
+            ],
+            # ALT-referenced destination, can't be resolved on-device
+            [
+                create_transfer_token_instruction(destination_is_reference=True),
+            ],
+            # one direct and one ALT-referenced destination
+            [
+                create_transfer_token_instruction(),
+                create_transfer_token_instruction(destination_is_reference=True),
             ],
         ]
 
