@@ -84,8 +84,9 @@ def read(
                 raise exceptions.ProtocolError(f"Missing chunk magic: {chunk.hex()}")
             return chunk[len(magic) :]
 
-    # process first chunk
-    chunk = read_next_chunk(FIRST_MAGIC)
+    # process first chunk (allowing interrupts)
+    with transport.allow_interrupts():
+        chunk = read_next_chunk(FIRST_MAGIC)
 
     # extract header
     header = chunk[:HEADER_LEN]

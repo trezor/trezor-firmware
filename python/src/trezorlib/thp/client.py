@@ -179,7 +179,9 @@ class TrezorClientThp(client.TrezorClient[ThpSession]):
         if session.is_invalid:
             raise exceptions.InvalidSessionError(session.id)
         while True:
-            msg = self.channel.read_chunk(timeout=timeout)
+            # read a protobuf message from channel (allowing interrupts)
+            with self.transport.allow_interrupts():
+                msg = self.channel.read_chunk(timeout=timeout)
             session_id, msg_type = struct.unpack(HEADER_FMT, msg[:HEADER_LEN])
             msg_bytes = msg[HEADER_LEN:]
             LOG.log(

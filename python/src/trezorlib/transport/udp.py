@@ -22,7 +22,7 @@ import time
 from typing import TYPE_CHECKING, Iterable, Tuple
 
 from ..log import DUMP_PACKETS
-from . import Timeout, Transport, TransportException
+from . import Interrupt, Timeout, Transport, TransportException
 
 if TYPE_CHECKING:
     from ..models import TrezorModel
@@ -52,6 +52,10 @@ class UdpTransport(Transport):
 
         self.socket: socket.socket | None = None
         super().__init__()
+
+    @classmethod
+    def _create_interrupt_handle(cls) -> Interrupt | None:
+        return Interrupt()
 
     @classmethod
     def _try_path(cls, path: str) -> "UdpTransport":
@@ -116,6 +120,7 @@ class UdpTransport(Transport):
         assert self.socket is not None
         start = time.time()
         while True:
+            self.check_interrupt()
             try:
                 chunk = self.socket.recv(64)
                 break

@@ -24,7 +24,14 @@ from typing import Iterable, List
 
 from ..log import DUMP_PACKETS
 from ..models import ALL_MODELS, TrezorModel
-from . import UDEV_RULES_STR, DeviceIsBusy, Timeout, Transport, TransportException
+from . import (
+    UDEV_RULES_STR,
+    DeviceIsBusy,
+    Interrupt,
+    Timeout,
+    Transport,
+    TransportException,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -69,6 +76,10 @@ class WebUsbTransport(Transport):
         self.handle: usb1.USBDeviceHandle | None = None
 
         super().__init__()
+
+    @classmethod
+    def _create_interrupt_handle(cls) -> Interrupt | None:
+        return Interrupt()
 
     @classmethod
     def enumerate(
@@ -160,6 +171,7 @@ class WebUsbTransport(Transport):
         endpoint = 0x80 | self.endpoint
         start = time.time()
         while True:
+            self.check_interrupt()
             try:
                 chunk = self.handle.interruptRead(
                     endpoint, WEBUSB_CHUNK_SIZE, USB_COMM_TIMEOUT_MS

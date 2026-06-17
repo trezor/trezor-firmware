@@ -27,7 +27,7 @@ from construct_classes import Struct
 
 from ..construct_helpers import EnumAdapter
 from ..log import DUMP_PACKETS
-from ..transport import Timeout, Transport, TransportException
+from ..transport import Interrupt, Timeout, Transport, TransportException
 from ..transport.udp import UdpTransport
 
 if TYPE_CHECKING:
@@ -139,6 +139,11 @@ class EmuBleTransport(Transport):
         super().__init__()
 
     @classmethod
+    def _create_interrupt_handle(cls) -> Interrupt | None:
+        """Create an interrupt handle, if supported by this transport."""
+        return Interrupt()
+
+    @classmethod
     def _try_path(cls, path: str) -> "EmuBleTransport":
         d = cls(path)
         try:
@@ -211,6 +216,7 @@ class EmuBleTransport(Transport):
         assert self.data_socket is not None
         start = time.time()
         while True:
+            self.check_interrupt()
             try:
                 chunk = self.data_socket.recv(self.CHUNK_SIZE or 1)
                 break

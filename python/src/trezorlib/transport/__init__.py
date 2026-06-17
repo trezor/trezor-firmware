@@ -16,7 +16,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
+import queue
+import time
 import typing as t
 from abc import ABCMeta, abstractmethod
 
@@ -53,12 +56,42 @@ class Timeout(TransportException):
     pass
 
 
+class Interrupt:
+    """Interrupt blocking I/O operations. Can be used across threads."""
+
+    def __init__(self) -> None:
+        self._event = queue.Queue(maxsize=1)
+
+    def request(self) -> None:
+        """Request `InterruptedError` to be raised. Not guaranteed to happen immediately."""
+        try:
+            self._event.put_nowait(time.monotonic())
+        except queue.Full:
+            # interruption has already been requested
+            pass
+
+    def check(self) -> None:
+        """Raise `InterruptedError` if an interrupt was requested."""
+        try:
+            start = self._event.get_nowait()
+            LOG.warning("Interrupted after %.3f seconds", time.monotonic() - start)
+            raise InterruptedError
+        except queue.Empty:
+            # no interruption request
+            pass
+
+
 class Transport(metaclass=ABCMeta):
     PATH_PREFIX: t.ClassVar[str]
     CHUNK_SIZE: t.ClassVar[int | None]
     ENABLED: t.ClassVar[bool]
 
     _opened: int = 0
+
+    # Note: some transports are not interruptible
+    interrupt: Interrupt | None = None
+    # Set by `self.allow_interrupts()` context manager.
+    _allow_interrupts: bool = False
 
     @classmethod
     def enumerate(
@@ -118,9 +151,33 @@ class Transport(metaclass=ABCMeta):
         self._close()
         self._opened = 0
 
+    @contextlib.contextmanager
+    def allow_interrupts(self) -> t.Generator[None, None, None]:
+        """Interrupts are allowed only when reading the first chunk (on v1 protocol) or when reading a response message (after a THP ACK)."""
+
+        # allow_interrupts() nesting is not supported
+        assert self._allow_interrupts is False
+        self._allow_interrupts = True
+        try:
+            yield
+        finally:
+            assert self._allow_interrupts is True
+            self._allow_interrupts = False
+
+    def check_interrupt(self) -> None:
+        """Raise `InterruptedError` if an interrupt was requested, and is currently allowed."""
+        if self.interrupt is not None and self._allow_interrupts:
+            return self.interrupt.check()
+
+    @classmethod
+    def _create_interrupt_handle(cls) -> Interrupt | None:
+        """Create an interrupt handle, if supported by this transport."""
+        return None
+
     def __enter__(self) -> Transport:
         if self._opened == 0:
             self.open()  # resets self._opened to 1
+            self.interrupt = self.__class__._create_interrupt_handle()
         else:
             self._opened += 1
         return self
@@ -134,6 +191,7 @@ class Transport(metaclass=ABCMeta):
         if self._opened > 0:
             self._opened -= 1
             if self._opened == 0:
+                self.interrupt = None
                 self.close()
 
     @abstractmethod

@@ -115,10 +115,12 @@ class UnexpectedMessageError(TrezorException):
     previous request.
     """
 
-    def __init__(self, expected: type[MessageType], actual: MessageType) -> None:
-        self.expected = expected
+    def __init__(self, expected: type[MessageType] | None, actual: MessageType) -> None:
+        self.expected = type(None) if expected is None else expected
         self.actual = actual
-        super().__init__(f"Expected {expected.__name__} but Trezor sent {actual}")
+        super().__init__(
+            f'{"Nothing expected" if expected is None else f"Expected {expected.__name__}"} but Trezor sent {actual}'
+        )
 
 
 class InvalidSessionError(TrezorException):

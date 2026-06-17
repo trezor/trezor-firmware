@@ -23,7 +23,7 @@ import typing as t
 
 from ..log import DUMP_PACKETS
 from ..models import TREZOR_ONE, TrezorModel
-from . import UDEV_RULES_STR, Timeout, Transport, TransportException
+from . import UDEV_RULES_STR, Interrupt, Timeout, Transport, TransportException
 
 LOG = logging.getLogger(__name__)
 
@@ -54,6 +54,10 @@ class HidTransport(Transport):
         self.device_serial_number = device["serial_number"]
         self.handle: HidDeviceHandle = None
         self.hid_version = None if probe_hid_version else 2
+
+    @classmethod
+    def _create_interrupt_handle(cls) -> Interrupt | None:
+        return Interrupt()
 
     def get_path(self) -> str:
         return f"{self.PATH_PREFIX}:{self.device['path'].decode()}"
@@ -133,6 +137,7 @@ class HidTransport(Transport):
     def read_chunk(self, *, timeout: float | None = None) -> bytes:
         start = time.time()
         while True:
+            self.check_interrupt()
             # hidapi seems to return lists of ints instead of bytes
             chunk = bytes(self.handle.read(64))
             if chunk:

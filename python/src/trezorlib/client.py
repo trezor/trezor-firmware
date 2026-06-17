@@ -112,7 +112,18 @@ class Session(t.Generic[ClientType, SessionIdType]):
         if self.is_invalid:
             raise exceptions.InvalidSessionError(self.id)
         with self:
-            return self.client._call(self, msg, expect=expect, timeout=timeout)
+            try:
+                return self.client._call(
+                    self,
+                    msg,
+                    expect=expect,
+                    timeout=timeout,
+                )
+            except InterruptedError:
+                # If the operation was interrupted by the host, cancel the current workflow on device.
+                # Will raise if the device response with ActionCancelled
+                self.client._call(self, messages.Cancel(), expect=None, timeout=timeout)
+                # TODO: there is a cancellation & response race condition (#7135)
 
     def call_raw(self, msg: MessageType, timeout: float | None = None) -> MessageType:
         """Invoke a single call-response round-trip to the device.
@@ -497,12 +508,34 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
             assert resp.message is not None
             return resp.message
 
+    if t.TYPE_CHECKING:
+
+        @t.overload
+        def _call(
+            self,
+            session: SessionType,
+            msg: MessageType,
+            *,
+            expect: type[MT] = MessageType,
+            timeout: float | None = None,
+        ) -> MT: ...
+
+        @t.overload
+        def _call(
+            self,
+            session: SessionType,
+            msg: MessageType,
+            *,
+            expect: None,
+            timeout: float | None = None,
+        ) -> t.NoReturn: ...
+
     def _call(
         self,
         session: SessionType,
         msg: MessageType,
         *,
-        expect: type[MT] = MessageType,
+        expect: type[MT] | None = MessageType,
         timeout: float | None = None,
     ) -> MT:
         resp = session.call_raw(msg, timeout=timeout)
@@ -522,7 +555,7 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
                 raise exceptions.TrezorFailure(resp)
             elif isinstance(resp, messages.PassphraseRequest):
                 raise exceptions.InvalidSessionError(session.id, from_message=resp)
-            elif not isinstance(resp, expect):
+            elif expect is None or not isinstance(resp, expect):
                 raise exceptions.UnexpectedMessageError(expect, resp)
             else:
                 return resp
