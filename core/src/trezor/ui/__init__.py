@@ -395,7 +395,8 @@ class Layout(Generic[T]):
             yield self._handle_touch_events()
         if utils.USE_BLE:
             yield self._handle_ble_events()
-        yield self._handle_ipc_events()
+        if utils.USE_IPC:
+            yield self._handle_ipc_events()
         if utils.USE_POWER_MANAGER:
             yield self._handle_power_manager()
 
