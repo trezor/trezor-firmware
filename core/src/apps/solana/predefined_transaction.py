@@ -105,6 +105,11 @@ def is_predefined_token_transfer(
     owner = transfer_token_instructions[0].owner[0]
 
     for transfer_token_instruction in transfer_token_instructions:
+        if is_address_reference(transfer_token_instruction.destination_account):
+            # ALT-referenced destination can't be resolved on-device, fall back
+            # to the generic reference-aware display instead of showing the
+            # lookup table address as the recipient.
+            return False
         if (
             transfer_token_instruction.program_id != token_program
             or transfer_token_instruction.token_mint[0] != token_mint
