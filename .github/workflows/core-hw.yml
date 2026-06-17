@@ -83,16 +83,10 @@ jobs:
       TT_UHUB_PORT: all
     timeout-minutes: 360  # 6h CI job timeout
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # actions/checkout@v4.3.1
-        with:
-          submodules: recursive
-          persist-credentials: false
-        if: matrix.model == 'T2B1' || matrix.model == 'T2T1'
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
-        if: matrix.model != 'T2B1' && matrix.model != 'T2T1'
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
@@ -113,7 +107,7 @@ jobs:
             trezor.log
             pytest.log
           retention-days: 7
-        if: always() && matrix.model != 'T2B1' && matrix.model != 'T2T1'
+        if: always()
 
   core_monero_test:
     name: Monero tests
@@ -181,7 +175,7 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: 1
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # actions/checkout@v4.3.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
@@ -190,7 +184,7 @@ jobs:
       - run: nix-shell --run "uv run legacy/script/setup"
       - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
       - run: nix-shell --arg hardwareTest true --run "ci/hardware_tests/t1_hw_test.sh"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # actions/upload-artifact@v4.6.2
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-hardware-${{ matrix.coins }}
           path: ci/hardware_tests/*.mp4
