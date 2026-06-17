@@ -4,7 +4,7 @@ use clap::ValueEnum;
 use crate::config::ModelConfig;
 use crate::helpers;
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Model {
     #[value(name = "d001")]
     D001,
@@ -19,6 +19,7 @@ pub enum Model {
     #[value(name = "t3t1")]
     T3T1,
     #[value(name = "t3w1")]
+    #[default]
     T3W1,
 }
 

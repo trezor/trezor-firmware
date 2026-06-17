@@ -258,7 +258,7 @@ pub(crate) fn ed25519_cosi_combine_publickeys(
     unsafe {
         unwrap!(get_crypto_or_die().ed25519_cosi_combine_publickeys)(
             res.as_mut_ptr(),
-            pks.as_ptr() as *mut _,
+            pks.as_ptr() as *const _,
             n,
         )
     }

@@ -101,7 +101,7 @@ pub struct trezor_crypto_v1_t {
     pub ed25519_cosi_combine_publickeys: ::core::option::Option<
         unsafe extern "C" fn(
             res: *mut cty::c_uchar,
-            pks: *mut ed25519_public_key,
+            pks: *const ed25519_public_key,
             n: usize,
         ) -> cty::c_int,
     >,
