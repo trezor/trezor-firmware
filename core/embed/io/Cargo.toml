@@ -92,7 +92,7 @@ backlight_tps61043 = []
 backlight_tps61062 = []
 backlight_pin = []
 
-# touch drivers
+touch_none = []
 touch_ft6x36 = []
 touch_ft3168 = []
 touch_stmpe811 = []
