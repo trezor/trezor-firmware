@@ -1461,9 +1461,6 @@ impl ::protobuf::reflect::ProtobufValue for PinMatrixAck {
 // @@protoc_insertion_point(message:hw.trezor.messages.common.PassphraseRequest)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct PassphraseRequest {
-    // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.common.PassphraseRequest._on_device)
-    pub _on_device: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.common.PassphraseRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1480,33 +1477,9 @@ impl PassphraseRequest {
         ::std::default::Default::default()
     }
 
-    // optional bool _on_device = 1;
-
-    pub fn _on_device(&self) -> bool {
-        self._on_device.unwrap_or(false)
-    }
-
-    pub fn clear__on_device(&mut self) {
-        self._on_device = ::std::option::Option::None;
-    }
-
-    pub fn has__on_device(&self) -> bool {
-        self._on_device.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set__on_device(&mut self, v: bool) {
-        self._on_device = ::std::option::Option::Some(v);
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(0);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "_on_device",
-            |m: &PassphraseRequest| { &m._on_device },
-            |m: &mut PassphraseRequest| { &mut m._on_device },
-        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<PassphraseRequest>(
             "PassphraseRequest",
             fields,
@@ -1525,9 +1498,6 @@ impl ::protobuf::Message for PassphraseRequest {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                8 => {
-                    self._on_device = ::std::option::Option::Some(is.read_bool()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1540,18 +1510,12 @@ impl ::protobuf::Message for PassphraseRequest {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self._on_device {
-            my_size += 1 + 1;
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self._on_device {
-            os.write_bool(1, v)?;
-        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1569,13 +1533,11 @@ impl ::protobuf::Message for PassphraseRequest {
     }
 
     fn clear(&mut self) {
-        self._on_device = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static PassphraseRequest {
         static instance: PassphraseRequest = PassphraseRequest {
-            _on_device: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1605,8 +1567,6 @@ pub struct PassphraseAck {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.common.PassphraseAck.passphrase)
     pub passphrase: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.common.PassphraseAck._state)
-    pub _state: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.common.PassphraseAck.on_device)
     pub on_device: ::std::option::Option<bool>,
     // special fields
@@ -1661,42 +1621,6 @@ impl PassphraseAck {
         self.passphrase.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // optional bytes _state = 2;
-
-    pub fn _state(&self) -> &[u8] {
-        match self._state.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear__state(&mut self) {
-        self._state = ::std::option::Option::None;
-    }
-
-    pub fn has__state(&self) -> bool {
-        self._state.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set__state(&mut self, v: ::std::vec::Vec<u8>) {
-        self._state = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut__state(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self._state.is_none() {
-            self._state = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self._state.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take__state(&mut self) -> ::std::vec::Vec<u8> {
-        self._state.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     // optional bool on_device = 3;
 
     pub fn on_device(&self) -> bool {
@@ -1717,17 +1641,12 @@ impl PassphraseAck {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "passphrase",
             |m: &PassphraseAck| { &m.passphrase },
             |m: &mut PassphraseAck| { &mut m.passphrase },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "_state",
-            |m: &PassphraseAck| { &m._state },
-            |m: &mut PassphraseAck| { &mut m._state },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "on_device",
@@ -1755,9 +1674,6 @@ impl ::protobuf::Message for PassphraseAck {
                 10 => {
                     self.passphrase = ::std::option::Option::Some(is.read_string()?);
                 },
-                18 => {
-                    self._state = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 24 => {
                     self.on_device = ::std::option::Option::Some(is.read_bool()?);
                 },
@@ -1776,9 +1692,6 @@ impl ::protobuf::Message for PassphraseAck {
         if let Some(v) = self.passphrase.as_ref() {
             my_size += ::protobuf::rt::string_size(1, &v);
         }
-        if let Some(v) = self._state.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
-        }
         if let Some(v) = self.on_device {
             my_size += 1 + 1;
         }
@@ -1790,9 +1703,6 @@ impl ::protobuf::Message for PassphraseAck {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.passphrase.as_ref() {
             os.write_string(1, v)?;
-        }
-        if let Some(v) = self._state.as_ref() {
-            os.write_bytes(2, v)?;
         }
         if let Some(v) = self.on_device {
             os.write_bool(3, v)?;
@@ -1815,7 +1725,6 @@ impl ::protobuf::Message for PassphraseAck {
 
     fn clear(&mut self) {
         self.passphrase = ::std::option::Option::None;
-        self._state = ::std::option::Option::None;
         self.on_device = ::std::option::Option::None;
         self.special_fields.clear();
     }
@@ -1823,7 +1732,6 @@ impl ::protobuf::Message for PassphraseAck {
     fn default_instance() -> &'static PassphraseAck {
         static instance: PassphraseAck = PassphraseAck {
             passphrase: ::std::option::Option::None,
-            _state: ::std::option::Option::None,
             on_device: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -4049,41 +3957,40 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01\x12!\n\x1dPinMatrixRequestType_NewFirst\x10\x02\x12\"\n\x1ePinMatri\
     xRequestType_NewSecond\x10\x03\x12&\n\"PinMatrixRequestType_WipeCodeFirs\
     t\x10\x04\x12'\n#PinMatrixRequestType_WipeCodeSecond\x10\x05\"\x20\n\x0c\
-    PinMatrixAck\x12\x10\n\x03pin\x18\x01\x20\x02(\tR\x03pin\"5\n\x11Passphr\
-    aseRequest\x12\x20\n\n_on_device\x18\x01\x20\x01(\x08R\x08OnDeviceB\x02\
-    \x18\x01\"g\n\rPassphraseAck\x12\x1e\n\npassphrase\x18\x01\x20\x01(\tR\n\
-    passphrase\x12\x19\n\x06_state\x18\x02\x20\x01(\x0cR\x05StateB\x02\x18\
-    \x01\x12\x1b\n\ton_device\x18\x03\x20\x01(\x08R\x08onDevice\"=\n!Depreca\
-    ted_PassphraseStateRequest\x12\x14\n\x05state\x18\x01\x20\x01(\x0cR\x05s\
-    tate:\x02\x18\x01\"#\n\x1dDeprecated_PassphraseStateAck:\x02\x18\x01\"\
-    \xc0\x01\n\nHDNodeType\x12\x14\n\x05depth\x18\x01\x20\x02(\rR\x05depth\
-    \x12\x20\n\x0bfingerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\t\
-    child_num\x18\x03\x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\
-    \x20\x02(\x0cR\tchainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\
-    \nprivateKey\x12\x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\
-    \xb4\x07\n\x0ePaymentRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\
-    \x05nonce\x12%\n\x0erecipient_name\x18\x02\x20\x02(\tR\rrecipientName\
-    \x12R\n\x05memos\x18\x03\x20\x03(\x0b2<.hw.trezor.messages.common.Paymen\
-    tRequest.PaymentRequestMemoR\x05memos\x12\x16\n\x06amount\x18\x06\x20\
-    \x01(\x0cR\x06amount\x12\x1c\n\tsignature\x18\x05\x20\x02(\x0cR\tsignatu\
-    re\x1a\x8d\x03\n\x12PaymentRequestMemo\x12O\n\ttext_memo\x18\x01\x20\x01\
-    (\x0b22.hw.trezor.messages.common.PaymentRequest.TextMemoR\x08textMemo\
-    \x12U\n\x0brefund_memo\x18\x02\x20\x01(\x0b24.hw.trezor.messages.common.\
-    PaymentRequest.RefundMemoR\nrefundMemo\x12h\n\x12coin_purchase_memo\x18\
-    \x03\x20\x01(\x0b2:.hw.trezor.messages.common.PaymentRequest.CoinPurchas\
-    eMemoR\x10coinPurchaseMemo\x12e\n\x11text_details_memo\x18\x04\x20\x01(\
-    \x0b29.hw.trezor.messages.common.PaymentRequest.TextDetailsMemoR\x0ftext\
-    DetailsMemo\x1a\x1e\n\x08TextMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\
-    \x04text\x1a;\n\x0fTextDetailsMemo\x12\x14\n\x05title\x18\x01\x20\x02(\t\
-    R\x05title\x12\x12\n\x04text\x18\x02\x20\x02(\tR\x04text\x1aU\n\nRefundM\
-    emo\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x1b\n\taddre\
-    ss_n\x18\x02\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x03\x20\x02(\
-    \x0cR\x03mac\x1a\x90\x01\n\x10CoinPurchaseMemo\x12\x1b\n\tcoin_type\x18\
-    \x01\x20\x02(\rR\x08coinType\x12\x16\n\x06amount\x18\x02\x20\x02(\tR\x06\
-    amount\x12\x18\n\x07address\x18\x03\x20\x02(\tR\x07address\x12\x1b\n\tad\
-    dress_n\x18\x04\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x05\x20\x02\
-    (\x0cR\x03macJ\x04\x08\x04\x10\x05B>\n#com.satoshilabs.trezor.lib.protob\
-    ufB\x13TrezorMessageCommon\x80\xa6\x1d\x01\
+    PinMatrixAck\x12\x10\n\x03pin\x18\x01\x20\x02(\tR\x03pin\"\x19\n\x11Pass\
+    phraseRequestJ\x04\x08\x01\x10\x02\"R\n\rPassphraseAck\x12\x1e\n\npassph\
+    rase\x18\x01\x20\x01(\tR\npassphrase\x12\x1b\n\ton_device\x18\x03\x20\
+    \x01(\x08R\x08onDeviceJ\x04\x08\x02\x10\x03\"=\n!Deprecated_PassphraseSt\
+    ateRequest\x12\x14\n\x05state\x18\x01\x20\x01(\x0cR\x05state:\x02\x18\
+    \x01\"#\n\x1dDeprecated_PassphraseStateAck:\x02\x18\x01\"\xc0\x01\n\nHDN\
+    odeType\x12\x14\n\x05depth\x18\x01\x20\x02(\rR\x05depth\x12\x20\n\x0bfin\
+    gerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\
+    \x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tch\
+    ainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\
+    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xb4\x07\n\x0ePayme\
+    ntRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0ere\
+    cipient_name\x18\x02\x20\x02(\tR\rrecipientName\x12R\n\x05memos\x18\x03\
+    \x20\x03(\x0b2<.hw.trezor.messages.common.PaymentRequest.PaymentRequestM\
+    emoR\x05memos\x12\x16\n\x06amount\x18\x06\x20\x01(\x0cR\x06amount\x12\
+    \x1c\n\tsignature\x18\x05\x20\x02(\x0cR\tsignature\x1a\x8d\x03\n\x12Paym\
+    entRequestMemo\x12O\n\ttext_memo\x18\x01\x20\x01(\x0b22.hw.trezor.messag\
+    es.common.PaymentRequest.TextMemoR\x08textMemo\x12U\n\x0brefund_memo\x18\
+    \x02\x20\x01(\x0b24.hw.trezor.messages.common.PaymentRequest.RefundMemoR\
+    \nrefundMemo\x12h\n\x12coin_purchase_memo\x18\x03\x20\x01(\x0b2:.hw.trez\
+    or.messages.common.PaymentRequest.CoinPurchaseMemoR\x10coinPurchaseMemo\
+    \x12e\n\x11text_details_memo\x18\x04\x20\x01(\x0b29.hw.trezor.messages.c\
+    ommon.PaymentRequest.TextDetailsMemoR\x0ftextDetailsMemo\x1a\x1e\n\x08Te\
+    xtMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\x04text\x1a;\n\x0fTextDetai\
+    lsMemo\x12\x14\n\x05title\x18\x01\x20\x02(\tR\x05title\x12\x12\n\x04text\
+    \x18\x02\x20\x02(\tR\x04text\x1aU\n\nRefundMemo\x12\x18\n\x07address\x18\
+    \x01\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08\
+    addressN\x12\x10\n\x03mac\x18\x03\x20\x02(\x0cR\x03mac\x1a\x90\x01\n\x10\
+    CoinPurchaseMemo\x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08coinType\
+    \x12\x16\n\x06amount\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\
+    \x18\x03\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x04\x20\x03(\rR\
+    \x08addressN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03macJ\x04\x08\x04\
+    \x10\x05B>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\
+    \x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
