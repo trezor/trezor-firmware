@@ -78,6 +78,8 @@ ssize_t syshandle_write(syshandle_t handle, const void* data, size_t data_size);
  *
  * If the timeout is 0, the function behaves like `syshandle_read`.
  *
+ * This function must not be called from an interrupt context
+ *
  * @param handle Handle of the device to read from
  * @param buffer Pointer to the buffer where the read data will be stored
  * @param buffer_size Size of the buffer in bytes
@@ -93,6 +95,8 @@ ssize_t syshandle_read_blocking(syshandle_t handle, void* buffer,
  * or timeout expires.
  *
  * If the timeout is 0, the function behaves like `syshandle_write`.
+ *
+ * This function must not be called from an interrupt context
  *
  * @param handle Handle of the device to write to
  * @param data Pointer to the data to write

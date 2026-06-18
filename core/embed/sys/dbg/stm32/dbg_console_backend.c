@@ -25,6 +25,7 @@
 
 #include <sys/dbg_console.h>
 #include <sys/sysevent.h>
+#include <sys/systick.h>
 
 #ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
 #include "SEGGER_RTT.h"
@@ -79,8 +80,29 @@ static ssize_t usb_vcp_write(const void *data, size_t data_size) {
   // In interrupt context, we must not block.
   uint32_t ipsr = __get_IPSR();
   bool thread_mode = (ipsr == 0 || ipsr == 11);  // Thread mode or SVCall
-  uint32_t timeout = thread_mode ? 1000 : 0;
-  return syshandle_write_blocking(SYSHANDLE_USB_VCP, data, data_size, timeout);
+  uint32_t deadline = ticks_timeout(thread_mode ? 1000 : 0);
+
+  const uint8_t *ptr = (const uint8_t *)data;
+  size_t remaining = data_size;
+
+  while (remaining > 0) {
+    ssize_t written = syshandle_write(SYSHANDLE_USB_VCP, ptr, remaining);
+
+    if (written < 0) {
+      break;
+    }
+
+    ptr += written;
+    remaining -= written;
+
+    if (ticks_expired(deadline)) {
+      break;
+    } else if (remaining > 0) {
+      systick_delay_ms(1);
+    }
+  }
+
+  return data_size - remaining;
 #else
   return syshandle_write(SYSHANDLE_USB_VCP, data, data_size);
 #endif
