@@ -1,5 +1,5 @@
-use super::{Trezor, TrezorResponse};
-use crate::{error::Result, flows::sign_tx::SignTxProgress, protos, utils};
+use super::Trezor;
+use crate::{error::Result, protos, utils, SignTxProgress};
 use bitcoin::{
     address::NetworkUnchecked, bip32, network::Network, psbt,
     secp256k1::ecdsa::RecoverableSignature, Address,
@@ -13,12 +13,13 @@ impl Trezor {
         path: &bip32::DerivationPath,
         network: Network,
         show_display: bool,
-    ) -> Result<TrezorResponse<'_, bip32::Xpub, protos::PublicKey>> {
+    ) -> Result<bip32::Xpub> {
         let mut req = protos::GetPublicKey::new();
         req.address_n = utils::convert_path(path);
         req.set_show_display(show_display);
         req.set_coin_name(utils::coin_name(network)?);
-        self.call(req, Box::new(|_, m| Ok(m.xpub().parse()?)))
+        let m: protos::PublicKey = self.call(req)?;
+        Ok(m.xpub().parse()?)
     }
 
     //TODO(stevenroose) multisig
@@ -28,20 +29,17 @@ impl Trezor {
         script_type: InputScriptType,
         network: Network,
         show_display: bool,
-    ) -> Result<TrezorResponse<'_, Address, protos::Address>> {
+    ) -> Result<Address> {
         let mut req = protos::GetAddress::new();
         req.address_n = utils::convert_path(path);
         req.set_coin_name(utils::coin_name(network)?);
         req.set_show_display(show_display);
         req.set_script_type(script_type);
-        self.call(req, Box::new(|_, m| parse_address(m.address())))
+        let m: protos::Address = self.call(req)?;
+        parse_address(m.address())
     }
 
-    pub fn sign_tx(
-        &mut self,
-        psbt: &psbt::Psbt,
-        network: Network,
-    ) -> Result<TrezorResponse<'_, SignTxProgress<'_>, protos::TxRequest>> {
+    pub fn sign_tx(&mut self, psbt: &psbt::Psbt, network: Network) -> Result<Vec<u8>> {
         let tx = &psbt.unsigned_tx;
         let mut req = protos::SignTx::new();
         req.set_inputs_count(tx.input.len() as u32);
@@ -49,7 +47,18 @@ impl Trezor {
         req.set_coin_name(utils::coin_name(network)?);
         req.set_version(tx.version.0 as u32);
         req.set_lock_time(tx.lock_time.to_consensus_u32());
-        self.call(req, Box::new(|c, m| Ok(SignTxProgress::new(c, m))))
+        let resp = self.call(req)?;
+        let mut progress = SignTxProgress::new(self, resp);
+        let mut signed_tx = vec![];
+        loop {
+            if let Some(part) = progress.get_serialized_tx_part() {
+                signed_tx.extend_from_slice(part);
+            }
+            if progress.finished() {
+                return Ok(signed_tx);
+            }
+            progress.ack_psbt(psbt, network)?;
+        }
     }
 
     pub fn sign_message(
@@ -58,7 +67,7 @@ impl Trezor {
         path: &bip32::DerivationPath,
         script_type: InputScriptType,
         network: Network,
-    ) -> Result<TrezorResponse<'_, (Address, RecoverableSignature), protos::MessageSignature>> {
+    ) -> Result<(Address, RecoverableSignature)> {
         let mut req = protos::SignMessage::new();
         req.address_n = utils::convert_path(path);
         // Normalize to Unicode NFC.
@@ -66,14 +75,10 @@ impl Trezor {
         req.set_message(msg_bytes);
         req.set_coin_name(utils::coin_name(network)?);
         req.set_script_type(script_type);
-        self.call(
-            req,
-            Box::new(|_, m| {
-                let address = parse_address(m.address())?;
-                let signature = utils::parse_recoverable_signature(m.signature())?;
-                Ok((address, signature))
-            }),
-        )
+        let res: protos::MessageSignature = self.call(req)?;
+        let address = parse_address(res.address())?;
+        let signature = utils::parse_recoverable_signature(res.signature())?;
+        Ok((address, signature))
     }
 }
 

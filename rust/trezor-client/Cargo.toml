@@ -52,6 +52,7 @@ bitcoin = { version = "0.32", optional = true }
 unicode-normalization = { version = "0.1.22", optional = true }
 
 [dev-dependencies]
+hex_lit = "0.1"
 tracing-subscriber = "0.3"
 serial_test = "3"
 

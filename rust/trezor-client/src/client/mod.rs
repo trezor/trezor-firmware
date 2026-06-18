@@ -11,9 +11,6 @@ pub use ethereum::*;
 #[cfg(feature = "solana")]
 mod solana;
 
-pub mod common;
-pub use common::*;
-
 use crate::{
     error::{Error, Result},
     messages::TrezorMessage,
@@ -70,50 +67,25 @@ impl Trezor {
     /// a failure or an interaction request.
     /// This method is only exported for users that want to expand the features of this library
     /// f.e. for supporting additional coins etc.
-    pub fn call<'a, T, S: TrezorMessage, R: TrezorMessage>(
-        &'a mut self,
-        message: S,
-        result_handler: Box<ResultHandler<'a, T, R>>,
-    ) -> Result<TrezorResponse<'a, T, R>> {
+    pub fn call<S: TrezorMessage, R: TrezorMessage>(&mut self, message: S) -> Result<R> {
         trace!("Sending {:?} msg: {:?}", S::MESSAGE_TYPE, message);
-        let resp = self.call_raw(message)?;
-        if resp.message_type() == R::MESSAGE_TYPE {
-            let resp_msg = resp.into_message()?;
-            trace!("Received {:?} msg: {:?}", R::MESSAGE_TYPE, resp_msg);
-            Ok(TrezorResponse::Ok(result_handler(self, resp_msg)?))
-        } else {
+        let mut resp = self.call_raw(message)?;
+        loop {
+            if resp.message_type() == R::MESSAGE_TYPE {
+                let resp_msg = resp.into_message()?;
+                trace!("Received {:?} msg: {:?}", R::MESSAGE_TYPE, resp_msg);
+                return Ok(resp_msg);
+            }
             match resp.message_type() {
+                MessageType_ButtonRequest => {
+                    let req_msg: protos::ButtonRequest = resp.into_message()?;
+                    trace!("Received ButtonRequest: {:?}", req_msg);
+                    resp = self.call_raw(protos::ButtonAck::new())?;
+                }
                 MessageType_Failure => {
                     let fail_msg = resp.into_message()?;
                     debug!("Received failure: {:?}", fail_msg);
-                    Ok(TrezorResponse::Failure(fail_msg))
-                }
-                MessageType_ButtonRequest => {
-                    let req_msg = resp.into_message()?;
-                    trace!("Received ButtonRequest: {:?}", req_msg);
-                    Ok(TrezorResponse::ButtonRequest(ButtonRequest {
-                        message: req_msg,
-                        client: self,
-                        result_handler,
-                    }))
-                }
-                MessageType_PinMatrixRequest => {
-                    let req_msg = resp.into_message()?;
-                    trace!("Received PinMatrixRequest: {:?}", req_msg);
-                    Ok(TrezorResponse::PinMatrixRequest(PinMatrixRequest {
-                        message: req_msg,
-                        client: self,
-                        result_handler,
-                    }))
-                }
-                MessageType_PassphraseRequest => {
-                    let req_msg = resp.into_message()?;
-                    trace!("Received PassphraseRequest: {:?}", req_msg);
-                    Ok(TrezorResponse::PassphraseRequest(PassphraseRequest {
-                        message: req_msg,
-                        client: self,
-                        result_handler,
-                    }))
+                    return Err(Error::FailureResponse(fail_msg));
                 }
                 mtype => {
                     debug!(
@@ -121,56 +93,53 @@ impl Trezor {
                         mtype,
                         hex::encode(resp.into_payload())
                     );
-                    Err(Error::UnexpectedMessageType(mtype))
+                    return Err(Error::UnexpectedMessageType(mtype))
                 }
             }
         }
     }
 
     pub fn init_device(&mut self, session_id: Option<Vec<u8>>) -> Result<()> {
-        let features = self.initialize(session_id)?.ok()?;
+        let features = self.initialize(session_id)?;
         self.features = Some(features);
         Ok(())
     }
 
-    pub fn initialize(
-        &mut self,
-        session_id: Option<Vec<u8>>,
-    ) -> Result<TrezorResponse<'_, Features, Features>> {
+    pub fn initialize(&mut self, session_id: Option<Vec<u8>>) -> Result<protos::Features> {
         let mut req = protos::Initialize::new();
         if let Some(session_id) = session_id {
             req.set_session_id(session_id);
         }
-        self.call(req, Box::new(|_, m| Ok(m)))
+        self.call(req)
     }
 
-    pub fn ping(&mut self, message: &str) -> Result<TrezorResponse<'_, (), protos::Success>> {
+    pub fn ping(&mut self, message: &str) -> Result<protos::Success> {
         let mut req = protos::Ping::new();
         req.set_message(message.to_owned());
-        self.call(req, Box::new(|_, _| Ok(())))
+        self.call(req)
     }
 
-    pub fn change_pin(&mut self, remove: bool) -> Result<TrezorResponse<'_, (), protos::Success>> {
+    pub fn change_pin(&mut self, remove: bool) -> Result<protos::Success> {
         let mut req = protos::ChangePin::new();
         req.set_remove(remove);
-        self.call(req, Box::new(|_, _| Ok(())))
+        self.call(req)
     }
 
-    pub fn wipe_device(&mut self) -> Result<TrezorResponse<'_, (), protos::Success>> {
+    pub fn wipe_device(&mut self) -> Result<protos::Success> {
         let req = protos::WipeDevice::new();
-        self.call(req, Box::new(|_, _| Ok(())))
+        self.call(req)
     }
 
     pub fn recover_device(
         &mut self,
-        word_count: WordCount,
+        word_count: u32,
         passphrase_protection: bool,
         pin_protection: bool,
         label: String,
         dry_run: bool,
-    ) -> Result<TrezorResponse<'_, (), protos::Success>> {
+    ) -> Result<protos::Success> {
         let mut req = protos::RecoveryDevice::new();
-        req.set_word_count(word_count as u32);
+        req.set_word_count(word_count);
         req.set_passphrase_protection(passphrase_protection);
         req.set_pin_protection(pin_protection);
         req.set_label(label);
@@ -183,7 +152,7 @@ impl Trezor {
         req.set_input_method(protos::recovery_device::RecoveryDeviceInputMethod::ScrambledWords);
         //TODO(stevenroose) support languages
         req.set_language("english".to_owned());
-        self.call(req, Box::new(|_, _| Ok(())))
+        self.call(req)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -195,7 +164,11 @@ impl Trezor {
         label: String,
         skip_backup: bool,
         no_backup: bool,
-    ) -> Result<TrezorResponse<'_, EntropyRequest<'_>, protos::EntropyRequest>> {
+        external_entropy: Vec<u8>,
+    ) -> Result<protos::Success> {
+        if external_entropy.len() != 32 {
+            return Err(Error::InvalidEntropy);
+        }
         let mut req = protos::ResetDevice::new();
         req.set_strength(strength as u32);
         req.set_passphrase_protection(passphrase_protection);
@@ -203,12 +176,15 @@ impl Trezor {
         req.set_label(label);
         req.set_skip_backup(skip_backup);
         req.set_no_backup(no_backup);
-        self.call(req, Box::new(|c, _| Ok(EntropyRequest { client: c })))
+        let _: protos::EntropyRequest = self.call(req)?;
+        let mut ack = protos::EntropyAck::new();
+        ack.set_entropy(external_entropy);
+        self.call(ack)
     }
 
-    pub fn backup(&mut self) -> Result<TrezorResponse<'_, (), protos::Success>> {
+    pub fn backup(&mut self) -> Result<protos::Success> {
         let req = protos::BackupDevice::new();
-        self.call(req, Box::new(|_, _| Ok(())))
+        self.call(req)
     }
 
     //TODO(stevenroose) support U2F stuff? currently ignored all
@@ -219,7 +195,7 @@ impl Trezor {
         use_passphrase: Option<bool>,
         homescreen: Option<Vec<u8>>,
         auto_lock_delay_ms: Option<usize>,
-    ) -> Result<TrezorResponse<'_, (), protos::Success>> {
+    ) -> Result<protos::Success> {
         let mut req = protos::ApplySettings::new();
         if let Some(label) = label {
             req.set_label(label);
@@ -233,7 +209,7 @@ impl Trezor {
         if let Some(auto_lock_delay_ms) = auto_lock_delay_ms {
             req.set_auto_lock_delay_ms(auto_lock_delay_ms as u32);
         }
-        self.call(req, Box::new(|_, _| Ok(())))
+        self.call(req)
     }
 
     pub fn sign_identity(
@@ -241,13 +217,14 @@ impl Trezor {
         identity: protos::IdentityType,
         digest: Vec<u8>,
         curve: String,
-    ) -> Result<TrezorResponse<'_, Vec<u8>, protos::SignedIdentity>> {
+    ) -> Result<Vec<u8>> {
         let mut req = protos::SignIdentity::new();
         req.identity = MessageField::some(identity);
         req.set_challenge_hidden(digest);
         req.set_challenge_visual("".to_owned());
         req.set_ecdsa_curve_name(curve);
-        self.call(req, Box::new(|_, m| Ok(m.signature().to_owned())))
+        let m: protos::SignedIdentity = self.call(req)?;
+        Ok(m.signature().to_owned())
     }
 
     pub fn get_ecdh_session_key(
@@ -255,11 +232,11 @@ impl Trezor {
         identity: protos::IdentityType,
         peer_public_key: Vec<u8>,
         curve: String,
-    ) -> Result<TrezorResponse<'_, protos::ECDHSessionKey, protos::ECDHSessionKey>> {
+    ) -> Result<protos::ECDHSessionKey> {
         let mut req = protos::GetECDHSessionKey::new();
         req.identity = MessageField::some(identity);
         req.set_peer_public_key(peer_public_key);
         req.set_ecdsa_curve_name(curve);
-        self.call(req, Box::new(|_, m| Ok(m)))
+        self.call(req)
     }
 }
