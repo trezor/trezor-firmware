@@ -30,6 +30,25 @@
 
 static nfc_dev_info_t dev_info = {0};
 
+static uint8_t nfc_compose_uri(const char* uri, uint8_t* buffer,
+                               uint8_t buffer_size) {
+  size_t uri_len = strlen(uri);
+  const uint8_t uri_header[] = {0x03,    uri_len + 5, 0xD1, 0x01,
+                                uri_len, 0x55,        0x01};
+
+  if (buffer_size < (uri_len + sizeof(uri_header))) {
+    return 0;  // Not enough room to create URI
+  }
+
+  memcpy(buffer, uri_header, sizeof(uri_header));
+  buffer = buffer + sizeof(uri_header);
+  memcpy(buffer, uri, uri_len);
+  buffer = buffer + uri_len;
+  *buffer = 0xFE;
+
+  return uri_len + sizeof(uri_header);  // return buffer len
+}
+
 static void prodtest_nfc_read_card(cli_t* cli) {
   uint32_t timeout = 0;
   bool timeout_set = false;
@@ -228,7 +247,23 @@ static void prodtest_nfc_write_card(cli_t* cli) {
       }
 
       cli_trace(cli, "Writing URI to NFC tag %s", dev_info.uid);
-      nfc_dev_write_ndef_uri();
+      uint8_t uri_buffer[128] = {0};
+      uint8_t* rx_buff_ptr = NULL;
+      uint16_t* rx_buff_len = NULL;
+      nfc_apdu_cmd_t tx_buf = {.data = uri_buffer, .data_len = 0};
+      nfc_apdu_response_t rx_buf = {.data = &rx_buff_ptr,
+                                    .data_len = &rx_buff_len};
+
+      tx_buf.data_len =
+          nfc_compose_uri("trezor.io/", uri_buffer, sizeof(uri_buffer));
+      nfc_status = nfc_transceive(tx_buf, rx_buf);
+      if (ts_ok(nfc_status)) {
+        cli_trace(cli, "URI write success");
+      } else {
+        cli_error(cli, CLI_ERROR, "URI write failed: err=%d",
+                  ts_code(nfc_status));
+      }
+
     } else if (event_flag == NFC_EVENT_DISCONNECTED) {
       cli_trace(cli, "NFC card removed.");
     }

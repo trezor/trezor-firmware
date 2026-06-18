@@ -381,26 +381,6 @@ ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp) {
   return err;
 }
 
-nfc_status_t nfc_dev_write_ndef_uri(void) {
-  st25_driver_t *drv = &g_st25_driver;
-
-  if (!drv->initialized) {
-    return NFC_NOT_INITIALIZED;
-  }
-
-  // NDEF message
-  uint8_t ndef_message[128] = {0};
-
-  uint16_t buffer_len =
-      ndef_create_uri("trezor.io/", ndef_message, sizeof(ndef_message));
-
-  for (uint8_t i = 0; i < buffer_len / 4; i++) {
-    rfalT2TPollerWrite(4 + i, ndef_message + i * 4);
-  }
-
-  return NFC_OK;
-}
-
 ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
   if (rfalNfcIsDevActivated(rfalNfcGetState())) {
     rfalNfcDevice *nfc_device;
