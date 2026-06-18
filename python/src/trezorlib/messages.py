@@ -920,23 +920,12 @@ class PinMatrixAck(protobuf.MessageType):
 
 class PassphraseRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 41
-    FIELDS = {
-        1: protobuf.Field("_on_device", "bool", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        _on_device: Optional["bool"] = None,
-    ) -> None:
-        self._on_device = _on_device
 
 
 class PassphraseAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 42
     FIELDS = {
         1: protobuf.Field("passphrase", "string", repeated=False, required=False, default=None),
-        2: protobuf.Field("_state", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("on_device", "bool", repeated=False, required=False, default=None),
     }
 
@@ -944,11 +933,9 @@ class PassphraseAck(protobuf.MessageType):
         self,
         *,
         passphrase: Optional["str"] = None,
-        _state: Optional["bytes"] = None,
         on_device: Optional["bool"] = None,
     ) -> None:
         self.passphrase = passphrase
-        self._state = _state
         self.on_device = on_device
 
 

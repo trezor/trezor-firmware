@@ -130,7 +130,7 @@ message PinMatrixAck {
  * @next PassphraseAck
  */
 message PassphraseRequest {
-    optional bool _on_device = 1 [deprecated = true];  // <2.3.0
+    reserved 1;  // bool on_device, deprecated in 2.3.0
 }
 
 /**
@@ -139,8 +139,8 @@ message PassphraseRequest {
  */
 message PassphraseAck {
     optional string passphrase = 1;
-    optional bytes _state = 2 [deprecated = true];  // <2.3.0
-    optional bool on_device = 3;                    // user wants to enter passphrase on the device
+    reserved 2;                   // bytes state, deprecated in 2.3.0
+    optional bool on_device = 3;  // user wants to enter passphrase on the device
 }
 
 /**
