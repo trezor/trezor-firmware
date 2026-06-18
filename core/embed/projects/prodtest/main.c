@@ -204,9 +204,6 @@ static void drivers_init(void) {
 #ifdef USE_HW_REVISION
   hw_revision_init();
 #endif
-#ifdef USE_NFC
-  nfc_init();
-#endif
 }
 
 void prodtest_show_homescreen(void) {

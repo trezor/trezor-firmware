@@ -48,7 +48,13 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     return;
   }
 
-  nfc_status_t nfc_status = nfc_start_discovery(NFC_DISCOVERY_TYPE_CARD_READER);
+  ts_t nfc_status = nfc_init();
+  if (ts_error(nfc_status)) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC initialization failed");
+    return;
+  }
+
+  nfc_status = nfc_start_discovery(NFC_DISCOVERY_TYPE_CARD_READER);
   if (nfc_status == NFC_NOT_INITIALIZED) {
     cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_INIT, "NFC not initialized");
     goto cleanup;
@@ -88,7 +94,8 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     }
 
     if (!nfc_get_event(&event_flag)) {
-      cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_ERROR, "Failed to get NFC events");
+      cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_ERROR,
+                "Failed to get NFC events");
       continue;
     }
 
@@ -123,8 +130,8 @@ static void prodtest_nfc_read_card(cli_t* cli) {
           break;
         case NFC_DEV_INTERFACE_UNKNOWN:
         default:
-          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC Unexpected Tag Type (%d)",
-                    dev_info.interface);
+          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED,
+                    "NFC Unexpected Tag Type (%d)", dev_info.interface);
           goto cleanup;
       }
 
@@ -139,6 +146,7 @@ static void prodtest_nfc_read_card(cli_t* cli) {
 
 cleanup:
   nfc_stop_discovery();
+  nfc_deinit();
 }
 
 static void prodtest_nfc_emulate_card(cli_t* cli) {
@@ -228,7 +236,13 @@ static void prodtest_nfc_write_card(cli_t* cli) {
     return;
   }
 
-  nfc_status_t nfc_status = nfc_start_discovery(NFC_DISCOVERY_TYPE_CARD_READER);
+  ts_t nfc_status = nfc_init();
+  if (ts_error(nfc_status)) {
+    cli_error(cli, PRODTEST_ERR_NFC_INIT, "NFC initialization failed");
+    return;
+  }
+
+  nfc_status = nfc_start_discovery(NFC_DISCOVERY_TYPE_CARD_READER);
   if (nfc_status == NFC_NOT_INITIALIZED) {
     cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_INIT, "NFC not initialized");
     goto cleanup;
@@ -268,7 +282,8 @@ static void prodtest_nfc_write_card(cli_t* cli) {
     }
 
     if (!nfc_get_event(&event_flag)) {
-      cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_ERROR, "Failed to get NFC events");
+      cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_ERROR,
+                "Failed to get NFC events");
       continue;
     }
 
@@ -294,6 +309,7 @@ static void prodtest_nfc_write_card(cli_t* cli) {
 
 cleanup:
   nfc_stop_discovery();
+  nfc_deinit();
 }
 
 // clang-format off
