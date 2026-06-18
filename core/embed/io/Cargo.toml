@@ -111,6 +111,7 @@ framebuffer = []
 # to also advertise `framebuffer` in its project.toml. display_st7789 supports
 # both modes — the model.toml decides.
 # The emulator's unix driver is selected by display/build.rs (not a feature).
+display_none = []
 display_ltdc_dsi = ["framebuffer"]
 display_st7789 = []
 display_vg2864 = ["framebuffer"]
