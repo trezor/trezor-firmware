@@ -38,7 +38,9 @@ use crate::{
 #[cfg(feature = "app_loading")]
 use rkyv::{option::ArchivedOption, tuple::ArchivedTuple2};
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::structs::{ArchivedSlice, ArchivedStrSlice, ArchivedTrezorUiEnum, Property, StrExt};
+use trezor_app_sdk::structs::{
+    ArchivedSlice, ArchivedStrSlice, ArchivedTrezorUiEnum, Property, StrExt,
+};
 
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
