@@ -23,7 +23,7 @@
 
 #include <io/nfc.h>
 #include <rtl/cli.h>
-#include <sys/sysevent_source.h>
+#include <sys/sysevent.h>
 #include <sys/systick.h>
 
 #include "prodtest_error_codes.h"
