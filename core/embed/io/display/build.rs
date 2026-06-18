@@ -23,6 +23,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         // The emulator reuses the emulated board's display configuration (panel,
         // framebuffer) but always builds the unix driver instead of the HW one.
         add_driver_unix(lib)?;
+    } else if cfg!(feature = "display_none") {
+        add_driver_none(lib)?;
     } else if cfg!(feature = "display_ltdc_dsi") {
         add_driver_ltdc_dsi(lib)?;
     } else if cfg!(feature = "display_st7789") {
@@ -107,6 +109,18 @@ fn add_driver_unix(lib: &mut CLibrary) -> Result<()> {
         bail_unsupported!();
     }
     lib.add_source("display/unix/display_driver.c");
+    Ok(())
+}
+
+// Headless driver for boards without a display. Sets nominal resolution
+// defines so dependent code compiles; performs no drawing at runtime.
+fn add_driver_none(lib: &mut CLibrary) -> Result<()> {
+    lib.add_defines([
+        ("USE_RGB_COLORS", Some("1")),
+        ("DISPLAY_RESX", Some("240")),
+        ("DISPLAY_RESY", Some("240")),
+    ]);
+    lib.add_source("display/none/display_driver.c");
     Ok(())
 }
 
