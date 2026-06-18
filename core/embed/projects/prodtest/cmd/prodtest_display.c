@@ -18,12 +18,23 @@
  */
 
 #include <rust_ui_prodtest.h>
+#include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #include <io/display.h>
 #include <rtl/cli.h>
+#include <sys/systick.h>
+
+#ifdef USE_BUTTON
+#include <io/button.h>
+#endif
+
+#ifdef USE_TOUCH
+#include <io/touch.h>
+#endif
 
 #include "prodtest.h"
+#include "prodtest_display_images.h"
 
 static void prodtest_display_border(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -173,6 +184,141 @@ static void prodtest_display_image(cli_t* cli) {
   }
 }
 
+// Returns true if input received, false on timeout or abort.
+static bool slideshow_wait_advance(cli_t* cli, uint32_t timeout_ms) {
+  uint32_t deadline = ticks_timeout(timeout_ms);
+
+#ifdef USE_TOUCH
+  // Drain stale events before waiting for fresh input.
+  while (touch_get_event() != 0) {
+    if (cli_aborted(cli)) return false;
+  }
+#endif
+
+  for (;;) {
+    if (timeout_ms != 0 && ticks_expired(deadline)) return false;
+    if (cli_aborted(cli)) return false;
+
+    // Poll for terminal input. The USB VCP interrupt may not fire during a
+    // command handler, so we read directly instead of relying on cli_abort.
+    {
+      char buf[1];
+      if (cli->read(cli->callback_context, buf, sizeof(buf)) > 0) {
+        cli_abort(cli);
+        return false;
+      }
+    }
+
+#ifdef USE_TOUCH
+    if (touch_get_event() & TOUCH_START) return true;
+#endif
+
+#ifdef USE_BUTTON
+    {
+      button_event_t btn = {0};
+      if (button_get_event(&btn) && btn.event_type == BTN_EVENT_DOWN) {
+        return true;
+      }
+    }
+#endif
+  }
+}
+
+static void slideshow_display_image(display_fb_info_t* fb,
+                                     const prodtest_image_t* img) {
+  int w = img->width < DISPLAY_RESX ? img->width : DISPLAY_RESX;
+  int h = img->height < DISPLAY_RESY ? img->height : DISPLAY_RESY;
+  for (int y = 0; y < h; y++) {
+    const uint8_t* src_row = img->data + (size_t)y * img->width * 2;
+    uint8_t* dst_row = (uint8_t*)fb->ptr + (size_t)y * fb->stride;
+    memcpy(dst_row, src_row, (size_t)w * 2);
+  }
+}
+
+static void prodtest_display_slideshow(cli_t* cli) {
+  uint32_t timeout_ms = 0;
+  uint32_t backlight = 0;
+  bool loop = false;
+  bool timeout_set = false;
+  bool backlight_set = false;
+
+  for (int arg_idx = 0; arg_idx < (int)cli_arg_count(cli); arg_idx++) {
+    const char* arg = cli_nth_arg(cli, arg_idx);
+    if (strcmp(arg, "--loop") == 0) {
+      loop = true;
+    } else if (strcmp(arg, "--backlight") == 0) {
+      arg_idx++;
+      if (arg_idx >= (int)cli_arg_count(cli) ||
+          !cstr_parse_uint32(cli_nth_arg(cli, arg_idx), 10, &backlight) ||
+          backlight > 255) {
+        cli_error_arg(cli, "Expecting backlight level (0-255) after --backlight.");
+        return;
+      }
+      backlight_set = true;
+    } else if (!timeout_set) {
+      if (!cstr_parse_uint32(arg, 10, &timeout_ms)) {
+        cli_error_arg(cli, "Expecting per-image timeout in ms (0 = wait for input).");
+        return;
+      }
+      timeout_set = true;
+    } else {
+      cli_error_arg(cli, "Unknown argument: %s.", arg);
+      return;
+    }
+  }
+
+  if (backlight_set) {
+    display_set_backlight(backlight);
+  }
+
+  bool first_display = true;
+  bool done = false;
+
+  if (loop) {
+    cli_trace(cli, "Send any input from the terminal to exit the loop.");
+  }
+
+  do {
+    for (int i = 0; i < PRODTEST_IMAGES_COUNT; i++) {
+      if (!first_display) {
+        // Overwrite previous list block in place. "\033[NA" moves cursor up N
+        // rows, "\r" goes to col 0, "\033[J" clears to end of screen (including
+        // the "# " artifact on this trace line). The trailing "\r\n" from
+        // cli_trace then lands the cursor at the blank-line row.
+        cli_trace(cli, "\033[%dA\r\033[J", PRODTEST_IMAGES_COUNT + 2);
+      }
+      first_display = false;
+
+      cli_trace(cli, "");
+      for (int j = 0; j < PRODTEST_IMAGES_COUNT; j++) {
+        if (j == i) {
+          cli_trace(cli, " >> %2d. %s  [current]", j + 1, PRODTEST_IMAGES[j].name);
+        } else {
+          cli_trace(cli, "    %2d. %s", j + 1, PRODTEST_IMAGES[j].name);
+        }
+      }
+
+      display_fb_info_t fb = {0};
+      if (!display_get_frame_buffer(&fb)) {
+        cli_error(cli, CLI_ERROR, "Cannot get frame buffer.");
+        return;
+      }
+
+      slideshow_display_image(&fb, &PRODTEST_IMAGES[i]);
+      display_refresh();
+
+      if (!slideshow_wait_advance(cli, timeout_ms)) {
+        if (cli_aborted(cli)) {
+          // Terminal input is a clean exit in all modes.
+          done = true;
+          break;
+        }
+      }
+    }
+  } while (loop && !done);
+
+  cli_ok(cli, "");
+}
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -208,4 +354,11 @@ PRODTEST_CLI_CMD(
   .func = prodtest_display_image,
   .info = "Show a raw RGB565 image (begin|chunk <hex>|end)",
   .args = "<phase> [<hex-data>]"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "display-slideshow",
+  .func = prodtest_display_slideshow,
+  .info = "Show display test images one by one (advance on touch/button)",
+  .args = "[<timeout_ms>] [--loop] [--backlight <level>]"
 );
