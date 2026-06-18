@@ -34,7 +34,6 @@
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
 #include "rfal_nfca.h"
-#include "rfal_platform.h"
 #include "rfal_rf.h"
 #include "rfal_t2t.h"
 #include "rfal_utils.h"
@@ -67,7 +66,7 @@ typedef struct {
   // NFC IRQ pin callback
   void (*nfc_irq_callback)(void);
   EXTI_HandleTypeDef hEXTI;
-  rfalNfcDiscoverParam disc_params;
+  const rfalNfcDiscoverParam *disc_params;
 } st25_driver_t;
 
 static const rfalNfcDiscoverParam default_disc_params = {
@@ -90,8 +89,7 @@ static const rfalNfcDiscoverParam default_disc_params = {
     .wakeupPollBefore = false,
     .wakeupNPolls = 1U,
     .totalDuration = 1000U,
-    .techs2Find =
-        RFAL_NFC_POLL_TECH_A | RFAL_NFC_POLL_TECH_B | RFAL_NFC_POLL_TECH_V,
+    .techs2Find = RFAL_NFC_POLL_TECH_A | RFAL_NFC_POLL_TECH_B,
     .techs2Bail = RFAL_NFC_TECH_NONE,
     .propNfc = {0},
     .lmConfigPA = {0},
@@ -104,44 +102,6 @@ static st25_driver_t g_st25_driver = {
     .rfal_initialized = false,
 };
 
-typedef struct {
-  uint8_t UID[7];
-  uint8_t BCC[1];
-  uint8_t SYSTEM_AREA[2];
-  union {
-    uint8_t CC[4];
-    struct {
-      uint8_t CC_MAGIC_NUMBER;
-      uint8_t CC_VERSION;
-      uint8_t CC_SIZE;
-      uint8_t CC_ACCESS_CONDITION;
-    };
-  };
-} nfc_device_header_t2t_t;
-
-// NFC-A CE config
-// 4-byte UIDs with first byte 0x08 would need random number for the subsequent
-// 3 bytes. 4-byte UIDs with first byte 0x*F are Fixed number, not unique, use
-// for this demo 7-byte UIDs need a manufacturer ID and need to assure
-// uniqueness of the rest.
-static const uint8_t ce_nfca_nfcid[] = {
-    0x1, 0x2, 0x3, 0x4};  // =_STM, 5F 53 54 4D NFCID1 / UID (4 bytes)
-static const uint8_t ce_nfca_sens_res[] = {
-    0x02, 0x00};  // SENS_RES / ATQA for 4-byte UID
-static const uint8_t ce_nfca_sel_res = LM_SEL_RES;  // SEL_RES / SAK
-
-static const uint8_t ce_nfcf_nfcid2[] = {
-    LM_NFCID2_BYTE1, 0xFE, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
-
-// NFC-F CE config
-static const uint8_t ce_nfcf_sc[] = {LM_SC_BYTE1, LM_SC_BYTE2};
-static uint8_t ce_nfcf_sensf_res[] = {
-    0x01,  // SENSF_RES
-    0x02,    0xFE,    0x11, 0x22,
-    0x33,    0x44,    0x55, 0x66,  // NFCID2
-    LM_PAD0, LM_PAD0, 0x00, 0x00,
-    0x00,    0x7F,    0x7F, 0x00,  // PAD0, PAD1, MRTIcheck, MRTIupdate, PAD2
-    0x00,    0x00};                // RD
 
 static nfc_status_t nfc_transcieve_blocking(uint8_t *tx_buf,
                                             uint16_t tx_buf_size,
@@ -252,7 +212,7 @@ nfc_status_t nfc_init() {
   drv->rfal_initialized = true;
   drv->initialized = true;
   drv->card_connected = false;
-  memcpy(&drv->disc_params, &default_disc_params, sizeof(drv->disc_params));
+  drv->disc_params = &default_disc_params;
 
   if (!nfc_poll_init()) {
     goto cleanup;
@@ -292,67 +252,7 @@ void nfc_deinit(void) {
   memset(drv, 0, sizeof(st25_driver_t));
 }
 
-// Should be used only to overwrite default configuration in order to run
-// card emulation, the default configuration is good for reader mode.
-static nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
-  st25_driver_t *drv = &g_st25_driver;
-
-  if (drv->initialized == false) {
-    return NFC_NOT_INITIALIZED;
-  }
-
-  // Set default discovery parameters
-  rfalNfcDefaultDiscParams(&drv->disc_params);
-
-  // Set user defined discovery parameters
-  drv->disc_params.devLimit = 1;
-  memcpy(&drv->disc_params.nfcid3, default_disc_params.nfcid3,
-         sizeof(default_disc_params.nfcid3));
-  memcpy(&drv->disc_params.GB, default_disc_params.GB,
-         sizeof(default_disc_params.GB));
-  drv->disc_params.GBLen = sizeof(default_disc_params.GB);
-  drv->disc_params.p2pNfcaPrio = true;
-  drv->disc_params.totalDuration = 1000U;
-
-  if (tech & NFC_CARD_EMU_TECH_A) {
-    card_emulation_init(ce_nfcf_nfcid2);
-
-    // Set SENS_RES / ATQA
-    memcpy(drv->disc_params.lmConfigPA.SENS_RES, ce_nfca_sens_res,
-           RFAL_LM_SENS_RES_LEN);
-
-    // Set NFCID / UID
-    memcpy(drv->disc_params.lmConfigPA.nfcid, ce_nfca_nfcid,
-           RFAL_LM_NFCID_LEN_04);
-
-    // Set NFCID length to 4 bytes
-    drv->disc_params.lmConfigPA.nfcidLen = RFAL_LM_NFCID_LEN_04;
-
-    // Set SEL_RES / SAK
-    drv->disc_params.lmConfigPA.SEL_RES = ce_nfca_sel_res;
-    drv->disc_params.techs2Find |= RFAL_NFC_LISTEN_TECH_A;
-  }
-
-  if (tech & NFC_CARD_EMU_TECH_F) {
-    // Set configuration for NFC-F CE
-    memcpy(drv->disc_params.lmConfigPF.SC, ce_nfcf_sc,
-           RFAL_LM_SENSF_SC_LEN);  // Set System Code
-
-    // Load NFCID2 on SENSF_RES
-    memcpy(&ce_nfcf_sensf_res[RFAL_NFCF_CMD_LEN], ce_nfcf_nfcid2,
-           RFAL_NFCID2_LEN);
-
-    // Set SENSF_RES / Poll Response
-    memcpy(drv->disc_params.lmConfigPF.SENSF_RES, ce_nfcf_sensf_res,
-           RFAL_LM_SENSF_RES_LEN);
-
-    drv->disc_params.techs2Find |= RFAL_NFC_LISTEN_TECH_F;
-  }
-
-  return NFC_OK;
-}
-
-nfc_status_t nfc_start_discovery(nfc_discovery_type_t discovery_type) {
+ts_t nfc_start_discovery(void) {
   st25_driver_t *drv = &g_st25_driver;
 
   if (!drv->initialized) {
@@ -369,7 +269,7 @@ nfc_status_t nfc_start_discovery(nfc_discovery_type_t discovery_type) {
   }
 
   ReturnCode err;
-  err = rfalNfcDiscover(&drv->disc_params);
+  err = rfalNfcDiscover(drv->disc_params);
   if (err != RFAL_ERR_NONE) {
     return NFC_ERROR;
   }
