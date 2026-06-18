@@ -27,6 +27,7 @@
 
 #include "nfc_poll.h"
 #include "nfc_poll_internal.h"
+#include "rfal_nfc.h"
 
 typedef struct {
   // Last state

@@ -22,12 +22,10 @@
 #include <trezor_bsp.h>
 #include <trezor_types.h>
 
-#include "rfal_nfc.h"
-
 bool nfc_is_connected();
 
 bool nfc_identify();
 
 bool nfc_check_connection();
 
-nfc_status_t nfc_restart_discovery(void);
+ts_t nfc_restart_discovery(void);

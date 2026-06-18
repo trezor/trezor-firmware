@@ -50,15 +50,15 @@ static void prodtest_nfc_read_card(cli_t* cli) {
 
   ts_t nfc_status = nfc_init();
   if (ts_error(nfc_status)) {
-    cli_error(cli, CLI_ERROR_FATAL, "NFC initialization failed");
+    cli_error(cli, PRODTEST_ERR_NFC_INIT, "NFC initialization failed");
     return;
   }
 
   nfc_status = nfc_start_discovery();
-  if (nfc_status == NFC_NOT_INITIALIZED) {
+  if (ts_eq(nfc_status, TS_ENOINIT)) {
     cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_INIT, "NFC not initialized");
     goto cleanup;
-  } else if (nfc_status != NFC_OK) {
+  } else if (ts_error(nfc_status)) {
     cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
     goto cleanup;
   } else if (timeout_set) {
@@ -174,10 +174,10 @@ static void prodtest_nfc_write_card(cli_t* cli) {
   }
 
   nfc_status = nfc_start_discovery(NFC_DISCOVERY_TYPE_CARD_READER);
-  if (nfc_status == NFC_NOT_INITIALIZED) {
+  if (ts_eq(nfc_status, TS_ENOINIT)) {
     cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_INIT, "NFC not initialized");
     goto cleanup;
-  } else if (nfc_status != NFC_OK) {
+  } else if (ts_error(nfc_status)) {
     cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
     goto cleanup;
   } else if (timeout_set) {
