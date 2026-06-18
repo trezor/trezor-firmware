@@ -129,9 +129,9 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
 #define RFAL_FEATURE_NFCB \
   true /*!< Enable/Disable RFAL support for NFC-B (ISO14443B) */
 #define RFAL_FEATURE_NFCF \
-  true /*!< Enable/Disable RFAL support for NFC-F (FeliCa) */
+  false /*!< Enable/Disable RFAL support for NFC-F (FeliCa) */
 #define RFAL_FEATURE_NFCV \
-  true /*!< Enable/Disable RFAL support for NFC-V (ISO15693) */
+  false /*!< Enable/Disable RFAL support for NFC-V (ISO15693) */
 #define RFAL_FEATURE_T1T \
   true /*!< Enable/Disable RFAL support for T1T (Topaz) */
 #define RFAL_FEATURE_T2T true /*!< Enable/Disable RFAL support for T2T */

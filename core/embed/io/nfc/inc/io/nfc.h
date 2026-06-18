@@ -32,12 +32,6 @@ typedef enum {
 typedef enum {
   NFC_DEV_TYPE_A,
   NFC_DEV_TYPE_B,
-  NFC_DEV_TYPE_F,
-  NFC_DEV_TYPE_V,
-  NFC_DEV_TYPE_ST25TB,
-  NFC_DEV_TYPE_AP2P,
-  NFC_DEV_TYPE_POLL_TYPE_A,
-  NFC_DEV_TYPE_POLL_TYPE_F,
   NFC_DEV_TYPE_UNKNOWN,
 } nfc_dev_type_t;
 

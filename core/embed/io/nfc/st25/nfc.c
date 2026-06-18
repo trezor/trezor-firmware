@@ -536,24 +536,6 @@ nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
       case RFAL_NFC_LISTEN_TYPE_NFCB:
         dev_info->type = NFC_DEV_TYPE_B;
         break;
-      case RFAL_NFC_LISTEN_TYPE_NFCF:
-        dev_info->type = NFC_DEV_TYPE_F;
-        break;
-      case RFAL_NFC_LISTEN_TYPE_NFCV:
-        dev_info->type = NFC_DEV_TYPE_V;
-        break;
-      case RFAL_NFC_LISTEN_TYPE_ST25TB:
-        dev_info->type = NFC_DEV_TYPE_ST25TB;
-        break;
-      case RFAL_NFC_LISTEN_TYPE_AP2P:
-        dev_info->type = NFC_DEV_TYPE_AP2P;
-        break;
-      case RFAL_NFC_POLL_TYPE_NFCA:
-        dev_info->type = NFC_DEV_TYPE_POLL_TYPE_A;
-        break;
-      case RFAL_NFC_POLL_TYPE_NFCF:
-        dev_info->type = NFC_DEV_TYPE_POLL_TYPE_F;
-        break;
       default:
         dev_info->type = NFC_DEV_TYPE_UNKNOWN;
         break;

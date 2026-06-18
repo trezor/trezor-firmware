@@ -103,23 +103,11 @@ static void prodtest_nfc_read_card(cli_t* cli) {
         case NFC_DEV_TYPE_B:
           cli_trace(cli, "NFC Type B: UID: %s", dev_info.uid);
           break;
-        case NFC_DEV_TYPE_F:
-          cli_trace(cli, "NFC Type F: UID: %s", dev_info.uid);
-          break;
-        case NFC_DEV_TYPE_V:
-          cli_trace(cli, "NFC Type V: UID: %s", dev_info.uid);
-          break;
-        case NFC_DEV_TYPE_ST25TB:
-          cli_trace(cli, "NFC Type ST25TB: UID: %s", dev_info.uid);
-          break;
-        case NFC_DEV_TYPE_AP2P:
-          cli_trace(cli, "NFC Type AP2P: UID: %s", dev_info.uid);
-          break;
         case NFC_DEV_TYPE_UNKNOWN:
           cli_trace(cli, "NFC Type UNKNOWN");
           break;
         default:
-          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC ERROR Unexpected");
+          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "Unknown NFC card type!");
           goto cleanup;
       }
 
