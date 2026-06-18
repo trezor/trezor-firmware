@@ -24,6 +24,7 @@ mcu_stm32f427 = ["sec/mcu_stm32f427", "mcu_stm32f4"]
 mcu_stm32f429 = ["sec/mcu_stm32f429", "mcu_stm32f4"]
 mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_stm32u5a = ["sec/mcu_stm32u5a", "mcu_stm32u5"]
 
 # --------------------------------------------------------------------------
 # Privilege mode features
