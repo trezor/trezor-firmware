@@ -1,0 +1,13 @@
+mcu = "stm32u5a"
+default_board = "nucleo"
+secmon = false
+
+features = [
+    "hash_processor",
+    "lockable_bootloader",
+    "secret",
+    "secure_aes",
+    "secure_mode",
+    "tamper",
+    "layout_bolt",
+]

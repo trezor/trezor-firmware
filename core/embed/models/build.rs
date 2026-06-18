@@ -16,6 +16,8 @@ fn main() -> Result<()> {
         "D001"
     } else if cfg!(feature = "model_d002") {
         "D002"
+    } else if cfg!(feature = "model_d003") {
+        "D003"
     } else {
         ""
     };
@@ -170,6 +172,8 @@ fn main() -> Result<()> {
             define_model_d001(lib, &board_header)?;
         } else if cfg!(feature = "model_d002") {
             define_model_d002(lib, &board_header)?;
+        } else if cfg!(feature = "model_d003") {
+            define_model_d003(lib, &board_header)?;
         } else {
             bail_unsupported!();
         }
@@ -376,6 +380,29 @@ fn define_model_d002(lib: &mut CLibrary, board_header: &str) -> Result<()> {
         ),
         ("HW_MODEL", Some(model_to_num("D002").to_string().as_str())),
         ("HW_REVISION", Some("0")),
+        ("HSE_VALUE", Some("16000000")),
+        ("USE_HSE", Some("1")),
+        ("USE_BOOTARGS_RSOD", Some("1")),
+    ]);
+
+    Ok(())
+}
+
+fn define_model_d003(lib: &mut CLibrary, board_header: &str) -> Result<()> {
+    lib.add_defines([
+        ("TREZOR_MODEL_D003", None),
+        ("TREZOR_BOARD", Some(board_header)),
+        ("MODEL_HEADER", Some("\"D003/model_D003.h\"")),
+        ("VERSIONS_HEADER", Some("\"D003/versions.h\"")),
+        ("OTP_LAYOUT_HEADER", Some("\"D003/otp_layout.h\"")),
+        (
+            "UNIT_PROPERTIES_CONTENT_HEADER",
+            Some("\"D003/unit_properties_content.h\""),
+        ),
+        ("HW_MODEL", Some(model_to_num("D003").to_string().as_str())),
+        ("HW_REVISION", Some("0")),
+        // 16 MHz HSE crystal, same as the U5G9J-DK, matching the board's
+        // CubeMX clock configuration (160 MHz SYSCLK).
         ("HSE_VALUE", Some("16000000")),
         ("USE_HSE", Some("1")),
         ("USE_BOOTARGS_RSOD", Some("1")),

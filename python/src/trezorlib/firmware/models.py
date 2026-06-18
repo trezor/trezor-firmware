@@ -38,6 +38,7 @@ class Model(Enum):
     T3W1 = b"T3W1"
     D001 = b"D001"
     D002 = b"D002"
+    D003 = b"D003"
 
     # legacy aliases
     ONE = b"T1B1"
@@ -45,6 +46,7 @@ class Model(Enum):
     R = b"T2B1"
     DISC1 = b"D001"
     DISC2 = b"D002"
+    DISC3 = b"D003"
 
     @classmethod
     def from_hw_model(cls, hw_model: Self | bytes) -> Model:
@@ -455,6 +457,7 @@ MODEL_MAP = {
     Model.T3W1: T3W1,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
+    Model.D003: TREZOR_CORE_DEV,
 }
 
 MODEL_MAP_DEV = {
@@ -466,6 +469,7 @@ MODEL_MAP_DEV = {
     Model.T3W1: TREZOR_CORE_DEV,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
+    Model.D003: TREZOR_CORE_DEV,
 }
 
 MODEL_HASH_PARAMS_MAP = {
@@ -477,6 +481,7 @@ MODEL_HASH_PARAMS_MAP = {
     Model.T3W1: T3W1_HASH_PARAMS,
     Model.D001: T2T1_HASH_PARAMS,
     Model.D002: D002_HASH_PARAMS,
+    Model.D003: D002_HASH_PARAMS,
 }
 
 # deprecated aliases -- don't add more
@@ -499,3 +504,5 @@ D001 = TREZOR_CORE_DEV
 D001_DEV = TREZOR_CORE_DEV
 D002 = TREZOR_CORE_DEV
 D002_DEV = TREZOR_CORE_DEV
+D003 = TREZOR_CORE_DEV
+D003_DEV = TREZOR_CORE_DEV
