@@ -79,7 +79,7 @@ sram_region_t g_sram_regions[] = {
     {SRAM1_BASE, SRAM1_BASE + SRAM1_SIZE, GTZC_MPCBB1},
     {SRAM2_BASE, SRAM2_BASE + SRAM2_SIZE, GTZC_MPCBB2},
     {SRAM3_BASE, SRAM3_BASE + SRAM3_SIZE, GTZC_MPCBB3},
-#if defined STM32U5A9xx | defined STM32U5G9xx
+#if defined STM32U5A9xx | defined STM32U5G9xx | defined STM32U5A5xx
     {SRAM5_BASE, SRAM5_BASE + SRAM5_SIZE, GTZC_MPCBB5},
 #endif
 #if defined STM32U5G9xx
@@ -178,6 +178,8 @@ typedef struct {
 #if defined STM32U5A9xx
 #define XFLASH_BANK_SIZE 0x200000
 #elif defined STM32U5G9xx
+#define XFLASH_BANK_SIZE 0x200000
+#elif defined STM32U5A5xx
 #define XFLASH_BANK_SIZE 0x200000
 #elif defined STM32U585xx
 #define XFLASH_BANK_SIZE 0x100000
