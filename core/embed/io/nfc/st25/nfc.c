@@ -27,7 +27,6 @@
 #include <sys/irq.h>
 #include <sys/systick.h>
 
-#include "card_emulation.h"
 #include "ndef.h"
 #include "nfc_internal.h"
 #include "nfc_poll.h"
@@ -107,8 +106,6 @@ static nfc_status_t nfc_transcieve_blocking(uint8_t *tx_buf,
                                             uint16_t tx_buf_size,
                                             uint8_t **rx_buf,
                                             uint16_t **rcv_len, uint32_t fwt);
-
-static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev);
 
 nfc_status_t nfc_init() {
   st25_driver_t *drv = &g_st25_driver;
@@ -259,15 +256,6 @@ ts_t nfc_start_discovery(void) {
     return NFC_NOT_INITIALIZED;
   }
 
-  if (discovery_type == NFC_DISCOVERY_TYPE_CARD_EMULATION) {
-    nfc_status_t status = nfc_register_tech(NFC_CARD_EMU_TECH_A);
-    if (status != NFC_OK) {
-      return status;
-    }
-  } else {
-    memcpy(&drv->disc_params, &default_disc_params, sizeof(drv->disc_params));
-  }
-
   ReturnCode err;
   err = rfalNfcDiscover(drv->disc_params);
   if (err != RFAL_ERR_NONE) {
@@ -333,8 +321,7 @@ bool nfc_identify(void) {
     return false;
   }
 
-  if (dev_info.type == NFC_DEV_TYPE_A || dev_info.type == NFC_DEV_TYPE_B ||
-      dev_info.type == NFC_DEV_TYPE_V) {
+  if (dev_info.type == NFC_DEV_TYPE_A || dev_info.type == NFC_DEV_TYPE_B) {
     drv->card_connected = true;
     return true;
   } else {
@@ -452,20 +439,7 @@ nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
         dev_info->interface = NFC_DEV_INTERFACE_UNKNOWN;
     }
 
-    // For poll mode, run the card emulator loop to handle the
-    // communication until the peer device deactivates.
-    if (dev_info->type == NFC_DEV_TYPE_POLL_TYPE_A ||
-        dev_info->type == NFC_DEV_TYPE_POLL_TYPE_F) {
-      if (dev_info->interface == NFC_DEV_INTERFACE_NFCDEP) {
-        // not supported yet
-      } else {
-        nfc_card_emulator_loop(nfc_device);
-      }
-      return NFC_ERROR;  // Automatically deactivate
-    }
-
     dev_info->uid_len = nfc_device->nfcidLen;
-
     if (nfc_device->nfcidLen > NFC_MAX_UID_LEN) {
       return NFC_ERROR;
     }
@@ -518,45 +492,6 @@ void NFC_EXTI_INTERRUPT_HANDLER(void) {
 
   mpu_restore(mode);
   IRQ_LOG_EXIT();
-}
-
-static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev) {
-  ReturnCode err = RFAL_ERR_INTERNAL;
-  uint8_t *rx_buf;
-  uint16_t *rcv_len;
-  uint8_t tx_buf[150];
-  uint16_t tx_len;
-
-  do {
-    rfalNfcWorker();
-
-    switch (rfalNfcGetState()) {
-      case RFAL_NFC_STATE_ACTIVATED:
-        err = nfc_transcieve_blocking(NULL, 0, &rx_buf, &rcv_len, 0);
-        break;
-
-      case RFAL_NFC_STATE_DATAEXCHANGE:
-      case RFAL_NFC_STATE_DATAEXCHANGE_DONE:
-
-        tx_len =
-            ((nfc_dev->type == RFAL_NFC_POLL_TYPE_NFCA)
-                 ? card_emulation_t4t(rx_buf, *rcv_len, tx_buf, sizeof(tx_buf))
-                 : rfalConvBytesToBits(
-                       card_emulation_t3t(rx_buf, rfalConvBitsToBytes(*rcv_len),
-                                          tx_buf, sizeof(rx_buf))));
-
-        err = nfc_transcieve_blocking(tx_buf, tx_len, &rx_buf, &rcv_len,
-                                      RFAL_FWT_NONE);
-        break;
-
-      case RFAL_NFC_STATE_START_DISCOVERY:
-        return;
-
-      case RFAL_NFC_STATE_LISTEN_SLEEP:
-      default:
-        break;
-    }
-  } while ((err == RFAL_ERR_NONE) || (err == RFAL_ERR_SLEEP_REQ));
 }
 
 static nfc_status_t nfc_transcieve_blocking(uint8_t *tx_buf,

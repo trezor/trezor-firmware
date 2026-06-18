@@ -56,11 +56,6 @@ typedef enum {
   NFC_EVENT_DISCONNECTED,
 } nfc_event_t;
 
-typedef enum {
-  NFC_DISCOVERY_TYPE_CARD_READER = 0,
-  NFC_DISCOVERY_TYPE_CARD_EMULATION,
-} nfc_discovery_type_t;
-
 /**
  * @brief NFC poll state
  */
@@ -82,12 +77,14 @@ nfc_status_t nfc_init(void);
 // Deinitialize NFC driver
 void nfc_deinit(void);
 
-// Activates the NFC RFAL state machine to explore the previously registered
-// technologies. The RFAL handles low-level NFC protocols and provides
-// information about the activated device. This function only starts the
-// exploration; you must regularly call nfc_get_event() to continue processing
-// NFC operations.
-nfc_status_t nfc_start_discovery(nfc_discovery_type_t discovery_type);
+/**
+ * @brief Activates the NFC RFAL state machine to explore the previously
+ * registered technologies. The RFAL handles low-level NFC protocols and
+ * provides information about the activated device. This function only starts
+ * the exploration; you must regularly call nfc_get_event() to continue
+ * processing NFC operations.
+ */
+ts_t nfc_start_discovery(void);
 
 // Deactivate the NFC RFAL state machine (put in IDLE state).
 nfc_status_t nfc_stop_discovery(void);
