@@ -61,7 +61,7 @@ sbu = []
 sd_card = []
 smp = []
 suspend = ["sec/suspend"]
-touch = ["sys/i2c_bus"]
+touch = []
 touch_wakeup = []
 usb_iface_debug = ["usb"]
 usb_iface_vcp = ["usb"]
@@ -93,10 +93,10 @@ backlight_tps61062 = []
 backlight_pin = []
 
 touch_none = []
-touch_ft6x36 = []
-touch_ft3168 = []
-touch_stmpe811 = []
-touch_sitronix = []
+touch_ft6x36 = ["sys/i2c_bus"]
+touch_ft3168 = ["sys/i2c_bus"]
+touch_stmpe811 = ["sys/i2c_bus"]
+touch_sitronix = ["sys/i2c_bus"]
 
 # touch panels (coordinate correction); selected alongside the driver by the
 # board TOML, mirroring the display driver/panel split below.
