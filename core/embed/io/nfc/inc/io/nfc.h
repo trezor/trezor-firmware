@@ -59,6 +59,18 @@ typedef struct {
   uint8_t uid_len;
 } nfc_dev_info_t;
 
+/** @brief NFC APDU command buffer structure */
+typedef struct {
+  const uint8_t *data;
+  uint16_t data_len;
+} nfc_apdu_cmd_t;
+
+/** @brief NFC APDU response buffer pointers */
+typedef struct {
+  uint8_t **data;
+  uint16_t **data_len;
+} nfc_apdu_response_t;
+
 /** @brief Initialize NFC driver including supportive
    RFAL middleware and polling mechanism. */
 ts_t nfc_init(void);
@@ -92,5 +104,4 @@ nfc_status_t nfc_dev_write_ndef_uri(void);
 
 /** @brief Transceive data with the activated NFC device. This is a blocking
  * call. */
-ts_t nfc_transceive(onst uint8_t *tx_data, uint16_t tx_data_len,
-                            uint8_t **rx_data, uint16_t **rx_data_len);
+ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp);

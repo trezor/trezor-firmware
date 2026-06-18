@@ -101,11 +101,8 @@ static st25_driver_t g_st25_driver = {
     .rfal_initialized = false,
 };
 
-
-static nfc_status_t nfc_transcieve_blocking(uint8_t *tx_buf,
-                                            uint16_t tx_buf_size,
-                                            uint8_t **rx_buf,
-                                            uint16_t **rcv_len, uint32_t fwt);
+static ts_t nfc_transcieve_blocking(const nfc_apdu_cmd_t cmd,
+                                    nfc_apdu_response_t resp, uint32_t fwt);
 
 ts_t nfc_init() {
   st25_driver_t *drv = &g_st25_driver;
@@ -347,8 +344,10 @@ bool nfc_check_connection() {
     uint8_t tx_read_1b[] = {0x00, 0xB0, 0x00, 0x00, 0x01};
     uint8_t *rx_dummy = NULL;
     uint16_t *rx_dummy_len = NULL;
-    status = nfc_transceive(tx_read_1b, sizeof(tx_read_1b), &rx_dummy,
-                            &rx_dummy_len);
+    nfc_apdu_cmd_t tx_buf = {.data = tx_read_1b,
+                             .data_len = sizeof(tx_read_1b)};
+    nfc_apdu_response_t rx_buf = {.data = &rx_dummy, .data_len = &rx_dummy_len};
+    status = nfc_transceive(tx_buf, rx_buf);
     return ts_ok(status);
   }
 
@@ -364,8 +363,7 @@ bool nfc_check_connection() {
   }
 }
 
-ts_t nfc_transceive(const uint8_t *tx_data, uint16_t tx_data_len,
-                            uint8_t **rx_data, uint16_t **rx_data_len) {
+ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp) {
   st25_driver_t *drv = &g_st25_driver;
 
   if (drv->initialized == false) {
@@ -378,7 +376,7 @@ ts_t nfc_transceive(const uint8_t *tx_data, uint16_t tx_data_len,
     return TS_ENOSTATE;
   }
 
-  ts_t err = nfc_transcieve_blocking((uint8_t *)tx_data, tx_data_len, rx_data, rx_data_len, RFAL_FWT_NONE);
+  ts_t err = nfc_transcieve_blocking(cmd, resp, RFAL_FWT_NONE);
 
   return err;
 }
@@ -492,12 +490,11 @@ void NFC_EXTI_INTERRUPT_HANDLER(void) {
   IRQ_LOG_EXIT();
 }
 
-static ts_t nfc_transcieve_blocking(uint8_t *tx_buf,
-                                            uint16_t tx_buf_size,
-                                            uint8_t **rx_buf,
-                                            uint16_t **rcv_len, uint32_t fwt) {
+static ts_t nfc_transcieve_blocking(const nfc_apdu_cmd_t cmd,
+                                    nfc_apdu_response_t resp, uint32_t fwt) {
   ReturnCode err;
-  err = rfalNfcDataExchangeStart(tx_buf, tx_buf_size, rx_buf, rcv_len, fwt);
+  err = rfalNfcDataExchangeStart((uint8_t *)cmd.data, cmd.data_len, resp.data,
+                                 resp.data_len, fwt);
   if (err == RFAL_ERR_NONE) {
     do {
       rfalNfcWorker();
