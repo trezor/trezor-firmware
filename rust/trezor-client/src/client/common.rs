@@ -101,11 +101,6 @@ impl<'a, T, R: TrezorMessage> fmt::Debug for PassphraseRequest<'a, T, R> {
 }
 
 impl<'a, T, R: TrezorMessage> PassphraseRequest<'a, T, R> {
-    /// Check whether the use is supposed to enter the passphrase on the device or not.
-    pub fn on_device(&self) -> bool {
-        self.message._on_device()
-    }
-
     /// Ack the request with a passphrase and get the next message from the device.
     pub fn ack_passphrase(self, passphrase: String) -> Result<TrezorResponse<'a, T, R>> {
         let mut req = protos::PassphraseAck::new();
