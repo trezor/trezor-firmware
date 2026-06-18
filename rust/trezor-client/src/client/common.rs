@@ -221,10 +221,7 @@ pub fn handle_interaction<T, R: TrezorMessage>(resp: TrezorResponse<'_, T, R>) -
         TrezorResponse::Failure(_) => resp.ok(), // assering ok() returns the failure error
         TrezorResponse::ButtonRequest(req) => handle_interaction(req.ack()?),
         TrezorResponse::PinMatrixRequest(_) => Err(Error::UnsupportedNetwork),
-        TrezorResponse::PassphraseRequest(req) => handle_interaction({
-            let on_device = req.on_device();
-            req.ack(!on_device)?
-        }),
+        TrezorResponse::PassphraseRequest(req) => handle_interaction(req.ack(true)?),
     }
 }
 
