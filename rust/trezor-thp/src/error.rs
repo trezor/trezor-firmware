@@ -91,6 +91,19 @@ impl From<trezor_noise_protocol::Error> for Error {
     }
 }
 
+#[cfg(feature = "noise_protocol")]
+impl From<noise_protocol::Error> for Error {
+    fn from(val: noise_protocol::Error) -> Self {
+        match val.kind() {
+            noise_protocol::ErrorKind::DH | noise_protocol::ErrorKind::Decryption => {
+                Self::crypto_error()
+            }
+            noise_protocol::ErrorKind::TooShort => Self::malformed_data(),
+            noise_protocol::ErrorKind::NeedPSK => unreachable!(),
+        }
+    }
+}
+
 pub type Result<T> = core::result::Result<T, Error>;
 
 impl Error {

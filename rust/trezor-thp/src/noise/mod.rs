@@ -9,6 +9,9 @@
 #[cfg(feature = "trezor_noise_protocol")]
 pub mod forked;
 
+#[cfg(feature = "noise_protocol")]
+pub mod noise_protocol;
+
 use crate::{
     Error,
     channel::PairingState,
