@@ -62,18 +62,14 @@ def load(
         trezorctl trezorapp load --min-version 0.1 ethereum.bin
     """
     try:
-        if min_version is None:
-            version = (0, 1)  # TODO extract from binary
-        else:
+        version = None
+        if min_version is not None:
             version = tuple(map(int, min_version.split(".")))
             assert len(version) == 2, "Version must be in the format 'major.minor'"
 
-        app_id = "ethereum.trezor.com"  # TODO extract from binary
-        app_bytes = app_path.read_bytes()
-        app_hash = trezorapp.load(
-            session, app_id, version, app_bytes, b"", force_reload
-        )
-        click.echo(f"Loaded app hash: {app_hash:064x}")
+        app_binary = app_path.read_bytes()
+        instance_id = trezorapp.load(session, app_binary, b"", version, force_reload)
+        click.echo(f"App loaded with instance ID: {instance_id}")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
