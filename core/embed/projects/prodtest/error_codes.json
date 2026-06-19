@@ -1537,6 +1537,101 @@
       "module": "tropic"
     },
     {
+      "code": 20120,
+      "name": "PRODTEST_ERR_TROPIC_STRESS_MAC_AND_DESTROY",
+      "module": "tropic"
+    },
+    {
+      "code": 20121,
+      "name": "PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY",
+      "module": "tropic"
+    },
+    {
+      "code": 20122,
+      "name": "PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20123,
+      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_KEY_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20124,
+      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_CURVE",
+      "module": "tropic"
+    },
+    {
+      "code": 20125,
+      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_VERIFY",
+      "module": "tropic"
+    },
+    {
+      "code": 20126,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT",
+      "module": "tropic"
+    },
+    {
+      "code": 20127,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_GET",
+      "module": "tropic"
+    },
+    {
+      "code": 20128,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20129,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_UPDATE",
+      "module": "tropic"
+    },
+    {
+      "code": 20130,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20131,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_ERASE",
+      "module": "tropic"
+    },
+    {
+      "code": 20132,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_WRITE",
+      "module": "tropic"
+    },
+    {
+      "code": 20133,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20134,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20135,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RNG_ZERO",
+      "module": "tropic"
+    },
+    {
+      "code": 20136,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RNG_REPEAT",
+      "module": "tropic"
+    },
+    {
+      "code": 20137,
+      "name": "PRODTEST_ERR_TROPIC_EXPLICIT_SLOT_COUNT",
+      "module": "tropic"
+    },
+    {
+      "code": 20138,
+      "name": "PRODTEST_ERR_TROPIC_EXPLICIT_SLOT_RANGE",
+      "module": "tropic"
+    },
+    {
       "code": 21010,
       "name": "PRODTEST_ERR_UNIT_TEST_FAILED",
       "module": "unit-test"
