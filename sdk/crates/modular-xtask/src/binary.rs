@@ -34,7 +34,7 @@ struct AppHeader {
     /// Magic number to identify the app binary format
     magic: U32<LittleEndian>,
     /// Header size in bytes (contains AppHeader::APP_HEADER_SIZE)
-    size: U32<LittleEndian>,
+    header_size: U32<LittleEndian>,
     /// Unique identifier of the app
     identifier: [u8; AppHeader::APP_ID_MAX_LEN],
     /// App version in the format major.minor.patch.build, each as a byte
@@ -140,7 +140,7 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
 
     let header = AppHeader {
         magic: U32::new(AppHeader::APP_HEADER_MAGIC),
-        size: U32::new(AppHeader::APP_HEADER_SIZE as u32),
+        header_size: U32::new(AppHeader::APP_HEADER_SIZE as u32),
         identifier: app_identifier(package)?,
         version: app_version(package)?,
         sdk_version: [0; 2],
