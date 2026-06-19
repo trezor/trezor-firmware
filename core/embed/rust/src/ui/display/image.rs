@@ -56,11 +56,14 @@ impl ToifInfo {
     pub const HEADER_LENGTH: usize = 12;
 
     pub fn parse(image: BinaryData) -> Option<Self> {
-        if image.read_u8(0)? != b'T' && image.read_u8(1)? != b'O' && image.read_u8(2)? != b'I' {
+        let mut prefix = [0u8; 4];
+        if image.read(0, prefix.as_mut()) != prefix.len() {
             return None;
         }
-
-        let format = match image.read_u8(3)? {
+        if prefix[..3] != *b"TOI" {
+            return None;
+        }
+        let format = match prefix[3] {
             b'f' => ToifFormat::FullColorBE,
             b'g' => ToifFormat::GrayScaleOH,
             b'F' => ToifFormat::FullColorLE,
