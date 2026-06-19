@@ -70,6 +70,7 @@
 #include "nem.h"
 #include "nist256p1.h"
 #include "noise_kk1.h"
+#include "noise_xx.h"
 #include "pbkdf2.h"
 #include "rand.h"
 #include "rc4.h"
@@ -11502,7 +11503,7 @@ START_TEST(test_elligator2) {
 }
 END_TEST
 
-START_TEST(test_noise) {
+START_TEST(test_noise_kk1) {
   // Inject the seed to the random number generator to make the test
   // deterministic
   random_reseed(2748932008);
@@ -11574,6 +11575,196 @@ START_TEST(test_noise) {
       noise_handle_handshake_response(&initiator_context, initiator_private_key,
                                       responder_public_key, &response);
   ck_assert_int_eq(ret, true);
+
+  // Initiator sends message1
+  ret = noise_send_message(&initiator_context, associated_data1,
+                           sizeof(associated_data1), message1, sizeof(message1),
+                           ciphertext1);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(ciphertext1, fromhex(expected_message1_hex),
+                   sizeof(ciphertext1));
+
+  // Initiator sends message2
+  ret = noise_send_message(&initiator_context, associated_data2,
+                           sizeof(associated_data2), message2, sizeof(message2),
+                           ciphertext2);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(ciphertext2, fromhex(expected_message2_hex),
+                   sizeof(ciphertext2));
+
+  // Responder sends message3
+  ret = noise_send_message(&responder_context, associated_data3,
+                           sizeof(associated_data3), message3, sizeof(message3),
+                           ciphertext3);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(ciphertext3, fromhex(expected_message3_hex),
+                   sizeof(ciphertext3));
+
+  // Responder sends message4
+  ret = noise_send_message(&responder_context, associated_data4,
+                           sizeof(associated_data4), message4, sizeof(message4),
+                           ciphertext4);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(ciphertext4, fromhex(expected_message4_hex),
+                   sizeof(ciphertext4));
+
+  // Responder receives message1
+  ret = noise_receive_message(&responder_context, associated_data1,
+                              sizeof(associated_data1), ciphertext1,
+                              sizeof(ciphertext1), plaintext1);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(plaintext1, message1, sizeof(message1));
+
+  // Responder receives message2
+  ret = noise_receive_message(&responder_context, associated_data2,
+                              sizeof(associated_data2), ciphertext2,
+                              sizeof(ciphertext2), plaintext2);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(plaintext2, message2, sizeof(message2));
+
+  // Initiator receives message3
+  ret = noise_receive_message(&initiator_context, associated_data3,
+                              sizeof(associated_data3), ciphertext3,
+                              sizeof(ciphertext3), plaintext3);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(plaintext3, message3, sizeof(message3));
+
+  // Initiator receives message4
+  ret = noise_receive_message(&initiator_context, associated_data4,
+                              sizeof(associated_data4), ciphertext4,
+                              sizeof(ciphertext4), plaintext4);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(plaintext4, message4, sizeof(message4));
+}
+END_TEST
+
+START_TEST(test_noise_xx) {
+  // Inject the seed to the random number generator to make the test
+  // deterministic
+  random_reseed(2748932008);
+
+  curve25519_key initiator_private_key = {0};
+  curve25519_key responder_private_key = {0};
+  curve25519_key initiator_public_key = {0};
+  curve25519_key responder_public_key = {0};
+  random_buffer(initiator_private_key, sizeof(initiator_private_key));
+  random_buffer(responder_private_key, sizeof(responder_private_key));
+  curve25519_scalarmult_basepoint(initiator_public_key, initiator_private_key);
+  curve25519_scalarmult_basepoint(responder_public_key, responder_private_key);
+
+  noise_xx_handshake_context_t initiator_handshake_context = {0};
+  noise_xx_handshake_context_t responder_handshake_context = {0};
+
+  noise_context_t initiator_context = {0};
+  noise_context_t responder_context = {0};
+
+  noise_xx_initiation_request_t initiation_request = {0};
+  noise_xx_initiation_response_t initiation_response = {0};
+  noise_xx_completion_request_t completion_request = {0};
+
+  uint8_t prologue[] = "prologue";
+  uint8_t payload1_sent = 0xb7;
+  uint8_t payload1_received = 0x00;
+  uint8_t payload2_sent[] = "payload2";
+  uint8_t payload2_received[NOISE_XX_MAX_PAYLOAD_LEN] = {0};
+  size_t payload2_received_len;
+
+  uint8_t message1[] = "message1";
+  uint8_t associated_data1[] = "associated_data1";
+  uint8_t message2[] = "message2";
+  uint8_t associated_data2[] = "associated_data2";
+  uint8_t message3[] = "message3";
+  uint8_t associated_data3[] = "associated_data3";
+  uint8_t message4[] = "message4";
+  uint8_t associated_data4[] = "associated_data4";
+
+  // These test vectors were generated using the noise-protocol rust crate as
+  // initiator and trezor THP implementation in python as responder
+  char expected_initiation_request_hex[] =
+      "4f1c3515b7d561226b4917ddbc79eae44542dab2ae54e294c83f39328f126562b79743b5"
+      "8b";
+  char expected_initiation_response_hex[] =
+      "cdfe8958fc5f10a893c8441e73207909778d8cc66241309ad4ee07fb9d06a40141b0cd1d"
+      "6ae694fb30068252e3a01d5c2e4ab5da28579f6d17e3dd41d18f8b7065e791ab22174137"
+      "d6a612362e1bc89b023640d201a8c82f5b1785f6fab90480";
+  char expected_completion_request_hex[] =
+      "a3bd5c3192598925e132ba8f686295338fae00985c27ceedb4056a1d953acf0bb0fcdb74"
+      "4729b8e54fd5ef89260bb0dae24781c417382d1d5d368746d405cb0db7981285603cca89"
+      "53";
+
+  char expected_message1_hex[] =
+      "908885f4cfdc440b209e979e741659358a86ecdf2c7c8a5cff";
+  char expected_message2_hex[] =
+      "943d13da0f083cb98adf1cdb2889146bc6fcfb3bc830cee770";
+  char expected_message3_hex[] =
+      "001b36363d3e7e2ab81858f90f9566757d9d213a27ab78bcf8";
+  char expected_message4_hex[] =
+      "8d2433d79ed0b7b97da0aebff26a9dabcb3f10d23bfaefb145";
+
+  uint8_t plaintext1[sizeof(message1)] = {0};
+  uint8_t ciphertext1[sizeof(plaintext1) + NOISE_TAG_SIZE];
+  uint8_t plaintext2[sizeof(message2)] = {0};
+  uint8_t ciphertext2[sizeof(plaintext2) + NOISE_TAG_SIZE] = {0};
+  uint8_t plaintext3[sizeof(message3)] = {0};
+  uint8_t ciphertext3[sizeof(plaintext3) + NOISE_TAG_SIZE] = {0};
+  uint8_t plaintext4[sizeof(message4)] = {0};
+  uint8_t ciphertext4[sizeof(plaintext4) + NOISE_TAG_SIZE] = {0};
+
+  bool ret = false;
+
+  // Initiator sends initiation request
+  ret = noise_xx_create_initiation_request(&initiator_handshake_context,
+                                           prologue, sizeof(prologue),
+                                           payload1_sent, &initiation_request);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(&initiation_request,
+                   fromhex(expected_initiation_request_hex),
+                   sizeof(initiation_request));
+
+  // Responder receives initiation request
+  ret = noise_xx_handle_initiation_request(
+      &responder_handshake_context, prologue, sizeof(prologue),
+      &payload1_received, &initiation_request);
+  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(payload1_sent, payload1_received);
+
+  // Responder obtains static private key based on payload1 and sends initiation
+  // response
+  ret = noise_xx_create_initiation_response(&responder_handshake_context,
+                                            responder_private_key,
+                                            &initiation_response);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(&initiation_response,
+                   fromhex(expected_initiation_response_hex),
+                   sizeof(initiation_response));
+
+  // Initiator receives initiation response
+  ret = noise_xx_handle_initiation_response(&initiator_handshake_context,
+                                            &initiation_response);
+  ck_assert_int_eq(ret, true);
+
+  // Initiator obtains static private key based on
+  // initiator_handshake_context->remote_ephemeral_public_key and
+  // initiator_handshake_context->remote_static_public_key and sends completion
+  // request
+  ret = noise_xx_create_completion_request(
+      &initiator_handshake_context, initiator_private_key, payload2_sent,
+      sizeof(payload2_sent), &initiator_context, &completion_request);
+  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(completion_request.encrypted_payload_len,
+                   sizeof(payload2_sent) + NOISE_TAG_SIZE);
+  ck_assert_mem_eq(&completion_request,
+                   fromhex(expected_completion_request_hex),
+                   sizeof(curve25519_key) + NOISE_TAG_SIZE +
+                       completion_request.encrypted_payload_len);
+
+  // Responder receives completion request
+  ret = noise_xx_handle_completion_request(
+      &responder_handshake_context, payload2_received, &payload2_received_len,
+      &responder_context, &completion_request);
+  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(payload2_received_len, sizeof(payload2_sent));
+  ck_assert_mem_eq(payload2_sent, payload2_received, sizeof(payload2_sent));
 
   // Initiator sends message1
   ret = noise_send_message(&initiator_context, associated_data1,
@@ -11995,7 +12186,8 @@ Suite *test_suite(void) {
   suite_add_tcase(s, tc);
 
   tc = tcase_create("noise");
-  tcase_add_test(tc, test_noise);
+  tcase_add_test(tc, test_noise_kk1);
+  tcase_add_test(tc, test_noise_xx);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
