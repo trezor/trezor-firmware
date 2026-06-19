@@ -98,10 +98,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
     if homescreen is not None:
         _validate_homescreen(homescreen)
         await _require_confirm_change_homescreen(homescreen)
-        try:
-            storage_device.set_homescreen(homescreen)
-        except ValueError:
-            raise DataError("Invalid homescreen")
+        storage_device.set_homescreen(homescreen)
 
     if label is not None:
         if len(label) > storage_device.LABEL_MAXLENGTH:
