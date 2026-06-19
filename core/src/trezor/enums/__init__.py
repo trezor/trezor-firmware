@@ -493,8 +493,6 @@ if TYPE_CHECKING:
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81
-        Deprecated_PassphraseStateRequest = 77
-        Deprecated_PassphraseStateAck = 78
         FirmwareErase = 6
         FirmwareUpload = 7
         FirmwareRequest = 8

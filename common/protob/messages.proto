@@ -86,9 +86,8 @@ enum MessageType {
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];
     MessageType_NextU2FCounter = 81 [(wire_out) = true];
 
-    // Deprecated messages, kept for protobuf compatibility.
-    MessageType_Deprecated_PassphraseStateRequest = 77 [deprecated = true];
-    MessageType_Deprecated_PassphraseStateAck = 78 [deprecated = true];
+    // Deprecated passphrase-related messages (used <2.3.0)
+    reserved 77 to 78;
 
     // Bootloader
     MessageType_FirmwareErase = 6 [(bitcoin_only) = true, (wire_in) = true, (wire_bootloader) = true];
