@@ -69,7 +69,7 @@
 #include "monero/monero.h"
 #include "nem.h"
 #include "nist256p1.h"
-#include "noise.h"
+#include "noise_kk1.h"
 #include "pbkdf2.h"
 #include "rand.h"
 #include "rc4.h"
@@ -11519,8 +11519,8 @@ START_TEST(test_noise) {
   noise_context_t initiator_context = {0};
   noise_context_t responder_context = {0};
 
-  noise_request_t request = {0};
-  noise_response_t response = {0};
+  noise_kk1_request_t request = {0};
+  noise_kk1_response_t response = {0};
 
   uint8_t message1[] = "message1";
   uint8_t associated_data1[] = "associated_data1";
