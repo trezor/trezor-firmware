@@ -128,6 +128,10 @@ static void systask_yield(void) {
 
   pthread_mutex_unlock(&scheduler->lock);
 
+  if (current_task->killed) {
+    pthread_exit(0);
+  }
+
   // Now the task called systask_yield() is active again
 
   // Process the pushed call first, if any
@@ -170,10 +174,16 @@ static void* thread_trampoline(void* arg) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
   pthread_mutex_lock(&scheduler->lock);
-  while (scheduler->active_task != task) {
+  while (scheduler->active_task != task && !task->killed) {
     pthread_cond_wait(&task->cv, &scheduler->lock);
   }
   pthread_mutex_unlock(&scheduler->lock);
+
+  if (task->killed) {
+    // The task was killed before it could start running,
+    // so exit immediately.
+    return 0;
+  }
 
   int exit_code = (int)invoke_pushed_fn_call(task);
 
@@ -241,12 +251,20 @@ static void systask_kill(systask_t* task) {
     // if it returns. Neither is expected to happen.
     reboot_device();
   } else {
-    // Free task ID
+    // Wake up the task if it’s waiting    // Free task ID
     scheduler->task_id_map &= ~(1 << task->id);
     // Notify all event sources about the task termination
     sysevents_notify_task_killed(task);
-    // Switch to the kernel task
-    systask_yield_to(&scheduler->kernel_task);
+
+    if (scheduler->active_task != task) {
+      // Wake-up killed task (it will terminate itself)
+      pthread_cond_signal(&task->cv);
+      // Ensure the task thread is fully terminated before returning.
+      pthread_join(task->pthread, NULL);
+    } else {
+      // Switch to the kernel task
+      systask_yield_to(&scheduler->kernel_task);
+    }
   }
 }
 

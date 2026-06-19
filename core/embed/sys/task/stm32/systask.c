@@ -359,8 +359,11 @@ static void systask_kill(systask_t* task) {
     scheduler->task_id_map &= ~(1 << task->id);
     // Notify all event sources about the task termination
     sysevents_notify_task_killed(task);
-    // Switch to the kernel task
-    systask_yield_to(&scheduler->kernel_task);
+
+    if (task == scheduler->active_task) {
+      // Switch to the kernel task
+      systask_yield_to(&scheduler->kernel_task);
+    }
   }
 }
 
