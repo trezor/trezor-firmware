@@ -28,6 +28,117 @@ message CKBAddress {
 }
 
 // ============================================================
+// SPHINCS+ Post-Quantum Messages
+// ============================================================
+//
+// The SPHINCS+ keypair is derived from the device mnemonic with HKDF-SHA256
+// and combined with the CKB all-in-one quantum-resistant lock script. Both
+// signing flows reuse the same streaming protocol as CKBSignTx (TXINPUT/
+// TXOUTPUT/TXCELLDEP/TXWITNESS plus the TXPREV* previous-tx capacity check) and
+// the same trustless fee computation, differing only in the signing message
+// (ckb_tx_message_all) and the key/algorithm. SPHINCS+ signatures reach ~50 KB,
+// so they are streamed in fixed-size chunks via TXSIGCHUNK / CKBTxAckSigChunk.
+
+/**
+ * Request: Get a CKB SPHINCS+ post-quantum address.
+ *
+ * Requires the device to be initialized with an extended BIP-39 mnemonic
+ * (36/54/72 words) matching the requested variant's security level.
+ * @start
+ * @next CKBSphincsPlusAddress
+ * @next Failure
+ */
+message CKBSphincsPlusGetAddress {
+    optional uint32 account_index = 1 [default=0];  // account index fed into the HKDF info string
+    optional uint32 variant = 2 [default=49];       // SPHINCS+ variant ID (48..=59). Default 49 = SLH-DSA-SHA2-128s
+    required string network = 3;                    // "Mainnet" or "Testnet"
+    optional bool show_display = 4;                 // optionally show on display before sending
+    optional bool chunkify = 5;                     // display the address in chunks of 4 characters
+}
+
+/**
+ * Response: CKB SPHINCS+ address encoded as Bech32m
+ * @end
+ */
+message CKBSphincsPlusAddress {
+    required string address = 1;     // Bech32m encoded CKB address
+    required bytes lock_args = 2;    // 32-byte Blake2b lock script args
+    required bytes public_key = 3;   // SPHINCS+ public key bytes
+    required uint32 variant = 4;     // SPHINCS+ variant ID used
+}
+
+/**
+ * Request: Sign a CKB transaction with a SPHINCS+ post-quantum signature.
+ *
+ * Streams and verifies the transaction exactly like CKBSignTx (including the
+ * trustless previous-tx capacity check and witness streaming); the resulting
+ * signature is returned through the TXSIGCHUNK chunk stream.
+ * @start
+ * @next CKBTxRequest
+ * @next Failure
+ */
+message CKBSphincsPlusSignTx {
+    optional uint32 account_index = 1 [default=0];      // account index fed into the HKDF info string
+    optional uint32 variant = 2 [default=49];           // SPHINCS+ variant ID (48..=59)
+    required string network = 3;                        // "Mainnet" or "Testnet"
+    required uint32 inputs_count = 4;                   // number of cell inputs
+    required uint32 outputs_count = 5;                  // number of cell outputs
+    optional uint32 cell_deps_count = 6 [default=0];    // number of cell dependencies
+    optional uint32 witnesses_count = 7;                // length of the on-chain witness vector (required)
+    repeated uint32 sign_group_input_indices = 8;       // input indices of the lock-script group to sign (sorted)
+    optional bool chunkify = 9;                         // display addresses in chunks
+}
+
+/**
+ * Request: Sign a message with a SPHINCS+ post-quantum key.
+ *
+ * The signature is returned through the TXSIGCHUNK chunk stream, terminated by
+ * a CKBSphincsPlusMessageSignature carrying the address and public key.
+ * @start
+ * @next CKBTxRequest
+ * @next CKBSphincsPlusMessageSignature
+ * @next Failure
+ */
+message CKBSphincsPlusSignMessage {
+    optional uint32 account_index = 1 [default=0];  // account index fed into the HKDF info string
+    optional uint32 variant = 2 [default=49];       // SPHINCS+ variant ID (48..=59)
+    required bytes message = 3;                     // message to be signed
+    required string network = 4;                    // "Mainnet" or "Testnet"
+    optional bool chunkify = 5;                     // display the address in chunks of 4 characters
+}
+
+/**
+ * Response: terminates a SPHINCS+ message-signing flow. The signature itself
+ * was already delivered through the TXSIGCHUNK chunk stream.
+ * @end
+ */
+message CKBSphincsPlusMessageSignature {
+    required string address = 1;    // address used to sign the message
+    required bytes public_key = 2;  // SPHINCS+ public key bytes
+    required uint32 variant = 3;    // SPHINCS+ variant ID used
+}
+
+/**
+ * Request: Verify a SPHINCS+ message signature on the device.
+ *
+ * The signature to verify is streamed from the host in chunks: the device
+ * issues CKBTxRequest{TXSIGCHUNK} requests answered by CKBTxAckSigChunk.
+ * @start
+ * @next CKBTxRequest
+ * @next Success
+ * @next Failure
+ */
+message CKBSphincsPlusVerifyMessage {
+    required string address = 1;               // address to verify against
+    required bytes public_key = 2;             // SPHINCS+ public key (verify needs the full key)
+    required bytes message = 3;                // message to verify
+    required uint32 variant = 4;               // SPHINCS+ variant ID
+    required string network = 5;               // "Mainnet" or "Testnet"
+    required uint32 signature_total_size = 6;  // total length of the signature streamed via TXSIGCHUNK
+    optional bool chunkify = 7;                // display the address in chunks of 4 characters
+}
+
+// ============================================================
 // Message Signing/Verification
 // ============================================================
 
@@ -162,6 +273,12 @@ enum CKBTxRequestType {
     TXPREVOUTPUT = 7;   // previous-tx output, answered with CKBTxAckOutput (carries data)
     TXPREVCELLDEP = 8;  // previous-tx cell dep, answered with CKBTxAckCellDep
     TXHEADER = 9;       // full block header for header_deps[request_index], answered with CKBTxAckHeader
+    // SPHINCS+ signature chunk transfer (both directions), answered with
+    // CKBTxAckSigChunk. When signing, the device sends each chunk in
+    // `serialized.signature`; when verifying, the host returns it in
+    // CKBTxAckSigChunk.signature. `details.signature_offset` /
+    // `signature_total_size` locate the chunk inside the full signature.
+    TXSIGCHUNK = 10;
 }
 
 /**
@@ -169,8 +286,10 @@ enum CKBTxRequestType {
  * @embed
  */
 message CKBTxRequestDetails {
-    optional uint32 request_index = 1;  // item index within the current or previous tx
-    optional bytes tx_hash = 2;         // when set, the item belongs to this previous transaction
+    optional uint32 request_index = 1;          // item index within the current or previous tx
+    optional bytes tx_hash = 2;                 // when set, the item belongs to this previous transaction
+    optional uint32 signature_offset = 3;       // TXSIGCHUNK: byte offset of the chunk in the full signature
+    optional uint32 signature_total_size = 4;   // TXSIGCHUNK: total signature length (set on every chunk)
 }
 
 /**
@@ -273,4 +392,14 @@ message CKBWitnessArgs {
 message CKBTxAckWitness {
     optional CKBWitnessArgs witness_args = 1;  // structured WitnessArgs for the signing witness
     optional bytes raw = 2;                    // raw bytes for other/trailing witnesses
+}
+
+/**
+ * Acknowledge a SPHINCS+ signature chunk. When the device is signing, the body
+ * is empty (the host only acknowledges the delivered chunk). When the device is
+ * verifying, the host returns the requested chunk in `signature`.
+ * @next CKBTxRequest
+ */
+message CKBTxAckSigChunk {
+    optional bytes signature = 1;  // signature chunk (verify direction); empty when acknowledging a sign chunk
 }

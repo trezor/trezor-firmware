@@ -182,6 +182,13 @@ trezor_message_impl! {
     CKBTxAckWitness => MessageType_CKBTxAckWitness,
     CKBTxAckPrevMeta => MessageType_CKBTxAckPrevMeta,
     CKBTxAckHeader => MessageType_CKBTxAckHeader,
+    CKBSphincsPlusGetAddress => MessageType_CKBSphincsPlusGetAddress,
+    CKBSphincsPlusAddress => MessageType_CKBSphincsPlusAddress,
+    CKBSphincsPlusSignTx => MessageType_CKBSphincsPlusSignTx,
+    CKBTxAckSigChunk => MessageType_CKBTxAckSigChunk,
+    CKBSphincsPlusSignMessage => MessageType_CKBSphincsPlusSignMessage,
+    CKBSphincsPlusMessageSignature => MessageType_CKBSphincsPlusMessageSignature,
+    CKBSphincsPlusVerifyMessage => MessageType_CKBSphincsPlusVerifyMessage,
 }
 
 #[cfg(feature = "eos")]

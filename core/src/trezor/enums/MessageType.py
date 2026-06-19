@@ -307,3 +307,10 @@ if not utils.BITCOIN_ONLY:
     CKBTxAckWitness = 5510
     CKBTxAckPrevMeta = 5511
     CKBTxAckHeader = 5512
+    CKBSphincsPlusGetAddress = 5520
+    CKBSphincsPlusAddress = 5521
+    CKBSphincsPlusSignTx = 5522
+    CKBTxAckSigChunk = 5523
+    CKBSphincsPlusSignMessage = 5524
+    CKBSphincsPlusMessageSignature = 5525
+    CKBSphincsPlusVerifyMessage = 5526

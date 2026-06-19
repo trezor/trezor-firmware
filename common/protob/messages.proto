@@ -391,6 +391,14 @@ enum MessageType {
     MessageType_CKBTxAckWitness = 5510 [(wire_in) = true];
     MessageType_CKBTxAckPrevMeta = 5511 [(wire_in) = true];
     MessageType_CKBTxAckHeader = 5512 [(wire_in) = true];
+    // SPHINCS+ post-quantum (5520+, leaving 5513-5519 as an ECDSA reserve)
+    MessageType_CKBSphincsPlusGetAddress = 5520 [(wire_in) = true];
+    MessageType_CKBSphincsPlusAddress = 5521 [(wire_out) = true];
+    MessageType_CKBSphincsPlusSignTx = 5522 [(wire_in) = true];
+    MessageType_CKBTxAckSigChunk = 5523 [(wire_in) = true];
+    MessageType_CKBSphincsPlusSignMessage = 5524 [(wire_in) = true];
+    MessageType_CKBSphincsPlusMessageSignature = 5525 [(wire_out) = true];
+    MessageType_CKBSphincsPlusVerifyMessage = 5526 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

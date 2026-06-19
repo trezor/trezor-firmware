@@ -182,6 +182,7 @@ if TYPE_CHECKING:
         TXPREVOUTPUT = 7
         TXPREVCELLDEP = 8
         TXHEADER = 9
+        TXSIGCHUNK = 10
 
     class BackupType(IntEnum):
         Bip39 = 0
@@ -738,6 +739,13 @@ if TYPE_CHECKING:
         CKBTxAckWitness = 5510
         CKBTxAckPrevMeta = 5511
         CKBTxAckHeader = 5512
+        CKBSphincsPlusGetAddress = 5520
+        CKBSphincsPlusAddress = 5521
+        CKBSphincsPlusSignTx = 5522
+        CKBTxAckSigChunk = 5523
+        CKBSphincsPlusSignMessage = 5524
+        CKBSphincsPlusMessageSignature = 5525
+        CKBSphincsPlusVerifyMessage = 5526
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

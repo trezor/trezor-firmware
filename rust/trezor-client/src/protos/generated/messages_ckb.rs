@@ -495,6 +495,2113 @@ impl ::protobuf::reflect::ProtobufValue for CKBAddress {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSphincsPlusGetAddress)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBSphincsPlusGetAddress {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusGetAddress.account_index)
+    pub account_index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusGetAddress.variant)
+    pub variant: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusGetAddress.network)
+    pub network: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusGetAddress.show_display)
+    pub show_display: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusGetAddress.chunkify)
+    pub chunkify: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSphincsPlusGetAddress.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBSphincsPlusGetAddress {
+    fn default() -> &'a CKBSphincsPlusGetAddress {
+        <CKBSphincsPlusGetAddress as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBSphincsPlusGetAddress {
+    pub fn new() -> CKBSphincsPlusGetAddress {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 account_index = 1;
+
+    pub fn account_index(&self) -> u32 {
+        self.account_index.unwrap_or(0u32)
+    }
+
+    pub fn clear_account_index(&mut self) {
+        self.account_index = ::std::option::Option::None;
+    }
+
+    pub fn has_account_index(&self) -> bool {
+        self.account_index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_account_index(&mut self, v: u32) {
+        self.account_index = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 variant = 2;
+
+    pub fn variant(&self) -> u32 {
+        self.variant.unwrap_or(49u32)
+    }
+
+    pub fn clear_variant(&mut self) {
+        self.variant = ::std::option::Option::None;
+    }
+
+    pub fn has_variant(&self) -> bool {
+        self.variant.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_variant(&mut self, v: u32) {
+        self.variant = ::std::option::Option::Some(v);
+    }
+
+    // required string network = 3;
+
+    pub fn network(&self) -> &str {
+        match self.network.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_network(&mut self) {
+        self.network = ::std::option::Option::None;
+    }
+
+    pub fn has_network(&self) -> bool {
+        self.network.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_network(&mut self, v: ::std::string::String) {
+        self.network = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_network(&mut self) -> &mut ::std::string::String {
+        if self.network.is_none() {
+            self.network = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.network.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_network(&mut self) -> ::std::string::String {
+        self.network.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional bool show_display = 4;
+
+    pub fn show_display(&self) -> bool {
+        self.show_display.unwrap_or(false)
+    }
+
+    pub fn clear_show_display(&mut self) {
+        self.show_display = ::std::option::Option::None;
+    }
+
+    pub fn has_show_display(&self) -> bool {
+        self.show_display.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_show_display(&mut self, v: bool) {
+        self.show_display = ::std::option::Option::Some(v);
+    }
+
+    // optional bool chunkify = 5;
+
+    pub fn chunkify(&self) -> bool {
+        self.chunkify.unwrap_or(false)
+    }
+
+    pub fn clear_chunkify(&mut self) {
+        self.chunkify = ::std::option::Option::None;
+    }
+
+    pub fn has_chunkify(&self) -> bool {
+        self.chunkify.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_chunkify(&mut self, v: bool) {
+        self.chunkify = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "account_index",
+            |m: &CKBSphincsPlusGetAddress| { &m.account_index },
+            |m: &mut CKBSphincsPlusGetAddress| { &mut m.account_index },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "variant",
+            |m: &CKBSphincsPlusGetAddress| { &m.variant },
+            |m: &mut CKBSphincsPlusGetAddress| { &mut m.variant },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "network",
+            |m: &CKBSphincsPlusGetAddress| { &m.network },
+            |m: &mut CKBSphincsPlusGetAddress| { &mut m.network },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "show_display",
+            |m: &CKBSphincsPlusGetAddress| { &m.show_display },
+            |m: &mut CKBSphincsPlusGetAddress| { &mut m.show_display },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "chunkify",
+            |m: &CKBSphincsPlusGetAddress| { &m.chunkify },
+            |m: &mut CKBSphincsPlusGetAddress| { &mut m.chunkify },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSphincsPlusGetAddress>(
+            "CKBSphincsPlusGetAddress",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBSphincsPlusGetAddress {
+    const NAME: &'static str = "CKBSphincsPlusGetAddress";
+
+    fn is_initialized(&self) -> bool {
+        if self.network.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.account_index = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.variant = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                26 => {
+                    self.network = ::std::option::Option::Some(is.read_string()?);
+                },
+                32 => {
+                    self.show_display = ::std::option::Option::Some(is.read_bool()?);
+                },
+                40 => {
+                    self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.account_index {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.variant {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.network.as_ref() {
+            my_size += ::protobuf::rt::string_size(3, &v);
+        }
+        if let Some(v) = self.show_display {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.chunkify {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.account_index {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.variant {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.network.as_ref() {
+            os.write_string(3, v)?;
+        }
+        if let Some(v) = self.show_display {
+            os.write_bool(4, v)?;
+        }
+        if let Some(v) = self.chunkify {
+            os.write_bool(5, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBSphincsPlusGetAddress {
+        CKBSphincsPlusGetAddress::new()
+    }
+
+    fn clear(&mut self) {
+        self.account_index = ::std::option::Option::None;
+        self.variant = ::std::option::Option::None;
+        self.network = ::std::option::Option::None;
+        self.show_display = ::std::option::Option::None;
+        self.chunkify = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBSphincsPlusGetAddress {
+        static instance: CKBSphincsPlusGetAddress = CKBSphincsPlusGetAddress {
+            account_index: ::std::option::Option::None,
+            variant: ::std::option::Option::None,
+            network: ::std::option::Option::None,
+            show_display: ::std::option::Option::None,
+            chunkify: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBSphincsPlusGetAddress {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSphincsPlusGetAddress").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBSphincsPlusGetAddress {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBSphincsPlusGetAddress {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSphincsPlusAddress)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBSphincsPlusAddress {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusAddress.address)
+    pub address: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusAddress.lock_args)
+    pub lock_args: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusAddress.public_key)
+    pub public_key: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusAddress.variant)
+    pub variant: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSphincsPlusAddress.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBSphincsPlusAddress {
+    fn default() -> &'a CKBSphincsPlusAddress {
+        <CKBSphincsPlusAddress as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBSphincsPlusAddress {
+    pub fn new() -> CKBSphincsPlusAddress {
+        ::std::default::Default::default()
+    }
+
+    // required string address = 1;
+
+    pub fn address(&self) -> &str {
+        match self.address.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_address(&mut self) {
+        self.address = ::std::option::Option::None;
+    }
+
+    pub fn has_address(&self) -> bool {
+        self.address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_address(&mut self, v: ::std::string::String) {
+        self.address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_address(&mut self) -> &mut ::std::string::String {
+        if self.address.is_none() {
+            self.address = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_address(&mut self) -> ::std::string::String {
+        self.address.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required bytes lock_args = 2;
+
+    pub fn lock_args(&self) -> &[u8] {
+        match self.lock_args.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_lock_args(&mut self) {
+        self.lock_args = ::std::option::Option::None;
+    }
+
+    pub fn has_lock_args(&self) -> bool {
+        self.lock_args.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_lock_args(&mut self, v: ::std::vec::Vec<u8>) {
+        self.lock_args = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_lock_args(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.lock_args.is_none() {
+            self.lock_args = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.lock_args.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_lock_args(&mut self) -> ::std::vec::Vec<u8> {
+        self.lock_args.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required bytes public_key = 3;
+
+    pub fn public_key(&self) -> &[u8] {
+        match self.public_key.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_public_key(&mut self) {
+        self.public_key = ::std::option::Option::None;
+    }
+
+    pub fn has_public_key(&self) -> bool {
+        self.public_key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_public_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.public_key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_public_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.public_key.is_none() {
+            self.public_key = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.public_key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_public_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.public_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required uint32 variant = 4;
+
+    pub fn variant(&self) -> u32 {
+        self.variant.unwrap_or(0)
+    }
+
+    pub fn clear_variant(&mut self) {
+        self.variant = ::std::option::Option::None;
+    }
+
+    pub fn has_variant(&self) -> bool {
+        self.variant.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_variant(&mut self, v: u32) {
+        self.variant = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "address",
+            |m: &CKBSphincsPlusAddress| { &m.address },
+            |m: &mut CKBSphincsPlusAddress| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "lock_args",
+            |m: &CKBSphincsPlusAddress| { &m.lock_args },
+            |m: &mut CKBSphincsPlusAddress| { &mut m.lock_args },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "public_key",
+            |m: &CKBSphincsPlusAddress| { &m.public_key },
+            |m: &mut CKBSphincsPlusAddress| { &mut m.public_key },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "variant",
+            |m: &CKBSphincsPlusAddress| { &m.variant },
+            |m: &mut CKBSphincsPlusAddress| { &mut m.variant },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSphincsPlusAddress>(
+            "CKBSphincsPlusAddress",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBSphincsPlusAddress {
+    const NAME: &'static str = "CKBSphincsPlusAddress";
+
+    fn is_initialized(&self) -> bool {
+        if self.address.is_none() {
+            return false;
+        }
+        if self.lock_args.is_none() {
+            return false;
+        }
+        if self.public_key.is_none() {
+            return false;
+        }
+        if self.variant.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.address = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.lock_args = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.public_key = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                32 => {
+                    self.variant = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.address.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.lock_args.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.public_key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        if let Some(v) = self.variant {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.address.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.lock_args.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.public_key.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.variant {
+            os.write_uint32(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBSphincsPlusAddress {
+        CKBSphincsPlusAddress::new()
+    }
+
+    fn clear(&mut self) {
+        self.address = ::std::option::Option::None;
+        self.lock_args = ::std::option::Option::None;
+        self.public_key = ::std::option::Option::None;
+        self.variant = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBSphincsPlusAddress {
+        static instance: CKBSphincsPlusAddress = CKBSphincsPlusAddress {
+            address: ::std::option::Option::None,
+            lock_args: ::std::option::Option::None,
+            public_key: ::std::option::Option::None,
+            variant: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBSphincsPlusAddress {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSphincsPlusAddress").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBSphincsPlusAddress {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBSphincsPlusAddress {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSphincsPlusSignTx)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBSphincsPlusSignTx {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.account_index)
+    pub account_index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.variant)
+    pub variant: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.network)
+    pub network: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.inputs_count)
+    pub inputs_count: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.outputs_count)
+    pub outputs_count: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.cell_deps_count)
+    pub cell_deps_count: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.witnesses_count)
+    pub witnesses_count: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.sign_group_input_indices)
+    pub sign_group_input_indices: ::std::vec::Vec<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.chunkify)
+    pub chunkify: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBSphincsPlusSignTx {
+    fn default() -> &'a CKBSphincsPlusSignTx {
+        <CKBSphincsPlusSignTx as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBSphincsPlusSignTx {
+    pub fn new() -> CKBSphincsPlusSignTx {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 account_index = 1;
+
+    pub fn account_index(&self) -> u32 {
+        self.account_index.unwrap_or(0u32)
+    }
+
+    pub fn clear_account_index(&mut self) {
+        self.account_index = ::std::option::Option::None;
+    }
+
+    pub fn has_account_index(&self) -> bool {
+        self.account_index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_account_index(&mut self, v: u32) {
+        self.account_index = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 variant = 2;
+
+    pub fn variant(&self) -> u32 {
+        self.variant.unwrap_or(49u32)
+    }
+
+    pub fn clear_variant(&mut self) {
+        self.variant = ::std::option::Option::None;
+    }
+
+    pub fn has_variant(&self) -> bool {
+        self.variant.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_variant(&mut self, v: u32) {
+        self.variant = ::std::option::Option::Some(v);
+    }
+
+    // required string network = 3;
+
+    pub fn network(&self) -> &str {
+        match self.network.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_network(&mut self) {
+        self.network = ::std::option::Option::None;
+    }
+
+    pub fn has_network(&self) -> bool {
+        self.network.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_network(&mut self, v: ::std::string::String) {
+        self.network = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_network(&mut self) -> &mut ::std::string::String {
+        if self.network.is_none() {
+            self.network = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.network.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_network(&mut self) -> ::std::string::String {
+        self.network.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required uint32 inputs_count = 4;
+
+    pub fn inputs_count(&self) -> u32 {
+        self.inputs_count.unwrap_or(0)
+    }
+
+    pub fn clear_inputs_count(&mut self) {
+        self.inputs_count = ::std::option::Option::None;
+    }
+
+    pub fn has_inputs_count(&self) -> bool {
+        self.inputs_count.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_inputs_count(&mut self, v: u32) {
+        self.inputs_count = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 outputs_count = 5;
+
+    pub fn outputs_count(&self) -> u32 {
+        self.outputs_count.unwrap_or(0)
+    }
+
+    pub fn clear_outputs_count(&mut self) {
+        self.outputs_count = ::std::option::Option::None;
+    }
+
+    pub fn has_outputs_count(&self) -> bool {
+        self.outputs_count.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_outputs_count(&mut self, v: u32) {
+        self.outputs_count = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 cell_deps_count = 6;
+
+    pub fn cell_deps_count(&self) -> u32 {
+        self.cell_deps_count.unwrap_or(0u32)
+    }
+
+    pub fn clear_cell_deps_count(&mut self) {
+        self.cell_deps_count = ::std::option::Option::None;
+    }
+
+    pub fn has_cell_deps_count(&self) -> bool {
+        self.cell_deps_count.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_cell_deps_count(&mut self, v: u32) {
+        self.cell_deps_count = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 witnesses_count = 7;
+
+    pub fn witnesses_count(&self) -> u32 {
+        self.witnesses_count.unwrap_or(0)
+    }
+
+    pub fn clear_witnesses_count(&mut self) {
+        self.witnesses_count = ::std::option::Option::None;
+    }
+
+    pub fn has_witnesses_count(&self) -> bool {
+        self.witnesses_count.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_witnesses_count(&mut self, v: u32) {
+        self.witnesses_count = ::std::option::Option::Some(v);
+    }
+
+    // optional bool chunkify = 9;
+
+    pub fn chunkify(&self) -> bool {
+        self.chunkify.unwrap_or(false)
+    }
+
+    pub fn clear_chunkify(&mut self) {
+        self.chunkify = ::std::option::Option::None;
+    }
+
+    pub fn has_chunkify(&self) -> bool {
+        self.chunkify.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_chunkify(&mut self, v: bool) {
+        self.chunkify = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "account_index",
+            |m: &CKBSphincsPlusSignTx| { &m.account_index },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.account_index },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "variant",
+            |m: &CKBSphincsPlusSignTx| { &m.variant },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.variant },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "network",
+            |m: &CKBSphincsPlusSignTx| { &m.network },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.network },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "inputs_count",
+            |m: &CKBSphincsPlusSignTx| { &m.inputs_count },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.inputs_count },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "outputs_count",
+            |m: &CKBSphincsPlusSignTx| { &m.outputs_count },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.outputs_count },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "cell_deps_count",
+            |m: &CKBSphincsPlusSignTx| { &m.cell_deps_count },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.cell_deps_count },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "witnesses_count",
+            |m: &CKBSphincsPlusSignTx| { &m.witnesses_count },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.witnesses_count },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "sign_group_input_indices",
+            |m: &CKBSphincsPlusSignTx| { &m.sign_group_input_indices },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.sign_group_input_indices },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "chunkify",
+            |m: &CKBSphincsPlusSignTx| { &m.chunkify },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.chunkify },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSphincsPlusSignTx>(
+            "CKBSphincsPlusSignTx",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBSphincsPlusSignTx {
+    const NAME: &'static str = "CKBSphincsPlusSignTx";
+
+    fn is_initialized(&self) -> bool {
+        if self.network.is_none() {
+            return false;
+        }
+        if self.inputs_count.is_none() {
+            return false;
+        }
+        if self.outputs_count.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.account_index = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.variant = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                26 => {
+                    self.network = ::std::option::Option::Some(is.read_string()?);
+                },
+                32 => {
+                    self.inputs_count = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                40 => {
+                    self.outputs_count = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                48 => {
+                    self.cell_deps_count = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                56 => {
+                    self.witnesses_count = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                66 => {
+                    is.read_repeated_packed_uint32_into(&mut self.sign_group_input_indices)?;
+                },
+                64 => {
+                    self.sign_group_input_indices.push(is.read_uint32()?);
+                },
+                72 => {
+                    self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.account_index {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.variant {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.network.as_ref() {
+            my_size += ::protobuf::rt::string_size(3, &v);
+        }
+        if let Some(v) = self.inputs_count {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        if let Some(v) = self.outputs_count {
+            my_size += ::protobuf::rt::uint32_size(5, v);
+        }
+        if let Some(v) = self.cell_deps_count {
+            my_size += ::protobuf::rt::uint32_size(6, v);
+        }
+        if let Some(v) = self.witnesses_count {
+            my_size += ::protobuf::rt::uint32_size(7, v);
+        }
+        for value in &self.sign_group_input_indices {
+            my_size += ::protobuf::rt::uint32_size(8, *value);
+        };
+        if let Some(v) = self.chunkify {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.account_index {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.variant {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.network.as_ref() {
+            os.write_string(3, v)?;
+        }
+        if let Some(v) = self.inputs_count {
+            os.write_uint32(4, v)?;
+        }
+        if let Some(v) = self.outputs_count {
+            os.write_uint32(5, v)?;
+        }
+        if let Some(v) = self.cell_deps_count {
+            os.write_uint32(6, v)?;
+        }
+        if let Some(v) = self.witnesses_count {
+            os.write_uint32(7, v)?;
+        }
+        for v in &self.sign_group_input_indices {
+            os.write_uint32(8, *v)?;
+        };
+        if let Some(v) = self.chunkify {
+            os.write_bool(9, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBSphincsPlusSignTx {
+        CKBSphincsPlusSignTx::new()
+    }
+
+    fn clear(&mut self) {
+        self.account_index = ::std::option::Option::None;
+        self.variant = ::std::option::Option::None;
+        self.network = ::std::option::Option::None;
+        self.inputs_count = ::std::option::Option::None;
+        self.outputs_count = ::std::option::Option::None;
+        self.cell_deps_count = ::std::option::Option::None;
+        self.witnesses_count = ::std::option::Option::None;
+        self.sign_group_input_indices.clear();
+        self.chunkify = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBSphincsPlusSignTx {
+        static instance: CKBSphincsPlusSignTx = CKBSphincsPlusSignTx {
+            account_index: ::std::option::Option::None,
+            variant: ::std::option::Option::None,
+            network: ::std::option::Option::None,
+            inputs_count: ::std::option::Option::None,
+            outputs_count: ::std::option::Option::None,
+            cell_deps_count: ::std::option::Option::None,
+            witnesses_count: ::std::option::Option::None,
+            sign_group_input_indices: ::std::vec::Vec::new(),
+            chunkify: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBSphincsPlusSignTx {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSphincsPlusSignTx").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBSphincsPlusSignTx {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBSphincsPlusSignTx {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSphincsPlusSignMessage)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBSphincsPlusSignMessage {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignMessage.account_index)
+    pub account_index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignMessage.variant)
+    pub variant: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignMessage.message)
+    pub message: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignMessage.network)
+    pub network: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignMessage.chunkify)
+    pub chunkify: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSphincsPlusSignMessage.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBSphincsPlusSignMessage {
+    fn default() -> &'a CKBSphincsPlusSignMessage {
+        <CKBSphincsPlusSignMessage as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBSphincsPlusSignMessage {
+    pub fn new() -> CKBSphincsPlusSignMessage {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 account_index = 1;
+
+    pub fn account_index(&self) -> u32 {
+        self.account_index.unwrap_or(0u32)
+    }
+
+    pub fn clear_account_index(&mut self) {
+        self.account_index = ::std::option::Option::None;
+    }
+
+    pub fn has_account_index(&self) -> bool {
+        self.account_index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_account_index(&mut self, v: u32) {
+        self.account_index = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 variant = 2;
+
+    pub fn variant(&self) -> u32 {
+        self.variant.unwrap_or(49u32)
+    }
+
+    pub fn clear_variant(&mut self) {
+        self.variant = ::std::option::Option::None;
+    }
+
+    pub fn has_variant(&self) -> bool {
+        self.variant.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_variant(&mut self, v: u32) {
+        self.variant = ::std::option::Option::Some(v);
+    }
+
+    // required bytes message = 3;
+
+    pub fn message(&self) -> &[u8] {
+        match self.message.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_message(&mut self) {
+        self.message = ::std::option::Option::None;
+    }
+
+    pub fn has_message(&self) -> bool {
+        self.message.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_message(&mut self, v: ::std::vec::Vec<u8>) {
+        self.message = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_message(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.message.is_none() {
+            self.message = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.message.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_message(&mut self) -> ::std::vec::Vec<u8> {
+        self.message.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required string network = 4;
+
+    pub fn network(&self) -> &str {
+        match self.network.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_network(&mut self) {
+        self.network = ::std::option::Option::None;
+    }
+
+    pub fn has_network(&self) -> bool {
+        self.network.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_network(&mut self, v: ::std::string::String) {
+        self.network = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_network(&mut self) -> &mut ::std::string::String {
+        if self.network.is_none() {
+            self.network = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.network.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_network(&mut self) -> ::std::string::String {
+        self.network.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional bool chunkify = 5;
+
+    pub fn chunkify(&self) -> bool {
+        self.chunkify.unwrap_or(false)
+    }
+
+    pub fn clear_chunkify(&mut self) {
+        self.chunkify = ::std::option::Option::None;
+    }
+
+    pub fn has_chunkify(&self) -> bool {
+        self.chunkify.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_chunkify(&mut self, v: bool) {
+        self.chunkify = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "account_index",
+            |m: &CKBSphincsPlusSignMessage| { &m.account_index },
+            |m: &mut CKBSphincsPlusSignMessage| { &mut m.account_index },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "variant",
+            |m: &CKBSphincsPlusSignMessage| { &m.variant },
+            |m: &mut CKBSphincsPlusSignMessage| { &mut m.variant },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "message",
+            |m: &CKBSphincsPlusSignMessage| { &m.message },
+            |m: &mut CKBSphincsPlusSignMessage| { &mut m.message },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "network",
+            |m: &CKBSphincsPlusSignMessage| { &m.network },
+            |m: &mut CKBSphincsPlusSignMessage| { &mut m.network },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "chunkify",
+            |m: &CKBSphincsPlusSignMessage| { &m.chunkify },
+            |m: &mut CKBSphincsPlusSignMessage| { &mut m.chunkify },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSphincsPlusSignMessage>(
+            "CKBSphincsPlusSignMessage",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBSphincsPlusSignMessage {
+    const NAME: &'static str = "CKBSphincsPlusSignMessage";
+
+    fn is_initialized(&self) -> bool {
+        if self.message.is_none() {
+            return false;
+        }
+        if self.network.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.account_index = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.variant = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                26 => {
+                    self.message = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                34 => {
+                    self.network = ::std::option::Option::Some(is.read_string()?);
+                },
+                40 => {
+                    self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.account_index {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.variant {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.message.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        if let Some(v) = self.network.as_ref() {
+            my_size += ::protobuf::rt::string_size(4, &v);
+        }
+        if let Some(v) = self.chunkify {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.account_index {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.variant {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.message.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.network.as_ref() {
+            os.write_string(4, v)?;
+        }
+        if let Some(v) = self.chunkify {
+            os.write_bool(5, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBSphincsPlusSignMessage {
+        CKBSphincsPlusSignMessage::new()
+    }
+
+    fn clear(&mut self) {
+        self.account_index = ::std::option::Option::None;
+        self.variant = ::std::option::Option::None;
+        self.message = ::std::option::Option::None;
+        self.network = ::std::option::Option::None;
+        self.chunkify = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBSphincsPlusSignMessage {
+        static instance: CKBSphincsPlusSignMessage = CKBSphincsPlusSignMessage {
+            account_index: ::std::option::Option::None,
+            variant: ::std::option::Option::None,
+            message: ::std::option::Option::None,
+            network: ::std::option::Option::None,
+            chunkify: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBSphincsPlusSignMessage {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSphincsPlusSignMessage").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBSphincsPlusSignMessage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBSphincsPlusSignMessage {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSphincsPlusMessageSignature)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBSphincsPlusMessageSignature {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusMessageSignature.address)
+    pub address: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusMessageSignature.public_key)
+    pub public_key: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusMessageSignature.variant)
+    pub variant: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSphincsPlusMessageSignature.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBSphincsPlusMessageSignature {
+    fn default() -> &'a CKBSphincsPlusMessageSignature {
+        <CKBSphincsPlusMessageSignature as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBSphincsPlusMessageSignature {
+    pub fn new() -> CKBSphincsPlusMessageSignature {
+        ::std::default::Default::default()
+    }
+
+    // required string address = 1;
+
+    pub fn address(&self) -> &str {
+        match self.address.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_address(&mut self) {
+        self.address = ::std::option::Option::None;
+    }
+
+    pub fn has_address(&self) -> bool {
+        self.address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_address(&mut self, v: ::std::string::String) {
+        self.address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_address(&mut self) -> &mut ::std::string::String {
+        if self.address.is_none() {
+            self.address = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_address(&mut self) -> ::std::string::String {
+        self.address.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required bytes public_key = 2;
+
+    pub fn public_key(&self) -> &[u8] {
+        match self.public_key.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_public_key(&mut self) {
+        self.public_key = ::std::option::Option::None;
+    }
+
+    pub fn has_public_key(&self) -> bool {
+        self.public_key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_public_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.public_key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_public_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.public_key.is_none() {
+            self.public_key = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.public_key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_public_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.public_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required uint32 variant = 3;
+
+    pub fn variant(&self) -> u32 {
+        self.variant.unwrap_or(0)
+    }
+
+    pub fn clear_variant(&mut self) {
+        self.variant = ::std::option::Option::None;
+    }
+
+    pub fn has_variant(&self) -> bool {
+        self.variant.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_variant(&mut self, v: u32) {
+        self.variant = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "address",
+            |m: &CKBSphincsPlusMessageSignature| { &m.address },
+            |m: &mut CKBSphincsPlusMessageSignature| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "public_key",
+            |m: &CKBSphincsPlusMessageSignature| { &m.public_key },
+            |m: &mut CKBSphincsPlusMessageSignature| { &mut m.public_key },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "variant",
+            |m: &CKBSphincsPlusMessageSignature| { &m.variant },
+            |m: &mut CKBSphincsPlusMessageSignature| { &mut m.variant },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSphincsPlusMessageSignature>(
+            "CKBSphincsPlusMessageSignature",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBSphincsPlusMessageSignature {
+    const NAME: &'static str = "CKBSphincsPlusMessageSignature";
+
+    fn is_initialized(&self) -> bool {
+        if self.address.is_none() {
+            return false;
+        }
+        if self.public_key.is_none() {
+            return false;
+        }
+        if self.variant.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.address = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.public_key = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                24 => {
+                    self.variant = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.address.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.public_key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.variant {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.address.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.public_key.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.variant {
+            os.write_uint32(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBSphincsPlusMessageSignature {
+        CKBSphincsPlusMessageSignature::new()
+    }
+
+    fn clear(&mut self) {
+        self.address = ::std::option::Option::None;
+        self.public_key = ::std::option::Option::None;
+        self.variant = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBSphincsPlusMessageSignature {
+        static instance: CKBSphincsPlusMessageSignature = CKBSphincsPlusMessageSignature {
+            address: ::std::option::Option::None,
+            public_key: ::std::option::Option::None,
+            variant: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBSphincsPlusMessageSignature {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSphincsPlusMessageSignature").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBSphincsPlusMessageSignature {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBSphincsPlusMessageSignature {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBSphincsPlusVerifyMessage {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage.address)
+    pub address: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage.public_key)
+    pub public_key: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage.message)
+    pub message: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage.variant)
+    pub variant: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage.network)
+    pub network: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage.signature_total_size)
+    pub signature_total_size: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage.chunkify)
+    pub chunkify: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSphincsPlusVerifyMessage.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBSphincsPlusVerifyMessage {
+    fn default() -> &'a CKBSphincsPlusVerifyMessage {
+        <CKBSphincsPlusVerifyMessage as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBSphincsPlusVerifyMessage {
+    pub fn new() -> CKBSphincsPlusVerifyMessage {
+        ::std::default::Default::default()
+    }
+
+    // required string address = 1;
+
+    pub fn address(&self) -> &str {
+        match self.address.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_address(&mut self) {
+        self.address = ::std::option::Option::None;
+    }
+
+    pub fn has_address(&self) -> bool {
+        self.address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_address(&mut self, v: ::std::string::String) {
+        self.address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_address(&mut self) -> &mut ::std::string::String {
+        if self.address.is_none() {
+            self.address = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_address(&mut self) -> ::std::string::String {
+        self.address.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required bytes public_key = 2;
+
+    pub fn public_key(&self) -> &[u8] {
+        match self.public_key.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_public_key(&mut self) {
+        self.public_key = ::std::option::Option::None;
+    }
+
+    pub fn has_public_key(&self) -> bool {
+        self.public_key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_public_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.public_key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_public_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.public_key.is_none() {
+            self.public_key = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.public_key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_public_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.public_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required bytes message = 3;
+
+    pub fn message(&self) -> &[u8] {
+        match self.message.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_message(&mut self) {
+        self.message = ::std::option::Option::None;
+    }
+
+    pub fn has_message(&self) -> bool {
+        self.message.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_message(&mut self, v: ::std::vec::Vec<u8>) {
+        self.message = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_message(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.message.is_none() {
+            self.message = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.message.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_message(&mut self) -> ::std::vec::Vec<u8> {
+        self.message.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required uint32 variant = 4;
+
+    pub fn variant(&self) -> u32 {
+        self.variant.unwrap_or(0)
+    }
+
+    pub fn clear_variant(&mut self) {
+        self.variant = ::std::option::Option::None;
+    }
+
+    pub fn has_variant(&self) -> bool {
+        self.variant.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_variant(&mut self, v: u32) {
+        self.variant = ::std::option::Option::Some(v);
+    }
+
+    // required string network = 5;
+
+    pub fn network(&self) -> &str {
+        match self.network.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_network(&mut self) {
+        self.network = ::std::option::Option::None;
+    }
+
+    pub fn has_network(&self) -> bool {
+        self.network.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_network(&mut self, v: ::std::string::String) {
+        self.network = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_network(&mut self) -> &mut ::std::string::String {
+        if self.network.is_none() {
+            self.network = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.network.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_network(&mut self) -> ::std::string::String {
+        self.network.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required uint32 signature_total_size = 6;
+
+    pub fn signature_total_size(&self) -> u32 {
+        self.signature_total_size.unwrap_or(0)
+    }
+
+    pub fn clear_signature_total_size(&mut self) {
+        self.signature_total_size = ::std::option::Option::None;
+    }
+
+    pub fn has_signature_total_size(&self) -> bool {
+        self.signature_total_size.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature_total_size(&mut self, v: u32) {
+        self.signature_total_size = ::std::option::Option::Some(v);
+    }
+
+    // optional bool chunkify = 7;
+
+    pub fn chunkify(&self) -> bool {
+        self.chunkify.unwrap_or(false)
+    }
+
+    pub fn clear_chunkify(&mut self) {
+        self.chunkify = ::std::option::Option::None;
+    }
+
+    pub fn has_chunkify(&self) -> bool {
+        self.chunkify.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_chunkify(&mut self, v: bool) {
+        self.chunkify = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "address",
+            |m: &CKBSphincsPlusVerifyMessage| { &m.address },
+            |m: &mut CKBSphincsPlusVerifyMessage| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "public_key",
+            |m: &CKBSphincsPlusVerifyMessage| { &m.public_key },
+            |m: &mut CKBSphincsPlusVerifyMessage| { &mut m.public_key },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "message",
+            |m: &CKBSphincsPlusVerifyMessage| { &m.message },
+            |m: &mut CKBSphincsPlusVerifyMessage| { &mut m.message },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "variant",
+            |m: &CKBSphincsPlusVerifyMessage| { &m.variant },
+            |m: &mut CKBSphincsPlusVerifyMessage| { &mut m.variant },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "network",
+            |m: &CKBSphincsPlusVerifyMessage| { &m.network },
+            |m: &mut CKBSphincsPlusVerifyMessage| { &mut m.network },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature_total_size",
+            |m: &CKBSphincsPlusVerifyMessage| { &m.signature_total_size },
+            |m: &mut CKBSphincsPlusVerifyMessage| { &mut m.signature_total_size },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "chunkify",
+            |m: &CKBSphincsPlusVerifyMessage| { &m.chunkify },
+            |m: &mut CKBSphincsPlusVerifyMessage| { &mut m.chunkify },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSphincsPlusVerifyMessage>(
+            "CKBSphincsPlusVerifyMessage",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBSphincsPlusVerifyMessage {
+    const NAME: &'static str = "CKBSphincsPlusVerifyMessage";
+
+    fn is_initialized(&self) -> bool {
+        if self.address.is_none() {
+            return false;
+        }
+        if self.public_key.is_none() {
+            return false;
+        }
+        if self.message.is_none() {
+            return false;
+        }
+        if self.variant.is_none() {
+            return false;
+        }
+        if self.network.is_none() {
+            return false;
+        }
+        if self.signature_total_size.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.address = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.public_key = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.message = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                32 => {
+                    self.variant = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                42 => {
+                    self.network = ::std::option::Option::Some(is.read_string()?);
+                },
+                48 => {
+                    self.signature_total_size = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                56 => {
+                    self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.address.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.public_key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.message.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        if let Some(v) = self.variant {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        if let Some(v) = self.network.as_ref() {
+            my_size += ::protobuf::rt::string_size(5, &v);
+        }
+        if let Some(v) = self.signature_total_size {
+            my_size += ::protobuf::rt::uint32_size(6, v);
+        }
+        if let Some(v) = self.chunkify {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.address.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.public_key.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.message.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.variant {
+            os.write_uint32(4, v)?;
+        }
+        if let Some(v) = self.network.as_ref() {
+            os.write_string(5, v)?;
+        }
+        if let Some(v) = self.signature_total_size {
+            os.write_uint32(6, v)?;
+        }
+        if let Some(v) = self.chunkify {
+            os.write_bool(7, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBSphincsPlusVerifyMessage {
+        CKBSphincsPlusVerifyMessage::new()
+    }
+
+    fn clear(&mut self) {
+        self.address = ::std::option::Option::None;
+        self.public_key = ::std::option::Option::None;
+        self.message = ::std::option::Option::None;
+        self.variant = ::std::option::Option::None;
+        self.network = ::std::option::Option::None;
+        self.signature_total_size = ::std::option::Option::None;
+        self.chunkify = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBSphincsPlusVerifyMessage {
+        static instance: CKBSphincsPlusVerifyMessage = CKBSphincsPlusVerifyMessage {
+            address: ::std::option::Option::None,
+            public_key: ::std::option::Option::None,
+            message: ::std::option::Option::None,
+            variant: ::std::option::Option::None,
+            network: ::std::option::Option::None,
+            signature_total_size: ::std::option::Option::None,
+            chunkify: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBSphincsPlusVerifyMessage {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSphincsPlusVerifyMessage").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBSphincsPlusVerifyMessage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBSphincsPlusVerifyMessage {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSignMessage)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct CKBSignMessage {
@@ -3010,6 +5117,10 @@ pub struct CKBTxRequestDetails {
     pub request_index: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequestDetails.tx_hash)
     pub tx_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequestDetails.signature_offset)
+    pub signature_offset: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequestDetails.signature_total_size)
+    pub signature_total_size: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxRequestDetails.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -3081,8 +5192,46 @@ impl CKBTxRequestDetails {
         self.tx_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional uint32 signature_offset = 3;
+
+    pub fn signature_offset(&self) -> u32 {
+        self.signature_offset.unwrap_or(0)
+    }
+
+    pub fn clear_signature_offset(&mut self) {
+        self.signature_offset = ::std::option::Option::None;
+    }
+
+    pub fn has_signature_offset(&self) -> bool {
+        self.signature_offset.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature_offset(&mut self, v: u32) {
+        self.signature_offset = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 signature_total_size = 4;
+
+    pub fn signature_total_size(&self) -> u32 {
+        self.signature_total_size.unwrap_or(0)
+    }
+
+    pub fn clear_signature_total_size(&mut self) {
+        self.signature_total_size = ::std::option::Option::None;
+    }
+
+    pub fn has_signature_total_size(&self) -> bool {
+        self.signature_total_size.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature_total_size(&mut self, v: u32) {
+        self.signature_total_size = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "request_index",
@@ -3093,6 +5242,16 @@ impl CKBTxRequestDetails {
             "tx_hash",
             |m: &CKBTxRequestDetails| { &m.tx_hash },
             |m: &mut CKBTxRequestDetails| { &mut m.tx_hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature_offset",
+            |m: &CKBTxRequestDetails| { &m.signature_offset },
+            |m: &mut CKBTxRequestDetails| { &mut m.signature_offset },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature_total_size",
+            |m: &CKBTxRequestDetails| { &m.signature_total_size },
+            |m: &mut CKBTxRequestDetails| { &mut m.signature_total_size },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxRequestDetails>(
             "CKBTxRequestDetails",
@@ -3118,6 +5277,12 @@ impl ::protobuf::Message for CKBTxRequestDetails {
                 18 => {
                     self.tx_hash = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                24 => {
+                    self.signature_offset = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                32 => {
+                    self.signature_total_size = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -3136,6 +5301,12 @@ impl ::protobuf::Message for CKBTxRequestDetails {
         if let Some(v) = self.tx_hash.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.signature_offset {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.signature_total_size {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -3147,6 +5318,12 @@ impl ::protobuf::Message for CKBTxRequestDetails {
         }
         if let Some(v) = self.tx_hash.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.signature_offset {
+            os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.signature_total_size {
+            os.write_uint32(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -3167,6 +5344,8 @@ impl ::protobuf::Message for CKBTxRequestDetails {
     fn clear(&mut self) {
         self.request_index = ::std::option::Option::None;
         self.tx_hash = ::std::option::Option::None;
+        self.signature_offset = ::std::option::Option::None;
+        self.signature_total_size = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -3174,6 +5353,8 @@ impl ::protobuf::Message for CKBTxRequestDetails {
         static instance: CKBTxRequestDetails = CKBTxRequestDetails {
             request_index: ::std::option::Option::None,
             tx_hash: ::std::option::Option::None,
+            signature_offset: ::std::option::Option::None,
+            signature_total_size: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -5284,6 +7465,164 @@ impl ::protobuf::reflect::ProtobufValue for CKBTxAckWitness {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBTxAckSigChunk)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBTxAckSigChunk {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxAckSigChunk.signature)
+    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxAckSigChunk.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBTxAckSigChunk {
+    fn default() -> &'a CKBTxAckSigChunk {
+        <CKBTxAckSigChunk as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBTxAckSigChunk {
+    pub fn new() -> CKBTxAckSigChunk {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes signature = 1;
+
+    pub fn signature(&self) -> &[u8] {
+        match self.signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signature(&mut self) {
+        self.signature = ::std::option::Option::None;
+    }
+
+    pub fn has_signature(&self) -> bool {
+        self.signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature.is_none() {
+            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature",
+            |m: &CKBTxAckSigChunk| { &m.signature },
+            |m: &mut CKBTxAckSigChunk| { &mut m.signature },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxAckSigChunk>(
+            "CKBTxAckSigChunk",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBTxAckSigChunk {
+    const NAME: &'static str = "CKBTxAckSigChunk";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.signature.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBTxAckSigChunk {
+        CKBTxAckSigChunk::new()
+    }
+
+    fn clear(&mut self) {
+        self.signature = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBTxAckSigChunk {
+        static instance: CKBTxAckSigChunk = CKBTxAckSigChunk {
+            signature: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBTxAckSigChunk {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBTxAckSigChunk").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBTxAckSigChunk {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBTxAckSigChunk {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.ckb.CKBTxRequestType)
 pub enum CKBTxRequestType {
@@ -5307,6 +7646,8 @@ pub enum CKBTxRequestType {
     TXPREVCELLDEP = 8,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.ckb.CKBTxRequestType.TXHEADER)
     TXHEADER = 9,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.ckb.CKBTxRequestType.TXSIGCHUNK)
+    TXSIGCHUNK = 10,
 }
 
 impl ::protobuf::Enum for CKBTxRequestType {
@@ -5328,6 +7669,7 @@ impl ::protobuf::Enum for CKBTxRequestType {
             7 => ::std::option::Option::Some(CKBTxRequestType::TXPREVOUTPUT),
             8 => ::std::option::Option::Some(CKBTxRequestType::TXPREVCELLDEP),
             9 => ::std::option::Option::Some(CKBTxRequestType::TXHEADER),
+            10 => ::std::option::Option::Some(CKBTxRequestType::TXSIGCHUNK),
             _ => ::std::option::Option::None
         }
     }
@@ -5344,6 +7686,7 @@ impl ::protobuf::Enum for CKBTxRequestType {
             "TXPREVOUTPUT" => ::std::option::Option::Some(CKBTxRequestType::TXPREVOUTPUT),
             "TXPREVCELLDEP" => ::std::option::Option::Some(CKBTxRequestType::TXPREVCELLDEP),
             "TXHEADER" => ::std::option::Option::Some(CKBTxRequestType::TXHEADER),
+            "TXSIGCHUNK" => ::std::option::Option::Some(CKBTxRequestType::TXSIGCHUNK),
             _ => ::std::option::Option::None
         }
     }
@@ -5359,6 +7702,7 @@ impl ::protobuf::Enum for CKBTxRequestType {
         CKBTxRequestType::TXPREVOUTPUT,
         CKBTxRequestType::TXPREVCELLDEP,
         CKBTxRequestType::TXHEADER,
+        CKBTxRequestType::TXSIGCHUNK,
     ];
 }
 
@@ -5392,48 +7736,80 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x18\n\x07netwo\
     rk\x18\x03\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x04\x20\x01(\
     \x08R\x08chunkify\"8\n\nCKBAddress\x12\x18\n\x07address\x18\x01\x20\x02(\
-    \tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"}\n\x0eCKB\
-    SignMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\
-    \n\x07message\x18\x02\x20\x02(\x0cR\x07message\x12\x18\n\x07network\x18\
-    \x03\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x04\x20\x01(\x08R\
-    \x08chunkify\"M\n\x13CKBMessageSignature\x12\x18\n\x07address\x18\x01\
+    \tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xb9\x01\n\
+    \x18CKBSphincsPlusGetAddress\x12&\n\raccount_index\x18\x01\x20\x01(\r:\
+    \x010R\x0caccountIndex\x12\x1c\n\x07variant\x18\x02\x20\x01(\r:\x0249R\
+    \x07variant\x12\x18\n\x07network\x18\x03\x20\x02(\tR\x07network\x12!\n\
+    \x0cshow_display\x18\x04\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunk\
+    ify\x18\x05\x20\x01(\x08R\x08chunkify\"\x87\x01\n\x15CKBSphincsPlusAddre\
+    ss\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x1b\n\tlock_a\
+    rgs\x18\x02\x20\x02(\x0cR\x08lockArgs\x12\x1d\n\npublic_key\x18\x03\x20\
+    \x02(\x0cR\tpublicKey\x12\x18\n\x07variant\x18\x04\x20\x02(\rR\x07varian\
+    t\"\xe7\x02\n\x14CKBSphincsPlusSignTx\x12&\n\raccount_index\x18\x01\x20\
+    \x01(\r:\x010R\x0caccountIndex\x12\x1c\n\x07variant\x18\x02\x20\x01(\r:\
+    \x0249R\x07variant\x12\x18\n\x07network\x18\x03\x20\x02(\tR\x07network\
+    \x12!\n\x0cinputs_count\x18\x04\x20\x02(\rR\x0binputsCount\x12#\n\routpu\
+    ts_count\x18\x05\x20\x02(\rR\x0coutputsCount\x12)\n\x0fcell_deps_count\
+    \x18\x06\x20\x01(\r:\x010R\rcellDepsCount\x12'\n\x0fwitnesses_count\x18\
+    \x07\x20\x01(\rR\x0ewitnessesCount\x127\n\x18sign_group_input_indices\
+    \x18\x08\x20\x03(\rR\x15signGroupInputIndices\x12\x1a\n\x08chunkify\x18\
+    \t\x20\x01(\x08R\x08chunkify\"\xb1\x01\n\x19CKBSphincsPlusSignMessage\
+    \x12&\n\raccount_index\x18\x01\x20\x01(\r:\x010R\x0caccountIndex\x12\x1c\
+    \n\x07variant\x18\x02\x20\x01(\r:\x0249R\x07variant\x12\x18\n\x07message\
+    \x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07network\x18\x04\x20\x02(\
+    \tR\x07network\x12\x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify\"\
+    s\n\x1eCKBSphincsPlusMessageSignature\x12\x18\n\x07address\x18\x01\x20\
+    \x02(\tR\x07address\x12\x1d\n\npublic_key\x18\x02\x20\x02(\x0cR\tpublicK\
+    ey\x12\x18\n\x07variant\x18\x03\x20\x02(\rR\x07variant\"\xf2\x01\n\x1bCK\
+    BSphincsPlusVerifyMessage\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07ad\
+    dress\x12\x1d\n\npublic_key\x18\x02\x20\x02(\x0cR\tpublicKey\x12\x18\n\
+    \x07message\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07variant\x18\
+    \x04\x20\x02(\rR\x07variant\x12\x18\n\x07network\x18\x05\x20\x02(\tR\x07\
+    network\x120\n\x14signature_total_size\x18\x06\x20\x02(\rR\x12signatureT\
+    otalSize\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"}\n\
+    \x0eCKBSignMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
+    \x12\x18\n\x07message\x18\x02\x20\x02(\x0cR\x07message\x12\x18\n\x07netw\
+    ork\x18\x03\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x04\x20\x01\
+    (\x08R\x08chunkify\"M\n\x13CKBMessageSignature\x12\x18\n\x07address\x18\
+    \x01\x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\t\
+    signature\"\x9a\x01\n\x10CKBVerifyMessage\x12\x18\n\x07address\x18\x01\
     \x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsign\
-    ature\"\x9a\x01\n\x10CKBVerifyMessage\x12\x18\n\x07address\x18\x01\x20\
-    \x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignatur\
-    e\x12\x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07net\
-    work\x18\x04\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x05\x20\
-    \x01(\x08R\x08chunkify\"\x86\x02\n\x0cCKBCellInput\x125\n\x17previous_ou\
-    tput_tx_hash\x18\x01\x20\x02(\x0cR\x14previousOutputTxHash\x122\n\x15pre\
-    vious_output_index\x18\x02\x20\x02(\rR\x13previousOutputIndex\x12\x17\n\
-    \x05since\x18\x03\x20\x01(\x04:\x010R\x05since\x127\n\x18dao_deposit_hea\
-    der_index\x18\x04\x20\x01(\rR\x15daoDepositHeaderIndex\x129\n\x19dao_wit\
-    hdraw_header_index\x18\x05\x20\x01(\rR\x16daoWithdrawHeaderIndex\"\x91\
-    \x02\n\rCKBCellOutput\x12\x1a\n\x08capacity\x18\x01\x20\x02(\x04R\x08cap\
-    acity\x12$\n\x0elock_code_hash\x18\x02\x20\x02(\x0cR\x0clockCodeHash\x12\
-    $\n\x0elock_hash_type\x18\x03\x20\x02(\rR\x0clockHashType\x12\x1b\n\tloc\
-    k_args\x18\x04\x20\x02(\x0cR\x08lockArgs\x12$\n\x0etype_code_hash\x18\
-    \x05\x20\x01(\x0cR\x0ctypeCodeHash\x12$\n\x0etype_hash_type\x18\x06\x20\
-    \x01(\rR\x0ctypeHashType\x12\x1b\n\ttype_args\x18\x07\x20\x01(\x0cR\x08t\
-    ypeArgs\x12\x12\n\x04data\x18\x08\x20\x01(\x0cR\x04data\"V\n\nCKBCellDep\
-    \x12\x17\n\x07tx_hash\x18\x01\x20\x02(\x0cR\x06txHash\x12\x14\n\x05index\
-    \x18\x02\x20\x02(\rR\x05index\x12\x19\n\x08dep_type\x18\x03\x20\x02(\rR\
-    \x07depType\"\xd4\x02\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\
-    \rR\x08addressN\x12\x18\n\x07network\x18\x02\x20\x02(\tR\x07network\x12!\
-    \n\x0cinputs_count\x18\x03\x20\x02(\rR\x0binputsCount\x12#\n\routputs_co\
-    unt\x18\x04\x20\x02(\rR\x0coutputsCount\x12)\n\x0fcell_deps_count\x18\
-    \x05\x20\x01(\r:\x010R\rcellDepsCount\x12\x1a\n\x08chunkify\x18\x06\x20\
-    \x01(\x08R\x08chunkify\x12'\n\x0fwitnesses_count\x18\x07\x20\x01(\rR\x0e\
-    witnessesCount\x127\n\x18sign_group_input_indices\x18\x08\x20\x03(\rR\
-    \x15signGroupInputIndices\x12\x1f\n\x0bheader_deps\x18\t\x20\x03(\x0cR\n\
-    headerDeps\"\xf2\x01\n\x0cCKBTxRequest\x12K\n\x0crequest_type\x18\x01\
+    ature\x12\x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\
+    \x07network\x18\x04\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x05\
+    \x20\x01(\x08R\x08chunkify\"\x86\x02\n\x0cCKBCellInput\x125\n\x17previou\
+    s_output_tx_hash\x18\x01\x20\x02(\x0cR\x14previousOutputTxHash\x122\n\
+    \x15previous_output_index\x18\x02\x20\x02(\rR\x13previousOutputIndex\x12\
+    \x17\n\x05since\x18\x03\x20\x01(\x04:\x010R\x05since\x127\n\x18dao_depos\
+    it_header_index\x18\x04\x20\x01(\rR\x15daoDepositHeaderIndex\x129\n\x19d\
+    ao_withdraw_header_index\x18\x05\x20\x01(\rR\x16daoWithdrawHeaderIndex\"\
+    \x91\x02\n\rCKBCellOutput\x12\x1a\n\x08capacity\x18\x01\x20\x02(\x04R\
+    \x08capacity\x12$\n\x0elock_code_hash\x18\x02\x20\x02(\x0cR\x0clockCodeH\
+    ash\x12$\n\x0elock_hash_type\x18\x03\x20\x02(\rR\x0clockHashType\x12\x1b\
+    \n\tlock_args\x18\x04\x20\x02(\x0cR\x08lockArgs\x12$\n\x0etype_code_hash\
+    \x18\x05\x20\x01(\x0cR\x0ctypeCodeHash\x12$\n\x0etype_hash_type\x18\x06\
+    \x20\x01(\rR\x0ctypeHashType\x12\x1b\n\ttype_args\x18\x07\x20\x01(\x0cR\
+    \x08typeArgs\x12\x12\n\x04data\x18\x08\x20\x01(\x0cR\x04data\"V\n\nCKBCe\
+    llDep\x12\x17\n\x07tx_hash\x18\x01\x20\x02(\x0cR\x06txHash\x12\x14\n\x05\
+    index\x18\x02\x20\x02(\rR\x05index\x12\x19\n\x08dep_type\x18\x03\x20\x02\
+    (\rR\x07depType\"\xd4\x02\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\x01\x20\
+    \x03(\rR\x08addressN\x12\x18\n\x07network\x18\x02\x20\x02(\tR\x07network\
+    \x12!\n\x0cinputs_count\x18\x03\x20\x02(\rR\x0binputsCount\x12#\n\routpu\
+    ts_count\x18\x04\x20\x02(\rR\x0coutputsCount\x12)\n\x0fcell_deps_count\
+    \x18\x05\x20\x01(\r:\x010R\rcellDepsCount\x12\x1a\n\x08chunkify\x18\x06\
+    \x20\x01(\x08R\x08chunkify\x12'\n\x0fwitnesses_count\x18\x07\x20\x01(\rR\
+    \x0ewitnessesCount\x127\n\x18sign_group_input_indices\x18\x08\x20\x03(\r\
+    R\x15signGroupInputIndices\x12\x1f\n\x0bheader_deps\x18\t\x20\x03(\x0cR\
+    \nheaderDeps\"\xf2\x01\n\x0cCKBTxRequest\x12K\n\x0crequest_type\x18\x01\
     \x20\x01(\x0e2(.hw.trezor.messages.ckb.CKBTxRequestTypeR\x0brequestType\
     \x12E\n\x07details\x18\x02\x20\x01(\x0b2+.hw.trezor.messages.ckb.CKBTxRe\
     questDetailsR\x07details\x12N\n\nserialized\x18\x03\x20\x01(\x0b2..hw.tr\
-    ezor.messages.ckb.CKBTxRequestSerializedR\nserialized\"S\n\x13CKBTxReque\
-    stDetails\x12#\n\rrequest_index\x18\x01\x20\x01(\rR\x0crequestIndex\x12\
-    \x17\n\x07tx_hash\x18\x02\x20\x01(\x0cR\x06txHash\"O\n\x16CKBTxRequestSe\
-    rialized\x12\x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\n\
-    \x07tx_hash\x18\x02\x20\x01(\x0cR\x06txHash\"K\n\rCKBTxAckInput\x12:\n\
+    ezor.messages.ckb.CKBTxRequestSerializedR\nserialized\"\xb0\x01\n\x13CKB\
+    TxRequestDetails\x12#\n\rrequest_index\x18\x01\x20\x01(\rR\x0crequestInd\
+    ex\x12\x17\n\x07tx_hash\x18\x02\x20\x01(\x0cR\x06txHash\x12)\n\x10signat\
+    ure_offset\x18\x03\x20\x01(\rR\x0fsignatureOffset\x120\n\x14signature_to\
+    tal_size\x18\x04\x20\x01(\rR\x12signatureTotalSize\"O\n\x16CKBTxRequestS\
+    erialized\x12\x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\
+    \n\x07tx_hash\x18\x02\x20\x01(\x0cR\x06txHash\"K\n\rCKBTxAckInput\x12:\n\
     \x05input\x18\x01\x20\x02(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\
     \x05input\"O\n\x0eCKBTxAckOutput\x12=\n\x06output\x18\x01\x20\x02(\x0b2%\
     .hw.trezor.messages.ckb.CKBCellOutputR\x06output\"P\n\x0fCKBTxAckCellDep\
@@ -5458,13 +7834,14 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01(\x0cR\tinputType\x12\x1f\n\x0boutput_type\x18\x03\x20\x01(\x0cR\nou\
     tputType\"n\n\x0fCKBTxAckWitness\x12I\n\x0cwitness_args\x18\x01\x20\x01(\
     \x0b2&.hw.trezor.messages.ckb.CKBWitnessArgsR\x0bwitnessArgs\x12\x10\n\
-    \x03raw\x18\x02\x20\x01(\x0cR\x03raw*\xaf\x01\n\x10CKBTxRequestType\x12\
-    \x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TXOUTPUT\x10\x01\x12\r\n\tTXCELLDEP\
-    \x10\x02\x12\x0e\n\nTXFINISHED\x10\x03\x12\r\n\tTXWITNESS\x10\x04\x12\
-    \x0e\n\nTXPREVMETA\x10\x05\x12\x0f\n\x0bTXPREVINPUT\x10\x06\x12\x10\n\
-    \x0cTXPREVOUTPUT\x10\x07\x12\x11\n\rTXPREVCELLDEP\x10\x08\x12\x0c\n\x08T\
-    XHEADER\x10\tB7\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessageC\
-    KB\
+    \x03raw\x18\x02\x20\x01(\x0cR\x03raw\"0\n\x10CKBTxAckSigChunk\x12\x1c\n\
+    \tsignature\x18\x01\x20\x01(\x0cR\tsignature*\xbf\x01\n\x10CKBTxRequestT\
+    ype\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TXOUTPUT\x10\x01\x12\r\n\tTX\
+    CELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\x10\x03\x12\r\n\tTXWITNESS\x10\x04\
+    \x12\x0e\n\nTXPREVMETA\x10\x05\x12\x0f\n\x0bTXPREVINPUT\x10\x06\x12\x10\
+    \n\x0cTXPREVOUTPUT\x10\x07\x12\x11\n\rTXPREVCELLDEP\x10\x08\x12\x0c\n\
+    \x08TXHEADER\x10\t\x12\x0e\n\nTXSIGCHUNK\x10\nB7\n#com.satoshilabs.trezo\
+    r.lib.protobufB\x10TrezorMessageCKB\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -5482,9 +7859,15 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(20);
+            let mut messages = ::std::vec::Vec::with_capacity(27);
             messages.push(CKBGetAddress::generated_message_descriptor_data());
             messages.push(CKBAddress::generated_message_descriptor_data());
+            messages.push(CKBSphincsPlusGetAddress::generated_message_descriptor_data());
+            messages.push(CKBSphincsPlusAddress::generated_message_descriptor_data());
+            messages.push(CKBSphincsPlusSignTx::generated_message_descriptor_data());
+            messages.push(CKBSphincsPlusSignMessage::generated_message_descriptor_data());
+            messages.push(CKBSphincsPlusMessageSignature::generated_message_descriptor_data());
+            messages.push(CKBSphincsPlusVerifyMessage::generated_message_descriptor_data());
             messages.push(CKBSignMessage::generated_message_descriptor_data());
             messages.push(CKBMessageSignature::generated_message_descriptor_data());
             messages.push(CKBVerifyMessage::generated_message_descriptor_data());
@@ -5503,6 +7886,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(CKBTxAckHeader::generated_message_descriptor_data());
             messages.push(CKBWitnessArgs::generated_message_descriptor_data());
             messages.push(CKBTxAckWitness::generated_message_descriptor_data());
+            messages.push(CKBTxAckSigChunk::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(1);
             enums.push(CKBTxRequestType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
