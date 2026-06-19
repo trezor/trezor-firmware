@@ -60,8 +60,6 @@ trezor_message_impl! {
     SetU2FCounter => MessageType_SetU2FCounter,
     GetNextU2FCounter => MessageType_GetNextU2FCounter,
     NextU2FCounter => MessageType_NextU2FCounter,
-    Deprecated_PassphraseStateRequest => MessageType_Deprecated_PassphraseStateRequest,
-    Deprecated_PassphraseStateAck => MessageType_Deprecated_PassphraseStateAck,
     FirmwareErase => MessageType_FirmwareErase,
     FirmwareUpload => MessageType_FirmwareUpload,
     FirmwareRequest => MessageType_FirmwareRequest,

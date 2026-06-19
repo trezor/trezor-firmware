@@ -553,8 +553,6 @@ class MessageType(IntEnum):
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
-    Deprecated_PassphraseStateRequest = 77
-    Deprecated_PassphraseStateAck = 78
     FirmwareErase = 6
     FirmwareUpload = 7
     FirmwareRequest = 8
@@ -937,24 +935,6 @@ class PassphraseAck(protobuf.MessageType):
     ) -> None:
         self.passphrase = passphrase
         self.on_device = on_device
-
-
-class Deprecated_PassphraseStateRequest(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 77
-    FIELDS = {
-        1: protobuf.Field("state", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        state: Optional["bytes"] = None,
-    ) -> None:
-        self.state = state
-
-
-class Deprecated_PassphraseStateAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 78
 
 
 class HDNodeType(protobuf.MessageType):

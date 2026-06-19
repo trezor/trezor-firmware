@@ -144,25 +144,6 @@ message PassphraseAck {
 }
 
 /**
- * Response: Device awaits passphrase state
- * Deprecated in 2.3.0
- * @next Deprecated_PassphraseStateAck
- */
-message Deprecated_PassphraseStateRequest {
-    option deprecated = true;
-    optional bytes state = 1;  // actual device state
-}
-
-/**
- * Request: Send passphrase state back
- * Deprecated in 2.3.0
- * @auxend
- */
-message Deprecated_PassphraseStateAck {
-    option deprecated = true;
-}
-
-/**
  * Structure representing BIP32 (hierarchical deterministic) node
  * Used for imports of private key into the device and exporting public key out of device
  * @embed
