@@ -1477,9 +1477,33 @@ secure-channel-handshake-2 e08e84b91413ad8f7b07853c8ce4c1b5547a12d9dd65f30e3adaa
 OK
 ```
 
-### tropic-stress-test
+### tropic-stress-* and tropic-test-*
 
-Runs a Tropic stress test that repeatedly calls `lt_init()`, `lt_session_start()`, `lt_mac_and_destroy()`, `lt_ecc_key_generate()` and `lt_random_value_get()` to test that Tropic doesn't enter alarm mode.
+The `tropic-stress-*` commands hammer an operation without checking its results, to test that Tropic doesn't enter alarm mode. The `tropic-test-*` commands verify that an operation produces correct results.
+
+The commands that test multiple slots select them pseudorandomly deterministically (seeded with the command and the requested slot count), so a given invocation always tests the same slots. Such a command also accepts an optional trailing `<slot>` argument that pins the exact slot to use; it is only valid together with a slot count of 1. `<iterations>` is the number of test iterations performed *per slot*.
+
+| Command | Arguments | Description |
+|---|---|---|
+| `tropic-stress-init` | `[<iterations> [<delay-ms>]]` | Repeatedly reinitialize the chip, waiting `<delay-ms>` between deinit and init. |
+| `tropic-stress-session` | `[<iterations>]` | Repeatedly tear down and re-establish the secure session. |
+| `tropic-stress-mac-and-destroy` | `[<iterations> <slot-count> [<slot>]]` | Hammer MAC-and-destroy on a sample of slots with random inputs. |
+| `tropic-test-mac-and-destroy` | `[<iterations> <slot-count> [<slot>]]` | Verify MAC-and-destroy produces consistent results; one consistency check per iteration against the first result. |
+| `tropic-test-sign` | `[<iterations>]` | Generate EdDSA signatures with verification; one sign & verify per iteration. |
+| `tropic-test-counter` | `[<iterations> <slot-count> [<slot>]]` | Verify monotonic counters set, read back, and decrement correctly; one decrement & check per iteration. |
+| `tropic-test-rmem` | `[<iterations> <slot-count> [<slot>]]` | Write random data to a sample of R-memory slots and read it back; one write & read cycle per iteration. |
+| `tropic-test-rng` | `[<iterations>]` | Sanity-check the TRNG output (non-zero, non-repeating). |
+| `tropic-stress-test` | `[<init-iterations> <start-session-iterations> <mac-and-destroy-slot-count> <mac-and-destroy-per-slot-iterations> <signing-iterations> <rng-iterations>]` | **Deprecated** — the original combined stress test; will be removed. |
+
+Several resources are partitioned by pairing-key privilege, so the available slot range depends on the session. A privileged session (or, on an unprovisioned device, the factory key) grants the full range; an unprivileged session is restricted:
+
+| Command         | Full range | Unprivileged range |
+|-----------------|------------|--------------------|
+| MAC-and-destroy | `0`–`127`  | `64`–`127`         |
+| counter         | `0`–`15`   | `4`–`15`           |
+| R-memory        | `6`–`511`  | `256`–`511`        |
+
+The R-memory test never touches the certificate slots (`0`–`5`).
 
 ### tropic-benchmark
 
