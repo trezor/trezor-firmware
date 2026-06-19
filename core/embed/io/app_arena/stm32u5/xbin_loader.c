@@ -118,15 +118,6 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
 
   const xbin_header_t* header = (const xbin_header_t*)image;
 
-  // Make the image header accessible for verification
-  mpu_set_active_applet(&(applet_layout_t){
-      .data1 =
-          {
-              .start = (uintptr_t)image,
-              .size = sizeof(xbin_header_t),
-          },
-  });
-
   TSH_CHECK(header->magic == XBIN_HEADER_MAGIC, TS_EINVAL);
   TSH_CHECK(header->header_size >= sizeof(xbin_header_t), TS_EINVAL);
   TSH_CHECK(IS_ALIGNED(header->header_size, MPU_ALIGNMENT), TS_EINVAL);
@@ -137,15 +128,6 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
   TSH_CHECK(IS_ALIGNED(header->payload_size, MPU_ALIGNMENT), TS_EINVAL);
   TSH_CHECK(header->payload_size + header->header_size == image_size,
             TS_EINVAL);
-
-  // Make the payload header accessible
-  mpu_set_active_applet(&(applet_layout_t){
-      .data1 =
-          {
-              .start = (uintptr_t)image,
-              .size = header->header_size + sizeof(payload_header_t),
-          },
-  });
 
   const payload_header_t* p =
       (const payload_header_t*)((const uint8_t*)header + header->header_size);
@@ -184,7 +166,6 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
   retval = header;
 
 cleanup:
-  systask_set_mpu(systask_active());
   return retval;
 }
 
@@ -192,28 +173,9 @@ ts_t xbin_verify_signature(const xbin_header_t* header, const void* proof,
                            size_t proof_size) {
   TSH_DECLARE;
 
-  // Make the header accessible
-  mpu_set_active_applet(&(applet_layout_t){
-      .data1 =
-          {
-              .start = (uintptr_t)header,
-              .size = sizeof(xbin_header_t),
-          },
-  });
-
-  // Make the entire image accessible for signature verification
-  mpu_set_active_applet(&(applet_layout_t){
-      .data1 =
-          {
-              .start = (uintptr_t)header,
-              .size = header->header_size + header->payload_size,
-          },
-  });
-
   // TODO !@# verify signature as soons as the signing scheme is defined
 
   // cleanup:
-  systask_set_mpu(systask_active());
   TSH_RETURN;
 }
 
@@ -298,29 +260,6 @@ ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
 
   TSH_CHECK_ARG(IS_ALIGNED((uintptr_t)rwmem, MPU_ALIGNMENT));
   TSH_CHECK_ARG(IS_ALIGNED((uintptr_t)rwmem_size, MPU_ALIGNMENT));
-
-  // Make the header accessible
-  mpu_set_active_applet(&(applet_layout_t){
-      .data1 =
-          {
-              .start = (uintptr_t)header,
-              .size = sizeof(xbin_header_t),
-          },
-  });
-
-  // Make the entire image accessible for preparation (relocations, etc.)
-  mpu_set_active_applet(&(applet_layout_t){
-      .data1 =
-          {
-              .start = (uintptr_t)header,
-              .size = header->header_size + header->payload_size,
-          },
-      .data2 =
-          {
-              .start = (uintptr_t)rwmem,
-              .size = rwmem_size,
-          },
-  });
 
   payload_header_t* p =
       (payload_header_t*)((const uint8_t*)header + header->header_size);

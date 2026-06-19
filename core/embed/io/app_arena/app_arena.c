@@ -53,17 +53,12 @@ typedef struct {
   // Set if image is currently running
   bool running;
 
-  // Identification of the loaded image
-  char id[APP_IMAGE_MAX_ID_LEN + 1];
-  // Version of the loaded image
-  uint32_t version;
-
   // Reserved memory for the application
   void* mem_ptr;
   // Reserved memory size
   size_t mem_size;
-
-  // Number of bytes written to the image so far
+  // Number of bytes of the image loaded into the reserved memory
+  // (the rest of the reserved memory is used for rwdata)
   size_t image_size;
 
   // Applet associated with the application
@@ -232,6 +227,21 @@ cleanup:
   TSH_RETURN;
 }
 
+static void app_arena_configure_mpu(const app_arena_entry_t* entry) {
+#ifndef TREZOR_EMULATOR
+  applet_layout_t layout = {
+      .data1 = {.start = (uintptr_t)entry->mem_ptr, .size = entry->mem_size},
+  };
+  mpu_set_active_applet(&layout);
+#endif
+}
+
+static void app_arena_restore_mpu(void) {
+#ifndef TREZOR_EMULATOR
+  systask_set_mpu(systask_active());
+#endif
+}
+
 static app_arena_entry_t* find_image_by_handle(app_image_handle_t handle) {
   app_arena_t* arena = &g_app_arena;
 
@@ -260,33 +270,27 @@ ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t* info) {
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
 
-  memset(info, 0, sizeof(*info));
-
-  memcpy(info->id, entry->id, sizeof(info->id));
-  info->verified = entry->verified;
-  info->running = entry->running;
-  info->image_size = entry->image_size;
+  app_image_info_t temp_info = {
+      .verified = entry->verified,
+      .running = entry->running,
+      .image_size = entry->image_size,
+  };
 
   if (entry->verified) {
     const xbin_header_t* header = (const xbin_header_t*)entry->mem_ptr;
 
-    mpu_set_active_applet(&(applet_layout_t){
-        .data1 =
-            {
-                .start = (uintptr_t)header,
-                .size = sizeof(xbin_header_t),
-            },
-    });
-
-    info->version = header->version;
-    memcpy(&info->id[0], &header->id[0], sizeof(info->id));
-
-    systask_set_mpu(systask_active());
+    // We copy ID from one applet to another
+    app_arena_configure_mpu(entry);
+    temp_info.version = header->version;
+    memcpy(temp_info.id, header->id, sizeof(temp_info.id));
+    app_arena_restore_mpu();
   }
 
   if (entry->running) {
-    info->task_id = systask_id(&entry->applet.task);
+    temp_info.task_id = systask_id(&entry->applet.task);
   }
+
+  *info = temp_info;
 
 cleanup:
   TSH_RETURN;
@@ -336,11 +340,6 @@ ts_t app_image_write_chunk(app_image_handle_t handle, const void* data,
     TSH_CHECK_OK(TS_ENOMEM);
   }
 
-  // Copy the new data to the image memory
-  applet_layout_t temp_layout = {
-      .data1 = {.start = (uintptr_t)entry->mem_ptr, .size = entry->mem_size},
-  };
-
   const uint8_t* src = data;
   const uint8_t* src_end = src + size;
   uint8_t* dst = (uint8_t*)entry->mem_ptr + entry->image_size;
@@ -353,9 +352,9 @@ ts_t app_image_write_chunk(app_image_handle_t handle, const void* data,
     // We are copying data between two memory areas that are not
     // accessible at the same time due to MPU restrictions.
     memcpy(temp, src, bytes_to_copy);
-    mpu_set_active_applet(&temp_layout);
+    app_arena_configure_mpu(entry);
     memcpy(dst, temp, bytes_to_copy);
-    systask_set_mpu(systask_active());
+    app_arena_restore_mpu();
 
     src += bytes_to_copy;
     dst += bytes_to_copy;
@@ -384,6 +383,8 @@ ts_t app_image_verify(app_image_handle_t handle, const void* proof,
 
   TSH_CHECK(!entry->verified, TS_EINVAL);
 
+  app_arena_configure_mpu(entry);
+
   const xbin_header_t* header =
       xbin_verify_image(entry->mem_ptr, entry->image_size);
   TSH_CHECK(header != NULL, TS_EINVAL);
@@ -394,6 +395,7 @@ ts_t app_image_verify(app_image_handle_t handle, const void* proof,
   entry->verified = true;
 
 cleanup:
+  app_arena_restore_mpu();
   TSH_RETURN;
 }
 
@@ -419,6 +421,8 @@ ts_t app_image_run(app_image_handle_t handle, systask_id_t* task_id) {
     size_t rwmem_size = entry->mem_size - entry->image_size;
     void* rwmem = (uint8_t*)entry->mem_ptr + entry->image_size;
 
+    app_arena_configure_mpu(entry);
+
     const xbin_header_t* header = (const xbin_header_t*)entry->mem_ptr;
     status = xbin_prepare_applet(header, rwmem, rwmem_size, &entry->applet);
     TSH_CHECK_OK(status);
@@ -430,6 +434,7 @@ ts_t app_image_run(app_image_handle_t handle, systask_id_t* task_id) {
   }
 
 cleanup:
+  app_arena_restore_mpu();
   TSH_RETURN;
 }
 
