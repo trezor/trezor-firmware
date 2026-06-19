@@ -8,7 +8,7 @@ pub struct Point {
 }
 
 #[cfg(feature = "thp")]
-impl trezor_thp::channel::U8Array for Point {
+impl trezor_thp::noise::forked::U8Array for Point {
     fn new() -> Self {
         Self { bytes: [0u8; 32] }
     }
@@ -42,7 +42,7 @@ pub struct Scalar {
 }
 
 #[cfg(feature = "thp")]
-impl trezor_thp::channel::U8Array for Scalar {
+impl trezor_thp::noise::forked::U8Array for Scalar {
     fn new() -> Self {
         Self { bytes: [0u8; 32] }
     }

@@ -9,13 +9,14 @@ use crate::{
     Device, Host,
     credential::{CredentialVerifier, NullCredentialStore},
     header::{BROADCAST_CHANNEL_ID, MAX_CHANNEL_ID, MIN_CHANNEL_ID},
+    noise::forked::{TrezorNoiseProtocol, TrezorNoiseProtocolBackend},
 };
 
 use test_case::{test_case, test_matrix};
 
 struct RustCrypto;
 
-impl Backend for RustCrypto {
+impl TrezorNoiseProtocolBackend for RustCrypto {
     type DH = trezor_noise_rust_crypto::X25519;
     type Cipher = trezor_noise_rust_crypto::Aes256Gcm;
     type Hash = trezor_noise_rust_crypto::Sha256;
@@ -24,6 +25,8 @@ impl Backend for RustCrypto {
         getrandom::fill(dest).unwrap();
     }
 }
+
+type TrezorNoiseRustCrypto = TrezorNoiseProtocol<RustCrypto>;
 
 type Packet = Vec<u8>;
 type AppMsg = (u8, u16, Vec<u8>);
@@ -64,18 +67,18 @@ impl CredentialVerifier for TestCredentialVerifier {
     }
 }
 
-pub struct WithKey<C: CredentialVerifier, B: Backend> {
-    channel: super::device::ChannelOpen<C, B>,
+pub struct WithKey<C: CredentialVerifier, N: NoiseHandshake> {
+    channel: super::device::ChannelOpen<C, N>,
     static_key: [u8; PRIVKEY_LEN],
 }
 
-impl<C: CredentialVerifier, B: Backend> WithKey<C, B> {
-    fn unwrap(self) -> super::device::ChannelOpen<C, B> {
+impl<C: CredentialVerifier, N: NoiseHandshake> WithKey<C, N> {
+    fn unwrap(self) -> super::device::ChannelOpen<C, N> {
         self.channel
     }
 }
 
-impl<C: CredentialVerifier, B: Backend> ChannelIO for WithKey<C, B> {
+impl<C: CredentialVerifier, N: NoiseHandshake> ChannelIO for WithKey<C, N> {
     fn packet_in(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> PacketInResult {
         let pir = self.channel.packet_in(packet_buffer, receive_buffer);
         if matches!(pir, PacketInResult::HandshakeKeyRequired { .. }) {
@@ -127,26 +130,28 @@ impl<C: CredentialVerifier, B: Backend> ChannelIO for WithKey<C, B> {
     }
 }
 
-impl<C: CredentialVerifier, B: Backend> Deref for WithKey<C, B> {
-    type Target = super::device::ChannelOpen<C, B>;
+impl<C: CredentialVerifier, N: NoiseHandshake> Deref for WithKey<C, N> {
+    type Target = super::device::ChannelOpen<C, N>;
 
     fn deref(&self) -> &Self::Target {
         &self.channel
     }
 }
 
-impl<C: CredentialVerifier, B: Backend> DerefMut for WithKey<C, B> {
+impl<C: CredentialVerifier, N: NoiseHandshake> DerefMut for WithKey<C, N> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.channel
     }
 }
 
-pub trait WithKeyExt<C: CredentialVerifier, B: Backend>: Sized {
-    fn with_key(self, key: &[u8; PRIVKEY_LEN]) -> WithKey<C, B>;
+pub trait WithKeyExt<C: CredentialVerifier, N: NoiseHandshake>: Sized {
+    fn with_key(self, key: &[u8; PRIVKEY_LEN]) -> WithKey<C, N>;
 }
 
-impl<C: CredentialVerifier, B: Backend> WithKeyExt<C, B> for super::device::ChannelOpen<C, B> {
-    fn with_key(self, key: &[u8; PRIVKEY_LEN]) -> WithKey<C, B> {
+impl<C: CredentialVerifier, N: NoiseHandshake> WithKeyExt<C, N>
+    for super::device::ChannelOpen<C, N>
+{
+    fn with_key(self, key: &[u8; PRIVKEY_LEN]) -> WithKey<C, N> {
         WithKey {
             channel: self,
             static_key: *key,
@@ -538,23 +543,23 @@ fn test_device_locked(ack_piggybacking: bool) -> Result<()> {
 }
 
 fn create_mux() -> (
-    Buffered<host::Mux<RustCrypto>>,
-    Buffered<device::Mux<RustCrypto>>,
+    Buffered<host::Mux<TrezorNoiseRustCrypto>>,
+    Buffered<device::Mux<TrezorNoiseRustCrypto>>,
     device::ChannelIdAllocator,
 ) {
-    let mut hm = host::Mux::<RustCrypto>::new().into_buffered();
+    let mut hm = host::Mux::<TrezorNoiseRustCrypto>::new().into_buffered();
     hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<RustCrypto>::new(DEVICE_PROPERTIES)
+    let mut dm = device::Mux::<TrezorNoiseRustCrypto>::new(DEVICE_PROPERTIES)
         .unwrap()
         .into_buffered();
     dm.set_packet_len(DEFAULT_PACKET_LEN);
-    let cids = device::ChannelIdAllocator::new_random::<RustCrypto>();
+    let cids = device::ChannelIdAllocator::new_random::<TrezorNoiseRustCrypto>();
     (hm, dm, cids)
 }
 
 fn alloc_channel() -> Result<(
-    Buffered<host::ChannelOpen<NullCredentialStore, RustCrypto>>,
-    Buffered<WithKey<TestCredentialVerifier, RustCrypto>>,
+    Buffered<host::ChannelOpen<NullCredentialStore, TrezorNoiseRustCrypto>>,
+    Buffered<WithKey<TestCredentialVerifier, TrezorNoiseRustCrypto>>,
 )> {
     let (mut hm, mut dm, cids) = create_mux();
     hm.request_channel(false);
@@ -572,8 +577,8 @@ fn open_channel(
     packet_len: usize,
     enable_piggybacking: bool,
 ) -> Result<(
-    Buffered<host::Channel<RustCrypto>>,
-    Buffered<device::Channel<RustCrypto>>,
+    Buffered<host::Channel<TrezorNoiseRustCrypto>>,
+    Buffered<device::Channel<TrezorNoiseRustCrypto>>,
 )> {
     let (mut hm, mut dm, cids) = create_mux();
     hm.set_packet_len(packet_len);
@@ -633,16 +638,16 @@ fn test_packet_length(packet_len: usize, ack_piggybacking: bool) -> Result<()> {
 fn test_one_device_multiple_hosts() -> Result<()> {
     const NHOSTS: usize = 4;
     setup();
-    let mut dm = device::Mux::<RustCrypto>::new(DEVICE_PROPERTIES)?.into_buffered();
+    let mut dm = device::Mux::<TrezorNoiseRustCrypto>::new(DEVICE_PROPERTIES)?.into_buffered();
     dm.set_packet_len(DEFAULT_PACKET_LEN);
     let cids = device::ChannelIdAllocator::new_from(42);
 
-    let mut device_chans = Vec::<Buffered<Channel<Device, RustCrypto>>>::new();
-    let mut host_chans = Vec::<Buffered<Channel<Host, RustCrypto>>>::new();
+    let mut device_chans = Vec::<Buffered<Channel<Device, TrezorNoiseRustCrypto>>>::new();
+    let mut host_chans = Vec::<Buffered<Channel<Host, TrezorNoiseRustCrypto>>>::new();
 
     // open channels
     for i in 0..NHOSTS {
-        let mut hm = host::Mux::<RustCrypto>::new().into_buffered();
+        let mut hm = host::Mux::<TrezorNoiseRustCrypto>::new().into_buffered();
         hm.set_packet_len(DEFAULT_PACKET_LEN);
         hm.request_channel(false);
         take_turns(&mut hm, &mut dm)?;
@@ -742,8 +747,8 @@ fn test_packet_loss_alloc() -> Result<()> {
 }
 
 fn handshake_timeout(
-    h: &mut Buffered<host::ChannelOpen<NullCredentialStore, RustCrypto>>,
-    d: &mut Buffered<WithKey<TestCredentialVerifier, RustCrypto>>,
+    h: &mut Buffered<host::ChannelOpen<NullCredentialStore, TrezorNoiseRustCrypto>>,
+    d: &mut Buffered<WithKey<TestCredentialVerifier, TrezorNoiseRustCrypto>>,
     who_retransmits: Direction,
     max_timeouts: usize,
 ) -> Result<()> {
@@ -1258,8 +1263,8 @@ fn test_channel_id_wraparound() -> Result<()> {
     setup();
 
     fn alloc_test(
-        hm: &mut Buffered<host::Mux<RustCrypto>>,
-        dm: &mut Buffered<device::Mux<RustCrypto>>,
+        hm: &mut Buffered<host::Mux<TrezorNoiseRustCrypto>>,
+        dm: &mut Buffered<device::Mux<TrezorNoiseRustCrypto>>,
         cids: &device::ChannelIdAllocator,
         expected_id: u16,
     ) -> Result<()> {

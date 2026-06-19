@@ -1,23 +1,23 @@
 use heapless;
 
 use crate::{
-    Backend, ChannelIO, Error, Host,
+    ChannelIO, Error, Host, NoiseHandshake,
     alternating_bit::SyncBits,
     channel::{
         HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, MAX_ALLOC_RESPONSE_LEN,
         MAX_DEVICE_PROPERTIES_LEN, Nonce, PacketInResult, PairingState, Phase, ReceiveState,
-        noise::NoiseHandshake,
     },
     control_byte::ControlByte,
     credential::CredentialStore,
     fragment::{Fragmenter, Reassembler},
     header::{BROADCAST_CHANNEL_ID, HandshakeMessage, Header, parse_channel_length, parse_u16},
+    noise::Ciphers,
     util::prepare_zeroed,
 };
 
 use core::marker::PhantomData;
 
-pub type Channel<B> = super::Channel<Host, B>;
+pub type Channel<N> = super::Channel<Host, N>;
 
 enum AllocationState {
     None,
@@ -53,16 +53,16 @@ enum PingState {
 /// Handles broadcast channel messages, notably channel allocation requests.
 /// Because host often only needs a single channel, you can throw away the Mux
 /// after allocating one, if you don't need the keep-alive functionality.
-pub struct Mux<B> {
+pub struct Mux<N> {
     internal_buffer: heapless::Vec<u8, MAX_ALLOC_RESPONSE_LEN>,
     channel_allocation: AllocationState,
     ping: PingState,
-    _phantom: PhantomData<B>,
+    _phantom: PhantomData<N>,
 }
 
-impl<B> Mux<B>
+impl<N> Mux<N>
 where
-    B: Backend,
+    N: NoiseHandshake,
 {
     pub fn new() -> Self {
         let mut internal_buffer = heapless::Vec::new();
@@ -97,7 +97,7 @@ where
     }
 
     /// Create new [`ChannelOpen`] after channel allocation response was received.
-    pub fn channel_alloc<C>(&mut self, cred_store: C) -> Result<ChannelOpen<C, B>, Error>
+    pub fn channel_alloc<C>(&mut self, cred_store: C) -> Result<ChannelOpen<C, N>, Error>
     where
         C: CredentialStore,
     {
@@ -121,7 +121,7 @@ where
 
     /// Same as [`Mux::channel_alloc`] but destroys the [`Mux`],
     /// like `complete()` does for other types.
-    pub fn complete<C>(mut self, cred_store: C) -> Result<ChannelOpen<C, B>, Error>
+    pub fn complete<C>(mut self, cred_store: C) -> Result<ChannelOpen<C, N>, Error>
     where
         C: CredentialStore,
     {
@@ -220,18 +220,18 @@ where
     }
 }
 
-impl<B> Default for Mux<B>
+impl<N> Default for Mux<N>
 where
-    B: Backend,
+    N: NoiseHandshake,
 {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<B> ChannelIO for Mux<B>
+impl<N> ChannelIO for Mux<N>
 where
-    B: Backend,
+    N: NoiseHandshake,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
         let Ok((cb, _)) = ControlByte::parse(packet_buffer) else {
@@ -254,7 +254,7 @@ where
 
     fn packet_out(&mut self, packet_buffer: &mut [u8], _send_buffer: &[u8]) -> Result<(), Error> {
         if let AllocationState::SendingRequest { try_to_unlock } = self.channel_allocation {
-            let nonce = Nonce::random::<B>();
+            let nonce = Nonce::random::<N>();
             Fragmenter::<Host>::single(
                 Header::new_channel_request(),
                 SyncBits::new(),
@@ -266,7 +266,7 @@ where
                 nonce,
             };
         } else if let PingState::SendingPing = self.ping {
-            let nonce = Nonce::random::<B>();
+            let nonce = Nonce::random::<N>();
             Fragmenter::<Host>::single(
                 Header::new_ping(),
                 SyncBits::new(),
@@ -338,17 +338,17 @@ enum HandshakeState {
 /// - calling [`Mux::channel_alloc`] to obtain [`ChannelOpen`]
 /// - perform [`ChannelIO`] with empty messages until [`ChannelOpen::handshake_done`]
 /// - call [`ChannelOpen::complete`] to obtain [`Channel`]
-pub struct ChannelOpen<C: CredentialStore, B: Backend> {
-    channel: Channel<B>,
+pub struct ChannelOpen<C: CredentialStore, N: NoiseHandshake> {
+    channel: Channel<N>,
     state: HandshakeState,
-    noise: NoiseHandshake<Host, B>,
+    noise: N,
     send_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_HTD_LEN>,
     receive_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_DTH_LEN>,
     device_properties: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
     cred_store: C,
 }
 
-impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
+impl<C: CredentialStore, N: NoiseHandshake> ChannelOpen<C, N> {
     fn new(
         channel_id: u16,
         cred_store: C,
@@ -360,11 +360,8 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
 
         let mut send_buffer = heapless::Vec::new();
         prepare_zeroed(&mut send_buffer);
-        let (hss, len) = NoiseHandshake::write_initiation_request(
-            &device_properties,
-            try_to_unlock,
-            &mut send_buffer,
-        )?;
+        let (hss, len) =
+            N::write_initiation_request(&device_properties, try_to_unlock, &mut send_buffer)?;
         send_buffer.truncate(len);
         let mut receive_buffer = heapless::Vec::new();
         prepare_zeroed(&mut receive_buffer);
@@ -475,7 +472,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     ///
     /// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
     /// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
-    pub fn complete(mut self) -> Result<Channel<B>, Error> {
+    pub fn complete(mut self) -> Result<Channel<N>, Error> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }
@@ -496,10 +493,10 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     }
 }
 
-impl<C, B> ChannelIO for ChannelOpen<C, B>
+impl<C, N> ChannelIO for ChannelOpen<C, N>
 where
     C: CredentialStore,
-    B: Backend,
+    N: NoiseHandshake,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
         if matches!(self.state, HandshakeState::Initial) {

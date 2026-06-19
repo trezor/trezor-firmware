@@ -2,7 +2,6 @@
 pub mod buffered;
 pub mod device;
 pub mod host;
-mod noise;
 #[cfg(test)]
 mod test;
 
@@ -13,15 +12,13 @@ use crate::{
     error::{Result, TransportError},
     fragment::{Fragmenter, Reassembler},
     header::{BROADCAST_CHANNEL_ID, Header, NONCE_LEN, parse_cb_channel, parse_u16},
+    noise::Ciphers,
     util::max,
 };
 
 use core::num::NonZeroU16;
 
-use noise::NoiseCiphers;
-pub use noise::{
-    Backend, Cipher, DH, HANDSHAKE_HASH_LEN, Hash, PRIVKEY_LEN, PUBKEY_LEN, TAG_LEN, U8Array,
-};
+pub use crate::noise::{HANDSHAKE_HASH_LEN, NoiseHandshake, PRIVKEY_LEN, PUBKEY_LEN, TAG_LEN};
 
 pub const MAX_DEVICE_PROPERTIES_LEN: usize = 64;
 pub const MAX_CREDENTIAL_LEN: usize = 128;
@@ -51,9 +48,9 @@ struct Nonce([u8; NONCE_LEN as _]);
 impl Nonce {
     pub const LEN: usize = NONCE_LEN as _;
 
-    pub fn random<B: Backend>() -> Self {
+    pub fn random<N: NoiseHandshake>() -> Self {
         let mut bytes = [0u8; Self::LEN];
-        B::random_bytes(&mut bytes);
+        N::random_bytes(&mut bytes);
         Self(bytes)
     }
 
@@ -178,17 +175,17 @@ pub enum Phase {
 /// There is no constructor, to obtain a channel please use [`host::Mux`]
 /// or [`device::Mux`].
 /// For actually sending and receiving messages please see [`ChannelIO`].
-pub struct Channel<R: Role, B: Backend> {
+pub struct Channel<R: Role, N: NoiseHandshake> {
     channel_id: u16,
     sync: ChannelSync,
-    noise: Option<NoiseCiphers<B>>,
+    noise: Option<N::Ciphers>,
     send_ack: Option<SyncBits>,
     send_state: SendState<R>,
     receive_state: ReceiveState<R>,
     phase: Phase,
 }
 
-impl<R: Role, B: Backend> Channel<R, B> {
+impl<R: Role, N: NoiseHandshake> Channel<R, N> {
     fn new(channel_id: u16) -> Self {
         Self {
             channel_id,
@@ -205,7 +202,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
         }
     }
 
-    fn noise(&mut self) -> Result<&mut NoiseCiphers<B>> {
+    fn noise(&mut self) -> Result<&mut N::Ciphers> {
         self.noise.as_mut().ok_or_else(Error::unexpected_input)
     }
 
@@ -765,7 +762,7 @@ pub trait ChannelIO {
     fn channel_id(&self) -> u16;
 }
 
-impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
+impl<R: Role, N: NoiseHandshake> ChannelIO for Channel<R, N> {
     fn packet_in(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> PacketInResult {
         if self.is_failed() {
             return PacketInResult::fail(Error::unexpected_input());

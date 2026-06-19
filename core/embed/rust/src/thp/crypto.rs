@@ -1,4 +1,6 @@
-use trezor_thp::channel::{Backend, Cipher, Hash, U8Array, DH};
+use trezor_thp::noise::forked::{
+    Cipher, Hash, TrezorNoiseProtocol, TrezorNoiseProtocolBackend, U8Array, DH,
+};
 
 use zeroize::{Zeroize, Zeroizing};
 
@@ -197,9 +199,9 @@ impl Hash for TrezorCryptoSha256 {
     }
 }
 
-pub struct TrezorCrypto;
+pub struct TrezorCryptoPrimitives;
 
-impl Backend for TrezorCrypto {
+impl TrezorNoiseProtocolBackend for TrezorCryptoPrimitives {
     type DH = TrezorCryptoCurve25519;
     type Cipher = TrezorCryptoAesGcm;
     type Hash = TrezorCryptoSha256;
@@ -208,3 +210,5 @@ impl Backend for TrezorCrypto {
         crate::trezorhal::random::bytes(dest);
     }
 }
+
+pub type TrezorCrypto = TrezorNoiseProtocol<TrezorCryptoPrimitives>;

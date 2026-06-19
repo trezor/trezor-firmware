@@ -4,11 +4,15 @@ use std::net::{SocketAddr, UdpSocket};
 use std::str::FromStr;
 use std::time::Duration;
 
-use trezor_thp::{Backend, channel::buffered::ChannelExt, channel::host::Mux};
+use trezor_thp::{
+    channel::buffered::ChannelExt,
+    channel::host::Mux,
+    noise::forked::{TrezorNoiseProtocol, TrezorNoiseProtocolBackend},
+};
 
 struct RustCrypto;
 
-impl Backend for RustCrypto {
+impl TrezorNoiseProtocolBackend for RustCrypto {
     type DH = trezor_noise_rust_crypto::X25519;
     type Cipher = trezor_noise_rust_crypto::Aes256Gcm;
     type Hash = trezor_noise_rust_crypto::Sha256;
@@ -17,6 +21,8 @@ impl Backend for RustCrypto {
         getrandom::fill(dest).unwrap();
     }
 }
+
+type TrezorNoiseRustCrypto = TrezorNoiseProtocol<RustCrypto>;
 
 const REPEAT: u8 = 1;
 const PACKET_LEN: usize = 64;
@@ -29,7 +35,7 @@ pub fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind("127.0.0.1:0")?;
 
     let mut recvbuf = [0u8; PACKET_LEN];
-    let mut mux = Mux::<RustCrypto>::new().into_buffered();
+    let mut mux = Mux::<TrezorNoiseRustCrypto>::new().into_buffered();
     mux.set_packet_len(PACKET_LEN);
 
     for _i in 0..REPEAT {

@@ -1,5 +1,3 @@
-use trezor_noise_protocol::{Error as NoiseError, ErrorKind as NoiseErrorKind};
-
 /// Payload of `transport_error` message type (0x42).
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -81,11 +79,14 @@ pub enum Error {
     CryptoError,
 }
 
-impl From<NoiseError> for Error {
-    fn from(val: NoiseError) -> Self {
+#[cfg(feature = "trezor_noise_protocol")]
+impl From<trezor_noise_protocol::Error> for Error {
+    fn from(val: trezor_noise_protocol::Error) -> Self {
         match val.kind() {
-            NoiseErrorKind::DH | NoiseErrorKind::Decryption => Self::crypto_error(),
-            NoiseErrorKind::TooShort => Self::malformed_data(),
+            trezor_noise_protocol::ErrorKind::DH | trezor_noise_protocol::ErrorKind::Decryption => {
+                Self::crypto_error()
+            }
+            trezor_noise_protocol::ErrorKind::TooShort => Self::malformed_data(),
         }
     }
 }

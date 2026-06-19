@@ -5,6 +5,7 @@ edition = "2024"
 
 [features]
 use_std = []
+trezor_noise_protocol = ["dep:trezor-noise-protocol"]
 
 [dependencies]
 log = "0.4.29"
@@ -16,6 +17,7 @@ default-features = false
 [dependencies.trezor-noise-protocol]
 version = "0.2.1"
 default-features = false
+optional = true
 
 [dev-dependencies]
 env_logger = "0.11.8"
@@ -27,7 +29,7 @@ protobuf = "=3.7.2"
 protobuf-codegen = "=3.7.2"
 
 [dev-dependencies.trezor-thp]
-features = ["use_std"]
+features = ["use_std", "trezor_noise_protocol"]
 path = "."
 
 [dev-dependencies.trezor-noise-rust-crypto]
