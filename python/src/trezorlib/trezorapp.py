@@ -23,7 +23,14 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
-def load(session: "Session", id: str, version: tuple[int, int], data: bytes, proof: bytes, force_reload: bool = False) -> int:
+def load(
+    session: "Session",
+    id: str,
+    version: tuple[int, int],
+    data: bytes,
+    proof: bytes,
+    force_reload: bool = False,
+) -> int:
     """Load an external application onto the device.
 
     Returns:
@@ -36,8 +43,8 @@ def load(session: "Session", id: str, version: tuple[int, int], data: bytes, pro
         messages.TrezorAppLoad(hash=hash, id=id, version=version, size=len(data))
     )
 
-    #if resp isinstance AppBinaryRequest
-        #call AppBinaryAck (header, proof, DEV ONLY root_for_proof)
+    # if resp isinstance AppBinaryRequest
+    # call AppBinaryAck (header, proof, DEV ONLY root_for_proof)
 
     while isinstance(resp, messages.DataChunkRequest):
         chunk = data[resp.data_offset : resp.data_offset + resp.data_length]

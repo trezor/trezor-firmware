@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import logging
-from posixpath import splitext
 import sys
 import typing as t
 from pathlib import Path
@@ -42,7 +41,7 @@ def cli() -> None:
 @click.argument(
     "app_path", type=click.Path(exists=True, dir_okay=False, path_type=Path)
 )
-@click.option(    
+@click.option(
     "--min-version",
     type=str,
     help="Minimum required version of the app in the format 'major.minor'.",
@@ -54,22 +53,26 @@ def cli() -> None:
     help="Force reload of the app even if it is already loaded.",
 )
 @with_session()
-def load(session: "Session", min_version: str | None, app_path: Path, force_reload: bool) -> None:
+def load(
+    session: "Session", min_version: str | None, app_path: Path, force_reload: bool
+) -> None:
     """Load an external application onto the device.
 
     Example:
-        trezorctl trezorapp load --min-version 0.1 ethereum.bin 
+        trezorctl trezorapp load --min-version 0.1 ethereum.bin
     """
     try:
         if min_version is None:
-            version = (0, 1) # TODO extract from binary
+            version = (0, 1)  # TODO extract from binary
         else:
             version = tuple(map(int, min_version.split(".")))
             assert len(version) == 2, "Version must be in the format 'major.minor'"
 
-        app_id = "ethereum.trezor.com" # TODO extract from binary
+        app_id = "ethereum.trezor.com"  # TODO extract from binary
         app_bytes = app_path.read_bytes()
-        app_hash = trezorapp.load(session, app_id, version, app_bytes, b'', force_reload)
+        app_hash = trezorapp.load(
+            session, app_id, version, app_bytes, b"", force_reload
+        )
         click.echo(f"Loaded app hash: {app_hash:064x}")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
