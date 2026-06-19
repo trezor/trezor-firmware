@@ -1850,7 +1850,7 @@ def load_device(
 
 
 def load_trezorapp(session: client.Session, binary: Path) -> int:
-    instance_id = trezorapp.load(session, binary.read_bytes())
+    instance_id = trezorapp.load(session, "", (0, 0), binary.read_bytes(), b"", True)
     return instance_id
 
 

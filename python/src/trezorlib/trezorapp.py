@@ -36,7 +36,7 @@ def load(
     Returns:
         Instance ID of the loaded app
     """
-    hash = None
+    hash = b""
     if force_reload:
         hash = sha256(data).digest()
     resp = session.call(
