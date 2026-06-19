@@ -48,9 +48,9 @@ async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
         image.write_chunk(chunk)
         offset += len(chunk)
     image.verify(b"")  # !@# TODO use real proof
-    # if not image_matches(image, msg):
-    #    image.delete()
-    #    raise DataError("Loaded image does not match the expected app")
+    if not image_matches(image, msg):
+        image.delete()
+        raise DataError("Loaded image does not match the expected app")
     prog.stop()
     return image
 
