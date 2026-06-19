@@ -135,7 +135,7 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
             identifier: app_identifier(package)?,
             version: app_version(package)?,
             sdk_version: [0; 2],
-            abi_version: 0,
+            abi_version: 1,
             payload_type: payload_type as u8,
             payload_size: U32::new(payload.len() as u32),
         };
