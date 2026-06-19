@@ -31,9 +31,9 @@ typedef struct {
   /** Magic number to identify the file format */
   uint32_t magic;
   /** Header size in bytes */
-  uint32_t size;
+  uint32_t header_size;
   /** Unique identifier of the app */
-  char identifier[32];
+  char id[32];
   /** App version as major.minor.patch.build bytes */
   uint32_t version;
   /** SDK version used to build the app. */
@@ -51,6 +51,8 @@ typedef struct {
   // TODO: app hash
   // TODO model
   // TODO bip32_paths
+
+  uint32_t reserved[3];
 
 } xbin_header_t;
 

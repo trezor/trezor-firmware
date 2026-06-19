@@ -48,8 +48,10 @@ typedef struct {
 typedef struct {
   // Handle of the loaded image
   app_image_handle_t handle;
-  // State of the loaded image
-  app_image_state_t state;
+  // Set if image was verified successfully
+  bool verified;
+  // Set if image is currently running
+  bool running;
 
   // Identification of the loaded image
   char id[APP_IMAGE_MAX_ID_LEN + 1];
@@ -64,8 +66,6 @@ typedef struct {
   // Number of bytes written to the image so far
   size_t image_size;
 
-  // Verified header of the loaded image
-  const xbin_header_t* header;
   // Applet associated with the application
   applet_t applet;
 
@@ -155,7 +155,7 @@ ts_t app_arena_get_info(app_arena_info_t* info) {
 
   size_t image_count = 0;
   for (size_t i = 0; i < ARRAY_LENGTH(arena->images); i++) {
-    if (arena->images[i].state != APP_IMAGE_STATE_INVALID) {
+    if (arena->images[i].handle != APP_IMAGE_HANDLE_INVALID) {
       image_count++;
     }
   }
@@ -182,7 +182,7 @@ ts_t app_arena_get_image_by_index(size_t idx, app_image_handle_t* handle) {
   // Iterate through the images and find the idx-th valid image
   for (size_t i = 0; i < ARRAY_LENGTH(arena->images); i++) {
     app_arena_entry_t* entry = &arena->images[i];
-    if (entry->state != APP_IMAGE_STATE_INVALID) {
+    if (entry->handle != APP_IMAGE_HANDLE_INVALID) {
       if (idx == 0) {
         *handle = entry->handle;
         break;
@@ -210,7 +210,7 @@ ts_t app_arena_create_image(app_image_handle_t* handle) {
   // Find an empty slot in the arena
   for (size_t i = 0; i < ARRAY_LENGTH(arena->images); i++) {
     app_arena_entry_t* entry = &arena->images[i];
-    if (entry->state == APP_IMAGE_STATE_INVALID) {
+    if (entry->handle == APP_IMAGE_HANDLE_INVALID) {
       memset(entry, 0, sizeof(*entry));
       // Allocate memory, for simplicity, we allow only using the whole arena.
       entry->mem_ptr = arena->mem_ptr + arena->mem_used;
@@ -218,7 +218,8 @@ ts_t app_arena_create_image(app_image_handle_t* handle) {
       arena->mem_used += entry->mem_size;
       // Assign a new handle and mark the entry as loading
       entry->handle = arena->next_handle++;
-      entry->state = APP_IMAGE_STATE_LOADING;
+      entry->verified = false;
+      entry->running = false;
 
       *handle = entry->handle;
       break;
@@ -240,7 +241,7 @@ static app_arena_entry_t* find_image_by_handle(app_image_handle_t handle) {
 
   for (size_t i = 0; i < ARRAY_LENGTH(arena->images); i++) {
     app_arena_entry_t* entry = &arena->images[i];
-    if (entry->handle == handle && entry->state != APP_IMAGE_STATE_INVALID) {
+    if (entry->handle == handle) {
       return entry;
     }
   }
@@ -262,12 +263,30 @@ ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t* info) {
   memset(info, 0, sizeof(*info));
 
   memcpy(info->id, entry->id, sizeof(info->id));
-  info->version = entry->version;
-  info->state = entry->state;
+  info->verified = entry->verified;
+  info->running = entry->running;
   info->image_size = entry->image_size;
-  info->task_id = (entry->state == APP_IMAGE_STATE_RUNNING)
-                      ? systask_id(&entry->applet.task)
-                      : 0;
+
+  if (entry->verified) {
+    const xbin_header_t* header = (const xbin_header_t*)entry->mem_ptr;
+
+    mpu_set_active_applet(&(applet_layout_t){
+        .data1 =
+            {
+                .start = (uintptr_t)header,
+                .size = sizeof(xbin_header_t),
+            },
+    });
+
+    info->version = header->version;
+    memcpy(&info->id[0], &header->id[0], sizeof(info->id));
+
+    systask_set_mpu(systask_active());
+  }
+
+  if (entry->running) {
+    info->task_id = systask_id(&entry->applet.task);
+  }
 
 cleanup:
   TSH_RETURN;
@@ -283,7 +302,7 @@ ts_t app_image_delete(app_image_handle_t handle) {
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
 
-  if (entry->state == APP_IMAGE_STATE_RUNNING) {
+  if (entry->running) {
     app_image_stop(handle);
   }
 
@@ -309,7 +328,7 @@ ts_t app_image_write_chunk(app_image_handle_t handle, const void* data,
 
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
-  TSH_CHECK(entry->state == APP_IMAGE_STATE_LOADING, TS_EINVAL);
+  TSH_CHECK(!entry->verified, TS_EINVAL);
 
   if (entry->image_size + size < entry->image_size ||
       entry->image_size + size > entry->mem_size) {
@@ -363,7 +382,7 @@ ts_t app_image_verify(app_image_handle_t handle, const void* proof,
   TSH_CHECK(IS_ALIGNED(proof_size, 32), TS_EINVAL);
   TSH_CHECK(proof_size == 0 || proof != NULL, TS_EINVAL);
 
-  TSH_CHECK(entry->state == APP_IMAGE_STATE_LOADING, TS_EINVAL);
+  TSH_CHECK(!entry->verified, TS_EINVAL);
 
   const xbin_header_t* header =
       xbin_verify_image(entry->mem_ptr, entry->image_size);
@@ -372,8 +391,7 @@ ts_t app_image_verify(app_image_handle_t handle, const void* proof,
   status = xbin_verify_signature(header, proof, proof_size);
   TSH_CHECK_OK(status);
 
-  entry->header = header;
-  entry->state = APP_IMAGE_STATE_VERIFIED;
+  entry->verified = true;
 
 cleanup:
   TSH_RETURN;
@@ -386,34 +404,29 @@ ts_t app_image_run(app_image_handle_t handle, systask_id_t* task_id) {
   app_arena_t* arena = &g_app_arena;
 
   TSH_CHECK(arena->initialized, TS_ENOINIT);
+
   TSH_CHECK(task_id != NULL, TS_EINVAL);
+  *task_id = 0;
 
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
 
-  *task_id = 0;
+  TSH_CHECK(entry->verified, TS_EINVAL);
 
-  size_t rwmem_size = entry->mem_size - entry->image_size;
-  void* rwmem = (uint8_t*)entry->mem_ptr + entry->image_size;
+  if (entry->running) {
+    *task_id = entry->applet.task.id;
+  } else {
+    size_t rwmem_size = entry->mem_size - entry->image_size;
+    void* rwmem = (uint8_t*)entry->mem_ptr + entry->image_size;
 
-  switch (entry->state) {
-    case APP_IMAGE_STATE_VERIFIED:
-      status =
-          xbin_prepare_applet(entry->header, rwmem, rwmem_size, &entry->applet);
-      TSH_CHECK_OK(status);
-      *task_id = entry->applet.task.id;
-      entry->state = APP_IMAGE_STATE_RUNNING;
-      applet_run(&entry->applet);
-      break;
+    const xbin_header_t* header = (const xbin_header_t*)entry->mem_ptr;
+    status = xbin_prepare_applet(header, rwmem, rwmem_size, &entry->applet);
+    TSH_CHECK_OK(status);
 
-    case APP_IMAGE_STATE_RUNNING:
-      // Already running, do nothing
-      *task_id = entry->applet.task.id;
-      break;
+    entry->running = true;
+    applet_run(&entry->applet);
 
-    default:
-      // Invalid state for runningW
-      TSH_CHECK_OK(TS_EINVAL);
+    *task_id = entry->applet.task.id;
   }
 
 cleanup:
@@ -430,11 +443,11 @@ ts_t app_image_stop(app_image_handle_t handle) {
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
 
-  if (entry->state == APP_IMAGE_STATE_RUNNING) {
+  if (entry->running) {
     applet_unload(&entry->applet);
 
     memset(&entry->applet, 0, sizeof(entry->applet));
-    entry->state = APP_IMAGE_STATE_VERIFIED;
+    entry->running = false;
   }
 
 cleanup:
@@ -495,10 +508,9 @@ static void on_task_killed(void* context, systask_id_t task_id) {
 
   for (size_t i = 0; i < ARRAY_LENGTH(arena->images); i++) {
     app_arena_entry_t* entry = &arena->images[i];
-    if (entry->state == APP_IMAGE_STATE_RUNNING &&
-        entry->applet.task.id == task_id) {
+    if (entry->running && entry->applet.task.id == task_id) {
       // Mark the image as stopped
-      entry->state = APP_IMAGE_STATE_VERIFIED;
+      entry->running = false;
       arena->task_killed = true;
       break;
     }

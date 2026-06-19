@@ -64,6 +64,9 @@ typedef struct {
 _Static_assert(sizeof(payload_header_t) == 64,
                "payload_header_t must be 64 bytes");
 
+_Static_assert(sizeof(xbin_header_t) % MPU_ALIGNMENT == 0,
+               "xbin_header_t must be 32-byte aligned");
+
 typedef struct {
   // RO segment (from original elf)
   uint32_t ro_v_addr;
@@ -125,26 +128,27 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
   });
 
   TSH_CHECK(header->magic == XBIN_HEADER_MAGIC, TS_EINVAL);
-  TSH_CHECK(header->size >= sizeof(xbin_header_t), TS_EINVAL);
-  TSH_CHECK(IS_ALIGNED(header->size, MPU_ALIGNMENT), TS_EINVAL);
-  TSH_CHECK(header->size <= image_size, TS_EINVAL);
+  TSH_CHECK(header->header_size >= sizeof(xbin_header_t), TS_EINVAL);
+  TSH_CHECK(IS_ALIGNED(header->header_size, MPU_ALIGNMENT), TS_EINVAL);
+  TSH_CHECK(header->header_size <= image_size, TS_EINVAL);
   TSH_CHECK(header->abi_version == 1, TS_EINVAL);
   TSH_CHECK(header->payload_type == XBIN_TARGET_ARMV8M, TS_EINVAL);
   TSH_CHECK(header->payload_size >= sizeof(payload_header_t), TS_EINVAL);
   TSH_CHECK(IS_ALIGNED(header->payload_size, MPU_ALIGNMENT), TS_EINVAL);
-  TSH_CHECK(header->payload_size + header->size == image_size, TS_EINVAL);
+  TSH_CHECK(header->payload_size + header->header_size == image_size,
+            TS_EINVAL);
 
   // Make the payload header accessible
   mpu_set_active_applet(&(applet_layout_t){
       .data1 =
           {
               .start = (uintptr_t)image,
-              .size = header->size + sizeof(payload_header_t),
+              .size = header->header_size + sizeof(payload_header_t),
           },
   });
 
   const payload_header_t* p =
-      (const payload_header_t*)((const uint8_t*)header + header->size);
+      (const payload_header_t*)((const uint8_t*)header + header->header_size);
 
   uint32_t raw_data_size = header->payload_size - sizeof(payload_header_t);
 
@@ -154,7 +158,8 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
 
   // Check whether the total image size (including RO segment and relocations)
   // fits within the provided image size
-  TSH_CHECK(header->size + header->payload_size <= image_size, TS_EINVAL);
+  TSH_CHECK(header->header_size + header->payload_size <= image_size,
+            TS_EINVAL);
 
   // Check that RW segment size and address are valid
   TSH_CHECK(p->rw_va >= p->ro_size, TS_EINVAL);
@@ -201,7 +206,7 @@ ts_t xbin_verify_signature(const xbin_header_t* header, const void* proof,
       .data1 =
           {
               .start = (uintptr_t)header,
-              .size = header->size + header->payload_size,
+              .size = header->header_size + header->payload_size,
           },
   });
 
@@ -308,7 +313,7 @@ ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
       .data1 =
           {
               .start = (uintptr_t)header,
-              .size = header->size + header->payload_size,
+              .size = header->header_size + header->payload_size,
           },
       .data2 =
           {
@@ -318,7 +323,7 @@ ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
   });
 
   payload_header_t* p =
-      (payload_header_t*)((const uint8_t*)header + header->size);
+      (payload_header_t*)((const uint8_t*)header + header->header_size);
 
   status = xbin_fit_in_memory(p, rwmem, rwmem_size, &map);
   TSH_CHECK_OK(status);

@@ -41,11 +41,12 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
   const xbin_header_t* header = (const xbin_header_t*)image;
 
   TSH_CHECK(header->magic == XBIN_HEADER_MAGIC, TS_EINVAL);
-  TSH_CHECK(header->size >= sizeof(xbin_header_t), TS_EINVAL);
-  TSH_CHECK(header->size <= image_size, TS_EINVAL);
+  TSH_CHECK(header->header_size >= sizeof(xbin_header_t), TS_EINVAL);
+  TSH_CHECK(header->header_size <= image_size, TS_EINVAL);
   TSH_CHECK(header->abi_version == 1, TS_EINVAL);
   TSH_CHECK(header->payload_type == XBIN_TARGET_X86_64, TS_EINVAL);
-  TSH_CHECK(header->payload_size == image_size - header->size, TS_EINVAL);
+  TSH_CHECK(header->payload_size == image_size - header->header_size,
+            TS_EINVAL);
 
   retval = header;
 
@@ -101,7 +102,7 @@ ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
 
   // Copy the embedded elf image to the temporary file that
   // we can load with dlopen
-  const void* payload = (const uint8_t*)header + header->size;
+  const void* payload = (const uint8_t*)header + header->header_size;
   status = write_to_file(filename, payload, header->payload_size);
   TSH_CHECK_OK(status);
 

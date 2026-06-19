@@ -64,7 +64,7 @@ STATIC mp_obj_t mod_trezorapp_AppImage_get_task_id(mp_obj_t self) {
                  MP_ERROR_TEXT("Failed to get AppImage info."));
   }
 
-  if (info.state != APP_IMAGE_STATE_RUNNING || info.task_id == 0) {
+  if (!info.running) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("AppImage is not running."));
   }
@@ -91,7 +91,7 @@ STATIC mp_obj_t mod_trezorapp_AppImage_is_running(mp_obj_t self) {
                  MP_ERROR_TEXT("Failed to get AppImage info."));
   }
 
-  return mp_obj_new_bool(info.state == APP_IMAGE_STATE_RUNNING);
+  return mp_obj_new_bool(info.running);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_running_obj,
                                  mod_trezorapp_AppImage_is_running);
@@ -113,8 +113,7 @@ STATIC mp_obj_t mod_trezorapp_AppImage_is_verified(mp_obj_t self) {
                  MP_ERROR_TEXT("Failed to get AppImage info."));
   }
 
-  return mp_obj_new_bool(info.state == APP_IMAGE_STATE_VERIFIED ||
-                         info.state == APP_IMAGE_STATE_RUNNING);
+  return mp_obj_new_bool(info.verified);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_verified_obj,
                                  mod_trezorapp_AppImage_is_verified);
@@ -159,8 +158,8 @@ STATIC mp_obj_t mod_trezorapp_AppImage_get_version(mp_obj_t self) {
   }
 
   mp_obj_t version_tuple[2];
-  version_tuple[0] = mp_obj_new_int((info.version >> 24) & 0xFF);  // major
-  version_tuple[1] = mp_obj_new_int((info.version >> 16) & 0xFF);  // minor
+  version_tuple[0] = mp_obj_new_int((info.version >> 0) & 0xFF);  // major
+  version_tuple[1] = mp_obj_new_int((info.version >> 8) & 0xFF);  // minor
 
   return mp_obj_new_tuple(2, version_tuple);
 }

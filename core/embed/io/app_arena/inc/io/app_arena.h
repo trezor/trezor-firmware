@@ -30,28 +30,18 @@
 /** Handle for a loaded application image. */
 typedef uint32_t app_image_handle_t;
 
-/** State of a loaded application image. */
-typedef enum {
-  /** Invalid state, indicates an unused slot in the arena. */
-  APP_IMAGE_STATE_INVALID = 0,
-  /** Image allocated and loading in progress. */
-  APP_IMAGE_STATE_LOADING,
-  /** Image loaded, verified and ready to run. */
-  APP_IMAGE_STATE_VERIFIED,
-  /** Image is currently running. */
-  APP_IMAGE_STATE_RUNNING,
-} app_image_state_t;
-
 /** Information about a loaded application image. */
 typedef struct {
+  /** Set if image was verified successfully. */
+  bool verified;
+  /** Set if image is currently running. */
+  bool running;
   /** Identification of the loaded image. */
-  char id[APP_IMAGE_MAX_ID_LEN + 1];
+  char id[APP_IMAGE_MAX_ID_LEN];
   /** Version of the loaded image. */
   uint32_t version;
   /** ID of the task running the image (or 0 if not running). */
   systask_id_t task_id;
-  /** State of the image. */
-  app_image_state_t state;
   /** Size of the image in bytes. */
   size_t image_size;
 } app_image_info_t;
