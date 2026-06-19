@@ -192,7 +192,7 @@ static void prodtest_nfc_write_card(cli_t* cli) {
     return;
   }
 
-  nfc_status = nfc_start_discovery(NFC_DISCOVERY_TYPE_CARD_READER);
+  nfc_status = nfc_start_discovery();
   if (ts_eq(nfc_status, TS_ENOINIT)) {
     cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_INIT, "NFC not initialized");
     goto cleanup;
@@ -260,8 +260,8 @@ static void prodtest_nfc_write_card(cli_t* cli) {
       if (ts_ok(nfc_status)) {
         cli_trace(cli, "URI write success");
       } else {
-        cli_error(cli, CLI_ERROR, "URI write failed: err=%d",
-                  ts_code(nfc_status));
+        cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_ERROR,
+                  "URI write failed: err=%d", ts_code(nfc_status));
       }
 
     } else if (event_flag == NFC_EVENT_DISCONNECTED) {

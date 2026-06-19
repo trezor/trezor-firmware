@@ -31,7 +31,7 @@
 
 typedef struct {
   // Last state
-  nfc_state_t last_state;
+  bool last_state;
   // Pending events
   nfc_event_t events;
 
@@ -58,11 +58,11 @@ bool nfc_get_event(nfc_event_t* event) {
   return true;
 }
 
-static bool nfc_fsm_update(nfc_fsm_t* fsm, nfc_state_t* new_state) {
+static bool nfc_fsm_update(nfc_fsm_t* fsm, bool* new_state) {
   bool new_event = false;
 
-  if (new_state->connected != fsm->last_state.connected) {
-    if (new_state->connected) {
+  if (*new_state != fsm->last_state) {
+    if (*new_state) {
       fsm->events = NFC_EVENT_CONNECTED;
     } else {
       fsm->events = NFC_EVENT_DISCONNECTED;
@@ -85,7 +85,7 @@ static void on_event_poll(void* context, bool read_awaited,
   UNUSED(write_awaited);
 
   if (read_awaited) {
-    nfc_state_t state = {.connected = false};
+    bool connected = false;
 
     // Run worker
     rfalNfcWorker();
@@ -95,20 +95,20 @@ static void on_event_poll(void* context, bool read_awaited,
     if (rfalNfcIsDevActivated(rfal_state)) {
       if (nfc_is_connected()) {
         if (nfc_check_connection()) {
-          state.connected = true;
+          connected = true;
         } else {
           nfc_restart_discovery();
         }
       } else {
         if (nfc_identify()) {
-          state.connected = true;
+          connected = true;
         } else {
           nfc_restart_discovery();
         }
       }
     }
 
-    syshandle_signal_read_ready(SYSHANDLE_NFC, &state);
+    syshandle_signal_read_ready(SYSHANDLE_NFC, &connected);
   }
 }
 
@@ -116,7 +116,7 @@ static bool on_check_read_ready(void* context, systask_id_t task_id,
                                 void* param) {
   nfc_fsm_t* fsm = &g_nfc_tls[task_id];
 
-  nfc_state_t* new_state = (nfc_state_t*)param;
+  bool* new_state = (bool*)param;
 
   return nfc_fsm_update(fsm, new_state);
 }

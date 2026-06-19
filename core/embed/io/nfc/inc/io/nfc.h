@@ -46,11 +46,6 @@ typedef enum {
   NFC_EVENT_DISCONNECTED,
 } nfc_event_t;
 
-/** @brief NFC poll state */
-typedef struct {
-  bool connected;
-} nfc_state_t;
-
 /** @brief NFC card details */
 typedef struct {
   nfc_dev_type_t type;             //!< NFC card type
@@ -92,9 +87,6 @@ ts_t nfc_stop_discovery(void);
 
 /** @brief Get current events of NFC device. */
 bool nfc_get_event(nfc_event_t *event);
-
-/** @brief Get current state of NFC device. */
-void nfc_get_state(nfc_state_t *state);
 
 /** @brief Read the general device information of the activated NFC device. */
 ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);

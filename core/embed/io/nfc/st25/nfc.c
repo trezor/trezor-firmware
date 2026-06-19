@@ -297,14 +297,6 @@ ts_t nfc_restart_discovery(void) {
   return TS_OK;
 }
 
-void nfc_get_state(nfc_state_t *state) {
-  if (rfalNfcIsDevActivated(rfalNfcGetState())) {
-    *state = (nfc_state_t){.connected = true};
-  } else {
-    *state = (nfc_state_t){.connected = false};
-  }
-}
-
 bool nfc_is_connected() {
   st25_driver_t *drv = &g_st25_driver;
   return drv->card_connected;
