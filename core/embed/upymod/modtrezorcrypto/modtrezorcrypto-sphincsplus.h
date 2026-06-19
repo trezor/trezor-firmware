@@ -226,6 +226,38 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_sphincsplus_derive_and_sign_obj, 4, 4,
     mod_trezorcrypto_sphincsplus_derive_and_sign);
 
+/// def verify(
+///     public_key: bytes, signature: bytes, message: bytes, variant: int
+/// ) -> bool:
+///     """
+///     Verify a SPHINCS+ signature of `message` under `public_key`. `message`
+///     must already carry whatever domain wrapping the signer applied.
+///     """
+STATIC mp_obj_t mod_trezorcrypto_sphincsplus_verify(size_t n_args,
+                                                     const mp_obj_t *args) {
+  (void)n_args;
+  mp_buffer_info_t pk = {0}, sig = {0}, msg = {0};
+  mp_get_buffer_raise(args[0], &pk, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[1], &sig, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[2], &msg, MP_BUFFER_READ);
+  int variant = mp_obj_get_int(args[3]);
+
+  const spx_variant_t *v = spx_get_variant(variant);
+  if (v == NULL) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Unsupported SPHINCS+ variant"));
+  }
+  if (pk.len != v->pk_bytes) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid public key length"));
+  }
+
+  int ret = v->verify((const uint8_t *)sig.buf, sig.len, (const uint8_t *)msg.buf,
+                      msg.len, (const uint8_t *)pk.buf);
+  return mp_obj_new_bool(ret == 0);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_sphincsplus_verify_obj, 4, 4,
+    mod_trezorcrypto_sphincsplus_verify);
+
 STATIC const mp_rom_map_elem_t
     mod_trezorcrypto_sphincsplus_globals_table[] = {
         {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sphincsplus)},
@@ -233,6 +265,8 @@ STATIC const mp_rom_map_elem_t
          MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_derive_public_key_obj)},
         {MP_ROM_QSTR(MP_QSTR_derive_and_sign),
          MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_derive_and_sign_obj)},
+        {MP_ROM_QSTR(MP_QSTR_verify),
+         MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_verify_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_sphincsplus_globals,
                             mod_trezorcrypto_sphincsplus_globals_table);
