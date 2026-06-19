@@ -12,6 +12,8 @@ use std::{fmt, io::Write, mem::size_of};
 use zerocopy::{IntoBytes, LittleEndian, U32};
 use zerocopy_derive::{Immutable, IntoBytes};
 
+const MPU_ALIGNMENT: usize = 32;
+
 #[repr(C)]
 #[derive(IntoBytes, Immutable)]
 struct Armv8mBinaryHeader {
@@ -43,7 +45,7 @@ struct Armv8mBinaryHeader {
 
 impl Armv8mBinaryHeader {
     /// Fixed size of the ARM app header in bytes.
-    const HEADER_SIZE: usize = 0x64;
+    const HEADER_SIZE: usize = 64;
 
     fn to_padded_bytes(&self) -> [u8; Self::HEADER_SIZE] {
         let mut bytes = [0u8; Self::HEADER_SIZE];
@@ -197,12 +199,7 @@ impl Armv8mBinary {
         let startup_symbol = elf
             .symbols()
             .find(|symbol| symbol.name().ok() == Some(Self::ENTRY_SYMBOL))
-            .with_context(|| {
-                format!(
-                    "Failed to find the '{}' symbol",
-                    Self::ENTRY_SYMBOL
-                )
-            })?;
+            .with_context(|| format!("Failed to find the '{}' symbol", Self::ENTRY_SYMBOL))?;
 
         u32::try_from(startup_symbol.address())
             .context("Startup symbol address does not fit in u32")
@@ -231,8 +228,8 @@ impl Armv8mBinary {
             .context("Failed to read the read-only segment data")
             .map(|data| data.to_vec())?;
 
-        // Pad data with zeroes to ensure it is aligned to 4 bytes
-        let padding = (4 - (data.len() % 4)) % 4;
+        // Pad data with zeroes to ensure it is properly aligned
+        let padding = data.len().next_multiple_of(MPU_ALIGNMENT) - data.len();
         data.extend(vec![0; padding]);
 
         Ok((file_offset, data))
@@ -330,6 +327,14 @@ impl Armv8mBinary {
                 .context("Failed to write relocation address to the output file")?;
         }
 
+        // Pad the relocations with zeroes to ensure the total size of
+        // the header + ro segment + relocations is aligned to MPU_ALIGNMENT.
+        let size = self.ro_segment.relocations.len() * size_of::<u32>();
+        let padding = size.next_multiple_of(MPU_ALIGNMENT) - size;
+        writer
+            .write_all(&vec![0; padding])
+            .context("Failed to write padding after relocations to the output file")?;
+
         Ok(())
     }
 
@@ -354,7 +359,6 @@ impl Armv8mBinary {
             heap_size: U32::new(0),
         };
 
-
         Ok(arm_header.to_padded_bytes())
     }
 }
@@ -364,4 +368,3 @@ impl Armv8mBinary {
 fn format_kb(bytes: usize) -> String {
     format!("{:.1} KB", bytes as f64 / 1024.0)
 }
-

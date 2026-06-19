@@ -2,14 +2,19 @@
 //! for loading as a Trezor applet.
 //!
 //! The app binary format consists of a fixed-size header followed by the platform
-//! specific executable binary. 
+//! specific executable binary.
 
 use anyhow::{Context, Result, ensure};
+use cargo_metadata::Package;
 use object::Object;
-use std::{fs, io::Write, mem::size_of, path::{Path, PathBuf}};
+use std::{
+    fs,
+    io::Write,
+    mem::size_of,
+    path::{Path, PathBuf},
+};
 use zerocopy::{IntoBytes, LittleEndian, U32};
 use zerocopy_derive::{Immutable, IntoBytes};
-use cargo_metadata::Package;
 
 use crate::armv8m;
 
@@ -43,12 +48,11 @@ struct AppHeader {
     payload_type: u8,
     /// Size of binary payload in bytes
     payload_size: U32<LittleEndian>,
-
     // TODO app_name
     // TODO vendor_name
     // TODO logo
     // TODO model
-    // TODO bip32_paths    
+    // TODO bip32_paths
 }
 
 impl AppHeader {
@@ -69,9 +73,15 @@ impl AppHeader {
 fn app_version(package: &Package) -> Result<[u8; 4]> {
     let ver = package.version.clone();
     Ok([
-        ver.major.try_into().context("Failed to convert major version to u8")?,
-        ver.minor.try_into().context("Failed to convert minor version to u8")?,
-        ver.patch.try_into().context("Failed to convert patch version to u8")?,
+        ver.major
+            .try_into()
+            .context("Failed to convert major version to u8")?,
+        ver.minor
+            .try_into()
+            .context("Failed to convert minor version to u8")?,
+        ver.patch
+            .try_into()
+            .context("Failed to convert patch version to u8")?,
         0,
     ])
 }
@@ -125,20 +135,19 @@ fn load_elf_payload(elf_path: &Path) -> Result<(AppBinaryType, Vec<u8>)> {
     Ok(payload)
 }
 
-
 pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf> {
     let (payload_type, payload) = load_elf_payload(elf_path)?;
 
     let header = AppHeader {
-            magic: U32::new(AppHeader::APP_HEADER_MAGIC),
-            size: U32::new(AppHeader::APP_HEADER_SIZE as u32),
-            identifier: app_identifier(package)?,
-            version: app_version(package)?,
-            sdk_version: [0; 2],
-            abi_version: 0,
-            payload_type: payload_type as u8,
-            payload_size: U32::new(payload.len() as u32),
-        };
+        magic: U32::new(AppHeader::APP_HEADER_MAGIC),
+        size: U32::new(AppHeader::APP_HEADER_SIZE as u32),
+        identifier: app_identifier(package)?,
+        version: app_version(package)?,
+        sdk_version: [0; 2],
+        abi_version: 1,
+        payload_type: payload_type as u8,
+        payload_size: U32::new(payload.len() as u32),
+    };
 
     let bin_path = elf_path.with_extension("bin");
 
@@ -154,6 +163,6 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
     writer
         .write_all(&payload)
         .context("Failed to write the app binary data to the output file")?;
-    
+
     Ok(bin_path)
 }
