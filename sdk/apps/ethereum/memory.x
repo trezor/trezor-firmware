@@ -19,7 +19,7 @@ SECTIONS
     *(.data.rel.ro .data.rel.ro.*)
   } : rx
 
-  . = ALIGN(4);
+  . = ALIGN(32);
   .data : {
     *(.data .data.*)
     *(.sdata .sdata.*)
