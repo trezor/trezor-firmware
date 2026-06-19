@@ -52,30 +52,6 @@ typedef struct {
   // TODO model
   // TODO bip32_paths
 
-  /** Size of the read-only segment. */
-  /** It starts after the header and has virtual address 0. */
-  uint32_t ro_size;
-  /** Number of relocations after read-only data. */
-  /** Each relocation is a 4-byte virtual address in the app image. */
-  uint32_t reloc_count;
-  /** Read-write segment size to reserve at load time. */
-  uint32_t rw_size;
-  /** Virtual address of the read-write segment. */
-  uint32_t rw_va;
-  /** Virtual address of RW init data. */
-  /** Copy init data from RO to RW at load time. */
-  uint32_t rw_init_va;
-  /** Size of RW init data in bytes. */
-  uint32_t rw_init_size;
-  /** Virtual address of the app stack. */
-  uint32_t stack_va;
-  /** App stack size in bytes. */
-  uint32_t stack_size;
-  /** Heap size in bytes. Unused now; set to 0. */
-  uint32_t heap_size;
-  /** Virtual address of entry function (applet_main) in RO segment. */
-  uint32_t entry_va;
-
 } xbin_header_t;
 
 /**

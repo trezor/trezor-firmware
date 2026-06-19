@@ -321,9 +321,26 @@ ts_t app_image_write_chunk(app_image_handle_t handle, const void* data,
   applet_layout_t temp_layout = {
       .data1 = {.start = (uintptr_t)entry->mem_ptr, .size = entry->mem_size},
   };
-  mpu_set_active_applet(&temp_layout);
-  memcpy((uint8_t*)entry->mem_ptr + entry->image_size, data, size);
-  systask_set_mpu(systask_active());
+
+  const uint8_t* src = data;
+  const uint8_t* src_end = src + size;
+  uint8_t* dst = (uint8_t*)entry->mem_ptr + entry->image_size;
+
+  while (src < src_end) {
+    uint8_t temp[256];
+
+    size_t bytes_to_copy = MIN(src_end - src, sizeof(temp));
+
+    // We are copying data between two memory areas that are not
+    // accessible at the same time due to MPU restrictions.
+    memcpy(temp, src, bytes_to_copy);
+    mpu_set_active_applet(&temp_layout);
+    memcpy(dst, temp, bytes_to_copy);
+    systask_set_mpu(systask_active());
+
+    src += bytes_to_copy;
+    dst += bytes_to_copy;
+  }
 
   entry->image_size += size;
 
@@ -376,10 +393,13 @@ ts_t app_image_run(app_image_handle_t handle, systask_id_t* task_id) {
 
   *task_id = 0;
 
+  size_t rwmem_size = entry->mem_size - entry->image_size;
+  void* rwmem = (uint8_t*)entry->mem_ptr + entry->image_size;
+
   switch (entry->state) {
     case APP_IMAGE_STATE_VERIFIED:
-      status = xbin_prepare_applet(entry->header, entry->mem_ptr,
-                                   entry->mem_size, &entry->applet);
+      status =
+          xbin_prepare_applet(entry->header, rwmem, rwmem_size, &entry->applet);
       TSH_CHECK_OK(status);
       *task_id = entry->applet.task.id;
       entry->state = APP_IMAGE_STATE_RUNNING;
@@ -392,7 +412,7 @@ ts_t app_image_run(app_image_handle_t handle, systask_id_t* task_id) {
       break;
 
     default:
-      // Invalid state for running
+      // Invalid state for runningW
       TSH_CHECK_OK(TS_EINVAL);
   }
 

@@ -120,11 +120,12 @@ STATIC mp_obj_t mod_trezorapp_arena_clear_event(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_clear_event_obj,
                                  mod_trezorapp_arena_clear_event);
 
-/// def get_info() -> dict:
+/// def get_image_count() -> int:
 ///     """
-///     Returns run-time information about the app arena.
+///     Returns the number of application images currently
+///     loaded in the app arena.
 ///     """
-STATIC mp_obj_t mod_trezorapp_arena_get_info(void) {
+STATIC mp_obj_t mod_trezorapp_arena_get_image_count(void) {
   app_arena_info_t info;
   ts_t status = app_arena_get_info(&info);
   if (ts_error(status)) {
@@ -132,18 +133,44 @@ STATIC mp_obj_t mod_trezorapp_arena_get_info(void) {
                  MP_ERROR_TEXT("Failed to get app arena info"));
   }
 
-  mp_obj_t info_dict = mp_obj_new_dict(0);
-  mp_obj_dict_store(info_dict, MP_OBJ_NEW_QSTR(MP_QSTR_total_size),
-                    mp_obj_new_int(info.total_size));
-  mp_obj_dict_store(info_dict, MP_OBJ_NEW_QSTR(MP_QSTR_free_size),
-                    mp_obj_new_int(info.free_size));
-  mp_obj_dict_store(info_dict, MP_OBJ_NEW_QSTR(MP_QSTR_image_count),
-                    mp_obj_new_int(info.image_count));
-  return info_dict;
+  return mp_obj_new_int(info.image_count);
 }
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_get_image_count_obj,
+                                 mod_trezorapp_arena_get_image_count);
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_get_info_obj,
-                                 mod_trezorapp_arena_get_info);
+/// def get_mem_total() -> int:
+///     """
+///     Returns the total memory available in the app arena.
+///     """
+STATIC mp_obj_t mod_trezorapp_arena_get_mem_total(void) {
+  app_arena_info_t info;
+  ts_t status = app_arena_get_info(&info);
+  if (ts_error(status)) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get app arena info"));
+  }
+
+  return mp_obj_new_int(info.total_size);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_get_mem_total_obj,
+                                 mod_trezorapp_arena_get_mem_total);
+
+/// def get_mem_free() -> int:
+///     """
+///     Returns the free memory available in the app arena.
+///     """
+STATIC mp_obj_t mod_trezorapp_arena_get_mem_free(void) {
+  app_arena_info_t info;
+  ts_t status = app_arena_get_info(&info);
+  if (ts_error(status)) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get app arena info"));
+  }
+
+  return mp_obj_new_int(info.free_size);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_get_mem_free_obj,
+                                 mod_trezorapp_arena_get_mem_free);
 
 STATIC const mp_rom_map_elem_t mod_module_trezorapp_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorapp)},
@@ -151,13 +178,16 @@ STATIC const mp_rom_map_elem_t mod_module_trezorapp_globals_table[] = {
      MP_ROM_PTR(&mod_trezorapp_create_image_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_image_by_index),
      MP_ROM_PTR(&mod_trezorapp_arena_get_image_by_index_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_image_count),
+     MP_ROM_PTR(&mod_trezorapp_arena_get_image_count_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_image_by_handle),
      MP_ROM_PTR(&mod_trezorapp_arena_get_image_by_handle_obj)},
     {MP_ROM_QSTR(MP_QSTR_clear_event),
      MP_ROM_PTR(&mod_trezorapp_arena_clear_event_obj)},
-    {MP_ROM_QSTR(MP_QSTR_get_info),
-     MP_ROM_PTR(&mod_trezorapp_arena_get_info_obj)},
-
+    {MP_ROM_QSTR(MP_QSTR_get_mem_total),
+     MP_ROM_PTR(&mod_trezorapp_arena_get_mem_total_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_mem_free),
+     MP_ROM_PTR(&mod_trezorapp_arena_get_mem_free_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,
                             mod_module_trezorapp_globals_table);

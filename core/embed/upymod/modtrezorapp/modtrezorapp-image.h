@@ -47,40 +47,6 @@ STATIC mp_obj_t mod_trezorapp_AppImage_get_handle(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_get_handle_obj,
                                  mod_trezorapp_AppImage_get_handle);
 
-/// def get_info(self) -> dict:
-///     """
-///     Gets the information about the application image, such as its id,
-///     version, state, size, etc.
-///     """
-STATIC mp_obj_t mod_trezorapp_AppImage_get_info(mp_obj_t self) {
-  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
-
-  app_image_info_t info;
-  ts_t status = app_image_get_info(o->handle, &info);
-
-  if (ts_eq(status, TS_ENOENT)) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid AppImage handle"));
-  } else if (ts_error(status)) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to get AppImage info."));
-  }
-
-  mp_obj_t info_dict = mp_obj_new_dict(0);
-  mp_obj_dict_store(info_dict, MP_OBJ_NEW_QSTR(MP_QSTR_id),
-                    mp_obj_new_str(info.id, strlen(info.id)));
-  mp_obj_dict_store(info_dict, MP_OBJ_NEW_QSTR(MP_QSTR_version),
-                    mp_obj_new_int(info.version));
-  mp_obj_dict_store(info_dict, MP_OBJ_NEW_QSTR(MP_QSTR_state),
-                    mp_obj_new_int(info.state));
-  mp_obj_dict_store(info_dict, MP_OBJ_NEW_QSTR(MP_QSTR_image_size),
-                    mp_obj_new_int(info.image_size));
-  mp_obj_dict_store(info_dict, MP_OBJ_NEW_QSTR(MP_QSTR_task_id),
-                    mp_obj_new_int(info.task_id));
-  return info_dict;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_get_info_obj,
-                                 mod_trezorapp_AppImage_get_info);
-
 /// def get_task_id(self) -> int:
 ///     """
 ///     Gets the task ID associated with the application image.
@@ -129,6 +95,100 @@ STATIC mp_obj_t mod_trezorapp_AppImage_is_running(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_running_obj,
                                  mod_trezorapp_AppImage_is_running);
+
+/// def is_verified(self) -> bool:
+///     """
+///     Checks if the application image has been verified.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_is_verified(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  ts_t status = app_image_get_info(o->handle, &info);
+
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid AppImage handle"));
+  } else if (ts_error(status)) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get AppImage info."));
+  }
+
+  return mp_obj_new_bool(info.state == APP_IMAGE_STATE_VERIFIED ||
+                         info.state == APP_IMAGE_STATE_RUNNING);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_verified_obj,
+                                 mod_trezorapp_AppImage_is_verified);
+
+/// def get_id(self) -> str:
+///     """
+///     Returns the ID of the application image.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_get_id(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  ts_t status = app_image_get_info(o->handle, &info);
+
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid AppImage handle"));
+  } else if (ts_error(status)) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get AppImage info."));
+  }
+
+  return mp_obj_new_str(info.id, strlen(info.id));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_get_id_obj,
+                                 mod_trezorapp_AppImage_get_id);
+
+/// def get_version(self) -> tuple[int, int]:
+///     """
+///     Returns the version of the application image as a tuple (major, minor).
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_get_version(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  ts_t status = app_image_get_info(o->handle, &info);
+
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid AppImage handle"));
+  } else if (ts_error(status)) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get AppImage info."));
+  }
+
+  mp_obj_t version_tuple[2];
+  version_tuple[0] = mp_obj_new_int((info.version >> 24) & 0xFF);  // major
+  version_tuple[1] = mp_obj_new_int((info.version >> 16) & 0xFF);  // minor
+
+  return mp_obj_new_tuple(2, version_tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_get_version_obj,
+                                 mod_trezorapp_AppImage_get_version);
+
+/// def get_hash(self) -> bytes:
+///     """
+///     Returns the hash of the application image.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_get_hash(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  ts_t status = app_image_get_info(o->handle, &info);
+
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid AppImage handle"));
+  } else if (ts_error(status)) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get AppImage info."));
+  }
+
+  const char dummy_hash[32] = {0};  // TODO: Replace with actual hash retrieval
+  return mp_obj_new_bytes((const byte *)dummy_hash, sizeof(dummy_hash));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_get_hash_obj,
+                                 mod_trezorapp_AppImage_get_hash);
 
 /// def write_chunk(self, data: AnyBytes) -> None:
 ///     """
@@ -257,12 +317,18 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_stop_obj,
 STATIC const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_get_handle),
      MP_ROM_PTR(&mod_trezorapp_AppImage_get_handle_obj)},
-    {MP_ROM_QSTR(MP_QSTR_get_info),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_get_info_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_task_id),
      MP_ROM_PTR(&mod_trezorapp_AppImage_get_task_id_obj)},
     {MP_ROM_QSTR(MP_QSTR_is_running),
      MP_ROM_PTR(&mod_trezorapp_AppImage_is_running_obj)},
+    {MP_ROM_QSTR(MP_QSTR_is_verified),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_is_verified_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_id),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_get_id_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_version),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_get_version_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_hash),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_get_hash_obj)},
     {MP_ROM_QSTR(MP_QSTR_write_chunk),
      MP_ROM_PTR(&mod_trezorapp_AppImage_write_chunk_obj)},
     {MP_ROM_QSTR(MP_QSTR_verify),
@@ -271,10 +337,6 @@ STATIC const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorapp_AppImage_delete_obj)},
     {MP_ROM_QSTR(MP_QSTR_run), MP_ROM_PTR(&mod_trezorapp_AppImage_run_obj)},
     {MP_ROM_QSTR(MP_QSTR_stop), MP_ROM_PTR(&mod_trezorapp_AppImage_stop_obj)},
-    {MP_ROM_QSTR(MP_QSTR_STATE_INVALID), MP_ROM_INT(APP_IMAGE_STATE_INVALID)},
-    {MP_ROM_QSTR(MP_QSTR_STATE_LOADING), MP_ROM_INT(APP_IMAGE_STATE_LOADING)},
-    {MP_ROM_QSTR(MP_QSTR_STATE_VERIFIED), MP_ROM_INT(APP_IMAGE_STATE_VERIFIED)},
-    {MP_ROM_QSTR(MP_QSTR_STATE_RUNNING), MP_ROM_INT(APP_IMAGE_STATE_RUNNING)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorapp_AppImage_locals_dict,
                             mod_trezorapp_AppImage_locals_dict_table);
