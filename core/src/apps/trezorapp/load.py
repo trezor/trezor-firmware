@@ -1,5 +1,4 @@
 import ustruct
-from typing import TYPE_CHECKING
 
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
@@ -14,31 +13,44 @@ from trezor.messages import (
 from trezor.wire import context
 from trezor.wire.errors import DataError
 
-if TYPE_CHECKING:
-    from buffer_types import AnyBytes
+
+def image_matches(image: app.AppImage, msg: TrezorAppLoad) -> bool:
+    if not image.is_verified():
+        return False
+    if image.get_id() != msg.id:
+        return False
+    if image.get_version() < tuple(msg.version):
+        return False
+    if msg.hash != b"" and image.get_hash() != msg.hash:
+        return False
+    return True
 
 
-async def _load_image(hash: AnyBytes, size: int) -> app.AppImage:
+async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
+    from trezor import app
     from trezor.ui.layouts.progress import progress
 
     image = app.create_image()
     offset = 0
     prog = progress("Loading app...")
-    while offset < size:
-        prog.report(int(offset / size * 1000))
+    while offset < msg.size:
+        prog.report(int(offset / msg.size * 1000))
         chunk = (
             await context.call(
                 DataChunkRequest(
-                    data_length=min(size - offset, 1024), data_offset=offset
+                    data_length=min(msg.size - offset, 1024), data_offset=offset
                 ),
                 DataChunkAck,
             )
         ).data_chunk
-        if len(chunk) != min(size - offset, 1024):
+        if len(chunk) != min(msg.size - offset, 1024):
             raise DataError("Data length mismatch")
         image.write_chunk(chunk)
         offset += len(chunk)
     image.verify(b"")  # !@# TODO use real proof
+    # if not image_matches(image, msg):
+    #    image.delete()
+    #    raise DataError("Loaded image does not match the expected app")
     prog.stop()
     return image
 
@@ -50,24 +62,18 @@ async def load(msg: TrezorAppLoad) -> TrezorAppLoaded:
     image = app.get_image_by_index(0)
 
     if image is not None:
-        version = (msg.version[0] << 24) | (msg.version[1] << 16)
-        
-        info = image.get_info()
-
-        id_ok = msg.id == info.identifier
-        version_ok = version >= info.version
-        hash_ok = msg.hash == b'' #or image.hash == msg.hash TODO
-
-        if not (version_ok and id_ok and hash_ok):
+        if not image_matches(image, msg):
             image.delete()
             image = None
+        elif image.is_running():
+            image.stop()  # ensure clean state
 
     if image is None:
         try:
-            image = await _load_image(msg.hash, msg.size)
+            image = await _load_image(msg)
             assert image is not None
         except Exception as e:
-            raise DataError(f"TrezorApp load failed: {e}") from e
+            raise DataError(f"Failed to load app: {e}") from e
 
     image.run()
 
