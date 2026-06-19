@@ -2321,7 +2321,7 @@ async def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> None:
 
 def create_details(
     name: str,
-    value: list[StrPropertyType] | str,
+    value: Iterable[StrPropertyType] | str,
     title: str | None = None,
 ) -> Details:
     from trezor.ui.layouts.menu import Details

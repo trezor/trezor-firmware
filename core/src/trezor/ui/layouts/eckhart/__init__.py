@@ -2446,7 +2446,7 @@ async def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> None:
 
 def create_details(
     name: str,
-    value: list[StrPropertyType] | str,
+    value: Iterable[StrPropertyType] | str,
     title: str | None = None,
     subtitle: str | None = None,
 ) -> Details:

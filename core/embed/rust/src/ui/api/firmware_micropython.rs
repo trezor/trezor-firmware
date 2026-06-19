@@ -2094,7 +2094,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_properties(
     ///     *,
     ///     title: str,
-    ///     value: Sequence[PropertyType] | str,
+    ///     value: Iterable[PropertyType] | str,
     ///     subtitle: str | None = None,
     /// ) -> LayoutContext[None]:
     ///     """Show a list of key-value pairs, or a monospace string."""
