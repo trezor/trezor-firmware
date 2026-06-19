@@ -14,12 +14,6 @@ class AppImage:
         Returns the image internal unique handle.
         """
 
-    def get_info(self) -> dict:
-        """
-        Gets the information about the application image, such as its id,
-        version, state, size, etc.
-        """
-
     def get_task_id(self) -> int:
         """
         Gets the task ID associated with the application image.
@@ -28,6 +22,26 @@ class AppImage:
     def is_running(self) -> bool:
         """
         Checks if the application image is currently running.
+        """
+
+    def is_verified(self) -> bool:
+        """
+        Checks if the application image has been verified.
+        """
+
+    def get_id(self) -> str:
+        """
+        Returns the ID of the application image.
+        """
+
+    def get_version(self) -> tuple[int, int]:
+        """
+        Returns the version of the application image as a tuple (major, minor).
+        """
+
+    def get_hash(self) -> bytes:
+        """
+        Returns the hash of the application image.
         """
 
     def write_chunk(self, data: AnyBytes) -> None:
@@ -96,7 +110,22 @@ def clear_event() -> None:
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def get_info() -> dict:
+def get_image_count() -> int:
     """
-    Returns run-time information about the app arena.
+    Returns the number of application images currently
+    loaded in the app arena.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def get_mem_total() -> int:
+    """
+    Returns the total memory available in the app arena.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def get_mem_free() -> int:
+    """
+    Returns the free memory available in the app arena.
     """

@@ -104,16 +104,14 @@ static uint8_t* map_va(const va_map_t* map, uint32_t va) {
   return map_va_size(map, va, 0);
 }
 
-static inline size_t xbin_image_size(const xbin_header_t* header) {
-  return header->size + header->payload_size;
-}
-
 const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
   TSH_DECLARE;
   const xbin_header_t* retval = NULL;
 
   TSH_CHECK(image != NULL, TS_EINVAL);
   TSH_CHECK(image_size >= sizeof(xbin_header_t), TS_EINVAL);
+  TSH_CHECK(IS_ALIGNED((uintptr_t)image, MPU_ALIGNMENT), TS_EINVAL);
+  TSH_CHECK(IS_ALIGNED(image_size, MPU_ALIGNMENT), TS_EINVAL);
 
   const xbin_header_t* header = (const xbin_header_t*)image;
 
@@ -128,10 +126,12 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
 
   TSH_CHECK(header->magic == XBIN_HEADER_MAGIC, TS_EINVAL);
   TSH_CHECK(header->size >= sizeof(xbin_header_t), TS_EINVAL);
+  TSH_CHECK(IS_ALIGNED(header->size, MPU_ALIGNMENT), TS_EINVAL);
   TSH_CHECK(header->size <= image_size, TS_EINVAL);
   TSH_CHECK(header->abi_version == 1, TS_EINVAL);
   TSH_CHECK(header->payload_type == XBIN_TARGET_ARMV8M, TS_EINVAL);
   TSH_CHECK(header->payload_size >= sizeof(payload_header_t), TS_EINVAL);
+  TSH_CHECK(IS_ALIGNED(header->payload_size, MPU_ALIGNMENT), TS_EINVAL);
   TSH_CHECK(header->payload_size + header->size == image_size, TS_EINVAL);
 
   // Make the payload header accessible
@@ -154,7 +154,7 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
 
   // Check whether the total image size (including RO segment and relocations)
   // fits within the provided image size
-  TSH_CHECK(xbin_image_size(header) <= image_size, TS_EINVAL);
+  TSH_CHECK(header->size + header->payload_size <= image_size, TS_EINVAL);
 
   // Check that RW segment size and address are valid
   TSH_CHECK(p->rw_va >= p->ro_size, TS_EINVAL);
@@ -187,6 +187,15 @@ ts_t xbin_verify_signature(const xbin_header_t* header, const void* proof,
                            size_t proof_size) {
   TSH_DECLARE;
 
+  // Make the header accessible
+  mpu_set_active_applet(&(applet_layout_t){
+      .data1 =
+          {
+              .start = (uintptr_t)header,
+              .size = sizeof(xbin_header_t),
+          },
+  });
+
   // Make the entire image accessible for signature verification
   mpu_set_active_applet(&(applet_layout_t){
       .data1 =
@@ -216,7 +225,7 @@ static ts_t xbin_fit_in_memory(const payload_header_t* p, void* rwmem,
   map->ro_size = p->ro_size;
 
   map->rw_v_addr = p->rw_va;
-  map->rw_p_addr = ALIGN_UP((uint32_t)rwmem, MPU_ALIGNMENT);
+  map->rw_p_addr = (uint32_t)rwmem;
   map->rw_size = ALIGN_UP(p->rw_size, STACK_ALIGNMENT);
 
   map->stack_p_addr = map->rw_p_addr + (p->stack_va - p->rw_va);
@@ -281,6 +290,18 @@ ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
   ts_t status;
 
   va_map_t map = {0};
+
+  TSH_CHECK_ARG(IS_ALIGNED((uintptr_t)rwmem, MPU_ALIGNMENT));
+  TSH_CHECK_ARG(IS_ALIGNED((uintptr_t)rwmem_size, MPU_ALIGNMENT));
+
+  // Make the header accessible
+  mpu_set_active_applet(&(applet_layout_t){
+      .data1 =
+          {
+              .start = (uintptr_t)header,
+              .size = sizeof(xbin_header_t),
+          },
+  });
 
   // Make the entire image accessible for preparation (relocations, etc.)
   mpu_set_active_applet(&(applet_layout_t){

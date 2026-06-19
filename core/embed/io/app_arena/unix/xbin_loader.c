@@ -43,7 +43,7 @@ const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
   TSH_CHECK(header->magic == XBIN_HEADER_MAGIC, TS_EINVAL);
   TSH_CHECK(header->size >= sizeof(xbin_header_t), TS_EINVAL);
   TSH_CHECK(header->size <= image_size, TS_EINVAL);
-  TSH_CHECK(header->abi_version == 0, TS_EINVAL);
+  TSH_CHECK(header->abi_version == 1, TS_EINVAL);
   TSH_CHECK(header->payload_type == XBIN_TARGET_X86_64, TS_EINVAL);
   TSH_CHECK(header->payload_size == image_size - header->size, TS_EINVAL);
 
