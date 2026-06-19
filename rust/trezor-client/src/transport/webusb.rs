@@ -111,14 +111,21 @@ impl WebUsbLink {
     /// Discard any stale chunks left buffered from a previous, interrupted
     /// session. Without this, the first response can be paired with a leftover
     /// message and the link stays desynchronised for the rest of its life.
-    fn drain(&mut self) {
+    fn drain(&mut self) -> Result<(), Error> {
         let endpoint = constants::READ_ENDPOINT_MASK | self.endpoint;
         let mut chunk = vec![0; CHUNK_SIZE];
         for _ in 0..DRAIN_MAX_CHUNKS {
-            if self.handle.read_interrupt(endpoint, &mut chunk, DRAIN_TIMEOUT).is_err() {
-                break;
+            match self.handle.read_interrupt(endpoint, &mut chunk, DRAIN_TIMEOUT) {
+                // A stale chunk; keep draining.
+                Ok(_) => {}
+                // Nothing more queued -- a clean finish.
+                Err(rusb::Error::Timeout) => break,
+                // A real USB error (e.g. the device was unplugged): surface it
+                // rather than handing back a half-broken transport.
+                Err(e) => return Err(e.into()),
             }
         }
+        Ok(())
     }
 }
 
@@ -201,7 +208,7 @@ impl WebUsbTransport {
         };
         // Drain any chunks already queued on the IN endpoint after claiming
         // the interface, so the first exchange starts from a clean state.
-        link.drain();
+        link.drain()?;
 
         Ok(Box::new(WebUsbTransport { protocol: ProtocolV1 { link } }))
     }

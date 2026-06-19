@@ -144,16 +144,23 @@ impl UdpLink {
     /// Discard any stale datagrams left buffered from a previous, interrupted
     /// session. Without this, the first response can be paired with a leftover
     /// message and the link stays desynchronised for the rest of its life.
-    fn drain(&mut self) {
+    fn drain(&mut self) -> Result<(), Error> {
         let mut chunk = vec![0; CHUNK_SIZE];
-        if self.socket.set_read_timeout(Some(DRAIN_TIMEOUT)).is_err() {
-            return;
-        }
+        self.socket.set_read_timeout(Some(DRAIN_TIMEOUT))?;
         for _ in 0..DRAIN_MAX_CHUNKS {
-            if self.socket.recv(&mut chunk).is_err() {
-                break;
+            match self.socket.recv(&mut chunk) {
+                // A stale datagram; keep draining.
+                Ok(_) => {}
+                // Buffer is empty (nothing more queued) -- a clean finish.
+                Err(e) if e.kind() == ErrorKind::WouldBlock || e.kind() == ErrorKind::TimedOut => {
+                    break
+                }
+                // A real transport error (e.g. the peer vanished): surface it
+                // rather than handing back a half-broken transport.
+                Err(e) => return Err(e.into()),
             }
         }
+        Ok(())
     }
 }
 
@@ -200,7 +207,7 @@ impl UdpTransport {
         path.push_str(&transport.port);
         let mut link = UdpLink::open(&path)?;
         // Drop any stale datagrams before the first real exchange.
-        link.drain();
+        link.drain()?;
         Ok(Box::new(UdpTransport { protocol: ProtocolV1 { link } }))
     }
 }
@@ -265,7 +272,9 @@ mod tests {
         peer.send_to(&[0xAA; CHUNK_SIZE], client_addr).unwrap();
         std::thread::sleep(Duration::from_millis(50));
 
-        link.drain();
+        // Draining the stale chunk and then finding the buffer empty is a
+        // clean finish, not an error.
+        link.drain().unwrap();
 
         // Nothing is left to read, so the watchdog fires rather than handing
         // back the stale bytes that drain was supposed to discard.
