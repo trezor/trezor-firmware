@@ -767,9 +767,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # multisig address warning
-        self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.synchronize_at("VerticalMenu")
-        self.debug.button_actions.navigate_to_menu_item(1)
+        self.debug.press_yes()
 
         yield  # show address
         layout = self.debug.read_layout()
@@ -819,9 +817,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         yield  # multisig address warning
-        self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.synchronize_at("VerticalMenu")
-        self.debug.button_actions.navigate_to_menu_item(1)
+        self.debug.press_yes()
 
         yield  # show address
         layout = self.debug.read_layout()
@@ -1121,9 +1117,7 @@ def sign_tx_go_to_info_delizia(
     if multi_account:
         yield
         client.debug.read_layout()
-        client.debug.click(client.debug.screen_buttons.menu())
-        client.debug.synchronize_at("VerticalMenu")
-        client.debug.button_actions.navigate_to_menu_item(1)
+        client.debug.press_yes()
 
     yield  # confirm transaction
     client.debug.read_layout()
@@ -1163,9 +1157,7 @@ def sign_tx_go_to_info_eckhart(
     if multi_account:
         yield
         client.debug.read_layout()
-        client.debug.click(client.debug.screen_buttons.menu())
-        client.debug.synchronize_at("VerticalMenu")
-        client.debug.button_actions.navigate_to_menu_item(1)
+        client.debug.press_yes()
 
     yield  # confirm transaction
     client.debug.read_layout()

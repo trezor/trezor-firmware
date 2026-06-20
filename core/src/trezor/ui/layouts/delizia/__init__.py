@@ -180,11 +180,9 @@ def confirm_path_warning(
 
 
 def confirm_multisig_warning() -> Awaitable[None]:
-    return show_danger(
+    return show_warning(
         "warning_multisig",
         TR.send__receiving_to_multisig,
-        title=TR.words__important,
-        verb_cancel=TR.words__cancel_and_exit,
     )
 
 
@@ -201,10 +199,9 @@ async def confirm_multisig_different_paths_warning() -> None:
 
 
 def confirm_multiple_accounts_warning() -> Awaitable[None]:
-    return show_danger(
+    return show_warning(
         "sending_from_multiple_accounts",
         TR.send__from_multiple_accounts,
-        verb_cancel=TR.send__cancel_transaction,
         br_code=ButtonRequestType.SignTx,
     )
 
