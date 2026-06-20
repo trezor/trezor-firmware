@@ -1624,6 +1624,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     solana__offchain_is_multisig = 1232,  // "The following message requires multiple signers."
     words__comm_continue = 1233,  // "Communication with your connected device failed. It's safe to continue."
+    address__title_cosigner_template = 1234,  // "Cosigner {0}"
 }
 
 impl TranslatedString {
@@ -2865,6 +2866,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4104,6 +4106,7 @@ impl TranslatedString {
                 19671,
                 19719,
                 19790,
+                19802,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5342,6 +5345,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6581,6 +6585,7 @@ impl TranslatedString {
                 19671,
                 19719,
                 19790,
+                19802,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7819,6 +7824,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9058,6 +9064,7 @@ impl TranslatedString {
                 19671,
                 19719,
                 19790,
+                19802,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10296,6 +10303,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11535,6 +11543,7 @@ impl TranslatedString {
                 19671,
                 19719,
                 19790,
+                19802,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12774,6 +12783,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14013,6 +14023,7 @@ impl TranslatedString {
                 17609,
                 17657,
                 17728,
+                17740,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15251,6 +15262,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16490,6 +16502,7 @@ impl TranslatedString {
                 17609,
                 17657,
                 17728,
+                17740,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17728,6 +17741,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18967,6 +18981,7 @@ impl TranslatedString {
                 17609,
                 17657,
                 17728,
+                17740,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20205,6 +20220,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21444,6 +21460,7 @@ impl TranslatedString {
                 17609,
                 17657,
                 17728,
+                17740,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22683,6 +22700,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23922,6 +23940,7 @@ impl TranslatedString {
                 19044,
                 19092,
                 19163,
+                19175,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25160,6 +25179,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26399,6 +26419,7 @@ impl TranslatedString {
                 19044,
                 19092,
                 19163,
+                19175,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27637,6 +27658,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28876,6 +28898,7 @@ impl TranslatedString {
                 19044,
                 19092,
                 19163,
+                19175,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30114,6 +30137,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31353,6 +31377,7 @@ impl TranslatedString {
                 19044,
                 19092,
                 19163,
+                19175,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32592,6 +32617,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33831,6 +33857,7 @@ impl TranslatedString {
                 20365,
                 20413,
                 20484,
+                20496,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35069,6 +35096,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36308,6 +36336,7 @@ impl TranslatedString {
                 20365,
                 20413,
                 20484,
+                20496,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37546,6 +37575,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38785,6 +38815,7 @@ impl TranslatedString {
                 20365,
                 20413,
                 20484,
+                20496,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40023,6 +40054,7 @@ impl TranslatedString {
                 "Application domain",
                 "The following message requires multiple signers.",
                 "Communication with your connected device failed. It's safe to continue.",
+                "Cosigner {0}",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41262,6 +41294,7 @@ impl TranslatedString {
                 20365,
                 20413,
                 20484,
+                20496,
             ];
 
         }
@@ -41286,6 +41319,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_address__public_key_confirmed, Self::address__public_key_confirmed),
         (Qstr::MP_QSTR_address__qr_code, Self::address__qr_code),
         (Qstr::MP_QSTR_address__title_cosigner, Self::address__title_cosigner),
+        (Qstr::MP_QSTR_address__title_cosigner_template, Self::address__title_cosigner_template),
         (Qstr::MP_QSTR_address__title_provider_address, Self::address__title_provider_address),
         (Qstr::MP_QSTR_address__title_receive_address, Self::address__title_receive_address),
         (Qstr::MP_QSTR_address__title_refund_address, Self::address__title_refund_address),

@@ -17,6 +17,7 @@ class TR:
     address__public_key_confirmed: str = "Public key confirmed"
     address__qr_code: str = "QR code"
     address__title_cosigner: str = "Cosigner"
+    address__title_cosigner_template: str = "Cosigner {0}"
     address__title_provider_address: str = "Provider address"
     address__title_receive_address: str = "Receive address"
     address__title_refund_address: str = "Refund address"

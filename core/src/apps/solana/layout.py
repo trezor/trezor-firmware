@@ -644,7 +644,7 @@ async def confirm_offchain_signverify(
     for i, signer in enumerate(offchain_message.signers):
         if i != signer_index:
             await confirm_address(
-                f"{TR.address__title_cosigner} {i + (i < signer_index)}",
+                TR.address__title_cosigner_template.format(i + (i < signer_index)),
                 base58.encode(signer),
                 verb=TR.buttons__continue,
                 chunkify=chunkify,
