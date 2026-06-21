@@ -1709,6 +1709,7 @@
       "Eckhart": ""
     },
     "pin__enter": "Enter PIN",
+    "pin__enter_current": "Enter current PIN",
     "pin__enter_new": "Enter new PIN",
     "pin__entered_not_valid": "The PIN you have entered is not valid.",
     "pin__info": {

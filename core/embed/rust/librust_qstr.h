@@ -525,6 +525,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__disabled;
   MP_QSTR_pin__enabled;
   MP_QSTR_pin__enter;
+  MP_QSTR_pin__enter_current;
   MP_QSTR_pin__enter_new;
   MP_QSTR_pin__entered_not_valid;
   MP_QSTR_pin__info;

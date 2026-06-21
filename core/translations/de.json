@@ -1961,6 +1961,7 @@
       "Eckhart": ""
     },
     "pin__enter": "PIN eingeben",
+    "pin__enter_current": "",
     "pin__enter_new": "Neue PIN eingeben",
     "pin__entered_not_valid": "Die eingegebene PIN ist ungültig.",
     "pin__info": {

@@ -1681,6 +1681,7 @@
       "Eckhart": ""
     },
     "pin__enter": "Zadejte PIN",
+    "pin__enter_current": "",
     "pin__enter_new": "Zadejte nový PIN",
     "pin__entered_not_valid": "Zadaný PIN není platný.",
     "pin__info": "Pro přístup k tomuto zařízení bude vyžadován PIN.",
