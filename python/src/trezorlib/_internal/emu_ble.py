@@ -180,7 +180,7 @@ class EmuBleTransport(Transport):
     def get_path(self) -> str:
         return "{}:{}:{}".format(self.PATH_PREFIX, *self.device)
 
-    def open(self) -> None:
+    def _open(self) -> None:
         try:
             self.data_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.data_socket.connect(self.device)
@@ -189,10 +189,10 @@ class EmuBleTransport(Transport):
             self.event_socket.connect((self.device[0], self.device[1] + 1))
             self.event_socket.settimeout(SOCKET_TIMEOUT)
         except Exception:
-            self.close()
+            self._close()
             raise
 
-    def close(self) -> None:
+    def _close(self) -> None:
         if self.data_socket is not None:
             self.data_socket.close()
             self.data_socket = None
