@@ -106,9 +106,9 @@ impl UdpLink {
             // reported that nothing is listening. That just means "not here",
             // not an error worth propagating up through discovery.
             Err(e)
-                if e.kind() == ErrorKind::WouldBlock
-                    || e.kind() == ErrorKind::TimedOut
-                    || e.kind() == ErrorKind::ConnectionRefused =>
+                if e.kind() == ErrorKind::WouldBlock ||
+                    e.kind() == ErrorKind::TimedOut ||
+                    e.kind() == ErrorKind::ConnectionRefused =>
             {
                 Ok(false)
             }
@@ -279,10 +279,7 @@ mod tests {
         // Nothing is left to read, so the watchdog fires rather than handing
         // back the stale bytes that drain was supposed to discard.
         let deadline = Instant::now() + Duration::from_millis(150);
-        assert!(matches!(
-            link.read_chunk_until(deadline).unwrap_err(),
-            Error::DeviceReadTimeout
-        ));
+        assert!(matches!(link.read_chunk_until(deadline).unwrap_err(), Error::DeviceReadTimeout));
     }
 
     #[test]
