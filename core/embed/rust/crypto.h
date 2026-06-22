@@ -2,4 +2,5 @@
 #include "ed25519-donna/ed25519.h"
 #include "elligator2.h"
 #include "hmac.h"
+#include "noise_xx.h"
 #include "sha2.h"

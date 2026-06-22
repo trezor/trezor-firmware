@@ -1,214 +1,194 @@
-use trezor_thp::noise::forked::{
-    Cipher, Hash, TrezorNoiseProtocol, TrezorNoiseProtocolBackend, U8Array, DH,
+use heapless::Vec;
+use trezor_thp::{
+    channel::{PairingState, MAX_CREDENTIAL_LEN, MAX_DEVICE_PROPERTIES_LEN},
+    credential::CredentialVerifier,
+    noise::{Ciphers, NoiseHandshake, HANDSHAKE_HASH_LEN, PRIVKEY_LEN, PUBKEY_LEN, TAG_LEN},
+    Error,
 };
 
-use zeroize::{Zeroize, Zeroizing};
+use crate::crypto::noise_xx::{Context, HandshakeContext};
 
-use crate::crypto::{aesgcm, curve25519, memory::init_ctx, sha256};
-
-/// Array wrapper that zeroizes on `drop()`. Can't use zeroizing directly due to
-/// the orphan rule.
-pub struct Sensitive<A: U8Array + Zeroize>(Zeroizing<A>);
-
-impl<A: U8Array + Zeroize> Sensitive<A> {
-    pub fn from(a: A) -> Self {
-        Sensitive(Zeroizing::new(a))
-    }
+// TODO: ZeroizeOnDrop
+pub struct CipherState {
+    ctx: Context,
+    handshake_hash: [u8; HANDSHAKE_HASH_LEN],
+    remote_static_pubkey: [u8; PUBKEY_LEN],
 }
 
-impl<A> U8Array for Sensitive<A>
-where
-    A: Zeroize + U8Array,
-{
-    fn new() -> Self {
-        Sensitive::from(A::new())
-    }
-
-    fn new_with(v: u8) -> Self {
-        Sensitive::from(A::new_with(v))
-    }
-
-    fn from_slice(s: &[u8]) -> Self {
-        Sensitive::from(A::from_slice(s))
-    }
-
-    fn len() -> usize {
-        A::len()
-    }
-
-    fn as_slice(&self) -> &[u8] {
-        self.0.as_slice()
-    }
-
-    fn as_mut(&mut self) -> &mut [u8] {
-        self.0.as_mut()
-    }
-}
-
-pub struct TrezorCryptoCurve25519;
-
-impl DH for TrezorCryptoCurve25519 {
-    // Scalar & Point implement ZeroizeOnDrop, no need to wrap them.
-    type Key = curve25519::Scalar;
-    type Pubkey = curve25519::Point;
-    type Output = curve25519::Point;
-
-    fn name() -> &'static str {
-        "25519"
-    }
-
-    fn genkey() -> Self::Key {
-        curve25519::Scalar::generate()
-    }
-
-    fn pubkey(scalar: &Self::Key) -> Self::Pubkey {
-        curve25519::Point::from_secret(scalar)
-    }
-
-    fn dh(scalar: &Self::Key, point: &Self::Pubkey) -> Result<Self::Output, ()> {
-        Ok(point.multiply(scalar))
-    }
-}
-
-pub struct TrezorCryptoAesGcm;
-
-impl TrezorCryptoAesGcm {
-    const KEY_SIZE: usize = 32;
-    const NONCE_SIZE: usize = 12;
-}
-
-impl Cipher for TrezorCryptoAesGcm {
-    fn name() -> &'static str {
-        "AESGCM"
-    }
-
-    type Key = Sensitive<[u8; Self::KEY_SIZE]>;
-
-    fn encrypt(key: &Self::Key, nonce: u64, ad: &[u8], plaintext: &[u8], out: &mut [u8]) {
-        assert!(plaintext.len().checked_add(aesgcm::TAG_SIZE) == Some(out.len()));
-
-        let mut full_nonce = [0u8; Self::NONCE_SIZE];
-        full_nonce[4..].copy_from_slice(&nonce.to_be_bytes());
-
-        let (in_out, tag_out) = out.split_at_mut(plaintext.len());
-        in_out.copy_from_slice(plaintext);
-
-        init_ctx!(aesgcm::AesGcmEncrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
-        unwrap!(ctx.encrypt_in_place(in_out));
-        unwrap!(ctx.auth(ad));
-        let tag = unwrap!(ctx.finish());
-        tag_out.copy_from_slice(&tag);
-    }
-
-    fn encrypt_in_place(
-        key: &Self::Key,
-        nonce: u64,
-        ad: &[u8],
-        in_out: &mut [u8],
-        plaintext_len: usize,
-    ) -> usize {
-        assert!(plaintext_len
-            .checked_add(aesgcm::TAG_SIZE)
-            .is_some_and(|l| l <= in_out.len()));
-
-        let mut full_nonce = [0u8; Self::NONCE_SIZE];
-        full_nonce[4..].copy_from_slice(&nonce.to_be_bytes());
-
-        let (in_out, tag_out) =
-            in_out[..plaintext_len + aesgcm::TAG_SIZE].split_at_mut(plaintext_len);
-
-        init_ctx!(aesgcm::AesGcmEncrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
-        unwrap!(ctx.encrypt_in_place(in_out));
-        unwrap!(ctx.auth(ad));
-        let tag = unwrap!(ctx.finish());
-        tag_out.copy_from_slice(&tag);
-
-        plaintext_len + aesgcm::TAG_SIZE
-    }
-
-    fn decrypt(
-        key: &Self::Key,
-        nonce: u64,
-        ad: &[u8],
-        ciphertext: &[u8],
-        out: &mut [u8],
-    ) -> Result<(), ()> {
-        assert!(ciphertext.len().checked_sub(aesgcm::TAG_SIZE) == Some(out.len()));
-
-        let mut full_nonce = [0u8; Self::NONCE_SIZE];
-        full_nonce[4..].copy_from_slice(&nonce.to_be_bytes());
-
-        let (ciphertext, tag) = unwrap!(ciphertext.split_last_chunk::<{ aesgcm::TAG_SIZE }>());
-        out.copy_from_slice(ciphertext);
-
-        init_ctx!(aesgcm::AesGcmDecrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
-        unwrap!(ctx.decrypt_in_place(out));
-        unwrap!(ctx.auth(ad));
-        ctx.finish(tag).map_err(|_| ())?;
-
+impl Ciphers for CipherState {
+    fn encrypt(&mut self, in_out: &mut [u8], plaintext_len: usize) -> Result<(), Error> {
+        let _ = self
+            .ctx
+            .send_message_inplace(&[], in_out, plaintext_len)
+            .map_err(|_| Error::crypto_error())?;
         Ok(())
     }
 
-    fn decrypt_in_place(
-        key: &Self::Key,
-        nonce: u64,
-        ad: &[u8],
-        in_out: &mut [u8],
-        ciphertext_len: usize,
-    ) -> Result<usize, ()> {
-        assert!(ciphertext_len <= in_out.len());
-        assert!(ciphertext_len >= aesgcm::TAG_SIZE);
+    fn decrypt(&mut self, in_out: &mut [u8]) -> Result<usize, Error> {
+        let len = self
+            .ctx
+            .receive_message_inplace(&[], in_out)
+            .map_err(|_| Error::crypto_error())?;
+        Ok(len)
+    }
 
-        let mut full_nonce = [0u8; Self::NONCE_SIZE];
-        full_nonce[4..].copy_from_slice(&nonce.to_be_bytes());
+    fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
+        &self.handshake_hash
+    }
 
-        let in_out = &mut in_out[..ciphertext_len];
-        let (in_out, tag) = unwrap!(in_out.split_last_chunk_mut::<{ aesgcm::TAG_SIZE }>());
-
-        init_ctx!(aesgcm::AesGcmDecrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
-        unwrap!(ctx.decrypt_in_place(in_out));
-        unwrap!(ctx.auth(ad));
-        ctx.finish(tag).map_err(|_| ())?;
-
-        Ok(in_out.len())
+    fn remote_static_pubkey(&self) -> &[u8; PUBKEY_LEN] {
+        &self.remote_static_pubkey
     }
 }
 
-pub type TrezorCryptoSha256 = sha256::NoPinSha256;
-
-impl Hash for TrezorCryptoSha256 {
-    fn name() -> &'static str {
-        "SHA256"
-    }
-
-    type Block = Sensitive<[u8; sha256::BLOCK_SIZE]>;
-    type Output = Sensitive<sha256::Digest>;
-
-    fn input(&mut self, data: &[u8]) {
-        self.update(data);
-    }
-
-    fn result(&mut self) -> Self::Output {
-        let mut digest = sha256::Digest::default();
-        self.clone().finalize_into(&mut digest);
-        Self::Output::from_slice(&digest)
-    }
+// TODO: ZeroizeOnDrop
+pub struct Handshake {
+    ctx: Option<HandshakeContext>,
+    device_properties: Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
 }
 
-pub struct TrezorCryptoPrimitives;
-
-impl TrezorNoiseProtocolBackend for TrezorCryptoPrimitives {
-    type DH = TrezorCryptoCurve25519;
-    type Cipher = TrezorCryptoAesGcm;
-    type Hash = TrezorCryptoSha256;
+impl NoiseHandshake for Handshake {
+    type Ciphers = CipherState;
 
     fn random_bytes(dest: &mut [u8]) {
         crate::trezorhal::random::bytes(dest);
     }
+
+    fn prepare_responder(device_properties: &[u8]) -> Self {
+        Self {
+            ctx: None,
+            device_properties: Vec::from_slice(device_properties).unwrap(),
+        }
+    }
+
+    fn read_initiation_request(&mut self, receive_buffer: &[u8]) -> Result<bool, Error> {
+        let (hctx, payload) =
+            HandshakeContext::handle_initiation_request(&self.device_properties, receive_buffer)
+                .map_err(|_| Error::crypto_error())?;
+        let try_to_unlock = payload & 0x01 == 0x01;
+        self.ctx = Some(hctx);
+        Ok(try_to_unlock)
+    }
+
+    fn write_initiation_response(
+        &mut self,
+        static_privkey: &[u8; PRIVKEY_LEN],
+        send_buffer: &mut [u8],
+    ) -> Result<usize, Error> {
+        let hctx = self.ctx.as_mut().ok_or_else(Error::unexpected_input)?;
+        let response_size = hctx
+            .create_initiation_response(static_privkey, send_buffer)
+            .map_err(|_| Error::crypto_error())?;
+        Ok(response_size)
+    }
+
+    fn write_completion_response(
+        &mut self,
+        receive_buffer: &[u8],
+        cred_verifier: &impl CredentialVerifier,
+        send_buffer: &mut [u8],
+    ) -> Result<(Self::Ciphers, PairingState, usize), Error> {
+        let mut payload = [0u8; MAX_CREDENTIAL_LEN];
+        let hctx = self.ctx.as_mut().ok_or_else(Error::unexpected_input)?;
+        let (cipher_ctx, payload_len) = hctx
+            .handle_completion_request(receive_buffer, &mut payload)
+            .map_err(|_| Error::crypto_error())?;
+
+        let handshake_hash = *hctx.handshake_hash().ok_or_else(Error::crypto_error)?;
+        let remote_static_pubkey = *hctx
+            .remote_static_pubkey()
+            .ok_or_else(Error::crypto_error)?;
+        let mut ciphers = CipherState {
+            ctx: cipher_ctx,
+            handshake_hash,
+            remote_static_pubkey,
+        };
+        let pairing_state =
+            cred_verifier.verify(&ciphers.remote_static_pubkey, &payload[..payload_len]);
+
+        let payload = &[pairing_state as u8];
+        let plaintext_len = payload.len();
+        let dest = send_buffer
+            .get_mut(..plaintext_len + TAG_LEN)
+            .ok_or_else(Error::insufficient_buffer)?;
+        dest[0..plaintext_len].copy_from_slice(payload);
+        ciphers.encrypt(dest, plaintext_len)?;
+        Ok((ciphers, pairing_state, dest.len()))
+    }
+
+    #[cfg(feature = "test")]
+    fn write_initiation_request(
+        device_properties: &[u8],
+        try_to_unlock: bool,
+        dest: &mut [u8],
+    ) -> Result<(Self, usize), Error> {
+        let payload = u8::from(try_to_unlock);
+        let (ctx, request_len) =
+            HandshakeContext::create_initiation_request(device_properties, payload, dest)
+                .map_err(|_| Error::crypto_error())?;
+        let handshake = Self {
+            ctx: Some(ctx),
+            device_properties: Vec::new(),
+        };
+        Ok((handshake, request_len))
+    }
+
+    #[cfg(feature = "test")]
+    fn write_completion_request(
+        &mut self,
+        cred_store: &mut impl trezor_thp::credential::CredentialStore,
+        receive_buffer: &[u8],
+        send_buffer: &mut [u8],
+    ) -> Result<(Self::Ciphers, usize), Error> {
+        let hctx = self.ctx.as_mut().ok_or_else(Error::unexpected_input)?;
+        hctx.handle_initiation_response(receive_buffer)
+            .map_err(|_| Error::crypto_error())?;
+
+        // Look up static key based on remote keys, or generate a new one.
+        let remote_static_pubkey = hctx
+            .remote_static_pubkey()
+            .ok_or_else(Error::crypto_error)?
+            .clone();
+        let remote_ephemeral_pubkey = hctx
+            .remote_ephemeral_pubkey()
+            .ok_or_else(Error::crypto_error)?;
+        let (local_static, pairing_credential) =
+            Self::credential_from_store(cred_store, remote_ephemeral_pubkey, &remote_static_pubkey);
+
+        let (cipher_ctx, payload_len) = hctx
+            .create_completion_request(&local_static, &pairing_credential, send_buffer)
+            .map_err(|_| Error::crypto_error())?;
+        let handshake_hash = hctx
+            .handshake_hash()
+            .ok_or_else(Error::crypto_error)?
+            .clone();
+        let mut ciphers = CipherState {
+            ctx: cipher_ctx,
+            handshake_hash,
+            remote_static_pubkey,
+        };
+        Ok((ciphers, payload_len))
+    }
 }
 
-pub type TrezorCrypto = TrezorNoiseProtocol<TrezorCryptoPrimitives>;
+#[cfg(feature = "test")]
+impl Handshake {
+    fn credential_from_store(
+        cs: &impl trezor_thp::credential::CredentialStore,
+        re: &[u8],
+        rs: &[u8],
+    ) -> ([u8; PRIVKEY_LEN], heapless::Vec<u8, MAX_CREDENTIAL_LEN>) {
+        let mut buf = [0; { PRIVKEY_LEN + MAX_CREDENTIAL_LEN }];
+        match cs.lookup(re, rs, &mut buf) {
+            Some(found) => {
+                let found_credential = heapless::Vec::from_slice(found.auth_credential).unwrap();
+                (found.local_static_privkey.clone(), found_credential)
+            }
+            None => {
+                let mut new_key = [0; PRIVKEY_LEN];
+                Self::random_bytes(&mut new_key);
+                (new_key, heapless::Vec::new())
+            }
+        }
+    }
+}

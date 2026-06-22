@@ -47,7 +47,7 @@ default = [
     "rtl/sprintf",
     "rtl/mldsa",
     "rtl/aes_gcm",
-    "rtl/noise",
+    "rtl/noise_kk1",
 
     "trezor_lib/with_new_crates", # only for transitional period
 

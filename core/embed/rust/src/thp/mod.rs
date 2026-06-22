@@ -27,7 +27,7 @@ use trezor_thp::{
     ChannelIO, Error as ThpError,
 };
 
-use crypto::TrezorCrypto;
+use crypto::Handshake as TrezorCrypto;
 use time::{least_recently_used, ChannelTiming};
 
 type TrezorMux = Mux<TrezorCrypto>;
