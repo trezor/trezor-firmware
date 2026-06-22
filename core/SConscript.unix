@@ -241,6 +241,8 @@ if THP:
     CPPDEFINES_MOD += ['USE_THP']
     SOURCE_MOD += [
         'vendor/trezor-crypto/elligator2.c',
+        'vendor/trezor-crypto/noise_common.c',
+        'vendor/trezor-crypto/noise_xx.c',
     ]
 
 # modtrezorio

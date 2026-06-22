@@ -7,67 +7,9 @@ pub struct Point {
     bytes: [u8; 32],
 }
 
-#[cfg(feature = "thp")]
-impl trezor_thp::noise::forked::U8Array for Point {
-    fn new() -> Self {
-        Self { bytes: [0u8; 32] }
-    }
-
-    fn new_with(c: u8) -> Self {
-        Self { bytes: [c; 32] }
-    }
-
-    fn from_slice(src: &[u8]) -> Self {
-        let mut bytes = [0u8; 32];
-        bytes.copy_from_slice(src);
-        Self { bytes }
-    }
-
-    fn len() -> usize {
-        32
-    }
-
-    fn as_slice(&self) -> &[u8] {
-        &self.bytes
-    }
-
-    fn as_mut(&mut self) -> &mut [u8] {
-        &mut self.bytes
-    }
-}
-
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Scalar {
     bytes: [u8; 32],
-}
-
-#[cfg(feature = "thp")]
-impl trezor_thp::noise::forked::U8Array for Scalar {
-    fn new() -> Self {
-        Self { bytes: [0u8; 32] }
-    }
-
-    fn new_with(c: u8) -> Self {
-        Self { bytes: [c; 32] }
-    }
-
-    fn from_slice(src: &[u8]) -> Self {
-        let mut bytes = [0u8; 32];
-        bytes.copy_from_slice(src);
-        Self { bytes }
-    }
-
-    fn len() -> usize {
-        32
-    }
-
-    fn as_slice(&self) -> &[u8] {
-        &self.bytes
-    }
-
-    fn as_mut(&mut self) -> &mut [u8] {
-        &mut self.bytes
-    }
 }
 
 impl Scalar {
@@ -202,7 +144,7 @@ mod test {
         assert_eq!(res1.to_bytes(), res2.to_bytes());
     }
 
-    #[cfg(feature = "layout_eckhart")] // TODO replace with feature = "thp"
+    #[cfg(feature = "thp")]
     #[test]
     fn test_elligator2() {
         // https://elligator.org/vectors/curve25519_direct.vec
