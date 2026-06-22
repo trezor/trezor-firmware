@@ -52,7 +52,11 @@ class Model(Enum):
             return hw_model
         if hw_model == b"\x00\x00\x00\x00":
             return cls.T2T1
-        raise ValueError(f"Unknown hardware model: {hw_model}")
+        try:
+            assert isinstance(hw_model, bytes)
+            return cls(hw_model)
+        except ValueError as e:
+            raise ValueError(f"Unknown hardware model: {hw_model}") from e
 
     @classmethod
     def from_trezor_model(cls, trezor_model: TrezorModel) -> Self:
