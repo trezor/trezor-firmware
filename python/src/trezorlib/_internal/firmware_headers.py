@@ -29,6 +29,7 @@ from typing_extensions import Protocol, Self, runtime_checkable
 
 from .. import _ed25519, cosi, firmware
 from ..firmware import models as fw_models
+from ..firmware import nrf
 from ..firmware.sanity_struct import STRICT_SANITY_CHECK_DEFAULT
 
 SYM_OK = click.style("\u2714", fg="green")
@@ -311,7 +312,10 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
     NAME: t.ClassVar[str] = "vendorheader"
     DEV_KEYS: t.ClassVar[t.Sequence[bytes]] = _make_dev_keys(b"\x44", b"\x45")
 
-    SUBCON = c.Struct(*firmware.VendorHeader.SUBCON.subcons, c.Terminated)
+    SUBCON = c.Struct(
+        *firmware.VendorHeader.SUBCON.subcons,
+        c.Terminated,
+    )
 
     def get_header(self) -> CosiSignatureHeaderProto:
         return self
@@ -628,6 +632,85 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
 
     def slots(self) -> t.Iterable[int]:
         return self.header.v1_key_indexes
+
+
+class NrfImage(nrf.NrfImage):
+    NAME: t.ClassVar[str] = "nrf"
+
+    def signature_present(self) -> bool:
+        return (
+            nrf.TlvType.SIGNATURE1 in self.unprotected_tlv
+            and nrf.TlvType.SIGNATURE2 in self.unprotected_tlv
+        )
+
+    def format(self, verbose: bool = False) -> str:
+        header_str = _format_header(self.header)
+        image_str = f"Image data: {len(self.img_data)} bytes"
+        tlvs_str = _format_tlvs(self.protected_tlv, self.unprotected_tlv)
+        fingerprint_str = (
+            f"Calculated fingerprint: {click.style(chunkify(self.digest()), bold=True)}"
+        )
+        sig_result = check_signature_any(self)
+        sig_ok = SYM_OK if sig_result.is_ok() else SYM_FAIL
+        sig_str = f"{sig_ok} Signature is {sig_result.value}"
+
+        return "\n".join(
+            [
+                header_str,
+                image_str,
+                tlvs_str,
+                fingerprint_str,
+                sig_str,
+            ]
+        )
+
+
+def _format_header(header: nrf.NrfHeader) -> str:
+    header_dict = asdict(header)
+    header_out = header_dict.copy()
+
+    for key, val in header_out.items():
+        if "version" in key:
+            header_out[key] = LiteralStr(_format_version_nRF(val))
+
+    return "NrfHeader " + format_container(header_out)
+
+
+def _format_version_nRF(version: tuple[int, int, int, int]) -> str:
+    return "{}.{}.{}+{}".format(*version)
+
+
+def _format_tlvs(
+    *tlv_tables: nrf.TlvTable,
+    padding: str = " " * 4,
+) -> str:
+    total_size = 0
+    for table in tlv_tables:
+        total_size += table.length
+
+    output = [f"TLVs (count: {len(tlv_tables)}, total_size: {total_size} bytes) {{"]
+
+    def _add(s: str, depth: int = 1) -> None:
+        output.append(padding * depth + s)
+
+    for tlv in tlv_tables:
+        type_name = tlv.magic.name
+        _add(f"{type_name} ({tlv.length} bytes) {{")
+
+        for entry in tlv.entries:
+            if isinstance(entry.id, nrf.TlvType):
+                name = entry.id.name
+            else:
+                name = f"unrecognized {entry.id}"
+            if len(entry.data) > 64:
+                data = entry.data[:64].hex() + "..."
+            elif isinstance(entry.id, nrf.TlvType) and entry.id.name == "MODEL":
+                data = f"{entry.data.decode()} ({entry.data.hex()})"
+            else:
+                data = entry.data.hex()
+            _add(f"{name}: ({len(entry.data)} bytes) {data}", depth=2)
+        _add("}")
+    return "\n".join(output) + "\n}"
 
 
 def parse_image(
