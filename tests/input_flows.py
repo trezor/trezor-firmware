@@ -1829,12 +1829,18 @@ class InputFlowBip39Backup(InputFlowBase):
 
 
 class InputFlowBip39ResetBackup(InputFlowBase):
-    def __init__(self, client: Client | DebugSession):
+    def __init__(
+        self,
+        client: Client | DebugSession,
+        method: messages.BackupMethod = messages.BackupMethod.Display,
+    ):
         super().__init__(client)
         self.mnemonic = None
+        self.method = method
 
     # NOTE: same as above, just two more YES
     def input_flow_bolt(self) -> BRGeneratorType:
+        assert self.method is messages.BackupMethod.Display
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Backup intro
@@ -1845,6 +1851,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         self.mnemonic = yield from get_mnemonic(self.debug)
 
     def input_flow_caesar(self) -> BRGeneratorType:
+        assert self.method is messages.BackupMethod.Display
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Backup intro
@@ -1855,6 +1862,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         self.mnemonic = yield from get_mnemonic(self.debug)
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        assert self.method is messages.BackupMethod.Display
         # 1. Confirm Reset
         # 2. Wallet created
         # 3. Backup your seed
@@ -1866,15 +1874,31 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         self.mnemonic = yield from get_mnemonic(self.debug)
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        # 1. Confirm Reset
-        # 2. Wallet created
-        # 3. Backup your seed
-        # 4. Backup intro
-        # 5. Confirm warning
-        yield from click_through(self.debug, screens=5, code=B.ResetDevice)
+        if self.method is messages.BackupMethod.Display:
+            # 1. Confirm Reset
+            # 2. Wallet created
+            # 3. Backup your seed
+            # 4. Backup intro
+            # 5. Confirm warning
+            yield from click_through(self.debug, screens=5, code=B.ResetDevice)
 
-        # mnemonic phrases and rest
-        self.mnemonic = yield from get_mnemonic(self.debug)
+            # mnemonic phrases and rest
+            self.mnemonic = yield from get_mnemonic(self.debug)
+        elif self.method is messages.BackupMethod.N4W1:
+            # 1. Confirm Reset
+            # 2. Wallet created
+            # 3. Backup your seed
+            yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+            # 4. Backup using N4W1
+            assert (yield).name == "backup_write"
+            self.mnemonic = n4w1_handle_write(self.debug).decode()
+            # 5. Success
+            br = yield
+            assert br.name == "success_backup"
+            assert br.code == B.Success
+            self.debug.press_yes()
+        else:
+            raise RuntimeError
 
 
 class InputFlowBip39ResetPIN(InputFlowBase):
@@ -2518,12 +2542,19 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
-    def __init__(self, client: Client | DebugSession, click_info: bool):
+    def __init__(
+        self,
+        client: Client | DebugSession,
+        click_info: bool,
+        method: messages.BackupMethod,
+    ):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
+        self.method = method
 
     def input_flow_bolt(self) -> BRGeneratorType:
+        assert self.method is messages.BackupMethod.Display
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Backup intro
@@ -2546,6 +2577,7 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
+        assert self.method is messages.BackupMethod.Display
         yield  # Wallet backup
         self.debug.press_yes()
         yield  # Wallet creation
@@ -2582,6 +2614,7 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        assert self.method is messages.BackupMethod.Display
         # 1. Confirm Reset
         # 2. Wallet Created
         # 3. Prompt Backup
@@ -2609,7 +2642,7 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         # 2. Wallet Created
         # 3. Prompt Backup
         # 4. Backup intro
-        # 5. Confirm warning
+        # 5. Confirm warning (only for BackupMethod.Display)
         # 6. shares info
         # 7. Set & Confirm number of groups
         # 8. threshold info
@@ -2617,11 +2650,15 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         # 10-19: for each of 5 groups:
         #   1. Set & Confirm number of shares
         #   2. Set & confirm share threshold value
-        # 20. Confirm show seeds
-        yield from click_through(self.debug, screens=20, code=B.ResetDevice)
+        # 20. Confirm show seeds (only for BackupMethod.Display)
+        screens = {
+            messages.BackupMethod.Display: 20,
+            messages.BackupMethod.N4W1: 18,
+        }[self.method]
+        yield from click_through(self.debug, screens=screens, code=B.ResetDevice)
 
         # Mnemonic phrases - show & confirm shares for all groups
-        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+        self.mnemonics = yield from load_5_groups_5_shares(self.debug, self.method)
 
         br = yield  # safety warning
         assert br.code == B.Success
@@ -2665,18 +2702,24 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
 
 class InputFlowBip39Recovery(InputFlowBase):
     def __init__(
-        self, client: Client | DebugSession, mnemonic: list[str], pin: str | None = None
+        self,
+        client: Client | DebugSession,
+        mnemonic: list[str],
+        pin: str | None = None,
+        method: messages.BackupMethod = messages.BackupMethod.Display,
     ):
         super().__init__(client)
         self.mnemonic = mnemonic
         self.pin = pin
+        self.method = method
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
         if self.pin is not None:
             yield from self.PIN.setup_new_pin(self.pin)
-        yield from self.REC.setup_bip39_recovery(len(self.mnemonic))
-        yield from self.REC.input_mnemonic(self.mnemonic)
+        if self.method is messages.BackupMethod.Display:
+            yield from self.REC.setup_bip39_recovery(len(self.mnemonic))
+        yield from self.REC.input_mnemonic(self.mnemonic, self.method)
         yield from self.REC.success_wallet_recovered()
 
 
@@ -2701,18 +2744,24 @@ class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
 
 class InputFlowSlip39AdvancedRecovery(InputFlowBase):
     def __init__(
-        self, client: Client | DebugSession, shares: list[str], click_info: bool
+        self,
+        client: Client | DebugSession,
+        shares: list[str],
+        click_info: bool,
+        method: messages.BackupMethod = messages.BackupMethod.Display,
     ):
         super().__init__(client)
         self.shares = shares
         self.click_info = click_info
         self.word_count = len(shares[0].split(" "))
+        self.method = method
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        yield from self.REC.setup_slip39_recovery(self.word_count)
+        if self.method is messages.BackupMethod.Display:
+            yield from self.REC.setup_slip39_recovery(self.word_count)
         yield from self.REC.input_all_slip39_shares(
-            self.shares, has_groups=True, click_info=self.click_info
+            self.shares, has_groups=True, click_info=self.click_info, method=self.method
         )
         yield from self.REC.success_wallet_recovered()
 

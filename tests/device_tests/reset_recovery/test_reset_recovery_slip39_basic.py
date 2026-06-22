@@ -38,7 +38,7 @@ from ...translations import set_language
 def test_reset_recovery(client: Client, backup_method: BackupMethod):
     session = client.get_seedless_session()
 
-    mnemonics = reset(session)
+    mnemonics = reset(session, backup_method=backup_method)
     session = client.get_session()
     address_before = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 
@@ -49,7 +49,7 @@ def test_reset_recovery(client: Client, backup_method: BackupMethod):
         session = client.get_seedless_session()
         set_language(session, lang[:2])
         selected_mnemonics = share_subset
-        recover(session, selected_mnemonics, backup_method)
+        recover(session, selected_mnemonics, backup_method=backup_method)
         session = client.get_session()
         address_after = btc.get_address(
             session, "Bitcoin", parse_path("m/44h/0h/0h/0/0")
@@ -57,9 +57,13 @@ def test_reset_recovery(client: Client, backup_method: BackupMethod):
         assert address_before == address_after
 
 
-def reset(session: Session, strength: int = 128) -> list[str]:
+def reset(
+    session: Session,
+    strength: int = 128,
+    backup_method: BackupMethod = BackupMethod.Display,
+) -> list[str]:
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicResetRecovery(session)
+        IF = InputFlowSlip39BasicResetRecovery(session, backup_method)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
@@ -70,6 +74,7 @@ def reset(session: Session, strength: int = 128) -> list[str]:
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Basic,
+            backup_method=backup_method,
             entropy_check_count=0,
             _get_entropy=MOCK_GET_ENTROPY,
         )
@@ -86,12 +91,12 @@ def reset(session: Session, strength: int = 128) -> list[str]:
     return IF.mnemonics
 
 
-def recover(session: Session, shares: t.Sequence[str], method: BackupMethod):
+def recover(session: Session, shares: t.Sequence[str], backup_method: BackupMethod):
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicRecovery(session, shares, method=method)
+        IF = InputFlowSlip39BasicRecovery(session, shares, method=backup_method)
         client.set_input_flow(IF.get())
         device.recover(
-            session, pin_protection=False, label="label", backup_method=method
+            session, pin_protection=False, label="label", backup_method=backup_method
         )
 
     # Workflow successfully ended
