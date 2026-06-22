@@ -45,7 +45,6 @@ class HeaderType(Enum):
     FIRMWARE = b"TRZF"
     BOOTLOADER = b"TRZB"
     BOOTLOADER_V2 = b"TRZQ"
-    NRF_FIRMWARE = bytes.fromhex("3DB8F396")
 
 
 class FirmwareHeader(SanityCheckedStruct):
