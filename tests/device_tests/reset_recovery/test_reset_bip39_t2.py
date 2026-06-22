@@ -48,10 +48,15 @@ FLOW_ADAPTERS = [
 ]
 
 
-def reset_device(session: Session, strength: int, adapt_flow: FlowAdapter):
+def reset_device(
+    session: Session,
+    strength: int,
+    adapt_flow: FlowAdapter,
+    backup_method: messages.BackupMethod,
+):
     debug = session.debug
     with session.test_ctx as client:
-        IF = InputFlowBip39ResetBackup(session)
+        IF = InputFlowBip39ResetBackup(session, method=backup_method)
         client.set_input_flow(adapt_flow(session, IF.get()))
 
         # No PIN, no passphrase, don't display random
@@ -63,6 +68,7 @@ def reset_device(session: Session, strength: int, adapt_flow: FlowAdapter):
             label="test",
             entropy_check_count=0,
             backup_type=messages.BackupType.Bip39,
+            backup_method=backup_method,
             _get_entropy=MOCK_GET_ENTROPY,
         )
 
@@ -87,28 +93,34 @@ def reset_device(session: Session, strength: int, adapt_flow: FlowAdapter):
 
     # backup attempt fails because backup was done in reset
     with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
-def test_reset_device(session: Session, adapt_flow: FlowAdapter):
-    reset_device(session, 128, adapt_flow)  # 12 words
+def test_reset_device(
+    session: Session, adapt_flow: FlowAdapter, backup_method: messages.BackupMethod
+):
+    reset_device(session, 128, adapt_flow, backup_method)  # 12 words
 
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
-def test_reset_device_192(session: Session, adapt_flow: FlowAdapter):
-    reset_device(session, 192, adapt_flow)  # 18 words
+def test_reset_device_192(
+    session: Session, adapt_flow: FlowAdapter, backup_method: messages.BackupMethod
+):
+    reset_device(session, 192, adapt_flow, backup_method)  # 18 words
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_pin(test_ctx: TrezorTestContext):
+def test_reset_device_pin(
+    test_ctx: TrezorTestContext, backup_method: messages.BackupMethod
+):
     debug = test_ctx.debug
     strength = 256  # 24 words
 
     with test_ctx:
-        IF = InputFlowBip39ResetPIN(test_ctx)
+        IF = InputFlowBip39ResetPIN(test_ctx, method=backup_method)
         test_ctx.set_input_flow(IF.get())
 
         # PIN, passphrase, display random
@@ -120,6 +132,7 @@ def test_reset_device_pin(test_ctx: TrezorTestContext):
             label="test",
             entropy_check_count=0,
             backup_type=messages.BackupType.Bip39,
+            backup_method=backup_method,
             _get_entropy=MOCK_GET_ENTROPY,
         )
 
@@ -143,11 +156,13 @@ def test_reset_device_pin(test_ctx: TrezorTestContext):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_entropy_check(test_ctx: TrezorTestContext):
+def test_reset_entropy_check(
+    test_ctx: TrezorTestContext, backup_method: messages.BackupMethod
+):
     strength = 128  # 12 words
 
     with test_ctx:
-        IF = InputFlowBip39ResetBackup(test_ctx)
+        IF = InputFlowBip39ResetBackup(test_ctx, method=backup_method)
         test_ctx.set_input_flow(IF.get())
 
         # No PIN, no passphrase
@@ -159,6 +174,7 @@ def test_reset_entropy_check(test_ctx: TrezorTestContext):
             label="test",
             entropy_check_count=2,
             backup_type=messages.BackupType.Bip39,
+            backup_method=backup_method,
             _get_entropy=MOCK_GET_ENTROPY,
         )
 

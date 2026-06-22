@@ -1793,10 +1793,10 @@ class InputFlowEthereumSignTxStaking(InputFlowBase):
         yield from self.ETH.confirm_tx_staking(info=True)
 
 
-def get_mnemonic(debug: DebugLink) -> Generator[None, "messages.ButtonRequest", str]:
+def get_mnemonic(debug: DebugLink, method: messages.BackupMethod = messages.BackupMethod.Display) -> Generator[None, "messages.ButtonRequest", str]:
     """Used for BIP39 or SLIP-39 1-of-1 backup."""
     # mnemonic phrases
-    [mnemonic] = yield from load_N_shares(debug, n=1)
+    [mnemonic] = yield from load_N_shares(debug, n=1, method=method)
     return mnemonic
 
 
@@ -1902,9 +1902,10 @@ class InputFlowBip39ResetBackup(InputFlowBase):
 
 
 class InputFlowBip39ResetPIN(InputFlowBase):
-    def __init__(self, client: Client | DebugSession):
+    def __init__(self, client: Client | DebugSession, method: messages.BackupMethod):
         super().__init__(client)
         self.mnemonic = None
+        self.method = method
 
     def input_flow_common(self) -> BRGeneratorType:
         br = yield  # Confirm Reset
@@ -1922,24 +1923,17 @@ class InputFlowBip39ResetPIN(InputFlowBase):
         assert br.code == B.ResetDevice
         self.debug.press_yes()
 
-        br = yield  # Confirm warning
-        assert br.code == B.ResetDevice
-        self.debug.press_yes()
+        if self.method is messages.BackupMethod.Display:
+            br = yield  # Confirm warning
+            assert br.code == B.ResetDevice
+            self.debug.press_yes()
 
-        br = yield  # Backup intro
-        assert br.code == B.ResetDevice
-        self.debug.press_yes()
+            br = yield  # Backup intro
+            assert br.code == B.ResetDevice
+            self.debug.press_yes()
 
         # mnemonic phrases
-        self.mnemonic = yield from read_and_confirm_mnemonic(self.debug)
-
-        br = yield  # confirm recovery seed check
-        assert br.code == B.Success
-        self.debug.press_yes()
-
-        br = yield  # confirm success
-        assert br.code == B.Success
-        self.debug.press_yes()
+        self.mnemonic = yield from get_mnemonic(self.debug, self.method)
 
 
 class InputFlowBip39ResetFailedCheck(InputFlowBase):
