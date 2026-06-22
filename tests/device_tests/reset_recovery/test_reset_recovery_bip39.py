@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
-from trezorlib.messages import BackupType
+from trezorlib.messages import BackupMethod, BackupType
 from trezorlib.tools import parse_path
 
 from ...common import MOCK_GET_ENTROPY
@@ -29,9 +29,9 @@ from ...translations import set_language
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_recovery(client: Client):
+def test_reset_recovery(client: Client, backup_method: BackupMethod):
     session = client.get_seedless_session()
-    mnemonic = reset(session)
+    mnemonic = reset(session, backup_method=backup_method)
     session = client.get_session()
     address_before = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 
@@ -39,15 +39,20 @@ def test_reset_recovery(client: Client):
     device.wipe(session)
     session = client.get_seedless_session()
     set_language(session, lang[:2])
-    recover(session, mnemonic)
+    recover(session, mnemonic, backup_method=backup_method)
     session = client.get_session()
     address_after = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
     assert address_before == address_after
 
 
-def reset(session: Session, strength: int = 128, skip_backup: bool = False) -> str:
+def reset(
+    session: Session,
+    strength: int = 128,
+    skip_backup: bool = False,
+    backup_method: BackupMethod = BackupMethod.Display,
+) -> str:
     with session.test_ctx as client:
-        IF = InputFlowBip39ResetBackup(session)
+        IF = InputFlowBip39ResetBackup(session, backup_method)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
@@ -58,6 +63,7 @@ def reset(session: Session, strength: int = 128, skip_backup: bool = False) -> s
             pin_protection=False,
             label="test",
             backup_type=BackupType.Bip39,
+            backup_method=backup_method,
             entropy_check_count=0,
             _get_entropy=MOCK_GET_ENTROPY,
         )
@@ -74,16 +80,16 @@ def reset(session: Session, strength: int = 128, skip_backup: bool = False) -> s
     return IF.mnemonic
 
 
-def recover(session: Session, mnemonic: str):
+def recover(session: Session, mnemonic: str, backup_method: BackupMethod):
     words = mnemonic.split(" ")
     with session.test_ctx as client:
-        IF = InputFlowBip39Recovery(session, words)
+        IF = InputFlowBip39Recovery(session, words, method=backup_method)
         client.set_input_flow(IF.get())
         device.recover(
             session,
             pin_protection=False,
             label="label",
-            backup_method=messages.BackupMethod.Display,
+            backup_method=backup_method,
         )
 
     # Workflow successfully ended

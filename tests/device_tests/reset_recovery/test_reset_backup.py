@@ -20,7 +20,7 @@ from shamir_mnemonic import shamir
 
 from trezorlib import device
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.messages import BackupAvailability, BackupType
+from trezorlib.messages import BackupAvailability, BackupMethod, BackupType
 
 from ...common import MOCK_GET_ENTROPY
 from ...input_flows import (
@@ -31,32 +31,34 @@ from ...input_flows import (
 )
 
 
-def backup_flow_bip39(session: Session) -> bytes:
+def backup_flow_bip39(session: Session, method: BackupMethod) -> bytes:
     with session.test_ctx as client:
-        IF = InputFlowBip39Backup(client)
+        IF = InputFlowBip39Backup(client, method=method)
         client.set_input_flow(IF.get())
-        device.backup(session)
+        device.backup(session, backup_method=method)
 
     assert IF.mnemonic is not None
     return IF.mnemonic.encode()
 
 
-def backup_flow_slip39_basic(session: Session):
+def backup_flow_slip39_basic(session: Session, method: BackupMethod):
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicBackup(client, False)
+        IF = InputFlowSlip39BasicBackup(client, click_info=False, method=method)
         client.set_input_flow(IF.get())
-        device.backup(session)
+        device.backup(session, backup_method=method)
 
     groups = shamir.decode_mnemonics(IF.mnemonics[:3])
     ems = shamir.recover_ems(groups)
     return ems.ciphertext
 
 
-def backup_flow_slip39_advanced(session: Session):
+def backup_flow_slip39_advanced(session: Session, method: BackupMethod):
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedBackup(client, False)
+        IF = InputFlowSlip39AdvancedBackup(
+            client, click_info=False, backup_method=method
+        )
         client.set_input_flow(IF.get())
-        device.backup(session)
+        device.backup(session, backup_method=method)
 
     mnemonics = IF.mnemonics[0:3] + IF.mnemonics[5:8] + IF.mnemonics[10:13]
     groups = shamir.decode_mnemonics(mnemonics)
@@ -74,7 +76,9 @@ VECTORS = [
 @pytest.mark.models("core")
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_skip_backup_msg(session: Session, backup_type, backup_flow):
+def test_skip_backup_msg(
+    session: Session, backup_type, backup_flow, backup_method: BackupMethod
+):
     assert session.features.initialized is False
 
     with session.test_ctx:
@@ -94,7 +98,7 @@ def test_skip_backup_msg(session: Session, backup_type, backup_flow):
     assert session.features.no_backup is False
     assert session.features.backup_type is backup_type
 
-    secret = backup_flow(session)
+    secret = backup_flow(session, backup_method)
 
     assert session.features.initialized is True
     assert session.features.backup_availability == BackupAvailability.NotAvailable
@@ -110,7 +114,9 @@ def test_skip_backup_msg(session: Session, backup_type, backup_flow):
 @pytest.mark.models("core")
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_skip_backup_manual(session: Session, backup_type: BackupType, backup_flow):
+def test_skip_backup_manual(
+    session: Session, backup_type: BackupType, backup_flow, backup_method: BackupMethod
+):
     assert session.features.initialized is False
 
     with session.test_ctx as client:
@@ -131,7 +137,7 @@ def test_skip_backup_manual(session: Session, backup_type: BackupType, backup_fl
     assert session.features.no_backup is False
     assert session.features.backup_type is backup_type
 
-    secret = backup_flow(session)
+    secret = backup_flow(session, backup_method)
 
     session.refresh_features()
     assert session.features.initialized is True
