@@ -35,9 +35,6 @@ __all__ = [
     "VendorHeader",
 ]
 
-if t.TYPE_CHECKING:
-    from . import HeaderType
-
 
 def _transform_vendor_trust(data: bytes) -> bytes:
     """Byte-swap and bit-invert the VendorTrust field.
@@ -67,8 +64,8 @@ class VendorTrust(SanityCheckedStruct):
     SUBCON = c.Transformed(
         c.BitStruct(
             "reserved" / c.Default(c.BitsInteger(5), 0b11111),
-            "limit_runtime" / c.Default(c.Flag, 1),
-            "deny_provisioning_access" / c.Default(c.Flag, 1),
+            "limit_runtime" / c.Default(c.Flag, True),
+            "deny_provisioning_access" / c.Default(c.Flag, True),
             "_dont_provide_secret"
             / c.Default(c.Flag, lambda this: not this.allow_run_with_secret),
             "allow_run_with_secret" / c.Flag,
@@ -93,7 +90,6 @@ class VendorTrust(SanityCheckedStruct):
 
 
 class VendorHeader(SanityCheckedStruct):
-    magic: HeaderType
     header_len: int
     expiry: int
     version: tuple[int, int]
@@ -115,7 +111,7 @@ class VendorHeader(SanityCheckedStruct):
     # fmt: off
     SUBCON = c.Struct(
         "_start_offset" / c.Tell,
-        "magic" / c.Const(b"TRZV"),
+        "_magic" / c.Const(b"TRZV"),
         "header_len" / c.Int32ul,
         "expiry" / c.Int32ul,
         "version" / TupleAdapter(c.Int8ul, c.Int8ul),
