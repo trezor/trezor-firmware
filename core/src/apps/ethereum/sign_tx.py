@@ -18,7 +18,7 @@ from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Coroutine, Iterable
+    from typing import Any, Coroutine, Sequence
 
     from trezor.messages import EthereumSignTx, EthereumTxAck
     from trezor.ui.layouts import StrPropertyType
@@ -221,7 +221,7 @@ async def confirm_tx_data(
     tx_type: int | None,
     address_bytes: bytes,
     maximum_fee: str,
-    fee_items: Iterable[StrPropertyType],
+    fee_items: Sequence[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
     sender_bytes: AnyBytes,
 ) -> tuple[ConfirmDataFn | None, Coroutine[Any, Any, None] | None]:

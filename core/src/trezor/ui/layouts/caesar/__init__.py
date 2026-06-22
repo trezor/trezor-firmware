@@ -557,9 +557,9 @@ async def confirm_payment_request(
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[Refund],
     trades: list[Trade],
-    account_items: Iterable[StrPropertyType],
+    account_items: Sequence[StrPropertyType],
     transaction_fee: str | None,
-    fee_info_items: Iterable[StrPropertyType] | None,
+    fee_info_items: Sequence[StrPropertyType] | None,
     extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -638,8 +638,8 @@ async def confirm_payment_request(
         )
 
         summary_menu_items = [
-            create_details(TR.confirm_total__title_fee, list(fee_info_items)),
-            create_details(TR.address_details__account_info, list(account_items)),
+            create_details(TR.confirm_total__title_fee, fee_info_items),
+            create_details(TR.address_details__account_info, account_items),
         ]
 
         summary_menu = Menu.root(summary_menu_items)
@@ -2400,7 +2400,7 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
         )
 
 
-def create_details(name: str, value: list[StrPropertyType] | str) -> Details:
+def create_details(name: str, value: Sequence[StrPropertyType] | str) -> Details:
     from trezor.ui.layouts.menu import Details
 
     return Details.from_layout(

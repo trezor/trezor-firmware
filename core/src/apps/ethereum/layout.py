@@ -21,7 +21,7 @@ from .helpers import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Awaitable, Iterable
+    from typing import Awaitable, Iterable, Sequence
 
     from trezor.messages import (
         EthereumFieldType,
@@ -141,7 +141,7 @@ async def require_confirm_payment_request(
     verified_payment_req: PaymentRequest,
     address_n: list[int],
     maximum_fee: str,
-    fee_info_items: Iterable[StrPropertyType],
+    fee_info_items: Sequence[StrPropertyType],
     chain_id: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
