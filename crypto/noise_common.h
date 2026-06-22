@@ -51,6 +51,11 @@ bool noise_send_message(noise_context_t* ctx, const uint8_t* associated_data,
                         size_t associated_data_length, const uint8_t* plaintext,
                         size_t plaintext_length, uint8_t* ciphertext);
 
+bool noise_send_message_inplace(noise_context_t* ctx,
+                                const uint8_t* associated_data,
+                                size_t associated_data_length, uint8_t* in_out,
+                                size_t plaintext_length);
+
 // This is called by both the initiator and responder to receive a message
 // len(plaintext) == ciphertext_length - NOISE_TAG_SIZE
 // The official Noise specification requires the associated_data to be empty
@@ -58,5 +63,10 @@ bool noise_receive_message(noise_context_t* ctx, const uint8_t* associated_data,
                            size_t associated_data_length,
                            const uint8_t* ciphertext, size_t ciphertext_length,
                            uint8_t* plaintext);
+
+bool noise_receive_message_inplace(noise_context_t* ctx,
+                                   const uint8_t* associated_data,
+                                   size_t associated_data_length,
+                                   uint8_t* in_out, size_t ciphertext_length);
 
 #endif  // __NOISE_COMMON_H__

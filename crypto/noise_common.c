@@ -28,6 +28,28 @@
 #include "memzero.h"
 #include "sha2.h"
 
+bool noise_internal_encrypt_inplace(const uint8_t key[NOISE_KEY_SIZE],
+                                    const uint8_t nonce[NOISE_NONCE_SIZE],
+                                    const uint8_t *associated_data,
+                                    size_t associated_data_length,
+                                    uint8_t *in_out, size_t plaintext_length) {
+  gcm_ctx ctx = {0};
+  if (gcm_init_and_key(key, NOISE_KEY_SIZE, &ctx) != RETURN_GOOD) {
+    return false;
+  }
+
+  if (gcm_encrypt_message(nonce, NOISE_NONCE_SIZE, associated_data,
+                          associated_data_length, in_out, plaintext_length,
+                          in_out + plaintext_length, NOISE_TAG_SIZE,
+                          &ctx) != RETURN_GOOD) {
+    memzero(&ctx, sizeof(ctx));
+    return false;
+  }
+  memzero(&ctx, sizeof(ctx));
+
+  return true;
+}
+
 bool noise_internal_encrypt(const uint8_t key[NOISE_KEY_SIZE],
                             const uint8_t nonce[NOISE_NONCE_SIZE],
                             const uint8_t *associated_data,
@@ -35,19 +57,38 @@ bool noise_internal_encrypt(const uint8_t key[NOISE_KEY_SIZE],
                             const uint8_t *plaintext, size_t plaintext_length,
                             uint8_t *ciphertext) {
   // ciphertext = AES-GCM-Encrypt(key, nonce, associated_data, plaintext)
+  memcpy(ciphertext, plaintext, plaintext_length);
+
+  if (!noise_internal_encrypt_inplace(key, nonce, associated_data,
+                                      associated_data_length, ciphertext,
+                                      plaintext_length)) {
+    memzero(ciphertext, plaintext_length);
+    return false;
+  }
+
+  return true;
+}
+
+bool noise_internal_decrypt_inplace(const uint8_t key[NOISE_KEY_SIZE],
+                                    const uint8_t nonce[NOISE_NONCE_SIZE],
+                                    const uint8_t *associated_data,
+                                    size_t associated_data_length,
+                                    uint8_t *in_out, size_t ciphertext_length) {
+  if (ciphertext_length < NOISE_TAG_SIZE) {
+    return false;
+  }
+  const size_t plaintext_length = ciphertext_length - NOISE_TAG_SIZE;
+
   gcm_ctx ctx = {0};
   if (gcm_init_and_key(key, NOISE_KEY_SIZE, &ctx) != RETURN_GOOD) {
     return false;
   }
 
-  memcpy(ciphertext, plaintext, plaintext_length);
-
-  if (gcm_encrypt_message(nonce, NOISE_NONCE_SIZE, associated_data,
-                          associated_data_length, ciphertext, plaintext_length,
-                          ciphertext + plaintext_length, NOISE_TAG_SIZE,
+  if (gcm_decrypt_message(nonce, NOISE_NONCE_SIZE, associated_data,
+                          associated_data_length, in_out, plaintext_length,
+                          in_out + plaintext_length, NOISE_TAG_SIZE,
                           &ctx) != RETURN_GOOD) {
     memzero(&ctx, sizeof(ctx));
-    memzero(ciphertext, plaintext_length);
     return false;
   }
   memzero(&ctx, sizeof(ctx));
@@ -184,6 +225,50 @@ bool noise_receive_message(noise_context_t *ctx, const uint8_t *associated_data,
   if (!noise_internal_decrypt(ctx->decryption_key, ctx->decryption_nonce,
                               associated_data, associated_data_length,
                               ciphertext, ciphertext_length, plaintext)) {
+    // Wrong tag
+    return false;
+  }
+  if (!increase_nonce(ctx->decryption_nonce)) {
+    // Nonce overflow
+    memzero(ctx, sizeof(*ctx));
+    ctx->initialized = false;
+    return false;
+  }
+  return true;
+}
+
+bool noise_send_message_inplace(noise_context_t *ctx,
+                                const uint8_t *associated_data,
+                                size_t associated_data_length, uint8_t *in_out,
+                                size_t plaintext_length) {
+  if (!ctx->initialized) {
+    return false;
+  }
+  if (!noise_internal_encrypt_inplace(
+          ctx->encryption_key, ctx->encryption_nonce, associated_data,
+          associated_data_length, in_out, plaintext_length)) {
+    return false;
+  }
+  if (!increase_nonce(ctx->encryption_nonce)) {
+    // Nonce overflow
+    memzero(ctx, sizeof(*ctx));
+    ctx->initialized = false;
+    return false;
+  }
+
+  return true;
+}
+
+bool noise_receive_message_inplace(noise_context_t *ctx,
+                                   const uint8_t *associated_data,
+                                   size_t associated_data_length,
+                                   uint8_t *in_out, size_t ciphertext_length) {
+  if (!ctx->initialized) {
+    return false;
+  }
+  if (!noise_internal_decrypt_inplace(
+          ctx->decryption_key, ctx->decryption_nonce, associated_data,
+          associated_data_length, in_out, ciphertext_length)) {
     // Wrong tag
     return false;
   }
