@@ -128,7 +128,11 @@ class RecoveryFlow:
             self.debug.press_right()
         self.debug.press_yes()
 
-    def abort_recovery(self, confirm: bool, method: messages.BackupMethod = messages.BackupMethod.Display) -> BRGeneratorType:
+    def abort_recovery(
+        self,
+        confirm: bool,
+        method: messages.BackupMethod = messages.BackupMethod.Display,
+    ) -> BRGeneratorType:
         if method is messages.BackupMethod.Display:
             assert (yield).name == ""
 

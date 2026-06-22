@@ -46,10 +46,16 @@ VECTORS = (
 
 # To allow reusing functionality for multiple tests
 def _test_secret(
-    session: Session, shares: list[str], secret: str, click_info: bool = False, method: messages.BackupMethod = messages.BackupMethod.Display,
+    session: Session,
+    shares: list[str],
+    secret: str,
+    click_info: bool = False,
+    method: messages.BackupMethod = messages.BackupMethod.Display,
 ):
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedRecovery(session, shares, click_info=click_info, method=method)
+        IF = InputFlowSlip39AdvancedRecovery(
+            session, shares, click_info=click_info, method=method
+        )
         client.set_input_flow(IF.get())
         device.recover(
             session,
@@ -67,13 +73,23 @@ def _test_secret(
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
-def test_secret(session: Session, shares: list[str], secret: str, backup_method: messages.BackupMethod):
+def test_secret(
+    session: Session,
+    shares: list[str],
+    secret: str,
+    backup_method: messages.BackupMethod,
+):
     _test_secret(session, shares, secret, method=backup_method)
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
 @pytest.mark.models(skip="safe3", reason="safe3 does not have info button")
-def test_secret_click_info_button(session: Session, shares: list[str], secret: str, backup_method: messages.BackupMethod):
+def test_secret_click_info_button(
+    session: Session,
+    shares: list[str],
+    secret: str,
+    backup_method: messages.BackupMethod,
+):
     _test_secret(session, shares, secret, click_info=True, method=backup_method)
 
 
@@ -104,7 +120,9 @@ def test_abort(session: Session, backup_method: messages.BackupMethod):
 def test_noabort(session: Session, backup_method: messages.BackupMethod):
     with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedRecoveryNoAbort(
-            session, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, method=backup_method,
+            session,
+            EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20,
+            method=backup_method,
         )
         client.set_input_flow(IF.get())
         device.recover(

@@ -28,7 +28,9 @@ pytestmark = pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
 def test_tt_pin_passphrase(session: Session, backup_method: messages.BackupMethod):
     with session.test_ctx as client:
-        IF = InputFlowBip39Recovery(session, MNEMONIC12.split(" "), pin="654", method=backup_method)
+        IF = InputFlowBip39Recovery(
+            session, MNEMONIC12.split(" "), pin="654", method=backup_method
+        )
         client.set_input_flow(IF.get())
         device.recover(
             session,
@@ -49,7 +51,9 @@ def test_tt_pin_passphrase(session: Session, backup_method: messages.BackupMetho
 @pytest.mark.setup_client(uninitialized=True)
 def test_tt_nopin_nopassphrase(session: Session, backup_method: messages.BackupMethod):
     with session.test_ctx as client:
-        IF = InputFlowBip39Recovery(session, MNEMONIC12.split(" "), method=backup_method)
+        IF = InputFlowBip39Recovery(
+            session, MNEMONIC12.split(" "), method=backup_method
+        )
         client.set_input_flow(IF.get())
         device.recover(
             session,

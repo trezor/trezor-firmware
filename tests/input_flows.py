@@ -1793,7 +1793,9 @@ class InputFlowEthereumSignTxStaking(InputFlowBase):
         yield from self.ETH.confirm_tx_staking(info=True)
 
 
-def get_mnemonic(debug: DebugLink, method: messages.BackupMethod = messages.BackupMethod.Display) -> Generator[None, "messages.ButtonRequest", str]:
+def get_mnemonic(
+    debug: DebugLink, method: messages.BackupMethod = messages.BackupMethod.Display
+) -> Generator[None, "messages.ButtonRequest", str]:
     """Used for BIP39 or SLIP-39 1-of-1 backup."""
     # mnemonic phrases
     [mnemonic] = yield from load_N_shares(debug, n=1, method=method)
@@ -2719,7 +2721,11 @@ class InputFlowBip39Recovery(InputFlowBase):
 
 class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
     def __init__(
-        self, client: Client | DebugSession, shares: list[str], mismatch: bool = False, method: messages.BackupMethod = messages.BackupMethod.Display,
+        self,
+        client: Client | DebugSession,
+        shares: list[str],
+        mismatch: bool = False,
+        method: messages.BackupMethod = messages.BackupMethod.Display,
     ):
         super().__init__(client)
         self.shares = shares
@@ -2731,7 +2737,9 @@ class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
         yield from self.REC.confirm_dry_run()
         if self.method is messages.BackupMethod.Display:
             yield from self.REC.setup_slip39_recovery(self.word_count)
-        yield from self.REC.input_all_slip39_shares(self.shares, has_groups=True, method=self.method)
+        yield from self.REC.input_all_slip39_shares(
+            self.shares, has_groups=True, method=self.method
+        )
         if self.mismatch:
             yield from self.REC.warning_slip39_dryrun_mismatch()
         else:
@@ -2769,17 +2777,26 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.layout_type in (
-            LayoutType.Bolt,
-            LayoutType.Delizia,
-            LayoutType.Eckhart,
-        ) and self.method is messages.BackupMethod.Display:
+        if (
+            self.layout_type
+            in (
+                LayoutType.Bolt,
+                LayoutType.Delizia,
+                LayoutType.Eckhart,
+            )
+            and self.method is messages.BackupMethod.Display
+        ):
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True, method=self.method)
 
 
 class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
-    def __init__(self, client: Client | DebugSession, shares: list[str], method: messages.BackupMethod):
+    def __init__(
+        self,
+        client: Client | DebugSession,
+        shares: list[str],
+        method: messages.BackupMethod,
+    ):
         super().__init__(client)
         self.shares = shares
         self.word_count = len(shares[0].split(" "))
@@ -2802,7 +2819,9 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
                 yield from self.REC.input_number_of_words(self.word_count)
         if self.method is messages.BackupMethod.Display:
             yield from self.REC.enter_any_share()
-        yield from self.REC.input_all_slip39_shares(self.shares, has_groups=True, method=self.method)
+        yield from self.REC.input_all_slip39_shares(
+            self.shares, has_groups=True, method=self.method
+        )
         yield from self.REC.success_wallet_recovered()
 
 

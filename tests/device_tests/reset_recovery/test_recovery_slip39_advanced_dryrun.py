@@ -42,7 +42,9 @@ EXTRA_GROUP_SHARE = [
 def test_2of3_dryrun(session: Session, backup_method: messages.BackupMethod):
     with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
-            session, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, method=backup_method
+            session,
+            EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20,
+            method=backup_method,
         )
         client.set_input_flow(IF.get())
         device.recover(
@@ -56,7 +58,9 @@ def test_2of3_dryrun(session: Session, backup_method: messages.BackupMethod):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
-def test_2of3_invalid_seed_dryrun(session: Session, backup_method: messages.BackupMethod):
+def test_2of3_invalid_seed_dryrun(
+    session: Session, backup_method: messages.BackupMethod
+):
     # test fails because of different seed on device
     with (
         session.test_ctx as client,
@@ -65,7 +69,10 @@ def test_2of3_invalid_seed_dryrun(session: Session, backup_method: messages.Back
         ),
     ):
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
-            session, INVALID_SHARES_SLIP39_ADVANCED_20, mismatch=True, method=backup_method,
+            session,
+            INVALID_SHARES_SLIP39_ADVANCED_20,
+            mismatch=True,
+            method=backup_method,
         )
         client.set_input_flow(IF.get())
         device.recover(
