@@ -486,9 +486,9 @@ async def confirm_payment_request(
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[Refund],
     trades: list[Trade],
-    account_items: Iterable[StrPropertyType] | None,
+    account_items: Sequence[StrPropertyType] | None,
     transaction_fee: str | None,
-    fee_info_items: Iterable[StrPropertyType] | None,
+    fee_info_items: Sequence[StrPropertyType] | None,
     extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -2321,7 +2321,7 @@ async def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> None:
 
 def create_details(
     name: str,
-    value: list[StrPropertyType] | str,
+    value: Sequence[StrPropertyType] | str,
     title: str | None = None,
 ) -> Details:
     from trezor.ui.layouts.menu import Details

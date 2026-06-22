@@ -14,7 +14,7 @@ from .helpers import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, Iterable
+    from typing import Callable, Iterable, Sequence
 
     from trezor.messages import (
         EthereumABIValueInfo,
@@ -835,7 +835,7 @@ async def try_confirm(
     msg: MsgInSignTx,
     defs: Definitions,
     maximum_fee: str,
-    fee_items: Iterable[StrPropertyType],
+    fee_items: Sequence[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> bool:
     from .clear_signing_definitions import (
@@ -986,7 +986,7 @@ async def _handle_transfer(
     msg: MsgInSignTx,
     defs: Definitions,
     maximum_fee: str,
-    fee_items: Iterable[StrPropertyType],
+    fee_items: Sequence[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> None:
     from .layout import require_confirm_payment_request, require_confirm_tx
