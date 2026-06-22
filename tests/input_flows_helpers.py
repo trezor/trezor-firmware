@@ -128,8 +128,10 @@ class RecoveryFlow:
             self.debug.press_right()
         self.debug.press_yes()
 
-    def abort_recovery(self, confirm: bool) -> BRGeneratorType:
-        yield
+    def abort_recovery(self, confirm: bool, method: messages.BackupMethod = messages.BackupMethod.Display) -> BRGeneratorType:
+        if method is messages.BackupMethod.Display:
+            assert (yield).name == ""
+
         if self.client.layout_type is LayoutType.Bolt:
             assert TR.recovery__enter_any_share in self._text_content()
             self.debug.press_no()
@@ -150,7 +152,8 @@ class RecoveryFlow:
             else:
                 self.debug.press_no()
         elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
-            assert TR.recovery__enter_each_word in self._text_content()
+            if method is messages.BackupMethod.Display:
+                assert TR.recovery__enter_each_word in self._text_content()
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
             if confirm:

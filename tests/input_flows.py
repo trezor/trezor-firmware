@@ -2719,17 +2719,19 @@ class InputFlowBip39Recovery(InputFlowBase):
 
 class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
     def __init__(
-        self, client: Client | DebugSession, shares: list[str], mismatch: bool = False
+        self, client: Client | DebugSession, shares: list[str], mismatch: bool = False, method: messages.BackupMethod = messages.BackupMethod.Display,
     ):
         super().__init__(client)
         self.shares = shares
         self.mismatch = mismatch
         self.word_count = len(shares[0].split(" "))
+        self.method = method
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_dry_run()
-        yield from self.REC.setup_slip39_recovery(self.word_count)
-        yield from self.REC.input_all_slip39_shares(self.shares, has_groups=True)
+        if self.method is messages.BackupMethod.Display:
+            yield from self.REC.setup_slip39_recovery(self.word_count)
+        yield from self.REC.input_all_slip39_shares(self.shares, has_groups=True, method=self.method)
         if self.mismatch:
             yield from self.REC.warning_slip39_dryrun_mismatch()
         else:
@@ -2761,8 +2763,9 @@ class InputFlowSlip39AdvancedRecovery(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
-    def __init__(self, client: Client | DebugSession):
+    def __init__(self, client: Client | DebugSession, method: messages.BackupMethod):
         super().__init__(client)
+        self.method = method
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
@@ -2770,16 +2773,17 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
-        ):
+        ) and self.method is messages.BackupMethod.Display:
             yield from self.REC.input_number_of_words(20)
-        yield from self.REC.abort_recovery(True)
+        yield from self.REC.abort_recovery(True, method=self.method)
 
 
 class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
-    def __init__(self, client: Client | DebugSession, shares: list[str]):
+    def __init__(self, client: Client | DebugSession, shares: list[str], method: messages.BackupMethod):
         super().__init__(client)
         self.shares = shares
         self.word_count = len(shares[0].split(" "))
+        self.method = method
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
@@ -2788,14 +2792,17 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
             LayoutType.Delizia,
             LayoutType.Eckhart,
         ):
-            yield from self.REC.input_number_of_words(self.word_count)
-            yield from self.REC.abort_recovery(False)
+            if self.method is messages.BackupMethod.Display:
+                yield from self.REC.input_number_of_words(self.word_count)
+            yield from self.REC.abort_recovery(False, method=self.method)
         else:
-            yield from self.REC.abort_recovery(False)
+            yield from self.REC.abort_recovery(False, method=self.method)
             yield from self.REC.recovery_homescreen_caesar()
-            yield from self.REC.input_number_of_words(self.word_count)
-        yield from self.REC.enter_any_share()
-        yield from self.REC.input_all_slip39_shares(self.shares, has_groups=True)
+            if self.method is messages.BackupMethod.Display:
+                yield from self.REC.input_number_of_words(self.word_count)
+        if self.method is messages.BackupMethod.Display:
+            yield from self.REC.enter_any_share()
+        yield from self.REC.input_all_slip39_shares(self.shares, has_groups=True, method=self.method)
         yield from self.REC.success_wallet_recovered()
 
 

@@ -46,17 +46,17 @@ VECTORS = (
 
 # To allow reusing functionality for multiple tests
 def _test_secret(
-    session: Session, shares: list[str], secret: str, click_info: bool = False
+    session: Session, shares: list[str], secret: str, click_info: bool = False, method: messages.BackupMethod = messages.BackupMethod.Display,
 ):
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedRecovery(session, shares, click_info=click_info)
+        IF = InputFlowSlip39AdvancedRecovery(session, shares, click_info=click_info, method=method)
         client.set_input_flow(IF.get())
         device.recover(
             session,
             pin_protection=False,
             passphrase_protection=False,
             label="label",
-            backup_method=messages.BackupMethod.Display,
+            backup_method=method,
         )
 
     assert session.features.initialized is True
@@ -67,50 +67,51 @@ def _test_secret(
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
-def test_secret(session: Session, shares: list[str], secret: str):
-    _test_secret(session, shares, secret)
+def test_secret(session: Session, shares: list[str], secret: str, backup_method: messages.BackupMethod):
+    _test_secret(session, shares, secret, method=backup_method)
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
 @pytest.mark.models(skip="safe3", reason="safe3 does not have info button")
-def test_secret_click_info_button(session: Session, shares: list[str], secret: str):
-    _test_secret(session, shares, secret, click_info=True)
+def test_secret_click_info_button(session: Session, shares: list[str], secret: str, backup_method: messages.BackupMethod):
+    _test_secret(session, shares, secret, click_info=True, method=backup_method)
 
 
-def test_extra_share_entered(session: Session):
+def test_extra_share_entered(session: Session, backup_method: messages.BackupMethod):
     _test_secret(
         session,
         shares=EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20,
         secret=VECTORS[0][1],
+        method=backup_method,
     )
 
 
-def test_abort(session: Session):
+def test_abort(session: Session, backup_method: messages.BackupMethod):
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedRecoveryAbort(session)
+        IF = InputFlowSlip39AdvancedRecoveryAbort(session, method=backup_method)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(
                 session,
                 pin_protection=False,
                 label="label",
-                backup_method=messages.BackupMethod.Display,
+                backup_method=backup_method,
             )
         session.refresh_features()
         assert session.features.initialized is False
 
 
-def test_noabort(session: Session):
+def test_noabort(session: Session, backup_method: messages.BackupMethod):
     with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedRecoveryNoAbort(
-            session, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
+            session, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, method=backup_method,
         )
         client.set_input_flow(IF.get())
         device.recover(
             session,
             pin_protection=False,
             label="label",
-            backup_method=messages.BackupMethod.Display,
+            backup_method=backup_method,
         )
         session.refresh_features()
         assert session.features.initialized is True

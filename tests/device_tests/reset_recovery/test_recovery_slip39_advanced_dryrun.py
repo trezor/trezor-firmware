@@ -39,10 +39,10 @@ EXTRA_GROUP_SHARE = [
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=False)
-def test_2of3_dryrun(session: Session):
+def test_2of3_dryrun(session: Session, backup_method: messages.BackupMethod):
     with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
-            session, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
+            session, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, method=backup_method
         )
         client.set_input_flow(IF.get())
         device.recover(
@@ -51,12 +51,12 @@ def test_2of3_dryrun(session: Session):
             pin_protection=False,
             label="label",
             type=messages.RecoveryType.DryRun,
-            backup_method=messages.BackupMethod.Display,
+            backup_method=backup_method,
         )
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
-def test_2of3_invalid_seed_dryrun(session: Session):
+def test_2of3_invalid_seed_dryrun(session: Session, backup_method: messages.BackupMethod):
     # test fails because of different seed on device
     with (
         session.test_ctx as client,
@@ -65,7 +65,7 @@ def test_2of3_invalid_seed_dryrun(session: Session):
         ),
     ):
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
-            session, INVALID_SHARES_SLIP39_ADVANCED_20, mismatch=True
+            session, INVALID_SHARES_SLIP39_ADVANCED_20, mismatch=True, method=backup_method,
         )
         client.set_input_flow(IF.get())
         device.recover(
@@ -74,5 +74,5 @@ def test_2of3_invalid_seed_dryrun(session: Session):
             pin_protection=False,
             label="label",
             type=messages.RecoveryType.DryRun,
-            backup_method=messages.BackupMethod.Display,
+            backup_method=backup_method,
         )
