@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
-from trezorlib.messages import BackupType
+from trezorlib.messages import BackupMethod, BackupType
 from trezorlib.tools import parse_path
 
 from ...common import MOCK_GET_ENTROPY
@@ -32,9 +32,9 @@ from ...translations import set_language
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_recovery(client: Client):
+def test_reset_recovery(client: Client, backup_method: BackupMethod):
     session = client.get_seedless_session()
-    mnemonics = reset(session)
+    mnemonics = reset(session, backup_method=backup_method)
     session = client.get_session()
     address_before = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
     # we're generating 3of5 groups 3of5 shares each
@@ -58,7 +58,7 @@ def test_reset_recovery(client: Client):
         device.wipe(session)
         session = client.get_seedless_session()
         set_language(session, lang[:2])
-        recover(session, combination, click_info=True)
+        recover(session, combination, click_info=True, backup_method=backup_method)
         session = client.get_session()
         address_after = btc.get_address(
             session, "Bitcoin", parse_path("m/44h/0h/0h/0/0")
@@ -66,9 +66,13 @@ def test_reset_recovery(client: Client):
         assert address_before == address_after
 
 
-def reset(session: Session, strength: int = 128) -> list[str]:
+def reset(
+    session: Session,
+    strength: int = 128,
+    backup_method: BackupMethod = BackupMethod.Display,
+) -> list[str]:
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedResetRecovery(session, False)
+        IF = InputFlowSlip39AdvancedResetRecovery(session, False, method=backup_method)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
@@ -79,6 +83,7 @@ def reset(session: Session, strength: int = 128) -> list[str]:
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Advanced,
+            backup_method=backup_method,
             entropy_check_count=0,
             _get_entropy=MOCK_GET_ENTROPY,
         )
@@ -95,15 +100,22 @@ def reset(session: Session, strength: int = 128) -> list[str]:
     return IF.mnemonics
 
 
-def recover(session: Session, shares: list[str], click_info: bool = False):
+def recover(
+    session: Session,
+    shares: list[str],
+    click_info: bool = False,
+    backup_method: BackupMethod = BackupMethod.Display,
+):
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedRecovery(client, shares, click_info)
+        IF = InputFlowSlip39AdvancedRecovery(
+            client, shares, click_info, method=backup_method
+        )
         client.set_input_flow(IF.get())
         device.recover(
             session,
             pin_protection=False,
             label="label",
-            backup_method=messages.BackupMethod.Display,
+            backup_method=backup_method,
         )
 
     # Workflow successfully ended

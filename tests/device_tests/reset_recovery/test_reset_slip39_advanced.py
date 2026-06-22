@@ -20,7 +20,7 @@ from shamir_mnemonic import shamir
 from trezorlib import device
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.messages import BackupAvailability, BackupType
+from trezorlib.messages import BackupAvailability, BackupMethod, BackupType
 
 from ...common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from ...input_flows import (
@@ -41,13 +41,15 @@ FLOW_ADAPTERS = [
 # TODO: test with different options
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
-def test_reset_device_slip39_advanced(client: Client, adapt_flow: FlowAdapter):
+def test_reset_device_slip39_advanced(
+    client: Client, adapt_flow: FlowAdapter, backup_method: BackupMethod
+):
     strength = 128
     member_threshold = 3
 
     session = client.get_seedless_session()
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedResetRecovery(client, False)
+        IF = InputFlowSlip39AdvancedResetRecovery(client, False, method=backup_method)
         client.set_input_flow(adapt_flow(session, IF.get()))
         # No PIN, no passphrase, don't display random
         device.setup(
@@ -57,6 +59,7 @@ def test_reset_device_slip39_advanced(client: Client, adapt_flow: FlowAdapter):
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Advanced,
+            backup_method=backup_method,
             entropy_check_count=0,
             _get_entropy=MOCK_GET_ENTROPY,
         )
@@ -78,7 +81,7 @@ def test_reset_device_slip39_advanced(client: Client, adapt_flow: FlowAdapter):
 
     # backup attempt fails because backup was done in reset
     with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
-        device.backup(session)
+        device.backup(session, backup_method=backup_method)
 
 
 def validate_mnemonics(
