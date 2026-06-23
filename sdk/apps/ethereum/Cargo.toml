@@ -8,27 +8,6 @@ edition = "2024"
 [package.metadata.trezor]
 id = "ethereum.trezor.com"
 
-[profile.dev]
-panic = "abort"
-split-debuginfo = "off"
-debug = 2
-strip = "none"
-
-[profile.release]
-panic = "immediate-abort"
-opt-level = "z"
-lto = "fat"
-codegen-units = 1
-split-debuginfo = "off"
-debug = 0
-debug-assertions = false
-overflow-checks = false
-incremental = false
-
-[profile.test]
-split-debuginfo = "off"
-debug = 2
-
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
 emballoc = "0.3.0"

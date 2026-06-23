@@ -1,86 +1,82 @@
-use anyhow::{Context, Ok, Result, ensure};
-use std::ffi::OsStr;
-use std::process;
+use anyhow::{Context, Result, ensure};
+use std::{ffi::OsStr, process};
 
 use crate::{
     args::{BuildArgs, UnitTestArgs},
-    arm, helpers, postbuild, tools,
+    binary, helpers, postbuild, tools,
 };
 
-pub fn build(args: BuildArgs) -> Result<()> {
+pub fn build(args: &BuildArgs) -> Result<()> {
     // Build the component
-    run_cargo_subcommand("build", &args, None::<&[&str]>)?;
-    let orig = helpers::elf_path(&args)?;
+    run_cargo_subcommand("build", args, None::<&[&str]>)?;
 
-    if !args.emulator && !args.debug {
-        nm(args.clone())?;
-        let tmp = arm::objcopy(
-            &orig,
-            "min",
-            [
-                "--remove-section=.rel.text",
-                "--remove-section=.debug*",
-                "--remove-section=.rel.debug*",
-                "--strip-debug",
-                "--discard-locals",
-            ],
-        )?;
+    let elf_path = helpers::elf_path(args)?;
 
-        postbuild::zero_symnames(&tmp, ["applet_main"], true)?;
-
-        let min = arm::objcopy(&tmp, "", ["--strip-unneeded"])?;
-        arm::size(&min, ["-A"])?;
-        arm::size(&min, ["-B"])?;
-
-        arm::print_elf_sections(&min)?;
-
-        postbuild::publish_artifact(&min, &args.app, args.model, args.lang, args.emulator)?;
+    let app = if helpers::is_workspace()? {
+        args.project.clone()
     } else {
-        run_cargo_subcommand("size", &args, Some(&["-A"]))?;
-        run_cargo_subcommand("size", &args, Some(&["-B"]))?;
-        postbuild::publish_artifact(&orig, &args.app, args.model, args.lang, args.emulator)?;
+        helpers::standalone_project_name()?
     };
+
+    let app_package = helpers::app_package(&app)?;
+
+    let bin_path = binary::convert_elf_to_bin(&elf_path, &app_package)?;
+
+    postbuild::publish_artifact(&elf_path, &app, args.model, args.emulator)?;
+    postbuild::publish_artifact(&bin_path, &app, args.model, args.emulator)?;
 
     Ok(())
 }
 
-pub fn clippy(args: BuildArgs) -> Result<()> {
-    run_cargo_subcommand("clippy", &args, None::<&[&str]>)
+pub fn clippy(args: &BuildArgs) -> Result<()> {
+    run_cargo_subcommand("clippy", args, None::<&[&str]>)
 }
 
-pub fn check(args: BuildArgs) -> Result<()> {
-    run_cargo_subcommand("check", &args, None::<&[&str]>)
+pub fn check(args: &BuildArgs) -> Result<()> {
+    run_cargo_subcommand("check", args, None::<&[&str]>)
 }
 
-pub fn size(args: BuildArgs) -> Result<()> {
-    run_cargo_subcommand("size", &args, Some(&["-A"]))
+pub fn size(args: &BuildArgs) -> Result<()> {
+    run_cargo_subcommand("size", args, Some(&["-A"]))
 }
 
-pub fn nm(args: BuildArgs) -> Result<()> {
+pub fn nm(args: &BuildArgs) -> Result<()> {
     let output = run_cargo_subcommand_output(
         "nm",
-        &args,
+        args,
         Some(&["--size-sort", "--print-size", "--demangle"]),
     )?;
-    let elf = helpers::elf_path(&args)?;
+    let elf = helpers::elf_path(args)?;
 
     tools::group_nm(&output.stdout, Some(&elf), 50, 500, 2, "llvm-addr2line")?;
     Ok(())
 }
 
-pub fn test(args: UnitTestArgs) -> Result<()> {
+pub fn test(args: &UnitTestArgs) -> Result<()> {
     let features = vec![
         args.model.feature_name(),
         args.lang.feature_name(),
-        "test".into(),
-        "log_level_trace".into(),
+        "test",
+        "log_level_trace",
     ];
 
-    let status = process::Command::new("cargo")
-        .arg("test")
-        .args(["--features", &features.join(",")])
-        .arg("--verbose")
-        .current_dir(helpers::workspace_dir()?)
+    let mut cmd = process::Command::new("cargo");
+    cmd.arg("test");
+    if helpers::is_workspace()? {
+        ensure!(
+            !args.project.is_empty(),
+            "Project name must be specified when running tests in a workspace"
+        );
+        cmd.arg("-p").arg(&args.project);
+    }
+    cmd.args(["--features", &features.join(",")])
+        .arg(args.test.to_string());
+
+    println!("xtask: Running cargo test");
+    println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
+
+    let status = cmd
+        .current_dir(helpers::root_dir()?)
         .status()
         .context("Failed to spawn `cargo test`")?;
     ensure!(
@@ -91,12 +87,14 @@ pub fn test(args: UnitTestArgs) -> Result<()> {
 }
 
 pub fn clean() -> Result<()> {
-    let status = process::Command::new("cargo")
-        .arg("clean")
-        .current_dir(helpers::workspace_dir()?)
-        .status()
-        .context("Failed to spawn `cargo clean`")?;
+    let mut cmd = process::Command::new("cargo");
+    cmd.arg("clean");
+    cmd.current_dir(helpers::root_dir()?);
 
+    println!("xtask: Running cargo clean");
+    println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
+
+    let status = cmd.status().context("Failed to spawn `cargo clean`")?;
     ensure!(
         status.success(),
         "`cargo clean` failed with status: {status}",
@@ -106,12 +104,14 @@ pub fn clean() -> Result<()> {
 }
 
 pub fn fmt() -> Result<()> {
-    let status = process::Command::new("cargo")
-        .arg("fmt")
-        .current_dir(helpers::workspace_dir()?)
-        .status()
-        .context("Failed to spawn `cargo fmt`")?;
+    let mut cmd = process::Command::new("cargo");
+    cmd.arg("fmt");
+    cmd.current_dir(helpers::root_dir()?);
 
+    println!("xtask: Running cargo fmt");
+    println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
+
+    let status = cmd.status().context("Failed to spawn `cargo fmt`")?;
     ensure!(status.success(), "`cargo fmt` failed with status: {status}",);
 
     Ok(())
@@ -170,6 +170,7 @@ where
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
 
     let status = cmd
+        .current_dir(helpers::root_dir()?)
         .status()
         .context(format!("Failed to spawn `cargo {}`", subcommand))?;
 
