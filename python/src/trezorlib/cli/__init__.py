@@ -216,7 +216,7 @@ class TrezorConnection:
             try:
                 decoded_session = SessionIdentifier.from_session_str(session_str)
             except Exception:
-                LOG.warning(f"Failed to decode session string, not resuming.")
+                LOG.warning("Failed to decode session string, not resuming.")
                 LOG.debug("Exception details:", exc_info=True)
 
         if decoded_session is None:
