@@ -1,0 +1,1 @@
+Fix non-functional `trezorctl get-session` with THP.
