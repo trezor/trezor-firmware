@@ -1056,7 +1056,7 @@ bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
   // length.
   size_t copy_length = min(slot_length - prefix_length, out_length - out_pos);
   if (out_pos + copy_length > max_data_length) {
-    false;
+    return false;
   }
   memcpy(&data[out_pos], &slot_buffer[prefix_length], copy_length);
   out_pos += copy_length;
