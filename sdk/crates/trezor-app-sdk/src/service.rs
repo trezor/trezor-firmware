@@ -1,3 +1,8 @@
+//! IPC service abstractions for communicating with the Core application.
+//!
+//! This module provides typed remote endpoints, utility message handling traits,
+//! and a macro for declaring static IPC service instances.
+
 use core::marker::PhantomData;
 
 use ufmt::derive::uDebug;
@@ -7,38 +12,50 @@ use crate::structs::ArchivedUtilEnum;
 use crate::sysevent::SysEvents;
 use crate::util::Timeout;
 
+/// The remote system task identifier for the Core application service.
 pub const CORE_SERVICE_REMOTE: RemoteSysTask = RemoteSysTask::CoreApp;
 
 // ============================================================================
 // Trait-based Call Abstraction
 // ============================================================================
-/// Context for handling utility messages, contains info from the original request
+
+/// Context for handling utility messages, containing metadata from the original request.
 pub struct UtilContext {
+    /// The service ID from which the utility message was received.
     pub service: u16,
+    /// The message ID of the utility message.
     pub id: u16,
+    /// The remote task that sent the utility message.
     pub remote: RemoteSysTask,
 }
 
-/// Result of handling a utility message
+/// Result of handling a utility message during an IPC call loop.
 pub enum UtilHandleResult {
-    /// Continue waiting for more messages
+    /// Message was handled successfully; continue waiting for the actual response.
     Continue,
-    /// Unexpected message received
+    /// Message was not expected; the call should return an error.
     Unexpected,
 }
 
-/// Trait for handling utility service messages during IPC calls
+/// Trait for handling utility service messages that may arrive during IPC calls.
+///
+/// Implementations can intercept and process utility messages (e.g. progress updates)
+/// while waiting for the primary response to a call.
 pub trait UtilHandler {
-    /// Returns true if this handler expects utility messages
+    /// Returns `true` if this handler expects to receive utility messages.
+    ///
+    /// When `false`, any incoming utility message will be treated as unexpected.
     fn expects_util_messages(&self) -> bool;
 
-    /// Handle an incoming utility enum message
-    /// Returns `UtilHandleResult::Continue` if handled successfully and should keep waiting
-    /// Returns `UtilHandleResult::Unexpected` if the message was not expected
+    /// Handle an incoming archived utility enum message.
+    ///
+    /// - Returns [`UtilHandleResult::Continue`] if the message was handled and the call
+    ///   loop should continue waiting.
+    /// - Returns [`UtilHandleResult::Unexpected`] if the message was not expected.
     fn handle(&self, ctx: &UtilContext, archived: &ArchivedUtilEnum) -> UtilHandleResult;
 }
 
-/// No utility message handling - for regular calls
+/// A no-op [`UtilHandler`] for calls that do not expect any utility messages.
 pub struct NoUtilHandler;
 
 impl UtilHandler for NoUtilHandler {
@@ -52,6 +69,7 @@ impl UtilHandler for NoUtilHandler {
     }
 }
 
+/// Identifies the IPC services provided by the Core application.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, num_enum::IntoPrimitive, num_enum::FromPrimitive)]
 #[repr(u16)]
 pub enum CoreIpcService {
@@ -64,24 +82,35 @@ pub enum CoreIpcService {
     Util = 6,
     Progress = 7,
     WireError = 8,
+    /// Catch-all variant for unrecognized service IDs.
     #[num_enum(catch_all)]
     Unknown(u16),
 }
 
+/// A typed IPC remote endpoint for sending requests and receiving responses.
+///
+/// `T` is the service enum type (e.g. [`CoreIpcService`]) whose variants are
+/// converted to `u16` service IDs when sending messages.
 pub struct IpcRemote<'a, T> {
     inbox: IpcInbox<'a>,
     _service_type: PhantomData<T>,
 }
 
+/// Errors that can occur during IPC communication.
 #[derive(ufmt::derive::uDebug)]
 pub enum Error<'a> {
+    /// The operation timed out while waiting for a response.
     Timeout,
+    /// The message could not be sent to the remote task.
     FailedToSend,
+    /// A response was received from an unexpected service ID.
     UnexpectedService(IpcMessage<'a>),
+    /// A response with an unexpected format or content was received.
     UnexpectedResponse(IpcMessage<'a>),
 }
 
 impl<'a> Error<'a> {
+    /// Returns a static human-readable description of the error.
     pub fn message(&self) -> &'static str {
         match self {
             Self::Timeout => "timeout while waiting for response",
@@ -93,6 +122,7 @@ impl<'a> Error<'a> {
 }
 
 impl<'a, T: Into<u16> + Copy> IpcRemote<'a, T> {
+    /// Creates a new [`IpcRemote`] wrapping the given [`IpcInbox`].
     pub const fn new(inbox: IpcInbox<'a>) -> Self {
         Self {
             inbox,
@@ -100,10 +130,17 @@ impl<'a, T: Into<u16> + Copy> IpcRemote<'a, T> {
         }
     }
 
+    /// Registers this inbox with the kernel so it can receive messages.
+    ///
+    /// Must be called before any [`receive`](Self::receive) or [`call`](Self::call).
     pub fn start(&self) {
         self.inbox.register();
     }
 
+    /// Waits for and returns the next incoming [`IpcMessage`].
+    ///
+    /// Blocks until a message is available or `timeout` expires.
+    /// Returns [`Error::Timeout`] if no message arrives in time.
     pub fn receive(&self, timeout: Timeout) -> Result<IpcMessage<'a>, Error<'a>> {
         let events_ready = SysEvents::new_with_read(&[self.inbox.remote()]).poll(timeout);
         if !events_ready.read_ready(self.inbox.remote()) {
@@ -114,6 +151,23 @@ impl<'a, T: Into<u16> + Copy> IpcRemote<'a, T> {
         Ok(message)
     }
 
+    /// Sends a message to the remote service and waits for a response.
+    ///
+    /// Utility messages (service ID [`CoreIpcService::Util`]) that arrive while waiting
+    /// are forwarded to `util_handler`. The loop continues until the expected service
+    /// response is received, a timeout occurs, or an unexpected message is received.
+    ///
+    /// # Arguments
+    /// - `service` — The target service on the remote task.
+    /// - `message` — The IPC message payload to send.
+    /// - `timeout` — Maximum wait time per receive attempt.
+    /// - `util_handler` — Handler for interleaved utility messages.
+    ///
+    /// # Errors
+    /// - [`Error::FailedToSend`] — Message could not be sent.
+    /// - [`Error::Timeout`] — No response received within `timeout`.
+    /// - [`Error::UnexpectedService`] — Response arrived from wrong service.
+    /// - [`Error::UnexpectedResponse`] — Utility message handler rejected the message.
     pub fn call(
         &self,
         service: T,
@@ -152,6 +206,18 @@ impl<'a, T: Into<u16> + Copy> IpcRemote<'a, T> {
     }
 }
 
+/// Declares a `static` [`IpcRemote`] instance with a statically allocated receive buffer.
+///
+/// # Parameters
+/// - `$name` — The name of the resulting `static` variable.
+/// - `$remote` — The [`RemoteSysTask`] variant (without the path prefix) to communicate with.
+/// - `$service_type` — The service enum type (e.g. `CoreIpcService`).
+/// - `$bufsize` — The buffer size in **bytes**; internally rounded to `usize` alignment.
+///
+/// # Example
+/// ```rust
+/// static_service!(CORE_REMOTE, CoreApp, CoreIpcService, 4096);
+/// ```
 #[macro_export]
 macro_rules! static_service {
     ($name:ident, $remote:ident, $service_type:ty, $bufsize:expr) => {
