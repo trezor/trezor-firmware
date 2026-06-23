@@ -168,11 +168,32 @@ class SessionIdentifier:
         return cls(**dict)
 
     def to_session_str(self) -> str:
+        """
+        Encode the session identifier to a portable string format.
+        
+        Returns:
+            str: Base64-encoded JSON representation of this session identifier.
+        """
         session_str_plain = json.dumps(dataclasses.asdict(self))
         LOG.info(f"Decoded session string: {session_str_plain}")
         return base64.b64encode(session_str_plain.encode()).decode()
 
     def resume(self, client: TrezorClient) -> Session:
+        """
+        Resume a session using the provided client.
+        
+        The client must be compatible with the session's protocol type (v1 or THP).
+        
+        Parameters:
+        	client (TrezorClient): The client to use for resuming the session.
+        
+        Returns:
+        	Session: A resumed session object.
+        
+        Raises:
+        	click.ClickException: If the client type does not match the stored session protocol.
+        	ValueError: If the session type is not recognized.
+        """
         if self.type == "v1":
             if not isinstance(client, protocol_v1.TrezorClientV1):
                 raise click.ClickException(
@@ -209,6 +230,23 @@ class TrezorConnection:
         app_name: str = "trezorctl",
         record_dir: Path | None = None,
     ) -> None:
+        """
+        Initialize a Trezor connection manager with session resumption and device path validation.
+        
+        Attempts to decode session_str to resume a previous session. If a session is decoded and
+        path is explicitly provided, validates that they reference the same device.
+        
+        Parameters:
+            session_str: Base64-encoded session identifier for resuming a previous connection.
+            path: Device path to use. If provided with a decoded session, must match its path.
+            passphrase_source: Method for acquiring the passphrase.
+            script: If True, use script-mode UI callbacks instead of interactive prompts.
+            app_name: Application name for the credential store.
+            record_dir: Directory for recording device screen interactions.
+        
+        Raises:
+            click.ClickException: If the provided path does not match the decoded session path.
+        """
         self.session_str = session_str
 
         decoded_session = None
@@ -253,6 +291,12 @@ class TrezorConnection:
 
     @property
     def features(self) -> messages.Features:
+        """
+        Retrieve device features, cached on first access.
+        
+        Returns:
+            messages.Features: The device's feature capabilities.
+        """
         if self._features is None:
             with self.client_context() as client:
                 client.ensure_unlocked()
@@ -290,6 +334,9 @@ class TrezorConnection:
             self._record_screen(True)
 
     def close(self) -> None:
+        """
+        Close the device transport connection and reset internal state.
+        """
         self._record_screen(False)
         if self._transport is not None:
             self._transport.close()
@@ -301,17 +348,19 @@ class TrezorConnection:
     def _passphrase_source_resolved(
         self, prompt_passphrase: bool = True
     ) -> PassphraseSource:
-        """Resolve PassphraseSource.AUTO to a concrete PassphraseSource.
-
-        Assumes that `self.features` is already populated.
-
+        """
+        Determine the concrete passphrase source based on device capabilities.
+        
+        Requires self.features to be populated.
+        
+        Parameters:
+            prompt_passphrase: If False, returns PassphraseSource.EMPTY immediately.
+        
         Returns:
-        * `PassphraseSource.EMPTY` if `prompt_passphrase` is False, indicating that
-           the caller does not ask for passphrase entry.
-        * `self.passphrase_source` if it is not `PassphraseSource.AUTO`
-        * `PassphraseSource.EMPTY` if passphrase protection is disabled
-        * `PassphraseSource.DEVICE` if passphrase entry is supported
-        * `PassphraseSource.PROMPT` otherwise
+            PassphraseSource: The resolved passphrase source—EMPTY if passphrase prompting is disabled or the device has no passphrase protection; DEVICE if the device supports passphrase entry; PROMPT otherwise.
+        
+        Raises:
+            click.ClickException: If passphrase protection is not enabled on the device and the configured passphrase source does not allow disabled protection.
         """
         if not prompt_passphrase:
             return PassphraseSource.EMPTY
@@ -336,13 +385,16 @@ class TrezorConnection:
         seedless: bool = False,
         derive_cardano: bool = False,
     ) -> Session:
-        """Get a session from this connection.
-
-        Arguments:
-        - prompt_passphrase: if True, user should get a passphrase prompt
-          (either on host or on device)
-        - seedless: if True, create a session without a derived seed
-        - derive_cardano: whether to derive a Cardano session
+        """
+        Acquire or resume a session with the Trezor device.
+        
+        Parameters:
+        	prompt_passphrase (bool): Whether to prompt the user for a passphrase, either on the device or host. Defaults to True.
+        	seedless (bool): Whether to create a session without deriving a seed. Defaults to False.
+        	derive_cardano (bool): Whether to derive a Cardano session. Defaults to False.
+        
+        Returns:
+        	Session: The active session with the device.
         """
         client = self.get_client()
 
@@ -370,13 +422,15 @@ class TrezorConnection:
         derive_cardano: bool = False,
         randomize_id: bool = False,
     ) -> Session:
-        """Allocate a new session.
-
-        By default, every THP session is counted from 1 based on
-        `client._session_id_counter`. If `randomize_id` is True, the returned
-        session will instead pick a random ID between 128 and 255, avoiding the
-        id that is currently set on `self.session`. This should match what the user
-        expects from `trezorctl get-session`.
+        """Allocate a new session with the specified passphrase and derivation settings.
+        
+        Parameters:
+            prompt_passphrase (bool): If True, prompt for passphrase input.
+            derive_cardano (bool): If True, derive Cardano keys for this session.
+            randomize_id (bool): If True and the client supports THP, use a random session ID between 128 and 255.
+        
+        Returns:
+            A new session.
         """
         client = self.get_client()
         if randomize_id and isinstance(client, thp_client.TrezorClientThp):
@@ -430,6 +484,12 @@ class TrezorConnection:
                 raise click.ClickException("No Trezor device found")
 
     def _get_client(self) -> TrezorClient:
+        """
+        Create a Trezor client, initiating pairing if necessary.
+        
+        Returns:
+            A paired Trezor client ready for use.
+        """
         client = get_client(self.app, self.transport)
         if not client.pairing.is_paired():
             from ..thp import pairing
@@ -445,6 +505,12 @@ class TrezorConnection:
         return client
 
     def get_client(self) -> TrezorClient:
+        """
+        Retrieve the device client, creating it on first access.
+        
+        Returns:
+            TrezorClient: The Trezor client instance.
+        """
         if self._client is None:
             self._client = self._get_client()
         return self._client
@@ -503,6 +569,17 @@ class TrezorConnection:
         derive_cardano: bool = False,
         seedless: bool = False,
     ) -> t.Generator[Session, None, None]:
+        """
+        Context manager for acquiring a session from the connected device.
+        
+        Parameters:
+        	prompt_passphrase (bool): Whether to prompt the user for a passphrase when acquiring the session.
+        	derive_cardano (bool): Whether to derive Cardano keys for the session.
+        	seedless (bool): Whether to acquire a seedless session.
+        
+        Yields:
+        	Session: An established session with the connected device.
+        """
         yield from self._connection_context(
             self.get_session,
             prompt_passphrase=prompt_passphrase,
@@ -541,14 +618,17 @@ def with_session(
     cardano: bool = False,
     seedless: bool = False,
 ) -> t.Callable[[FuncWithSession[P, R]], t.Callable[P, R]] | t.Callable[P, R]:
-    """Provides a Click command with parameter `session=obj.get_session(...)`
-    based on the parameters provided:
-
-    * if `passphrase` is set to False, the user will not be prompted for a passphrase
-    * if `cardano` is set to True, Cardano-specific operations are enabled for this session
-    * if `seedless` is set to True, a seedless session is used for this session
-
-    If default parameters are ok, this decorator can be used without parentheses.
+    """
+    Decorator that supplies a Session to a Click command.
+    
+    Acquires a session with the specified configuration and passes it as the first argument
+    to the decorated command. The session is automatically closed if it was not previously
+    stored and the device is not in bootloader mode.
+    
+    Parameters:
+        passphrase (bool): If False, the user will not be prompted for a passphrase. Defaults to True.
+        cardano (bool): If True, enables Cardano-specific operations for the session. Defaults to False.
+        seedless (bool): If True, creates a seedless session. Defaults to False.
     """
 
     def decorator(

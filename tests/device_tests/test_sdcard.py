@@ -158,6 +158,17 @@ def press_lock(session: Session) -> None:
     [pytest.param(fn, id=fn.__name__) for fn in (session_lock, auto_lock, press_lock)],
 )
 def test_sd_protect_lock(session: Session, lock_func: "t.Callable[[Session], None]"):
+    """
+    Test SD card protection state transitions across lock/unlock cycles with different locking mechanisms.
+    
+    Verifies that SD card protection settings persist correctly when the device is locked and unlocked
+    through different mechanisms (session lock, auto-lock, and long press). The test progresses through
+    four phases: enabling SD protection with PIN, removing the PIN while keeping SD protection,
+    re-enabling the PIN, and verifying unlock failure handling.
+    
+    Parameters:
+    	lock_func: The mechanism to lock the device (session_lock, auto_lock, or press_lock).
+    """
     layout = session.debug.read_layout
 
     assert "Lockscreen" in layout().all_components()

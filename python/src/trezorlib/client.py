@@ -96,6 +96,12 @@ class Session(t.Generic[ClientType, SessionIdType]):
 
     @enter_context
     def get_root_fingerprint(self) -> bytes:
+        """
+        Retrieve the root fingerprint for this session.
+        
+        Returns:
+            bytes: The 4-byte root fingerprint in big-endian format.
+        """
         if self._root_fingerprint is None:
             pubkey = self.call(GET_ROOT_FINGERPRINT_MESSAGE, expect=messages.PublicKey)
             # can't use resp.root_fingerprint because it's not available on <1.9.4 & <2.3.5
@@ -110,7 +116,12 @@ class Session(t.Generic[ClientType, SessionIdType]):
         expect: type[MT] = MessageType,
         timeout: float | None = None,
     ) -> MT:
-        """Call a method on this session, process and return the response."""
+        """
+        Send a message to the device and return the processed response.
+        
+        Raises:
+            InvalidSessionError: If the session is invalid.
+        """
         if self.is_invalid:
             raise exceptions.InvalidSessionError(self.id)
         with self:
@@ -180,6 +191,9 @@ class Session(t.Generic[ClientType, SessionIdType]):
 
     @enter_context
     def lock(self) -> None:
+        """
+        Lock the device.
+        """
         self.client.lock(_use_session=self)
 
 
@@ -555,16 +569,20 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
             session.cancel()
 
     def lock(self, *, _use_session: SessionType | None = None) -> None:
-        """Lock the device with a PIN prompt, if enabled."""
+        """
+        Lock the device.
+        """
         session = _use_session or self._get_any_session()
         with session:
             session.call_raw(messages.LockDevice())
         self.refresh_features()
 
     def ensure_unlocked(self, *, _use_session: SessionType | None = None) -> None:
-        """Ensure the device is unlocked.
-
-        If the device has PIN set, this will trigger a PIN unlock.
+        """
+        Attempt to unlock a PIN-protected device.
+        
+        If the device is uninitialized, returns without performing an unlock attempt. Device
+        features are refreshed after each unlock attempt to reflect any state changes.
         """
         if not self.features.initialized:
             # uninitialized device cannot be locked
