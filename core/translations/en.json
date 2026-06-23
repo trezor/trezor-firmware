@@ -2214,7 +2214,12 @@
       "Delizia": "Share {0} completed.",
       "Eckhart": "Share {0} completed."
     },
-    "reset__share_words_title": "Standard backup",
+    "reset__share_words_title": {
+      "Bolt": "",
+      "Caesar": "Standard backup",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__slip39_checklist_more_info_threshold": {
       "Bolt": "",
       "Caesar": "",
