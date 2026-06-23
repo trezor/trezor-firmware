@@ -297,7 +297,6 @@ class TrezorConnection:
         self._client = None
         self._features = None
         self._version = None
-        self._standard_session = None
 
     def _passphrase_source_resolved(
         self, prompt_passphrase: bool = True
