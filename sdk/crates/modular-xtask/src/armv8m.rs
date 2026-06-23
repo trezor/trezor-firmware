@@ -41,6 +41,8 @@ struct Armv8mBinaryHeader {
     heap_size: U32<LittleEndian>,
     /// Virtual address of the entry function (applet_main) in the read-only segment
     entry_va: U32<LittleEndian>,
+    /// Reserved field for runtime purposes (zeroed)
+    runtime_flags: U32<LittleEndian>,
 }
 
 impl Armv8mBinaryHeader {
