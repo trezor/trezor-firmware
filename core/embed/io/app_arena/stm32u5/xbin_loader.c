@@ -33,6 +33,9 @@
 // Alignment required for MPU regions
 #define MPU_ALIGNMENT 32
 
+// RO segment has been relocated to RW segment
+#define RUNTIME_FLAG_RO_SEGMENT_RELOCATED (1 << 0)
+
 typedef struct {
   // Size of the read-only segment
   // It starts after the header and has virtual address 0
@@ -57,8 +60,10 @@ typedef struct {
   uint32_t heap_size;
   // Virtual address of entry function (applet_main) in RO segment
   uint32_t entry_va;
+  // Flags for future use
+  uint32_t runtime_flags;
   // Reserved for future use
-  uint32_t _reserved[6];
+  uint32_t _reserved[5];
 } payload_header_t;
 
 _Static_assert(sizeof(payload_header_t) == 64,
@@ -223,28 +228,53 @@ static void xbin_unload_cb(applet_t* applet) {
   systask_set_mpu(systask_active());
 }
 
+typedef enum {
+  RELOCATION_GROUP_RO = 0,
+  RELOCATION_GROUP_RW = 1,
+} relocation_group_t;
+
 static ts_t xbin_apply_relocations(const payload_header_t* p,
-                                   const va_map_t* map) {
+                                   const va_map_t* map,
+                                   relocation_group_t group) {
   TSH_DECLARE;
 
   uint32_t* reloc_table =
       (uint32_t*)((uint8_t*)p + sizeof(payload_header_t) + p->ro_size);
 
-  // Check reloc table first (so we don't modify anything if the table is
-  // invalid)
-  for (uint32_t i = 0; i < p->reloc_count; i++) {
-    uint32_t reloc_va = reloc_table[i];
-    uint32_t* reloc_ptr =
-        (uint32_t*)map_va_size(map, reloc_va, sizeof(uint32_t));
-    TSH_CHECK(reloc_ptr != NULL, TS_EINVAL);
-    TSH_CHECK(map_va(map, *reloc_ptr) != NULL, TS_EINVAL);
+  uint32_t segment_addr = 0;
+  uint32_t segment_size = 0;
+
+  if (group == RELOCATION_GROUP_RO) {
+    segment_addr = map->ro_v_addr;
+    segment_size = map->ro_size;
+  } else if (group == RELOCATION_GROUP_RW) {
+    segment_addr = map->rw_v_addr;
+    segment_size = map->rw_size;
+  } else {
+    TSH_CHECK(false, TS_EINVAL);
   }
 
-  // Apply relocations
+  // First pass: verify that all relocations are within the segment
   for (uint32_t i = 0; i < p->reloc_count; i++) {
     uint32_t reloc_va = reloc_table[i];
-    uint32_t* reloc_ptr = (uint32_t*)map_va(map, reloc_va);
-    *reloc_ptr = (uint32_t)map_va(map, *reloc_ptr);
+    if (reloc_va >= segment_addr &&
+        reloc_va + sizeof(uint32_t) <= segment_addr + segment_size) {
+      uint32_t* reloc_ptr =
+          (uint32_t*)map_va_size(map, reloc_va, sizeof(uint32_t));
+      TSH_CHECK(reloc_ptr != NULL, TS_EINVAL);
+      TSH_CHECK(map_va(map, *reloc_ptr) != NULL, TS_EINVAL);
+    }
+  }
+
+  // Second pass: apply relocations by updating the values at the relocation
+  // addresses
+  for (uint32_t i = 0; i < p->reloc_count; i++) {
+    uint32_t reloc_va = reloc_table[i];
+    if (reloc_va >= segment_addr &&
+        reloc_va + sizeof(uint32_t) <= segment_addr + segment_size) {
+      uint32_t* reloc_ptr = (uint32_t*)map_va(map, reloc_va);
+      *reloc_ptr = (uint32_t)map_va(map, *reloc_ptr);
+    }
   }
 
 cleanup:
@@ -274,8 +304,14 @@ ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
   TSH_CHECK(dst != NULL, TS_EINVAL);
   memcpy(dst, src, p->rw_init_size);
 
-  // Apply relocations
-  status = xbin_apply_relocations(p, &map);
+  if ((p->runtime_flags & RUNTIME_FLAG_RO_SEGMENT_RELOCATED) == 0) {
+    // Apply relocations
+    status = xbin_apply_relocations(p, &map, RELOCATION_GROUP_RO);
+    TSH_CHECK_OK(status);
+    p->runtime_flags |= RUNTIME_FLAG_RO_SEGMENT_RELOCATED;
+  }
+
+  status = xbin_apply_relocations(p, &map, RELOCATION_GROUP_RW);
   TSH_CHECK_OK(status);
 
   // Get stack address and size

@@ -156,6 +156,11 @@ fn main() -> Result<()> {
             lib.add_define("TREZOR_EMULATOR", None);
         }
 
+        if cfg!(not(any(feature = "kernel_mode", feature = "emulator"))) {
+            // Support for multiple unprivileged tasks
+            lib.add_define("THREAD_LOCAL", Some("__attribute__((section(\".tls\")))"));
+        }
+
         if cfg!(feature = "model_t2t1") {
             define_model_t2t1(lib, &board_header)?;
         } else if cfg!(feature = "model_t2b1") {
