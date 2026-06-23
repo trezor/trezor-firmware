@@ -246,7 +246,7 @@ def test_sd_protect_lock(session: Session, lock_func: "t.Callable[[Session], Non
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.PinEntry),
-                messages.PublicKey,
+                messages.Success,
                 messages.Features,
             ]
         )
