@@ -1,5 +1,5 @@
 [package]
-name = "xtask"
+name = "modular-xtask"
 version = "0.1.0"
 edition = "2024"
 
@@ -12,5 +12,6 @@ serde = { version = "1", features = ["derive"] }
 regex = "1"
 hex = "0.4"
 tempfile = "3"
-
-[dev-dependencies]
+object = "0.39.1"
+zerocopy = "0.8.50"
+zerocopy-derive = "0.8.50"

@@ -57,7 +57,7 @@ let
     ];
     # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
-    extensions = [ "rust-src" "clippy" "rustfmt" ];
+    extensions = [ "rust-src" "clippy" "rustfmt" "llvm-tools" ];
   };
   openocd-stm = (nixpkgs.openocd.overrideAttrs (oldAttrs: {
     src = nixpkgs.fetchFromGitHub {
@@ -108,6 +108,7 @@ stdenvNoCC.mkDerivation ({
     pyright
     python3
     (mkBinOnlyWrapper rustNightly)
+    cargo-binutils
     sccache
     uv
     wget
