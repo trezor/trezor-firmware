@@ -21,7 +21,7 @@ STM32U5 offers a strong built-in security baseline that aligns well with the fir
 - HDP is used to temporarily hide a flash region containing sensitive data after that data has been transferred into BHK hardware registers.
 - JTAG/SWD debugging interfaces are fully locked in production configuration.
 - TrustZone attribution controls (SAU/IDAU + GTZC): enforce secure/non-secure memory and peripheral partitioning.
-- hardware crypto and entropy blocks are available (SAES/HASH/PKA/TRNG), but current usage is selective: SAES is used for key derivation and HASH is used for fast firmware hash calculation; the rest is handled by firmware crypto libraries.
+- hardware crypto and entropy blocks are available (SAES/HASH/PKA/TRNG); currently SAES is used for key derivation, HASH accelerates firmware hashing, and TRNG provides hardware entropy. PKA is not currently used and is delegated to firmware crypto libraries.
 - selected tamper events (potential attack indicators) trigger deletion/zeroization of critical RAM regions and registers containing sensitive material.
 
 #### Secure elements
@@ -225,7 +225,7 @@ Because the Cortex-M33 MPU configuration provides only eight banks, which is ins
 
 ### 5.4.1 Kernel Drivers
 
-The kernel implements drivers for hardware peripherals, initialized at startup (`core/embed/projects/kernel/main.c`) before execution transfers to unprivileged applications. 
+The kernel implements drivers for hardware peripherals, initialized at startup (`core/embed/projects/kernel/main.c`) before execution transfers to unprivileged applications.
 
 Kernel driver source code is located in the `core/embed/io` folder. The following table summarizes the drivers by area:
 
@@ -304,7 +304,7 @@ As part of the kernel API there are also functions implemented in the secure mon
 | `boot_image_*` | Checks or replaces boot images during secure boot and upgrade flows. |
 | `reboot_*` | Performs controlled reboot and power-state transitions. |
 | `rng_*` | Fills buffers with random data from secure random sources. |
-| `telemetry_get` | Updates or reads secure telemetry maintained by secmon. |
+| `telemetry_*` | Updates or reads secure telemetry maintained by secmon. |
 | `firmware_*` | Returns firmware vendor information and computes firmware hashes. |
 | `optiga_*` | Mediates access to Optiga secure-element operations. |
 | `tropic_*` | Mediates access to Tropic secure-element operations. |
@@ -322,6 +322,9 @@ Most of Trezor's application logic resides in coreapp, which runs in unprivilege
 
 Coreapp has access only to its dedicated flash and SRAM regions and must use kernel syscalls to communicate with privileged or secure-world services. Because it renders the UI, it also has direct access to the SRAM framebuffers.
 
+_Note: while coreapp is limited in terms of hardware privilege, the kernel (and transitively secmon) allows it to call essentially
+any privileged APIs. This means in particular that coreapp can ask for access to raw secrets and will just get them. We are gradually improving the separation of layers in this regard._
+
 Coreapp exposes two APIs to third-party applications: a direct-call API and an IPC API, both described in the following chapter.
 
 ### 5.6 Third-party applications
@@ -334,13 +337,13 @@ Accordingly, the interfaces exposed to third-party applications are intentionall
 
 #### 5.6.1 Application lifecycle
 
-Third-party application code is executed from SRAM. The portion of SRAM reserved for these applications is called the **application arena**. Currently, only one application can be loaded into the application arena at a time. 
+Third-party application code is executed from SRAM. The portion of SRAM reserved for these applications is called the **application arena**. Currently, only one application can be loaded into the application arena at a time.
 
 Application lifecycle can be described by a simple diagram:
 
 ![App Lifecycle](app-lifecycle.drawio.svg)
 
-**LOADING:** The kernel first loads the image into the application arena from USB, Bluetooth, or, in the future, a flash-memory cache. 
+**LOADING:** The kernel first loads the image into the application arena from USB, Bluetooth, or, in the future, a flash-memory cache.
 
 **VERIFICATION:** The loaded image is then verified before execution. The verification process includes both integrity checks and security checks. Integrity checks ensure that the application header is valid and that the application image is not malformed. Security checks include signature verification.
 
@@ -377,6 +380,8 @@ void applet_main(trezor_api_getter_t api_getter);
 A third-party app can call the `api_getter()` function to retrieve a pointer
 to a structure that defines the callable functions — the so-called direct-call API (for more details see `core/embed/api/trezor_api_v1.h`).
 
+There is no mechanism preventing a third-party app from calling unexposed APIs, or indeed any part of coreapp code. Doing so is unsupported -- function addresses may change between firmware upgrades. Any such invocation operates within the memory space of the third-party app. Legitimate apps are forbidden from doing this by the application review guidelines.
+
 ##### Thread-local storage workaround
  The global-variable limitation can be partially overcome by placing a small number of variables in a TLS (thread-local storage) section located at a fixed SRAM address. This section belongs to a single task, and its contents are swapped during task switches, which allows a limited form of task-local "global" state while keeping ownership with the calling application. For example, this mechanism is used for the `__stack_chk_guard` variable, which is accessed by nearly every coreapp function because GCC's stack protector is enabled.
 
@@ -389,7 +394,43 @@ The coreapp IPC API uses the IPC mechanism provided by the kernel:
 - An application task can send an IPC message to another task by calling `ipc_send()`. This function copies an arbitrary payload, including IPC call arguments, into the recipient task's address space.
 - An application task can wait for an incoming IPC message using the standard polling mechanism. Once the message is signaled, the application can call `ipc_try_receive()` to retrieve it.
 
-_TODO: How coreapp validates the IPC requests?_
+The IPC handler in coreapp is implemented in MicroPython, in `core/src/apps/trezorapp/run.py`.
 
-_TODO: IPC API call reference_
+Each IPC call is identified by a _service_ and a _message id_. The following services are currently supported:
 
+##### (0) Lifecycle service
+
+Coreapp may send a cancellation request to the third-party app. The app should respond by stopping any pending operations and fully unwinding its stack. If it does not respond within a set time, a kernel watchdog will terminate the app.
+
+##### (1) UI service
+
+The third-party app can request displaying one of several predefined screens, and provide their parameters. The coreapp will handle the UI lifecycle and respond with a single result code.
+
+The parameters for the UI are serialized in a `rkyv` binary format, and passed through the MicroPython layer into the Rust UI implementation. That decodes the parameters, constructs the appropriate UI object, and returns it back to MicroPython for handling.
+
+##### (2) Wire service
+
+Third-party apps need to be able to communicate with the host. The wire service acts as an intermediary, and abstract away the difference between the actual transports (USB or Bluetooth).
+
+A third-party app receives and sends back tuples of `(message_type: int, message_payload: bytes)`. Coreapp does not examine contents of the payload. It embeds it in a wrapper message, which gets sent out to the host; and conversely, a message from the host for the app is unwrapped and its binary contents passed on to the app. This way, a third-party app cannot write raw messages to the wire and cause confusion on the host side, and also cannot learn contents of messages not intended for it.
+
+For legitimate apps, the app review guidelines prescribe a codec for converting structured messages to and from the binary payload.
+
+##### (3) Crypto service
+
+Multiple different cryptographic operations with private keys are exposed via this service. An app can generally request (a) a public key on a certain BIP-32 / SLIP-10 path and curve, and (b) a signature of a digest, by a key living on a certain BIP-32 / SLIP-10 path.
+
+The list of allowed path prefixes is pre-registered and signed in the app metadata. By default, requested paths outside the pre-registered prefixes will be rejected.
+
+Trezor has a user setting for permanently or temporarily allowing unsanctioned path access: if this setting is enabled, **and** the app metadata carries a special entitlement, the app can request access to any path. Any such access is gated by a user confirmation dialog automatically displayed by the coreapp.
+
+A different entitlement allows an app to request direct access to a private key on a specified derivation path. The entitlements for "any path" and "direct key access" are mutually exclusive, and exported private keys are always subject to prefix restrictions.
+
+##### (4) Progress service
+
+Separate from the UI screen service, the app can indicate progress of a long-running operation by pinging this IPC service with either a percentage or a generic uncounted progress step signal. The coreapp takes care of displaying a progress bar and handles its interaction with any other UI elements.
+
+##### (5) Error service
+
+In addition to app-specific messages sent over the wire, the third party app can return an error, which gets forwarded to the host. An error signal consists of a _code_ out of a fixed list, and a string _message_. Errors should be sent by this mechanism,
+so that they are understandable as errors without needing to decode the app-specific payload format.
