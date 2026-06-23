@@ -299,17 +299,24 @@ class TrezorConnection:
         self._version = None
         self._standard_session = None
 
-    def _passphrase_source_resolved(self) -> PassphraseSource:
+    def _passphrase_source_resolved(
+        self, prompt_passphrase: bool = True
+    ) -> PassphraseSource:
         """Resolve PassphraseSource.AUTO to a concrete PassphraseSource.
 
         Assumes that `self.features` is already populated.
 
         Returns:
+        * `PassphraseSource.EMPTY` if `prompt_passphrase` is False, indicating that
+           the caller does not ask for passphrase entry.
         * `self.passphrase_source` if it is not `PassphraseSource.AUTO`
         * `PassphraseSource.EMPTY` if passphrase protection is disabled
         * `PassphraseSource.DEVICE` if passphrase entry is supported
         * `PassphraseSource.PROMPT` otherwise
         """
+        if not prompt_passphrase:
+            return PassphraseSource.EMPTY
+
         if (
             not self.features.passphrase_protection
             and not self.passphrase_source.ok_if_disabled()
@@ -354,10 +361,15 @@ class TrezorConnection:
                 raise
 
         # nothing to resume, allocate a new session
-        return self.get_new_session(derive_cardano=derive_cardano)
+        return self.get_new_session(
+            prompt_passphrase=prompt_passphrase, derive_cardano=derive_cardano
+        )
 
     def get_new_session(
-        self, derive_cardano: bool = False, randomize_id: bool = False
+        self,
+        prompt_passphrase: bool = True,
+        derive_cardano: bool = False,
+        randomize_id: bool = False,
     ) -> Session:
         """Allocate a new session.
 
@@ -378,7 +390,7 @@ class TrezorConnection:
                 random_value = random.randint(128, 255)
             client._session_id_counter = random_value - 1
 
-        passphrase_source = self._passphrase_source_resolved()
+        passphrase_source = self._passphrase_source_resolved(prompt_passphrase)
         if passphrase_source == PassphraseSource.EMPTY:
             return client.get_session(
                 passphrase=PassphraseSetting.STANDARD_WALLET,
