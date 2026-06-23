@@ -204,8 +204,15 @@ fn add_crypto(lib: &mut xbuild::CLibrary) -> Result<()> {
         );
     }
 
-    if cfg!(feature = "noise") {
-        lib.add_sources_in_dir_with_attrs(crypto_path, ["noise.c"], Some(crypto_attrs.clone()));
+    if cfg!(any(feature = "noise_kk1", feature = "noise_xx")) {
+        let mut sources = Vec::from(&["noise_common.c"]);
+        if cfg!(feature = "noise_kk1") {
+            sources.push("noise_kk1.c");
+        }
+        if cfg!(feature = "noise_xx") {
+            sources.push("noise_xx.c")
+        }
+        lib.add_sources_in_dir_with_attrs(crypto_path, &sources, Some(crypto_attrs.clone()));
     }
 
     if cfg!(feature = "secp256k1_zkp") {

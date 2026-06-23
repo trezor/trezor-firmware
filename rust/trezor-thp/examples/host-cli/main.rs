@@ -6,9 +6,9 @@ use std::{env, net::SocketAddr, str::FromStr};
 use protobuf::Message;
 
 use trezor_thp::{
-    Backend,
     channel::host::{Channel, ChannelOpen, Mux},
     credential::{CredentialStore, NullCredentialStore},
+    noise::forked::{TrezorNoiseProtocol, TrezorNoiseProtocolBackend},
 };
 
 use client::Client;
@@ -19,7 +19,7 @@ use pb::{
 
 struct RustCrypto;
 
-impl Backend for RustCrypto {
+impl TrezorNoiseProtocolBackend for RustCrypto {
     type DH = trezor_noise_rust_crypto::X25519;
     type Cipher = trezor_noise_rust_crypto::Aes256Gcm;
     type Hash = trezor_noise_rust_crypto::Sha256;
@@ -29,13 +29,15 @@ impl Backend for RustCrypto {
     }
 }
 
-type HostChannel = Channel<RustCrypto>;
+type TrezorNoiseRustCrypto = TrezorNoiseProtocol<RustCrypto>;
 
-fn do_allocation(client: &mut Client<Mux<RustCrypto>>) {
+type HostChannel = Channel<TrezorNoiseRustCrypto>;
+
+fn do_allocation(client: &mut Client<Mux<TrezorNoiseRustCrypto>>) {
     client.call(0, &[]);
 }
 
-fn do_handshake<C>(client: &mut Client<ChannelOpen<C, RustCrypto>>)
+fn do_handshake<C>(client: &mut Client<ChannelOpen<C, TrezorNoiseRustCrypto>>)
 where
     C: CredentialStore,
 {
@@ -118,7 +120,7 @@ pub fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::default().filter_or("RUST_LOG", "info"));
 
     let cred_lookup = NullCredentialStore;
-    let mut channel = Mux::<RustCrypto>::new();
+    let mut channel = Mux::<TrezorNoiseRustCrypto>::new();
     channel.request_channel(false);
     let mut client = Client::open(get_address(), channel);
 

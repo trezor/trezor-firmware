@@ -57,7 +57,7 @@ static curve25519_key hsm_public_keys[] = {
 
 bool secure_channel_handshake_1(uint8_t output[SECURE_CHANNEL_OUTPUT_SIZE]) {
   if (!noise_create_handshake_request(&noise_context,
-                                      (noise_request_t*)output)) {
+                                      (noise_kk1_request_t*)output)) {
     return false;
   }
 
@@ -75,7 +75,7 @@ bool secure_channel_handshake_2(
   if (!noise_handle_handshake_response_multiple_keys(
           &noise_context, prodtest_private_key, hsm_public_keys,
           sizeof(hsm_public_keys) / sizeof(hsm_public_keys[0]),
-          (const noise_response_t*)input)) {
+          (const noise_kk1_response_t*)input)) {
     return false;
   }
 

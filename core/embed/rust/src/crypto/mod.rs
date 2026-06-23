@@ -9,6 +9,8 @@ mod ffi;
 pub mod hmac;
 pub mod memory;
 pub mod merkle;
+#[cfg(feature = "thp")]
+pub mod noise_xx;
 pub mod sha256;
 pub mod sha512;
 

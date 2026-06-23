@@ -1,34 +1,21 @@
-//! Implementation of the Noise XX patern. See https://noiseprotocol.org/
-//! Host is the initiator, device is the responder.
-//!
-//!  -> e               # initiation request
-//!  <- e, ee, s, es    # initiation response
-//!  -> s, se           # completion request
-//!  <- (pairing_state) # completion response - technically not part of the handshake as secure channel is established at this point
-
 use trezor_noise_protocol::{CipherState, HandshakeState, patterns::noise_xx};
 
 pub use trezor_noise_protocol::{Cipher, DH, Hash, U8Array};
 
 use crate::{
-    Device, Error, Host, Role,
+    Error,
     channel::{MAX_CREDENTIAL_LEN, PairingState},
     credential::{CredentialStore, CredentialVerifier},
     util::prepare_zeroed,
 };
 
-use core::marker::PhantomData;
-
-pub const HANDSHAKE_HASH_LEN: usize = 32;
-pub const PRIVKEY_LEN: usize = 32;
-pub const PUBKEY_LEN: usize = 32;
-pub const TAG_LEN: usize = 16;
+use super::{Ciphers, HANDSHAKE_HASH_LEN, NoiseHandshake, PRIVKEY_LEN, PUBKEY_LEN, TAG_LEN};
 
 /// Cryptography backend trait.
 ///
 /// Please see [`trezor-noise-rust-crypto` and `trezor-noise-ring`](http://github.com/trezor/noise-rust)
 /// for implementations based on rust-crypto and ring.
-pub trait Backend {
+pub trait TrezorNoiseProtocolBackend {
     /// Implementation of AES-256-GCM.
     type Cipher: Cipher;
     /// Implementation of X25519.
@@ -40,23 +27,22 @@ pub trait Backend {
     fn random_bytes(dest: &mut [u8]);
 }
 
-type DHPrivKey<B> = <<B as Backend>::DH as DH>::Key;
-type DHPubKey<B> = <<B as Backend>::DH as DH>::Pubkey;
+type DHPrivKey<B> = <<B as TrezorNoiseProtocolBackend>::DH as DH>::Key;
+type DHPubKey<B> = <<B as TrezorNoiseProtocolBackend>::DH as DH>::Pubkey;
 
-pub struct NoiseHandshake<R: Role, B: Backend> {
+pub struct TrezorNoiseProtocol<B: TrezorNoiseProtocolBackend> {
     hss: HandshakeState<B::DH, B::Cipher, B::Hash>,
-    _phantom: PhantomData<R>,
 }
 
-pub struct NoiseCiphers<B: Backend> {
+pub struct NoiseCiphers<B: TrezorNoiseProtocolBackend> {
     encrypt: CipherState<B::Cipher>,
     decrypt: CipherState<B::Cipher>,
     handshake_hash: [u8; HANDSHAKE_HASH_LEN],
     remote_static_pubkey: [u8; PUBKEY_LEN],
 }
 
-impl<B: Backend> NoiseCiphers<B> {
-    pub fn encrypt(&mut self, in_out: &mut [u8], plaintext_len: usize) -> Result<(), Error> {
+impl<B: TrezorNoiseProtocolBackend> Ciphers for NoiseCiphers<B> {
+    fn encrypt(&mut self, in_out: &mut [u8], plaintext_len: usize) -> Result<(), Error> {
         if in_out.len() < plaintext_len + TAG_LEN {
             return Err(Error::insufficient_buffer());
         }
@@ -64,7 +50,7 @@ impl<B: Backend> NoiseCiphers<B> {
         Ok(())
     }
 
-    pub fn decrypt(&mut self, in_out: &mut [u8]) -> Result<usize, Error> {
+    fn decrypt(&mut self, in_out: &mut [u8]) -> Result<usize, Error> {
         if in_out.len() < TAG_LEN {
             return Err(Error::malformed_data());
         }
@@ -73,17 +59,23 @@ impl<B: Backend> NoiseCiphers<B> {
             .map_err(|()| Error::crypto_error())
     }
 
-    pub fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
+    fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
         &self.handshake_hash
     }
 
-    pub fn remote_static_pubkey(&self) -> &[u8; PUBKEY_LEN] {
+    fn remote_static_pubkey(&self) -> &[u8; PUBKEY_LEN] {
         &self.remote_static_pubkey
     }
 }
 
-impl<B: Backend> NoiseHandshake<Host, B> {
-    pub fn write_initiation_request(
+impl<B: TrezorNoiseProtocolBackend> NoiseHandshake for TrezorNoiseProtocol<B> {
+    type Ciphers = NoiseCiphers<B>;
+
+    fn random_bytes(dest: &mut [u8]) {
+        B::random_bytes(dest);
+    }
+
+    fn write_initiation_request(
         device_properties: &[u8],
         try_to_unlock: bool,
         dest: &mut [u8],
@@ -101,14 +93,11 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         let len = hss.get_next_message_overhead() + payload.len();
         let dest = dest.get_mut(..len).ok_or_else(Error::insufficient_buffer)?;
         hss.write_message(payload, dest)?;
-        let new = NoiseHandshake {
-            hss,
-            _phantom: PhantomData,
-        };
+        let new = TrezorNoiseProtocol { hss };
         Ok((new, len))
     }
 
-    pub fn write_completion_request(
+    fn write_completion_request(
         &mut self,
         cred_store: &mut impl CredentialStore,
         receive_buffer: &[u8],
@@ -152,30 +141,7 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         Ok((nc, len))
     }
 
-    fn credential_from_store(
-        cs: &impl CredentialStore,
-        re: &DHPubKey<B>,
-        rs: &DHPubKey<B>,
-    ) -> Result<(DHPrivKey<B>, heapless::Vec<u8, MAX_CREDENTIAL_LEN>), Error>
-    where
-        DHPrivKey<B>: U8Array,
-    {
-        let mut buf = heapless::Vec::<u8, { PRIVKEY_LEN + MAX_CREDENTIAL_LEN }>::new();
-        prepare_zeroed(&mut buf);
-        let result = cs.lookup(re.as_slice(), rs.as_slice(), buf.as_mut_slice());
-        if let Some(found) = result {
-            let found_key = <DHPrivKey<B> as U8Array>::from_slice(found.local_static_privkey);
-            let found_credential = heapless::Vec::from_slice(found.auth_credential)
-                .map_err(|_| Error::insufficient_buffer())?;
-            return Ok((found_key, found_credential));
-        }
-        let new_key = <B::DH as DH>::genkey();
-        Ok((new_key, heapless::Vec::new()))
-    }
-}
-
-impl<B: Backend> NoiseHandshake<Device, B> {
-    pub fn prepare_responder(device_properties: &[u8]) -> Self {
+    fn prepare_responder(device_properties: &[u8]) -> Self {
         let hss = HandshakeState::new(
             noise_xx(),
             /*is_initiator=*/ false,
@@ -185,13 +151,10 @@ impl<B: Backend> NoiseHandshake<Device, B> {
             /*re=*/ None,
             /*rs=*/ None,
         );
-        NoiseHandshake {
-            hss,
-            _phantom: PhantomData,
-        }
+        TrezorNoiseProtocol { hss }
     }
 
-    pub fn read_initiation_request(&mut self, incoming: &[u8]) -> Result<bool, Error> {
+    fn read_initiation_request(&mut self, incoming: &[u8]) -> Result<bool, Error> {
         const PAYLOAD_LEN: usize = 1;
         if incoming.len() != self.hss.get_next_message_overhead() + PAYLOAD_LEN {
             log::error!("Unexpected message length during handshake.");
@@ -203,7 +166,7 @@ impl<B: Backend> NoiseHandshake<Device, B> {
         Ok(try_to_unlock)
     }
 
-    pub fn write_initiation_response(
+    fn write_initiation_response(
         &mut self,
         static_privkey: &[u8; PRIVKEY_LEN],
         dest: &mut [u8],
@@ -218,7 +181,7 @@ impl<B: Backend> NoiseHandshake<Device, B> {
         Ok(len)
     }
 
-    pub fn write_completion_response(
+    fn write_completion_response(
         &mut self,
         incoming: &[u8],
         cred_verifier: &impl CredentialVerifier,
@@ -264,7 +227,32 @@ impl<B: Backend> NoiseHandshake<Device, B> {
         nc.encrypt(dest, plaintext_len)?;
         Ok((nc, pairing_state, dest.len()))
     }
+}
 
+impl<B: TrezorNoiseProtocolBackend> TrezorNoiseProtocol<B> {
+    fn credential_from_store(
+        cs: &impl CredentialStore,
+        re: &DHPubKey<B>,
+        rs: &DHPubKey<B>,
+    ) -> Result<(DHPrivKey<B>, heapless::Vec<u8, MAX_CREDENTIAL_LEN>), Error>
+    where
+        DHPrivKey<B>: U8Array,
+    {
+        let mut buf = heapless::Vec::<u8, { PRIVKEY_LEN + MAX_CREDENTIAL_LEN }>::new();
+        prepare_zeroed(&mut buf);
+        let result = cs.lookup(re.as_slice(), rs.as_slice(), buf.as_mut_slice());
+        if let Some(found) = result {
+            let found_key = <DHPrivKey<B> as U8Array>::from_slice(found.local_static_privkey);
+            let found_credential = heapless::Vec::from_slice(found.auth_credential)
+                .map_err(|_| Error::insufficient_buffer())?;
+            return Ok((found_key, found_credential));
+        }
+        let new_key = <B::DH as DH>::genkey();
+        Ok((new_key, heapless::Vec::new()))
+    }
+}
+
+impl<B: TrezorNoiseProtocolBackend> TrezorNoiseProtocol<B> {
     fn mask_key(static_privkey: &[u8; PRIVKEY_LEN]) -> MaskKeyResult<B>
     where
         DHPrivKey<B>: U8Array,
@@ -283,13 +271,13 @@ impl<B: Backend> NoiseHandshake<Device, B> {
     }
 }
 
-struct MaskKeyResult<B: Backend> {
+struct MaskKeyResult<B: TrezorNoiseProtocolBackend> {
     static_privkey: DHPrivKey<B>,
     ephemeral_privkey: DHPrivKey<B>,
     mask: DHPrivKey<B>,
 }
 
-fn hash_of_two<B: Backend>(in1: &[u8], in2: &[u8]) -> [u8; PRIVKEY_LEN] {
+fn hash_of_two<B: TrezorNoiseProtocolBackend>(in1: &[u8], in2: &[u8]) -> [u8; PRIVKEY_LEN] {
     let mut res = [0u8; PRIVKEY_LEN];
     let mut h = <B::Hash as Default>::default();
     h.input(in1);

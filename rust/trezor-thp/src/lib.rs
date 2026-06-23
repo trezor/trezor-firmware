@@ -10,9 +10,10 @@ pub mod credential;
 pub mod error;
 mod fragment;
 pub mod header;
+pub mod noise;
 mod util;
 
-pub use channel::{Backend, ChannelIO};
+pub use channel::{ChannelIO, NoiseHandshake};
 pub use error::Error;
 
 pub trait Role: Clone + PartialEq {

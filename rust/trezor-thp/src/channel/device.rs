@@ -1,12 +1,11 @@
 use heapless;
 
 use crate::{
-    Backend, ChannelIO, Device, Error,
+    ChannelIO, Device, Error, NoiseHandshake,
     alternating_bit::SyncBits,
     channel::{
         HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, MAX_DEVICE_PROPERTIES_LEN, Nonce,
         PRIVKEY_LEN, PacketInResult, PairingState, Phase, ReceiveState, SendState,
-        noise::NoiseHandshake,
     },
     control_byte::ControlByte,
     credential::CredentialVerifier,
@@ -31,17 +30,17 @@ const BROADCAST_OUTGOING_QUEUE_LEN: usize = 8;
 // "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
 const CODEC_V1_RESPONSE: &[u8] = b"?##\x00\x03\x00\x00\x00\x02\x08\x11";
 
-pub type Channel<B> = super::Channel<Device, B>;
+pub type Channel<N> = super::Channel<Device, N>;
 
 /// Maps packets to channels. Handles broadcast channel messages, notably channel allocation.
 /// Every packet interface on the device needs to have one Mux. Event loop should pass every
 /// incoming packet to [`Mux::packet_in`] in order to determine what to do with it.
 /// Single packet only. Does not keep track of opened channels.
-pub struct Mux<B> {
+pub struct Mux<N> {
     outgoing: heapless::Deque<MuxOutgoing, BROADCAST_OUTGOING_QUEUE_LEN>,
     new_channel: Option<Nonce>,
     device_properties: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
-    _phantom: PhantomData<B>,
+    _phantom: PhantomData<N>,
 }
 
 enum MuxOutgoing {
@@ -60,9 +59,9 @@ impl MuxOutgoing {
     }
 }
 
-impl<B> Mux<B>
+impl<N> Mux<N>
 where
-    B: Backend,
+    N: NoiseHandshake,
 {
     pub fn new(device_properties: &[u8]) -> Result<Self, Error> {
         let device_properties = heapless::Vec::from_slice(device_properties)
@@ -87,7 +86,7 @@ where
         &mut self,
         channel_id: u16,
         cred_verif: C,
-    ) -> Result<ChannelOpen<C, B>, Error>
+    ) -> Result<ChannelOpen<C, N>, Error>
     where
         C: CredentialVerifier,
     {
@@ -97,7 +96,7 @@ where
         let Some(nonce) = self.new_channel.take() else {
             return Err(Error::not_ready());
         };
-        ChannelOpen::<C, B>::new(channel_id, nonce, &self.device_properties, cred_verif)
+        ChannelOpen::<C, N>::new(channel_id, nonce, &self.device_properties, cred_verif)
     }
 
     /// Returns `true` if there is channel allocation request pending.
@@ -185,9 +184,9 @@ where
     }
 }
 
-impl<B> ChannelIO for Mux<B>
+impl<N> ChannelIO for Mux<N>
 where
-    B: Backend,
+    N: NoiseHandshake,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
         let Ok((cb, _)) = ControlByte::parse(packet_buffer) else {
@@ -290,16 +289,16 @@ enum HandshakeState {
 /// [`ChannelOpen::handshake_done`] is true, then call [`ChannelOpen::complete`].
 /// Please note that this object also handles sending ChannelAllocationResponse
 /// which is a broadcast message, which are normally handled by [`Mux`].
-pub struct ChannelOpen<C: CredentialVerifier, B: Backend> {
-    channel: Channel<B>,
+pub struct ChannelOpen<C: CredentialVerifier, N: NoiseHandshake> {
+    channel: Channel<N>,
     state: HandshakeState,
-    noise: NoiseHandshake<Device, B>,
+    noise: N,
     send_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_DTH_LEN>,
     receive_buffer: heapless::Vec<u8, HANDSHAKE_BUFFER_HTD_LEN>,
     cred_verif: C,
 }
 
-impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
+impl<C: CredentialVerifier, N: NoiseHandshake> ChannelOpen<C, N> {
     fn new(
         channel_id: u16,
         nonce: Nonce,
@@ -325,7 +324,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         Ok(Self {
             channel,
             state: HandshakeState::SendingChannelResponse,
-            noise: NoiseHandshake::prepare_responder(device_properties),
+            noise: N::prepare_responder(device_properties),
             send_buffer,
             receive_buffer,
             cred_verif,
@@ -436,7 +435,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     ///
     /// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
     /// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
-    pub fn complete(mut self) -> Result<Channel<B>, Error> {
+    pub fn complete(mut self) -> Result<Channel<N>, Error> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }
@@ -485,10 +484,10 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     }
 }
 
-impl<C, B> ChannelIO for ChannelOpen<C, B>
+impl<C, N> ChannelIO for ChannelOpen<C, N>
 where
     C: CredentialVerifier,
-    B: Backend,
+    N: NoiseHandshake,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
         let res = self
@@ -570,9 +569,9 @@ pub struct ChannelIdAllocator {
 
 impl ChannelIdAllocator {
     /// Use random starting id to avoid giving out the number of channels allocated since boot.
-    pub fn new_random<B: Backend>() -> Self {
+    pub fn new_random<N: NoiseHandshake>() -> Self {
         let mut bytes = [0u8, 0u8];
-        B::random_bytes(&mut bytes);
+        N::random_bytes(&mut bytes);
         Self::new_from(u16::from_be_bytes(bytes))
     }
 
