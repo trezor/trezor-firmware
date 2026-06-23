@@ -169,7 +169,7 @@ class SessionIdentifier:
 
     def to_session_str(self) -> str:
         session_str_plain = json.dumps(dataclasses.asdict(self))
-        LOG.info(f"Decoded ession string: {session_str_plain}")
+        LOG.info(f"Decoded session string: {session_str_plain}")
         return base64.b64encode(session_str_plain.encode()).decode()
 
     def resume(self, client: TrezorClient) -> Session:
@@ -198,7 +198,6 @@ class TrezorConnection:
     _features: messages.Features | None = None
     _version: tuple[int, int, int] | None = None
     _transport: Transport | None = None
-    _standard_session: Session | None = None
 
     def __init__(
         self,
@@ -212,12 +211,20 @@ class TrezorConnection:
     ) -> None:
         self.session_str = session_str
 
-        if session_str is None:
+        decoded_session = None
+        if session_str is not None:
+            try:
+                decoded_session = SessionIdentifier.from_session_str(session_str)
+            except Exception:
+                LOG.warning("Failed to decode session string, not resuming.")
+                LOG.debug("Exception details:", exc_info=True)
+
+        if decoded_session is None:
             self.session = None
             self.path = path
         else:
-            self.session = SessionIdentifier.from_session_str(session_str)
-            if path is not None and self.session.path != path:
+            self.session = decoded_session
+            if path is not None and decoded_session.path != path:
                 click.echo("Attempting to resume a session on a different device.")
                 click.echo(
                     "Hint: omit -p or unset TREZOR_PATH to use the appropriate device for this session."
@@ -229,7 +236,7 @@ class TrezorConnection:
                 raise click.ClickException(
                     "Session path does not match the provided path"
                 )
-            self.path = self.session.path
+            self.path = decoded_session.path
 
         self.passphrase_source = passphrase_source
         self.script = script
@@ -244,36 +251,12 @@ class TrezorConnection:
             self.app.button_callback = click_ui.button_request
             self.app.pin_callback = click_ui.get_pin
 
-    def ensure_unlocked(self) -> None:
-        """Ensure that the device is unlocked.
-
-        Separate from `client.ensure_unlocked()` because we want to reuse the
-        standard session.
-        """
-        with self.client_context() as client:
-            if not client.features.initialized:
-                # uninitialized device cannot be locked
-                return
-            # query the standard session instead
-            self.standard_session.ensure_unlocked()
-
-    @property
-    def standard_session(self) -> Session:
-        if self._standard_session is None:
-            with self.client_context() as client:
-                self._standard_session = client.get_session(
-                    passphrase=PassphraseSetting.STANDARD_WALLET
-                )
-        # seems to be a weird typechecker limitation that it still thinks that
-        # session could be None here
-        return self._standard_session  # type: ignore ["None" is not assignable]
-
     @property
     def features(self) -> messages.Features:
         if self._features is None:
-            self.ensure_unlocked()
-            assert self._client is not None  # after ensure_unlocked
-            self._features = self._client.features
+            with self.client_context() as client:
+                client.ensure_unlocked()
+                self._features = client.features
         return self._features
 
     @property
@@ -314,7 +297,6 @@ class TrezorConnection:
         self._client = None
         self._features = None
         self._version = None
-        self._standard_session = None
 
     def _passphrase_source_resolved(self) -> PassphraseSource:
         """Resolve PassphraseSource.AUTO to a concrete PassphraseSource.
@@ -343,14 +325,14 @@ class TrezorConnection:
 
     def get_session(
         self,
-        use_passphrase: bool = True,
+        prompt_passphrase: bool = True,
         seedless: bool = False,
         derive_cardano: bool = False,
     ) -> Session:
         """Get a session from this connection.
 
         Arguments:
-        - use_passphrase: if True, user should get a passphrase prompt
+        - prompt_passphrase: if True, user should get a passphrase prompt
           (either on host or on device)
         - seedless: if True, create a session without a derived seed
         - derive_cardano: whether to derive a Cardano session
@@ -361,14 +343,8 @@ class TrezorConnection:
         if seedless:
             return client.get_session(passphrase=None)
 
-        passphrase_source = self._passphrase_source_resolved()
-
-        # if empty passphrase is requested, do not try to resume and just use
-        # the standard session that we already have
-        if not use_passphrase or passphrase_source == PassphraseSource.EMPTY:
-            return self.standard_session
-
-        # Try resume session from id
+        # Try to resume session from id first. A previous `get-session` call might have
+        # derived an unlocked session for us already.
         if self.session is not None:
             try:
                 return self.session.resume(client)
@@ -376,7 +352,7 @@ class TrezorConnection:
                 LOG.error("Failed to resume session", exc_info=True)
                 raise
 
-        # if all else fails, allocate a new session
+        # nothing to resume, allocate a new session
         return self.get_new_session(derive_cardano=derive_cardano)
 
     def get_new_session(
@@ -452,6 +428,8 @@ class TrezorConnection:
             if credential is not None:
                 self.credentials.add(credential)
 
+        client.pairing.finish()
+
         return client
 
     def get_client(self) -> TrezorClient:
@@ -509,13 +487,13 @@ class TrezorConnection:
     def session_context(
         self,
         *,
-        use_passphrase: bool = True,
+        prompt_passphrase: bool = True,
         derive_cardano: bool = False,
         seedless: bool = False,
     ) -> t.Generator[Session, None, None]:
         yield from self._connection_context(
             self.get_session,
-            use_passphrase=use_passphrase,
+            prompt_passphrase=prompt_passphrase,
             derive_cardano=derive_cardano,
             seedless=seedless,
         )
@@ -554,7 +532,7 @@ def with_session(
     """Provides a Click command with parameter `session=obj.get_session(...)`
     based on the parameters provided:
 
-    * if `passphrase` is set to False, a standard wallet is always used for this session
+    * if `passphrase` is set to False, the user will not be prompted for a passphrase
     * if `cardano` is set to True, Cardano-specific operations are enabled for this session
     * if `seedless` is set to True, a seedless session is used for this session
 
@@ -571,7 +549,7 @@ def with_session(
             obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
         ) -> "R":
             with obj.session_context(
-                use_passphrase=passphrase,
+                prompt_passphrase=passphrase,
                 derive_cardano=cardano,
                 seedless=seedless,
             ) as session:
