@@ -1,0 +1,1 @@
+`TrezorClient.ensure_unlocked()` will not allocate a session and will not cause seed derivation. `Session.ensure_unlocked()` now just forwards to `TrezorClient`.
