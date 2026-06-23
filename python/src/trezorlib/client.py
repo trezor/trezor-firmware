@@ -571,7 +571,18 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         with session:
             # ApplySettings with no settings specified will trigger PIN unlock but
             # then immediately return with an error "no setting provided".
-            session.call_raw(messages.ApplySettings())
+            try:
+                session.call(messages.ApplySettings(), expect=messages.Failure)
+            except exceptions.TrezorFailure as e:
+                if e.code not in (
+                    messages.FailureType.ProcessError,
+                    messages.FailureType.DataError,
+                ):
+                    # T1 sends a DataError, trezor-core sends ProcessError.
+                    # Anything else is likely to mean the error is from the PIN unlock,
+                    # not from the ApplySettings call.
+                    raise
+
         # refresh features to update fields whose state is different after unlock.
         self.refresh_features()
 
