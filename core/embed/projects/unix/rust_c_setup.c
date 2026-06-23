@@ -20,11 +20,14 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
-#include <io/usb_config.h>
 #include <sec/unit_properties.h>
 #include <sys/flash.h>
 #include <sys/flash_otp.h>
 #include <sys/system.h>
+
+#ifdef USE_USB
+#include <io/usb_config.h>
+#endif
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -62,5 +65,7 @@ void rust_tests_c_setup(void) {
   tropic_init();
 #endif
 
+#ifdef USE_USB
   usb_configure(NULL);
+#endif
 }

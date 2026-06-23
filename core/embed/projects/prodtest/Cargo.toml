@@ -42,7 +42,6 @@ default = [
     # "io/fancy_fatal_error", # switched off in prodtest
     "io/kernel_mode",
     "io/secure_mode",
-    "io/usb_iface_vcp",
     "models/prodtest",
     "rtl/sprintf",
     "rtl/mldsa",
@@ -54,7 +53,6 @@ default = [
     "trezor_lib/crypto",
     "trezor_lib/ui",
     "trezor_lib/prodtest",
-    "trezor_lib/usb",
 ]
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]
@@ -110,6 +108,7 @@ telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
 touch = ["io/touch", "trezor_lib/touch"]
 touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
 tropic = ["sec/tropic", "trezor_lib/tropic"]
+usb = ["io/usb", "io/usb_iface_vcp", "sys/usb", "trezor_lib/usb"]
 
 
 display_mono = ["trezor_lib/display_mono"]

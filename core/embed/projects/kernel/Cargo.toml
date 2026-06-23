@@ -46,7 +46,6 @@ default = [
     "sys/applets",
     "io/display",
     "io/kernel_mode",
-    "io/usb_iface_wire",
     "sec/rdi",
     "sec/storage",
     "models/kernel",
@@ -98,3 +97,4 @@ telemetry = ["sec/telemetry"]
 touch = ["io/touch"]
 touch_wakeup = ["io/touch_wakeup"]
 tropic = ["sec/tropic"]
+usb = ["io/usb", "io/usb_iface_wire", "sys/usb"]

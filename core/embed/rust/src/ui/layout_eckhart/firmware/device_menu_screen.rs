@@ -6,7 +6,6 @@ use crate::{
     micropython::{gc::GcBox, obj::Obj},
     strutil::TString,
     translations::TR,
-    trezorhal::usb,
     ui::{
         component::{
             text::{
@@ -340,7 +339,10 @@ impl DeviceMenuScreen {
         screen.register_settings_menu(ble_enabled);
         screen.register_power_menu();
 
-        let is_connected = usb::usb_configured();
+        #[cfg(feature = "usb")]
+        let is_connected = crate::trezorhal::usb::usb_configured();
+        #[cfg(not(feature = "usb"))]
+        let is_connected = false;
         #[cfg(feature = "ble")]
         let is_connected = is_connected || ble::is_connected();
 

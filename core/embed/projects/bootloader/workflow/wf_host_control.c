@@ -26,13 +26,17 @@
 #include <sys/types.h>
 
 #include "protob/protob.h"
-#include "wire/wire_iface_usb.h"
 #include "workflow.h"
+
+#ifdef USE_USB
+#include "wire/wire_iface_usb.h"
+#endif
 
 #ifdef USE_BLE
 #include <wire/wire_iface_ble.h>
 #endif
 
+#if defined(USE_USB) || defined(USE_BLE)
 static workflow_result_t bootloader_process_comm(wire_iface_t *wire_iface) {
   if (wire_iface == NULL) {
     // continue with the event processing
@@ -85,11 +89,14 @@ static workflow_result_t bootloader_process_comm(wire_iface_t *wire_iface) {
       return WF_OK;
   }
 }
+#endif
 
+#ifdef USE_USB
 workflow_result_t bootloader_process_usb(void) {
   wire_iface_t *iface = usb_iface_get();
   return bootloader_process_comm(iface);
 }
+#endif
 
 #ifdef USE_BLE
 workflow_result_t bootloader_process_ble(void) {
@@ -99,17 +106,20 @@ workflow_result_t bootloader_process_ble(void) {
 #endif
 
 void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios) {
-  size_t cnt = 1;
+  size_t cnt = 0;
   memset(ios, 0, sizeof(*ios));
 
+#ifdef USE_USB
   wire_iface_t *usb_iface = usb_iface_init(usb21_landing);
-
-  protob_init(&ios->ifaces[0], usb_iface);
+  protob_init(&ios->ifaces[cnt], usb_iface);
+  cnt++;
+#else
+  (void)usb21_landing;
+#endif
 
 #ifdef USE_BLE
   wire_iface_t *ble_iface = ble_iface_init();
-
-  protob_init(&ios->ifaces[1], ble_iface);
+  protob_init(&ios->ifaces[cnt], ble_iface);
   cnt++;
 #endif
 
@@ -118,7 +128,9 @@ void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios) {
 
 void workflow_ifaces_deinit(protob_ios_t *ios) {
   systick_delay_ms(100);
+#ifdef USE_USB
   usb_iface_deinit();
+#endif
 #ifdef USE_BLE
   ble_iface_deinit();
 #endif
@@ -128,7 +140,9 @@ void workflow_ifaces_pause(protob_ios_t *ios) {
   if (ios == NULL) {
     return;
   }
+#ifdef USE_USB
   usb_iface_deinit();
+#endif
 #ifdef USE_BLE
   ble_iface_deinit();
 #endif

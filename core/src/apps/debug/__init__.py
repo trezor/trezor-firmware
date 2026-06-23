@@ -619,8 +619,9 @@ if __debug__:
         )
 
     def boot() -> None:
-        import usb
-
         global _SESSION_TASK
 
-        _SESSION_TASK = loop.spawn(handle_session(usb.iface_debug))
+        if utils.USE_USB:
+            import usb
+
+            _SESSION_TASK = loop.spawn(handle_session(usb.iface_debug))

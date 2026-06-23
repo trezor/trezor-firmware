@@ -10,3 +10,5 @@ panel = "io/display_panel_vg2864"
 [optiga]
 
 [sbu]
+
+[usb]

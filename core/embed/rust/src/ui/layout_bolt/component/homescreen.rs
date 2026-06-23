@@ -3,7 +3,6 @@ use crate::{
     strutil::TString,
     time::{Duration, Instant},
     translations::TR,
-    trezorhal::usb::usb_configured,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Pad, Timer},
         display::{
@@ -92,15 +91,15 @@ impl Homescreen {
     }
 
     fn get_notification(&self) -> Option<Notification> {
-        if !usb_configured() {
-            Some(Notification {
+        #[cfg(feature = "usb")]
+        if !crate::trezorhal::usb::usb_configured() {
+            return Some(Notification {
                 text: TR::homescreen__title_no_usb_connection.into(),
                 level: NotificationLevel::Alert,
                 actionable: false,
-            })
-        } else {
-            self.notification.clone()
+            });
         }
+        self.notification.clone()
     }
 
     fn render_loader<'s>(&'s self, target: &mut impl Renderer<'s>) {

@@ -245,6 +245,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     }
 #endif
 
+#ifdef USE_USB
     if (signalled.read_ready & (1 << SYSHANDLE_USB)) {
       usb_event_t event = usb_get_event();
       ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_USB);
@@ -266,6 +267,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         return mp_const_true;
       }
     }
+#endif
   }
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_poll_obj, mod_trezorio_poll);

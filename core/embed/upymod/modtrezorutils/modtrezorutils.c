@@ -35,7 +35,6 @@
 #include "modtrezorutils-meminfo.h"
 
 #include <io/notify.h>
-#include <io/usb.h>
 #include <rtl/scm_revision.h>
 #include <sec/fwutils.h>
 #include <sec/unit_properties.h>
@@ -44,6 +43,10 @@
 
 #include "blake2s.h"
 #include "memzero.h"
+
+#ifdef USE_USB
+#include <io/usb.h>
+#endif
 
 #ifdef USE_SECRET
 #include <sec/secret.h>
@@ -843,6 +846,8 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether a debug console is enabled."""
 /// USE_APP_LOADING: bool
 /// """Whether the firmware supports loading 3rd-party applications."""
+/// USE_USB: bool
+/// """Whether the hardware supports USB."""
 /// USE_TELEMETRY: bool
 /// """Whether a telemetry is supported."""
 /// USE_N4W1: bool
@@ -1074,6 +1079,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_APP_LOADING), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_APP_LOADING), mp_const_false},
+#endif
+#ifdef USE_USB
+    {MP_ROM_QSTR(MP_QSTR_USE_USB), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_USB), mp_const_false},
 #endif
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_PTR(&mod_trezorutils_model_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_MODEL_FULL_NAME),

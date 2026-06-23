@@ -9,3 +9,5 @@ driver = "io/backlight_pin"
 
 [touch]
 driver = "io/touch_sitronix"
+
+[usb]

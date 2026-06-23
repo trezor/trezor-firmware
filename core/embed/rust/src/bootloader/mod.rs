@@ -5,7 +5,7 @@ use crate::ui::layout::simplified::button_eval;
 
 use crate::{
     trezorhal::{
-        bootloader::{bootloader_process_usb, BootloaderWFResult},
+        bootloader::BootloaderWFResult,
         sysevent::{sysevents_poll, Syshandle},
     },
     ui::{
@@ -14,6 +14,9 @@ use crate::{
         CommonUI, ModelUI,
     },
 };
+
+#[cfg(feature = "usb")]
+use crate::trezorhal::bootloader::bootloader_process_usb;
 
 #[cfg(feature = "ble")]
 use crate::trezorhal::bootloader::bootloader_process_ble;
@@ -146,6 +149,7 @@ pub fn run(
                 continue;
             }
 
+            #[cfg(feature = "usb")]
             if e == Event::USBWire {
                 let res = bootloader_process_usb();
                 if res == BootloaderWFResult::Ok {

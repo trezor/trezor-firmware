@@ -17,6 +17,7 @@ pub enum BootloaderWFResult {
     Cancelled = ffi::workflow_result_t_WF_CANCELLED as _,
 }
 
+#[cfg(feature = "usb")]
 pub fn bootloader_process_usb() -> BootloaderWFResult {
     unsafe {
         BootloaderWFResult::from_u32(ffi::bootloader_process_usb())

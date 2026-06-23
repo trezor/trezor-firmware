@@ -86,6 +86,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_NRF",
     "-DUSE_HW_JPEG_DECODER",
     "-DUSE_STORAGE",
+    "-DUSE_USB",
     "-DUSE_DBG_CONSOLE",
     "-DBOOTLOADER",
 ];

@@ -53,6 +53,9 @@ dbg_console_system_view = ["dbg_console", "system_view"]
 sdram = []
 sdram_stm32f429i_disc1 = []
 system_view = []
+# Compiles the vendor USB HAL drivers (PCD + LL USB). Enabled by the
+# board-gated `usb` aggregate in the project crates.
+usb = []
 production = ["rtl/production"]
 
 test = [

@@ -36,6 +36,7 @@ uses = [
     "touch",
     "touch_wakeup",
     "tropic",
+    "usb",
 
     # Legacy coin support
     "decred",

@@ -63,10 +63,15 @@ smp = []
 suspend = ["sec/suspend"]
 touch = []
 touch_wakeup = []
-usb_iface_debug = ["usb"]
-usb_iface_vcp = ["usb"]
-usb_iface_webauthn = ["usb"]
-usb_iface_wire = ["usb"]
+# USB interface selectors. These only choose which interface defines are
+# emitted; they intentionally do NOT enable the `usb` stack itself, so that
+# enabling an interface (e.g. via universal_fw/debuglink) on a board without
+# USB does not pull in the whole USB driver. The `usb` feature is enabled
+# separately by the board-gated `usb` aggregate in each project crate.
+usb_iface_debug = []
+usb_iface_vcp = []
+usb_iface_webauthn = []
+usb_iface_wire = []
 
 test = [
     "mcu_stm32u5g",

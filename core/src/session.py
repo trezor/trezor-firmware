@@ -3,11 +3,13 @@ from trezor import log, loop, utils, wire, workflow
 
 import apps.base
 from apps.common import lock_manager
-import usb
+
+if utils.USE_USB:
+    import usb
 
 apps.base.boot()
 
-if not utils.BITCOIN_ONLY and usb.ENABLE_IFACE_WEBAUTHN:
+if utils.USE_USB and not utils.BITCOIN_ONLY and usb.ENABLE_IFACE_WEBAUTHN:
     import apps.webauthn
 
     apps.webauthn.boot()
@@ -24,9 +26,13 @@ workflow.start_default()
 if utils.USE_BLE:
     import trezorble as ble
 
-    # initialize the wire codec over USB & BLE
-    wire.setup(usb.iface_wire, ble.interface)
-else:
+    if utils.USE_USB:
+        # initialize the wire codec over USB & BLE
+        wire.setup(usb.iface_wire, ble.interface)
+    else:
+        # initialize the wire codec over BLE
+        wire.setup(ble.interface)
+elif utils.USE_USB:
     # initialize the wire codec over USB
     wire.setup(usb.iface_wire)
 

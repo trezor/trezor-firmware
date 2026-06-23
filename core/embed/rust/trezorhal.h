@@ -6,7 +6,6 @@
 #include <io/display_utils.h>
 #include <io/gfx_bitblt.h>
 #include <io/translations.h>
-#include <io/usb.h>
 #include <rtl/secbool.h>
 #include <sys/flash.h>
 #include <sys/irq.h>
@@ -41,6 +40,10 @@
 
 #ifdef USE_TOUCH
 #include <io/touch.h>
+#endif
+
+#ifdef USE_USB
+#include <io/usb.h>
 #endif
 
 #ifdef USE_POWER_MANAGER

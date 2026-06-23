@@ -942,6 +942,7 @@ impl<'a> MpyBuilder<'a> {
         let touch = py_bool(cfg!(feature = "touch"));
         let touch_wakeup = py_bool(cfg!(feature = "touch_wakeup"));
         let tropic = py_bool(cfg!(feature = "tropic"));
+        let usb = py_bool(cfg!(feature = "usb"));
         let scm_revision_xor2 = self.scm_revision_xor2;
 
         let layout_bolt = py_bool(cfg!(feature = "layout_bolt"));
@@ -966,6 +967,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_TOUCH_WAKEUP/{touch_wakeup}/g"), // must be before USE_TOUCH
             format!(r"s/utils\.USE_TOUCH/{touch}/g"),
             format!(r"s/utils\.USE_TROPIC/{tropic}/g"),
+            format!(r"s/utils\.USE_USB/{usb}/g"),
             format!(r"s/utils\.SCM_REVISION_XOR2/{scm_revision_xor2}/g"),
             format!(r#"s/utils\.UI_LAYOUT == "BOLT"/{layout_bolt}/g"#),
             format!(r#"s/utils\.UI_LAYOUT == "CAESAR"/{layout_caesar}/g"#),
@@ -1010,6 +1012,10 @@ impl<'a> MpyBuilder<'a> {
             files.remove(src, "ble.py");
         }
 
+        if cfg!(not(feature = "usb")) {
+            files.remove(src, "usb.py");
+        }
+
         files.add(src.join("trezor"), "*.py")?;
 
         if cfg!(not(feature = "sd_card")) {
@@ -1021,7 +1027,7 @@ impl<'a> MpyBuilder<'a> {
 
         files.add(src.join("trezor/ui/layouts"), "*.py")?;
 
-        if cfg!(not(feature = "universal_fw")) {
+        if cfg!(not(feature = "universal_fw")) || cfg!(not(feature = "usb")) {
             files.remove(src, "trezor/ui/layouts/fido.py");
         }
 
@@ -1039,7 +1045,7 @@ impl<'a> MpyBuilder<'a> {
 
         files.add(layout_dir, "*.py")?;
 
-        if cfg!(not(feature = "universal_fw")) {
+        if cfg!(not(feature = "universal_fw")) || cfg!(not(feature = "usb")) {
             files.remove(layout_dir, "fido.py");
         }
 
@@ -1235,7 +1241,10 @@ impl<'a> MpyBuilder<'a> {
 
             files.add(src, "apps/zcash/*.py")?;
 
-            files.add(src, "apps/webauthn/*.py")?;
+            // WebAuthn (FIDO2/U2F) is only reachable over USB HID.
+            if cfg!(feature = "usb") {
+                files.add(src, "apps/webauthn/*.py")?;
+            }
 
             if cfg!(feature = "decred") {
                 files.add(src, "apps/bitcoin/sign_tx/decred.py")?;

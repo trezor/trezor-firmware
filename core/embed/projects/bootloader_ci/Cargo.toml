@@ -43,7 +43,6 @@ default = [
     "io/display",
     "io/kernel_mode",
     "io/secure_mode",
-    "io/usb_iface_wire",
     "models/bootloader",
     "rtl/ed25519_no_precomp",
 ]
@@ -80,3 +79,4 @@ suspend = ["io/suspend"]
 tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry"]
 touch = ["io/touch"]
+usb = ["io/usb", "io/usb_iface_wire", "sys/usb"]

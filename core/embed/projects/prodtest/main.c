@@ -24,8 +24,6 @@
 
 #include <io/display.h>
 #include <io/rsod.h>
-#include <io/usb.h>
-#include <io/usb_config.h>
 #include <rtl/cli.h>
 #include <sec/board_capabilities.h>
 #include <sec/rsod_special.h>
@@ -38,6 +36,11 @@
 #include "rust_types.h"
 #include "rust_ui_prodtest.h"
 #include "sys/sysevent.h"
+
+#ifdef USE_USB
+#include <io/usb.h>
+#include <io/usb_config.h>
+#endif
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -141,7 +144,9 @@ static ssize_t console_write(void *context, const char *buf, size_t size) {
   return rc;
 }
 
+#ifdef USE_USB
 static void usb_vcp_intr_callback(void) { cli_abort(&g_cli); }
+#endif
 
 // Set if the RGB LED must not be controlled by the main loop
 static bool g_rgbled_control_disabled = false;
@@ -233,9 +238,11 @@ int prodtest_main(void) {
 
   drivers_init();
 
+#ifdef USE_USB
   ensure(usb_configure(&usb_vcp_intr_callback), "usb_configure failed");
 
   ensure(usb_start(NULL), "usb_start failed");
+#endif
 
   // Initialize command line interface
   cli_init(&g_cli, console_read, console_write, NULL);

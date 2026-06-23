@@ -41,6 +41,7 @@ uses = [
     "touch",
     "touch_wakeup",
     "tropic",
+    "usb",
 ]
 
 elf_sections = [".vendorheader", ".header", ".flash", ".data"]
