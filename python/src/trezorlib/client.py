@@ -97,8 +97,10 @@ class Session(t.Generic[ClientType, SessionIdType]):
     @enter_context
     def get_root_fingerprint(self) -> bytes:
         if self._root_fingerprint is None:
-            self.ensure_unlocked()
-            assert self._root_fingerprint is not None
+            pubkey = self.call(GET_ROOT_FINGERPRINT_MESSAGE, expect=messages.PublicKey)
+            # can't use resp.root_fingerprint because it's not available on <1.9.4 & <2.3.5
+            assert pubkey.node.fingerprint is not None
+            self._root_fingerprint = pubkey.node.fingerprint.to_bytes(4, "big")
         return self._root_fingerprint
 
     def call(
