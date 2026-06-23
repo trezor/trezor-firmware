@@ -1,3 +1,12 @@
+//! Low-level IPC message types for the Trezor UI, Crypto, and Progress interfaces.
+//!
+//! These types are serialized via [`rkyv`] and sent over IPC between the app
+//! and the Core firmware task.
+//!
+//! **Do not use these types directly.** They are re-exported and wrapped by the
+//! higher-level modules (`ui`, `crypto`, `progress`). The raw variants and fields
+//! are considered an implementation detail and may change without notice.
+
 use rkyv::munge::munge;
 use rkyv::rancor::Fallible;
 use rkyv::ser::Writer;
@@ -5,7 +14,10 @@ use rkyv::{
     Archive, ArchiveUnsized, Deserialize, Place, Portable, RelPtr, Serialize, SerializeUnsized,
 };
 
-/// Fixed-capacity byte string for `no_std`, serialized as `[u8; N] + len`.
+/// Fixed-capacity UTF-8 string for `no_std`, stored as `[u8; N]` + length.
+///
+/// Used as a serializable alternative to `heapless::String` in IPC messages.
+/// Prefer the higher-level string APIs over constructing this directly.
 #[derive(Archive, Serialize, Deserialize, Copy, Clone)]
 pub struct String<const N: usize> {
     pub data: [u8; N],
@@ -17,11 +29,21 @@ impl<const N: usize> String<N> {
         &self.data[..self.len]
     }
 
+    /// Returns the string contents, panicking if the stored bytes are not valid UTF-8.
+    ///
+    /// # Safety
+    /// Valid UTF-8 is enforced at construction time via [`from_slice`](Self::from_slice).
+    /// This function is safe to call as long as `String` was not constructed manually.
     pub fn as_str(&self) -> &str {
-        // SAFETY: We ensure that the data up to `len` is always valid UTF-8 when creating a String.
-        core::str::from_utf8(self.as_slice()).unwrap()
+        crate::unwrap!(
+            core::str::from_utf8(self.as_slice()),
+            "String contains invalid UTF-8"
+        )
     }
 
+    /// Constructs a `String<N>` from a byte slice.
+    ///
+    /// Returns `Err(())` if `slice.len() > N`.
     pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
         if slice.len() > N {
             // TODO: better error handling
@@ -36,6 +58,7 @@ impl<const N: usize> String<N> {
     }
 }
 
+/// A key-value pair with an optional monospace flag, used in UI detail views.
 #[derive(Archive, Serialize, Deserialize)]
 pub struct Property<'a> {
     pub key: StrSlice<'a>,
@@ -53,6 +76,7 @@ impl<'a> Property<'a> {
     }
 }
 
+/// A string with an optional monospace flag, used in UI list views.
 #[derive(Archive, Serialize, Deserialize)]
 pub struct StrExt<'a> {
     pub key: StrSlice<'a>,
@@ -68,6 +92,8 @@ impl<'a> StrExt<'a> {
     }
 }
 
+// Borrowed string slice wrapper — serialized as a relative pointer via rkyv.
+// Used instead of &str because rkyv cannot serialize &str directly.
 #[derive(Copy, Clone, Default)]
 pub struct StrSlice<'a> {
     inner: &'a str,
@@ -89,6 +115,7 @@ impl<'a> From<&'a str> for StrSlice<'a> {
     }
 }
 
+// rkyv archived form of StrSlice — holds a RelPtr<str>.
 #[derive(Portable)]
 #[repr(transparent)]
 pub struct ArchivedStrSlice {
@@ -106,6 +133,8 @@ impl ArchivedStrSlice {
     }
 }
 
+// Resolver produced during StrSlice serialization — holds the position of the
+// serialized string bytes so the relative pointer can be calculated.
 pub struct BorrowedResolver {
     // This will be the position that the bytes of our string are stored at.
     // We'll use this to resolve the relative pointer of our
@@ -143,6 +172,8 @@ impl<'a, S: Fallible + Writer + ?Sized> Serialize<S> for StrSlice<'a> {
     }
 }
 
+// Borrowed slice wrapper — serialized as a relative pointer via rkyv.
+// Used instead of &[T] for the same reason as StrSlice.
 pub struct Slice<'a, T: Archive> {
     inner: &'a [T],
 }
@@ -175,6 +206,7 @@ impl<'a, T: Archive> From<&'a [T]> for Slice<'a, T> {
     }
 }
 
+// rkyv archived form of Slice<T> — holds a RelPtr<[T::Archived]>.
 #[derive(Portable)]
 #[repr(transparent)]
 pub struct ArchivedSlice<T: Archive> {
@@ -209,6 +241,10 @@ where
     }
 }
 
+/// All UI screens that can be requested from the app via IPC.
+///
+/// Each variant corresponds to one screen type in the Trezor UI. Constructed
+/// by the higher-level `ui` module — do not construct variants directly.
 #[derive(Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
     SelectMenu {
@@ -375,7 +411,7 @@ pub enum TrezorUiEnum<'a> {
     },
 }
 
-/// Outgoing UI result message for IPC
+/// Result returned by the Core task after a UI interaction.
 #[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorUiResult {
     Confirmed,
@@ -385,6 +421,9 @@ pub enum TrezorUiResult {
     Integer(u32),
 }
 
+/// All crypto operations that can be requested from the app via IPC.
+///
+/// Constructed by the higher-level `crypto` module — do not construct variants directly.
 #[derive(Archive, Serialize)]
 pub enum TrezorCryptoEnum<'a> {
     GetXpub {
@@ -440,7 +479,7 @@ impl<'a> TrezorCryptoEnum<'a> {
     }
 }
 
-/// Outgoing Crypto result message for IPC
+/// Result returned by the Core task after a crypto operation.
 #[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorCryptoResult {
     Xpub(String<150>),
@@ -450,12 +489,15 @@ pub enum TrezorCryptoResult {
     Boolean(bool),
 }
 
-/// Outgoing Crypto result message for IPC
+// Internal utility message — used for requesting paginated content pages.
 #[derive(Archive, Serialize, Deserialize)]
 pub enum UtilEnum {
     RequestPage { idx: usize },
 }
 
+/// Progress bar operations that can be requested from the app via IPC.
+///
+/// Constructed by the higher-level `progress` module — do not construct variants directly.
 #[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum<'a> {
     Init {

@@ -1,42 +1,56 @@
 //! # Trezor App SDK
 //!
-//! A unified SDK for developing Trezor applications in Rust.
+//! A `no_std` SDK for developing Trezor applications in Rust.
 //!
-//! This SDK provides:
-//! - **Logging**: Structured logging with compile-time filtering
-//! - **UI API**: High-level functions for user interaction (confirm dialogs, input, etc.)
-//! - **Low-level API**: Direct access to system functions (internal use)
+//! ## What this SDK provides
+//!
+//! - **UI API**: High-level functions for user interaction (confirm dialogs, display, etc.)
+//! - **Crypto API**: Cryptographic primitives and operations
+//! - **Logging**: Structured logging macros (`trace!`, `info!`, `error!`, etc.) with compile-time filtering
+//! - **IPC Services**: [`service`] module for communicating with the core app via IPC messages
+//! - **Error handling**: [`Error`] and [`ResultExt::context`] for rich error context
+//!   (context strings are only kept in `debug + alloc` builds; stripped in release)
+//! - **Essential symbols**: Panic handler, `eh_personality`, and other required `no_std` symbols
+//! - **`unwrap!` macro**: Fatal-error variant of `.unwrap()` — see [`macros`]
+//!
+//! ## Features
+//!
+//! - `alloc`: Enables heap allocation support (requires initializing an allocator in your app)
+//! - `debug`: Enables debug logging and richer error context via [`ResultExt::context`]
+//! - `test`: Enables std-based testing utilities
 //!
 //! ## Quick Start
 //!
-//! ```rust
-//! use trezor_app_sdk::{info, error, ui};
+//! ```rust,ignore
+//! use trezor_app_sdk::{trace, error, Error, Result, CORE_SERVICE};
+//! use trezor_app_sdk::service::{CoreIpcService, Timeout};
 //!
 //! #[unsafe(no_mangle)]
-//! pub extern "C" fn applet_main(api_get: trezor_app_sdk::TrezorApiGetter) -> i32 {
-//!     // Initialize the SDK
-//!     if let Err(e) = trezor_app_sdk::init(api_get) {
-//!         return e.to_c_int();
+//! pub fn app() -> Result<()> {
+//!     #[cfg(feature = "alloc")]
+//!     {
+//!         use core::mem::MaybeUninit;
+//!         const HEAP_SIZE: usize = 4096;
+//!         static mut HEAP_MEM: [MaybeUninit<u8>; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
+//!         unsafe { HEAP.init(&raw mut HEAP_MEM as usize, HEAP_SIZE) }
 //!     }
 //!
-//!     info!("Application started");
-//!
-//!     // Use high-level UI functions
-//!     match ui::confirm_value("Title", "Confirm this action?") {
-//!         Ok(true) => {
-//!             info!("User confirmed");
-//!             ui::show_success("Success", "Action completed")?;
-//!         }
-//!         Ok(false) => {
-//!             info!("User cancelled");
-//!         }
-//!         Err(e) => {
-//!             error!("UI error: {:?}", e);
-//!             return e.to_c_int();
-//!         }
+//!     loop {
+//!         trace!("Waiting for message");
+//!         let message = CORE_SERVICE
+//!             .receive(Timeout::max())
+//!             .map_err(Into::into)
+//!             .context("Timeout while receiving message")?;
+//!         match message.service().into() {
+//!             CoreIpcService::WireStart => {
+//!                 handle_wire_message(&message).context("Error handling wire message")?
+//!             }
+//!             _ => {
+//!                 error!("Invalid service invoked");
+//!                 return Err(Error::InvalidFunction);
+//!             }
+//!         };
 //!     }
-//!
-//!     0
 //! }
 //! ```
 

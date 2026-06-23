@@ -1,20 +1,28 @@
-//! High-level UI API
+//! High-level UI API for interacting with the Trezor display.
 //!
-//! This module provides user-friendly functions for interacting with the Trezor UI.
+//! All functions in this module send an IPC message to the Core firmware task,
+//! which renders the requested screen and returns the user's response.
 //!
 //! ## Examples
 //!
 //! ```rust
 //! use trezor_app_sdk::ui;
 //!
-//! // Show confirmation dialog
-//! if ui::confirm_value("Title", "Confirm this?")? {
-//!     ui::show_success("Success", "Confirmed!")?;
-//! }
+//! // Show a confirmation dialog
+//! let result = ui::confirm_action("Sign transaction", "Do you want to sign?",
+//!     None, None, false, None, true, Some("confirm"), 1, false)?;
 //!
-//! // Request user input
-//! let name = ui::request_string("Enter name:")?;
-//! let amount = ui::request_number("Amount", "Enter amount", 0, 0, 100)?;
+//! // Show a list of key-value properties
+//! let props = [Property { key: "Amount".into(), value: "1.0 BTC".into(), mono: false }];
+//! ui::confirm_properties("Details", &props, None, None, false, Some("confirm"), 1)?;
+//!
+//! // Show a success screen
+//! ui::show_success("Done", "Transaction signed", "Continue", None, Some("success"), 1)?;
+//!
+//! // Show a progress bar
+//! ui::init_progress(Some("Loading..."), Some("Please wait"), false, false)?;
+//! ui::update_progress(Some("50%"), 50)?;
+//! ui::end_progress()?;
 //! ```
 
 // Re-export the archived types for convenience
@@ -48,7 +56,7 @@ pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;
 pub const CHARS_PER_PAGE: usize = 96;
 
 /// Long content handler - responds to page requests
-pub struct LongContentHandler<'a>(pub &'a str);
+struct LongContentHandler<'a>(pub &'a str);
 
 impl<'a> LongContentHandler<'a> {
     fn send_page(&self, ctx: &UtilContext, page_idx: usize) {

@@ -1,3 +1,13 @@
+//! Mock implementations for unit testing only.
+//!
+//! This module provides stub implementations of the Trezor crypto and API interfaces
+//! intended exclusively for use in unit tests. It must **not** be used in production builds.
+//!
+//! Each implementation is explicitly marked as either:
+//! - **Functional** — delegates to a real software implementation via a third-party crate.
+//! - **Stub** — always returns a fixed error value, zero, `false`, or `null`; does not perform
+//!   any real computation.
+
 use mock_hmac_sha256::{HMAC as HMAC256_impl, Hash as Sha256_impl};
 use mock_hmac_sha512::{HMAC as HMAC512_impl, Hash as Sha512_impl};
 use mock_sha3::digest::FixedOutput;
@@ -90,6 +100,9 @@ static NIST256P1: ecdsa_curve = ecdsa_curve {
 };
 
 // Sha3 functions
+// All four functions below are **stubs** — they do nothing and return no output.
+// The actual SHA-3 / Keccak logic is provided by the [`Keccak256`], [`Sha3_256`],
+// and [`Sha3_512`] structs further down in this file.
 unsafe extern "C" fn dummy_sha3_256_init(_ctx: *mut SHA3_CTX) {}
 unsafe extern "C" fn dummy_sha3_512_init(_ctx: *mut SHA3_CTX) {}
 unsafe extern "C" fn dummy_sha3_update(_ctx: *mut SHA3_CTX, _msg: *const u8, _size: usize) {}
@@ -97,6 +110,9 @@ unsafe extern "C" fn dummy_keccak_final(_ctx: *mut SHA3_CTX, _result: *mut u8) {
 unsafe extern "C" fn dummy_sha3_final(_ctx: *mut SHA3_CTX, _result: *mut u8) {}
 
 // Sha functions
+// All six functions below are **stubs** — they do nothing and write no digest output.
+// The actual SHA-256 / SHA-512 logic is provided by the [`Sha256`] and [`Sha512`]
+// structs further down in this file.
 unsafe extern "C" fn dummy_sha256_init(_ctx: *mut SHA256_CTX) {}
 unsafe extern "C" fn dummy_sha256_update(_ctx: *mut SHA256_CTX, _msg: *const u8, _size: usize) {}
 unsafe extern "C" fn dummy_sha256_final(_ctx: *mut SHA256_CTX, _digest: *mut u8) {}
@@ -105,6 +121,8 @@ unsafe extern "C" fn dummy_sha512_update(_ctx: *mut SHA512_CTX, _msg: *const u8,
 unsafe extern "C" fn dummy_sha512_final(_ctx: *mut SHA512_CTX, _digest: *mut u8) {}
 
 // HMAC functions
+// All three functions below are **stubs** — they do nothing and write no HMAC output.
+// The actual HMAC-SHA-256 logic is provided by the [`HmacSha256`] struct further down.
 unsafe extern "C" fn dummy_hmac_sha256_init(
     _hctx: *mut HMAC_SHA256_CTX,
     _key: *const u8,
@@ -121,6 +139,7 @@ unsafe extern "C" fn dummy_hmac_sha256_final(_hctx: *mut HMAC_SHA256_CTX, _hmac:
 
 // ECDSA functions
 
+/// **Stub** — always returns `1` (failure). Does not perform any signature recovery.
 unsafe extern "C" fn dummy_ecdsa_recover_pub_from_sig(
     _curve: *const ecdsa_curve,
     _pub_key: *mut u8,
@@ -130,6 +149,8 @@ unsafe extern "C" fn dummy_ecdsa_recover_pub_from_sig(
 ) -> core::ffi::c_int {
     1
 }
+
+/// **Stub** — always returns `1` (failure). Does not perform any signature verification.
 unsafe extern "C" fn dummy_ecdsa_verify_digest(
     _curve: *const ecdsa_curve,
     _pub_key: *const u8,
@@ -141,6 +162,7 @@ unsafe extern "C" fn dummy_ecdsa_verify_digest(
 
 // ED25519 functions
 
+/// **Stub** — always returns `0` (success) without combining any public keys.
 unsafe extern "C" fn dummy_ed25519_cosi_combine_publickeys(
     _res: *mut core::ffi::c_uchar,
     _pks: *const ed25519_public_key,
@@ -149,6 +171,7 @@ unsafe extern "C" fn dummy_ed25519_cosi_combine_publickeys(
     0
 }
 
+/// **Stub** — always returns `0` (success) without verifying any signature.
 unsafe extern "C" fn dummy_ed25519_sign_open(
     _m: *const u8,
     _mlen: usize,
@@ -181,8 +204,12 @@ pub static DUMMY_TREZOR_CRYPTO_V1: trezor_crypto_v1_t = trezor_crypto_v1_t {
     nist256p1: &NIST256P1 as *const ecdsa_curve,
 };
 
+// System / API stubs
+
+/// **Stub** — does nothing. No process exit is performed.
 unsafe extern "C" fn dummy_system_exit(_exitcode: core::ffi::c_int) {}
 
+/// **Stub** — does nothing. No error screen is displayed.
 unsafe extern "C" fn dummy_system_exit_error(
     _title: *const core::ffi::c_char,
     _message: *const core::ffi::c_char,
@@ -190,6 +217,7 @@ unsafe extern "C" fn dummy_system_exit_error(
 ) {
 }
 
+/// **Stub** — does nothing. No error screen is displayed.
 unsafe extern "C" fn dummy_system_exit_error_ex(
     _title: *const core::ffi::c_char,
     _title_len: usize,
@@ -200,6 +228,7 @@ unsafe extern "C" fn dummy_system_exit_error_ex(
 ) {
 }
 
+/// **Stub** — does nothing. No fatal error is reported.
 unsafe extern "C" fn dummy_system_exit_fatal(
     _message: *const core::ffi::c_char,
     _file: *const core::ffi::c_char,
@@ -207,6 +236,7 @@ unsafe extern "C" fn dummy_system_exit_fatal(
 ) {
 }
 
+/// **Stub** — does nothing. No fatal error is reported.
 unsafe extern "C" fn dummy_system_exit_fatal_ex(
     _message: *const core::ffi::c_char,
     _message_len: usize,
@@ -216,6 +246,7 @@ unsafe extern "C" fn dummy_system_exit_fatal_ex(
 ) {
 }
 
+/// **Stub** — does nothing and always returns `0`. No data is written to any console.
 unsafe extern "C" fn dummy_dbg_console_write(
     _data: *const core::ffi::c_void,
     _size: usize,
@@ -223,10 +254,12 @@ unsafe extern "C" fn dummy_dbg_console_write(
     0
 }
 
+/// **Stub** — always returns `0`. Does not read any real hardware tick counter.
 unsafe extern "C" fn dummy_systick_ms() -> u32 {
     0
 }
 
+/// **Stub** — does nothing. No events are polled; `signalled` is left unmodified.
 unsafe extern "C" fn dummy_sysevents_poll(
     _awaited: *const sysevents_t,
     _signalled: *mut sysevents_t,
@@ -234,6 +267,7 @@ unsafe extern "C" fn dummy_sysevents_poll(
 ) {
 }
 
+/// **Stub** — always returns `false`. No IPC inbox is registered.
 unsafe extern "C" fn dummy_ipc_register(
     _remote: systask_id_t,
     _buffer: *mut core::ffi::c_void,
@@ -242,14 +276,18 @@ unsafe extern "C" fn dummy_ipc_register(
     false
 }
 
+/// **Stub** — does nothing. No IPC inbox is unregistered.
 unsafe extern "C" fn dummy_ipc_unregister(_remote: systask_id_t) {}
 
+/// **Stub** — always returns `false`. No IPC message is ever available.
 unsafe extern "C" fn dummy_ipc_try_receive(_msg: *mut ipc_message_t) -> bool {
     false
 }
 
+/// **Stub** — does nothing. No IPC message memory is freed.
 unsafe extern "C" fn dummy_ipc_message_free(_msg: *mut ipc_message_t) {}
 
+/// **Stub** — always returns `false`. No IPC message is sent.
 unsafe extern "C" fn dummy_ipc_send(
     _remote: systask_id_t,
     _fn_: u32,
@@ -293,8 +331,17 @@ pub unsafe extern "C" fn sdk_init(
     0
 }
 
+// ============================================================================
+// Functional hash / HMAC implementations (via third-party crates)
+// ============================================================================
+//
+// All structs below delegate to real software implementations and produce
+// correct cryptographic output. They are safe to use in unit tests that
+// need to verify hash or HMAC correctness.
+
 // Sha functions
 
+/// **Functional** — delegates to `mock_hmac_sha256::Hash` (software SHA-256).
 pub struct Sha256 {
     ctx: Sha256_impl,
 }
@@ -333,6 +380,7 @@ impl Hasher for Sha256 {
     }
 }
 
+/// **Functional** — delegates to `mock_hmac_sha512::Hash` (software SHA-512).
 pub struct Sha512 {
     ctx: Sha512_impl,
 }
@@ -372,6 +420,7 @@ impl Hasher for Sha512 {
 }
 // Sha3 functions
 
+/// **Functional** — delegates to `mock_sha3::Keccak256` (software Keccak-256).
 pub struct Keccak256 {
     ctx: Keccak256_impl,
 }
@@ -409,6 +458,7 @@ impl Drop for Keccak256 {
     }
 }
 
+/// **Functional** — delegates to `mock_sha3::Sha3_256` (software SHA3-256).
 pub struct Sha3_256 {
     ctx: Sha3_256_impl,
 }
@@ -446,6 +496,7 @@ impl Drop for Sha3_256 {
     }
 }
 
+/// **Functional** — delegates to `mock_sha3::Sha3_512` (software SHA3-512).
 pub struct Sha3_512 {
     ctx: Sha3_512_impl,
 }
@@ -484,6 +535,8 @@ impl Hasher for Sha3_512 {
 }
 
 // HMAC functions
+
+/// **Functional** — delegates to `mock_hmac_sha256::HMAC` (software HMAC-SHA-256).
 pub struct HmacSha256 {
     ctx: HMAC256_impl,
 }
@@ -523,6 +576,7 @@ impl Drop for HmacSha256 {
     }
 }
 
+/// **Functional** — delegates to `mock_hmac_sha512::HMAC` (software HMAC-SHA-512).
 pub struct HmacSha512 {
     ctx: HMAC512_impl,
 }
