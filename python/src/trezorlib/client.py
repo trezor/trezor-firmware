@@ -173,22 +173,8 @@ class Session(t.Generic[ClientType, SessionIdType]):
 
     @enter_context
     def ensure_unlocked(self) -> None:
-        """Ensure that the device is unlocked.
-
-        This method only works on sessions that have a passphrase derived, and
-        transitively, only on an initialized device.
-
-        Go through `client.ensure_unlocked()` if you want to abstract away the
-        choice of a correct session for this operation.
-        """
-        resp = self.call(GET_ROOT_FINGERPRINT_MESSAGE, expect=messages.PublicKey)
-        # resp.root_fingerprint is not available on <1.9.4 & <2.3.5
-        assert resp.node.fingerprint is not None
-        root_fingerprint = resp.node.fingerprint.to_bytes(4, "big")
-        if self._root_fingerprint is None:
-            self._root_fingerprint = root_fingerprint
-        assert self._root_fingerprint == root_fingerprint
-        self.refresh_features()
+        """Ensure that the device is unlocked."""
+        self.client.ensure_unlocked(_use_session=self)
 
     @enter_context
     def lock(self) -> None:
@@ -573,14 +559,24 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
             session.call_raw(messages.LockDevice())
         self.refresh_features()
 
-    def ensure_unlocked(self) -> None:
-        """Ensure the device is unlocked."""
+    def ensure_unlocked(self, *, _use_session: SessionType | None = None) -> None:
+        """Ensure the device is unlocked.
+
+        If the device has PIN set, this will trigger a PIN unlock.
+        """
         if not self.features.initialized:
             # uninitialized device cannot be locked
             return
-        session = self.get_session(passphrase=PassphraseSetting.STANDARD_WALLET)
+        session = _use_session or self._get_any_session()
         with session:
-            session.ensure_unlocked()
+            # ApplyFlags(0) is a no-op because the device (1) ORs the flags into
+            # the current value, which does nothing, then (2) only writes the
+            # flags if modified.
+            # It needs PIN unlock to access the flags value but does not derive seed.
+            session.call(messages.ApplyFlags(flags=0), expect=messages.Success)
+
+        # refresh features to update fields whose state is different after unlock.
+        self.refresh_features()
 
     def _invalidate(self) -> None:
         """Invalidate the client after a device wipe.
