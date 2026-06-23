@@ -607,7 +607,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__invalid_wallet_backup_entered;
   MP_QSTR_recovery__more_shares_needed;
   MP_QSTR_recovery__num_of_words;
-  MP_QSTR_recovery__only_first_n_letters;
   MP_QSTR_recovery__progress_will_be_lost;
   MP_QSTR_recovery__share_already_entered;
   MP_QSTR_recovery__share_does_not_match;
@@ -670,7 +669,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__group_share_checked_successfully_template;
   MP_QSTR_reset__group_share_title_template;
   MP_QSTR_reset__incorrect_word_selected;
-  MP_QSTR_reset__more_at;
   MP_QSTR_reset__more_info_at;
   MP_QSTR_reset__need_all_share_template;
   MP_QSTR_reset__need_any_share_template;
@@ -700,7 +698,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__set_it_to_count_template;
   MP_QSTR_reset__share_checked_successfully_template;
   MP_QSTR_reset__share_completed_template;
-  MP_QSTR_reset__share_words_first;
   MP_QSTR_reset__share_words_title;
   MP_QSTR_reset__slip39_checklist_more_info_threshold;
   MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template;
@@ -1276,7 +1273,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__staking_unstake;
   MP_QSTR_ethereum__staking_unstake_intro;
   MP_QSTR_ethereum__subtitle_input_data_bytes;
-  MP_QSTR_ethereum__title_all_input_data_template;
   MP_QSTR_ethereum__title_confirm_domain;
   MP_QSTR_ethereum__title_confirm_message;
   MP_QSTR_ethereum__title_confirm_message_hash;

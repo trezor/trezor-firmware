@@ -145,21 +145,16 @@ def select_number_of_words(
         if debug.layout_type is LayoutType.Caesar:
             assert TR.recovery__enter_backup in layout.text_content()
         else:
-            assert (
-                TR.recovery__only_first_n_letters in layout.text_content()
-                or TR.recovery__enter_each_word in layout.text_content()
-            )
+            assert TR.recovery__enter_each_word in layout.text_content()
     elif num_of_words in (20, 33):
         assert (
             TR.recovery__enter_backup in layout.text_content()
             or TR.recovery__enter_any_share in layout.text_content()
-            or TR.recovery__only_first_n_letters in layout.text_content()
             or TR.recovery__enter_each_word in layout.text_content()
         )
     else:  # BIP-39
         assert (
             TR.recovery__enter_backup in layout.text_content()
-            or TR.recovery__only_first_n_letters in layout.text_content()
             or TR.recovery__enter_each_word in layout.text_content()
         )
 
@@ -237,7 +232,6 @@ def enter_shares(
         assert (
             TR.recovery__enter_backup in debug.read_layout().text_content()
             or TR.recovery__enter_any_share in debug.read_layout().text_content()
-            or TR.recovery__only_first_n_letters in debug.read_layout().text_content()
             or TR.recovery__enter_each_word in debug.read_layout().text_content()
             or TR.translate(text) in debug.read_layout().text_content()
         )
@@ -326,7 +320,6 @@ def prepare_enter_seed(
 ) -> None:
     assert (
         TR.recovery__enter_backup in debug.read_layout().text_content()
-        or TR.recovery__only_first_n_letters in debug.read_layout().text_content()
         or TR.recovery__enter_each_word in debug.read_layout().text_content()
         or TR.translate(layout_text) in debug.read_layout().text_content()
     )
