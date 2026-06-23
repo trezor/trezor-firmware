@@ -18,10 +18,20 @@
 //! ```
 
 // Re-export the archived types for convenience
-pub use rkyv::Archived;
+#[cfg(not(feature = "alloc"))]
+use core::mem::MaybeUninit;
+
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
+#[cfg(feature = "alloc")]
 use rkyv::to_bytes;
+pub use rkyv::Archived;
+#[cfg(not(feature = "alloc"))]
+use rkyv::{
+    api::low::to_bytes_in_with_alloc,
+    ser::{allocator::SubAllocator, writer::Buffer},
+    util::Align,
+};
 use trezor_structs::{ArchivedUtilEnum, TrezorUiEnum};
 pub use trezor_structs::{Property, StrExt, StrSlice, TrezorProgressEnum, TrezorUiResult};
 
@@ -29,7 +39,7 @@ use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
 use crate::service::{CoreIpcService, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler};
 use crate::util::Timeout;
-use crate::{Error, unwrap};
+use crate::{unwrap, Error};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;
@@ -89,14 +99,32 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
 }
 
 fn ipc_ui_call_ext(value: &TrezorUiEnum, util_handler: &dyn UtilHandler) -> UiResult {
+    #[cfg(feature = "alloc")]
     let bytes = to_bytes::<Failure>(value).map_err(|_| Error::ServiceError)?;
-    let message = IpcMessage::new(0, &bytes);
+
+    #[cfg(not(feature = "alloc"))]
+    let mut out = Align([MaybeUninit::<u8>::uninit(); 2000]);
+    #[cfg(not(feature = "alloc"))]
+    let mut arena = [MaybeUninit::<u8>::uninit(); 2000];
+    #[cfg(not(feature = "alloc"))]
+    let bytes = unwrap!(to_bytes_in_with_alloc::<_, _, Failure>(
+        value,
+        Buffer::from(&mut *out),
+        SubAllocator::new(&mut arena),
+    ));
+
+    let message = IpcMessage::new(0, bytes.as_ref());
     let result =
         services_or_die().call(CoreIpcService::Ui, &message, Timeout::max(), util_handler)?;
+
     // Safe validation using bytecheck before accessing archived data
+    #[cfg(feature = "alloc")]
     let archived = unwrap!(rkyv::access::<ArchivedTrezorUiResult, Failure>(
         result.data()
     ));
+
+    #[cfg(not(feature = "alloc"))]
+    let archived = unsafe { rkyv::access_unchecked::<Archived<TrezorUiResult>>(result.data()) };
     let deserialized = unwrap!(deserialize::<TrezorUiResult, Failure>(archived));
     Ok(deserialized)
 }
@@ -117,8 +145,21 @@ fn ipc_ui_call_void(value: &TrezorUiEnum) -> Result<()> {
 }
 
 fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<()> {
+    #[cfg(feature = "alloc")]
     let bytes = to_bytes::<Failure>(value).map_err(|_| Error::ServiceError)?;
-    let message = IpcMessage::new(value.id(), &bytes);
+
+    #[cfg(not(feature = "alloc"))]
+    let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
+    #[cfg(not(feature = "alloc"))]
+    let mut arena = [MaybeUninit::<u8>::uninit(); 200];
+    #[cfg(not(feature = "alloc"))]
+    let bytes = unwrap!(to_bytes_in_with_alloc::<_, _, Failure>(
+        value,
+        Buffer::from(&mut *out),
+        SubAllocator::new(&mut arena),
+    ));
+
+    let message = IpcMessage::new(value.id(), bytes.as_ref());
     let _ = services_or_die().call(
         CoreIpcService::Progress,
         &message,
