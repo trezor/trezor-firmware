@@ -2013,7 +2013,7 @@
       "Bolt": "Continue with the next share.",
       "Caesar": "Continue with the next share.",
       "Delizia": "Continue with the next share.",
-      "Eckhart": "Continue with the next share"
+      "Eckhart": "Enter next share"
     },
     "reset__continue_with_share_template": {
       "Bolt": "Continue with share {0}.",
@@ -2123,14 +2123,14 @@
     "reset__num_of_shares_long_info_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
+      "Delizia": "Each backup share is a sequence of {0} words.\nStore each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
       "Eckhart": "Each backup share is a sequence of {0} words.\nStore each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
     },
     "reset__num_shares_for_group_template": {
-      "Bolt": "The required number of shares to form group {0}.",
+      "Bolt": "Number of shares required to form group {0}.",
       "Caesar": "",
-      "Delizia": "The required number of shares to form group {0}.",
-      "Eckhart": "The required number of shares to form group {0}."
+      "Delizia": "Number of shares required to form group {0}.",
+      "Eckhart": "Number of shares required to form group {0}."
     },
     "reset__number_of_shares_info": {
       "Bolt": "",
