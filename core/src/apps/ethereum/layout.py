@@ -456,23 +456,6 @@ def confirm_empty_typed_message() -> Awaitable[None]:
     )
 
 
-async def should_show_domain(name: AnyBytes, version: AnyBytes) -> bool:
-    domain_name = decode_typed_data(name, "string")
-    domain_version = decode_typed_data(version, "string")
-
-    para = (
-        (TR.ethereum__name_and_version, False),
-        (domain_name, False),
-        (domain_version, False),
-    )
-    return await should_show_more(
-        TR.ethereum__title_confirm_domain,
-        para,
-        TR.ethereum__show_full_domain,
-        "should_show_domain",
-    )
-
-
 async def should_show_struct(
     description: str,
     data_members: list[EthereumStructMember],
