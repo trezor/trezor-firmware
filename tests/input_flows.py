@@ -1641,10 +1641,6 @@ class InputFlowEIP712ShowMore(InputFlowBase):
         yield  # confirm address
         self.debug.press_yes()
 
-        yield  # confirm domain
-        self.debug.read_layout()
-        self._confirm_show_more()
-
         # confirm domain properties
         for _ in range(4):
             yield from swipe_if_necessary(self.debug)  # EIP712 DOMAIN
