@@ -1,0 +1,1 @@
+../../projects/firmware/version.h

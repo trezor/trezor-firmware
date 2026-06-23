@@ -27,7 +27,7 @@
 #include "py/runtime.h"
 
 #include <sec/image.h>
-#include "version.h"
+#include "firmware_version.h"
 
 #if MICROPY_PY_TREZORUTILS
 
