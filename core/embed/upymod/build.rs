@@ -118,11 +118,20 @@ fn main() -> Result<()> {
 
         lib.add_sources_in_dir_with_attrs(mpy_dir, ["py/gc.c", "py/pystack.c", "py/vm.c"], attrs);
 
+        // silence warning about unterminated string literals
+        // TODO: remove this after we upgrade MicroPython
+        let attrs_silence_unterminated =
+            xbuild::CompileAttrs::new().with_flag("-Wno-unterminated-string-initialization");
+        lib.add_sources_in_dir_with_attrs(
+            mpy_dir,
+            ["extmod/moductypes.c"],
+            Some(attrs_silence_unterminated),
+        );
+
         lib.add_sources_in_dir(
             mpy_dir,
             [
                 "extmod/modubinascii.c",
-                "extmod/moductypes.c",
                 "extmod/moduheapq.c",
                 "extmod/modutimeq.c",
                 "extmod/utime_mphal.c",
