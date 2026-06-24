@@ -7,6 +7,8 @@ edition = "2024"
 
 [package.metadata.trezor]
 id = "ethereum.trezor.com"
+name = "Ethereum"
+vendor = "SatoshiLabs"
 
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk", features = ["alloc"] }

@@ -7,13 +7,14 @@
 use anyhow::{Context, Result, ensure};
 use cargo_metadata::Package;
 use object::Object;
+use sha2::Digest;
 use std::{
     fs,
     io::Write,
     mem::size_of,
     path::{Path, PathBuf},
 };
-use zerocopy::{IntoBytes, LittleEndian, U32};
+use zerocopy::{IntoBytes, LittleEndian, U16, U32};
 use zerocopy_derive::{Immutable, IntoBytes};
 
 use crate::armv8m;
@@ -27,7 +28,6 @@ enum AppBinaryType {
 /// The app header is a fixed-size structure at the beginning of the applicatio image
 /// containing metadata about the app, such as segment sizes and addresses padded
 /// with zeroes to ensure it is exactly APP_HEADER_SIZE bytes in size.
-///
 #[repr(C)]
 #[derive(IntoBytes, Immutable, Debug)]
 struct AppHeader {
@@ -35,23 +35,34 @@ struct AppHeader {
     magic: U32<LittleEndian>,
     /// Header size in bytes (contains AppHeader::APP_HEADER_SIZE)
     header_size: U32<LittleEndian>,
-    /// Unique identifier of the app
-    identifier: [u8; AppHeader::APP_ID_MAX_LEN],
+    /// Unique identifier of the app (utf-8 encoded, zero-padded)
+    id: [u8; AppHeader::APP_ID_MAX_LEN],
+    /// App name (utf-8 encoded, zero-padded)
+    app_name: [u8; AppHeader::APP_NAME_MAX_LEN],
+    /// Vendor name (utf-8 encoded, zero-padded)
+    vendor_name: [u8; AppHeader::APP_VENDOR_MAX_LEN],
+    /// Target model identifier (or zeroed for universal apps)
+    model: [u8; 4],
     /// App version in the format major.minor.patch.build, each as a byte
     /// For example, version 1.2.3 would be represented as [1, 2, 3, 0]
     version: [u8; 4],
     /// SDK version that the app was built against
-    sdk_version: [u8; 2],
+    sdk_version: [u8; 4],
     /// ABI version that the app was built against
     abi_version: u8,
     /// Type of binary payload (e.g., ARMV8M, X86_64)
     payload_type: u8,
+    // Padding, reserved for future use
+    reserved1: [u8; 2],
     /// Size of binary payload in bytes
     payload_size: U32<LittleEndian>,
-    // TODO app_name
-    // TODO vendor_name
+    /// Chain hash of payload chunks processed in reverse order
+    payload_hash: [u8; 32],
+    /// Size of each chunk of the payload in bytes
+    chunk_size: U16<LittleEndian>,
+    /// Reserved field for runtime purposes (zeroed)
+    reserved2: U16<LittleEndian>,
     // TODO logo
-    // TODO model
     // TODO bip32_paths
 }
 
@@ -62,6 +73,12 @@ impl AppHeader {
     const APP_HEADER_MAGIC: u32 = 0x415A5254; // TRZA
     /// Maximum length of the app identifier string in bytes.
     const APP_ID_MAX_LEN: usize = 32;
+    /// Maximum length of the app name string in bytes.
+    const APP_NAME_MAX_LEN: usize = 32;
+    /// Maximum length of the vendor name string in bytes.
+    const APP_VENDOR_MAX_LEN: usize = 32;
+    /// Chunk size used for hashing the payload in bytes.
+    const CHUNK_SIZE: usize = 2048;
 
     fn to_padded_bytes(&self) -> [u8; AppHeader::APP_HEADER_SIZE] {
         let mut bytes = [0u8; AppHeader::APP_HEADER_SIZE];
@@ -70,6 +87,7 @@ impl AppHeader {
     }
 }
 
+/// Retrieves the app version from the package metadata and converts it into a 4-byte array.
 fn app_version(package: &Package) -> Result<[u8; 4]> {
     let ver = package.version.clone();
     Ok([
@@ -86,6 +104,7 @@ fn app_version(package: &Package) -> Result<[u8; 4]> {
     ])
 }
 
+/// Retrieves the app identifier from the package metadata.
 fn app_identifier(package: &Package) -> Result<[u8; AppHeader::APP_ID_MAX_LEN]> {
     let id = package
         .metadata
@@ -109,6 +128,55 @@ fn app_identifier(package: &Package) -> Result<[u8; AppHeader::APP_ID_MAX_LEN]> 
     Ok(result)
 }
 
+/// Retrieve the app name from the package metadata.
+fn app_name(package: &Package) -> Result<[u8; AppHeader::APP_NAME_MAX_LEN]> {
+    let name = package
+        .metadata
+        .get("trezor")
+        .and_then(|m| m.get("name"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow::anyhow!("App name not found in Cargo.toml"))?;
+
+    let name_bytes = name.as_bytes();
+
+    ensure!(
+        name_bytes.len() <= AppHeader::APP_NAME_MAX_LEN,
+        "App name '{}' is too long (max {} bytes)",
+        name,
+        AppHeader::APP_NAME_MAX_LEN
+    );
+
+    let mut result = [0u8; AppHeader::APP_NAME_MAX_LEN];
+    result[..name_bytes.len()].copy_from_slice(&name_bytes);
+
+    Ok(result)
+}
+
+/// Retrieve the vendor name from the package metadata.
+fn vendor_name(package: &Package) -> Result<[u8; AppHeader::APP_VENDOR_MAX_LEN]> {
+    let vendor = package
+        .metadata
+        .get("trezor")
+        .and_then(|m| m.get("vendor"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow::anyhow!("Vendor name not found in Cargo.toml"))?;
+
+    let vendor_bytes = vendor.as_bytes();
+
+    ensure!(
+        vendor_bytes.len() <= AppHeader::APP_VENDOR_MAX_LEN,
+        "Vendor name '{}' is too long (max {} bytes)",
+        vendor,
+        AppHeader::APP_VENDOR_MAX_LEN
+    );
+
+    let mut result = [0u8; AppHeader::APP_VENDOR_MAX_LEN];
+    result[..vendor_bytes.len()].copy_from_slice(&vendor_bytes);
+
+    Ok(result)
+}
+
+/// Loads an ELF file and extracts the binary payload and its type based on the architecture.
 fn load_elf_payload(elf_path: &Path) -> Result<(AppBinaryType, Vec<u8>)> {
     let raw_elf = fs::read(elf_path)
         .with_context(|| format!("Failed to read the elf file {:?}", elf_path))?;
@@ -135,18 +203,40 @@ fn load_elf_payload(elf_path: &Path) -> Result<(AppBinaryType, Vec<u8>)> {
     Ok(payload)
 }
 
+/// Computes the SHA256 hash of the payload in chunks, processing them in reverse order.
+/// The approach allows checking the integrity of the payload during loading, by
+/// chunks of the specified size.
+pub fn hash_payload(payload: &[u8], chunk_size: usize) -> [u8; 32] {
+    payload
+        .chunks(chunk_size)
+        .rev()
+        .fold([0u8; 32], |prev_hash, chunk| {
+            let mut hasher = sha2::Sha256::new();
+            hasher.update(chunk);
+            hasher.update(&prev_hash);
+            hasher.finalize().into()
+        })
+}
+
 pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf> {
     let (payload_type, payload) = load_elf_payload(elf_path)?;
 
     let header = AppHeader {
         magic: U32::new(AppHeader::APP_HEADER_MAGIC),
         header_size: U32::new(AppHeader::APP_HEADER_SIZE as u32),
-        identifier: app_identifier(package)?,
+        id: app_identifier(package)?,
+        app_name: app_name(package)?,
+        vendor_name: vendor_name(package)?,
+        model: [0; 4],
         version: app_version(package)?,
-        sdk_version: [0; 2],
+        sdk_version: [0; 4],
         abi_version: 1,
         payload_type: payload_type as u8,
+        reserved1: [0; 2],
         payload_size: U32::new(payload.len() as u32),
+        payload_hash: hash_payload(&payload, AppHeader::CHUNK_SIZE),
+        chunk_size: U16::new(AppHeader::CHUNK_SIZE as u16),
+        reserved2: U16::new(0),
     };
 
     let bin_path = elf_path.with_extension("bin");
