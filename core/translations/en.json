@@ -797,6 +797,7 @@
     "ethereum__data_size_template": "Size: {0} bytes",
     "ethereum__deposit_amount": "Deposit amount",
     "ethereum__deposit_to": "Deposit to",
+    "ethereum__eip_712_empty_domain": "dApp did not identify itself!",
     "ethereum__eip_7702": {
       "Bolt": "Authorize the following contract as an EIP-7702 on your account",
       "Caesar": "Authorize the following contract as an EIP-7702 on your account",

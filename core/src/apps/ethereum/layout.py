@@ -542,6 +542,21 @@ async def confirm_typed_value(
         )
 
 
+def extract_properties(
+    name: str,
+    value: AnyBytes,
+    field: EthereumFieldType,
+) -> StrPropertyType:
+
+    from .helpers import get_type_name
+
+    type_name = get_type_name(field)
+    key = f"{name} ({type_name})"
+    data = decode_typed_data(value, type_name)
+
+    return (key, data, True)
+
+
 def limit_str(s: str, limit: int = 16) -> str:
     """Shortens string to show the last <limit> characters."""
     if len(s) <= limit + 2:

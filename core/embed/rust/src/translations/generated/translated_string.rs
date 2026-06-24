@@ -1627,6 +1627,8 @@ pub enum TranslatedString {
     address__warning_not_yours = 1237,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This is NOT your address"}
     #[cfg(feature = "universal_fw")]
     tron__owner_address = 1238,  // "Owner address"
+    #[cfg(feature = "universal_fw")]
+    ethereum__eip_712_empty_domain = 1239,  // "dApp did not identify itself!"
 }
 
 impl TranslatedString {
@@ -2873,6 +2875,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4117,6 +4120,7 @@ impl TranslatedString {
                 19414,
                 19414,
                 19427,
+                19456,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5360,6 +5364,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6604,6 +6609,7 @@ impl TranslatedString {
                 19414,
                 19414,
                 19427,
+                19456,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7847,6 +7853,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9091,6 +9098,7 @@ impl TranslatedString {
                 19414,
                 19414,
                 19427,
+                19456,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10334,6 +10342,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11578,6 +11587,7 @@ impl TranslatedString {
                 19414,
                 19414,
                 19427,
+                19456,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12822,6 +12832,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14066,6 +14077,7 @@ impl TranslatedString {
                 17302,
                 17302,
                 17315,
+                17344,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15309,6 +15321,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16553,6 +16566,7 @@ impl TranslatedString {
                 17302,
                 17302,
                 17315,
+                17344,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17796,6 +17810,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19040,6 +19055,7 @@ impl TranslatedString {
                 17302,
                 17302,
                 17315,
+                17344,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20283,6 +20299,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21527,6 +21544,7 @@ impl TranslatedString {
                 17302,
                 17302,
                 17315,
+                17344,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -22771,6 +22789,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24015,6 +24034,7 @@ impl TranslatedString {
                 18931,
                 18931,
                 18944,
+                18973,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25258,6 +25278,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26502,6 +26523,7 @@ impl TranslatedString {
                 18931,
                 18931,
                 18944,
+                18973,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27745,6 +27767,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28989,6 +29012,7 @@ impl TranslatedString {
                 18931,
                 18931,
                 18944,
+                18973,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30232,6 +30256,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31476,6 +31501,7 @@ impl TranslatedString {
                 18931,
                 18931,
                 18944,
+                18973,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -32720,6 +32746,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "This is NOT your address",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -33964,6 +33991,7 @@ impl TranslatedString {
                 20215,
                 20239,
                 20252,
+                20281,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35207,6 +35235,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "This is NOT your address",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36451,6 +36480,7 @@ impl TranslatedString {
                 20215,
                 20239,
                 20252,
+                20281,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37694,6 +37724,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "This is NOT your address",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38938,6 +38969,7 @@ impl TranslatedString {
                 20215,
                 20239,
                 20252,
+                20281,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40181,6 +40213,7 @@ impl TranslatedString {
                 "Claim voting rewards?",
                 "This is NOT your address",
                 "Owner address",
+                "dApp did not identify itself!",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41425,6 +41458,7 @@ impl TranslatedString {
                 20215,
                 20239,
                 20252,
+                20281,
             ];
 
         }
@@ -41949,6 +41983,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__deposit_amount, Self::ethereum__deposit_amount),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__deposit_to, Self::ethereum__deposit_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__eip_712_empty_domain, Self::ethereum__eip_712_empty_domain),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__eip_7702, Self::ethereum__eip_7702),
         #[cfg(feature = "universal_fw")]

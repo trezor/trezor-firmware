@@ -1247,6 +1247,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__data_size_template;
   MP_QSTR_ethereum__deposit_amount;
   MP_QSTR_ethereum__deposit_to;
+  MP_QSTR_ethereum__eip_712_empty_domain;
   MP_QSTR_ethereum__eip_7702;
   MP_QSTR_ethereum__eip_7702_title;
   MP_QSTR_ethereum__gas_limit;

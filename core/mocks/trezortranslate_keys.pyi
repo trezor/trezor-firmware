@@ -340,6 +340,7 @@ class TR:
     ethereum__data_size_template: str = "Size: {0} bytes"
     ethereum__deposit_amount: str = "Deposit amount"
     ethereum__deposit_to: str = "Deposit to"
+    ethereum__eip_712_empty_domain: str = "dApp did not identify itself!"
     ethereum__eip_7702: str = "Authorize the following contract as an EIP-7702 on your account"
     ethereum__eip_7702_title: str = "Smart accounts"
     ethereum__gas_limit: str = "Gas limit"
