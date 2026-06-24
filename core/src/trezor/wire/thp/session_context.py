@@ -35,7 +35,7 @@ class GenericSessionContext(Context):
         self.channel: Channel = channel
         self.session_id: int = session_id
 
-    async def handle(self, message: Message) -> None:
+    async def handle(self, message: Message) -> bool:
         if __debug__:
             log.debug(
                 __name__,
@@ -47,9 +47,7 @@ class GenericSessionContext(Context):
 
         while True:
             try:
-                await handle_single_message(self, message)
-                if __debug__:
-                    self.channel._log("session loop is over")
+                return await handle_single_message(self, message)
             except protocol_common.WireError as e:
                 if __debug__:
                     log.exception(__name__, e, iface=self.iface)
@@ -63,7 +61,6 @@ class GenericSessionContext(Context):
             except Exception as exc:
                 if __debug__:
                     log.exception(__name__, exc, iface=self.iface)
-            return
 
     async def _read_next_message(self) -> Message:
         while True:
