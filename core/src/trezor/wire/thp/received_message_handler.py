@@ -54,8 +54,7 @@ async def handle_received_message(channel: Channel) -> bool:
     try:
         state = channel.get_channel_state()
         if state is ChannelState.ENCRYPTED_TRANSPORT:
-            await _handle_state_ENCRYPTED_TRANSPORT(channel)
-            return False
+            return await _handle_state_ENCRYPTED_TRANSPORT(channel)
         elif _is_channel_state_pairing(state):
             await _handle_pairing(channel)
             return False
@@ -271,7 +270,7 @@ async def _handle_state_handshake(
         ctx.set_channel_state(ChannelState.TP0)
 
 
-async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel) -> None:
+async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel) -> bool:
     if __debug__:
         log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.iface)
 
@@ -290,7 +289,7 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel) -> None:
 
     s = ctx.sessions[session_id]
     update_session_last_used(s.channel_id, (s.session_id).to_bytes(1, "big"))
-    await s.handle(message)
+    return await s.handle(message)
 
 
 async def _handle_pairing(ctx: Channel) -> None:
