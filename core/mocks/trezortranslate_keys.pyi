@@ -349,6 +349,7 @@ class TR:
     ethereum__delegating: str = "Delegating"
     ethereum__deposit_amount: str = "Deposit amount"
     ethereum__deposit_to: str = "Deposit to"
+    ethereum__eip_712_empty_domain: str = "dApp did not identify itself!"
     ethereum__gas_limit: str = "Gas limit"
     ethereum__gas_price: str = "Gas price"
     ethereum__interaction_contract: str = "Interaction contract"
