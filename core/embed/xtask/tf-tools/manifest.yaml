@@ -266,18 +266,7 @@ options:
     description: Controls whether TROPIC support is disabled.
     when: component(firmware)
     group: Testing
-    type: multistate
-    states:
-      - value: null
-        name: Default
-        description: Use the target default.
-        default: true
-      - value: "true"
-        name: Disabled
-        description: Disable TROPIC support.
-      - value: "false"
-        name: Enabled
-        description: Keep TROPIC support enabled.
+    type: checkbox
 
   - id: storage-insecure-testing-mode
     name: Insecure Storage Testing

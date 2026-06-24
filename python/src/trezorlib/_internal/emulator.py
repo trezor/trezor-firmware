@@ -53,19 +53,23 @@ def _rm_f(path: Path) -> None:
 
 
 class TropicModel:
+    DEFAULT_PORT = 28992
+
     def __init__(
         self,
-        workdir: Path,
-        profile_dir: Path,
-        port: int,
-        configfile: str,
-        logfile: Union[TextIO, str, Path],
+        profile_dir: str,
+        configfile: Path,
+        port: int = DEFAULT_PORT,
+        logfile: TextIO | str | Path | None = None,
+        configfile_output: Path | None = None,
     ) -> None:
-        self.workdir = workdir
-        self.profile_dir = profile_dir
+        self.profile_dir = Path(profile_dir).resolve()
         self.port = port
-        self.configfile = configfile
-        self.logfile = logfile
+        self.configfile = configfile.resolve()
+        self.configfile_output = (
+            configfile_output or self.profile_dir / "tropic_model_config_output.yml"
+        )
+        self.logfile = logfile or self.profile_dir / "trezor-tropic-model.log"
         self.process: Optional[subprocess.Popen] = None
 
     def start(self) -> None:
@@ -101,27 +105,27 @@ class TropicModel:
             output = self.logfile
         else:
             assert isinstance(self.logfile, (str, Path))
-            output = open(self.logfile, "w")
+            output = open(self.logfile, "a")
 
         return subprocess.Popen(
             [
                 "model_server",
                 "tcp",
                 "-c",
-                self.configfile,
+                str(self.configfile),
                 "-p",
                 str(self.port),
                 "-o",
-                str(self.profile_dir / "tropic_model_config_output.yml"),
+                str(self.configfile_output),
             ],
-            cwd=self.workdir,
+            cwd=self.profile_dir,
             stdout=cast(TextIO, output),
             stderr=subprocess.STDOUT,
         )
 
     def _wait_until_ready(self, timeout: float = TROPIC_MODEL_WAIT_TIME) -> None:
         assert self.process is not None, "Tropic model not started"
-        LOG.info("Waiting for Tropic model to come up...")
+        LOG.info(f"Waiting for Tropic model to come up on port {self.port}...")
         start = time.monotonic()
         while True:
             try:
@@ -144,7 +148,13 @@ class TropicModel:
 
             time.sleep(0.1)
 
-        LOG.info(f"Emulator ready after {time.monotonic() - start:.3f} seconds")
+        LOG.info(f"Tropic model ready after {time.monotonic() - start:.3f} seconds")
+
+    def __enter__(self) -> "TropicModel":
+        return self
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        self.stop()
 
 
 class Emulator:
@@ -195,12 +205,6 @@ class Emulator:
 
         # To save all screenshots properly in one directory between restarts
         self.restart_amount = 0
-
-    def start_tropic_model(self) -> None:
-        pass
-
-    def stop_tropic_model(self) -> None:
-        pass
 
     @property
     def client(self) -> TrezorTestContext:
@@ -260,7 +264,7 @@ class Emulator:
             output = self.logfile
         else:
             assert isinstance(self.logfile, (str, Path))
-            output = open(self.logfile, "w")
+            output = open(self.logfile, "a")
 
         return subprocess.Popen(
             [str(self.executable)] + args + self.extra_args,
@@ -283,8 +287,6 @@ class Emulator:
             else:
                 # process is running, no need to start again
                 return
-
-        self.start_tropic_model()
 
         self.transport = transport or self._get_transport()
         self.process = self._launch_process()
@@ -328,8 +330,6 @@ class Emulator:
                 self.process.kill()
             _RUNNING_PIDS.remove(self.process)
 
-        self.stop_tropic_model()
-
         _rm_f(self.profile_dir / "trezor.pid")
         _rm_f(self.profile_dir / "trezor.port")
         self.process = None
@@ -362,10 +362,7 @@ class CoreEmulator(Emulator):
     def __init__(
         self,
         *args: Any,
-        launch_tropic_model: bool = False,
         tropic_model_port: Optional[int] = None,
-        tropic_model_configfile: Optional[str] = None,
-        tropic_model_logfile: Union[TextIO, str, Path, None] = None,
         port: Optional[int] = None,
         main_args: Sequence[str] = ("-m", "main"),
         workdir: Optional[Path] = None,
@@ -382,36 +379,13 @@ class CoreEmulator(Emulator):
         if sdcard is not None:
             self.sdcard.write_bytes(sdcard)
 
-        self.tropic_model_port = tropic_model_port
-
-        if launch_tropic_model:
-            assert tropic_model_port
-            assert tropic_model_configfile
-            self.tropic_model = TropicModel(
-                workdir=self.workdir,
-                profile_dir=self.profile_dir,
-                port=tropic_model_port,
-                configfile=tropic_model_configfile,
-                logfile=(
-                    tropic_model_logfile or self.profile_dir / "trezor-tropic-model.log"
-                ),
-            )
-        else:
-            self.tropic_model = None
-
         if port:
             self.port = port
+        self.tropic_model_port = tropic_model_port
+
         self.disable_animation = disable_animation
         self.main_args = list(main_args)
         self.heap_size = heap_size
-
-    def start_tropic_model(self) -> None:
-        if self.tropic_model:
-            self.tropic_model.start()
-
-    def stop_tropic_model(self) -> None:
-        if self.tropic_model:
-            self.tropic_model.stop()
 
     def make_env(self) -> Dict[str, str]:
         env = super().make_env()
@@ -425,8 +399,7 @@ class CoreEmulator(Emulator):
         if self.headless or self.disable_animation:
             env["TREZOR_DISABLE_FADE"] = "1"
             env["TREZOR_DISABLE_ANIMATION"] = "1"
-        if self.tropic_model_port is not None:
-            env["TROPIC_MODEL_PORT"] = str(self.tropic_model_port)
+        env["TROPIC_MODEL_PORT"] = str(self.tropic_port())
 
         return env
 
@@ -438,6 +411,24 @@ class CoreEmulator(Emulator):
             + self.extra_args
         )
 
+    # UDP ports are hardcoded as offsets to the base wirelink port
+    def debuglink_port(self) -> int:
+        return self.port + 1
+
+    def fido2_port(self) -> int:
+        return self.port + 2
+
+    def vcp_port(self) -> int:
+        return self.port + 3
+
+    def ble_port(self) -> tuple[int, int]:
+        return (self.port + 4, self.port + 5)
+
+    # Tropic model can be managed externally, return configured port if set.
+    # Also TCP instead of UDP.
+    def tropic_port(self) -> int:
+        return self.tropic_model_port or (self.port + 6)
+
 
 class LegacyEmulator(Emulator):
     STORAGE_FILENAME = "emulator.img"
@@ -447,9 +438,3 @@ class LegacyEmulator(Emulator):
         if self.headless:
             env["SDL_VIDEODRIVER"] = "dummy"
         return env
-
-    def start_tropic_model(self) -> None:
-        pass
-
-    def stop_tropic_model(self) -> None:
-        pass

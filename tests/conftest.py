@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import os
+import tempfile
 import typing as t
 from dataclasses import asdict, dataclass
 from enum import IntEnum
@@ -30,6 +31,7 @@ from _pytest.reports import TestReport
 
 from trezorlib import client as client_module
 from trezorlib import debuglink, log, messages, models
+from trezorlib._internal.emulator import TropicModel
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.device import apply_settings
 from trezorlib.transport import enumerate_devices, get_transport
@@ -43,7 +45,13 @@ from trezorlib.testing import translations
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 from . import ui_tests
-from .emulators import EmulatorWrapper
+from .emulators import (
+    TROPIC_MODEL_CONFIGFILE,
+    EmulatorWrapper,
+    delete_profile,
+    get_logfile,
+    get_tropic_model_port,
+)
 
 if t.TYPE_CHECKING:
     from _pytest.config import Config
@@ -79,10 +87,46 @@ def _emulator_wrapper_main_args() -> list[str]:
         return ["-m", "main"]
 
 
+def _get_worker_id(request: pytest.FixtureRequest) -> int:
+    worker_id = xdist.get_xdist_worker_id(request)
+    if worker_id == "master":
+        return 0
+    assert worker_id.startswith("gw")
+    return 1 + int(worker_id[2:])
+
+
+@pytest.fixture(scope="session")
+def tropic_model(request: pytest.FixtureRequest) -> t.Iterator[TropicModel]:
+    worker_id = _get_worker_id(request)
+    logfile = get_logfile(f"trezor-tropic-model-{worker_id}.log")
+    port = get_tropic_model_port(worker_id)
+
+    with tempfile.TemporaryDirectory(
+        prefix="trezor-tropic-model-", delete=delete_profile()
+    ) as temp_dir:
+        LOG.debug(
+            f"Tropic model workdir: {temp_dir} (delete: {delete_profile()}), port: {port}, log: {logfile}"
+        )
+        with TropicModel(
+            profile_dir=temp_dir,
+            configfile=TROPIC_MODEL_CONFIGFILE,
+            port=port,
+            logfile=logfile,
+        ) as tropic_model:
+            tropic_model.start()
+            yield tropic_model
+
+
 @pytest.fixture
-def core_emulator(request: pytest.FixtureRequest) -> t.Iterator[Emulator]:
+def core_emulator(
+    tropic_model: TropicModel, request: pytest.FixtureRequest
+) -> t.Iterator[Emulator]:
     """Fixture returning default core emulator with possibility of screen recording."""
-    with EmulatorWrapper("core", main_args=_emulator_wrapper_main_args()) as emu:
+    with EmulatorWrapper(
+        "core",
+        main_args=_emulator_wrapper_main_args(),
+        tropic_model_port=tropic_model.port,
+    ) as emu:
         # Modifying emu.client to add screen recording (when --ui=test is used)
         _check_protocol(request, emu.client)
         with ui_tests.screen_recording(emu.client, request, lambda: emu.client) as _:
@@ -90,7 +134,9 @@ def core_emulator(request: pytest.FixtureRequest) -> t.Iterator[Emulator]:
 
 
 @pytest.fixture(scope="session")
-def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, None]:
+def emulator(
+    tropic_model: TropicModel, request: pytest.FixtureRequest
+) -> t.Generator["Emulator", None, None]:
     """Fixture for getting emulator connection in case tests should operate it on their own.
 
     Is responsible for starting it at the start of the session and stopping
@@ -119,17 +165,13 @@ def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, No
             "Legacy emulator is not supported until it can be run on arbitrary ports."
         )
 
-    worker_id = xdist.get_xdist_worker_id(request)
-    assert worker_id.startswith("gw")
-    worker_id = int(worker_id[2:])
-
     with EmulatorWrapper(
         model,
-        worker_id=worker_id,
+        worker_id=_get_worker_id(request),
         headless=True,
         auto_interact=not interact,
         main_args=_emulator_wrapper_main_args(),
-        launch_tropic_model=True,
+        tropic_model_port=tropic_model.port,
     ) as emu:
         yield emu
 

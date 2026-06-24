@@ -16,24 +16,28 @@
 
 
 import json
-import socket
 import tempfile
+from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 import yaml
 
-from tests.emulators import LOCAL_BUILD_PATHS, ROOT, TROPIC_MODEL_CONFIGFILE
-from trezorlib._internal.emulator import CoreEmulator
+from tests.emulators import (
+    ROOT,
+    TROPIC_MODEL_CONFIGFILE,
+    EmulatorWrapper,
+    delete_profile,
+    get_logfile,
+)
+from trezorlib._internal.emulator import TropicModel
 
 from . import model_only
 
-BUILD_PATH = LOCAL_BUILD_PATHS["core"]
 TROPIC_CONFIGS_JSON = (
     ROOT / "core" / "embed" / "sec" / "tropic" / "config" / "tropic_configs.json"
 )
-CORE_SRC_DIR = ROOT / "core" / "src"
 TROPIC_MODEL_DIR = TROPIC_MODEL_CONFIGFILE.parent
 TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT = 6
 TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT = 7
@@ -207,13 +211,6 @@ TROPIC_BOOT_SCENARIOS = [
 ]
 
 
-def _free_port() -> int:
-    """Ask the OS to allocate a free TCP port by binding to port 0, then return it."""
-    with socket.socket() as s:
-        s.bind(("", 0))
-        return s.getsockname()[1]
-
-
 def _config_to_numbers(config: dict, irreversible: bool) -> dict[str, int]:
     numbers = {}
     for category, category_config in config.items():
@@ -362,27 +359,40 @@ def _check_tropic_model_output(
 @model_only("T3W1")
 @pytest.mark.parametrize("scenario", TROPIC_BOOT_SCENARIOS, ids=lambda s: s.id)
 def test_tropic_boot(scenario: TropicBootScenario) -> None:
-    with tempfile.TemporaryDirectory() as temp_dir:
+    with tempfile.TemporaryDirectory(
+        prefix="trezor-tropic-config-", delete=delete_profile()
+    ) as temp_dir:
         config_path = Path(temp_dir) / "tropic_model_config.yml"
         output_path = Path(temp_dir) / "tropic_model_config_output.yml"
         config_path.write_text(
             yaml.safe_dump(_build_tropic_model_config(scenario), sort_keys=False)
         )
 
-        with CoreEmulator(
+        # using the default port - needs similar mechanism as device tests if we want
+        # parallel execution of test cases (currently not supported for upgrade tests)
+        with TropicModel(
             profile_dir=temp_dir,
-            executable=BUILD_PATH,
-            workdir=CORE_SRC_DIR,
-            headless=True,
-            launch_tropic_model=True,
-            tropic_model_configfile=str(config_path),
-            tropic_model_port=_free_port(),
-        ) as emulator:
+            configfile=config_path,
+            configfile_output=output_path,
+            logfile=get_logfile("trezor-tropic-model.log", Path(temp_dir)),
+        ) as tropic_model:
+            tropic_model.start()
+
             if scenario.expect_failure:
-                with pytest.raises(RuntimeError, match="Emulator process died"):
-                    emulator.start()
+                expectation = pytest.raises(RuntimeError, match="Emulator process died")
             else:
-                emulator.start()
+                expectation = nullcontext()
+
+            with (
+                expectation,
+                EmulatorWrapper(
+                    model="core",
+                    profile_dir=temp_dir,
+                    tropic_model_port=tropic_model.port,
+                ),
+            ):
+                # wait for start, then exit immediately
+                pass
 
         if not scenario.expect_failure:
             assert scenario.expected_i_version is not None

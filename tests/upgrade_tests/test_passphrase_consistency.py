@@ -43,7 +43,11 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
-def emulator(tag: str, model: str, shared_profile_dir) -> Iterator[Emulator]:
+def emulator(
+    tag: str,
+    model: str,
+    shared_profile_dir: str,
+) -> Iterator[Emulator]:
     with EmulatorWrapper(
         model,
         tag=tag,

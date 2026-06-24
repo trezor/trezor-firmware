@@ -97,7 +97,7 @@ def _get_session(client: "Client", passphrase: str | None = "") -> "Session":
 def test_upgrade_load(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ) -> None:
     def asserts(client: "Client"):
         client.refresh_features()
@@ -140,7 +140,7 @@ def test_upgrade_load(
 def test_upgrade_load_pin(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ) -> None:
     PIN = "1234"
 
@@ -192,7 +192,9 @@ def test_upgrade_load_pin(
     ("T1B1", ["v1.8.0", "v1.9.0"]),
 )
 @lower_models_minimum_version
-def test_storage_upgrade_progressive(tags: List[str], model: str, shared_profile_dir):
+def test_storage_upgrade_progressive(
+    tags: List[str], model: str, shared_profile_dir: str
+):
     PIN = "1234"
 
     def asserts(client: "Client") -> None:
@@ -242,7 +244,7 @@ def test_storage_upgrade_progressive(tags: List[str], model: str, shared_profile
 def test_upgrade_wipe_code(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ):
     PIN = "1234"
     WIPE_CODE = "4321"
@@ -302,7 +304,7 @@ def test_upgrade_wipe_code(
 def test_upgrade_reset(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ):
     def asserts(client: "Client"):
         assert not client.features.pin_protection
@@ -347,7 +349,7 @@ def test_upgrade_reset(
 def test_upgrade_reset_skip_backup(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ):
     def asserts(client: "Client"):
         assert not client.features.pin_protection
@@ -393,7 +395,7 @@ def test_upgrade_reset_skip_backup(
 def test_upgrade_reset_no_backup(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ):
     def asserts(client: "Client"):
         assert not client.features.pin_protection
@@ -441,7 +443,7 @@ def test_upgrade_reset_no_backup(
 def test_upgrade_shamir_recovery(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ):
     with (
         EmulatorWrapper(
@@ -538,7 +540,7 @@ def test_upgrade_shamir_recovery(
 def test_upgrade_shamir_backup(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ):
     with EmulatorWrapper(
         model,
@@ -621,7 +623,7 @@ def test_upgrade_shamir_backup(
 def test_upgrade_u2f(
     tag: str | None,
     model: str | None,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ):
     """Check U2F counter stayed the same after an upgrade."""
     with EmulatorWrapper(
@@ -665,7 +667,7 @@ def test_cardano_address_does_not_change_by_upgrade(
     model: str | None,
     backup_type: BackupType,
     derivation_type: CardanoDerivationType,
-    shared_profile_dir,
+    shared_profile_dir: str,
 ):
     """
     Check that the Cardano address does not change after upgrading app storage from v2
