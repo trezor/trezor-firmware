@@ -1,6 +1,5 @@
 use crate::micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr};
 
-#[cfg(feature = "dbg_console")]
 use crate::{
     error::Error,
     micropython::{buffer::StrBuffer, util},
@@ -8,7 +7,6 @@ use crate::{
     util::logger::init_rust_logging,
 };
 
-#[cfg(feature = "dbg_console")]
 fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
     let [module, fmt, fmt_args @ ..] = args else {
         return Err(Error::TypeError);
@@ -33,59 +31,44 @@ fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
 }
 
 extern "C" fn py_debug(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    #[cfg(feature = "dbg_console")]
-    {
-        let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Debug, args, kwargs);
-        unsafe {
-            util::try_with_args_and_kwargs(n_args, args, kwargs, block);
-        }
+    let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Debug, args, kwargs);
+    unsafe {
+        util::try_with_args_and_kwargs(n_args, args, kwargs, block);
     }
     Obj::const_none()
 }
 
 extern "C" fn py_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    #[cfg(feature = "dbg_console")]
-    {
-        let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Info, args, kwargs);
-        unsafe {
-            util::try_with_args_and_kwargs(n_args, args, kwargs, block);
-        }
+    let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Info, args, kwargs);
+    unsafe {
+        util::try_with_args_and_kwargs(n_args, args, kwargs, block);
     }
     Obj::const_none()
 }
 
 extern "C" fn py_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    #[cfg(feature = "dbg_console")]
-    {
-        let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Warn, args, kwargs);
-        unsafe {
-            util::try_with_args_and_kwargs(n_args, args, kwargs, block);
-        }
+    let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Warn, args, kwargs);
+    unsafe {
+        util::try_with_args_and_kwargs(n_args, args, kwargs, block);
     }
     Obj::const_none()
 }
 
 extern "C" fn py_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    #[cfg(feature = "dbg_console")]
-    {
-        let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Error, args, kwargs);
-        unsafe {
-            util::try_with_args_and_kwargs(n_args, args, kwargs, block);
-        }
+    let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Error, args, kwargs);
+    unsafe {
+        util::try_with_args_and_kwargs(n_args, args, kwargs, block);
     }
     Obj::const_none()
 }
 
 extern "C" fn py_init(level: Obj) -> Obj {
-    #[cfg(feature = "dbg_console")]
-    {
-        let block = || {
-            init_rust_logging(level.try_into()?);
-            Ok(())
-        };
-        unsafe {
-            util::try_or_raise(block);
-        }
+    let block = || {
+        init_rust_logging(level.try_into()?);
+        Ok(())
+    };
+    unsafe {
+        util::try_or_raise(block);
     }
     Obj::const_none()
 }
