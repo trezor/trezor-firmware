@@ -8,6 +8,7 @@ mod trezor;
 
 pub use attrs::CompileAttrs;
 pub use clibrary::CLibrary;
+pub use clibrary::compile::OutputType;
 pub use input_files::InputFiles;
 
 pub use dep_tracking::format_command_error;
