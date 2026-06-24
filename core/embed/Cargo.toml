@@ -53,6 +53,24 @@ opt-level = 3
 split-debuginfo = "off"
 debug = 2
 
+# Optimized profile for build related binaries
+[profile.release.build-override]
+debug = false
+strip = true
+opt-level = "s"
+
+# Optimized profile for build related binaries
+[profile.dev.build-override]
+debug = false
+strip = true
+opt-level = "s"
+
+# Optimized profile for xtask binary
+[profile.xtask]
+inherits = "dev"
+debug = false
+strip = true
+
 [workspace.dependencies]
 cfg-if = "1.0"
 cty = "0.2.2"

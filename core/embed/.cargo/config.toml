@@ -3,7 +3,7 @@ target-dir = "../build-xtask"
 #rustc-wrapper = "sccache"
 
 [alias]
-xtask = "run -p xtask --"
+xtask = "run --profile xtask -p xtask --"
 
 [target.x86_64-unknown-linux-gnu]
 
