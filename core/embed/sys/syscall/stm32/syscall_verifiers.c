@@ -1456,12 +1456,16 @@ access_violation:
   return TS_EACCES;
 }
 
-ts_t app_arena_create_image__verified(app_image_handle_t *handle) {
+ts_t app_arena_create_image__verified(const void *header, size_t header_size,
+                                      const sha256_digest_t *proof,
+                                      size_t proof_len,
+                                      app_image_handle_t *handle) {
   if (!probe_write_access(handle, sizeof(*handle))) {
     goto access_violation;
   }
 
-  return app_arena_create_image(handle);
+  return app_arena_create_image(header, header_size, proof, proof_len, handle);
+
 access_violation:
   apptask_access_violation();
   return TS_EACCES;
@@ -1494,25 +1498,17 @@ access_violation:
 }
 
 ts_t app_image_write_chunk__verified(app_image_handle_t handle,
-                                     const void *data, size_t size) {
+                                     const void *data, size_t size,
+                                     const sha256_digest_t *hash) {
   if (!probe_read_access(data, size)) {
     goto access_violation;
   }
 
-  return app_image_write_chunk(handle, data, size);
-
-access_violation:
-  apptask_access_violation();
-  return TS_EACCES;
-}
-
-ts_t app_image_verify__verified(app_image_handle_t handle, const void *proof,
-                                size_t proof_size) {
-  if (!probe_read_access(proof, proof_size)) {
+  if (!probe_read_access(hash, sizeof(*hash))) {
     goto access_violation;
   }
 
-  return app_image_verify(handle, proof, proof_size);
+  return app_image_write_chunk(handle, data, size, hash);
 
 access_violation:
   apptask_access_violation();

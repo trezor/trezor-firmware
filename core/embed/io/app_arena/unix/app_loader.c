@@ -24,43 +24,24 @@
 #include <sys/logging.h>
 #include <sys/systask.h>
 
-#include "../xbin_loader.h"
+#include "../app_loader.h"
 
 #include <dlfcn.h>
 #include <unistd.h>
 
-LOG_DECLARE(xbin_loader)
+LOG_DECLARE(app_loader)
 
-const xbin_header_t* xbin_verify_image(const void* image, size_t image_size) {
+ts_t app_loader_verify_payload(const app_header_t* header, const void* payload,
+                               size_t payload_size) {
   TSH_DECLARE;
-  const xbin_header_t* retval = NULL;
 
-  TSH_CHECK(image != NULL, TS_EINVAL);
-  TSH_CHECK(image_size >= sizeof(xbin_header_t), TS_EINVAL);
+  TSH_CHECK_ARG(header != NULL);
+  TSH_CHECK_ARG(payload != NULL);
 
-  const xbin_header_t* header = (const xbin_header_t*)image;
-
-  TSH_CHECK(header->magic == XBIN_HEADER_MAGIC, TS_EINVAL);
-  TSH_CHECK(header->header_size >= sizeof(xbin_header_t), TS_EINVAL);
-  TSH_CHECK(header->header_size <= image_size, TS_EINVAL);
-  TSH_CHECK(header->abi_version == 1, TS_EINVAL);
-  TSH_CHECK(header->payload_type == XBIN_TARGET_X86_64, TS_EINVAL);
-  TSH_CHECK(header->payload_size == image_size - header->header_size,
-            TS_EINVAL);
-
-  retval = header;
+  TSH_CHECK(header->payload_type == APP_TARGET_X86_64, TS_EBADMSG);
+  TSH_CHECK(payload_size == header->payload_size, TS_EBADMSG);
 
 cleanup:
-  return retval;
-}
-
-ts_t xbin_verify_signature(const xbin_header_t* header, const void* proof,
-                           size_t proof_size) {
-  TSH_DECLARE;
-
-  // TODO !@# verify signature as soons as the signing scheme is defined
-
-  // cleanup:
   TSH_RETURN;
 }
 
@@ -82,27 +63,30 @@ cleanup:
   TSH_RETURN;
 }
 
-static void xbin_applet_unload(applet_t* applet) {
+static void app_loader_applet_unload(applet_t* applet) {
   if (applet->handle != NULL) {
     // Unload dynamic library
     dlclose(applet->handle);
   }
 }
 
-ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
-                         size_t rwmem_size, applet_t* applet) {
+ts_t app_loader_prepare_applet(const app_header_t* header, void* payload,
+                               void* rwmem, size_t rwmem_size,
+                               applet_t* applet) {
   TSH_DECLARE;
   ts_t status;
 
+  UNUSED(rwmem);
+  UNUSED(rwmem_size);
+
   applet_privileges_t privileges = {0};
 
-  applet_init(applet, &privileges, xbin_applet_unload);
+  applet_init(applet, &privileges, app_loader_applet_unload);
 
   const char* filename = "/tmp/trezor_ext_app.so";
 
   // Copy the embedded elf image to the temporary file that
   // we can load with dlopen
-  const void* payload = (const uint8_t*)header + header->header_size;
   status = write_to_file(filename, payload, header->payload_size);
   TSH_CHECK_OK(status);
 
@@ -111,10 +95,10 @@ ts_t xbin_prepare_applet(const xbin_header_t* header, void* rwmem,
   if (applet->handle == NULL) {
     LOG_ERR("dlopen failed: %s", dlerror());
   }
-  TSH_CHECK(applet->handle != NULL, TS_EINVAL);
+  TSH_CHECK(applet->handle != NULL, TS_EBADMSG);
 
   void* entrypoint = dlsym(applet->handle, "applet_main");
-  TSH_CHECK(entrypoint != NULL, TS_EINVAL);
+  TSH_CHECK(entrypoint != NULL, TS_EBADMSG);
 
   bool ok = systask_init(&applet->task, 0, 0, 0, applet);
   TSH_CHECK(ok, TS_ENOMEM);

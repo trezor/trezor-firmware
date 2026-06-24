@@ -990,8 +990,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_APP_ARENA_CREATE_IMAGE: {
-      app_image_handle_t *handle = (app_image_handle_t *)args[0];
-      ts_t status = app_arena_create_image__verified(handle);
+      const void *header = (const void *)args[0];
+      size_t header_size = (size_t)args[1];
+      const sha256_digest_t *proof = (const sha256_digest_t *)args[2];
+      size_t proof_len = (size_t)args[3];
+      app_image_handle_t *handle = (app_image_handle_t *)args[4];
+      ts_t status = app_arena_create_image__verified(header, header_size, proof,
+                                                     proof_len, handle);
       args[0] = ts_code(status);
     } break;
 
@@ -1013,16 +1018,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       app_image_handle_t handle = (app_image_handle_t)args[0];
       const void *data = (const void *)args[1];
       size_t size = (size_t)args[2];
-      ts_t status = app_image_write_chunk__verified(handle, data, size);
-      args[0] = ts_code(status);
-    } break;
-
-    case SYSCALL_APP_IMAGE_VERIFY: {
-      app_image_handle_t handle = (app_image_handle_t)args[0];
-      const void *proof = (const void *)args[1];
-      size_t proof_size = (size_t)args[2];
-
-      ts_t status = app_image_verify__verified(handle, proof, proof_size);
+      sha256_digest_t *hash = (sha256_digest_t *)args[3];
+      ts_t status = app_image_write_chunk__verified(handle, data, size, hash);
       args[0] = ts_code(status);
     } break;
 

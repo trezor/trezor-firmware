@@ -100,11 +100,6 @@ Q(${import_name})
 % endfor
 #endif
 
-#if USE_APP_LOADING
-Q(image_size)
-Q(task_id)
-#endif
-
 // generate full alphabet
 <%
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"

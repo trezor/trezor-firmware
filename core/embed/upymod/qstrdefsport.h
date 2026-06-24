@@ -873,11 +873,6 @@ Q(trezor.enums.DebugTouchEventType)
 Q(trezor.enums.DebugWaitType)
 #endif
 
-#if USE_APP_LOADING
-Q(image_size)
-Q(task_id)
-#endif
-
 // generate full alphabet
 Q(a)
 Q(A)

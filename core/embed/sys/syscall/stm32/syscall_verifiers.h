@@ -366,7 +366,10 @@ bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
 
 ts_t app_arena_get_info__verified(app_arena_info_t *info);
 
-ts_t app_arena_create_image__verified(app_image_handle_t *handle);
+ts_t app_arena_create_image__verified(const void *header, size_t header_size,
+                                      const sha256_digest_t *proof,
+                                      size_t proof_len,
+                                      app_image_handle_t *handle);
 
 ts_t app_arena_get_image_by_index__verified(size_t idx,
                                             app_image_handle_t *handle);
@@ -375,10 +378,8 @@ ts_t app_image_get_info__verified(app_image_handle_t handle,
                                   app_image_info_t *info);
 
 ts_t app_image_write_chunk__verified(app_image_handle_t handle,
-                                     const void *data, size_t size);
-
-ts_t app_image_verify__verified(app_image_handle_t handle, const void *proof,
-                                size_t proof_size);
+                                     const void *data, size_t size,
+                                     const sha256_digest_t *hash);
 
 ts_t app_image_run__verified(app_image_handle_t handle, systask_id_t *task_id);
 

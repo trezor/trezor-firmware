@@ -980,9 +980,12 @@ ts_t app_arena_clear_event(void) {
   return ts_make(syscall_invoke0(SYSCALL_APP_ARENA_CLEAR_EVENT));
 }
 
-ts_t app_arena_create_image(app_image_handle_t *handle) {
-  return ts_make(
-      syscall_invoke1((uint32_t)handle, SYSCALL_APP_ARENA_CREATE_IMAGE));
+ts_t app_arena_create_image(const void *header, size_t header_size,
+                            const sha256_digest_t *proof, size_t proof_len,
+                            app_image_handle_t *handle) {
+  return ts_make(syscall_invoke5(
+      (uint32_t)header, (uint32_t)header_size, (uint32_t)proof,
+      (uint32_t)proof_len, (uint32_t)handle, SYSCALL_APP_ARENA_CREATE_IMAGE));
 }
 
 ts_t app_arena_get_image_by_index(size_t idx, app_image_handle_t *handle) {
@@ -996,15 +999,10 @@ ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t *info) {
 }
 
 ts_t app_image_write_chunk(app_image_handle_t handle, const void *data,
-                           size_t size) {
-  return ts_make(syscall_invoke3((uint32_t)handle, (uint32_t)data, size,
+                           size_t size, const sha256_digest_t *hash) {
+  return ts_make(syscall_invoke4((uint32_t)handle, (uint32_t)data, size,
+                                 (uint32_t)hash,
                                  SYSCALL_APP_IMAGE_WRITE_CHUNK));
-}
-
-ts_t app_image_verify(app_image_handle_t handle, const void *proof,
-                      size_t proof_size) {
-  return ts_make(syscall_invoke3((uint32_t)handle, (uint32_t)proof, proof_size,
-                                 SYSCALL_APP_IMAGE_VERIFY));
 }
 
 ts_t app_image_delete(app_image_handle_t handle) {

@@ -23,8 +23,11 @@
 #include <trezor_rtl.h>
 
 #include <io/app_arena.h>
+#include <io/app_header.h>
 #include <sys/applet.h>
 #include <sys/sysevent_source.h>
+
+#include <sha2.h>
 
 #ifdef USE_TRUSTZONE
 #include <sys/trustzone.h>
@@ -32,7 +35,7 @@
 
 #include <stdlib.h>
 
-#include "xbin_loader.h"
+#include "app_loader.h"
 
 // Maximum number of application images that can be loaded in the arena
 // at the same time. If more images are needed, this can be increased
@@ -48,8 +51,14 @@ typedef struct {
 typedef struct {
   // Handle of the loaded image
   app_image_handle_t handle;
-  // Set if image was verified successfully
-  bool verified;
+
+  // Raw header data of the image (copied from the image file)
+  uint8_t header_raw[APP_HEADER_MAX_SIZE];
+  // Verified application header (points to the header_raw buffer)
+  const app_header_t* header;
+
+  // Set if image was fully loaded and verified
+  bool ready;
   // Set if image is currently running
   bool running;
 
@@ -59,7 +68,11 @@ typedef struct {
   size_t mem_size;
   // Number of bytes of the image loaded into the reserved memory
   // (the rest of the reserved memory is used for rwdata)
-  size_t image_size;
+  size_t written_bytes;
+  // Hash of the next chunk
+  sha256_digest_t chunk_hash;
+  // Hash of the image header
+  sha256_digest_t header_hash;
 
   // Applet associated with the application
   applet_t applet;
@@ -77,7 +90,7 @@ typedef struct {
   // Amount of arena memory currently used by loaded images
   size_t mem_used;
 
-  // TLS for for event handling
+  // TLS for event handling
   app_arena_tls_t tls[SYSTASK_MAX_TASKS];
   // Set if a systask associated with any loaded image has been killed
   bool task_killed;
@@ -144,7 +157,7 @@ ts_t app_arena_get_info(app_arena_info_t* info) {
   app_arena_t* arena = &g_app_arena;
 
   TSH_CHECK(arena->initialized, TS_ENOINIT);
-  TSH_CHECK(info != NULL, TS_EINVAL);
+  TSH_CHECK_ARG(info != NULL);
 
   memset(info, 0, sizeof(*info));
 
@@ -169,8 +182,8 @@ ts_t app_arena_get_image_by_index(size_t idx, app_image_handle_t* handle) {
   app_arena_t* arena = &g_app_arena;
 
   TSH_CHECK(arena->initialized, TS_ENOINIT);
-  TSH_CHECK(handle != NULL, TS_EINVAL);
-  TSH_CHECK(idx < APP_ARENA_MAX_IMAGES, TS_EINVAL);
+  TSH_CHECK_ARG(handle != NULL);
+  TSH_CHECK_ARG(idx < APP_ARENA_MAX_IMAGES);
 
   *handle = APP_IMAGE_HANDLE_INVALID;
 
@@ -190,13 +203,18 @@ cleanup:
   TSH_RETURN;
 }
 
-ts_t app_arena_create_image(app_image_handle_t* handle) {
+ts_t app_arena_create_image(const void* header, size_t header_size,
+                            const sha256_digest_t* proof, size_t proof_len,
+                            app_image_handle_t* handle) {
   TSH_DECLARE;
 
   app_arena_t* arena = &g_app_arena;
 
   TSH_CHECK(arena->initialized, TS_ENOINIT);
-  TSH_CHECK(handle != NULL, TS_EINVAL);
+  TSH_CHECK_ARG(header != NULL);
+  TSH_CHECK_ARG(header_size <= APP_HEADER_MAX_SIZE);
+  TSH_CHECK_ARG(handle != NULL);
+  TSH_CHECK_ARG(proof_len == 0 || proof != NULL);
 
   *handle = APP_IMAGE_HANDLE_INVALID;
 
@@ -207,13 +225,30 @@ ts_t app_arena_create_image(app_image_handle_t* handle) {
     app_arena_entry_t* entry = &arena->images[i];
     if (entry->handle == APP_IMAGE_HANDLE_INVALID) {
       memset(entry, 0, sizeof(*entry));
+
+      memcpy(entry->header_raw, header, header_size);
+      entry->header = app_header_verify(entry->header_raw, header_size);
+      TSH_CHECK(entry->header != NULL, TS_EBADMSG);
+      entry->chunk_hash = entry->header->payload_hash;
+
+      // Calculate header hash
+      sha256_digest_t header_hash;
+      SHA256_CTX ctx;
+      sha256_Init(&ctx);
+      sha256_Update(&ctx, entry->header_raw, entry->header->header_size);
+      sha256_Final(&ctx, (uint8_t*)&header_hash);
+
+      entry->header_hash = header_hash;
+
+      // TODO !@# app_header_verify_signature()
+
       // Allocate memory, for simplicity, we allow only using the whole arena.
       entry->mem_ptr = arena->mem_ptr + arena->mem_used;
       entry->mem_size = arena->mem_size - arena->mem_used;
       arena->mem_used += entry->mem_size;
       // Assign a new handle and mark the entry as loading
       entry->handle = arena->next_handle++;
-      entry->verified = false;
+      entry->ready = false;
       entry->running = false;
 
       *handle = entry->handle;
@@ -265,32 +300,26 @@ ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t* info) {
   app_arena_t* arena = &g_app_arena;
 
   TSH_CHECK(arena->initialized, TS_ENOINIT);
-  TSH_CHECK(info != NULL, TS_EINVAL);
+  TSH_CHECK_ARG(info != NULL);
 
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
 
-  app_image_info_t temp_info = {
-      .verified = entry->verified,
-      .running = entry->running,
-      .image_size = entry->image_size,
-  };
+  memset(info, 0, sizeof(*info));
 
-  if (entry->verified) {
-    const xbin_header_t* header = (const xbin_header_t*)entry->mem_ptr;
-
-    // We copy ID from one applet to another
-    app_arena_configure_mpu(entry);
-    temp_info.version = header->version;
-    memcpy(temp_info.id, header->id, sizeof(temp_info.id));
-    app_arena_restore_mpu();
-  }
+  info->ready = entry->ready;
+  info->running = entry->running;
+  info->image_size = entry->header->payload_size;
+  info->chunk_size = entry->header->chunk_size;
+  info->version = entry->header->version;
+  info->header_hash = entry->header_hash;
+  memcpy(info->id, entry->header->id, sizeof(info->id));
+  memcpy(info->name, entry->header->app_name, sizeof(info->name));
+  memcpy(info->vendor, entry->header->vendor_name, sizeof(info->vendor));
 
   if (entry->running) {
-    temp_info.task_id = systask_id(&entry->applet.task);
+    info->task_id = systask_id(&entry->applet.task);
   }
-
-  *info = temp_info;
 
 cleanup:
   TSH_RETURN;
@@ -298,6 +327,7 @@ cleanup:
 
 ts_t app_image_delete(app_image_handle_t handle) {
   TSH_DECLARE;
+  ts_t status;
 
   app_arena_t* arena = &g_app_arena;
 
@@ -307,7 +337,8 @@ ts_t app_image_delete(app_image_handle_t handle) {
   TSH_CHECK(entry != NULL, TS_ENOENT);
 
   if (entry->running) {
-    app_image_stop(handle);
+    status = app_image_stop(handle);
+    TSH_CHECK_OK(status);
   }
 
   // Free the allocated memory
@@ -321,28 +352,44 @@ cleanup:
 }
 
 ts_t app_image_write_chunk(app_image_handle_t handle, const void* data,
-                           size_t size) {
+                           size_t size, const sha256_digest_t* hash) {
   TSH_DECLARE;
+  ts_t status;
 
   app_arena_t* arena = &g_app_arena;
 
   TSH_CHECK(arena->initialized, TS_ENOINIT);
-  TSH_CHECK(data != NULL, TS_EINVAL);
-  TSH_CHECK(size > 0, TS_EINVAL);
+  TSH_CHECK_ARG(data != NULL);
+  TSH_CHECK_ARG(size > 0);
 
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
-  TSH_CHECK(!entry->verified, TS_EINVAL);
 
-  if (entry->image_size + size < entry->image_size ||
-      entry->image_size + size > entry->mem_size) {
+  // Do not allow writing to an image that is already marked as ready
+  TSH_CHECK(!entry->ready, TS_EINVAL);
+
+  // Calculate chunk hash
+  sha256_digest_t digest;
+  SHA256_CTX ctx;
+  sha256_Init(&ctx);
+  sha256_Update(&ctx, data, size);
+  sha256_Update(&ctx, (const uint8_t*)hash, sizeof(*hash));
+  sha256_Final(&ctx, (uint8_t*)&digest);
+
+  // Compare the calculated hash with the expected one
+  TSH_CHECK(memcmp(&digest, &entry->chunk_hash, sizeof(digest)) == 0,
+            TS_EBADMSG);
+  entry->chunk_hash = *hash;
+
+  if (entry->written_bytes + size < entry->written_bytes ||
+      entry->written_bytes + size > entry->mem_size) {
     // Not enough space in the arena for the new data
-    TSH_CHECK_OK(TS_ENOMEM);
+    TSH_RAISE(TS_ENOMEM);
   }
 
   const uint8_t* src = data;
   const uint8_t* src_end = src + size;
-  uint8_t* dst = (uint8_t*)entry->mem_ptr + entry->image_size;
+  uint8_t* dst = (uint8_t*)entry->mem_ptr + entry->written_bytes;
 
   while (src < src_end) {
     uint8_t temp[256];
@@ -360,42 +407,20 @@ ts_t app_image_write_chunk(app_image_handle_t handle, const void* data,
     dst += bytes_to_copy;
   }
 
-  entry->image_size += size;
+  entry->written_bytes += size;
+
+  if (entry->written_bytes >= entry->header->payload_size) {
+    // All data has been written, verify the payload integrity
+    app_arena_configure_mpu(entry);
+    status = app_loader_verify_payload(entry->header, entry->mem_ptr,
+                                       entry->written_bytes);
+    app_arena_restore_mpu();
+    TSH_CHECK_OK(status);
+
+    entry->ready = true;
+  }
 
 cleanup:
-  TSH_RETURN;
-}
-
-ts_t app_image_verify(app_image_handle_t handle, const void* proof,
-                      size_t proof_size) {
-  TSH_DECLARE;
-  ts_t status;
-
-  app_arena_t* arena = &g_app_arena;
-
-  TSH_CHECK(arena->initialized, TS_ENOINIT);
-
-  app_arena_entry_t* entry = find_image_by_handle(handle);
-  TSH_CHECK(entry != NULL, TS_ENOENT);
-
-  TSH_CHECK(IS_ALIGNED(proof_size, 32), TS_EINVAL);
-  TSH_CHECK(proof_size == 0 || proof != NULL, TS_EINVAL);
-
-  TSH_CHECK(!entry->verified, TS_EINVAL);
-
-  app_arena_configure_mpu(entry);
-
-  const xbin_header_t* header =
-      xbin_verify_image(entry->mem_ptr, entry->image_size);
-  TSH_CHECK(header != NULL, TS_EINVAL);
-
-  status = xbin_verify_signature(header, proof, proof_size);
-  TSH_CHECK_OK(status);
-
-  entry->verified = true;
-
-cleanup:
-  app_arena_restore_mpu();
   TSH_RETURN;
 }
 
@@ -406,25 +431,25 @@ ts_t app_image_run(app_image_handle_t handle, systask_id_t* task_id) {
   app_arena_t* arena = &g_app_arena;
 
   TSH_CHECK(arena->initialized, TS_ENOINIT);
-
-  TSH_CHECK(task_id != NULL, TS_EINVAL);
+  TSH_CHECK_ARG(task_id != NULL);
   *task_id = 0;
 
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
 
-  TSH_CHECK(entry->verified, TS_EINVAL);
+  // Check that the image is ready to be run
+  TSH_CHECK(entry->ready, TS_EINVAL);
 
   if (entry->running) {
     *task_id = entry->applet.task.id;
   } else {
-    size_t rwmem_size = entry->mem_size - entry->image_size;
-    void* rwmem = (uint8_t*)entry->mem_ptr + entry->image_size;
+    size_t rwmem_size = entry->mem_size - entry->written_bytes;
+    void* rwmem = (uint8_t*)entry->mem_ptr + entry->written_bytes;
 
     app_arena_configure_mpu(entry);
 
-    const xbin_header_t* header = (const xbin_header_t*)entry->mem_ptr;
-    status = xbin_prepare_applet(header, rwmem, rwmem_size, &entry->applet);
+    status = app_loader_prepare_applet(entry->header, entry->mem_ptr, rwmem,
+                                       rwmem_size, &entry->applet);
     TSH_CHECK_OK(status);
 
     entry->running = true;
@@ -466,7 +491,7 @@ ts_t app_image_get_pminfo(app_image_handle_t handle,
   app_arena_t* arena = &g_app_arena;
 
   TSH_CHECK(arena->initialized, TS_ENOINIT);
-  TSH_CHECK(pminfo != NULL, TS_EINVAL);
+  TSH_CHECK_ARG(pminfo != NULL);
 
   app_arena_entry_t* entry = find_image_by_handle(handle);
   TSH_CHECK(entry != NULL, TS_ENOENT);
