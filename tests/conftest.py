@@ -226,7 +226,7 @@ class ModelsFilter:
 
         if isinstance(marker_list[0], models.TrezorModel):
             # raw list of TrezorModels
-            return set(marker_list)  # type: ignore [incompatible with return type]
+            return set(marker_list)  # type: ignore [is not assignable to return type]
 
         if len(marker_list) == 1:
             # @pytest.mark.models("t2t1,t2b1") -> ("t2t1,t2b1",) -> "t2t1,t2b1"
@@ -464,7 +464,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
     if test_ui and _is_main_runner(session):
         session.exitstatus = ui_tests.sessionfinish(
             exitstatus,
-            test_ui,  # type: ignore
+            test_ui,
             bool(session.config.getoption("ui_check_missing")),
             bool(session.config.getoption("do_master_diff")),
         )
@@ -480,7 +480,7 @@ def pytest_terminal_summary(
     if ui_option:
         ui_tests.terminal_summary(
             terminalreporter.write_line,
-            ui_option,  # type: ignore
+            ui_option,
             bool(config.getoption("ui_check_missing")),
             exitstatus,
         )
@@ -606,7 +606,7 @@ def pytest_runtest_makereport(item: pytest.Item, call) -> t.Generator:
     # The device_handler fixture uses this as 'request.node.rep_call.passed' attribute,
     # in order to raise error only if the test passed.
     outcome = yield
-    rep = outcome.get_result()
+    rep = outcome.get_result()  # type: ignore [Cannot access attribute]
     setattr(item, f"rep_{rep.when}", rep)
 
 
@@ -639,7 +639,7 @@ def device_handler(
 
     # if test finished, make sure all background tasks are done
     finalized_ok = device_handler.check_finalize()
-    if test_res and not finalized_ok:  # type: ignore [rep_call must exist]
+    if test_res and not finalized_ok:
         raise RuntimeError("Test did not check result of background task")
 
 

@@ -125,7 +125,7 @@ class InputFlowNewWipeCodeCancel(InputFlowBase):
         self.debug.synchronize_at("VerticalMenu")
         self.debug.button_actions.navigate_to_menu_item(0)
 
-        self.debug.read_layout().title == TR.wipe_code__cancel_setup
+        assert self.debug.read_layout().title() == TR.wipe_code__cancel_setup
         self.debug.swipe_up()
         self.debug.read_layout()
         self.debug.synchronize_at("PromptScreen")
@@ -139,7 +139,7 @@ class InputFlowNewWipeCodeCancel(InputFlowBase):
         self.debug.synchronize_at("VerticalMenu")
         self.debug.button_actions.navigate_to_menu_item(0)
 
-        self.debug.read_layout().title == TR.wipe_code__cancel_setup
+        assert TR.wipe_code__cancel_setup in self.debug.read_layout().text_content()
         self.debug.press_no()
 
 
@@ -888,7 +888,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.press_no()
         self.debug.press_no()
-        for _ in range(br.pages - 1):
+        for _ in range((br.pages or 1) - 1):
             self.debug.swipe_up()
         self.debug.press_yes()
 
@@ -986,7 +986,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
 
         # In case of page overflow, paginate to the last page
         # The last page is the confirm page
-        if br.pages > 1:
+        if br.pages and br.pages > 1:
             for _ in range(br.pages - 1):
                 self.debug.click(self.debug.screen_buttons.ok())
 

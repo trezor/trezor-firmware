@@ -20,9 +20,10 @@ import struct
 from copy import copy
 from typing import Any, List, Tuple
 
-import ecdsa
 from ecdsa.curves import SECP256k1
+from ecdsa.ecdsa import generator_secp256k1
 from ecdsa.ellipticcurve import INFINITY, Point
+from ecdsa.numbertheory import square_root_mod_prime
 from ecdsa.util import number_to_string, string_to_number
 
 from trezorlib import messages, tools
@@ -47,14 +48,12 @@ def sec_to_public_pair(pubkey: bytes) -> Tuple[int, Any]:
         curve = generator.curve()
         p = curve.p()
         alpha = (pow(x, 3, p) + curve.a() * x + curve.b()) % p
-        beta = ecdsa.numbertheory.square_root_mod_prime(alpha, p)
+        beta = square_root_mod_prime(alpha, p)
         if is_even == bool(beta & 1):
             return (x, p - beta)
         return (x, beta)
 
-    return public_pair_for_x(
-        ecdsa.ecdsa.generator_secp256k1, x, is_even=(sec0 == b"\2")
-    )
+    return public_pair_for_x(generator_secp256k1, x, is_even=sec0 == b"\2")
 
 
 def fingerprint(pubkey: bytes) -> int:
@@ -135,7 +134,7 @@ def deserialize(xpub: str) -> messages.HDNodeType:
         fingerprint=struct.unpack(">I", data[5:9])[0],
         child_num=struct.unpack(">I", data[9:13])[0],
         chain_code=data[13:45],
-        public_key=None,
+        public_key=b"",
     )
 
     key = data[45:-4]
