@@ -97,22 +97,14 @@ def _get_test_address(session: Session) -> None:
     )
 
 
-def _assert_protection(client: Client, pin: bool = True, passphrase: bool = True):
+def _assert_protection(test_ctx: Client, pin: bool = True, passphrase: bool = True):
     """Make sure PIN and passphrase protection have expected values"""
-    with client:
-        client.use_pin_sequence([PIN4])
-        session = client.get_session()
-        try:
-            session.ensure_unlocked()
-        except exceptions.InvalidSessionError:
-            session.cancel()
-            session.read()
-
-        client.refresh_features()
-        assert client.features.pin_protection is pin
-        assert client.features.passphrase_protection is passphrase
-        session.lock()
-        session.close()
+    with test_ctx:
+        test_ctx.use_pin_sequence([PIN4])
+        test_ctx.client.ensure_unlocked()
+        assert test_ctx.features.pin_protection is pin
+        assert test_ctx.features.passphrase_protection is passphrase
+        test_ctx.lock()
 
 
 def test_initialize(client: Client):
@@ -501,3 +493,23 @@ def test_unlocked(client: Client):
     with client:
         client.set_expected_responses([messages.Address])
         _get_test_address(session)
+
+
+@pytest.mark.parametrize("passphrase", (True, False))
+def test_ensure_unlocked(test_ctx: Client, passphrase: bool):
+    assert test_ctx.features.pin_protection is True
+
+    with test_ctx:
+        test_ctx.use_pin_sequence([PIN4])
+        session = test_ctx.get_session()
+        device.apply_settings(session, use_passphrase=passphrase)
+
+    _assert_protection(test_ctx, passphrase=passphrase)
+
+    test_ctx.lock()
+    with test_ctx:
+        test_ctx.use_pin_sequence([PIN4])
+
+        assert test_ctx.features.unlocked is False
+        test_ctx.client.ensure_unlocked()
+        assert test_ctx.features.unlocked is True
