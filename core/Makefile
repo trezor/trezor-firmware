@@ -62,16 +62,14 @@ endif
 
 ifeq ($(STORAGE_INSECURE_TESTING_MODE),1)
 XTASK_BUILD_OPTS += --storage-insecure-testing-mode
-XTASK_BUILD_OPTS += --disable-tropic true
+XTASK_BUILD_OPTS += --disable-tropic
 XTASK_BUILD_OPTS += --disable-optiga
 else
 	ifeq ($(DISABLE_OPTIGA),1)
 	XTASK_BUILD_OPTS += --disable-optiga
 	endif
 	ifeq ($(DISABLE_TROPIC),1)
-	XTASK_BUILD_OPTS += --disable-tropic true
-	else ifeq ($(DISABLE_TROPIC),0)
-	XTASK_BUILD_OPTS += --disable-tropic false
+	XTASK_BUILD_OPTS += --disable-tropic
 	endif
 endif
 

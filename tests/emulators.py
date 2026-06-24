@@ -15,24 +15,20 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Sequence, Tuple
+from typing import Sequence, Tuple
 
-from trezorlib._internal.emulator import (
-    CoreEmulator,
-    Emulator,
-    LegacyEmulator,
-    TropicModel,
-)
+from trezorlib._internal.emulator import CoreEmulator, Emulator, LegacyEmulator
 from trezorlib.models import CORE_MODELS, LEGACY_MODELS
+
+LOG = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parent.parent
 BINDIR = ROOT / "tests" / "emulators"
-
-_SHARED_TROPIC_MODELS: Dict[str, TropicModel] = {}
 
 LOCAL_BUILD_PATHS = {
     "core": ROOT / "core" / "build-xtask" / "artifacts" / "latest" / "firmware-emu",
@@ -43,10 +39,10 @@ CORE_SRC_DIR = ROOT / "core" / "src"
 
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
-TROPIC_MODEL_CONFIGFILE_OLD = ROOT / "tests" / "tropic_model" / "config_old.yml"
 TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
-TROPIC_CAPABLE_MODELS = {"T3W1"}
+TROPIC_MODEL_CONFIGFILE_OLD = ROOT / "tests" / "tropic_model" / "config_old.yml"
 TROPIC_OLD_CONFIG_UNTIL_VERSION = (2, 12, 1)  # inclusive
+TROPIC_CAPABLE_MODELS = {"T3W1"}
 
 
 def is_tropic_capable_model(model_internal_name: str | None) -> bool:
@@ -69,35 +65,6 @@ def gen_from_model(model_internal_name: str) -> str:
     if model_internal_name in core_names:
         return "core"
     raise ValueError(f"Unknown model: {model_internal_name}")
-
-
-def _get_shared_tropic_model(
-    profile_dir: str,
-    workdir: Path | None,
-    port: int,
-    configfile: Path,
-    logfile: Path | None,
-) -> TropicModel:
-    model = _SHARED_TROPIC_MODELS.get(profile_dir)
-    if model is None or model.process is None or model.process.poll() is not None:
-        if model is not None:
-            model.stop()
-        model = TropicModel(
-            workdir=workdir or ROOT,
-            profile_dir=Path(profile_dir),
-            port=port,
-            configfile=str(configfile),
-            logfile=logfile or (Path(profile_dir) / "trezor-tropic-model.log"),
-        )
-        model.start()
-        _SHARED_TROPIC_MODELS[profile_dir] = model
-    return model
-
-
-def stop_shared_tropic_model(profile_dir: str) -> None:
-    model = _SHARED_TROPIC_MODELS.pop(profile_dir, None)
-    if model:
-        model.stop()
 
 
 def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
@@ -163,34 +130,30 @@ def get_tags() -> dict[str, list[str]]:
 ALL_TAGS = get_tags()
 
 
-def _get_tropic_model_port(worker_id: int) -> int:
-    """Get a unique port for this worker process' Tropic model.
+def get_tropic_model_port(worker_id: int) -> int:
+    """Get a unique port for this worker process' shared Tropic model.
 
     Guarantees to be unique because each worker has a unique ID.
     """
-    return 28992 + worker_id  # 28992 is the default port tvl server listens to
+    if worker_id == 0:
+        # was not configurable before 2.9.4, use the default value for singlecore upgrade tests
+        return 28992
+    else:
+        return 20000 + worker_id * 7 + 6
 
 
 def _get_port(worker_id: int) -> int:
     """Get a unique port for this worker process on which it can run.
 
     Guarantees to be unique because each worker has a unique ID.
-    #0=>20000, #1=>20003, #2=>20006, etc.
+    #0=>20000, #1=>20007, #2=>20014, etc.
     """
-    # One emulator instance occupies 3 consecutive ports:
+    # One emulator instance occupies 7 consecutive ports:
     # 1. normal link, 2. debug link and 3. webauthn fake interface
     # 4. USB serial 5. ble-emulator-data 6. ble-emulator-events
-    return 20000 + worker_id * 6
-
-
-def _get_tropic_model_configfile(tag: str | None) -> Path:
-    if tag is not None and tag.startswith("v"):
-        tag_version = tag[1:].partition("-")[0]
-        if len(tag_version.split(".")) == 3:
-            version_tuple = tuple(int(i) for i in tag_version.split("."))
-            if version_tuple <= TROPIC_OLD_CONFIG_UNTIL_VERSION:
-                return TROPIC_MODEL_CONFIGFILE_OLD
-    return TROPIC_MODEL_CONFIGFILE
+    # 7. tropic model
+    # See: *_PORT_OFFSET constants in core sources
+    return 20000 + worker_id * 7
 
 
 class EmulatorWrapper:
@@ -200,14 +163,12 @@ class EmulatorWrapper:
         model: str | None,
         tag: str | None = None,
         storage: bytes | None = None,
-        profile_dir: tempfile.TemporaryDirectory | None = None,
+        profile_dir: str | None = None,
         worker_id: int = 0,
         headless: bool = True,
         auto_interact: bool = True,
         main_args: Sequence[str] = ("-m", "main"),
-        launch_tropic_model: bool | None = None,
-        tropic_model_port_override: int | None = None,
-        port_override: int | None = None,
+        tropic_model_port: int | None = None,
     ) -> None:
 
         if model is None:
@@ -215,8 +176,8 @@ class EmulatorWrapper:
 
         gen = gen_from_model(model)
 
-        if launch_tropic_model is None:
-            launch_tropic_model = is_tropic_capable_model(model)
+        if tropic_model_port is None:
+            tropic_model_port = get_tropic_model_port(worker_id)
 
         if tag is not None:
             executable = get_emulator_path(gen, model, tag)
@@ -226,60 +187,29 @@ class EmulatorWrapper:
         if not executable.exists():
             raise ValueError(f"emulator executable not found: {executable}")
 
-        self.profile_dir = profile_dir or tempfile.TemporaryDirectory()
-        self.own_profile_dir = profile_dir is None
+        if profile_dir:
+            self.temp_dir = None
+            self.profile_dir = profile_dir
+        else:
+            self.temp_dir = tempfile.TemporaryDirectory(
+                prefix="trezor-emulator-", delete=delete_profile()
+            )
+            self.profile_dir = self.temp_dir.name
+            LOG.debug(
+                f"Emulator profile dir: {self.profile_dir} (delete: {delete_profile()})"
+            )
+
         if executable == LOCAL_BUILD_PATHS["core"]:
             workdir = CORE_SRC_DIR
         else:
             workdir = None
 
-        logs_dir = os.environ.get("TREZOR_PYTEST_LOGS_DIR")
-        logfile = None
-        tropic_model_logfile = None
-        if logs_dir:
-            logfile = Path(logs_dir) / f"trezor-{worker_id}.log"
-            tropic_model_logfile = (
-                Path(logs_dir) / f"trezor-tropic-model-{worker_id}.log"
-            )
+        logfile = get_logfile(f"trezor-{worker_id}.log")
 
-        tropic_configfile = _get_tropic_model_configfile(tag)
-        if launch_tropic_model:
-            tropic_config_output = (
-                Path(self.profile_dir.name) / "tropic_model_config_output.yml"
-            )
-            if tropic_config_output.exists():
-                tropic_configfile = tropic_config_output
-
-        use_shared_tropic_model = launch_tropic_model and not self.own_profile_dir
-        launch_tropic_model_for_emulator = launch_tropic_model
-        if use_shared_tropic_model:
-            shared_model = _get_shared_tropic_model(
-                profile_dir=self.profile_dir.name,
-                workdir=workdir,
-                port=(
-                    tropic_model_port_override
-                    if tropic_model_port_override is not None
-                    else _get_tropic_model_port(worker_id)
-                ),
-                configfile=tropic_configfile,
-                logfile=(
-                    tropic_model_logfile
-                    if isinstance(tropic_model_logfile, Path)
-                    else None
-                ),
-            )
-            launch_tropic_model_for_emulator = False
-            tropic_model_port = shared_model.port
-        else:
-            tropic_model_port = (
-                tropic_model_port_override
-                if tropic_model_port_override is not None
-                else _get_tropic_model_port(worker_id)
-            )
         if gen == "legacy":
             self.emulator = LegacyEmulator(
                 executable,
-                self.profile_dir.name,
+                self.profile_dir,
                 storage=storage,
                 headless=headless,
                 auto_interact=auto_interact,
@@ -288,16 +218,11 @@ class EmulatorWrapper:
         elif gen == "core":
             self.emulator = CoreEmulator(
                 executable,
-                self.profile_dir.name,
+                self.profile_dir,
                 storage=storage,
                 workdir=workdir,
-                launch_tropic_model=launch_tropic_model_for_emulator,
                 tropic_model_port=tropic_model_port,
-                tropic_model_configfile=str(tropic_configfile),
-                tropic_model_logfile=tropic_model_logfile,
-                port=(
-                    port_override if port_override is not None else _get_port(worker_id)
-                ),
+                port=_get_port(worker_id),
                 headless=headless,
                 auto_interact=auto_interact,
                 main_args=main_args,
@@ -314,5 +239,16 @@ class EmulatorWrapper:
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.emulator.stop()
-        if self.own_profile_dir:
-            self.profile_dir.cleanup()
+        if self.temp_dir and not delete_profile():
+            self.temp_dir.cleanup()
+
+
+def get_logfile(filename: str, default_dir: Path | None = None) -> Path | None:
+    logs_dir = os.environ.get("TREZOR_PYTEST_LOGS_DIR") or default_dir
+    if logs_dir is None:
+        return None
+    return Path(logs_dir) / filename
+
+
+def delete_profile() -> bool:
+    return os.environ.get("TREZOR_KEEP_PROFILE_DIR") != "1"

@@ -15,7 +15,7 @@ import click
 
 import trezorlib.debuglink
 from trezorlib.cli.debug import record_screen
-from trezorlib._internal.emulator import CoreEmulator
+from trezorlib._internal.emulator import CoreEmulator, TropicModel
 
 try:
     import inotify.adapters
@@ -25,6 +25,7 @@ except Exception:
 
 HERE = Path(__file__).resolve().parent
 MICROPYTHON = HERE / "build-xtask" / "artifacts" / "latest" / "firmware-emu"
+TROPIC_MODEL_CONFIG = HERE.parent / "tests" / "tropic_model" / "config.yml"
 SRC_DIR = HERE / "src"
 
 PROFILE_BASE = Path.home() / ".trezoremu"
@@ -72,6 +73,7 @@ def run_debugger(
     gdb_script_file: str | Path | None,
     valgrind: bool = False,
     run_command: list[str] = [],
+    tropic_model: TropicModel | None = None,
 ) -> None:
     os.chdir(emulator.workdir)
     env = emulator.make_env()
@@ -101,6 +103,8 @@ def run_debugger(
         dbg_command += emulator.make_args()
 
     if not run_command:
+        if tropic_model and tropic_model.process and tropic_model.process.pid:
+            click.echo(f"Warning: Tropic01 model (PID {tropic_model.process.pid}) left running", err=True)
         os.execvpe(dbg_command[0], dbg_command, env)
     else:
         dbg_process = subprocess.Popen(dbg_command, env=env)
@@ -138,8 +142,10 @@ def _from_env(name: str) -> bool:
 @click.option("-r", "--record-dir", help="Directory where to record screen changes", type=click.Path(file_okay=False, dir_okay=True, path_type=Path))
 @click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
 @click.option("-S", "--script-gdb-file", type=click.Path(exists=True, dir_okay=False), help="Run gdb with an init file")
-@click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
+@click.option("--tropic-emulator/--no-tropic-emulator", default=True, help="Start Tropic01 model")
+@click.option("--tropic-emulator-config", type=click.Path(exists=True, dir_okay=False), default=TROPIC_MODEL_CONFIG, help="Tropic01 model configuration file")
+@click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
 @click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
 # fmt: on
@@ -165,8 +171,10 @@ def cli(
     record_dir: Path | None,
     slip0014: bool,
     script_gdb_file: str | Path | None,
-    valgrind: bool,
     temporary_profile: bool,
+    tropic_emulator: bool,
+    tropic_emulator_config: Path,
+    valgrind: bool,
     watch: bool,
     extra_args: list[str],
     command: list[str],
@@ -270,13 +278,14 @@ def cli(
         heap_size=heap_size,
         disable_animation=disable_animation,
         workdir=SRC_DIR,
+        tropic_model_port=TropicModel.DEFAULT_PORT,
     )
 
     emulator_env = dict(
         TREZOR_PATH=f"udp:127.0.0.1:{emulator.port}",
         TREZOR_PROFILE_DIR=str(profile_dir.resolve()),
         TREZOR_UDP_PORT=str(emulator.port),
-        TREZOR_FIDO2_UDP_PORT=str(emulator.port + 2),
+        TREZOR_FIDO2_UDP_PORT=str(emulator.fido2_port()),
         TREZOR_SRC=str(SRC_DIR),
     )
     os.environ.update(emulator_env)
@@ -289,8 +298,20 @@ def cli(
     if alloc_profiling:
         os.environ["TREZOR_MEMPERF"] = "1"
 
+    tropic_model = None
+    if tropic_emulator:
+        tropic_model = TropicModel(
+            profile_dir=str(profile_dir),
+            configfile=tropic_emulator_config,
+            port=TropicModel.DEFAULT_PORT,
+        )
+        try:
+            tropic_model.start()
+        except Exception as exc:
+            click.echo(f"Failed to start Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+
     if debugger or valgrind:
-        run_debugger(emulator, script_gdb_file, valgrind, command)
+        run_debugger(emulator, script_gdb_file, valgrind, command, tropic_model)
         raise RuntimeError("run_debugger should not return")
 
     emulator.start()
@@ -322,6 +343,12 @@ def cli(
         ret = watch_emulator(emulator)
     else:
         ret = run_emulator(emulator)
+
+    if tropic_model:
+        try:
+            tropic_model.stop()
+        except Exception as exc:
+            click.echo(f"Error stopping Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
 
     if tempdir is not None:
         tempdir.cleanup()

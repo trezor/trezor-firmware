@@ -1,37 +1,63 @@
-import os
+import logging
 import tempfile
+from pathlib import Path
+from typing import Any, Generator
 
 import pytest
 
-from ..emulators import stop_shared_tropic_model
+from trezorlib._internal.emulator import TropicModel
+
+from ..emulators import (
+    TROPIC_MODEL_CONFIGFILE,
+    TROPIC_MODEL_CONFIGFILE_OLD,
+    TROPIC_OLD_CONFIG_UNTIL_VERSION,
+    delete_profile,
+    get_logfile,
+    is_tropic_capable_model,
+)
+
+LOG = logging.getLogger(__name__)
 
 
+def _get_tropic_model_configfile(tag: str | None) -> Path:
+    if tag is not None and tag.startswith("v"):
+        tag_version = tag[1:].partition("-")[0]
+        if len(tag_version.split(".")) == 3:
+            version_tuple = tuple(int(i) for i in tag_version.split("."))
+            if version_tuple <= TROPIC_OLD_CONFIG_UNTIL_VERSION:
+                return TROPIC_MODEL_CONFIGFILE_OLD
+    return TROPIC_MODEL_CONFIGFILE
+
+
+# This fixture is very similar to `tropic_model` from the parent directory, but has a "function"
+# scope instead of session.
 @pytest.fixture
-def shared_profile_dir():
-    keep_profile = os.environ.get("TREZOR_KEEP_PROFILE_DIR") == "1"
-    profile_dir = tempfile.TemporaryDirectory()
-    # TODO: in Python >=3.12, simplify to
-    # with tempfile.TemporaryDirectory(delete=not keep_profile) as path:
-    #    yield path          # str, not TemporaryDirectory
+def shared_profile_dir(request) -> Generator[str, Any, Any]:
+    # Use the default port because before 2.9.4 it was not configurable.
+    # This means upgrade tests currently can't run in multiple threads for T3W1.
+    tropic_model_port = 28992
+    model = request.node.callspec.params["model"]
+    start_tropic_model = is_tropic_capable_model(model)
 
-    if keep_profile:
-        # Prevent automatic cleanup when the object is GC'd.
-        finalizer = getattr(profile_dir, "_finalizer", None)
-        if finalizer is not None:
-            try:
-                finalizer.detach()
-            except AttributeError:
-                pass
+    profile_dir = tempfile.TemporaryDirectory(
+        prefix="trezor-upgrade-", delete=delete_profile()
+    )
+    LOG.debug(
+        f"Test profile dir: {profile_dir.name} (delete: {delete_profile()}), start_tropic: {start_tropic_model}"
+    )
 
-    try:
-        yield profile_dir
-    finally:
-        if not keep_profile:
-            profile_dir.cleanup()
+    with profile_dir as path:
+        # do not start tropic model when not supported
+        if not start_tropic_model:
+            yield path
+            return
 
-
-@pytest.fixture(autouse=True)
-def _cleanup_shared_tropic_model(shared_profile_dir):
-    """Stop any shared Tropic model that was started during the test."""
-    yield
-    stop_shared_tropic_model(shared_profile_dir.name)
+        tag = request.node.callspec.params["tag"]
+        with TropicModel(
+            profile_dir=path,
+            configfile=_get_tropic_model_configfile(tag),
+            port=tropic_model_port,
+            logfile=get_logfile("trezor-tropic-model.log", Path(profile_dir.name)),
+        ) as tropic_model:
+            tropic_model.start()
+            yield path

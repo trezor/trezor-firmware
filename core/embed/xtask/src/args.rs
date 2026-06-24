@@ -252,8 +252,8 @@ pub struct BuildArgs {
     pub board: Option<String>,
 
     /// Disable TROPIC support
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub disable_tropic: Option<bool>,
+    #[arg(long)]
+    pub disable_tropic: bool,
 
     /// Enable insecure storage test mode
     #[arg(long)]
