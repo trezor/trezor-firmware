@@ -8,8 +8,8 @@ use std::{
 };
 
 use xbuild::{
-    CLibrary, InputFiles, Result, WrapErr, bail, bail_unsupported, current_model_id, ensure,
-    model_ids,
+    CLibrary, InputFiles, OutputType, Result, WrapErr, bail, bail_unsupported, current_model_id,
+    ensure, model_ids,
 };
 
 fn main() -> Result<()> {
@@ -453,8 +453,8 @@ impl<'a> MpyBuilder<'a> {
         // the preprocessed output in corresponding .upydef files next to
         // each object file.
         let upydefs = self.lib.process_sources(
-            "upydef",
-            Some(&["-E", "-DNO_QSTR", "-DN_X64", "-DN_X86", "-DN_THUMB"]),
+            OutputType::Preprocessed("upydef"),
+            Some(&["-DNO_QSTR", "-DN_X64", "-DN_X86", "-DN_THUMB"]),
             Some(&extra_sources),
         )?;
 
