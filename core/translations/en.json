@@ -836,6 +836,7 @@
     "ethereum__delegating": "Delegating",
     "ethereum__deposit_amount": "Deposit amount",
     "ethereum__deposit_to": "Deposit to",
+    "ethereum__eip_712_empty_domain": "dApp did not identify itself!",
     "ethereum__gas_limit": "Gas limit",
     "ethereum__gas_price": "Gas price",
     "ethereum__interaction_contract": {
