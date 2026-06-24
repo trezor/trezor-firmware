@@ -277,12 +277,26 @@ class TypedDataEnvelope:
         i.e. the concatenation of the encoded member values in the order that they appear in the type.
         Each encoded member value is exactly 32-byte long.
         """
-        from .layout import confirm_typed_value, should_show_array
+        from trezor.enums import ButtonRequestType
+        from trezor.ui.layouts import confirm_properties
+
+        from .layout import confirm_typed_value, extract_properties, should_show_array
 
         type_members = self.types[primary_type].members
         members_count = len(type_members)
         member_value_path = member_path + [0]
         current_parent_objects = parent_objects + [""]
+
+        _NESTED = (EthereumDataType.ARRAY, EthereumDataType.STRUCT)
+
+        if primary_type == "EIP712Domain":
+            if any(member.type.data_type in _NESTED for member in type_members):
+                # https://eips.ethereum.org/EIPS/eip-712#definition-of-domainseparator
+                raise DataError("Unexpected member in EIP712Domain")
+            combined_props = []  # all items will be confirmed using a single layout
+        else:
+            combined_props = None  # items will be confirmed separately
+
         for member_index, member in enumerate(type_members):
             if report_progress:
                 report_progress(member_index / members_count)
@@ -377,12 +391,38 @@ class TypedDataEnvelope:
                 value = await get_value(field_type, member_value_path)
                 encode_field(w, field_type, value)
                 if show_data:
-                    await confirm_typed_value(
-                        field_name,
-                        value,
-                        parent_objects,
-                        field_type,
-                    )
+                    if combined_props is None:
+                        await confirm_typed_value(
+                            field_name,
+                            value,
+                            parent_objects,
+                            field_type,
+                        )
+                    else:
+                        combined_props.append(
+                            extract_properties(field_name, value, field_type)
+                        )
+
+        if show_data and combined_props is not None:
+            if combined_props:
+                # Confirm all EIP712Domain items at once:
+                await confirm_properties(
+                    "confirm_typed_value",
+                    primary_type,
+                    combined_props,
+                    br_code=ButtonRequestType.Other,
+                )
+            else:
+                from trezor import TR
+                from trezor.ui.layouts import show_warning
+
+                # Show a warning if no EIP712Domain items:
+                await show_warning(
+                    content=TR.ethereum__eip_712_empty_domain,
+                    button=TR.buttons__continue,
+                    br_name="confirm_typed_value",
+                    br_code=ButtonRequestType.Warning,
+                )
 
 
 def encode_field(

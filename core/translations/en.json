@@ -836,6 +836,14 @@
     "ethereum__delegating": "Delegating",
     "ethereum__deposit_amount": "Deposit amount",
     "ethereum__deposit_to": "Deposit to",
+    "ethereum__eip_712_empty_domain": "dApp did not identify itself!",
+    "ethereum__eip_7702": {
+      "Bolt": "Authorize the following contract as an EIP-7702 on your account",
+      "Caesar": "Authorize the following contract as an EIP-7702 on your account",
+      "Delizia": "Authorize the following contract as an EIP-7702 on your account?",
+      "Eckhart": "Authorize the following contract as an EIP-7702 on your account?"
+    },
+    "ethereum__eip_7702_title": "Smart accounts",
     "ethereum__gas_limit": "Gas limit",
     "ethereum__gas_price": "Gas price",
     "ethereum__interaction_contract": {
