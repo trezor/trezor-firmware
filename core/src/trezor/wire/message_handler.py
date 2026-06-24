@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from storage.cache_common import InvalidSessionError
 from trezor import log, loop, protobuf, utils, workflow
-from trezor.enums import FailureType
+from trezor.enums import FailureType, MessageType
 from trezor.messages import Failure
 
 from .context import UnexpectedMessageException, with_context
@@ -179,7 +179,11 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     return msg.type in AVOID_RESTARTING_FOR
 
 
-AVOID_RESTARTING_FOR: Container[int] = ()
+if utils.UI_LAYOUT == "ECKHART":
+    # Don't close device menu when `GetFeatures` is received.
+    AVOID_RESTARTING_FOR: Container[int] = (MessageType.GetFeatures,)
+else:
+    AVOID_RESTARTING_FOR: Container[int] = ()
 
 
 def failure(exc: BaseException) -> Failure:

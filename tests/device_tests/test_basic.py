@@ -21,6 +21,8 @@ from trezorlib.client import get_client
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 
+from ..click_tests.device_menu.common import open_device_menu
+
 
 def test_capabilities(session: Session):
     assert (messages.Capability.Translations in session.features.capabilities) == (
@@ -87,3 +89,15 @@ def test_desync_v1(client: Client):
     # Creating a new client fails without skipping stale responses
     # (see https://github.com/trezor/trezor-firmware/issues/6859)
     get_client(client.app, client.transport).ping("reconnect")
+
+
+@pytest.mark.models("eckhart")
+def test_get_features_avoids_restart(session: Session):
+    debug = session.debug
+    assert "Homescreen" == debug.read_layout().main_component()
+    open_device_menu(debug)
+    assert "DeviceMenuScreen" == debug.read_layout().main_component()
+
+    # GetFeatures doesn't restart MicroPython event loop - device menu is still open.
+    session.refresh_features()
+    assert "DeviceMenuScreen" == debug.read_layout().main_component()
