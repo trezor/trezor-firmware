@@ -2,7 +2,8 @@
     "include": [
         "src",
         "tools",
-        "site_scons"
+        "site_scons",
+        "*.py"
     ],
     "exclude": [
         "src/apps/monero",

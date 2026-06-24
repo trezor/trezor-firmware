@@ -67,8 +67,9 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self) -> None:
         if self.path == "/fixtures.json":
 
-            length = int(self.headers.get("content-length"))
-            field_data = self.rfile.read(length)
+            length = self.headers.get("content-length")
+            assert length
+            field_data = self.rfile.read(int(length))
             data = json.loads(field_data)
 
             test_name = data.get("test")
@@ -86,7 +87,7 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 
 def launch_http_server(port: int) -> None:
-    http.server.test(HandlerClass=NoCacheRequestHandler, bind="localhost", port=port)  # type: ignore [test is defined]
+    http.server.test(HandlerClass=NoCacheRequestHandler, bind="localhost", port=port)  # type: ignore ["test" is not a known attribute]
 
 
 @click.command()

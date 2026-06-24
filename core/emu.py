@@ -57,7 +57,9 @@ def watch_emulator(emulator: CoreEmulator) -> int:
     assert inotify is not None
     watch = inotify.adapters.InotifyTree(str(SRC_DIR))
     try:
-        for _, type_names, _, _ in watch.event_gen(yield_nones=False):
+        for ev in watch.event_gen(yield_nones=False):
+            assert ev is not None
+            type_names = ev[1]
             if "IN_CLOSE_WRITE" in type_names:
                 emulator.restart()
     except KeyboardInterrupt:

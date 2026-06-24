@@ -1,11 +1,17 @@
 {
     "include": [
         "tools",
-        "common"
+        "common",
+        "tests"
     ],
     "exclude": [
         "tools/pyright_tool.py",
-        "tools/snippets"
+        "tools/snippets",
+        "tests/burn_tests",
+        "tests/click_tests",
+        "tests/device_tests",
+        "tests/fido_tests",
+        "tests/ui_tests"
     ],
     "stubPath": "mocks/generated",
     "typeCheckingMode": "basic",

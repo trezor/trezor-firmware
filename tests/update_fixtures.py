@@ -98,7 +98,7 @@ def ci(
         assert model == _model
         group = next(iter(ui_res_dict[model].keys()))
         current_model = current_fixtures.setdefault(model, {})
-        current_group = current_model.setdefault(group, {})  # type: ignore
+        current_group = current_model.setdefault(group, {})
 
         if remove_missing:
             # get rid of tests that were not run in CI
