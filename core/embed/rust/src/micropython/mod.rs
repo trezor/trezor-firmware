@@ -19,7 +19,7 @@ pub mod simple_type;
 pub mod typ;
 pub mod util;
 
-#[cfg(feature = "debug")]
+#[cfg(all(feature = "debug", feature = "dbg_console"))]
 pub mod logging;
 
 #[cfg(test)]
