@@ -299,5 +299,9 @@ if not utils.BITCOIN_ONLY:
     TronVoteWitnessContract = 2210
     TrezorAppLoad = 9200
     TrezorAppLoaded = 9201
-    TrezorAppMessage = 9202
-    TrezorAppResponse = 9203
+    TrezorAppHeaderRequest = 9202
+    TrezorAppHeaderAck = 9203
+    TrezorAppDataChunkRequest = 9204
+    TrezorAppDataChunkAck = 9205
+    TrezorAppMessage = 9206
+    TrezorAppResponse = 9207

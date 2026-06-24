@@ -392,6 +392,10 @@ enum MessageType {
     // Trezor Apps
     MessageType_TrezorAppLoad = 9200 [(wire_in) = true];
     MessageType_TrezorAppLoaded = 9201 [(wire_out) = true];
-    MessageType_TrezorAppMessage = 9202 [(wire_in) = true];
-    MessageType_TrezorAppResponse = 9203 [(wire_out) = true];
+    MessageType_TrezorAppHeaderRequest = 9202 [(wire_out) = true];
+    MessageType_TrezorAppHeaderAck = 9203 [(wire_in) = true];
+    MessageType_TrezorAppDataChunkRequest = 9204 [(wire_out) = true];
+    MessageType_TrezorAppDataChunkAck = 9205 [(wire_in) = true];
+    MessageType_TrezorAppMessage = 9206 [(wire_in) = true];
+    MessageType_TrezorAppResponse = 9207 [(wire_out) = true];
 }

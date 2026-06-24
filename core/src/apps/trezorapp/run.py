@@ -60,11 +60,11 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
     instance_ids = get_sessionless_cache().get(cc.APP_EXTAPP_IDS)
     if instance_ids is None:
         raise DataError(f"Invalid instance ID: {request.instance_id}")
-    image_handle, instance_id = ustruct.unpack("<BI", instance_ids)
+    image_handle, instance_id = ustruct.unpack("<II", instance_ids)
     if instance_id != request.instance_id:
         raise DataError(f"Invalid instance ID: {request.instance_id}")
 
-    image = app.get_image_by_handle(image_handle)
+    image = app.image_by_handle(image_handle)
     if not image.is_running():
         raise DataError(f"Task not running: {request.instance_id}")
 
@@ -72,7 +72,7 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
         image.stop()  # TODO or image.delete ???
         raise exception
 
-    task_id = image.get_task_id()
+    task_id = image.task_id()
 
     try:
         io.ipc_send(

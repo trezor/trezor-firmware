@@ -130,7 +130,7 @@ class SessionlessCache(DataCache):
             32,  # APP_MISC_COSI_NONCE
             32,  # APP_MISC_COSI_COMMITMENT
             0,  # APP_RECOVERY_REPEATED_BACKUP_UNLOCKED
-            4 + 1,  # APP_EXTAPP_IDS
+            4 + 4,  # APP_EXTAPP_IDS
         )
         super().__init__()
 

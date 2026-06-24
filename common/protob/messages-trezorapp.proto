@@ -13,12 +13,12 @@ option (include_in_bitcoin_only) = true;
  * Request: Load an external application onto the device.
  *
  * If the app is present in the app cache, it will be loaded into memory.
- * Otherwise, a DataChunkRequest flow will be initiated to download the app
+ * Otherwise, a TrezorAppDataChunkRequest flow will be initiated to download the app
  * into Trezor.
  *
  * @start
  * @next TrezorAppLoaded
- * @next DataChunkRequest
+ * @next TrezorAppHeaderRequest
  */
 message TrezorAppLoad {
     // Application id
@@ -27,8 +27,6 @@ message TrezorAppLoad {
     repeated uint32 version = 2;
     /// Hash of the app to load (optional)
     required bytes hash = 3 [default = ''];
-    /// Size of the app to load
-    required uint32 size = 4;
 }
 
 /**
@@ -38,6 +36,45 @@ message TrezorAppLoad {
 message TrezorAppLoaded {
     /// Instance ID of the loaded app, referred to in TrezorAppRun
     required uint32 instance_id = 1;
+}
+
+/**
+ * Request: Ask for application header and merkle proof
+ *
+ * @next TrezorAppHeaderAck
+ */
+message TrezorAppHeaderRequest {}
+
+/**
+ * Response: Application header and merkle proof
+ *
+ * @next TrezorAppDataChunkRequest
+ */
+message TrezorAppHeaderAck {
+    // Application header
+    required bytes header = 1;
+    // Merkle proof
+    required bytes proof = 2;
+}
+
+/**
+ * Response: Device asks for more data from application image.
+ * @end
+ * @next TrezorAppDataChunkAck
+ */
+message TrezorAppDataChunkRequest {
+    required uint32 index = 1;  // Index of requested chunk
+}
+
+/**
+ * Request: Data chunk sent to the device
+ *
+ * @next TrezorAppDataChunkRequest
+ * @next Success
+ */
+message TrezorAppDataChunkAck {
+    required bytes data = 1;  // Bytes from the application image
+    required bytes hash = 2;  // Hash used for the chunk verification
 }
 
 /**

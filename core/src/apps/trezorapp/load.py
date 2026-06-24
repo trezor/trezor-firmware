@@ -2,11 +2,13 @@ import ustruct
 
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
-from trezor import app
+from trezor import app, log
 from trezor.crypto import random
 from trezor.messages import (
-    DataChunkAck,
-    DataChunkRequest,
+    TrezorAppDataChunkAck,
+    TrezorAppDataChunkRequest,
+    TrezorAppHeaderAck,
+    TrezorAppHeaderRequest,
     TrezorAppLoad,
     TrezorAppLoaded,
 )
@@ -15,13 +17,11 @@ from trezor.wire.errors import DataError
 
 
 def image_matches(image: app.AppImage, msg: TrezorAppLoad) -> bool:
-    if not image.is_verified():
+    if image.id() != msg.id:
         return False
-    if image.get_id() != msg.id:
+    if image.version() < tuple(msg.version):
         return False
-    if image.get_version() < tuple(msg.version):
-        return False
-    if msg.hash != b"" and image.get_hash() != msg.hash:
+    if msg.hash != b"" and image.header_hash() != msg.hash:
         return False
     return True
 
@@ -30,39 +30,50 @@ async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
     from trezor import app
     from trezor.ui.layouts.progress import progress
 
-    image = app.create_image()
-    offset = 0
-    prog = progress("Loading app...")
-    while offset < msg.size:
-        prog.report(int(offset / msg.size * 1000))
-        chunk = (
-            await context.call(
-                DataChunkRequest(
-                    data_length=min(msg.size - offset, 1024), data_offset=offset
-                ),
-                DataChunkAck,
-            )
-        ).data_chunk
-        if len(chunk) != min(msg.size - offset, 1024):
-            raise DataError("Data length mismatch")
-        image.write_chunk(chunk)
-        offset += len(chunk)
-    image.verify(b"")  # !@# TODO use real proof
+    binary = await context.call(
+        TrezorAppHeaderRequest(),
+        TrezorAppHeaderAck,
+    )
+
+    image = app.create_image(binary.header, binary.proof)
+
     if not image_matches(image, msg):
         image.delete()
         raise DataError("Loaded image does not match the expected app")
+
+    prog = progress("Loading app...")
+    chunk_size = image.chunk_size()
+    chunk_count = (image.size() + chunk_size - 1) // chunk_size
+    for chunk_index in range(chunk_count):
+        prog.report(int(chunk_index / chunk_count * 1000))
+        chunk = await context.call(
+            TrezorAppDataChunkRequest(
+                index=chunk_index,
+            ),
+            TrezorAppDataChunkAck,
+        )
+        image.write_chunk(chunk.data, chunk.hash)
+
+    if not image.is_ready():
+        image.delete()
+        # Image was not fully loaded, probably truncated by the host.
+        raise DataError("App image truncated")
+
     prog.stop()
     return image
 
 
 async def load(msg: TrezorAppLoad) -> TrezorAppLoaded:
-    """Load external application from a host and return its hash."""
+    """Load external application from a host"""
     from trezor import app
 
-    image = app.get_image_by_index(0)
+    try:
+        image = next(app.images())
+    except StopIteration:
+        image = None
 
     if image is not None:
-        if not image_matches(image, msg):
+        if not image_matches(image, msg) or not image.is_ready():
             image.delete()
             image = None
         elif image.is_running():
@@ -71,13 +82,19 @@ async def load(msg: TrezorAppLoad) -> TrezorAppLoaded:
     if image is None:
         try:
             image = await _load_image(msg)
-            assert image is not None
-        except Exception as e:
-            raise DataError(f"Failed to load app: {e}") from e
+        except app.AppImageVerificationError as e:
+            log.exception(__name__, e)
+            raise DataError("App image verification failed")
+        except app.AppImageMemoryError as e:
+            log.exception(__name__, e)
+            raise DataError("Not enough memory to load app")
+        except app.AppError as e:
+            log.exception(__name__, e)
+            raise DataError("Failed to load app")
 
     image.run()
 
     instance_id = random.uniform(2**32 - 1)
-    cache_entry = ustruct.pack("<BI", image.get_handle(), instance_id)
+    cache_entry = ustruct.pack("<II", image.handle(), instance_id)
     get_sessionless_cache().set(cc.APP_EXTAPP_IDS, cache_entry)
     return TrezorAppLoaded(instance_id=instance_id)
