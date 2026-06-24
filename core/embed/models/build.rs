@@ -53,8 +53,7 @@ fn main() -> Result<()> {
             "-fsingle-precision-constant",
             "-fdata-sections",
             "-ffunction-sections",
-            "-g3",
-            "-ggdb",
+            "-g",
         ]);
 
         if cfg!(feature = "emulator") {
