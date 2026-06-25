@@ -331,12 +331,12 @@ static void stwlc38_i2c_callback(void *context, i2c_packet_t *packet) {
       memset(&drv->report, 0, sizeof(stwlc38_report_t));
       drv->report.ready = true;
       drv->report.vout_ready = drv->report_regs.status0 & 0x40;
-      drv->report.vrect = drv->report_regs.vrect / 1000.0;
-      drv->report.vout = drv->report_regs.vout / 1000.0;
+      drv->report.vrect = drv->report_regs.vrect / 1000.0f;
+      drv->report.vout = drv->report_regs.vout / 1000.0f;
       drv->report.icur = drv->report_regs.icur;
-      drv->report.tmeas = drv->report_regs.tmeas / 10.0;
+      drv->report.tmeas = drv->report_regs.tmeas / 10.0f;
       drv->report.opfreq = drv->report_regs.opfreq;
-      drv->report.ntc = drv->report_regs.ntc / 10.0;
+      drv->report.ntc = drv->report_regs.ntc / 10.0f;
 
       // Just powered-up ?
       if (!was_ready) {
