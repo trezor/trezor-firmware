@@ -1,3 +1,5 @@
+from subprocess import Popen, run
+
 import serial
 
 from .device import Device
@@ -15,12 +17,13 @@ class TrezorOne(Device):
 
     def update_firmware(self, file=None):
         if file:
+            run(f"headertool {file}", shell=True, check=True)  # check if file exists
             unofficial = True
-            trezorctlcmd = f"firmware-update -s -f {file} &"
+            trezorctlcmd = f"trezorctl firmware-update -s -f {file}"
             self.log(f"[software] Updating the firmware to {file}")
         else:
             unofficial = False
-            trezorctlcmd = "firmware-update &"
+            trezorctlcmd = "trezorctl firmware-update"
             self.log("[software] Updating the firmware to latest")
         self.wait(3)
         self._enter_bootloader()
@@ -28,7 +31,9 @@ class TrezorOne(Device):
         self.wait(3)
         self.check_model("Trezor 1 bootloader")
 
-        self.run_trezorctl(trezorctlcmd)
+        self.log(f"[software/trezorctl] Running '{trezorctlcmd}' in background")
+        process = Popen(trezorctlcmd, shell=True)
+
         self.wait(3)
         self.touch("right", "click")
         self.wait(30)
@@ -42,6 +47,13 @@ class TrezorOne(Device):
             self.wait(5)
             self.touch("right", "click")
         self.wait(15)
+
+        if process.poll() is None:
+            process.kill()
+            process.wait(timeout=1)
+        if process.returncode != 0:
+            raise RuntimeError(f"{trezorctlcmd} failed: {process.returncode}")
+
         print(self.check_model("Trezor 1"))
 
     def _enter_bootloader(self):
