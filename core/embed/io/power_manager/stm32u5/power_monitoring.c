@@ -276,7 +276,7 @@ static void pm_temperature_controller(pm_driver_t* drv) {
     for (size_t i = 0; i < sizeof(temp_bands) / sizeof(temp_bands[0]); ++i) {
       if (drv->pmic_data.ntc_temp < temp_bands[i].max_temp) {
         i_chg_temp_limit_ma = (uint16_t)(PM_BATTERY_CHARGING_CURRENT_MAX *
-                              temp_bands[i].current_limit_factor);
+                                         temp_bands[i].current_limit_factor);
         break;
       }
     }
