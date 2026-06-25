@@ -3,14 +3,14 @@ from trezor.enums import FailureType
 
 class Error(Exception):
     def __init__(self, code: FailureType, message: str) -> None:
-        super().__init__()
+        super().__init__(message)
         self.code = code
         self.message = message
 
 
 class SilentError(Exception):
     def __init__(self, message: str) -> None:
-        super().__init__()
+        super().__init__(message)
         self.message = message
 
 
