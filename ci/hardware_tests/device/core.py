@@ -10,23 +10,23 @@ class TrezorCore(Device):
 
         # reset to enter bootloader again
         self.power_off()
-        self.wait(5)
+        self.wait(10)
         self.power_on()
 
-        self.wait(10)
+        self.wait(20)
         self.check_model("bootloader")
 
         self.run_trezorctl("device wipe --bootloader || true")
-        self.wait(5)
+        self.wait(10)
         self.power_off()
         self.power_on()
 
-        self.wait(5)
+        self.wait(10)
         self.log(f"[software] Updating the firmware to {file}")
         self.run_trezorctl(f"firmware-update -s -f {file}")
 
         # after firmware-update finishes wait for reboot
-        self.wait(15)
+        self.wait(30)
 
         # THP gets stuck on get-features
         if model_name != "Safe 7":

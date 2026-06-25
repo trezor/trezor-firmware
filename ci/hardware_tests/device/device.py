@@ -50,7 +50,7 @@ class Device:
             shell=True,
             check=True,
         )
-        self.wait(3)
+        self.wait(10)
 
     def power_off(self):
         self.now()
@@ -60,7 +60,7 @@ class Device:
             shell=True,
             check=True,
         )
-        self.wait(3)
+        self.wait(10)
 
     def touch(self, location, action):
         raise NotImplementedError
