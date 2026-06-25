@@ -661,6 +661,6 @@ def backup_method(request, _raw_test_ctx: TrezorTestContext) -> messages.BackupM
     method: messages.BackupMethod = request.param
     if (capability := REQUIRED_CAPABILITY.get(method)) is not None:
         if capability not in _raw_test_ctx.capabilities:
-            pytest.skip(f"Missing {capability}")
+            pytest.skip(f"Missing {capability.name}")
 
     return method
