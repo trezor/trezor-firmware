@@ -162,9 +162,6 @@ else:
         ctx = CodecContext(iface, WIRE_BUFFER_PROVIDER)
         next_msg: protocol_common.Message | None = None
 
-        # Take a mark of modules that are imported at this point, so we can
-        # roll back and un-import any others.
-        modules = utils.unimport_begin()
         while True:
             try:
                 if next_msg is None:
@@ -200,9 +197,6 @@ else:
                     if __debug__:
                         log.exception(__name__, exc, iface=iface)
                 finally:
-                    # Unload modules imported by the workflow. Should not raise.
-                    utils.unimport_end(modules)
-
                     if not do_not_restart:
                         # Wait for all active workflows to finish.
                         await workflow.join_all()
