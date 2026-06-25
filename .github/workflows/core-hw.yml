@@ -1,4 +1,5 @@
 name: Hardware tests
+run-name: Hardware tests on ${{ inputs.models_json != '' && join(fromJSON(inputs.models_json), ', ') || 'all models' }}
 
 on:
   schedule:
