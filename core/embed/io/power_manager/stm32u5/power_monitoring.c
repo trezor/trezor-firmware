@@ -46,10 +46,10 @@ static const struct {
   float max_temp;
   float current_limit_factor;
 } temp_bands[] = {
-    {PM_TEMP_CONTROL_BAND_1_MAX_TEMP, 1.0},
-    {PM_TEMP_CONTROL_BAND_2_MAX_TEMP, 0.7},
-    {PM_TEMP_CONTROL_BAND_3_MAX_TEMP, 0.5},
-    {PM_TEMP_CONTROL_BAND_4_MAX_TEMP, 0.3},
+    {PM_TEMP_CONTROL_BAND_1_MAX_TEMP, 1.0f},
+    {PM_TEMP_CONTROL_BAND_2_MAX_TEMP, 0.7f},
+    {PM_TEMP_CONTROL_BAND_3_MAX_TEMP, 0.5f},
+    {PM_TEMP_CONTROL_BAND_4_MAX_TEMP, 0.3f},
 };
 
 #endif
@@ -232,7 +232,7 @@ void pm_charging_controller(pm_driver_t* drv) {
     if (drv->target_battery_ocv_v_tau > target_ocv_voltage_v) {
       // current voltage is within tight bounds of target voltage,
       // we may also force SoC estimate to target value.
-      if (drv->target_battery_ocv_v_tau < target_ocv_voltage_v + 0.15) {
+      if (drv->target_battery_ocv_v_tau < target_ocv_voltage_v + 0.15f) {
         bat_fg_state_t fg_state;
         bat_fg_get_state(&fg_state);
         bat_fg_set_soc((drv->soc_target / 100.0f) - 0.0001f, fg_state.P);
@@ -275,8 +275,8 @@ static void pm_temperature_controller(pm_driver_t* drv) {
     i_chg_temp_limit_ma = 0;  // Default to safety limit
     for (size_t i = 0; i < sizeof(temp_bands) / sizeof(temp_bands[0]); ++i) {
       if (drv->pmic_data.ntc_temp < temp_bands[i].max_temp) {
-        i_chg_temp_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX *
-                              temp_bands[i].current_limit_factor;
+        i_chg_temp_limit_ma = (uint16_t)(PM_BATTERY_CHARGING_CURRENT_MAX *
+                              temp_bands[i].current_limit_factor);
         break;
       }
     }

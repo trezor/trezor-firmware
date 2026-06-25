@@ -87,7 +87,7 @@ STATIC mp_obj_t mod_trezorutils_telemetry_get(void) {
   tuple[0] = mp_obj_new_int((int32_t)(data.min_temp_c * 1000.0f));
   tuple[1] = mp_obj_new_int((int32_t)(data.max_temp_c * 1000.0f));
   tuple[2] = mp_obj_new_int(data.battery_errors.all);
-  tuple[3] = mp_obj_new_int(data.battery_cycles * 1000.0f);
+  tuple[3] = mp_obj_new_int((int32_t)(data.battery_cycles * 1000.0f));
 
   return mp_obj_new_tuple(4, tuple);
 }
