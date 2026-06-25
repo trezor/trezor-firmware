@@ -44,7 +44,9 @@ static bool encrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
     return false;
   }
 
-  memcpy(ciphertext, plaintext, plaintext_length);
+  if (ciphertext != NULL && plaintext != NULL) {  // to suppress asan warning
+    memcpy(ciphertext, plaintext, plaintext_length);
+  }
 
   if (gcm_encrypt_message(nonce, NOISE_KK1_NONCE_SIZE, associated_data,
                           associated_data_length, ciphertext, plaintext_length,
@@ -75,7 +77,9 @@ static bool decrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
     return false;
   }
 
-  memcpy(plaintext, ciphertext, plaintext_length);
+  if (plaintext != NULL && ciphertext != NULL) {  // to suppress asan warning
+    memcpy(plaintext, ciphertext, plaintext_length);
+  }
 
   if (gcm_decrypt_message(nonce, NOISE_KK1_NONCE_SIZE, associated_data,
                           associated_data_length, plaintext, plaintext_length,
@@ -133,8 +137,9 @@ static void mix_key(uint8_t chaining_key[SHA256_DIGEST_LENGTH],
                  "output_key must be truncated to NOISE_KK1_KEY_SIZE");
 }
 
-void split(uint8_t chaining_key[SHA256_DIGEST_LENGTH],
-           uint8_t output1[NOISE_KEY_SIZE], uint8_t output2[NOISE_KEY_SIZE]) {
+static void split(uint8_t chaining_key[SHA256_DIGEST_LENGTH],
+                  uint8_t output1[NOISE_KK1_KEY_SIZE],
+                  uint8_t output2[NOISE_KK1_KEY_SIZE]) {
   // output1 || output2 =
   //   HKDF(salt=chaining_key, key=b"", output_length=2*NOISE_KK1_KEY_SIZE)
   hkdf(chaining_key, SHA256_DIGEST_LENGTH, NULL, 0, output1, output2);
@@ -217,8 +222,11 @@ bool noise_kk1_handle_handshake_request(
   memcpy(response, responder_ephemeral_public_key, sizeof(curve25519_key));
 
   uint8_t zero_nonce[NOISE_KK1_NONCE_SIZE] = {0};
-  encrypt(kauth, zero_nonce, handshake_hash, sizeof(handshake_hash), NULL, 0,
-          response->tag);
+  if (!encrypt(kauth, zero_nonce, handshake_hash, sizeof(handshake_hash), NULL,
+               0, response->tag)) {
+    memzero(kauth, sizeof(kauth));
+    return false;
+  }
   memzero(kauth, sizeof(kauth));
 
   // This is unnecessary, as the handshake hash is no longer used.
@@ -355,5 +363,6 @@ bool noise_kk1_handle_handshake_response_multiple_keys(
       return true;
     }
   }
+  memzero(ephemeral_key_backup, sizeof(ephemeral_key_backup));
   return false;
 }
