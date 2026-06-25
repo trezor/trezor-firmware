@@ -13,3 +13,5 @@ proto.gv*
 .DS_Store
 crypto/tests/libtrezor-crypto.so.dSYM/
 .hypothesis/
+/.clangd
+/.tf-tools
