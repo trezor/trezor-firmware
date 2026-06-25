@@ -185,7 +185,7 @@ impl CLibrary {
             OutputType::Object => {
                 attrs.add_flag("-c");
             }
-            OutputType::Preprocessed { .. } => {
+            OutputType::Preprocessed(..) => {
                 attrs.add_flag("-E");
             }
         }
