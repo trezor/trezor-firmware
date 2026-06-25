@@ -681,7 +681,7 @@ static void display_draw_suspend_overlay_internal(void) {
   // create a blue texture
   SDL_Texture *overlay =
       SDL_CreateTexture(drv->renderer, SDL_PIXELFORMAT_RGBA8888,
-                        SDL_TEXTUREACCESS_STATIC, screen.w, screen.h);
+                        SDL_TEXTUREACCESS_STATIC, (int)screen.w, (int)screen.h);
   SDL_SetTextureBlendMode(overlay, SDL_BLENDMODE_BLEND);
   SDL_SetRenderTarget(drv->renderer, overlay);
 
