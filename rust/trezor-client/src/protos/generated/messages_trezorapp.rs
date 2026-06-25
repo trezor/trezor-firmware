@@ -34,8 +34,6 @@ pub struct TrezorAppLoad {
     pub version: ::std::vec::Vec<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.hash)
     pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.size)
-    pub size: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppLoad.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -124,27 +122,8 @@ impl TrezorAppLoad {
         self.hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // required uint32 size = 4;
-
-    pub fn size(&self) -> u32 {
-        self.size.unwrap_or(0)
-    }
-
-    pub fn clear_size(&mut self) {
-        self.size = ::std::option::Option::None;
-    }
-
-    pub fn has_size(&self) -> bool {
-        self.size.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_size(&mut self, v: u32) {
-        self.size = ::std::option::Option::Some(v);
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "id",
@@ -160,11 +139,6 @@ impl TrezorAppLoad {
             "hash",
             |m: &TrezorAppLoad| { &m.hash },
             |m: &mut TrezorAppLoad| { &mut m.hash },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "size",
-            |m: &TrezorAppLoad| { &m.size },
-            |m: &mut TrezorAppLoad| { &mut m.size },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppLoad>(
             "TrezorAppLoad",
@@ -184,9 +158,6 @@ impl ::protobuf::Message for TrezorAppLoad {
         if self.hash.is_none() {
             return false;
         }
-        if self.size.is_none() {
-            return false;
-        }
         true
     }
 
@@ -204,9 +175,6 @@ impl ::protobuf::Message for TrezorAppLoad {
                 },
                 26 => {
                     self.hash = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                32 => {
-                    self.size = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -229,9 +197,6 @@ impl ::protobuf::Message for TrezorAppLoad {
         if let Some(v) = self.hash.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
-        if let Some(v) = self.size {
-            my_size += ::protobuf::rt::uint32_size(4, v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -246,9 +211,6 @@ impl ::protobuf::Message for TrezorAppLoad {
         };
         if let Some(v) = self.hash.as_ref() {
             os.write_bytes(3, v)?;
-        }
-        if let Some(v) = self.size {
-            os.write_uint32(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -270,7 +232,6 @@ impl ::protobuf::Message for TrezorAppLoad {
         self.id = ::std::option::Option::None;
         self.version.clear();
         self.hash = ::std::option::Option::None;
-        self.size = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -279,7 +240,6 @@ impl ::protobuf::Message for TrezorAppLoad {
             id: ::std::option::Option::None,
             version: ::std::vec::Vec::new(),
             hash: ::std::option::Option::None,
-            size: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -444,6 +404,689 @@ impl ::std::fmt::Display for TrezorAppLoaded {
 }
 
 impl ::protobuf::reflect::ProtobufValue for TrezorAppLoaded {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppHeaderRequest)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct TrezorAppHeaderRequest {
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppHeaderRequest.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a TrezorAppHeaderRequest {
+    fn default() -> &'a TrezorAppHeaderRequest {
+        <TrezorAppHeaderRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl TrezorAppHeaderRequest {
+    pub fn new() -> TrezorAppHeaderRequest {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppHeaderRequest>(
+            "TrezorAppHeaderRequest",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for TrezorAppHeaderRequest {
+    const NAME: &'static str = "TrezorAppHeaderRequest";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> TrezorAppHeaderRequest {
+        TrezorAppHeaderRequest::new()
+    }
+
+    fn clear(&mut self) {
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static TrezorAppHeaderRequest {
+        static instance: TrezorAppHeaderRequest = TrezorAppHeaderRequest {
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for TrezorAppHeaderRequest {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppHeaderRequest").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for TrezorAppHeaderRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for TrezorAppHeaderRequest {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppHeaderAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct TrezorAppHeaderAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppHeaderAck.header)
+    pub header: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppHeaderAck.proof)
+    pub proof: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppHeaderAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a TrezorAppHeaderAck {
+    fn default() -> &'a TrezorAppHeaderAck {
+        <TrezorAppHeaderAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl TrezorAppHeaderAck {
+    pub fn new() -> TrezorAppHeaderAck {
+        ::std::default::Default::default()
+    }
+
+    // required bytes header = 1;
+
+    pub fn header(&self) -> &[u8] {
+        match self.header.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_header(&mut self) {
+        self.header = ::std::option::Option::None;
+    }
+
+    pub fn has_header(&self) -> bool {
+        self.header.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_header(&mut self, v: ::std::vec::Vec<u8>) {
+        self.header = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_header(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.header.is_none() {
+            self.header = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.header.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_header(&mut self) -> ::std::vec::Vec<u8> {
+        self.header.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required bytes proof = 2;
+
+    pub fn proof(&self) -> &[u8] {
+        match self.proof.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_proof(&mut self) {
+        self.proof = ::std::option::Option::None;
+    }
+
+    pub fn has_proof(&self) -> bool {
+        self.proof.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_proof(&mut self, v: ::std::vec::Vec<u8>) {
+        self.proof = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_proof(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.proof.is_none() {
+            self.proof = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.proof.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_proof(&mut self) -> ::std::vec::Vec<u8> {
+        self.proof.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "header",
+            |m: &TrezorAppHeaderAck| { &m.header },
+            |m: &mut TrezorAppHeaderAck| { &mut m.header },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "proof",
+            |m: &TrezorAppHeaderAck| { &m.proof },
+            |m: &mut TrezorAppHeaderAck| { &mut m.proof },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppHeaderAck>(
+            "TrezorAppHeaderAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for TrezorAppHeaderAck {
+    const NAME: &'static str = "TrezorAppHeaderAck";
+
+    fn is_initialized(&self) -> bool {
+        if self.header.is_none() {
+            return false;
+        }
+        if self.proof.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.header = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.proof = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.header.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.proof.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.header.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.proof.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> TrezorAppHeaderAck {
+        TrezorAppHeaderAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.header = ::std::option::Option::None;
+        self.proof = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static TrezorAppHeaderAck {
+        static instance: TrezorAppHeaderAck = TrezorAppHeaderAck {
+            header: ::std::option::Option::None,
+            proof: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for TrezorAppHeaderAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppHeaderAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for TrezorAppHeaderAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for TrezorAppHeaderAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppDataChunkRequest)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct TrezorAppDataChunkRequest {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppDataChunkRequest.index)
+    pub index: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppDataChunkRequest.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a TrezorAppDataChunkRequest {
+    fn default() -> &'a TrezorAppDataChunkRequest {
+        <TrezorAppDataChunkRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl TrezorAppDataChunkRequest {
+    pub fn new() -> TrezorAppDataChunkRequest {
+        ::std::default::Default::default()
+    }
+
+    // required uint32 index = 1;
+
+    pub fn index(&self) -> u32 {
+        self.index.unwrap_or(0)
+    }
+
+    pub fn clear_index(&mut self) {
+        self.index = ::std::option::Option::None;
+    }
+
+    pub fn has_index(&self) -> bool {
+        self.index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_index(&mut self, v: u32) {
+        self.index = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "index",
+            |m: &TrezorAppDataChunkRequest| { &m.index },
+            |m: &mut TrezorAppDataChunkRequest| { &mut m.index },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppDataChunkRequest>(
+            "TrezorAppDataChunkRequest",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for TrezorAppDataChunkRequest {
+    const NAME: &'static str = "TrezorAppDataChunkRequest";
+
+    fn is_initialized(&self) -> bool {
+        if self.index.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.index = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.index {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.index {
+            os.write_uint32(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> TrezorAppDataChunkRequest {
+        TrezorAppDataChunkRequest::new()
+    }
+
+    fn clear(&mut self) {
+        self.index = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static TrezorAppDataChunkRequest {
+        static instance: TrezorAppDataChunkRequest = TrezorAppDataChunkRequest {
+            index: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for TrezorAppDataChunkRequest {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppDataChunkRequest").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for TrezorAppDataChunkRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for TrezorAppDataChunkRequest {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppDataChunkAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct TrezorAppDataChunkAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppDataChunkAck.data)
+    pub data: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppDataChunkAck.hash)
+    pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppDataChunkAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a TrezorAppDataChunkAck {
+    fn default() -> &'a TrezorAppDataChunkAck {
+        <TrezorAppDataChunkAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl TrezorAppDataChunkAck {
+    pub fn new() -> TrezorAppDataChunkAck {
+        ::std::default::Default::default()
+    }
+
+    // required bytes data = 1;
+
+    pub fn data(&self) -> &[u8] {
+        match self.data.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_data(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_data(&self) -> bool {
+        self.data.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_data(&mut self, v: ::std::vec::Vec<u8>) {
+        self.data = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_data(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.data.is_none() {
+            self.data = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.data.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_data(&mut self) -> ::std::vec::Vec<u8> {
+        self.data.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required bytes hash = 2;
+
+    pub fn hash(&self) -> &[u8] {
+        match self.hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_hash(&mut self) {
+        self.hash = ::std::option::Option::None;
+    }
+
+    pub fn has_hash(&self) -> bool {
+        self.hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.hash.is_none() {
+            self.hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "data",
+            |m: &TrezorAppDataChunkAck| { &m.data },
+            |m: &mut TrezorAppDataChunkAck| { &mut m.data },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "hash",
+            |m: &TrezorAppDataChunkAck| { &m.hash },
+            |m: &mut TrezorAppDataChunkAck| { &mut m.hash },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppDataChunkAck>(
+            "TrezorAppDataChunkAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for TrezorAppDataChunkAck {
+    const NAME: &'static str = "TrezorAppDataChunkAck";
+
+    fn is_initialized(&self) -> bool {
+        if self.data.is_none() {
+            return false;
+        }
+        if self.hash.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.data = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.data.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.data.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.hash.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> TrezorAppDataChunkAck {
+        TrezorAppDataChunkAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.data = ::std::option::Option::None;
+        self.hash = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static TrezorAppDataChunkAck {
+        static instance: TrezorAppDataChunkAck = TrezorAppDataChunkAck {
+            data: ::std::option::Option::None,
+            hash: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for TrezorAppDataChunkAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppDataChunkAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for TrezorAppDataChunkAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for TrezorAppDataChunkAck {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -928,17 +1571,22 @@ impl ::protobuf::reflect::ProtobufValue for TrezorAppResponse {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x18messages-trezorapp.proto\x12\x1dhw.trezor.messages.trezorapps\x1a\
-    \roptions.proto\"c\n\rTrezorAppLoad\x12\x0e\n\x02id\x18\x01\x20\x02(\tR\
+    \roptions.proto\"O\n\rTrezorAppLoad\x12\x0e\n\x02id\x18\x01\x20\x02(\tR\
     \x02id\x12\x18\n\x07version\x18\x02\x20\x03(\rR\x07version\x12\x14\n\x04\
-    hash\x18\x03\x20\x02(\x0c:\0R\x04hash\x12\x12\n\x04size\x18\x04\x20\x02(\
-    \rR\x04size\"2\n\x0fTrezorAppLoaded\x12\x1f\n\x0binstance_id\x18\x01\x20\
-    \x02(\rR\ninstanceId\"f\n\x10TrezorAppMessage\x12\x1f\n\x0binstance_id\
-    \x18\x01\x20\x02(\rR\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\x02(\
-    \rR\tmessageId\x12\x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"i\n\x11T\
-    rezorAppResponse\x12\x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\
-    \x12\x12\n\x04data\x18\x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\
-    \x03\x20\x01(\x08:\x05falseR\x08finishedB;\n#com.satoshilabs.trezor.lib.\
-    protobufB\x10MessageTrezorApp\x80\xa6\x1d\x01\
+    hash\x18\x03\x20\x02(\x0c:\0R\x04hash\"2\n\x0fTrezorAppLoaded\x12\x1f\n\
+    \x0binstance_id\x18\x01\x20\x02(\rR\ninstanceId\"\x18\n\x16TrezorAppHead\
+    erRequest\"B\n\x12TrezorAppHeaderAck\x12\x16\n\x06header\x18\x01\x20\x02\
+    (\x0cR\x06header\x12\x14\n\x05proof\x18\x02\x20\x02(\x0cR\x05proof\"1\n\
+    \x19TrezorAppDataChunkRequest\x12\x14\n\x05index\x18\x01\x20\x02(\rR\x05\
+    index\"?\n\x15TrezorAppDataChunkAck\x12\x12\n\x04data\x18\x01\x20\x02(\
+    \x0cR\x04data\x12\x12\n\x04hash\x18\x02\x20\x02(\x0cR\x04hash\"f\n\x10Tr\
+    ezorAppMessage\x12\x1f\n\x0binstance_id\x18\x01\x20\x02(\rR\ninstanceId\
+    \x12\x1d\n\nmessage_id\x18\x02\x20\x02(\rR\tmessageId\x12\x12\n\x04data\
+    \x18\x03\x20\x02(\x0cR\x04data\"i\n\x11TrezorAppResponse\x12\x1d\n\nmess\
+    age_id\x18\x01\x20\x02(\rR\tmessageId\x12\x12\n\x04data\x18\x02\x20\x02(\
+    \x0cR\x04data\x12!\n\x08finished\x18\x03\x20\x01(\x08:\x05falseR\x08fini\
+    shedB;\n#com.satoshilabs.trezor.lib.protobufB\x10MessageTrezorApp\x80\
+    \xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -957,9 +1605,13 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(4);
+            let mut messages = ::std::vec::Vec::with_capacity(8);
             messages.push(TrezorAppLoad::generated_message_descriptor_data());
             messages.push(TrezorAppLoaded::generated_message_descriptor_data());
+            messages.push(TrezorAppHeaderRequest::generated_message_descriptor_data());
+            messages.push(TrezorAppHeaderAck::generated_message_descriptor_data());
+            messages.push(TrezorAppDataChunkRequest::generated_message_descriptor_data());
+            messages.push(TrezorAppDataChunkAck::generated_message_descriptor_data());
             messages.push(TrezorAppMessage::generated_message_descriptor_data());
             messages.push(TrezorAppResponse::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);

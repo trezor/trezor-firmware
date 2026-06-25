@@ -64,12 +64,18 @@ def load(
     try:
         version = None
         if min_version is not None:
-            version = tuple(map(int, min_version.split(".")))
-            assert len(version) == 2, "Version must be in the format 'major.minor'"
+            parts = tuple(map(int, min_version.split(".")))
+            if len(parts) < 1 or len(parts) > 4:
+                raise ValueError(
+                    "Version must be in the format 'major[.minor[.patch[.build]]]'"
+                )
+            version = t.cast(
+                t.Tuple[int, int, int, int], parts + (0,) * (4 - len(parts))
+            )
 
         app_binary = app_path.read_bytes()
         instance_id = trezorapp.load(session, app_binary, b"", version, force_reload)
-        click.echo(f"App loaded with instance ID: {instance_id}")
+        click.echo(f"Application ready with instance ID: {instance_id}")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)

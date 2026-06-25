@@ -611,10 +611,18 @@ pub enum MessageType {
     MessageType_TrezorAppLoad = 9200,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppLoaded)
     MessageType_TrezorAppLoaded = 9201,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppHeaderRequest)
+    MessageType_TrezorAppHeaderRequest = 9202,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppHeaderAck)
+    MessageType_TrezorAppHeaderAck = 9203,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppDataChunkRequest)
+    MessageType_TrezorAppDataChunkRequest = 9204,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppDataChunkAck)
+    MessageType_TrezorAppDataChunkAck = 9205,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppMessage)
-    MessageType_TrezorAppMessage = 9202,
+    MessageType_TrezorAppMessage = 9206,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppResponse)
-    MessageType_TrezorAppResponse = 9203,
+    MessageType_TrezorAppResponse = 9207,
 }
 
 impl ::protobuf::Enum for MessageType {
@@ -918,8 +926,12 @@ impl ::protobuf::Enum for MessageType {
             1101 => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
             9200 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppLoad),
             9201 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppLoaded),
-            9202 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppMessage),
-            9203 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppResponse),
+            9202 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppHeaderRequest),
+            9203 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppHeaderAck),
+            9204 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppDataChunkRequest),
+            9205 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppDataChunkAck),
+            9206 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppMessage),
+            9207 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppResponse),
             _ => ::std::option::Option::None
         }
     }
@@ -1218,6 +1230,10 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_Telemetry" => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
             "MessageType_TrezorAppLoad" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppLoad),
             "MessageType_TrezorAppLoaded" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppLoaded),
+            "MessageType_TrezorAppHeaderRequest" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppHeaderRequest),
+            "MessageType_TrezorAppHeaderAck" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppHeaderAck),
+            "MessageType_TrezorAppDataChunkRequest" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppDataChunkRequest),
+            "MessageType_TrezorAppDataChunkAck" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppDataChunkAck),
             "MessageType_TrezorAppMessage" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppMessage),
             "MessageType_TrezorAppResponse" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppResponse),
             _ => ::std::option::Option::None
@@ -1517,6 +1533,10 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_Telemetry,
         MessageType::MessageType_TrezorAppLoad,
         MessageType::MessageType_TrezorAppLoaded,
+        MessageType::MessageType_TrezorAppHeaderRequest,
+        MessageType::MessageType_TrezorAppHeaderAck,
+        MessageType::MessageType_TrezorAppDataChunkRequest,
+        MessageType::MessageType_TrezorAppDataChunkAck,
         MessageType::MessageType_TrezorAppMessage,
         MessageType::MessageType_TrezorAppResponse,
     ];
@@ -1822,8 +1842,12 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_Telemetry => 289,
             MessageType::MessageType_TrezorAppLoad => 290,
             MessageType::MessageType_TrezorAppLoaded => 291,
-            MessageType::MessageType_TrezorAppMessage => 292,
-            MessageType::MessageType_TrezorAppResponse => 293,
+            MessageType::MessageType_TrezorAppHeaderRequest => 292,
+            MessageType::MessageType_TrezorAppHeaderAck => 293,
+            MessageType::MessageType_TrezorAppDataChunkRequest => 294,
+            MessageType::MessageType_TrezorAppDataChunkAck => 295,
+            MessageType::MessageType_TrezorAppMessage => 296,
+            MessageType::MessageType_TrezorAppResponse => 297,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1842,7 +1866,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x9bg\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xd5h\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2177,15 +2201,19 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_Telem\
     etry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12$\n\x19Messa\
     geType_TrezorAppLoad\x10\xf0G\x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMessageT\
-    ype_TrezorAppLoaded\x10\xf1G\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageTy\
-    pe_TrezorAppMessage\x10\xf2G\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageTy\
-    pe_TrezorAppResponse\x10\xf3G\x1a\x04\x98\xb5\x18\x01\x1a\x08\xc8\xf3\
-    \x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10\
-    J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\
-    \x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\
-    \x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\
-    \x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protob\
-    ufB\rTrezorMessage\x80\xa6\x1d\x01\
+    ype_TrezorAppLoaded\x10\xf1G\x1a\x04\x98\xb5\x18\x01\x12-\n\"MessageType\
+    _TrezorAppHeaderRequest\x10\xf2G\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessa\
+    geType_TrezorAppHeaderAck\x10\xf3G\x1a\x04\x90\xb5\x18\x01\x120\n%Messag\
+    eType_TrezorAppDataChunkRequest\x10\xf4G\x1a\x04\x98\xb5\x18\x01\x12,\n!\
+    MessageType_TrezorAppDataChunkAck\x10\xf5G\x1a\x04\x90\xb5\x18\x01\x12'\
+    \n\x1cMessageType_TrezorAppMessage\x10\xf6G\x1a\x04\x90\xb5\x18\x01\x12(\
+    \n\x1dMessageType_TrezorAppResponse\x10\xf7G\x1a\x04\x98\xb5\x18\x01\x1a\
+    \x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\
+    \x04\x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\
+    \x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\
+    \"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\
+    \xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.t\
+    rezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
