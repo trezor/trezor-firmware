@@ -71,7 +71,7 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   return true;
 }
 
-#else // defined(USE_OPTIGA) || defined(USE_TROPIC)
+#else  // defined(USE_OPTIGA) || defined(USE_TROPIC)
 bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   rng_fill_buffer(buffer, buffer_size);
   return true;
