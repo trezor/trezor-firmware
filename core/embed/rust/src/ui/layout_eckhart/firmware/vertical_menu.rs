@@ -166,7 +166,7 @@ impl<T: MenuItems> VerticalMenu<T> {
         self.offset_y = offset_y.max(0).min(self.offset_y_max);
     }
 
-    /// Chcek if the menu is on the bottom.
+    /// Check if the menu is on the bottom.
     pub fn is_max_offset(&self) -> bool {
         self.offset_y == self.offset_y_max
     }
