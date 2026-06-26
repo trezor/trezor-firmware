@@ -199,6 +199,9 @@ where
 }
 
 pub fn write(bytes: &[u8]) -> Result<(), BleError> {
+    if bytes.len() > TX_PACKET_SIZE {
+        return Err(BleError::WriteFailed);
+    }
     let len = bytes.len() as u16;
     let success = unsafe { ffi::ble_write(bytes.as_ptr(), len) };
     if success {
@@ -209,7 +212,7 @@ pub fn write(bytes: &[u8]) -> Result<(), BleError> {
 }
 
 pub fn read(buf: &mut [u8]) -> Result<usize, BleError> {
-    debug_assert!(buf.len() <= RX_PACKET_SIZE);
-    let read_len = unsafe { super::ffi::ble_read(buf.as_mut_ptr(), buf.len() as u16) };
+    let len = buf.len().try_into().unwrap_or(u16::MAX);
+    let read_len = unsafe { super::ffi::ble_read(buf.as_mut_ptr(), len) };
     Ok(read_len as usize)
 }
