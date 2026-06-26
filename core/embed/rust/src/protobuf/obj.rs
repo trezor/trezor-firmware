@@ -1,19 +1,17 @@
 use core::convert::TryFrom;
 
-use crate::{
+use crate::micropython::{
+    dict::Dict,
     error::Error,
-    micropython::{
-        dict::Dict,
-        ffi,
-        gc::Gc,
-        macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_type},
-        map::Map,
-        module::Module,
-        obj::{Obj, ObjBase},
-        qstr::Qstr,
-        typ::Type,
-        util,
-    },
+    ffi,
+    gc::Gc,
+    macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_type},
+    map::Map,
+    module::Module,
+    obj::{Obj, ObjBase},
+    qstr::Qstr,
+    typ::Type,
+    util,
 };
 
 use super::{
@@ -88,7 +86,7 @@ impl MsgObj {
                 // we're returning a mutable dict.
                 Ok(Gc::new(Dict::with_map(self.map.try_clone()?))?.into())
             }
-            _ => Err(Error::AttributeError(attr)),
+            _ => Err(Error::AttributeError(attr.into())),
         }
     }
 
@@ -102,7 +100,7 @@ impl MsgObj {
             self.map.set(attr, value)?;
             Ok(())
         } else {
-            Err(Error::AttributeError(attr))
+            Err(Error::AttributeError(attr.into()))
         }
     }
 }
@@ -243,7 +241,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
                 }
             }
             _ => {
-                return Err(Error::AttributeError(attr));
+                return Err(Error::AttributeError(attr.into()));
             }
         }
         Ok(())

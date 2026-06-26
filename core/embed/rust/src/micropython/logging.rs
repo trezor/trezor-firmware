@@ -2,8 +2,7 @@ use crate::micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr};
 
 #[cfg(feature = "dbg_console")]
 use crate::{
-    error::Error,
-    micropython::{buffer::StrBuffer, util},
+    micropython::{buffer::StrBuffer, error::Error, util},
     trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel},
     util::logger::init_rust_logging,
 };

@@ -1,5 +1,5 @@
 use crate::{
-    error,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -63,7 +63,7 @@ pub fn new_request_number(
     max_count: u32,
     description: TString<'static>,
     info_closure: impl Fn(u32) -> TString<'static> + 'static,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     NUM_DISPLAYED.store(count as u16, Ordering::Relaxed);
 
     // wrap the closure for obtaining MoreInfo text and call it with NUM_DISPLAYED
@@ -111,7 +111,7 @@ pub fn new_request_number(
         .with_header(Header::new(title).with_close_button())
         .map(|_| Some(FlowMsg::Cancelled));
 
-    let mut res = SwipeFlow::new(&RequestNumber::Number)?;
+    let mut res = SwipeFlow::new(&RequestNumber::Number);
     res.add_page(&RequestNumber::Number, content_input)?
         .add_page(&RequestNumber::Menu, content_menu)?
         .add_page(&RequestNumber::Info, content_info)?;

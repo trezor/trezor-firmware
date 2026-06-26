@@ -1,8 +1,8 @@
 use heapless::Vec;
 
 use crate::{
-    error::{self, Error},
     maybe_trace::MaybeTrace,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -290,7 +290,7 @@ pub fn new_confirm_action(
     prompt_screen: bool,
     prompt_title: TString<'static>,
     external_menu: bool,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let paragraphs = {
         let action = action.unwrap_or("".into());
         let description = description.unwrap_or("".into());
@@ -331,8 +331,8 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
     options: ConfirmActionOptions,
-) -> Result<SwipeFlow, error::Error> {
-    let (prompt_screen, prompt_pages, flow, page) =
+) -> Result<SwipeFlow, Error> {
+    let (prompt_screen, prompt_pages, mut flow, page) =
         create_flow(strings.title, strings.prompt_screen, options.hold, &extra);
 
     let header = Header::left_aligned(strings.title);
@@ -375,7 +375,6 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
         .map_to_button_msg()
         .with_pages(move |intro_pages| intro_pages + prompt_pages);
 
-    let mut flow = flow?;
     flow.add_page(page, content)?;
 
     let menu = match &extra {
@@ -415,7 +414,7 @@ fn create_flow(
 ) -> (
     Option<TString<'static>>,
     u16,
-    Result<SwipeFlow, Error>,
+    SwipeFlow,
     &'static dyn FlowController,
 ) {
     let prompt_screen = prompt_screen.or_else(|| hold.then_some(title));
@@ -514,7 +513,7 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
     options: ConfirmActionOptions,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     new_confirm_action_uni(
         SwipeContent::new(SwipePage::vertical(content).with_limit(options.page_limit)),
         extra,

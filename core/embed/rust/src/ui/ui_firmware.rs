@@ -1,7 +1,6 @@
 use crate::{
-    error::Error,
     io::BinaryData,
-    micropython::{buffer::StrBuffer, gc::Gc, list::List, obj::Obj},
+    micropython::{buffer::StrBuffer, gc::Gc, list::List, Error, Obj},
     strutil::TString,
     ui::notification::Notification,
 };

@@ -24,7 +24,6 @@ mod align;
 mod coverage;
 #[cfg(feature = "debug")]
 mod debug;
-mod error;
 mod io;
 mod maybe_trace;
 #[cfg(feature = "micropython")]

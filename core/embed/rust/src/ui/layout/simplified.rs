@@ -34,14 +34,7 @@ where
 
 #[cfg(feature = "button")]
 pub fn button_eval() -> Option<ButtonEvent> {
-    let event = button_get_event();
-    let (event_btn, event_type) = event?;
-    let event = ButtonEvent::new(event_type, event_btn);
-
-    if let Ok(event) = event {
-        return Some(event);
-    }
-    None
+    button_get_event().map(|(event_btn, event_type)| ButtonEvent::new(event_type, event_btn))
 }
 
 #[cfg(feature = "touch")]

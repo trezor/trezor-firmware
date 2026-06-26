@@ -7,8 +7,7 @@ use super::component::{
     SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
 };
 use crate::{
-    error::Error,
-    micropython::{gc::GcBox, obj::Obj},
+    micropython::{gc::GcBox, obj::Obj, Error},
     ui::{
         component::{paginated::Paginate, Component, Never},
         flow::Swipable,

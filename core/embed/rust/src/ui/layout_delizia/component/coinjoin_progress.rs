@@ -1,8 +1,8 @@
 use core::mem;
 
 use crate::{
-    error::Error,
     maybe_trace::MaybeTrace,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{

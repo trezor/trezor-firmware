@@ -1,8 +1,7 @@
 use core::{convert::TryFrom, ptr};
 
-use crate::error::Error;
-
 use super::{
+    error::Error,
     ffi,
     gc::{Gc, GcBox},
     obj::Obj,

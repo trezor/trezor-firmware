@@ -3,8 +3,6 @@ use crate::ui::{
     component::{base::AttachType, Event, EventCtx},
 };
 
-use crate::error::Error;
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum LayoutState {
     Initial,
@@ -13,11 +11,13 @@ pub enum LayoutState {
     Done,
 }
 
+pub struct PaintOutOfBounds;
+
 pub trait Layout<T> {
     fn place(&mut self);
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState>;
     fn value(&self) -> Option<&T>;
-    fn paint(&mut self) -> Result<(), Error>;
+    fn paint(&mut self) -> Result<(), PaintOutOfBounds>;
 }
 
 #[cfg(feature = "micropython")]

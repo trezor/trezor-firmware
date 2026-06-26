@@ -1,5 +1,5 @@
 use crate::{
-    error,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -52,7 +52,7 @@ impl FlowController for ConfirmHomescreen {
 pub fn new_confirm_homescreen(
     title: TString<'static>,
     image: CachedJpeg,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let content_homescreen = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),
         SwipeContent::new(image),
@@ -76,7 +76,7 @@ pub fn new_confirm_homescreen(
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&ConfirmHomescreen::Homescreen)?;
+    let mut res = SwipeFlow::new(&ConfirmHomescreen::Homescreen);
     res.add_page(&ConfirmHomescreen::Homescreen, content_homescreen)?
         .add_page(&ConfirmHomescreen::Menu, content_menu)?
         .add_page(&ConfirmHomescreen::Confirm, content_confirm)?;

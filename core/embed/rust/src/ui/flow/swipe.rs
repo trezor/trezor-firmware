@@ -1,9 +1,8 @@
 use crate::{
-    error::{self, Error},
     maybe_trace::MaybeTrace,
     micropython::{
         gc::{self, GcBox},
-        obj::Obj,
+        Error, Obj,
     },
     ui::{
         component::{
@@ -14,7 +13,7 @@ use crate::{
         event::SwipeEvent,
         flow::{base::Decision, FlowController},
         geometry::{Direction, Rect},
-        layout::base::{Layout, LayoutState},
+        layout::base::{Layout, LayoutState, PaintOutOfBounds},
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
         util::animation_disabled,
         CommonUI, ModelUI,
@@ -111,15 +110,15 @@ pub struct SwipeFlow {
 }
 
 impl SwipeFlow {
-    pub fn new(initial_state: &'static dyn FlowController) -> Result<Self, error::Error> {
-        Ok(Self {
+    pub fn new(initial_state: &'static dyn FlowController) -> Self {
+        Self {
             state: initial_state,
             swipe: SwipeDetect::new(),
             store: Vec::new(),
             allow_swipe: true,
             pending_decision: None,
             returned_value: None,
-        })
+        }
     }
 
     /// Add a page to the flow.
@@ -129,7 +128,7 @@ impl SwipeFlow {
         &mut self,
         state: &'static dyn FlowController,
         page: impl FlowComponentDynTrait + 'static,
-    ) -> Result<&mut Self, error::Error> {
+    ) -> Result<&mut Self, Error> {
         debug_assert!(self.store.len() == state.index());
         let alloc = GcBox::new(page)?;
         let page = gc::coerce!(FlowComponentDynTrait, alloc);
@@ -305,7 +304,7 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         self.returned_value.as_ref()
     }
 
-    fn paint(&mut self) -> Result<(), Error> {
+    fn paint(&mut self) -> Result<(), PaintOutOfBounds> {
         #[cfg(feature = "ui_debug")]
         let mut overflow: bool = false;
         #[cfg(not(feature = "ui_debug"))]
@@ -323,7 +322,7 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         });
 
         if overflow {
-            Err(Error::OutOfRange)
+            Err(PaintOutOfBounds)
         } else {
             Ok(())
         }

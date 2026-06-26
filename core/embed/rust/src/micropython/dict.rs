@@ -1,8 +1,6 @@
 use core::convert::TryFrom;
 
-use crate::error::Error;
-
-use super::{ffi, gc::Gc, map::Map, obj::Obj, runtime::catch_exception};
+use super::{error::Error, ffi, gc::Gc, map::Map, obj::Obj, runtime::catch_exception};
 
 /// Insides of the MicroPython `dict` object.
 pub type Dict = ffi::mp_obj_dict_t;

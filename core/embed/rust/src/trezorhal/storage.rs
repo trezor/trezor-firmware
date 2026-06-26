@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use super::ffi;
-use crate::error::{value_error, Error};
 use core::ptr;
 
 use num_traits::FromPrimitive;
@@ -77,16 +76,16 @@ pub enum StorageError {
     CounterFailed,
 }
 
-impl From<StorageError> for Error {
+#[cfg(feature = "micropython")]
+impl From<StorageError> for crate::micropython::Error {
     fn from(err: StorageError) -> Self {
+        use crate::micropython::Error;
         match err {
-            StorageError::InvalidData => value_error!(c"Invalid data for storage"),
-            StorageError::WriteFailed => value_error!(c"Storage write failed"),
-            StorageError::ReadFailed => value_error!(c"Storage read failed"),
-            StorageError::DeleteFailed => value_error!(c"Storage delete failed"),
-            StorageError::CounterFailed => {
-                value_error!(c"Retrieving counter value failed")
-            }
+            StorageError::InvalidData => Error::ValueError(c"Invalid data for storage"),
+            StorageError::WriteFailed => Error::ValueError(c"Storage write failed"),
+            StorageError::ReadFailed => Error::ValueError(c"Storage read failed"),
+            StorageError::DeleteFailed => Error::ValueError(c"Storage delete failed"),
+            StorageError::CounterFailed => Error::ValueError(c"Retrieving counter value failed"),
         }
     }
 }

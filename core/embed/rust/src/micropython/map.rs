@@ -1,11 +1,6 @@
 use core::{marker::PhantomData, mem::MaybeUninit, ops::Deref, ptr, slice};
 
-use crate::{
-    error::Error,
-    micropython::{obj::Obj, qstr::Qstr},
-};
-
-use super::{ffi, runtime::catch_exception};
+use super::{error::Error, ffi, obj::Obj, qstr::Qstr, runtime::catch_exception};
 
 pub type Map = ffi::mp_map_t;
 pub type MapElem = ffi::mp_map_elem_t;

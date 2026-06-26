@@ -8,8 +8,7 @@ use super::component::{
     Progress, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog, SimplePage,
 };
 use crate::{
-    error::Error,
-    micropython::obj::Obj,
+    micropython::{Error, Obj},
     strutil::TString,
     ui::{
         component::{

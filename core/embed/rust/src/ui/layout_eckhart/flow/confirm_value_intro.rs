@@ -1,6 +1,5 @@
 use crate::{
-    error,
-    micropython::obj::Obj,
+    micropython::{Error, Obj},
     strutil::TString,
     translations::TR,
     ui::{
@@ -68,7 +67,7 @@ pub fn new_confirm_value_intro(
     confirm_button_label: Option<TString<'static>>,
     hold: bool,
     chunkify: bool,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let cancel_menu_label = cancel_menu_label.unwrap_or(TR::buttons__cancel.into());
 
     // Intro
@@ -127,7 +126,7 @@ pub fn new_confirm_value_intro(
             _ => None,
         });
 
-    let mut res = SwipeFlow::new(&ConfirmValueIntro::Intro)?;
+    let mut res = SwipeFlow::new(&ConfirmValueIntro::Intro);
     res.add_page(&ConfirmValueIntro::Intro, content_intro)?
         .add_page(&ConfirmValueIntro::Menu, content_menu)?;
     Ok(res)

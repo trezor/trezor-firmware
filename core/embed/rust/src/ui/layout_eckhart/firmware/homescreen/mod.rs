@@ -9,8 +9,8 @@ use notification_center::HomescreenNotificationCenter;
 pub use helpers::check_homescreen_format;
 
 use crate::{
-    error::Error,
     io::BinaryData,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{

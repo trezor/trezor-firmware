@@ -1,8 +1,8 @@
 use crate::{
-    error::Error,
     io::InputStream,
     micropython::{
         buffer::get_buffer,
+        error::Error,
         ffi,
         macros::{
             attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type,
@@ -18,7 +18,28 @@ use crate::{
     trezorhal::translations,
 };
 
-use super::translated_string::TranslatedString;
+use super::{error::Error as TranslationsError, translated_string::TranslatedString};
+
+impl From<TranslationsError> for Error {
+    fn from(error: TranslationsError) -> Self {
+        const INVALID_TRANSLATIONS_BLOB: Error = Error::ValueError(c"Invalid translations blob");
+        match error {
+            TranslationsError::InvalidString => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::TranslationsInUse => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidOffsetTable => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidAlignment => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidLength => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::TrailingData => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::NotEnoughData => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidDataHash => INVALID_TRANSLATIONS_BLOB,
+            TranslationsError::InvalidSignature => Error::ValueError(c"Invalid signature"),
+            TranslationsError::BadMagic => Error::ValueError(c"Unknown translations blob version"),
+            TranslationsError::WriteFailed => {
+                Error::ValueError(c"Failed to write translations blob")
+            }
+        }
+    }
+}
 
 // SAFETY: Caller is supposed to be MicroPython, or copy MicroPython contracts
 // about the meaning of arguments.
@@ -35,7 +56,7 @@ unsafe extern "C" fn tr_attr_fn(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) 
             // TODO fall back to English (which is static and can be converted
             // infallibly) if the allocation fails?
         } else {
-            return Err(Error::AttributeError(attr));
+            return Err(Error::AttributeError(attr.into()));
         };
         unsafe { dest.write(result) };
         Ok(())

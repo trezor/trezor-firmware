@@ -1,6 +1,6 @@
-use crate::{error::Error, trezorhal::bitblt};
+use crate::trezorhal::bitblt;
 
-use crate::ui::{display::Color, geometry::Offset};
+use crate::ui::{display::Color, geometry::Offset, UIError};
 
 use core::{cell::Cell, marker::PhantomData};
 
@@ -62,7 +62,7 @@ impl<'a> Bitmap<'a> {
         mut size: Offset,
         min_height: Option<i16>,
         buff: &'a [u8],
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, UIError> {
         assert!(size.x >= 0 && size.y >= 0);
 
         let min_stride = match format {
@@ -96,10 +96,10 @@ impl<'a> Bitmap<'a> {
                 if max_height >= min_height as usize {
                     size.y = max_height as i16;
                 } else {
-                    return Err(Error::ValueError(c"Buffer too small."));
+                    return Err(UIError::Capacity);
                 }
             } else {
-                return Err(Error::ValueError(c"Buffer too small."));
+                return Err(UIError::Capacity);
             }
         }
 
@@ -129,7 +129,7 @@ impl<'a> Bitmap<'a> {
         size: Offset,
         min_height: Option<i16>,
         buff: &'a mut [u8],
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, UIError> {
         let mut bitmap = Self::new(format, stride, size, min_height, buff)?;
         bitmap.mutable = true;
         Ok(bitmap)

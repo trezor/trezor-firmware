@@ -4,9 +4,7 @@ use core::{
     ptr::{self, NonNull},
 };
 
-use crate::error::Error;
-
-use super::ffi;
+use super::{error::Error, ffi};
 
 /// A pointer type for values on the garbage-collected heap.
 pub struct Gc<T: ?Sized>(NonNull<T>);

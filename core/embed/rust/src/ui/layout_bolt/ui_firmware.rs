@@ -1,9 +1,8 @@
 use core::cmp::Ordering;
 
 use crate::{
-    error::{value_error, Error},
     io::BinaryData,
-    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, util, Error, Obj},
     storage,
     strutil::TString,
     translations::TR,
@@ -168,7 +167,7 @@ impl FirmwareUI for UIBolt {
         }
 
         if !check_homescreen_format(image, false) {
-            return Err(value_error!(c"Invalid image."));
+            return Err(Error::ValueError(c"Invalid image."));
         };
 
         let buttons = Button::cancel_confirm_text(None, Some(TR::buttons__change.into()));

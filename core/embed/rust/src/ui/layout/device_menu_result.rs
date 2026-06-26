@@ -1,8 +1,5 @@
-use crate::{
-    error::Error,
-    micropython::{
-        ffi, macros::obj_type, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util,
-    },
+use crate::micropython::{
+    ffi, macros::obj_type, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util, Error, Obj,
 };
 
 use num_traits::ToPrimitive;
@@ -95,7 +92,7 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             Qstr::MP_QSTR_Reboot => DeviceMenuMsg::Reboot.as_obj(),
             Qstr::MP_QSTR_RebootToBootloader => DeviceMenuMsg::RebootToBootloader.as_obj(),
             Qstr::MP_QSTR_RefreshMenu => DeviceMenuMsg::RefreshMenu.as_obj(),
-            _ => return Err(Error::AttributeError(attr)),
+            _ => return Err(Error::AttributeError(attr.into())),
         };
         unsafe { dest.write(value) };
         Ok(())

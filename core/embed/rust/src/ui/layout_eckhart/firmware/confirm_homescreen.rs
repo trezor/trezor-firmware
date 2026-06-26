@@ -1,6 +1,6 @@
 use crate::{
-    error::{value_error, Error},
     io::BinaryData,
+    micropython::Error,
     strutil::TString,
     translations::TR,
     ui::{
@@ -47,7 +47,7 @@ impl ConfirmHomescreen {
         } else {
             // Validate and use custom homescreen
             if !check_homescreen_format(image) {
-                return Err(value_error!(c"Invalid image."));
+                return Err(Error::ValueError(c"Invalid image."));
             }
 
             Ok(Self {

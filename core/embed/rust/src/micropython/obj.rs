@@ -3,9 +3,7 @@ use core::{
     ffi::CStr,
 };
 
-use crate::error::Error;
-
-use super::{ffi, runtime::catch_exception};
+use super::{error::Error, ffi, runtime::catch_exception};
 
 pub type Obj = ffi::mp_obj_t;
 pub type ObjBase = ffi::mp_obj_base_t;
