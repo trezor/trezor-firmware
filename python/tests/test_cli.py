@@ -168,13 +168,17 @@ class TestUnderscoreToDash:
         result = runner.invoke(cli, ["btc", "sign-tx", "--help"])
         assert result.exit_code == 0
 
-    def test_btc_subcommand_underscore_rejected(self, runner: CliRunner) -> None:
-        """AliasedGroup normalises at the top level only; sub-group commands
-        use their own AliasedGroup instance and also normalise underscores."""
+    def test_btc_subcommand_underscore(self, runner: CliRunner) -> None:
+        """``btc sign_tx`` is recognised as ``btc sign-tx``.
+
+        AliasedGroup normalises underscores to dashes at every level, so
+        ``sign_tx`` resolves to the canonical ``sign-tx`` sub-command.
+        """
         result = runner.invoke(cli, ["btc", "sign_tx", "--help"])
-        # Underscore in sub-group — AliasedGroup inside btc.cli normalises it
-        # so this may succeed; what matters is it does not crash unhandled.
-        assert result.exit_code in (0, 2)
+        assert result.exit_code == 0, (
+            f"Expected underscore normalisation to work, got exit={result.exit_code}\n"
+            f"{result.output}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -191,10 +195,13 @@ class TestOldStyleCommandLookup:
         assert result.exit_code == 0
         assert "sign" in result.output.lower()
 
-    def test_btc_sign_tx(self, runner: CliRunner) -> None:
-        """``btc sign-tx`` is directly in btc group; old-style falls back too."""
-        result = runner.invoke(cli, ["btc", "sign-tx", "--help"])
-        assert result.exit_code == 0
+    def test_btc_sign_tx_oldstyle(self, runner: CliRunner) -> None:
+        """Old-style ``btc-sign-tx`` resolves to ``btc sign-tx``."""
+        result = runner.invoke(cli, ["btc-sign-tx", "--help"])
+        assert result.exit_code == 0, (
+            f"Expected old-style btc-sign-tx to resolve, got exit={result.exit_code}\n"
+            f"{result.output}"
+        )
 
     def test_firmware_update_oldstyle(self, runner: CliRunner) -> None:
         """``update-firmware`` is a COMMAND_ALIAS."""
@@ -297,9 +304,16 @@ class TestCurrencyAliases:
         assert result.exit_code == 0, (
             f"currency alias '{alias}' failed: exit={result.exit_code}\n{result.output}"
         )
-        # The help output should mention the canonical group name or its purpose
-        assert canonical in result.output.lower() or result.output.strip(), (
-            f"alias '{alias}': expected '{canonical}' in help output"
+        # The help output for the resolved alias should match that of the canonical
+        # group; invoking both and comparing exit codes is the minimal deterministic check.
+        canonical_result = runner.invoke(cli, [canonical, "--help"])
+        assert canonical_result.exit_code == 0, (
+            f"canonical group '{canonical}' --help failed"
+        )
+        assert result.output == canonical_result.output, (
+            f"alias '{alias}' help output differs from canonical '{canonical}':\n"
+            f"alias:    {result.output[:200]}\n"
+            f"canonical:{canonical_result.output[:200]}"
         )
 
 
