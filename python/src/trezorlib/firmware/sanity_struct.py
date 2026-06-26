@@ -97,7 +97,7 @@ class SanityCheckedStruct(Struct):
             while isinstance(subcon, Transformed):
                 subcon = subcon.subcon
 
-            subcon_fields: t.ItemsView[str, t.Any] = subcon._subcons.items()
+            subcon_fields: t.ItemsView[str, t.Any] = subcon._subcons.items()  # type: ignore [Cannot access attribute]
         except Exception as e:
             errors.append(f"Failed to parse subcon fields. {e}")
             return False

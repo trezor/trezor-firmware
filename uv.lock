@@ -8,7 +8,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-05-09T13:36:00.892620957Z"
+exclude-newer = "2026-05-27T13:22:26.419278496Z"
 exclude-newer-span = "P30D"
 
 [options.exclude-newer-package]
@@ -416,6 +416,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/75/6f/e2e98ed52e94fd9db21a7f816061e0d47fef9b13077b5a9940a7b55e0b98/construct_classes-0.2.2.tar.gz", hash = "sha256:c644026fef4d082fd6632efa974376d77e8be7d95e4e57a6df74407fc0954efd", size = 4622, upload-time = "2025-08-26T14:32:47.955Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9e/9a/bfe55ec4afaecb64512cc39f3a801e76fcc5660b5a98d6c193af527b5f23/construct_classes-0.2.2-py3-none-any.whl", hash = "sha256:bf616b174ad53adbd388beb4fc1a5af4ba42289b186e6a741142262ead337b3f", size = 4149, upload-time = "2025-08-26T14:32:46.945Z" },
+]
+
+[[package]]
+name = "construct-typing"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "construct" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f6/ae/659fe4866d89ef5a3a65cddbdd7b35882f4feb72db383821965f2fcea934/construct_typing-0.7.0.tar.gz", hash = "sha256:71d110dedff39bd3b603c734077032a7065bc597a49db1f5b03a211d05dbac23", size = 45104, upload-time = "2025-10-27T19:30:29.614Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/0c/2db6f7e1ae9795e436c6a0dc0bc38b12b8c8a228cb63203e24190b755b3b/construct_typing-0.7.0-py3-none-any.whl", hash = "sha256:c92383c6e8e5d07ba25811c8d5163820458d821e73bb1006541f43f89788646c", size = 24350, upload-time = "2025-10-27T19:30:27.505Z" },
 ]
 
 [[package]]
@@ -2202,6 +2215,7 @@ dependencies = [
     { name = "black" },
     { name = "bleak" },
     { name = "click" },
+    { name = "construct-typing" },
     { name = "coverage" },
     { name = "cryptography" },
     { name = "demjson3" },
@@ -2268,6 +2282,7 @@ requires-dist = [
     { name = "black", specifier = ">=24.2" },
     { name = "bleak", specifier = ">=1.1.0" },
     { name = "click", specifier = ">=8,<9" },
+    { name = "construct-typing", specifier = ">=0.7.0" },
     { name = "coverage", specifier = "==7.13.5" },
     { name = "cryptography" },
     { name = "demjson3" },
