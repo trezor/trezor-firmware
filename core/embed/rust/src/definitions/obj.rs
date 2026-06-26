@@ -1,16 +1,29 @@
-use super::blob;
-use crate::error::Error;
-use crate::io::InputStream;
+use crypto::{cosi, ed25519};
+
+use super::constants;
 use crate::micropython::buffer::get_buffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::macros::{obj_fn_var, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::util;
-use crate::protobuf::decode::Decoder;
-use crate::protobuf::obj::MsgDefObj;
+use crate::micropython::{util, Error, Obj};
+
+fn verify_with_keys(
+    threshold: u8,
+    digest: &[u8],
+    sig: &cosi::Signature,
+    public_keys: &[ed25519::PublicKey; 3],
+) -> Result<(), Error> {
+    cosi::verify(threshold, digest, public_keys, sig)
+        .map_err(|_| Error::ValueError(c"Signature verification failed"))
+}
+
+fn threshold_for_version(version: u8) -> Result<u8, Error> {
+    let version = constants::DefsVersion::from_byte(version)
+        .ok_or(Error::ValueError(c"Unsupported definition format version"))?;
+    Ok(version.threshold())
+}
 
 extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {

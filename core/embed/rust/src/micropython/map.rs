@@ -3,11 +3,11 @@ use core::mem::MaybeUninit;
 use core::ops::Deref;
 use core::{ptr, slice};
 
+use super::error::Error;
 use super::ffi;
+use super::obj::Obj;
+use super::qstr::Qstr;
 use super::runtime::catch_exception;
-use crate::error::Error;
-use crate::micropython::obj::Obj;
-use crate::micropython::qstr::Qstr;
 
 pub type Map = ffi::mp_map_t;
 pub type MapElem = ffi::mp_map_elem_t;

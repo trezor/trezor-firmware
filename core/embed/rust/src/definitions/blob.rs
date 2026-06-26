@@ -2,7 +2,7 @@ use crypto::merkle::merkle_root;
 use crypto::{cosi, ed25519, sha256};
 
 use super::{constants, generated};
-use crate::error::Error;
+use crate::micropython::Error;
 use crate::io::InputStream;
 
 const INVALID_DEFINITION: Error = Error::ExternalDataError(c"Invalid definition");

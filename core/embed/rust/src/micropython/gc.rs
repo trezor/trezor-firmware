@@ -2,8 +2,8 @@ use core::alloc::Layout;
 use core::ops::{Deref, DerefMut};
 use core::ptr::{self, NonNull};
 
+use super::error::Error;
 use super::ffi;
-use crate::error::Error;
 
 /// A pointer type for values on the garbage-collected heap.
 pub struct Gc<T: ?Sized>(NonNull<T>);
