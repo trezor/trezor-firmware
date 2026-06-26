@@ -85,12 +85,19 @@ ts_t nfc_start_discovery(void);
 /** @brief Deactivate the NFC RFAL state machine (put in IDLE state). */
 ts_t nfc_stop_discovery(void);
 
-/** @brief Get current events of NFC device. */
+/** @brief Get current events of NFC device.
+ * @param event [out] Pointer to store new event.
+ */
 bool nfc_get_event(nfc_event_t *event);
 
-/** @brief Read the general device information of the activated NFC device. */
+/** @brief Read the general device information of the activated NFC device.
+ * @param dev_info [out] Pointer to store current NFC device details.
+ */
 ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 
 /** @brief Transceive data with the activated NFC device. This is a blocking
- * call. */
+ * call.
+ * @param cmd [in] Tx data buffer structure
+ * @param resp [out] Rx data buffer structure
+ */
 ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp);
