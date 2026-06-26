@@ -86,7 +86,7 @@ static st25_driver_t g_st25_driver = {
     .rfal_initialized = false,
 };
 
-static ts_t nfc_transcieve_blocking(const nfc_apdu_cmd_t cmd,
+static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
                                     nfc_apdu_response_t resp, uint32_t fwt);
 
 ts_t nfc_init(void) {
@@ -338,7 +338,7 @@ ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp) {
     return TS_ENOSTATE;
   }
 
-  return nfc_transcieve_blocking(cmd, resp, RFAL_FWT_NONE);
+  return nfc_transceive_blocking(cmd, resp, RFAL_FWT_NONE);
 
 cleanup:
   TSH_RETURN;
@@ -425,7 +425,7 @@ void NFC_EXTI_INTERRUPT_HANDLER(void) {
   IRQ_LOG_EXIT();
 }
 
-static ts_t nfc_transcieve_blocking(const nfc_apdu_cmd_t cmd,
+static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
                                     nfc_apdu_response_t resp, uint32_t fwt) {
   TSH_DECLARE;
   ReturnCode err = rfalNfcDataExchangeStart((uint8_t *)cmd.data, cmd.data_len,
