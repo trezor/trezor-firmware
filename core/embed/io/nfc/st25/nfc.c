@@ -104,7 +104,7 @@ static st25_driver_t g_st25_driver = {
 static ts_t nfc_transcieve_blocking(const nfc_apdu_cmd_t cmd,
                                     nfc_apdu_response_t resp, uint32_t fwt);
 
-ts_t nfc_init() {
+ts_t nfc_init(void) {
   TSH_DECLARE;
   st25_driver_t *drv = &g_st25_driver;
 
@@ -283,7 +283,7 @@ cleanup:
   TSH_RETURN;
 }
 
-bool nfc_is_connected() {
+bool nfc_is_connected(void) {
   st25_driver_t *drv = &g_st25_driver;
   return drv->card_connected;
 }
@@ -304,7 +304,7 @@ cleanup:
   return false;
 }
 
-bool nfc_check_connection() {
+bool nfc_check_connection(void) {
   TSH_DECLARE;
   static uint32_t last_check_time = 0;
   if (!ticks_expired(last_check_time + NFC_POLLING_INTERVAL_MS)) {
