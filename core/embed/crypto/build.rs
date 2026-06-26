@@ -8,6 +8,9 @@ fn main() {
 
 fn prepare_bindings() -> bindgen::Builder {
     let mut attrs = xbuild::CompileAttrs::new();
+    attrs
+        .import_cc_compiler_includes()
+        .expect("Failed to import C compiler includes");
     attrs.remove_flag("-mcmse");
     attrs
         .import_library_metadata("rtl")
