@@ -1,9 +1,9 @@
 use core::ptr;
 
+use super::error::Error;
 use super::ffi;
+use super::obj::Obj;
 use super::runtime::catch_exception;
-use crate::error::Error;
-use crate::micropython::obj::Obj;
 
 pub struct IterBuf {
     iter_buf: ffi::mp_obj_iter_buf_t,

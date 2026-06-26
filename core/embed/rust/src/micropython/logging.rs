@@ -1,12 +1,10 @@
 use sys::syslog::{log, LogLevel};
 
-use crate::error::Error;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
 use crate::util::logger::init_rust_logging;
 
 fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {

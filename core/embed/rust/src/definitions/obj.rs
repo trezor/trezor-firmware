@@ -1,25 +1,19 @@
 use crypto::{cosi, ed25519};
 
 use super::constants;
-use crate::error::Error;
 use crate::micropython::buffer::get_buffer;
 use crate::micropython::macros::{obj_fn_3, obj_module};
 use crate::micropython::module::Module;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
 
 fn verify_with_keys(
     digest: &[u8],
     sig: &cosi::Signature,
     public_keys: &[ed25519::PublicKey; 3],
 ) -> Result<(), Error> {
-    Ok(cosi::verify(
-        constants::THRESHOLD,
-        digest,
-        public_keys,
-        sig,
-    )?)
+    cosi::verify(constants::THRESHOLD, digest, public_keys, sig)
+        .map_err(|_| Error::ValueError(c"Signature verification failed"))
 }
 
 extern "C" fn verify(digest: Obj, sig: Obj, sigmask: Obj) -> Obj {

@@ -2,9 +2,9 @@ use core::convert::TryFrom;
 use core::ops::Deref;
 use core::{ptr, slice, str};
 
+use super::error::Error;
 use super::ffi;
-use crate::error::Error;
-use crate::micropython::obj::Obj;
+use super::obj::Obj;
 use crate::strutil::hexlify;
 
 /// Represents an immutable UTF-8 string managed by MicroPython GC.

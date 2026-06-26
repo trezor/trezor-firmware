@@ -3,7 +3,6 @@ use core::convert::TryFrom;
 use super::decode::{protobuf_decode, Decoder};
 use super::defs::{find_name_by_msg_offset, get_msg, MsgDef};
 use super::encode::{protobuf_encode, protobuf_len};
-use crate::error::Error;
 use crate::micropython::dict::Dict;
 use crate::micropython::gc::Gc;
 use crate::micropython::macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_type};
@@ -12,7 +11,7 @@ use crate::micropython::module::Module;
 use crate::micropython::obj::{Obj, ObjBase};
 use crate::micropython::qstr::Qstr;
 use crate::micropython::typ::{FullType, Type};
-use crate::micropython::{ffi, util};
+use crate::micropython::{ffi, util, Error};
 
 #[repr(C)]
 pub struct MsgObj {
@@ -80,7 +79,7 @@ impl MsgObj {
                 // we're returning a mutable dict.
                 Ok(Gc::new(Dict::with_map(self.map.try_clone()?))?.into())
             }
-            _ => Err(Error::AttributeError(attr)),
+            _ => Err(Error::AttributeError(attr.into())),
         }
     }
 
@@ -94,7 +93,7 @@ impl MsgObj {
             self.map.set(attr, value)?;
             Ok(())
         } else {
-            Err(Error::AttributeError(attr))
+            Err(Error::AttributeError(attr.into()))
         }
     }
 }
@@ -235,7 +234,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
                 }
             }
             _ => {
-                return Err(Error::AttributeError(attr));
+                return Err(Error::AttributeError(attr.into()));
             }
         }
         Ok(())
