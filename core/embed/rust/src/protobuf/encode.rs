@@ -208,7 +208,7 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += len;
                 buf.copy_from_slice(val);
             })
-            .ok_or_else(error::end_of_buffer)
+            .ok_or(Error::EOFError)
     }
 
     fn write_byte(&mut self, val: u8) -> Result<(), Error> {
@@ -219,6 +219,6 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += 1;
                 *buf = val;
             })
-            .ok_or_else(error::end_of_buffer)
+            .ok_or(Error::EOFError)
     }
 }
