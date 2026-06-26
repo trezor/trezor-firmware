@@ -38,23 +38,8 @@
 #include "rfal_utils.h"
 #include "sys/mpu.h"
 
-// NFC-A SEL_RES configured for Type 4A Tag Platform
-#define LM_SEL_RES 0x20U
-
-// NFC-F SENSF_RES configured for Type 3 Tag Platform
-#define LM_NFCID2_BYTE1 0x02U
-
-// NFC-F System Code byte 1
-#define LM_SC_BYTE1 0x12U
-
-// NFC-F System Code byte 2
-#define LM_SC_BYTE2 0xFCU
-
-// NFC-F PAD0
-#define LM_PAD0 0x00U
-
 // Interval to poll NFC device if still present (ms)
-#define NFC_POLLING_INTERVAL_MS 300
+#define NFC_POLLING_INTERVAL_MS 300u
 
 typedef struct {
   bool initialized;
