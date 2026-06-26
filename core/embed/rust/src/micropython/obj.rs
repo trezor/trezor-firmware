@@ -1,9 +1,9 @@
 use core::convert::{TryFrom, TryInto};
 use core::ffi::CStr;
 
+use super::error::Error;
 use super::ffi;
 use super::runtime::catch_exception;
-use crate::error::Error;
 
 pub type Obj = ffi::mp_obj_t;
 pub type ObjBase = ffi::mp_obj_base_t;

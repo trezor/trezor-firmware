@@ -1,7 +1,7 @@
 use core::mem::MaybeUninit;
 
+use super::error::Error;
 use super::ffi;
-use crate::error::Error;
 
 /// Raise a micropython exception via NLR jump.
 /// Jumps directly out of the context without running any destructors,

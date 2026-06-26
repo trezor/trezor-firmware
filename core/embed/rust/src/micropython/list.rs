@@ -1,11 +1,11 @@
 use core::convert::TryFrom;
 use core::ptr;
 
+use super::error::Error;
 use super::ffi;
 use super::gc::{Gc, GcBox};
 use super::obj::Obj;
 use super::runtime::catch_exception;
-use crate::error::Error;
 
 pub type List = ffi::mp_obj_list_t;
 

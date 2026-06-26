@@ -2,13 +2,13 @@ use core::slice;
 
 use heapless::Vec;
 
+use super::error::Error;
 use super::ffi;
 use super::iter::IterBuf;
 use super::map::{Map, MapElem};
 use super::obj::Obj;
 use super::qstr::Qstr;
 use super::runtime::{catch_exception, raise_exception};
-use crate::error::{value_error, Error};
 
 /// Perform a call and convert errors into a raised MicroPython exception.
 /// Should only called when returning from Rust to C. See `raise_exception` for
@@ -131,7 +131,7 @@ where
     let vec: Vec<T, N> = iter_into_vec(iterable)?;
     // Returns error if array.len() != N
     vec.into_array()
-        .map_err(|_| value_error!(c"Invalid iterable length"))
+        .map_err(|_| Error::ValueError(c"Invalid iterable length"))
 }
 
 pub fn iter_into_vec<T, E, const N: usize>(iterable: Obj) -> Result<Vec<T, N>, Error>
@@ -142,7 +142,7 @@ where
     let mut vec = Vec::<T, N>::new();
     for item in IterBuf::new().try_iterate(iterable)? {
         vec.push(item.try_into()?)
-            .map_err(|_| value_error!(c"Invalid iterable length"))?;
+            .map_err(|_| Error::ValueError(c"Invalid iterable length"))?;
     }
     Ok(vec)
 }

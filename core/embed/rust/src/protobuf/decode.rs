@@ -4,14 +4,12 @@ use core::str;
 use super::defs::{self, FieldDef, FieldType, MsgDef};
 use super::obj::{MsgDefObj, MsgObj};
 use super::{error, zigzag};
-use crate::error::Error;
 use crate::io::InputStream;
 use crate::micropython::gc::Gc;
 use crate::micropython::list::List;
 use crate::micropython::map::Map;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::{buffer, util};
+use crate::micropython::{buffer, util, Error, Obj};
 
 const MAX_NESTING: u8 = 16;
 
