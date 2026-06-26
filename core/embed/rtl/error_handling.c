@@ -18,6 +18,7 @@
  */
 
 #include <trezor_rtl.h>
+#include "fault_handler.h"
 
 #ifndef TREZOR_EMULATOR
 // Stack check guard value set in startup code.
@@ -78,3 +79,5 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
   system_exit_fatal(msg, file, line);
   while (1);
 }
+
+void tc_fault_handler(const char *msg) { ensure(secfalse, msg); }

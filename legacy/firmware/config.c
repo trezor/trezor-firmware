@@ -29,6 +29,7 @@
 #include "bip39.h"
 #include "common.h"
 #include "config.h"
+#include "consteq.h"
 #include "curves.h"
 #include "debug.h"
 #include "fsm.h"
@@ -797,14 +798,10 @@ bool config_containsMnemonic(const char *mnemonic) {
   uint8_t digest_input[SHA256_DIGEST_LENGTH] = {0};
   sha256_Raw((const uint8_t *)mnemonic, strnlen(mnemonic, MAX_MNEMONIC_LEN),
              digest_input);
-
-  uint8_t diff = 0;
-  for (size_t i = 0; i < sizeof(digest_input); i++) {
-    diff |= (digest_stored[i] - digest_input[i]);
-  }
+  bool result = consteq(digest_stored, digest_input, sizeof(digest_input));
   memzero(digest_stored, sizeof(digest_stored));
   memzero(digest_input, sizeof(digest_input));
-  return diff == 0;
+  return result;
 }
 
 /* Check whether pin matches storage.  The pin must be
