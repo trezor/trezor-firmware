@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "bip39.h"
+#include "consteq.h"
 #include "hmac.h"
 #include "memzero.h"
 #include "options.h"
@@ -240,23 +241,6 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
 }
 
 /**
- * @brief Constant-time memory comparison.
- * Compares 'n' bytes, but unlike memcmp, it does not short-circuit,
- * thus preventing timing attacks.
- * @return `true` if the memory areas are equal, `false` otherwise.
- */
-static bool constant_time_memeq(const void *s1, const void *s2, size_t n) {
-  const unsigned char *p1 = s1;
-  const unsigned char *p2 = s2;
-  int diff = 0;
-  for (size_t i = 0; i < n; i++) {
-    // Accumulate differences using OR to prevent early termination
-    diff |= p1[i] ^ p2[i];
-  }
-  return diff == 0;
-}
-
-/**
  * @brief Constant-time linear search for a mnemonic word. Make sure the `word`
  * argument is provided within at least 9 characters big buffer to avoid
  * out-of-bounds reads.
@@ -268,7 +252,7 @@ found_word mnemonic_find_word(const char *word) {
     const char *dict_word = BIP39_WORDLIST_ENGLISH[i];
     size_t dict_word_len = strlen(dict_word);
     bool is_match =  // 0 or 1 - 1 is match
-        constant_time_memeq(word, dict_word, dict_word_len + 1);
+        consteq(word, dict_word, dict_word_len + 1);
     int8_t match_mask = -is_match;  // 0x00 or 0xFF - 0xFF is match
     result_index =
         (match_mask & i) + (~match_mask & result_index);  // take one of the two

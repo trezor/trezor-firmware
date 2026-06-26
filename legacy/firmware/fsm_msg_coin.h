@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "consteq.h"
 
 void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   RESP_INIT(PublicKey);
@@ -907,12 +908,8 @@ void fsm_msgUnlockPath(const UnlockPath *msg) {
 
   // Require confirmation to access SLIP25 paths unless already authorized.
   if (msg->has_mac) {
-    uint8_t diff = 0;
-    for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-      diff |= (msg->mac.bytes[i] - resp->mac.bytes[i]);
-    }
-
-    if (msg->mac.size != SHA256_DIGEST_LENGTH || diff != 0) {
+    if (msg->mac.size != SHA256_DIGEST_LENGTH ||
+        !consteq(msg->mac.bytes, resp->mac.bytes, SHA256_DIGEST_LENGTH)) {
       fsm_sendFailure(FailureType_Failure_DataError, _("Invalid MAC"));
       layoutHome();
       return;

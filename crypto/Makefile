@@ -136,6 +136,8 @@ SRCS  += tls_prf.c
 SRCS  += hash_to_curve.c
 SRCS  += buffer.c der.c
 SRCS  += elligator2.c
+SRCS  += consteq.c
+SRCS  += fault_handler_noop.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o

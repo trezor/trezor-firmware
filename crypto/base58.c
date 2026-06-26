@@ -24,6 +24,7 @@
 #include "base58.h"
 #include <stdbool.h>
 #include <string.h>
+#include "consteq.h"
 #include "memzero.h"
 #include "ripemd160.h"
 #include "sha2.h"
@@ -134,7 +135,7 @@ int b58check(const void *bin, size_t binsz, HasherType hasher_type,
   unsigned i = 0;
   if (binsz < 4) return -4;
   hasher_Raw(hasher_type, bin, binsz - 4, buf);
-  if (memcmp(&binc[binsz - 4], buf, 4)) return -1;
+  if (!consteq(&binc[binsz - 4], buf, 4)) return -1;
 
   // Check number of zeros is correct AFTER verifying checksum (to avoid
   // possibility of accessing base58str beyond the end)

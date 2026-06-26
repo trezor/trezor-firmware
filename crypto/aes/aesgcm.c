@@ -30,6 +30,7 @@ Issue Date: 30/03/2011
 */
 
 #include "aesgcm.h"
+#include "consteq.h"
 #include "mode_hdr.h"
 
 /*  This GCM implementation needs a Galois Field multiplier for GF(2^128).
@@ -539,7 +540,7 @@ ret_type gcm_decrypt_message(               /* decrypt an entire message    */
     gcm_auth_header(hdr, hdr_len, ctx);
     gcm_decrypt(msg, msg_len, ctx);
     rr = gcm_compute_tag(local_tag, tag_len, ctx);
-    return (rr != RETURN_GOOD || memcmp(tag, local_tag, tag_len)) ? RETURN_ERROR : RETURN_GOOD;
+    return (rr != RETURN_GOOD || !consteq(tag, local_tag, tag_len)) ? RETURN_ERROR : RETURN_GOOD;
 }
 
 #if defined(__cplusplus)

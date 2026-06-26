@@ -14,12 +14,13 @@
 #define ED25519_FN(fn) fn
 #endif
 
-#include "ed25519-donna.h"
 #include "ed25519.h"
+#include "ed25519-donna.h"
 
+#include "consteq.h"
 #include "ed25519-hash-custom.h"
-#include "rand.h"
 #include "memzero.h"
+#include "rand.h"
 
 /*
 	Generates a (extsk[0..31]) and aExt (extsk[32..63])
@@ -179,7 +180,7 @@ ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed2551
 	ge25519_pack(checkR, &R);
 
 	/* check that R = SB - H(R,A,m)A */
-	return ed25519_verify(RS, checkR, 32) ? 0 : -1;
+	return consteq(RS, checkR, 32) ? 0 : -1;
 }
 
 int

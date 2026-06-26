@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "base32.h"
+#include "consteq.h"
 #include "ed25519-donna/ed25519-keccak.h"
 #include "memzero.h"
 #include "ripemd160.h"
@@ -170,7 +171,7 @@ bool nem_validate_address_raw(const uint8_t *address, uint8_t network) {
   uint8_t hash[SHA3_256_DIGEST_LENGTH] = {0};
 
   keccak_256(address, 1 + RIPEMD160_DIGEST_LENGTH, hash);
-  bool valid = (memcmp(&address[1 + RIPEMD160_DIGEST_LENGTH], hash, 4) == 0);
+  bool valid = consteq(&address[1 + RIPEMD160_DIGEST_LENGTH], hash, 4);
 
   memzero(hash, sizeof(hash));
   return valid;
