@@ -2591,6 +2591,10 @@ pub enum EthereumERC7730FieldFormatterType {
     FORMATTER_TOKEN_AMOUNT = 2,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730FieldFormatterType.FORMATTER_UNIT)
     FORMATTER_UNIT = 3,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730FieldFormatterType.FORMATTER_RAW)
+    FORMATTER_RAW = 4,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730FieldFormatterType.FORMATTER_DATE)
+    FORMATTER_DATE = 5,
 }
 
 impl ::protobuf::Enum for EthereumERC7730FieldFormatterType {
@@ -2606,6 +2610,8 @@ impl ::protobuf::Enum for EthereumERC7730FieldFormatterType {
             1 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_AMOUNT),
             2 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_TOKEN_AMOUNT),
             3 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_UNIT),
+            4 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_RAW),
+            5 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_DATE),
             _ => ::std::option::Option::None
         }
     }
@@ -2616,6 +2622,8 @@ impl ::protobuf::Enum for EthereumERC7730FieldFormatterType {
             "FORMATTER_AMOUNT" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_AMOUNT),
             "FORMATTER_TOKEN_AMOUNT" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_TOKEN_AMOUNT),
             "FORMATTER_UNIT" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_UNIT),
+            "FORMATTER_RAW" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_RAW),
+            "FORMATTER_DATE" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_DATE),
             _ => ::std::option::Option::None
         }
     }
@@ -2625,6 +2633,8 @@ impl ::protobuf::Enum for EthereumERC7730FieldFormatterType {
         EthereumERC7730FieldFormatterType::FORMATTER_AMOUNT,
         EthereumERC7730FieldFormatterType::FORMATTER_TOKEN_AMOUNT,
         EthereumERC7730FieldFormatterType::FORMATTER_UNIT,
+        EthereumERC7730FieldFormatterType::FORMATTER_RAW,
+        EthereumERC7730FieldFormatterType::FORMATTER_DATE,
     ];
 }
 
@@ -2776,12 +2786,13 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12\x0c\n\x08ABI_BOOL\x10\x10\x12\x0f\n\x0bABI_BYTES32\x10\x14\x12\x0f\
     \n\x0bABI_BYTES16\x10\x15\x12\x0e\n\nABI_BYTES8\x10\x16\x12\x0e\n\nABI_B\
     YTES4\x10\x17\x12\r\n\tABI_BYTES\x10\x1e\x12\x0e\n\nABI_STRING\x10\x1f*\
-    \x85\x01\n!EthereumERC7730FieldFormatterType\x12\x1a\n\x16FORMATTER_ADDR\
+    \xac\x01\n!EthereumERC7730FieldFormatterType\x12\x1a\n\x16FORMATTER_ADDR\
     ESS_NAME\x10\0\x12\x14\n\x10FORMATTER_AMOUNT\x10\x01\x12\x1a\n\x16FORMAT\
-    TER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFORMATTER_UNIT\x10\x03*;\n\x1cEthe\
-    reumERC7730ContainerPath\x12\x08\n\x04FROM\x10\x01\x12\t\n\x05VALUE\x10\
-    \x02\x12\x06\n\x02TO\x10\x03B?\n#com.satoshilabs.trezor.lib.protobufB\
-    \x18TrezorMessageDefinitions\
+    TER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFORMATTER_UNIT\x10\x03\x12\x11\n\r\
+    FORMATTER_RAW\x10\x04\x12\x12\n\x0eFORMATTER_DATE\x10\x05*;\n\x1cEthereu\
+    mERC7730ContainerPath\x12\x08\n\x04FROM\x10\x01\x12\t\n\x05VALUE\x10\x02\
+    \x12\x06\n\x02TO\x10\x03B?\n#com.satoshilabs.trezor.lib.protobufB\x18Tre\
+    zorMessageDefinitions\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

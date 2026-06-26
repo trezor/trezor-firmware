@@ -6,12 +6,18 @@ import unittest
 if not utils.BITCOIN_ONLY:
 
     from ethereum_common import *
+    from trezor.enums import EthereumERC7730FieldFormatterType as FT
+    from trezor.messages import EthereumERC7730FieldInfo, EthereumERC7730Path
 
     from apps.ethereum.clear_signing import (
         Array,
         Atomic,
+        DateFormatter,
         DirtyAddress,
+        FieldDefinition,
+        InvalidFormatDefinition,
         OutOfBounds,
+        RawFormatter,
         Tuple,
         ValueOverflow,
         parse_address,
@@ -394,6 +400,81 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         with self.assertRaises(OutOfBounds):
             nested_array_parser.parse(memoryview(payload_fail), 0)
+
+    # --- Field formatters ---
+
+    def test_raw_formatter(self):
+        fmt = RawFormatter()
+
+        # int -> decimal, including a full-width uint256 (no float rounding / sci-notation)
+        big = 2**256 - 1
+        for value, expected in (
+            (0, "0"),
+            (291, "291"),
+            (big, str(big)),
+        ):
+            formatted, token, addr = await_result(fmt.format(value, None, None, None))
+            self.assertEqual(formatted, expected)
+            self.assertIsNone(token)
+            self.assertIsNone(addr)
+
+        # string -> passed through unchanged
+        formatted, _, _ = await_result(fmt.format("Trezor", None, None, None))
+        self.assertEqual(formatted, "Trezor")
+
+        # bytes -> hex-encoded string
+        formatted, _, _ = await_result(
+            fmt.format(b"\x12\x34\x56\x78\x9a", None, None, None)
+        )
+        self.assertEqual(formatted, "123456789a")
+
+        # None -> None
+        formatted, _, _ = await_result(fmt.format(None, None, None, None))
+        self.assertIsNone(formatted)
+
+    def test_date_formatter(self):
+        fmt = DateFormatter()
+
+        # unix timestamp (seconds) -> human-readable date
+        formatted, token, addr = await_result(fmt.format(1616051824, None, None, None))
+        self.assertEqual(formatted, "2021-03-18 07:17:04")
+        self.assertIsNone(token)
+        self.assertIsNone(addr)
+
+        formatted, _, _ = await_result(fmt.format(0, None, None, None))
+        self.assertEqual(formatted, "1970-01-01 00:00:00")
+
+        # None -> None
+        formatted, _, _ = await_result(fmt.format(None, None, None, None))
+        self.assertIsNone(formatted)
+
+        # non-int value is rejected
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(fmt.format("not-a-timestamp", None, None, None))
+
+    def test_from_proto_raw_date_dispatch(self):
+        # End-to-end from a proto enum value to a rendered string. `from_proto`
+        # maps the wire integer (FORMATTER_RAW=4 / FORMATTER_DATE=5) to a
+        # formatter class.
+        raw_info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Field",
+            formatter=FT.FORMATTER_RAW,
+        )
+        raw_fmt = FieldDefinition.from_proto(raw_info).get_formatter()
+        self.assertIsInstance(raw_fmt, RawFormatter)
+        formatted, _, _ = await_result(raw_fmt.format(42, None, None, None))
+        self.assertEqual(formatted, "42")
+
+        date_info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Field",
+            formatter=FT.FORMATTER_DATE,
+        )
+        date_fmt = FieldDefinition.from_proto(date_info).get_formatter()
+        self.assertIsInstance(date_fmt, DateFormatter)
+        formatted, _, _ = await_result(date_fmt.format(1616051824, None, None, None))
+        self.assertEqual(formatted, "2021-03-18 07:17:04")
 
 
 if __name__ == "__main__":
