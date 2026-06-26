@@ -4,7 +4,7 @@ use core::{
     num::TryFromIntError,
 };
 
-use crate::micropython::{ffi, Obj};
+use super::{ffi, qstr::Attribute, Obj};
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
 #[derive(Clone, Copy, Debug)]
@@ -17,7 +17,7 @@ pub enum Error {
     IndexError,
     CaughtException(Obj),
     KeyError(Obj),
-    AttributeError(Obj),
+    AttributeError(Attribute),
     ValueError(&'static CStr),
     ValueErrorParam(&'static CStr, Obj),
     RuntimeError(&'static CStr),
@@ -59,7 +59,7 @@ impl Error {
                     }
                 }
                 Error::AttributeError(attr) => {
-                    ffi::mp_obj_new_exception_args(&ffi::mp_type_AttributeError, 1, &attr)
+                    ffi::mp_obj_new_exception_args(&ffi::mp_type_AttributeError, 1, &attr.to_obj())
                 }
                 Error::EOFError => ffi::mp_obj_new_exception(&ffi::mp_type_EOFError),
                 Error::RuntimeError(msg) => {

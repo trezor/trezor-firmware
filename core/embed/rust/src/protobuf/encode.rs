@@ -1,8 +1,6 @@
 use core::convert::{TryFrom, TryInto};
 
-use crate::micropython::{
-    buffer, error::Error, gc::Gc, iter::IterBuf, list::List, obj::Obj, qstr::Qstr, util,
-};
+use crate::micropython::{buffer, error::Error, gc::Gc, iter::IterBuf, list::List, obj::Obj, util};
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
@@ -49,10 +47,8 @@ impl Encoder {
         obj: &MsgObj,
     ) -> Result<(), Error> {
         for field in msg.fields {
-            let field_name = Qstr::from(field.name);
-
             // Lookup the field by name. If not set or None, skip.
-            let field_value = match obj.map().get(field_name) {
+            let field_value = match obj.map().get(field.name()) {
                 Ok(value) => value,
                 Err(_) => continue,
             };
