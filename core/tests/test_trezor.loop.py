@@ -372,7 +372,13 @@ class TestRace(unittest.TestCase):
         self.assertEqual(len(finish_count), 1)
 
     def test_race_exception_kills_all_children(self):
-        """Throwing an exception into the waiting race closes all children."""
+        """Throwing an exception into the waiting race closes all children.
+
+        This test primes the race with handle() (simulating what the event loop
+        does when it processes the yield-syscall), and advances each child to its
+        first suspension point so that loop.close() can deliver GeneratorExit to
+        the except-clause inside each child.
+        """
         closed_count = [0]
 
         async def never_ending():
@@ -383,7 +389,23 @@ class TestRace(unittest.TestCase):
 
         racer = loop.race(never_ending(), never_ending(), never_ending())
         driver_gen = racer.__iter__()
-        driver_gen.send(None)  # yield to get handle() called
+        driver_gen.send(None)  # advance to the `yield self` syscall point
+
+        # Simulate the event loop calling handle() with the driver as callback.
+        # This populates racer.scheduled with the three child generators.
+        async def _dummy_callback():
+            pass  # pragma: no cover
+
+        racer.handle(_dummy_callback())
+
+        # Advance each scheduled child to its first suspension point inside
+        # loop.sleep so that loop.close() can inject GeneratorExit into the
+        # running body (not just into an unstarted generator).
+        for child in list(racer.scheduled):
+            try:
+                child.send(None)  # child suspends at `yield sleep_syscall`
+            except StopIteration:
+                pass  # pragma: no cover
 
         try:
             driver_gen.throw(RuntimeError, RuntimeError("external cancel"))
@@ -405,6 +427,17 @@ class TestRace(unittest.TestCase):
         gen = racer.__iter__()
         gen.send(None)
 
+        # Prime handle() and advance the child so close() works correctly.
+        async def _dummy():
+            pass  # pragma: no cover
+
+        racer.handle(_dummy())
+        for child in list(racer.scheduled):
+            try:
+                child.send(None)
+            except StopIteration:
+                pass  # pragma: no cover
+
         try:
             gen.throw(ValueError, ValueError("cancel"))
         except ValueError:
@@ -413,7 +446,12 @@ class TestRace(unittest.TestCase):
         self.assertTrue(racer.finished)
 
     def test_race_exception_does_not_fire_callback(self):
-        """After an external cancel, the callback task is NOT stepped."""
+        """After an external cancel, the callback task is NOT stepped.
+
+        Use waiter() as the real callback so the assertion is meaningful:
+        if the exception path incorrectly calls _finish(), waiter() would
+        append to callback_stepped and the test would fail.
+        """
         callback_stepped = []
 
         async def waiter():
@@ -429,15 +467,25 @@ class TestRace(unittest.TestCase):
         gen = racer.__iter__()
         gen.send(None)
 
-        # At this point racer.callback is the dummy task (waiter), but we
-        # won't schedule a callback at all — just verify no crash and that
-        # the race doesn't step a random task.
+        # Register waiter() as the real callback task so that, if _finish()
+        # were mistakenly called on the exception path, it would step waiter()
+        # and make callback_stepped non-empty.
+        racer.handle(waiter())
+
+        # Advance the child to its suspension point.
+        for scheduled_child in list(racer.scheduled):
+            try:
+                scheduled_child.send(None)
+            except StopIteration:
+                pass  # pragma: no cover
+
         try:
             gen.throw(GeneratorExit, GeneratorExit())
         except GeneratorExit:
             pass
 
         self.assertTrue(racer.finished)
+        # Verify the exception path does NOT step the callback.
         self.assertEqual(callback_stepped, [])
 
 
