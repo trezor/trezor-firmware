@@ -399,6 +399,58 @@ class UnitFormatter(FieldFormatter):
             return f"{significand:g}{prefix_symbol}{self.base}", None, None
 
 
+class RawFormatter(FieldFormatter):
+    """Lazy placeholder. Simply adds label to the value and show it essentially as-is.
+    ERC-7730 `raw` format: display the decoded value with no transformation,
+    rendering by its Solidity type per the spec:
+      * int    -> decimal string (natural representation)
+      * string -> the UTF-8 string as-is
+      * bytes  -> hex-encoded string
+    """
+
+    async def format(
+        self,
+        value: AnyValue,
+        _msg: MsgInSignTx,
+        _definitions: Definitions,
+        _path_walker: PathWalker,
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+        if value is None:
+            return None, None, None
+        elif isinstance(value, str):
+            return value, None, None
+        elif isinstance(value, (bytes, bytearray)):
+            from ubinascii import hexlify
+
+            return hexlify(value).decode(), None, None
+        elif isinstance(value, int):
+            # bool is an int subclass; rendered as "True"/"False".
+            return str(value), None, None
+        else:
+            raise InvalidFormatDefinition
+
+
+class DateFormatter(FieldFormatter):
+    """ERC-7730 `date` format with `encoding: timestamp` (the only encoding used
+    by the supported definitions). Renders a unix timestamp (seconds) as a
+    human-readable date."""
+
+    async def format(
+        self,
+        value: AnyValue,
+        _msg: MsgInSignTx,
+        _definitions: Definitions,
+        _path_walker: PathWalker,
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+        from trezor.strings import format_timestamp
+
+        if value is None:
+            return None, None, None
+        if isinstance(value, int):
+            return format_timestamp(value), None, None
+        raise InvalidFormatDefinition
+
+
 # https://eips.ethereum.org/EIPS/eip-7730#context-section
 
 
@@ -646,6 +698,10 @@ class FieldDefinition:
             if info.prefix is not None:
                 formatter_params["prefix"] = info.prefix
             formatter = UnitFormatter(**formatter_params)
+        elif fmt_type == FT.FORMATTER_RAW:
+            formatter = RawFormatter
+        elif fmt_type == FT.FORMATTER_DATE:
+            formatter = DateFormatter
         else:
             raise InvalidFormatDefinition
 
@@ -703,7 +759,18 @@ class DisplayFormat:
 
         offset = 0
         for parameter_definition in self.parameter_definitions:
-            value, consumed = parameter_definition.parse(calldata, offset)
+            try:
+                value, consumed = parameter_definition.parse(calldata, offset)
+            except Exception as e:
+                if __debug__:
+                    from trezor import log
+
+                    log.debug(
+                        __name__,
+                        "clear signing: failed to parse calldata parameters (%s)",
+                        type(e).__name__,
+                    )
+                raise
             parameters.append(value)
             offset += consumed
 
@@ -762,12 +829,23 @@ class DisplayFormat:
             ]
         ] = []
         for field_definition in self.field_definitions:
-            value = get_value_for_path(field_definition.path)
-            formatter = field_definition.get_formatter()
+            try:
+                value = get_value_for_path(field_definition.path)
+                formatter = field_definition.get_formatter()
+                formatted, token, token_address = await formatter.format(
+                    value, msg, defs, get_value_for_path
+                )
+            except Exception as e:
+                if __debug__:
+                    from trezor import log
 
-            formatted, token, token_address = await formatter.format(
-                value, msg, defs, get_value_for_path
-            )
+                    log.debug(
+                        __name__,
+                        'clear signing: failed to display field "%s" (%s)',
+                        field_definition.label,
+                        type(e).__name__,
+                    )
+                raise
 
             fields.append(
                 (
