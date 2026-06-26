@@ -200,6 +200,9 @@ where
 }
 
 pub fn write(bytes: &[u8]) -> Result<(), BleError> {
+    if bytes.len() > TX_PACKET_SIZE {
+        return Err(BleError::WriteFailed);
+    }
     let len = bytes.len() as u16;
     let success = unsafe { ffi::ble_write(bytes.as_ptr(), len) };
     if success {
