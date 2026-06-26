@@ -1042,7 +1042,7 @@ impl Component for DeviceMenuScreen {
             _ => false,
         };
         if refresh {
-            let submenu_idx = match self.active_screen.deref_mut() {
+            let submenu_idx = match self.active_screen.deref() {
                 ActiveScreen::Menu(_, id) => *id,
                 ActiveScreen::Device(_) => DeviceMenuId::PairAndConnect,
                 ActiveScreen::Regulatory(_) | ActiveScreen::About(_) => DeviceMenuId::Device,
