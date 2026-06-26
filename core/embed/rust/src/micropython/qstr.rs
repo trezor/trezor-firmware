@@ -4,9 +4,7 @@
 
 use core::{convert::TryFrom, slice, str::from_utf8};
 
-use crate::error::Error;
-
-use super::{ffi, obj::Obj};
+use super::{error::Error, ffi, obj::Obj};
 
 impl Qstr {
     pub const fn to_obj(self) -> Obj {

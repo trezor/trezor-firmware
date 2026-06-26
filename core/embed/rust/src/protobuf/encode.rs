@@ -1,13 +1,11 @@
 use core::convert::{TryFrom, TryInto};
 
-use crate::{
-    error::Error,
-    micropython::{buffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, qstr::Qstr, util},
+use crate::micropython::{
+    buffer, error::Error, gc::Gc, iter::IterBuf, list::List, obj::Obj, qstr::Qstr, util,
 };
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
-    error,
     obj::MsgObj,
     zigzag,
 };

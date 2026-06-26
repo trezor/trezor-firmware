@@ -4,9 +4,8 @@ use core::{
 };
 
 use crate::{
-    error::Error,
     io::InputStream,
-    micropython::{buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr, util},
+    micropython::{buffer, error::Error, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr, util},
 };
 
 use super::{

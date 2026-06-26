@@ -4,6 +4,7 @@ pub mod macros;
 
 pub mod buffer;
 pub mod dict;
+pub mod error;
 pub mod ffi;
 pub mod func;
 pub mod gc;
@@ -18,6 +19,9 @@ pub mod runtime;
 pub mod simple_type;
 pub mod typ;
 pub mod util;
+
+pub use error::Error;
+pub use obj::Obj;
 
 #[cfg(feature = "debug")]
 pub mod logging;
