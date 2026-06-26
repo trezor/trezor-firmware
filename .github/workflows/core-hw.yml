@@ -57,6 +57,7 @@ jobs:
       - self-hosted
       # FIXME runner4 with t2b1 does not work at the moment
       - ${{ matrix.model == 'T2B1' && 'runner3' || matrix.model == 'T3T1' && 'hw-t3t1' || matrix.model == 'T3B1' && 'hw-t3b1' || matrix.model == 'T3W1' && 'hw-t3w1' || 'hw-t2t1' }}
+    if: needs.param.outputs.core_models != '[]'
     strategy:
       fail-fast: false
       matrix:
@@ -117,7 +118,7 @@ jobs:
       - self-hosted
       # FIXME runner4 with t2b1 does not work at the moment
       - ${{ matrix.model == 'T2B1' && 'runner3' || matrix.model == 'T3T1' && 'hw-t3t1' || matrix.model == 'T3B1' && 'hw-t3b1' || matrix.model == 'T3W1' && 'hw-t3w1' || 'hw-t2t1' }}
-    if: false  # FIXME https://github.com/trezor/trezor-firmware/issues/3128
+    if: needs.param.outputs.core_models != '[]' && false  # FIXME https://github.com/trezor/trezor-firmware/issues/3128
     strategy:
       fail-fast: false
       matrix:
