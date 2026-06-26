@@ -35,7 +35,6 @@ typedef enum {
 typedef enum {
   NFC_DEV_INTERFACE_RF,
   NFC_DEV_INTERFACE_ISODEP,
-  NFC_DEV_INTERFACE_NFCDEP,
   NFC_DEV_INTERFACE_UNKNOWN,
 } nfc_dev_interface_t;
 
@@ -66,8 +65,10 @@ typedef struct {
   uint16_t **data_len;
 } nfc_apdu_response_t;
 
-/** @brief Initialize NFC driver including supportive
-   RFAL middleware and polling mechanism. */
+/** @brief Initialize NFC driver including supportive RFAL middleware and
+ * polling mechanism.
+ * @return TS_OK when the function pass, otherwise an error.
+ */
 ts_t nfc_init(void);
 
 /** @brief Deinitialize NFC driver. */
@@ -79,19 +80,24 @@ void nfc_deinit(void);
  * provides information about the activated device. This function only starts
  * the exploration; you must regularly call nfc_get_event() to continue
  * processing NFC operations.
+ * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_start_discovery(void);
 
-/** @brief Deactivate the NFC RFAL state machine (put in IDLE state). */
+/** @brief Deactivate the NFC RFAL state machine (put in IDLE state).
+ * @return TS_OK when the function pass, otherwise an error.
+ */
 ts_t nfc_stop_discovery(void);
 
 /** @brief Get current events of NFC device.
  * @param event [out] Pointer to store new event.
+ * @return TS_OK when the function pass, otherwise an error.
  */
 bool nfc_get_event(nfc_event_t *event);
 
 /** @brief Read the general device information of the activated NFC device.
  * @param dev_info [out] Pointer to store current NFC device details.
+ * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 
@@ -99,5 +105,6 @@ ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
  * call.
  * @param cmd [in] Tx data buffer structure
  * @param resp [out] Rx data buffer structure
+ * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp);
