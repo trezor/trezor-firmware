@@ -23,7 +23,7 @@ import construct
 
 
 class EnumAdapter(construct.Adapter):
-    def __init__(self, subcon: construct.Adapter, enum: type[Enum]) -> None:
+    def __init__(self, subcon: construct.Construct, enum: type[Enum]) -> None:
         self.enum = enum
         super().__init__(subcon)
 
@@ -40,7 +40,7 @@ class EnumAdapter(construct.Adapter):
 
 
 class TupleAdapter(construct.Adapter):
-    def __init__(self, *subcons: construct.Adapter) -> None:
+    def __init__(self, *subcons: construct.Construct) -> None:
         super().__init__(construct.Sequence(*subcons))
 
     def _encode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
