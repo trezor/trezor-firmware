@@ -157,3 +157,19 @@ jobs:
             _artifacts/
           retention-days: 7
         if: always()
+
+  python_options_rst_check:
+    name: Python OPTIONS.rst check
+    runs-on: ubuntu-latest
+    env:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
+      - run: nix-shell --run "unset LD_LIBRARY_PATH && cd python && uv run python helper-scripts/make-options-rst.py"
+      - name: Fail if OPTIONS.rst is out of date
+        run: git diff --exit-code python/docs/OPTIONS.rst
