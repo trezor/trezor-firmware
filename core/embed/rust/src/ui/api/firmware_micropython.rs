@@ -913,6 +913,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let init_submenu_idx: Option<u8> = kwargs
             .get(Qstr::MP_QSTR_init_submenu_idx)?
             .try_into_option()?;
+        let init_submenu_offset: i16 = kwargs.get(Qstr::MP_QSTR_init_submenu_offset)?.try_into()?;
         let backup_failed: bool = kwargs.get(Qstr::MP_QSTR_backup_failed)?.try_into()?;
         let backup_needed: bool = kwargs.get(Qstr::MP_QSTR_backup_needed)?.try_into()?;
         let ble_enabled: bool = kwargs.get(Qstr::MP_QSTR_ble_enabled)?.try_into()?;
@@ -963,6 +964,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             .try_into_option()?;
         let layout = ModelUI::show_device_menu(
             init_submenu_idx,
+            init_submenu_offset,
             backup_failed,
             backup_needed,
             ble_enabled,
@@ -1971,6 +1973,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_device_menu(
     ///     *,
     ///     init_submenu_idx: int | None,
+    ///     init_submenu_offset: int,
     ///     backup_failed: bool,
     ///     backup_needed: bool,
     ///     ble_enabled: bool,
@@ -1987,8 +1990,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     led_enabled: bool | None,
     ///     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
     ///     production_year: str | None,
-    /// ) -> LayoutContext[tuple[str, int | None, int]]:
-    ///     """Show the device menu. Result is a tuple (action, action_arg, parent_menu_id)."""
+    /// ) -> LayoutContext[tuple[str, int | None, int, int]]:
+    ///     """Show the device menu. Result is a tuple (action, action_arg, next_menu_id, next_menu_offset)."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
 
     /// def show_pairing_device_name(

@@ -42,7 +42,7 @@ use heapless::Vec;
 use num_traits::{FromPrimitive, ToPrimitive};
 
 #[repr(u8)]
-#[derive(Copy, Clone, Default, FromPrimitive, ToPrimitive)]
+#[derive(Copy, Clone, Default, FromPrimitive, ToPrimitive, PartialEq, Eq)]
 #[cfg_attr(test, derive(Debug))]
 pub enum DeviceMenuId {
     #[default]
@@ -289,6 +289,7 @@ impl DeviceMenuScreen {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         init_submenu_idx: Option<u8>,
+        init_submenu_offset: i16,
         backup_failed: bool,
         backup_needed: bool,
         ble_enabled: bool,
@@ -401,7 +402,7 @@ impl DeviceMenuScreen {
             .unwrap_or_default();
 
         let init_subscreen = unwrap!(screen.try_resolve_submenu(init_submenu_id));
-        screen.set_active_subscreen(init_subscreen);
+        screen.set_active_subscreen(init_subscreen, init_submenu_offset);
 
         Ok(screen)
     }
@@ -779,14 +780,15 @@ impl DeviceMenuScreen {
         self.subscreens.len() as u8 - 1
     }
 
-    fn set_active_subscreen(&mut self, idx: u8) {
+    fn set_active_subscreen(&mut self, idx: u8, offset: i16) {
         assert!(usize::from(idx) < self.subscreens.len());
         self.active_subscreen = idx;
-        self.build_active_subscreen();
+        self.build_active_subscreen(offset);
     }
 
     fn activate_subscreen(&mut self, idx: u8, ctx: &mut EventCtx) {
-        self.set_active_subscreen(idx);
+        // A new subscreen is shown - previous offset is not reused.
+        self.set_active_subscreen(idx, 0);
         self.place(self.bounds);
         if let ActiveScreen::Menu(screen, ..) = self.active_screen.deref_mut() {
             screen.initialize_screen(ctx);
@@ -795,7 +797,15 @@ impl DeviceMenuScreen {
         }
     }
 
-    fn build_active_subscreen(&mut self) {
+    /// Used to avoid flickering on menu refresh.
+    pub fn current_state(&self) -> Option<(DeviceMenuId, i16)> {
+        match self.active_screen.deref() {
+            ActiveScreen::Menu(menu, id) => Some((*id, menu.get_offset())),
+            _ => None,
+        }
+    }
+
+    fn build_active_subscreen(&mut self, offset: i16) {
         match self.subscreens[usize::from(self.active_subscreen)] {
             Subscreen::Submenu(submenu_index, id) => {
                 let submenu = &self.submenus[usize::from(submenu_index)];
@@ -830,7 +840,8 @@ impl DeviceMenuScreen {
                 *self.active_screen.deref_mut() = ActiveScreen::Menu(
                     VerticalMenuScreen::new(menu)
                         .with_header(header)
-                        .with_subtitle(submenu.subtitle.unwrap_or(TString::empty())),
+                        .with_subtitle(submenu.subtitle.unwrap_or(TString::empty()))
+                        .with_initial_offset(offset),
                     id,
                 );
             }
