@@ -73,12 +73,14 @@ enum Action {
 }
 
 impl DeviceMenuScreen {
-    pub fn parent(msg: DeviceMenuMsg) -> DeviceMenuId {
+    /// Which submenu should be reloaded after msg is handled.
+    pub fn next_menu_id(&self, msg: DeviceMenuMsg) -> DeviceMenuId {
         match msg {
+            DeviceMenuMsg::Close => DeviceMenuId::Root,
             DeviceMenuMsg::ReviewFailedBackup => DeviceMenuId::Root,
             DeviceMenuMsg::PairDevice => DeviceMenuId::PairAndConnect,
             DeviceMenuMsg::DisconnectDevice => DeviceMenuId::PairAndConnect,
-            DeviceMenuMsg::UnpairDevice => DeviceMenuId::PairAndConnect,
+            DeviceMenuMsg::UnpairDevice(_) => DeviceMenuId::PairAndConnect,
             DeviceMenuMsg::UnpairAllDevices => DeviceMenuId::PairAndConnect,
             DeviceMenuMsg::TurnOff => DeviceMenuId::Power,
             DeviceMenuMsg::Reboot => DeviceMenuId::Power,
@@ -97,8 +99,13 @@ impl DeviceMenuScreen {
             DeviceMenuMsg::ToggleHaptics => DeviceMenuId::Device,
             DeviceMenuMsg::ToggleLed => DeviceMenuId::Device,
             DeviceMenuMsg::WipeDevice => DeviceMenuId::Device,
-            DeviceMenuMsg::RefreshMenu => DeviceMenuId::Root,
-            DeviceMenuMsg::Close => DeviceMenuId::Root,
+            DeviceMenuMsg::RefreshMenu => match self.active_screen.deref() {
+                ActiveScreen::Menu(_, id) => *id,
+                ActiveScreen::Device(_) => DeviceMenuId::PairAndConnect,
+                ActiveScreen::Regulatory(_) | ActiveScreen::About(_) => DeviceMenuId::Device,
+                ActiveScreen::Empty | ActiveScreen::BackupInfo(_) => DeviceMenuId::Root,
+                ActiveScreen::HostInfo(_) => DeviceMenuId::PairAndConnect,
+            },
         }
     }
 }
@@ -274,9 +281,6 @@ pub struct DeviceMenuScreen {
     // index of the current subscreen in the list of subscreens
     active_subscreen: u8,
 
-    // Integer argument for DeviceMenuMsg::RefreshMenu and DeviceMenuMsg::UnpairDevice
-    pub result_arg: Option<u8>,
-
     // Production year string for Regulatory screen
     production_year: Option<TString<'static>>,
 }
@@ -310,7 +314,6 @@ impl DeviceMenuScreen {
             submenus: GcBox::new(Vec::new())?,
             subscreens: Vec::new(),
             submenu_index: [None; MAX_SUBMENUS],
-            result_arg: None,
             production_year,
         };
 
@@ -545,18 +548,13 @@ impl DeviceMenuScreen {
 
     fn register_auto_lock_menu(&mut self, auto_lock_delay: [TString<'static>; 2]) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
-        let battery_delay = MenuItem::new(
-            auto_lock_delay[0],
-            Some(Action::Return(DeviceMenuMsg::SetAutoLockBattery)),
-        )
-        .with_subtext(Some((TR::auto_lock__on_battery.into(), None)));
+        let battery_delay =
+            MenuItem::return_msg(auto_lock_delay[0], DeviceMenuMsg::SetAutoLockBattery)
+                .with_subtext(Some((TR::auto_lock__on_battery.into(), None)));
         items.add(battery_delay);
 
-        let usb_delay = MenuItem::new(
-            auto_lock_delay[1],
-            Some(Action::Return(DeviceMenuMsg::SetAutoLockUSB)),
-        )
-        .with_subtext(Some((TR::auto_lock__on_usb.into(), None)));
+        let usb_delay = MenuItem::return_msg(auto_lock_delay[1], DeviceMenuMsg::SetAutoLockUSB)
+            .with_subtext(Some((TR::auto_lock__on_usb.into(), None)));
         items.add(usb_delay);
 
         self.register_submenu(DeviceMenuId::AutoLock, Submenu::new(items));
@@ -1031,28 +1029,19 @@ impl Component for DeviceMenuScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let refresh = match event {
-            Event::USB(USBEvent::Configured | USBEvent::Deconfigured) => true,
+        // Refresh this layout after reloading connection status
+        match event {
+            Event::USB(USBEvent::Configured | USBEvent::Deconfigured) => {
+                return Some(DeviceMenuMsg::RefreshMenu)
+            }
 
             #[cfg(feature = "ble")]
             Event::BLE(
                 BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged,
-            ) => true,
+            ) => return Some(DeviceMenuMsg::RefreshMenu),
 
-            _ => false,
+            _ => (),
         };
-        if refresh {
-            let submenu_idx = match self.active_screen.deref() {
-                ActiveScreen::Menu(_, id) => *id,
-                ActiveScreen::Device(_) => DeviceMenuId::PairAndConnect,
-                ActiveScreen::Regulatory(_) | ActiveScreen::About(_) => DeviceMenuId::Device,
-                ActiveScreen::Empty | ActiveScreen::BackupInfo(_) => DeviceMenuId::Root,
-                ActiveScreen::HostInfo(_) => DeviceMenuId::PairAndConnect,
-            };
-
-            self.result_arg = submenu_idx.to_u8();
-            return Some(DeviceMenuMsg::RefreshMenu);
-        }
 
         // Handle the event for the active menu
         let subscreen = &self.subscreens[usize::from(self.active_subscreen)];
@@ -1083,8 +1072,9 @@ impl Component for DeviceMenuScreen {
                                 return None;
                             }
                             (1, false) | (2, true) => {
-                                self.result_arg = Some(device_screen.device_index);
-                                return Some(DeviceMenuMsg::UnpairDevice);
+                                return Some(DeviceMenuMsg::UnpairDevice(
+                                    device_screen.device_index,
+                                ));
                             }
                             _ => {}
                         }
