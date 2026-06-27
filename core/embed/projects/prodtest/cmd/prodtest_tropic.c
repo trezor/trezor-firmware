@@ -2841,49 +2841,57 @@ static void prodtest_tropic_erase_all_slots(cli_t* cli) {
 }
 
 static void prodtest_tropic_set_sensors(cli_t* cli) {
-  if (cli_arg_count(cli) != 1) {
+  if (cli_arg_count(cli) > 1) {
     cli_error_arg_count(cli);
     return;
   }
 
-  uint8_t input[4] = {0};
-  size_t input_length = 0;
-  if (!cli_arg_hex(cli, "hex-data", input, sizeof(input), &input_length)) {
-    if (input_length == sizeof(input)) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_INPUT_LONG, "Input too long.");
-    } else {
-      cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_HEX_DECODE,
-                "Hexadecimal decoding error.");
+  // Default to 0x00000000, which enables all sensors.
+  uint32_t new_sensors_config = 0;
+  if (cli_arg_count(cli) == 1) {
+    uint8_t input[4] = {0};
+    size_t input_length = 0;
+    if (!cli_arg_hex(cli, "hex-data", input, sizeof(input), &input_length)) {
+      if (input_length == sizeof(input)) {
+        cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_INPUT_LONG,
+                  "Input too long.");
+      } else {
+        cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_HEX_DECODE,
+                  "Hexadecimal decoding error.");
+      }
+      return;
     }
-    return;
+
+    if (input_length != sizeof(input)) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_INPUT_LEN,
+                "Expected 4 bytes (8 hex digits) for uint32.");
+      return;
+    }
+
+    new_sensors_config = ((uint32_t)input[0] << 24) |
+                         ((uint32_t)input[1] << 16) |
+                         ((uint32_t)input[2] << 8) | ((uint32_t)input[3]);
   }
 
-  if (input_length != sizeof(input)) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_INPUT_LEN,
-              "Expected 4 bytes (8 hex digits) for uint32.");
-    return;
-  }
-
-  uint32_t new_sensors_config =
-      ((uint32_t)input[0] << 24) | ((uint32_t)input[1] << 16) |
-      ((uint32_t)input[2] << 8) | ((uint32_t)input[3]);
-
-  if (!privileged_session_start(cli)) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_SESSION,
-              "`privileged_session_start()` failed.");
+  lt_pkey_index_t pairing_key_index = 0;
+  if (!tropic_ensure_session(cli, &pairing_key_index)) {
     return;
   }
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
-  lt_ret_t ret = tropic_erase_all_slots_internal(cli, tropic_handle);
-  if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_ERASE, "Erase operation failed");
-    return;
+  // No need to wipe under a factory session. Tropic is unprovisioned.
+  if (pairing_key_index != TROPIC_FACTORY_PAIRING_KEY_SLOT) {
+    lt_ret_t ret = tropic_erase_all_slots_internal(cli, tropic_handle);
+    if (ret != LT_OK) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_ERASE,
+                "Erase operation failed");
+      return;
+    }
   }
 
   struct lt_config_t configuration = {0};
-  ret = lt_read_whole_R_config_retry(tropic_handle, &configuration);
+  lt_ret_t ret = lt_read_whole_R_config_retry(tropic_handle, &configuration);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_READ_CONFIG,
               "`lt_read_whole_R_config()` failed with error %s",
@@ -2916,6 +2924,20 @@ static void prodtest_tropic_set_sensors(cli_t* cli) {
              sizeof(verify_configuration)) != 0) {
     cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_WRITE_VERIFY,
               "Configuration was not written correctly.");
+    return;
+  }
+
+  // The sensor configuration only takes effect after a reboot.
+  ret = lt_reboot(tropic_handle, TR01_REBOOT);
+  if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_REBOOT,
+              "`lt_reboot()` failed with error %s", lt_ret_verbose(ret));
+    return;
+  }
+  tropic_deinit();
+  if (!tropic_init() || !tropic_wait_for_ready(cli)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_REBOOT,
+              "Re-initialization after reboot failed.");
     return;
   }
 
@@ -3193,8 +3215,8 @@ PRODTEST_CLI_CMD(
 PRODTEST_CLI_CMD(
   .name = "tropic-set-sensors",
   .func = prodtest_tropic_set_sensors,
-  .info = "Set the reversible configuration of the sensors in Tropic",
-  .args = "<hex-data>"
+  .info = "Set the reversible sensor configuration and reboot Tropic to apply it. Enables all sensors by default.",
+  .args = "[<hex-data>]"
 );
 
 PRODTEST_CLI_CMD(
