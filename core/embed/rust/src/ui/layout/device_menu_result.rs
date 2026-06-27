@@ -5,19 +5,16 @@ use crate::{
     },
 };
 
-use num_traits::ToPrimitive;
-
-#[repr(u8)]
-#[derive(Copy, Clone, ToPrimitive)]
+#[derive(Copy, Clone)]
 pub enum DeviceMenuMsg {
-    Close = 0,
+    Close,
     // Root menu
     ReviewFailedBackup,
 
     // "Pair & Connect"
     PairDevice,       // pair a new device
     DisconnectDevice, // disconnect a device
-    UnpairDevice,     // unpair a device, its index is in result_arg
+    UnpairDevice(u8), // unpair a device
     UnpairAllDevices,
 
     // Power
@@ -46,14 +43,45 @@ pub enum DeviceMenuMsg {
     WipeDevice,
 
     // Misc
-    RefreshMenu, // menu id is in result_arg
+    RefreshMenu,
 }
 
 impl DeviceMenuMsg {
-    pub fn as_obj(&self) -> Obj {
-        assert!(!matches!(self, DeviceMenuMsg::Close));
-        let n = unwrap!(self.to_u8());
-        n.into()
+    pub fn id_to_obj(&self) -> Obj {
+        match self {
+            Self::Close => Qstr::MP_QSTR_Close,
+            Self::ReviewFailedBackup => Qstr::MP_QSTR_ReviewFailedBackup,
+            Self::PairDevice => Qstr::MP_QSTR_PairDevice,
+            Self::DisconnectDevice => Qstr::MP_QSTR_DisconnectDevice,
+            Self::UnpairDevice(_) => Qstr::MP_QSTR_UnpairDevice,
+            Self::UnpairAllDevices => Qstr::MP_QSTR_UnpairAllDevices,
+            Self::TurnOff => Qstr::MP_QSTR_TurnOff,
+            Self::Reboot => Qstr::MP_QSTR_Reboot,
+            Self::RebootToBootloader => Qstr::MP_QSTR_RebootToBootloader,
+            Self::ToggleBluetooth => Qstr::MP_QSTR_ToggleBluetooth,
+            Self::SetOrChangePin => Qstr::MP_QSTR_SetOrChangePin,
+            Self::RemovePin => Qstr::MP_QSTR_RemovePin,
+            Self::SetAutoLockBattery => Qstr::MP_QSTR_SetAutoLockBattery,
+            Self::SetAutoLockUSB => Qstr::MP_QSTR_SetAutoLockUSB,
+            Self::SetOrChangeWipeCode => Qstr::MP_QSTR_SetOrChangeWipeCode,
+            Self::RemoveWipeCode => Qstr::MP_QSTR_RemoveWipeCode,
+            Self::CheckBackup => Qstr::MP_QSTR_CheckBackup,
+            Self::SetDeviceName => Qstr::MP_QSTR_SetDeviceName,
+            Self::SetBrightness => Qstr::MP_QSTR_SetBrightness,
+            Self::ToggleTapToWake => Qstr::MP_QSTR_ToggleTapToWake,
+            Self::ToggleHaptics => Qstr::MP_QSTR_ToggleHaptics,
+            Self::ToggleLed => Qstr::MP_QSTR_ToggleLed,
+            Self::WipeDevice => Qstr::MP_QSTR_WipeDevice,
+            Self::RefreshMenu => Qstr::MP_QSTR_RefreshMenu,
+        }
+        .to_obj()
+    }
+
+    pub fn args_to_obj(&self) -> Obj {
+        match self {
+            Self::UnpairDevice(id) => (*id).into(),
+            _ => Obj::const_none(),
+        }
     }
 }
 
@@ -71,33 +99,34 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             return Err(Error::TypeError);
         }
         let attr = Qstr::from_u16(attr as _);
-        let value = match attr {
-            Qstr::MP_QSTR_ReviewFailedBackup => DeviceMenuMsg::ReviewFailedBackup.as_obj(),
-            Qstr::MP_QSTR_PairDevice => DeviceMenuMsg::PairDevice.as_obj(),
-            Qstr::MP_QSTR_DisconnectDevice => DeviceMenuMsg::DisconnectDevice.as_obj(),
-            Qstr::MP_QSTR_UnpairDevice => DeviceMenuMsg::UnpairDevice.as_obj(),
-            Qstr::MP_QSTR_UnpairAllDevices => DeviceMenuMsg::UnpairAllDevices.as_obj(),
-            Qstr::MP_QSTR_ToggleBluetooth => DeviceMenuMsg::ToggleBluetooth.as_obj(),
-            Qstr::MP_QSTR_SetOrChangePin => DeviceMenuMsg::SetOrChangePin.as_obj(),
-            Qstr::MP_QSTR_RemovePin => DeviceMenuMsg::RemovePin.as_obj(),
-            Qstr::MP_QSTR_SetAutoLockBattery => DeviceMenuMsg::SetAutoLockBattery.as_obj(),
-            Qstr::MP_QSTR_SetAutoLockUSB => DeviceMenuMsg::SetAutoLockUSB.as_obj(),
-            Qstr::MP_QSTR_SetOrChangeWipeCode => DeviceMenuMsg::SetOrChangeWipeCode.as_obj(),
-            Qstr::MP_QSTR_RemoveWipeCode => DeviceMenuMsg::RemoveWipeCode.as_obj(),
-            Qstr::MP_QSTR_CheckBackup => DeviceMenuMsg::CheckBackup.as_obj(),
-            Qstr::MP_QSTR_SetDeviceName => DeviceMenuMsg::SetDeviceName.as_obj(),
-            Qstr::MP_QSTR_SetBrightness => DeviceMenuMsg::SetBrightness.as_obj(),
-            Qstr::MP_QSTR_ToggleTapToWake => DeviceMenuMsg::ToggleTapToWake.as_obj(),
-            Qstr::MP_QSTR_ToggleHaptics => DeviceMenuMsg::ToggleHaptics.as_obj(),
-            Qstr::MP_QSTR_ToggleLed => DeviceMenuMsg::ToggleLed.as_obj(),
-            Qstr::MP_QSTR_WipeDevice => DeviceMenuMsg::WipeDevice.as_obj(),
-            Qstr::MP_QSTR_TurnOff => DeviceMenuMsg::TurnOff.as_obj(),
-            Qstr::MP_QSTR_Reboot => DeviceMenuMsg::Reboot.as_obj(),
-            Qstr::MP_QSTR_RebootToBootloader => DeviceMenuMsg::RebootToBootloader.as_obj(),
-            Qstr::MP_QSTR_RefreshMenu => DeviceMenuMsg::RefreshMenu.as_obj(),
+        let msg = match attr {
+            Qstr::MP_QSTR_Close => Qstr::MP_QSTR_Close,
+            Qstr::MP_QSTR_ReviewFailedBackup => Qstr::MP_QSTR_ReviewFailedBackup,
+            Qstr::MP_QSTR_PairDevice => Qstr::MP_QSTR_PairDevice,
+            Qstr::MP_QSTR_DisconnectDevice => Qstr::MP_QSTR_DisconnectDevice,
+            Qstr::MP_QSTR_UnpairDevice => Qstr::MP_QSTR_UnpairDevice,
+            Qstr::MP_QSTR_UnpairAllDevices => Qstr::MP_QSTR_UnpairAllDevices,
+            Qstr::MP_QSTR_ToggleBluetooth => Qstr::MP_QSTR_ToggleBluetooth,
+            Qstr::MP_QSTR_SetOrChangePin => Qstr::MP_QSTR_SetOrChangePin,
+            Qstr::MP_QSTR_RemovePin => Qstr::MP_QSTR_RemovePin,
+            Qstr::MP_QSTR_SetAutoLockBattery => Qstr::MP_QSTR_SetAutoLockBattery,
+            Qstr::MP_QSTR_SetAutoLockUSB => Qstr::MP_QSTR_SetAutoLockUSB,
+            Qstr::MP_QSTR_SetOrChangeWipeCode => Qstr::MP_QSTR_SetOrChangeWipeCode,
+            Qstr::MP_QSTR_RemoveWipeCode => Qstr::MP_QSTR_RemoveWipeCode,
+            Qstr::MP_QSTR_CheckBackup => Qstr::MP_QSTR_CheckBackup,
+            Qstr::MP_QSTR_SetDeviceName => Qstr::MP_QSTR_SetDeviceName,
+            Qstr::MP_QSTR_SetBrightness => Qstr::MP_QSTR_SetBrightness,
+            Qstr::MP_QSTR_ToggleTapToWake => Qstr::MP_QSTR_ToggleTapToWake,
+            Qstr::MP_QSTR_ToggleHaptics => Qstr::MP_QSTR_ToggleHaptics,
+            Qstr::MP_QSTR_ToggleLed => Qstr::MP_QSTR_ToggleLed,
+            Qstr::MP_QSTR_WipeDevice => Qstr::MP_QSTR_WipeDevice,
+            Qstr::MP_QSTR_TurnOff => Qstr::MP_QSTR_TurnOff,
+            Qstr::MP_QSTR_Reboot => Qstr::MP_QSTR_Reboot,
+            Qstr::MP_QSTR_RebootToBootloader => Qstr::MP_QSTR_RebootToBootloader,
+            Qstr::MP_QSTR_RefreshMenu => Qstr::MP_QSTR_RefreshMenu,
             _ => return Err(Error::AttributeError(attr)),
         };
-        unsafe { dest.write(value) };
+        unsafe { dest.write(msg.to_obj()) };
         Ok(())
     };
     unsafe { util::try_or_raise(block) }

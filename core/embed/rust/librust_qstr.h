@@ -25,6 +25,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
   MP_QSTR_CheckBackup;
+  MP_QSTR_Close;
   MP_QSTR_DIM;
   MP_QSTR_DONE;
   MP_QSTR_DeviceMenuResult;
