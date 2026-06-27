@@ -1358,7 +1358,9 @@ OK <hexadecimal string>
 
 ### tropic-set-sensors
 
-Erases all ECC key slots, data slots and MAC & Destroy slots and then sets the reversible configuration of Tropic sensors to the input value.
+Erases all ECC key slots, data slots and MAC & Destroy slots if Tropic is paired. Sets the reversible configuration of Tropic sensors to the input value and reboots the chip so the new configuration takes effect.
+
+The optional argument defaults to `00000000`, which enables all sensors.
 
 Example:
 ```
