@@ -392,6 +392,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_info_button;
   MP_QSTR_init;
   MP_QSTR_init_submenu_idx;
+  MP_QSTR_init_submenu_offset;
   MP_QSTR_inputs__back;
   MP_QSTR_inputs__cancel;
   MP_QSTR_inputs__delete;

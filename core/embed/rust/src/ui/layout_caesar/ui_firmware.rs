@@ -1098,6 +1098,7 @@ impl FirmwareUI for UICaesar {
 
     fn show_device_menu(
         _init_submenu_idx: Option<u8>,
+        _init_submenu_offset: i16,
         _backup_failed: bool,
         _backup_needed: bool,
         _ble_enabled: bool,

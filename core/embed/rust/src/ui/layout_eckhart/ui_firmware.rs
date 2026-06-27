@@ -1086,6 +1086,7 @@ impl FirmwareUI for UIEckhart {
 
     fn show_device_menu(
         init_submenu_idx: Option<u8>,
+        init_submenu_offset: i16,
         backup_failed: bool,
         backup_needed: bool,
         ble_enabled: bool,
@@ -1108,6 +1109,7 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             init_submenu_idx,
+            init_submenu_offset,
             backup_failed,
             backup_needed,
             ble_enabled,

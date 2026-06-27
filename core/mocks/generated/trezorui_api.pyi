@@ -631,6 +631,7 @@ def show_homescreen(
 def show_device_menu(
     *,
     init_submenu_idx: int | None,
+    init_submenu_offset: int,
     backup_failed: bool,
     backup_needed: bool,
     ble_enabled: bool,
@@ -647,8 +648,8 @@ def show_device_menu(
     led_enabled: bool | None,
     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
     production_year: str | None,
-) -> LayoutContext[tuple[str, int | None, int]]:
-    """Show the device menu. Result is a tuple (action, action_arg, parent_menu_id)."""
+) -> LayoutContext[tuple[str, int | None, int, int]]:
+    """Show the device menu. Result is a tuple (action, action_arg, next_menu_id, next_menu_offset)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
