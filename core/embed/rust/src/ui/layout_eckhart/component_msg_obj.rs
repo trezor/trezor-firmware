@@ -15,8 +15,8 @@ use crate::{
 };
 
 use super::firmware::{
-    AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
-    Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
+    AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuScreen, Homescreen,
+    HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
     PinKeyboardMsg, ProgressScreen, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
     SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
     TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
@@ -157,16 +157,9 @@ impl ComponentMsgObj for SetBrightnessScreen {
 
 impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        if matches!(msg, DeviceMenuMsg::Close) {
-            return Ok(CANCELLED.as_obj());
-        }
-        let action_obj = msg.to_u8().into();
-        let result: Option<u8> = match msg {
-            DeviceMenuMsg::UnpairDevice | DeviceMenuMsg::RefreshMenu => self.result_arg,
-            _ => None,
-        };
-        let result_obj = result.into();
-        let parent_idx_obj = DeviceMenuScreen::parent(msg).to_u8().into();
-        new_tuple(&[action_obj, result_obj, parent_idx_obj])
+        let action_obj = msg.id_to_obj();
+        let result_obj = msg.args_to_obj();
+        let next_menu_obj = self.next_menu_id(msg).to_u8().into();
+        new_tuple(&[action_obj, result_obj, next_menu_obj])
     }
 }

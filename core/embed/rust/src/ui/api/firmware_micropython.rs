@@ -1987,8 +1987,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     led_enabled: bool | None,
     ///     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
     ///     production_year: str | None,
-    /// ) -> LayoutContext[UiResult | tuple[int, int | None, int]]:
-    ///     """Show the device menu. Result is either CANCELLED or a tuple (action, action_arg, parent_menu_id)."""
+    /// ) -> LayoutContext[tuple[str, int | None, int]]:
+    ///     """Show the device menu. Result is a tuple (action, action_arg, parent_menu_id)."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
 
     /// def show_pairing_device_name(
@@ -2212,28 +2212,29 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// class DeviceMenuResult:
     ///     """Result of a device menu operation."""
-    ///     ReviewFailedBackup: ClassVar[int]
-    ///     DisconnectDevice: ClassVar[int]
-    ///     PairDevice: ClassVar[int]
-    ///     UnpairDevice: ClassVar[int]
-    ///     UnpairAllDevices: ClassVar[int]
-    ///     ToggleBluetooth: ClassVar[int]
-    ///     SetOrChangePin: ClassVar[int]
-    ///     RemovePin: ClassVar[int]
-    ///     SetAutoLockBattery: ClassVar[int]
-    ///     SetAutoLockUSB: ClassVar[int]
-    ///     SetOrChangeWipeCode: ClassVar[int]
-    ///     RemoveWipeCode: ClassVar[int]
-    ///     CheckBackup: ClassVar[int]
-    ///     SetDeviceName: ClassVar[int]
-    ///     SetBrightness: ClassVar[int]
-    ///     ToggleTapToWake: ClassVar[int]
-    ///     ToggleHaptics: ClassVar[int]
-    ///     ToggleLed: ClassVar[int]
-    ///     WipeDevice: ClassVar[int]
-    ///     Reboot: ClassVar[int]
-    ///     RebootToBootloader: ClassVar[int]
-    ///     TurnOff: ClassVar[int]
-    ///     RefreshMenu: ClassVar[int]
+    ///     Close: ClassVar[str]
+    ///     ReviewFailedBackup: ClassVar[str]
+    ///     DisconnectDevice: ClassVar[str]
+    ///     PairDevice: ClassVar[str]
+    ///     UnpairDevice: ClassVar[str]
+    ///     UnpairAllDevices: ClassVar[str]
+    ///     ToggleBluetooth: ClassVar[str]
+    ///     SetOrChangePin: ClassVar[str]
+    ///     RemovePin: ClassVar[str]
+    ///     SetAutoLockBattery: ClassVar[str]
+    ///     SetAutoLockUSB: ClassVar[str]
+    ///     SetOrChangeWipeCode: ClassVar[str]
+    ///     RemoveWipeCode: ClassVar[str]
+    ///     CheckBackup: ClassVar[str]
+    ///     SetDeviceName: ClassVar[str]
+    ///     SetBrightness: ClassVar[str]
+    ///     ToggleTapToWake: ClassVar[str]
+    ///     ToggleHaptics: ClassVar[str]
+    ///     ToggleLed: ClassVar[str]
+    ///     WipeDevice: ClassVar[str]
+    ///     Reboot: ClassVar[str]
+    ///     RebootToBootloader: ClassVar[str]
+    ///     TurnOff: ClassVar[str]
+    ///     RefreshMenu: ClassVar[str]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };
