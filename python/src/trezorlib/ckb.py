@@ -147,6 +147,8 @@ def sign_tx(
     network: str = "Mainnet",
     chunkify: bool = False,
     prev_txs: dict[bytes | str, CkbPrevTx] | None = None,
+    header_deps: list[bytes] | None = None,
+    headers: list["messages.CKBBlockHeader"] | None = None,
 ) -> "messages.CKBTxRequest":
     """
     Sign a CKB transaction using streaming protocol.
@@ -168,6 +170,12 @@ def sign_tx(
         prev_txs: Map of input ``previous_output_tx_hash`` to the previous
             transaction, used by the device to verify input capacities. Required
             for every distinct tx hash referenced by ``inputs``.
+        header_deps: 32-byte block-header hashes committed in the tx hash. Empty
+            for plain transfers; Nervos DAO withdrawals reference the deposit and
+            withdraw block headers here.
+        headers: Full block headers, one per ``header_deps`` entry (same order),
+            served to the device on demand so it can verify Nervos DAO
+            compensation. Required when any input is a DAO withdrawing cell.
 
     Returns:
         CKBTxRequest with signature and tx_hash when TXFINISHED
@@ -202,6 +210,7 @@ def sign_tx(
             witnesses_count=len(witnesses),
             sign_group_input_indices=sign_group_input_indices,
             chunkify=chunkify,
+            header_deps=header_deps or [],
         ),
         expect=messages.CKBTxRequest,
     )
@@ -264,6 +273,13 @@ def sign_tx(
                 messages.CKBTxAckCellDep(cell_dep=prev.cell_deps[idx]),
                 expect=messages.CKBTxRequest,
             )
+        elif res.request_type == CKBTxRequestType.TXHEADER:
+            if headers is None or idx >= len(headers):
+                raise ValueError(f"Missing block header for header_deps[{idx}]")
+            res = session.call(
+                messages.CKBTxAckHeader(header=headers[idx]),
+                expect=messages.CKBTxRequest,
+            )
         else:
             raise ValueError(f"Unknown request type: {res.request_type}")
 
@@ -274,8 +290,16 @@ def create_cell_input(
     tx_hash: bytes | str,
     index: int,
     since: int = 0,
+    dao_deposit_header_index: int | None = None,
+    dao_withdraw_header_index: int | None = None,
 ) -> "messages.CKBCellInput":
-    """Create a CKBCellInput message."""
+    """Create a CKBCellInput message.
+
+    For a Nervos DAO phase-2 withdrawal input, set ``dao_deposit_header_index``
+    and ``dao_withdraw_header_index`` to the positions in the transaction's
+    ``header_deps`` of the deposit block header and the withdrawing cell's
+    including block header; the device then credits the DAO compensation.
+    """
     if isinstance(tx_hash, str):
         tx_hash = bytes.fromhex(tx_hash.removeprefix("0x"))
 
@@ -283,6 +307,43 @@ def create_cell_input(
         previous_output_tx_hash=tx_hash,
         previous_output_index=index,
         since=since,
+        dao_deposit_header_index=dao_deposit_header_index,
+        dao_withdraw_header_index=dao_withdraw_header_index,
+    )
+
+
+def create_block_header(
+    version: int,
+    compact_target: int,
+    timestamp: int,
+    number: int,
+    epoch: int,
+    parent_hash: bytes | str,
+    transactions_root: bytes | str,
+    proposals_hash: bytes | str,
+    extra_hash: bytes | str,
+    dao: bytes | str,
+    nonce: bytes | str,
+) -> "messages.CKBBlockHeader":
+    """Create a CKBBlockHeader message (used to verify Nervos DAO compensation)."""
+
+    def _b(value: bytes | str) -> bytes:
+        if isinstance(value, str):
+            return bytes.fromhex(value.removeprefix("0x"))
+        return bytes(value)
+
+    return messages.CKBBlockHeader(
+        version=version,
+        compact_target=compact_target,
+        timestamp=timestamp,
+        number=number,
+        epoch=epoch,
+        parent_hash=_b(parent_hash),
+        transactions_root=_b(transactions_root),
+        proposals_hash=_b(proposals_hash),
+        extra_hash=_b(extra_hash),
+        dao=_b(dao),
+        nonce=_b(nonce),
     )
 
 

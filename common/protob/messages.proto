@@ -390,6 +390,7 @@ enum MessageType {
     MessageType_CKBVerifyMessage = 5509 [(wire_in) = true];
     MessageType_CKBTxAckWitness = 5510 [(wire_in) = true];
     MessageType_CKBTxAckPrevMeta = 5511 [(wire_in) = true];
+    MessageType_CKBTxAckHeader = 5512 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

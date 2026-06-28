@@ -1967,6 +1967,8 @@ if TYPE_CHECKING:
         previous_output_tx_hash: "AnyBytes"
         previous_output_index: "int"
         since: "int"
+        dao_deposit_header_index: "int | None"
+        dao_withdraw_header_index: "int | None"
 
         def __init__(
             self,
@@ -1974,6 +1976,8 @@ if TYPE_CHECKING:
             previous_output_tx_hash: "AnyBytes",
             previous_output_index: "int",
             since: "int | None" = None,
+            dao_deposit_header_index: "int | None" = None,
+            dao_withdraw_header_index: "int | None" = None,
         ) -> None:
             pass
 
@@ -2036,6 +2040,7 @@ if TYPE_CHECKING:
         chunkify: "bool | None"
         witnesses_count: "int | None"
         sign_group_input_indices: "list[int]"
+        header_deps: "list[AnyBytes]"
 
         def __init__(
             self,
@@ -2045,6 +2050,7 @@ if TYPE_CHECKING:
             outputs_count: "int",
             address_n: "list[int] | None" = None,
             sign_group_input_indices: "list[int] | None" = None,
+            header_deps: "list[AnyBytes] | None" = None,
             cell_deps_count: "int | None" = None,
             chunkify: "bool | None" = None,
             witnesses_count: "int | None" = None,
@@ -2167,6 +2173,54 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["CKBTxAckPrevMeta"]:
+            return isinstance(msg, cls)
+
+    class CKBBlockHeader(protobuf.MessageType):
+        version: "int"
+        compact_target: "int"
+        timestamp: "int"
+        number: "int"
+        epoch: "int"
+        parent_hash: "AnyBytes"
+        transactions_root: "AnyBytes"
+        proposals_hash: "AnyBytes"
+        extra_hash: "AnyBytes"
+        dao: "AnyBytes"
+        nonce: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            version: "int",
+            compact_target: "int",
+            timestamp: "int",
+            number: "int",
+            epoch: "int",
+            parent_hash: "AnyBytes",
+            transactions_root: "AnyBytes",
+            proposals_hash: "AnyBytes",
+            extra_hash: "AnyBytes",
+            dao: "AnyBytes",
+            nonce: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CKBBlockHeader"]:
+            return isinstance(msg, cls)
+
+    class CKBTxAckHeader(protobuf.MessageType):
+        header: "CKBBlockHeader"
+
+        def __init__(
+            self,
+            *,
+            header: "CKBBlockHeader",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CKBTxAckHeader"]:
             return isinstance(msg, cls)
 
     class CKBWitnessArgs(protobuf.MessageType):

@@ -79,6 +79,13 @@ message CKBCellInput {
     required bytes previous_output_tx_hash = 1;  // 32-byte transaction hash
     required uint32 previous_output_index = 2;   // output index in that transaction
     optional uint64 since = 3 [default = 0];     // since field for time-lock
+    // Nervos DAO withdraw (phase 2) inputs only: indices into the top-level
+    // header_deps of the deposit block header and of the withdrawing cell's
+    // including (withdraw phase 1) block header. When both are set and the spent
+    // cell is a Nervos DAO withdrawing cell, the device verifies both headers
+    // against header_deps and credits the DAO compensation to this input.
+    optional uint32 dao_deposit_header_index = 4;
+    optional uint32 dao_withdraw_header_index = 5;
 }
 
 /**
@@ -123,6 +130,8 @@ message CKBSignTx {
         7;  // length of the on-chain witness vector; required, the device rejects the request if absent
     repeated uint32 sign_group_input_indices =
         8;  // input indices forming the lock-script group to sign (required, sorted; first index holds the signature)
+    repeated bytes header_deps =
+        9;  // 32-byte block-header hashes committed in the tx hash (e.g. Nervos DAO); empty for plain transfers
 }
 
 /**
@@ -152,6 +161,7 @@ enum CKBTxRequestType {
     TXPREVINPUT = 6;    // previous-tx input, answered with CKBTxAckInput
     TXPREVOUTPUT = 7;   // previous-tx output, answered with CKBTxAckOutput (carries data)
     TXPREVCELLDEP = 8;  // previous-tx cell dep, answered with CKBTxAckCellDep
+    TXHEADER = 9;       // full block header for header_deps[request_index], answered with CKBTxAckHeader
 }
 
 /**
@@ -209,6 +219,35 @@ message CKBTxAckPrevMeta {
     required uint32 outputs_count = 3;                  // number of cell outputs in the previous tx
     optional uint32 cell_deps_count = 4 [default = 0];  // number of cell deps in the previous tx
     repeated bytes header_deps = 5;                     // 32-byte header dep hashes, usually empty
+}
+
+/**
+ * A CKB block header, used to verify Nervos DAO compensation trustlessly.
+ * The device re-serializes the Molecule Header (192-byte RawHeader + 16-byte
+ * nonce), hashes it, and checks the result against the matching header_deps
+ * entry before trusting the accumulated rate (the `dao` field) for compensation.
+ * @embed
+ */
+message CKBBlockHeader {
+    required uint32 version = 1;           // RawHeader.version
+    required uint32 compact_target = 2;    // RawHeader.compact_target
+    required uint64 timestamp = 3;         // RawHeader.timestamp
+    required uint64 number = 4;            // RawHeader.number (block height)
+    required uint64 epoch = 5;             // RawHeader.epoch
+    required bytes parent_hash = 6;        // 32 bytes
+    required bytes transactions_root = 7;  // 32 bytes
+    required bytes proposals_hash = 8;     // 32 bytes
+    required bytes extra_hash = 9;         // 32 bytes (a.k.a. uncles_hash)
+    required bytes dao = 10;               // 32 bytes; packs C/AR/S/U as uint64 LE
+    required bytes nonce = 11;             // 16 bytes (Uint128 LE)
+}
+
+/**
+ * Acknowledge: Provide the full block header for header_deps[request_index].
+ * @next CKBTxRequest
+ */
+message CKBTxAckHeader {
+    required CKBBlockHeader header = 1;
 }
 
 /**

@@ -181,6 +181,7 @@ if TYPE_CHECKING:
         TXPREVINPUT = 6
         TXPREVOUTPUT = 7
         TXPREVCELLDEP = 8
+        TXHEADER = 9
 
     class BackupType(IntEnum):
         Bip39 = 0
@@ -736,6 +737,7 @@ if TYPE_CHECKING:
         CKBVerifyMessage = 5509
         CKBTxAckWitness = 5510
         CKBTxAckPrevMeta = 5511
+        CKBTxAckHeader = 5512
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

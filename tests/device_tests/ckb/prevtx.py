@@ -134,6 +134,77 @@ def raw_tx_hash(inputs, outputs, outputs_data, cell_deps, version=0, header_deps
     return _hash(raw)
 
 
+def make_dao(c: int, ar: int, s: int, u: int) -> bytes:
+    """Pack a header's 32-byte ``dao`` field (C, AR, S, U as uint64 LE)."""
+    return _u64(c) + _u64(ar) + _u64(s) + _u64(u)
+
+
+def header_hash(header) -> bytes:
+    """Hash of a Molecule ``Header``; mirrors the device's _serialize_header."""
+    blob = (
+        _u32(header.version)
+        + _u32(header.compact_target)
+        + _u64(header.timestamp)
+        + _u64(header.number)
+        + _u64(header.epoch)
+        + bytes(header.parent_hash)
+        + bytes(header.transactions_root)
+        + bytes(header.proposals_hash)
+        + bytes(header.extra_hash)
+        + bytes(header.dao)
+        + bytes(header.nonce)
+    )
+    return _hash(blob)
+
+
+def build_witness_args(lock_size, input_type=None, output_type=None) -> bytes:
+    """Molecule WitnessArgs with the lock blanked to ``lock_size`` zero bytes;
+    mirrors the device's _build_witness_args."""
+    lock_s = _blob(bytes(lock_size))
+    input_s = _blob(input_type) if input_type is not None else b""
+    output_s = _blob(output_type) if output_type is not None else b""
+    off_lock = 16
+    off_input = off_lock + len(lock_s)
+    off_output = off_input + len(input_s)
+    total = off_output + len(output_s)
+    return (
+        _u32(total)
+        + _u32(off_lock)
+        + _u32(off_input)
+        + _u32(off_output)
+        + lock_s
+        + input_s
+        + output_s
+    )
+
+
+def sighash_all(tx_hash, witnesses, group_indices, inputs_count) -> bytes:
+    """Compute sighash_all; mirrors the device's _compute_sighash_all."""
+    h = blake2b(digest_size=32, person=b"ckb-default-hash")
+    h.update(tx_hash)
+    first = witnesses[group_indices[0]]
+    h.update(_u64(len(first)) + first)
+    for idx in group_indices[1:]:
+        if idx < len(witnesses):
+            h.update(_u64(len(witnesses[idx])) + witnesses[idx])
+    for idx in range(inputs_count, len(witnesses)):
+        h.update(_u64(len(witnesses[idx])) + witnesses[idx])
+    return h.digest()
+
+
+def occupied_capacity(lock_args_len, type_args_len, data_len) -> int:
+    """Occupied capacity in shannons; mirrors the device's _occupied_capacity."""
+    occupied_bytes = 8 + 32 + 1 + lock_args_len + 32 + 1 + type_args_len + data_len
+    return occupied_bytes * 100_000_000
+
+
+def dao_maximum_withdraw(capacity, occupied, ar_deposit, ar_withdraw) -> int:
+    """Max withdraw (deposit + compensation); mirrors the device's
+    _dao_withdraw_value (RFC 0023)."""
+    counted = capacity - occupied
+    return counted * ar_withdraw // ar_deposit + occupied
+
+
 def synth_prev_tx(capacities: list[int], salt: int = 0):
     """Build a minimal previous tx whose outputs carry the given capacities.
 

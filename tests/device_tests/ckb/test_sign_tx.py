@@ -215,6 +215,239 @@ def test_sign_tx_streaming_protocol(session: Session):
     assert len(res.serialized.tx_hash) == 32
 
 
+def test_sign_tx_with_header_deps(session: Session):
+    # header_deps are a Byte32Vec field of the RawTransaction and are committed
+    # in its hash (e.g. Nervos DAO withdrawals reference the deposit/withdraw
+    # block headers). The device must hash them, otherwise its tx_hash — and the
+    # signature over it — would not match the transaction the host broadcasts.
+    parameters = {
+        "path": "m/44'/309'/0'/0/0",
+        "network": "Mainnet",
+        "inputs": [{"since": 0}],
+        "outputs": [
+            {
+                "capacity": 10000000000,
+                "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                "lock_hash_type": 1,
+                "lock_args": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            },
+        ],
+        "fee": 1000,
+    }
+    address_n, network, inputs, outputs, cell_deps, prev_txs = (
+        _build_sign_tx_components(parameters)
+    )
+    header_deps = [bytes.fromhex("11" * 32), bytes.fromhex("22" * 32)]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+
+        resp = ckb.sign_tx(
+            session,
+            address_n,
+            inputs=inputs,
+            outputs=outputs,
+            cell_deps=cell_deps,
+            network=network,
+            prev_txs=prev_txs,
+            header_deps=header_deps,
+        )
+
+    tx_hash = resp.serialized.tx_hash
+    outputs_data = _outputs_data(outputs)
+
+    # The device commits exactly the header_deps we passed...
+    expected = prevtx.raw_tx_hash(
+        inputs, outputs, outputs_data, cell_deps, header_deps=header_deps
+    )
+    assert tx_hash == expected
+
+    # ...and the hash genuinely depends on them: dropping the header_deps yields a
+    # different tx hash, proving the field is not silently ignored.
+    without = prevtx.raw_tx_hash(inputs, outputs, outputs_data, cell_deps)
+    assert tx_hash != without
+
+
+def test_sign_tx_dao_withdraw(session: Session):
+    # A Nervos DAO phase-2 withdrawal: the input is a withdrawing cell whose
+    # unlocked value (deposit + compensation) exceeds its plain capacity, so the
+    # single output is LARGER than the input capacity. The device must accept it
+    # by verifying the deposit/withdraw block headers and crediting the
+    # compensation, instead of rejecting with "Inputs do not cover outputs".
+    SHANNON = 100_000_000
+    DAO_CODE_HASH = "82d76d1b75fe2fd9a27dfbaa65a039221a380d76c926f378d3f81cf3e7e13f2e"
+
+    ar_deposit = 10_000_000_000_000_000
+    ar_withdraw = 10_050_000_000_000_000  # +0.5% accumulated rate
+    deposit_number = 100
+    withdraw_number = 200_000
+
+    def _hdr(number, ar, timestamp):
+        return ckb.create_block_header(
+            version=0,
+            compact_target=0x1A08A97E,
+            timestamp=timestamp,
+            number=number,
+            epoch=0,
+            parent_hash="00" * 32,
+            transactions_root="00" * 32,
+            proposals_hash="00" * 32,
+            extra_hash="00" * 32,
+            dao=prevtx.make_dao(1, ar, 2, 3),
+            nonce="00" * 16,
+        )
+
+    deposit_header = _hdr(deposit_number, ar_deposit, 1_573_852_800_000)
+    withdraw_header = _hdr(withdraw_number, ar_withdraw, 1_576_852_800_000)
+    headers = [deposit_header, withdraw_header]
+    header_deps = [
+        prevtx.header_hash(deposit_header),
+        prevtx.header_hash(withdraw_header),
+    ]
+
+    # The spent cell is a DAO withdrawing cell (DAO type script, data = deposit
+    # block number) with 20000 CKB of capacity.
+    deposit_capacity = 20000 * SHANNON
+    cell_data = deposit_number.to_bytes(8, "little")
+    withdrawing_cell = ckb.create_cell_output(
+        capacity=deposit_capacity,
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="11" * 20,
+        type_code_hash=DAO_CODE_HASH,
+        type_hash_type=1,
+        type_args=b"",
+        data=cell_data,
+    )
+    prev = ckb.create_prev_tx(outputs=[withdrawing_cell])
+    prev_hash = prevtx.raw_tx_hash([], [withdrawing_cell], [cell_data], [])
+
+    inp = ckb.create_cell_input(
+        tx_hash=prev_hash,
+        index=0,
+        dao_deposit_header_index=0,
+        dao_withdraw_header_index=1,
+    )
+
+    # Max withdraw the device should credit (RFC 0023), via the same helper the
+    # chain-anchored golden test pins to real data.
+    occupied = prevtx.occupied_capacity(lock_args_len=20, type_args_len=0, data_len=8)
+    max_withdraw = prevtx.dao_maximum_withdraw(
+        deposit_capacity, occupied, ar_deposit, ar_withdraw
+    )
+    fee = 1000
+    out_capacity = max_withdraw - fee
+    assert out_capacity > deposit_capacity
+
+    output = ckb.create_cell_output(
+        capacity=out_capacity,
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="aa" * 20,
+    )
+
+    address_n = parse_path("m/44'/309'/0'/0/0")
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+
+        resp = ckb.sign_tx(
+            session,
+            address_n,
+            inputs=[inp],
+            outputs=[output],
+            cell_deps=[],
+            network="Mainnet",
+            prev_txs={prev_hash: prev},
+            header_deps=header_deps,
+            headers=headers,
+        )
+
+    assert resp.serialized.signature is not None
+    assert len(resp.serialized.signature) == 65
+    expected = prevtx.raw_tx_hash([inp], [output], [b""], [], header_deps=header_deps)
+    assert resp.serialized.tx_hash == expected
+
+
+def test_sign_tx_rejects_dao_withdraw_tampered_header(session: Session):
+    # The device must reject a DAO withdrawal whose supplied header does not hash
+    # to the committed header_deps entry (a host inflating the compensation).
+    SHANNON = 100_000_000
+    DAO_CODE_HASH = "82d76d1b75fe2fd9a27dfbaa65a039221a380d76c926f378d3f81cf3e7e13f2e"
+    deposit_number = 100
+
+    def _hdr(number, ar):
+        return ckb.create_block_header(
+            version=0,
+            compact_target=0x1A08A97E,
+            timestamp=1_573_852_800_000,
+            number=number,
+            epoch=0,
+            parent_hash="00" * 32,
+            transactions_root="00" * 32,
+            proposals_hash="00" * 32,
+            extra_hash="00" * 32,
+            dao=prevtx.make_dao(1, ar, 2, 3),
+            nonce="00" * 16,
+        )
+
+    honest_deposit = _hdr(deposit_number, 10_000_000_000_000_000)
+    honest_withdraw = _hdr(200_000, 10_050_000_000_000_000)
+    header_deps = [
+        prevtx.header_hash(honest_deposit),
+        prevtx.header_hash(honest_withdraw),
+    ]
+    # Host lies: serves a withdraw header with a much higher AR than the one whose
+    # hash is committed in header_deps.
+    lying_withdraw = _hdr(200_000, 99_000_000_000_000_000)
+    headers = [honest_deposit, lying_withdraw]
+
+    cell_data = deposit_number.to_bytes(8, "little")
+    withdrawing_cell = ckb.create_cell_output(
+        capacity=20000 * SHANNON,
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="11" * 20,
+        type_code_hash=DAO_CODE_HASH,
+        type_hash_type=1,
+        type_args=b"",
+        data=cell_data,
+    )
+    prev = ckb.create_prev_tx(outputs=[withdrawing_cell])
+    prev_hash = prevtx.raw_tx_hash([], [withdrawing_cell], [cell_data], [])
+    inp = ckb.create_cell_input(
+        tx_hash=prev_hash,
+        index=0,
+        dao_deposit_header_index=0,
+        dao_withdraw_header_index=1,
+    )
+    output = ckb.create_cell_output(
+        capacity=20100 * SHANNON,
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="aa" * 20,
+    )
+
+    address_n = parse_path("m/44'/309'/0'/0/0")
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+
+        with pytest.raises(TrezorFailure, match="header hash mismatch"):
+            ckb.sign_tx(
+                session,
+                address_n,
+                inputs=[inp],
+                outputs=[output],
+                cell_deps=[],
+                network="Mainnet",
+                prev_txs={prev_hash: prev},
+                header_deps=header_deps,
+                headers=headers,
+            )
+
+
 def test_sign_tx_rejects_tampered_prev_tx(session: Session):
     # The host claims an input OutPoint but supplies a previous tx that hashes to
     # something else (here: a different capacity). The device must refuse.
@@ -507,3 +740,103 @@ def test_sign_tx_zero_outputs(session: Session):
             network="Mainnet",
             chunkify=True,
         )
+
+
+def test_ckb_header_hash_matches_real_block():
+    # Real CKB testnet block 0x14862de (get_header). prevtx.header_hash mirrors the
+    # device, so matching the real block hash proves the device serializes headers
+    # like the chain. The Molecule nonce is little-endian, so the RPC value is reversed.
+    nonce_be = bytes.fromhex("dca82cb7e9a6532774df50405ea8f7b4")
+    header = ckb.create_block_header(
+        version=0,
+        compact_target=0x1D092A51,
+        timestamp=0x19EF54A43FF,
+        number=0x14862DE,
+        epoch=0x708030D00340F,
+        parent_hash="2ce3fc21e61547b9f3cf64607ede99db89b57105f863fc0d54e2551a4b73ae11",
+        transactions_root="459a8d141f32618ab6b0d0009e6c0519dabee211eda82ff0bc6f8bf440bc14a5",
+        proposals_hash="d89c1955e7aede1c654347f5fbc7b01eaaa42de9b8b8f38fd435502ccf40a3ad",
+        extra_hash="2a1c789d4f5b25c7314d9b519d136cdfacf639c066cb15496fd9c0f0050703fb",
+        dao="92e19928da715f5721051281c41d2a00ec383bac641ff50900032e1e81ec5c09",
+        nonce=nonce_be[::-1],
+    )
+
+    assert (
+        prevtx.header_hash(header).hex()
+        == "6e94518dac325b38b689e0632cb8f7d39bc5feb1f4761140acb02174ccadb4d0"
+    )
+
+
+def test_dao_maximum_withdraw_matches_real_chain():
+    # Expected value from CKB's own calculate_dao_maximum_withdraw RPC for a real
+    # testnet DAO cell (100000 CKB; deposit block 19863841, withdraw block 19876418),
+    # so the formula is checked against the chain, not just the synthetic test above.
+    # AR is the second uint64 (LE) of each block's `dao` field.
+    SHANNON = 100_000_000
+    # Use the same helpers the device tests check the device against, so this
+    # anchors the (device-mirrored) occupied + compensation math to the chain.
+    occupied = prevtx.occupied_capacity(lock_args_len=20, type_args_len=0, data_len=8)
+    max_withdraw = prevtx.dao_maximum_withdraw(
+        capacity=100_000 * SHANNON,
+        occupied=occupied,
+        ar_deposit=11_747_530_930_063_161,
+        ar_withdraw=11_748_349_830_170_696,
+    )
+
+    assert occupied == 102 * SHANNON
+    assert max_withdraw == 10_000_696_371_717
+
+
+def test_raw_tx_hash_matches_real_block_tx():
+    # Anchor the RawTransaction serialization (prevtx.raw_tx_hash mirrors the
+    # device's _compute_raw_tx_hash) to a real CKB testnet transaction, so the
+    # device tests that rely on this hash are not only self-consistent.
+    # Tx 0x9a8ad792... on CKB testnet (get_transaction): 1 input, 1 secp256k1
+    # output, 1 dep_group cell_dep, no header_deps.
+    inputs = [
+        ckb.create_cell_input(
+            tx_hash="7337f83101d63e1c94b485062281e33429c72b5a290649cbdb43395b17d0576b",
+            index=0,
+        )
+    ]
+    outputs = [
+        ckb.create_cell_output(
+            capacity=27_135_496_481,
+            lock_code_hash="9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            lock_hash_type=1,  # "type"
+            lock_args="fa9e6338fb52b39ff39a3ca11c0ad793c0efeaf6",
+        )
+    ]
+    cell_deps = [
+        ckb.create_cell_dep(
+            tx_hash="f8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37",
+            index=0,
+            dep_type=1,  # "dep_group"
+        )
+    ]
+
+    tx_hash = prevtx.raw_tx_hash(inputs, outputs, [b""], cell_deps)
+
+    assert tx_hash.hex() == (
+        "9a8ad7922b5f03a3072fc5cb4aac6194e55a5f2c4ee43483010002b42d3b44dc"
+    )
+
+
+def test_sighash_all_matches_real_signed_tx():
+    # Anchor sighash_all (prevtx.sighash_all mirrors the device's
+    # _compute_sighash_all) to a real signed CKB transaction. The device tests
+    # only assert the tx_hash, not the digest the device actually signs, so this
+    # locks the signing-witness hashing and lock blanking. The expected digest
+    # was confirmed by recovering the on-chain signature of tx 0x9a8ad792 to its
+    # address (recovered blake160 == the input lock args fa9e6338...c0efeaf6).
+    tx_hash = bytes.fromhex(
+        "9a8ad7922b5f03a3072fc5cb4aac6194e55a5f2c4ee43483010002b42d3b44dc"
+    )
+    # One secp256k1 signer: the signing witness has its 65-byte lock blanked.
+    blanked = prevtx.build_witness_args(65)
+
+    sighash = prevtx.sighash_all(tx_hash, [blanked], [0], 1)
+
+    assert sighash.hex() == (
+        "b8bba12b59dbf39447ae69006c63e67ce7f8d94020cd3ee4110787dc4c83e77a"
+    )

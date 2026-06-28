@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
     from trezor.messages import (
+        CKBBlockHeader,
         CKBCellDep,
         CKBCellInput,
         CKBCellOutput,
@@ -27,6 +28,14 @@ if TYPE_CHECKING:
 
 # CKB-specific constants
 SIGNATURE_PLACEHOLDER_SIZE = 65  # secp256k1 recoverable signature
+
+# 1 byte of cell capacity is 10^8 shannons; occupied capacity is sized in bytes.
+SHANNONS_PER_BYTE = 100000000
+
+# Nervos DAO type script code hash (identical on Mainnet and Testnet). An input
+# is treated as a DAO cell only if its verified previous output carries this script.
+DAO_TYPE_CODE_HASH = b"\x82\xd7\x6d\x1b\x75\xfe\x2f\xd9\xa2\x7d\xfb\xaa\x65\xa0\x39\x22\x1a\x38\x0d\x76\xc9\x26\xf3\x78\xd3\xf8\x1c\xf3\xe7\xe1\x3f\x2e"
+DAO_TYPE_HASH_TYPE = 1  # "type"
 
 
 def _blake2b_hash(data: bytes) -> bytes:
@@ -382,10 +391,163 @@ def _validate_sign_group(
         raise DataError("Signing witness index out of range")
 
 
-async def _verify_prev_tx_capacities(tx_hash: bytes) -> list[int]:
+def _serialize_header(header: "CKBBlockHeader") -> bytes:
     """
-    Stream a previous transaction, recompute its hash, and return the capacities
-    of its outputs.
+    Serialize a Molecule ``Header`` (the 192-byte fixed RawHeader struct followed
+    by the 16-byte nonce). The block hash is ``blake2b`` of this serialization, so
+    re-serializing on-device lets us check a host-supplied header against the
+    header_dep hash the user is signing.
+    """
+    for field in (
+        header.parent_hash,
+        header.transactions_root,
+        header.proposals_hash,
+        header.extra_hash,
+        header.dao,
+    ):
+        if len(field) != 32:
+            raise DataError("CKB header field must be 32 bytes")
+    if len(header.nonce) != 16:
+        raise DataError("CKB header nonce must be 16 bytes")
+
+    return (
+        _serialize_uint32_le(header.version)
+        + _serialize_uint32_le(header.compact_target)
+        + _serialize_uint64_le(header.timestamp)
+        + _serialize_uint64_le(header.number)
+        + _serialize_uint64_le(header.epoch)
+        + bytes(header.parent_hash)
+        + bytes(header.transactions_root)
+        + bytes(header.proposals_hash)
+        + bytes(header.extra_hash)
+        + bytes(header.dao)
+        + bytes(header.nonce)
+    )
+
+
+def _is_dao_withdrawing_cell(cell: "CKBCellOutput") -> bool:
+    """A Nervos DAO phase-2 withdrawing cell: the DAO type script plus 8 bytes of
+    cell data holding the deposit block number (a fresh deposit cell stores 8 zero
+    bytes and earns no compensation, so it is treated as a plain input)."""
+    if cell.type_code_hash is None:
+        return False
+    if bytes(cell.type_code_hash) != DAO_TYPE_CODE_HASH:
+        return False
+    if (cell.type_hash_type or 0) != DAO_TYPE_HASH_TYPE:
+        return False
+    data = bytes(cell.data) if cell.data else b""
+    return len(data) == 8 and data != bytes(8)
+
+
+def _occupied_capacity(cell: "CKBCellOutput") -> int:
+    """Occupied capacity in shannons: the cell's own byte size (capacity field +
+    lock script + type script + data) times 10^8. Only the free capacity above
+    this earns DAO compensation."""
+    lock_args = bytes(cell.lock_args)
+    type_args = bytes(cell.type_args) if cell.type_args else b""
+    data = bytes(cell.data) if cell.data else b""
+    occupied_bytes = (
+        8  # capacity field
+        + 32
+        + 1
+        + len(lock_args)  # lock script (code_hash + hash_type + args)
+        + 32
+        + 1
+        + len(type_args)  # type script
+        + len(data)
+    )
+    return occupied_bytes * SHANNONS_PER_BYTE
+
+
+async def _verify_header(
+    index: int, header_deps: list[bytes], cache: dict[int, tuple[int, int]]
+) -> tuple[int, int]:
+    """
+    Stream the block header at ``header_deps[index]``, verify its hash, and return
+    ``(block_number, accumulated_rate)``. The accumulated rate (AR) is the second
+    uint64 of the 32-byte ``dao`` field. Cached per index so a header shared by
+    several DAO inputs is streamed and verified once.
+    """
+    cached = cache.get(index)
+    if cached is not None:
+        return cached
+
+    from trezor.enums import CKBTxRequestType
+    from trezor.messages import CKBTxAckHeader, CKBTxRequest, CKBTxRequestDetails
+    from trezor.wire.context import call
+
+    if index >= len(header_deps):
+        raise DataError("DAO header index out of range")
+
+    ack = await call(
+        CKBTxRequest(
+            request_type=CKBTxRequestType.TXHEADER,
+            details=CKBTxRequestDetails(request_index=index),
+        ),
+        CKBTxAckHeader,
+    )
+    if ack.header is None:
+        raise DataError("Missing block header")
+
+    if _blake2b_hash(_serialize_header(ack.header)) != header_deps[index]:
+        raise DataError("CKB header hash mismatch")
+
+    accumulated_rate = int.from_bytes(bytes(ack.header.dao)[8:16], "little")
+    result = (ack.header.number, accumulated_rate)
+    cache[index] = result
+    return result
+
+
+async def _dao_withdraw_value(
+    inp: "CKBCellInput",
+    spent: "CKBCellOutput",
+    header_deps: list[bytes],
+    header_cache: dict[int, tuple[int, int]],
+) -> int:
+    """
+    Maximum withdraw capacity (deposit + compensation) of a Nervos DAO
+    withdrawing cell, per RFC 0023:
+
+        (capacity - occupied) * AR_withdraw / AR_deposit + occupied
+
+    Both headers are verified against header_deps. The deposit header is pinned to
+    the cell (its number must equal the deposit number stored in the cell data);
+    the withdraw header is host-asserted, so the host can only shift the displayed
+    fee within the signed header_deps, never the amount consensus enforces on chain.
+    """
+    if inp.dao_deposit_header_index is None or inp.dao_withdraw_header_index is None:
+        raise DataError("DAO withdrawal input requires header indices")
+
+    deposit_number, ar_deposit = await _verify_header(
+        inp.dao_deposit_header_index, header_deps, header_cache
+    )
+    _, ar_withdraw = await _verify_header(
+        inp.dao_withdraw_header_index, header_deps, header_cache
+    )
+
+    cell_data = spent.data
+    if cell_data is None or len(cell_data) < 8:
+        raise DataError("DAO withdrawing cell missing deposit block number")
+
+    cell_deposit_number = int.from_bytes(bytes(cell_data)[:8], "little")
+    if deposit_number != cell_deposit_number:
+        raise DataError("DAO deposit header does not match cell")
+    if ar_deposit == 0:
+        raise DataError("Invalid DAO deposit rate")
+    if ar_withdraw < ar_deposit:
+        raise DataError("DAO compensation must be non-negative")
+
+    occupied = _occupied_capacity(spent)
+    if occupied > spent.capacity:
+        raise DataError("DAO occupied capacity exceeds deposit")
+
+    counted = spent.capacity - occupied
+    return counted * ar_withdraw // ar_deposit + occupied
+
+
+async def _verify_prev_tx_outputs(tx_hash: bytes) -> list["CKBCellOutput"]:
+    """
+    Stream a previous transaction, recompute its hash, and return its outputs.
 
     The CKB sighash commits to the input OutPoints but not to the capacities of
     the cells being spent, so a host could otherwise lie to the screen about the
@@ -468,7 +630,7 @@ async def _verify_prev_tx_capacities(tx_hash: bytes) -> list[int]:
     if recomputed != tx_hash:
         raise DataError("Previous transaction hash mismatch")
 
-    return [out.capacity for out in prev_outputs]
+    return prev_outputs
 
 
 @with_slip44_keychain(PATTERN, slip44_id=SLIP44_ID, curve=CURVE)
@@ -608,27 +770,42 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     # Compute transaction hash. This also validates the structural lengths of
     # inputs, outputs, and cell_deps before the (more expensive) previous-tx
     # streaming below, so malformed data fails fast.
+    # header_deps are committed in the tx hash; the device must hash them or its
+    # signature would not match the transaction the host broadcasts.
+    header_deps = [bytes(h) for h in msg.header_deps] if msg.header_deps else []
     tx_hash = _compute_raw_tx_hash(
         inputs=inputs,
         outputs=outputs,
         outputs_data=outputs_data,
         cell_deps=cell_deps,
+        header_deps=header_deps,
     )
 
     # Verify each input's capacity trustlessly by streaming its previous tx.
-    # Cache by tx_hash so a funding tx spent by several inputs is streamed once.
-    prev_tx_capacities: dict[bytes, list[int]] = {}
+    # Cache the verified previous-tx outputs by tx_hash so a funding tx spent by
+    # several inputs is streamed once.
+    prev_tx_outputs: dict[bytes, list["CKBCellOutput"]] = {}
+    # (header index) -> (block number, accumulated rate), filled on demand while
+    # verifying Nervos DAO withdrawing-cell inputs.
+    header_cache: dict[int, tuple[int, int]] = {}
     total_in = 0
     for inp in inputs:
         prev_hash = bytes(inp.previous_output_tx_hash)
-        capacities = prev_tx_capacities.get(prev_hash)
-        if capacities is None:
-            capacities = await _verify_prev_tx_capacities(prev_hash)
-            prev_tx_capacities[prev_hash] = capacities
+        outs = prev_tx_outputs.get(prev_hash)
+        if outs is None:
+            outs = await _verify_prev_tx_outputs(prev_hash)
+            prev_tx_outputs[prev_hash] = outs
         index = inp.previous_output_index
-        if index >= len(capacities):
+        if index >= len(outs):
             raise DataError("Input previous_output_index out of range")
-        total_in += capacities[index]
+        spent = outs[index]
+        if _is_dao_withdrawing_cell(spent):
+            # A DAO withdrawal unlocks deposit + compensation, so total_out may
+            # validly exceed the plain input capacity. Credit the verified
+            # maximum withdraw capacity instead of the raw capacity.
+            total_in += await _dao_withdraw_value(inp, spent, header_deps, header_cache)
+        else:
+            total_in += spent.capacity
 
     # The host declares the witnesses and signing group; the device never guesses.
     if msg.witnesses_count is None:

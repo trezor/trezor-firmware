@@ -203,6 +203,7 @@ class CKBTxRequestType(IntEnum):
     TXPREVINPUT = 6
     TXPREVOUTPUT = 7
     TXPREVCELLDEP = 8
+    TXHEADER = 9
 
 
 class BackupType(IntEnum):
@@ -797,6 +798,7 @@ class MessageType(IntEnum):
     CKBVerifyMessage = 5509
     CKBTxAckWitness = 5510
     CKBTxAckPrevMeta = 5511
+    CKBTxAckHeader = 5512
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -3225,6 +3227,8 @@ class CKBCellInput(protobuf.MessageType):
         1: protobuf.Field("previous_output_tx_hash", "bytes", repeated=False, required=True),
         2: protobuf.Field("previous_output_index", "uint32", repeated=False, required=True),
         3: protobuf.Field("since", "uint64", repeated=False, required=False, default=0),
+        4: protobuf.Field("dao_deposit_header_index", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("dao_withdraw_header_index", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3233,10 +3237,14 @@ class CKBCellInput(protobuf.MessageType):
         previous_output_tx_hash: "bytes",
         previous_output_index: "int",
         since: Optional["int"] = 0,
+        dao_deposit_header_index: Optional["int"] = None,
+        dao_withdraw_header_index: Optional["int"] = None,
     ) -> None:
         self.previous_output_tx_hash = previous_output_tx_hash
         self.previous_output_index = previous_output_index
         self.since = since
+        self.dao_deposit_header_index = dao_deposit_header_index
+        self.dao_withdraw_header_index = dao_withdraw_header_index
 
 
 class CKBCellOutput(protobuf.MessageType):
@@ -3305,6 +3313,7 @@ class CKBSignTx(protobuf.MessageType):
         6: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
         7: protobuf.Field("witnesses_count", "uint32", repeated=False, required=False, default=None),
         8: protobuf.Field("sign_group_input_indices", "uint32", repeated=True, required=False, default=None),
+        9: protobuf.Field("header_deps", "bytes", repeated=True, required=False, default=None),
     }
 
     def __init__(
@@ -3315,12 +3324,14 @@ class CKBSignTx(protobuf.MessageType):
         outputs_count: "int",
         address_n: Optional[Sequence["int"]] = None,
         sign_group_input_indices: Optional[Sequence["int"]] = None,
+        header_deps: Optional[Sequence["bytes"]] = None,
         cell_deps_count: Optional["int"] = 0,
         chunkify: Optional["bool"] = None,
         witnesses_count: Optional["int"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.sign_group_input_indices: Sequence["int"] = sign_group_input_indices if sign_group_input_indices is not None else []
+        self.header_deps: Sequence["bytes"] = header_deps if header_deps is not None else []
         self.network = network
         self.inputs_count = inputs_count
         self.outputs_count = outputs_count
@@ -3449,6 +3460,64 @@ class CKBTxAckPrevMeta(protobuf.MessageType):
         self.inputs_count = inputs_count
         self.outputs_count = outputs_count
         self.cell_deps_count = cell_deps_count
+
+
+class CKBBlockHeader(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("version", "uint32", repeated=False, required=True),
+        2: protobuf.Field("compact_target", "uint32", repeated=False, required=True),
+        3: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
+        4: protobuf.Field("number", "uint64", repeated=False, required=True),
+        5: protobuf.Field("epoch", "uint64", repeated=False, required=True),
+        6: protobuf.Field("parent_hash", "bytes", repeated=False, required=True),
+        7: protobuf.Field("transactions_root", "bytes", repeated=False, required=True),
+        8: protobuf.Field("proposals_hash", "bytes", repeated=False, required=True),
+        9: protobuf.Field("extra_hash", "bytes", repeated=False, required=True),
+        10: protobuf.Field("dao", "bytes", repeated=False, required=True),
+        11: protobuf.Field("nonce", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        version: "int",
+        compact_target: "int",
+        timestamp: "int",
+        number: "int",
+        epoch: "int",
+        parent_hash: "bytes",
+        transactions_root: "bytes",
+        proposals_hash: "bytes",
+        extra_hash: "bytes",
+        dao: "bytes",
+        nonce: "bytes",
+    ) -> None:
+        self.version = version
+        self.compact_target = compact_target
+        self.timestamp = timestamp
+        self.number = number
+        self.epoch = epoch
+        self.parent_hash = parent_hash
+        self.transactions_root = transactions_root
+        self.proposals_hash = proposals_hash
+        self.extra_hash = extra_hash
+        self.dao = dao
+        self.nonce = nonce
+
+
+class CKBTxAckHeader(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5512
+    FIELDS = {
+        1: protobuf.Field("header", "CKBBlockHeader", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        header: "CKBBlockHeader",
+    ) -> None:
+        self.header = header
 
 
 class CKBWitnessArgs(protobuf.MessageType):
