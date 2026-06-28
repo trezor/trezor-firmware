@@ -100,7 +100,7 @@ def test_auto_lock_battery_change(device_handler: "BackgroundDeviceHandler"):
     # Confirm changes
     debug.click(debug.screen_buttons.ok())
     # Make sure we are back at the security menu and go to homescreen
-    assert_device_screen(debug, Menu.SECURITY)
+    assert_device_screen(debug, Menu.AUTO_LOCK)
     close_device_menu(debug)
 
     # Refresh features
@@ -138,7 +138,7 @@ def test_auto_lock_usb_change(device_handler: "BackgroundDeviceHandler"):
     # Confirm changes
     debug.click(debug.screen_buttons.ok())
     # Make sure we are back at the security menu and go to homescreen
-    assert_device_screen(debug, Menu.SECURITY)
+    assert_device_screen(debug, Menu.AUTO_LOCK)
     close_device_menu(debug)
 
     # Refresh features
@@ -175,7 +175,7 @@ def test_auto_lock_battery_cancel(device_handler: "BackgroundDeviceHandler"):
     # Cancel auto-lock change
     debug.click(debug.screen_buttons.cancel())
     # Make sure we are back at the security menu and go to homescreen
-    assert_device_screen(debug, Menu.SECURITY)
+    assert_device_screen(debug, Menu.AUTO_LOCK)
     close_device_menu(debug)
 
     # Refresh features
@@ -210,7 +210,7 @@ def test_auto_lock_usb_cancel(device_handler: "BackgroundDeviceHandler"):
     # Cancel auto-lock change
     debug.click(debug.screen_buttons.cancel())
     # Make sure we are back at the security menu and go to homescreen
-    assert_device_screen(debug, Menu.SECURITY)
+    assert_device_screen(debug, Menu.AUTO_LOCK)
     close_device_menu(debug)
 
     # Refresh features
