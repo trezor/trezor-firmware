@@ -108,6 +108,7 @@ stdenvNoCC.mkDerivation ({
     pyright
     python3
     (mkBinOnlyWrapper rustNightly)
+    s5cmd
     sccache
     uv
     wget

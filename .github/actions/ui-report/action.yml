@@ -18,10 +18,7 @@ runs:
       uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
       with:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
-        aws-region: eu-west-1
-    - name: Increase AWS S3 max concurrency for faster uploads
-      run: aws configure set default.s3.max_concurrent_requests 50
-      shell: sh
+        aws-region: eu-central-1
     - run: |
         MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
         OUTDIR=${{ github.run_id }}
@@ -50,15 +47,19 @@ runs:
       shell: sh
     - name: Upload test results
       run: |
+        # Cache s5cmd package (to be reused by the next calls)
+        nix-shell --run "s5cmd version"
+
+        CMD="s5cmd --log error cp --concurrency 100"
+
         # Upload report
         du -sh ${{ github.run_id }}
-        ls -l ${{ github.run_id }}
-        aws s3 cp --no-overwrite --recursive --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }} &
+        nix-shell --run "$CMD ${{ github.run_id }}/ s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/" &
         PID1=$!
 
         # Upload test screen recording
         du -sh ci/ui_test_records
-        aws s3 cp --no-overwrite --recursive --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests &
+        nix-shell --run "$CMD ci/ui_test_records/ s3://data.trezor.io/dev/firmware/ui_tests/" &
         PID2=$!
         # TODO: generate directory listing / autoindex
 
