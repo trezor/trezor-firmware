@@ -382,6 +382,16 @@ impl TryFrom<Obj> for u16 {
     }
 }
 
+impl TryFrom<Obj> for i16 {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        let val = i32::try_from(obj)?;
+        let this = Self::try_from(val)?;
+        Ok(this)
+    }
+}
+
 impl TryFrom<Obj> for u32 {
     type Error = Error;
 
