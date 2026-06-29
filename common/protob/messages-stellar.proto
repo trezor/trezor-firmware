@@ -296,7 +296,7 @@ message StellarSignedTx {
 
 /**
  * Describes a Stellar SCValue
- * See https://github.com/stellar/stellar-xdr/blob/0a621ec7811db000a60efae5b35f78dee3aa2533/Stellar-contract.x#L214
+ * See https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-contract.x#L229
  * @embed
  */
 message StellarSCVal {
@@ -397,7 +397,7 @@ message StellarSCVal {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/0a621ec7811db000a60efae5b35f78dee3aa2533/Stellar-transaction.x#L515
+ * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L515
  * @embed
  */
 message StellarInvokeContractArgs {
@@ -407,7 +407,7 @@ message StellarInvokeContractArgs {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/0a621ec7811db000a60efae5b35f78dee3aa2533/Stellar-transaction.x#L540
+ * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L540
  * @embed
  */
 message StellarSorobanAuthorizedFunction {
@@ -422,7 +422,7 @@ message StellarSorobanAuthorizedFunction {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/0a621ec7811db000a60efae5b35f78dee3aa2533/Stellar-transaction.x#L558
+ * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L558
  * @embed
  */
 message StellarSorobanAuthorizedInvocation {
@@ -431,7 +431,7 @@ message StellarSorobanAuthorizedInvocation {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/0a621ec7811db000a60efae5b35f78dee3aa2533/Stellar-transaction.x#L521
+ * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L521
  * @embed
  */
 message StellarHostFunction {
@@ -448,7 +448,7 @@ message StellarHostFunction {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/0a621ec7811db000a60efae5b35f78dee3aa2533/Stellar-transaction.x#L564
+ * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L564
  * @embed
  */
 message StellarSorobanAddressCredentials {
@@ -459,7 +459,7 @@ message StellarSorobanAddressCredentials {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/0a621ec7811db000a60efae5b35f78dee3aa2533/Stellar-transaction.x#L578
+ * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L578
  * @embed
  */
 message StellarSorobanCredentials {
@@ -474,7 +474,7 @@ message StellarSorobanCredentials {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/0a621ec7811db000a60efae5b35f78dee3aa2533/Stellar-transaction.x#L591
+ * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L591
  * @embed
  */
 message StellarSorobanAuthorizationEntry {
