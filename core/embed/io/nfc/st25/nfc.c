@@ -32,7 +32,7 @@
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
 #include "rfal_t2t.h"
-#include "rfal_utils.h"
+#include "rfal_t4t.h"
 #include "sys/mpu.h"
 
 // Interval to poll NFC device if still present (ms)
@@ -81,8 +81,10 @@ static st25_driver_t g_st25_driver = {
     .rfal_initialized = false,
 };
 
-static ts_t nfc_transceive_blocking(const nfc_apdu_message_t *cmd,
-                                    nfc_apdu_message_t *resp);
+static rfalIsoDepApduBufFormat nfc_apdu_buffer;
+
+static ts_t nfc_transceive_blocking(const nfc_apdu_message_t cmd,
+                                    nfc_apdu_message_t resp, uint32_t fwt);
 
 static ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 
@@ -442,17 +444,61 @@ static ts_t nfc_transceive_blocking(const nfc_apdu_message_t *cmd,
 
   // copy Rx APDU data and length
   if ((rx_data != NULL) && (rx_data_len != NULL)) {
-    if (*rx_data_len > sizeof(resp->data)) {
-      return TS_ENOMEM;
+    if ((rx_data[*rx_data_len - 2] == NFC_RETURN_SW1_PASS) &&
+        (rx_data[*rx_data_len - 1] == NFC_RETURN_SW2_PASS)) {
+      *rx_data_len -= 2;
+      if (*rx_data_len > sizeof(resp->data)) {
+        return TS_ENOMEM;
+      }
+      memcpy(resp->data, rx_data, *rx_data_len);
+      resp->data_len = *rx_data_len;
+    } else {
+      return TS_EINVAL;
     }
-    memcpy(resp->data, rx_data, *rx_data_len);
-    resp->data_len = *rx_data_len;
+    return TS_OK;
   } else {
-    return TS_EINVAL;
+    return TS_EBADMSG;
   }
 
 cleanup:
   TSH_RETURN;
+}
+
+ts_t nfc_compose_apdu(const nfc_apdu_header_t *apdu_header,
+                      const uint8_t *lc_data, uint8_t **apdu_buf,
+                      uint16_t *apdu_buf_len) {
+  uint16_t nfc_apdu_buffer_len = 0;
+  rfalT4tCApduParam apduParam;
+  apduParam.CLA = apdu_header->cla;
+  apduParam.INS = apdu_header->ins;
+  apduParam.P1 = apdu_header->p1;
+  apduParam.P2 = apdu_header->p2;
+  apduParam.Lc = apdu_header->lc;
+  apduParam.LcFlag = apdu_header->has_lc;
+  apduParam.Le = apdu_header->le;
+  apduParam.LeFlag = apdu_header->has_le;
+  apduParam.cApduBuf = &nfc_apdu_buffer;
+  apduParam.cApduLen = &nfc_apdu_buffer_len;
+
+  if ((lc_data != NULL) && (apdu_header->has_lc) && (apdu_header->lc > 0U) &&
+      (apdu_header->lc < sizeof(nfc_apdu_buffer.apdu))) {
+    memcpy(nfc_apdu_buffer.apdu, lc_data, apdu_header->lc);
+  }
+
+  ReturnCode ret = rfalT4TPollerComposeCAPDU(&apduParam);
+
+  if (ret == RFAL_ERR_PARAM) {
+    return TS_EINVAL;
+  } else if (ret == RFAL_ERR_NOMEM) {
+    return TS_ENOMEM;
+  } else if (ret != RFAL_ERR_NONE) {
+    return TS_ENOEN;
+  } else {
+    *apdu_buf = nfc_apdu_buffer.apdu;
+    *apdu_buf_len = nfc_apdu_buffer_len;
+
+    return TS_OK;
+  }
 }
 
 #endif

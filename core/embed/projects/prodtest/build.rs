@@ -60,6 +60,7 @@ fn main() -> Result<()> {
                     "prodtest_ble.c",
                     "prodtest_bootloader.c",
                     "prodtest_nfc.c",
+                    "prodtest_nfc_backup.c",
                     "prodtest_rtc.c",
                     "prodtest_nrf.c",
                     "prodtest_optiga.c",
