@@ -53,6 +53,8 @@ fn main() -> Result<()> {
             ],
         );
 
+        lib.add_sources_in_dir("src/utils", ["noise.c"]);
+
         if cfg!(not(feature = "emulator")) {
             lib.add_sources_in_dir(
                 "cmd",
