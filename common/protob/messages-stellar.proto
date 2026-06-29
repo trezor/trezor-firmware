@@ -423,8 +423,8 @@ message StellarSorobanAuthorizedFunction {
 
     enum StellarSorobanAuthorizedFunctionType {
         SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0;
-        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN = 1; // Not supported yet
-        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2; // Not supported yet
+        reserved 1; // SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN, not supported yet
+        reserved 2; // SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN, not supported yet
     }
 }
 
@@ -448,9 +448,9 @@ message StellarHostFunction {
     enum StellarHostFunctionType
     {
         HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0; // We only support this type of host function at this time.
-        HOST_FUNCTION_TYPE_CREATE_CONTRACT = 1; // Not supported yet
-        HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM = 2; // Not supported yet
-        HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3; // Not supported yet
+        reserved 1; // HOST_FUNCTION_TYPE_CREATE_CONTRACT, not supported yet
+        reserved 2; // HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM, not supported yet
+        reserved 3; // HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2, not supported yet
     }
 }
 
