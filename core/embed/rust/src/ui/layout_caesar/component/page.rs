@@ -213,6 +213,6 @@ where
         t.int("page_count", self.pager().total() as i64);
         t.child("buttons", &self.buttons);
         t.child("content", &self.content);
-        t.bool("has_menu", self.has_menu);
+        t.bool("has_menu", self.has_menu && self.pager().is_last());
     }
 }
