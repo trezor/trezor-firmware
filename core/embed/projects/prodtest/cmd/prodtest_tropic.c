@@ -478,6 +478,33 @@ static const struct lt_config_t g_reversible_configuration = {
     }};
 // clang-format on
 
+// Total number of MAC-and-destroy slots.
+#define TROPIC_MAC_AND_DESTROY_SLOT_TOTAL \
+  (2 * TROPIC_MAC_AND_DESTROY_SLOT_COUNT)
+
+// Number of monotonic counters.
+#define TROPIC_MCOUNTER_COUNT (TR01_MCOUNTER_INDEX_15 + 1)
+// For unprivileged sessions, counter initialization is restricted to counters
+// 4-15. Mirrors `CFG_UAP_MCOUNTER_INIT`.
+#define TROPIC_FIRST_UNPRIVILEGED_MCOUNTER 4
+
+// R-memory range used by the writable-slot test. Starts right after the
+// certificate slots (0-5) and Tropic config distribution version slots (6, 7),
+// which must not be overwritten.
+#define TROPIC_RMEM_TEST_FIRST 8
+#define TROPIC_RMEM_TEST_LAST TR01_R_MEM_DATA_SLOT_MAX
+#define TROPIC_RMEM_TEST_COUNT \
+  (TROPIC_RMEM_TEST_LAST - TROPIC_RMEM_TEST_FIRST + 1)
+// For unprivileged sessions, R-memory writes are restricted to slots 256-511.
+// Mirrors `CFG_UAP_R_MEM_DATA_WRITE`,
+#define TROPIC_RMEM_UNPRIVILEGED_FIRST 256
+// Amount of data written and read back per R-memory slot in the test.
+#define TROPIC_RMEM_TEST_DATA_SIZE 64
+
+// First ECC key slot that is not provisioned (device key is slot 0, FIDO key is
+// slot 1).
+#define TROPIC_ECC_TEST_FIRST TR01_ECC_SLOT_2
+
 static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -1173,6 +1200,103 @@ static void prodtest_tropic_send_command(cli_t* cli) {
   cli_ok_hexdata(cli, output, output_length);
 }
 
+// Brings the non-provisioned slots into a clean state in case a test fails to
+// clean them up.
+static bool tropic_tests_cleanup(cli_t* cli, lt_handle_t* h,
+                                 bool unprivileged) {
+  if (unprivileged) {
+    cli_trace(cli,
+              "Privileged session unavailable; cleaning only the unprivileged "
+              "slot ranges.");
+  }
+
+  // R-memory data slots that were tested and can be erased.
+  uint16_t rmem_first =
+      unprivileged ? TROPIC_RMEM_UNPRIVILEGED_FIRST : TROPIC_RMEM_TEST_FIRST;
+  for (uint16_t slot = rmem_first; slot <= TROPIC_RMEM_TEST_LAST; slot++) {
+    uint8_t data[TROPIC_RMEM_TEST_DATA_SIZE] = {0};
+    uint16_t read_size = 0;
+    lt_ret_t res = lt_r_mem_data_read(h, slot, data, sizeof(data), &read_size);
+    if (res == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+      continue;  // Expected: already empty.
+    }
+    cli_trace(cli, "WARNING: data slot %d was not empty (read '%s'); erasing.",
+              slot, lt_ret_verbose(res));
+    res = lt_r_mem_data_erase(h, slot);
+    if (res != LT_OK) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_RMEM,
+                "Failed to erase data slot %d: '%s'", slot,
+                lt_ret_verbose(res));
+      return false;
+    }
+    res = lt_r_mem_data_read(h, slot, data, sizeof(data), &read_size);
+    if (res != LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_RMEM,
+                "Data slot %d still not empty after erase ('%s').", slot,
+                lt_ret_verbose(res));
+      return false;
+    }
+  }
+
+  // ECC key slots above the device and FIDO keys.
+  for (lt_ecc_slot_t slot = TROPIC_ECC_TEST_FIRST; slot <= TR01_ECC_SLOT_31;
+       slot++) {
+    uint8_t pubkey[64] = {0};
+    lt_ecc_curve_type_t curve = 0;
+    lt_ecc_key_origin_t origin = 0;
+    lt_ret_t res =
+        lt_ecc_key_read(h, slot, pubkey, sizeof(pubkey), &curve, &origin);
+    if (res == LT_L3_INVALID_KEY) {
+      continue;  // Expected: already empty.
+    }
+    cli_trace(cli, "WARNING: ECC slot %d was not empty (read '%s'); erasing.",
+              slot, lt_ret_verbose(res));
+    res = lt_ecc_key_erase(h, slot);
+    if (res != LT_OK) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_ECC,
+                "Failed to erase ECC slot %d: '%s'", slot, lt_ret_verbose(res));
+      return false;
+    }
+    res = lt_ecc_key_read(h, slot, pubkey, sizeof(pubkey), &curve, &origin);
+    if (res != LT_L3_INVALID_KEY) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_ECC,
+                "ECC slot %d still not empty after erase ('%s').", slot,
+                lt_ret_verbose(res));
+      return false;
+    }
+  }
+
+  // Monotonic counters cannot be de-initialized, so at least ensure that the
+  // ones we can reinitialize are set to the maximum value if they were touched.
+  lt_mcounter_index_t counter_first =
+      unprivileged ? TROPIC_FIRST_UNPRIVILEGED_MCOUNTER : 0;
+  for (lt_mcounter_index_t idx = counter_first; idx < TROPIC_MCOUNTER_COUNT;
+       idx++) {
+    uint32_t value = 0;
+    lt_ret_t res = lt_mcounter_get(h, idx, &value);
+    if (res == LT_L3_COUNTER_INVALID ||
+        (res == LT_OK && value == TR01_MCOUNTER_VALUE_MAX)) {
+      continue;  // Uninitialized or already at maximum.
+    }
+    res = lt_mcounter_init(h, idx, TR01_MCOUNTER_VALUE_MAX);
+    if (res != LT_OK) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_COUNTER,
+                "Failed to reset counter %d to max: '%s'", idx,
+                lt_ret_verbose(res));
+      return false;
+    }
+    res = lt_mcounter_get(h, idx, &value);
+    if (res != LT_OK || value != TR01_MCOUNTER_VALUE_MAX) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_COUNTER,
+                "Counter %d not at max after reset (value %u, '%s').", idx,
+                (unsigned)value, lt_ret_verbose(res));
+      return false;
+    }
+  }
+
+  return true;
+}
+
 static void prodtest_tropic_lock(cli_t* cli) {
   // This function is:
   //   * idempotent (it can be called multiple times without changing the state
@@ -1653,29 +1777,6 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 cleanup:
   tropic_deinit();
 }
-
-// Total number of MAC-and-destroy slots.
-#define TROPIC_MAC_AND_DESTROY_SLOT_TOTAL \
-  (2 * TROPIC_MAC_AND_DESTROY_SLOT_COUNT)
-
-// Number of monotonic counters.
-#define TROPIC_MCOUNTER_COUNT (TR01_MCOUNTER_INDEX_15 + 1)
-// For unprivileged sessions, counter initialization is restricted to counters
-// 4-15. Mirrors `CFG_UAP_MCOUNTER_INIT`.
-#define TROPIC_FIRST_UNPRIVILEGED_MCOUNTER 4
-
-// R-memory range used by the writable-slot test. Starts right after the
-// certificate slots (0-5), which must never be overwritten.
-#define TROPIC_RMEM_TEST_FIRST \
-  (TROPIC_DEVICE_CERT_FIRST_SLOT + TROPIC_DEVICE_CERT_SLOT_COUNT)
-#define TROPIC_RMEM_TEST_LAST TR01_R_MEM_DATA_SLOT_MAX
-#define TROPIC_RMEM_TEST_COUNT \
-  (TROPIC_RMEM_TEST_LAST - TROPIC_RMEM_TEST_FIRST + 1)
-// For unprivileged sessions, R-memory writes are restricted to slots 256-511.
-// Mirrors `CFG_UAP_R_MEM_DATA_WRITE`,
-#define TROPIC_RMEM_UNPRIVILEGED_FIRST 256
-// Amount of data written and read back per R-memory slot in the test.
-#define TROPIC_RMEM_TEST_DATA_SIZE 64
 
 // Per-command identifiers used as PRNG seeds so that different commands sample
 // different slot subsets.
@@ -3021,7 +3122,31 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_tropic_tests_cleanup(cli_t* cli) {
+  if (cli_arg_count(cli) != 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+  lt_pkey_index_t pairing_key_index = -1;
+  if (!tropic_ensure_session(cli, &pairing_key_index)) {
+    return;
+  }
+  bool unprivileged = pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
+  if (!tropic_tests_cleanup(cli, tropic_get_handle(), unprivileged)) {
+    // Error already reported by tropic_tests_cleanup().
+    return;
+  }
+  cli_ok(cli, "");
+}
+
 // clang-format off
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-tests-cleanup",
+  .func = prodtest_tropic_tests_cleanup,
+  .info = "Reset the slots written by the tropic-test-* commands to a clean state",
+  .args = ""
+);
 
 PRODTEST_CLI_CMD(
   .name = "tropic-get-riscv-fw-version",
