@@ -1127,7 +1127,11 @@ class DebugUI:
         is_flow_menu = False
         if layout.has_menu():
             is_menu = True
-            self.debuglink.press_info()
+            if self.debuglink.layout_type is LayoutType.Caesar:
+                self.debuglink.press_right()
+            else:
+                self.debuglink.click(self.debuglink.screen_buttons.menu())
+
         elif layout.has_flow_menu():
             is_flow_menu = True
             self.debuglink.click(self.debuglink.screen_buttons.menu())
