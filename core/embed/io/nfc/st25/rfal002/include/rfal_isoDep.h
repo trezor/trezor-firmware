@@ -1033,6 +1033,13 @@ ReturnCode rfalIsoDepPollBStartActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rfa
  */
 ReturnCode rfalIsoDepPollBGetActivationStatus( void );
 
+/**
+ *****************************************************************************
+ *  @brief  Get the current block number.
+ *  @return The current block number of the last received I-Block.
+ *****************************************************************************
+ */
+uint8_t rfalIsoDepGetBlockNumber( void );
 
 #endif /* RFAL_ISODEP_H_ */
 
