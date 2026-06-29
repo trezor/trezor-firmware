@@ -351,6 +351,13 @@ message StellarSCVal {
 
     message StellarSCAddress {
         required StellarSCAddressType type = 1;
+        // Raw bytes of the StrKey payload (no version byte / checksum), per SEP-0023.
+        // https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
+        //   ACCOUNT           (G...): 32 bytes = ed25519 public key
+        //   CONTRACT          (C...): 32 bytes = contract hash
+        //   MUXED_ACCOUNT     (M...): 40 bytes = 32-byte ed25519 || 8-byte id (big-endian uint64)
+        //   CLAIMABLE_BALANCE (B...): 33 bytes = 1-byte type (0x00 = V0) || 32-byte hash
+        //   LIQUIDITY_POOL    (L...): 32 bytes = pool hash
         required bytes address = 2;
 
         enum StellarSCAddressType
