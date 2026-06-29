@@ -57,6 +57,10 @@ const char *ts_string(ts_t status) {
     return "ENOINIT";
   } else if (ts_eq(status, TS_ENOEN)) {
     return "ENOEN";
+  } else if (ts_eq(status, TS_ENOSTATE)) {
+    return "ENOSTATE";
+  } else if (ts_eq(status, TS_EINIT)) {
+    return "EINIT";
   } else {
     return "?ERROR";
   }
