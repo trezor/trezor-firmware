@@ -685,8 +685,8 @@ static bool update_change_pin_counter() {
   g_is_change_pin_counter_cached = false;
   ret = TROPIC_RETRY_COMMAND(
       lt_mcounter_update(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT));
-  if (ret == LT_L3_COUNTER_INVALID) {
-    // The counter has not been initialized yet
+  if (ret == LT_L3_COUNTER_INVALID || ret == LT_L3_UPDATE_ERR) {
+    // The counter has not been initialized yet or is depleted.
     ret = TROPIC_RETRY_COMMAND(
         lt_mcounter_init(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT,
                          TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE - 1));

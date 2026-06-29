@@ -1507,6 +1507,16 @@ Several resources are partitioned by pairing-key privilege, so the available slo
 
 The R-memory test never touches the certificate slots (`0`–`5`).
 
+### tropic-tests-cleanup
+
+Ensures that the slots written by the `tropic-test-*` commands are reset to a clean state. Run this if one of the test commands reports a problem, so the device is not shipped with stray data left in a slot.
+
+Example:
+```
+tropic-tests-cleanup
+OK
+```
+
 ### tropic-benchmark
 
 Measures the actual average duration of individual Tropic operations over 25 iterations and prints the results.
