@@ -144,9 +144,6 @@ static void prodtest_nfc_read_card(cli_t* cli) {
         case NFC_DEV_INTERFACE_ISODEP:
           cli_trace(cli, "NFC Tag Type: ISO-DEP (%d)", dev_info.interface);
           break;
-        case NFC_DEV_INTERFACE_NFCDEP:
-          cli_trace(cli, "NFC Tag Type: NFC-DEP (%d)", dev_info.interface);
-          break;
         case NFC_DEV_INTERFACE_UNKNOWN:
         default:
           cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED,
@@ -164,7 +161,6 @@ static void prodtest_nfc_read_card(cli_t* cli) {
   cli_ok(cli, "");
 
 cleanup:
-  nfc_stop_discovery();
   nfc_deinit();
 }
 
@@ -274,7 +270,6 @@ static void prodtest_nfc_write_card(cli_t* cli) {
   cli_ok(cli, "");
 
 cleanup:
-  nfc_stop_discovery();
   nfc_deinit();
 }
 

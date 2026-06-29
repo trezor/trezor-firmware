@@ -34,20 +34,26 @@ typedef struct {
   bool last_state;
   // Pending events
   nfc_event_t events;
-
 } nfc_fsm_t;
 
-// State machine for each task
+//!< Card connection status flag
+static bool card_connected = false;
+
+//!< State machine for each task
 static nfc_fsm_t g_nfc_tls[SYSTASK_MAX_TASKS] = {0};
 
-// Forward declarations
+//!< Forward declarations
 static const syshandle_vmt_t g_nfc_handle_vmt;
 
 bool nfc_poll_init(void) {
+  card_connected = false;
   return syshandle_register(SYSHANDLE_NFC, &g_nfc_handle_vmt, NULL);
 }
 
-void nfc_poll_deinit(void) { syshandle_unregister(SYSHANDLE_NFC); }
+void nfc_poll_deinit(void) {
+  card_connected = false;
+  syshandle_unregister(SYSHANDLE_NFC);
+}
 
 bool nfc_get_event(nfc_event_t* event) {
   assert(event != NULL);
@@ -57,6 +63,8 @@ bool nfc_get_event(nfc_event_t* event) {
   fsm->events = NFC_NO_EVENT;
   return true;
 }
+
+bool nfc_get_state(void) { return card_connected; }
 
 static bool nfc_fsm_update(nfc_fsm_t* fsm, bool* new_state) {
   bool new_event = false;
@@ -68,9 +76,8 @@ static bool nfc_fsm_update(nfc_fsm_t* fsm, bool* new_state) {
       fsm->events = NFC_EVENT_DISCONNECTED;
     }
     new_event = true;
+    fsm->last_state = *new_state;
   }
-
-  fsm->last_state = *new_state;
 
   return new_event;
 }
@@ -85,30 +92,25 @@ static void on_event_poll(void* context, bool read_awaited,
   UNUSED(write_awaited);
 
   if (read_awaited) {
-    bool connected = false;
-
     // Run worker
     rfalNfcWorker();
 
-    rfalNfcState rfal_state = rfalNfcGetState();
-
-    if (rfalNfcIsDevActivated(rfal_state)) {
-      if (nfc_is_connected()) {
-        if (nfc_check_connection()) {
-          connected = true;
-        } else {
+    if (rfalNfcIsDevActivated(rfalNfcGetState())) {
+      if (card_connected) {
+        if (!nfc_check_connection()) {
           nfc_restart_discovery();
+          card_connected = false;
         }
       } else {
         if (nfc_identify()) {
-          connected = true;
+          card_connected = true;
         } else {
           nfc_restart_discovery();
         }
       }
     }
 
-    syshandle_signal_read_ready(SYSHANDLE_NFC, &connected);
+    syshandle_signal_read_ready(SYSHANDLE_NFC, &card_connected);
   }
 }
 

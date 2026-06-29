@@ -44,7 +44,6 @@
 typedef struct {
   bool initialized;
   bool rfal_initialized;
-  bool card_connected;
   // SPI driver
   SPI_HandleTypeDef hspi;
   // NFC IRQ pin callback
@@ -182,7 +181,6 @@ ts_t nfc_init(void) {
 
   drv->rfal_initialized = true;
   drv->initialized = true;
-  drv->card_connected = false;
   drv->disc_params = &default_disc_params;
 
   TSH_CHECK(nfc_poll_init(), TS_ENOINIT);
@@ -236,7 +234,6 @@ cleanup:
 ts_t nfc_stop_discovery(void) {
   TSH_DECLARE;
   st25_driver_t *drv = &g_st25_driver;
-  drv->card_connected = false;
   TSH_CHECK(drv->initialized, TS_ENOINIT);
 
   // In case the NFC state machine is active, deactivate to idle before
@@ -258,7 +255,6 @@ cleanup:
 ts_t nfc_restart_discovery(void) {
   TSH_DECLARE;
   st25_driver_t *drv = &g_st25_driver;
-  drv->card_connected = false;
   TSH_CHECK(drv->initialized, TS_ENOINIT);
 
   ReturnCode ret = rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_DISCOVERY);
@@ -268,20 +264,13 @@ cleanup:
   TSH_RETURN;
 }
 
-bool nfc_is_connected(void) {
-  st25_driver_t *drv = &g_st25_driver;
-  return drv->card_connected;
-}
-
 bool nfc_identify(void) {
   TSH_DECLARE;
-  st25_driver_t *drv = &g_st25_driver;
   nfc_dev_info_t dev_info;
   ts_t status = nfc_dev_read_info(&dev_info);
   TSH_CHECK_OK(status);
 
   if (dev_info.type == NFC_DEV_TYPE_A || dev_info.type == NFC_DEV_TYPE_B) {
-    drv->card_connected = true;
     return true;
   }
 

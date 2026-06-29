@@ -22,8 +22,6 @@
 #include <trezor_bsp.h>
 #include <trezor_types.h>
 
-bool nfc_is_connected();
-
 bool nfc_identify();
 
 bool nfc_check_connection();

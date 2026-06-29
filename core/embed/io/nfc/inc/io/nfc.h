@@ -65,7 +65,8 @@ typedef struct {
   uint16_t **data_len;
 } nfc_apdu_response_t;
 
-/** @brief Initialize NFC driver including supportive RFAL middleware and
+/**
+ * @brief Initialize NFC driver including supportive RFAL middleware and
  * polling mechanism.
  * @return TS_OK when the function pass, otherwise an error.
  */
@@ -84,24 +85,34 @@ void nfc_deinit(void);
  */
 ts_t nfc_start_discovery(void);
 
-/** @brief Deactivate the NFC RFAL state machine (put in IDLE state).
+/**
+ * @brief Deactivate the NFC RFAL state machine (put in IDLE state).
  * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_stop_discovery(void);
 
-/** @brief Get current events of NFC device.
+/**
+ * @brief Get current events of NFC device.
  * @param event [out] Pointer to store new event.
  * @return TS_OK when the function pass, otherwise an error.
  */
 bool nfc_get_event(nfc_event_t *event);
 
-/** @brief Read the general device information of the activated NFC device.
+/**
+ * @brief Get current state of NFC device.
+ * @return 'true' when card is connected, else 'false'.
+ */
+bool nfc_get_state(void);
+
+/**
+ * @brief Read the general device information of the activated NFC device.
  * @param dev_info [out] Pointer to store current NFC device details.
  * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 
-/** @brief Transceive data with the activated NFC device. This is a blocking
+/**
+ * @brief Transceive data with the activated NFC device. This is a blocking
  * call.
  * @param cmd [in] Tx data buffer structure
  * @param resp [out] Rx data buffer structure
