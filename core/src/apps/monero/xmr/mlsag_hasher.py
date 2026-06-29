@@ -75,7 +75,7 @@ class PreMlsagHasher:
                 for x in p:
                     update(x)
             else:
-                assert isinstance(p, AnyBytes)
+                assert isinstance(p, (bytes, bytearray, memoryview))
                 update(p)
             return
 

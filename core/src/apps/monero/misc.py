@@ -35,6 +35,7 @@ def compute_tx_key(
 ) -> bytes:
     from apps.monero.xmr import crypto, crypto_helpers
 
+    tx_prefix_hash = bytes(tx_prefix_hash)
     rand_inp = crypto.sc_add_into(None, spend_key_private, rand_mult_num)
     passwd = crypto_helpers.keccak_2hash(
         crypto_helpers.encodeint(rand_inp) + tx_prefix_hash
@@ -51,6 +52,7 @@ def compute_enc_key_host(
     from apps.monero.xmr import crypto_helpers
 
     salt = random.bytes(32)
+    tx_prefix_hash = bytes(tx_prefix_hash)
     passwd = crypto_helpers.keccak_2hash(
         crypto_helpers.encodeint(view_key_private) + tx_prefix_hash
     )

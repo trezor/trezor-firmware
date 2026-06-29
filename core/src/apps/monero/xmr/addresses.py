@@ -39,11 +39,11 @@ def classify_subaddresses(
         assert addr is not None
         if change_addr and addr_eq(change_addr, addr):
             continue
+        assert addr.spend_public_key is not None
+        assert addr.view_public_key is not None
         # addr_to_hash
         # Creates hashable address representation
-        addr_hashed = bytes(addr.spend_public_key or b"") + bytes(
-            addr.view_public_key or b""
-        )
+        addr_hashed = bytes(addr.spend_public_key) + bytes(addr.view_public_key)
         if addr_hashed in addr_set:
             continue
         addr_set.add(addr_hashed)

@@ -27,7 +27,8 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
     await paths.validate_path(keychain, address_n)
 
     creds = misc.get_creds(keychain, address_n, msg.network_type)
-    address = creds.address or ""
+    address = creds.address
+    assert address is not None
 
     have_subaddress = (
         account is not None and minor is not None and (account, minor) != (0, 0)
