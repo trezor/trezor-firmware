@@ -41,6 +41,12 @@
 // Interval to poll NFC device if still present (ms)
 #define NFC_POLLING_INTERVAL_MS 300u
 
+/* PCB byte definitions for R-blocks */
+#define ISODEP_PCB_RNAK_BN0 (0xB2U)  //!< R(NAK) block number 0
+#define ISODEP_PCB_RNAK_BN1 (0xB3U)  //!< R(NAK) block number 1
+#define ISODEP_PCB_RACK_BN0 (0xA2U)  //!< R(ACK) block number 0
+#define ISODEP_PCB_RACK_BN1 (0xA3U)  //!< R(ACK) block number 1
+
 typedef struct {
   bool initialized;
   bool rfal_initialized;
@@ -86,6 +92,8 @@ static st25_driver_t g_st25_driver = {
 };
 
 static rfalIsoDepApduBufFormat nfc_apdu_buffer;
+
+static uint8_t isodep_block_number = 0;
 
 static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
                                     nfc_apdu_response_t resp, uint32_t fwt);
@@ -284,8 +292,68 @@ cleanup:
   return false;
 }
 
+/*!
+ * @brief Call after every successful APDU exchange to keep block number in sync
+ */
+static inline void nfc_isodep_toggle_block(void) {
+  isodep_block_number ^= 0x01U;
+}
+
+/*!
+ * R(NAK) presence check — ISO/IEC 14443-4 §7.6.6 Method 2
+ *
+ * Sends R(NAK) at raw RF transceive level.
+ * Does NOT affect ISO-DEP session state (selected AID, file, security).
+ * Does NOT toggle block number.
+ *
+ * \return RFAL_ERR_NONE    : R(ACK) received, card is present
+ * \return RFAL_ERR_TIMEOUT : no response, card removed
+ * \return RFAL_ERR_PROTO   : unexpected response received
+ */
+static ReturnCode nfc_isodep_rnak_presence_check(void) {
+  uint8_t rnak =
+      (isodep_block_number == 0U) ? ISODEP_PCB_RNAK_BN0 : ISODEP_PCB_RNAK_BN1;
+
+  /* Expected R(ACK) per ISO Rule 12:
+   * R(NAK) bn != PICC bn → PICC sends R(ACK) with its own bn
+   * Since we match our current bn, PICC bn will be opposite  */
+  uint8_t rack_exp =
+      (isodep_block_number == 0U) ? ISODEP_PCB_RACK_BN1 : ISODEP_PCB_RACK_BN0;
+
+  uint8_t rxBuf[2U];
+  uint16_t rxLenBits = 0U;
+
+  // R(NAK) can be sent only when no APDU exchange is in progress
+  if (rfalNfcGetState() == RFAL_NFC_STATE_DATAEXCHANGE) {
+    return RFAL_ERR_NONE;
+  }
+
+  rfalNfcDevice *nfcDev;
+  ReturnCode err = rfalNfcGetActiveDevice(&nfcDev);
+  if (err != RFAL_ERR_NONE) {
+    return err;
+  }
+
+  // R(NAK) transceive
+  err = rfalTransceiveBlockingTxRx(
+      &rnak, sizeof(rnak), rxBuf, (uint16_t)sizeof(rxBuf), &rxLenBits,
+      RFAL_TXRX_FLAGS_DEFAULT, nfcDev->proto.isoDep.info.FWT);
+
+  if (err != RFAL_ERR_NONE) {
+    return err;
+  }
+
+  /* Verify response is R(ACK) with expected block number */
+  if ((rfalConvBitsToBytes(rxLenBits) == 1U) && (rxBuf[0] == rack_exp)) {
+    return RFAL_ERR_NONE;
+  }
+
+  return RFAL_ERR_PROTO;
+}
+
 bool nfc_check_connection(nfc_dev_info_t *dev_info) {
   TSH_DECLARE;
+  ReturnCode err = RFAL_ERR_BUSY;
   static uint32_t last_check_time = 0;
   if (!ticks_expired(last_check_time + NFC_POLLING_INTERVAL_MS)) {
     return true;
@@ -293,21 +361,14 @@ bool nfc_check_connection(nfc_dev_info_t *dev_info) {
   last_check_time = ticks();
 
   if (dev_info->interface == NFC_DEV_INTERFACE_ISODEP) {
-    uint8_t tx_read_1b[] = {0x00, 0xB0, 0x00, 0x00, 0x01};
-    uint8_t *rx_dummy = NULL;
-    uint16_t *rx_dummy_len = NULL;
-    nfc_apdu_cmd_t tx_buf = {.data = tx_read_1b,
-                             .data_len = sizeof(tx_read_1b)};
-    nfc_apdu_response_t rx_buf = {.data = &rx_dummy, .data_len = &rx_dummy_len};
-    ts_t status = nfc_transceive(tx_buf, rx_buf);
-    return ts_ok(status);
+    return nfc_isodep_rnak_presence_check() == RFAL_ERR_NONE;
   }
 
   switch (dev_info->type) {
     case NFC_DEV_TYPE_A:
       uint8_t rxBuf[20];
       uint16_t rxLen = sizeof(rxBuf);
-      ReturnCode err = rfalT2TPollerRead(0x00, rxBuf, sizeof(rxBuf), &rxLen);
+      err = rfalT2TPollerRead(0x00, rxBuf, sizeof(rxBuf), &rxLen);
       return err == RFAL_ERR_NONE;
     case NFC_DEV_TYPE_B:
     default:
@@ -329,6 +390,7 @@ ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp) {
   }
 
   return nfc_transceive_blocking(cmd, resp, RFAL_FWT_NONE);
+  nfc_isodep_toggle_block();
 
 cleanup:
   TSH_RETURN;
