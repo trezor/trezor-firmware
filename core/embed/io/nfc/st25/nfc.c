@@ -88,6 +88,8 @@ static st25_driver_t g_st25_driver = {
 static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
                                     nfc_apdu_response_t resp, uint32_t fwt);
 
+static ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
+
 ts_t nfc_init(void) {
   TSH_DECLARE;
   st25_driver_t *drv = &g_st25_driver;
@@ -264,21 +266,23 @@ cleanup:
   TSH_RETURN;
 }
 
-bool nfc_identify(void) {
+bool nfc_identify(nfc_dev_info_t *dev_info) {
   TSH_DECLARE;
-  nfc_dev_info_t dev_info;
-  ts_t status = nfc_dev_read_info(&dev_info);
+  ts_t status = nfc_dev_read_info(dev_info);
   TSH_CHECK_OK(status);
 
-  if (dev_info.type == NFC_DEV_TYPE_A || dev_info.type == NFC_DEV_TYPE_B) {
+  if (((dev_info->type == NFC_DEV_TYPE_A) ||
+       (dev_info->type == NFC_DEV_TYPE_B)) &&
+      (dev_info->interface == NFC_DEV_INTERFACE_ISODEP)) {
     return true;
   }
 
 cleanup:
+  memset(dev_info, 0, sizeof(nfc_dev_info_t));
   return false;
 }
 
-bool nfc_check_connection(void) {
+bool nfc_check_connection(nfc_dev_info_t *dev_info) {
   TSH_DECLARE;
   static uint32_t last_check_time = 0;
   if (!ticks_expired(last_check_time + NFC_POLLING_INTERVAL_MS)) {
@@ -286,22 +290,18 @@ bool nfc_check_connection(void) {
   }
   last_check_time = ticks();
 
-  nfc_dev_info_t dev_info;
-  ts_t status = nfc_dev_read_info(&dev_info);
-  TSH_CHECK_OK(status);
-
-  if (dev_info.interface == NFC_DEV_INTERFACE_ISODEP) {
+  if (dev_info->interface == NFC_DEV_INTERFACE_ISODEP) {
     uint8_t tx_read_1b[] = {0x00, 0xB0, 0x00, 0x00, 0x01};
     uint8_t *rx_dummy = NULL;
     uint16_t *rx_dummy_len = NULL;
     nfc_apdu_cmd_t tx_buf = {.data = tx_read_1b,
                              .data_len = sizeof(tx_read_1b)};
     nfc_apdu_response_t rx_buf = {.data = &rx_dummy, .data_len = &rx_dummy_len};
-    status = nfc_transceive(tx_buf, rx_buf);
+    ts_t status = nfc_transceive(tx_buf, rx_buf);
     return ts_ok(status);
   }
 
-  switch (dev_info.type) {
+  switch (dev_info->type) {
     case NFC_DEV_TYPE_A:
       uint8_t rxBuf[20];
       uint16_t rxLen = sizeof(rxBuf);
@@ -312,7 +312,6 @@ bool nfc_check_connection(void) {
       return false;
   }
 
-cleanup:
   return false;
 }
 
@@ -333,7 +332,7 @@ cleanup:
   TSH_RETURN;
 }
 
-ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
+static ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
   TSH_DECLARE;
   TSH_CHECK(rfalNfcIsDevActivated(rfalNfcGetState()), TS_ENOEN);
 

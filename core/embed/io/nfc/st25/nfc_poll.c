@@ -39,6 +39,9 @@ typedef struct {
 //!< Card connection status flag
 static bool card_connected = false;
 
+//!< Active card details
+static nfc_dev_info_t nfc_card_info;
+
 //!< State machine for each task
 static nfc_fsm_t g_nfc_tls[SYSTASK_MAX_TASKS] = {0};
 
@@ -65,6 +68,16 @@ bool nfc_get_event(nfc_event_t* event) {
 }
 
 bool nfc_get_state(void) { return card_connected; }
+
+ts_t nfc_get_device_info(nfc_dev_info_t* dev_info) {
+  if (card_connected) {
+    memcpy(dev_info, &nfc_card_info, sizeof(nfc_dev_info_t));
+    return TS_OK;
+  } else {
+    memset(&nfc_card_info, 0, sizeof(nfc_dev_info_t));
+    return TS_ENOSTATE;
+  }
+}
 
 static bool nfc_fsm_update(nfc_fsm_t* fsm, bool* new_state) {
   bool new_event = false;
@@ -97,12 +110,12 @@ static void on_event_poll(void* context, bool read_awaited,
 
     if (rfalNfcIsDevActivated(rfalNfcGetState())) {
       if (card_connected) {
-        if (!nfc_check_connection()) {
+        if (!nfc_check_connection(&nfc_card_info)) {
           nfc_restart_discovery();
           card_connected = false;
         }
       } else {
-        if (nfc_identify()) {
+        if (nfc_identify(&nfc_card_info)) {
           card_connected = true;
         } else {
           nfc_restart_discovery();

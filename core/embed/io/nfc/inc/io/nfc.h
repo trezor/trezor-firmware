@@ -105,11 +105,11 @@ bool nfc_get_event(nfc_event_t *event);
 bool nfc_get_state(void);
 
 /**
- * @brief Read the general device information of the activated NFC device.
+ * @brief Return general device information of the activated NFC device.
  * @param dev_info [out] Pointer to store current NFC device details.
  * @return TS_OK when the function pass, otherwise an error.
  */
-ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
+ts_t nfc_get_device_info(nfc_dev_info_t *dev_info);
 
 /**
  * @brief Transceive data with the activated NFC device. This is a blocking

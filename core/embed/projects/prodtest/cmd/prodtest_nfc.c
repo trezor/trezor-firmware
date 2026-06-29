@@ -28,8 +28,6 @@
 
 #include "prodtest_error_codes.h"
 
-static nfc_dev_info_t dev_info = {0};
-
 static uint8_t nfc_compose_uri(const char* uri, uint8_t* buffer,
                                uint8_t buffer_size) {
   size_t uri_len = strlen(uri);
@@ -52,6 +50,7 @@ static uint8_t nfc_compose_uri(const char* uri, uint8_t* buffer,
 static void prodtest_nfc_read_card(cli_t* cli) {
   uint32_t timeout = 0;
   bool timeout_set = false;
+  nfc_dev_info_t dev_info;
   memset(&dev_info, 0, sizeof(dev_info));
 
   if (cli_has_arg(cli, "timeout")) {
@@ -119,7 +118,7 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     }
 
     if (event_flag == NFC_EVENT_CONNECTED) {
-      nfc_dev_read_info(&dev_info);
+      nfc_get_device_info(&dev_info);
       cli_trace(cli, "NFC card detected.");
 
       switch (dev_info.type) {
@@ -167,6 +166,7 @@ cleanup:
 static void prodtest_nfc_write_card(cli_t* cli) {
   uint32_t timeout = 0;
   bool timeout_set = false;
+  nfc_dev_info_t dev_info;
   memset(&dev_info, 0, sizeof(dev_info));
 
   if (cli_has_arg(cli, "timeout")) {
@@ -234,7 +234,8 @@ static void prodtest_nfc_write_card(cli_t* cli) {
     }
 
     if (event_flag == NFC_EVENT_CONNECTED) {
-      nfc_dev_read_info(&dev_info);
+      cli_trace(cli, "NFC card detected.");
+      nfc_get_device_info(&dev_info);
 
       if (dev_info.type != NFC_DEV_TYPE_A) {
         cli_error(cli, PRODTEST_ERR_NFC_TYPE_A_ONLY,

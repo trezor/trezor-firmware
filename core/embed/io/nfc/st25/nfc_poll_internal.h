@@ -22,8 +22,8 @@
 #include <trezor_bsp.h>
 #include <trezor_types.h>
 
-bool nfc_identify();
+bool nfc_identify(nfc_dev_info_t *dev_info);
 
-bool nfc_check_connection();
+bool nfc_check_connection(nfc_dev_info_t *dev_info);
 
 ts_t nfc_restart_discovery(void);
