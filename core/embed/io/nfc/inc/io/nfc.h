@@ -45,6 +45,26 @@ typedef enum {
   NFC_EVENT_DISCONNECTED,
 } nfc_event_t;
 
+/** @brief NFC-A T4T command set, T4T 1.0 & ISO7816-4 2013 Table 4 */
+typedef enum {
+  NFC_APDU_INS_SELECT = 0xA4,
+  NFC_APDU_INS_READBINARY = 0xB0,
+  NFC_APDU_INS_WRITEBINARY = 0xD6,
+  NFC_APDU_INS_NOISE_1 = 0x01,
+} nfc_apdu_ins_t;
+
+/** @brief NFC Class byte definitions */
+typedef enum {
+  NFC_APDU_CLA_DEFAULT = 0x00,
+  NFC_APDU_CLA_TREZOR = 0x80,
+} nfc_apdu_cla_t;
+
+/** @brief NFC APDU return codes definitions */
+typedef enum {
+  NFC_RETURN_SW1_PASS = 0x90,
+  NFC_RETURN_SW2_PASS = 0x00,
+} nfc_return_code_t;
+
 /** @brief NFC card details */
 typedef struct {
   nfc_dev_type_t type;             //!< NFC card type
@@ -52,6 +72,17 @@ typedef struct {
   char uid[NFC_MAX_UID_BUF_SIZE];  //!< Card UID string
   uint8_t uid_len;
 } nfc_dev_info_t;
+
+typedef struct {
+  uint8_t cla;
+  uint8_t ins;
+  uint8_t p1;
+  uint8_t p2;
+  uint8_t lc;
+  uint8_t le;
+  bool has_lc;
+  bool has_le;
+} nfc_apdu_header_t;
 
 /** @brief NFC APDU command buffer structure */
 typedef struct {
@@ -110,6 +141,11 @@ bool nfc_get_state(void);
  * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_get_device_info(nfc_dev_info_t *dev_info);
+
+/** @brief Compose APDU data packet from header and data buffer. */
+ts_t nfc_compose_apdu(const nfc_apdu_header_t *apdu_header,
+                      const uint8_t *lc_data, uint8_t **apdu_buf,
+                      uint16_t *apdu_buf_len);
 
 /**
  * @brief Transceive data with the activated NFC device. This is a blocking

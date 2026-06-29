@@ -47,6 +47,13 @@ typedef struct cli cli_t;
 #define CLI_ERROR_FATAL 13
 #define CLI_ERROR_INVALID_CRC 14
 
+/** Color codes */
+#define ESC_COLOR_GREEN "\e[32m"
+#define ESC_COLOR_RED "\e[31m"
+#define ESC_COLOR_GRAY "\e[37m"
+#define ESC_COLOR_YELLOW "\e[33m"
+#define ESC_COLOR_RESET "\e[39m"
+
 /** CLI command handler routine prototype */
 typedef void (*cli_cmd_handler_t)(cli_t* cli);
 
