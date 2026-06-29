@@ -87,12 +87,16 @@ def _ensure_dst_key(dst: bytearray | None = None) -> bytearray:
 
 
 def memcpy(
-    dst: bytearray, dst_off: int, src: AnyBytes, src_off: int, len: int
-) -> bytearray:
+    dst: bytearray | None,
+    dst_off: int,
+    src: AnyBytes,
+    src_off: int,
+    length: int,
+) -> bytearray | None:
     from trezor.utils import memcpy as tmemcpy
 
     if dst is not None:
-        tmemcpy(dst, dst_off, src, src_off, len)
+        tmemcpy(dst, dst_off, src, src_off, length)
     return dst
 
 
@@ -432,11 +436,13 @@ class KeyVBase(Generic[T]):
     def __len__(self) -> int:
         return self.size
 
-    def to(self, idx: int, buff: bytearray | None = None, offset: int = 0) -> bytearray:
+    def to(
+        self, idx: int, buff: bytearray | None = None, offset: int = 0
+    ) -> bytearray | None:
         buff = _ensure_dst_key(buff)
         return memcpy(buff, offset, self.__getitem__(self.idxize(idx)), 0, 32)
 
-    def read(self, idx: int, buff: bytes, offset: int = 0) -> bytes:
+    def read(self, idx: int, buff: AnyBytes, offset: int = 0) -> None:
         raise NotImplementedError
 
     def slice_view(self, start: int, stop: int) -> "KeyVSliced":
