@@ -1429,6 +1429,7 @@ class TrezorTestContext:
             type[protobuf.MessageType],
             t.Callable[[protobuf.MessageType], protobuf.MessageType],
         ] = {}
+        self.reset_resp_mappings()
 
     def reset_resp_mappings(self) -> None:
         self.resp_mappings: dict[

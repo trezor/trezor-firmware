@@ -36,7 +36,7 @@ impl<const T: usize> CacheNode<T> {
         self.valid = true;
         let len = data.len();
         debug_assert!(len <= T);
-        self.content[..len].copy_from_slice(&data);
+        self.content[..len].copy_from_slice(data);
         self.content_len = len;
     }
 
@@ -246,19 +246,13 @@ impl<const T: usize, const N: usize> Cache<T, N> {
     }
 
     pub fn current_data(&self) -> Option<TString<'static>> {
-        if let Some(current) = self.current {
-            unsafe {
-                return Some(
-                    StrBuffer::from_ptr_and_len(
-                        self.nodes[current].content.as_ptr(),
-                        self.nodes[current].content_len,
-                    )
-                    .into(),
-                );
-            }
-        } else {
-            None
-        }
+        self.current.map(|current| unsafe {
+            StrBuffer::from_ptr_and_len(
+                self.nodes[current].content.as_ptr(),
+                self.nodes[current].content_len,
+            )
+            .into()
+        })
     }
 }
 

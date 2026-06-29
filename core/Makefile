@@ -44,7 +44,9 @@ ifeq ($(N4W1),1)
 XTASK_BUILD_OPTS += --n4w1
 endif
 ifeq ($(TREZOR_MODEL),T3W1)
+ifneq ($(BITCOIN_ONLY),1)
 XTASK_BUILD_OPTS += --apps
+endif
 endif
 ifeq ($(PRODUCTION),1)
 XTASK_BUILD_OPTS += --production
@@ -112,7 +114,7 @@ test_emu_sanity: ## make sure the emulator doesn't crash on startup
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests  --ui=test $(TESTOPTS) --lang=$(TEST_LANG)
 
-stest_emu_multicore: ## run device tests using multiple cores
+test_emu_multicore: ## run device tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
 		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
