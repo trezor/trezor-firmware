@@ -371,8 +371,8 @@ message StellarSCVal {
     }
 
     message StellarSCValMapEntry {
-        optional StellarSCVal key = 1;
-        optional StellarSCVal value = 2;
+        required StellarSCVal key = 1;
+        required StellarSCVal value = 2;
     }
 
     enum StellarSCValType {

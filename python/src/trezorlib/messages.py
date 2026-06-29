@@ -8246,15 +8246,15 @@ class StellarSCAddress(protobuf.MessageType):
 class StellarSCValMapEntry(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("key", "StellarSCVal", repeated=False, required=False, default=None),
-        2: protobuf.Field("value", "StellarSCVal", repeated=False, required=False, default=None),
+        1: protobuf.Field("key", "StellarSCVal", repeated=False, required=True),
+        2: protobuf.Field("value", "StellarSCVal", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        key: Optional["StellarSCVal"] = None,
-        value: Optional["StellarSCVal"] = None,
+        key: "StellarSCVal",
+        value: "StellarSCVal",
     ) -> None:
         self.key = key
         self.value = value

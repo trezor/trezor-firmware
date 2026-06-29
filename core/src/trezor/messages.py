@@ -6428,14 +6428,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class StellarSCValMapEntry(protobuf.MessageType):
-        key: "StellarSCVal | None"
-        value: "StellarSCVal | None"
+        key: "StellarSCVal"
+        value: "StellarSCVal"
 
         def __init__(
             self,
             *,
-            key: "StellarSCVal | None" = None,
-            value: "StellarSCVal | None" = None,
+            key: "StellarSCVal",
+            value: "StellarSCVal",
         ) -> None:
             pass
 

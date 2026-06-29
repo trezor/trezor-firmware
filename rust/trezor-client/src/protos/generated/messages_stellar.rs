@@ -8234,6 +8234,12 @@ pub mod stellar_scval {
         const NAME: &'static str = "StellarSCValMapEntry";
 
         fn is_initialized(&self) -> bool {
+            if self.key.is_none() {
+                return false;
+            }
+            if self.value.is_none() {
+                return false;
+            }
             for v in &self.key {
                 if !v.is_initialized() {
                     return false;
@@ -10699,8 +10705,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \0\x12\x1c\n\x18SC_ADDRESS_TYPE_CONTRACT\x10\x01\x12!\n\x1dSC_ADDRESS_TY\
     PE_MUXED_ACCOUNT\x10\x02\x12%\n!SC_ADDRESS_TYPE_CLAIMABLE_BALANCE\x10\
     \x03\x12\"\n\x1eSC_ADDRESS_TYPE_LIQUIDITY_POOL\x10\x04\x1a\x92\x01\n\x14\
-    StellarSCValMapEntry\x12:\n\x03key\x18\x01\x20\x01(\x0b2(.hw.trezor.mess\
-    ages.stellar.StellarSCValR\x03key\x12>\n\x05value\x18\x02\x20\x01(\x0b2(\
+    StellarSCValMapEntry\x12:\n\x03key\x18\x01\x20\x02(\x0b2(.hw.trezor.mess\
+    ages.stellar.StellarSCValR\x03key\x12>\n\x05value\x18\x02\x20\x02(\x0b2(\
     .hw.trezor.messages.stellar.StellarSCValR\x05value\"\xb1\x02\n\x10Stella\
     rSCValType\x12\x0c\n\x08SCV_BOOL\x10\0\x12\x0c\n\x08SCV_VOID\x10\x01\x12\
     \x0b\n\x07SCV_U32\x10\x03\x12\x0b\n\x07SCV_I32\x10\x04\x12\x0b\n\x07SCV_\
