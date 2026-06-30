@@ -12,3 +12,8 @@ KNOWN_ADDRESSES = {
     # https://etherscan.io/address/0xe592427a0aece92de3edee1f18e0157c05861564
     unhexlify("e592427a0aece92de3edee1f18e0157c05861564"): "Uniswap V3 Router",
 }
+
+if __debug__:
+    KNOWN_ADDRESSES[unhexlify("dddddddddddddddddddddddddddddddddddddddd")] = (
+        "Trezor Test. DO NOT USE"
+    )
