@@ -19,7 +19,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Collection, Tuple
 
+from . import _modeldata as _md
 from . import mapping, messages
+from ._modeldata import registry as _registry
 
 UsbId = Tuple[int, int]
 
@@ -28,6 +30,16 @@ VENDORS = ("bitcointrezor.com", "trezor.io")
 
 @dataclass(eq=True, frozen=True)
 class TrezorModel:
+    """Runtime/wire view of a model, built from a single-source
+    :class:`._modeldata.ModelData` via :func:`_build`.
+
+    ``ModelData`` is the protobuf-free source of truth (it also carries the
+    firmware-verification keys/hashes) and deliberately sits *below* this module
+    so ``trezorlib.firmware.models`` can consume it without pulling in protobuf.
+    ``TrezorModel`` is the derived wrapper that adds the protobuf mapping and
+    transport fields (``default_mapping``, ``usb_ids``, ``vendors``); the fields
+    shared with ``ModelData`` are populated from it, not duplicated."""
+
     name: str
     internal_name: str
     minimum_version: tuple[int, int, int]
@@ -36,6 +48,12 @@ class TrezorModel:
     default_mapping: mapping.ProtobufMapping
 
     is_unknown: bool = False
+    # UI layout name (matches debuglink.LayoutType members), BLE capability, and
+    # CLI aliases. Sourced from the single-source model registry; None/empty for
+    # ad-hoc unknown models.
+    layout: str | None = None
+    ble_capable: bool = False
+    aliases: tuple[str, ...] = ()
 
 
 # ==== internal names ====
@@ -45,95 +63,41 @@ USBID_TREZOR_CORE = (0x1209, 0x53C1)
 USBID_TREZOR_CORE_BOOTLOADER = (0x1209, 0x53C0)
 
 
-T1B1 = TrezorModel(
-    name="1",
-    internal_name="T1B1",
-    minimum_version=(1, 8, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_ONE,),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
+def _usb_ids(model_class: _md.ModelClass) -> tuple[UsbId, ...]:
+    if model_class is _md.ModelClass.LEGACY:
+        return (USBID_TREZOR_ONE,)
+    return (USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER)
 
-T2T1 = TrezorModel(
-    name="T",
-    internal_name="T2T1",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
 
-T2B1 = TrezorModel(
-    name="Safe 3",
-    internal_name="T2B1",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
+def _build(data: _md.ModelData) -> TrezorModel:
+    """Build a TrezorModel from a single-source model definition. Constant
+    fields (vendors, usb_ids, default_mapping) are injected here rather than
+    stored per model."""
+    return TrezorModel(
+        name=data.name,
+        internal_name=data.internal_name,
+        minimum_version=data.minimum_version,
+        vendors=VENDORS,
+        usb_ids=_usb_ids(data.model_class),
+        default_mapping=mapping.DEFAULT_MAPPING,
+        layout=data.layout.value,
+        ble_capable=data.ble_capable,
+        aliases=data.aliases,
+    )
 
-T3T1 = TrezorModel(
-    name="Safe 5",
-    internal_name="T3T1",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
 
-T3T2 = TrezorModel(
-    name="T3T2",
-    internal_name="T3T2",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
+_BY_INTERNAL = {d.internal_name: _build(d) for d in _registry.ALL}
 
-T3B1 = TrezorModel(
-    name="Safe 3",
-    internal_name="T3B1",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
-
-T3W1 = TrezorModel(
-    name="Safe 7",
-    internal_name="T3W1",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
-
-DISC1 = TrezorModel(
-    name="DISC1",
-    internal_name="D001",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
-
-DISC2 = TrezorModel(
-    name="DISC2",
-    internal_name="D002",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
-
-DISC3 = TrezorModel(
-    name="DISC3",
-    internal_name="D003",
-    minimum_version=(2, 3, 0),
-    vendors=VENDORS,
-    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
-    default_mapping=mapping.DEFAULT_MAPPING,
-)
+T1B1 = _BY_INTERNAL["T1B1"]
+T2T1 = _BY_INTERNAL["T2T1"]
+T2B1 = _BY_INTERNAL["T2B1"]
+T3T1 = _BY_INTERNAL["T3T1"]
+T3T2 = _BY_INTERNAL["T3T2"]
+T3B1 = _BY_INTERNAL["T3B1"]
+T3W1 = _BY_INTERNAL["T3W1"]
+D001 = _BY_INTERNAL["D001"]
+D002 = _BY_INTERNAL["D002"]
+D003 = _BY_INTERNAL["D003"]
 
 # ==== model based names ====
 
@@ -142,12 +106,27 @@ TREZOR_T = T2T1
 TREZOR_R = T2B1
 TREZOR_SAFE3 = T2B1
 TREZOR_SAFE5 = T3T1
-TREZOR_DISC1 = DISC1
-TREZOR_DISC2 = DISC2
-TREZOR_DISC3 = DISC3
+TREZOR_DISC1 = D001
+TREZOR_DISC2 = D002
+TREZOR_DISC3 = D003
 
-LEGACY_MODELS = frozenset({T1B1})
-CORE_MODELS = frozenset({T2T1, T2B1, T3T1, T3T2, T3B1, T3W1, DISC1, DISC2, DISC3})
+# deprecated aliases: the discovery boards used to be exposed under DISC1/DISC2,
+# but the canonical handle is now the internal name (D001/D002), like every
+# other model. Kept for backwards compatibility.
+DISC1 = D001
+DISC2 = D002
+DISC3 = D003
+
+LEGACY_MODELS = frozenset(
+    _BY_INTERNAL[d.internal_name]
+    for d in _registry.ALL
+    if d.model_class is _md.ModelClass.LEGACY
+)
+CORE_MODELS = frozenset(
+    _BY_INTERNAL[d.internal_name]
+    for d in _registry.ALL
+    if d.model_class is _md.ModelClass.CORE
+)
 ALL_MODELS = LEGACY_MODELS | CORE_MODELS
 
 

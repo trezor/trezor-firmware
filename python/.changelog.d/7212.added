@@ -1,0 +1,1 @@
+Refactored Trezor model definitions into a single-source module shared by `trezorlib.models` and `trezorlib.firmware.models`.
