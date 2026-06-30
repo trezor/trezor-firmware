@@ -7,19 +7,27 @@ if not utils.BITCOIN_ONLY:
 
     from ethereum_common import *
     from trezor.enums import EthereumERC7730FieldFormatterType as FT
-    from trezor.messages import EthereumERC7730FieldInfo, EthereumERC7730Path
+    from trezor.messages import (
+        EthereumERC7730FieldInfo,
+        EthereumERC7730Path,
+        EthereumTokenInfo,
+    )
 
     from apps.ethereum.clear_signing import (
+        AddressNameFormatter,
         Array,
         Atomic,
         DateFormatter,
         DirtyAddress,
+        DisplayFormat,
         FieldDefinition,
         InvalidFormatDefinition,
         OutOfBounds,
         RawFormatter,
+        TokenAmountFormatter,
         Tuple,
         ValueOverflow,
+        _format_field_value,
         parse_address,
         parse_bool,
         parse_bytes32,
@@ -475,6 +483,323 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertIsInstance(date_fmt, DateFormatter)
         formatted, _, _ = await_result(date_fmt.format(1616051824, None, None, None))
         self.assertEqual(formatted, "2021-03-18 07:17:04")
+
+    # --- Multi-value fields (a formatter pointed at an array) ---
+
+    def test_multi_value_formats_each_element(self):
+        # A formatter pointed at an array formats every element and joins the
+        # rendered values with newlines (one value per line).
+        fmt = RawFormatter()
+
+        formatted, token, addr = await_result(
+            _format_field_value(fmt, [10, 20, 30], None, None, None)
+        )
+        self.assertEqual(formatted, "10\n20\n30")
+        self.assertIsNone(token)
+        self.assertIsNone(addr)
+
+        # works for any leaf type the formatter supports
+        formatted, _, _ = await_result(
+            _format_field_value(fmt, ["alice", "bob"], None, None, None)
+        )
+        self.assertEqual(formatted, "alice\nbob")
+
+    def test_multi_value_scalar_passthrough(self):
+        # A non-list value is formatted directly (no newline wrapping).
+        fmt = RawFormatter()
+        formatted, _, _ = await_result(_format_field_value(fmt, 42, None, None, None))
+        self.assertEqual(formatted, "42")
+
+    def test_multi_value_empty_and_single(self):
+        fmt = RawFormatter()
+
+        # empty array renders as an empty string
+        formatted, _, _ = await_result(_format_field_value(fmt, [], None, None, None))
+        self.assertEqual(formatted, "")
+
+        # a single-element array still renders the element (no trailing newline)
+        formatted, _, _ = await_result(_format_field_value(fmt, [7], None, None, None))
+        self.assertEqual(formatted, "7")
+
+    def test_multi_value_nested_array_rejected(self):
+        # We only render flat arrays. A nested-array element is a `list`, which
+        # no formatter accepts, so it cleanly falls back (blind signing) rather
+        # than being silently flattened.
+        fmt = RawFormatter()
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(_format_field_value(fmt, [[1, 2], [3]], None, None, None))
+
+    def test_multi_value_none_element_rejected(self):
+        # An element that produces no rendering must not become a blank line.
+        fmt = RawFormatter()
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(_format_field_value(fmt, [1, None, 3], None, None, None))
+
+    def test_multi_value_address_array(self):
+        # The same behaviour with a richer formatter: an array of addresses is
+        # rendered as one checksummed (EIP-55) address per line.
+        class _Defs:
+            network = make_eth_network()
+
+        fmt = AddressNameFormatter()
+        addr1 = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        addr2 = unhexlify("71c7656ec7ab88b098defb751b7401b5f6d8976f")
+
+        formatted, _, _ = await_result(
+            _format_field_value(fmt, [addr1, addr2], None, _Defs(), None)
+        )
+        line1, line2 = formatted.split("\n")
+        self.assertEqual(
+            line1.lower(), "0x" + "d8da6bf26964af9d7eed9e03e53415d37aa96045"
+        )
+        self.assertEqual(
+            line2.lower(), "0x" + "71c7656ec7ab88b098defb751b7401b5f6d8976f"
+        )
+
+    def test_multi_value_token_amount(self):
+        # Multi-value with TokenAmountFormatter: every element shares the one
+        # (constant) token, rendered one amount-per-line.
+        token_addr = unhexlify("ae7ab96520de3a18e5e111b5eaab095312d7fe84")
+
+        class _Defs:
+            network = make_eth_network()
+
+            def get_token(self, address):
+                return make_eth_token(symbol="TST", decimals=6, address=address)
+
+        fmt = TokenAmountFormatter(const_token_address=token_addr)
+        formatted, token, addr = await_result(
+            _format_field_value(fmt, [1_000_000, 2_000_000], None, _Defs(), None)
+        )
+        self.assertEqual(formatted, "1 TST\n2 TST")
+        self.assertEqual(token.symbol, "TST")
+        self.assertEqual(addr, token_addr)
+
+    def test_multi_value_date(self):
+        # Multi-value with DateFormatter: a list of timestamps -> one date per line.
+        fmt = DateFormatter()
+        formatted, token, addr = await_result(
+            _format_field_value(fmt, [1616051824, 0], None, None, None)
+        )
+        self.assertEqual(formatted, "2021-03-18 07:17:04\n1970-01-01 00:00:00")
+        self.assertIsNone(token)
+        self.assertIsNone(addr)
+
+    def test_multi_value_end_to_end(self):
+        # Full path: calldata -> parse a `uint256[]` parameter -> the field path
+        # resolves to the whole array -> rendered as one value per line.
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[Array(Atomic(parse_uint256))],
+            field_definitions=[FieldDefinition((0,), "Values", RawFormatter)],
+        )
+
+        calldata = (
+            to_bytes(32)  # pointer to the array body
+            + to_bytes(3)  # array length
+            + to_bytes(10)
+            + to_bytes(20)
+            + to_bytes(30)
+        )
+
+        parameters, fields = await_result(
+            display_format.parse_calldata(memoryview(calldata), None, None)
+        )
+
+        self.assertEqual(parameters, [[10, 20, 30]])
+        self.assertEqual(len(fields), 1)
+        (label, formatted, hint), token, token_address = fields[0]
+        self.assertEqual(label, "Values")
+        self.assertEqual(formatted, "10\n20\n30")
+        self.assertIsNone(hint)
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+
+    # --- tokenAmount with a constant (literal) token address ---
+
+    def test_from_proto_token_amount_constant_token(self):
+        # Regression test for `from_proto`
+        # Might use a .proto binary blob in future.
+        token_addr = unhexlify("ae7ab96520de3a18e5e111b5eaab095312d7fe84")  # stETH
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Amount",
+            formatter=FT.FORMATTER_TOKEN_AMOUNT,
+            const_token_address=token_addr,
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertIsInstance(fmt, TokenAmountFormatter)
+        self.assertEqual(fmt.const_token_address, token_addr)
+        self.assertIsNone(fmt.token_path)
+
+    def test_token_amount_constant_token_format(self):
+        # The token is resolved from `defs` by the constant address, without
+        # touching the calldata - so `path_walker` is never called (passed None).
+        token_addr = unhexlify("ae7ab96520de3a18e5e111b5eaab095312d7fe84")  # stETH
+
+        class _Defs:
+            network = make_eth_network()
+
+            def get_token(self, address):
+                return make_eth_token(symbol="stETH", decimals=18, address=address)
+
+        fmt = TokenAmountFormatter(const_token_address=token_addr)
+        formatted, token, addr = await_result(
+            fmt.format(2 * 10**18, None, _Defs(), None)
+        )
+        self.assertEqual(addr, token_addr)
+        self.assertEqual(token.symbol, "stETH")
+        self.assertIn("stETH", formatted)
+        self.assertIn("2", formatted)
+
+    def test_token_amount_no_token_source_rejected(self):
+        # Neither token_path nor const_token_address set -> cannot resolve a token.
+        fmt = TokenAmountFormatter()
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(fmt.format(1, None, None, None))
+
+    # --- Test descriptor: every formatter / parser / path style ---
+
+    def test_descriptor_all_formatters(self):
+        from apps.ethereum.clear_signing_definitions import (
+            TREZOR_TEST_ARRAYS_DESCRIPTOR,
+            TREZOR_TEST_CONST_TOKEN,
+            TREZOR_TEST_PATHS_DESCRIPTOR,
+            TREZOR_TEST_SCALARS_DESCRIPTOR,
+            TREZOR_TEST_TOKEN_DESCRIPTOR,
+        )
+
+        class _Defs:
+            network = make_eth_network(chain_id=1, symbol="ETH")
+
+            def get_token(self, address: bytes) -> EthereumTokenInfo:
+                return make_eth_token(symbol="TST", decimals=6, address=address)
+
+        def render(
+            descriptor: DisplayFormat, calldata_hex: str
+        ) -> dict[str, tuple[str, EthereumTokenInfo | None, bytes | None]]:
+            calldata = unhexlify(calldata_hex)
+            # [4:] strips the 4-byte selector; parse_calldata expects it stripped
+            _, fields = await_result(
+                descriptor.parse_calldata(memoryview(calldata)[4:], None, _Defs())
+            )
+            return {
+                label: (formatted, token_, addr_)
+                for (label, formatted, _), token_, addr_ in fields
+            }
+
+        # --- scalars: recipient 0x11.., 1 ETH, raw 42, unit 123.45, date,
+        # bytes32 0x0001..1f, bool true, uint160 4660, "hello", 0xdeadbeef
+        rendered = render(
+            TREZOR_TEST_SCALARS_DESCRIPTOR,
+            "7e577e01"
+            "0000000000000000000000001111111111111111111111111111111111111111"
+            "0000000000000000000000000000000000000000000000000de0b6b3a7640000"
+            "000000000000000000000000000000000000000000000000000000000000002a"
+            "0000000000000000000000000000000000000000000000000000000000003039"
+            "000000000000000000000000000000000000000000000000000000006052fe70"
+            "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+            "0000000000000000000000000000000000000000000000000000000000000001"
+            "0000000000000000000000000000000000000000000000000000000000001234"
+            "0000000000000000000000000000000000000000000000000000000000000140"
+            "0000000000000000000000000000000000000000000000000000000000000180"
+            "0000000000000000000000000000000000000000000000000000000000000005"
+            "68656c6c6f000000000000000000000000000000000000000000000000000000"
+            "0000000000000000000000000000000000000000000000000000000000000004"
+            "deadbeef00000000000000000000000000000000000000000000000000000000",
+        )
+        self.assertEqual(rendered["Recipient"][0].lower(), "0x" + "11" * 20)
+        self.assertEqual(rendered["Native Amount"][0], "1 ETH")
+        self.assertEqual(rendered["Raw Integer"][0], "42")
+        self.assertEqual(rendered["Unit Value"][0], "123.45 UNIT")
+        self.assertEqual(rendered["Date"][0], "2021-03-18 07:17:04")
+        self.assertEqual(
+            rendered["Raw Bytes32"][0],
+            "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+        )
+        self.assertEqual(rendered["Raw Bool"][0], "True")
+        self.assertEqual(rendered["Raw Uint160"][0], "4660")
+        self.assertEqual(rendered["Raw String"][0], "hello")
+        self.assertEqual(rendered["Raw Bytes"][0], "deadbeef")
+
+        # --- token-amount resolution: token 0x22.., 2.0 TST (via path), 3.0 TST
+        # (via constant)
+        rendered = render(
+            TREZOR_TEST_TOKEN_DESCRIPTOR,
+            "7e577e02"
+            "0000000000000000000000002222222222222222222222222222222222222222"
+            "00000000000000000000000000000000000000000000000000000000001e8480"
+            "00000000000000000000000000000000000000000000000000000000002dc6c0",
+        )
+        # token from the calldata `token` parameter
+        self.assertEqual(rendered["Token (via path)"][0], "2 TST")
+        self.assertEqual(rendered["Token (via path)"][2], unhexlify("22" * 20))
+        # token from the literal const_token_address, not the calldata
+        self.assertEqual(rendered["Token (via constant)"][0], "3 TST")
+        self.assertEqual(rendered["Token (via constant)"][2], TREZOR_TEST_CONST_TOKEN)
+
+        # --- multi-value arrays: amounts [1.0, 2.0], tokenAmounts [4.0, 5.0]
+        # (TST units), dates [.., ..]
+        rendered = render(
+            TREZOR_TEST_ARRAYS_DESCRIPTOR,
+            "7e577e03"
+            "0000000000000000000000000000000000000000000000000000000000000060"
+            "00000000000000000000000000000000000000000000000000000000000000c0"
+            "0000000000000000000000000000000000000000000000000000000000000120"
+            "0000000000000000000000000000000000000000000000000000000000000002"
+            "00000000000000000000000000000000000000000000000000000000000f4240"
+            "00000000000000000000000000000000000000000000000000000000001e8480"
+            "0000000000000000000000000000000000000000000000000000000000000002"
+            "00000000000000000000000000000000000000000000000000000000003d0900"
+            "00000000000000000000000000000000000000000000000000000000004c4b40"
+            "0000000000000000000000000000000000000000000000000000000000000002"
+            "000000000000000000000000000000000000000000000000000000006052fe70"
+            "000000000000000000000000000000000000000000000000000000006553f100",
+        )
+        self.assertEqual(rendered["Amounts (array)"][0], "1000000\n2000000")
+        # multi-value tokenAmount: each element shares the one constant token
+        self.assertEqual(rendered["Token Amounts (array)"][0], "4 TST\n5 TST")
+        self.assertEqual(rendered["Token Amounts (array)"][2], TREZOR_TEST_CONST_TOKEN)
+        self.assertEqual(
+            rendered["Dates (array)"][0],
+            "2021-03-18 07:17:04\n2023-11-14 22:13:20",
+        )
+
+        # --- composite path styles: amount 2.0 (TST units), packedPath
+        # 0x44..||0x55.., swap[(0x66,0x77,6.0),(0x88,native,1 ETH)]
+        rendered = render(
+            TREZOR_TEST_PATHS_DESCRIPTOR,
+            "7e577e04"
+            "00000000000000000000000000000000000000000000000000000000001e8480"
+            "0000000000000000000000000000000000000000000000000000000000000060"
+            "00000000000000000000000000000000000000000000000000000000000000c0"
+            "0000000000000000000000000000000000000000000000000000000000000028"
+            "4444444444444444444444444444444444444444555555555555555555555555"
+            "5555555555555555000000000000000000000000000000000000000000000000"
+            "0000000000000000000000000000000000000000000000000000000000000002"
+            "0000000000000000000000000000000000000000000000000000000000000040"
+            "00000000000000000000000000000000000000000000000000000000000000a0"
+            "0000000000000000000000006666666666666666666666666666666666666666"
+            "0000000000000000000000007777777777777777777777777777777777777777"
+            "00000000000000000000000000000000000000000000000000000000005b8d80"
+            "0000000000000000000000008888888888888888888888888888888888888888"
+            "0000000000000000000000000000000000000000000000000000000000000000"
+            "0000000000000000000000000000000000000000000000000de0b6b3a7640000",
+        )
+        # token_path slicing the packed bytes blob (packedPath[0:20] / [-20:])
+        self.assertEqual(rendered["Token (path[0:20] slice)"][0], "2 TST")
+        self.assertEqual(rendered["Token (path[0:20] slice)"][2], unhexlify("44" * 20))
+        self.assertEqual(rendered["Token (path[-20:] slice)"][0], "2 TST")
+        self.assertEqual(rendered["Token (path[-20:] slice)"][2], unhexlify("55" * 20))
+        # nested array-of-structs, positive index: swapData[0]
+        self.assertEqual(rendered["Token (nested swap[0])"][0], "6 TST")
+        self.assertEqual(rendered["Token (nested swap[0])"][2], unhexlify("66" * 20))
+        # negative index + native currency: swapData[-1], receivingAssetId is the
+        # native sentinel, so it renders native (no token returned)
+        self.assertEqual(rendered["Token (neg index swap[-1], native)"][0], "1 ETH")
+        self.assertIsNone(rendered["Token (neg index swap[-1], native)"][1])
 
 
 if __name__ == "__main__":
