@@ -61,6 +61,12 @@ class Cpace:
         Compute a shared secret using host's public (cpace) key.
         Must be called after `generate_keys`.
         """
+        from trezor.utils import consteq
+
+        if consteq(bytes(host_public_key), b"\x00" * 32):
+            raise ValueError
         self.shared_secret = curve25519.multiply(
             self.trezor_private_key, host_public_key
         )
+        if consteq(self.shared_secret, b"\x00" * 32):
+            raise ValueError
