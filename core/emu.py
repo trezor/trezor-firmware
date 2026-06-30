@@ -143,7 +143,7 @@ def _from_env(name: str) -> bool:
 @click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
 @click.option("-S", "--script-gdb-file", type=click.Path(exists=True, dir_okay=False), help="Run gdb with an init file")
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
-@click.option("--tropic-emulator/--no-tropic-emulator", default=True, help="Start Tropic01 model")
+@click.option("--tropic-emulator/--no-tropic-emulator", default=None, help="Start Tropic01 model")
 @click.option("--tropic-emulator-config", type=click.Path(exists=True, dir_okay=False), default=TROPIC_MODEL_CONFIG, help="Tropic01 model configuration file")
 @click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
@@ -172,7 +172,7 @@ def cli(
     slip0014: bool,
     script_gdb_file: str | Path | None,
     temporary_profile: bool,
-    tropic_emulator: bool,
+    tropic_emulator: bool | None,
     tropic_emulator_config: Path,
     valgrind: bool,
     watch: bool,
@@ -299,6 +299,8 @@ def cli(
         os.environ["TREZOR_MEMPERF"] = "1"
 
     tropic_model = None
+    if tropic_emulator is None:
+        tropic_emulator = emulator.properties().get("tropic", False)
     if tropic_emulator:
         tropic_model = TropicModel(
             profile_dir=str(profile_dir),
