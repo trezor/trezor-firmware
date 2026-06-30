@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from trezor import log
     from trezor.messages import AuthDbLookup, AuthDbLookupResponse
 
 
@@ -13,9 +14,22 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
     if stored_root is None:
         raise DataError("No Merkle root stored on device")
 
-    valid = _verify_proof(msg.address, msg.value, msg.proof, stored_root)
-    counter = authdb.get_counter()
+    if __debug__:
+        from trezor import log
+        log.debug(
+            __name__,
+            "lookup: address=%s proof_len=%d",
+            msg.address.hex(),
+            len(msg.proof),
+        )
 
+    valid = _verify_proof(msg.address, msg.value, msg.proof, stored_root)
+
+    if __debug__:
+        from trezor import log
+        log.debug(__name__, "lookup: result valid=%s", valid)
+
+    counter = authdb.get_counter()
     return AuthDbLookupResponse(valid=valid, counter=counter)
 
 
@@ -40,6 +54,16 @@ def _verify_proof(
     current = sha256(b"\x00" + address + value).digest()
     depth = len(proof)
 
+    if __debug__:
+        from trezor import log
+        log.debug(
+            __name__,
+            "_verify_proof: addr_hash=%s leaf_hash=%s depth=%d",
+            addr_hash.hex(),
+            current.hex(),
+            depth,
+        )
+
     for i, sibling in enumerate(proof):
         level = depth - 1 - i          # 0 = root level, depth-1 = leaf level
         byte_idx = level // 8
@@ -49,4 +73,23 @@ def _verify_proof(
         else:
             current = sha256(b"\x01" + sibling + current).digest()
 
-    return current == expected_root
+        if __debug__:
+            from trezor import log
+            log.debug(
+                __name__,
+                "  level=%d bit=%d hash=%s",
+                level,
+                bit,
+                current.hex(),
+            )
+
+    match = current == expected_root
+    if __debug__ and not match:
+        from trezor import log
+        log.debug(
+            __name__,
+            "_verify_proof: MISMATCH computed=%s expected=%s",
+            current.hex(),
+            expected_root.hex(),
+        )
+    return match
