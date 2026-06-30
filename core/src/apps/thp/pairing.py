@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import protobuf
+from trezor import protobuf, utils
 from trezor.crypto import random
 from trezor.crypto.hashlib import sha256
 from trezor.enums import ThpMessageType, ThpPairingMethod
@@ -303,9 +303,13 @@ async def _handle_code_entry_cpace(
     if message.tag is None:
         raise DataError("Message ThpCodeEntryCpaceHostTag is missing a tag")
 
-    ctx.cpace.compute_shared_secret(message.cpace_host_public_key)
+    try:
+        ctx.cpace.compute_shared_secret(message.cpace_host_public_key)
+    except ValueError:
+        raise DataError("Invalid CPACE host public key")
+
     expected_tag = sha256(ctx.cpace.shared_secret).digest()
-    if expected_tag != message.tag:
+    if not utils.consteq(expected_tag, message.tag):
         raise DataError("Unexpected Code Entry Tag")
 
     if ctx.code_entry_secret is None:
