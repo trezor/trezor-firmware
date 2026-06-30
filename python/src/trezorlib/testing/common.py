@@ -37,7 +37,7 @@ def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest)
 
 
 def swipe_if_necessary(
-    debug: "DebugLink", br_code: Union[messages.ButtonRequestType, None] = None
+    debug: "DebugLink", br_code: Union[messages.ButtonRequestType, None] = None, br_name: Union[str, None] = None
 ) -> BRGeneratorType:
     """
     Generator that swipes through pages if necessary, based on button request code.
@@ -52,6 +52,8 @@ def swipe_if_necessary(
     br = yield
     if br_code is not None:
         assert br.code == br_code
+    if br_name is not None:
+        assert br.name == br_name
     swipe_till_the_end(debug, br)
 
 
