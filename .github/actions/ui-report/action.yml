@@ -27,8 +27,8 @@ runs:
         OUTDIR=${{ github.run_id }}
         mkdir -p $OUTDIR
         nix-shell --run "uv run python ci/prepare_ui_artifacts.py || true"
-        mv -v tests/ui_tests/reports/test/* $OUTDIR
-        mv -v tests/ui_tests/fixtures.*.json $OUTDIR
+        mv tests/ui_tests/reports/test/* $OUTDIR
+        mv tests/ui_tests/fixtures.*.json $OUTDIR
 
         # rename all model/job-speficific report files, so they won't be overwritten during upload
         cd $OUTDIR
@@ -37,15 +37,15 @@ runs:
           if [ "$F" = "testreport.js" ]; then
             echo "Skip $F"
           elif [ -f "$F" ]; then
-            mv -v $F $MODELJOB-$F
+            mv $F $MODELJOB-$F
           fi
         done
         cd ..
 
         if [ "${{ inputs.status }}" = "success" ]; then
-          cp -v .github/actions/ui-report/success.png $OUTDIR/$MODELJOB-status.png
+          cp .github/actions/ui-report/success.png $OUTDIR/$MODELJOB-status.png
         else
-          cp -v .github/actions/ui-report/failure.png $OUTDIR/$MODELJOB-status.png
+          cp .github/actions/ui-report/failure.png $OUTDIR/$MODELJOB-status.png
         fi
       shell: sh
     - name: Upload test results
