@@ -17,6 +17,7 @@ from trezorlib.messages import (
     Cancel,
     Failure,
     FailureType,
+    ThpCodeEntryCpaceHostTag,
     ThpCredentialRequest,
     ThpCredentialResponse,
     ThpEndRequest,
@@ -36,6 +37,16 @@ if t.TYPE_CHECKING:
 MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 pytestmark = [pytest.mark.protocol("thp")]
+
+# Test vectors from https://www.ietf.org/archive/id/draft-irtf-cfrg-cpace-21.html#name-test-vectors-for-g_x25519sc.
+# Vector u3_256 is the vector u3 with last bit set to 1. This bit is ignored as specified in RFC 7748. More vectors
+# are tested in the CPace unit tests - they are not included here for performance reasons
+LOW_ORDER_POINTS = {
+    "u0": "0000000000000000000000000000000000000000000000000000000000000000",
+    "u1": "0100000000000000000000000000000000000000000000000000000000000000",
+    "u2": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+    "u3_256": "e0eb7a7c3b41b8ae1656e3faf19fc46ada098deb9c32b1fd866205165f49b880",
+}
 
 
 @contextmanager
@@ -109,7 +120,7 @@ def test_pairing_code_entry_invalid_cpace_key(test_ctx: TrezorTestContext) -> No
     code_str = f"{code:06}"
 
     invalid_msg = method._perform_cpace(code_str)
-    invalid_msg.cpace_host_public_key = b"\x00" * 32
+    invalid_msg.cpace_host_public_key = b"\x11" * 32
     method._perform_cpace = lambda code: invalid_msg
     with pytest.raises(
         exceptions.TrezorFailure, match="DataError: Unexpected Code Entry Tag"
@@ -143,6 +154,31 @@ def test_pairing_code_entry_invalid_cpace_key_length(
         match="DataError: CPACE host public key must be 32 bytes long",
     ):
         method.send_code(code_str)
+
+
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+@deterministic_secrets()
+@pytest.mark.parametrize(
+    "key",
+    [
+        pytest.param(bytes.fromhex(point_hex), id=name)
+        for name, point_hex in LOW_ORDER_POINTS.items()
+    ],
+)
+def test_pairing_code_entry_forbbidden_cpace_key(
+    test_ctx: TrezorTestContext, key: bytes
+) -> None:
+    pairing = prepare_channel_for_pairing(test_ctx, fixed_entropy=True)
+    method = CodeEntry(pairing)
+    attack_msg = ThpCodeEntryCpaceHostTag(cpace_host_public_key=key, tag=b"\x00" * 32)
+    method._perform_cpace = lambda code: attack_msg
+    with pytest.raises(
+        exceptions.TrezorFailure,
+        match="DataError: Invalid CPACE host public key",
+    ):
+        method.send_code("123456")
 
 
 @pytest.mark.filterwarnings(
