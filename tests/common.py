@@ -382,5 +382,48 @@ def get_test_address(session: "Session") -> str:
     return btc.get_address(session, "Testnet", TEST_ADDRESS_N)
 
 
+def compact_size(n: int) -> bytes:
+    if n < 253:
+        return n.to_bytes(1, "little")
+    elif n < 0x1_0000:
+        return bytes([253]) + n.to_bytes(2, "little")
+    elif n < 0x1_0000_0000:
+        return bytes([254]) + n.to_bytes(4, "little")
+    else:
+        return bytes([255]) + n.to_bytes(8, "little")
+
+
+def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest) -> str:
+    text = debug.read_layout().text_content()
+    if br.pages is not None:
+        for _ in range(br.pages - 1):
+            if debug.layout_type is LayoutType.Eckhart:
+                debug.click(debug.screen_buttons.ok())
+            else:
+                debug.swipe_up()
+            text += " "
+            text += debug.read_layout().text_content()
+    return text
+
+
+def swipe_if_necessary(
+    debug: "DebugLink",
+    br_code: messages.ButtonRequestType | None = None,
+    br_name: str | None = None,
+) -> BRGeneratorType:
+    br = yield
+    if br_code is not None:
+        assert br.code == br_code
+    if br_name is not None:
+        assert br.name == br_name
+    swipe_till_the_end(debug, br)
+
+
+def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
+    if br.pages is not None:
+        for _ in range(br.pages - 1):
+            debug.swipe_up()
+
+
 def is_core(session: Client | Session) -> bool:
     return session.model is not models.T1B1
