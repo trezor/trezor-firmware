@@ -7615,13 +7615,15 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class AuthDbLookup(protobuf.MessageType):
-        leaf_hash: "AnyBytes"
+        address: "AnyBytes"
+        value: "AnyBytes"
         proof: "list[AnyBytes]"
 
         def __init__(
             self,
             *,
-            leaf_hash: "AnyBytes",
+            address: "AnyBytes",
+            value: "AnyBytes",
             proof: "list[AnyBytes] | None" = None,
         ) -> None:
             pass

@@ -24,19 +24,28 @@ message AuthDbSetRootResponse {
 }
 
 /**
- * Request: Verify a Merkle proof for a leaf against the stored root.
+ * Request: Verify a Sparse Merkle Tree proof for a (address, value) pair.
  *
- * The leaf_hash must be computed as SHA-256(b"\x00" + raw_value).
- * Each proof entry is combined using SHA-256(b"\x01" + min(a,b) + max(a,b)).
- * This matches the trezorlib.merkle_tree algorithm.
+ * The device computes:
+ *   path      = SHA-256(address) bits, MSB first
+ *   leaf_hash = SHA-256(b"\x00" + address + value)
+ *   For each proof sibling (leaf-to-root order):
+ *     level = depth - 1 - i
+ *     bit   = path[level]
+ *     if bit == 0: current = SHA-256(b"\x01" + current + sibling)
+ *     if bit == 1: current = SHA-256(b"\x01" + sibling  + current)
+ *   valid = (current == stored_root)
+ *
+ * This matches trezorlib.authdb_tree.AuthDbTree.
  *
  * @start
  * @next AuthDbLookupResponse
  * @next Failure
  */
 message AuthDbLookup {
-    required bytes leaf_hash = 1;  // SHA-256(b"\x00" + raw_value)
-    repeated bytes proof = 2;      // sibling hashes from leaf level to root
+    required bytes address = 1;  // key whose SHA-256 determines the path
+    required bytes value   = 2;  // value stored at this address
+    repeated bytes proof   = 3;  // sibling hashes, leaf-to-root order
 }
 
 /**
@@ -44,6 +53,6 @@ message AuthDbLookup {
  * @end
  */
 message AuthDbLookupResponse {
-    required bool valid = 1;    // true if proof is valid against stored root
+    required bool   valid   = 1;  // true if proof is valid against stored root
     required uint32 counter = 2;  // current monotonic counter
 }

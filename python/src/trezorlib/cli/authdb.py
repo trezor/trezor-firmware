@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 import click
 
 from .. import authdb
-from ..merkle_tree import leaf_hash as mk_leaf_hash
 from . import with_session
 
 if TYPE_CHECKING:
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
 
 @click.group(name="authdb")
 def cli() -> None:
-    """AuthDB commands – Merkle-root storage and proof verification."""
+    """AuthDB commands – Sparse Merkle Tree root storage and proof verification."""
 
 
 @cli.command()
@@ -28,32 +27,35 @@ def set_root(session: "Session", root_hex: str) -> str:
 
 
 @cli.command()
+@click.argument("address_hex")
 @click.argument("value_hex")
 @click.option(
     "-p",
     "--proof",
     "proof_hexes",
     multiple=True,
-    help="Sibling hash (hex) at each level, from leaf level to root.",
+    help="Sibling hash (hex) at each level, leaf-to-root order.",
 )
 @with_session
 def lookup(
     session: "Session",
+    address_hex: str,
     value_hex: str,
     proof_hexes: tuple[str, ...],
 ) -> str:
-    """Verify a Merkle proof against the stored root.
+    """Verify a Sparse Merkle Tree proof against the stored root.
 
-    VALUE_HEX is the hex-encoded raw leaf value. Its leaf hash is computed
-    automatically as SHA-256(0x00 || value).
-    Supply each sibling hash (hex) with -p <hex>.
+    ADDRESS_HEX  hex-encoded address (key); its SHA-256 determines the tree path.
+    VALUE_HEX    hex-encoded value stored at that address.
+
+    Supply each sibling hash (hex, leaf-to-root) with -p <hex>.
 
     Example:
-        trezorctl authdb lookup <value_hex> -p <sib0> -p <sib1>
+        trezorctl authdb lookup <addr_hex> <val_hex> -p <sib_leaf> -p <sib_root>
     """
+    address = bytes.fromhex(address_hex)
     value = bytes.fromhex(value_hex)
-    lhash = mk_leaf_hash(value)
     proof = [bytes.fromhex(h) for h in proof_hexes]
-    valid, counter = authdb.lookup(session, leaf_hash=lhash, proof=proof)
+    valid, counter = authdb.lookup(session, address=address, value=value, proof=proof)
     status = "VALID" if valid else "INVALID"
     return f"Proof {status}. Counter: {counter}"

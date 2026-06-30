@@ -19,17 +19,19 @@ def set_root(session: "Session", root: bytes) -> int:
 
 def lookup(
     session: "Session",
-    leaf_hash: bytes,
+    address: bytes,
+    value: bytes,
     proof: list[bytes],
 ) -> tuple[bool, int]:
-    """Verify a Merkle proof against the stored root.
+    """Verify a Sparse Merkle Tree proof for (address, value) against stored root.
 
-    leaf_hash must be SHA-256(b"\\x00" + raw_value) as per trezorlib.merkle_tree.
+    proof must be in leaf-to-root order, as returned by AuthDbTree.get_proof().
     Returns (valid, counter).
     """
     resp = session.call(
         messages.AuthDbLookup(
-            leaf_hash=leaf_hash,
+            address=address,
+            value=value,
             proof=proof,
         ),
         expect=messages.AuthDbLookupResponse,

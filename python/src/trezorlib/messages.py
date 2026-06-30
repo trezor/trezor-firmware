@@ -9543,17 +9543,20 @@ class AuthDbSetRootResponse(protobuf.MessageType):
 class AuthDbLookup(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2302
     FIELDS = {
-        1: protobuf.Field("leaf_hash", "bytes", repeated=False, required=True),
-        2: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("value", "bytes", repeated=False, required=True),
+        3: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        leaf_hash: "bytes",
+        address: "bytes",
+        value: "bytes",
         proof: Optional[Sequence["bytes"]] = None,
     ) -> None:
-        self.leaf_hash = leaf_hash
+        self.address = address
+        self.value = value
         self.proof: Sequence["bytes"] = proof if proof is not None else []
 
 

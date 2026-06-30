@@ -1,14 +1,22 @@
 import pytest
 
 from trezorlib import authdb
+from trezorlib.authdb_tree import AuthDbTree
 from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.merkle_tree import MerkleTree, leaf_hash
 
-VALUES = [b"alice", b"bob", b"carol", b"dave"]
+ENTRIES = {
+    b"alice": b"data_alice",
+    b"bob":   b"data_bob",
+    b"carol": b"data_carol",
+    b"dave":  b"data_dave",
+}
 
 
-def _make_tree() -> MerkleTree:
-    return MerkleTree(VALUES)
+def _make_tree() -> AuthDbTree:
+    tree = AuthDbTree()
+    for addr, val in ENTRIES.items():
+        tree.insert(addr, val)
+    return tree
 
 
 @pytest.mark.models("core")
@@ -20,42 +28,55 @@ def test_set_root_returns_incremented_counter(session: Session) -> None:
 
 
 @pytest.mark.models("core")
-@pytest.mark.parametrize("value", VALUES)
-def test_lookup_valid_proof(session: Session, value: bytes) -> None:
+@pytest.mark.parametrize("address,value", list(ENTRIES.items()))
+def test_lookup_valid_proof(session: Session, address: bytes, value: bytes) -> None:
     tree = _make_tree()
     authdb.set_root(session, tree.get_root_hash())
 
-    lhash = leaf_hash(value)
-    proof = tree.get_proof(value)
-    valid, counter = authdb.lookup(session, leaf_hash=lhash, proof=proof)
+    proof = tree.get_proof(address)
+    valid, counter = authdb.lookup(session, address=address, value=value, proof=proof)
 
     assert valid is True
     assert counter > 0
 
 
 @pytest.mark.models("core")
-def test_lookup_invalid_proof_wrong_leaf(session: Session) -> None:
+def test_lookup_invalid_wrong_value(session: Session) -> None:
     tree = _make_tree()
     authdb.set_root(session, tree.get_root_hash())
 
-    # Use bob's proof but alice's leaf hash – must be invalid
-    lhash = leaf_hash(b"alice")
-    proof = tree.get_proof(b"bob")
-    valid, _counter = authdb.lookup(session, leaf_hash=lhash, proof=proof)
+    proof = tree.get_proof(b"alice")
+    valid, _counter = authdb.lookup(
+        session, address=b"alice", value=b"WRONG", proof=proof
+    )
     assert valid is False
 
 
 @pytest.mark.models("core")
-def test_lookup_invalid_against_wrong_root(session: Session) -> None:
+def test_lookup_invalid_wrong_address(session: Session) -> None:
+    tree = _make_tree()
+    authdb.set_root(session, tree.get_root_hash())
+
+    # alice's proof, but claim address=bob — path mismatch
+    proof = tree.get_proof(b"alice")
+    valid, _counter = authdb.lookup(
+        session, address=b"bob", value=b"data_alice", proof=proof
+    )
+    assert valid is False
+
+
+@pytest.mark.models("core")
+def test_lookup_invalid_wrong_root(session: Session) -> None:
     from hashlib import sha256
 
     wrong_root = sha256(b"wrong").digest()
     authdb.set_root(session, wrong_root)
 
     tree = _make_tree()
-    lhash = leaf_hash(b"alice")
     proof = tree.get_proof(b"alice")
-    valid, _counter = authdb.lookup(session, leaf_hash=lhash, proof=proof)
+    valid, _counter = authdb.lookup(
+        session, address=b"alice", value=b"data_alice", proof=proof
+    )
     assert valid is False
 
 
@@ -63,9 +84,21 @@ def test_lookup_invalid_against_wrong_root(session: Session) -> None:
 def test_lookup_no_root_raises(session: Session) -> None:
     from trezorlib.exceptions import TrezorFailure
 
-    # Wipe stored root by setting a new one after a wipe – but here we just
-    # use a fresh session after device wipe. In practice the emulator starts
-    # clean, so issuing a lookup without ever setting a root must fail.
-    lhash = leaf_hash(b"alice")
+    tree = _make_tree()
+    proof = tree.get_proof(b"alice")
     with pytest.raises(TrezorFailure):
-        authdb.lookup(session, leaf_hash=lhash, proof=[])
+        authdb.lookup(session, address=b"alice", value=b"data_alice", proof=proof)
+
+
+@pytest.mark.models("core")
+def test_verify_proof_host_matches_device(session: Session) -> None:
+    """Confirm host-side AuthDbTree.verify_proof produces the same result as device."""
+    tree = _make_tree()
+    root = tree.get_root_hash()
+    authdb.set_root(session, root)
+
+    for address, value in ENTRIES.items():
+        proof = tree.get_proof(address)
+        host_result = AuthDbTree.verify_proof(address, value, proof, root)
+        device_valid, _ = authdb.lookup(session, address=address, value=value, proof=proof)
+        assert host_result == device_valid is True
