@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import typing as t
 from dataclasses import dataclass
 from enum import Enum
@@ -183,33 +182,6 @@ LEGACY_V3_DEV = ModelKeys(
     nrf_keys=(),
 )
 
-T2T1 = ModelKeys(
-    production=True,
-    boardloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "0eb9856be9ba7e972c7f34eac1ed9b6fd0efd172ec00faf0c589759da4ddfba0",
-            "ac8ab40b32c98655798fd5da5e192be27a22306ea05c6d277cdff4a3f4125cd8",
-            "ce0fcd12543ef5936cf2804982136707863d17295faced72af171d6e6513ff06",
-        )
-    ],
-    boardloader_sigs_needed=2,
-    bootloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "c2c87a49c5a3460977fbb2ec9dfe60f06bd694db8244bd4981fe3b7a26307f3f",
-            "80d036b08739b846f4cb77593078deb25dc9487aedcf52e30b4fb7cd7024178a",
-            "b8307a71f552c60a4cbb317ff48b82cdbf6b6bb5f04c920fec7badf017883751",
-        )
-    ],
-    bootloader_sigs_needed=2,
-    firmware_keys=(),
-    firmware_sigs_needed=-1,
-    secmon_keys=(),
-    secmon_sigs_needed=-1,
-    nrf_keys=(),
-)
-
 TREZOR_CORE_DEV = ModelKeys(
     production=False,
     boardloader_keys=[
@@ -246,157 +218,6 @@ TREZOR_CORE_DEV = ModelKeys(
         for k in (
             "d759793bbc13a2819a827c76adb6fba8a49aee007f49f2d0992d99b825ad2c48",
             "6355691c178a8ff91007a7478afb955ef7352c63e7b25703984cf78b26e21a56",
-        )
-    ],
-)
-
-T2B1 = ModelKeys(
-    production=True,
-    boardloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "549a45557008d5518a9a151dc6a3568cf73830a7fe419f2626d9f30d024b2bec",
-            "c16c7027f8a3962607bf24cdec2e3cd2344e1f6071e8260b3dda52b1a5107cb7",
-            "87180f933178b2832bee2d7046c7f4b98300ca7d7fb2e4567169c8730a1c4020",
-        )
-    ],
-    boardloader_sigs_needed=2,
-    bootloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "bf4e6f004fcb32cec683f22c88c1a86c1518c6de8ac97002d84a63bea3e375dd",
-            "d2def691c1e9d809d8190cf7af935c10688f68983479b4ee9abac19104878ec1",
-            "07c85134946bf89fa19bdc2c5e5ff9ce01296508ee0863d0ff6d63331d1a2516",
-        )
-    ],
-    bootloader_sigs_needed=2,
-    firmware_keys=(),
-    firmware_sigs_needed=-1,
-    secmon_keys=(),
-    secmon_sigs_needed=-1,
-    nrf_keys=(),
-)
-
-T3T1 = ModelKeys(
-    production=True,
-    boardloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "76af426e61406bad7c077b409c66fde39fb817919313ae1e4c02535c80beed96",
-            "619751dc8d2d09d7e5dfb99e41f606debdf419f85a8143e8e5399ea67a3988c7",
-            "abf94b6615a7dde2a871f7d62c38efc7d9d8f6010d8846bee636e4f3e658a38c",
-        )
-    ],
-    boardloader_sigs_needed=2,
-    bootloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "338b949b7e3b26470d4fe3696fd6fff28757265d14cca48ebf2db97b4f5bc039",
-            "28682027730b783201b05a8c9d11685447c17297db71b8a60dc693a44610751d",
-            "9fbf31b4e351a4cc81c75995b2257f0a7169268da5a44e94b6a5590d434e32da",
-        )
-    ],
-    bootloader_sigs_needed=2,
-    firmware_keys=(),
-    firmware_sigs_needed=-1,
-    secmon_keys=(),
-    secmon_sigs_needed=-1,
-    nrf_keys=(),
-)
-
-T3T2 = ModelKeys(
-    production=True,
-    boardloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            # todo replace with production keys
-            "76af426e61406bad7c077b409c66fde39fb817919313ae1e4c02535c80beed96",
-            "619751dc8d2d09d7e5dfb99e41f606debdf419f85a8143e8e5399ea67a3988c7",
-            "abf94b6615a7dde2a871f7d62c38efc7d9d8f6010d8846bee636e4f3e658a38c",
-        )
-    ],
-    boardloader_sigs_needed=2,
-    bootloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            # todo replace with production keys
-            "338b949b7e3b26470d4fe3696fd6fff28757265d14cca48ebf2db97b4f5bc039",
-            "28682027730b783201b05a8c9d11685447c17297db71b8a60dc693a44610751d",
-            "9fbf31b4e351a4cc81c75995b2257f0a7169268da5a44e94b6a5590d434e32da",
-        )
-    ],
-    bootloader_sigs_needed=2,
-    firmware_keys=(),
-    firmware_sigs_needed=-1,
-    secmon_keys=(),
-    secmon_sigs_needed=-1,
-    nrf_keys=(),
-)
-
-T3B1 = ModelKeys(
-    production=True,
-    boardloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "bbc21adbc1b44d6bfe10c5223de33c28429e52680707d3249007ed42dcc5be13",
-            "22e42a301f3b6ff4f2e6926bce4359e83fc83f0f4a84a7338959c1fd0e29dc13",
-            "7f478f5fb78d8c054b720d8104bf2f6487e452402458979b5525c290dc344d32",
-        )
-    ],
-    boardloader_sigs_needed=2,
-    bootloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "41d9884801377cff04b0b459fc9b56af1b51f47343a3a6e4fdc1eacabcad7756",
-            "23ec4ec4674d68ac5431e8ba84d7ac24cb5a66702ec565014d164a72182a66c7",
-            "8a7dac53e1be46607231920b0c71056a27be16b67a2fc0d8644d5f8708a28dd1",
-        )
-    ],
-    bootloader_sigs_needed=2,
-    firmware_keys=(),
-    firmware_sigs_needed=-1,
-    secmon_keys=(),
-    secmon_sigs_needed=-1,
-    nrf_keys=(),
-)
-
-T3W1 = ModelKeys(
-    production=True,
-    boardloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "e8912f81b3e780ee650ed3856db5326e0b9eff10364b339193e7a8f10f7621b9",
-            "bde70a38eee633d26f434eee2f536df457b8deb8bd988294f4a0c8d9054903d2",
-            "a85b601dfbda1d22ccb5dd492d26034d87f67f2a0b8584b7774439461fc471a9",
-        )
-    ],
-    boardloader_sigs_needed=2,
-    bootloader_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "320e111e9dded5fe7f5d41fd372ef0e91b2dfa4c6cdc9fe5221bfb16aaf91775",
-            "2e349f8d06b2334262ecb603ed04cb5a7cc0b660ebe3cd5c2972b5cd1f38ef85",
-            "ab0d3f91a4adf744719dba661783ec549f73a4e45457cb6d02752a40fb63d3bf",
-        )
-    ],
-    bootloader_sigs_needed=2,
-    firmware_keys=(),
-    firmware_sigs_needed=-1,
-    secmon_keys=[
-        bytes.fromhex(key)
-        for key in (
-            "7da3dd4769fef0f9489d5ff7fba8be122aef0f60778302557ba2cc67ff2a6d9e",
-            "4ae3bf88b0e5226322d867432940265b4bef46e5c45b64730e26ca32ee653e0b",
-            "6c1640f38d037c57e86960863505ef70ff60f98157440cf25f1c133b4a15960e",
-        )
-    ],
-    secmon_sigs_needed=2,
-    nrf_keys=[
-        bytes.fromhex(k)
-        for k in (
-            "d1bad5e8c73dfe183ba1bd5464b2c96f1d1de66d53c95026d17169148d096f3e",
-            "585f0635efc6518c490228a72ae1f5d0808ebe77f1c12516eb6d525821eb1e21",
-            "065ee19b0de4eec3be70938935313ca2949cc3808b2bf3ad7ef0ac419a974191",
         )
     ],
 )
@@ -442,86 +263,58 @@ ROOT_SLH_DSA_KEYS_DEV_PUBLIC = [
 ]
 
 
-LEGACY_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.sha256,
-    chunk_size=1024 * 64,
-    padding_byte=b"\xff",
-)
+# ---- Model dispatch tables, built from the single-source model registry ----
+# trezorlib._modeldata holds one file per model (keys, hash params, layout, ...).
+# Adding a model there makes it appear in all three maps automatically, so these
+# tables no longer need to be hand-maintained.
 
-T2T1_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.blake2s,
-    chunk_size=1024 * 128,
-    padding_byte=None,
-)
+from .._modeldata import HashParams, KeySet
+from .._modeldata import registry as _registry  # noqa: E402
 
-T3T1_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.sha256,
-    chunk_size=1024 * 128,
-    padding_byte=None,
-)
 
-T3T2_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.sha256,
-    chunk_size=1024 * 128,
-    padding_byte=None,
-)
+def _to_modelkeys(ks: KeySet) -> ModelKeys:
+    """Convert a _modeldata.KeySet into the verification-layer ModelKeys."""
+    return ModelKeys(
+        production=ks.production,
+        boardloader_keys=list(ks.boardloader_keys),
+        boardloader_sigs_needed=ks.boardloader_sigs_needed,
+        bootloader_keys=list(ks.bootloader_keys),
+        bootloader_sigs_needed=ks.bootloader_sigs_needed,
+        firmware_keys=list(ks.firmware_keys),
+        firmware_sigs_needed=ks.firmware_sigs_needed,
+        secmon_keys=list(ks.secmon_keys),
+        secmon_sigs_needed=ks.secmon_sigs_needed,
+        nrf_keys=list(ks.nrf_keys),
+    )
 
-T3B1_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.sha256,
-    chunk_size=1024 * 128,
-    padding_byte=None,
-)
 
-T3W1_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.sha256,
-    chunk_size=1024 * 256,
-    padding_byte=None,
-)
+MODEL_MAP = {Model(d.hw_model): _to_modelkeys(d.prod_keys) for d in _registry.ALL}
 
-D002_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.sha256,
-    chunk_size=1024 * 256,
-    padding_byte=None,
-)
+MODEL_MAP_DEV = {Model(d.hw_model): _to_modelkeys(d.dev_keys) for d in _registry.ALL}
 
-MODEL_MAP = {
-    Model.T1B1: LEGACY_V3,
-    Model.T2T1: T2T1,
-    Model.T2B1: T2B1,
-    Model.T3T1: T3T1,
-    Model.T3T2: T3T2,
-    Model.T3B1: T3B1,
-    Model.T3W1: T3W1,
-    Model.D001: TREZOR_CORE_DEV,
-    Model.D002: TREZOR_CORE_DEV,
-    Model.D003: TREZOR_CORE_DEV,
-}
 
-MODEL_MAP_DEV = {
-    Model.T1B1: LEGACY_V3_DEV,
-    Model.T2T1: TREZOR_CORE_DEV,
-    Model.T2B1: TREZOR_CORE_DEV,
-    Model.T3T1: TREZOR_CORE_DEV,
-    Model.T3T2: TREZOR_CORE_DEV,
-    Model.T3B1: TREZOR_CORE_DEV,
-    Model.T3W1: TREZOR_CORE_DEV,
-    Model.D001: TREZOR_CORE_DEV,
-    Model.D002: TREZOR_CORE_DEV,
-    Model.D003: TREZOR_CORE_DEV,
-}
+def _to_hashparams(hp: HashParams | None) -> FirmwareHashParameters:
+    assert hp is not None
+    return FirmwareHashParameters(
+        hash_function=hp.hash_function,
+        chunk_size=hp.chunk_size,
+        padding_byte=hp.padding_byte,
+    )
+
 
 MODEL_HASH_PARAMS_MAP = {
-    Model.T1B1: LEGACY_HASH_PARAMS,
-    Model.T2T1: T2T1_HASH_PARAMS,
-    Model.T2B1: T2T1_HASH_PARAMS,
-    Model.T3T1: T3T1_HASH_PARAMS,
-    Model.T3T2: T3T2_HASH_PARAMS,
-    Model.T3B1: T3B1_HASH_PARAMS,
-    Model.T3W1: T3W1_HASH_PARAMS,
-    Model.D001: T2T1_HASH_PARAMS,
-    Model.D002: D002_HASH_PARAMS,
-    Model.D003: D002_HASH_PARAMS,
+    Model(d.hw_model): _to_hashparams(d.hash_params) for d in _registry.ALL
 }
+
+# Per-model key sets, kept as module-level names for backwards compatibility
+# (e.g. firmware.consts, _internal.firmware_headers). The source of truth is the
+# model registry above; these are just convenient handles into MODEL_MAP.
+T2T1 = MODEL_MAP[Model.T2T1]
+T2B1 = MODEL_MAP[Model.T2B1]
+T3T1 = MODEL_MAP[Model.T3T1]
+T3T2 = MODEL_MAP[Model.T3T2]
+T3B1 = MODEL_MAP[Model.T3B1]
+T3W1 = MODEL_MAP[Model.T3W1]
 
 # deprecated aliases -- don't add more
 
@@ -530,10 +323,10 @@ TREZOR_ONE_V1V2_DEV = LEGACY_V1V2_DEV
 TREZOR_ONE_V3 = LEGACY_V3
 TREZOR_ONE_V3_DEV = LEGACY_V3_DEV
 
-TREZOR_T = T2T1
-TREZOR_R = T2B1
-TREZOR_T3T1 = T3T1
-TREZOR_T3B1 = T3B1
+TREZOR_T = MODEL_MAP[Model.T2T1]
+TREZOR_R = MODEL_MAP[Model.T2B1]
+TREZOR_T3T1 = MODEL_MAP[Model.T3T1]
+TREZOR_T3B1 = MODEL_MAP[Model.T3B1]
 TREZOR_T_DEV = TREZOR_CORE_DEV
 TREZOR_R_DEV = TREZOR_CORE_DEV
 
