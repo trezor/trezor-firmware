@@ -9,6 +9,7 @@ _This usually requires some code changes in the affected software._
 - HWI https://github.com/bitcoin-core/HWI
 - Trezor Agent https://github.com/romanz/trezor-agent
 - Shadowlands https://github.com/kayagoban/shadowlands
+- Bitcoin Safe https://github.com/andreasgriffin/bitcoin-safe
 
 ### Using HWI
 _Updating HWI to the latest version should be enough._
