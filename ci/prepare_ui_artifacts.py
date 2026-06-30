@@ -1,5 +1,6 @@
 import shutil
 import sys
+from multiprocessing import Pool
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -10,10 +11,11 @@ from tests.ui_tests.common import get_current_fixtures  # isort:skip
 
 FIXTURES = get_current_fixtures()
 
-for result in TestResult.recent_results():
+
+def compute_hash(result: TestResult) -> TestResult | None:
     if not result.passed or result.expected_hash != result.actual_hash:
         print("WARNING: skipping failed test", result.test.id)
-        continue
+        return None
 
     actual_hash = _hash_files(result.test.actual_dir)
     expected_hash = (
@@ -23,6 +25,28 @@ for result in TestResult.recent_results():
     )
     assert result.expected_hash == actual_hash
     assert expected_hash == actual_hash
-    shutil.make_archive(
-        str(ROOT / "ci/ui_test_records" / actual_hash), "zip", result.test.actual_dir
-    )
+    return result
+
+
+def create_zip(item: tuple[str, TestResult]) -> None:
+    archive_path, result = item
+    shutil.make_archive(archive_path, "zip", result.test.actual_dir)
+
+
+def main():
+    with Pool() as pool:
+        all_results = list(TestResult.recent_results())
+        print(f"Hashing {len(all_results)} results")
+        # deduplicate results by `actual_hash`, and skip failed tests
+        results_map = {
+            str(ROOT / "ci/ui_test_records" / result.actual_hash): result
+            for result in pool.imap_unordered(compute_hash, all_results)
+            if result is not None
+        }
+        print(f"Creating {len(results_map)} ZIP files")
+        for _ in pool.imap_unordered(create_zip, results_map.items()):
+            pass
+
+
+if __name__ == "__main__":
+    main()
