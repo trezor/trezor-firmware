@@ -65,12 +65,12 @@ XTASK_BUILD_OPTS += --storage-insecure-testing-mode
 XTASK_BUILD_OPTS += --disable-tropic
 XTASK_BUILD_OPTS += --disable-optiga
 else
-	ifeq ($(DISABLE_OPTIGA),1)
-	XTASK_BUILD_OPTS += --disable-optiga
-	endif
-	ifeq ($(DISABLE_TROPIC),1)
-	XTASK_BUILD_OPTS += --disable-tropic
-	endif
+ifeq ($(DISABLE_OPTIGA),1)
+XTASK_BUILD_OPTS += --disable-optiga
+endif
+ifeq ($(DISABLE_TROPIC),1)
+XTASK_BUILD_OPTS += --disable-tropic
+endif
 endif
 
 ## help commands:
