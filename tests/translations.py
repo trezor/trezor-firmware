@@ -107,7 +107,8 @@ class Translation:
 
     def _translate_raw(self, key: str, _stacklevel: int = 0) -> str:
         tr = self.translations.get(key)
-        if tr is not None:
+        # Emulate firmware behaviour: English strings are used instead of missing & empty strings
+        if tr:
             # Handle layout-specific translations
             if isinstance(tr, dict) and hasattr(_CURRENT_TRANSLATION, "LAYOUT"):
                 # Try to get translation for current layout
