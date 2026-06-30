@@ -40,6 +40,7 @@ from . import (
     SessionIdentifier,
     TrezorConnection,
     benchmark,
+    authdb,
     ble,
     btc,
     cardano,
@@ -429,6 +430,7 @@ def wait_for_emulator(obj: TrezorConnection, timeout: float) -> None:
 # Basic coin functions
 #
 
+cli.add_command(authdb.cli)
 cli.add_command(btc.cli)
 cli.add_command(cardano.cli)
 cli.add_command(crypto.cli)

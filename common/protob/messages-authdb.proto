@@ -1,0 +1,49 @@
+syntax = "proto2";
+package hw.trezor.messages.authdb;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageAuthDb";
+
+/**
+ * Request: Set (or replace) the Merkle root stored on the device and increment the counter.
+ * @start
+ * @next AuthDbSetRootResponse
+ * @next Failure
+ */
+message AuthDbSetRoot {
+    required bytes root = 1;  // 32-byte Merkle root
+}
+
+/**
+ * Response: Confirmation that the root was stored.
+ * @end
+ */
+message AuthDbSetRootResponse {
+    required uint32 counter = 1;  // monotonic counter after this operation
+}
+
+/**
+ * Request: Verify a Merkle proof for a leaf against the stored root.
+ *
+ * The leaf_hash must be computed as SHA-256(b"\x00" + raw_value).
+ * Each proof entry is combined using SHA-256(b"\x01" + min(a,b) + max(a,b)).
+ * This matches the trezorlib.merkle_tree algorithm.
+ *
+ * @start
+ * @next AuthDbLookupResponse
+ * @next Failure
+ */
+message AuthDbLookup {
+    required bytes leaf_hash = 1;  // SHA-256(b"\x00" + raw_value)
+    repeated bytes proof = 2;      // sibling hashes from leaf level to root
+}
+
+/**
+ * Response: Verification result together with the current counter.
+ * @end
+ */
+message AuthDbLookupResponse {
+    required bool valid = 1;    // true if proof is valid against stored root
+    required uint32 counter = 2;  // current monotonic counter
+}

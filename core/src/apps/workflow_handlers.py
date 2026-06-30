@@ -112,6 +112,12 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.PaymentNotification:
         return "apps.misc.payment_notification"
 
+    # authdb
+    if msg_type == MessageType.AuthDbSetRoot:
+        return "apps.authdb.set_root"
+    if msg_type == MessageType.AuthDbLookup:
+        return "apps.authdb.lookup"
+
     # evolu
     if msg_type == MessageType.EvoluGetNode:
         return "apps.evolu.get_node"

@@ -381,6 +381,12 @@ enum MessageType {
     // 2 indexes reserved for (un)delegation. PR in review.
     MessageType_TronWithdrawBalance = 2213 [(wire_in) = true];
 
+    // AuthDB
+    MessageType_AuthDbSetRoot = 2300 [(wire_in) = true];
+    MessageType_AuthDbSetRootResponse = 2301 [(wire_out) = true];
+    MessageType_AuthDbLookup = 2302 [(wire_in) = true];
+    MessageType_AuthDbLookupResponse = 2303 [(wire_out) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];

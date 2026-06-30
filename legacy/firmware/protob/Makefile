@@ -19,6 +19,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult \
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
 	BleUnpair PaymentNotification Evolu \
+	AuthDb \
 	GetSerialNumber SerialNumber \
 	TelemetryGet, Telemetry
 

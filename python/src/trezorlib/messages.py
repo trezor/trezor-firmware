@@ -9510,3 +9510,65 @@ class WebAuthnCredential(protobuf.MessageType):
         self.use_sign_count = use_sign_count
         self.algorithm = algorithm
         self.curve = curve
+
+
+class AuthDbSetRoot(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2300
+    FIELDS = {
+        1: protobuf.Field("root", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        root: "bytes",
+    ) -> None:
+        self.root = root
+
+
+class AuthDbSetRootResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2301
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+    ) -> None:
+        self.counter = counter
+
+
+class AuthDbLookup(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2302
+    FIELDS = {
+        1: protobuf.Field("leaf_hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        leaf_hash: "bytes",
+        proof: Optional[Sequence["bytes"]] = None,
+    ) -> None:
+        self.leaf_hash = leaf_hash
+        self.proof: Sequence["bytes"] = proof if proof is not None else []
+
+
+class AuthDbLookupResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2303
+    FIELDS = {
+        1: protobuf.Field("valid", "bool", repeated=False, required=True),
+        2: protobuf.Field("counter", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        valid: "bool",
+        counter: "int",
+    ) -> None:
+        self.valid = valid
+        self.counter = counter

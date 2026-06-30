@@ -7585,3 +7585,63 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WebAuthnCredential"]:
             return isinstance(msg, cls)
+
+    class AuthDbSetRoot(protobuf.MessageType):
+        root: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            root: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetRoot"]:
+            return isinstance(msg, cls)
+
+    class AuthDbSetRootResponse(protobuf.MessageType):
+        counter: "int"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetRootResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbLookup(protobuf.MessageType):
+        leaf_hash: "AnyBytes"
+        proof: "list[AnyBytes]"
+
+        def __init__(
+            self,
+            *,
+            leaf_hash: "AnyBytes",
+            proof: "list[AnyBytes] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbLookup"]:
+            return isinstance(msg, cls)
+
+    class AuthDbLookupResponse(protobuf.MessageType):
+        valid: "bool"
+        counter: "int"
+
+        def __init__(
+            self,
+            *,
+            valid: "bool",
+            counter: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbLookupResponse"]:
+            return isinstance(msg, cls)

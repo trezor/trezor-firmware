@@ -718,6 +718,10 @@ if TYPE_CHECKING:
         TronWithdrawUnfreeze = 2209
         TronVoteWitnessContract = 2210
         TronWithdrawBalance = 2213
+        AuthDbSetRoot = 2300
+        AuthDbSetRootResponse = 2301
+        AuthDbLookup = 2302
+        AuthDbLookupResponse = 2303
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
