@@ -4808,6 +4808,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         6: protobuf.Field("decimals", "uint32", repeated=False, required=False, default=None),
         7: protobuf.Field("base", "string", repeated=False, required=False, default=None),
         8: protobuf.Field("prefix", "bool", repeated=False, required=False, default=None),
+        9: protobuf.Field("const_token_address", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4821,6 +4822,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         decimals: Optional["int"] = None,
         base: Optional["str"] = None,
         prefix: Optional["bool"] = None,
+        const_token_address: Optional["bytes"] = None,
     ) -> None:
         self.path = path
         self.label = label
@@ -4830,6 +4832,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         self.decimals = decimals
         self.base = base
         self.prefix = prefix
+        self.const_token_address = const_token_address
 
 
 class EthereumDisplayFormatInfo(protobuf.MessageType):

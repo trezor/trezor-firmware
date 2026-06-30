@@ -295,11 +295,13 @@ class AmountFormatter(FieldFormatter):
 class TokenAmountFormatter(FieldFormatter):
     def __init__(
         self,
-        token_path: Path,
+        token_path: Path | None = None,
+        const_token_address: bytes | None = None,
         native_currency_address: list[bytes] | None = None,
         threshold: int | None = None,
     ) -> None:
         self.token_path = token_path
+        self.const_token_address = const_token_address
         self.native_currency_address = native_currency_address
         self.threshold = threshold
 
@@ -320,8 +322,15 @@ class TokenAmountFormatter(FieldFormatter):
         if not isinstance(amount, int):
             raise InvalidFormatDefinition
 
-        token_address = path_walker(self.token_path)
-        if not isinstance(token_address, bytes):
+        if self.const_token_address is not None:
+            # token given as a literal constant address
+            token_address = self.const_token_address
+        elif self.token_path is not None:
+            walked = path_walker(self.token_path)
+            if not isinstance(walked, bytes):
+                raise InvalidFormatDefinition
+            token_address = walked
+        else:
             raise InvalidFormatDefinition
 
         if self.native_currency_address is not None:
@@ -686,6 +695,10 @@ class FieldDefinition:
             formatter_params = {}
             if info.token_path is not None:
                 formatter_params["token_path"] = decode_path(info.token_path)
+            if info.const_token_address is not None:
+                formatter_params["const_token_address"] = bytes(
+                    info.const_token_address
+                )
             if info.threshold is not None:
                 formatter_params["threshold"] = int.from_bytes(info.threshold, "big")
             formatter = TokenAmountFormatter(**formatter_params)
