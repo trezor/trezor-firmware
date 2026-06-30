@@ -79,6 +79,8 @@
 
 #include <SDL3/SDL.h>
 
+#include "version.h"
+
 static void drivers_deinit(void) { flash_deinit(); }
 
 static void drivers_init(void) {
@@ -169,6 +171,22 @@ static bool sdl_event_filter(void *userdata, SDL_Event *event) {
   return true;
 }
 
+// Can be used to get basic emulator properties before regularly starting it.
+// Needs to be called before it starts listening on UDP sockets in case there
+// are multiple copies of the process called, e.g. from multicore tests.
+static void print_emulator_properties_and_exit(void) {
+  printf("{\"internal_model\": \"%s\",\n", MODEL_INTERNAL_NAME);
+#ifdef USE_TROPIC
+  printf(" \"tropic\": true,\n");
+#endif
+#ifdef USE_BLE
+  printf(" \"ble\": true,\n");
+#endif
+  printf(" \"version\": \"%d.%d.%d.%d\"}\n", VERSION_MAJOR, VERSION_MINOR,
+         VERSION_PATCH, VERSION_BUILD);
+  exit(0);
+}
+
 // Kernel task main loop
 //
 // Returns when the coreapp task is terminated
@@ -184,6 +202,10 @@ static void kernel_loop(applet_t *coreapp) {
 
 int main(int argc, char **argv) {
   system_init(&rsod_panic_handler);
+
+  if (argc > 1 && strcmp(argv[1], "--emulator-properties") == 0) {
+    print_emulator_properties_and_exit();
+  }
 
 #ifdef USE_MCU_ATTESTATION
   {

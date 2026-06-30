@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import atexit
+import json
 import logging
 import os
 import signal
@@ -355,6 +356,9 @@ class Emulator:
     def get_storage(self) -> bytes:
         return self.storage.read_bytes()
 
+    def properties(self) -> dict:
+        return {}
+
 
 class CoreEmulator(Emulator):
     STORAGE_FILENAME = "trezor.flash"
@@ -428,6 +432,28 @@ class CoreEmulator(Emulator):
     # Also TCP instead of UDP.
     def tropic_port(self) -> int:
         return self.tropic_model_port or (self.port + 6)
+
+    def properties(self) -> dict[str, Any]:
+        args = [str(self.executable), "--emulator-properties"]
+        try:
+            stdout = subprocess.check_output(
+                args,
+                cwd=self.workdir,
+                env=self.make_env(),
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=5,
+            )
+            props = json.loads(stdout)
+            assert isinstance(props, dict)
+            return props
+        except subprocess.CalledProcessError as exc:
+            LOG.warning(
+                f"{' '.join(args)} failed: {exc}\nstdout: {exc.stdout}\nstderr: {exc.stderr}"
+            )
+        except Exception as exc:
+            LOG.warning(f"{' '.join(args)} failed: {exc}")
+        return {}
 
 
 class LegacyEmulator(Emulator):

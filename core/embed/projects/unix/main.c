@@ -308,6 +308,7 @@ STATIC int usage(char **argv) {
   printf(
       "usage: %s [<opts>] [-X <implopt>] [-c <command>] [<filename>]\n"
       "Options:\n"
+      "--emulator-properties : print basic emulator info and exit\n"
       "-v : verbose (trace various operations); can be multiple\n"
       "-O[N] : apply bytecode optimizations of level N\n"
       "\n"
