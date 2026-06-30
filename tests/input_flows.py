@@ -1640,40 +1640,43 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         """Triggers show more wherever possible"""
-        yield  # confirm address
+        assert (yield).name == "confirm_address"  # confirm address
         self.debug.press_yes()
 
-        # confirm domain properties
-        for _ in range(4):
-            yield from swipe_if_necessary(self.debug)  # EIP712 DOMAIN
-            self.debug.press_yes()
+        # confirm EIP712 domain properties
+        yield from swipe_if_necessary(
+            self.debug, br_name="confirm_typed_value", br_code=B.Other
+        )
+        self.debug.press_yes()
 
-        yield  # confirm message
-        self.debug.read_layout()
+        assert (yield).name == "should_show_struct"  # confirm message
         self._confirm_show_more()
 
-        yield  # confirm message.from
-        self.debug.read_layout()
+        assert (yield).name == "should_show_struct"  # confirm message.from
         self._confirm_show_more()
 
         # confirm message.from properties
         for _ in range(2):
-            yield from swipe_if_necessary(self.debug)
+            yield from swipe_if_necessary(
+                self.debug, br_name="confirm_typed_value", br_code=B.Other
+            )
             self.debug.press_yes()
 
-        yield  # confirm message.to
+        assert (yield).name == "should_show_struct"  # confirm message.to
         self.debug.read_layout()
         self._confirm_show_more()
 
         # confirm message.to properties
         for _ in range(2):
-            yield from swipe_if_necessary(self.debug)
+            yield from swipe_if_necessary(
+                self.debug, br_name="confirm_typed_value", br_code=B.Other
+            )
             self.debug.press_yes()
 
-        yield  # confirm message.contents
+        assert (yield).name == "confirm_typed_value"  # confirm message.contents
         self.debug.press_yes()
 
-        yield  # confirm final hash
+        assert (yield).name == "confirm_typed_data_final"  # confirm final hash
         self.debug.press_yes()
 
 
