@@ -233,6 +233,10 @@ class EmulatorWrapper:
                 f"Unrecognized gen - {gen} - only 'core' and 'legacy' supported"
             )
 
+    def executable_is_tropic_capable(self) -> bool:
+        """Try running the binary with --emulator-properties to see if it is Tropic capable."""
+        return self.emulator.properties().get("tropic", False)
+
     def __enter__(self) -> Emulator:
         self.emulator.start()
         return self.emulator

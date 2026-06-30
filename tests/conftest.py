@@ -96,8 +96,19 @@ def _get_worker_id(request: pytest.FixtureRequest) -> int:
 
 
 @pytest.fixture(scope="session")
-def tropic_model(request: pytest.FixtureRequest) -> t.Iterator[TropicModel]:
+def tropic_model_port(request: pytest.FixtureRequest) -> t.Iterator[int | None]:
+    """Fixture that starts Tropic01 model and returns the TCP port it's running on.
+    It returns None if the currently tested emulator does not need it."""
     worker_id = _get_worker_id(request)
+
+    emulator_wrapper = EmulatorWrapper(
+        request.session.config.getoption("model") or "core"
+    )
+    if not emulator_wrapper.executable_is_tropic_capable():
+        LOG.debug(f"Not starting tropic model (worker {worker_id})")
+        yield None
+        return
+
     logfile = get_logfile(f"trezor-tropic-model-{worker_id}.log")
     port = get_tropic_model_port(worker_id)
 
@@ -114,18 +125,18 @@ def tropic_model(request: pytest.FixtureRequest) -> t.Iterator[TropicModel]:
             logfile=logfile,
         ) as tropic_model:
             tropic_model.start()
-            yield tropic_model
+            yield tropic_model.port
 
 
 @pytest.fixture
 def core_emulator(
-    tropic_model: TropicModel, request: pytest.FixtureRequest
+    tropic_model_port: int | None, request: pytest.FixtureRequest
 ) -> t.Iterator[Emulator]:
     """Fixture returning default core emulator with possibility of screen recording."""
     with EmulatorWrapper(
         "core",
         main_args=_emulator_wrapper_main_args(),
-        tropic_model_port=tropic_model.port,
+        tropic_model_port=tropic_model_port,
     ) as emu:
         # Modifying emu.client to add screen recording (when --ui=test is used)
         _check_protocol(request, emu.client)
@@ -135,7 +146,7 @@ def core_emulator(
 
 @pytest.fixture(scope="session")
 def emulator(
-    tropic_model: TropicModel, request: pytest.FixtureRequest
+    tropic_model_port: int | None, request: pytest.FixtureRequest
 ) -> t.Generator["Emulator", None, None]:
     """Fixture for getting emulator connection in case tests should operate it on their own.
 
@@ -171,7 +182,7 @@ def emulator(
         headless=True,
         auto_interact=not interact,
         main_args=_emulator_wrapper_main_args(),
-        tropic_model_port=tropic_model.port,
+        tropic_model_port=tropic_model_port,
     ) as emu:
         yield emu
 
