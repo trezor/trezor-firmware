@@ -573,11 +573,18 @@ def pytest_configure(config: "Config") -> None:
     verbosity = config.getoption("verbose")
     if verbosity:
         log.enable_debug_output(verbosity)
+        handler = logging.StreamHandler()
 
         verbose_log_file = config.getoption("verbose_log_file")
         if verbose_log_file:
             handler = logging.FileHandler(verbose_log_file)
             log.enable_debug_output(verbosity, handler)
+
+        # enable logging for test cases and fixtures
+        logger = logging.getLogger(__name__.rsplit(".", 1)[0])
+        handler.setFormatter(log.PrettyProtobufFormatter())
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
 
     idval_orig = IdMaker._idval_from_value
 
