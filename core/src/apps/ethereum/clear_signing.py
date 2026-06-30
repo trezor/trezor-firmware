@@ -31,13 +31,14 @@ if TYPE_CHECKING:
 
     # Represents values that have been parsed from the calldata
     # into our internal representation.
+    # TODO: Revisit simplifying this.
     Value = int | bytes | bool | str | None | list["Value"]
     TupleValue = tuple[Value, ...]
     ListValue = list[TupleValue]
-    AnyValue = Value | TupleValue | ListValue | list[Value | TupleValue | ListValue]
+    AnyValue = Value | TupleValue | list["AnyValue"]
 
     Path = tuple[int | tuple[int] | tuple[int, int], ...] | int
-    PathWalker = Callable[[Path], Value]
+    PathWalker = Callable[[Path], AnyValue]
 
     # Parses a Value from a slice of the calldata.
     # Assumes that the memoryview contains just that value.
@@ -432,8 +433,9 @@ class RawFormatter(FieldFormatter):
             from ubinascii import hexlify
 
             return hexlify(value).decode(), None, None
+        elif isinstance(value, bool):
+            return str(value), None, None
         elif isinstance(value, int):
-            # bool is an int subclass; rendered as "True"/"False".
             return str(value), None, None
         else:
             raise InvalidFormatDefinition
@@ -458,6 +460,51 @@ class DateFormatter(FieldFormatter):
         if isinstance(value, int):
             return format_timestamp(value), None, None
         raise InvalidFormatDefinition
+
+
+async def _format_field_value(
+    formatter: FieldFormatter,
+    value: AnyValue,
+    msg: MsgInSignTx,
+    defs: Definitions,
+    path_walker: PathWalker,
+) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    """Format a field value.
+
+    When the field's path resolves to an array (a `list`), the formatter is
+    applied to each element and the rendered values are joined with newlines,
+    so the field is shown as one value per line - eg. an `amount.[]` field over
+    `[1, 2]` renders as "1 token\n2 token". This works for any formatter pointed
+    at an array (amount, address, raw, ...). A non-list value is formatted
+    directly.
+
+    Only flat arrays of formattable leaves are handled."""
+    if not isinstance(value, list):
+        return await formatter.format(value, msg, defs, path_walker)
+
+    from trezor.ui.layouts.properties import AboveThreshold
+
+    lines: list[str] = []
+    # The same formatter instance is reused for every element, so a
+    # `tokenAmount`'s single `token_path` resolves to the same token on each
+    # iteration: the token is shared across the array and returned once.
+    token: EthereumTokenInfo | None = None
+    token_address: AnyBytes | None = None
+    for element in value:
+        formatted, element_token, element_address = await formatter.format(
+            element, msg, defs, path_walker
+        )
+        if isinstance(formatted, AboveThreshold):
+            formatted = formatted.message
+        if formatted is None:
+            # Raise if any member returns None.
+            raise InvalidFormatDefinition
+        lines.append(formatted)
+        if element_token is not None:
+            token = element_token
+        if element_address is not None:
+            token_address = element_address
+    return "\n".join(lines), token, token_address
 
 
 # https://eips.ethereum.org/EIPS/eip-7730#context-section
@@ -787,7 +834,7 @@ class DisplayFormat:
             parameters.append(value)
             offset += consumed
 
-        def get_value_for_path(path: Path) -> Value:
+        def get_value_for_path(path: Path) -> AnyValue:
             if isinstance(path, int):  # ContainerPath
                 # standard container paths like @.from, @.value...
                 if path == ContainerPath.From:
@@ -828,9 +875,8 @@ class DisplayFormat:
                     else:
                         # can't walk inside basic types
                         raise InvalidFormatDefinition
-                if isinstance(p, (list, tuple)):
-                    # at the end of the path, we must have arrived somewhere
-                    # ie. not on an Array or Tuple
+                if isinstance(p, tuple):
+                    # Array/list makes sense. Not expecting tuples here.
                     raise InvalidFormatDefinition
                 return p
 
@@ -845,8 +891,8 @@ class DisplayFormat:
             try:
                 value = get_value_for_path(field_definition.path)
                 formatter = field_definition.get_formatter()
-                formatted, token, token_address = await formatter.format(
-                    value, msg, defs, get_value_for_path
+                formatted, token, token_address = await _format_field_value(
+                    formatter, value, msg, defs, get_value_for_path
                 )
             except Exception as e:
                 if __debug__:
