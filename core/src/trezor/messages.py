@@ -3391,6 +3391,7 @@ if TYPE_CHECKING:
         decimals: "int | None"
         base: "str | None"
         prefix: "bool | None"
+        const_token_address: "AnyBytes | None"
 
         def __init__(
             self,
@@ -3403,6 +3404,7 @@ if TYPE_CHECKING:
             decimals: "int | None" = None,
             base: "str | None" = None,
             prefix: "bool | None" = None,
+            const_token_address: "AnyBytes | None" = None,
         ) -> None:
             pass
 

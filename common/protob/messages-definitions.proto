@@ -178,6 +178,10 @@ message EthereumERC7730FieldInfo {
     optional uint32 decimals = 6;
     optional string base = 7;
     optional bool prefix = 8;
+
+    // Constant token address, specific to the contract.
+    // Typically a metadata value, resolved by the parser.
+    optional bytes const_token_address = 9;
 }
 
 /**
