@@ -7,6 +7,9 @@ option java_outer_classname = "TrezorMessageAuthDb";
 
 /**
  * Request: Set (or replace) the Merkle root stored on the device and increment the counter.
+ * DEBUG ONLY: on production firmware this is rejected.  Production firmware must derive the
+ * root itself via AuthDbUpdateLeaf.  Accepting an external root would allow an attacker to
+ * forge the entire database state.
  * @start
  * @next AuthDbSetRootResponse
  * @next Failure
@@ -24,28 +27,29 @@ message AuthDbSetRootResponse {
 }
 
 /**
- * Request: Verify a Sparse Merkle Tree proof for a (address, value) pair.
+ * Request: Verify a Merkle Patricia Trie proof for a (address, value) pair.
  *
- * The device computes:
- *   path      = SHA-256(address) bits, MSB first
- *   leaf_hash = SHA-256(b"\x00" + address + value)
- *   For each proof sibling (leaf-to-root order):
- *     level = depth - 1 - i
- *     bit   = path[level]
- *     if bit == 0: current = SHA-256(b"\x01" + current + sibling)
- *     if bit == 1: current = SHA-256(b"\x01" + sibling  + current)
- *   valid = (current == stored_root)
+ * Membership proof (witness_address absent):
+ *   Verify that (address, value) is in the tree with the stored root.
  *
- * This matches trezorlib.authdb_tree.AuthDbTree.
+ * Non-membership proof (witness_address present):
+ *   Verify that address is NOT in the tree by proving a witness leaf (witness_address,
+ *   witness_value) that occupies address's path.  The device checks:
+ *     1. witness is in the tree (membership proof for witness against stored root)
+ *     2. witness_address != address
+ *     3. witness_address and address share all bit-positions that appear in proof
+ *   If the proof list is empty and witness_address is absent, the tree is empty.
  *
  * @start
  * @next AuthDbLookupResponse
  * @next Failure
  */
 message AuthDbLookup {
-    required bytes address = 1;  // key whose SHA-256 determines the path
-    required bytes value   = 2;  // value stored at this address
-    repeated bytes proof   = 3;  // sibling hashes, leaf-to-root order
+    required bytes address         = 1;  // key whose SHA-256 determines the tree path
+    optional bytes value           = 2;  // value stored at address (required for membership)
+    repeated bytes proof           = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
+    optional bytes witness_address = 4;  // non-membership: witness leaf address
+    optional bytes witness_value   = 5;  // non-membership: witness leaf value
 }
 
 /**
@@ -53,6 +57,41 @@ message AuthDbLookup {
  * @end
  */
 message AuthDbLookupResponse {
-    required bool   valid   = 1;  // true if proof is valid against stored root
-    required uint32 counter = 2;  // current monotonic counter
+    required bool   valid      = 1;  // true if proof is valid against stored root
+    required uint32 counter    = 2;  // current monotonic counter
+    optional bool   membership = 3;  // true = membership proof, false = non-membership
+}
+
+/**
+ * Request: Atomically update a leaf in the Merkle tree.
+ *
+ * The device verifies old_value is the current value at address (or the address is absent
+ * when old_value is empty), then computes and stores the new root.
+ *
+ * Supported operations:
+ *   UPDATE  : old_value non-empty, new_value non-empty, membership proof for old leaf
+ *   DELETE  : old_value non-empty, new_value empty,     membership proof for old leaf
+ *   INSERT  : old_value empty,     new_value non-empty, non-membership proof (witness fields)
+ *   INIT    : old_value empty,     new_value non-empty, proof empty, no witness (empty tree)
+ *
+ * @start
+ * @next AuthDbUpdateLeafResponse
+ * @next Failure
+ */
+message AuthDbUpdateLeaf {
+    required bytes  address         = 1;  // key to update
+    required bytes  old_value       = 2;  // current value; empty means address is absent
+    required bytes  new_value       = 3;  // new value; empty means delete
+    repeated bytes  proof           = 4;  // proof for old state (33 bytes each, leaf-to-root)
+    optional bytes  witness_address = 5;  // non-membership witness address (INSERT only)
+    optional bytes  witness_value   = 6;  // non-membership witness value   (INSERT only)
+}
+
+/**
+ * Response: New counter and (optionally) the newly computed root.
+ * @end
+ */
+message AuthDbUpdateLeafResponse {
+    required uint32 counter  = 1;  // monotonic counter after this update
+    optional bytes  new_root = 2;  // absent if the tree is now empty
 }

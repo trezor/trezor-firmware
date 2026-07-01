@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from . import messages
 
@@ -20,20 +20,57 @@ def set_root(session: "Session", root: bytes) -> int:
 def lookup(
     session: "Session",
     address: bytes,
-    value: bytes,
+    value: Optional[bytes],
     proof: list[bytes],
-) -> tuple[bool, int]:
-    """Verify a Sparse Merkle Tree proof for (address, value) against stored root.
+    witness_address: Optional[bytes] = None,
+    witness_value: Optional[bytes] = None,
+) -> tuple[bool, bool, int]:
+    """Verify an MPT proof against the stored root.
 
-    proof must be in leaf-to-root order, as returned by AuthDbTree.get_proof().
-    Returns (valid, counter).
+    For a membership proof supply value; leave witness_address/witness_value None.
+    For a non-membership proof supply witness_address and witness_value; value may be None.
+
+    Returns (valid, membership, counter).
     """
     resp = session.call(
         messages.AuthDbLookup(
             address=address,
             value=value,
             proof=proof,
+            witness_address=witness_address,
+            witness_value=witness_value,
         ),
         expect=messages.AuthDbLookupResponse,
     )
-    return resp.valid, resp.counter
+    membership = resp.membership if resp.membership is not None else True
+    return resp.valid, membership, resp.counter
+
+
+def update_leaf(
+    session: "Session",
+    address: bytes,
+    old_value: bytes,
+    new_value: bytes,
+    proof: list[bytes],
+    witness_address: Optional[bytes] = None,
+    witness_value: Optional[bytes] = None,
+) -> tuple[int, Optional[bytes]]:
+    """Atomically update a leaf in the Merkle tree.
+
+    old_value=b"" means the address is currently absent (INSERT / INIT).
+    new_value=b"" means delete the address (DELETE).
+
+    Returns (counter, new_root).  new_root is None if the tree is now empty.
+    """
+    resp = session.call(
+        messages.AuthDbUpdateLeaf(
+            address=address,
+            old_value=old_value,
+            new_value=new_value,
+            proof=proof,
+            witness_address=witness_address,
+            witness_value=witness_value,
+        ),
+        expect=messages.AuthDbUpdateLeafResponse,
+    )
+    return resp.counter, resp.new_root

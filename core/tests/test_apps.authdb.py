@@ -85,6 +85,28 @@ def build_mpt_root_and_proof(entries, target_address):
     return root_hash, proof   # post-order walk → leaf-to-root order
 
 
+def find_witness(entries, target_address):
+    """Find the witness leaf for a non-membership proof (leaf occupying target's path)."""
+    target_hash = _sha256d(target_address)
+    leaves = [(_sha256d(a), a, v) for a, v in entries.items()]
+    root_node = _build_mpt(
+        [(ah, _leaf_hash(a, v)) for ah, a, v in leaves], 0
+    )
+    leaf_map = {ah: (a, v) for ah, a, v in leaves}
+
+    def walk(node):
+        if node[0] == "leaf":
+            return node[1]  # addr_hash of witness leaf
+        _, bit, left, right = node
+        if _addr_bit(target_hash, bit) == 0:
+            return walk(left)
+        else:
+            return walk(right)
+
+    witness_addr_hash = walk(root_node)
+    return leaf_map[witness_addr_hash]  # (witness_address, witness_value)
+
+
 ENTRIES = {b"alice": b"data_alice", b"bob": b"data_bob",
            b"carol": b"data_carol", b"dave": b"data_dave"}
 
@@ -132,6 +154,42 @@ class TestAuthDbVerifyProof(unittest.TestCase):
         self.assertTrue(self._verify(b"solo", b"val", proof, root))
         # single-entry MPT has no branch nodes → empty proof
         self.assertEqual(proof, [])
+
+
+class TestAuthDbNonMembership(unittest.TestCase):
+
+    def setUp(self):
+        from apps.authdb.lookup import _verify_nonmembership
+        self._verify_nm = _verify_nonmembership
+
+    def test_nonmember_valid(self):
+        root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
+        target = b"zara"  # not in ENTRIES
+        w_addr, w_val = find_witness(ENTRIES, target)
+        proof, _ = build_mpt_root_and_proof(ENTRIES, w_addr)
+        self.assertTrue(self._verify_nm(target, w_addr, w_val, proof, root))
+
+    def test_nonmember_wrong_witness_value(self):
+        root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
+        target = b"zara"
+        w_addr, w_val = find_witness(ENTRIES, target)
+        proof, _ = build_mpt_root_and_proof(ENTRIES, w_addr)
+        self.assertFalse(self._verify_nm(target, w_addr, b"WRONG", proof, root))
+
+    def test_nonmember_witness_equals_target_fails(self):
+        # If witness_address == address, non-membership is false
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
+        self.assertFalse(self._verify_nm(b"alice", b"alice", b"data_alice", proof, root))
+
+    def test_nonmember_tampered_proof(self):
+        root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
+        target = b"zara"
+        w_addr, w_val = find_witness(ENTRIES, target)
+        proof, _ = build_mpt_root_and_proof(ENTRIES, w_addr)
+        if proof:
+            tampered = list(proof)
+            tampered[0] = bytes([tampered[0][0]]) + _sha256d(b"garbage")
+            self.assertFalse(self._verify_nm(target, w_addr, w_val, tampered, root))
 
 
 if __name__ == "__main__":

@@ -7616,15 +7616,19 @@ if TYPE_CHECKING:
 
     class AuthDbLookup(protobuf.MessageType):
         address: "AnyBytes"
-        value: "AnyBytes"
+        value: "AnyBytes | None"
         proof: "list[AnyBytes]"
+        witness_address: "AnyBytes | None"
+        witness_value: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             address: "AnyBytes",
-            value: "AnyBytes",
+            value: "AnyBytes | None" = None,
             proof: "list[AnyBytes] | None" = None,
+            witness_address: "AnyBytes | None" = None,
+            witness_value: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7635,15 +7639,57 @@ if TYPE_CHECKING:
     class AuthDbLookupResponse(protobuf.MessageType):
         valid: "bool"
         counter: "int"
+        membership: "bool | None"
 
         def __init__(
             self,
             *,
             valid: "bool",
             counter: "int",
+            membership: "bool | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbLookupResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbUpdateLeaf(protobuf.MessageType):
+        address: "AnyBytes"
+        old_value: "AnyBytes"
+        new_value: "AnyBytes"
+        proof: "list[AnyBytes]"
+        witness_address: "AnyBytes | None"
+        witness_value: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+            old_value: "AnyBytes",
+            new_value: "AnyBytes",
+            proof: "list[AnyBytes] | None" = None,
+            witness_address: "AnyBytes | None" = None,
+            witness_value: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbUpdateLeaf"]:
+            return isinstance(msg, cls)
+
+    class AuthDbUpdateLeafResponse(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbUpdateLeafResponse"]:
             return isinstance(msg, cls)

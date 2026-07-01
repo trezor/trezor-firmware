@@ -20,6 +20,10 @@ def set_root(root: bytes) -> None:
     common.set(_NAMESPACE, _ROOT, root, public=True)
 
 
+def clear_root() -> None:
+    common.delete(_NAMESPACE, _ROOT, public=True)
+
+
 def get_counter() -> int:
     val = common.get(_NAMESPACE, _COUNTER, public=True)
     if val is None:

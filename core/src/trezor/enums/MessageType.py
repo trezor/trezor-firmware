@@ -302,3 +302,5 @@ if not utils.BITCOIN_ONLY:
     AuthDbSetRootResponse = 2301
     AuthDbLookup = 2302
     AuthDbLookupResponse = 2303
+    AuthDbUpdateLeaf = 2304
+    AuthDbUpdateLeafResponse = 2305

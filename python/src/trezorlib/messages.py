@@ -9544,20 +9544,26 @@ class AuthDbLookup(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2302
     FIELDS = {
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("value", "bytes", repeated=False, required=True),
+        2: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        4: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "bytes",
-        value: "bytes",
+        value: Optional["bytes"] = None,
         proof: Optional[Sequence["bytes"]] = None,
+        witness_address: Optional["bytes"] = None,
+        witness_value: Optional["bytes"] = None,
     ) -> None:
         self.address = address
         self.value = value
         self.proof: Sequence["bytes"] = proof if proof is not None else []
+        self.witness_address = witness_address
+        self.witness_value = witness_value
 
 
 class AuthDbLookupResponse(protobuf.MessageType):
@@ -9565,6 +9571,7 @@ class AuthDbLookupResponse(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("valid", "bool", repeated=False, required=True),
         2: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        3: protobuf.Field("membership", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9572,6 +9579,54 @@ class AuthDbLookupResponse(protobuf.MessageType):
         *,
         valid: "bool",
         counter: "int",
+        membership: Optional["bool"] = None,
     ) -> None:
         self.valid = valid
         self.counter = counter
+        self.membership = membership
+
+
+class AuthDbUpdateLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2304
+    FIELDS = {
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("old_value", "bytes", repeated=False, required=True),
+        3: protobuf.Field("new_value", "bytes", repeated=False, required=True),
+        4: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        5: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "bytes",
+        old_value: "bytes",
+        new_value: "bytes",
+        proof: Optional[Sequence["bytes"]] = None,
+        witness_address: Optional["bytes"] = None,
+        witness_value: Optional["bytes"] = None,
+    ) -> None:
+        self.address = address
+        self.old_value = old_value
+        self.new_value = new_value
+        self.proof: Sequence["bytes"] = proof if proof is not None else []
+        self.witness_address = witness_address
+        self.witness_value = witness_value
+
+
+class AuthDbUpdateLeafResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2305
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root

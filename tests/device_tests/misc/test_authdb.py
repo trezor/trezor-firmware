@@ -1,7 +1,7 @@
 import pytest
 
 from trezorlib import authdb
-from trezorlib.authdb_tree import AuthDbTree
+from trezorlib.authdb_tree import AuthDbTree, EMPTY_ROOT
 from trezorlib.debuglink import SessionDebugWrapper as Session
 
 ENTRIES = {
@@ -34,9 +34,12 @@ def test_lookup_valid_proof(session: Session, address: bytes, value: bytes) -> N
     authdb.set_root(session, tree.get_root_hash())
 
     proof = tree.get_proof(address)
-    valid, counter = authdb.lookup(session, address=address, value=value, proof=proof)
+    valid, membership, counter = authdb.lookup(
+        session, address=address, value=value, proof=proof
+    )
 
     assert valid is True
+    assert membership is True
     assert counter > 0
 
 
@@ -46,7 +49,7 @@ def test_lookup_invalid_wrong_value(session: Session) -> None:
     authdb.set_root(session, tree.get_root_hash())
 
     proof = tree.get_proof(b"alice")
-    valid, _counter = authdb.lookup(
+    valid, _membership, _counter = authdb.lookup(
         session, address=b"alice", value=b"WRONG", proof=proof
     )
     assert valid is False
@@ -59,7 +62,7 @@ def test_lookup_invalid_wrong_address(session: Session) -> None:
 
     # alice's proof, but claim address=bob — path mismatch
     proof = tree.get_proof(b"alice")
-    valid, _counter = authdb.lookup(
+    valid, _membership, _counter = authdb.lookup(
         session, address=b"bob", value=b"data_alice", proof=proof
     )
     assert valid is False
@@ -74,7 +77,7 @@ def test_lookup_invalid_wrong_root(session: Session) -> None:
 
     tree = _make_tree()
     proof = tree.get_proof(b"alice")
-    valid, _counter = authdb.lookup(
+    valid, _membership, _counter = authdb.lookup(
         session, address=b"alice", value=b"data_alice", proof=proof
     )
     assert valid is False
@@ -100,5 +103,185 @@ def test_verify_proof_host_matches_device(session: Session) -> None:
     for address, value in ENTRIES.items():
         proof = tree.get_proof(address)
         host_result = AuthDbTree.verify_proof(address, value, proof, root)
-        device_valid, _ = authdb.lookup(session, address=address, value=value, proof=proof)
+        device_valid, _, _ = authdb.lookup(
+            session, address=address, value=value, proof=proof
+        )
         assert host_result == device_valid is True
+
+
+# ---------------------------------------------------------------------------
+# Non-membership proofs
+# ---------------------------------------------------------------------------
+
+@pytest.mark.models("core")
+def test_nonmembership_proof_valid(session: Session) -> None:
+    """Non-member address returns valid=True, membership=False."""
+    tree = _make_tree()
+    authdb.set_root(session, tree.get_root_hash())
+
+    target = b"zara"
+    proof, w_addr, w_val = tree.get_nonmembership_proof(target)
+    assert w_addr is not None
+
+    valid, membership, counter = authdb.lookup(
+        session,
+        address=target,
+        value=None,
+        proof=proof,
+        witness_address=w_addr,
+        witness_value=w_val,
+    )
+    assert valid is True
+    assert membership is False
+    assert counter > 0
+
+
+@pytest.mark.models("core")
+def test_nonmembership_proof_member_returns_false(session: Session) -> None:
+    """Non-membership proof for a member should fail because witness == target."""
+    tree = _make_tree()
+    authdb.set_root(session, tree.get_root_hash())
+
+    # Use a real member as the "non-member target"; the witness found will
+    # be the leaf itself, which makes witness_address == address → invalid.
+    proof = tree.get_proof(b"alice")
+    valid, _membership, _counter = authdb.lookup(
+        session,
+        address=b"alice",
+        value=None,
+        proof=proof,
+        witness_address=b"alice",
+        witness_value=b"data_alice",
+    )
+    assert valid is False
+
+
+@pytest.mark.models("core")
+def test_nonmembership_host_matches_device(session: Session) -> None:
+    """Host-side verify_nonmembership matches device."""
+    tree = _make_tree()
+    root = tree.get_root_hash()
+    authdb.set_root(session, root)
+
+    target = b"zara"
+    proof, w_addr, w_val = tree.get_nonmembership_proof(target)
+
+    host = AuthDbTree.verify_nonmembership(target, proof, w_addr, w_val, root)
+    device_valid, device_membership, _ = authdb.lookup(
+        session,
+        address=target,
+        value=None,
+        proof=proof,
+        witness_address=w_addr,
+        witness_value=w_val,
+    )
+    assert host is True
+    assert device_valid is True
+    assert device_membership is False
+
+
+# ---------------------------------------------------------------------------
+# update_leaf
+# ---------------------------------------------------------------------------
+
+@pytest.mark.models("core")
+def test_update_leaf_init(session: Session) -> None:
+    """INIT: insert first entry into an empty tree."""
+    counter, new_root = authdb.update_leaf(
+        session,
+        address=b"alice",
+        old_value=b"",
+        new_value=b"data_alice",
+        proof=[],
+    )
+    assert new_root is not None
+    assert counter > 0
+    # Host-side tree should match
+    tree = AuthDbTree()
+    tree.insert(b"alice", b"data_alice")
+    assert new_root == tree.get_root_hash()
+
+
+@pytest.mark.models("core")
+def test_update_leaf_insert(session: Session) -> None:
+    """INSERT: add a second entry to an existing tree."""
+    # Bootstrap with alice
+    counter0, root0 = authdb.update_leaf(
+        session, address=b"alice", old_value=b"", new_value=b"data_alice", proof=[]
+    )
+
+    # Build host tree with alice to get non-membership proof for bob
+    tree = AuthDbTree()
+    tree.insert(b"alice", b"data_alice")
+    assert tree.get_root_hash() == root0
+
+    proof, w_addr, w_val = tree.get_nonmembership_proof(b"bob")
+    counter1, new_root = authdb.update_leaf(
+        session,
+        address=b"bob",
+        old_value=b"",
+        new_value=b"data_bob",
+        proof=proof,
+        witness_address=w_addr,
+        witness_value=w_val,
+    )
+    assert counter1 == counter0 + 1
+    tree.insert(b"bob", b"data_bob")
+    assert new_root == tree.get_root_hash()
+
+
+@pytest.mark.models("core")
+def test_update_leaf_update(session: Session) -> None:
+    """UPDATE: change the value of an existing entry."""
+    tree = AuthDbTree()
+    tree.insert(b"alice", b"data_alice")
+    authdb.set_root(session, tree.get_root_hash())
+
+    proof = tree.get_proof(b"alice")
+    counter, new_root = authdb.update_leaf(
+        session,
+        address=b"alice",
+        old_value=b"data_alice",
+        new_value=b"data_alice_v2",
+        proof=proof,
+    )
+    tree.insert(b"alice", b"data_alice_v2")
+    assert new_root == tree.get_root_hash()
+
+
+@pytest.mark.models("core")
+def test_update_leaf_delete(session: Session) -> None:
+    """DELETE: remove an entry; single-entry tree becomes empty."""
+    tree = AuthDbTree()
+    tree.insert(b"alice", b"data_alice")
+    authdb.set_root(session, tree.get_root_hash())
+
+    proof = tree.get_proof(b"alice")
+    counter, new_root = authdb.update_leaf(
+        session,
+        address=b"alice",
+        old_value=b"data_alice",
+        new_value=b"",
+        proof=proof,
+    )
+    assert new_root is None  # tree is empty
+
+
+@pytest.mark.models("core")
+def test_update_leaf_wrong_old_value_rejected(session: Session) -> None:
+    """UPDATE with wrong old_value must be rejected."""
+    from trezorlib.exceptions import TrezorFailure
+
+    tree = AuthDbTree()
+    tree.insert(b"alice", b"data_alice")
+    authdb.set_root(session, tree.get_root_hash())
+
+    proof = tree.get_proof(b"alice")
+    with pytest.raises(TrezorFailure):
+        authdb.update_leaf(
+            session,
+            address=b"alice",
+            old_value=b"WRONG",
+            new_value=b"data_alice_v2",
+            proof=proof,
+        )
