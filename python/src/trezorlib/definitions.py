@@ -91,6 +91,17 @@ class Definition(Struct):
         )
 
 
+def _normalize_eth_address(address: t.AnyStr) -> str:
+    if isinstance(address, bytes):
+        address_str = address.hex()
+    elif address.startswith("0x"):
+        address_str = address[2:]
+    else:
+        address_str = address
+
+    return address_str.lower()
+
+
 class Source:
     def fetch_path(self, *components: str) -> t.Optional[bytes]:
         raise NotImplementedError
@@ -102,17 +113,30 @@ class Source:
         return self.fetch_path("eth", "chain-id", str(chain_id), "network.dat")
 
     def get_eth_token(self, chain_id: int, address: t.AnyStr) -> t.Optional[bytes]:
-        if isinstance(address, bytes):
-            address_str = address.hex()
-        elif address.startswith("0x"):
-            address_str = address[2:]
-        else:
-            address_str = address
-
-        address_str = address_str.lower()
+        address_str = _normalize_eth_address(address)
 
         return self.fetch_path(
             "eth", "chain-id", f"{chain_id}", f"token-{address_str}.dat"
+        )
+
+    def get_eth_display_format(
+        self, chain_id: int, address: t.AnyStr, func_sig: bytes
+    ) -> t.Optional[bytes]:
+        """Fetch an ERC-7730 clear-signing contract descriptor (display format).
+
+        Descriptors are keyed by the contract address and the 4-byte function
+        selector (`func_sig`) of the call, e.g.
+        ``eth/chain-id/1/display-format/<address>-<func_sig>.dat``.
+        """
+        address_str = _normalize_eth_address(address)
+        func_sig_str = func_sig.hex().lower()
+
+        return self.fetch_path(
+            "eth",
+            "chain-id",
+            f"{chain_id}",
+            "display-format",
+            f"{address_str}-{func_sig_str}.dat",
         )
 
     def get_solana_token(self, mint_account: str) -> t.Optional[bytes]:
