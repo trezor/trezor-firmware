@@ -540,7 +540,7 @@ class DebugLink:
         self.allow_interactions = auto_interact
         self.mapping = mapping.DEFAULT_MAPPING
 
-        # To be set by TrezorClientDebugLink (is not known during creation time)
+        # To be set by TrezorTestContext (is not known during creation time)
         self.model: models.TrezorModel | None = None
         self.version: tuple[int, int, int] = (0, 0, 0)
 
