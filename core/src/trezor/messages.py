@@ -3369,12 +3369,14 @@ if TYPE_CHECKING:
     class EthereumERC7730Path(protobuf.MessageType):
         path: "list[int]"
         container_path: "EthereumERC7730ContainerPath | None"
+        const_value: "str | None"
 
         def __init__(
             self,
             *,
             path: "list[int] | None" = None,
             container_path: "EthereumERC7730ContainerPath | None" = None,
+            const_value: "str | None" = None,
         ) -> None:
             pass
 
