@@ -128,7 +128,7 @@ class State:
         Contains tx_prefix_hash.
         See Monero-Trezor documentation section 3.3 for more details.
         """
-        self.full_message_hasher: PreMlsagHasher = PreMlsagHasher()
+        self.full_message_hasher: PreMlsagHasher | None = PreMlsagHasher()
         self.full_message: bytes | None = None
 
     def mem_trace(self, x=None, collect: bool = False) -> None:
