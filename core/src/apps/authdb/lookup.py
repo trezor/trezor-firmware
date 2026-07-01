@@ -10,21 +10,30 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
     from trezor.messages import AuthDbLookupResponse
     from trezor.wire import DataError
 
+    membership_query = msg.witness_address is None #and msg.value is not None
+
     stored_root = authdb.get_root()
     if stored_root is None:
-        raise DataError("No Merkle root stored on device")
+        # Empty tree: membership is trivially false, non-membership is trivially true.
+        counter = authdb.get_counter()
+        return AuthDbLookupResponse(
+            valid=not membership_query,
+            counter=counter,
+            membership=membership_query,
+        )
 
     if __debug__:
         from trezor import log
         log.debug(
             __name__,
-            "lookup: address=%s proof_len=%d witness=%s",
+            "lookup: address=%s proof_len=%d witness=%s membership_query=%s",
             msg.address,
             len(msg.proof),
-            msg.witness_address.hex() if msg.witness_address else "none",
+            msg.witness_address if msg.witness_address else "none",
+            membership_query,
         )
 
-    if msg.witness_address is not None:
+    if not membership_query:
         # Non-membership proof: prove witness is in tree, then verify address is absent
         if msg.witness_value is None:
             raise DataError("witness_value required for non-membership proof")
@@ -34,8 +43,6 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
         membership = False
     else:
         # Membership proof
-        if msg.value is None:
-            raise DataError("value required for membership proof")
         valid = _verify_proof(msg.address, msg.value, msg.proof, stored_root)
         membership = True
 

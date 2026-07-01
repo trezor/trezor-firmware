@@ -84,14 +84,30 @@ def test_lookup_invalid_wrong_root(session: Session) -> None:
 
 
 @pytest.mark.models("core")
-def test_lookup_no_root_raises(session: Session) -> None:
-    from trezorlib.exceptions import TrezorFailure
+def test_lookup_no_root_membership_returns_false(session: Session) -> None:
+    """Membership query against empty tree returns valid=False, membership=True."""
 
     tree = _make_tree()
     proof = tree.get_proof(b"alice")
-    with pytest.raises(TrezorFailure):
-        authdb.lookup(session, address=b"alice", value=b"data_alice", proof=proof)
+    valid, membership, counter = authdb.lookup(
+        session, address=b"alice", value=b"data_alice", proof=proof
+    )
+    assert valid is False
+    assert membership is True
 
+@pytest.mark.models("core")
+def test_lookup_no_root_nonmembership_returns_true(session: Session) -> None:
+    """Non-membership query against empty tree returns valid=True, membership=False."""
+    valid, membership, counter = authdb.lookup(
+        session,
+        address=b"alice",
+        value=None,
+        proof=[],
+        witness_address=None,
+        witness_value=None,
+    )
+    assert valid is True
+    assert membership is False
 
 @pytest.mark.models("core")
 def test_verify_proof_host_matches_device(session: Session) -> None:

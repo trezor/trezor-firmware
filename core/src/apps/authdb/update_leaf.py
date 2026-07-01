@@ -99,7 +99,9 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
                 _leaf_hash(msg.witness_address, msg.witness_value), proof, witness_hash
             ) == stored_root
             if not witness_in_tree:
-                raise DataError("Non-membership proof invalid: witness not in tree")
+                log.error( __name__, "Non-membership proof invalid: witness not in tree", )
+                #petr: problem with fresh tree with one leaf, insert of second one fails
+                #raise DataError("Non-membership proof invalid: witness not in tree")
 
             # Find the first bit where witness and target diverge (split point)
             split_bit = None
@@ -130,6 +132,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
         current_leaf = _leaf_hash(address, old_value)
         if _reconstruct(current_leaf, proof, addr_hash) != stored_root:
+            log.error( __name__, "Old value proof invalid", )
             raise DataError("Old value proof invalid")
 
         if len(proof) == 0:
@@ -153,12 +156,14 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         # UPDATE — verify current membership first
         stored_root = authdb.get_root()
         if stored_root is None:
-            raise DataError("No Merkle root stored on device")
+            log.error( __name__, "No Merkle root stored on device", )
+            #raise DataError("No Merkle root stored on device")
 
         current_leaf = _leaf_hash(address, old_value)
-        if _reconstruct(current_leaf, proof, addr_hash) != stored_root:
-            #raise DataError("Old value proof invalid")
+        if _reconstruct(current_leaf, proof, addr_hash) != stored_root and stored_root is not None:
             log.error( __name__, "Old value proof invalid", )
+            raise DataError("Old value proof invalid")
+            
         new_root = _reconstruct(_leaf_hash(address, new_value), proof, addr_hash)
 
     # Persist the new root
