@@ -143,17 +143,18 @@ jobs:
       - name: Show fingerprints
         run: |
           tree _artifacts
-          for file in _artifacts/*/*/*.fingerprint
-          do
-            echo "\`$(tr -d '\n' < $file)\` ${file%.fingerprint}" >> $GITHUB_STEP_SUMMARY
-          done
-          cat $GITHUB_STEP_SUMMARY
+          python3 tools/artifact_summary.py --markdown _artifacts | tee -a $GITHUB_STEP_SUMMARY
         if: always()
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        id: artifact-upload-step
         with:
           name: reproducible-${{ matrix.model }}
           path: |
             _artifacts/
           retention-days: 7
         if: always()
+
+      - run: echo "[download archive]($URL)" >> $GITHUB_STEP_SUMMARY
+        env:
+          URL: ${{ steps.artifact-upload-step.outputs.artifact-url }}
