@@ -1,4 +1,5 @@
 from micropython import const
+from typing import Generator
 from ubinascii import unhexlify
 
 from .clear_signing import (
@@ -1242,148 +1243,149 @@ ALL_DISPLAY_FORMATS.append(
 
 
 if __debug__:
-    # One contract to test it all would have been easier. But Caesar has a paragraph limit.
-    #   * TREZOR_TEST_SCALARS_DESCRIPTOR  - scalar/atomic formatters
-    #   * TREZOR_TEST_TOKEN_DESCRIPTOR    - token-amount resolution (path + const)
-    #   * TREZOR_TEST_ARRAYS_DESCRIPTOR   - multi-value arrays
-    #   * TREZOR_TEST_PATHS_DESCRIPTOR    - composite path styles (slices + nested)
-    TREZOR_TEST_CHAIN_ID = 1
-    TREZOR_TEST_ADDRESS = unhexlify("dddddddddddddddddddddddddddddddddddddddd")
-    TREZOR_TEST_CONST_TOKEN = unhexlify("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
-    TREZOR_TEST_NATIVE = unhexlify("0000000000000000000000000000000000000000")
 
-    TREZOR_TEST_CONTEXT = BindingContext([(TREZOR_TEST_CHAIN_ID, TREZOR_TEST_ADDRESS)])
+    def _test_formats() -> Generator[DisplayFormat, None, None]:
+        # One contract to test it all would have been easier. But Caesar has a paragraph limit.
+        #   * TREZOR_TEST_SCALARS_DESCRIPTOR  - scalar/atomic formatters
+        #   * TREZOR_TEST_TOKEN_DESCRIPTOR    - token-amount resolution (path + const)
+        #   * TREZOR_TEST_ARRAYS_DESCRIPTOR   - multi-value arrays
+        #   * TREZOR_TEST_PATHS_DESCRIPTOR    - composite path styles (slices + nested)
+        TREZOR_TEST_CHAIN_ID = 1
+        TREZOR_TEST_ADDRESS = unhexlify("dddddddddddddddddddddddddddddddddddddddd")
+        TREZOR_TEST_CONST_TOKEN = unhexlify("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+        TREZOR_TEST_NATIVE = unhexlify("0000000000000000000000000000000000000000")
 
-    # --- 1) scalar / atomic formatters ---
-    TREZOR_TEST_SCALARS_DESCRIPTOR = DisplayFormat(
-        binding_context=TREZOR_TEST_CONTEXT,
-        func_sig=unhexlify("7e577e01"),  # synthetic selector (dummy contract)
-        intent="Trezor Test Scalars. DO NOT USE",
-        parameter_definitions=[
-            Atomic(parse_address),  # 0 recipient
-            Atomic(parse_uint256),  # 1 nativeAmount
-            Atomic(parse_uint256),  # 2 rawInt
-            Atomic(parse_uint256),  # 3 unitValue
-            Atomic(parse_uint256),  # 4 timestamp
-            Atomic(parse_bytes32),  # 5 hashBytes32
-            Atomic(parse_bool),  # 6 flagBool
-            Atomic(parse_uint160),  # 7 sizedUint
-            Dynamic(parse_string),  # 8 note
-            Dynamic(parse_bytes),  # 9 payload
-        ],
-        field_definitions=[
-            FieldDefinition((0,), "Recipient", AddressNameFormatter),
-            FieldDefinition((1,), "Native Amount", AmountFormatter),
-            FieldDefinition((2,), "Raw Integer", RawFormatter),
-            FieldDefinition(
-                (3,),
-                "Unit Value",
-                UnitFormatter(decimals=2, base=" UNIT", prefix=False),
-            ),
-            FieldDefinition((4,), "Date", DateFormatter),
-            FieldDefinition((5,), "Raw Bytes32", RawFormatter),  # parse_bytes32
-            FieldDefinition((6,), "Raw Bool", RawFormatter),  # parse_bool
-            FieldDefinition((7,), "Raw Uint160", RawFormatter),  # parse_uint160
-            FieldDefinition((8,), "Raw String", RawFormatter),  # string passthrough
-            FieldDefinition((9,), "Raw Bytes", RawFormatter),  # bytes -> hex
-        ],
-    )
+        TREZOR_TEST_CONTEXT = BindingContext(
+            [(TREZOR_TEST_CHAIN_ID, TREZOR_TEST_ADDRESS)]
+        )
 
-    # --- 2) token-amount resolution: via token_path and via constant address ---
-    TREZOR_TEST_TOKEN_DESCRIPTOR = DisplayFormat(
-        binding_context=TREZOR_TEST_CONTEXT,
-        func_sig=unhexlify("7e577e02"),  # synthetic selector (dummy contract)
-        intent="Trezor Test Token. DO NOT USE",
-        parameter_definitions=[
-            Atomic(parse_address),  # 0 token (target of token_path below)
-            Atomic(parse_uint256),  # 1 tokenAmount
-            Atomic(parse_uint256),  # 2 constTokenAmount
-        ],
-        field_definitions=[
-            FieldDefinition(
-                (1,), "Token (via path)", TokenAmountFormatter(token_path=(0,))
-            ),
-            FieldDefinition(
-                (2,),
-                "Token (via constant)",
-                TokenAmountFormatter(const_token_address=TREZOR_TEST_CONST_TOKEN),
-            ),
-        ],
-    )
-
-    # --- 3) multi-value arrays ---
-    TREZOR_TEST_ARRAYS_DESCRIPTOR = DisplayFormat(
-        binding_context=TREZOR_TEST_CONTEXT,
-        func_sig=unhexlify("7e577e03"),  # synthetic selector (dummy contract)
-        intent="Trezor Test Arrays. DO NOT USE",
-        parameter_definitions=[
-            Array(Atomic(parse_uint256)),  # 0 amounts (multi-value array)
-            Array(Atomic(parse_uint256)),  # 1 tokenAmounts (multi-value tokenAmount)
-            Array(Atomic(parse_uint256)),  # 2 dates (multi-value date)
-        ],
-        field_definitions=[
-            FieldDefinition((0,), "Amounts (array)", RawFormatter),  # multi-value raw
-            # multi-value tokenAmount sharing one constant token
-            FieldDefinition(
-                (1,),
-                "Token Amounts (array)",
-                TokenAmountFormatter(const_token_address=TREZOR_TEST_CONST_TOKEN),
-            ),
-            FieldDefinition((2,), "Dates (array)", DateFormatter),  # multi-value date
-        ],
-    )
-
-    # --- 4) composite path styles: bytes slicing + nested array-of-structs ---
-    TREZOR_TEST_PATHS_DESCRIPTOR = DisplayFormat(
-        binding_context=TREZOR_TEST_CONTEXT,
-        func_sig=unhexlify("7e577e04"),  # synthetic selector (dummy contract)
-        intent="Trezor Test Paths. DO NOT USE",
-        parameter_definitions=[
-            Atomic(parse_uint256),  # 0 amount (reused by both slice fields)
-            Dynamic(parse_bytes),  # 1 packedPath (sliced for token addresses)
-            Array(  # 2 swapData: (sendingAssetId, receivingAssetId, fromAmount)[]
-                Tuple(
-                    (parse_address, parse_address, parse_uint256),
-                    is_dynamic=False,
-                )
-            ),
-        ],
-        field_definitions=[
-            # token_path slicing a packed bytes blob: packedPath[0:20] / [-20:]
-            FieldDefinition(
-                (0,),
-                "Token (path[0:20] slice)",
-                TokenAmountFormatter(token_path=(1, (0, 20))),
-            ),
-            FieldDefinition(
-                (0,),
-                "Token (path[-20:] slice)",
-                TokenAmountFormatter(token_path=(1, (-20,))),
-            ),
-            # nested array-of-structs: swapData[0].fromAmount, token sendingAssetId
-            FieldDefinition(
-                (2, 0, 2),
-                "Token (nested swap[0])",
-                TokenAmountFormatter(token_path=(2, 0, 0)),
-            ),
-            # negative index + native currency: swapData[-1].fromAmount, token
-            # swapData[-1].receivingAssetId (the native sentinel -> renders native)
-            FieldDefinition(
-                (2, -1, 2),
-                "Token (neg index swap[-1], native)",
-                TokenAmountFormatter(
-                    token_path=(2, -1, 1),
-                    native_currency_address=[TREZOR_TEST_NATIVE],
+        # --- 1) scalar / atomic formatters ---
+        yield DisplayFormat(
+            binding_context=TREZOR_TEST_CONTEXT,
+            func_sig=unhexlify("7e577e01"),  # synthetic selector (dummy contract)
+            intent="Trezor Test Scalars. DO NOT USE",
+            parameter_definitions=[
+                Atomic(parse_address),  # 0 recipient
+                Atomic(parse_uint256),  # 1 nativeAmount
+                Atomic(parse_uint256),  # 2 rawInt
+                Atomic(parse_uint256),  # 3 unitValue
+                Atomic(parse_uint256),  # 4 timestamp
+                Atomic(parse_bytes32),  # 5 hashBytes32
+                Atomic(parse_bool),  # 6 flagBool
+                Atomic(parse_uint160),  # 7 sizedUint
+                Dynamic(parse_string),  # 8 note
+                Dynamic(parse_bytes),  # 9 payload
+            ],
+            field_definitions=[
+                FieldDefinition((0,), "Recipient", AddressNameFormatter),
+                FieldDefinition((1,), "Native Amount", AmountFormatter),
+                FieldDefinition((2,), "Raw Integer", RawFormatter),
+                FieldDefinition(
+                    (3,),
+                    "Unit Value",
+                    UnitFormatter(decimals=2, base=" UNIT", prefix=False),
                 ),
-            ),
-        ],
-    )
+                FieldDefinition((4,), "Date", DateFormatter),
+                FieldDefinition((5,), "Raw Bytes32", RawFormatter),  # parse_bytes32
+                FieldDefinition((6,), "Raw Bool", RawFormatter),  # parse_bool
+                FieldDefinition((7,), "Raw Uint160", RawFormatter),  # parse_uint160
+                FieldDefinition((8,), "Raw String", RawFormatter),  # string passthrough
+                FieldDefinition((9,), "Raw Bytes", RawFormatter),  # bytes -> hex
+            ],
+        )
 
-    ALL_DISPLAY_FORMATS.extend(
-        [
-            TREZOR_TEST_SCALARS_DESCRIPTOR,
-            TREZOR_TEST_TOKEN_DESCRIPTOR,
-            TREZOR_TEST_ARRAYS_DESCRIPTOR,
-            TREZOR_TEST_PATHS_DESCRIPTOR,
-        ]
-    )
+        # --- 2) token-amount resolution: via token_path and via constant address ---
+        yield DisplayFormat(
+            binding_context=TREZOR_TEST_CONTEXT,
+            func_sig=unhexlify("7e577e02"),  # synthetic selector (dummy contract)
+            intent="Trezor Test Token. DO NOT USE",
+            parameter_definitions=[
+                Atomic(parse_address),  # 0 token (target of token_path below)
+                Atomic(parse_uint256),  # 1 tokenAmount
+                Atomic(parse_uint256),  # 2 constTokenAmount
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1,), "Token (via path)", TokenAmountFormatter(token_path=(0,))
+                ),
+                FieldDefinition(
+                    (2,),
+                    "Token (via constant)",
+                    TokenAmountFormatter(const_token_address=TREZOR_TEST_CONST_TOKEN),
+                ),
+            ],
+        )
+
+        # --- 3) multi-value arrays ---
+        yield DisplayFormat(
+            binding_context=TREZOR_TEST_CONTEXT,
+            func_sig=unhexlify("7e577e03"),  # synthetic selector (dummy contract)
+            intent="Trezor Test Arrays. DO NOT USE",
+            parameter_definitions=[
+                Array(Atomic(parse_uint256)),  # 0 amounts (multi-value array)
+                Array(
+                    Atomic(parse_uint256)
+                ),  # 1 tokenAmounts (multi-value tokenAmount)
+                Array(Atomic(parse_uint256)),  # 2 dates (multi-value date)
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (0,), "Amounts (array)", RawFormatter
+                ),  # multi-value raw
+                # multi-value tokenAmount sharing one constant token
+                FieldDefinition(
+                    (1,),
+                    "Token Amounts (array)",
+                    TokenAmountFormatter(const_token_address=TREZOR_TEST_CONST_TOKEN),
+                ),
+                FieldDefinition(
+                    (2,), "Dates (array)", DateFormatter
+                ),  # multi-value date
+            ],
+        )
+
+        # --- 4) composite path styles: bytes slicing + nested array-of-structs ---
+        yield DisplayFormat(
+            binding_context=TREZOR_TEST_CONTEXT,
+            func_sig=unhexlify("7e577e04"),  # synthetic selector (dummy contract)
+            intent="Trezor Test Paths. DO NOT USE",
+            parameter_definitions=[
+                Atomic(parse_uint256),  # 0 amount (reused by both slice fields)
+                Dynamic(parse_bytes),  # 1 packedPath (sliced for token addresses)
+                Array(  # 2 swapData: (sendingAssetId, receivingAssetId, fromAmount)[]
+                    Tuple(
+                        (parse_address, parse_address, parse_uint256),
+                        is_dynamic=False,
+                    )
+                ),
+            ],
+            field_definitions=[
+                # token_path slicing a packed bytes blob: packedPath[0:20] / [-20:]
+                FieldDefinition(
+                    (0,),
+                    "Token (path[0:20] slice)",
+                    TokenAmountFormatter(token_path=(1, (0, 20))),
+                ),
+                FieldDefinition(
+                    (0,),
+                    "Token (path[-20:] slice)",
+                    TokenAmountFormatter(token_path=(1, (-20,))),
+                ),
+                # nested array-of-structs: swapData[0].fromAmount, token sendingAssetId
+                FieldDefinition(
+                    (2, 0, 2),
+                    "Token (nested swap[0])",
+                    TokenAmountFormatter(token_path=(2, 0, 0)),
+                ),
+                # negative index + native currency: swapData[-1].fromAmount, token
+                # swapData[-1].receivingAssetId (the native sentinel -> renders native)
+                FieldDefinition(
+                    (2, -1, 2),
+                    "Token (neg index swap[-1], native)",
+                    TokenAmountFormatter(
+                        token_path=(2, -1, 1),
+                        native_currency_address=[TREZOR_TEST_NATIVE],
+                    ),
+                ),
+            ],
+        )
