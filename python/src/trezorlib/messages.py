@@ -4785,6 +4785,7 @@ class EthereumERC7730Path(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("path", "sint32", repeated=True, required=False, default=None),
         2: protobuf.Field("container_path", "EthereumERC7730ContainerPath", repeated=False, required=False, default=None),
+        3: protobuf.Field("const_value", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4792,9 +4793,11 @@ class EthereumERC7730Path(protobuf.MessageType):
         *,
         path: Optional[Sequence["int"]] = None,
         container_path: Optional["EthereumERC7730ContainerPath"] = None,
+        const_value: Optional["str"] = None,
     ) -> None:
         self.path: Sequence["int"] = path if path is not None else []
         self.container_path = container_path
+        self.const_value = const_value
 
 
 class EthereumERC7730FieldInfo(protobuf.MessageType):
