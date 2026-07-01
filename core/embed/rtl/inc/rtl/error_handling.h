@@ -292,6 +292,18 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
     }                                  \
   } while (0)
 
+/**
+ * Raises an error by setting the status variable and jumping to `cleanup` label.
+ *
+ * @param status status value to set
+ */
+#define TSH_RAISE(status) \
+  do {                                 \
+    __status = status;                 \
+    TSH_LOG_((__status));              \
+    goto cleanup;                      \
+  } while (0)
+
 #ifdef USE_DBG_CONSOLE
 
 // defined in /sys/dbg/syslog.c
