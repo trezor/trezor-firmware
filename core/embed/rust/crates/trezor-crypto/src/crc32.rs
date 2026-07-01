@@ -33,40 +33,35 @@ pub fn digest(data: &[u8]) -> [u8; 4] {
 
 #[cfg(test)]
 mod test {
-    use crate::strutil::hexlify;
-
     use super::*;
 
-    const CRC32_VECTORS: &[(&[u8], &[u8])] = &[
-        (b"", b"00000000"),
-        (b"a", b"e8b7be43"),
-        (b"abc", b"352441c2"),
-        (b"message digest", b"20159d7f"),
-        (b"abcdefghijklmnopqrstuvwxyz", b"4c2750bd"),
+    const CRC32_VECTORS: &[(&[u8], &str)] = &[
+        (b"", "00000000"),
+        (b"a", "e8b7be43"),
+        (b"abc", "352441c2"),
+        (b"message digest", "20159d7f"),
+        (b"abcdefghijklmnopqrstuvwxyz", "4c2750bd"),
         (
             b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-            b"1fc2e6d2",
+            "1fc2e6d2",
         ),
         (
             b"12345678901234567890123456789012345678901234567890123456789012345678901234567890",
-            b"7ca94a72",
+            "7ca94a72",
         ),
     ];
 
-    fn hexdigest(data: &[u8]) -> [u8; 8] {
-        let mut out_hex = [0u8; 8];
+    fn hexdigest(data: &[u8]) -> String {
         let digest = digest(data);
-        hexlify(&digest, &mut out_hex);
-        out_hex
+        hex::encode(digest)
     }
 
     #[test]
     fn test_no_update() {
         let out = Crc32::new().finalize();
-        let mut out_hex = [0u8; 8];
-        hexlify(&out, &mut out_hex);
+        let out_hex = hex::encode(out);
 
-        assert_eq!(out_hex, *b"00000000");
+        assert_eq!(out_hex, "00000000");
     }
 
     #[test]
