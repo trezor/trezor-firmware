@@ -288,12 +288,13 @@ for TREZOR_MODEL in ${MODELS[@]}; do
           uv run ../python/tools/firmware-fingerprint.py \
                       -o build-xtask/artifacts/$TREZOR_MODEL/\$item.bin.fingerprint \
                       build-xtask/artifacts/$TREZOR_MODEL/\$item.bin \
-                      || echo "No fingerprint for build-xtask/artifacts/TREZOR_MODEL/\$item.bin"
+                      || echo "No fingerprint for build-xtask/artifacts/$TREZOR_MODEL/\$item.bin"
         fi
         if [ -f build-xtask/artifacts/$TREZOR_MODEL/\$item.bin ]; then
           # copy only the artifacts to the build output directory
           mkdir /build/\$item/
           cp -v build-xtask/artifacts/$TREZOR_MODEL/\$item* /build/\$item/
+          cp -v build-xtask/artifacts/pub/\$item-$TREZOR_MODEL-*.bin /build/\$item/ || true  # n/a for secmon or kernel
         fi
       done
       chown -R $USER:$GROUP /build
