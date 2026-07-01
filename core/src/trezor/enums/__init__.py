@@ -724,6 +724,8 @@ if TYPE_CHECKING:
         AuthDbLookupResponse = 2303
         AuthDbUpdateLeaf = 2304
         AuthDbUpdateLeafResponse = 2305
+        AuthDbClearRoot = 2306
+        AuthDbClearRootResponse = 2307
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

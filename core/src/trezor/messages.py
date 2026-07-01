@@ -7602,11 +7602,13 @@ if TYPE_CHECKING:
 
     class AuthDbSetRootResponse(protobuf.MessageType):
         counter: "int"
+        identifier: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             counter: "int",
+            identifier: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7640,6 +7642,7 @@ if TYPE_CHECKING:
         valid: "bool"
         counter: "int"
         membership: "bool | None"
+        identifier: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7647,6 +7650,7 @@ if TYPE_CHECKING:
             valid: "bool",
             counter: "int",
             membership: "bool | None" = None,
+            identifier: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7681,15 +7685,39 @@ if TYPE_CHECKING:
     class AuthDbUpdateLeafResponse(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
+        identifier: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             counter: "int",
             new_root: "AnyBytes | None" = None,
+            identifier: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbUpdateLeafResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbClearRoot(protobuf.MessageType):
+        def __init__(self) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbClearRoot"]:
+            return isinstance(msg, cls)
+
+    class AuthDbClearRootResponse(protobuf.MessageType):
+        identifier: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            identifier: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbClearRootResponse"]:
             return isinstance(msg, cls)

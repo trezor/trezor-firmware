@@ -26,8 +26,9 @@ def set_root(session: "Session", root_hex: str) -> str:
     device itself via the update-leaf command.
     """
     root = bytes.fromhex(root_hex)
-    counter = authdb.set_root(session, root)
-    return f"Root stored. Counter: {counter}"
+    counter, identifier = authdb.set_root(session, root)
+    id_hex = identifier.hex() if identifier else "(none)"
+    return f"Root stored. Counter: {counter}. Identifier: {id_hex}"
 
 
 @cli.command()
@@ -79,7 +80,7 @@ def lookup(
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
 
-    valid, membership, counter = authdb.lookup(
+    valid, membership, counter, identifier = authdb.lookup(
         session,
         address=address,
         value=value,
@@ -89,7 +90,8 @@ def lookup(
     )
     proof_type = "membership" if membership else "non-membership"
     status = "VALID" if valid else "INVALID"
-    return f"Proof {status} ({proof_type}). Counter: {counter}"
+    id_hex = identifier.hex() if identifier else "(none)"
+    return f"Proof {status} ({proof_type}). Counter: {counter}. Identifier: {id_hex}"
 
 
 @cli.command(name="update-leaf")
@@ -158,7 +160,7 @@ def update_leaf(
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
 
-    counter, new_root = authdb.update_leaf(
+    counter, new_root, identifier = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
@@ -168,7 +170,17 @@ def update_leaf(
         witness_value=witness_value,
     )
     root_hex = new_root.hex() if new_root else "(empty)"
-    return f"Updated. Counter: {counter}. New root: {root_hex}"
+    id_hex = identifier.hex() if identifier else "(none)"
+    return f"Updated. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}"
+
+
+@cli.command(name="clear-root")
+@with_session
+def clear_root(session: "Session") -> str:
+    """Wipe the stored Merkle root and bump the counter. DEBUG BUILDS ONLY."""
+    identifier = authdb.clear_root(session)
+    id_hex = identifier.hex() if identifier else "(none)"
+    return f"Root cleared. Identifier: {id_hex}"
 
 
 @cli.command()
@@ -199,7 +211,7 @@ def delete(
     old_value = bytes.fromhex(old_value_hex)
     proof = [bytes.fromhex(h) for h in proof_hexes]
 
-    counter, new_root = authdb.update_leaf(
+    counter, new_root, identifier = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
@@ -207,4 +219,5 @@ def delete(
         proof=proof,
     )
     root_hex = new_root.hex() if new_root else "(empty)"
-    return f"Deleted. Counter: {counter}. New root: {root_hex}"
+    id_hex = identifier.hex() if identifier else "(none)"
+    return f"Deleted. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}"

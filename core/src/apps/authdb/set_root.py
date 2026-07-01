@@ -14,6 +14,7 @@ async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
     import storage.authdb as authdb
     from trezor.messages import AuthDbSetRootResponse
     from trezor.wire import DataError
+    from apps.authdb import _get_identifier
 
     if not __debug__:
         raise DataError("AuthDbSetRoot is not available on production firmware")
@@ -21,7 +22,8 @@ async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
     if len(msg.root) != authdb.ROOT_LENGTH:
         raise DataError("Root must be exactly 32 bytes")
 
-    authdb.set_root(msg.root)
-    counter = authdb.increment_counter()
+    identifier = await _get_identifier()
+    authdb.set_root(identifier, msg.root)
+    counter = authdb.increment_counter(identifier)
 
-    return AuthDbSetRootResponse(counter=counter)
+    return AuthDbSetRootResponse(counter=counter, identifier=identifier)

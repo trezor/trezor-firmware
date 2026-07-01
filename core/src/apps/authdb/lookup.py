@@ -9,17 +9,20 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
     import storage.authdb as authdb
     from trezor.messages import AuthDbLookupResponse
     from trezor.wire import DataError
+    from apps.authdb import _get_identifier
 
-    membership_query = msg.witness_address is None #and msg.value is not None
+    membership_query = msg.witness_address is None and msg.value is not None
 
-    stored_root = authdb.get_root()
+    identifier = await _get_identifier()
+    stored_root = authdb.get_root(identifier)
     if stored_root is None:
         # Empty tree: membership is trivially false, non-membership is trivially true.
-        counter = authdb.get_counter()
+        counter = authdb.get_counter(identifier)
         return AuthDbLookupResponse(
             valid=not membership_query,
             counter=counter,
             membership=membership_query,
+            identifier=identifier,
         )
 
     if __debug__:
@@ -27,9 +30,9 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
         log.debug(
             __name__,
             "lookup: address=%s proof_len=%d witness=%s membership_query=%s",
-            msg.address,
+            msg.address.hex(),
             len(msg.proof),
-            msg.witness_address if msg.witness_address else "none",
+            msg.witness_address.hex() if msg.witness_address else "none",
             membership_query,
         )
 
@@ -50,8 +53,8 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
         from trezor import log
         log.debug(__name__, "lookup: result valid=%s membership=%s", valid, membership)
 
-    counter = authdb.get_counter()
-    return AuthDbLookupResponse(valid=valid, counter=counter, membership=membership)
+    counter = authdb.get_counter(identifier)
+    return AuthDbLookupResponse(valid=valid, counter=counter, membership=membership, identifier=identifier)
 
 
 def _verify_nonmembership(
@@ -129,8 +132,8 @@ def _verify_proof(
         log.debug(
             __name__,
             "_verify_proof: addr_hash=%s leaf_hash=%s proof_len=%d",
-            addr_hash,
-            node,
+            addr_hash.hex(),
+            node.hex(),
             len(proof),
         )
 
@@ -150,7 +153,7 @@ def _verify_proof(
                 "  bit=%d target_bit=%d hash=%s",
                 bit,
                 target_bit,
-                node,
+                node.hex(),
             )
 
     match = node == expected_root
@@ -159,7 +162,7 @@ def _verify_proof(
         log.debug(
             __name__,
             "_verify_proof: MISMATCH computed=%s expected=%s",
-            node,
-            expected_root,
+            node.hex(),
+            expected_root.hex(),
         )
     return match

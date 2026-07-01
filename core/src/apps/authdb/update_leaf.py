@@ -19,6 +19,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     import storage.authdb as authdb
     from trezor.messages import AuthDbUpdateLeafResponse
     from trezor.wire import DataError
+    from apps.authdb import _get_identifier
 
     from trezor.crypto.hashlib import sha256
 
@@ -46,6 +47,8 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
                 node = _internal_hash(sibling, node)
         return node
 
+    identifier = await _get_identifier()
+
     address = msg.address
     old_value = msg.old_value   # empty bytes = address absent from tree
     new_value = msg.new_value   # empty bytes = delete
@@ -64,14 +67,14 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         log.debug(
             __name__,
             "update_leaf: address=%s inserting=%s deleting=%s proof_len=%d",
-            address, inserting, deleting, len(proof),
+            address.hex(), inserting, deleting, len(proof),
         )
 
     if inserting:
         # INSERT or INIT — verify non-membership first
         if len(proof) == 0 and msg.witness_address is None:
             # INIT: tree was empty; verify no root is stored
-            stored_root = authdb.get_root()
+            stored_root = authdb.get_root(identifier)
             if stored_root is not None:
                 raise DataError("Tree is not empty; supply non-membership proof")
             new_root: bytes | None = _leaf_hash(address, new_value)
@@ -79,7 +82,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             # INSERT: verify witness is in tree and address is absent
             if msg.witness_address is None or msg.witness_value is None:
                 raise DataError("witness_address and witness_value required for INSERT")
-            stored_root = authdb.get_root()
+            stored_root = authdb.get_root(identifier)
             if stored_root is None:
                 raise DataError("No Merkle root stored; use INIT (empty proof, no witness)")
 
@@ -99,9 +102,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
                 _leaf_hash(msg.witness_address, msg.witness_value), proof, witness_hash
             ) == stored_root
             if not witness_in_tree:
-                log.error( __name__, "Non-membership proof invalid: witness not in tree", )
-                #petr: problem with fresh tree with one leaf, insert of second one fails
-                #raise DataError("Non-membership proof invalid: witness not in tree")
+                raise DataError("Non-membership proof invalid: witness not in tree")
 
             # Find the first bit where witness and target diverge (split point)
             split_bit = None
@@ -126,13 +127,12 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     elif deleting:
         # DELETE — verify current membership first
-        stored_root = authdb.get_root()
+        stored_root = authdb.get_root(identifier)
         if stored_root is None:
             raise DataError("No Merkle root stored on device")
 
         current_leaf = _leaf_hash(address, old_value)
         if _reconstruct(current_leaf, proof, addr_hash) != stored_root:
-            log.error( __name__, "Old value proof invalid", )
             raise DataError("Old value proof invalid")
 
         if len(proof) == 0:
@@ -154,33 +154,31 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     else:
         # UPDATE — verify current membership first
-        stored_root = authdb.get_root()
+        stored_root = authdb.get_root(identifier)
         if stored_root is None:
-            log.error( __name__, "No Merkle root stored on device", )
-            #raise DataError("No Merkle root stored on device")
+            raise DataError("No Merkle root stored on device")
 
         current_leaf = _leaf_hash(address, old_value)
-        if _reconstruct(current_leaf, proof, addr_hash) != stored_root and stored_root is not None:
-            log.error( __name__, "Old value proof invalid", )
+        if _reconstruct(current_leaf, proof, addr_hash) != stored_root:
             raise DataError("Old value proof invalid")
-            
+
         new_root = _reconstruct(_leaf_hash(address, new_value), proof, addr_hash)
 
     # Persist the new root
     if new_root is None:
-        authdb.clear_root()
+        authdb.clear_root(identifier)
     else:
-        authdb.set_root(new_root)
+        authdb.set_root(identifier, new_root)
 
-    counter = authdb.increment_counter()
+    counter = authdb.increment_counter(identifier)
 
     if __debug__:
         from trezor import log
         log.debug(
             __name__,
             "update_leaf: new_root=%s counter=%d",
-            new_root if new_root else "empty",
+            new_root.hex() if new_root else "empty",
             counter,
         )
 
-    return AuthDbUpdateLeafResponse(counter=counter, new_root=new_root)
+    return AuthDbUpdateLeafResponse(counter=counter, new_root=new_root, identifier=identifier)

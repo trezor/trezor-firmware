@@ -388,6 +388,8 @@ enum MessageType {
     MessageType_AuthDbLookupResponse = 2303 [(wire_out) = true];
     MessageType_AuthDbUpdateLeaf = 2304 [(wire_in) = true];
     MessageType_AuthDbUpdateLeafResponse = 2305 [(wire_out) = true];
+    MessageType_AuthDbClearRoot = 2306 [(wire_in) = true];
+    MessageType_AuthDbClearRootResponse = 2307 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

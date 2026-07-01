@@ -9530,14 +9530,17 @@ class AuthDbSetRootResponse(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2301
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         counter: "int",
+        identifier: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
+        self.identifier = identifier
 
 
 class AuthDbLookup(protobuf.MessageType):
@@ -9572,6 +9575,7 @@ class AuthDbLookupResponse(protobuf.MessageType):
         1: protobuf.Field("valid", "bool", repeated=False, required=True),
         2: protobuf.Field("counter", "uint32", repeated=False, required=True),
         3: protobuf.Field("membership", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9580,10 +9584,12 @@ class AuthDbLookupResponse(protobuf.MessageType):
         valid: "bool",
         counter: "int",
         membership: Optional["bool"] = None,
+        identifier: Optional["bytes"] = None,
     ) -> None:
         self.valid = valid
         self.counter = counter
         self.membership = membership
+        self.identifier = identifier
 
 
 class AuthDbUpdateLeaf(protobuf.MessageType):
@@ -9620,6 +9626,7 @@ class AuthDbUpdateLeafResponse(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9627,6 +9634,30 @@ class AuthDbUpdateLeafResponse(protobuf.MessageType):
         *,
         counter: "int",
         new_root: Optional["bytes"] = None,
+        identifier: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
         self.new_root = new_root
+        self.identifier = identifier
+
+
+class AuthDbClearRoot(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2306
+    FIELDS: dict = {}
+
+    def __init__(self) -> None:
+        pass
+
+
+class AuthDbClearRootResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2307
+    FIELDS = {
+        1: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        identifier: Optional["bytes"] = None,
+    ) -> None:
+        self.identifier = identifier

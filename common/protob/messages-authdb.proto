@@ -23,7 +23,8 @@ message AuthDbSetRoot {
  * @end
  */
 message AuthDbSetRootResponse {
-    required uint32 counter = 1;  // monotonic counter after this operation
+    required uint32 counter    = 1;  // monotonic counter after this operation
+    optional bytes  identifier = 2;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
 }
 
 /**
@@ -60,6 +61,7 @@ message AuthDbLookupResponse {
     required bool   valid      = 1;  // true if proof is valid against stored root
     required uint32 counter    = 2;  // current monotonic counter
     optional bool   membership = 3;  // true = membership proof, false = non-membership
+    optional bytes  identifier = 4;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
 }
 
 /**
@@ -92,6 +94,25 @@ message AuthDbUpdateLeaf {
  * @end
  */
 message AuthDbUpdateLeafResponse {
-    required uint32 counter  = 1;  // monotonic counter after this update
-    optional bytes  new_root = 2;  // absent if the tree is now empty
+    required uint32 counter    = 1;  // monotonic counter after this update
+    optional bytes  new_root   = 2;  // absent if the tree is now empty
+    optional bytes  identifier = 3;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
+}
+
+/**
+ * Request: Wipe the stored Merkle root and reset the counter to zero.
+ * DEBUG ONLY: rejected on production firmware.
+ * @start
+ * @next AuthDbClearRootResponse
+ * @next Failure
+ */
+message AuthDbClearRoot {
+}
+
+/**
+ * Response: Confirmation that root and counter were cleared.
+ * @end
+ */
+message AuthDbClearRootResponse {
+    optional bytes identifier = 1;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
 }

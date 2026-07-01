@@ -22,9 +22,29 @@ def _make_tree() -> AuthDbTree:
 @pytest.mark.models("core")
 def test_set_root_returns_incremented_counter(session: Session) -> None:
     tree = _make_tree()
-    counter1 = authdb.set_root(session, tree.get_root_hash())
-    counter2 = authdb.set_root(session, tree.get_root_hash())
+    counter1, identifier1 = authdb.set_root(session, tree.get_root_hash())
+    counter2, identifier2 = authdb.set_root(session, tree.get_root_hash())
     assert counter2 == counter1 + 1
+    assert identifier1 == identifier2  # same seed → same identifier
+
+
+@pytest.mark.models("core")
+def test_identifier_is_32_bytes(session: Session) -> None:
+    tree = _make_tree()
+    _counter, identifier = authdb.set_root(session, tree.get_root_hash())
+    assert identifier is not None
+    assert len(identifier) == 32
+
+
+@pytest.mark.models("core")
+def test_identifier_consistent_across_calls(session: Session) -> None:
+    """Same seed/passphrase must produce the same identifier on every call."""
+    tree = _make_tree()
+    _, id1 = authdb.set_root(session, tree.get_root_hash())
+    _, id2 = authdb.set_root(session, tree.get_root_hash())
+    proof = tree.get_proof(b"alice")
+    _, _, _, id3 = authdb.lookup(session, address=b"alice", value=b"data_alice", proof=proof)
+    assert id1 == id2 == id3
 
 
 @pytest.mark.models("core")
@@ -34,13 +54,14 @@ def test_lookup_valid_proof(session: Session, address: bytes, value: bytes) -> N
     authdb.set_root(session, tree.get_root_hash())
 
     proof = tree.get_proof(address)
-    valid, membership, counter = authdb.lookup(
+    valid, membership, counter, identifier = authdb.lookup(
         session, address=address, value=value, proof=proof
     )
 
     assert valid is True
     assert membership is True
     assert counter > 0
+    assert identifier is not None and len(identifier) == 32
 
 
 @pytest.mark.models("core")
@@ -49,7 +70,7 @@ def test_lookup_invalid_wrong_value(session: Session) -> None:
     authdb.set_root(session, tree.get_root_hash())
 
     proof = tree.get_proof(b"alice")
-    valid, _membership, _counter = authdb.lookup(
+    valid, _membership, _counter, _identifier = authdb.lookup(
         session, address=b"alice", value=b"WRONG", proof=proof
     )
     assert valid is False
@@ -62,7 +83,7 @@ def test_lookup_invalid_wrong_address(session: Session) -> None:
 
     # alice's proof, but claim address=bob — path mismatch
     proof = tree.get_proof(b"alice")
-    valid, _membership, _counter = authdb.lookup(
+    valid, _membership, _counter, _identifier = authdb.lookup(
         session, address=b"bob", value=b"data_alice", proof=proof
     )
     assert valid is False
@@ -77,7 +98,7 @@ def test_lookup_invalid_wrong_root(session: Session) -> None:
 
     tree = _make_tree()
     proof = tree.get_proof(b"alice")
-    valid, _membership, _counter = authdb.lookup(
+    valid, _membership, _counter, _identifier = authdb.lookup(
         session, address=b"alice", value=b"data_alice", proof=proof
     )
     assert valid is False
@@ -86,19 +107,20 @@ def test_lookup_invalid_wrong_root(session: Session) -> None:
 @pytest.mark.models("core")
 def test_lookup_no_root_membership_returns_false(session: Session) -> None:
     """Membership query against empty tree returns valid=False, membership=True."""
-
     tree = _make_tree()
     proof = tree.get_proof(b"alice")
-    valid, membership, counter = authdb.lookup(
+    valid, membership, counter, identifier = authdb.lookup(
         session, address=b"alice", value=b"data_alice", proof=proof
     )
     assert valid is False
     assert membership is True
+    assert identifier is not None and len(identifier) == 32
+
 
 @pytest.mark.models("core")
 def test_lookup_no_root_nonmembership_returns_true(session: Session) -> None:
     """Non-membership query against empty tree returns valid=True, membership=False."""
-    valid, membership, counter = authdb.lookup(
+    valid, membership, counter, identifier = authdb.lookup(
         session,
         address=b"alice",
         value=None,
@@ -108,6 +130,8 @@ def test_lookup_no_root_nonmembership_returns_true(session: Session) -> None:
     )
     assert valid is True
     assert membership is False
+    assert identifier is not None and len(identifier) == 32
+
 
 @pytest.mark.models("core")
 def test_verify_proof_host_matches_device(session: Session) -> None:
@@ -119,7 +143,7 @@ def test_verify_proof_host_matches_device(session: Session) -> None:
     for address, value in ENTRIES.items():
         proof = tree.get_proof(address)
         host_result = AuthDbTree.verify_proof(address, value, proof, root)
-        device_valid, _, _ = authdb.lookup(
+        device_valid, _, _, _ = authdb.lookup(
             session, address=address, value=value, proof=proof
         )
         assert host_result == device_valid is True
@@ -139,7 +163,7 @@ def test_nonmembership_proof_valid(session: Session) -> None:
     proof, w_addr, w_val = tree.get_nonmembership_proof(target)
     assert w_addr is not None
 
-    valid, membership, counter = authdb.lookup(
+    valid, membership, counter, identifier = authdb.lookup(
         session,
         address=target,
         value=None,
@@ -150,6 +174,7 @@ def test_nonmembership_proof_valid(session: Session) -> None:
     assert valid is True
     assert membership is False
     assert counter > 0
+    assert identifier is not None and len(identifier) == 32
 
 
 @pytest.mark.models("core")
@@ -161,7 +186,7 @@ def test_nonmembership_proof_member_returns_false(session: Session) -> None:
     # Use a real member as the "non-member target"; the witness found will
     # be the leaf itself, which makes witness_address == address → invalid.
     proof = tree.get_proof(b"alice")
-    valid, _membership, _counter = authdb.lookup(
+    valid, _membership, _counter, _identifier = authdb.lookup(
         session,
         address=b"alice",
         value=None,
@@ -183,7 +208,7 @@ def test_nonmembership_host_matches_device(session: Session) -> None:
     proof, w_addr, w_val = tree.get_nonmembership_proof(target)
 
     host = AuthDbTree.verify_nonmembership(target, proof, w_addr, w_val, root)
-    device_valid, device_membership, _ = authdb.lookup(
+    device_valid, device_membership, _, _ = authdb.lookup(
         session,
         address=target,
         value=None,
@@ -203,7 +228,7 @@ def test_nonmembership_host_matches_device(session: Session) -> None:
 @pytest.mark.models("core")
 def test_update_leaf_init(session: Session) -> None:
     """INIT: insert first entry into an empty tree."""
-    counter, new_root = authdb.update_leaf(
+    counter, new_root, identifier = authdb.update_leaf(
         session,
         address=b"alice",
         old_value=b"",
@@ -212,6 +237,7 @@ def test_update_leaf_init(session: Session) -> None:
     )
     assert new_root is not None
     assert counter > 0
+    assert identifier is not None and len(identifier) == 32
     # Host-side tree should match
     tree = AuthDbTree()
     tree.insert(b"alice", b"data_alice")
@@ -222,7 +248,7 @@ def test_update_leaf_init(session: Session) -> None:
 def test_update_leaf_insert(session: Session) -> None:
     """INSERT: add a second entry to an existing tree."""
     # Bootstrap with alice
-    counter0, root0 = authdb.update_leaf(
+    counter0, root0, _ = authdb.update_leaf(
         session, address=b"alice", old_value=b"", new_value=b"data_alice", proof=[]
     )
 
@@ -232,7 +258,7 @@ def test_update_leaf_insert(session: Session) -> None:
     assert tree.get_root_hash() == root0
 
     proof, w_addr, w_val = tree.get_nonmembership_proof(b"bob")
-    counter1, new_root = authdb.update_leaf(
+    counter1, new_root, identifier = authdb.update_leaf(
         session,
         address=b"bob",
         old_value=b"",
@@ -254,7 +280,7 @@ def test_update_leaf_update(session: Session) -> None:
     authdb.set_root(session, tree.get_root_hash())
 
     proof = tree.get_proof(b"alice")
-    counter, new_root = authdb.update_leaf(
+    counter, new_root, identifier = authdb.update_leaf(
         session,
         address=b"alice",
         old_value=b"data_alice",
@@ -273,7 +299,7 @@ def test_update_leaf_delete(session: Session) -> None:
     authdb.set_root(session, tree.get_root_hash())
 
     proof = tree.get_proof(b"alice")
-    counter, new_root = authdb.update_leaf(
+    counter, new_root, identifier = authdb.update_leaf(
         session,
         address=b"alice",
         old_value=b"data_alice",
