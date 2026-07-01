@@ -354,23 +354,11 @@ def probe(
     retries: int = 10,
 ) -> bool:
     """Probe the transport to see if it supports protocol v1."""
-    for _ in range(retries):
-        try:
-            # skip stale responses (to prevent the device from blocking during sending)
-            resp = read(transport, _ignore_bad_magic=True, timeout=0.1)
-            LOG.debug("stale response: %s", resp)
-        except Timeout:
-            break
-    cancel_msg = messages.Cancel()
-    cancel_msg_type, cancel_msg_bytes = mapping.encode(cancel_msg)
-    write(transport, cancel_msg_type, cancel_msg_bytes)
-    # Ignore previously sent unexpected packets, while waiting for the response.
-    resp_type, resp_bytes = read(transport, _ignore_bad_magic=True)
-    resp = mapping.decode(resp_type, resp_bytes)
-    if isinstance(resp, messages.Failure):
-        if resp.code == messages.FailureType.InvalidProtocol:
-            return False
-    return True
+    try:
+        sync_responses(transport, mapping=mapping, retries=retries)
+        return True
+    except NotImplementedError:
+        return False
 
 
 @enter_context
@@ -379,8 +367,17 @@ def sync_responses(
     *,
     mapping: ProtobufMapping = mapping.DEFAULT_MAPPING,
     retries: int = 10,
+    _max_stale_responses: int = 10,
 ) -> None:
     """Sync responses from the transport."""
+    for _ in range(_max_stale_responses):
+        try:
+            # skip stale responses (also to prevent the device from blocking during sending)
+            resp = read(transport, _ignore_bad_magic=True, timeout=0.1)
+            LOG.debug("stale response: %s", resp)
+        except Timeout:
+            break
+
     # cancel anything on screen -- on T1B1 this is the only way to exit e.g. a PIN prompt.
     cancel_msg = mapping.encode(messages.Cancel())
     write(transport, *cancel_msg)
@@ -394,6 +391,12 @@ def sync_responses(
     for _ in range(retries):
         resp_type, resp_bytes = read(transport)
         resp = mapping.decode(resp_type, resp_bytes)
+        if (
+            isinstance(resp, messages.Failure)
+            and resp.code is messages.FailureType.InvalidProtocol
+        ):
+            # v1 protocol is not supported
+            raise NotImplementedError(resp.message)
         if isinstance(resp, messages.Success) and resp.message == sync_string:
             return
     raise exceptions.ProtocolError("Failed to sync responses")
