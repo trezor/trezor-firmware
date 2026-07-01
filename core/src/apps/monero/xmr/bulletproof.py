@@ -1063,14 +1063,10 @@ class KeyChallengeCacheVct(KeyVBase):
         return cur
 
 
-def _ensure_dst_keyvect(dst=None, size: int | None = None):
+def _ensure_dst_keyvect(dst: KeyV | None, size: int):
     if dst is None:
-        if size is not None:
-            dst = KeyV(elems=size)
-        else:
-            dst = KeyV()
-        return dst
-    if size is not None and size != len(dst):
+        return KeyV(elems=size)
+    elif size != len(dst):
         dst.resize(size)
     return dst
 
