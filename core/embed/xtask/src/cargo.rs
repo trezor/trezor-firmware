@@ -35,7 +35,7 @@ pub fn test(args: TestArgs) -> Result<()> {
         let mut cmd = process::Command::new("cargo");
 
         let test_feature = match package.as_str() {
-            "trezor_lib" => "test_with_new_crates",
+            "trezor_lib" | "crypto" => "test_with_new_crates",
             _ => "test",
         };
 

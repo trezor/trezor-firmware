@@ -1,6 +1,6 @@
 use std::{env, path::PathBuf, process::Command};
 
-fn main() {
+pub fn legacy_main() {
     println!("cargo:rustc-env=BUILD_DIR={}", build_dir());
     generate_crypto_bindings();
     #[cfg(feature = "test")]
@@ -24,7 +24,7 @@ fn prepare_bindings() -> bindgen::Builder {
 
     let mut clang_args: Vec<String> = Vec::new();
     clang_args.push(build_dir_include);
-    clang_args.push("-Iinc".to_string());
+    clang_args.push("-I../../vendor/trezor-crypto".to_string());
 
     // Pass in correct include paths and defines.
     if env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
@@ -133,7 +133,6 @@ fn link_core_objects() {
 
     let crate_path = env::var("CARGO_MANIFEST_DIR").unwrap();
     let build_path = format!("{}/../../../../build/unix", crate_path);
-    let path = PathBuf::from(build_path.clone());
 
     // List of object filenames to ignore in the `embed` directory
     let embed_blocklist = [OsStr::new("main_main.o")];

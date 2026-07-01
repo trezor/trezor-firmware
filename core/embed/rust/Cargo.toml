@@ -7,7 +7,7 @@ build = "build.rs"
 
 [features]
 default = ["layout_bolt"]
-crypto = ["zeroize", "trezor-crypto"]
+crypto = ["zeroize", "dep:crypto"]
 layout_bolt = []
 layout_caesar = []
 layout_delizia = []

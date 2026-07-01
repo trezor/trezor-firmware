@@ -2,7 +2,7 @@ use core::pin::Pin;
 
 use super::{
     ffi,
-    memory::{init_ctx, Memory},
+    memory::{Memory, init_ctx},
 };
 
 use zeroize::Zeroize as _;

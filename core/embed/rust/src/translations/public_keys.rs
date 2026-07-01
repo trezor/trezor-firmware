@@ -1,4 +1,4 @@
-use trezor_crypto::ed25519;
+use crypto::ed25519;
 
 #[cfg(feature = "dev_keys")]
 pub const PUBLIC_KEYS_DEVEL: [ed25519::PublicKey; 3] = [

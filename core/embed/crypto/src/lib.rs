@@ -3,6 +3,7 @@
 #[macro_use]
 mod error_util;
 
+#[cfg(feature = "aes_gcm")]
 pub mod aesgcm;
 pub mod cosi;
 pub mod crc32;
