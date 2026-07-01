@@ -1100,7 +1100,7 @@ async def _handle_approve(
 
     assert isinstance(arg1_raw_value, int)
 
-    recipient_str = KNOWN_ADDRESSES.get(arg0_raw_value)
+    recipient_str = KNOWN_ADDRESSES.get((msg.chain_id, arg0_raw_value))
     if recipient_str is None:
         vault = lookup_vault(defs.network, arg0_raw_value)
         if vault is not UNKNOWN_VAULT:
@@ -1219,7 +1219,9 @@ async def _handle_generic_ui(
             )
             properties_to_confirm.append(token_address_property)
 
-    recipient_str = KNOWN_ADDRESSES.get(bytes_from_address(msg.to), msg.to)
+    recipient_str = KNOWN_ADDRESSES.get(
+        (msg.chain_id, bytes_from_address(msg.to)), msg.to
+    )
 
     await require_confirm_clear_signing(
         recipient_str, display_format.intent, properties_to_confirm, maximum_fee
