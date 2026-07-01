@@ -141,7 +141,16 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
         // Copy the final binary to the `pub` directory
         if !matches!(args.project, Project::Secmon | Project::Kernel) {
             let version_file = helpers::get_version_file(args.project)?;
-            postbuild::publish_artifact(&bin, args.project, args.model, &version_file, None)?;
+            let infix =
+                (matches!(args.project, Project::Firmware) && args.btc_only).then_some("btconly");
+            postbuild::publish_artifact(
+                &bin,
+                args.project,
+                args.model,
+                &version_file,
+                None,
+                infix,
+            )?;
         }
     }
 
