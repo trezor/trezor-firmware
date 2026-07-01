@@ -119,7 +119,7 @@ async def require_confirm_transaction(
     change_idx = get_change_addr_idx(outputs, tsx_data.change_dts)
     payment_id = tsx_data.payment_id  # local_cache_attribute
 
-    if tsx_data.unlock_time != 0 and tsx_data.unlock_time is not None:
+    if tsx_data.unlock_time is not None and tsx_data.unlock_time != 0:
         await _require_confirm_unlock_time(tsx_data.unlock_time)
 
     for idx, dst in enumerate(outputs):
