@@ -76,7 +76,7 @@
     "address__public_key_confirmed": "Public Key bestätigt",
     "address__qr_code": "QR-Code",
     "address__title_cosigner": "Mitunterzeich.",
-    "address__title_cosigner_template": "",
+    "address__title_cosigner_template": "Cosigner {0}",
     "address__title_provider_address": "Anbieteradresse",
     "address__title_receive_address": "Empfangsadresse",
     "address__title_refund_address": "Refund-Adresse",
@@ -1334,14 +1334,14 @@
     "instructions__shares_start_with_1": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Mit Share #1 beginnen",
-      "Eckhart": "Beginne mit Share #1"
+      "Delizia": "Mit Share 1 beginnen",
+      "Eckhart": "Mit Share 1 beginnen"
     },
     "instructions__shares_start_with_x_template": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Beginne mit Share {0}"
+      "Eckhart": "Mit Share {0} beginnen"
     },
     "instructions__swipe_down": {
       "Bolt": "Nach unten wischen",
@@ -2122,11 +2122,11 @@
       "Eckhart": ""
     },
     "recovery__dry_run_bip39_valid_match": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
-    "recovery__dry_run_bip39_valid_mismatch": "Eingegebener Recovery Seed ist gültig, passt aber nicht zu dem auf dem Gerät.",
-    "recovery__dry_run_slip39_valid_match": "Eingegebene Recovery Shares sind gültig und passen zu denen auf dem Gerät.",
+    "recovery__dry_run_bip39_valid_mismatch": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
+    "recovery__dry_run_slip39_valid_match": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
     "recovery__dry_run_slip39_valid_mismatch": {
-      "Bolt": "Eingegebene Recovery Shares sind gültig, passen aber nicht zum Geräteinhalt.",
-      "Caesar": "Eingegebene Recovery Shares sind gültig, passen aber nicht zum Geräteinhalt.",
+      "Bolt": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
+      "Caesar": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
       "Delizia": "Eingegebener Recovery Seed ist gültig, passt aber nicht zu dem auf dem Gerät.",
       "Eckhart": "Eingegebener Recovery Seed ist gültig, passt aber nicht zu dem auf dem Gerät."
     },
@@ -2293,10 +2293,10 @@
       "Eckhart": "Backup überprüfen"
     },
     "reset__check_group_share_title_template": {
-      "Bolt": "Prüfe Gr. {0} - Share {1}",
+      "Bolt": "Share {1} von Gruppe {0}",
       "Caesar": "",
-      "Delizia": "Prüfe Gr. {0} - Share {1}",
-      "Eckhart": "Prüfe Gruppe {0} - Share {1}"
+      "Delizia": "Share {1} von Gruppe {0}",
+      "Eckhart": "Share {1} von Gruppe {0}"
     },
     "reset__check_share_backup_template": {
       "Bolt": "",
@@ -2320,11 +2320,11 @@
       "Bolt": "Fahre mit dem nächsten Share fort.",
       "Caesar": "Fahre mit dem nächsten Share fort.",
       "Delizia": "Fahre mit dem nächsten Share fort.",
-      "Eckhart": "Fahre mit dem nächsten Share fort"
+      "Eckhart": "Nächsten Share eingeben"
     },
     "reset__continue_with_share_template": {
-      "Bolt": "Fahre mit Share {0} fort.",
-      "Caesar": "Fahre mit Share {0} fort.",
+      "Bolt": "Mit Share {0} fortfahren.",
+      "Caesar": "Mit Share {0} fortfahren.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2360,16 +2360,16 @@
       "Eckhart": "Jede Gruppe hat eine feste Share-Anzahl und ihre eigene Schwelle. Als Nächstes legst du die Anzahl der Shares und die Schwellen fest."
     },
     "reset__group_share_checked_successfully_template": {
-      "Bolt": "Gruppe {0} - Share {1} erfolgreich geprüft.",
-      "Caesar": "Gruppe {0} - Share {1} erfolgreich geprüft.",
-      "Delizia": "Gruppe {0} - Share {1} verifiziert",
-      "Eckhart": "Gruppe {0} - Share {1} erfolgreich geprüft."
+      "Bolt": "Share {1} von Gruppe {0} erfolgreich geprüft.",
+      "Caesar": "Share {1} von Gruppe {0} erfolgreich geprüft.",
+      "Delizia": "Share {1} von Gruppe {0} erledigt",
+      "Eckhart": "Share {1} von Gruppe {0} erfolgreich geprüft."
     },
     "reset__group_share_title_template": {
-      "Bolt": "Gruppe {0} - share {1}",
+      "Bolt": "Share {1} von Gruppe {0}",
       "Caesar": "",
-      "Delizia": "Gruppe {0} - share {1}",
-      "Eckhart": "Gruppe {0} - Share {1}"
+      "Delizia": "Share {1} von Gruppe {0}",
+      "Eckhart": "Share {1} von Gruppe {0}"
     },
     "reset__incorrect_word_selected": {
       "Bolt": "",
@@ -2378,9 +2378,9 @@
       "Eckhart": "Falsches Wort ausgewählt."
     },
     "reset__more_info_at": {
-      "Bolt": "Weitere Infos unter",
-      "Caesar": "Weitere Info unter",
-      "Delizia": "Weitere Infos unter",
+      "Bolt": "Mehr erfahren unter",
+      "Caesar": "Mehr erfahren unter",
+      "Delizia": "Mehr erfahren unter",
       "Eckhart": ""
     },
     "reset__need_all_share_template": {
@@ -2587,14 +2587,14 @@
     },
     "reset__slip39_checklist_set_sizes": {
       "Bolt": "",
-      "Caesar": "Größen und Schwellen festlegen",
+      "Caesar": "Größen und Schwellenwerte festlegen",
       "Delizia": "",
       "Eckhart": ""
     },
     "reset__slip39_checklist_set_sizes_longer": {
-      "Bolt": "Größe und Schwelle für jede Gruppe festlegen",
+      "Bolt": "Größe und Schwellenwert für jede Gruppe festlegen",
       "Caesar": "",
-      "Delizia": "Größe und Schwelle für jede Gruppe festlegen",
+      "Delizia": "Größe und Schwellenwert für jede Gruppe festlegen",
       "Eckhart": "Größe und Schwellenwert für jede Gruppe festlegen"
     },
     "reset__slip39_checklist_set_threshold": {
@@ -2686,7 +2686,7 @@
     },
     "reset__title_shamir_backup": "Multi-Share-Backup",
     "reset__to_form_group_template": {
-      "Bolt": "zur Bildung von Gruppe {0}.",
+      "Bolt": "um Gruppe {0} zu bilden.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2698,9 +2698,9 @@
       "Eckhart": "Mehr auf trezor.io/tos"
     },
     "reset__total_number_of_shares_in_group_template": {
-      "Bolt": "Wähle die Share-Anzahl in Gruppe {0}.",
+      "Bolt": "Lege die Gesamtzahl der Shares in Gruppe {0} fest.",
       "Caesar": "",
-      "Delizia": "Wähle die Share-Anzahl in Gruppe {0}.",
+      "Delizia": "Lege die Gesamtzahl der Shares in Gruppe {0} fest.",
       "Eckhart": "Lege die Gesamtzahl der Shares in Gruppe {0} fest."
     },
     "reset__use_your_backup": {
@@ -2745,8 +2745,8 @@
       "Delizia": "Backup abgeschlossen.",
       "Eckhart": "Dein Backup ist abgeschlossen."
     },
-    "ripple__account_deletion_warning": "",
-    "ripple__account_to_be_deleted": "",
+    "ripple__account_deletion_warning": "Ripple Account löschen?",
+    "ripple__account_to_be_deleted": "Zu löschen:",
     "ripple__confirm_tag": "Tag bestätigen",
     "ripple__destination_tag_missing": {
       "Bolt": "Destination-Tag ist nicht gesetzt. Wird benötigt, wenn du an Börsen sendest.",
@@ -3071,7 +3071,7 @@
       "Eckhart": "Max. Rent-Gebühr"
     },
     "solana__multiple_signers": "Mehrere Unterzeichner",
-    "solana__offchain_is_multisig": "",
+    "solana__offchain_is_multisig": "Die folgende Nachricht erfordert mehrere Signierer.",
     "solana__priority_fee": "Prioritätsgebühr",
     "solana__stake": "Stake",
     "solana__stake_account": "Staking-Konto",
@@ -3494,7 +3494,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "TROPIC01 ist eine neue Generation des Open-Source Secure-Element-Chips, entwickelt für transparente und auditierbare Hardware-Sicherheit."
+      "Eckhart": "TROPIC01 ist ein Secure-Element-Chip der nächsten Generation, der für transparente und überprüfbare Hardwaresicherheit entwickelt wurde."
     },
     "tutorial__use_trezor": {
       "Bolt": "",
@@ -3640,7 +3640,7 @@
     "words__about": "Über",
     "words__account": "Konto",
     "words__account_colon": "Konto:",
-    "words__account_deletion": "",
+    "words__account_deletion": "Kontolöschung",
     "words__address": "Adresse",
     "words__amount": "Betrag",
     "words__are_you_sure": {
@@ -3664,13 +3664,8 @@
       "Eckhart": "Abbrechen?"
     },
     "words__chain": "Chain",
-    "words__comm_continue": "",
-    "words__comm_trouble": {
-      "Bolt": "Dein Trezor hat Probleme bei der Kommunikation mit deinem verbundenen Gerät.",
-      "Caesar": "Dein Trezor hat Schwierigkeiten, mit deinem verbundenen Gerät zu kommunizieren.",
-      "Delizia": "Dein Trezor hat Probleme, mit deinem verbundenen Gerät zu kommunizieren.",
-      "Eckhart": "Dein Trezor hat Schwierigkeiten, mit deinem verbundenen Gerät zu kommunizieren."
-    },
+    "words__comm_continue": "Die Kommunikation mit deinem verbundenen Gerät ist fehlgeschlagen. Du kannst den Vorgang sicher fortsetzen.",
+    "words__comm_trouble": "Die Kommunikation mit deinem verbundenen Gerät ist fehlgeschlagen. Brich den Vorgang ab und versuche es erneut.",
     "words__confirm": "Bestätigen",
     "words__confirm_all": "Alles bestätigen",
     "words__confirm_fee": "Gebühr bestätigen",
@@ -3727,7 +3722,12 @@
       "Eckhart": "Fahre nur fort, wenn du weißt was du tust!"
     },
     "words__led": "LED",
-    "words__made_in": "",
+    "words__made_in": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hergestellt in"
+    },
     "words__manage": "Verwalten",
     "words__my_trezor": "Mein Trezor",
     "words__name": "Name",
@@ -3797,7 +3797,12 @@
     "words__sign": "Signieren",
     "words__signer": "Unterzeichner",
     "words__swap": "Swap",
-    "words__tap_to_wake": "",
+    "words__tap_to_wake": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zum Aktivieren tippen"
+    },
     "words__title_check": {
       "Bolt": "",
       "Caesar": "Prüfen",

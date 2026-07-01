@@ -80,7 +80,7 @@
     "address__title_provider_address": "Adresa poskytovatele",
     "address__title_receive_address": "Přijímací adresa",
     "address__title_refund_address": "Adresa pro vrácení prostředků",
-    "address__title_yours": "Vaše",
+    "address__title_yours": "Váš",
     "address__xpub": {
       "Bolt": "XPUB",
       "Caesar": "XPUB",
@@ -382,10 +382,10 @@
     "buttons__format": "Formátovat",
     "buttons__go_back": "Jít zpět",
     "buttons__hold_to_confirm": {
-      "Bolt": "Držením potvrď",
-      "Caesar": "Držením potvrďte",
-      "Delizia": "Držením potvrďte",
-      "Eckhart": "Držením potvrďte"
+      "Bolt": "Potvrdit držením",
+      "Caesar": "Potvrdit podržením",
+      "Delizia": "Potvrdit podržením",
+      "Eckhart": "Potvrdit podržením"
     },
     "buttons__info": "Informace",
     "buttons__install": "Nainstalovat",
@@ -1092,22 +1092,22 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Zadejte další podíl",
-      "Eckhart": "Zadejte další podíl"
+      "Eckhart": "Zadat další podíl"
     },
     "instructions__hold_to_confirm": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Držením potvrďte",
+      "Delizia": "Potvrďte podržením",
       "Eckhart": ""
     },
-    "instructions__hold_to_continue": "Držením pokračujte",
+    "instructions__hold_to_continue": "Pokračujte podržením",
     "instructions__hold_to_exit_tutorial": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Podržením ukončíte tutoriál",
-      "Eckhart": "Podržením ukončíte tutoriál"
+      "Delizia": "Ukončete tutoriál podržením",
+      "Eckhart": "Ukončit tutoriál podržením"
     },
-    "instructions__hold_to_sign": "Podržením podepíšete",
+    "instructions__hold_to_sign": "Podepište podržením",
     "instructions__learn_more": "Zjistit více",
     "instructions__menu_to_continue": "Pokračujte přes nabídku",
     "instructions__shares_continue_with_x_template": {
@@ -1812,9 +1812,19 @@
       "Eckhart": ""
     },
     "recovery__dry_run_bip39_valid_match": "Zadaná záloha peněženky je platná a shoduje se se zálohou v tomto zařízení.",
-    "recovery__dry_run_bip39_valid_mismatch": "Zadaná záloha peněženky je platná, ale neshoduje se se zálohou v tomto zařízení.",
+    "recovery__dry_run_bip39_valid_mismatch": {
+      "Bolt": "Zadaná záloha je platná, ale neshoduje se se zálohou v tomto zařízení.",
+      "Caesar": "Zadaná záloha peněženky je platná, ale neshoduje se se zálohou v tomto zařízení.",
+      "Delizia": "Zadaná záloha peněženky je platná, ale neshoduje se se zálohou v tomto zařízení.",
+      "Eckhart": "Zadaná záloha peněženky je platná, ale neshoduje se se zálohou v tomto zařízení."
+    },
     "recovery__dry_run_slip39_valid_match": "Zadaná záloha peněženky je platná a shoduje se se zálohou v tomto zařízení.",
-    "recovery__dry_run_slip39_valid_mismatch": "Zadaná záloha peněženky je platná, ale neshoduje se se zálohou v tomto zařízení.",
+    "recovery__dry_run_slip39_valid_mismatch": {
+      "Bolt": "Zadaná záloha je platná, ale neshoduje se se zálohou v tomto zařízení.",
+      "Caesar": "Zadaná záloha peněženky je platná, ale neshoduje se se zálohou v tomto zařízení.",
+      "Delizia": "Zadaná záloha peněženky je platná, ale neshoduje se se zálohou v tomto zařízení.",
+      "Eckhart": "Zadaná záloha peněženky je platná, ale neshoduje se se zálohou v tomto zařízení."
+    },
     "recovery__enter_any_share": "Zadejte libovolný podíl",
     "recovery__enter_backup": "Zadejte zálohu.",
     "recovery__enter_different_share": {
@@ -1952,7 +1962,7 @@
     "reset__cancel_create_wallet": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Zrušit vytvoření peněženky",
+      "Delizia": "Zrušit vytváření peněženky",
       "Eckhart": ""
     },
     "reset__check_backup_instructions": {
@@ -1990,7 +2000,7 @@
       "Bolt": "Pokračujte dalším podílem.",
       "Caesar": "Následuje další podíl.",
       "Delizia": "Pokračujte dalším podílem.",
-      "Eckhart": "Vložit další podíl"
+      "Eckhart": "Zdat další podíl"
     },
     "reset__continue_with_share_template": {
       "Bolt": "Pokračujte podílem {0}.",
@@ -2168,8 +2178,8 @@
       "Eckhart": "Vyberte slovo {0} z vaší zálohy peněženky"
     },
     "reset__select_word_x_of_y_template": {
-      "Bolt": "Vyb. slovo {0} z {1}:",
-      "Caesar": "Vyb. slovo {0} z {1}:",
+      "Bolt": "Slovo {0} z {1} je:",
+      "Caesar": "Slovo {0} z {1} je:",
       "Delizia": "Vyberte slovo {0} z {1}",
       "Eckhart": ""
     },
@@ -2386,7 +2396,7 @@
     },
     "reset__your_backup_is_done": "Záloha je dokončena.",
     "ripple__account_deletion_warning": "Smazat Ripple účet?",
-    "ripple__account_to_be_deleted": "Ke smazání:",
+    "ripple__account_to_be_deleted": "Smazat:",
     "ripple__confirm_tag": "Potvrdit značku",
     "ripple__destination_tag_missing": "Cílová značka není nastavena. Obvykle je vyžadována při odesílání na burzy.",
     "ripple__destination_tag_template": "Cílová značka:\n{0}",
@@ -2917,7 +2927,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__suite_restart": "Tento návod si kdykoliv přehrajte z aplikace Trezor Suite.",
+    "tutorial__suite_restart": "Tento tutoriál si kdykoliv přehrajte z aplikace Trezor Suite.",
     "tutorial__sure_you_want_skip": {
       "Bolt": "",
       "Caesar": "Opravdu chcete\npřeskočit tutoriál?",
@@ -2934,7 +2944,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Klepněte pro spuštění návodu"
+      "Eckhart": "Spustit tutoriál klepnutím"
     },
     "tutorial__title_easy_navigation": "Základní navigace",
     "tutorial__title_handy_menu": "Praktická nabídka",
@@ -2947,7 +2957,7 @@
     "tutorial__title_hold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Držením potvrdíte důležité akce",
+      "Delizia": "Podržením potvrdíte důležité akce",
       "Eckhart": "Podržte tlačítko dole na displeji pro potvrzení důležitých akcí."
     },
     "tutorial__title_lets_begin": {
@@ -3266,7 +3276,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Probuzení klepnutím"
+      "Eckhart": "Probudit klepnutím"
     },
     "words__title_check": {
       "Bolt": "",
