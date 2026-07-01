@@ -14,7 +14,7 @@ from .helpers import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, Iterable, Sequence
+    from typing import Callable, Generator, Iterable, Sequence
 
     from trezor.messages import (
         EthereumABIValueInfo,
@@ -981,6 +981,14 @@ async def try_confirm(
         TRANSFER_DISPLAY_FORMAT,
     )
 
+    def iter_formats() -> Generator[DisplayFormat, None, None]:
+        yield from ALL_DISPLAY_FORMATS
+
+        if __debug__:
+            from .clear_signing_definitions import _test_formats
+
+            yield from _test_formats()
+
     if not address_bytes:
         return False
 
@@ -990,7 +998,7 @@ async def try_confirm(
     func_sig = bytes(data[0:SC_FUNC_SIG_BYTES])
 
     display_format = None
-    for f in ALL_DISPLAY_FORMATS:
+    for f in iter_formats():
         # Start by trying built-in definitions...
         if f.func_sig == func_sig and f.matches_context(msg.chain_id, address_bytes):
             display_format = f
