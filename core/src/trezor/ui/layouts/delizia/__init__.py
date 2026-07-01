@@ -422,7 +422,8 @@ async def show_warning(
     with trezorui_api.show_warning(
         title=TR.words__important,
         value=content,
-        button=subheader or TR.words__continue_anyway_question,
+        description=subheader or "",
+        button=button or TR.words__continue_anyway_question,
         danger=True,
     ) as layout:
         return await raise_if_not_confirmed(layout, br_name, br_code)
