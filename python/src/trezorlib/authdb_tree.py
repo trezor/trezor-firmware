@@ -1,62 +1,100 @@
-"""Sparse Merkle Tree for AuthDB.
+"""Merkle Patricia Trie (MPT) for AuthDB.
 
-Path routing is determined by bits of SHA-256(address), MSB first, so left/right
-at each level is fixed by the address — independent of the leaf value.
+Path-compressed positional trie. Only branches where leaves actually diverge,
+so proof size is O(log N) instead of O(depth) for a fixed-depth sparse tree.
 
-Hashing scheme:
+Hashing scheme (matches merkletree.ts):
   leaf hash     : SHA-256(b"\\x00" + address + value)
-  internal hash : SHA-256(b"\\x01" + left + right)   — positional, no min/max
-  empty leaf    : SHA-256(b"")
-  empty subtree : propagated upward via internal_hash(empty, empty)
+  internal hash : SHA-256(b"\\x01" + left + right)  — positional, no sorting
+
+Proof format (leaf→root order):
+  Each element is 33 bytes: 1-byte bit-position (0-255) + 32-byte sibling hash.
+  Proof length is O(log N) for N entries — well within the firmware buffer.
+
+Mirrors buildMpt / generateMerkleProof / evaluateProof in merkletree.ts.
 """
 
 from __future__ import annotations
 
 from hashlib import sha256 as _sha256
-from typing import Dict, List, Optional, Tuple
-
-DEFAULT_DEPTH = 32  # 2^32 address space; proof = 32 × 32 B = 1 KB
+from typing import Dict, List, Tuple, Union
 
 
 # ---------------------------------------------------------------------------
-# Primitive hash functions
+# Primitives (identical to merkletree.ts)
 # ---------------------------------------------------------------------------
 
-def authdb_leaf_hash(address: bytes, value: bytes) -> bytes:
-    return _sha256(b"\x00" + address + value).digest()
+def _sha256d(data: bytes) -> bytes:
+    return _sha256(data).digest()
 
 
-def authdb_internal_hash(left: bytes, right: bytes) -> bytes:
-    return _sha256(b"\x01" + left + right).digest()
+def _addr_bit(addr_hash: bytes, bit: int) -> int:
+    """MSB-first: bit 0 is the most significant bit of byte 0."""
+    return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def _addr_bit(addr_hash: bytes, level: int) -> int:
-    """Return bit `level` (MSB first) of `addr_hash`."""
-    return (addr_hash[level // 8] >> (7 - level % 8)) & 1
+def _leaf_hash(address: bytes, value: bytes) -> bytes:
+    return _sha256d(b"\x00" + address + value)
 
 
-def _precompute_empty(depth: int) -> List[bytes]:
-    """Return list of length depth+1 where empty[i] is the hash of an all-empty
-    subtree at tree level i (0 = root, depth = leaf level)."""
-    e = _sha256(b"").digest()   # empty leaf
-    levels = [e]
-    for _ in range(depth):
-        e = authdb_internal_hash(e, e)
-        levels.append(e)
-    levels.reverse()            # index 0 → root level
-    return levels
+def _internal_hash(left: bytes, right: bytes) -> bytes:
+    return _sha256d(b"\x01" + left + right)
 
 
 # ---------------------------------------------------------------------------
-# AuthDbTree
+# Internal MPT node types
 # ---------------------------------------------------------------------------
 
-_LeafMap = Dict[bytes, Tuple[bytes, bytes]]   # addr_hash → (address, value)
+class _LeafNode:
+    __slots__ = ("addr_hash", "leaf_hash")
 
+    def __init__(self, addr_hash: bytes, leaf_hash: bytes) -> None:
+        self.addr_hash = addr_hash
+        self.leaf_hash = leaf_hash
+
+
+class _BranchNode:
+    __slots__ = ("bit", "left", "right")
+
+    def __init__(self, bit: int, left: "_MptNode", right: "_MptNode") -> None:
+        self.bit = bit
+        self.left = left
+        self.right = right
+
+
+_MptNode = Union[_LeafNode, _BranchNode]
+
+
+def _find_split_bit(leaves: List[_LeafNode], start_bit: int) -> int:
+    """Find the first bit >= start_bit where the set of leaves diverges."""
+    for bit in range(start_bit, 256):
+        b0 = _addr_bit(leaves[0].addr_hash, bit)
+        if any(_addr_bit(l.addr_hash, bit) != b0 for l in leaves[1:]):
+            return bit
+    raise ValueError("MPT: duplicate address hashes (SHA-256 collision)")
+
+
+def _build_mpt(leaves: List[_LeafNode], start_bit: int) -> _MptNode:
+    if len(leaves) == 1:
+        return leaves[0]
+    bit = _find_split_bit(leaves, start_bit)
+    left = [l for l in leaves if _addr_bit(l.addr_hash, bit) == 0]
+    right = [l for l in leaves if _addr_bit(l.addr_hash, bit) == 1]
+    return _BranchNode(bit, _build_mpt(left, bit + 1), _build_mpt(right, bit + 1))
+
+
+def _hash_mpt(node: _MptNode) -> bytes:
+    if isinstance(node, _LeafNode):
+        return node.leaf_hash
+    return _internal_hash(_hash_mpt(node.left), _hash_mpt(node.right))
+
+
+# ---------------------------------------------------------------------------
+# AuthDbTree — public interface (bytes in/out, used by device tests)
+# ---------------------------------------------------------------------------
 
 class AuthDbTree:
-    """Sparse Merkle Tree where each leaf's position is determined by
-    SHA-256(address) bit-path, not by sorting leaf values.
+    """MPT-based Merkle tree for AuthDB.
 
     Usage::
 
@@ -65,49 +103,52 @@ class AuthDbTree:
         tree.insert(b"bob",   b"data_bob")
         root = tree.get_root_hash()
         proof = tree.get_proof(b"alice")
-        assert tree.verify_proof(b"alice", b"data_alice", proof, root)
+        assert AuthDbTree.verify_proof(b"alice", b"data_alice", proof, root)
     """
 
-    def __init__(self, depth: int = DEFAULT_DEPTH) -> None:
-        self.depth = depth
-        self._leaves: _LeafMap = {}
-        self._empty = _precompute_empty(depth)
-
-    # ------------------------------------------------------------------
-    # Public interface
-    # ------------------------------------------------------------------
+    def __init__(self) -> None:
+        # addr_hash → (address, value)
+        self._leaves: Dict[bytes, Tuple[bytes, bytes]] = {}
 
     def insert(self, address: bytes, value: bytes) -> None:
         """Insert or overwrite the entry for *address*."""
-        addr_hash = _sha256(address).digest()
-        self._leaves[addr_hash] = (address, value)
+        self._leaves[_sha256d(address)] = (address, value)
 
     def get_root_hash(self) -> bytes:
-        return self._subtree_hash(0, self._leaves)
+        if not self._leaves:
+            raise ValueError("tree is empty")
+        leaves = [_LeafNode(ah, _leaf_hash(a, v)) for ah, (a, v) in self._leaves.items()]
+        return _hash_mpt(_build_mpt(leaves, 0))
 
     def get_proof(self, address: bytes) -> List[bytes]:
-        """Return sibling hashes ordered from *leaf level up to root*
-        (proof[0] is the sibling nearest the leaf).
+        """Return sibling hashes in leaf→root order.
 
-        Compatible with :func:`verify_proof` and the firmware verifier.
+        Each element is 33 bytes: 1-byte bit-position + 32-byte sibling hash.
+        Mirrors generateMerkleProof() in merkletree.ts.
         """
-        addr_hash = _sha256(address).digest()
-        siblings: List[bytes] = []
-        leaves = dict(self._leaves)
+        target_addr_hash = _sha256d(address)
+        leaves = [_LeafNode(ah, _leaf_hash(a, v)) for ah, (a, v) in self._leaves.items()]
+        root = _build_mpt(leaves, 0)
 
-        for level in range(self.depth):
-            left, right = self._split(leaves, level)
-            bit = _addr_bit(addr_hash, level)
-            if bit == 0:
-                # current node is in left subtree; sibling is right subtree
-                siblings.append(self._subtree_hash(level + 1, right))
-                leaves = left
+        proof: List[bytes] = []
+
+        def walk(node: _MptNode) -> bytes:
+            if isinstance(node, _LeafNode):
+                return node.leaf_hash
+            target_bit = _addr_bit(target_addr_hash, node.bit)
+            if target_bit == 0:
+                left_hash = walk(node.left)
+                right_hash = _hash_mpt(node.right)
+                proof.append(bytes([node.bit]) + right_hash)
+                return _internal_hash(left_hash, right_hash)
             else:
-                siblings.append(self._subtree_hash(level + 1, left))
-                leaves = right
+                left_hash = _hash_mpt(node.left)
+                right_hash = walk(node.right)
+                proof.append(bytes([node.bit]) + left_hash)
+                return _internal_hash(left_hash, right_hash)
 
-        siblings.reverse()   # leaf-to-root order
-        return siblings
+        walk(root)
+        return proof  # post-order walk → already leaf-to-root order
 
     @staticmethod
     def verify_proof(
@@ -116,61 +157,17 @@ class AuthDbTree:
         proof: List[bytes],
         root: bytes,
     ) -> bool:
-        """Verify a Merkle proof for *(address, value)* against *root*.
+        """Verify a proof for *(address, value)* against *root*.
 
-        *proof* must be in leaf-to-root order, as returned by :meth:`get_proof`.
+        Mirrors evaluateProof() in merkletree.ts and _verify_proof() in lookup.py.
         """
-        addr_hash = _sha256(address).digest()
-        current = authdb_leaf_hash(address, value)
-        depth = len(proof)
-        for i, sibling in enumerate(proof):
-            level = depth - 1 - i          # 0 = root level, depth-1 = leaf level
-            bit = _addr_bit(addr_hash, level)
-            if bit == 0:
-                current = authdb_internal_hash(current, sibling)
+        addr_hash = _sha256d(address)
+        node = _leaf_hash(address, value)
+        for elem in proof:
+            bit = elem[0]
+            sibling = elem[1:]
+            if _addr_bit(addr_hash, bit) == 0:
+                node = _internal_hash(node, sibling)
             else:
-                current = authdb_internal_hash(sibling, current)
-        return current == root
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
-    def _subtree_hash(self, level: int, leaves: _LeafMap) -> bytes:
-        if not leaves:
-            return self._empty[level]
-        if level == self.depth:
-            assert len(leaves) == 1, "hash collision in address space"
-            addr, val = next(iter(leaves.values()))
-            return authdb_leaf_hash(addr, val)
-        left, right = self._split(leaves, level)
-        return authdb_internal_hash(
-            self._subtree_hash(level + 1, left),
-            self._subtree_hash(level + 1, right),
-        )
-
-    @staticmethod
-    def _split(leaves: _LeafMap, level: int) -> Tuple[_LeafMap, _LeafMap]:
-        """Partition *leaves* by bit *level* of their address hash."""
-        left: _LeafMap = {}
-        right: _LeafMap = {}
-        for addr_hash, av in leaves.items():
-            if _addr_bit(addr_hash, level) == 0:
-                left[addr_hash] = av
-            else:
-                right[addr_hash] = av
-        return left, right
-
-
-# ---------------------------------------------------------------------------
-# Convenience top-level verifier (mirrors firmware logic)
-# ---------------------------------------------------------------------------
-
-def verify_proof(
-    address: bytes,
-    value: bytes,
-    proof: List[bytes],
-    root: bytes,
-) -> bool:
-    """Standalone proof verifier — no tree object needed."""
-    return AuthDbTree.verify_proof(address, value, proof, root)
+                node = _internal_hash(sibling, node)
+        return node == root

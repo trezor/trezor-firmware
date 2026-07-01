@@ -3,77 +3,88 @@ from common import unittest
 from trezor.crypto.hashlib import sha256
 
 
-def _sha256(data: bytes) -> bytes:
+# ---------------------------------------------------------------------------
+# MPT primitives (must match lookup.py and authdb_tree.py)
+# ---------------------------------------------------------------------------
+
+def _sha256d(data):
     return sha256(data).digest()
 
 
-def _addr_bit(addr_hash: bytes, level: int) -> int:
-    return (addr_hash[level // 8] >> (7 - level % 8)) & 1
+def _addr_bit(addr_hash, bit):
+    return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def _leaf_hash(address: bytes, value: bytes) -> bytes:
-    return _sha256(b"\x00" + address + value)
+def _leaf_hash(address, value):
+    return _sha256d(b"\x00" + address + value)
 
 
-def _internal_hash(left: bytes, right: bytes) -> bytes:
-    return _sha256(b"\x01" + left + right)
+def _internal_hash(left, right):
+    return _sha256d(b"\x01" + left + right)
 
 
-def _precompute_empty(depth: int) -> list:
-    e = _sha256(b"")
-    levels = [e]
-    for _ in range(depth):
-        e = _internal_hash(e, e)
-        levels.append(e)
-    levels.reverse()
-    return levels
+# ---------------------------------------------------------------------------
+# MPT builder — returns (root, proof) for target_address
+# ---------------------------------------------------------------------------
+
+def _find_split_bit(leaves, start_bit):
+    for bit in range(start_bit, 256):
+        b0 = _addr_bit(leaves[0][0], bit)
+        if any(_addr_bit(l[0], bit) != b0 for l in leaves[1:]):
+            return bit
+    raise ValueError("duplicate address hashes")
 
 
-def build_smt_root_and_proof(entries: dict, target_address: bytes, depth: int = 32):
-    """Build a Sparse Merkle Tree and return (root, proof) for target_address.
+def _build_mpt(leaves, start_bit):
+    # leaf tuple: ("leaf", addr_hash, leaf_hash)
+    # branch tuple: ("branch", bit, left_node, right_node)
+    if len(leaves) == 1:
+        return ("leaf", leaves[0][0], leaves[0][1])
+    bit = _find_split_bit(leaves, start_bit)
+    left = [l for l in leaves if _addr_bit(l[0], bit) == 0]
+    right = [l for l in leaves if _addr_bit(l[0], bit) == 1]
+    return ("branch", bit, _build_mpt(left, bit + 1), _build_mpt(right, bit + 1))
 
-    entries: dict of address -> value
-    Returns (root_hash, proof) where proof is leaf-to-root sibling hashes.
+
+def _hash_mpt(node):
+    if node[0] == "leaf":
+        return node[2]
+    return _internal_hash(_hash_mpt(node[2]), _hash_mpt(node[3]))
+
+
+def build_mpt_root_and_proof(entries, target_address):
+    """Build an MPT and return (root_hash, proof) for target_address.
+
+    proof is in leaf-to-root order; each element is 33 bytes:
+    1-byte bit-position + 32-byte sibling hash.
     """
-    empty = _precompute_empty(depth)
+    leaves = [(_sha256d(a), _leaf_hash(a, v)) for a, v in entries.items()]
+    root_node = _build_mpt(leaves, 0)
+    root_hash = _hash_mpt(root_node)
 
-    # leaves: addr_hash -> (address, value)
-    leaves = {_sha256(a): (a, v) for a, v in entries.items()}
+    target_hash = _sha256d(target_address)
+    proof = []
 
-    def subtree_hash(level, lvs):
-        if not lvs:
-            return empty[level]
-        if level == depth:
-            assert len(lvs) == 1
-            a, v = next(iter(lvs.values()))
-            return _leaf_hash(a, v)
-        left, right = {}, {}
-        for ah, av in lvs.items():
-            (left if _addr_bit(ah, level) == 0 else right)[ah] = av
-        return _internal_hash(subtree_hash(level + 1, left), subtree_hash(level + 1, right))
-
-    root = subtree_hash(0, leaves)
-
-    addr_hash = _sha256(target_address)
-    siblings = []
-    current_lvs = dict(leaves)
-    for level in range(depth):
-        left, right = {}, {}
-        for ah, av in current_lvs.items():
-            (left if _addr_bit(ah, level) == 0 else right)[ah] = av
-        bit = _addr_bit(addr_hash, level)
-        if bit == 0:
-            siblings.append(subtree_hash(level + 1, right))
-            current_lvs = left
+    def walk(node):
+        if node[0] == "leaf":
+            return node[2]
+        _, bit, left, right = node
+        target_bit = _addr_bit(target_hash, bit)
+        if target_bit == 0:
+            left_hash = walk(left)
+            right_hash = _hash_mpt(right)
+            proof.append(bytes([bit]) + right_hash)
+            return _internal_hash(left_hash, right_hash)
         else:
-            siblings.append(subtree_hash(level + 1, left))
-            current_lvs = right
-    siblings.reverse()  # leaf-to-root
+            left_hash = _hash_mpt(left)
+            right_hash = walk(right)
+            proof.append(bytes([bit]) + left_hash)
+            return _internal_hash(left_hash, right_hash)
 
-    return root, siblings
+    walk(root_node)
+    return root_hash, proof   # post-order walk → leaf-to-root order
 
 
-DEPTH = 32
 ENTRIES = {b"alice": b"data_alice", b"bob": b"data_bob",
            b"carol": b"data_carol", b"dave": b"data_dave"}
 
@@ -85,40 +96,42 @@ class TestAuthDbVerifyProof(unittest.TestCase):
         self._verify = _verify_proof
 
     def test_valid_proof_alice(self):
-        root, proof = build_smt_root_and_proof(ENTRIES, b"alice", DEPTH)
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         self.assertTrue(self._verify(b"alice", b"data_alice", proof, root))
 
     def test_valid_proof_bob(self):
-        root, proof = build_smt_root_and_proof(ENTRIES, b"bob", DEPTH)
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"bob")
         self.assertTrue(self._verify(b"bob", b"data_bob", proof, root))
 
     def test_valid_proof_carol(self):
-        root, proof = build_smt_root_and_proof(ENTRIES, b"carol", DEPTH)
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"carol")
         self.assertTrue(self._verify(b"carol", b"data_carol", proof, root))
 
     def test_invalid_wrong_value(self):
-        root, proof = build_smt_root_and_proof(ENTRIES, b"alice", DEPTH)
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         self.assertFalse(self._verify(b"alice", b"WRONG_VALUE", proof, root))
 
     def test_invalid_wrong_address(self):
-        root, proof = build_smt_root_and_proof(ENTRIES, b"alice", DEPTH)
-        # Use alice's proof but claim address=bob
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
+        # alice's proof applied with bob's address → wrong bit decisions
         self.assertFalse(self._verify(b"bob", b"data_alice", proof, root))
 
     def test_invalid_tampered_sibling(self):
-        root, proof = build_smt_root_and_proof(ENTRIES, b"alice", DEPTH)
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         tampered = list(proof)
-        tampered[0] = _sha256(b"garbage")
+        tampered[0] = bytes([tampered[0][0]]) + _sha256d(b"garbage")
         self.assertFalse(self._verify(b"alice", b"data_alice", tampered, root))
 
     def test_invalid_wrong_root(self):
-        _, proof = build_smt_root_and_proof(ENTRIES, b"alice", DEPTH)
-        wrong_root = _sha256(b"not the root")
+        _, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
+        wrong_root = _sha256d(b"not the root")
         self.assertFalse(self._verify(b"alice", b"data_alice", proof, wrong_root))
 
     def test_single_entry_tree(self):
-        root, proof = build_smt_root_and_proof({b"solo": b"val"}, b"solo", DEPTH)
+        root, proof = build_mpt_root_and_proof({b"solo": b"val"}, b"solo")
         self.assertTrue(self._verify(b"solo", b"val", proof, root))
+        # single-entry MPT has no branch nodes → empty proof
+        self.assertEqual(proof, [])
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
         log.debug(
             __name__,
             "lookup: address=%s proof_len=%d",
-            msg.address.hex(),
+            msg.address,
             len(msg.proof),
         )
 
@@ -39,57 +39,65 @@ def _verify_proof(
     proof: list[bytes],
     expected_root: bytes,
 ) -> bool:
-    """Verify a Sparse Merkle Tree proof.
+    """Verify an MPT (Merkle Patricia Trie) proof.
 
-    Path routing: bit i of SHA-256(address) (MSB first) determines left (0) / right (1)
-    at tree level i from the root.
-    Leaf hash:     SHA-256(b"\\x00" + address + value)
-    Internal hash: SHA-256(b"\\x01" + left + right)  -- positional, no min/max
+    Hashing scheme:
+      leaf hash     : SHA-256(b"\\x00" + address + value)
+      internal hash : SHA-256(b"\\x01" + left + right)  -- positional
 
-    proof is in leaf-to-root order (proof[0] = sibling nearest leaf).
+    Proof format (leaf-to-root order):
+      Each element is 33 bytes: 1-byte bit-position (0-255) + 32-byte sibling hash.
+      Only actual branch points appear, so proof length is O(log N) for N entries.
+
+    Mirrors evaluateProof() in merkletree.ts.
     """
     from trezor.crypto.hashlib import sha256
 
-    addr_hash = sha256(address).digest()
-    current = sha256(b"\x00" + address + value).digest()
-    depth = len(proof)
+    def _sha256d(data: bytes) -> bytes:
+        return sha256(data).digest()
+
+    def _addr_bit(addr_hash: bytes, bit: int) -> int:
+        return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
+
+    addr_hash = _sha256d(address)
+    node = _sha256d(b"\x00" + address + value)   # leaf hash
 
     if __debug__:
         from trezor import log
         log.debug(
             __name__,
-            "_verify_proof: addr_hash=%s leaf_hash=%s depth=%d",
-            addr_hash.hex(),
-            current.hex(),
-            depth,
+            "_verify_proof: addr_hash=%s leaf_hash=%s proof_len=%d",
+            addr_hash,
+            node,
+            len(proof),
         )
 
-    for i, sibling in enumerate(proof):
-        level = depth - 1 - i          # 0 = root level, depth-1 = leaf level
-        byte_idx = level // 8
-        bit = (addr_hash[byte_idx] >> (7 - level % 8)) & 1
-        if bit == 0:
-            current = sha256(b"\x01" + current + sibling).digest()
+    for elem in proof:
+        bit = elem[0]                            # bit position (0-255)
+        sibling = bytes(elem[1:])                # 32-byte sibling hash
+        target_bit = _addr_bit(addr_hash, bit)
+        if target_bit == 0:
+            node = _sha256d(b"\x01" + node + sibling)
         else:
-            current = sha256(b"\x01" + sibling + current).digest()
+            node = _sha256d(b"\x01" + sibling + node)
 
         if __debug__:
             from trezor import log
             log.debug(
                 __name__,
-                "  level=%d bit=%d hash=%s",
-                level,
+                "  bit=%d target_bit=%d hash=%s",
                 bit,
-                current.hex(),
+                target_bit,
+                node,
             )
 
-    match = current == expected_root
+    match = node == expected_root
     if __debug__ and not match:
         from trezor import log
         log.debug(
             __name__,
             "_verify_proof: MISMATCH computed=%s expected=%s",
-            current.hex(),
-            expected_root.hex(),
+            node,
+            expected_root,
         )
     return match
