@@ -20,12 +20,22 @@ import sys
 import tarfile
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, TextIO, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AnyStr,
+    Dict,
+    List,
+    NoReturn,
+    Optional,
+    TextIO,
+    cast,
+)
 
 import click
 
 from .. import _rlp, definitions, ethereum, tools
-from ..messages import EthereumDefinitions
+from ..messages import EthereumAccessList, EthereumDefinitionAck, EthereumDefinitions
 from . import with_session
 
 if TYPE_CHECKING:
@@ -34,6 +44,7 @@ if TYPE_CHECKING:
     from web3.types import Wei
 
     from ..client import Session
+    from ..messages import EthereumDefinitionRequest
 
 PATH_HELP = "BIP-32 path, e.g. m/44h/60h/0h/0/0"
 
@@ -105,7 +116,7 @@ def _amount_to_int(
 
 def _parse_access_list(
     ctx: click.Context, param: Any, value: str
-) -> List[ethereum.messages.EthereumAccessList]:
+) -> List[EthereumAccessList]:
     try:
         return [_parse_access_list_item(val) for val in value]
 
@@ -113,14 +124,12 @@ def _parse_access_list(
         raise click.BadParameter("Access List format invalid")
 
 
-def _parse_access_list_item(value: str) -> ethereum.messages.EthereumAccessList:
+def _parse_access_list_item(value: str) -> EthereumAccessList:
     try:
         arr = value.split(":")
         address, storage_keys = arr[0], arr[1:]
         storage_keys_bytes = [ethereum.decode_hex(key) for key in storage_keys]
-        return ethereum.messages.EthereumAccessList(
-            address=address, storage_keys=storage_keys_bytes
-        )
+        return EthereumAccessList(address=address, storage_keys=storage_keys_bytes)
 
     except Exception:
         raise click.BadParameter("Access List format invalid")
@@ -155,7 +164,7 @@ def _erc20_contract(
 
 
 def _format_access_list(
-    access_list: List[ethereum.messages.EthereumAccessList],
+    access_list: List[EthereumAccessList],
 ) -> "_rlp.RLPItem":
     return [
         (ethereum.decode_hex(item.address), item.storage_keys) for item in access_list
@@ -178,6 +187,7 @@ def _hex_or_file(data: str) -> bytes:
 class CliSource(definitions.Source):
     network: Optional[bytes] = None
     token: Optional[bytes] = None
+    display_format: Optional[bytes] = None
     delegate: definitions.Source = definitions.NullSource()
 
     def get_eth_network(self, chain_id: int) -> Optional[bytes]:
@@ -194,6 +204,13 @@ class CliSource(definitions.Source):
         if self.token is not None:
             return self.token
         return self.delegate.get_eth_token(chain_id, address)
+
+    def get_eth_display_format(
+        self, chain_id: int, address: AnyStr, func_sig: bytes
+    ) -> Optional[bytes]:
+        if self.display_format is not None:
+            return self.display_format
+        return self.delegate.get_eth_display_format(chain_id, address, func_sig)
 
 
 DEFINITIONS_SOURCE = CliSource()
@@ -213,6 +230,42 @@ def _network_def_from_address_n(address_n: tools.Address) -> Optional[bytes]:
     return DEFINITIONS_SOURCE.get_eth_network_by_slip44(slip44)
 
 
+def _definition_provider(
+    req: "EthereumDefinitionRequest",
+) -> EthereumDefinitionAck:
+    """Answer a firmware `EthereumDefinitionRequest` from `DEFINITIONS_SOURCE`.
+
+    The firmware issues these mid-flow while signing a transaction:
+
+    - With a `func_sig`, it is asking for an ERC-7730 contract descriptor
+      (clear-signing display format) for `token_address` on `chain_id`.
+    - Without a `func_sig`, it is asking for a network + token definition
+      (e.g. to resolve a token referenced by a descriptor field).
+    """
+    if req.func_sig:
+        encoded_display_format = DEFINITIONS_SOURCE.get_eth_display_format(
+            req.chain_id, req.token_address, req.func_sig
+        )
+        if encoded_display_format is None:
+            return EthereumDefinitionAck(definitions=None)
+        return EthereumDefinitionAck(
+            definitions=EthereumDefinitions(
+                encoded_display_format=encoded_display_format,
+            )
+        )
+
+    encoded_network = DEFINITIONS_SOURCE.get_eth_network(req.chain_id)
+    encoded_token = DEFINITIONS_SOURCE.get_eth_token(req.chain_id, req.token_address)
+    if encoded_network is None and encoded_token is None:
+        return EthereumDefinitionAck(definitions=None)
+    return EthereumDefinitionAck(
+        definitions=EthereumDefinitions(
+            encoded_network=encoded_network,
+            encoded_token=encoded_token,
+        )
+    )
+
+
 #####################
 #
 # commands start here
@@ -230,11 +283,15 @@ def _network_def_from_address_n(address_n: tools.Address) -> Optional[bytes]:
 )
 @click.option("--network", help="Network definition blob.")
 @click.option("--token", help="Token definition blob.")
+@click.option(
+    "--display-format", help="ERC-7730 clear-signing contract descriptor blob."
+)
 def cli(
     defs: Optional[str],
     auto_definitions: Optional[bool],
     network: Optional[str],
     token: Optional[str],
+    display_format: Optional[str],
 ) -> None:
     """Ethereum commands.
 
@@ -251,9 +308,10 @@ def cli(
     - path to local tar archive
     \b
 
-    For debugging purposes, it is possible to force use a specific network and token
-    definition by using the `--network` and `--token` options. These options accept
-    either a path to a file with a binary blob, or a hex-encoded string.
+    For debugging purposes, it is possible to force use a specific network, token
+    or contract descriptor definition by using the `--network`, `--token` and
+    `--display-format` options. These options accept either a path to a file with a
+    binary blob, or a hex-encoded string.
     """
     if auto_definitions:
         if defs is not None:
@@ -270,12 +328,14 @@ def cli(
         elif defs.startswith("http"):
             DEFINITIONS_SOURCE.delegate = definitions.UrlSource(defs)
         else:
-            raise click.ClickException("Unrecognized --definitions value.")
+            raise click.ClickException("Unrecognized definition source.")
 
     if network is not None:
         DEFINITIONS_SOURCE.network = _hex_or_file(network)
     if token is not None:
         DEFINITIONS_SOURCE.token = _hex_or_file(token)
+    if display_format is not None:
+        DEFINITIONS_SOURCE.display_format = _hex_or_file(display_format)
 
 
 @cli.command()
@@ -374,7 +434,7 @@ def sign_tx(
     token: Optional[str],
     max_gas_fee: Optional[int],
     max_priority_fee: Optional[int],
-    access_list: List[ethereum.messages.EthereumAccessList],
+    access_list: List[EthereumAccessList],
     eip2718_type: Optional[int],
     chunkify: bool,
 ) -> str:
@@ -473,6 +533,8 @@ def sign_tx(
             access_list=access_list,
             definitions=defs,
             chunkify=chunkify,
+            supports_definition_request=True,
+            definition_provider=_definition_provider,
         )
     else:
         if gas_price is None:
@@ -491,6 +553,8 @@ def sign_tx(
             chain_id=chain_id,
             definitions=defs,
             chunkify=chunkify,
+            supports_definition_request=True,
+            definition_provider=_definition_provider,
         )
 
     to = ethereum.decode_hex(to_address)
