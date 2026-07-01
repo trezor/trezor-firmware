@@ -381,6 +381,9 @@ def test_sign_message_seedless(client: Client):
             btc.sign_message(
                 session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), "testing message"
             )
+        # Otherwise, the device will continue waiting for "PassphraseAck" and display
+        # "Please enter your passphrase." message, resulting in UI fixtures' flakiness.
+        session.cancel()
 
 
 @pytest.mark.models("legacy")
