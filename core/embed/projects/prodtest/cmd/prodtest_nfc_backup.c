@@ -21,12 +21,13 @@
 #include <trezor_rtl.h>
 
 #include <io/nfc.h>
-#include <io/nfc/st25/rfal002/rfal_t4t.h>
+#include <rfal_t4t.h>
 #include <rtl/cli.h>
 #include <stdlib.h>
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
 #include "rfal_nfc.h"
+#include "noise_xx.h"
 
 static nfc_dev_info_t dev_info = {0};
 static uint8_t cli_cmd_byte_idx = 0;
@@ -498,6 +499,217 @@ cleanup:
   nfc_stop_discovery();
 }
 
+typedef struct{
+  uint8_t data[256];
+  uint16_t len;
+  uint16_t status;
+} apdu_resp_t;
+
+//nfc_transceive(const uint8_t *tx_data, uint16_t tx_data_len,
+//                           uint8_t **rx_data, uint16_t **rx_data_len)
+
+
+static void assamble_apdu_cmd(uint8_t *transfer_buf,
+                              size_t transfer_buf_size,
+                              size_t *transfer_buf_len,
+                              uint8_t cla,
+                              uint8_t ins,
+                              uint8_t p1,
+                              uint8_t p2,
+                              const uint8_t* tx_data,
+                              uint16_t tx_data_len){
+
+  if(transfer_buf_size < (tx_data_len + 5)){
+    return;
+  }
+
+  transfer_buf[0] = cla;
+  transfer_buf[1] = ins;
+  transfer_buf[2] = p1;
+  transfer_buf[3] = p2;
+  transfer_buf[4] = tx_data_len;
+  memcpy(&transfer_buf[5], tx_data, tx_data_len);
+  
+  if (transfer_buf_len) {
+    *transfer_buf_len = tx_data_len + 5;
+  }
+
+}
+
+
+      // Do a Hanshake
+  uint8_t B_static_private_key[DHLEN] = {
+      0x5f, 0x8a, 0x0d, 0x3b, 0x6c, 0x9e, 0x1f, 0x4a, 0x7d, 0x2b, 0x8c,
+      0x5e, 0x0f, 0x3a, 0x6d, 0x9b, 0x7c, 0x1e, 0x4f, 0x2a, 0x8d, 0x3b,
+      0x5c, 0x0e, 0x6a, 0x9f, 0x7b, 0x1d, 0x2e, 0x8c, 0xa3, 0xf4};
+
+
+static const uint8_t psk[DHLEN] = {'P', 'S', 'K', 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+
+// static void cli_log_hex(cli_t* cli, const char* prefix, const uint8_t* data, size_t len) {
+//   char text[256];
+//   cstr_encode_hex(text, sizeof(text), data, len);
+//   cli_trace(cli, "%s: %s", prefix, text);
+// }
+
+static void prodtest_nfc_backup_handshake_cmd(cli_t* cli){
+
+  nfc_status_t nfc_status = nfc_start_discovery(NFC_DISCOVERY_TYPE_CARD_READER);
+
+  if (nfc_status == NFC_NOT_INITIALIZED) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC not initialized");
+    goto cleanup;
+  } else if (nfc_status != NFC_OK) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC activation failed");
+    goto cleanup;
+  } else {
+    cli_trace(cli, "");
+    cli_trace(cli, "Attach the NFC card.");
+    cli_trace(cli, "");
+  }
+
+  // Clear leftover events
+  nfc_event_t event_flag;
+  nfc_get_event(&event_flag);
+  sysevents_t awaited_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+  sysevents_t signalled_events = {0};
+  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
+
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "NFC test aborted");
+      goto cleanup;
+    }
+    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(10));
+
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
+      continue;
+    }
+
+    if (!nfc_get_event(&event_flag)) {
+      cli_error(cli, CLI_ERROR, "Failed to get NFC events");
+      continue;
+    }
+
+    if (event_flag == NFC_EVENT_CONNECTED) {
+      cli_trace(cli, "NFC card detected.");
+
+      nfc_dev_read_info(&dev_info);
+      switch (dev_info.type) {
+        case NFC_DEV_TYPE_A:
+          cli_trace(cli, "NFC Type A: UID: %s", dev_info.uid);
+          break;
+        default:
+          cli_error(cli, CLI_ERROR_ABORT,
+                    "NFC ERROR: Unexpected card type (%d)", dev_info.type);
+          goto cleanup;
+      }
+
+      /** Noise protocol handshake */
+
+      ts_t status;
+      uint8_t transfer_buf[256] = {0};
+      size_t transfer_buf_len = 0;
+      uint8_t *receive_buf = NULL;
+      uint16_t *receive_buf_len = NULL;
+
+      uint32_t tic = systick_ms();
+
+      initiator_xxpsk3_t initiator = {0};
+      status = noise_initiator_init(&initiator, psk, B_static_private_key);
+
+      if(!ts_ok(status)) {
+        cli_error(cli, CLI_ERROR_ABORT, "Noise handshake initialization failed");
+        goto cleanup;
+      }
+
+      uint8_t request_buf[256] = {0};
+      size_t request_buf_size;
+      status = noise_initiator_create_request1(&initiator,
+                                      request_buf,
+                                      sizeof(request_buf),
+                                      &request_buf_size);
+
+
+      if(!ts_ok(status)) {
+        cli_error(cli, CLI_ERROR_ABORT, "Noise handshake request creation failed");
+        goto cleanup;
+      }
+
+      // Parse apdu message
+      assamble_apdu_cmd(transfer_buf, sizeof(transfer_buf),&transfer_buf_len,
+                        0x80, 0x01, 0x00, 0x00,
+                        request_buf, request_buf_size);
+
+      nfc_status_t nfc_status = nfc_transceive(transfer_buf,
+                                               (uint16_t)transfer_buf_len,
+                                               &receive_buf,
+                                               &receive_buf_len);
+
+      if (nfc_status != NFC_OK || receive_buf == NULL ||
+          receive_buf_len == NULL) {
+        cli_error(cli, CLI_ERROR_ABORT, "NFC transceive failed");
+        goto cleanup;
+      }
+
+      uint8_t decrypted_payload[256] = {0};
+      size_t decrypted_payload_len = 0;
+
+      noise_initiator_handle_response1(&initiator, receive_buf, *receive_buf_len - 2,
+                                       decrypted_payload, sizeof(decrypted_payload),
+                                       &decrypted_payload_len);
+      uint32_t toc = systick_ms();
+
+      status = noise_initiator_create_request2(&initiator, request_buf,
+                                      sizeof(request_buf),
+                                      &request_buf_size);
+
+      if(!ts_ok(status)) {
+        cli_error(cli, CLI_ERROR_ABORT, "Noise handshake request2 creation failed");
+        goto cleanup;
+      }
+
+      assamble_apdu_cmd(transfer_buf, sizeof(transfer_buf),&transfer_buf_len,
+                        0x80, 0x01, 0x01, 0x00,
+                        request_buf, request_buf_size);
+
+      nfc_status = nfc_transceive(transfer_buf,
+                                  (uint16_t)transfer_buf_len,
+                                  &receive_buf,
+                                  &receive_buf_len);
+  
+      status = noise_initiator_handle_response2(&initiator, receive_buf,
+                                                *receive_buf_len - 2);
+    
+      if(ts_ok(status)) {
+        cli_trace(cli, "Noise handshake completed successfully.");
+      } else {
+        cli_error(cli, CLI_ERROR_ABORT, "Noise handshake failed with status: %d", status);
+        goto cleanup;
+      }
+
+    uint32_t toc2 = systick_ms();
+
+    cli_trace(cli, "Noise handshake timing: request1: %d ms, request2: %d ms, total: %d ms",
+              toc - tic, toc2 - toc, toc2 - tic);
+
+
+    } else if (event_flag == NFC_EVENT_DISCONNECTED) {
+      cli_trace(cli, "NFC card removed.");
+      goto cleanup;
+    }
+
+    systick_delay_ms(1);
+  }
+
+cleanup:
+  nfc_stop_discovery();
+
+} 
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -506,6 +718,13 @@ PRODTEST_CLI_CMD(
   .info = "Open dedicated NFC cli for manual testing of NFC.",
   .args = ""
 );
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-handshake",
+  .func = prodtest_nfc_backup_handshake_cmd,
+  .info = "Perform NFC backup handshake with NFC card",
+  .args = ""
+)
 
 PRODTEST_CLI_CMD(
   .name = "nfc-backup-read-ndef",

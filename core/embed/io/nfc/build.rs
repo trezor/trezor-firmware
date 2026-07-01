@@ -2,6 +2,10 @@ use xbuild::{CLibrary, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("nfc/inc");
+    lib.add_include("nfc/st25/");
+    lib.add_include("nfc/st25/rfal002/source");
+    lib.add_include("nfc/st25/rfal002/source/st25r3916");
+    lib.add_include("nfc/st25/rfal002/include/");
 
     lib.add_define("USE_NFC", Some("1"));
 
@@ -26,6 +30,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
                 "nfc/st25/rfal002/source/rfal_st25tb.c",
                 "nfc/st25/rfal002/source/rfal_t1t.c",
                 "nfc/st25/rfal002/source/rfal_t2t.c",
+                "nfc/st25/rfal002/source/rfal_t4t.c",
                 "nfc/st25/rfal002/source/rfal_iso15693_2.c",
                 "nfc/st25/rfal002/source/rfal_crc.c",
                 "nfc/st25/rfal002/source/st25r3916/st25r3916.c",

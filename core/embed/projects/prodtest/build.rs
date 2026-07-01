@@ -6,6 +6,8 @@ fn main() -> Result<()> {
 
         lib.add_includes(["."]);
 
+	lib.add_include("src/");
+
         lib.add_include("../../rust"); // Cyclic dependency
 
         lib.add_sources(["main.c", "commands.c"]);
@@ -23,6 +25,7 @@ fn main() -> Result<()> {
         lib.add_sources_in_dir(
             "cmd",
             [
+		"noise_xx.c",
                 "common.c",
                 "prodtest_boardloader.c",
                 "prodtest_button.c",
