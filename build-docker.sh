@@ -290,11 +290,12 @@ for TREZOR_MODEL in ${MODELS[@]}; do
                       build-xtask/artifacts/$TREZOR_MODEL/\$item.bin \
                       || echo "No fingerprint for build-xtask/artifacts/$TREZOR_MODEL/\$item.bin"
         fi
-        if [ -f build-xtask/artifacts/$TREZOR_MODEL/\$item.bin ]; then
+        if [ -f build-xtask/artifacts/$TREZOR_MODEL/\$item.elf ]; then
           # copy only the artifacts to the build output directory
           mkdir /build/\$item/
+          gzip build-xtask/artifacts/$TREZOR_MODEL/\$item.elf
           cp -v build-xtask/artifacts/$TREZOR_MODEL/\$item* /build/\$item/
-          cp -v build-xtask/artifacts/pub/\$item-$TREZOR_MODEL-*.bin /build/\$item/ || true  # n/a for secmon or kernel
+          cp -v build-xtask/artifacts/pub/\$item-$TREZOR_MODEL-*.bin /build/\$item/ || true  # n/a for kernel
         fi
       done
       chown -R $USER:$GROUP /build
