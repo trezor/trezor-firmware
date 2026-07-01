@@ -138,8 +138,10 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
             )?;
         }
 
+        let is_kernel = matches!(args.project, Project::Kernel);
+        let is_secmon = matches!(args.project, Project::Secmon);
         // Copy the final binary to the `pub` directory
-        if !matches!(args.project, Project::Secmon | Project::Kernel) {
+        if !(is_kernel || (is_secmon && is_dependency)) {
             let version_file = helpers::get_version_file(args.project)?;
             let infix =
                 (matches!(args.project, Project::Firmware) && args.btc_only).then_some("btconly");
