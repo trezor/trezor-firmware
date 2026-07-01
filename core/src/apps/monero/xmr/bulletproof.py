@@ -436,7 +436,9 @@ class KeyVBase(Generic[T]):
     def __len__(self) -> int:
         return self.size
 
-    def to(self, idx: int, buff: bytearray | None = None, offset: int = 0) -> bytearray:
+    def to(
+        self, idx: int, buff: bytearray | None = None, offset: int = 0
+    ) -> bytearray | None:
         buff = _ensure_dst_key(buff)
         return memcpy(buff, offset, self.__getitem__(self.idxize(idx)), 0, 32)
 
