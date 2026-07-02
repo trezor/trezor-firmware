@@ -121,6 +121,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.authdb.update_leaf"
     if msg_type == MessageType.AuthDbClearRoot:
         return "apps.authdb.clear_root"
+    if msg_type == MessageType.AuthDbApprove:
+        return "apps.authdb.approve"
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:

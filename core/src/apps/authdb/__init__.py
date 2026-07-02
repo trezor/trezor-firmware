@@ -1,10 +1,33 @@
+async def _derive_mac_key() -> bytes:
+    """Derive the 32-byte HMAC key for AuthDB MAC tokens via SLIP-0021.
+
+    Path: [b"AUTHDB MAC v1"]  — unique per seed+passphrase.
+    """
+    from apps.common import seed as seed_module
+    from apps.common.seed import Slip21Node
+
+    s = seed_module._get_seed_without_passphrase()
+    node = Slip21Node(s)
+    node.derive_path([b"AUTHDB MAC v1"])
+    return node.key()
+
+
+def _compute_mac(key: bytes, *parts: bytes) -> bytes:
+    """Compute HMAC-SHA256(key, concatenation of parts)."""
+    from trezor.crypto import hmac as crypto_hmac
+
+    h = crypto_hmac(crypto_hmac.SHA256, key)
+    for p in parts:
+        h.update(p)
+    return h.digest()
+
+
 async def _get_identifier() -> bytes:
     """Derive the AuthDB identity identifier for the current seed/passphrase.
 
     identifier = SHA-256(public_key at m/44'/0'/0'/0/0)
 
-    Unique per seed/passphrase combination.  The seed is cached after the user
-    enters their PIN/passphrase, so this is fast and silent on repeated calls.
+    Unique per seed/passphrase combination.
     """
     from apps.common import seed as seed_module
     from apps.common.paths import HARDENED

@@ -117,6 +117,18 @@ def lookup(
     default=None,
     help="Witness value (hex) for INSERT non-membership proof.",
 )
+@click.option(
+    "--mac",
+    "mac_hex",
+    default=None,
+    help="MAC token (hex) from a prior approve call — skips confirmation dialog.",
+)
+@click.option(
+    "--device-id",
+    "device_id_hex",
+    default=None,
+    help="Device identifier (hex) matching the MAC token.",
+)
 @with_session
 def update_leaf(
     session: "Session",
@@ -126,6 +138,8 @@ def update_leaf(
     proof_hexes: tuple[str, ...],
     witness_address_hex: str | None,
     witness_value_hex: str | None,
+    mac_hex: str | None,
+    device_id_hex: str | None,
 ) -> str:
     """Atomically update a leaf in the Merkle tree.
 
@@ -159,8 +173,10 @@ def update_leaf(
     proof = [bytes.fromhex(h) for h in proof_hexes]
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
+    mac = bytes.fromhex(mac_hex) if mac_hex else None
+    device_id = bytes.fromhex(device_id_hex) if device_id_hex else None
 
-    counter, new_root, identifier = authdb.update_leaf(
+    counter, new_root, identifier, new_mac = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
@@ -168,10 +184,13 @@ def update_leaf(
         proof=proof,
         witness_address=witness_address,
         witness_value=witness_value,
+        mac=mac,
+        device_id=device_id,
     )
     root_hex = new_root.hex() if new_root else "(empty)"
     id_hex = identifier.hex() if identifier else "(none)"
-    return f"Updated. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}"
+    mac_out = new_mac.hex() if new_mac else "(none)"
+    return f"Updated. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}. MAC: {mac_out}"
 
 
 @cli.command(name="clear-root")
@@ -211,7 +230,7 @@ def delete(
     old_value = bytes.fromhex(old_value_hex)
     proof = [bytes.fromhex(h) for h in proof_hexes]
 
-    counter, new_root, identifier = authdb.update_leaf(
+    counter, new_root, identifier, _mac = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
@@ -221,3 +240,24 @@ def delete(
     root_hex = new_root.hex() if new_root else "(empty)"
     id_hex = identifier.hex() if identifier else "(none)"
     return f"Deleted. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}"
+
+
+@cli.command()
+@click.argument("address_hex")
+@click.argument("value_hex")
+@with_session
+def approve(session: "Session", address_hex: str, value_hex: str) -> str:
+    """Pre-authorize an (address, value) pair on the device.
+
+    The user confirms on-screen; the device returns a MAC token.
+    Use the returned MAC with update-leaf --mac to skip future confirmation dialogs.
+
+    ADDRESS_HEX  hex-encoded address to authorize.
+    VALUE_HEX    hex-encoded value to authorize at that address.
+    """
+    address = bytes.fromhex(address_hex)
+    value = bytes.fromhex(value_hex)
+    mac, identifier = authdb.approve(session, address=address, value=value)
+    mac_hex = mac.hex()
+    id_hex = identifier.hex() if identifier else "(none)"
+    return f"Approved. MAC: {mac_hex}. Identifier: {id_hex}"

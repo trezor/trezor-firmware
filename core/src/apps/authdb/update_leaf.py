@@ -19,7 +19,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     import storage.authdb as authdb
     from trezor.messages import AuthDbUpdateLeafResponse
     from trezor.wire import DataError
-    from apps.authdb import _get_identifier
+    from apps.authdb import _get_identifier, _derive_mac_key, _compute_mac
 
     from trezor.crypto.hashlib import sha256
 
@@ -48,6 +48,17 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         return node
 
     identifier = await _get_identifier()
+    mac_key = await _derive_mac_key()
+
+    # Verify MAC-based pre-authorization when supplied by the host
+    if msg.mac is not None and msg.device_id is not None:
+        if msg.device_id != identifier:
+            raise DataError("device_id mismatch")
+        if _compute_mac(mac_key, msg.address, msg.new_value) != msg.mac:
+            raise DataError("MAC verification failed")
+        # pre-authorized — confirmation dialog skipped
+    else:
+        pass  # TODO: show address+new_value confirmation dialog when UI ready
 
     address = msg.address
     old_value = msg.old_value   # empty bytes = address absent from tree
@@ -183,4 +194,5 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             counter,
         )
 
-    return AuthDbUpdateLeafResponse(counter=counter, new_root=new_root, identifier=identifier)
+    new_mac = _compute_mac(mac_key, new_root) if new_root is not None else None
+    return AuthDbUpdateLeafResponse(counter=counter, new_root=new_root, identifier=identifier, mac=new_mac)

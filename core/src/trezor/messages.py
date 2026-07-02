@@ -7588,11 +7588,15 @@ if TYPE_CHECKING:
 
     class AuthDbSetRoot(protobuf.MessageType):
         root: "AnyBytes"
+        mac: "AnyBytes | None"
+        device_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             root: "AnyBytes",
+            mac: "AnyBytes | None" = None,
+            device_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7665,6 +7669,8 @@ if TYPE_CHECKING:
         proof: "list[AnyBytes]"
         witness_address: "AnyBytes | None"
         witness_value: "AnyBytes | None"
+        mac: "AnyBytes | None"
+        device_id: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7675,6 +7681,8 @@ if TYPE_CHECKING:
             proof: "list[AnyBytes] | None" = None,
             witness_address: "AnyBytes | None" = None,
             witness_value: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
+            device_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7686,6 +7694,7 @@ if TYPE_CHECKING:
         counter: "int"
         new_root: "AnyBytes | None"
         identifier: "AnyBytes | None"
+        mac: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7693,6 +7702,7 @@ if TYPE_CHECKING:
             counter: "int",
             new_root: "AnyBytes | None" = None,
             identifier: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7720,4 +7730,36 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbClearRootResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbApprove(protobuf.MessageType):
+        address: "AnyBytes"
+        value: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+            value: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbApprove"]:
+            return isinstance(msg, cls)
+
+    class AuthDbApproveResponse(protobuf.MessageType):
+        mac: "AnyBytes"
+        identifier: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            mac: "AnyBytes",
+            identifier: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbApproveResponse"]:
             return isinstance(msg, cls)

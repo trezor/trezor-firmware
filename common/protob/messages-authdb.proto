@@ -15,7 +15,9 @@ option java_outer_classname = "TrezorMessageAuthDb";
  * @next Failure
  */
 message AuthDbSetRoot {
-    required bytes root = 1;  // 32-byte Merkle root
+    required bytes root      = 1;  // 32-byte Merkle root
+    optional bytes mac       = 2;  // HMAC-SHA256(slip21_key, root) — skips confirmation if valid
+    optional bytes device_id = 3;  // identifier matching the MAC key owner
 }
 
 /**
@@ -87,6 +89,8 @@ message AuthDbUpdateLeaf {
     repeated bytes  proof           = 4;  // proof for old state (33 bytes each, leaf-to-root)
     optional bytes  witness_address = 5;  // non-membership witness address (INSERT only)
     optional bytes  witness_value   = 6;  // non-membership witness value   (INSERT only)
+    optional bytes  mac             = 7;  // HMAC-SHA256(slip21_key, address‖new_value) — skips confirmation
+    optional bytes  device_id       = 8;  // identifier matching the MAC key owner
 }
 
 /**
@@ -97,6 +101,28 @@ message AuthDbUpdateLeafResponse {
     required uint32 counter    = 1;  // monotonic counter after this update
     optional bytes  new_root   = 2;  // absent if the tree is now empty
     optional bytes  identifier = 3;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
+    optional bytes  mac        = 4;  // HMAC-SHA256(slip21_key, new_root); absent if tree is now empty
+}
+
+/**
+ * Request: Pre-authorize an address+value pair on-screen so future update_leaf calls
+ * can skip the confirmation dialog when they supply the returned MAC.
+ * @start
+ * @next AuthDbApproveResponse
+ * @next Failure
+ */
+message AuthDbApprove {
+    required bytes address = 1;  // address to authorize
+    required bytes value   = 2;  // value to authorize at that address
+}
+
+/**
+ * Response: MAC token authorizing future updates to (address, value).
+ * @end
+ */
+message AuthDbApproveResponse {
+    required bytes mac        = 1;  // HMAC-SHA256(slip21_key, address‖value)
+    optional bytes identifier = 2;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
 }
 
 /**

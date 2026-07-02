@@ -306,3 +306,5 @@ if not utils.BITCOIN_ONLY:
     AuthDbUpdateLeafResponse = 2305
     AuthDbClearRoot = 2306
     AuthDbClearRootResponse = 2307
+    AuthDbApprove = 2308
+    AuthDbApproveResponse = 2309
