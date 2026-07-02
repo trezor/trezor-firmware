@@ -381,7 +381,7 @@
     "buttons__continue": "Continuar",
     "buttons__details": "Detalles",
     "buttons__enable": "Activar",
-    "buttons__enter_share": "Ingr. parte",
+    "buttons__enter_share": "Ingresar parte",
     "buttons__export": "Exportar",
     "buttons__finish": "Finalizar",
     "buttons__format": "Formatear",
@@ -1854,8 +1854,8 @@
     "recovery__progress_will_be_lost": "Se perderá todo el progreso.",
     "recovery__share_already_entered": {
       "Bolt": "Ya se ha introducido esta parte.",
-      "Caesar": "Ya se ha introducido esta parte.",
-      "Delizia": "Ya se ha introducido la parte",
+      "Caesar": "Ya se ha introducido esta parte",
+      "Delizia": "Ya se ha introducido esta parte",
       "Eckhart": "Ya se ha introducido esta parte. Ingresa una distinta."
     },
     "recovery__share_does_not_match": {
@@ -1884,12 +1884,7 @@
     "recovery__title_dry_run": "Verif. c. seg.",
     "recovery__title_recover": "Recuperar billetera",
     "recovery__title_remaining_shares": "Partes restantes",
-    "recovery__title_unlock_repeated_backup": {
-      "Bolt": "Respaldo con múltiples partes",
-      "Caesar": "Respaldo con múltiplas partes",
-      "Delizia": "Respaldo con múltiples partes",
-      "Eckhart": "Respaldo con múltiples partes"
-    },
+    "recovery__title_unlock_repeated_backup": "Respaldo con múltiples partes",
     "recovery__type_word_x_of_y_template": "Escribe palabra {0} de {1}",
     "recovery__unlock_repeated_backup": "¿Crear copia de seguridad adicional?",
     "recovery__unlock_repeated_backup_verb": "Crear c. seg",
@@ -1940,13 +1935,13 @@
       "Eckhart": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera."
     },
     "reset__all_x_of_y_template": {
-      "Bolt": "{0} de {1} partes",
+      "Bolt": "las {0} partes de {1}",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "reset__any_x_of_y_template": {
-      "Bolt": "{0} de {1} partes",
+      "Bolt": "{0} partes cualesquiera de {1}",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2013,12 +2008,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__create_x_of_y_multi_share_backup_template": {
-      "Bolt": "¿Quieres crear c. seg. de múltiples partes {0} de {1}?",
-      "Caesar": "¿Quieres crear {0} de {1} c. seg. de múltiples partes?",
-      "Delizia": "¿Quieres crear {0} de {1} c. seg. de múltiples partes?",
-      "Eckhart": "¿Quieres crear {0} de {1} c. seg. de múltiples partes?"
-    },
+    "reset__create_x_of_y_multi_share_backup_template": "¿Quieres crear {0} de {1} c. seg. de múltiples partes?",
     "reset__finished_verifying_group_template": {
       "Bolt": "Has verificado tus partes de recuperación del grupo {0}.",
       "Caesar": "Has verificado tus partes de recuperación del grupo {0}.",
@@ -2044,10 +2034,10 @@
       "Eckhart": "Un grupo consta de partes de recuperación."
     },
     "reset__group_info": {
-      "Bolt": "Cada grupo tiene un núm. de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales.",
+      "Bolt": "Cada grupo tiene un número de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales.",
       "Caesar": "",
-      "Delizia": "Cada grupo tiene un núm. de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales.",
-      "Eckhart": "Cada grupo tiene un núm. de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales."
+      "Delizia": "Cada grupo tiene un número de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales.",
+      "Eckhart": "Cada grupo tiene un número de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales."
     },
     "reset__group_share_checked_successfully_template": {
       "Bolt": "Parte {1} del grupo {0} verificada con éxito.",
@@ -2080,7 +2070,7 @@
       "Eckhart": ""
     },
     "reset__need_any_share_template": {
-      "Bolt": "Para la recup. necesitas {0} partes cualesquiera.",
+      "Bolt": "Para la recuperación necesitas {0} partes cualesquiera.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2092,7 +2082,7 @@
       "Eckhart": ""
     },
     "reset__needed_to_recover_your_wallet": {
-      "Bolt": "neces. para recuperar tu billetera. ",
+      "Bolt": "necesarias para recuperar tu billetera. ",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2179,7 +2169,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Seleccionar la palabra {0} de la parte {1}"
+      "Eckhart": "Seleccionar la palabra {0} de\nla parte {1}"
     },
     "reset__select_word_template": {
       "Bolt": "",
@@ -2308,7 +2298,7 @@
       "Eckhart": "Escribe y verifica las partes de respaldo"
     },
     "reset__the_threshold_sets_the_number_of_shares": {
-      "Bolt": "El umbral define el núm. de partes. ",
+      "Bolt": "El umbral define el número de partes ",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
