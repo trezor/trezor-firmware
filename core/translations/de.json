@@ -75,8 +75,8 @@
     "address__public_key": "Public Key",
     "address__public_key_confirmed": "Public Key bestätigt",
     "address__qr_code": "QR-Code",
-    "address__title_cosigner": "Mitunterzeich.",
-    "address__title_cosigner_template": "Cosigner {0}",
+    "address__title_cosigner": "Mitunterzeichner",
+    "address__title_cosigner_template": "Mitunterzeichner {0}",
     "address__title_provider_address": "Anbieteradresse",
     "address__title_receive_address": "Empfangsadresse",
     "address__title_refund_address": "Refund-Adresse",
@@ -2122,14 +2122,9 @@
       "Eckhart": ""
     },
     "recovery__dry_run_bip39_valid_match": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
-    "recovery__dry_run_bip39_valid_mismatch": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
+    "recovery__dry_run_bip39_valid_mismatch": "Das eingegebene Wallet-Backup ist gültig, passt aber nicht zu dem auf dem Gerät.",
     "recovery__dry_run_slip39_valid_match": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
-    "recovery__dry_run_slip39_valid_mismatch": {
-      "Bolt": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
-      "Caesar": "Das eingegebene Wallet-Backup ist gültig und passt zu dem auf dem Gerät.",
-      "Delizia": "Eingegebener Recovery Seed ist gültig, passt aber nicht zu dem auf dem Gerät.",
-      "Eckhart": "Eingegebener Recovery Seed ist gültig, passt aber nicht zu dem auf dem Gerät."
-    },
+    "recovery__dry_run_slip39_valid_mismatch": "Das eingegebene Wallet-Backup ist gültig, passt aber nicht zu dem auf dem Gerät.",
     "recovery__enter_any_share": "Share eingeben",
     "recovery__enter_backup": "Gib dein Backup ein.",
     "recovery__enter_different_share": {
@@ -3071,7 +3066,7 @@
       "Eckhart": "Max. Rent-Gebühr"
     },
     "solana__multiple_signers": "Mehrere Unterzeichner",
-    "solana__offchain_is_multisig": "Die folgende Nachricht erfordert mehrere Signierer.",
+    "solana__offchain_is_multisig": "Die folgende Nachricht erfordert mehrere Unterzeichner.",
     "solana__priority_fee": "Prioritätsgebühr",
     "solana__stake": "Stake",
     "solana__stake_account": "Staking-Konto",

@@ -1894,12 +1894,7 @@
     "recovery__dry_run_bip39_valid_match": "O backup de carteira inserido é válido e coincide com o deste dispositivo.",
     "recovery__dry_run_bip39_valid_mismatch": "O backup de carteira inserido é válido, mas não coincide com o deste dispositivo.",
     "recovery__dry_run_slip39_valid_match": "O backup de carteira inserido é válido e coincide com o deste dispositivo.",
-    "recovery__dry_run_slip39_valid_mismatch": {
-      "Bolt": "O backup de carteira inserido é válido, mas não coincide com o deste dispositivo.",
-      "Caesar": "O backup de carteira inserido é válido, mas não coincide com o deste dispositivo.",
-      "Delizia": "O backup de carteira inserido é válido, mas não coincide com o que está neste dispositivo.",
-      "Eckhart": "O backup de carteira inserido é válido, mas não coincide com o que está neste dispositivo."
-    },
+    "recovery__dry_run_slip39_valid_mismatch": "O backup de carteira inserido é válido, mas não coincide com o deste dispositivo.",
     "recovery__enter_any_share": "Insira qualquer share",
     "recovery__enter_backup": "Insira seu backup.",
     "recovery__enter_different_share": {

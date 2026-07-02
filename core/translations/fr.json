@@ -3385,12 +3385,7 @@
     "words__about": "À propos",
     "words__account": "Compte",
     "words__account_colon": "Compte :",
-    "words__account_deletion": {
-      "Bolt": "Supprimer compte",
-      "Caesar": "Supprimer compte",
-      "Delizia": "Supprimer compte",
-      "Eckhart": "Suppression de compte"
-    },
+    "words__account_deletion": "Suppression de compte",
     "words__address": "Adresse",
     "words__amount": "Montant",
     "words__are_you_sure": "Êtes-vous sûr ?",

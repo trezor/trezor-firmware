@@ -1100,14 +1100,24 @@
       "Delizia": "Potvrďte podržením",
       "Eckhart": ""
     },
-    "instructions__hold_to_continue": "Pokračujte podržením",
+    "instructions__hold_to_continue": {
+      "Bolt": "Pokračujte podržením",
+      "Caesar": "Pokračujte podržením",
+      "Delizia": "Pokračujte podržením",
+      "Eckhart": "Pokračovat podržením"
+    },
     "instructions__hold_to_exit_tutorial": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Ukončete tutoriál podržením",
       "Eckhart": "Ukončit tutoriál podržením"
     },
-    "instructions__hold_to_sign": "Podepište podržením",
+    "instructions__hold_to_sign": {
+      "Bolt": "Podepište podržením",
+      "Caesar": "Podepište podržením",
+      "Delizia": "Podepište podržením",
+      "Eckhart": "Podepsat podržením"
+    },
     "instructions__learn_more": "Zjistit více",
     "instructions__menu_to_continue": "Pokračujte přes nabídku",
     "instructions__shares_continue_with_x_template": {
@@ -2000,7 +2010,7 @@
       "Bolt": "Pokračujte dalším podílem.",
       "Caesar": "Následuje další podíl.",
       "Delizia": "Pokračujte dalším podílem.",
-      "Eckhart": "Zdat další podíl"
+      "Eckhart": "Zadat další podíl"
     },
     "reset__continue_with_share_template": {
       "Bolt": "Pokračujte podílem {0}.",
