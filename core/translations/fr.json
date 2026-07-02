@@ -2210,7 +2210,7 @@
     "reset__check_group_share_title_template": {
       "Bolt": "Fragment {1}/Groupe {0}",
       "Caesar": "",
-      "Delizia": "Fragment {1} du groupe {0}",
+      "Delizia": "Fragment {1}/Groupe {0}",
       "Eckhart": "Fragment {1} du groupe {0}"
     },
     "reset__check_share_backup_template": {
@@ -2423,7 +2423,7 @@
       "Eckhart": "Sélectionnez le mot {0} de la sauvegarde"
     },
     "reset__select_word_x_of_y_template": {
-      "Bolt": "Sélect. mot {0} sur {1} :",
+      "Bolt": "Le mot {0} sur {1} est :",
       "Caesar": "Mot {0} sur {1} :",
       "Delizia": "Sélect. mot {0} sur {1}",
       "Eckhart": ""
