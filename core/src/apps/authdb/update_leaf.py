@@ -106,6 +106,9 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             if stored_root is not None:
                 raise DataError("Tree is not empty; supply non-membership proof")
             new_root: bytes | None = _leaf_hash(address, new_value)
+            if __debug__:
+                from trezor import log
+                log.debug(__name__, "update_leaf: INIT — empty tree, no proof required")
         else:
             # INSERT: verify witness is in tree and address is absent
             if msg.witness_address is None or msg.witness_value is None:
@@ -168,6 +171,9 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         current_leaf = _leaf_hash(address, old_value)
         if _reconstruct(current_leaf, proof, addr_hash) != stored_root:
             raise DataError("Old value proof invalid")
+        if __debug__ and len(proof) == 0:
+            from trezor import log
+            log.debug(__name__, "update_leaf: single-leaf tree — empty proof is correct root proof")
 
         if len(proof) == 0:
             # Deleting the only leaf → tree becomes empty
@@ -195,6 +201,9 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         current_leaf = _leaf_hash(address, old_value)
         if _reconstruct(current_leaf, proof, addr_hash) != stored_root:
             raise DataError("Old value proof invalid")
+        if __debug__ and len(proof) == 0:
+            from trezor import log
+            log.debug(__name__, "update_leaf: single-leaf tree — empty proof is correct root proof")
 
         new_root = _reconstruct(_leaf_hash(address, new_value), proof, addr_hash)
 
