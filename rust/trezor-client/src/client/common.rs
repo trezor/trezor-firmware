@@ -220,7 +220,7 @@ pub fn handle_interaction<T, R: TrezorMessage>(resp: TrezorResponse<'_, T, R>) -
             let has_passphrase = req
                 .client
                 .features()
-                .map_or(false, |f| f.passphrase_protection());
+                .is_some_and(protos::Features::passphrase_protection);
             if has_passphrase {
                 handle_interaction(req.ack(true)?)
             } else {

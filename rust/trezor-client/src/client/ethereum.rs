@@ -244,7 +244,7 @@ impl Trezor {
                     let mut ack = protos::PassphraseAck::new();
                     let has_passphrase = self
                         .features()
-                        .map_or(false, |f| f.passphrase_protection());
+                        .is_some_and(protos::Features::passphrase_protection);
                     if has_passphrase {
                         ack.set_on_device(true);
                     } else {
