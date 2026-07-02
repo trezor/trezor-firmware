@@ -278,6 +278,132 @@
                 "sig_r": "23159b30f585016f909fdddc41951cb2aa2274a659d324b239fac41c5b94110c",
                 "sig_s": "401e555170f25b08c89c360992026a9a3bc0d3315091393910816478815e362e"
             }
+        },
+        {
+            "name": "erc20_approve_unknown_with_eth",
+            "parameters": {
+                "comment": "approve() on an unknown (non-builtin) token contract, carrying native ETH: the native amount is surfaced as the amount field on the approve summary page alongside fees.",
+                "data": "095ea7b30000000000000000000000001d1c328764a41bda0492b66baa30c4a339ff85ef0000000000000000000000000000000000000000000000000de0b6b3a7640000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdddddddddddddddddddddddddddddddddddddddd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x186a0",
+                "tx_type": null,
+                "value": "0xde0b6b3a7640000"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "cae5c5a8d64293655e2f0f09865f26ae62f69bbefb40e7404735a98c9978bdc0",
+                "sig_s": "2b463c1c244e9ac8648aa8d317cf9501219e542a9ca1bc94980d83db78f4ab9c"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "erc20_transfer_unknown_with_eth",
+            "parameters": {
+                "comment": "transfer() on an unknown (non-builtin) token contract, carrying native ETH: the native amount is surfaced on the line after the token total amount on the transfer summary page alongside fees.",
+                "data": "a9059cbb0000000000000000000000001d1c328764a41bda0492b66baa30c4a339ff85ef0000000000000000000000000000000000000000000000000de0b6b3a7640000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdddddddddddddddddddddddddddddddddddddddd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x186a0",
+                "tx_type": null,
+                "value": "0xde0b6b3a7640000"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "d9f59becea23a7ea0fb767158cb8f47595141480cbbf7e666a91cb2f43a4357c",
+                "sig_s": "7607d4827b2a85b2a59bbb9e3fddc7c719eb810602ad5b70aea38fca26f7a2d7"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "erc20_transfer_unknown_zero_with_eth",
+            "parameters": {
+                "comment": "transfer() of 0 tokens on an unknown contract, carrying 1 ETH native: renders '0 Wei UNKN' then the native amount on the line after, on the transfer summary page.",
+                "data": "a9059cbb0000000000000000000000001d1c328764a41bda0492b66baa30c4a339ff85ef0000000000000000000000000000000000000000000000000000000000000000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdddddddddddddddddddddddddddddddddddddddd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x186a0",
+                "tx_type": null,
+                "value": "0xde0b6b3a7640000"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "f6287f91025f994a56c54468a29bb43a7055fb83533cf7aa538bd9a0722268e5",
+                "sig_s": "3812e6b2f3a4b25c97b02ecd3f1430e064b72166167e05877acac70c746c7a7f"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "erc20_approve_usdc_with_eth",
+            "parameters": {
+                "comment": "approve() on the builtin USDC token, carrying native ETH: token renders as USDC; the native amount is surfaced as the amount field on the approve summary page alongside fees.",
+                "data": "095ea7b30000000000000000000000001d1c328764a41bda0492b66baa30c4a339ff85ef0000000000000000000000000000000000000000000000000de0b6b3a7640000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x186a0",
+                "tx_type": null,
+                "value": "0xde0b6b3a7640000"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "c77f25a859cf61409b5dffed5264f92412d40043896b4aad9e57baecd6ed0ee9",
+                "sig_s": "3fb934349498cfb33836e52da9ebda24508739b4835de4f408ac25381eb967a4"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "erc20_transfer_usdc_with_eth",
+            "parameters": {
+                "comment": "transfer() on the builtin USDC token, carrying native ETH: token renders as USDC; the native amount is surfaced on the line after the token total amount on the transfer summary page alongside fees.",
+                "data": "a9059cbb0000000000000000000000001d1c328764a41bda0492b66baa30c4a339ff85ef0000000000000000000000000000000000000000000000000de0b6b3a7640000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x186a0",
+                "tx_type": null,
+                "value": "0xde0b6b3a7640000"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "cd92dd9dca42ab2f3bc389c8c011bd10e14f055d778ad0bd629145f194fff2dc",
+                "sig_s": "2a48801b6d2d8793469fc5cfd1e76a30536676e7f4d85cd179d3d0797373540f"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "erc20_transfer_usdc_zero_with_eth",
+            "parameters": {
+                "comment": "transfer() of 0 USDC on the builtin USDC token, carrying 1 ETH native: renders '0 USDC' then the native amount on the line after, on the transfer summary page.",
+                "data": "a9059cbb0000000000000000000000001d1c328764a41bda0492b66baa30c4a339ff85ef0000000000000000000000000000000000000000000000000000000000000000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x186a0",
+                "tx_type": null,
+                "value": "0xde0b6b3a7640000"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "5d853e922f55aeef93d48390e8d71c10b55705055975ddbba161a25669f908ab",
+                "sig_s": "516f2b2a173ebf88002b4cdf717bbc9133bfc250ba477e93a17cec777f1a789b"
+            },
+            "skip_models": ["t1"]
         }
     ]
 }
