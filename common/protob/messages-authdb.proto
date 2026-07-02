@@ -143,3 +143,105 @@ message AuthDbClearRoot {
 message AuthDbClearRootResponse {
     optional bytes identifier = 1;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
 }
+
+/**
+ * Request: Store (or replace) the offline-cache entry for one address.
+ * Stores label and/or data_mac; absent fields are cleared.
+ * @start
+ * @next AuthDbSetCacheEntryResponse
+ * @next Failure
+ */
+message AuthDbSetCacheEntry {
+    required bytes  address  = 1;  // key whose cache entry is being set
+    optional string label    = 2;  // human-readable label; absent = clear label
+    optional bytes  data_mac = 3;  // MAC authorizing the data field; absent = clear
+}
+
+/**
+ * Response: Confirmation that the cache entry was stored.
+ * @end
+ */
+message AuthDbSetCacheEntryResponse {
+    required uint32 identifier_crc = 1;  // low 4 bytes of device_id, for sanity-check
+}
+
+/**
+ * Request: Retrieve the offline-cache entry for one address.
+ * @start
+ * @next AuthDbGetCacheEntryResponse
+ * @next Failure
+ */
+message AuthDbGetCacheEntry {
+    required bytes address = 1;
+}
+
+/**
+ * Response: Cache entry (or not-found).
+ * @end
+ */
+message AuthDbGetCacheEntryResponse {
+    required bool   found    = 1;
+    optional string label    = 2;
+    optional bytes  data_mac = 3;
+}
+
+/**
+ * Embedded: one entry returned by AuthDbGetAllCache.
+ */
+message AuthDbGetAllCacheEntry {
+    required bytes  address  = 1;
+    optional string label    = 2;
+    optional bytes  data_mac = 3;
+}
+
+/**
+ * Request: Return all offline-cache entries (for sync after reconnect).
+ * @start
+ * @next AuthDbGetAllCacheResponse
+ * @next Failure
+ */
+message AuthDbGetAllCache {
+}
+
+/**
+ * Response: All cached entries.
+ * @end
+ */
+message AuthDbGetAllCacheResponse {
+    repeated AuthDbGetAllCacheEntry entries = 1;
+}
+
+/**
+ * Request: Wipe all offline-cache entries from the device.
+ * @start
+ * @next AuthDbWipeCacheResponse
+ * @next Failure
+ */
+message AuthDbWipeCache {
+}
+
+/**
+ * Response: Confirmation that the cache was wiped.
+ * @end
+ */
+message AuthDbWipeCacheResponse {
+}
+
+/**
+ * Request: Override the device_id used for storage and MAC keying.
+ * DEBUG ONLY: rejected on production firmware.
+ * @start
+ * @next AuthDbSetDeviceIdResponse
+ * @next Failure
+ */
+message AuthDbSetDeviceId {
+    required bytes device_id = 1;  // 32 bytes to inject as device_id
+}
+
+/**
+ * Response: Echoes the injected device_id.
+ * @end
+ */
+message AuthDbSetDeviceIdResponse {
+    required bytes device_id = 1;
+}

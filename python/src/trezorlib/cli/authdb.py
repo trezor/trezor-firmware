@@ -262,3 +262,77 @@ def approve(session: "Session", address_hex: str, value_hex: str) -> str:
     mac_hex = mac.hex()
     id_hex = identifier.hex() if identifier else "(none)"
     return f"Approved. MAC: {mac_hex}. Identifier: {id_hex}"
+
+
+@cli.command(name="set-cache-entry")
+@click.argument("address_hex")
+@click.option("--label", "label", default=None, help="Human-readable label for the address.")
+@click.option("--data-mac", "data_mac_hex", default=None, help="MAC authorizing the data field (hex).")
+@with_session
+def set_cache_entry(
+    session: "Session",
+    address_hex: str,
+    label: str | None,
+    data_mac_hex: str | None,
+) -> str:
+    """Store offline-cache metadata (label and/or data_mac) for an address.
+
+    ADDRESS_HEX  hex-encoded address key.
+    """
+    address = bytes.fromhex(address_hex)
+    data_mac = bytes.fromhex(data_mac_hex) if data_mac_hex else None
+    identifier_crc = authdb.set_cache_entry(session, address=address, label=label, data_mac=data_mac)
+    return f"Cache entry stored. Identifier CRC: {identifier_crc:#010x}"
+
+
+@cli.command(name="get-cache-entry")
+@click.argument("address_hex")
+@with_session
+def get_cache_entry(session: "Session", address_hex: str) -> str:
+    """Retrieve offline-cache metadata for an address.
+
+    ADDRESS_HEX  hex-encoded address key.
+    """
+    address = bytes.fromhex(address_hex)
+    found, label, data_mac = authdb.get_cache_entry(session, address=address)
+    if not found:
+        return "Not found."
+    label_out = label if label else "(none)"
+    mac_out = data_mac.hex() if data_mac else "(none)"
+    return f"Found. Label: {label_out}. Data-MAC: {mac_out}"
+
+
+@cli.command(name="get-all-cache")
+@with_session
+def get_all_cache(session: "Session") -> str:
+    """Return all offline-cache entries stored on the device."""
+    entries = authdb.get_all_cache(session)
+    if not entries:
+        return "Cache is empty."
+    lines = ["address | label | data_mac"]
+    for address, label, data_mac in entries:
+        label_out = label if label else "(none)"
+        mac_out = data_mac.hex() if data_mac else "(none)"
+        lines.append(f"{address.hex()} | {label_out} | {mac_out}")
+    return "\n".join(lines)
+
+
+@cli.command(name="wipe-cache")
+@with_session
+def wipe_cache(session: "Session") -> str:
+    """Wipe all offline-cache entries from the device."""
+    authdb.wipe_cache(session)
+    return "Cache wiped."
+
+
+@cli.command(name="set-device-id")
+@click.argument("device_id_hex")
+@with_session
+def set_device_id(session: "Session", device_id_hex: str) -> str:
+    """Override the device_id on the device. DEBUG BUILDS ONLY.
+
+    DEVICE_ID_HEX  32-byte device identifier (hex, 64 chars).
+    """
+    device_id = bytes.fromhex(device_id_hex)
+    echoed = authdb.set_device_id(session, device_id=device_id)
+    return f"device_id set to: {echoed.hex()}"

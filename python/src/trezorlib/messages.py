@@ -9713,3 +9713,157 @@ class AuthDbApproveResponse(protobuf.MessageType):
     ) -> None:
         self.mac = mac
         self.identifier = identifier
+
+
+class AuthDbSetCacheEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2310
+    FIELDS = {
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("label", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("data_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "bytes",
+        label: Optional["str"] = None,
+        data_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.address = address
+        self.label = label
+        self.data_mac = data_mac
+
+
+class AuthDbSetCacheEntryResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2311
+    FIELDS = {
+        1: protobuf.Field("identifier_crc", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        identifier_crc: "int",
+    ) -> None:
+        self.identifier_crc = identifier_crc
+
+
+class AuthDbGetCacheEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2312
+    FIELDS = {
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "bytes",
+    ) -> None:
+        self.address = address
+
+
+class AuthDbGetCacheEntryResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2313
+    FIELDS = {
+        1: protobuf.Field("found", "bool", repeated=False, required=True),
+        2: protobuf.Field("label", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("data_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        found: "bool",
+        label: Optional["str"] = None,
+        data_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.found = found
+        self.label = label
+        self.data_mac = data_mac
+
+
+class AuthDbGetAllCacheEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("label", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("data_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "bytes",
+        label: Optional["str"] = None,
+        data_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.address = address
+        self.label = label
+        self.data_mac = data_mac
+
+
+class AuthDbGetAllCache(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2314
+    FIELDS: dict = {}
+
+    def __init__(self) -> None:
+        pass
+
+
+class AuthDbGetAllCacheResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2315
+    FIELDS = {
+        1: protobuf.Field("entries", "AuthDbGetAllCacheEntry", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        entries: Optional[list["AuthDbGetAllCacheEntry"]] = None,
+    ) -> None:
+        self.entries = entries if entries is not None else []
+
+
+class AuthDbWipeCache(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2316
+    FIELDS: dict = {}
+
+    def __init__(self) -> None:
+        pass
+
+
+class AuthDbWipeCacheResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2317
+    FIELDS: dict = {}
+
+    def __init__(self) -> None:
+        pass
+
+
+class AuthDbSetDeviceId(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2318
+    FIELDS = {
+        1: protobuf.Field("device_id", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        device_id: "bytes",
+    ) -> None:
+        self.device_id = device_id
+
+
+class AuthDbSetDeviceIdResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2319
+    FIELDS = {
+        1: protobuf.Field("device_id", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        device_id: "bytes",
+    ) -> None:
+        self.device_id = device_id

@@ -728,6 +728,16 @@ if TYPE_CHECKING:
         AuthDbClearRootResponse = 2307
         AuthDbApprove = 2308
         AuthDbApproveResponse = 2309
+        AuthDbSetCacheEntry = 2310
+        AuthDbSetCacheEntryResponse = 2311
+        AuthDbGetCacheEntry = 2312
+        AuthDbGetCacheEntryResponse = 2313
+        AuthDbGetAllCache = 2314
+        AuthDbGetAllCacheResponse = 2315
+        AuthDbWipeCache = 2316
+        AuthDbWipeCacheResponse = 2317
+        AuthDbSetDeviceId = 2318
+        AuthDbSetDeviceIdResponse = 2319
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

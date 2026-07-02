@@ -103,6 +103,69 @@ def update_leaf(
     return resp.counter, resp.new_root, resp.identifier, resp.mac, resp.auth_mac
 
 
+def set_cache_entry(
+    session: "Session",
+    address: bytes,
+    label: Optional[str] = None,
+    data_mac: Optional[bytes] = None,
+) -> int:
+    """Store label and/or data_mac for address in the device offline cache.
+
+    Returns identifier_crc (low 4 bytes of device_id) for sanity-checking.
+    """
+    resp = session.call(
+        messages.AuthDbSetCacheEntry(address=address, label=label, data_mac=data_mac),
+        expect=messages.AuthDbSetCacheEntryResponse,
+    )
+    return resp.identifier_crc
+
+
+def get_cache_entry(
+    session: "Session",
+    address: bytes,
+) -> tuple[bool, Optional[str], Optional[bytes]]:
+    """Retrieve cached metadata for address.
+
+    Returns (found, label, data_mac).
+    """
+    resp = session.call(
+        messages.AuthDbGetCacheEntry(address=address),
+        expect=messages.AuthDbGetCacheEntryResponse,
+    )
+    return resp.found, resp.label, resp.data_mac
+
+
+def get_all_cache(
+    session: "Session",
+) -> list[tuple[bytes, Optional[str], Optional[bytes]]]:
+    """Return all cached entries as (address, label, data_mac) tuples."""
+    resp = session.call(
+        messages.AuthDbGetAllCache(),
+        expect=messages.AuthDbGetAllCacheResponse,
+    )
+    return [(e.address, e.label, e.data_mac) for e in resp.entries]
+
+
+def wipe_cache(session: "Session") -> None:
+    """Wipe all offline-cache entries from the device."""
+    session.call(messages.AuthDbWipeCache(), expect=messages.AuthDbWipeCacheResponse)
+
+
+def set_device_id(
+    session: "Session",
+    device_id: bytes,
+) -> bytes:
+    """Override the device_id on the device. DEBUG BUILDS ONLY.
+
+    Returns the echoed device_id.
+    """
+    resp = session.call(
+        messages.AuthDbSetDeviceId(device_id=device_id),
+        expect=messages.AuthDbSetDeviceIdResponse,
+    )
+    return resp.device_id
+
+
 def approve(
     session: "Session",
     address: bytes,

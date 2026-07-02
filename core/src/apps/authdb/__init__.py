@@ -3,7 +3,14 @@ async def _get_device_id() -> bytes:
 
     device_id = SLIP21(no-passphrase seed, [b"AUTHDB DEVICE ID"]).key()  -- 32 bytes
     Stable across different passphrases on the same device/mnemonic.
+    In debug builds a flash override (set via AuthDbSetDeviceId) takes precedence.
     """
+    if __debug__:
+        import storage.authdb as authdb
+        override = authdb.get_device_id_override()
+        if override is not None:
+            return override
+
     from apps.common import seed as seed_module
     from apps.common.seed import Slip21Node
 

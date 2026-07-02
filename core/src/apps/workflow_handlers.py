@@ -123,6 +123,16 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.authdb.clear_root"
     if msg_type == MessageType.AuthDbApprove:
         return "apps.authdb.approve"
+    if msg_type == MessageType.AuthDbSetCacheEntry:
+        return "apps.authdb.set_cache_entry"
+    if msg_type == MessageType.AuthDbGetCacheEntry:
+        return "apps.authdb.get_cache_entry"
+    if msg_type == MessageType.AuthDbGetAllCache:
+        return "apps.authdb.get_all_cache"
+    if msg_type == MessageType.AuthDbWipeCache:
+        return "apps.authdb.wipe_cache"
+    if msg_type == MessageType.AuthDbSetDeviceId:
+        return "apps.authdb.set_device_id"
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:

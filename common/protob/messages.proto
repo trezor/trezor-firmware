@@ -392,6 +392,16 @@ enum MessageType {
     MessageType_AuthDbClearRootResponse = 2307 [(wire_out) = true];
     MessageType_AuthDbApprove = 2308 [(wire_in) = true];
     MessageType_AuthDbApproveResponse = 2309 [(wire_out) = true];
+    MessageType_AuthDbSetCacheEntry = 2310 [(wire_in) = true];
+    MessageType_AuthDbSetCacheEntryResponse = 2311 [(wire_out) = true];
+    MessageType_AuthDbGetCacheEntry = 2312 [(wire_in) = true];
+    MessageType_AuthDbGetCacheEntryResponse = 2313 [(wire_out) = true];
+    MessageType_AuthDbGetAllCache = 2314 [(wire_in) = true];
+    MessageType_AuthDbGetAllCacheResponse = 2315 [(wire_out) = true];
+    MessageType_AuthDbWipeCache = 2316 [(wire_in) = true];
+    MessageType_AuthDbWipeCacheResponse = 2317 [(wire_out) = true];
+    MessageType_AuthDbSetDeviceId = 2318 [(wire_in) = true];
+    MessageType_AuthDbSetDeviceIdResponse = 2319 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

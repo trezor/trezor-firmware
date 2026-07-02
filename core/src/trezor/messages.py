@@ -7765,3 +7765,151 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbApproveResponse"]:
             return isinstance(msg, cls)
+
+    class AuthDbSetCacheEntry(protobuf.MessageType):
+        address: "AnyBytes"
+        label: "str | None"
+        data_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+            label: "str | None" = None,
+            data_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetCacheEntry"]:
+            return isinstance(msg, cls)
+
+    class AuthDbSetCacheEntryResponse(protobuf.MessageType):
+        identifier_crc: "int"
+
+        def __init__(
+            self,
+            *,
+            identifier_crc: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetCacheEntryResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbGetCacheEntry(protobuf.MessageType):
+        address: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetCacheEntry"]:
+            return isinstance(msg, cls)
+
+    class AuthDbGetCacheEntryResponse(protobuf.MessageType):
+        found: "bool"
+        label: "str | None"
+        data_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            found: "bool",
+            label: "str | None" = None,
+            data_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetCacheEntryResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbGetAllCacheEntry(protobuf.MessageType):
+        address: "AnyBytes"
+        label: "str | None"
+        data_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+            label: "str | None" = None,
+            data_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetAllCacheEntry"]:
+            return isinstance(msg, cls)
+
+    class AuthDbGetAllCache(protobuf.MessageType):
+        def __init__(self) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetAllCache"]:
+            return isinstance(msg, cls)
+
+    class AuthDbGetAllCacheResponse(protobuf.MessageType):
+        entries: 'list["AuthDbGetAllCacheEntry"]'
+
+        def __init__(
+            self,
+            *,
+            entries: 'list["AuthDbGetAllCacheEntry"] | None' = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetAllCacheResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbWipeCache(protobuf.MessageType):
+        def __init__(self) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbWipeCache"]:
+            return isinstance(msg, cls)
+
+    class AuthDbWipeCacheResponse(protobuf.MessageType):
+        def __init__(self) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbWipeCacheResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbSetDeviceId(protobuf.MessageType):
+        device_id: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            device_id: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetDeviceId"]:
+            return isinstance(msg, cls)
+
+    class AuthDbSetDeviceIdResponse(protobuf.MessageType):
+        device_id: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            device_id: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetDeviceIdResponse"]:
+            return isinstance(msg, cls)
