@@ -176,7 +176,7 @@ def update_leaf(
     mac = bytes.fromhex(mac_hex) if mac_hex else None
     device_id = bytes.fromhex(device_id_hex) if device_id_hex else None
 
-    counter, new_root, identifier, new_mac = authdb.update_leaf(
+    counter, new_root, identifier, new_mac, auth_mac = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
@@ -190,7 +190,8 @@ def update_leaf(
     root_hex = new_root.hex() if new_root else "(empty)"
     id_hex = identifier.hex() if identifier else "(none)"
     mac_out = new_mac.hex() if new_mac else "(none)"
-    return f"Updated. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}. MAC: {mac_out}"
+    auth_mac_out = auth_mac.hex() if auth_mac else "(none)"
+    return f"Updated. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}. MAC: {mac_out}. Auth-MAC: {auth_mac_out}"
 
 
 @cli.command(name="clear-root")
@@ -230,7 +231,7 @@ def delete(
     old_value = bytes.fromhex(old_value_hex)
     proof = [bytes.fromhex(h) for h in proof_hexes]
 
-    counter, new_root, identifier, _mac = authdb.update_leaf(
+    counter, new_root, identifier, _mac, _auth_mac = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,

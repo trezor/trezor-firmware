@@ -19,7 +19,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     import storage.authdb as authdb
     from trezor.messages import AuthDbUpdateLeafResponse
     from trezor.wire import DataError
-    from apps.authdb import _get_identifier, _derive_mac_key, _compute_mac
+    from apps.authdb import _get_device_id, _derive_mac_key, _compute_mac
 
     from trezor.crypto.hashlib import sha256
 
@@ -47,18 +47,8 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
                 node = _internal_hash(sibling, node)
         return node
 
-    identifier = await _get_identifier()
+    device_id = await _get_device_id()
     mac_key = await _derive_mac_key()
-
-    # Verify MAC-based pre-authorization when supplied by the host
-    if msg.mac is not None and msg.device_id is not None:
-        if msg.device_id != identifier:
-            raise DataError("device_id mismatch")
-        if _compute_mac(mac_key, msg.address, msg.new_value) != msg.mac:
-            raise DataError("MAC verification failed")
-        # pre-authorized — confirmation dialog skipped
-    else:
-        pass  # TODO: show address+new_value confirmation dialog when UI ready
 
     address = msg.address
     old_value = msg.old_value   # empty bytes = address absent from tree
@@ -81,11 +71,27 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             address, inserting, deleting, len(proof),
         )
 
+    # Leaf hashes for old and new state (used for MAC verification and auth_mac)
+    # For INIT (old_value empty) use zero hash; for DELETE (new_value empty) use zero hash
+    ZERO_HASH = b"\x00" * 32
+    old_leaf_hash = _leaf_hash(address, old_value) if old_value else ZERO_HASH
+    new_leaf_hash = _leaf_hash(address, new_value) if new_value else ZERO_HASH
+
+    # Verify MAC-based pre-authorization when supplied by the host
+    if msg.mac is not None and msg.device_id is not None:
+        if msg.device_id != device_id:
+            raise DataError("device_id mismatch")
+        if _compute_mac(mac_key, old_leaf_hash, new_leaf_hash) != msg.mac:
+            raise DataError("MAC verification failed")
+        # pre-authorized — confirmation dialog skipped
+    else:
+        pass  # TODO: show address+new_value confirmation dialog when UI ready (production)
+
     if inserting:
         # INSERT or INIT — verify non-membership first
         if len(proof) == 0 and msg.witness_address is None:
             # INIT: tree was empty; verify no root is stored
-            stored_root = authdb.get_root(identifier)
+            stored_root = authdb.get_root(device_id)
             if stored_root is not None:
                 raise DataError("Tree is not empty; supply non-membership proof")
             new_root: bytes | None = _leaf_hash(address, new_value)
@@ -93,7 +99,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             # INSERT: verify witness is in tree and address is absent
             if msg.witness_address is None or msg.witness_value is None:
                 raise DataError("witness_address and witness_value required for INSERT")
-            stored_root = authdb.get_root(identifier)
+            stored_root = authdb.get_root(device_id)
             if stored_root is None:
                 #raise DataError("No Merkle root stored; use INIT (empty proof, no witness)")
                 log.error( __name__, "No Merkle root stored; use INIT (empty proof, no witness)", )
@@ -139,7 +145,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     elif deleting:
         # DELETE — verify current membership first
-        stored_root = authdb.get_root(identifier)
+        stored_root = authdb.get_root(device_id)
         if stored_root is None:
             #raise DataError("No Merkle root stored on device")
             log.error( __name__, "No Merkle root stored on device", )
@@ -167,7 +173,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     else:
         # UPDATE — verify current membership first
-        stored_root = authdb.get_root(identifier)
+        stored_root = authdb.get_root(device_id)
         if stored_root is None:
             raise DataError("No Merkle root stored on device")
 
@@ -179,11 +185,11 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     # Persist the new root
     if new_root is None:
-        authdb.clear_root(identifier)
+        authdb.clear_root(device_id)
     else:
-        authdb.set_root(identifier, new_root)
+        authdb.set_root(device_id, new_root)
 
-    counter = authdb.increment_counter(identifier)
+    counter = authdb.increment_counter(device_id)
 
     if __debug__:
         from trezor import log
@@ -195,4 +201,12 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         )
 
     new_mac = _compute_mac(mac_key, new_root) if new_root is not None else None
-    return AuthDbUpdateLeafResponse(counter=counter, new_root=new_root, identifier=identifier, mac=new_mac)
+    # In debug mode: auto-approve — return auth_mac so Suite can cache it for future calls
+    auth_mac = _compute_mac(mac_key, old_leaf_hash, new_leaf_hash) if __debug__ else None
+    return AuthDbUpdateLeafResponse(
+        counter=counter,
+        new_root=new_root,
+        identifier=device_id,
+        mac=new_mac,
+        auth_mac=auth_mac,
+    )

@@ -228,7 +228,7 @@ def test_nonmembership_host_matches_device(session: Session) -> None:
 @pytest.mark.models("core")
 def test_update_leaf_init(session: Session) -> None:
     """INIT: insert first entry into an empty tree."""
-    counter, new_root, identifier, new_mac = authdb.update_leaf(
+    counter, new_root, identifier, new_mac, auth_mac = authdb.update_leaf(
         session,
         address=b"alice",
         old_value=b"",
@@ -239,6 +239,7 @@ def test_update_leaf_init(session: Session) -> None:
     assert counter > 0
     assert identifier is not None and len(identifier) == 32
     assert new_mac is not None and len(new_mac) == 32
+    assert auth_mac is not None and len(auth_mac) == 32  # debug mode returns auth_mac
     # Host-side tree should match
     tree = AuthDbTree()
     tree.insert(b"alice", b"data_alice")
@@ -249,7 +250,7 @@ def test_update_leaf_init(session: Session) -> None:
 def test_update_leaf_insert(session: Session) -> None:
     """INSERT: add a second entry to an existing tree."""
     # Bootstrap with alice
-    counter0, root0, _, _mac0 = authdb.update_leaf(
+    counter0, root0, _, _mac0, _auth_mac0 = authdb.update_leaf(
         session, address=b"alice", old_value=b"", new_value=b"data_alice", proof=[]
     )
 
@@ -259,7 +260,7 @@ def test_update_leaf_insert(session: Session) -> None:
     assert tree.get_root_hash() == root0
 
     proof, w_addr, w_val = tree.get_nonmembership_proof(b"bob")
-    counter1, new_root, identifier, _mac1 = authdb.update_leaf(
+    counter1, new_root, identifier, _mac1, _auth_mac1 = authdb.update_leaf(
         session,
         address=b"bob",
         old_value=b"",
@@ -281,7 +282,7 @@ def test_update_leaf_update(session: Session) -> None:
     authdb.set_root(session, tree.get_root_hash())
 
     proof = tree.get_proof(b"alice")
-    counter, new_root, identifier, _mac = authdb.update_leaf(
+    counter, new_root, identifier, _mac, _auth_mac = authdb.update_leaf(
         session,
         address=b"alice",
         old_value=b"data_alice",
@@ -300,7 +301,7 @@ def test_update_leaf_delete(session: Session) -> None:
     authdb.set_root(session, tree.get_root_hash())
 
     proof = tree.get_proof(b"alice")
-    counter, new_root, identifier, del_mac = authdb.update_leaf(
+    counter, new_root, identifier, del_mac, _del_auth_mac = authdb.update_leaf(
         session,
         address=b"alice",
         old_value=b"data_alice",

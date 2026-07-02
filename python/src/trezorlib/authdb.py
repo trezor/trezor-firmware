@@ -76,14 +76,16 @@ def update_leaf(
     witness_value: Optional[bytes] = None,
     mac: Optional[bytes] = None,
     device_id: Optional[bytes] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
+) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes], Optional[bytes]]:
     """Atomically update a leaf in the Merkle tree.
 
     old_value=b"" means the address is currently absent (INSERT / INIT).
     new_value=b"" means delete the address (DELETE).
     mac + device_id skip the on-screen confirmation if they match a prior approve() call.
 
-    Returns (counter, new_root, identifier, mac).  new_root/mac are None if tree is now empty.
+    Returns (counter, new_root, identifier, mac, auth_mac).
+    new_root/mac are None if tree is now empty.
+    auth_mac is set in debug/auto-approve mode: HMAC(device_key, old_leafHash||new_leafHash).
     """
     resp = session.call(
         messages.AuthDbUpdateLeaf(
@@ -98,7 +100,7 @@ def update_leaf(
         ),
         expect=messages.AuthDbUpdateLeafResponse,
     )
-    return resp.counter, resp.new_root, resp.identifier, resp.mac
+    return resp.counter, resp.new_root, resp.identifier, resp.mac, resp.auth_mac
 
 
 def approve(

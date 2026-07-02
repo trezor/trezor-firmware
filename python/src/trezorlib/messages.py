@@ -9640,6 +9640,7 @@ class AuthDbUpdateLeafResponse(protobuf.MessageType):
         2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("auth_mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9649,11 +9650,13 @@ class AuthDbUpdateLeafResponse(protobuf.MessageType):
         new_root: Optional["bytes"] = None,
         identifier: Optional["bytes"] = None,
         mac: Optional["bytes"] = None,
+        auth_mac: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
         self.new_root = new_root
         self.identifier = identifier
         self.mac = mac
+        self.auth_mac = auth_mac
 
 
 class AuthDbClearRoot(protobuf.MessageType):

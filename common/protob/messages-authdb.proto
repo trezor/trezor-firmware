@@ -100,8 +100,9 @@ message AuthDbUpdateLeaf {
 message AuthDbUpdateLeafResponse {
     required uint32 counter    = 1;  // monotonic counter after this update
     optional bytes  new_root   = 2;  // absent if the tree is now empty
-    optional bytes  identifier = 3;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
-    optional bytes  mac        = 4;  // HMAC-SHA256(slip21_key, new_root); absent if tree is now empty
+    optional bytes  identifier = 3;  // device_id (SLIP21, not passphrase-bound)
+    optional bytes  mac        = 4;  // HMAC(device_key, new_root); absent if tree is now empty
+    optional bytes  auth_mac   = 5;  // HMAC(device_key, old_leafHash||new_leafHash); set in debug/auto_approve mode
 }
 
 /**

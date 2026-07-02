@@ -7695,6 +7695,7 @@ if TYPE_CHECKING:
         new_root: "AnyBytes | None"
         identifier: "AnyBytes | None"
         mac: "AnyBytes | None"
+        auth_mac: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7703,6 +7704,7 @@ if TYPE_CHECKING:
             new_root: "AnyBytes | None" = None,
             identifier: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
+            auth_mac: "AnyBytes | None" = None,
         ) -> None:
             pass
 
