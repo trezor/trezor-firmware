@@ -30,9 +30,9 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
         log.debug(
             __name__,
             "lookup: address=%s proof_len=%d witness=%s membership_query=%s",
-            msg.address.hex(),
+            msg.address,
             len(msg.proof),
-            msg.witness_address.hex() if msg.witness_address else "none",
+            msg.witness_address if msg.witness_address else "none",
             membership_query,
         )
 
@@ -132,8 +132,8 @@ def _verify_proof(
         log.debug(
             __name__,
             "_verify_proof: addr_hash=%s leaf_hash=%s proof_len=%d",
-            addr_hash.hex(),
-            node.hex(),
+            addr_hash,
+            node,
             len(proof),
         )
 
@@ -153,7 +153,7 @@ def _verify_proof(
                 "  bit=%d target_bit=%d hash=%s",
                 bit,
                 target_bit,
-                node.hex(),
+                node,
             )
 
     match = node == expected_root
@@ -162,7 +162,7 @@ def _verify_proof(
         log.debug(
             __name__,
             "_verify_proof: MISMATCH computed=%s expected=%s",
-            node.hex(),
-            expected_root.hex(),
+            node,
+            expected_root,
         )
     return match

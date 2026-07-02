@@ -11,7 +11,8 @@ async def _get_identifier() -> bytes:
     from trezor.crypto import bip32
     from trezor.crypto.hashlib import sha256
 
-    s = await seed_module.get_seed()
+    #FIXME(petr) s = await seed_module.get_seed()
+    s = seed_module._get_seed_without_passphrase()
     node = bip32.from_seed(s, "secp256k1")
     node.derive_path([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0])
     return sha256(node.public_key()).digest()

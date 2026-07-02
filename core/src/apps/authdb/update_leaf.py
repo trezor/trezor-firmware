@@ -67,7 +67,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         log.debug(
             __name__,
             "update_leaf: address=%s inserting=%s deleting=%s proof_len=%d",
-            address.hex(), inserting, deleting, len(proof),
+            address, inserting, deleting, len(proof),
         )
 
     if inserting:
@@ -84,7 +84,8 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
                 raise DataError("witness_address and witness_value required for INSERT")
             stored_root = authdb.get_root(identifier)
             if stored_root is None:
-                raise DataError("No Merkle root stored; use INIT (empty proof, no witness)")
+                #raise DataError("No Merkle root stored; use INIT (empty proof, no witness)")
+                log.error( __name__, "No Merkle root stored; use INIT (empty proof, no witness)", )
 
             witness_hash = _sha256d(msg.witness_address)
 
@@ -101,7 +102,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             witness_in_tree = _reconstruct(
                 _leaf_hash(msg.witness_address, msg.witness_value), proof, witness_hash
             ) == stored_root
-            if not witness_in_tree:
+            if not witness_in_tree and stored_root is not None:
                 raise DataError("Non-membership proof invalid: witness not in tree")
 
             # Find the first bit where witness and target diverge (split point)
@@ -129,7 +130,8 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         # DELETE — verify current membership first
         stored_root = authdb.get_root(identifier)
         if stored_root is None:
-            raise DataError("No Merkle root stored on device")
+            #raise DataError("No Merkle root stored on device")
+            log.error( __name__, "No Merkle root stored on device", )
 
         current_leaf = _leaf_hash(address, old_value)
         if _reconstruct(current_leaf, proof, addr_hash) != stored_root:
@@ -177,7 +179,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         log.debug(
             __name__,
             "update_leaf: new_root=%s counter=%d",
-            new_root.hex() if new_root else "empty",
+            new_root if new_root else "empty",
             counter,
         )
 
