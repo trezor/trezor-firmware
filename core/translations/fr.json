@@ -2208,7 +2208,7 @@
       "Eckhart": "Vérifier la sauvegarde"
     },
     "reset__check_group_share_title_template": {
-      "Bolt": "Fragment {1} du groupe {0}",
+      "Bolt": "Fragment {1}/Groupe {0}",
       "Caesar": "",
       "Delizia": "Fragment {1} du groupe {0}",
       "Eckhart": "Fragment {1} du groupe {0}"
@@ -2281,7 +2281,7 @@
       "Eckhart": "Fragment {1} du groupe {0} vérifié avec succès."
     },
     "reset__group_share_title_template": {
-      "Bolt": "Fragment {1} du groupe {0}",
+      "Bolt": "Fragment {1}/Groupe {0}",
       "Caesar": "",
       "Delizia": "Fragment {1} du groupe {0}",
       "Eckhart": "Fragment {1} du groupe {0}"

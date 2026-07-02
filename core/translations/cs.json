@@ -381,12 +381,7 @@
     "buttons__finish": "Dokončit",
     "buttons__format": "Formátovat",
     "buttons__go_back": "Jít zpět",
-    "buttons__hold_to_confirm": {
-      "Bolt": "Potvrdit držením",
-      "Caesar": "Potvrdit podržením",
-      "Delizia": "Potvrdit podržením",
-      "Eckhart": "Potvrdit podržením"
-    },
+    "buttons__hold_to_confirm": "Potvrdit podržením",
     "buttons__info": "Informace",
     "buttons__install": "Nainstalovat",
     "buttons__more_info": "Další informace",
