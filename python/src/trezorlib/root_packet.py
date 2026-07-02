@@ -15,6 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
+import typing as t
+from dataclasses import field
 
 import construct as c
 
@@ -26,22 +28,25 @@ MLDSA_SIG = c.Bytes(2420)
 
 
 RingMask = c.BitStruct(
-    "_padding" / c.Const(0, c.BitsInteger(5)),
+    "reserved" / c.Const(0, c.BitsInteger(5)),
     "ring_2" / c.Flag,
     "ring_1" / c.Flag,
     "ring_0" / c.Flag,
 )
 
 Flags = c.BitStruct(
-    "_padding" / c.Const(0, c.BitsInteger(6)),
+    "reserved" / c.Const(0, c.BitsInteger(6)),
     "is_dangerous" / c.Flag,
     "is_dev_signed" / c.Flag,
 )
 
 
 class RootPacket_AppRing0(SanityCheckedStruct):
+    NAME: t.ClassVar[str] = "root packet 0"
+
     root_ring_0: bytes
     timestamp: int
+    flags: dict[str, t.Any] = field(default_factory=dict)
     sigmask: int
     signature_0: bytes
     signature_1: bytes
@@ -64,9 +69,12 @@ class RootPacket_AppRing0(SanityCheckedStruct):
 
 
 class RootPacket_AppRing12(SanityCheckedStruct):
+    NAME: t.ClassVar[str] = "root packet 12"
+
     root_ring_1: bytes
     root_ring_2: bytes
     timestamp: int
+    flags: dict[str, t.Any] = field(default_factory=dict)
     sigmask: int
     signature_0: bytes
     signature_1: bytes
