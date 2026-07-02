@@ -119,7 +119,7 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
                                         platform - instantiated in main.c    */
 
 #define RFAL_FEATURE_LISTEN_MODE \
-  true /*!< Enable/Disable RFAL support for Listen Mode */
+  false /*!< Enable/Disable RFAL support for Listen Mode */
 #define RFAL_FEATURE_WAKEUP_MODE \
   true /*!< Enable/Disable RFAL support for the Wake-Up mode */
 #define RFAL_FEATURE_LOWPOWER_MODE \
@@ -133,14 +133,14 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
 #define RFAL_FEATURE_NFCV \
   false /*!< Enable/Disable RFAL support for NFC-V (ISO15693) */
 #define RFAL_FEATURE_T1T \
-  true /*!< Enable/Disable RFAL support for T1T (Topaz) */
+  false /*!< Enable/Disable RFAL support for T1T (Topaz) */
 #define RFAL_FEATURE_T2T true /*!< Enable/Disable RFAL support for T2T */
 #define RFAL_FEATURE_T4T true /*!< Enable/Disable RFAL support for T4T */
-#define RFAL_FEATURE_ST25TB                        \
-  true /*!< Enable/Disable RFAL support for ST25TB \
-        */
+#define RFAL_FEATURE_ST25TB                         \
+  false /*!< Enable/Disable RFAL support for ST25TB \
+         */
 #define RFAL_FEATURE_ST25xV \
-  true /*!< Enable/Disable RFAL support for ST25TV/ST25DV */
+  false /*!< Enable/Disable RFAL support for ST25TV/ST25DV */
 #define RFAL_FEATURE_DYNAMIC_ANALOG_CONFIG \
   false /*!< Enable/Disable Analog Configs to be dynamically updated (RAM) */
 #define RFAL_FEATURE_DPO \
@@ -150,11 +150,11 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
 #define RFAL_FEATURE_ISO_DEP_POLL                                     \
   true /*!< Enable/Disable RFAL support for Poller mode (PCD) ISO-DEP \
           (ISO14443-4)    */
-#define RFAL_FEATURE_ISO_DEP_LISTEN                                    \
-  true /*!< Enable/Disable RFAL support for Listen mode (PICC) ISO-DEP \
+#define RFAL_FEATURE_ISO_DEP_LISTEN                                     \
+  false /*!< Enable/Disable RFAL support for Listen mode (PICC) ISO-DEP \
           (ISO14443-4)   */
 #define RFAL_FEATURE_NFC_DEP \
-  true /*!< Enable/Disable RFAL support for NFC-DEP (NFCIP1/P2P) */
+  false /*!< Enable/Disable RFAL support for NFC-DEP (NFCIP1/P2P) */
 
 #define RFAL_FEATURE_ISO_DEP_IBLOCK_MAX_LEN                             \
   256U /*!< ISO-DEP I-Block max length. Please use values as defined by \

@@ -68,7 +68,8 @@ static void prodtest_nfc_read_card(cli_t* cli) {
 
   ts_t nfc_status = nfc_init();
   if (ts_error(nfc_status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_INIT, "NFC initialization failed");
+    cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_INIT,
+              "NFC initialization failed");
     return;
   }
 
@@ -77,7 +78,7 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_INIT, "NFC not initialized");
     goto cleanup;
   } else if (ts_error(nfc_status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
+    cli_error(cli, PRODTEST_ERR_NFC_READ_ACTIVATION, "NFC activation failed");
     goto cleanup;
   } else if (timeout_set) {
     cli_trace(cli, "NFC activated in reader mode for %d ms.", timeout);
@@ -132,7 +133,8 @@ static void prodtest_nfc_read_card(cli_t* cli) {
           cli_trace(cli, "NFC Type UNKNOWN");
           break;
         default:
-          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "Unknown NFC card type!");
+          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED_TYPE,
+                    "Unknown NFC card type!");
           goto cleanup;
       }
 
@@ -145,7 +147,7 @@ static void prodtest_nfc_read_card(cli_t* cli) {
           break;
         case NFC_DEV_INTERFACE_UNKNOWN:
         default:
-          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED,
+          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED_IF,
                     "NFC Unexpected Tag Type (%d)", dev_info.interface);
           goto cleanup;
       }
@@ -184,16 +186,17 @@ static void prodtest_nfc_write_card(cli_t* cli) {
 
   ts_t nfc_status = nfc_init();
   if (ts_error(nfc_status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_INIT, "NFC initialization failed");
+    cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_INIT,
+              "NFC initialization failed");
     return;
   }
 
   nfc_status = nfc_start_discovery();
   if (ts_eq(nfc_status, TS_ENOINIT)) {
-    cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_INIT, "NFC not initialized");
+    cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_START, "NFC not initialized");
     goto cleanup;
   } else if (ts_error(nfc_status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
+    cli_error(cli, PRODTEST_ERR_NFC_WRITE_ACTIVATION, "NFC activation failed");
     goto cleanup;
   } else if (timeout_set) {
     cli_trace(cli, "NFC activated in reader mode for %d ms.", timeout);
@@ -238,7 +241,7 @@ static void prodtest_nfc_write_card(cli_t* cli) {
       nfc_get_device_info(&dev_info);
 
       if (dev_info.type != NFC_DEV_TYPE_A) {
-        cli_error(cli, PRODTEST_ERR_NFC_TYPE_A_ONLY,
+        cli_error(cli, PRODTEST_ERR_NFC_WRITE_TYPE_A_ONLY,
                   "Only NFC type A cards supported");
         goto cleanup;
       }
