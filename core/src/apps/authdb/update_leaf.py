@@ -81,8 +81,19 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     if msg.mac is not None and msg.device_id is not None:
         if msg.device_id != device_id:
             raise DataError("device_id mismatch")
-        if _compute_mac(mac_key, old_leaf_hash, new_leaf_hash) != msg.mac:
+        expected_mac = _compute_mac(mac_key, old_leaf_hash, new_leaf_hash)
+        if expected_mac != msg.mac:
+            if __debug__:
+                from trezor import log
+                log.debug(
+                    __name__,
+                    "update_leaf: pre-approved MAC mismatch expected=%s got=%s",
+                    expected_mac, msg.mac,
+                )
             raise DataError("MAC verification failed")
+        if __debug__:
+            from trezor import log
+            log.debug(__name__, "update_leaf: pre-approved MAC verified ok")
         # pre-authorized — confirmation dialog skipped
     else:
         pass  # TODO: show address+new_value confirmation dialog when UI ready (production)
@@ -102,7 +113,9 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             stored_root = authdb.get_root(device_id)
             if stored_root is None:
                 #raise DataError("No Merkle root stored; use INIT (empty proof, no witness)")
-                log.error( __name__, "No Merkle root stored; use INIT (empty proof, no witness)", )
+                if __debug__:
+                    from trezor import log
+                    log.error(__name__, "No Merkle root stored; use INIT (empty proof, no witness)")
 
             witness_hash = _sha256d(msg.witness_address)
 
@@ -148,7 +161,9 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         stored_root = authdb.get_root(device_id)
         if stored_root is None:
             #raise DataError("No Merkle root stored on device")
-            log.error( __name__, "No Merkle root stored on device", )
+            if __debug__:
+                from trezor import log
+                log.error(__name__, "No Merkle root stored on device")
 
         current_leaf = _leaf_hash(address, old_value)
         if _reconstruct(current_leaf, proof, addr_hash) != stored_root:
@@ -203,6 +218,13 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     new_mac = _compute_mac(mac_key, new_root) if new_root is not None else None
     # In debug mode: auto-approve — return auth_mac so Suite can cache it for future calls
     auth_mac = _compute_mac(mac_key, old_leaf_hash, new_leaf_hash) if __debug__ else None
+    if __debug__:
+        from trezor import log
+        log.debug(
+            __name__,
+            "update_leaf: auto-approve auth_mac=%s (reuse as mac= in next pre-approved call)",
+            auth_mac,
+        )
     return AuthDbUpdateLeafResponse(
         counter=counter,
         new_root=new_root,

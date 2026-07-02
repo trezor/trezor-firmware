@@ -19,4 +19,13 @@ async def approve(msg: AuthDbApprove) -> AuthDbApproveResponse:
     identifier = await _get_identifier()
     mac_key = await _derive_mac_key()
     mac = _compute_mac(mac_key, msg.address, msg.value)
+
+    if __debug__:
+        from trezor import log
+        log.debug(
+            __name__,
+            "approve: address=%s value=%s identifier=%s mac=%s",
+            msg.address, msg.value, identifier, mac,
+        )
+
     return AuthDbApproveResponse(mac=mac, identifier=identifier)

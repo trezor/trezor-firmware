@@ -24,12 +24,13 @@ async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
 
     identifier = await _get_identifier()
 
-    if msg.mac is not None and msg.device_id is not None:
-        if msg.device_id != identifier:
-            raise DataError("device_id mismatch")
-        mac_key = await _derive_mac_key()
-        if _compute_mac(mac_key, msg.root) != msg.mac:
-            raise DataError("MAC verification failed")
+    if msg.mac is None or msg.device_id is None:
+        raise DataError("mac and device_id are required for AuthDbSetRoot")
+    if msg.device_id != identifier:
+        raise DataError("device_id mismatch")
+    mac_key = await _derive_mac_key()
+    if _compute_mac(mac_key, msg.root) != msg.mac:
+        raise DataError("MAC verification failed")
 
     authdb.set_root(identifier, msg.root)
     counter = authdb.increment_counter(identifier)
