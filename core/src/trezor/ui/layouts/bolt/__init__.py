@@ -1099,8 +1099,14 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
+        native_amount: str | None = None,
     ) -> None:
         from ..properties import with_colon
+
+        if native_amount is not None:
+            # A non-zero native ETH value carried alongside a token transfer;
+            # show it next to the token amount so it can't be signed unseen.
+            total_amount = f"{total_amount}\n{native_amount}"
 
         if is_send:
             description = f"{TR.words__recipient}:"
@@ -1181,6 +1187,7 @@ if not utils.BITCOIN_ONLY:
         maximum_fee: str,
         fee_info_items: Iterable[StrPropertyType],
         chunkify: bool = False,
+        native_amount: str | None = None,
     ) -> None:
         from ..properties import AboveThreshold
 
@@ -1269,8 +1276,8 @@ if not utils.BITCOIN_ONLY:
         )
 
         await _confirm_summary(
-            None,
-            None,
+            native_amount,
+            f"{TR.words__amount}:" if native_amount else None,
             maximum_fee,
             TR.send__maximum_fee,
             TR.words__title_summary,
@@ -1285,6 +1292,7 @@ if not utils.BITCOIN_ONLY:
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
+        amount: str | None = None,
     ) -> None:
         from ..properties import with_colon
 
@@ -1296,8 +1304,8 @@ if not utils.BITCOIN_ONLY:
             properties,
         )
         with trezorui_api.confirm_summary(
-            amount=None,
-            amount_label=None,
+            amount=amount,
+            amount_label=with_colon(TR.words__amount) if amount is not None else None,
             fee=maximum_fee,
             fee_label=with_colon(TR.send__maximum_fee),
             extra_items=None,

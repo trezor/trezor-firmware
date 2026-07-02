@@ -1080,6 +1080,14 @@ async def _handle_approve(
     from .sc_constants import KNOWN_ADDRESSES
     from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
+    # approve() is not payable; surface any native ETH sent along with it.
+    native_value = int.from_bytes(msg.value, "big")
+    native_amount = (
+        format_ethereum_amount(native_value, None, defs.network)
+        if native_value
+        else None
+    )
+
     args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
     if len(args) != 2 or len(fields) != 2:
@@ -1121,6 +1129,7 @@ async def _handle_approve(
         address_bytes,
         is_revoke,
         bool(msg.chunkify),
+        native_amount=native_amount,
     )
 
 
@@ -1135,6 +1144,14 @@ async def _handle_transfer(
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> None:
     from .layout import require_confirm_payment_request, require_confirm_tx
+
+    # transfer() is not payable; surface any native ETH sent along with it.
+    native_value = int.from_bytes(msg.value, "big")
+    native_amount = (
+        format_ethereum_amount(native_value, None, defs.network)
+        if native_value
+        else None
+    )
 
     args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
@@ -1184,6 +1201,7 @@ async def _handle_transfer(
             actual_token or defs.get_token(address_bytes),
             is_send=True,
             chunkify=bool(msg.chunkify),
+            native_amount=native_amount,
         )
 
 
@@ -1200,6 +1218,23 @@ async def _handle_generic_ui(
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
     from .sc_constants import KNOWN_ADDRESSES
+
+    # Surface the native ETH value in the summary when non-zero - unless the
+    # display format already renders it as an `AmountFormatter` field (e.g. a
+    # swap's "Amount to Send"). That field shows the same canonical string the
+    # summary would, so repeating it there is pure duplication. A `@.value`
+    # field formatted any other way still gets its own summary line.
+    value = int.from_bytes(msg.value, "big")
+    value_shown_as_amount_field = any(
+        fd.path == ContainerPath.Value
+        and isinstance(fd.get_formatter(), AmountFormatter)
+        for fd in display_format.field_definitions
+    )
+    amount = (
+        format_ethereum_amount(value, None, defs.network)
+        if value and not value_shown_as_amount_field
+        else None
+    )
 
     _, fields = await display_format.parse_calldata(calldata, msg, defs)
 
@@ -1224,5 +1259,5 @@ async def _handle_generic_ui(
     )
 
     await require_confirm_clear_signing(
-        recipient_str, display_format.intent, properties_to_confirm, maximum_fee
+        recipient_str, display_format.intent, properties_to_confirm, maximum_fee, amount
     )
