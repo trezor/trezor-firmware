@@ -2,6 +2,7 @@ cargo-features = ["panic-immediate-abort"]
 
 [workspace]
 members = [
+    "crypto",
     "models",
     "rtl",
     "sys",
@@ -90,6 +91,7 @@ unsize = "1.1.0"
 without-alloc = "0.2.2"
 zeroize = { version = "1.8.2", default-features = false }
 
+crypto = { path = "crypto" }
 models = { path = "models" }
 rtl = { path = "rtl" }
 sys = { path = "sys" }

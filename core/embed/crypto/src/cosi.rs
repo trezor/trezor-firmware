@@ -39,12 +39,15 @@ fn select_keys(
     let mut selected_keys = Vec::new();
     for key in keys {
         if sigmask & 1 != 0 {
-            unwrap!(selected_keys.push(*key));
+            if selected_keys.push(*key).is_err() {
+                // this means sigmask indicates more than MAX_PUBKEYS public keys
+                return Err(Error::InvalidSigmask);
+            };
         }
         sigmask >>= 1;
     }
     if sigmask != 0 {
-        Err(Error::InvalidParams)
+        Err(Error::InvalidSigmask)
     } else {
         Ok(selected_keys)
     }
