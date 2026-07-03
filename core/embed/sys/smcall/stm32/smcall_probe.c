@@ -33,6 +33,12 @@ bool probe_read_access(const void *addr, size_t len) {
     return true;
   }
 
+  // A zero-length access is always safe, even with a non-NULL dangling
+  // pointer (e.g. Rust's `"".as_ptr()`).
+  if (len == 0) {
+    return true;
+  }
+
   // Address overflow check
   if ((uintptr_t)addr + len < (uintptr_t)addr) {
     return false;
@@ -48,6 +54,12 @@ bool probe_read_access(const void *addr, size_t len) {
 
 bool probe_write_access(void *addr, size_t len) {
   if (addr == NULL) {
+    return true;
+  }
+
+  // A zero-length access is always safe, even with a non-NULL dangling
+  // pointer (e.g. Rust's `"".as_ptr()`).
+  if (len == 0) {
     return true;
   }
 
