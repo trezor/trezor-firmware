@@ -5,9 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-# Needed for setup purposes, filling the FILE_HASHES dict
-from tests.ui_tests.common import TestResult, _hash_files  # isort:skip
-from tests.ui_tests.common import get_current_fixtures  # isort:skip
+from tests.ui_tests.common import TestResult, get_current_fixtures  # isort:skip
 
 FIXTURES = get_current_fixtures()
 
@@ -17,7 +15,7 @@ def compute_hash(result: TestResult) -> TestResult | None:
         print("WARNING: skipping failed test", result.test.id)
         return None
 
-    actual_hash = _hash_files(result.test.actual_dir)
+    actual_hash = result.actual_hash
     expected_hash = (
         FIXTURES.get(result.test.model, {})
         .get(result.test.group, {})
