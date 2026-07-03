@@ -316,6 +316,41 @@ def test_update_leaf_delete(session: Session) -> None:
 
 
 @pytest.mark.models("core")
+def test_update_leaf_delete_to_empty_returns_incremented_counter(session: Session) -> None:
+    """Regression guard: deleting the only remaining leaf must still bump the
+    counter and succeed, not raise "No record for identifier". Built via
+    update_leaf() INIT (not set_root()) so this exercises only the
+    clear_root()/increment_counter() ordering fix in update_leaf.py, without
+    depending on AuthDbSetRoot's separate mac/device_id requirements."""
+    counter0, _root0, identifier, _mac0, _auth_mac0 = authdb.update_leaf(
+        session, address=b"alice", old_value=b"", new_value=b"data_alice", proof=[]
+    )
+
+    counter1, new_root, identifier2, del_mac, _auth_mac1 = authdb.update_leaf(
+        session,
+        address=b"alice",
+        old_value=b"data_alice",
+        new_value=b"",
+        proof=[],
+    )
+    assert new_root is None  # tree is empty
+    assert del_mac is None   # no root -> no MAC
+    assert counter1 == counter0 + 1
+    assert identifier2 == identifier
+
+    # The identity must be fully usable afterwards (record wasn't left in a
+    # half-deleted state): a fresh INIT should work exactly as before. Note
+    # clear_root() deletes the whole identity record, so the counter starts
+    # over from 0 here rather than continuing from counter1 -- a separate,
+    # pre-existing quirk of that design, not something this fix changes.
+    counter2, root2, _identifier3, _mac2, _auth_mac2 = authdb.update_leaf(
+        session, address=b"bob", old_value=b"", new_value=b"data_bob", proof=[]
+    )
+    assert root2 is not None
+    assert counter2 == 1
+
+
+@pytest.mark.models("core")
 def test_update_leaf_wrong_old_value_rejected(session: Session) -> None:
     """UPDATE with wrong old_value must be rejected."""
     from trezorlib.exceptions import TrezorFailure

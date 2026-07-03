@@ -207,13 +207,22 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
         new_root = _reconstruct(_leaf_hash(address, new_value), proof, addr_hash)
 
-    # Persist the new root
+    # Persist the new root.
+    #
+    # increment_counter() requires the identity's storage record to already
+    # exist, and clear_root() deletes that record outright (identifier, root
+    # AND counter). So on a DELETE that empties the tree, the counter must be
+    # bumped BEFORE clearing the root (the record still exists from the prior
+    # operation); for every other transition, set_root() -- which creates the
+    # record on a first-ever INIT -- must run first instead. Doing this in
+    # the other order raises "No record for identifier" on every delete-to-
+    # empty-tree call.
     if new_root is None:
+        counter = authdb.increment_counter(device_id)
         authdb.clear_root(device_id)
     else:
         authdb.set_root(device_id, new_root)
-
-    counter = authdb.increment_counter(device_id)
+        counter = authdb.increment_counter(device_id)
 
     if __debug__:
         from trezor import log
