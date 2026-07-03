@@ -343,6 +343,8 @@ uint32_t systask_get_r0(systask_t* task) {
 static void systask_kill(systask_t* task) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
+  systask_print_pminfo(task);
+
   task->killed = 1;
 
   if (task == &scheduler->kernel_task) {
