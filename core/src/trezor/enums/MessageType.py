@@ -326,3 +326,5 @@ if not utils.BITCOIN_ONLY:
     AuthDbApplyOfflineOperationsResponse = 2325
     AuthDbDeleteOfflineOperations = 2326
     AuthDbDeleteOfflineOperationsResponse = 2327
+    AuthDbFastForwardRoot = 2328
+    AuthDbFastForwardRootResponse = 2329

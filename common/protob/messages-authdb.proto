@@ -101,28 +101,35 @@ message AuthDbUpdateLeafResponse {
     required uint32 counter    = 1;  // monotonic counter after this update
     optional bytes  new_root   = 2;  // absent if the tree is now empty
     optional bytes  wallet_id  = 3;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
-    optional bytes  mac        = 4;  // HMAC(device_key, new_root); absent if tree is now empty
+    optional bytes  mac        = 4;  // HMAC(mac_key, wallet_id||counter||new_root); absent if tree is now
+                                      // empty. A root-attestation token -- see AuthDbFastForwardRoot.
     optional bytes  auth_mac   = 5;  // HMAC(device_key, old_leafHash||new_leafHash); set in debug/auto_approve mode
 }
 
 /**
- * Request: Pre-authorize an address+value pair on-screen so future update_leaf calls
- * can skip the confirmation dialog when they supply the returned MAC.
+ * Request: Pre-authorize an address+old_value->new_value transition on-screen
+ * so a future AuthDbUpdateLeaf call can skip the confirmation dialog when it
+ * supplies the returned MAC. old_value/new_value use the same empty=absent
+ * convention as AuthDbUpdateLeaf (empty old_value = INSERT/INIT, empty
+ * new_value = DELETE).
  * @start
  * @next AuthDbApproveResponse
  * @next Failure
  */
 message AuthDbApprove {
-    required bytes address = 1;  // address to authorize
-    required bytes value   = 2;  // value to authorize at that address
+    required bytes address   = 1;  // address to authorize
+    required bytes new_value = 2;  // value to authorize at that address; empty = delete
+    optional bytes old_value = 3;  // current value being replaced; empty/absent = address was absent
 }
 
 /**
- * Response: MAC token authorizing future updates to (address, value).
+ * Response: MAC token authorizing the update_leaf call for this exact
+ * address/old_value/new_value transition.
  * @end
  */
 message AuthDbApproveResponse {
-    required bytes mac        = 1;  // HMAC-SHA256(slip21_key, address‖value)
+    required bytes mac        = 1;  // HMAC(mac_key, leaf_hash(address,old_value)||leaf_hash(address,new_value))
+                                     // -- same formula AuthDbUpdateLeaf verifies against.
     optional bytes wallet_id  = 2;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
 }
 
@@ -365,6 +372,14 @@ message AuthDbApplyOfflineOperationsResponse {
     required uint32 counter               = 3;
     required uint32 last_applied_sequence = 4;
     optional bytes  wallet_id             = 5;
+    optional bytes  root_mac              = 6;  // HMAC(mac_key, wallet_id||counter||new_root);
+                                                 // absent if tree is now empty. A root-attestation
+                                                 // token: since mac_key is derived from the wallet's
+                                                 // seed (not the physical device), this token can be
+                                                 // replayed via AuthDbFastForwardRoot on ANY physical
+                                                 // device holding the same wallet to fast-forward it
+                                                 // to this exact state, without replaying every
+                                                 // individual operation.
 }
 
 /**
@@ -388,4 +403,47 @@ message AuthDbDeleteOfflineOperations {
 message AuthDbDeleteOfflineOperationsResponse {
     required uint32 deleted_count   = 1;
     required uint32 remaining_count = 2;
+}
+
+/**
+ * Request: Fast-forward this wallet's root directly to a state a device has
+ * already attested to, skipping replay of individual operations.
+ *
+ * `mac` MUST be a root-attestation token previously issued by THIS OR ANY
+ * OTHER physical device holding the same wallet (AuthDbUpdateLeafResponse.mac
+ * or AuthDbApplyOfflineOperationsResponse.root_mac) -- mac_key is derived
+ * from the wallet's seed, not the physical device, so it is intentionally
+ * interoperable across every device that has unlocked this exact wallet.
+ * This is NOT a host-originated signature: Suite can only replay a
+ * (wallet_id, counter, new_root) triple some device already vouched for, it
+ * cannot mint a new one. `counter` and `wallet_id` are bound INSIDE the mac
+ * preimage specifically so a host cannot pair a genuine old attestation with
+ * a forged, unauthenticated higher counter to bypass the monotonicity check
+ * below -- the device only trusts the counter it decodes from inside the
+ * verified mac, never a bare sibling field.
+ *
+ * The device rejects unless `counter` is strictly greater than its own
+ * currently stored counter for this wallet_id (anti-rollback; still permits
+ * skipping intermediate states the caller doesn't have -- see
+ * docs/authdb.md's open-question note on reconciling this with an
+ * in-flight, not-yet-drained offline queue).
+ * @start
+ * @next AuthDbFastForwardRootResponse
+ * @next Failure
+ */
+message AuthDbFastForwardRoot {
+    required bytes  new_root  = 1;  // 32-byte target Merkle root
+    required uint32 counter   = 2;  // must be > this wallet's current counter
+    required bytes  wallet_id = 3;  // must match the currently active wallet_id
+    required bytes  mac       = 4;  // HMAC(mac_key, wallet_id||counter||new_root)
+}
+
+/**
+ * Response: Confirmation that the root/counter were fast-forwarded.
+ * @end
+ */
+message AuthDbFastForwardRootResponse {
+    required uint32 counter   = 1;  // now-stored counter (equals request's counter)
+    optional bytes  new_root  = 2;  // now-stored root
+    optional bytes  wallet_id = 3;
 }

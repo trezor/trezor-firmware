@@ -141,6 +141,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.authdb.apply_offline_operations"
     if msg_type == MessageType.AuthDbDeleteOfflineOperations:
         return "apps.authdb.delete_offline_operations"
+    if msg_type == MessageType.AuthDbFastForwardRoot:
+        return "apps.authdb.fast_forward_root"
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:

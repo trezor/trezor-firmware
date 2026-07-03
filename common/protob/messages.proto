@@ -410,6 +410,8 @@ enum MessageType {
     MessageType_AuthDbApplyOfflineOperationsResponse = 2325 [(wire_out) = true];
     MessageType_AuthDbDeleteOfflineOperations = 2326 [(wire_in) = true];
     MessageType_AuthDbDeleteOfflineOperationsResponse = 2327 [(wire_out) = true];
+    MessageType_AuthDbFastForwardRoot = 2328 [(wire_in) = true];
+    MessageType_AuthDbFastForwardRootResponse = 2329 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

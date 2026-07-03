@@ -7736,13 +7736,15 @@ if TYPE_CHECKING:
 
     class AuthDbApprove(protobuf.MessageType):
         address: "AnyBytes"
-        value: "AnyBytes"
+        new_value: "AnyBytes"
+        old_value: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             address: "AnyBytes",
-            value: "AnyBytes",
+            new_value: "AnyBytes",
+            old_value: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8048,6 +8050,7 @@ if TYPE_CHECKING:
         counter: "int"
         last_applied_sequence: "int"
         wallet_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8057,6 +8060,7 @@ if TYPE_CHECKING:
             last_applied_sequence: "int",
             new_root: "AnyBytes | None" = None,
             wallet_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8086,4 +8090,42 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbDeleteOfflineOperationsResponse"]:
+            return isinstance(msg, cls)
+
+    class AuthDbFastForwardRoot(protobuf.MessageType):
+        new_root: "AnyBytes"
+        counter: "int"
+        wallet_id: "AnyBytes"
+        mac: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            new_root: "AnyBytes",
+            counter: "int",
+            wallet_id: "AnyBytes",
+            mac: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbFastForwardRoot"]:
+            return isinstance(msg, cls)
+
+    class AuthDbFastForwardRootResponse(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbFastForwardRootResponse"]:
             return isinstance(msg, cls)

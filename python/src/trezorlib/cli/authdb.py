@@ -245,20 +245,25 @@ def delete(
 
 @cli.command()
 @click.argument("address_hex")
-@click.argument("value_hex")
+@click.argument("old_value_hex")
+@click.argument("new_value_hex")
 @with_session
-def approve(session: "Session", address_hex: str, value_hex: str) -> str:
-    """Pre-authorize an (address, value) pair on the device.
+def approve(session: "Session", address_hex: str, old_value_hex: str, new_value_hex: str) -> str:
+    """Pre-authorize an address old_value->new_value transition on the device.
 
-    The user confirms on-screen; the device returns a MAC token.
-    Use the returned MAC with update-leaf --mac to skip future confirmation dialogs.
+    The user confirms on-screen; the device returns a MAC token computed the
+    same way update-leaf verifies it. Use the returned MAC with update-leaf
+    --mac (for this exact address/old_value/new_value) to skip future
+    confirmation dialogs.
 
-    ADDRESS_HEX  hex-encoded address to authorize.
-    VALUE_HEX    hex-encoded value to authorize at that address.
+    ADDRESS_HEX    hex-encoded address to authorize.
+    OLD_VALUE_HEX  hex-encoded current value; "" if the address is absent (INSERT/INIT).
+    NEW_VALUE_HEX  hex-encoded value to authorize at that address.
     """
     address = bytes.fromhex(address_hex)
-    value = bytes.fromhex(value_hex)
-    mac, wallet_id = authdb.approve(session, address=address, value=value)
+    old_value = bytes.fromhex(old_value_hex) if old_value_hex else None
+    new_value = bytes.fromhex(new_value_hex)
+    mac, wallet_id = authdb.approve(session, address=address, new_value=new_value, old_value=old_value)
     mac_hex = mac.hex()
     id_hex = wallet_id.hex() if wallet_id else "(none)"
     return f"Approved. MAC: {mac_hex}. Wallet ID: {id_hex}"
@@ -336,3 +341,138 @@ def set_device_id(session: "Session", device_id_hex: str) -> str:
     device_id = bytes.fromhex(device_id_hex)
     echoed = authdb.set_device_id(session, device_id=device_id)
     return f"device_id set to: {echoed.hex()}"
+
+
+# ---------------------------------------------------------------------------
+# Offline synchronization
+# ---------------------------------------------------------------------------
+
+
+@cli.command(name="queue-offline-operation")
+@click.argument("address_hex")
+@click.argument("old_value_hex")
+@click.argument("new_value_hex")
+@with_session
+def queue_offline_operation(
+    session: "Session", address_hex: str, old_value_hex: str, new_value_hex: str
+) -> str:
+    """Sign and append an offline operation to the on-device queue.
+
+    Use when the host database is unreachable.
+
+    ADDRESS_HEX    hex-encoded address.
+    OLD_VALUE_HEX  hex-encoded current value; "" if the address is absent (INSERT).
+    NEW_VALUE_HEX  hex-encoded new value; "" to delete.
+    """
+    address = bytes.fromhex(address_hex)
+    old_value = bytes.fromhex(old_value_hex) if old_value_hex else b""
+    new_value = bytes.fromhex(new_value_hex) if new_value_hex else b""
+    sequence, mac, wallet_id = authdb.queue_offline_operation(
+        session, address=address, old_value=old_value, new_value=new_value
+    )
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    return f"Queued. Sequence: {sequence}. MAC: {mac.hex()}. Wallet ID: {id_hex}"
+
+
+@cli.command(name="get-offline-operations")
+@with_session
+def get_offline_operations_cmd(session: "Session") -> str:
+    """Return the current root/counter plus every queued offline operation."""
+    current_root, counter, wallet_id, operations = authdb.get_offline_operations(session)
+    root_hex = current_root.hex() if current_root else "(empty)"
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    lines = [
+        f"Wallet ID: {id_hex}. Current root: {root_hex}. Counter: {counter}.",
+        "sequence | address | old_value | new_value | mac",
+    ]
+    for op in operations:
+        lines.append(
+            f"{op.sequence} | {op.address.hex()} | "
+            f"{op.old_value.hex() if op.old_value else ''} | "
+            f"{op.new_value.hex() if op.new_value else ''} | {op.mac.hex()}"
+        )
+    return "\n".join(lines)
+
+
+@cli.command(name="apply-offline-operations")
+@click.option(
+    "--file",
+    "file_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False),
+    help="JSON file: a list of rebased operations, each with hex-encoded "
+    "sequence/address/old_value/new_value/mac/proof/witness_address/witness_value "
+    "(proof is a list of hex strings; old_value/new_value/witness_* may be omitted).",
+)
+@with_session
+def apply_offline_operations_cmd(session: "Session", file_path: str) -> str:
+    """Apply a batch of host-rebased offline operations from a JSON file."""
+    import json
+
+    with open(file_path) as f:
+        raw_ops = json.load(f)
+
+    operations = [
+        authdb.RebasedOperation(
+            sequence=op["sequence"],
+            address=bytes.fromhex(op["address"]),
+            old_value=bytes.fromhex(op["old_value"]) if op.get("old_value") else b"",
+            new_value=bytes.fromhex(op["new_value"]) if op.get("new_value") else b"",
+            mac=bytes.fromhex(op["mac"]),
+            proof=[bytes.fromhex(h) for h in op.get("proof", [])],
+            witness_address=bytes.fromhex(op["witness_address"]) if op.get("witness_address") else None,
+            witness_value=bytes.fromhex(op["witness_value"]) if op.get("witness_value") else None,
+        )
+        for op in raw_ops
+    ]
+
+    applied_count, new_root, counter, last_applied_sequence, wallet_id, root_mac = (
+        authdb.apply_offline_operations(session, operations)
+    )
+    root_hex = new_root.hex() if new_root else "(empty)"
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    mac_hex = root_mac.hex() if root_mac else "(none)"
+    return (
+        f"Applied: {applied_count}/{len(operations)}. New root: {root_hex}. "
+        f"Counter: {counter}. Last applied sequence: {last_applied_sequence}. "
+        f"Wallet ID: {id_hex}. Root-attestation MAC: {mac_hex}"
+    )
+
+
+@cli.command(name="delete-offline-operations")
+@with_session
+def delete_offline_operations_cmd(session: "Session") -> str:
+    """Garbage-collect queued operations up to the device's own last_applied_sequence."""
+    deleted, remaining = authdb.delete_offline_operations(session)
+    return f"Deleted: {deleted}. Remaining: {remaining}."
+
+
+@cli.command(name="fast-forward-root")
+@click.argument("new_root_hex")
+@click.argument("counter", type=int)
+@click.argument("wallet_id_hex")
+@click.argument("mac_hex")
+@with_session
+def fast_forward_root(
+    session: "Session", new_root_hex: str, counter: int, wallet_id_hex: str, mac_hex: str
+) -> str:
+    """Fast-forward this wallet's root to a state some device already attested to.
+
+    MAC_HEX must be a root-attestation token previously returned as the
+    `mac`/root_mac field from update-leaf or apply-offline-operations (on
+    this device or on any other physical device sharing this wallet).
+
+    NEW_ROOT_HEX  hex-encoded target root (32 bytes).
+    COUNTER       target counter value; must be greater than the wallet's current counter.
+    WALLET_ID_HEX hex-encoded wallet_id the attestation was issued for.
+    MAC_HEX       hex-encoded root-attestation token.
+    """
+    new_root = bytes.fromhex(new_root_hex)
+    wallet_id = bytes.fromhex(wallet_id_hex)
+    mac = bytes.fromhex(mac_hex)
+    new_counter, echoed_root, echoed_wallet_id = authdb.fast_forward_root(
+        session, new_root=new_root, counter=counter, wallet_id=wallet_id, mac=mac
+    )
+    root_hex = echoed_root.hex() if echoed_root else "(none)"
+    id_hex = echoed_wallet_id.hex() if echoed_wallet_id else "(none)"
+    return f"Fast-forwarded. Counter: {new_counter}. Root: {root_hex}. Wallet ID: {id_hex}"

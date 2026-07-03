@@ -9685,17 +9685,20 @@ class AuthDbApprove(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2308
     FIELDS = {
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("value", "bytes", repeated=False, required=True),
+        2: protobuf.Field("new_value", "bytes", repeated=False, required=True),
+        3: protobuf.Field("old_value", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "bytes",
-        value: "bytes",
+        new_value: "bytes",
+        old_value: Optional["bytes"] = None,
     ) -> None:
         self.address = address
-        self.value = value
+        self.new_value = new_value
+        self.old_value = old_value
 
 
 class AuthDbApproveResponse(protobuf.MessageType):
@@ -10023,6 +10026,7 @@ class AuthDbApplyOfflineOperationsResponse(protobuf.MessageType):
         3: protobuf.Field("counter", "uint32", repeated=False, required=True),
         4: protobuf.Field("last_applied_sequence", "uint32", repeated=False, required=True),
         5: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10033,12 +10037,14 @@ class AuthDbApplyOfflineOperationsResponse(protobuf.MessageType):
         last_applied_sequence: "int",
         new_root: Optional["bytes"] = None,
         wallet_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
     ) -> None:
         self.applied_count = applied_count
         self.counter = counter
         self.last_applied_sequence = last_applied_sequence
         self.new_root = new_root
         self.wallet_id = wallet_id
+        self.root_mac = root_mac
 
 
 class AuthDbDeleteOfflineOperations(protobuf.MessageType):
@@ -10064,3 +10070,46 @@ class AuthDbDeleteOfflineOperationsResponse(protobuf.MessageType):
     ) -> None:
         self.deleted_count = deleted_count
         self.remaining_count = remaining_count
+
+
+class AuthDbFastForwardRoot(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2328
+    FIELDS = {
+        1: protobuf.Field("new_root", "bytes", repeated=False, required=True),
+        2: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=True),
+        4: protobuf.Field("mac", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        new_root: "bytes",
+        counter: "int",
+        wallet_id: "bytes",
+        mac: "bytes",
+    ) -> None:
+        self.new_root = new_root
+        self.counter = counter
+        self.wallet_id = wallet_id
+        self.mac = mac
+
+
+class AuthDbFastForwardRootResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2329
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.wallet_id = wallet_id

@@ -123,6 +123,24 @@ def increment_counter(wallet_id: bytes) -> int:
     return new_val
 
 
+def set_counter(wallet_id: bytes, counter: int) -> None:
+    """Directly set the counter to an arbitrary value.
+
+    Only used by fast-forward (AuthDbFastForwardRoot), which jumps straight
+    to a MAC-attested (wallet_id, counter, root) triple -- unlike
+    increment_counter(), this does not require the value to be exactly one
+    more than the current counter, since the caller has already verified
+    counter > current via the attestation MAC before calling this.
+    """
+    table = _load_table()
+    off = _find_record(table, wallet_id)
+    if off < 0:
+        raise ValueError("No record for wallet_id")
+    ctr_off = off + ROOT_LENGTH + WALLET_ID_LENGTH
+    table[ctr_off : ctr_off + 4] = counter.to_bytes(4, "big")
+    _save_table(table)
+
+
 # ---------------------------------------------------------------------------
 # Offline cache — per-address label + data_mac storage
 # ---------------------------------------------------------------------------

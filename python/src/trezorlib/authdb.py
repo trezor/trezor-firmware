@@ -169,17 +169,24 @@ def set_device_id(
 def approve(
     session: "Session",
     address: bytes,
-    value: bytes,
+    new_value: bytes,
+    old_value: Optional[bytes] = None,
 ) -> tuple[bytes, Optional[bytes]]:
-    """Pre-authorize an (address, value) pair on the device.
+    """Pre-authorize an address old_value->new_value transition on the device.
+
+    old_value=None/b"" means the address is currently absent (INSERT/INIT),
+    matching update_leaf's convention -- the MAC is computed the same way
+    update_leaf verifies it, so it can only be used to pre-approve this exact
+    transition.
 
     The user confirms on-screen; the device returns a MAC token that can be
-    passed to future update_leaf calls to skip the confirmation dialog.
+    passed to a future update_leaf call for this same address/old_value/
+    new_value to skip the confirmation dialog.
 
     Returns (mac, wallet_id).
     """
     resp = session.call(
-        messages.AuthDbApprove(address=address, value=value),
+        messages.AuthDbApprove(address=address, new_value=new_value, old_value=old_value),
         expect=messages.AuthDbApproveResponse,
     )
     return resp.mac, resp.wallet_id
@@ -285,7 +292,7 @@ class RebasedOperation:
 def apply_offline_operations(
     session: "Session",
     operations: list[RebasedOperation],
-) -> tuple[int, Optional[bytes], int, int, Optional[bytes]]:
+) -> tuple[int, Optional[bytes], int, int, Optional[bytes], Optional[bytes]]:
     """Apply a batch of host-rebased offline operations.
 
     The device independently verifies each operation's MAC and Merkle proof
@@ -293,7 +300,10 @@ def apply_offline_operations(
     root. Processing stops at the first operation that fails verification or
     is not the immediate next expected sequence.
 
-    Returns (applied_count, new_root, counter, last_applied_sequence, wallet_id).
+    Returns (applied_count, new_root, counter, last_applied_sequence,
+    wallet_id, root_mac). root_mac is a root-attestation token (absent if
+    the tree is now empty) that can be replayed via fast_forward_root() on
+    any other physical device sharing this wallet.
     """
     resp = session.call(
         messages.AuthDbApplyOfflineOperations(
@@ -319,6 +329,7 @@ def apply_offline_operations(
         resp.counter,
         resp.last_applied_sequence,
         resp.wallet_id,
+        resp.root_mac,
     )
 
 
@@ -336,3 +347,71 @@ def delete_offline_operations(session: "Session") -> tuple[int, int]:
         expect=messages.AuthDbDeleteOfflineOperationsResponse,
     )
     return resp.deleted_count, resp.remaining_count
+
+
+def fast_forward_root(
+    session: "Session",
+    new_root: bytes,
+    counter: int,
+    wallet_id: bytes,
+    mac: bytes,
+) -> tuple[int, Optional[bytes], Optional[bytes]]:
+    """Fast-forward this wallet's root to a state some device already attested to.
+
+    `mac` must be a root-attestation token previously returned as `mac` from
+    update_leaf() or as `root_mac` from apply_offline_operations() -- by this
+    device or by any other physical device that has unlocked the same
+    wallet_id (the underlying mac_key is wallet-derived, not device-derived).
+    Safe on production firmware: a host cannot mint a new token, only replay
+    one a device already produced, and the device independently re-derives
+    its own mac_key to verify it.
+
+    Returns (counter, new_root, wallet_id).
+    """
+    resp = session.call(
+        messages.AuthDbFastForwardRoot(
+            new_root=new_root, counter=counter, wallet_id=wallet_id, mac=mac
+        ),
+        expect=messages.AuthDbFastForwardRootResponse,
+    )
+    return resp.counter, resp.new_root, resp.wallet_id
+
+
+def sync_offline_queue(
+    session: "Session",
+    persist_and_rebase,
+    delete_after_apply: bool = True,
+) -> tuple[int, int]:
+    """Drive one full offline-sync cycle for this device's active wallet.
+
+    1. Fetch the queue via get_offline_operations().
+    2. Call persist_and_rebase(operations) -- caller-supplied callback that
+       MUST durably commit each operation to the host's canonical database
+       BEFORE returning rebased proofs. This ordering is intentionally hard
+       to get wrong: rebased proofs cannot be produced without the caller
+       already having the canonical (post-write) tree state, which for a
+       real backend implies the write already landed.
+    3. apply_offline_operations() -- device verifies + applies, returns
+       last_applied_sequence.
+    4. If delete_after_apply and applied_count > 0: delete_offline_operations().
+       Pass delete_after_apply=False to apply now and delete in a later,
+       separate call (e.g. after an out-of-band durability confirmation such
+       as a DB replica ack) -- apply and delete are intentionally separate
+       RPCs, so this wrapper preserves that separation instead of hiding it.
+
+    Returns (applied_count, deleted_count) (deleted_count=0 if skipped).
+    """
+    _current_root, _counter, _wallet_id, operations = get_offline_operations(session)
+    if not operations:
+        return 0, 0
+
+    rebased = persist_and_rebase(operations)
+    applied_count, _new_root, _counter, _last_applied_sequence, _wallet_id, _root_mac = (
+        apply_offline_operations(session, rebased)
+    )
+
+    deleted_count = 0
+    if delete_after_apply and applied_count > 0:
+        deleted_count, _remaining = delete_offline_operations(session)
+
+    return applied_count, deleted_count
