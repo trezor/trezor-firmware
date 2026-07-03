@@ -113,6 +113,7 @@ SRCS  += monero/base58.c
 SRCS  += monero/serialize.c
 SRCS  += monero/xmr.c
 SRCS  += noise_kk1.c
+SRCS  += noise_xxpsk3.c
 SRCS  += blake256.c
 SRCS  += blake2b.c blake2s.c
 SRCS  += chacha_drbg.c
