@@ -1,9 +1,33 @@
 async def _get_device_id() -> bytes:
-    """Derive a device-specific identifier (not passphrase-bound).
+    """Derive the physical-device identifier (independent of seed/passphrase).
 
-    device_id = SLIP21(no-passphrase seed, [b"AUTHDB DEVICE ID"]).key()  -- 32 bytes
-    Stable across different passphrases on the same device/mnemonic.
-    In debug builds a flash override (set via AuthDbSetDeviceId) takes precedence.
+    device_id = SHA-256(unhex(storage.device.get_device_id()))  -- 32 bytes
+
+    storage.device.get_device_id() is a random value generated once and
+    explicitly preserved across wipe_device (see core/src/storage/__init__.py
+    reset()), so this identifies the physical hardware unit, not the
+    currently loaded wallet. It is already exposed to hosts via
+    Features.device_id, so it carries no additional secrecy here -- it is
+    only ever used as a public attribution/scoping value, never as MAC
+    key material by itself.
+    """
+    import storage.device as storage_device
+    from trezor.crypto.hashlib import sha256
+    from ubinascii import unhexlify
+
+    raw = unhexlify(storage_device.get_device_id())
+    return sha256(raw).digest()
+
+
+async def _get_wallet_id() -> bytes:
+    """Derive the wallet identifier (specific mnemonic + passphrase combination).
+
+    wallet_id = SLIP21(seed_with_passphrase, [b"AUTHDB WALLET ID"]).key()  -- 32 bytes
+
+    Uses the passphrase-including seed, so distinct passphrases on the same
+    mnemonic (distinct hidden wallets) get distinct wallet_ids and therefore
+    distinct Merkle trees. In debug builds a flash override (set via
+    AuthDbSetDeviceId) takes precedence, for deterministic testing.
     """
     if __debug__:
         import storage.authdb as authdb
@@ -14,32 +38,36 @@ async def _get_device_id() -> bytes:
     from apps.common import seed as seed_module
     from apps.common.seed import Slip21Node
 
-    s = seed_module._get_seed_without_passphrase()
+    s = await seed_module.get_seed()
     node = Slip21Node(s)
-    node.derive_path([b"AUTHDB DEVICE ID"])
+    node.derive_path([b"AUTHDB WALLET ID"])
     return node.key()
 
 
 async def _derive_mac_key() -> bytes:
-    """Derive the 32-byte device MAC key for AuthDB tokens via SLIP-0021.
+    """Derive the 32-byte wallet MAC key for AuthDB tokens via SLIP-0021.
 
-    device_key = HMAC-SHA256(SLIP21(no-passphrase, [b"AUTHDB MAC v1"]).key(), device_id)
-    Unique per device (mnemonic), not passphrase-bound.
+    mac_key = HMAC-SHA256(SLIP21(seed_with_passphrase, [b"AUTHDB MAC v1"]).key(), wallet_id)
+
+    Scoped to wallet_id (not device_id): a MAC computed for one hidden
+    wallet on this device must not validate against a different hidden
+    wallet's tree on the same physical unit. Unique per (mnemonic,
+    passphrase); no longer device-only.
     """
     from trezor.crypto import hmac as crypto_hmac
 
-    device_id = await _get_device_id()
+    wallet_id = await _get_wallet_id()
 
     from apps.common import seed as seed_module
     from apps.common.seed import Slip21Node
 
-    s = seed_module._get_seed_without_passphrase()
+    s = await seed_module.get_seed()
     node = Slip21Node(s)
     node.derive_path([b"AUTHDB MAC v1"])
     base_key = node.key()
 
-    # bind the base key to the device_id
-    return crypto_hmac(crypto_hmac.SHA256, base_key, device_id).digest()
+    # bind the base key to the wallet_id
+    return crypto_hmac(crypto_hmac.SHA256, base_key, wallet_id).digest()
 
 
 def _compute_mac(key: bytes, *parts: bytes) -> bytes:
@@ -50,7 +78,3 @@ def _compute_mac(key: bytes, *parts: bytes) -> bytes:
     for p in parts:
         h.update(p)
     return h.digest()
-
-
-# Keep _get_wallet_id as alias so existing handler imports don't break
-_get_wallet_id = _get_device_id
