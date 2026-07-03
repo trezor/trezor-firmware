@@ -23,15 +23,34 @@
 
 #include <io/nfc.h>
 #include <rtl/cli.h>
+#include <sys/sysevent.h>
 #include <sys/systick.h>
 
 #include "prodtest_error_codes.h"
 
-static nfc_dev_info_t dev_info = {0};
+static uint8_t nfc_compose_uri(const char* uri, uint8_t* buffer,
+                               uint8_t buffer_size) {
+  size_t uri_len = strlen(uri);
+  const uint8_t uri_header[] = {0x03,    uri_len + 5, 0xD1, 0x01,
+                                uri_len, 0x55,        0x01};
+
+  if (buffer_size < (uri_len + sizeof(uri_header))) {
+    return 0;  // Not enough room to create URI
+  }
+
+  memcpy(buffer, uri_header, sizeof(uri_header));
+  buffer = buffer + sizeof(uri_header);
+  memcpy(buffer, uri, uri_len);
+  buffer = buffer + uri_len;
+  *buffer = 0xFE;
+
+  return uri_len + sizeof(uri_header);  // return buffer len
+}
 
 static void prodtest_nfc_read_card(cli_t* cli) {
   uint32_t timeout = 0;
   bool timeout_set = false;
+  nfc_dev_info_t dev_info;
   memset(&dev_info, 0, sizeof(dev_info));
 
   if (cli_has_arg(cli, "timeout")) {
@@ -47,49 +66,59 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     return;
   }
 
-  nfc_status_t ret = nfc_init();
-
-  if (ret != NFC_OK) {
-    cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_INIT, "NFC init failed");
-    goto cleanup;
-  } else {
-    if (timeout_set) {
-      cli_trace(cli, "NFC activated in reader mode for %d ms.", timeout);
-    } else {
-      cli_trace(cli, "NFC activated in reader mode");
-    }
+  ts_t nfc_status = nfc_init();
+  if (ts_error(nfc_status)) {
+    cli_error(cli, PRODTEST_ERR_NFC_INIT, "NFC initialization failed");
+    return;
   }
 
-  if (NFC_OK != nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B |
-                                  NFC_POLLER_TECH_F | NFC_POLLER_TECH_V)) {
-    cli_error(cli, PRODTEST_ERR_NFC_TECH_REG, "NFC tech registration failed");
+  nfc_status = nfc_start_discovery();
+  if (ts_eq(nfc_status, TS_ENOINIT)) {
+    cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_INIT, "NFC not initialized");
     goto cleanup;
-  }
-
-  if (NFC_OK != nfc_activate_stm()) {
+  } else if (ts_error(nfc_status)) {
     cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
     goto cleanup;
+  } else if (timeout_set) {
+    cli_trace(cli, "NFC activated in reader mode for %d ms.", timeout);
+  } else {
+    cli_trace(cli, "NFC activated in reader mode");
   }
 
-  nfc_event_t nfc_event;
-  uint32_t expire_time = ticks_timeout(timeout);
+  // Clear leftover events
+  nfc_event_t event_flag;
+  nfc_get_event(&event_flag);
+  sysevents_t awaited_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+  sysevents_t signalled_events = {0};
+  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
 
+  uint32_t expire_time = ticks_timeout(timeout);
   while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "NFC test aborted");
+      break;
+    }
+
     if (timeout_set && ticks_expired(expire_time)) {
       cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_TIMEOUT, "NFC timeout");
       goto cleanup;
     }
 
-    nfc_status_t nfc_status = nfc_get_event(&nfc_event);
+    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(10));
 
-    if (nfc_status != NFC_OK) {
-      cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_ERROR, "NFC error");
-      goto cleanup;
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
+      continue;
     }
 
-    if (nfc_event == NFC_EVENT_ACTIVATED) {
-      nfc_dev_read_info(&dev_info);
+    if (!nfc_get_event(&event_flag)) {
+      cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_ERROR,
+                "Failed to get NFC events");
+      continue;
+    }
 
+    if (event_flag == NFC_EVENT_CONNECTED) {
+      nfc_get_device_info(&dev_info);
       cli_trace(cli, "NFC card detected.");
 
       switch (dev_info.type) {
@@ -99,100 +128,34 @@ static void prodtest_nfc_read_card(cli_t* cli) {
         case NFC_DEV_TYPE_B:
           cli_trace(cli, "NFC Type B: UID: %s", dev_info.uid);
           break;
-        case NFC_DEV_TYPE_F:
-          cli_trace(cli, "NFC Type F: UID: %s", dev_info.uid);
-          break;
-        case NFC_DEV_TYPE_V:
-          cli_trace(cli, "NFC Type V: UID: %s", dev_info.uid);
-          break;
-        case NFC_DEV_TYPE_ST25TB:
-          cli_trace(cli, "NFC Type ST25TB: UID: %s", dev_info.uid);
-          break;
-        case NFC_DEV_TYPE_AP2P:
-          cli_trace(cli, "NFC Type AP2P: UID: %s", dev_info.uid);
-          break;
         case NFC_DEV_TYPE_UNKNOWN:
           cli_trace(cli, "NFC Type UNKNOWN");
           break;
         default:
-          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC ERROR Unexpected");
+          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "Unknown NFC card type!");
           goto cleanup;
       }
 
-      if (timeout_set) {
-        nfc_dev_deactivate();
-        cli_trace(cli, "NFC reader mode over");
-        break;
+      switch (dev_info.interface) {
+        case NFC_DEV_INTERFACE_RF:
+          cli_trace(cli, "NFC Tag Type: RF (%d)", dev_info.interface);
+          break;
+        case NFC_DEV_INTERFACE_ISODEP:
+          cli_trace(cli, "NFC Tag Type: ISO-DEP (%d)", dev_info.interface);
+          break;
+        case NFC_DEV_INTERFACE_UNKNOWN:
+        default:
+          cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED,
+                    "NFC Unexpected Tag Type (%d)", dev_info.interface);
+          goto cleanup;
       }
 
-      systick_delay_ms(100);
-      nfc_dev_deactivate();
-    }
-
-    if (cli_aborted(cli)) {
-      goto cleanup;
+    } else if (event_flag == NFC_EVENT_DISCONNECTED) {
+      cli_trace(cli, "NFC card removed.");
     }
 
     systick_delay_ms(1);
   }
-
-  cli_ok(cli, "");
-
-cleanup:
-  nfc_deinit();
-}
-
-static void prodtest_nfc_emulate_card(cli_t* cli) {
-  uint32_t timeout = 0;
-  bool timeout_set = false;
-
-  if (cli_has_arg(cli, "timeout")) {
-    if (!cli_arg_uint32(cli, "timeout", &timeout)) {
-      cli_error_arg(cli, "Expecting timeout argument.");
-      return;
-    }
-    timeout_set = true;
-  }
-
-  if (cli_arg_count(cli) > 1) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  nfc_status_t ret = nfc_init();
-
-  if (ret != NFC_OK) {
-    cli_error(cli, PRODTEST_ERR_NFC_EMULATE_INIT, "NFC init failed");
-    goto cleanup;
-  } else {
-    if (timeout_set) {
-      cli_trace(cli, "Emulation started for %d ms", timeout);
-    } else {
-      cli_trace(cli, "Emulation started");
-    }
-  }
-
-  nfc_register_tech(NFC_CARD_EMU_TECH_A);
-  nfc_activate_stm();
-
-  uint32_t expire_time = ticks_timeout(timeout);
-  nfc_event_t nfc_event;
-
-  while (!timeout_set || !ticks_expired(expire_time)) {
-    nfc_status_t nfc_status = nfc_get_event(&nfc_event);
-
-    if (nfc_status != NFC_OK) {
-      cli_error(cli, PRODTEST_ERR_NFC_EMULATE_ERROR, "NFC error");
-      goto cleanup;
-    }
-
-    if (cli_aborted(cli)) {
-      goto cleanup;
-    }
-    systick_delay_ms(1);
-  }
-
-  cli_trace(cli, "Emulation over");
 
   cli_ok(cli, "");
 
@@ -203,6 +166,7 @@ cleanup:
 static void prodtest_nfc_write_card(cli_t* cli) {
   uint32_t timeout = 0;
   bool timeout_set = false;
+  nfc_dev_info_t dev_info;
   memset(&dev_info, 0, sizeof(dev_info));
 
   if (cli_has_arg(cli, "timeout")) {
@@ -218,43 +182,60 @@ static void prodtest_nfc_write_card(cli_t* cli) {
     return;
   }
 
-  nfc_status_t ret = nfc_init();
-
-  if (ret != NFC_OK) {
-    cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_INIT, "NFC init failed");
-    goto cleanup;
-  } else {
-    if (timeout_set) {
-      cli_trace(cli,
-                "NFC reader on, put the card on the reader (timeout %d ms)",
-                timeout);
-    } else {
-      cli_trace(cli, "NFC reader on, put the card on the reader");
-    }
+  ts_t nfc_status = nfc_init();
+  if (ts_error(nfc_status)) {
+    cli_error(cli, PRODTEST_ERR_NFC_INIT, "NFC initialization failed");
+    return;
   }
 
-  nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B | NFC_POLLER_TECH_F |
-                    NFC_POLLER_TECH_V);
-  nfc_activate_stm();
+  nfc_status = nfc_start_discovery();
+  if (ts_eq(nfc_status, TS_ENOINIT)) {
+    cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_INIT, "NFC not initialized");
+    goto cleanup;
+  } else if (ts_error(nfc_status)) {
+    cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
+    goto cleanup;
+  } else if (timeout_set) {
+    cli_trace(cli, "NFC activated in reader mode for %d ms.", timeout);
+  } else {
+    cli_trace(cli, "NFC activated in reader mode");
+  }
 
-  nfc_event_t nfc_event;
+  // Clear leftover events
+  nfc_event_t event_flag;
+  nfc_get_event(&event_flag);
+  sysevents_t awaited_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+  sysevents_t signalled_events = {0};
+  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
+
   uint32_t expire_time = ticks_timeout(timeout);
-
   while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "NFC test aborted");
+      break;
+    }
+
     if (timeout_set && ticks_expired(expire_time)) {
       cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_TIMEOUT, "NFC timeout");
       goto cleanup;
     }
 
-    nfc_status_t nfc_status = nfc_get_event(&nfc_event);
+    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(10));
 
-    if (nfc_status != NFC_OK) {
-      cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_ERROR, "NFC error");
-      goto cleanup;
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
+      continue;
     }
 
-    if (nfc_event == NFC_EVENT_ACTIVATED) {
-      nfc_dev_read_info(&dev_info);
+    if (!nfc_get_event(&event_flag)) {
+      cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_ERROR,
+                "Failed to get NFC events");
+      continue;
+    }
+
+    if (event_flag == NFC_EVENT_CONNECTED) {
+      cli_trace(cli, "NFC card detected.");
+      nfc_get_device_info(&dev_info);
 
       if (dev_info.type != NFC_DEV_TYPE_A) {
         cli_error(cli, PRODTEST_ERR_NFC_TYPE_A_ONLY,
@@ -263,20 +244,25 @@ static void prodtest_nfc_write_card(cli_t* cli) {
       }
 
       cli_trace(cli, "Writing URI to NFC tag %s", dev_info.uid);
-      nfc_dev_write_ndef_uri();
+      uint8_t uri_buffer[128] = {0};
+      uint8_t* rx_buff_ptr = NULL;
+      uint16_t* rx_buff_len = NULL;
+      nfc_apdu_cmd_t tx_buf = {.data = uri_buffer, .data_len = 0};
+      nfc_apdu_response_t rx_buf = {.data = &rx_buff_ptr,
+                                    .data_len = &rx_buff_len};
 
-      if (timeout_set) {
-        nfc_dev_deactivate();
-        cli_trace(cli, "NFC reader mode over");
-        break;
+      tx_buf.data_len =
+          nfc_compose_uri("trezor.io/", uri_buffer, sizeof(uri_buffer));
+      nfc_status = nfc_transceive(tx_buf, rx_buf);
+      if (ts_ok(nfc_status)) {
+        cli_trace(cli, "URI write success");
+      } else {
+        cli_error(cli, PRODTEST_ERR_NFC_WRITE_CARD_ERROR,
+                  "URI write failed: err=%d", ts_code(nfc_status));
       }
 
-      systick_delay_ms(100);
-      nfc_dev_deactivate();
-    }
-
-    if (cli_aborted(cli)) {
-      goto cleanup;
+    } else if (event_flag == NFC_EVENT_DISCONNECTED) {
+      cli_trace(cli, "NFC card removed.");
     }
 
     systick_delay_ms(1);
@@ -294,13 +280,6 @@ PRODTEST_CLI_CMD(
   .name = "nfc-read-card",
   .func = prodtest_nfc_read_card,
   .info = "Activate NFC in reader mode",
-  .args = "[<timeout>]"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "nfc-emulate-card",
-  .func = prodtest_nfc_emulate_card,
-  .info = "Activate NFC in card emulation (CE) mode",
   .args = "[<timeout>]"
 );
 

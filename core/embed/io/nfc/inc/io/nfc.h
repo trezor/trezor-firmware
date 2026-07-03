@@ -24,6 +24,7 @@
 #define NFC_MAX_UID_LEN 10
 #define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
+/** @brief Supported NFC types. **/
 typedef enum {
   NFC_POLLER_TECH_A = 0x1,
   NFC_POLLER_TECH_B = 0x1 << 1,
@@ -36,64 +37,94 @@ typedef enum {
 typedef enum {
   NFC_DEV_TYPE_A,
   NFC_DEV_TYPE_B,
-  NFC_DEV_TYPE_F,
-  NFC_DEV_TYPE_V,
-  NFC_DEV_TYPE_ST25TB,
-  NFC_DEV_TYPE_AP2P,
   NFC_DEV_TYPE_UNKNOWN,
 } nfc_dev_type_t;
 
+/** @brief NFC interface */
 typedef enum {
-  NFC_NO_EVENT,
-  NFC_EVENT_DEACTIVATED,
-  NFC_EVENT_ACTIVATED,
+  NFC_DEV_INTERFACE_RF,
+  NFC_DEV_INTERFACE_ISODEP,
+  NFC_DEV_INTERFACE_UNKNOWN,
+} nfc_dev_interface_t;
+
+/** @brief NFC poll events */
+typedef enum {
+  NFC_NO_EVENT = 0,
+  NFC_EVENT_CONNECTED,
+  NFC_EVENT_DISCONNECTED,
 } nfc_event_t;
 
-typedef enum {
-  NFC_OK,
-  NFC_ERROR,
-  NFC_NOT_INITIALIZED,
-  NFC_SPI_BUS_ERROR,
-  NFC_INITIALIZATION_FAILED,
-} nfc_status_t;
-
+/** @brief NFC card details */
 typedef struct {
-  uint8_t type;
-  char uid[NFC_MAX_UID_BUF_SIZE];  // Plus one for string termination
+  nfc_dev_type_t type;             //!< NFC card type
+  nfc_dev_interface_t interface;   //!< NFC card interface
+  char uid[NFC_MAX_UID_BUF_SIZE];  //!< Card UID string
   uint8_t uid_len;
 } nfc_dev_info_t;
 
-// Initialize NFC driver including supportive RFAL middleware
-nfc_status_t nfc_init(void);
+/** @brief NFC APDU command buffer structure */
+typedef struct {
+  const uint8_t *data;
+  uint16_t data_len;
+} nfc_apdu_cmd_t;
 
-// Deinitialize NFC driver
+/** @brief NFC APDU response buffer pointers */
+typedef struct {
+  uint8_t **data;
+  uint16_t **data_len;
+} nfc_apdu_response_t;
+
+/**
+ * @brief Initialize NFC driver including supportive RFAL middleware and
+ * polling mechanism.
+ * @return TS_OK when the function pass, otherwise an error.
+ */
+ts_t nfc_init(void);
+
+/** @brief Deinitialize NFC driver. */
 void nfc_deinit(void);
 
-// Register NFC technology (or several) to be explored by NFC state machine
-// use this function before activating the state machine with nfc_activate_stm()
-nfc_status_t nfc_register_tech(const nfc_tech_t tech);
+/**
+ * @brief Activates the NFC RFAL state machine to explore the previously
+ * registered technologies. The RFAL handles low-level NFC protocols and
+ * provides information about the activated device. This function only starts
+ * the exploration; you must regularly call nfc_get_event() to continue
+ * processing NFC operations.
+ * @return TS_OK when the function pass, otherwise an error.
+ */
+ts_t nfc_start_discovery(void);
 
-// Activates the NFC RFAL state machine to explore the previously registered
-// technologies. The RFAL handles low-level NFC protocols and provides
-// information about the activated device. This function only starts the
-// exploration; you must regularly call nfc_get_event() to continue processing
-// NFC operations.
-nfc_status_t nfc_activate_stm(void);
+/**
+ * @brief Deactivate the NFC RFAL state machine (put in IDLE state).
+ * @return TS_OK when the function pass, otherwise an error.
+ */
+ts_t nfc_stop_discovery(void);
 
-// Deactivate the NFC RFAL state machine (put in IDLE state).
-nfc_status_t nfc_deactivate_stm(void);
+/**
+ * @brief Get current events of NFC device.
+ * @param event [out] Pointer to store new event.
+ * @return TS_OK when the function pass, otherwise an error.
+ */
+bool nfc_get_event(nfc_event_t *event);
 
-// Calls NFC RFAL worker to service the NFC state machine and expolore
-// registered technologies. This function has to be actively called in loop
-// (main NFC poll function), returns nfc event.
-nfc_status_t nfc_get_event(nfc_event_t *event);
+/**
+ * @brief Get current state of NFC device.
+ * @return 'true' when card is connected, else 'false'.
+ */
+bool nfc_get_state(void);
 
-// Deactivate the currently activated NFC device and put RFAL state machine back
-// to discovary state.
-nfc_status_t nfc_dev_deactivate(void);
+/**
+ * @brief Return general device information of the activated NFC device.
+ * @param dev_info [out] Pointer to store current NFC device details.
+ * @return TS_OK when the function pass, otherwise an error.
+ */
+ts_t nfc_get_device_info(nfc_dev_info_t *dev_info);
 
-// Read the general device information of the activated NFC device.
-nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
-
-// Write the NDEF message with the trezor.io URI to the activated NFC device.
-nfc_status_t nfc_dev_write_ndef_uri(void);
+/**
+ * @brief Transceive data with the activated NFC device. This is a blocking
+ * call.
+ * @param cmd [in] Tx data buffer structure
+ * @param resp [out] Rx data buffer structure
+ * @return TS_OK when the function pass, otherwise an error.
+ */
+ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp);
