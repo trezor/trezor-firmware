@@ -274,8 +274,10 @@ bool nfc_identify(nfc_dev_info_t *dev_info) {
   ts_t status = nfc_dev_read_info(dev_info);
   TSH_CHECK_OK(status);
 
-  if ((dev_info->type == NFC_DEV_TYPE_A) ||
-      (dev_info->type == NFC_DEV_TYPE_B)) {
+  if (((dev_info->type == NFC_DEV_TYPE_A) ||
+       (dev_info->type == NFC_DEV_TYPE_B)) &&
+      (dev_info->interface == NFC_DEV_INTERFACE_ISODEP) &&
+      (dev_info->tag_type == NFCA_T4T)) {
     return true;
   }
 
@@ -405,13 +407,17 @@ static ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
   ReturnCode ret = rfalNfcGetActiveDevice(&nfc_device);
   TSH_CHECK(ret == RFAL_ERR_NONE, TS_ENOEN);
 
-  // Resolve device type
+  dev_info->tag_type = NFCA_UNKNOWN_TYPE;
   switch (nfc_device->type) {
     case RFAL_NFC_LISTEN_TYPE_NFCA:
       dev_info->type = NFC_DEV_TYPE_A;
+      if (nfc_device->dev.nfca.type == RFAL_NFCA_T4T) {
+        dev_info->tag_type = NFCA_T4T;
+      }
       break;
     case RFAL_NFC_LISTEN_TYPE_NFCB:
       dev_info->type = NFC_DEV_TYPE_B;
+      dev_info->tag_type = NFCA_T4T;
       break;
     default:
       dev_info->type = NFC_DEV_TYPE_UNKNOWN;
