@@ -365,7 +365,7 @@ access_violation:
 #ifdef FRAMEBUFFER
 
 bool display_get_frame_buffer__verified(display_fb_info_t *fb) {
-  if (!probe_write_access(fb, sizeof(*fb))) {
+  if (fb == NULL || !probe_write_access(fb, sizeof(*fb))) {
     goto access_violation;
   }
 
@@ -385,7 +385,7 @@ access_violation:
 #endif  // FRAMEBUFFER
 
 void display_fill__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -400,7 +400,7 @@ access_violation:
 }
 
 void display_copy_rgb565__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -933,7 +933,7 @@ access_violation:
 }
 
 void ble_get_state__verified(ble_state_t *state) {
-  if (!probe_write_access(state, sizeof(*state))) {
+  if (state == NULL || !probe_write_access(state, sizeof(*state))) {
     goto access_violation;
   }
 
@@ -1058,7 +1058,7 @@ access_violation:
 #ifdef USE_POWER_MANAGER
 
 pm_status_t pm_get_state__verified(pm_state_t *status) {
-  if (!probe_write_access(status, sizeof(*status))) {
+  if (status == NULL || !probe_write_access(status, sizeof(*status))) {
     goto access_violation;
   }
 
@@ -1074,7 +1074,7 @@ access_violation:
 }
 
 bool pm_get_events__verified(pm_event_t *event) {
-  if (!probe_write_access(event, sizeof(*event))) {
+  if (event == NULL || !probe_write_access(event, sizeof(*event))) {
     goto access_violation;
   }
 
@@ -1112,11 +1112,7 @@ jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {
     goto access_violation;
   }
 
-  if (input->offset > input->size) {
-    goto access_violation;
-  }
-
-  if (!probe_read_access(input->data, input->size - input->offset)) {
+  if (!probe_read_access(input->data, input->size)) {
     goto access_violation;
   }
 
@@ -1179,7 +1175,7 @@ access_violation:
 #ifdef USE_DMA2D
 
 bool dma2d_rgb565_fill__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1195,7 +1191,7 @@ access_violation:
 }
 
 bool dma2d_rgb565_copy_mono4__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1212,7 +1208,7 @@ access_violation:
 }
 
 bool dma2d_rgb565_copy_rgb565__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1229,7 +1225,7 @@ access_violation:
 }
 
 bool dma2d_rgb565_blend_mono4__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1246,7 +1242,7 @@ access_violation:
 }
 
 bool dma2d_rgb565_blend_mono8__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1263,7 +1259,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_fill__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1279,7 +1275,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_copy_mono4__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1296,7 +1292,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_copy_rgb565__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1313,7 +1309,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_copy_rgba8888__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1330,7 +1326,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_blend_mono4__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1347,7 +1343,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_blend_mono8__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1468,7 +1464,7 @@ ts_t app_arena_create_image__verified(const void *header, size_t header_size,
   if (!probe_read_access(proof, proof_size)) {
     goto access_violation;
   }
-  
+
   if (!probe_write_access(handle, sizeof(*handle))) {
     goto access_violation;
   }

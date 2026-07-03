@@ -162,6 +162,10 @@ jpegdec_state_t jpegdec_process(jpegdec_input_t *input) {
     return JPEGDEC_STATE_ERROR;
   }
 
+  if (input == NULL || input->data == NULL || input->offset > input->size) {
+    return JPEGDEC_STATE_ERROR;
+  }
+
   dec->source_mgr.input = input;
 
   if (dec->state == JPEGDEC_STATE_SLICE_READY) {
@@ -270,6 +274,10 @@ bool jpegdec_get_info(jpegdec_image_t *image) {
   jpegdec_t *dec = &g_jpegdec;
 
   if (!dec->inuse) {
+    return false;
+  }
+
+  if (image == NULL) {
     return false;
   }
 

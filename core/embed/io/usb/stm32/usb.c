@@ -365,6 +365,10 @@ usb_event_t usb_get_event(void) {
 }
 
 void usb_get_state(usb_state_t *state) {
+  if (state == NULL) {
+    return;
+  }
+
   usb_state_t s = {0};
   s.configured = (usb_configured() == sectrue);
   *state = s;
