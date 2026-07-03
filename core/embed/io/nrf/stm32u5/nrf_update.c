@@ -55,6 +55,10 @@ static bool read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
                               uint8_t out_hash[IMAGE_HASH_LEN]) {
   bool ret;
 
+  if (binary_ptr == NULL || binary_size < sizeof(struct image_header)) {
+    return false;
+  }
+
   /* Read header to get image_size and hdr_size */
   struct image_header *hdr = (struct image_header *)binary_ptr;
 
@@ -169,6 +173,10 @@ static int version_cmp(const nrf_app_version_t *v1,
 }
 
 bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
+  if (image_ptr == NULL || image_len < sizeof(struct image_header)) {
+    return false;
+  }
+
   for (int i = 0; i < 3; i++) {
     nrf_info_t info;
     uint8_t expected_hash[SHA256_DIGEST_LENGTH];
@@ -195,6 +203,10 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
 }
 
 bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
+  if (image_ptr == NULL || image_len < sizeof(struct image_header)) {
+    return false;
+  }
+
   nrf_reboot_to_bootloader();
   nrf_set_dfu_mode(true);
 

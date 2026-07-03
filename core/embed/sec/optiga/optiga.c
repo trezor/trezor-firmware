@@ -139,6 +139,11 @@ optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
   }
 #endif  // SECRET_KEY_MASKING
 
+  if (max_der_signature_size < 2) {
+    ret = OPTIGA_SIGN_ERROR;
+    goto cleanup;
+  }
+
   optiga_result res = optiga_calc_sign(
       OPTIGA_OID_ECC_KEY + index, digest, digest_size, &der_signature[2],
       max_der_signature_size - 2, der_signature_size);
