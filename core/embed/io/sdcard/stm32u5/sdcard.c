@@ -300,6 +300,10 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
     return sectrue;
   }
 
+  if (dest == NULL) {
+    return secfalse;
+  }
+
   // check that dest pointer is aligned on a 4-byte boundary
   if (((uint32_t)dest & 3) != 0) {
     return secfalse;
@@ -326,6 +330,10 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 
   if (num_blocks == 0) {
     return sectrue;
+  }
+
+  if (src == NULL) {
+    return secfalse;
   }
 
   // check that src pointer is aligned on a 4-byte boundary
