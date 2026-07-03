@@ -345,6 +345,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3440]: https://github.com/trezor/trezor-firmware/pull/3440
 [#3442]: https://github.com/trezor/trezor-firmware/pull/3442
 [#3445]: https://github.com/trezor/trezor-firmware/pull/3445
+[#3446]: https://github.com/trezor/trezor-firmware/pull/3446
 [#3458]: https://github.com/trezor/trezor-firmware/pull/3458
 [#3475]: https://github.com/trezor/trezor-firmware/pull/3475
 [#3477]: https://github.com/trezor/trezor-firmware/pull/3477
@@ -430,6 +431,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6109]: https://github.com/trezor/trezor-firmware/pull/6109
 [#6165]: https://github.com/trezor/trezor-firmware/pull/6165
 [#6202]: https://github.com/trezor/trezor-firmware/pull/6202
+[#6211]: https://github.com/trezor/trezor-firmware/pull/6211
 [#6225]: https://github.com/trezor/trezor-firmware/pull/6225
 [#6228]: https://github.com/trezor/trezor-firmware/pull/6228
 [#6247]: https://github.com/trezor/trezor-firmware/pull/6247
@@ -450,4 +452,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6759]: https://github.com/trezor/trezor-firmware/pull/6759
 [#6780]: https://github.com/trezor/trezor-firmware/pull/6780
 [#6843]: https://github.com/trezor/trezor-firmware/pull/6843
-
