@@ -27,14 +27,10 @@
 #include <sys/irq.h>
 #include <sys/systick.h>
 
-#include "ndef.h"
 #include "nfc_internal.h"
 #include "nfc_poll.h"
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
-#include "rfal_nfca.h"
-#include "rfal_rf.h"
-#include "rfal_t2t.h"
 #include "rfal_utils.h"
 #include "sys/mpu.h"
 
