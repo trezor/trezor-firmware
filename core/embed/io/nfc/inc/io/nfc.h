@@ -38,6 +38,12 @@ typedef enum {
   NFC_DEV_INTERFACE_UNKNOWN,
 } nfc_dev_interface_t;
 
+/** @brief NFC-A Listen device types */
+typedef enum {
+  NFCA_T4T,
+  NFCA_UNKNOWN_TYPE,
+} nfc_nfca_listen_device_type_t;
+
 /** @brief NFC poll events */
 typedef enum {
   NFC_NO_EVENT = 0,
@@ -47,9 +53,10 @@ typedef enum {
 
 /** @brief NFC card details */
 typedef struct {
-  nfc_dev_type_t type;             //!< NFC card type
-  nfc_dev_interface_t interface;   //!< NFC card interface
-  char uid[NFC_MAX_UID_BUF_SIZE];  //!< Card UID string
+  nfc_dev_type_t type;                     //!< NFC card type
+  nfc_nfca_listen_device_type_t tag_type;  //!< NFC-A tag type
+  nfc_dev_interface_t interface;           //!< NFC card interface
+  char uid[NFC_MAX_UID_BUF_SIZE];          //!< Card UID string
   uint8_t uid_len;
 } nfc_dev_info_t;
 
