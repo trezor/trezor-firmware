@@ -66,36 +66,16 @@ def _verify_nonmembership(
 ) -> bool:
     """Verify that address is NOT in the tree.
 
-    The caller supplies a witness leaf (witness_address, witness_value) that
-    occupies address's path in the tree.  We verify:
-      1. The witness is in the tree (membership proof against stored root).
-      2. witness_address != address.
-      3. witness_address and address share the same bit-value at every bit
-         position that appears in the proof (they diverge only after the deepest
-         branch, i.e. the witness is truly the closest leaf to address).
+    Thin wrapper kept for backwards compatibility (imported directly by
+    core/tests/test_apps.authdb.py) -- the real implementation now lives in
+    apps.authdb._mpt so update_leaf.py and the offline-sync handlers share
+    the exact same audited logic.
     """
-    from trezor.crypto.hashlib import sha256
+    from apps.authdb import _mpt
 
-    def _sha256d(data: bytes) -> bytes:
-        return sha256(data).digest()
-
-    def _addr_bit(addr_hash: bytes, bit: int) -> int:
-        return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
-
-    if witness_address == address:
-        return False  # witness must differ from target
-
-    addr_hash = _sha256d(address)
-    witness_hash = _sha256d(witness_address)
-
-    # Witness and target must share the same bit at every branch in the proof
-    for elem in proof:
-        bit = elem[0]
-        if _addr_bit(addr_hash, bit) != _addr_bit(witness_hash, bit):
-            return False
-
-    # Membership proof for the witness
-    return _verify_proof(witness_address, witness_value, proof, expected_root)
+    return _mpt.verify_nonmembership(
+        address, witness_address, witness_value, proof, expected_root
+    )
 
 
 def _verify_proof(
@@ -104,65 +84,12 @@ def _verify_proof(
     proof: list[bytes],
     expected_root: bytes,
 ) -> bool:
-    """Verify an MPT (Merkle Patricia Trie) proof.
+    """Verify an MPT (Merkle Patricia Trie) membership proof.
 
-    Hashing scheme:
-      leaf hash     : SHA-256(b"\\x00" + address + value)
-      internal hash : SHA-256(b"\\x01" + left + right)  -- positional
-
-    Proof format (leaf-to-root order):
-      Each element is 33 bytes: 1-byte bit-position (0-255) + 32-byte sibling hash.
-      Only actual branch points appear, so proof length is O(log N) for N entries.
-
-    Mirrors evaluateProof() in merkletree.ts.
+    Thin wrapper kept for backwards compatibility (imported directly by
+    core/tests/test_apps.authdb.py) -- see apps.authdb._mpt for the shared
+    implementation and docs/authdb.md for the hashing scheme / proof format.
     """
-    from trezor.crypto.hashlib import sha256
+    from apps.authdb import _mpt
 
-    def _sha256d(data: bytes) -> bytes:
-        return sha256(data).digest()
-
-    def _addr_bit(addr_hash: bytes, bit: int) -> int:
-        return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
-
-    addr_hash = _sha256d(address)
-    node = _sha256d(b"\x00" + address + value)   # leaf hash
-
-    if __debug__:
-        from trezor import log
-        log.debug(
-            __name__,
-            "_verify_proof: addr_hash=%s leaf_hash=%s proof_len=%d",
-            addr_hash,
-            node,
-            len(proof),
-        )
-
-    for elem in proof:
-        bit = elem[0]                            # bit position (0-255)
-        sibling = bytes(elem[1:])                # 32-byte sibling hash
-        target_bit = _addr_bit(addr_hash, bit)
-        if target_bit == 0:
-            node = _sha256d(b"\x01" + node + sibling)
-        else:
-            node = _sha256d(b"\x01" + sibling + node)
-
-        if __debug__:
-            from trezor import log
-            log.debug(
-                __name__,
-                "  bit=%d target_bit=%d hash=%s",
-                bit,
-                target_bit,
-                node,
-            )
-
-    match = node == expected_root
-    if __debug__ and not match:
-        from trezor import log
-        log.debug(
-            __name__,
-            "_verify_proof: MISMATCH computed=%s expected=%s",
-            node,
-            expected_root,
-        )
-    return match
+    return _mpt.verify_proof(address, value, proof, expected_root)

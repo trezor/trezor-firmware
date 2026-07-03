@@ -20,32 +20,13 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     from trezor.messages import AuthDbUpdateLeafResponse
     from trezor.wire import DataError
     from apps.authdb import _get_wallet_id, _derive_mac_key, _compute_mac
+    from apps.authdb import _mpt
 
-    from trezor.crypto.hashlib import sha256
-
-    def _sha256d(data: bytes) -> bytes:
-        return sha256(data).digest()
-
-    def _addr_bit(addr_hash: bytes, bit: int) -> int:
-        return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
-
-    def _leaf_hash(addr: bytes, val: bytes) -> bytes:
-        return _sha256d(b"\x00" + addr + val)
-
-    def _internal_hash(left: bytes, right: bytes) -> bytes:
-        return _sha256d(b"\x01" + left + right)
-
-    def _reconstruct(start_hash: bytes, proof: list, addr_hash: bytes) -> bytes:
-        """Walk proof from leaf toward root, rebuilding hashes."""
-        node = start_hash
-        for elem in proof:
-            bit = elem[0]
-            sibling = bytes(elem[1:])
-            if _addr_bit(addr_hash, bit) == 0:
-                node = _internal_hash(node, sibling)
-            else:
-                node = _internal_hash(sibling, node)
-        return node
+    _sha256d = _mpt.sha256d
+    _addr_bit = _mpt.addr_bit
+    _leaf_hash = _mpt.leaf_hash
+    _internal_hash = _mpt.internal_hash
+    _reconstruct = _mpt.reconstruct
 
     wallet_id = await _get_wallet_id()
     mac_key = await _derive_mac_key()
@@ -233,7 +214,14 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             counter,
         )
 
-    new_mac = _compute_mac(mac_key, new_root) if new_root is not None else None
+    # Root-attestation token: binds wallet_id and counter (not just the root)
+    # so it can be safely replayed via AuthDbFastForwardRoot -- see that
+    # message's proto doc for why the counter must be inside the MAC.
+    new_mac = (
+        _compute_mac(mac_key, wallet_id, counter.to_bytes(4, "big"), new_root)
+        if new_root is not None
+        else None
+    )
     # In debug mode: auto-approve — return auth_mac so Suite can cache it for future calls
     auth_mac = _compute_mac(mac_key, old_leaf_hash, new_leaf_hash) if __debug__ else None
     if __debug__:
