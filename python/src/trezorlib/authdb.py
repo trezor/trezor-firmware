@@ -183,3 +183,156 @@ def approve(
         expect=messages.AuthDbApproveResponse,
     )
     return resp.mac, resp.identifier
+
+
+# ---------------------------------------------------------------------------
+# Offline synchronization
+# ---------------------------------------------------------------------------
+
+def queue_offline_operation(
+    session: "Session",
+    address: bytes,
+    old_value: bytes,
+    new_value: bytes,
+) -> tuple[int, bytes, Optional[bytes]]:
+    """Create a signed offline operation when the host database is unreachable.
+
+    old_value=b"" means the address is currently absent (INSERT).
+    new_value=b"" means delete the address (DELETE).
+
+    Returns (sequence, mac, identifier). Does not touch the Merkle root.
+    """
+    resp = session.call(
+        messages.AuthDbQueueOfflineOperation(
+            address=address, old_value=old_value, new_value=new_value
+        ),
+        expect=messages.AuthDbQueueOfflineOperationResponse,
+    )
+    return resp.sequence, resp.mac, resp.identifier
+
+
+class OfflineOperation:
+    """One entry of the on-device offline queue, as returned by get_offline_operations()."""
+
+    def __init__(
+        self,
+        sequence: int,
+        address: bytes,
+        old_value: bytes,
+        new_value: bytes,
+        mac: bytes,
+    ) -> None:
+        self.sequence = sequence
+        self.address = address
+        self.old_value = old_value
+        self.new_value = new_value
+        self.mac = mac
+
+
+def get_offline_operations(
+    session: "Session",
+) -> tuple[Optional[bytes], int, Optional[bytes], list[OfflineOperation]]:
+    """Fetch the current root/counter plus every queued offline operation, for upload.
+
+    Returns (current_root, counter, identifier, operations).
+    """
+    resp = session.call(
+        messages.AuthDbGetOfflineOperations(),
+        expect=messages.AuthDbGetOfflineOperationsResponse,
+    )
+    operations = [
+        OfflineOperation(
+            sequence=op.sequence,
+            address=op.address,
+            old_value=op.old_value if op.old_value else b"",
+            new_value=op.new_value if op.new_value else b"",
+            mac=op.mac,
+        )
+        for op in resp.operations
+    ]
+    return resp.current_root, resp.counter, resp.identifier, operations
+
+
+class RebasedOperation:
+    """One operation, rebased by the host against the current canonical root.
+
+    sequence/address/old_value/new_value/mac must be forwarded byte-for-byte
+    from the OfflineOperation it originates from -- rebase may choose whether
+    to forward an operation, never alter its signed fields.
+    """
+
+    def __init__(
+        self,
+        sequence: int,
+        address: bytes,
+        old_value: bytes,
+        new_value: bytes,
+        mac: bytes,
+        proof: list[bytes],
+        witness_address: Optional[bytes] = None,
+        witness_value: Optional[bytes] = None,
+    ) -> None:
+        self.sequence = sequence
+        self.address = address
+        self.old_value = old_value
+        self.new_value = new_value
+        self.mac = mac
+        self.proof = proof
+        self.witness_address = witness_address
+        self.witness_value = witness_value
+
+
+def apply_offline_operations(
+    session: "Session",
+    operations: list[RebasedOperation],
+) -> tuple[int, Optional[bytes], int, int, Optional[bytes]]:
+    """Apply a batch of host-rebased offline operations.
+
+    The device independently verifies each operation's MAC and Merkle proof
+    and computes the resulting root itself; it never accepts a host-supplied
+    root. Processing stops at the first operation that fails verification or
+    is not the immediate next expected sequence.
+
+    Returns (applied_count, new_root, counter, last_applied_sequence, identifier).
+    """
+    resp = session.call(
+        messages.AuthDbApplyOfflineOperations(
+            operations=[
+                messages.AuthDbRebasedOperation(
+                    sequence=op.sequence,
+                    address=op.address,
+                    old_value=op.old_value,
+                    new_value=op.new_value,
+                    mac=op.mac,
+                    proof=op.proof,
+                    witness_address=op.witness_address,
+                    witness_value=op.witness_value,
+                )
+                for op in operations
+            ]
+        ),
+        expect=messages.AuthDbApplyOfflineOperationsResponse,
+    )
+    return (
+        resp.applied_count,
+        resp.new_root,
+        resp.counter,
+        resp.last_applied_sequence,
+        resp.identifier,
+    )
+
+
+def delete_offline_operations(session: "Session") -> tuple[int, int]:
+    """Delete every queued operation with sequence <= the device's own last_applied_sequence.
+
+    Takes no input: the device is the sole source of truth for what it has
+    actually applied, so garbage collection cannot be tricked into deleting
+    an operation that was never really committed.
+
+    Returns (deleted_count, remaining_count).
+    """
+    resp = session.call(
+        messages.AuthDbDeleteOfflineOperations(),
+        expect=messages.AuthDbDeleteOfflineOperationsResponse,
+    )
+    return resp.deleted_count, resp.remaining_count

@@ -133,6 +133,14 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.authdb.wipe_cache"
     if msg_type == MessageType.AuthDbSetDeviceId:
         return "apps.authdb.set_device_id"
+    if msg_type == MessageType.AuthDbQueueOfflineOperation:
+        return "apps.authdb.queue_offline_operation"
+    if msg_type == MessageType.AuthDbGetOfflineOperations:
+        return "apps.authdb.get_offline_operations"
+    if msg_type == MessageType.AuthDbApplyOfflineOperations:
+        return "apps.authdb.apply_offline_operations"
+    if msg_type == MessageType.AuthDbDeleteOfflineOperations:
+        return "apps.authdb.delete_offline_operations"
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:

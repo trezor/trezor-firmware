@@ -245,3 +245,147 @@ message AuthDbSetDeviceId {
 message AuthDbSetDeviceIdResponse {
     required bytes device_id = 1;
 }
+
+/**
+ * Embedded: one entry of the on-device offline operation queue, as returned
+ * by AuthDbGetOfflineOperations. `mac` is HMAC(device_key, sequence ||
+ * old_leaf_hash || new_leaf_hash) -- the sequence number is part of the MAC
+ * preimage so a rebased operation cannot be replayed under a different
+ * (attacker-chosen) sequence number, which would otherwise let a malicious
+ * host inflate last_applied_sequence and cause AuthDbDeleteOfflineOperations
+ * to discard operations that were never actually applied.
+ */
+message AuthDbOfflineOperation {
+    required uint32 sequence  = 1;  // monotonic per-identity, assigned by the device
+    required bytes  address   = 2;
+    optional bytes  old_value = 3;  // empty/absent = address was absent (INSERT) when queued
+    optional bytes  new_value = 4;  // empty/absent = delete
+    required bytes  mac       = 5;  // HMAC(device_key, sequence||old_leafHash||new_leafHash)
+}
+
+/**
+ * Request: Create a signed offline operation and append it to the on-device
+ * queue. Used when the host database is unreachable. Does not touch the
+ * Merkle root -- the operation is only applied later via
+ * AuthDbApplyOfflineOperations, after the host has rebased it against the
+ * current canonical tree and supplied a Merkle proof.
+ * @start
+ * @next AuthDbQueueOfflineOperationResponse
+ * @next Failure
+ */
+message AuthDbQueueOfflineOperation {
+    required bytes address   = 1;
+    required bytes old_value = 2;  // empty = address absent (INSERT)
+    required bytes new_value = 3;  // empty = delete
+}
+
+/**
+ * Response: The assigned sequence number and MAC for the newly queued
+ * operation.
+ * @end
+ */
+message AuthDbQueueOfflineOperationResponse {
+    required uint32 sequence   = 1;
+    required bytes  mac        = 2;
+    optional bytes  identifier = 3;
+}
+
+/**
+ * Request: Return the current root/counter plus every operation currently
+ * queued for this identity, for upload to the host database.
+ * @start
+ * @next AuthDbGetOfflineOperationsResponse
+ * @next Failure
+ */
+message AuthDbGetOfflineOperations {
+}
+
+/**
+ * Response: Current state plus the full offline queue (FIFO order).
+ * @end
+ */
+message AuthDbGetOfflineOperationsResponse {
+    optional bytes  current_root = 1;  // absent if tree is empty
+    required uint32 counter      = 2;
+    optional bytes  identifier   = 3;
+    repeated AuthDbOfflineOperation operations = 4;
+}
+
+/**
+ * Embedded: one operation rebased by the host against the current canonical
+ * root, ready to be verified and applied on-device. `sequence`, `address`,
+ * `old_value`, `new_value` and `mac` must be forwarded byte-for-byte from the
+ * original AuthDbOfflineOperation -- rebase may choose whether to forward an
+ * operation, never alter its signed fields. `proof`/`witness_*` are freshly
+ * computed by the host against the root the operation will actually be
+ * applied to.
+ */
+message AuthDbRebasedOperation {
+    required uint32 sequence        = 1;
+    required bytes  address         = 2;
+    optional bytes  old_value       = 3;
+    optional bytes  new_value       = 4;
+    required bytes  mac             = 5;
+    repeated bytes  proof           = 6;
+    optional bytes  witness_address = 7;
+    optional bytes  witness_value   = 8;
+}
+
+/**
+ * Request: Apply a batch of rebased offline operations. The device is the
+ * sole authority for the resulting root: for every operation it independently
+ * verifies the MAC (proves the operation was genuinely queued under the
+ * current identity, for this exact sequence and leaf transition), verifies
+ * the supplied proof against its own current root, and then COMPUTES the new
+ * root itself from (address, old_value, new_value, proof) exactly as
+ * AuthDbUpdateLeaf does -- the host never supplies a root directly.
+ *
+ * Operations are processed strictly in ascending sequence order starting
+ * from the device's own persisted last_applied_sequence; processing stops at
+ * the first operation that fails its MAC/proof check (conflict) or is not
+ * the immediate next sequence, so committed state can never skip over an
+ * unresolved conflict.
+ * @start
+ * @next AuthDbApplyOfflineOperationsResponse
+ * @next Failure
+ */
+message AuthDbApplyOfflineOperations {
+    repeated AuthDbRebasedOperation operations = 1;
+}
+
+/**
+ * Response: How many operations were actually applied plus the resulting
+ * state. last_applied_sequence is persisted by the device itself and is the
+ * only input AuthDbDeleteOfflineOperations trusts for garbage collection.
+ * @end
+ */
+message AuthDbApplyOfflineOperationsResponse {
+    required uint32 applied_count         = 1;
+    optional bytes  new_root              = 2;  // absent if tree is now empty
+    required uint32 counter               = 3;
+    required uint32 last_applied_sequence = 4;
+    optional bytes  identifier            = 5;
+}
+
+/**
+ * Request: Delete every queued operation with sequence <= the device's own
+ * last_applied_sequence. Deliberately takes NO input from the host: garbage
+ * collection must never trust a host-supplied watermark, since an
+ * un-applied operation deleted on that basis would be permanently and
+ * silently lost (the offline queue is the only copy before the host commits
+ * it).
+ * @start
+ * @next AuthDbDeleteOfflineOperationsResponse
+ * @next Failure
+ */
+message AuthDbDeleteOfflineOperations {
+}
+
+/**
+ * Response: How many entries were deleted and how many remain queued.
+ * @end
+ */
+message AuthDbDeleteOfflineOperationsResponse {
+    required uint32 deleted_count   = 1;
+    required uint32 remaining_count = 2;
+}

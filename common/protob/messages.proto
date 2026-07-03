@@ -402,6 +402,14 @@ enum MessageType {
     MessageType_AuthDbWipeCacheResponse = 2317 [(wire_out) = true];
     MessageType_AuthDbSetDeviceId = 2318 [(wire_in) = true];
     MessageType_AuthDbSetDeviceIdResponse = 2319 [(wire_out) = true];
+    MessageType_AuthDbQueueOfflineOperation = 2320 [(wire_in) = true];
+    MessageType_AuthDbQueueOfflineOperationResponse = 2321 [(wire_out) = true];
+    MessageType_AuthDbGetOfflineOperations = 2322 [(wire_in) = true];
+    MessageType_AuthDbGetOfflineOperationsResponse = 2323 [(wire_out) = true];
+    MessageType_AuthDbApplyOfflineOperations = 2324 [(wire_in) = true];
+    MessageType_AuthDbApplyOfflineOperationsResponse = 2325 [(wire_out) = true];
+    MessageType_AuthDbDeleteOfflineOperations = 2326 [(wire_in) = true];
+    MessageType_AuthDbDeleteOfflineOperationsResponse = 2327 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

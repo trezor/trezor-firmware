@@ -738,6 +738,14 @@ if TYPE_CHECKING:
         AuthDbWipeCacheResponse = 2317
         AuthDbSetDeviceId = 2318
         AuthDbSetDeviceIdResponse = 2319
+        AuthDbQueueOfflineOperation = 2320
+        AuthDbQueueOfflineOperationResponse = 2321
+        AuthDbGetOfflineOperations = 2322
+        AuthDbGetOfflineOperationsResponse = 2323
+        AuthDbApplyOfflineOperations = 2324
+        AuthDbApplyOfflineOperationsResponse = 2325
+        AuthDbDeleteOfflineOperations = 2326
+        AuthDbDeleteOfflineOperationsResponse = 2327
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

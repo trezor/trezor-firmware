@@ -233,6 +233,45 @@ Every write operation (set_root, update_leaf) increments a persistent monotonic 
 
 ---
 
+## Offline synchronization
+
+When the host database is unreachable, the device can queue signed operations
+locally and apply them later once a host has rebased them against the
+current canonical tree.
+
+| Message | Purpose |
+|---|---|
+| `AuthDbQueueOfflineOperation` (2320) | Create a signed offline operation and append it to the on-device queue. Does not touch the root. |
+| `AuthDbGetOfflineOperations` (2322) | Return the current root/counter plus every queued operation, for upload. |
+| `AuthDbApplyOfflineOperations` (2324) | Apply a batch of host-rebased operations. |
+| `AuthDbDeleteOfflineOperations` (2326) | Garbage-collect applied operations from the queue. |
+
+Design invariants (see `core/src/apps/authdb/apply_offline_operations.py` and
+`_mpt.py` for the implementation):
+
+* **The device computes the resulting root itself**, from `(address,
+  old_value, new_value, proof)`, exactly as `AuthDbUpdateLeaf` does. A host
+  never supplies a root directly, for the same reason `AuthDbSetRoot` is
+  debug-only.
+* **The MAC binds the exact leaf transition *and* the sequence number**:
+  `mac = HMAC(device_key, sequence || leaf_hash(address, old_value) ||
+  leaf_hash(address, new_value))`. Binding the sequence number prevents a
+  host from replaying an approved operation under a different (inflated)
+  sequence number, which would otherwise corrupt garbage collection (see
+  next point). Binding the leaf values means an approved operation cannot
+  later be applied with a different value than what was actually approved.
+* **Operations are applied strictly in ascending order**, starting at
+  `last_applied_sequence + 1`. Processing stops at the first operation that
+  fails its sequence/MAC/proof check, so a conflict can never be silently
+  skipped over.
+* **Garbage collection takes no host input.** `AuthDbDeleteOfflineOperations`
+  only ever deletes up to the device's own persisted `last_applied_sequence`
+  -- never a host-supplied watermark -- since deleting an operation that was
+  never actually applied would permanently and silently lose it.
+* No approval dialog is shown when applying: it already happened when the
+  operation was queued, and the MAC cryptographically binds that approval to
+  the exact `(sequence, address, old_value, new_value)` being applied.
+
 ## CLI
 
 ```

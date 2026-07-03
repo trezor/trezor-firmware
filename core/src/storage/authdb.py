@@ -7,6 +7,8 @@ _NAMESPACE = common.APP_AUTHDB
 _ROOTS              = const(0x00)  # flat table of identity records
 _CACHE              = const(0x01)  # offline cache: variable-length per-address metadata
 _DEVICE_ID_OVERRIDE = const(0x02)  # debug only: injected device_id
+_QUEUE              = const(0x03)  # offline operation queue: identifier-scoped, append-only
+_SYNC               = const(0x04)  # per-identity offline-sync counters
 
 IDENTIFIER_LENGTH = const(32)
 ROOT_LENGTH       = const(32)
@@ -19,6 +21,26 @@ MAX_CACHE_ENTRIES = const(64)
 #   [addr_len: 1B][address: addr_len B]
 #   [label_len: 1B][label: label_len B]   (0 = absent)
 #   [data_mac_present: 1B][data_mac: 32B] (0x01 = present, 0x00 = absent)
+
+MAX_OFFLINE_QUEUE_ENTRIES = const(64)  # per identity
+# Queue record layout (variable length), FIFO by append order:
+#   [identifier: 32]
+#   [sequence: 4]
+#   [addr_len: 1B][address: addr_len B]
+#   [old_len: 1B][old_value: old_len B]   (0 = address absent / INSERT)
+#   [new_len: 1B][new_value: new_len B]   (0 = delete)
+#   [mac: 32]
+#
+# Kept in its own namespace, separate from `_ROOTS`, and scoped by identifier
+# from the start -- unlike `_CACHE`, which has no identifier column at all
+# and therefore leaks entries across identities sharing one device.
+
+MAX_SYNC_IDENTITIES = const(16)
+# Sync record layout: [identifier: 32][next_sequence: 4][last_applied_sequence: 4]
+# Kept separate from `_ROOTS` on purpose: `clear_root()` deletes the entire
+# identity row (including its counter) whenever the tree becomes empty via a
+# DELETE, which would otherwise silently reset offline-sync bookkeeping too.
+_SYNC_RECORD_SIZE = const(40)
 
 
 def _load_table() -> bytearray:
@@ -208,3 +230,181 @@ def get_device_id_override() -> bytes | None:
 
 def set_device_id_override(device_id: bytes) -> None:
     common.set(_NAMESPACE, _DEVICE_ID_OVERRIDE, device_id, public=True)
+
+
+# ---------------------------------------------------------------------------
+# Offline-sync counters (next_sequence / last_applied_sequence) per identity
+# ---------------------------------------------------------------------------
+
+def _load_sync() -> bytearray:
+    raw = common.get(_NAMESPACE, _SYNC, public=True)
+    return bytearray(raw) if raw else bytearray()
+
+
+def _save_sync(table: bytearray) -> None:
+    common.set(_NAMESPACE, _SYNC, bytes(table), public=True)
+
+
+def _find_sync_record(table: bytearray, identifier: bytes) -> int:
+    for off in range(0, len(table), _SYNC_RECORD_SIZE):
+        if table[off : off + IDENTIFIER_LENGTH] == identifier:
+            return off
+    return -1
+
+
+def _ensure_sync_record(table: bytearray, identifier: bytes) -> int:
+    """Return the offset of identifier's sync record, creating it (next_sequence=1) if absent."""
+    off = _find_sync_record(table, identifier)
+    if off >= 0:
+        return off
+    if len(table) // _SYNC_RECORD_SIZE >= MAX_SYNC_IDENTITIES:
+        raise ValueError("Too many identities")
+    off = len(table)
+    table += identifier + (1).to_bytes(4, "big") + (0).to_bytes(4, "big")
+    return off
+
+
+def get_next_sequence(identifier: bytes) -> int:
+    """Peek at the sequence number that would be assigned to the next queued operation."""
+    table = _load_sync()
+    off = _find_sync_record(table, identifier)
+    if off < 0:
+        return 1
+    seq_off = off + IDENTIFIER_LENGTH
+    return int.from_bytes(table[seq_off : seq_off + 4], "big")
+
+
+def take_next_sequence(identifier: bytes) -> int:
+    """Atomically assign and persist the next sequence number for identifier."""
+    table = _load_sync()
+    off = _ensure_sync_record(table, identifier)
+    seq_off = off + IDENTIFIER_LENGTH
+    sequence = int.from_bytes(table[seq_off : seq_off + 4], "big")
+    table[seq_off : seq_off + 4] = (sequence + 1).to_bytes(4, "big")
+    _save_sync(table)
+    return sequence
+
+
+def get_last_applied_sequence(identifier: bytes) -> int:
+    table = _load_sync()
+    off = _find_sync_record(table, identifier)
+    if off < 0:
+        return 0
+    seq_off = off + IDENTIFIER_LENGTH + 4
+    return int.from_bytes(table[seq_off : seq_off + 4], "big")
+
+
+def set_last_applied_sequence(identifier: bytes, sequence: int) -> None:
+    """Persist the highest sequence this device has itself verified and applied.
+
+    This is the ONLY value AuthDbDeleteOfflineOperations trusts for garbage
+    collection -- it is never taken from a host-supplied argument.
+    """
+    table = _load_sync()
+    off = _ensure_sync_record(table, identifier)
+    seq_off = off + IDENTIFIER_LENGTH + 4
+    table[seq_off : seq_off + 4] = sequence.to_bytes(4, "big")
+    _save_sync(table)
+
+
+# ---------------------------------------------------------------------------
+# Offline operation queue -- identifier-scoped, append-only, bounded, FIFO
+# ---------------------------------------------------------------------------
+
+def _load_queue() -> bytearray:
+    raw = common.get(_NAMESPACE, _QUEUE, public=True)
+    return bytearray(raw) if raw else bytearray()
+
+
+def _save_queue(queue: bytearray) -> None:
+    common.set(_NAMESPACE, _QUEUE, bytes(queue), public=True)
+
+
+def _iter_queue(queue: bytearray):
+    """Yield (start, end, identifier, sequence, address, old_value, new_value, mac)."""
+    off = 0
+    while off < len(queue):
+        start = off
+        identifier = bytes(queue[off : off + IDENTIFIER_LENGTH]); off += IDENTIFIER_LENGTH
+        sequence = int.from_bytes(queue[off : off + 4], "big"); off += 4
+        addr_len = queue[off]; off += 1
+        address = bytes(queue[off : off + addr_len]); off += addr_len
+        old_len = queue[off]; off += 1
+        old_value = bytes(queue[off : off + old_len]); off += old_len
+        new_len = queue[off]; off += 1
+        new_value = bytes(queue[off : off + new_len]); off += new_len
+        mac = bytes(queue[off : off + 32]); off += 32
+        yield start, off, identifier, sequence, address, old_value, new_value, mac
+
+
+def get_offline_queue(identifier: bytes) -> list:
+    """Return [(sequence, address, old_value, new_value, mac), ...] in FIFO order."""
+    queue = _load_queue()
+    return [
+        (sequence, address, old_value, new_value, mac)
+        for _start, _end, ident, sequence, address, old_value, new_value, mac in _iter_queue(queue)
+        if ident == identifier
+    ]
+
+
+def offline_queue_count(identifier: bytes) -> int:
+    queue = _load_queue()
+    return sum(
+        1
+        for _start, _end, ident, _seq, _addr, _old, _new, _mac in _iter_queue(queue)
+        if ident == identifier
+    )
+
+
+def append_offline_operation(
+    identifier: bytes, sequence: int, address: bytes, old_value: bytes, new_value: bytes, mac: bytes
+) -> None:
+    """Append an already-sequenced offline operation to the queue.
+
+    The caller must obtain `sequence` from `take_next_sequence()` first, so
+    that sequence assignment and the queue-full check happen in the order the
+    caller intends (typically: check capacity, take the sequence, append).
+    Raises ValueError if identifier's queue is already at MAX_OFFLINE_QUEUE_ENTRIES.
+    """
+    if len(address) > 255 or len(old_value) > 255 or len(new_value) > 255:
+        raise ValueError("address/old_value/new_value too long")
+    if len(mac) != 32:
+        raise ValueError("mac must be 32 bytes")
+    if offline_queue_count(identifier) >= MAX_OFFLINE_QUEUE_ENTRIES:
+        raise ValueError("Offline queue full")
+
+    queue = _load_queue()
+    rec = bytearray()
+    rec += identifier
+    rec += sequence.to_bytes(4, "big")
+    rec.append(len(address)); rec += address
+    rec.append(len(old_value)); rec += old_value
+    rec.append(len(new_value)); rec += new_value
+    rec += mac
+    queue += rec
+    _save_queue(queue)
+
+
+def delete_offline_operations_upto(identifier: bytes, max_sequence: int) -> int:
+    """Delete identifier's queued operations with sequence <= max_sequence. Returns count deleted."""
+    queue = _load_queue()
+    keep = bytearray()
+    deleted = 0
+    for start, end, ident, sequence, _addr, _old, _new, _mac in _iter_queue(queue):
+        if ident == identifier and sequence <= max_sequence:
+            deleted += 1
+        else:
+            keep += queue[start:end]
+    if deleted:
+        _save_queue(keep)
+    return deleted
+
+
+def wipe_offline_queue(identifier: bytes) -> None:
+    """Delete all of identifier's queued operations, regardless of sequence."""
+    queue = _load_queue()
+    keep = bytearray()
+    for start, end, ident, _seq, _addr, _old, _new, _mac in _iter_queue(queue):
+        if ident != identifier:
+            keep += queue[start:end]
+    _save_queue(keep)

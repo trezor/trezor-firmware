@@ -318,3 +318,11 @@ if not utils.BITCOIN_ONLY:
     AuthDbWipeCacheResponse = 2317
     AuthDbSetDeviceId = 2318
     AuthDbSetDeviceIdResponse = 2319
+    AuthDbQueueOfflineOperation = 2320
+    AuthDbQueueOfflineOperationResponse = 2321
+    AuthDbGetOfflineOperations = 2322
+    AuthDbGetOfflineOperationsResponse = 2323
+    AuthDbApplyOfflineOperations = 2324
+    AuthDbApplyOfflineOperationsResponse = 2325
+    AuthDbDeleteOfflineOperations = 2326
+    AuthDbDeleteOfflineOperationsResponse = 2327
