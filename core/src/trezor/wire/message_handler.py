@@ -178,11 +178,9 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     return msg.type in AVOID_RESTARTING_FOR
 
 
-if utils.UI_LAYOUT == "ECKHART":
-    # Don't close device menu when `GetFeatures` is received.
-    AVOID_RESTARTING_FOR: Container[int] = (MessageType.GetFeatures,)
-else:
-    AVOID_RESTARTING_FOR: Container[int] = ()
+# Don't restart MicroPython event loop, to lower device interaction latency.
+# Allows keeping T3W1 device menu open when `GetFeatures` is received (#6211).
+AVOID_RESTARTING_FOR: Container[int] = (MessageType.GetFeatures,)
 
 
 def failure(exc: BaseException) -> Failure:
