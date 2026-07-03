@@ -3,6 +3,7 @@ use clap::Parser;
 use modular_xtask::run_cmd;
 
 use xtask::{
+    api,
     args::{Cli, Cmd},
     cargo, combine, flash, upload,
 };
@@ -23,5 +24,6 @@ fn main() -> Result<()> {
         Cmd::Upload(args) => upload::upload(args),
         Cmd::Combine(args) => combine::combine(args),
         Cmd::Modular(args) => run_cmd(&args.command, std::path::Path::new("../../sdk/apps/")),
+        Cmd::ApiBindings(args) => api::bindings(args.check_only),
     }
 }

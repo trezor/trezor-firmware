@@ -92,6 +92,7 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 name = "api"
 version = "0.1.0"
 dependencies = [
+ "bindgen",
  "color-eyre",
  "io",
  "models",
@@ -1211,12 +1212,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
 
 [[package]]
-name = "simdutf8"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
-
-[[package]]
 name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1379,6 +1374,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
+name = "trezor-app-sdk"
+version = "0.1.0"
+dependencies = [
+ "critical-section",
+ "cty",
+ "num_enum",
+ "rkyv",
+ "spin 0.10.0",
+ "ufmt",
+]
+
+[[package]]
 name = "trezor-noise-protocol"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1394,18 +1401,6 @@ dependencies = [
  "heapless",
  "log",
  "trezor-noise-protocol",
-]
-
-[[package]]
-name = "trezor-app-sdk"
-version = "0.1.0"
-dependencies = [
- "critical-section",
- "cty",
- "num_enum",
- "rkyv",
- "spin 0.10.0",
- "ufmt",
 ]
 
 [[package]]
@@ -1435,8 +1430,8 @@ dependencies = [
  "serde_json",
  "spin 0.9.8",
  "static-alloc",
- "trezor-thp",
  "trezor-app-sdk",
+ "trezor-thp",
  "trezor-tjpgdec",
  "ufmt",
  "unsize",
