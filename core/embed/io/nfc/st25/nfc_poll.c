@@ -37,7 +37,7 @@ typedef struct {
 } nfc_fsm_t;
 
 //!< Card connection status flag
-static bool card_connected = false;
+static bool nfc_card_connected = false;
 
 //!< Active card details
 static nfc_dev_info_t nfc_card_info;
@@ -49,12 +49,12 @@ static nfc_fsm_t g_nfc_tls[SYSTASK_MAX_TASKS] = {0};
 static const syshandle_vmt_t g_nfc_handle_vmt;
 
 bool nfc_poll_init(void) {
-  card_connected = false;
+  nfc_card_connected = false;
   return syshandle_register(SYSHANDLE_NFC, &g_nfc_handle_vmt, NULL);
 }
 
 void nfc_poll_deinit(void) {
-  card_connected = false;
+  nfc_card_connected = false;
   syshandle_unregister(SYSHANDLE_NFC);
 }
 
@@ -67,10 +67,10 @@ bool nfc_get_event(nfc_event_t* event) {
   return true;
 }
 
-bool nfc_get_state(void) { return card_connected; }
+bool nfc_get_state(void) { return nfc_card_connected; }
 
 ts_t nfc_get_device_info(nfc_dev_info_t* dev_info) {
-  if (card_connected) {
+  if (nfc_card_connected) {
     memcpy(dev_info, &nfc_card_info, sizeof(nfc_dev_info_t));
     return TS_OK;
   } else {
@@ -109,21 +109,21 @@ static void on_event_poll(void* context, bool read_awaited,
     rfalNfcWorker();
 
     if (rfalNfcIsDevActivated(rfalNfcGetState())) {
-      if (card_connected) {
+      if (nfc_card_connected) {
         if (!nfc_check_connection(&nfc_card_info)) {
           nfc_restart_discovery();
-          card_connected = false;
+          nfc_card_connected = false;
         }
       } else {
         if (nfc_identify(&nfc_card_info)) {
-          card_connected = true;
+          nfc_card_connected = true;
         } else {
           nfc_restart_discovery();
         }
       }
     }
 
-    syshandle_signal_read_ready(SYSHANDLE_NFC, &card_connected);
+    syshandle_signal_read_ready(SYSHANDLE_NFC, &nfc_card_connected);
   }
 }
 

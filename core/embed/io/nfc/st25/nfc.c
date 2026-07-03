@@ -278,9 +278,8 @@ bool nfc_identify(nfc_dev_info_t *dev_info) {
   ts_t status = nfc_dev_read_info(dev_info);
   TSH_CHECK_OK(status);
 
-  if (((dev_info->type == NFC_DEV_TYPE_A) ||
-       (dev_info->type == NFC_DEV_TYPE_B)) &&
-      (dev_info->interface == NFC_DEV_INTERFACE_ISODEP)) {
+  if ((dev_info->type == NFC_DEV_TYPE_A) ||
+      (dev_info->type == NFC_DEV_TYPE_B)) {
     return true;
   }
 
