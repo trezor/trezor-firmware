@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.12.2] (22nd July 2026)
+
+### Added
+- Ethereum: Improved clear signing support.  [#6733]
+- Tron: Claim voting rewards.  [#7101]
+
+### Fixed
+- Solana: Allow chunkified addresses.  [#3446]
+- Avoid failing backup flow on I/O errors.  [#6348]
+- Return an explicit error when try to derive seed on Bitcoin-only firmware.  [#6941]
+- Solana: Show program id instead of 'unsupported program' label.  [#7065]
+
+### Security
+- Ask user for confirmation of some previously hidden Solana instruction parameters.
+- Solana: Fixed token transfer recipient for ALT addresses.
+- Fix external input misidentification in bitcoin signing.
+- Reject new external outputs in bitcoin replacement transactions.
+
 ## [2.12.1] (17th June 2026)
 
 ### Added
@@ -449,6 +467,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6597]: https://github.com/trezor/trezor-firmware/pull/6597
 [#6601]: https://github.com/trezor/trezor-firmware/pull/6601
 [#6709]: https://github.com/trezor/trezor-firmware/pull/6709
+<<<<<<< HEAD
+=======
+[#6710]: https://github.com/trezor/trezor-firmware/pull/6710
+[#6733]: https://github.com/trezor/trezor-firmware/pull/6733
+>>>>>>> 2549fb7f8f (docs(core,prodtest): changelog update core v2.12.2 prodtest v0.3.8)
 [#6759]: https://github.com/trezor/trezor-firmware/pull/6759
 [#6780]: https://github.com/trezor/trezor-firmware/pull/6780
 [#6843]: https://github.com/trezor/trezor-firmware/pull/6843
+<<<<<<< HEAD
+
+=======
+[#6900]: https://github.com/trezor/trezor-firmware/pull/6900
+[#6941]: https://github.com/trezor/trezor-firmware/pull/6941
+[#6984]: https://github.com/trezor/trezor-firmware/pull/6984
+[#7065]: https://github.com/trezor/trezor-firmware/pull/7065
+[#7101]: https://github.com/trezor/trezor-firmware/pull/7101
+[#7202]: https://github.com/trezor/trezor-firmware/pull/7202
+>>>>>>> 2549fb7f8f (docs(core,prodtest): changelog update core v2.12.2 prodtest v0.3.8)
