@@ -238,8 +238,8 @@ class TestAuthDbNonMembership(unittest.TestCase):
 class TestAuthDbStorageIsolation(unittest.TestCase):
     """Storage-level functional + adversarial coverage for core/src/storage/authdb.py.
 
-    Uses AuthDbSetDeviceId-style identifier switching (here done directly at
-    the storage layer) to emulate multiple devices/identities sharing one
+    Uses AuthDbSetDeviceId-style wallet_id switching (here done directly at
+    the storage layer) to emulate multiple devices/wallets sharing one
     physical flash, the same trick the device tests use via the debug-only
     AuthDbSetDeviceId RPC.
     """
@@ -251,7 +251,7 @@ class TestAuthDbStorageIsolation(unittest.TestCase):
         return _sha256d(b"root-%d" % n)
 
     @mock_storage
-    def test_roots_isolated_per_identity(self):
+    def test_roots_isolated_per_wallet(self):
         import storage.authdb as authdb
 
         id_a, id_b = self._id(1), self._id(2)
@@ -262,23 +262,23 @@ class TestAuthDbStorageIsolation(unittest.TestCase):
 
         self.assertEqual(authdb.get_root(id_a), root_a)
         self.assertEqual(authdb.get_root(id_b), root_b)
-        # Counters advance independently per identity.
+        # Counters advance independently per wallet.
         self.assertEqual(authdb.get_counter(id_a), 0)
         authdb.increment_counter(id_a)
         self.assertEqual(authdb.get_counter(id_a), 1)
         self.assertEqual(authdb.get_counter(id_b), 0)
 
     @mock_storage
-    def test_identity_table_capacity_enforced(self):
+    def test_wallet_table_capacity_enforced(self):
         import storage.authdb as authdb
 
-        for n in range(authdb.MAX_IDENTITIES):
+        for n in range(authdb.MAX_WALLETS):
             authdb.set_root(self._id(n), self._root(n))
 
         with self.assertRaises(ValueError):
-            authdb.set_root(self._id(authdb.MAX_IDENTITIES), self._root(999))
+            authdb.set_root(self._id(authdb.MAX_WALLETS), self._root(999))
 
-        # Existing identities remain intact after the rejected insert.
+        # Existing wallets remain intact after the rejected insert.
         self.assertEqual(authdb.get_root(self._id(0)), self._root(0))
 
     @mock_storage
@@ -298,40 +298,40 @@ class TestAuthDbStorageIsolation(unittest.TestCase):
         self.assertEqual(label, "label-overflow")
 
     @mock_storage
-    def test_cache_not_isolated_per_identity(self):
-        """BUG regression test — cache is NOT scoped by identifier.
+    def test_cache_not_isolated_per_wallet(self):
+        """BUG regression test — cache is NOT scoped by wallet_id.
 
-        Unlike `_ROOTS` (keyed table, see test_roots_isolated_per_identity),
+        Unlike `_ROOTS` (keyed table, see test_roots_isolated_per_wallet),
         `_CACHE` in core/src/storage/authdb.py is a single flat blob with no
-        identifier column at all. Switching identity (as AuthDbSetDeviceId
-        does) does not isolate offline-cache entries between identities
+        wallet_id column at all. Switching wallet (as AuthDbSetDeviceId
+        does) does not isolate offline-cache entries between wallets
         sharing one physical device. This asserts *today's* behavior; if the
-        cache storage is fixed to be identity-scoped, this test must be
+        cache storage is fixed to be wallet-scoped, this test must be
         flipped to assertIsNone (see docs/authdb.md and the sync-protocol
         review notes on cache isolation).
         """
         import storage.authdb as authdb
 
-        # No device_id/identifier parameter exists on these calls at all —
-        # that's the bug: cache entries have no identity scoping.
-        authdb.set_cache_entry(b"shared-addr", "label-for-identity-A", None)
+        # No device_id/wallet_id parameter exists on these calls at all —
+        # that's the bug: cache entries have no wallet scoping.
+        authdb.set_cache_entry(b"shared-addr", "label-for-wallet-A", None)
 
         label, _mac = authdb.get_cache_entry(b"shared-addr")
-        # A "different identity" (post AuthDbSetDeviceId switch) still sees
-        # identity A's cache entry — leakage across identities.
-        self.assertEqual(label, "label-for-identity-A")
+        # A "different wallet" (post AuthDbSetDeviceId switch) still sees
+        # wallet A's cache entry — leakage across wallets.
+        self.assertEqual(label, "label-for-wallet-A")
 
 
 class TestAuthDbOfflineQueueStorage(unittest.TestCase):
     """Storage-level functional + adversarial coverage for the offline sync
-    additions to core/src/storage/authdb.py (queue + per-identity counters).
+    additions to core/src/storage/authdb.py (queue + per-wallet counters).
     """
 
     def _id(self, n):
         return _sha256d(b"sync-identity-%d" % n)
 
     @mock_storage
-    def test_sequence_assignment_monotonic_per_identity(self):
+    def test_sequence_assignment_monotonic_per_wallet(self):
         import storage.authdb as authdb
 
         id_a, id_b = self._id(1), self._id(2)
@@ -341,7 +341,7 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         self.assertEqual(authdb.take_next_sequence(id_a), 2)
         self.assertEqual(authdb.take_next_sequence(id_a), 3)
 
-        # Independent per identity.
+        # Independent per wallet.
         self.assertEqual(authdb.take_next_sequence(id_b), 1)
         self.assertEqual(authdb.get_next_sequence(id_a), 4)
 
@@ -349,21 +349,21 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
     def test_queue_append_and_fifo_order(self):
         import storage.authdb as authdb
 
-        identifier = self._id(1)
+        wallet_id = self._id(1)
         for n in range(3):
-            seq = authdb.take_next_sequence(identifier)
+            seq = authdb.take_next_sequence(wallet_id)
             authdb.append_offline_operation(
-                identifier, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
+                wallet_id, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
             )
 
-        queue = authdb.get_offline_queue(identifier)
+        queue = authdb.get_offline_queue(wallet_id)
         self.assertEqual([e[0] for e in queue], [1, 2, 3])
         self.assertEqual([e[1] for e in queue], [b"addr-0", b"addr-1", b"addr-2"])
 
     @mock_storage
-    def test_queue_isolated_per_identity(self):
-        """Unlike the offline *cache* (see test_cache_not_isolated_per_identity),
-        the offline *queue* is identifier-scoped from the start."""
+    def test_queue_isolated_per_wallet(self):
+        """Unlike the offline *cache* (see test_cache_not_isolated_per_wallet),
+        the offline *queue* is wallet_id-scoped from the start."""
         import storage.authdb as authdb
 
         id_a, id_b = self._id(1), self._id(2)
@@ -374,23 +374,23 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         self.assertEqual(authdb.get_offline_queue(id_b), [])
 
     @mock_storage
-    def test_queue_capacity_enforced_per_identity(self):
+    def test_queue_capacity_enforced_per_wallet(self):
         import storage.authdb as authdb
 
-        identifier = self._id(1)
+        wallet_id = self._id(1)
         for n in range(authdb.MAX_OFFLINE_QUEUE_ENTRIES):
-            seq = authdb.take_next_sequence(identifier)
+            seq = authdb.take_next_sequence(wallet_id)
             authdb.append_offline_operation(
-                identifier, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
+                wallet_id, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
             )
 
-        overflow_seq = authdb.take_next_sequence(identifier)
+        overflow_seq = authdb.take_next_sequence(wallet_id)
         with self.assertRaises(ValueError):
             authdb.append_offline_operation(
-                identifier, overflow_seq, b"addr-overflow", b"", b"val", b"\x00" * 32
+                wallet_id, overflow_seq, b"addr-overflow", b"", b"val", b"\x00" * 32
             )
 
-        # A different identity is unaffected by identity A's full queue.
+        # A different wallet is unaffected by wallet A's full queue.
         other = self._id(2)
         other_seq = authdb.take_next_sequence(other)
         authdb.append_offline_operation(other, other_seq, b"addr", b"", b"val", b"\x00" * 32)
@@ -406,23 +406,23 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         boundary it's given precisely, with no off-by-one drift."""
         import storage.authdb as authdb
 
-        identifier = self._id(1)
+        wallet_id = self._id(1)
         for n in range(5):
-            seq = authdb.take_next_sequence(identifier)
+            seq = authdb.take_next_sequence(wallet_id)
             authdb.append_offline_operation(
-                identifier, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
+                wallet_id, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
             )
 
-        deleted = authdb.delete_offline_operations_upto(identifier, 3)
+        deleted = authdb.delete_offline_operations_upto(wallet_id, 3)
         self.assertEqual(deleted, 3)
-        remaining = authdb.get_offline_queue(identifier)
+        remaining = authdb.get_offline_queue(wallet_id)
         self.assertEqual([e[0] for e in remaining], [4, 5])
 
-        # A second identity's queue must be untouched.
+        # A second wallet's queue must be untouched.
         other = self._id(2)
         other_seq = authdb.take_next_sequence(other)
         authdb.append_offline_operation(other, other_seq, b"addr", b"", b"val", b"\x00" * 32)
-        deleted_none = authdb.delete_offline_operations_upto(identifier, 0)
+        deleted_none = authdb.delete_offline_operations_upto(wallet_id, 0)
         self.assertEqual(deleted_none, 0)
         self.assertEqual(len(authdb.get_offline_queue(other)), 1)
 
@@ -430,24 +430,24 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
     def test_last_applied_sequence_defaults_and_persists(self):
         import storage.authdb as authdb
 
-        identifier = self._id(1)
-        self.assertEqual(authdb.get_last_applied_sequence(identifier), 0)
+        wallet_id = self._id(1)
+        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 0)
 
-        authdb.set_last_applied_sequence(identifier, 7)
-        self.assertEqual(authdb.get_last_applied_sequence(identifier), 7)
+        authdb.set_last_applied_sequence(wallet_id, 7)
+        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 7)
 
         # Unrelated to the root/counter table: clearing a (hypothetical) root
-        # for this identifier must not reset sync bookkeeping, since they are
+        # for this wallet_id must not reset sync bookkeeping, since they are
         # deliberately stored in separate namespaces (_ROOTS vs _SYNC).
-        authdb.set_root(identifier, _sha256d(b"some-root"))
-        authdb.clear_root(identifier)
-        self.assertEqual(authdb.get_last_applied_sequence(identifier), 7)
+        authdb.set_root(wallet_id, _sha256d(b"some-root"))
+        authdb.clear_root(wallet_id)
+        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 7)
 
     @mock_storage
-    def test_sync_identity_table_capacity_enforced(self):
+    def test_sync_wallet_table_capacity_enforced(self):
         import storage.authdb as authdb
 
-        for n in range(authdb.MAX_SYNC_IDENTITIES):
+        for n in range(authdb.MAX_SYNC_WALLETS):
             authdb.take_next_sequence(self._id(100 + n))
 
         with self.assertRaises(ValueError):

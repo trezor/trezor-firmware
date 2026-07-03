@@ -12,11 +12,11 @@ async def approve(msg: AuthDbApprove) -> AuthDbApproveResponse:
     Subsequent update_leaf calls that present this MAC skip the confirmation step.
     """
     from trezor.messages import AuthDbApproveResponse
-    from apps.authdb import _get_identifier, _derive_mac_key, _compute_mac
+    from apps.authdb import _get_wallet_id, _derive_mac_key, _compute_mac
 
     # TODO: show address + value confirmation dialog when UI layout is available
 
-    identifier = await _get_identifier()
+    wallet_id = await _get_wallet_id()
     mac_key = await _derive_mac_key()
     mac = _compute_mac(mac_key, msg.address, msg.value)
 
@@ -24,8 +24,8 @@ async def approve(msg: AuthDbApprove) -> AuthDbApproveResponse:
         from trezor import log
         log.debug(
             __name__,
-            "approve: address=%s value=%s identifier=%s mac=%s",
-            msg.address, msg.value, identifier, mac,
+            "approve: address=%s value=%s wallet_id=%s mac=%s",
+            msg.address, msg.value, wallet_id, mac,
         )
 
-    return AuthDbApproveResponse(mac=mac, identifier=identifier)
+    return AuthDbApproveResponse(mac=mac, wallet_id=wallet_id)

@@ -7606,13 +7606,13 @@ if TYPE_CHECKING:
 
     class AuthDbSetRootResponse(protobuf.MessageType):
         counter: "int"
-        identifier: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             counter: "int",
-            identifier: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7646,7 +7646,7 @@ if TYPE_CHECKING:
         valid: "bool"
         counter: "int"
         membership: "bool | None"
-        identifier: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7654,7 +7654,7 @@ if TYPE_CHECKING:
             valid: "bool",
             counter: "int",
             membership: "bool | None" = None,
-            identifier: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7693,7 +7693,7 @@ if TYPE_CHECKING:
     class AuthDbUpdateLeafResponse(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
-        identifier: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
         mac: "AnyBytes | None"
         auth_mac: "AnyBytes | None"
 
@@ -7702,7 +7702,7 @@ if TYPE_CHECKING:
             *,
             counter: "int",
             new_root: "AnyBytes | None" = None,
-            identifier: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
             auth_mac: "AnyBytes | None" = None,
         ) -> None:
@@ -7721,12 +7721,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class AuthDbClearRootResponse(protobuf.MessageType):
-        identifier: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            identifier: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7752,13 +7752,13 @@ if TYPE_CHECKING:
 
     class AuthDbApproveResponse(protobuf.MessageType):
         mac: "AnyBytes"
-        identifier: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             mac: "AnyBytes",
-            identifier: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7957,14 +7957,14 @@ if TYPE_CHECKING:
     class AuthDbQueueOfflineOperationResponse(protobuf.MessageType):
         sequence: "int"
         mac: "AnyBytes"
-        identifier: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             sequence: "int",
             mac: "AnyBytes",
-            identifier: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7983,7 +7983,7 @@ if TYPE_CHECKING:
     class AuthDbGetOfflineOperationsResponse(protobuf.MessageType):
         current_root: "AnyBytes | None"
         counter: "int"
-        identifier: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
         operations: 'list["AuthDbOfflineOperation"]'
 
         def __init__(
@@ -7991,7 +7991,7 @@ if TYPE_CHECKING:
             *,
             counter: "int",
             current_root: "AnyBytes | None" = None,
-            identifier: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
             operations: 'list["AuthDbOfflineOperation"] | None' = None,
         ) -> None:
             pass
@@ -8047,7 +8047,7 @@ if TYPE_CHECKING:
         new_root: "AnyBytes | None"
         counter: "int"
         last_applied_sequence: "int"
-        identifier: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8056,7 +8056,7 @@ if TYPE_CHECKING:
             counter: "int",
             last_applied_sequence: "int",
             new_root: "AnyBytes | None" = None,
-            identifier: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 

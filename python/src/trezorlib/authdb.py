@@ -16,13 +16,13 @@ def set_root(
 ) -> tuple[int, Optional[bytes]]:
     """Store a new Merkle root on the device. DEBUG BUILDS ONLY.
 
-    Returns (counter, identifier).
+    Returns (counter, wallet_id).
     """
     resp = session.call(
         messages.AuthDbSetRoot(root=root, mac=mac, device_id=device_id),
         expect=messages.AuthDbSetRootResponse,
     )
-    return resp.counter, resp.identifier
+    return resp.counter, resp.wallet_id
 
 
 def lookup(
@@ -38,7 +38,7 @@ def lookup(
     For a membership proof supply value; leave witness_address/witness_value None.
     For a non-membership proof supply witness_address and witness_value; value may be None.
 
-    Returns (valid, membership, counter, identifier).
+    Returns (valid, membership, counter, wallet_id).
     """
     resp = session.call(
         messages.AuthDbLookup(
@@ -51,19 +51,19 @@ def lookup(
         expect=messages.AuthDbLookupResponse,
     )
     membership = resp.membership if resp.membership is not None else True
-    return resp.valid, membership, resp.counter, resp.identifier
+    return resp.valid, membership, resp.counter, resp.wallet_id
 
 
 def clear_root(session: "Session") -> Optional[bytes]:
     """Wipe the stored Merkle root. DEBUG BUILDS ONLY.
 
-    Returns identifier.
+    Returns wallet_id.
     """
     resp = session.call(
         messages.AuthDbClearRoot(),
         expect=messages.AuthDbClearRootResponse,
     )
-    return resp.identifier
+    return resp.wallet_id
 
 
 def update_leaf(
@@ -83,7 +83,7 @@ def update_leaf(
     new_value=b"" means delete the address (DELETE).
     mac + device_id skip the on-screen confirmation if they match a prior approve() call.
 
-    Returns (counter, new_root, identifier, mac, auth_mac).
+    Returns (counter, new_root, wallet_id, mac, auth_mac).
     new_root/mac are None if tree is now empty.
     auth_mac is set in debug/auto-approve mode: HMAC(device_key, old_leafHash||new_leafHash).
     """
@@ -100,7 +100,7 @@ def update_leaf(
         ),
         expect=messages.AuthDbUpdateLeafResponse,
     )
-    return resp.counter, resp.new_root, resp.identifier, resp.mac, resp.auth_mac
+    return resp.counter, resp.new_root, resp.wallet_id, resp.mac, resp.auth_mac
 
 
 def set_cache_entry(
@@ -176,13 +176,13 @@ def approve(
     The user confirms on-screen; the device returns a MAC token that can be
     passed to future update_leaf calls to skip the confirmation dialog.
 
-    Returns (mac, identifier).
+    Returns (mac, wallet_id).
     """
     resp = session.call(
         messages.AuthDbApprove(address=address, value=value),
         expect=messages.AuthDbApproveResponse,
     )
-    return resp.mac, resp.identifier
+    return resp.mac, resp.wallet_id
 
 
 # ---------------------------------------------------------------------------
@@ -200,7 +200,7 @@ def queue_offline_operation(
     old_value=b"" means the address is currently absent (INSERT).
     new_value=b"" means delete the address (DELETE).
 
-    Returns (sequence, mac, identifier). Does not touch the Merkle root.
+    Returns (sequence, mac, wallet_id). Does not touch the Merkle root.
     """
     resp = session.call(
         messages.AuthDbQueueOfflineOperation(
@@ -208,7 +208,7 @@ def queue_offline_operation(
         ),
         expect=messages.AuthDbQueueOfflineOperationResponse,
     )
-    return resp.sequence, resp.mac, resp.identifier
+    return resp.sequence, resp.mac, resp.wallet_id
 
 
 class OfflineOperation:
@@ -234,7 +234,7 @@ def get_offline_operations(
 ) -> tuple[Optional[bytes], int, Optional[bytes], list[OfflineOperation]]:
     """Fetch the current root/counter plus every queued offline operation, for upload.
 
-    Returns (current_root, counter, identifier, operations).
+    Returns (current_root, counter, wallet_id, operations).
     """
     resp = session.call(
         messages.AuthDbGetOfflineOperations(),
@@ -250,7 +250,7 @@ def get_offline_operations(
         )
         for op in resp.operations
     ]
-    return resp.current_root, resp.counter, resp.identifier, operations
+    return resp.current_root, resp.counter, resp.wallet_id, operations
 
 
 class RebasedOperation:
@@ -293,7 +293,7 @@ def apply_offline_operations(
     root. Processing stops at the first operation that fails verification or
     is not the immediate next expected sequence.
 
-    Returns (applied_count, new_root, counter, last_applied_sequence, identifier).
+    Returns (applied_count, new_root, counter, last_applied_sequence, wallet_id).
     """
     resp = session.call(
         messages.AuthDbApplyOfflineOperations(
@@ -318,7 +318,7 @@ def apply_offline_operations(
         resp.new_root,
         resp.counter,
         resp.last_applied_sequence,
-        resp.identifier,
+        resp.wallet_id,
     )
 
 

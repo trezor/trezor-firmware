@@ -26,7 +26,7 @@ message AuthDbSetRoot {
  */
 message AuthDbSetRootResponse {
     required uint32 counter    = 1;  // monotonic counter after this operation
-    optional bytes  identifier = 2;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
+    optional bytes  wallet_id  = 2;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
 }
 
 /**
@@ -63,7 +63,7 @@ message AuthDbLookupResponse {
     required bool   valid      = 1;  // true if proof is valid against stored root
     required uint32 counter    = 2;  // current monotonic counter
     optional bool   membership = 3;  // true = membership proof, false = non-membership
-    optional bytes  identifier = 4;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
+    optional bytes  wallet_id  = 4;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
 }
 
 /**
@@ -100,7 +100,7 @@ message AuthDbUpdateLeaf {
 message AuthDbUpdateLeafResponse {
     required uint32 counter    = 1;  // monotonic counter after this update
     optional bytes  new_root   = 2;  // absent if the tree is now empty
-    optional bytes  identifier = 3;  // device_id (SLIP21, not passphrase-bound)
+    optional bytes  wallet_id  = 3;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
     optional bytes  mac        = 4;  // HMAC(device_key, new_root); absent if tree is now empty
     optional bytes  auth_mac   = 5;  // HMAC(device_key, old_leafHash||new_leafHash); set in debug/auto_approve mode
 }
@@ -123,7 +123,7 @@ message AuthDbApprove {
  */
 message AuthDbApproveResponse {
     required bytes mac        = 1;  // HMAC-SHA256(slip21_key, address‖value)
-    optional bytes identifier = 2;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
+    optional bytes wallet_id  = 2;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
 }
 
 /**
@@ -141,7 +141,7 @@ message AuthDbClearRoot {
  * @end
  */
 message AuthDbClearRootResponse {
-    optional bytes identifier = 1;  // SHA-256(pubkey at m/44'/0'/0'/0/0), unique per seed/passphrase
+    optional bytes wallet_id  = 1;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
 }
 
 /**
@@ -256,7 +256,7 @@ message AuthDbSetDeviceIdResponse {
  * to discard operations that were never actually applied.
  */
 message AuthDbOfflineOperation {
-    required uint32 sequence  = 1;  // monotonic per-identity, assigned by the device
+    required uint32 sequence  = 1;  // monotonic per-wallet, assigned by the device
     required bytes  address   = 2;
     optional bytes  old_value = 3;  // empty/absent = address was absent (INSERT) when queued
     optional bytes  new_value = 4;  // empty/absent = delete
@@ -287,12 +287,12 @@ message AuthDbQueueOfflineOperation {
 message AuthDbQueueOfflineOperationResponse {
     required uint32 sequence   = 1;
     required bytes  mac        = 2;
-    optional bytes  identifier = 3;
+    optional bytes  wallet_id  = 3;
 }
 
 /**
  * Request: Return the current root/counter plus every operation currently
- * queued for this identity, for upload to the host database.
+ * queued for this wallet, for upload to the host database.
  * @start
  * @next AuthDbGetOfflineOperationsResponse
  * @next Failure
@@ -307,7 +307,7 @@ message AuthDbGetOfflineOperations {
 message AuthDbGetOfflineOperationsResponse {
     optional bytes  current_root = 1;  // absent if tree is empty
     required uint32 counter      = 2;
-    optional bytes  identifier   = 3;
+    optional bytes  wallet_id    = 3;
     repeated AuthDbOfflineOperation operations = 4;
 }
 
@@ -335,7 +335,7 @@ message AuthDbRebasedOperation {
  * Request: Apply a batch of rebased offline operations. The device is the
  * sole authority for the resulting root: for every operation it independently
  * verifies the MAC (proves the operation was genuinely queued under the
- * current identity, for this exact sequence and leaf transition), verifies
+ * current wallet, for this exact sequence and leaf transition), verifies
  * the supplied proof against its own current root, and then COMPUTES the new
  * root itself from (address, old_value, new_value, proof) exactly as
  * AuthDbUpdateLeaf does -- the host never supplies a root directly.
@@ -364,7 +364,7 @@ message AuthDbApplyOfflineOperationsResponse {
     optional bytes  new_root              = 2;  // absent if tree is now empty
     required uint32 counter               = 3;
     required uint32 last_applied_sequence = 4;
-    optional bytes  identifier            = 5;
+    optional bytes  wallet_id             = 5;
 }
 
 /**

@@ -14,7 +14,7 @@ async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
     import storage.authdb as authdb
     from trezor.messages import AuthDbSetRootResponse
     from trezor.wire import DataError
-    from apps.authdb import _get_identifier, _derive_mac_key, _compute_mac
+    from apps.authdb import _get_wallet_id, _derive_mac_key, _compute_mac
 
     if not __debug__:
         raise DataError("AuthDbSetRoot is not available on production firmware")
@@ -22,17 +22,17 @@ async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
     if len(msg.root) != authdb.ROOT_LENGTH:
         raise DataError("Root must be exactly 32 bytes")
 
-    identifier = await _get_identifier()
+    wallet_id = await _get_wallet_id()
 
     if msg.mac is None or msg.device_id is None:
         raise DataError("mac and device_id are required for AuthDbSetRoot")
-    if msg.device_id != identifier:
+    if msg.device_id != wallet_id:
         raise DataError("device_id mismatch")
     mac_key = await _derive_mac_key()
     if _compute_mac(mac_key, msg.root) != msg.mac:
         raise DataError("MAC verification failed")
 
-    authdb.set_root(identifier, msg.root)
-    counter = authdb.increment_counter(identifier)
+    authdb.set_root(wallet_id, msg.root)
+    counter = authdb.increment_counter(wallet_id)
 
-    return AuthDbSetRootResponse(counter=counter, identifier=identifier)
+    return AuthDbSetRootResponse(counter=counter, wallet_id=wallet_id)

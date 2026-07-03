@@ -4,17 +4,23 @@ from storage import common
 
 _NAMESPACE = common.APP_AUTHDB
 
-_ROOTS              = const(0x00)  # flat table of identity records
+_ROOTS              = const(0x00)  # flat table of wallet records
 _CACHE              = const(0x01)  # offline cache: variable-length per-address metadata
 _DEVICE_ID_OVERRIDE = const(0x02)  # debug only: injected device_id
-_QUEUE              = const(0x03)  # offline operation queue: identifier-scoped, append-only
-_SYNC               = const(0x04)  # per-identity offline-sync counters
+_QUEUE              = const(0x03)  # offline operation queue: wallet-scoped, append-only
+_SYNC               = const(0x04)  # per-wallet offline-sync counters
 
-IDENTIFIER_LENGTH = const(32)
-ROOT_LENGTH       = const(32)
-MAX_IDENTITIES    = const(16)
-# Record layout: [identifier: 32][root: 32][counter: 4]
-_RECORD_SIZE      = const(68)
+WALLET_ID_LENGTH = const(32)
+ROOT_LENGTH      = const(32)
+MAX_WALLETS      = const(16)
+# Record layout: [root: 32][wallet_id: 32][counter: 4]
+#
+# NOTE: this table can hold one root per wallet_id (up to MAX_WALLETS), but
+# host-facing root sync (e.g. a future AuthDbGetOfflineOperations-style
+# upload) must only ever read/sync the root for the CURRENTLY ACTIVE
+# wallet_id -- never enumerate or sync roots across every wallet_id stored
+# on this physical device.
+_RECORD_SIZE     = const(68)
 
 MAX_CACHE_ENTRIES = const(64)
 # Cache record layout (variable length):
@@ -22,23 +28,23 @@ MAX_CACHE_ENTRIES = const(64)
 #   [label_len: 1B][label: label_len B]   (0 = absent)
 #   [data_mac_present: 1B][data_mac: 32B] (0x01 = present, 0x00 = absent)
 
-MAX_OFFLINE_QUEUE_ENTRIES = const(64)  # per identity
+MAX_OFFLINE_QUEUE_ENTRIES = const(64)  # per wallet
 # Queue record layout (variable length), FIFO by append order:
-#   [identifier: 32]
-#   [sequence: 4]
-#   [addr_len: 1B][address: addr_len B]
-#   [old_len: 1B][old_value: old_len B]   (0 = address absent / INSERT)
-#   [new_len: 1B][new_value: new_len B]   (0 = delete)
+#   [wallet_id: 32]
 #   [mac: 32]
+#   [sequence: 4]
+#   [addr_len: 4][address: addr_len B]
+#   [old_len: 4][old_value: old_len B]   (0 = address absent / INSERT)
+#   [new_len: 4][new_value: new_len B]   (0 = delete)
 #
-# Kept in its own namespace, separate from `_ROOTS`, and scoped by identifier
-# from the start -- unlike `_CACHE`, which has no identifier column at all
-# and therefore leaks entries across identities sharing one device.
+# Kept in its own namespace, separate from `_ROOTS`, and scoped by wallet_id
+# from the start -- unlike `_CACHE`, which has no wallet_id column at all
+# and therefore leaks entries across wallets sharing one device.
 
-MAX_SYNC_IDENTITIES = const(16)
-# Sync record layout: [identifier: 32][next_sequence: 4][last_applied_sequence: 4]
+MAX_SYNC_WALLETS = const(16)
+# Sync record layout: [wallet_id: 32][next_sequence: 4][last_applied_sequence: 4]
 # Kept separate from `_ROOTS` on purpose: `clear_root()` deletes the entire
-# identity row (including its counter) whenever the tree becomes empty via a
+# wallet row (including its counter) whenever the tree becomes empty via a
 # DELETE, which would otherwise silently reset offline-sync bookkeeping too.
 _SYNC_RECORD_SIZE = const(40)
 
@@ -52,61 +58,65 @@ def _save_table(table: bytearray) -> None:
     common.set(_NAMESPACE, _ROOTS, bytes(table), public=True)
 
 
-def _find_record(table: bytearray, identifier: bytes) -> int:
-    """Return byte offset of the record matching identifier, or -1."""
+def _find_record(table: bytearray, wallet_id: bytes) -> int:
+    """Return byte offset of the record matching wallet_id, or -1."""
     for off in range(0, len(table), _RECORD_SIZE):
-        if table[off : off + IDENTIFIER_LENGTH] == identifier:
+        if table[off + ROOT_LENGTH : off + ROOT_LENGTH + WALLET_ID_LENGTH] == wallet_id:
             return off
     return -1
 
 
-def get_root(identifier: bytes) -> bytes | None:
+def get_root(wallet_id: bytes) -> bytes | None:
+    """Look up the root for wallet_id.
+
+    NOTE: callers doing host-facing sync must only ever call this for the
+    currently active wallet_id -- never iterate this table across wallets.
+    """
     table = _load_table()
-    off = _find_record(table, identifier)
+    off = _find_record(table, wallet_id)
     if off < 0:
         return None
-    return bytes(table[off + IDENTIFIER_LENGTH : off + IDENTIFIER_LENGTH + ROOT_LENGTH])
+    return bytes(table[off : off + ROOT_LENGTH])
 
 
-def set_root(identifier: bytes, root: bytes) -> None:
+def set_root(wallet_id: bytes, root: bytes) -> None:
     if len(root) != ROOT_LENGTH:
         raise ValueError("Root must be 32 bytes")
     table = _load_table()
-    off = _find_record(table, identifier)
+    off = _find_record(table, wallet_id)
     if off >= 0:
-        table[off + IDENTIFIER_LENGTH : off + IDENTIFIER_LENGTH + ROOT_LENGTH] = root
+        table[off : off + ROOT_LENGTH] = root
     else:
-        if len(table) // _RECORD_SIZE >= MAX_IDENTITIES:
-            raise ValueError("Too many identities")
-        table += identifier + root + b"\x00\x00\x00\x00"
+        if len(table) // _RECORD_SIZE >= MAX_WALLETS:
+            raise ValueError("Too many wallets")
+        table += root + wallet_id + b"\x00\x00\x00\x00"
     _save_table(table)
 
 
-def clear_root(identifier: bytes) -> None:
+def clear_root(wallet_id: bytes) -> None:
     table = _load_table()
-    off = _find_record(table, identifier)
+    off = _find_record(table, wallet_id)
     if off < 0:
         return
     table[off : off + _RECORD_SIZE] = b""
     _save_table(table)
 
 
-def get_counter(identifier: bytes) -> int:
+def get_counter(wallet_id: bytes) -> int:
     table = _load_table()
-    off = _find_record(table, identifier)
+    off = _find_record(table, wallet_id)
     if off < 0:
         return 0
-    return int.from_bytes(
-        table[off + IDENTIFIER_LENGTH + ROOT_LENGTH : off + _RECORD_SIZE], "big"
-    )
+    ctr_off = off + ROOT_LENGTH + WALLET_ID_LENGTH
+    return int.from_bytes(table[ctr_off : ctr_off + 4], "big")
 
 
-def increment_counter(identifier: bytes) -> int:
+def increment_counter(wallet_id: bytes) -> int:
     table = _load_table()
-    off = _find_record(table, identifier)
+    off = _find_record(table, wallet_id)
     if off < 0:
-        raise ValueError("No record for identifier")
-    ctr_off = off + IDENTIFIER_LENGTH + ROOT_LENGTH
+        raise ValueError("No record for wallet_id")
+    ctr_off = off + ROOT_LENGTH + WALLET_ID_LENGTH
     new_val = int.from_bytes(table[ctr_off : ctr_off + 4], "big") + 1
     table[ctr_off : ctr_off + 4] = new_val.to_bytes(4, "big")
     _save_table(table)
@@ -233,7 +243,7 @@ def set_device_id_override(device_id: bytes) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Offline-sync counters (next_sequence / last_applied_sequence) per identity
+# Offline-sync counters (next_sequence / last_applied_sequence) per wallet
 # ---------------------------------------------------------------------------
 
 def _load_sync() -> bytearray:
@@ -245,70 +255,70 @@ def _save_sync(table: bytearray) -> None:
     common.set(_NAMESPACE, _SYNC, bytes(table), public=True)
 
 
-def _find_sync_record(table: bytearray, identifier: bytes) -> int:
+def _find_sync_record(table: bytearray, wallet_id: bytes) -> int:
     for off in range(0, len(table), _SYNC_RECORD_SIZE):
-        if table[off : off + IDENTIFIER_LENGTH] == identifier:
+        if table[off : off + WALLET_ID_LENGTH] == wallet_id:
             return off
     return -1
 
 
-def _ensure_sync_record(table: bytearray, identifier: bytes) -> int:
-    """Return the offset of identifier's sync record, creating it (next_sequence=1) if absent."""
-    off = _find_sync_record(table, identifier)
+def _ensure_sync_record(table: bytearray, wallet_id: bytes) -> int:
+    """Return the offset of wallet_id's sync record, creating it (next_sequence=1) if absent."""
+    off = _find_sync_record(table, wallet_id)
     if off >= 0:
         return off
-    if len(table) // _SYNC_RECORD_SIZE >= MAX_SYNC_IDENTITIES:
-        raise ValueError("Too many identities")
+    if len(table) // _SYNC_RECORD_SIZE >= MAX_SYNC_WALLETS:
+        raise ValueError("Too many wallets")
     off = len(table)
-    table += identifier + (1).to_bytes(4, "big") + (0).to_bytes(4, "big")
+    table += wallet_id + (1).to_bytes(4, "big") + (0).to_bytes(4, "big")
     return off
 
 
-def get_next_sequence(identifier: bytes) -> int:
+def get_next_sequence(wallet_id: bytes) -> int:
     """Peek at the sequence number that would be assigned to the next queued operation."""
     table = _load_sync()
-    off = _find_sync_record(table, identifier)
+    off = _find_sync_record(table, wallet_id)
     if off < 0:
         return 1
-    seq_off = off + IDENTIFIER_LENGTH
+    seq_off = off + WALLET_ID_LENGTH
     return int.from_bytes(table[seq_off : seq_off + 4], "big")
 
 
-def take_next_sequence(identifier: bytes) -> int:
-    """Atomically assign and persist the next sequence number for identifier."""
+def take_next_sequence(wallet_id: bytes) -> int:
+    """Atomically assign and persist the next sequence number for wallet_id."""
     table = _load_sync()
-    off = _ensure_sync_record(table, identifier)
-    seq_off = off + IDENTIFIER_LENGTH
+    off = _ensure_sync_record(table, wallet_id)
+    seq_off = off + WALLET_ID_LENGTH
     sequence = int.from_bytes(table[seq_off : seq_off + 4], "big")
     table[seq_off : seq_off + 4] = (sequence + 1).to_bytes(4, "big")
     _save_sync(table)
     return sequence
 
 
-def get_last_applied_sequence(identifier: bytes) -> int:
+def get_last_applied_sequence(wallet_id: bytes) -> int:
     table = _load_sync()
-    off = _find_sync_record(table, identifier)
+    off = _find_sync_record(table, wallet_id)
     if off < 0:
         return 0
-    seq_off = off + IDENTIFIER_LENGTH + 4
+    seq_off = off + WALLET_ID_LENGTH + 4
     return int.from_bytes(table[seq_off : seq_off + 4], "big")
 
 
-def set_last_applied_sequence(identifier: bytes, sequence: int) -> None:
+def set_last_applied_sequence(wallet_id: bytes, sequence: int) -> None:
     """Persist the highest sequence this device has itself verified and applied.
 
     This is the ONLY value AuthDbDeleteOfflineOperations trusts for garbage
     collection -- it is never taken from a host-supplied argument.
     """
     table = _load_sync()
-    off = _ensure_sync_record(table, identifier)
-    seq_off = off + IDENTIFIER_LENGTH + 4
+    off = _ensure_sync_record(table, wallet_id)
+    seq_off = off + WALLET_ID_LENGTH + 4
     table[seq_off : seq_off + 4] = sequence.to_bytes(4, "big")
     _save_sync(table)
 
 
 # ---------------------------------------------------------------------------
-# Offline operation queue -- identifier-scoped, append-only, bounded, FIFO
+# Offline operation queue -- wallet-scoped, append-only, bounded, FIFO
 # ---------------------------------------------------------------------------
 
 def _load_queue() -> bytearray:
@@ -321,77 +331,79 @@ def _save_queue(queue: bytearray) -> None:
 
 
 def _iter_queue(queue: bytearray):
-    """Yield (start, end, identifier, sequence, address, old_value, new_value, mac)."""
+    """Yield (start, end, wallet_id, sequence, address, old_value, new_value, mac)."""
     off = 0
     while off < len(queue):
         start = off
-        identifier = bytes(queue[off : off + IDENTIFIER_LENGTH]); off += IDENTIFIER_LENGTH
-        sequence = int.from_bytes(queue[off : off + 4], "big"); off += 4
-        addr_len = queue[off]; off += 1
-        address = bytes(queue[off : off + addr_len]); off += addr_len
-        old_len = queue[off]; off += 1
-        old_value = bytes(queue[off : off + old_len]); off += old_len
-        new_len = queue[off]; off += 1
-        new_value = bytes(queue[off : off + new_len]); off += new_len
+        wallet_id = bytes(queue[off : off + WALLET_ID_LENGTH]); off += WALLET_ID_LENGTH
         mac = bytes(queue[off : off + 32]); off += 32
-        yield start, off, identifier, sequence, address, old_value, new_value, mac
+        sequence = int.from_bytes(queue[off : off + 4], "big"); off += 4
+        addr_len = int.from_bytes(queue[off : off + 4], "big"); off += 4
+        address = bytes(queue[off : off + addr_len]); off += addr_len
+        old_len = int.from_bytes(queue[off : off + 4], "big"); off += 4
+        old_value = bytes(queue[off : off + old_len]); off += old_len
+        new_len = int.from_bytes(queue[off : off + 4], "big"); off += 4
+        new_value = bytes(queue[off : off + new_len]); off += new_len
+        yield start, off, wallet_id, sequence, address, old_value, new_value, mac
 
 
-def get_offline_queue(identifier: bytes) -> list:
+def get_offline_queue(wallet_id: bytes) -> list:
     """Return [(sequence, address, old_value, new_value, mac), ...] in FIFO order."""
     queue = _load_queue()
     return [
         (sequence, address, old_value, new_value, mac)
-        for _start, _end, ident, sequence, address, old_value, new_value, mac in _iter_queue(queue)
-        if ident == identifier
+        for _start, _end, wid, sequence, address, old_value, new_value, mac in _iter_queue(queue)
+        if wid == wallet_id
     ]
 
 
-def offline_queue_count(identifier: bytes) -> int:
+def offline_queue_count(wallet_id: bytes) -> int:
     queue = _load_queue()
     return sum(
         1
-        for _start, _end, ident, _seq, _addr, _old, _new, _mac in _iter_queue(queue)
-        if ident == identifier
+        for _start, _end, wid, _seq, _addr, _old, _new, _mac in _iter_queue(queue)
+        if wid == wallet_id
     )
 
 
 def append_offline_operation(
-    identifier: bytes, sequence: int, address: bytes, old_value: bytes, new_value: bytes, mac: bytes
+    wallet_id: bytes, sequence: int, address: bytes, old_value: bytes, new_value: bytes, mac: bytes
 ) -> None:
     """Append an already-sequenced offline operation to the queue.
 
     The caller must obtain `sequence` from `take_next_sequence()` first, so
     that sequence assignment and the queue-full check happen in the order the
     caller intends (typically: check capacity, take the sequence, append).
-    Raises ValueError if identifier's queue is already at MAX_OFFLINE_QUEUE_ENTRIES.
+    Raises ValueError if wallet_id's queue is already at MAX_OFFLINE_QUEUE_ENTRIES.
     """
+    # 255 is a flash-usage sanity cap, not a wire-format limit: the length
+    # prefixes below are 4 bytes each, not tied to this value.
     if len(address) > 255 or len(old_value) > 255 or len(new_value) > 255:
         raise ValueError("address/old_value/new_value too long")
     if len(mac) != 32:
         raise ValueError("mac must be 32 bytes")
-    if offline_queue_count(identifier) >= MAX_OFFLINE_QUEUE_ENTRIES:
+    if offline_queue_count(wallet_id) >= MAX_OFFLINE_QUEUE_ENTRIES:
         raise ValueError("Offline queue full")
 
     queue = _load_queue()
     rec = bytearray()
-    rec += identifier
-    rec += sequence.to_bytes(4, "big")
-    rec.append(len(address)); rec += address
-    rec.append(len(old_value)); rec += old_value
-    rec.append(len(new_value)); rec += new_value
+    rec += wallet_id
     rec += mac
+    rec += sequence.to_bytes(4, "big")
+    rec += len(address).to_bytes(4, "big"); rec += address
+    rec += len(old_value).to_bytes(4, "big"); rec += old_value
+    rec += len(new_value).to_bytes(4, "big"); rec += new_value
     queue += rec
     _save_queue(queue)
 
 
-def delete_offline_operations_upto(identifier: bytes, max_sequence: int) -> int:
-    """Delete identifier's queued operations with sequence <= max_sequence. Returns count deleted."""
+def delete_offline_operations_upto(wallet_id: bytes, max_sequence: int) -> int:
+    """Delete wallet_id's queued operations with sequence <= max_sequence. Returns count deleted."""
     queue = _load_queue()
     keep = bytearray()
     deleted = 0
-    for start, end, ident, sequence, _addr, _old, _new, _mac in _iter_queue(queue):
-        if ident == identifier and sequence <= max_sequence:
+    for start, end, wid, sequence, _addr, _old, _new, _mac in _iter_queue(queue):
+        if wid == wallet_id and sequence <= max_sequence:
             deleted += 1
         else:
             keep += queue[start:end]
@@ -400,11 +412,11 @@ def delete_offline_operations_upto(identifier: bytes, max_sequence: int) -> int:
     return deleted
 
 
-def wipe_offline_queue(identifier: bytes) -> None:
-    """Delete all of identifier's queued operations, regardless of sequence."""
+def wipe_offline_queue(wallet_id: bytes) -> None:
+    """Delete all of wallet_id's queued operations, regardless of sequence."""
     queue = _load_queue()
     keep = bytearray()
-    for start, end, ident, _seq, _addr, _old, _new, _mac in _iter_queue(queue):
-        if ident != identifier:
+    for start, end, wid, _seq, _addr, _old, _new, _mac in _iter_queue(queue):
+        if wid != wallet_id:
             keep += queue[start:end]
     _save_queue(keep)

@@ -52,5 +52,5 @@ def _compute_mac(key: bytes, *parts: bytes) -> bytes:
     return h.digest()
 
 
-# Keep _get_identifier as alias so existing handler imports don't break
-_get_identifier = _get_device_id
+# Keep _get_wallet_id as alias so existing handler imports don't break
+_get_wallet_id = _get_device_id

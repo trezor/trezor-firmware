@@ -26,9 +26,9 @@ def set_root(session: "Session", root_hex: str) -> str:
     device itself via the update-leaf command.
     """
     root = bytes.fromhex(root_hex)
-    counter, identifier = authdb.set_root(session, root)
-    id_hex = identifier.hex() if identifier else "(none)"
-    return f"Root stored. Counter: {counter}. Identifier: {id_hex}"
+    counter, wallet_id = authdb.set_root(session, root)
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    return f"Root stored. Counter: {counter}. Wallet ID: {id_hex}"
 
 
 @cli.command()
@@ -80,7 +80,7 @@ def lookup(
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
 
-    valid, membership, counter, identifier = authdb.lookup(
+    valid, membership, counter, wallet_id = authdb.lookup(
         session,
         address=address,
         value=value,
@@ -90,8 +90,8 @@ def lookup(
     )
     proof_type = "membership" if membership else "non-membership"
     status = "VALID" if valid else "INVALID"
-    id_hex = identifier.hex() if identifier else "(none)"
-    return f"Proof {status} ({proof_type}). Counter: {counter}. Identifier: {id_hex}"
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    return f"Proof {status} ({proof_type}). Counter: {counter}. Wallet ID: {id_hex}"
 
 
 @cli.command(name="update-leaf")
@@ -176,7 +176,7 @@ def update_leaf(
     mac = bytes.fromhex(mac_hex) if mac_hex else None
     device_id = bytes.fromhex(device_id_hex) if device_id_hex else None
 
-    counter, new_root, identifier, new_mac, auth_mac = authdb.update_leaf(
+    counter, new_root, wallet_id, new_mac, auth_mac = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
@@ -188,19 +188,19 @@ def update_leaf(
         device_id=device_id,
     )
     root_hex = new_root.hex() if new_root else "(empty)"
-    id_hex = identifier.hex() if identifier else "(none)"
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
     mac_out = new_mac.hex() if new_mac else "(none)"
     auth_mac_out = auth_mac.hex() if auth_mac else "(none)"
-    return f"Updated. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}. MAC: {mac_out}. Auth-MAC: {auth_mac_out}"
+    return f"Updated. Counter: {counter}. New root: {root_hex}. Wallet ID: {id_hex}. MAC: {mac_out}. Auth-MAC: {auth_mac_out}"
 
 
 @cli.command(name="clear-root")
 @with_session
 def clear_root(session: "Session") -> str:
     """Wipe the stored Merkle root and bump the counter. DEBUG BUILDS ONLY."""
-    identifier = authdb.clear_root(session)
-    id_hex = identifier.hex() if identifier else "(none)"
-    return f"Root cleared. Identifier: {id_hex}"
+    wallet_id = authdb.clear_root(session)
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    return f"Root cleared. Wallet ID: {id_hex}"
 
 
 @cli.command()
@@ -231,7 +231,7 @@ def delete(
     old_value = bytes.fromhex(old_value_hex)
     proof = [bytes.fromhex(h) for h in proof_hexes]
 
-    counter, new_root, identifier, _mac, _auth_mac = authdb.update_leaf(
+    counter, new_root, wallet_id, _mac, _auth_mac = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
@@ -239,8 +239,8 @@ def delete(
         proof=proof,
     )
     root_hex = new_root.hex() if new_root else "(empty)"
-    id_hex = identifier.hex() if identifier else "(none)"
-    return f"Deleted. Counter: {counter}. New root: {root_hex}. Identifier: {id_hex}"
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    return f"Deleted. Counter: {counter}. New root: {root_hex}. Wallet ID: {id_hex}"
 
 
 @cli.command()
@@ -258,10 +258,10 @@ def approve(session: "Session", address_hex: str, value_hex: str) -> str:
     """
     address = bytes.fromhex(address_hex)
     value = bytes.fromhex(value_hex)
-    mac, identifier = authdb.approve(session, address=address, value=value)
+    mac, wallet_id = authdb.approve(session, address=address, value=value)
     mac_hex = mac.hex()
-    id_hex = identifier.hex() if identifier else "(none)"
-    return f"Approved. MAC: {mac_hex}. Identifier: {id_hex}"
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    return f"Approved. MAC: {mac_hex}. Wallet ID: {id_hex}"
 
 
 @cli.command(name="set-cache-entry")

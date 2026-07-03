@@ -9,20 +9,20 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
     import storage.authdb as authdb
     from trezor.messages import AuthDbLookupResponse
     from trezor.wire import DataError
-    from apps.authdb import _get_identifier
+    from apps.authdb import _get_wallet_id
 
     membership_query = msg.witness_address is None and msg.value is not None
 
-    identifier = await _get_identifier()
-    stored_root = authdb.get_root(identifier)
+    wallet_id = await _get_wallet_id()
+    stored_root = authdb.get_root(wallet_id)
     if stored_root is None:
         # Empty tree: membership is trivially false, non-membership is trivially true.
-        counter = authdb.get_counter(identifier)
+        counter = authdb.get_counter(wallet_id)
         return AuthDbLookupResponse(
             valid=not membership_query,
             counter=counter,
             membership=membership_query,
-            identifier=identifier,
+            wallet_id=wallet_id,
         )
 
     if __debug__:
@@ -53,8 +53,8 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
         from trezor import log
         log.debug(__name__, "lookup: result valid=%s membership=%s", valid, membership)
 
-    counter = authdb.get_counter(identifier)
-    return AuthDbLookupResponse(valid=valid, counter=counter, membership=membership, identifier=identifier)
+    counter = authdb.get_counter(wallet_id)
+    return AuthDbLookupResponse(valid=valid, counter=counter, membership=membership, wallet_id=wallet_id)
 
 
 def _verify_nonmembership(

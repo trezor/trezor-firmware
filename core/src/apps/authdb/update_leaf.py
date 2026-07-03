@@ -19,7 +19,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     import storage.authdb as authdb
     from trezor.messages import AuthDbUpdateLeafResponse
     from trezor.wire import DataError
-    from apps.authdb import _get_device_id, _derive_mac_key, _compute_mac
+    from apps.authdb import _get_wallet_id, _derive_mac_key, _compute_mac
 
     from trezor.crypto.hashlib import sha256
 
@@ -47,7 +47,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
                 node = _internal_hash(sibling, node)
         return node
 
-    device_id = await _get_device_id()
+    wallet_id = await _get_wallet_id()
     mac_key = await _derive_mac_key()
 
     address = msg.address
@@ -79,7 +79,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     # Verify MAC-based pre-authorization when supplied by the host
     if msg.mac is not None and msg.device_id is not None:
-        if msg.device_id != device_id:
+        if msg.device_id != wallet_id:
             raise DataError("device_id mismatch")
         expected_mac = _compute_mac(mac_key, old_leaf_hash, new_leaf_hash)
         if expected_mac != msg.mac:
@@ -102,7 +102,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         # INSERT or INIT — verify non-membership first
         if len(proof) == 0 and msg.witness_address is None:
             # INIT: tree was empty; verify no root is stored
-            stored_root = authdb.get_root(device_id)
+            stored_root = authdb.get_root(wallet_id)
             if stored_root is not None:
                 raise DataError("Tree is not empty; supply non-membership proof")
             new_root: bytes | None = _leaf_hash(address, new_value)
@@ -113,7 +113,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             # INSERT: verify witness is in tree and address is absent
             if msg.witness_address is None or msg.witness_value is None:
                 raise DataError("witness_address and witness_value required for INSERT")
-            stored_root = authdb.get_root(device_id)
+            stored_root = authdb.get_root(wallet_id)
             if stored_root is None:
                 #raise DataError("No Merkle root stored; use INIT (empty proof, no witness)")
                 if __debug__:
@@ -161,7 +161,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     elif deleting:
         # DELETE — verify current membership first
-        stored_root = authdb.get_root(device_id)
+        stored_root = authdb.get_root(wallet_id)
         if stored_root is None:
             #raise DataError("No Merkle root stored on device")
             if __debug__:
@@ -194,7 +194,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     else:
         # UPDATE — verify current membership first
-        stored_root = authdb.get_root(device_id)
+        stored_root = authdb.get_root(wallet_id)
         if stored_root is None:
             raise DataError("No Merkle root stored on device")
 
@@ -209,20 +209,20 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     # Persist the new root.
     #
-    # increment_counter() requires the identity's storage record to already
-    # exist, and clear_root() deletes that record outright (identifier, root
+    # increment_counter() requires the wallet's storage record to already
+    # exist, and clear_root() deletes that record outright (wallet_id, root
     # AND counter). So on a DELETE that empties the tree, the counter must be
     # bumped BEFORE clearing the root (the record still exists from the prior
     # operation); for every other transition, set_root() -- which creates the
     # record on a first-ever INIT -- must run first instead. Doing this in
-    # the other order raises "No record for identifier" on every delete-to-
+    # the other order raises "No record for wallet_id" on every delete-to-
     # empty-tree call.
     if new_root is None:
-        counter = authdb.increment_counter(device_id)
-        authdb.clear_root(device_id)
+        counter = authdb.increment_counter(wallet_id)
+        authdb.clear_root(wallet_id)
     else:
-        authdb.set_root(device_id, new_root)
-        counter = authdb.increment_counter(device_id)
+        authdb.set_root(wallet_id, new_root)
+        counter = authdb.increment_counter(wallet_id)
 
     if __debug__:
         from trezor import log
@@ -246,7 +246,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     return AuthDbUpdateLeafResponse(
         counter=counter,
         new_root=new_root,
-        identifier=device_id,
+        wallet_id=wallet_id,
         mac=new_mac,
         auth_mac=auth_mac,
     )
