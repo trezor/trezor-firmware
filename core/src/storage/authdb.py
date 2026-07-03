@@ -87,7 +87,7 @@ def clear_root(identifier: bytes) -> None:
     off = _find_record(table, identifier)
     if off < 0:
         return
-    del table[off : off + _RECORD_SIZE]
+    table[off : off + _RECORD_SIZE] = b""
     _save_table(table)
 
 
@@ -173,7 +173,7 @@ def set_cache_entry(address: bytes, label, data_mac) -> None:
                 off += 32
             found_end = off
     if found_start >= 0:
-        del cache[found_start:found_end]
+        cache[found_start:found_end] = b""
         count -= 1
     if count >= MAX_CACHE_ENTRIES:
         raise ValueError("Cache full")
@@ -200,7 +200,7 @@ def delete_cache_entry(address: bytes) -> None:
             off = start + 1 + len(addr) + 1 + len(_lb) + 1
             if _dm is not None:
                 off += 32
-            del cache[start:off]
+            cache[start:off] = b""
             _save_cache(cache)
             return
 

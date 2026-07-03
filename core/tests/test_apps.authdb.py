@@ -209,14 +209,14 @@ class TestAuthDbNonMembership(unittest.TestCase):
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"  # not in ENTRIES
         w_addr, w_val = find_witness(ENTRIES, target)
-        proof, _ = build_mpt_root_and_proof(ENTRIES, w_addr)
+        _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
         self.assertTrue(self._verify_nm(target, w_addr, w_val, proof, root))
 
     def test_nonmember_wrong_witness_value(self):
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"
         w_addr, w_val = find_witness(ENTRIES, target)
-        proof, _ = build_mpt_root_and_proof(ENTRIES, w_addr)
+        _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
         self.assertFalse(self._verify_nm(target, w_addr, b"WRONG", proof, root))
 
     def test_nonmember_witness_equals_target_fails(self):
@@ -228,7 +228,7 @@ class TestAuthDbNonMembership(unittest.TestCase):
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"
         w_addr, w_val = find_witness(ENTRIES, target)
-        proof, _ = build_mpt_root_and_proof(ENTRIES, w_addr)
+        _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
         if proof:
             tampered = list(proof)
             tampered[0] = bytes([tampered[0][0]]) + _sha256d(b"garbage")
