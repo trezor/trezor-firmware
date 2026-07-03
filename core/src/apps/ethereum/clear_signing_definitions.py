@@ -33,7 +33,6 @@ APPROVE_DISPLAY_FORMAT = DisplayFormat(
         ),
     ],
 )
-SC_FUNC_APPROVE_REVOKE_AMOUNT = 0
 
 TRANSFER_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,

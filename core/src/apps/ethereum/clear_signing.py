@@ -1067,7 +1067,6 @@ async def _handle_approve(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
 ) -> None:
-    from .clear_signing_definitions import SC_FUNC_APPROVE_REVOKE_AMOUNT
     from .layout import require_confirm_approve
     from .sc_constants import KNOWN_ADDRESSES
     from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
@@ -1106,7 +1105,8 @@ async def _handle_approve(
         if vault is not UNKNOWN_VAULT:
             recipient_str = vault.name
 
-    is_revoke = arg1_raw_value == SC_FUNC_APPROVE_REVOKE_AMOUNT
+    # In revocation, the approved amount is set to zero:
+    is_revoke = arg1_raw_value == 0
 
     await require_confirm_approve(
         recipient_addr,
