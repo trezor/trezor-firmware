@@ -343,23 +343,6 @@ static bool nfc_isodep_rnak_presence_check(void) {
   return false;
 }
 
-/*
- * @brief T2T presence check using READ command
- *
- * @return 'true' when tag is present and responded, else 'false'.
- */
-static bool nfc_t2t_presence_check_read(void) {
-  uint8_t read_cmd[] = {0x30, 0x00}; /* READ page 0 */
-  uint8_t rxBuf[18];                 /* 16 bytes + 2 CRC */
-  uint16_t rxLen = 0;
-
-  ReturnCode err = rfalTransceiveBlockingTxRx(
-      read_cmd, sizeof(read_cmd), rxBuf, sizeof(rxBuf), &rxLen,
-      RFAL_TXRX_FLAGS_DEFAULT, RFAL_GT_NFCA);
-
-  return err == RFAL_ERR_NONE;
-}
-
 bool nfc_check_connection(nfc_dev_info_t *dev_info) {
   TSH_DECLARE;
   static uint32_t last_check_time = 0;
@@ -368,17 +351,7 @@ bool nfc_check_connection(nfc_dev_info_t *dev_info) {
   }
   last_check_time = ticks();
 
-  if (dev_info->interface == NFC_DEV_INTERFACE_ISODEP) {
-    return nfc_isodep_rnak_presence_check();
-  }
-
-  switch (dev_info->type) {
-    case NFC_DEV_TYPE_A:
-      return nfc_t2t_presence_check_read();
-    case NFC_DEV_TYPE_B:
-    default:
-      return false;
-  }
+  return nfc_isodep_rnak_presence_check();
 }
 
 ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp) {
