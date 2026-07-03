@@ -1,8 +1,11 @@
 """Shared Merkle Patricia Trie hash/proof primitives.
 
 Used by update_leaf.py, lookup.py, and apply_offline_operations.py so the
-proof-verification logic is implemented and audited exactly once. See
-docs/authdb.md for the hashing scheme and proof format.
+proof-verification logic -- including the INIT/INSERT/UPDATE/DELETE
+state machine in compute_new_root() -- is implemented and audited exactly
+once, the property docs/authdb.md calls out as the reason production
+firmware never accepts a host-supplied root. See docs/authdb.md for the
+hashing scheme and proof format.
 """
 
 
@@ -80,3 +83,101 @@ def verify_nonmembership(
             return False
 
     return verify_proof(witness_address, witness_value, proof, expected_root)
+
+
+def compute_new_root(
+    address: bytes,
+    old_value: bytes,
+    new_value: bytes,
+    proof: list,
+    stored_root,
+    witness_address=None,
+    witness_value=None,
+):
+    """Verify (old_value, proof) against stored_root, then compute the new root.
+
+    Returns the new root (None if the tree becomes/stays empty), or raises
+    ValueError if the old-state proof does not verify. This is the single
+    shared implementation of the INIT/INSERT/UPDATE/DELETE state machine --
+    both update_leaf.py and apply_offline_operations.py call this rather
+    than each maintaining their own copy, so a bug fixed here is fixed for
+    both mutating RPCs at once.
+
+    Deliberately STRICTER than update_leaf.py's original inline logic in
+    one edge case: the witness-membership check for INSERT now runs
+    unconditionally (`witness_in_tree != stored_root`), including when
+    stored_root is None. The original inline code only raised when
+    `not witness_in_tree and stored_root is not None`, which silently
+    skipped the check entirely on an empty tree -- i.e. an INSERT into an
+    empty tree that incorrectly supplies a witness+proof instead of using
+    the INIT path (empty proof, no witness) was never actually validated.
+    Since stored_root is None makes any real witness_in_tree hash compare
+    unequal anyway, this only changes behavior for that one malformed-input
+    edge case, always toward rejecting it -- never toward accepting
+    something that was previously rejected.
+    """
+    inserting = len(old_value) == 0
+    deleting = len(new_value) == 0
+    if inserting and deleting:
+        raise ValueError("old_value and new_value cannot both be empty")
+
+    addr_hash = sha256d(address)
+
+    if inserting:
+        if len(proof) == 0 and witness_address is None:
+            # INIT: tree was empty
+            if stored_root is not None:
+                raise ValueError("Tree is not empty; supply non-membership proof")
+            return leaf_hash(address, new_value)
+
+        if witness_address is None or witness_value is None:
+            raise ValueError("witness_address and witness_value required for INSERT")
+        if witness_address == address:
+            raise ValueError("witness_address must differ from address")
+
+        witness_hash = sha256d(witness_address)
+        for elem in proof:
+            bit = elem[0]
+            if addr_bit(addr_hash, bit) != addr_bit(witness_hash, bit):
+                raise ValueError("Witness does not occupy target's path")
+
+        witness_in_tree = reconstruct(
+            leaf_hash(witness_address, witness_value), proof, witness_hash
+        )
+        if witness_in_tree != stored_root:
+            raise ValueError("Non-membership proof invalid: witness not in tree")
+
+        split_bit = None
+        for b in range(256):
+            if addr_bit(addr_hash, b) != addr_bit(witness_hash, b):
+                split_bit = b
+                break
+        if split_bit is None:
+            raise ValueError("address and witness_address hash to same value")
+
+        new_leaf_t = leaf_hash(address, new_value)
+        new_leaf_w = leaf_hash(witness_address, witness_value)
+        if addr_bit(addr_hash, split_bit) == 0:
+            new_branch = internal_hash(new_leaf_t, new_leaf_w)
+        else:
+            new_branch = internal_hash(new_leaf_w, new_leaf_t)
+        return reconstruct(new_branch, proof, witness_hash)
+
+    if deleting:
+        if stored_root is None:
+            raise ValueError("No Merkle root stored on device")
+        current_leaf = leaf_hash(address, old_value)
+        if reconstruct(current_leaf, proof, addr_hash) != stored_root:
+            raise ValueError("Old value proof invalid")
+        if len(proof) == 0:
+            return None
+        sibling_hash = bytes(proof[0][1:])
+        return reconstruct(sibling_hash, proof[1:], addr_hash)
+
+    # UPDATE
+    if stored_root is None:
+        raise ValueError("No Merkle root stored on device")
+    current_leaf = leaf_hash(address, old_value)
+    if reconstruct(current_leaf, proof, addr_hash) != stored_root:
+        raise ValueError("Old value proof invalid")
+    return reconstruct(leaf_hash(address, new_value), proof, addr_hash)

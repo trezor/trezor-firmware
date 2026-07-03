@@ -4,91 +4,6 @@ if TYPE_CHECKING:
     from trezor.messages import AuthDbApplyOfflineOperations, AuthDbApplyOfflineOperationsResponse, AuthDbRebasedOperation
 
 
-class _Reject(Exception):
-    """Internal: this operation failed verification, stop the batch here."""
-
-
-def _compute_new_root(
-    stored_root,
-    address: bytes,
-    old_value: bytes,
-    new_value: bytes,
-    proof: list,
-    witness_address,
-    witness_value,
-):
-    """Verify the transition and return the resulting root (or None if the
-    tree becomes empty). Raises _Reject on any invalid proof/witness.
-
-    Mirrors update_leaf.py's INIT/INSERT/UPDATE/DELETE branching exactly
-    (same four cases, same edge-case handling for single-leaf trees), ported
-    through the shared apps.authdb._mpt primitives. Duplicated deliberately
-    rather than factored into one shared state-machine function, to keep
-    this security-critical logic easy to read end-to-end in each handler;
-    see docs/authdb.md for the transition rules.
-    """
-    from apps.authdb import _mpt
-
-    inserting = len(old_value) == 0
-    deleting = len(new_value) == 0
-    addr_hash = _mpt.sha256d(address)
-
-    if inserting:
-        if len(proof) == 0 and witness_address is None:
-            # INIT: tree was empty
-            if stored_root is not None:
-                raise _Reject("Tree is not empty; supply non-membership proof")
-            return _mpt.leaf_hash(address, new_value)
-
-        if witness_address is None or witness_value is None:
-            raise _Reject("witness_address and witness_value required for INSERT")
-        if witness_address == address:
-            raise _Reject("witness_address must differ from address")
-
-        witness_hash = _mpt.sha256d(witness_address)
-        for elem in proof:
-            bit = elem[0]
-            if _mpt.addr_bit(addr_hash, bit) != _mpt.addr_bit(witness_hash, bit):
-                raise _Reject("Witness does not occupy target's path")
-
-        witness_in_tree = _mpt.reconstruct(
-            _mpt.leaf_hash(witness_address, witness_value), proof, witness_hash
-        )
-        if witness_in_tree != stored_root:
-            raise _Reject("Non-membership proof invalid: witness not in tree")
-
-        split_bit = None
-        for b in range(256):
-            if _mpt.addr_bit(addr_hash, b) != _mpt.addr_bit(witness_hash, b):
-                split_bit = b
-                break
-        if split_bit is None:
-            raise _Reject("address and witness_address hash to same value")
-
-        new_leaf_t = _mpt.leaf_hash(address, new_value)
-        new_leaf_w = _mpt.leaf_hash(witness_address, witness_value)
-        if _mpt.addr_bit(addr_hash, split_bit) == 0:
-            new_branch = _mpt.internal_hash(new_leaf_t, new_leaf_w)
-        else:
-            new_branch = _mpt.internal_hash(new_leaf_w, new_leaf_t)
-        return _mpt.reconstruct(new_branch, proof, witness_hash)
-
-    if deleting:
-        current_leaf = _mpt.leaf_hash(address, old_value)
-        if _mpt.reconstruct(current_leaf, proof, addr_hash) != stored_root:
-            raise _Reject("Old value proof invalid")
-        if len(proof) == 0:
-            return None
-        sibling_hash = bytes(proof[0][1:])
-        return _mpt.reconstruct(sibling_hash, proof[1:], addr_hash)
-
-    # UPDATE
-    current_leaf = _mpt.leaf_hash(address, old_value)
-    if _mpt.reconstruct(current_leaf, proof, addr_hash) != stored_root:
-        raise _Reject("Old value proof invalid")
-    return _mpt.reconstruct(_mpt.leaf_hash(address, new_value), proof, addr_hash)
-
-
 async def apply_offline_operations(
     msg: AuthDbApplyOfflineOperations,
 ) -> AuthDbApplyOfflineOperationsResponse:
@@ -145,11 +60,11 @@ async def apply_offline_operations(
             break
 
         try:
-            new_root = _compute_new_root(
-                current_root, op.address, old_value, new_value,
-                op.proof, op.witness_address, op.witness_value,
+            new_root = _mpt.compute_new_root(
+                op.address, old_value, new_value, op.proof, current_root,
+                op.witness_address, op.witness_value,
             )
-        except _Reject as e:
+        except ValueError as e:
             if __debug__:
                 from trezor import log
                 log.debug(

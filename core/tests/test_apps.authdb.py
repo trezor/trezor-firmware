@@ -525,5 +525,81 @@ class TestAuthDbMpt(unittest.TestCase):
         self.assertTrue(self.mpt.verify_nonmembership(target, w_addr, w_val, proof, root))
 
 
+class TestAuthDbComputeNewRoot(unittest.TestCase):
+    """Functional coverage for apps.authdb._mpt.compute_new_root(), the
+    single shared INIT/INSERT/UPDATE/DELETE state machine used by both
+    update_leaf.py and apply_offline_operations.py."""
+
+    def setUp(self):
+        from apps.authdb import _mpt
+        self.mpt = _mpt
+
+    def test_init_on_empty_tree(self):
+        new_root = self.mpt.compute_new_root(b"alice", b"", b"data_alice", [], None, None, None)
+        self.assertEqual(new_root, self.mpt.leaf_hash(b"alice", b"data_alice"))
+
+    def test_insert_into_existing_tree(self):
+        entries = {b"alice": b"data_alice"}
+        root, _ = build_mpt_root_and_proof(entries, b"alice")
+        w_addr, w_val = find_witness(entries, b"bob")
+        _, proof = build_mpt_root_and_proof(entries, w_addr)
+
+        new_root = self.mpt.compute_new_root(b"bob", b"", b"data_bob", proof, root, w_addr, w_val)
+
+        expected_root, _ = build_mpt_root_and_proof(
+            {b"alice": b"data_alice", b"bob": b"data_bob"}, b"alice"
+        )
+        self.assertEqual(new_root, expected_root)
+
+    def test_update_existing_leaf(self):
+        entries = {b"alice": b"data_alice", b"bob": b"data_bob"}
+        root, proof = build_mpt_root_and_proof(entries, b"alice")
+
+        new_root = self.mpt.compute_new_root(
+            b"alice", b"data_alice", b"NEW_VAL", proof, root, None, None
+        )
+
+        expected_root, _ = build_mpt_root_and_proof(
+            {b"alice": b"NEW_VAL", b"bob": b"data_bob"}, b"alice"
+        )
+        self.assertEqual(new_root, expected_root)
+
+    def test_delete_to_single_leaf_then_to_empty(self):
+        entries = {b"alice": b"NEW_VAL", b"bob": b"data_bob"}
+        root, proof = build_mpt_root_and_proof(entries, b"bob")
+
+        root_after_delete_bob = self.mpt.compute_new_root(
+            b"bob", b"data_bob", b"", proof, root, None, None
+        )
+        self.assertEqual(root_after_delete_bob, self.mpt.leaf_hash(b"alice", b"NEW_VAL"))
+
+        root_after_delete_alice = self.mpt.compute_new_root(
+            b"alice", b"NEW_VAL", b"", [], root_after_delete_bob, None, None
+        )
+        self.assertIsNone(root_after_delete_alice)
+
+    def test_rejects_invalid_old_value_proof(self):
+        entries = {b"alice": b"NEW_VAL", b"bob": b"data_bob"}
+        root, proof = build_mpt_root_and_proof(entries, b"bob")
+
+        with self.assertRaises(ValueError):
+            self.mpt.compute_new_root(b"bob", b"WRONG_OLD", b"", proof, root, None, None)
+
+    def test_rejects_both_values_empty(self):
+        with self.assertRaises(ValueError):
+            self.mpt.compute_new_root(b"alice", b"", b"", [], None, None, None)
+
+    def test_insert_into_empty_tree_with_witness_is_rejected(self):
+        """Deliberately stricter than the original inline update_leaf.py logic
+        (which only checked `stored_root is not None` before raising, so an
+        empty tree silently skipped the witness-membership check entirely).
+        compute_new_root() rejects unconditionally on any witness/stored_root
+        mismatch, including this malformed-input edge case."""
+        with self.assertRaises(ValueError):
+            self.mpt.compute_new_root(
+                b"bob", b"", b"data_bob", [bytes([0]) + b"S" * 32], None, b"alice", b"data_alice"
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
