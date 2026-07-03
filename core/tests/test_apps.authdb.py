@@ -453,6 +453,77 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         with self.assertRaises(ValueError):
             authdb.take_next_sequence(self._id(999))
 
+    @mock_storage
+    def test_set_counter_direct_write(self):
+        """set_counter() (used by fast_forward_root.py) jumps straight to an
+        arbitrary value, unlike increment_counter()'s +1-only semantics."""
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        authdb.set_root(wallet_id, _sha256d(b"root"))
+        self.assertEqual(authdb.get_counter(wallet_id), 0)
+
+        authdb.set_counter(wallet_id, 42)
+        self.assertEqual(authdb.get_counter(wallet_id), 42)
+
+        # A subsequent increment continues from the jumped-to value.
+        authdb.increment_counter(wallet_id)
+        self.assertEqual(authdb.get_counter(wallet_id), 43)
+
+        # A second wallet's counter is untouched.
+        other = self._id(2)
+        authdb.set_root(other, _sha256d(b"other-root"))
+        self.assertEqual(authdb.get_counter(other), 0)
+
+    @mock_storage
+    def test_set_counter_requires_existing_record(self):
+        import storage.authdb as authdb
+
+        with self.assertRaises(ValueError):
+            authdb.set_counter(self._id(1), 5)
+
+
+class TestAuthDbMpt(unittest.TestCase):
+    """Cross-check apps.authdb._mpt's extracted primitives against the same
+    MPT fixtures used by TestAuthDbVerifyProof/TestAuthDbNonMembership above,
+    to guarantee the extraction from update_leaf.py/lookup.py is
+    behavior-preserving."""
+
+    def setUp(self):
+        from apps.authdb import _mpt
+        self.mpt = _mpt
+
+    def test_leaf_and_internal_hash_match_local_helpers(self):
+        self.assertEqual(self.mpt.leaf_hash(b"alice", b"data"), _leaf_hash(b"alice", b"data"))
+        self.assertEqual(
+            self.mpt.internal_hash(b"L" * 32, b"R" * 32),
+            _internal_hash(b"L" * 32, b"R" * 32),
+        )
+
+    def test_verify_proof_matches_lookup_wrapper(self):
+        from apps.authdb.lookup import _verify_proof
+
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
+        self.assertEqual(
+            self.mpt.verify_proof(b"alice", b"data_alice", proof, root),
+            _verify_proof(b"alice", b"data_alice", proof, root),
+        )
+        self.assertTrue(self.mpt.verify_proof(b"alice", b"data_alice", proof, root))
+        self.assertFalse(self.mpt.verify_proof(b"alice", b"WRONG", proof, root))
+
+    def test_verify_nonmembership_matches_lookup_wrapper(self):
+        from apps.authdb.lookup import _verify_nonmembership
+
+        root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
+        target = b"zara"
+        w_addr, w_val = find_witness(ENTRIES, target)
+        _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
+        self.assertEqual(
+            self.mpt.verify_nonmembership(target, w_addr, w_val, proof, root),
+            _verify_nonmembership(target, w_addr, w_val, proof, root),
+        )
+        self.assertTrue(self.mpt.verify_nonmembership(target, w_addr, w_val, proof, root))
+
 
 if __name__ == "__main__":
     unittest.main()

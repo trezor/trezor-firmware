@@ -15,6 +15,34 @@ The host maintains the full database and the Merkle tree; the device only stores
 
 ---
 
+## Identity: `device_id` vs `wallet_id`
+
+AuthDB distinguishes two identities, both 32 bytes:
+
+| | `device_id` | `wallet_id` |
+|---|---|---|
+| Represents | the physical Trezor hardware unit | one mnemonic + passphrase combination (one hidden wallet) |
+| Source | `SHA-256(storage.device.get_device_id())` -- reuses the existing random 12-byte device id already exposed via `Features.device_id` | `SLIP21(seed_with_passphrase, [b"AUTHDB WALLET ID"]).key()` |
+| Survives seed wipe? | Yes (by design; `storage.device.get_device_id()` is explicitly preserved across `wipe_device`) | No -- tied to the seed |
+| Distinguishes passphrases? | No (one per physical unit) | Yes -- each hidden wallet gets its own tree |
+| Used for | attributing which physical unit produced an offline-queued operation | keying the on-device Merkle tree (`_ROOTS`/`_QUEUE`/`_SYNC`, all keyed by `wallet_id`) and deriving MAC key material |
+
+`wallet_id` is what every message below scopes its tree/queue/counter
+operations to; it appears on every AuthDb response. `device_id` is only used
+for MAC-owner matching on the pre-approval paths (`AuthDbSetRoot`/
+`AuthDbUpdateLeaf` request fields, historically named `device_id` even
+though they compare against `wallet_id` -- kept for wire compatibility)
+and for offline-queue attribution once multiple physical devices share one
+host database.
+
+`_derive_mac_key()` is scoped to `wallet_id`, not `device_id`: since it is
+seed-derived, **the same wallet loaded on two different physical Trezors
+produces the identical MAC key**. This is intentional -- it is what makes
+root-attestation tokens (see "Fast-forward" below) portable across every
+device that has unlocked a given wallet.
+
+---
+
 ## Merkle Patricia Trie (MPT)
 
 ### Why MPT instead of a sparse Merkle tree (SMT)?
@@ -254,7 +282,7 @@ Design invariants (see `core/src/apps/authdb/apply_offline_operations.py` and
   never supplies a root directly, for the same reason `AuthDbSetRoot` is
   debug-only.
 * **The MAC binds the exact leaf transition *and* the sequence number**:
-  `mac = HMAC(device_key, sequence || leaf_hash(address, old_value) ||
+  `mac = HMAC(mac_key, sequence || leaf_hash(address, old_value) ||
   leaf_hash(address, new_value))`. Binding the sequence number prevents a
   host from replaying an approved operation under a different (inflated)
   sequence number, which would otherwise corrupt garbage collection (see
@@ -272,6 +300,50 @@ Design invariants (see `core/src/apps/authdb/apply_offline_operations.py` and
   operation was queued, and the MAC cryptographically binds that approval to
   the exact `(sequence, address, old_value, new_value)` being applied.
 
+**Persistence-before-deletion is a host-side invariant the protocol cannot
+enforce.** Deletion is safe only when two independent conditions both hold:
+(1) the host has durably persisted the write into its own canonical
+database, and (2) the device has independently verified and applied it
+(reflected in `last_applied_sequence`). `AuthDbApplyOfflineOperations` only
+proves (2). Hosts MUST treat "rebased against the canonical tree" as
+implying the canonical write already happened -- the canonical tree only
+ever reflects committed state -- and MUST NOT call
+`AuthDbDeleteOfflineOperations` until they have separately confirmed their
+own database write is durable (e.g. past fsync/replication), even though the
+RPC does not require or check this.
+
+## Fast-forward: `AuthDbFastForwardRoot` (2328) / `Response` (2329)
+
+Lets a wallet's root be advanced directly to a state some device has already
+attested to, skipping replay of every individual operation in between.
+**Safe for production firmware** -- unlike `AuthDbSetRoot`, the host cannot
+mint an arbitrary `(root, mac)` pair; it can only replay a root-attestation
+token a device already produced:
+
+* `AuthDbUpdateLeafResponse.mac` and `AuthDbApplyOfflineOperationsResponse.root_mac`
+  are both `HMAC(mac_key, wallet_id || counter || new_root)` -- a
+  root-attestation token, computed whenever any device updates the tree.
+* Because `mac_key` is wallet-scoped (seed-derived), **a token issued by one
+  physical device is valid on every other physical device that has unlocked
+  the same wallet**. This is what makes fast-forward useful for the
+  three-devices-one-database scenario: any device that already advanced the
+  tree can hand another device a shortcut to the same state.
+* The device verifies `msg.wallet_id` matches its own current `wallet_id`,
+  recomputes `mac_key`, and checks `mac` against `wallet_id || counter ||
+  new_root` from inside the request -- **never a bare, separately-supplied
+  counter field**. This closes a specific replay hole: without binding the
+  counter into the MAC, a host could pair a genuinely-issued old
+  `(root, mac)` with a forged, higher counter and bypass the monotonicity
+  check below.
+* The device rejects unless `msg.counter` is strictly greater than its own
+  currently-stored counter for this `wallet_id` (anti-rollback).
+
+**Open question, not resolved by the protocol:** if a device fast-forwards
+while it still holds locally-queued-but-unapplied offline operations from
+*before* the fast-forward, whether those operations remain valid to replay
+via `AuthDbApplyOfflineOperations` afterward is not currently specified --
+see the firmware requirements doc for this feature for further discussion.
+
 ## CLI
 
 ```
@@ -286,7 +358,22 @@ trezorctl authdb update-leaf <addr_hex> "" <new_hex> -p <sib> ... \
     --witness-address <w_addr_hex> --witness-value <w_val_hex>
 
 trezorctl authdb delete <addr_hex> <old_hex> [-p <sib> ...]
+
+trezorctl authdb approve <addr_hex> <old_hex> <new_hex>
+
+# Offline synchronization
+trezorctl authdb queue-offline-operation <addr_hex> <old_hex> <new_hex>
+trezorctl authdb get-offline-operations
+trezorctl authdb apply-offline-operations --file rebased_ops.json
+trezorctl authdb delete-offline-operations
+
+# Fast-forward (skip replay, jump to an already-attested state)
+trezorctl authdb fast-forward-root <new_root_hex> <counter> <wallet_id_hex> <mac_hex>
 ```
+
+Note: offline-cache commands (`set-cache-entry`/`get-cache-entry`/
+`get-all-cache`/`wipe-cache`) are a separate, unrelated feature -- an
+on-device label cache, not part of the sync protocol above.
 
 ---
 
@@ -318,14 +405,24 @@ tree.delete(b"alice")    # or tree.insert(b"alice", b"")
 | File | Description |
 |---|---|
 | `common/protob/messages-authdb.proto` | Protobuf message definitions |
-| `common/protob/messages.proto` | Wire-type IDs (2300–2305) |
-| `core/src/storage/authdb.py` | Persistent storage: root + counter |
+| `common/protob/messages.proto` | Wire-type IDs (2300–2329) |
+| `core/src/storage/authdb.py` | Persistent storage: `_ROOTS`/`_CACHE`/`_QUEUE`/`_SYNC` |
+| `core/src/storage/device.py` | Physical `device_id` primitive (reused, not AuthDB-specific) |
+| `core/src/apps/authdb/__init__.py` | `device_id`/`wallet_id`/MAC-key derivation |
+| `core/src/apps/authdb/_mpt.py` | Shared MPT hash/proof primitives |
 | `core/src/apps/authdb/set_root.py` | `AuthDbSetRoot` handler (debug only) |
-| `core/src/apps/authdb/lookup.py` | `AuthDbLookup` handler + proof verifier |
+| `core/src/apps/authdb/lookup.py` | `AuthDbLookup` handler |
 | `core/src/apps/authdb/update_leaf.py` | `AuthDbUpdateLeaf` handler |
+| `core/src/apps/authdb/approve.py` | `AuthDbApprove` handler |
+| `core/src/apps/authdb/clear_root.py` | `AuthDbClearRoot` handler (debug only) |
+| `core/src/apps/authdb/queue_offline_operation.py` | `AuthDbQueueOfflineOperation` handler |
+| `core/src/apps/authdb/get_offline_operations.py` | `AuthDbGetOfflineOperations` handler |
+| `core/src/apps/authdb/apply_offline_operations.py` | `AuthDbApplyOfflineOperations` handler |
+| `core/src/apps/authdb/delete_offline_operations.py` | `AuthDbDeleteOfflineOperations` handler |
+| `core/src/apps/authdb/fast_forward_root.py` | `AuthDbFastForwardRoot` handler |
 | `core/src/apps/workflow_handlers.py` | Message → handler routing |
 | `python/src/trezorlib/authdb_tree.py` | Host-side MPT (insert, delete, proofs) |
-| `python/src/trezorlib/authdb.py` | Host-side RPC wrappers |
+| `python/src/trezorlib/authdb.py` | Host-side RPC wrappers + `sync_offline_queue()` |
 | `python/src/trezorlib/cli/authdb.py` | `trezorctl authdb` CLI commands |
-| `core/tests/test_apps.authdb.py` | Unit tests (proof verification) |
+| `core/tests/test_apps.authdb.py` | Unit tests (proof verification, storage, `_mpt`) |
 | `tests/device_tests/misc/test_authdb.py` | Device integration tests |
