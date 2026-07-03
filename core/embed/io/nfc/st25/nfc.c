@@ -33,7 +33,6 @@
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
 #include "rfal_nfca.h"
-#include "rfal_platform.h"
 #include "rfal_rf.h"
 #include "rfal_t2t.h"
 #include "rfal_utils.h"
@@ -50,8 +49,36 @@ typedef struct {
   // NFC IRQ pin callback
   void (*nfc_irq_callback)(void);
   EXTI_HandleTypeDef hEXTI;
-  rfalNfcDiscoverParam disc_params;
+  const rfalNfcDiscoverParam *disc_params;
 } st25_driver_t;
+
+static const rfalNfcDiscoverParam default_disc_params = {
+    .compMode = RFAL_COMPLIANCE_MODE_NFC,
+    .devLimit = 1u,
+    .nfcfBR = RFAL_BR_212,
+    .ap2pBR = RFAL_BR_424,
+    .maxBR = RFAL_BR_KEEP,
+    .isoDepFS = RFAL_ISODEP_FSXI_256,
+    .nfcDepLR = RFAL_NFCDEP_LR_254,
+    // P2P communication data
+    .nfcid3 = {0x01, 0xFE, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A},
+    .GB = {0x46, 0x66, 0x6d, 0x01, 0x01, 0x11, 0x02, 0x02, 0x07, 0x80,
+           0x03, 0x02, 0x00, 0x03, 0x04, 0x01, 0x32, 0x07, 0x01, 0x03},
+    .GBLen = 20,
+    .p2pNfcaPrio = true,
+    .wakeupEnabled = false,
+    .wakeupConfigDefault = true,
+    .wakeupConfig = {0},
+    .wakeupPollBefore = false,
+    .wakeupNPolls = 1U,
+    .totalDuration = 1000U,
+    .techs2Find = RFAL_NFC_POLL_TECH_A | RFAL_NFC_POLL_TECH_B,
+    .techs2Bail = RFAL_NFC_TECH_NONE,
+    .propNfc = {0},
+    .lmConfigPA = {0},
+    .lmConfigPF = {{0}, {0}},
+    .notifyCb = NULL,
+};
 
 static st25_driver_t g_st25_driver = {
     .initialized = false,

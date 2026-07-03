@@ -26,15 +26,6 @@
 
 /** @brief Supported NFC types. **/
 typedef enum {
-  NFC_POLLER_TECH_A = 0x1,
-  NFC_POLLER_TECH_B = 0x1 << 1,
-  NFC_POLLER_TECH_F = 0x1 << 2,
-  NFC_POLLER_TECH_V = 0x1 << 3,
-  NFC_CARD_EMU_TECH_A = 0x1 << 4,
-  NFC_CARD_EMU_TECH_F = 0x1 << 5,
-} nfc_tech_t;
-
-typedef enum {
   NFC_DEV_TYPE_A,
   NFC_DEV_TYPE_B,
   NFC_DEV_TYPE_UNKNOWN,
