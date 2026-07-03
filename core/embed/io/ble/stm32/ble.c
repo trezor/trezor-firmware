@@ -864,6 +864,14 @@ bool ble_write(const uint8_t *data, uint16_t len) {
     return false;
   }
 
+  if (len == 0) {
+    return true;
+  }
+
+  if (data == NULL) {
+    return false;
+  }
+
   irq_key_t key = irq_lock();
 
   if (!drv->connected || !drv->accept_msgs || !drv->enabled) {
@@ -912,6 +920,14 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
   ble_driver_t *drv = &g_ble_driver;
 
   if (!drv->initialized) {
+    return 0;
+  }
+
+  if (max_len == 0) {
+    return 0;
+  }
+
+  if (data == NULL) {
     return 0;
   }
 
@@ -1152,8 +1168,7 @@ void ble_set_name(const uint8_t *name, size_t len) {
   if (!drv->initialized) {
     return;
   }
-
-  if (len > BLE_ADV_NAME_LEN) {
+  if (name == NULL || len > BLE_ADV_NAME_LEN) {
     return;
   }
 
@@ -1177,6 +1192,10 @@ bool ble_get_event(ble_event_t *event) {
   ble_driver_t *drv = &g_ble_driver;
 
   if (!drv->initialized) {
+    return false;
+  }
+
+  if (event == NULL) {
     return false;
   }
 
@@ -1247,6 +1266,10 @@ uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
 
   if (!drv->initialized || count < BLE_MAX_BONDS) {
     memset(bonds, 0, count * sizeof(bt_le_addr_t));
+    return 0;
+  }
+
+  if (bonds == NULL) {
     return 0;
   }
 

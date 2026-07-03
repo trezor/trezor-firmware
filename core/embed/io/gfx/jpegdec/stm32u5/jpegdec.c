@@ -289,6 +289,10 @@ jpegdec_state_t jpegdec_process(jpegdec_input_t *inp) {
     return JPEGDEC_STATE_ERROR;
   }
 
+  if (inp == NULL || inp->data == NULL || inp->offset > inp->size) {
+    return JPEGDEC_STATE_ERROR;
+  }
+
   // Check input buffer alignment
   if (inp->offset < inp->size) {
     if (!IS_ALIGNED(inp->offset, 4) ||
@@ -392,6 +396,10 @@ bool jpegdec_get_info(jpegdec_image_t *image) {
     return false;
   }
 
+  if (image == NULL) {
+    return false;
+  }
+
   if (dec->image.width == 0 || dec->image.height == 0) {
     return false;
   }
@@ -404,6 +412,10 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
   jpegdec_t *dec = &g_jpegdec;
 
   if (!dec->inuse) {
+    return false;
+  }
+
+  if (rgba8888 == NULL || slice == NULL) {
     return false;
   }
 
@@ -523,6 +535,10 @@ bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
   jpegdec_t *dec = &g_jpegdec;
 
   if (!dec->inuse) {
+    return false;
+  }
+
+  if (mono8 == NULL || slice == NULL) {
     return false;
   }
 
