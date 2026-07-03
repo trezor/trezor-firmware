@@ -1,4 +1,8 @@
-#[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
+#[cfg(any(
+    feature = "ui_debug_overlay",
+    feature = "ui_performance_overlay",
+    feature = "ui_dev_overlay"
+))]
 use crate::ui::{CommonUI, ModelUI};
 use crate::{
     trezorhal::display,
@@ -99,6 +103,14 @@ where
         ))]
         {
             func(&mut target);
+        }
+
+        #[cfg(feature = "ui_dev_overlay")]
+        {
+            // Render an additional overlay for recognizing development devices.
+            if !display::is_recording() {
+                ModelUI::render_dev_overlay(&mut target);
+            }
         }
     });
 }
