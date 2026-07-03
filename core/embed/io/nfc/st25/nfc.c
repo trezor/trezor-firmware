@@ -45,8 +45,35 @@ typedef struct {
   // NFC IRQ pin callback
   void (*nfc_irq_callback)(void);
   EXTI_HandleTypeDef hEXTI;
-  rfalNfcDiscoverParam disc_params;
+  const rfalNfcDiscoverParam *disc_params;
 } st25_driver_t;
+
+static const rfalNfcDiscoverParam default_disc_params = {
+    .compMode = RFAL_COMPLIANCE_MODE_NFC,
+    .devLimit = 1u,
+    .nfcfBR = RFAL_BR_212,
+    .ap2pBR = RFAL_BR_424,
+    .maxBR = RFAL_BR_KEEP,
+    .isoDepFS = RFAL_ISODEP_FSXI_256,
+    .nfcDepLR = RFAL_NFCDEP_LR_254,
+    // P2P communication is not used
+    .nfcid3 = {0},
+    .GB = {0},
+    .GBLen = 0U,
+    .p2pNfcaPrio = false,  //!> ISO14443-4/T4T priority
+    .wakeupEnabled = false,
+    .wakeupConfigDefault = true,
+    .wakeupConfig = {0},
+    .wakeupPollBefore = false,
+    .wakeupNPolls = 1U,
+    .totalDuration = 1000U,
+    .techs2Find = RFAL_NFC_POLL_TECH_A | RFAL_NFC_POLL_TECH_B,
+    .techs2Bail = RFAL_NFC_TECH_NONE,
+    .propNfc = {0},
+    .lmConfigPA = {0},
+    .lmConfigPF = {{0}, {0}},
+    .notifyCb = NULL,
+};
 
 static st25_driver_t g_st25_driver = {
     .initialized = false,
