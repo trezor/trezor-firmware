@@ -1,4 +1,14 @@
 
+## 0.3.8 [22nd July 2026]
+
+### Added
+- Introduce prodtest error codes.  [#6829]
+- Add focused `tropic-stress-*` commands and `tropic-test-*` commands that also check operation results.  [#7161]
+- Add `prodtest-uptime` command returning the device uptime in milliseconds.
+
+### Deprecated
+- Deprecate `tropic-stress-test`. Use `tropic-stress-*` commands instead.  [#7161]
+
 ## 0.3.7 [26th March 2026]
 
 ### Added
@@ -219,3 +229,5 @@
 [#6346]: https://github.com/trezor/trezor-firmware/pull/6346
 [#6613]: https://github.com/trezor/trezor-firmware/pull/6613
 [#6621]: https://github.com/trezor/trezor-firmware/pull/6621
+[#6829]: https://github.com/trezor/trezor-firmware/pull/6829
+[#7161]: https://github.com/trezor/trezor-firmware/pull/7161
