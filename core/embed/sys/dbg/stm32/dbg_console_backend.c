@@ -60,16 +60,15 @@ static ssize_t itm_swo_write(const void *data, size_t data_size) {
 
 #ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
 static ssize_t sysview_write(const void *data, size_t data_size) {
-#if 1
   static char str[512];
-  strncpy(str, (const char *)data, sizeof(str) - 1);
-  str[sizeof(str) - 1] = 0;
+
+  size_t copy_size = MIN(data_size, sizeof(str) - 1);
+  memcpy(str, data, copy_size);
+  str[copy_size] = 0;
+
   SEGGER_SYSVIEW_Print(str);
-#endif
-#if 0
-  SEGGER_RTT_Write(0, data, data_size);
-#endif
-  return MIN(data_size, sizeof(str) - 1);
+
+  return copy_size;
 }
 #endif
 
