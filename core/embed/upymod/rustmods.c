@@ -40,6 +40,6 @@ MP_REGISTER_MODULE(MP_QSTR_trezorble, mp_module_trezorble);
 MP_REGISTER_MODULE(MP_QSTR_coveragedata, mp_module_coveragedata);
 #endif
 
-#if !PYOPT && defined(USE_DBG_CONSOLE)
+#if defined(USE_DBG_CONSOLE)
 MP_REGISTER_MODULE(MP_QSTR_trezorlog, mp_module_trezorlog);
 #endif

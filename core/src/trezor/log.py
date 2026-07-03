@@ -12,7 +12,7 @@ def _no_op(name: str, msg: str, *args: Any, iface: WireInterface | None = None) 
     return None
 
 
-if __debug__ and utils.USE_DBG_CONSOLE:
+if utils.USE_DBG_CONSOLE:
     from trezorlog import debug, error, info, init, warning  # noqa: F401
 
     _levels = [debug, info, warning, error]
@@ -20,7 +20,6 @@ if __debug__ and utils.USE_DBG_CONSOLE:
     debug, info, warning, error = [_no_op] * _min_level + _levels[_min_level:]
     init(_min_level)  # initialize rust logging connector
 else:
-    # logging is disabled in non-debug builds
     debug = warning = info = error = _no_op
 
 
