@@ -141,6 +141,11 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
             is_sending_from_trezor_account = False
 
         if StellarInvokeHostFunctionOp.is_type_of(op):
+            # A Soroban operation must be the only operation in the transaction.
+            if num_operations != 1:
+                raise ProcessError(
+                    "Stellar: a Soroban operation must be the only operation"
+                )
             has_soroban_op = True
 
         if any(
