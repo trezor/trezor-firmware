@@ -427,10 +427,16 @@ async def _confirm_auth_entry(auth: StellarSorobanAuthorizationEntry) -> None:
 
     creds = auth.credentials
 
-    # Skip non-SOURCE_ACCOUNT entries. When credentials.type is ADDRESS,
-    # it means a different address is authorizing with their own signature.
-    # Trezor only signs for the source account, so we don't need to display
-    # or confirm authorization entries that won't be signed by this device.
+    # We only support SOROBAN_CREDENTIALS_SOURCE_ACCOUNT authorization: the device
+    # signs the transaction envelope, and that signature authorizes these entries.
+    # An ADDRESS credential is instead authorized by a separate signature over the
+    # ENVELOPE_TYPE_SOROBAN_AUTHORIZATION preimage, which this device does not
+    # produce. Skipping such entries is safe: our transaction signature never
+    # authorizes them, so not showing them can't make the user unknowingly approve
+    # anything -- an ADDRESS credential we didn't sign (e.g. one for our own
+    # account) just makes the whole transaction fail on-chain, so no unauthorized
+    # invocation can run.
+    # NOTE: signing ADDRESS credentials for our own account may be added later.
     if creds.type != StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT:
         return
 
