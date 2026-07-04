@@ -15,6 +15,8 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
+    from typing import Callable, TypeVar
+
     from buffer_types import AnyBytes
 
     from trezor.messages import (
@@ -39,6 +41,7 @@ if TYPE_CHECKING:
         StellarPaymentOp,
         StellarSCAddress,
         StellarSCVal,
+        StellarSCValMapEntry,
         StellarSetOptionsOp,
         StellarSorobanAddressCredentials,
         StellarSorobanAuthorizationEntry,
@@ -49,6 +52,16 @@ if TYPE_CHECKING:
         StellarUInt256Parts,
     )
     from trezor.utils import Writer
+
+    T = TypeVar("T")
+
+
+def _write_vec(
+    w: Writer, items: list[T], write_item: Callable[[Writer, T], None]
+) -> None:
+    write_uint32(w, len(items))
+    for item in items:
+        write_item(w, item)
 
 
 def write_account_merge_op(w: Writer, msg: StellarAccountMergeOp) -> None:
@@ -125,9 +138,7 @@ def write_path_payment_strict_receive_op(
 
     _write_asset(w, msg.destination_asset)
     write_uint64(w, msg.destination_amount)
-    write_uint32(w, len(msg.paths))
-    for p in msg.paths:
-        _write_asset(w, p)
+    _write_vec(w, msg.paths, _write_asset)
 
 
 def write_path_payment_strict_send_op(
@@ -139,9 +150,7 @@ def write_path_payment_strict_send_op(
 
     _write_asset(w, msg.destination_asset)
     write_uint64(w, msg.destination_min)
-    write_uint32(w, len(msg.paths))
-    for p in msg.paths:
-        _write_asset(w, p)
+    _write_vec(w, msg.paths, _write_asset)
 
 
 def write_payment_op(w: Writer, msg: StellarPaymentOp) -> None:
@@ -259,9 +268,7 @@ def _write_claimable_balance_id(w: Writer, claimable_balance_id: AnyBytes) -> No
 def write_invoke_host_function_op(w: Writer, msg: StellarInvokeHostFunctionOp) -> None:
     _write_host_function(w, msg.function)
     # auth array
-    write_uint32(w, len(msg.auth))
-    for entry in msg.auth:
-        _write_soroban_authorization_entry(w, entry)
+    _write_vec(w, msg.auth, _write_soroban_authorization_entry)
 
 
 def _write_host_function(w: Writer, msg: StellarHostFunction) -> None:
@@ -280,9 +287,7 @@ def _write_invoke_contract_args(w: Writer, msg: StellarInvokeContractArgs) -> No
     _write_sc_address(w, msg.contract_address)
     _write_sc_symbol(w, msg.function_name)
     # args array
-    write_uint32(w, len(msg.args))
-    for arg in msg.args:
-        _write_sc_val(w, arg)
+    _write_vec(w, msg.args, _write_sc_val)
 
 
 def _write_sc_address(w: Writer, msg: StellarSCAddress) -> None:
@@ -396,24 +401,24 @@ def _write_sc_val(w: Writer, msg: StellarSCVal) -> None:
         # is a `repeated` field that is always a list, never None, so encoding it
         # as present is correct.
         write_bool(w, True)  # present
-        write_uint32(w, len(msg.vec))
-        for item in msg.vec:
-            _write_sc_val(w, item)
+        _write_vec(w, msg.vec, _write_sc_val)
     elif msg.type == StellarSCValType.SCV_MAP:
         # map is a pointer (SCMap*) in XDR; same reasoning as SCV_VEC above.
         write_bool(w, True)  # present
-        write_uint32(w, len(msg.map))
-        for entry in msg.map:
-            if entry.key is None or entry.value is None:
-                raise DataError("Stellar: map entry missing key or value")
-            _write_sc_val(w, entry.key)
-            _write_sc_val(w, entry.value)
+        _write_vec(w, msg.map, _write_sc_map_entry)
     elif msg.type == StellarSCValType.SCV_ADDRESS:
         if msg.address is None:
             raise DataError("Stellar: missing address value")
         _write_sc_address(w, msg.address)
     else:
         raise ProcessError("Stellar: unsupported SCVal type")
+
+
+def _write_sc_map_entry(w: Writer, entry: StellarSCValMapEntry) -> None:
+    if entry.key is None or entry.value is None:
+        raise DataError("Stellar: map entry missing key or value")
+    _write_sc_val(w, entry.key)
+    _write_sc_val(w, entry.value)
 
 
 def _write_uint128_parts(w: Writer, msg: StellarUInt128Parts) -> None:
@@ -475,9 +480,7 @@ def _write_soroban_authorized_invocation(
 ) -> None:
     _write_soroban_authorized_function(w, msg.function)
     # sub_invocations array
-    write_uint32(w, len(msg.sub_invocations))
-    for sub in msg.sub_invocations:
-        _write_soroban_authorized_invocation(w, sub)
+    _write_vec(w, msg.sub_invocations, _write_soroban_authorized_invocation)
 
 
 def _write_soroban_authorized_function(
