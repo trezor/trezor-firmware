@@ -388,13 +388,16 @@ def _write_sc_val(w: Writer, msg: StellarSCVal) -> None:
             raise DataError("Stellar: missing symbol value")
         _write_sc_symbol(w, msg.symbol)
     elif msg.type == StellarSCValType.SCV_VEC:
-        # vec is optional in XDR (SCVec*)
+        # In XDR the vector is a pointer (SCVec*), i.e. nullable, but a null vector
+        # is not a valid Soroban value (only Some([...]), possibly empty). Here it
+        # is a `repeated` field that is always a list, never None, so encoding it
+        # as present is correct.
         write_bool(w, True)  # present
         write_uint32(w, len(msg.vec))
         for item in msg.vec:
             _write_sc_val(w, item)
     elif msg.type == StellarSCValType.SCV_MAP:
-        # map is optional in XDR (SCMap*)
+        # map is a pointer (SCMap*) in XDR; same reasoning as SCV_VEC above.
         write_bool(w, True)  # present
         write_uint32(w, len(msg.map))
         for entry in msg.map:

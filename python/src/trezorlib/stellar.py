@@ -501,11 +501,20 @@ def _read_sc_val(val: "xdr.SCVal") -> messages.StellarSCVal:
             symbol=val.sym.sc_symbol.decode("utf-8"),
         )
     elif val.type == xdr.SCValType.SCV_VEC:
+        # SCV_VEC's vector is an XDR pointer (SCVec*), i.e. technically nullable,
+        # but a null vector is not a valid Soroban value. Reject it so we never
+        # coerce Vec(None) into Vec([]) and end up signing different bytes than
+        # the input XDR (the firmware always encodes the vector as present).
+        if val.vec is None:
+            raise ValueError("SCV_VEC with a null vector is not supported")
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_VEC,
             vec=[_read_sc_val(v) for v in val.vec.sc_vec],
         )
     elif val.type == xdr.SCValType.SCV_MAP:
+        # SCV_MAP's map is an XDR pointer (SCMap*); same reasoning as SCV_VEC.
+        if val.map is None:
+            raise ValueError("SCV_MAP with a null map is not supported")
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_MAP,
             map=[
