@@ -508,18 +508,17 @@ def _format_sc_address(addr: StellarSCAddress) -> str:
 
     from .. import helpers
 
-    if addr.type == StellarSCAddressType.SC_ADDRESS_TYPE_ACCOUNT:
-        return helpers.address_from_public_key(addr.address)
-    elif addr.type == StellarSCAddressType.SC_ADDRESS_TYPE_CONTRACT:
-        return helpers.encode_strkey(helpers.STRKEY_CONTRACT, addr.address)
-    elif addr.type == StellarSCAddressType.SC_ADDRESS_TYPE_MUXED_ACCOUNT:
-        return helpers.encode_strkey(helpers.STRKEY_MUXED_ACCOUNT, addr.address)
-    elif addr.type == StellarSCAddressType.SC_ADDRESS_TYPE_CLAIMABLE_BALANCE:
-        return helpers.encode_strkey(helpers.STRKEY_CLAIMABLE_BALANCE, addr.address)
-    elif addr.type == StellarSCAddressType.SC_ADDRESS_TYPE_LIQUIDITY_POOL:
-        return helpers.encode_strkey(helpers.STRKEY_LIQUIDITY_POOL, addr.address)
-    else:
+    strkey_version_map = {
+        StellarSCAddressType.SC_ADDRESS_TYPE_ACCOUNT: helpers.STRKEY_ED25519_PUBLIC_KEY,
+        StellarSCAddressType.SC_ADDRESS_TYPE_CONTRACT: helpers.STRKEY_CONTRACT,
+        StellarSCAddressType.SC_ADDRESS_TYPE_MUXED_ACCOUNT: helpers.STRKEY_MUXED_ACCOUNT,
+        StellarSCAddressType.SC_ADDRESS_TYPE_CLAIMABLE_BALANCE: helpers.STRKEY_CLAIMABLE_BALANCE,
+        StellarSCAddressType.SC_ADDRESS_TYPE_LIQUIDITY_POOL: helpers.STRKEY_LIQUIDITY_POOL,
+    }
+    version = strkey_version_map.get(addr.type)
+    if version is None:
         raise ProcessError(f"Stellar: unsupport SCAddress type: {addr.type}")
+    return helpers.encode_strkey(version, addr.address)
 
 
 def _format_sc_val(val: StellarSCVal) -> str:
