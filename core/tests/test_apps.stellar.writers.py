@@ -8,100 +8,60 @@ if not utils.BITCOIN_ONLY:
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestStellarWriters(unittest.TestCase):
     def test_write_int32(self):
-        w = bytearray()
-        write_int32(w, 0)
-        self.assertEqual(w, unhexlify("00000000"))
-
-        w = bytearray()
-        write_int32(w, 1)
-        self.assertEqual(w, unhexlify("00000001"))
-
-        w = bytearray()
-        write_int32(w, 127)
-        self.assertEqual(w, unhexlify("0000007f"))
-
-        w = bytearray()
-        write_int32(w, 256)
-        self.assertEqual(w, unhexlify("00000100"))
-
-        w = bytearray()
-        write_int32(w, -1)
-        self.assertEqual(w, unhexlify("ffffffff"))
-
-        w = bytearray()
-        write_int32(w, -128)
-        self.assertEqual(w, unhexlify("ffffff80"))
-
-        w = bytearray()
-        write_int32(w, -256)
-        self.assertEqual(w, unhexlify("ffffff00"))
-
-        w = bytearray()
-        write_int32(w, 0x7FFFFFFF)  # INT32_MAX
-        self.assertEqual(w, unhexlify("7fffffff"))
-
-        w = bytearray()
-        write_int32(w, -0x80000000)  # INT32_MIN
-        self.assertEqual(w, unhexlify("80000000"))
+        TESTS = [
+            (0, "00000000"),
+            (1, "00000001"),
+            (127, "0000007f"),
+            (256, "00000100"),
+            (-1, "ffffffff"),
+            (-128, "ffffff80"),
+            (-256, "ffffff00"),
+            (0x7FFFFFFF, "7fffffff"),  # INT32_MAX
+            (-0x80000000, "80000000"),  # INT32_MIN
+        ]
+        for value, expected in TESTS:
+            w = bytearray()
+            write_int32(w, value)
+            self.assertEqual(w, unhexlify(expected), msg=f"write_int32({value})")
 
     def test_write_int32_out_of_range(self):
-        w = bytearray()
-        with self.assertRaises(ValueError):
-            write_int32(w, 0x80000000)  # INT32_MAX + 1
-
-        with self.assertRaises(ValueError):
-            write_int32(w, -0x80000001)  # INT32_MIN - 1
-
-        with self.assertRaises(ValueError):
-            write_int32(w, 0x100000000)  # way out of range
+        TESTS = [
+            0x80000000,  # INT32_MAX + 1
+            -0x80000001,  # INT32_MIN - 1
+            0x100000000,  # way out of range
+        ]
+        for value in TESTS:
+            w = bytearray()
+            with self.assertRaises(ValueError):
+                write_int32(w, value)
 
     def test_write_int64(self):
-        w = bytearray()
-        write_int64(w, 0)
-        self.assertEqual(w, unhexlify("0000000000000000"))
-
-        w = bytearray()
-        write_int64(w, 1)
-        self.assertEqual(w, unhexlify("0000000000000001"))
-
-        w = bytearray()
-        write_int64(w, 127)
-        self.assertEqual(w, unhexlify("000000000000007f"))
-
-        w = bytearray()
-        write_int64(w, 0x100000000)  # larger than int32
-        self.assertEqual(w, unhexlify("0000000100000000"))
-
-        w = bytearray()
-        write_int64(w, -1)
-        self.assertEqual(w, unhexlify("ffffffffffffffff"))
-
-        w = bytearray()
-        write_int64(w, -128)
-        self.assertEqual(w, unhexlify("ffffffffffffff80"))
-
-        w = bytearray()
-        write_int64(w, -0x100000000)
-        self.assertEqual(w, unhexlify("ffffffff00000000"))
-
-        w = bytearray()
-        write_int64(w, 0x7FFFFFFFFFFFFFFF)  # INT64_MAX
-        self.assertEqual(w, unhexlify("7fffffffffffffff"))
-
-        w = bytearray()
-        write_int64(w, -0x8000000000000000)  # INT64_MIN
-        self.assertEqual(w, unhexlify("8000000000000000"))
+        TESTS = [
+            (0, "0000000000000000"),
+            (1, "0000000000000001"),
+            (127, "000000000000007f"),
+            (0x100000000, "0000000100000000"),  # larger than int32
+            (-1, "ffffffffffffffff"),
+            (-128, "ffffffffffffff80"),
+            (-0x100000000, "ffffffff00000000"),
+            (0x7FFFFFFFFFFFFFFF, "7fffffffffffffff"),  # INT64_MAX
+            (-0x8000000000000000, "8000000000000000"),  # INT64_MIN
+        ]
+        for value, expected in TESTS:
+            w = bytearray()
+            write_int64(w, value)
+            self.assertEqual(w, unhexlify(expected), msg=f"write_int64({value})")
 
     def test_write_int64_out_of_range(self):
-        w = bytearray()
-        with self.assertRaises(ValueError):
-            write_int64(w, 0x8000000000000000)  # INT64_MAX + 1
-
-        with self.assertRaises(ValueError):
-            write_int64(w, -0x8000000000000001)  # INT64_MIN - 1
-
-        with self.assertRaises(ValueError):
-            write_int64(w, 0x10000000000000000)  # way out of range
+        TESTS = [
+            0x8000000000000000,  # INT64_MAX + 1
+            -0x8000000000000001,  # INT64_MIN - 1
+            0x10000000000000000,  # way out of range
+        ]
+        for value in TESTS:
+            w = bytearray()
+            with self.assertRaises(ValueError):
+                write_int64(w, value)
 
 
 if __name__ == "__main__":
