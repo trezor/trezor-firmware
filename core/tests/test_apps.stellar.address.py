@@ -84,6 +84,10 @@ class TestStellarAddress(unittest.TestCase):
                 "GCN2K2HG53AWX2SP5UHRPMJUUHLJF2XBTGSXROTPWRGAYJCDDP63J2AA"
             )  # invalid checksum
 
+    # Strkey encoding test vectors from SEP-0023 "Valid test cases":
+    # https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md#tests
+    # (the muxed account with id=1024 is an extra variant, not part of SEP-0023;
+    #  muxed addresses can be generated at https://lab.stellar.org/account/muxed-create)
     def test_encode_strkey_account(self):
         # Test encoding ED25519 public key (G... address)
         pubkey = unhexlify(
@@ -104,7 +108,6 @@ class TestStellarAddress(unittest.TestCase):
             "CA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUWDA",
         )
 
-    # https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
     def test_encode_strkey_muxed_account(self):
         # Test encoding muxed account (M... address)
         # Muxed account is 32 bytes public key + 8 bytes ID
