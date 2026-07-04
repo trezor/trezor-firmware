@@ -404,18 +404,16 @@ def sign_tx(
 
 def _read_sc_address(address: "xdr.SCAddress") -> messages.StellarSCAddress:
     """Read an SCAddress from XDR."""
+    sc_address_type_map = {
+        AddressType.ACCOUNT: messages.StellarSCAddressType.SC_ADDRESS_TYPE_ACCOUNT,
+        AddressType.CONTRACT: messages.StellarSCAddressType.SC_ADDRESS_TYPE_CONTRACT,
+        AddressType.MUXED_ACCOUNT: messages.StellarSCAddressType.SC_ADDRESS_TYPE_MUXED_ACCOUNT,
+        AddressType.CLAIMABLE_BALANCE: messages.StellarSCAddressType.SC_ADDRESS_TYPE_CLAIMABLE_BALANCE,
+        AddressType.LIQUIDITY_POOL: messages.StellarSCAddressType.SC_ADDRESS_TYPE_LIQUIDITY_POOL,
+    }
     addr = StellarAddress.from_xdr_sc_address(address)
-    if addr.type == AddressType.ACCOUNT:
-        address_type = messages.StellarSCAddressType.SC_ADDRESS_TYPE_ACCOUNT
-    elif addr.type == AddressType.CONTRACT:
-        address_type = messages.StellarSCAddressType.SC_ADDRESS_TYPE_CONTRACT
-    elif addr.type == AddressType.MUXED_ACCOUNT:
-        address_type = messages.StellarSCAddressType.SC_ADDRESS_TYPE_MUXED_ACCOUNT
-    elif addr.type == AddressType.CLAIMABLE_BALANCE:
-        address_type = messages.StellarSCAddressType.SC_ADDRESS_TYPE_CLAIMABLE_BALANCE
-    elif addr.type == AddressType.LIQUIDITY_POOL:
-        address_type = messages.StellarSCAddressType.SC_ADDRESS_TYPE_LIQUIDITY_POOL
-    else:
+    address_type = sc_address_type_map.get(addr.type)
+    if address_type is None:
         raise ValueError(f"Unsupported address type: {addr.type}")
     return messages.StellarSCAddress(type=address_type, address=addr.key)
 
