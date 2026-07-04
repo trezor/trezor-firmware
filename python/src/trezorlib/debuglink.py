@@ -991,10 +991,18 @@ class DebugLink:
         )
         info = dict(sorted((item.name, item.value) for item in resp.items))
         if info["total"]:
+            # older firmware doesn't report GC stats
+            stats = "".join(
+                f" {key}={info[key]}"
+                for key in ("count", "used_min", "used_max")
+                if key in info
+            )
             LOG.debug(
-                "GC info: free=%.2f%% max_free=%.2f%%",
+                "GC info: free=%.2f%% max_free=%.2f%% total=%d%s",
                 100 * info["free"] / info["total"],
                 100 * info["max_free"] / info["total"],
+                info["total"],
+                stats,
             )
 
         prev_info = self.prev_gc_info

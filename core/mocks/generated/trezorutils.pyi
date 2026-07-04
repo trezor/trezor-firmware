@@ -155,6 +155,8 @@ if __debug__:
     def get_gc_info() -> dict[str, int]:
         """
         Get GC heap stats, updated by `update_gc_info`.
+        `used_{min,max}` are measured after each collection (since
+        the last call), so they exclude garbage freed by that collection.
         """
 if __debug__:
     def update_gc_info() -> None:
