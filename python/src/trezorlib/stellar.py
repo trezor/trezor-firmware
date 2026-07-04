@@ -89,9 +89,12 @@ DEFAULT_BIP32_PATH = "m/44h/148h/0h"
 def from_envelope(
     envelope: "TransactionEnvelope",
 ) -> Tuple[messages.StellarSignTx, List["StellarMessageType"], messages.StellarTxExt]:
-    """Parses transaction envelope into a map with the following keys:
+    """Parse a transaction envelope into a tuple of:
+
     tx - a StellarSignTx describing the transaction header
-    operations - an array of protobuf message objects for each operation
+    operations - a list of protobuf messages, one per operation
+    tx_ext - a StellarTxExt describing the transaction extension: v=1 carrying
+        the Soroban data for Soroban transactions, otherwise v=0
     """
     if not HAVE_STELLAR_SDK:
         raise RuntimeError("Stellar SDK not available")
