@@ -485,16 +485,27 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_clear_gc_info_obj,
 ///         Get GC heap stats, updated by `update_gc_info`.
 ///         """
 STATIC mp_obj_t mod_trezorutils_get_gc_info() {
-  mp_obj_t result = mp_obj_new_dict(4);
+  mp_obj_t result = mp_obj_new_dict(7);
+  mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_count),
+                    mp_obj_new_int_from_uint(MP_STATE_MEM(gc_count)));
   mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_total),
                     mp_obj_new_int_from_uint(current_gc_info.total));
   mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_used),
                     mp_obj_new_int_from_uint(current_gc_info.used));
+  mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_used_max),
+                    mp_obj_new_int_from_uint(MP_STATE_MEM(gc_used_blocks_max) *
+                                             MICROPY_BYTES_PER_GC_BLOCK));
+  mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_used_min),
+                    mp_obj_new_int_from_uint(MP_STATE_MEM(gc_used_blocks_min) *
+                                             MICROPY_BYTES_PER_GC_BLOCK));
   mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_free),
                     mp_obj_new_int_from_uint(current_gc_info.free));
   mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_max_free),
                     mp_obj_new_int_from_uint(current_gc_info.max_free *
                                              MICROPY_BYTES_PER_GC_BLOCK));
+  MP_STATE_MEM(gc_count) = 0;
+  MP_STATE_MEM(gc_used_blocks_max) = 0;
+  MP_STATE_MEM(gc_used_blocks_min) = 0;
   return result;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_get_gc_info_obj,

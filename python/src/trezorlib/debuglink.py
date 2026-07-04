@@ -966,9 +966,13 @@ class DebugLink:
         info = dict(sorted((item.name, item.value) for item in resp.items))
         if info["total"]:
             LOG.debug(
-                "GC info: free=%.2f%% max_free=%.2f%%",
+                "GC info: free=%.2f%% max_free=%.2f%% count=%d used_min=%d used_max=%d total=%d",
                 100 * info["free"] / info["total"],
                 100 * info["max_free"] / info["total"],
+                info["count"],
+                info["used_min"],
+                info["used_max"],
+                info["total"],
             )
 
         prev_info = self.prev_gc_info

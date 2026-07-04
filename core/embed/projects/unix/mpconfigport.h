@@ -180,6 +180,7 @@
 
 // allocate traceback data only on debug builds
 #define MICROPY_PY_SYS_TRACEBACK_DISABLE (PYOPT)
+#define MICROPY_PY_GC_STATS (!PYOPT)
 
 // Debugging and interactive functionality.
 #define MICROPY_DEBUG_PRINTERS      (1)
