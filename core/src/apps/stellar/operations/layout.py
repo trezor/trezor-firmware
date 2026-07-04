@@ -617,7 +617,7 @@ def _format_map_as_json(map_entries: list) -> str:
     return "{" + ", ".join(pairs) + "}"
 
 
-_MASK64 = 0xFFFFFFFFFFFFFFFF
+_MASK64 = 0xFFFF_FFFF_FFFF_FFFF
 
 
 def _format_u128(parts: "StellarUInt128Parts") -> str:
