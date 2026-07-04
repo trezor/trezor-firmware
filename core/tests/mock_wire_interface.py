@@ -46,5 +46,5 @@ class MockHID:
             self.packet = None
             return read
 
-    def wait_object(self, mode):
-        return wait(mode | self.num)
+    def wait_object(self, mode: int, timeout_ms: int | None = None):
+        return wait(mode | self.num, timeout_ms)

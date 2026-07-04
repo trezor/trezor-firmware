@@ -91,6 +91,18 @@ def test_desync_v1(client: Client):
     get_client(client.app, client.transport).ping("reconnect")
 
 
+@pytest.mark.protocol("v1")
+@pytest.mark.models(skip="legacy")
+def test_unblock_v1(session: Session):
+    # The response is not read - the device write will block
+    session.write(messages.Ping(message="A" * 1000))
+    # After write timeout, the device will be responsive
+    session.test_ctx.sync_responses()
+    large_msg = "B" * 1000
+    resp = session.call(messages.Ping(message=large_msg), expect=messages.Success)
+    assert resp.message == large_msg
+
+
 @pytest.mark.models("eckhart")
 def test_get_features_avoids_restart(session: Session):
     debug = session.debug

@@ -16,6 +16,10 @@ _REP_INIT = ">BBBHL"  # marker, magic, magic, wire type, data length
 _REP_INIT_DATA = const(9)  # offset of data in the initial report
 _REP_CONT_DATA = const(1)  # offset of data in the continuation report
 
+# Don't block indefinitely on writes send if the host is not reading from WebUSB.
+# Otherwise, the device may get stuck - while ignoring new messages from the host.
+_WRITE_TIMEOUT_MS = const(5000)
+
 
 class CodecError(WireError):
     pass
@@ -80,7 +84,7 @@ async def read_message(
 
 
 async def write_message(iface: WireInterface, mtype: int, mdata: AnyBytes) -> None:
-    write = loop.wait(iface.iface_num() | io.POLL_WRITE)
+    write = loop.wait(iface.iface_num() | io.POLL_WRITE, timeout_ms=_WRITE_TIMEOUT_MS)
 
     # gather data from msg
     msize = len(mdata)

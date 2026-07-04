@@ -21,6 +21,10 @@ def make_header(mtype, length):
 class TestWireCodecV1(unittest.TestCase):
     def setUp(self):
         self.interface = MockHID()
+        self._wait_write = self.interface.wait_object(
+            io.POLL_WRITE, codec_v1._WRITE_TIMEOUT_MS
+        )
+        self._wait_read = self.interface.wait_object(io.POLL_READ)
 
     def test_read_one_packet(self):
         # zero length message - just a header
@@ -30,7 +34,7 @@ class TestWireCodecV1(unittest.TestCase):
         gen = codec_v1.read_message(self.interface, lambda: buffer)
 
         query = gen.send(None)
-        self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+        self.assertObjectEqual(query, self._wait_read)
 
         with self.assertRaises(StopIteration) as e:
             self.interface.mock_read(message_packet, gen)
@@ -49,7 +53,7 @@ class TestWireCodecV1(unittest.TestCase):
         gen = codec_v1.read_message(self.interface, lambda: None)
 
         query = gen.send(None)
-        self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+        self.assertObjectEqual(query, self._wait_read)
 
         with self.assertRaises(WireError):
             self.interface.mock_read(message_packet, gen)
@@ -71,7 +75,7 @@ class TestWireCodecV1(unittest.TestCase):
         gen = codec_v1.read_message(self.interface, lambda: buffer)
         query = gen.send(None)
         for packet in packets[:-1]:
-            self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+            self.assertObjectEqual(query, self._wait_read)
             query = self.interface.mock_read(packet, gen)
 
         # last packet will stop
@@ -99,7 +103,7 @@ class TestWireCodecV1(unittest.TestCase):
 
         gen = codec_v1.read_message(self.interface, lambda: buffer)
         query = gen.send(None)
-        self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+        self.assertObjectEqual(query, self._wait_read)
         with self.assertRaises(StopIteration) as e:
             self.interface.mock_read(packet, gen)
 
@@ -115,7 +119,7 @@ class TestWireCodecV1(unittest.TestCase):
         gen = codec_v1.write_message(self.interface, MESSAGE_TYPE, b"")
 
         query = gen.send(None)
-        self.assertObjectEqual(query, self.interface.wait_object(io.POLL_WRITE))
+        self.assertObjectEqual(query, self._wait_write)
         with self.assertRaises(StopIteration):
             gen.send(None)
 
@@ -140,7 +144,7 @@ class TestWireCodecV1(unittest.TestCase):
         for _ in packets:
             # we receive as many queries as there are packets
             query = gen.send(None)
-            self.assertObjectEqual(query, self.interface.wait_object(io.POLL_WRITE))
+            self.assertObjectEqual(query, self._wait_write)
 
         # the first sent None only started the generator. the len(packets)-th None
         # will finish writing and raise StopIteration
@@ -162,13 +166,13 @@ class TestWireCodecV1(unittest.TestCase):
         # exhaust the iterator:
         # (XXX we can only do this because the iterator is only accepting None and returns None)
         for query in gen:
-            self.assertObjectEqual(query, self.interface.wait_object(io.POLL_WRITE))
+            self.assertObjectEqual(query, self._wait_write)
 
         buffer = bytearray(1024)
         gen = codec_v1.read_message(self.interface, lambda: buffer)
         query = gen.send(None)
         for packet in self.interface.data[:-1]:
-            self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+            self.assertObjectEqual(query, self._wait_read)
             query = self.interface.mock_read(packet, gen)
 
         with self.assertRaises(StopIteration) as e:
@@ -193,7 +197,7 @@ class TestWireCodecV1(unittest.TestCase):
 
         query = gen.send(None)
         for _ in range(PACKET_COUNT - 1):
-            self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+            self.assertObjectEqual(query, self._wait_read)
             query = self.interface.mock_read(packet, gen)
 
         with self.assertRaises(codec_v1.CodecError) as e:
