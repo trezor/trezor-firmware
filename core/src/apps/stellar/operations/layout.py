@@ -529,6 +529,8 @@ def _format_sc_val(val: StellarSCVal) -> str:
     t = val.type
 
     if t == StellarSCValType.SCV_BOOL:
+        if val.b is None:
+            raise DataError("Stellar: missing bool value")
         return "true" if val.b else "false"
     elif t == StellarSCValType.SCV_VOID:
         return "void"

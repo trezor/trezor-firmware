@@ -333,7 +333,9 @@ def _write_sc_val(w: Writer, msg: StellarSCVal) -> None:
     write_uint32(w, msg.type)
 
     if msg.type == StellarSCValType.SCV_BOOL:
-        write_bool(w, msg.b if msg.b is not None else False)
+        if msg.b is None:
+            raise DataError("Stellar: missing bool value")
+        write_bool(w, msg.b)
     elif msg.type == StellarSCValType.SCV_VOID:
         pass  # no data
     elif msg.type == StellarSCValType.SCV_U32:
