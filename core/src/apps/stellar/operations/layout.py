@@ -30,6 +30,7 @@ if TYPE_CHECKING:
         StellarCreatePassiveSellOfferOp,
         StellarInt128Parts,
         StellarInt256Parts,
+        StellarInvokeContractArgs,
         StellarInvokeHostFunctionOp,
         StellarManageBuyOfferOp,
         StellarManageDataOp,
@@ -384,6 +385,32 @@ async def confirm_asset_issuer(asset: StellarAsset) -> None:
     )
 
 
+async def _confirm_invoke_contract_args(
+    args: StellarInvokeContractArgs,
+    address_title: str,
+    function_title: str,
+    function_description: str | None,
+    br_name_prefix: str,
+) -> None:
+    await confirm_address(
+        address_title,
+        _format_sc_address(args.contract_address),
+        br_name=f"{br_name_prefix}_contract_address",
+    )
+    await confirm_text(
+        f"{br_name_prefix}_function",
+        function_title,
+        args.function_name,
+        description=function_description,
+    )
+    for i, arg in enumerate(args.args):
+        await confirm_text(
+            f"{br_name_prefix}_arg",
+            title=f"{TR.stellar__argument} #{i + 1}",
+            data=_format_sc_val(arg),
+        )
+
+
 async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> None:
     from trezor.enums import StellarHostFunctionType
 
@@ -393,28 +420,13 @@ async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> No
         if function.invoke_contract is None:
             raise DataError("Stellar: missing invoke_contract")
 
-        invoke = function.invoke_contract
-        contract_address = _format_sc_address(invoke.contract_address)
-
-        await confirm_address(
-            TR.stellar__invoke_contract,
-            contract_address,
-            br_name="op_invoke_contract_address",
+        await _confirm_invoke_contract_args(
+            function.invoke_contract,
+            address_title=TR.stellar__invoke_contract,
+            function_title=TR.stellar__function,
+            function_description=None,
+            br_name_prefix="op_invoke",
         )
-
-        await confirm_text(
-            "op_invoke_function",
-            TR.stellar__function,
-            invoke.function_name,
-        )
-
-        for i, arg in enumerate(invoke.args):
-            arg_str = _format_sc_val(arg)
-            await confirm_text(
-                "op_invoke_arg",
-                title=f"{TR.stellar__argument} #{i + 1}",
-                data=arg_str,
-            )
 
         for auth_entry in op.auth:
             await _confirm_auth_entry(auth_entry)
@@ -480,29 +492,13 @@ async def _confirm_invocation(
         if func.contract_fn is None:
             raise DataError("Stellar: missing contract_fn")
 
-        args = func.contract_fn
-        contract_address = _format_sc_address(args.contract_address)
-
-        await confirm_address(
-            title,
-            contract_address,
-            br_name="op_auth_contract_address",
+        await _confirm_invoke_contract_args(
+            func.contract_fn,
+            address_title=title,
+            function_title=title,
+            function_description=TR.stellar__function,
+            br_name_prefix="op_auth",
         )
-
-        await confirm_text(
-            "op_auth_function",
-            title,
-            args.function_name,
-            description=TR.stellar__function,
-        )
-
-        for i, arg in enumerate(args.args):
-            arg_str = _format_sc_val(arg)
-            await confirm_text(
-                "op_auth_arg",
-                title=f"{TR.stellar__argument} #{i + 1}",
-                data=arg_str,
-            )
 
     # Recursively show sub-invocations
     if invocation.sub_invocations:
