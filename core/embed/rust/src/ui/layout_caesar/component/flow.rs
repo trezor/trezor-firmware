@@ -349,6 +349,9 @@ where
         t.child("scrollbar", &self.scrollbar);
         t.child("buttons", &self.buttons);
         t.child("flow_page", &self.current_page);
-        t.bool("has_menu", self.has_menu);
+        t.bool(
+            "has_menu",
+            self.has_menu && self.current_page.pager().is_last(),
+        );
     }
 }
