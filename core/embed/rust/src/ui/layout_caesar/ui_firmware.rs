@@ -562,9 +562,11 @@ impl FirmwareUI for UICaesar {
                     if let Some(amount) = amount {
                         if let Some(amount_label) = amount_label {
                             has_amount = true;
-                            ops.add_text_with_font(amount_label, fonts::FONT_BOLD)
-                                .add_newline()
-                                .add_text_with_font(amount, fonts::FONT_MONO);
+                            ops.add_text_with_font(amount_label, fonts::FONT_BOLD);
+                            if !amount_label.is_empty() && !amount.is_empty() {
+                                ops.add_newline();
+                            }
+                            ops.add_text_with_font(amount, fonts::FONT_MONO);
                         }
                     }
 
