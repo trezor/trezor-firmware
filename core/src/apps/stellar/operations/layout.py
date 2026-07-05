@@ -523,6 +523,12 @@ def _format_sc_address(addr: StellarSCAddress) -> str:
     return helpers.encode_strkey(version, addr.address)
 
 
+def _escape_str(s: str) -> str:
+    # Escape `\` first, then `"`, so an embedded quote cannot close the surrounding
+    # string delimiters -- otherwise a string could forge extra vec/map items.
+    return s.replace("\\", "\\\\").replace('"', '\\"')
+
+
 def _format_sc_val(val: StellarSCVal) -> str:
     """Format SCVal as a human-readable string, using JSON for complex types."""
     from trezor.enums import StellarSCValType
@@ -578,15 +584,17 @@ def _format_sc_val(val: StellarSCVal) -> str:
     elif t == StellarSCValType.SCV_BYTES:
         if val.bytes is None:
             raise DataError("Stellar: missing bytes value")
-        return hexlify(val.bytes).decode()
+        return "0x" + hexlify(val.bytes).decode()
     elif t == StellarSCValType.SCV_STRING:
         if val.string is None:
             raise DataError("Stellar: missing string value")
-        # Try UTF-8 decode, fallback to hex if invalid
+        # Render decoded text as a quoted, escaped string so its content can never
+        # forge the surrounding quotes (and thus the vec/map separators). Non-UTF-8
+        # bytes can't be shown as text, so render them as hex like SCV_BYTES.
         try:
-            return f'"{bytes(val.string).decode()}"'
-        except UnicodeDecodeError:
-            return hexlify(val.string).decode()
+            return f'"{_escape_str(bytes(val.string).decode())}"'
+        except UnicodeError:
+            return "0x" + hexlify(val.string).decode()
     elif t == StellarSCValType.SCV_SYMBOL:
         if val.symbol is None:
             raise DataError("Stellar: missing symbol value")
