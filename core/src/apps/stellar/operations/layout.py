@@ -10,7 +10,6 @@ from trezor.ui.layouts import (
     confirm_properties,
     confirm_stellar_output,
     confirm_text,
-    should_show_more,
 )
 from trezor.wire import DataError, ProcessError
 
@@ -388,6 +387,7 @@ async def confirm_asset_issuer(asset: StellarAsset) -> None:
 async def _confirm_invoke_contract_args(
     args: StellarInvokeContractArgs,
     address_title: str,
+    address_description: str | None,
     function_title: str,
     function_description: str | None,
     br_name_prefix: str,
@@ -395,6 +395,7 @@ async def _confirm_invoke_contract_args(
     await confirm_address(
         address_title,
         _format_sc_address(args.contract_address),
+        description=address_description,
         br_name=f"{br_name_prefix}_contract_address",
     )
     await confirm_text(
@@ -423,18 +424,28 @@ async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> No
         await _confirm_invoke_contract_args(
             function.invoke_contract,
             address_title=TR.stellar__invoke_contract,
+            address_description=None,
             function_title=TR.stellar__function,
             function_description=None,
             br_name_prefix="op_invoke",
         )
 
+        # An InvokeHostFunctionOp can carry multiple authorization entries, and more
+        # than one may use SOURCE_ACCOUNT credentials -- a single source account can
+        # authorize several distinct invocation trees in one transaction (this occurs
+        # in real transactions). Number the displayed (source-account) entries so the
+        # user can tell them apart, and show each entry's full tree from its root.
+        shown = 0
         for auth_entry in op.auth:
-            await _confirm_auth_entry(auth_entry)
+            if await _confirm_auth_entry(auth_entry, shown + 1):
+                shown += 1
     else:
         raise ProcessError("Stellar: unsupported host function type")
 
 
-async def _confirm_auth_entry(auth: StellarSorobanAuthorizationEntry) -> None:
+async def _confirm_auth_entry(
+    auth: StellarSorobanAuthorizationEntry, position: int
+) -> bool:
     from trezor.enums import StellarSorobanCredentialsType
 
     creds = auth.credentials
@@ -450,59 +461,47 @@ async def _confirm_auth_entry(auth: StellarSorobanAuthorizationEntry) -> None:
     # invocation can run.
     # NOTE: signing ADDRESS credentials for our own account may be added later.
     if creds.type != StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT:
-        return
+        return False
 
-    # Check if there are nested sub-invocations to display
-    invocation = auth.root_invocation
-    if invocation.sub_invocations:
-        await _confirm_nested_invocations(invocation.sub_invocations)
-
-
-async def _confirm_nested_invocations(
-    sub_invocations: list[StellarSorobanAuthorizedInvocation],
-) -> None:
-    """Prompt user to view nested authorization details."""
-
-    sub_count = len(sub_invocations)
-    hint = TR.stellar__contains_x_sub_invocations_template.format(sub_count)
-
-    if await should_show_more(
-        TR.stellar__nested_authorization,
-        [(hint, False)],
-        br_name="op_auth_nested",
-    ):
-        for i, sub in enumerate(sub_invocations):
-            await _confirm_invocation(sub, i)
+    # Show the whole authorized invocation tree starting from its root (not just the
+    # nested sub-invocations), so the user sees exactly what this signature authorizes.
+    await _confirm_invocation(auth.root_invocation, str(position))
+    return True
 
 
 async def _confirm_invocation(
     invocation: StellarSorobanAuthorizedInvocation,
-    index: int,
+    position: str,
 ) -> None:
-    """Confirm an authorized invocation and its sub-invocations recursively."""
+    """Confirm an authorized invocation and its sub-invocations recursively.
+
+    The whole authorization tree is shown by default (it is security-critical and
+    can differ from the host function being invoked). `position` is the path in
+    the auth tree (e.g. "1", "1-2", "1-2-1").
+    """
     from trezor.enums import StellarSorobanAuthorizedFunctionType
 
     func = invocation.function
-    title = f"{TR.stellar__nested_authorization} #{index + 1}"
-
     if (
         func.type
-        == StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN
+        != StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN
     ):
-        if func.contract_fn is None:
-            raise DataError("Stellar: missing contract_fn")
+        raise ProcessError("Stellar: unsupported authorized function type")
+    if func.contract_fn is None:
+        raise DataError("Stellar: missing contract_fn")
 
-        await _confirm_invoke_contract_args(
-            func.contract_fn,
-            address_title=title,
-            function_title=title,
-            function_description=TR.stellar__function,
-            br_name_prefix="op_auth",
-        )
+    title = f"{TR.stellar__authorization} {position}"
+    await _confirm_invoke_contract_args(
+        func.contract_fn,
+        address_title=title,
+        address_description=TR.stellar__contract_address,
+        function_title=title,
+        function_description=TR.stellar__function,
+        br_name_prefix="op_auth",
+    )
 
-    # Recursively show sub-invocations
-    if invocation.sub_invocations:
-        await _confirm_nested_invocations(invocation.sub_invocations)
+    for i, sub in enumerate(invocation.sub_invocations):
+        await _confirm_invocation(sub, f"{position}-{i + 1}")
 
 
 def _format_sc_address(addr: StellarSCAddress) -> str:

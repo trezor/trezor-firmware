@@ -1408,6 +1408,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__all_will_be_sent_to;
   MP_QSTR_stellar__allow_trust;
   MP_QSTR_stellar__argument;
+  MP_QSTR_stellar__authorization;
   MP_QSTR_stellar__balance_id;
   MP_QSTR_stellar__bump_sequence;
   MP_QSTR_stellar__buying;
@@ -1418,7 +1419,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__confirm_memo;
   MP_QSTR_stellar__confirm_operation;
   MP_QSTR_stellar__confirm_timebounds;
-  MP_QSTR_stellar__contains_x_sub_invocations_template;
   MP_QSTR_stellar__contract_address;
   MP_QSTR_stellar__create_account;
   MP_QSTR_stellar__debited_amount;
@@ -1440,7 +1440,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__low;
   MP_QSTR_stellar__master_weight;
   MP_QSTR_stellar__medium;
-  MP_QSTR_stellar__nested_authorization;
   MP_QSTR_stellar__new_offer;
   MP_QSTR_stellar__new_passive_offer;
   MP_QSTR_stellar__no_memo_set;

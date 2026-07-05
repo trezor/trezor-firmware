@@ -1180,5 +1180,6 @@
   "1178": "stellar__contract_address",
   "1179": "stellar__function",
   "1180": "stellar__invoke_contract",
-  "1181": "stellar__nested_authorization"
+  "1181": "stellar__nested_authorization",
+  "1182": "stellar__authorization"
 }
