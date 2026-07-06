@@ -597,7 +597,10 @@ def _format_sc_val(val: StellarSCVal) -> str:
     elif t == StellarSCValType.SCV_SYMBOL:
         if val.symbol is None:
             raise DataError("Stellar: missing symbol value")
-        return val.symbol
+        # Quote and escape like SCV_STRING so the symbol's content can never forge the
+        # surrounding vec/map delimiters. A symbol is already a valid UTF-8 str, so no
+        # hex fallback is needed (unlike SCV_STRING, which holds raw bytes).
+        return f'"{_escape_str(val.symbol)}"'
     elif t == StellarSCValType.SCV_VEC:
         return _format_vec_as_json(val.vec)
     elif t == StellarSCValType.SCV_MAP:
