@@ -2,6 +2,8 @@ use core::hint::black_box;
 
 use crate::error::value_error;
 
+mod api;
+
 pub mod aesgcm;
 pub mod cosi;
 pub mod crc32;
