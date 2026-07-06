@@ -1,0 +1,29 @@
+cargo-features = ["panic-immediate-abort"]
+
+[workspace]
+members = ["ethereum"]
+
+resolver = "2"
+
+[profile.debug-fw]
+inherits = "dev"
+split-debuginfo = "off"
+debug = 2
+strip = "none"
+panic = "abort"
+
+[profile.release-fw]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+split-debuginfo = "off"
+debug = 0
+debug-assertions = false
+overflow-checks = false
+incremental = false
+panic = "immediate-abort"
+
+[profile.test]
+split-debuginfo = "off"
+debug = 2
