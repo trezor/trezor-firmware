@@ -1,0 +1,190 @@
+.novisit a:visited {
+    color: blue;
+}
+
+tr.ok a,
+tr.ok a:visited {
+    color: grey;
+}
+
+tr.bad a,
+tr.bad a:visited {
+    color: darkred;
+}
+
+#markbox {
+    position: fixed;
+    top: 50px;
+    right: 5px;
+    width: 500px;
+    padding: 1em;
+    font-family: Inter, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #1f2937;
+    background: #f3f4f6;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 10%);
+}
+
+#markbox #buttons {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+#markbox .mark {
+    display: flex;
+    flex-direction: column;
+}
+
+#markbox button {
+    border: 3px solid;
+    font-size: 20pt;
+    padding: 1em;
+    background: white;
+    border-radius: 10px;
+}
+
+#markbox #mark-ok {
+    color: green;
+    border-color: darkgreen;
+}
+
+#markbox #mark-ok:hover {
+    border-color: lightgreen;
+}
+
+#markbox #mark-update {
+    color: green;
+    border-color: darkgreen;
+}
+
+#markbox #mark-update:hover {
+    border-color: lightgreen;
+}
+
+#markbox #mark-bad {
+    color: darkred;
+    border-color: darkred;
+}
+
+#markbox #mark-bad:hover {
+    border-color: red;
+}
+
+.hidden {
+    display: none;
+}
+
+.script-hidden {
+    display: none;
+}
+
+.model-T1B1 img,
+.model-T2B1 img,
+.model-T3B1 img {
+    image-rendering: pixelated;
+    width: 256px;
+}
+
+.model-T2B1 canvas
+.model-T3B1 canvas {
+    image-rendering: pixelated;
+    width: 256px;
+}
+
+
+/* GIF styling */
+
+/* Style the input field */
+#delayInput {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+/* Style the buttons */
+button.gifBtn {
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    /* Add a 10 px space to the right of the button */
+    margin-right: 10px;
+}
+
+/* Remove the margin-right from the last button */
+button.gifBtn:last-child {
+    margin-right: 0;
+}
+
+/* Apply a gray background to disabled buttons */
+button.gifBtn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+button.gifBtn:hover {
+    background-color: #3e8e41;
+}
+
+/* Style the slider */
+#slider {
+    width: 30%;
+    margin-top: 10px;
+}
+
+/* Style the progress bar */
+#slider::-webkit-slider-runnable-track {
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+#slider::-webkit-slider-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -7px;
+}
+
+#slider::-moz-range-track {
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+#slider::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    cursor: pointer;
+}
+
+#slider::-ms-track {
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+    border: none;
+    color: transparent;
+}
+
+#slider::-ms-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    cursor: pointer;
+    margin-top: 0;
+}
