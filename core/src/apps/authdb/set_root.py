@@ -28,8 +28,8 @@ async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
         raise DataError("mac and device_id are required for AuthDbSetRoot")
     if msg.device_id != wallet_id:
         raise DataError("device_id mismatch")
-    mac_key = await _derive_mac_key()
-    if _compute_mac(mac_key, msg.root) != msg.mac:
+    root_mac_key = await _derive_mac_key(b"root_mac")
+    if _compute_mac(root_mac_key, msg.root) != msg.mac:
         raise DataError("MAC verification failed")
 
     authdb.set_root(wallet_id, msg.root)

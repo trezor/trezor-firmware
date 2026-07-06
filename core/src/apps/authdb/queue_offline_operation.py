@@ -36,7 +36,7 @@ async def queue_offline_operation(
     # (production). This is the ONLY approval point in the offline-sync flow.
 
     wallet_id = await _get_wallet_id()
-    mac_key = await _derive_mac_key()
+    leaf_approval_mac_key = await _derive_mac_key(b"leaf_approval")
 
     ZERO_HASH = b"\x00" * 32
     old_leaf_hash = _mpt.leaf_hash(address, old_value) if old_value else ZERO_HASH
@@ -50,7 +50,7 @@ async def queue_offline_operation(
     # sequence is taken AFTER approval, so a cancelled dialog never burns one.
     sequence = authdb.take_next_sequence(wallet_id)
     mac = _compute_mac(
-        mac_key, sequence.to_bytes(4, "big"), old_leaf_hash, new_leaf_hash
+        leaf_approval_mac_key, sequence.to_bytes(4, "big"), old_leaf_hash, new_leaf_hash
     )
 
     try:

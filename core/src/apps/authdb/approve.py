@@ -20,7 +20,7 @@ async def approve(msg: AuthDbApprove) -> AuthDbApproveResponse:
     # TODO: show address + old_value + new_value confirmation dialog when UI layout is available
 
     wallet_id = await _get_wallet_id()
-    mac_key = await _derive_mac_key()
+    leaf_approval_mac_key = await _derive_mac_key(b"leaf_approval")
 
     old_value = msg.old_value if msg.old_value else b""
     new_value = msg.new_value
@@ -28,7 +28,7 @@ async def approve(msg: AuthDbApprove) -> AuthDbApproveResponse:
     old_leaf_hash = _mpt.leaf_hash(msg.address, old_value) if old_value else ZERO_HASH
     new_leaf_hash = _mpt.leaf_hash(msg.address, new_value) if new_value else ZERO_HASH
 
-    mac = _compute_mac(mac_key, old_leaf_hash, new_leaf_hash)
+    mac = _compute_mac(leaf_approval_mac_key, old_leaf_hash, new_leaf_hash)
 
     if __debug__:
         from trezor import log

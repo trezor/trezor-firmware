@@ -39,7 +39,7 @@ async def fast_forward_root(
     if msg.counter <= current_counter:
         raise DataError("counter must be greater than the current counter")
 
-    mac_key = await _derive_mac_key()
+    mac_key = await _derive_mac_key(b"root_mac")
     expected_mac = _compute_mac(
         mac_key, wallet_id, msg.counter.to_bytes(4, "big"), msg.new_root
     )

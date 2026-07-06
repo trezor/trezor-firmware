@@ -25,7 +25,9 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     from apps.authdb import _mpt
 
     wallet_id = await _get_wallet_id()
-    mac_key = await _derive_mac_key()
+    root_mac_key = await _derive_mac_key(b"root_mac")
+    leaf_approval_mac_key = await _derive_mac_key(b"leaf_approval")
+
 
     address = msg.address
     old_value = msg.old_value   # empty bytes = address absent from tree
@@ -50,7 +52,7 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     if msg.mac is not None and msg.device_id is not None:
         if msg.device_id != wallet_id:
             raise DataError("device_id mismatch")
-        expected_mac = _compute_mac(mac_key, old_leaf_hash, new_leaf_hash)
+        expected_mac = _compute_mac(leaf_approval_mac_key, old_leaf_hash, new_leaf_hash)
         if expected_mac != msg.mac:
             if __debug__:
                 from trezor import log
@@ -105,24 +107,25 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     # Root-attestation token: binds wallet_id and counter (not just the root)
     # so it can be safely replayed via AuthDbFastForwardRoot -- see that
     # message's proto doc for why the counter must be inside the MAC.
-    new_mac = (
-        _compute_mac(mac_key, wallet_id, counter.to_bytes(4, "big"), new_root)
+    new_root_mac = (
+        _compute_mac(root_mac_key, wallet_id, counter.to_bytes(4, "big"), new_root)
         if new_root is not None
         else None
     )
-    # In debug mode: auto-approve — return auth_mac so Suite can cache it for future calls
-    auth_mac = _compute_mac(mac_key, old_leaf_hash, new_leaf_hash) if __debug__ else None
+    
+    update_leaf_auth_mac = _compute_mac(leaf_approval_mac_key, old_leaf_hash, new_leaf_hash) if __debug__ else None
+    
     if __debug__:
         from trezor import log
         log.debug(
             __name__,
-            "update_leaf: auto-approve auth_mac=%s (reuse as mac= in next pre-approved call)",
-            auth_mac,
+            "update_leaf: auto-approve new_mac=%s (reuse as mac= in next pre-approved call)",
+            new_root_mac,
         )
     return AuthDbUpdateLeafResponse(
         counter=counter,
         new_root=new_root,
         wallet_id=wallet_id,
-        mac=new_mac,
-        auth_mac=auth_mac,
+        mac=new_root_mac,
+        auth_mac=update_leaf_auth_mac,
     )

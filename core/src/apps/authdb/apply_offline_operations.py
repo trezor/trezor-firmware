@@ -23,8 +23,8 @@ async def apply_offline_operations(
     from apps.authdb import _mpt
 
     wallet_id = await _get_wallet_id()
-    mac_key = await _derive_mac_key()
-
+    leaf_approval_mac_key = await _derive_mac_key(b"leaf_approval")
+    root_mac_key = await _derive_mac_key(b"root_mac")
     expected_seq = authdb.get_last_applied_sequence(wallet_id) + 1
     current_root = authdb.get_root(wallet_id)
     applied_count = 0
@@ -47,7 +47,7 @@ async def apply_offline_operations(
         old_leaf_hash = _mpt.leaf_hash(op.address, old_value) if old_value else ZERO_HASH
         new_leaf_hash = _mpt.leaf_hash(op.address, new_value) if new_value else ZERO_HASH
         expected_mac = _compute_mac(
-            mac_key, op.sequence.to_bytes(4, "big"), old_leaf_hash, new_leaf_hash
+            leaf_approval_mac_key, op.sequence.to_bytes(4, "big"), old_leaf_hash, new_leaf_hash
         )
         if expected_mac != op.mac:
             if __debug__:
@@ -103,7 +103,7 @@ async def apply_offline_operations(
     # lets this device's replayed state be fast-forwarded onto ANY other
     # physical device sharing this wallet, without redoing the whole replay.
     root_mac = (
-        _compute_mac(mac_key, wallet_id, final_counter.to_bytes(4, "big"), current_root)
+        _compute_mac(root_mac_key, wallet_id, final_counter.to_bytes(4, "big"), current_root)
         if current_root is not None
         else None
     )
