@@ -46,12 +46,14 @@ async def fast_forward_root(
     if expected_mac != msg.mac:
         raise DataError("MAC verification failed")
 
-    authdb.set_root(wallet_id, msg.new_root)
-    # Jump straight to the attested counter value (not merely +1) -- the
-    # MAC check above already proved this exact (wallet_id, counter,
-    # new_root) triple was produced by a device that reached it one
-    # increment at a time itself.
-    authdb.set_counter(wallet_id, msg.counter)
+    # Jump straight to the attested counter value (not merely +1) -- the MAC
+    # check above already proved this exact (wallet_id, counter, new_root)
+    # triple was produced by a device that reached it one increment at a
+    # time itself. root+counter land in a single atomic storage write (see
+    # storage/authdb.py's commit_root_and_counter_value()), so a crash
+    # between them can't happen; even if it could, replaying the identical
+    # MAC-attested call again is self-healing (same inputs, same result).
+    authdb.commit_root_and_counter_value(wallet_id, msg.new_root, msg.counter)
 
     if __debug__:
         from trezor import log

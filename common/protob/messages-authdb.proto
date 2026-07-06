@@ -6,27 +6,54 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageAuthDb";
 
 /**
- * Request: Set (or replace) the Merkle root stored on the device and increment the counter.
- * DEBUG ONLY: on production firmware this is rejected.  Production firmware must derive the
- * root itself via AuthDbUpdateLeaf.  Accepting an external root would allow an attacker to
- * forge the entire database state.
+ * Request: Install a (root, counter) state and, in the same call, replay any
+ * of this wallet's own pending offline-queue operations on top of it.
+ *
+ * `mac` is now REQUIRED. Two cases:
+ *   - `mac` == 32 zero bytes: accepted as valid ONLY on debug builds -- a plain
+ *     unauthenticated root injection (increments the counter by 1, ignores
+ *     `counter`/`device_id`). Rejected on production firmware.
+ *   - Any other `mac`: verified exactly like AuthDbFastForwardRoot --
+ *     `device_id` must equal this wallet's wallet_id, `counter` must be
+ *     strictly greater than the currently stored counter (anti-rollback),
+ *     and `mac` must equal HMAC(root_mac_key, wallet_id||counter||root). On
+ *     success the device jumps straight to `counter` (not +1), safe on
+ *     production firmware for the same reason AuthDbFastForwardRoot is: the
+ *     only way to obtain a verifying mac is to already hold one a device
+ *     itself produced (AuthDbUpdateLeafResponse.mac /
+ *     AuthDbApplyOfflineOperationsResponse.root_mac).
+ *
+ * After the root/counter are installed (by either path), `operations` (if
+ * any) are replayed using the identical verification
+ * AuthDbApplyOfflineOperations uses -- see apps.authdb._replay for the
+ * shared implementation. This lets a caller install an attested state and
+ * replay this wallet's own pending queue on top of it in one round trip
+ * instead of two.
  * @start
  * @next AuthDbSetRootResponse
  * @next Failure
  */
 message AuthDbSetRoot {
-    required bytes root      = 1;  // 32-byte Merkle root
-    optional bytes mac       = 2;  // HMAC-SHA256(slip21_key, root) — skips confirmation if valid
-    optional bytes device_id = 3;  // identifier matching the MAC key owner
+    required bytes  root       = 1;  // 32-byte Merkle root to install
+    required bytes  mac        = 2;  // required; all-zero accepted only in debug builds
+    optional bytes  device_id  = 3;  // must equal wallet_id when mac is non-zero
+    optional uint32 counter    = 4;  // target counter; required when mac is non-zero
+    repeated AuthDbRebasedOperation operations = 5;  // replayed after install, may be empty
 }
 
 /**
- * Response: Confirmation that the root was stored.
+ * Response: Confirmation that the root/counter were installed, plus the
+ * result of replaying `operations` on top (all zero/absent if `operations`
+ * was empty -- new_root/counter then simply reflect the installed state).
  * @end
  */
 message AuthDbSetRootResponse {
-    required uint32 counter    = 1;  // monotonic counter after this operation
-    optional bytes  wallet_id  = 2;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
+    required uint32 counter               = 1;  // final counter, after install + replay
+    optional bytes  wallet_id             = 2;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
+    optional bytes  new_root              = 3;  // final root, after install + replay; absent if tree is empty
+    required uint32 applied_count         = 4;  // how many of `operations` were actually applied
+    required uint32 last_applied_sequence = 5;  // this wallet's persisted watermark after replay
+    optional bytes  root_mac              = 6;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if tree is empty
 }
 
 /**
@@ -48,11 +75,13 @@ message AuthDbSetRootResponse {
  * @next Failure
  */
 message AuthDbLookup {
-    required bytes address         = 1;  // key whose SHA-256 determines the tree path
-    optional bytes value           = 2;  // value stored at address (required for membership)
-    repeated bytes proof           = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
-    optional bytes witness_address = 4;  // non-membership: witness leaf address
-    optional bytes witness_value   = 5;  // non-membership: witness leaf value
+    required bytes  address         = 1;  // key whose SHA-256 determines the tree path
+    optional bytes  value           = 2;  // value stored at address (required for membership)
+    repeated bytes  proof           = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
+    optional bytes  witness_address = 4;  // non-membership: witness leaf address
+    optional bytes  witness_value   = 5;  // non-membership: witness leaf value
+    optional uint32 counter         = 6;  // leaf counter for address (required for membership)
+    optional uint32 witness_counter = 7;  // leaf counter for witness_address (non-membership)
 }
 
 /**
@@ -78,6 +107,12 @@ message AuthDbLookupResponse {
  *   INSERT  : old_value empty,     new_value non-empty, non-membership proof (witness fields)
  *   INIT    : old_value empty,     new_value non-empty, proof empty, no witness (empty tree)
  *
+ * The leaf hash is sha256d(0x00||address||counter(4B BE)||value) -- counter is a
+ * cryptographically-committed per-address version, not just text embedded in the opaque
+ * value blob. new_counter must be old_counter+1 on UPDATE, or 1 on INSERT/INIT; the device
+ * rejects otherwise. This lets a host distinguish "conflict is only a counter race" (the
+ * two competing writes agree on the target value) from a real content conflict, and is what
+ * makes an on-device-enforced auto-merge of the former safe without user approval.
  * @start
  * @next AuthDbUpdateLeafResponse
  * @next Failure
@@ -91,6 +126,9 @@ message AuthDbUpdateLeaf {
     optional bytes  witness_value   = 6;  // non-membership witness value   (INSERT only)
     optional bytes  mac             = 7;  // HMAC-SHA256(slip21_key, address‖new_value) — skips confirmation
     optional bytes  device_id       = 8;  // identifier matching the MAC key owner
+    optional uint32 old_counter     = 9;  // leaf counter of old_value; absent/0 on INSERT/INIT
+    required uint32 new_counter     = 10; // leaf counter of new_value; 1 on INSERT/INIT, old_counter+1 on UPDATE
+    optional uint32 witness_counter = 11; // leaf counter of witness_value (INSERT only)
 }
 
 /**
@@ -263,11 +301,13 @@ message AuthDbSetDeviceIdResponse {
  * to discard operations that were never actually applied.
  */
 message AuthDbOfflineOperation {
-    required uint32 sequence  = 1;  // monotonic per-wallet, assigned by the device
-    required bytes  address   = 2;
-    optional bytes  old_value = 3;  // empty/absent = address was absent (INSERT) when queued
-    optional bytes  new_value = 4;  // empty/absent = delete
-    required bytes  mac       = 5;  // HMAC(device_key, sequence||old_leafHash||new_leafHash)
+    required uint32 sequence    = 1;  // monotonic per-wallet, assigned by the device
+    required bytes  address     = 2;
+    optional bytes  old_value   = 3;  // empty/absent = address was absent (INSERT) when queued
+    optional bytes  new_value   = 4;  // empty/absent = delete
+    required bytes  mac         = 5;  // HMAC(device_key, sequence||old_leafHash||new_leafHash)
+    optional uint32 old_counter = 6;  // leaf counter of old_value; absent/0 on INSERT
+    required uint32 new_counter = 7;  // leaf counter of new_value; 1 on INSERT, old_counter+1 otherwise
 }
 
 /**
@@ -281,9 +321,11 @@ message AuthDbOfflineOperation {
  * @next Failure
  */
 message AuthDbQueueOfflineOperation {
-    required bytes address   = 1;
-    required bytes old_value = 2;  // empty = address absent (INSERT)
-    required bytes new_value = 3;  // empty = delete
+    required bytes  address     = 1;
+    required bytes  old_value   = 2;  // empty = address absent (INSERT)
+    required bytes  new_value   = 3;  // empty = delete
+    optional uint32 old_counter = 4;  // leaf counter of old_value; absent/0 on INSERT
+    required uint32 new_counter = 5;  // leaf counter of new_value; 1 on INSERT, old_counter+1 otherwise
 }
 
 /**
@@ -336,6 +378,9 @@ message AuthDbRebasedOperation {
     repeated bytes  proof           = 6;
     optional bytes  witness_address = 7;
     optional bytes  witness_value   = 8;
+    optional uint32 old_counter     = 9;  // forwarded byte-for-byte from AuthDbOfflineOperation
+    required uint32 new_counter     = 10; // forwarded byte-for-byte from AuthDbOfflineOperation
+    optional uint32 witness_counter = 11; // freshly computed by the host, like proof/witness_*
 }
 
 /**

@@ -8,21 +8,63 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
+ZERO_MAC = b"\x00" * 32
+
+
 def set_root(
     session: "Session",
     root: bytes,
     mac: Optional[bytes] = None,
     device_id: Optional[bytes] = None,
-) -> tuple[int, Optional[bytes]]:
-    """Store a new Merkle root on the device. DEBUG BUILDS ONLY.
+    counter: Optional[int] = None,
+    operations: Optional[list["RebasedOperation"]] = None,
+) -> tuple[int, Optional[bytes], Optional[bytes], int, int, Optional[bytes]]:
+    """Install a (root, counter) state and replay `operations` (this wallet's
+    own pending queue, if any) on top of it, in one call.
 
-    Returns (counter, wallet_id).
+    mac defaults to the all-zero sentinel -- a plain unauthenticated root
+    injection, accepted ONLY on debug builds (matches this wrapper's
+    historical "DEBUG BUILDS ONLY, bare call" ergonomics). Supply a real mac
+    (from update_leaf()'s `mac` or apply_offline_operations()'s `root_mac`)
+    plus device_id=wallet_id and the attested counter to use the
+    production-safe path instead -- verified exactly like fast_forward_root().
+
+    Returns (counter, wallet_id, new_root, applied_count, last_applied_sequence, root_mac)
+    -- all reflecting install + replay combined.
     """
     resp = session.call(
-        messages.AuthDbSetRoot(root=root, mac=mac, device_id=device_id),
+        messages.AuthDbSetRoot(
+            root=root,
+            mac=mac if mac is not None else ZERO_MAC,
+            device_id=device_id,
+            counter=counter,
+            operations=[
+                messages.AuthDbRebasedOperation(
+                    sequence=op.sequence,
+                    address=op.address,
+                    old_value=op.old_value,
+                    new_value=op.new_value,
+                    new_counter=op.new_counter,
+                    mac=op.mac,
+                    proof=op.proof,
+                    witness_address=op.witness_address,
+                    witness_value=op.witness_value,
+                    old_counter=op.old_counter,
+                    witness_counter=op.witness_counter,
+                )
+                for op in (operations or [])
+            ],
+        ),
         expect=messages.AuthDbSetRootResponse,
     )
-    return resp.counter, resp.wallet_id
+    return (
+        resp.counter,
+        resp.wallet_id,
+        resp.new_root,
+        resp.applied_count,
+        resp.last_applied_sequence,
+        resp.root_mac,
+    )
 
 
 def lookup(
@@ -30,15 +72,19 @@ def lookup(
     address: bytes,
     value: Optional[bytes],
     proof: list[bytes],
+    counter: Optional[int] = None,
     witness_address: Optional[bytes] = None,
     witness_value: Optional[bytes] = None,
+    witness_counter: Optional[int] = None,
 ) -> tuple[bool, bool, int, Optional[bytes]]:
     """Verify an MPT proof against the stored root.
 
-    For a membership proof supply value; leave witness_address/witness_value None.
-    For a non-membership proof supply witness_address and witness_value; value may be None.
+    For a membership proof supply value + counter (address's leaf counter);
+    leave witness_* None. For a non-membership proof supply witness_address,
+    witness_counter, and witness_value; value/counter may be None.
 
-    Returns (valid, membership, counter, wallet_id).
+    Returns (valid, membership, counter, wallet_id). The response `counter`
+    is the ROOT-level counter, not the leaf counter passed in.
     """
     resp = session.call(
         messages.AuthDbLookup(
@@ -47,6 +93,8 @@ def lookup(
             proof=proof,
             witness_address=witness_address,
             witness_value=witness_value,
+            counter=counter,
+            witness_counter=witness_counter,
         ),
         expect=messages.AuthDbLookupResponse,
     )
@@ -71,9 +119,12 @@ def update_leaf(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
+    new_counter: int,
     proof: list[bytes],
+    old_counter: Optional[int] = None,
     witness_address: Optional[bytes] = None,
     witness_value: Optional[bytes] = None,
+    witness_counter: Optional[int] = None,
     mac: Optional[bytes] = None,
     device_id: Optional[bytes] = None,
 ) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes], Optional[bytes]]:
@@ -81,6 +132,9 @@ def update_leaf(
 
     old_value=b"" means the address is currently absent (INSERT / INIT).
     new_value=b"" means delete the address (DELETE).
+    new_counter must be 1 for INSERT/INIT, or old_counter+1 for UPDATE/DELETE
+    -- the device enforces this and rejects otherwise (leaf counter, see
+    docs/authdb-sync-proposal.md Part 1).
     mac + device_id skip the on-screen confirmation if they match a prior approve() call.
 
     Returns (counter, new_root, wallet_id, mac, auth_mac).
@@ -92,9 +146,12 @@ def update_leaf(
             address=address,
             old_value=old_value,
             new_value=new_value,
+            new_counter=new_counter,
+            old_counter=old_counter,
             proof=proof,
             witness_address=witness_address,
             witness_value=witness_value,
+            witness_counter=witness_counter,
             mac=mac,
             device_id=device_id,
         ),
@@ -201,17 +258,24 @@ def queue_offline_operation(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
+    new_counter: int,
+    old_counter: Optional[int] = None,
 ) -> tuple[int, bytes, Optional[bytes]]:
     """Create a signed offline operation when the host database is unreachable.
 
     old_value=b"" means the address is currently absent (INSERT).
     new_value=b"" means delete the address (DELETE).
+    new_counter must be 1 for INSERT, or old_counter+1 otherwise.
 
     Returns (sequence, mac, wallet_id). Does not touch the Merkle root.
     """
     resp = session.call(
         messages.AuthDbQueueOfflineOperation(
-            address=address, old_value=old_value, new_value=new_value
+            address=address,
+            old_value=old_value,
+            new_value=new_value,
+            new_counter=new_counter,
+            old_counter=old_counter,
         ),
         expect=messages.AuthDbQueueOfflineOperationResponse,
     )
@@ -227,12 +291,16 @@ class OfflineOperation:
         address: bytes,
         old_value: bytes,
         new_value: bytes,
+        new_counter: int,
         mac: bytes,
+        old_counter: int = 0,
     ) -> None:
         self.sequence = sequence
         self.address = address
         self.old_value = old_value
         self.new_value = new_value
+        self.new_counter = new_counter
+        self.old_counter = old_counter
         self.mac = mac
 
 
@@ -253,6 +321,8 @@ def get_offline_operations(
             address=op.address,
             old_value=op.old_value if op.old_value else b"",
             new_value=op.new_value if op.new_value else b"",
+            new_counter=op.new_counter,
+            old_counter=op.old_counter if op.old_counter else 0,
             mac=op.mac,
         )
         for op in resp.operations
@@ -263,9 +333,11 @@ def get_offline_operations(
 class RebasedOperation:
     """One operation, rebased by the host against the current canonical root.
 
-    sequence/address/old_value/new_value/mac must be forwarded byte-for-byte
-    from the OfflineOperation it originates from -- rebase may choose whether
-    to forward an operation, never alter its signed fields.
+    sequence/address/old_value/new_value/old_counter/new_counter/mac must be
+    forwarded byte-for-byte (value-for-value) from the OfflineOperation it
+    originates from -- rebase may choose whether to forward an operation,
+    never alter its signed fields. proof/witness_* are freshly computed by
+    the host against the root the operation will actually be applied to.
     """
 
     def __init__(
@@ -274,19 +346,25 @@ class RebasedOperation:
         address: bytes,
         old_value: bytes,
         new_value: bytes,
+        new_counter: int,
         mac: bytes,
         proof: list[bytes],
+        old_counter: Optional[int] = None,
         witness_address: Optional[bytes] = None,
         witness_value: Optional[bytes] = None,
+        witness_counter: Optional[int] = None,
     ) -> None:
         self.sequence = sequence
         self.address = address
         self.old_value = old_value
         self.new_value = new_value
+        self.new_counter = new_counter
+        self.old_counter = old_counter
         self.mac = mac
         self.proof = proof
         self.witness_address = witness_address
         self.witness_value = witness_value
+        self.witness_counter = witness_counter
 
 
 def apply_offline_operations(
@@ -302,8 +380,9 @@ def apply_offline_operations(
 
     Returns (applied_count, new_root, counter, last_applied_sequence,
     wallet_id, root_mac). root_mac is a root-attestation token (absent if
-    the tree is now empty) that can be replayed via fast_forward_root() on
-    any other physical device sharing this wallet.
+    the tree is now empty) that can be replayed via fast_forward_root() (or
+    set_root()'s verified path) on any other physical device sharing this
+    wallet.
     """
     resp = session.call(
         messages.AuthDbApplyOfflineOperations(
@@ -313,10 +392,13 @@ def apply_offline_operations(
                     address=op.address,
                     old_value=op.old_value,
                     new_value=op.new_value,
+                    new_counter=op.new_counter,
+                    old_counter=op.old_counter,
                     mac=op.mac,
                     proof=op.proof,
                     witness_address=op.witness_address,
                     witness_value=op.witness_value,
+                    witness_counter=op.witness_counter,
                 )
                 for op in operations
             ]

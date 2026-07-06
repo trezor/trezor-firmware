@@ -3,28 +3,31 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import AuthDbSetRoot, AuthDbSetRootResponse
 
-# DANGER (no-mac path): AuthDbSetRoot lets the host inject an arbitrary
-# Merkle root into persistent storage. On production firmware the device
-# must derive the root itself as the sole source of truth. Accepting an
-# external root would let an attacker forge the database state, so the
-# no-mac path is restricted to debug builds.
+# `mac` is REQUIRED (no longer optional/conditionally debug-only as a whole
+# handler). Two cases:
 #
-# mac/device_id are OPTIONAL, not required: if supplied, they're verified as
-# a debug convenience (so a caller that happens to hold a well-formed
-# root_mac can exercise this path deterministically), but this handler
-# itself stays debug-only regardless of whether a mac is present -- unlike
-# AuthDbFastForwardRoot, which is the actual production-safe path for
-# replaying a device-issued root attestation. (Regression note: an earlier
-# revision made mac/device_id unconditionally required here, which broke
-# every bare debug call; restored to optional to match the original intent.)
+#   mac == 32 zero bytes: a plain unauthenticated root injection, accepted
+#   ONLY on debug builds. Production firmware must otherwise derive every
+#   root itself (AuthDbUpdateLeaf / AuthDbApplyOfflineOperations), never
+#   accept one directly -- so the zero-mac path is rejected outright on
+#   production firmware.
 #
-# NOTE: this handler's own mac preimage is HMAC(root_mac_key, root) --
-# root-only, unlike AuthDbFastForwardRoot's HMAC(root_mac_key, wallet_id ||
-# counter || root). That means a mac produced by AuthDbUpdateLeafResponse.mac
-# or AuthDbApplyOfflineOperationsResponse.root_mac will NOT verify here (it's
-# shaped for AuthDbFastForwardRoot instead) -- known, harmless inconsistency
-# since this whole handler is debug-only either way; not fixed here to avoid
-# duplicating AuthDbFastForwardRoot's anti-rollback counter-jump logic.
+#   Any other mac: verified exactly like AuthDbFastForwardRoot -- device_id
+#   must match this wallet's wallet_id, counter must be strictly greater
+#   than the current counter (anti-rollback), and
+#   mac == HMAC(root_mac_key, wallet_id||counter||root). This is safe on
+#   PRODUCTION firmware too: the only way to legitimately hold a verifying
+#   mac is to already have one a device itself produced
+#   (AuthDbUpdateLeafResponse.mac / AuthDbApplyOfflineOperationsResponse.root_mac)
+#   -- root_mac_key never leaves the device, derived via SLIP-21 from the
+#   wallet's seed+passphrase, so a host cannot forge one for a root of its
+#   own choosing.
+#
+# After the root/counter are installed by either path, `operations` (if any)
+# are replayed via apps.authdb._replay.replay_operations() -- the identical
+# verification AuthDbApplyOfflineOperations uses -- so a caller can install
+# an attested state and replay this wallet's own pending queue on top of it
+# in one round trip.
 
 
 async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
@@ -32,26 +35,65 @@ async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
     from trezor.messages import AuthDbSetRootResponse
     from trezor.wire import DataError
     from apps.authdb import _get_wallet_id, _derive_mac_key, _compute_mac
-
-    if not __debug__:
-        raise DataError("AuthDbSetRoot is not available on production firmware")
+    from apps.authdb._replay import replay_operations
 
     if len(msg.root) != authdb.ROOT_LENGTH:
-        raise DataError("Root must be exactly 32 bytes")
+        raise DataError("root must be exactly 32 bytes")
 
     wallet_id = await _get_wallet_id()
+    ZERO_MAC = b"\x00" * 32
 
-    if msg.mac is not None or msg.device_id is not None:
-        if msg.mac is None or msg.device_id is None:
-            raise DataError("mac and device_id must both be supplied, or neither")
+    if __debug__ and msg.mac == ZERO_MAC:
+        # Debug-only unauthenticated root injection. root+counter land in a
+        # single atomic write (see storage/authdb.py's commit_root_and_counter()).
+        authdb.commit_root_and_counter(wallet_id, msg.root)
+    else:
+        if msg.mac == ZERO_MAC:
+            raise DataError("zero mac is only accepted in debug builds")
+        if msg.device_id is None or msg.counter is None:
+            raise DataError("device_id and counter are required with a non-zero mac")
         if msg.device_id != wallet_id:
             raise DataError("device_id mismatch")
+
+        current_counter = authdb.get_counter(wallet_id)
+        if msg.counter <= current_counter:
+            raise DataError("counter must be greater than the current counter")
+
         root_mac_key = await _derive_mac_key(b"root_mac")
-        if _compute_mac(root_mac_key, msg.root) != msg.mac:
+        expected_mac = _compute_mac(
+            root_mac_key, wallet_id, msg.counter.to_bytes(4, "big"), msg.root
+        )
+        if expected_mac != msg.mac:
             raise DataError("MAC verification failed")
-    # else: no mac supplied -- plain debug-only unauthenticated root injection.
 
-    authdb.set_root(wallet_id, msg.root)
-    counter = authdb.increment_counter(wallet_id)
+        # Jump straight to the attested counter (not merely +1) -- same
+        # reasoning as AuthDbFastForwardRoot: the MAC check above already
+        # proved this exact (wallet_id, counter, root) triple was produced
+        # by a device that reached it one increment at a time itself.
+        authdb.commit_root_and_counter_value(wallet_id, msg.root, msg.counter)
 
-    return AuthDbSetRootResponse(counter=counter, wallet_id=wallet_id)
+    # Replay this wallet's own pending offline queue (if any) on top of the
+    # just-installed root, using the identical logic
+    # AuthDbApplyOfflineOperations uses. Runs unconditionally -- even for
+    # the debug zero-mac path -- since replay's own verification is what
+    # keeps this safe, not how the root itself was authenticated.
+    applied_count, new_root, counter, last_applied_sequence, root_mac = await replay_operations(
+        wallet_id, msg.operations
+    )
+
+    if __debug__:
+        from trezor import log
+        log.debug(
+            __name__,
+            "set_root: wallet_id=%s counter=%d applied_count=%d",
+            wallet_id, counter, applied_count,
+        )
+
+    return AuthDbSetRootResponse(
+        counter=counter,
+        wallet_id=wallet_id,
+        new_root=new_root,
+        applied_count=applied_count,
+        last_applied_sequence=last_applied_sequence,
+        root_mac=root_mac,
+    )

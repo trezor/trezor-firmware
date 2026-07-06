@@ -16,8 +16,8 @@ def _addr_bit(addr_hash, bit):
     return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def _leaf_hash(address, value):
-    return _sha256d(b"\x00" + address + value)
+def _leaf_hash(address, counter, value):
+    return _sha256d(b"\x00" + address + counter.to_bytes(4, "big") + value)
 
 
 def _internal_hash(left, right):
@@ -26,6 +26,11 @@ def _internal_hash(left, right):
 
 # ---------------------------------------------------------------------------
 # MPT builder — returns (root, proof) for target_address
+#
+# Every entry in ENTRIES-style dicts here is a fresh, single insert, so the
+# helpers below hard-code counter=1 for every leaf -- these fixtures don't
+# model multi-write-per-address history (see TestAuthDbComputeNewRoot for
+# tests that do, with explicit counters).
 # ---------------------------------------------------------------------------
 
 def _find_split_bit(leaves, start_bit):
@@ -54,12 +59,13 @@ def _hash_mpt(node):
 
 
 def build_mpt_root_and_proof(entries, target_address):
-    """Build an MPT and return (root_hash, proof) for target_address.
+    """Build an MPT (every leaf at counter=1) and return (root_hash, proof)
+    for target_address.
 
     proof is in leaf-to-root order; each element is 33 bytes:
     1-byte bit-position + 32-byte sibling hash.
     """
-    leaves = [(_sha256d(a), _leaf_hash(a, v)) for a, v in entries.items()]
+    leaves = [(_sha256d(a), _leaf_hash(a, 1, v)) for a, v in entries.items()]
     root_node = _build_mpt(leaves, 0)
     root_hash = _hash_mpt(root_node)
 
@@ -87,11 +93,13 @@ def build_mpt_root_and_proof(entries, target_address):
 
 
 def find_witness(entries, target_address):
-    """Find the witness leaf for a non-membership proof (leaf occupying target's path)."""
+    """Find the witness leaf for a non-membership proof (leaf occupying
+    target's path). Returns (witness_address, witness_counter, witness_value);
+    witness_counter is always 1, matching build_mpt_root_and_proof's fixtures."""
     target_hash = _sha256d(target_address)
     leaves = [(_sha256d(a), a, v) for a, v in entries.items()]
     root_node = _build_mpt(
-        [(ah, _leaf_hash(a, v)) for ah, a, v in leaves], 0
+        [(ah, _leaf_hash(a, 1, v)) for ah, a, v in leaves], 0
     )
     leaf_map = {ah: (a, v) for ah, a, v in leaves}
 
@@ -105,7 +113,8 @@ def find_witness(entries, target_address):
             return walk(right)
 
     witness_addr_hash = walk(root_node)
-    return leaf_map[witness_addr_hash]  # (witness_address, witness_value)
+    w_addr, w_val = leaf_map[witness_addr_hash]
+    return w_addr, 1, w_val
 
 
 ENTRIES = {b"alice": b"data_alice", b"bob": b"data_bob",
@@ -120,39 +129,45 @@ class TestAuthDbVerifyProof(unittest.TestCase):
 
     def test_valid_proof_alice(self):
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
-        self.assertTrue(self._verify(b"alice", b"data_alice", proof, root))
+        self.assertTrue(self._verify(b"alice", 1, b"data_alice", proof, root))
 
     def test_valid_proof_bob(self):
         root, proof = build_mpt_root_and_proof(ENTRIES, b"bob")
-        self.assertTrue(self._verify(b"bob", b"data_bob", proof, root))
+        self.assertTrue(self._verify(b"bob", 1, b"data_bob", proof, root))
 
     def test_valid_proof_carol(self):
         root, proof = build_mpt_root_and_proof(ENTRIES, b"carol")
-        self.assertTrue(self._verify(b"carol", b"data_carol", proof, root))
+        self.assertTrue(self._verify(b"carol", 1, b"data_carol", proof, root))
 
     def test_invalid_wrong_value(self):
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
-        self.assertFalse(self._verify(b"alice", b"WRONG_VALUE", proof, root))
+        self.assertFalse(self._verify(b"alice", 1, b"WRONG_VALUE", proof, root))
+
+    def test_invalid_wrong_counter(self):
+        # Same address/value, wrong counter -- must not validate: counter is
+        # part of the leaf hash preimage, not just documentation.
+        root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
+        self.assertFalse(self._verify(b"alice", 2, b"data_alice", proof, root))
 
     def test_invalid_wrong_address(self):
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         # alice's proof applied with bob's address → wrong bit decisions
-        self.assertFalse(self._verify(b"bob", b"data_alice", proof, root))
+        self.assertFalse(self._verify(b"bob", 1, b"data_alice", proof, root))
 
     def test_invalid_tampered_sibling(self):
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         tampered = list(proof)
         tampered[0] = bytes([tampered[0][0]]) + _sha256d(b"garbage")
-        self.assertFalse(self._verify(b"alice", b"data_alice", tampered, root))
+        self.assertFalse(self._verify(b"alice", 1, b"data_alice", tampered, root))
 
     def test_invalid_wrong_root(self):
         _, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         wrong_root = _sha256d(b"not the root")
-        self.assertFalse(self._verify(b"alice", b"data_alice", proof, wrong_root))
+        self.assertFalse(self._verify(b"alice", 1, b"data_alice", proof, wrong_root))
 
     def test_single_entry_tree(self):
         root, proof = build_mpt_root_and_proof({b"solo": b"val"}, b"solo")
-        self.assertTrue(self._verify(b"solo", b"val", proof, root))
+        self.assertTrue(self._verify(b"solo", 1, b"val", proof, root))
         # single-entry MPT has no branch nodes → empty proof
         self.assertEqual(proof, [])
 
@@ -175,13 +190,13 @@ class TestAuthDbVerifyProof(unittest.TestCase):
             b for b in range(256) if _addr_bit(addr_hash, b) != orig_value
         )
         tampered[0] = bytes([flipped_bit]) + sibling
-        self.assertFalse(self._verify(b"alice", b"data_alice", tampered, root))
+        self.assertFalse(self._verify(b"alice", 1, b"data_alice", tampered, root))
 
     def test_invalid_extra_proof_element(self):
         # Appending a bogus extra element must not still validate.
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         tampered = list(proof) + [bytes([0]) + _sha256d(b"bogus")]
-        self.assertFalse(self._verify(b"alice", b"data_alice", tampered, root))
+        self.assertFalse(self._verify(b"alice", 1, b"data_alice", tampered, root))
 
     def test_invalid_reordered_proof(self):
         # Swapping two valid elements (when there are at least two) must not
@@ -196,7 +211,7 @@ class TestAuthDbVerifyProof(unittest.TestCase):
             return
         tampered = list(proof)
         tampered[0], tampered[1] = tampered[1], tampered[0]
-        self.assertFalse(self._verify(b"alice", b"data_alice", tampered, root))
+        self.assertFalse(self._verify(b"alice", 1, b"data_alice", tampered, root))
 
 
 class TestAuthDbNonMembership(unittest.TestCase):
@@ -208,31 +223,38 @@ class TestAuthDbNonMembership(unittest.TestCase):
     def test_nonmember_valid(self):
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"  # not in ENTRIES
-        w_addr, w_val = find_witness(ENTRIES, target)
+        w_addr, w_counter, w_val = find_witness(ENTRIES, target)
         _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
-        self.assertTrue(self._verify_nm(target, w_addr, w_val, proof, root))
+        self.assertTrue(self._verify_nm(target, w_addr, w_counter, w_val, proof, root))
 
     def test_nonmember_wrong_witness_value(self):
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"
-        w_addr, w_val = find_witness(ENTRIES, target)
+        w_addr, w_counter, w_val = find_witness(ENTRIES, target)
         _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
-        self.assertFalse(self._verify_nm(target, w_addr, b"WRONG", proof, root))
+        self.assertFalse(self._verify_nm(target, w_addr, w_counter, b"WRONG", proof, root))
+
+    def test_nonmember_wrong_witness_counter(self):
+        root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
+        target = b"zara"
+        w_addr, w_counter, w_val = find_witness(ENTRIES, target)
+        _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
+        self.assertFalse(self._verify_nm(target, w_addr, w_counter + 1, w_val, proof, root))
 
     def test_nonmember_witness_equals_target_fails(self):
         # If witness_address == address, non-membership is false
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
-        self.assertFalse(self._verify_nm(b"alice", b"alice", b"data_alice", proof, root))
+        self.assertFalse(self._verify_nm(b"alice", b"alice", 1, b"data_alice", proof, root))
 
     def test_nonmember_tampered_proof(self):
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"
-        w_addr, w_val = find_witness(ENTRIES, target)
+        w_addr, w_counter, w_val = find_witness(ENTRIES, target)
         _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
         if proof:
             tampered = list(proof)
             tampered[0] = bytes([tampered[0][0]]) + _sha256d(b"garbage")
-            self.assertFalse(self._verify_nm(target, w_addr, w_val, tampered, root))
+            self.assertFalse(self._verify_nm(target, w_addr, w_counter, w_val, tampered, root))
 
 
 class TestAuthDbStorageIsolation(unittest.TestCase):
@@ -324,26 +346,33 @@ class TestAuthDbStorageIsolation(unittest.TestCase):
 
 class TestAuthDbOfflineQueueStorage(unittest.TestCase):
     """Storage-level functional + adversarial coverage for the offline sync
-    additions to core/src/storage/authdb.py (queue + per-wallet counters).
+    additions to core/src/storage/authdb.py (queue + per-wallet sequencing).
     """
 
     def _id(self, n):
         return _sha256d(b"sync-identity-%d" % n)
 
     @mock_storage
-    def test_sequence_assignment_monotonic_per_wallet(self):
+    def test_sequence_derived_monotonic_per_wallet(self):
+        """peek_next_sequence() is a pure derived read (no separate persisted
+        counter, see storage/authdb.py's comment on why that was removed):
+        it only advances once an operation carrying that sequence is
+        actually, durably appended."""
         import storage.authdb as authdb
 
         id_a, id_b = self._id(1), self._id(2)
-        self.assertEqual(authdb.get_next_sequence(id_a), 1)
+        self.assertEqual(authdb.peek_next_sequence(id_a), 1)
 
-        self.assertEqual(authdb.take_next_sequence(id_a), 1)
-        self.assertEqual(authdb.take_next_sequence(id_a), 2)
-        self.assertEqual(authdb.take_next_sequence(id_a), 3)
+        for n in range(3):
+            seq = authdb.peek_next_sequence(id_a)
+            self.assertEqual(seq, n + 1)
+            authdb.append_offline_operation(
+                id_a, seq, b"addr-%d" % n, 0, b"", 1, b"val-%d" % n, b"\x00" * 32
+            )
 
         # Independent per wallet.
-        self.assertEqual(authdb.take_next_sequence(id_b), 1)
-        self.assertEqual(authdb.get_next_sequence(id_a), 4)
+        self.assertEqual(authdb.peek_next_sequence(id_b), 1)
+        self.assertEqual(authdb.peek_next_sequence(id_a), 4)
 
     @mock_storage
     def test_queue_append_and_fifo_order(self):
@@ -351,14 +380,15 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
 
         wallet_id = self._id(1)
         for n in range(3):
-            seq = authdb.take_next_sequence(wallet_id)
+            seq = authdb.peek_next_sequence(wallet_id)
             authdb.append_offline_operation(
-                wallet_id, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
+                wallet_id, seq, b"addr-%d" % n, 0, b"", 1, b"val-%d" % n, b"\x00" * 32
             )
 
         queue = authdb.get_offline_queue(wallet_id)
         self.assertEqual([e[0] for e in queue], [1, 2, 3])
         self.assertEqual([e[1] for e in queue], [b"addr-0", b"addr-1", b"addr-2"])
+        self.assertEqual([e[4] for e in queue], [1, 1, 1])  # new_counter
 
     @mock_storage
     def test_queue_isolated_per_wallet(self):
@@ -367,8 +397,8 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         import storage.authdb as authdb
 
         id_a, id_b = self._id(1), self._id(2)
-        seq_a = authdb.take_next_sequence(id_a)
-        authdb.append_offline_operation(id_a, seq_a, b"addr", b"", b"val-a", b"\x00" * 32)
+        seq_a = authdb.peek_next_sequence(id_a)
+        authdb.append_offline_operation(id_a, seq_a, b"addr", 0, b"", 1, b"val-a", b"\x00" * 32)
 
         self.assertEqual(len(authdb.get_offline_queue(id_a)), 1)
         self.assertEqual(authdb.get_offline_queue(id_b), [])
@@ -379,21 +409,21 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
 
         wallet_id = self._id(1)
         for n in range(authdb.MAX_OFFLINE_QUEUE_ENTRIES):
-            seq = authdb.take_next_sequence(wallet_id)
+            seq = authdb.peek_next_sequence(wallet_id)
             authdb.append_offline_operation(
-                wallet_id, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
+                wallet_id, seq, b"addr-%d" % n, 0, b"", 1, b"val-%d" % n, b"\x00" * 32
             )
 
-        overflow_seq = authdb.take_next_sequence(wallet_id)
+        overflow_seq = authdb.peek_next_sequence(wallet_id)
         with self.assertRaises(ValueError):
             authdb.append_offline_operation(
-                wallet_id, overflow_seq, b"addr-overflow", b"", b"val", b"\x00" * 32
+                wallet_id, overflow_seq, b"addr-overflow", 0, b"", 1, b"val", b"\x00" * 32
             )
 
         # A different wallet is unaffected by wallet A's full queue.
         other = self._id(2)
-        other_seq = authdb.take_next_sequence(other)
-        authdb.append_offline_operation(other, other_seq, b"addr", b"", b"val", b"\x00" * 32)
+        other_seq = authdb.peek_next_sequence(other)
+        authdb.append_offline_operation(other, other_seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
         self.assertEqual(len(authdb.get_offline_queue(other)), 1)
 
     @mock_storage
@@ -408,9 +438,9 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
 
         wallet_id = self._id(1)
         for n in range(5):
-            seq = authdb.take_next_sequence(wallet_id)
+            seq = authdb.peek_next_sequence(wallet_id)
             authdb.append_offline_operation(
-                wallet_id, seq, b"addr-%d" % n, b"", b"val-%d" % n, b"\x00" * 32
+                wallet_id, seq, b"addr-%d" % n, 0, b"", 1, b"val-%d" % n, b"\x00" * 32
             )
 
         deleted = authdb.delete_offline_operations_upto(wallet_id, 3)
@@ -420,11 +450,30 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
 
         # A second wallet's queue must be untouched.
         other = self._id(2)
-        other_seq = authdb.take_next_sequence(other)
-        authdb.append_offline_operation(other, other_seq, b"addr", b"", b"val", b"\x00" * 32)
+        other_seq = authdb.peek_next_sequence(other)
+        authdb.append_offline_operation(other, other_seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
         deleted_none = authdb.delete_offline_operations_upto(wallet_id, 0)
         self.assertEqual(deleted_none, 0)
         self.assertEqual(len(authdb.get_offline_queue(other)), 1)
+
+    @mock_storage
+    def test_sequence_not_burned_by_crash_between_append_calls(self):
+        """Regression guard for item 3's fix: peek_next_sequence() derives
+        from durable queue contents + last_applied_sequence, so there is no
+        separate reservation step whose completion could desync from what
+        was actually appended -- simulate a "crash" by simply calling peek
+        again without appending, and confirm it's still consistent."""
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        seq = authdb.peek_next_sequence(wallet_id)
+        self.assertEqual(seq, 1)
+        # "Crash" before append: peeking again must still return 1, not 2 --
+        # there is nothing to have reserved-and-lost.
+        self.assertEqual(authdb.peek_next_sequence(wallet_id), 1)
+
+        authdb.append_offline_operation(wallet_id, seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
+        self.assertEqual(authdb.peek_next_sequence(wallet_id), 2)
 
     @mock_storage
     def test_last_applied_sequence_defaults_and_persists(self):
@@ -507,14 +556,28 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         self.assertEqual(authdb.get_counter(wallet_id), 3)  # not reset by the delete
 
     @mock_storage
-    def test_sync_wallet_table_capacity_enforced(self):
+    def test_commit_root_and_counter_single_write(self):
+        """update_leaf.py/set_root.py's atomicity primitive: root+counter
+        move together, incrementing by exactly 1 each call."""
         import storage.authdb as authdb
 
-        for n in range(authdb.MAX_SYNC_WALLETS):
-            authdb.take_next_sequence(self._id(100 + n))
+        wallet_id = self._id(1)
+        counter = authdb.commit_root_and_counter(wallet_id, _sha256d(b"root-1"))
+        self.assertEqual(counter, 1)
+        counter = authdb.commit_root_and_counter(wallet_id, _sha256d(b"root-2"))
+        self.assertEqual(counter, 2)
+        self.assertEqual(authdb.get_root(wallet_id), _sha256d(b"root-2"))
 
-        with self.assertRaises(ValueError):
-            authdb.take_next_sequence(self._id(999))
+    @mock_storage
+    def test_commit_root_and_counter_value_jumps_directly(self):
+        """fast_forward_root.py/set_root.py's verified-mac atomicity
+        primitive: jumps straight to an attested counter, not +1."""
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        authdb.commit_root_and_counter_value(wallet_id, _sha256d(b"root-1"), 42)
+        self.assertEqual(authdb.get_counter(wallet_id), 42)
+        self.assertEqual(authdb.get_root(wallet_id), _sha256d(b"root-1"))
 
     @mock_storage
     def test_set_counter_direct_write(self):
@@ -557,7 +620,9 @@ class TestAuthDbMpt(unittest.TestCase):
         self.mpt = _mpt
 
     def test_leaf_and_internal_hash_match_local_helpers(self):
-        self.assertEqual(self.mpt.leaf_hash(b"alice", b"data"), _leaf_hash(b"alice", b"data"))
+        self.assertEqual(
+            self.mpt.leaf_hash(b"alice", 1, b"data"), _leaf_hash(b"alice", 1, b"data")
+        )
         self.assertEqual(
             self.mpt.internal_hash(b"L" * 32, b"R" * 32),
             _internal_hash(b"L" * 32, b"R" * 32),
@@ -568,46 +633,58 @@ class TestAuthDbMpt(unittest.TestCase):
 
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         self.assertEqual(
-            self.mpt.verify_proof(b"alice", b"data_alice", proof, root),
-            _verify_proof(b"alice", b"data_alice", proof, root),
+            self.mpt.verify_proof(b"alice", 1, b"data_alice", proof, root),
+            _verify_proof(b"alice", 1, b"data_alice", proof, root),
         )
-        self.assertTrue(self.mpt.verify_proof(b"alice", b"data_alice", proof, root))
-        self.assertFalse(self.mpt.verify_proof(b"alice", b"WRONG", proof, root))
+        self.assertTrue(self.mpt.verify_proof(b"alice", 1, b"data_alice", proof, root))
+        self.assertFalse(self.mpt.verify_proof(b"alice", 1, b"WRONG", proof, root))
 
     def test_verify_nonmembership_matches_lookup_wrapper(self):
         from apps.authdb.lookup import _verify_nonmembership
 
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"
-        w_addr, w_val = find_witness(ENTRIES, target)
+        w_addr, w_counter, w_val = find_witness(ENTRIES, target)
         _, proof = build_mpt_root_and_proof(ENTRIES, w_addr)
         self.assertEqual(
-            self.mpt.verify_nonmembership(target, w_addr, w_val, proof, root),
-            _verify_nonmembership(target, w_addr, w_val, proof, root),
+            self.mpt.verify_nonmembership(target, w_addr, w_counter, w_val, proof, root),
+            _verify_nonmembership(target, w_addr, w_counter, w_val, proof, root),
         )
-        self.assertTrue(self.mpt.verify_nonmembership(target, w_addr, w_val, proof, root))
+        self.assertTrue(self.mpt.verify_nonmembership(target, w_addr, w_counter, w_val, proof, root))
 
 
 class TestAuthDbComputeNewRoot(unittest.TestCase):
     """Functional coverage for apps.authdb._mpt.compute_new_root(), the
     single shared INIT/INSERT/UPDATE/DELETE state machine used by both
-    update_leaf.py and apply_offline_operations.py."""
+    update_leaf.py and apply_offline_operations.py.
+
+    compute_new_root's positional signature is:
+        (address, old_counter, old_value, new_counter, new_value, proof,
+         stored_root, witness_address=None, witness_counter=None, witness_value=None)
+    """
 
     def setUp(self):
         from apps.authdb import _mpt
         self.mpt = _mpt
 
     def test_init_on_empty_tree(self):
-        new_root = self.mpt.compute_new_root(b"alice", b"", b"data_alice", [], None, None, None)
-        self.assertEqual(new_root, self.mpt.leaf_hash(b"alice", b"data_alice"))
+        new_root = self.mpt.compute_new_root(b"alice", 0, b"", 1, b"data_alice", [], None)
+        self.assertEqual(new_root, self.mpt.leaf_hash(b"alice", 1, b"data_alice"))
+
+    def test_init_rejects_wrong_new_counter(self):
+        with self.assertRaises(ValueError):
+            self.mpt.compute_new_root(b"alice", 0, b"", 2, b"data_alice", [], None)
 
     def test_insert_into_existing_tree(self):
         entries = {b"alice": b"data_alice"}
         root, _ = build_mpt_root_and_proof(entries, b"alice")
-        w_addr, w_val = find_witness(entries, b"bob")
+        w_addr, w_counter, w_val = find_witness(entries, b"bob")
         _, proof = build_mpt_root_and_proof(entries, w_addr)
 
-        new_root = self.mpt.compute_new_root(b"bob", b"", b"data_bob", proof, root, w_addr, w_val)
+        new_root = self.mpt.compute_new_root(
+            b"bob", 0, b"", 1, b"data_bob", proof, root,
+            witness_address=w_addr, witness_counter=w_counter, witness_value=w_val,
+        )
 
         expected_root, _ = build_mpt_root_and_proof(
             {b"alice": b"data_alice", b"bob": b"data_bob"}, b"alice"
@@ -619,38 +696,56 @@ class TestAuthDbComputeNewRoot(unittest.TestCase):
         root, proof = build_mpt_root_and_proof(entries, b"alice")
 
         new_root = self.mpt.compute_new_root(
-            b"alice", b"data_alice", b"NEW_VAL", proof, root, None, None
+            b"alice", 1, b"data_alice", 2, b"NEW_VAL", proof, root
         )
 
-        expected_root, _ = build_mpt_root_and_proof(
-            {b"alice": b"NEW_VAL", b"bob": b"data_bob"}, b"alice"
-        )
+        # expected_root can't be built via build_mpt_root_and_proof (it
+        # hard-codes counter=1 for every entry); reconstruct with the real
+        # counter-2 leaf for alice directly.
+        alice_leaf = self.mpt.leaf_hash(b"alice", 2, b"NEW_VAL")
+        bob_leaf = self.mpt.leaf_hash(b"bob", 1, b"data_bob")
+        # Same two-leaf tree shape build_mpt_root_and_proof would produce;
+        # reuse its internal split-bit logic by rebuilding the addr-hash pair.
+        from trezor.crypto.hashlib import sha256
+        ah_alice, ah_bob = sha256(b"alice").digest(), sha256(b"bob").digest()
+        bit = next(b for b in range(256) if _addr_bit(ah_alice, b) != _addr_bit(ah_bob, b))
+        if _addr_bit(ah_alice, bit) == 0:
+            expected_root = _internal_hash(alice_leaf, bob_leaf)
+        else:
+            expected_root = _internal_hash(bob_leaf, alice_leaf)
         self.assertEqual(new_root, expected_root)
 
+    def test_update_rejects_wrong_new_counter(self):
+        entries = {b"alice": b"data_alice", b"bob": b"data_bob"}
+        root, proof = build_mpt_root_and_proof(entries, b"alice")
+        with self.assertRaises(ValueError):
+            # Skips from 1 straight to 3 -- must be old_counter+1 == 2.
+            self.mpt.compute_new_root(b"alice", 1, b"data_alice", 3, b"NEW_VAL", proof, root)
+
     def test_delete_to_single_leaf_then_to_empty(self):
-        entries = {b"alice": b"NEW_VAL", b"bob": b"data_bob"}
+        entries = {b"alice": b"data_alice", b"bob": b"data_bob"}
         root, proof = build_mpt_root_and_proof(entries, b"bob")
 
         root_after_delete_bob = self.mpt.compute_new_root(
-            b"bob", b"data_bob", b"", proof, root, None, None
+            b"bob", 1, b"data_bob", 0, b"", proof, root
         )
-        self.assertEqual(root_after_delete_bob, self.mpt.leaf_hash(b"alice", b"NEW_VAL"))
+        self.assertEqual(root_after_delete_bob, self.mpt.leaf_hash(b"alice", 1, b"data_alice"))
 
         root_after_delete_alice = self.mpt.compute_new_root(
-            b"alice", b"NEW_VAL", b"", [], root_after_delete_bob, None, None
+            b"alice", 1, b"data_alice", 0, b"", [], root_after_delete_bob
         )
         self.assertIsNone(root_after_delete_alice)
 
     def test_rejects_invalid_old_value_proof(self):
-        entries = {b"alice": b"NEW_VAL", b"bob": b"data_bob"}
+        entries = {b"alice": b"data_alice", b"bob": b"data_bob"}
         root, proof = build_mpt_root_and_proof(entries, b"bob")
 
         with self.assertRaises(ValueError):
-            self.mpt.compute_new_root(b"bob", b"WRONG_OLD", b"", proof, root, None, None)
+            self.mpt.compute_new_root(b"bob", 1, b"WRONG_OLD", 0, b"", proof, root)
 
     def test_rejects_both_values_empty(self):
         with self.assertRaises(ValueError):
-            self.mpt.compute_new_root(b"alice", b"", b"", [], None, None, None)
+            self.mpt.compute_new_root(b"alice", 0, b"", 0, b"", [], None)
 
     def test_insert_into_empty_tree_with_witness_is_rejected(self):
         """Deliberately stricter than the original inline update_leaf.py logic
@@ -660,7 +755,8 @@ class TestAuthDbComputeNewRoot(unittest.TestCase):
         mismatch, including this malformed-input edge case."""
         with self.assertRaises(ValueError):
             self.mpt.compute_new_root(
-                b"bob", b"", b"data_bob", [bytes([0]) + b"S" * 32], None, b"alice", b"data_alice"
+                b"bob", 0, b"", 1, b"data_bob", [bytes([0]) + b"S" * 32], None,
+                witness_address=b"alice", witness_counter=1, witness_value=b"data_alice",
             )
 
 

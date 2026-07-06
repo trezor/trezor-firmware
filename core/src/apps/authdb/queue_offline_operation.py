@@ -28,9 +28,15 @@ async def queue_offline_operation(
     address = msg.address
     old_value = msg.old_value
     new_value = msg.new_value
+    old_counter = msg.old_counter if msg.old_counter else 0
+    new_counter = msg.new_counter
 
     if len(old_value) == 0 and len(new_value) == 0:
         raise DataError("old_value and new_value cannot both be empty")
+    if len(old_value) == 0 and new_counter != 1:
+        raise DataError("new_counter must be 1 for INSERT")
+    if len(old_value) != 0 and new_counter != old_counter + 1:
+        raise DataError("new_counter must be old_counter + 1")
 
     # TODO: show address+old_value+new_value confirmation dialog when UI ready
     # (production). This is the ONLY approval point in the offline-sync flow.
@@ -39,23 +45,22 @@ async def queue_offline_operation(
     leaf_approval_mac_key = await _derive_mac_key(b"leaf_approval")
 
     ZERO_HASH = b"\x00" * 32
-    old_leaf_hash = _mpt.leaf_hash(address, old_value) if old_value else ZERO_HASH
-    new_leaf_hash = _mpt.leaf_hash(address, new_value) if new_value else ZERO_HASH
+    old_leaf_hash = _mpt.leaf_hash(address, old_counter, old_value) if old_value else ZERO_HASH
+    new_leaf_hash = _mpt.leaf_hash(address, new_counter, new_value) if new_value else ZERO_HASH
 
-    # Check capacity before taking a sequence number, so a full queue never
-    # burns a sequence on a rejected operation.
     if authdb.offline_queue_count(wallet_id) >= authdb.MAX_OFFLINE_QUEUE_ENTRIES:
         raise DataError("Offline queue full")
 
-    # sequence is taken AFTER approval, so a cancelled dialog never burns one.
-    sequence = authdb.take_next_sequence(wallet_id)
+    # sequence is derived from durable state only (no separate reservation
+    # write) -- see storage.authdb.peek_next_sequence().
+    sequence = authdb.peek_next_sequence(wallet_id)
     mac = _compute_mac(
         leaf_approval_mac_key, sequence.to_bytes(4, "big"), old_leaf_hash, new_leaf_hash
     )
 
     try:
         authdb.append_offline_operation(
-            wallet_id, sequence, address, old_value, new_value, mac
+            wallet_id, sequence, address, old_counter, old_value, new_counter, new_value, mac
         )
     except ValueError as e:
         raise DataError(str(e))

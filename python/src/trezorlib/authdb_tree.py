@@ -3,9 +3,14 @@
 Path-compressed positional trie. Only branches where leaves actually diverge,
 so proof size is O(log N) instead of O(depth) for a fixed-depth sparse tree.
 
-Hashing scheme (matches merkletree.ts):
-  leaf hash     : SHA-256(b"\\x00" + address + value)
+Hashing scheme (matches merkletree.ts and apps.authdb._mpt):
+  leaf hash     : SHA-256(b"\\x00" + address + counter(4B BE) + value)
   internal hash : SHA-256(b"\\x01" + left + right)  — positional, no sorting
+
+counter is a first-class, cryptographically-committed per-address version
+number (docs/authdb-sync-proposal.md Part 1) -- not just text embedded in
+the opaque value blob. INSERT sets counter=1; each subsequent insert() call
+for the same address bumps it by exactly 1 (UPDATE semantics).
 
 Proof format (leaf→root order):
   Each element is 33 bytes: 1-byte bit-position (0-255) + 32-byte sibling hash.
@@ -26,7 +31,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 
 # ---------------------------------------------------------------------------
-# Primitives (identical to merkletree.ts)
+# Primitives (identical to merkletree.ts / apps.authdb._mpt)
 # ---------------------------------------------------------------------------
 
 EMPTY_ROOT: bytes = b"\x00" * 32
@@ -41,8 +46,8 @@ def _addr_bit(addr_hash: bytes, bit: int) -> int:
     return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def _leaf_hash(address: bytes, value: bytes) -> bytes:
-    return _sha256d(b"\x00" + address + value)
+def _leaf_hash(address: bytes, counter: int, value: bytes) -> bytes:
+    return _sha256d(b"\x00" + address + counter.to_bytes(4, "big") + value)
 
 
 def _internal_hash(left: bytes, right: bytes) -> bytes:
@@ -102,39 +107,56 @@ def _hash_mpt(node: _MptNode) -> bytes:
 # ---------------------------------------------------------------------------
 
 class AuthDbTree:
-    """MPT-based Merkle tree for AuthDB.
+    """MPT-based Merkle tree for AuthDB, with a per-address leaf counter.
 
     Usage::
 
         tree = AuthDbTree()
-        tree.insert(b"alice", b"data_alice")
-        tree.insert(b"bob",   b"data_bob")
+        c1 = tree.insert(b"alice", b"data_alice")       # c1 == 1
+        c2 = tree.insert(b"bob",   b"data_bob")         # c2 == 1
         root = tree.get_root_hash()
         proof = tree.get_proof(b"alice")
-        assert AuthDbTree.verify_proof(b"alice", b"data_alice", proof, root)
+        assert AuthDbTree.verify_proof(b"alice", c1, b"data_alice", proof, root)
+
+        # UPDATE bumps the counter by exactly 1:
+        c1b = tree.insert(b"alice", b"data_alice_v2")   # c1b == 2
 
         # Non-membership:
-        proof, w_addr, w_val = tree.get_nonmembership_proof(b"unknown")
-        assert AuthDbTree.verify_nonmembership(b"unknown", proof, w_addr, w_val, root)
+        proof, w_addr, w_counter, w_val = tree.get_nonmembership_proof(b"unknown")
+        assert AuthDbTree.verify_nonmembership(b"unknown", proof, w_addr, w_counter, w_val, root)
 
         # Delete (set value to empty):
         tree.delete(b"alice")
     """
 
     def __init__(self) -> None:
-        # addr_hash → (address, value)
-        self._leaves: Dict[bytes, Tuple[bytes, bytes]] = {}
+        # addr_hash → (address, counter, value)
+        self._leaves: Dict[bytes, Tuple[bytes, int, bytes]] = {}
 
     def is_empty(self) -> bool:
         return len(self._leaves) == 0
 
-    def insert(self, address: bytes, value: bytes) -> None:
-        """Insert or overwrite the entry for *address*."""
+    def get_counter(self, address: bytes) -> int:
+        """Return address's current leaf counter, or 0 if absent."""
+        entry = self._leaves.get(_sha256d(address))
+        return entry[1] if entry is not None else 0
+
+    def insert(self, address: bytes, value: bytes) -> int:
+        """Insert or update the entry for *address*.
+
+        Empty value is a virtual delete. Otherwise the counter becomes 1 on
+        first insert, or the previous counter + 1 on every subsequent call
+        for the same address (UPDATE semantics). Returns the new counter (0
+        if this call was a delete).
+        """
+        addr_hash = _sha256d(address)
         if len(value) == 0:
-            # Empty value is a virtual delete
-            self._leaves.pop(_sha256d(address), None)
-        else:
-            self._leaves[_sha256d(address)] = (address, value)
+            self._leaves.pop(addr_hash, None)
+            return 0
+        existing = self._leaves.get(addr_hash)
+        new_counter = existing[1] + 1 if existing is not None else 1
+        self._leaves[addr_hash] = (address, new_counter, value)
+        return new_counter
 
     def delete(self, address: bytes) -> None:
         """Remove *address* from the tree (same as inserting with empty value)."""
@@ -144,7 +166,9 @@ class AuthDbTree:
         """Return the root hash, or EMPTY_ROOT if the tree is empty."""
         if not self._leaves:
             return EMPTY_ROOT
-        leaves = [_LeafNode(ah, _leaf_hash(a, v)) for ah, (a, v) in self._leaves.items()]
+        leaves = [
+            _LeafNode(ah, _leaf_hash(a, c, v)) for ah, (a, c, v) in self._leaves.items()
+        ]
         return _hash_mpt(_build_mpt(leaves, 0))
 
     def get_proof(self, address: bytes) -> List[bytes]:
@@ -154,7 +178,9 @@ class AuthDbTree:
         Mirrors generateMerkleProof() in merkletree.ts.
         """
         target_addr_hash = _sha256d(address)
-        leaves = [_LeafNode(ah, _leaf_hash(a, v)) for ah, (a, v) in self._leaves.items()]
+        leaves = [
+            _LeafNode(ah, _leaf_hash(a, c, v)) for ah, (a, c, v) in self._leaves.items()
+        ]
         root = _build_mpt(leaves, 0)
 
         proof: List[bytes] = []
@@ -179,14 +205,14 @@ class AuthDbTree:
 
     def get_nonmembership_proof(
         self, address: bytes
-    ) -> Tuple[List[bytes], Optional[bytes], Optional[bytes]]:
+    ) -> Tuple[List[bytes], Optional[bytes], Optional[int], Optional[bytes]]:
         """Return a non-membership proof for *address*.
 
-        Returns ``(proof, witness_address, witness_value)``.
+        Returns ``(proof, witness_address, witness_counter, witness_value)``.
 
-        * If the tree is empty: ``([], None, None)``.
+        * If the tree is empty: ``([], None, None, None)``.
         * Otherwise: a membership proof for the witness leaf that occupies
-          *address*'s path, plus the witness address and value.
+          *address*'s path, plus the witness address, counter, and value.
 
         The witness leaf W is the one whose SHA-256(W) shares the longest
         common bit-prefix with SHA-256(address) — i.e. the leaf the MPT
@@ -199,9 +225,11 @@ class AuthDbTree:
             raise ValueError(f"address {address!r} is in the tree; use get_proof()")
 
         if not self._leaves:
-            return [], None, None
+            return [], None, None, None
 
-        leaves = [_LeafNode(ah, _leaf_hash(a, v)) for ah, (a, v) in self._leaves.items()]
+        leaves = [
+            _LeafNode(ah, _leaf_hash(a, c, v)) for ah, (a, c, v) in self._leaves.items()
+        ]
         root_node = _build_mpt(leaves, 0)
 
         # Walk the tree following address's bits until we land on a leaf
@@ -221,23 +249,24 @@ class AuthDbTree:
         find_witness(root_node)
         assert witness_node is not None
 
-        witness_address, witness_value = self._leaves[witness_node.addr_hash]
+        witness_address, witness_counter, witness_value = self._leaves[witness_node.addr_hash]
         proof = self.get_proof(witness_address)
-        return proof, witness_address, witness_value
+        return proof, witness_address, witness_counter, witness_value
 
     @staticmethod
     def verify_proof(
         address: bytes,
+        counter: int,
         value: bytes,
         proof: List[bytes],
         root: bytes,
     ) -> bool:
-        """Verify a membership proof for *(address, value)* against *root*.
+        """Verify a membership proof for *(address, counter, value)* against *root*.
 
         Mirrors evaluateProof() in merkletree.ts and _verify_proof() in lookup.py.
         """
         addr_hash = _sha256d(address)
-        node = _leaf_hash(address, value)
+        node = _leaf_hash(address, counter, value)
         for elem in proof:
             bit = elem[0]
             sibling = elem[1:]
@@ -252,18 +281,20 @@ class AuthDbTree:
         address: bytes,
         proof: List[bytes],
         witness_address: Optional[bytes],
+        witness_counter: Optional[int],
         witness_value: Optional[bytes],
         root: bytes,
     ) -> bool:
         """Verify a non-membership proof for *address* against *root*.
 
-        Pass witness_address=None / witness_value=None for an empty tree
-        (in that case root must equal EMPTY_ROOT and proof must be empty).
+        Pass witness_address=None / witness_counter=None / witness_value=None
+        for an empty tree (in that case root must equal EMPTY_ROOT and proof
+        must be empty).
         """
         if witness_address is None:
             return len(proof) == 0 and root == EMPTY_ROOT
 
-        if witness_value is None:
+        if witness_counter is None or witness_value is None:
             return False
 
         addr_hash = _sha256d(address)
@@ -278,4 +309,4 @@ class AuthDbTree:
             if _addr_bit(addr_hash, bit) != _addr_bit(witness_hash, bit):
                 return False
 
-        return AuthDbTree.verify_proof(witness_address, witness_value, proof, root)
+        return AuthDbTree.verify_proof(witness_address, witness_counter, witness_value, proof, root)

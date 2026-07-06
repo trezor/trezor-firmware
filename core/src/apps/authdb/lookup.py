@@ -38,15 +38,18 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
 
     if not membership_query:
         # Non-membership proof: prove witness is in tree, then verify address is absent
-        if msg.witness_value is None:
-            raise DataError("witness_value required for non-membership proof")
+        if msg.witness_value is None or msg.witness_counter is None:
+            raise DataError("witness_value and witness_counter required for non-membership proof")
         valid = _verify_nonmembership(
-            msg.address, msg.witness_address, msg.witness_value, msg.proof, stored_root
+            msg.address, msg.witness_address, msg.witness_counter, msg.witness_value,
+            msg.proof, stored_root,
         )
         membership = False
     else:
         # Membership proof
-        valid = _verify_proof(msg.address, msg.value, msg.proof, stored_root)
+        if msg.counter is None:
+            raise DataError("counter required for membership proof")
+        valid = _verify_proof(msg.address, msg.counter, msg.value, msg.proof, stored_root)
         membership = True
 
     if __debug__:
@@ -60,6 +63,7 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
 def _verify_nonmembership(
     address: bytes,
     witness_address: bytes,
+    witness_counter: int,
     witness_value: bytes,
     proof: list[bytes],
     expected_root: bytes,
@@ -74,12 +78,13 @@ def _verify_nonmembership(
     from apps.authdb import _mpt
 
     return _mpt.verify_nonmembership(
-        address, witness_address, witness_value, proof, expected_root
+        address, witness_address, witness_counter, witness_value, proof, expected_root
     )
 
 
 def _verify_proof(
     address: bytes,
+    counter: int,
     value: bytes,
     proof: list[bytes],
     expected_root: bytes,
@@ -92,4 +97,4 @@ def _verify_proof(
     """
     from apps.authdb import _mpt
 
-    return _mpt.verify_proof(address, value, proof, expected_root)
+    return _mpt.verify_proof(address, counter, value, proof, expected_root)

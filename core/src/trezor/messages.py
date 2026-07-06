@@ -7588,15 +7588,19 @@ if TYPE_CHECKING:
 
     class AuthDbSetRoot(protobuf.MessageType):
         root: "AnyBytes"
-        mac: "AnyBytes | None"
+        mac: "AnyBytes"
         device_id: "AnyBytes | None"
+        counter: "int | None"
+        operations: 'list["AuthDbRebasedOperation"]'
 
         def __init__(
             self,
             *,
             root: "AnyBytes",
-            mac: "AnyBytes | None" = None,
+            mac: "AnyBytes",
             device_id: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+            operations: 'list["AuthDbRebasedOperation"] | None' = None,
         ) -> None:
             pass
 
@@ -7607,12 +7611,20 @@ if TYPE_CHECKING:
     class AuthDbSetRootResponse(protobuf.MessageType):
         counter: "int"
         wallet_id: "AnyBytes | None"
+        new_root: "AnyBytes | None"
+        applied_count: "int"
+        last_applied_sequence: "int"
+        root_mac: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             counter: "int",
+            applied_count: "int",
+            last_applied_sequence: "int",
             wallet_id: "AnyBytes | None" = None,
+            new_root: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7626,6 +7638,8 @@ if TYPE_CHECKING:
         proof: "list[AnyBytes]"
         witness_address: "AnyBytes | None"
         witness_value: "AnyBytes | None"
+        counter: "int | None"
+        witness_counter: "int | None"
 
         def __init__(
             self,
@@ -7635,6 +7649,8 @@ if TYPE_CHECKING:
             proof: "list[AnyBytes] | None" = None,
             witness_address: "AnyBytes | None" = None,
             witness_value: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+            witness_counter: "int | None" = None,
         ) -> None:
             pass
 
@@ -7671,6 +7687,9 @@ if TYPE_CHECKING:
         witness_value: "AnyBytes | None"
         mac: "AnyBytes | None"
         device_id: "AnyBytes | None"
+        old_counter: "int | None"
+        new_counter: "int"
+        witness_counter: "int | None"
 
         def __init__(
             self,
@@ -7678,11 +7697,14 @@ if TYPE_CHECKING:
             address: "AnyBytes",
             old_value: "AnyBytes",
             new_value: "AnyBytes",
+            new_counter: "int",
             proof: "list[AnyBytes] | None" = None,
             witness_address: "AnyBytes | None" = None,
             witness_value: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
             device_id: "AnyBytes | None" = None,
+            old_counter: "int | None" = None,
+            witness_counter: "int | None" = None,
         ) -> None:
             pass
 
@@ -7922,6 +7944,8 @@ if TYPE_CHECKING:
         old_value: "AnyBytes | None"
         new_value: "AnyBytes | None"
         mac: "AnyBytes"
+        old_counter: "int | None"
+        new_counter: "int"
 
         def __init__(
             self,
@@ -7929,8 +7953,10 @@ if TYPE_CHECKING:
             sequence: "int",
             address: "AnyBytes",
             mac: "AnyBytes",
+            new_counter: "int",
             old_value: "AnyBytes | None" = None,
             new_value: "AnyBytes | None" = None,
+            old_counter: "int | None" = None,
         ) -> None:
             pass
 
@@ -7942,6 +7968,8 @@ if TYPE_CHECKING:
         address: "AnyBytes"
         old_value: "AnyBytes"
         new_value: "AnyBytes"
+        old_counter: "int | None"
+        new_counter: "int"
 
         def __init__(
             self,
@@ -7949,6 +7977,8 @@ if TYPE_CHECKING:
             address: "AnyBytes",
             old_value: "AnyBytes",
             new_value: "AnyBytes",
+            new_counter: "int",
+            old_counter: "int | None" = None,
         ) -> None:
             pass
 
@@ -8011,6 +8041,9 @@ if TYPE_CHECKING:
         proof: "list[AnyBytes]"
         witness_address: "AnyBytes | None"
         witness_value: "AnyBytes | None"
+        old_counter: "int | None"
+        new_counter: "int"
+        witness_counter: "int | None"
 
         def __init__(
             self,
@@ -8018,11 +8051,14 @@ if TYPE_CHECKING:
             sequence: "int",
             address: "AnyBytes",
             mac: "AnyBytes",
+            new_counter: "int",
             old_value: "AnyBytes | None" = None,
             new_value: "AnyBytes | None" = None,
             proof: "list[AnyBytes] | None" = None,
             witness_address: "AnyBytes | None" = None,
             witness_value: "AnyBytes | None" = None,
+            old_counter: "int | None" = None,
+            witness_counter: "int | None" = None,
         ) -> None:
             pass
 

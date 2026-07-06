@@ -32,21 +32,23 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     address = msg.address
     old_value = msg.old_value   # empty bytes = address absent from tree
     new_value = msg.new_value   # empty bytes = delete
+    old_counter = msg.old_counter if msg.old_counter else 0
+    new_counter = msg.new_counter
     proof = msg.proof
 
     if __debug__:
         from trezor import log
         log.debug(
             __name__,
-            "update_leaf: address=%s old_value=%s new_value=%s proof_len=%d",
-            address, old_value, new_value, len(proof),
+            "update_leaf: address=%s old_value=%s new_value=%s old_counter=%d new_counter=%d proof_len=%d",
+            address, old_value, new_value, old_counter, new_counter, len(proof),
         )
 
     # Leaf hashes for old and new state (used for MAC verification and auth_mac)
     # For INIT (old_value empty) use zero hash; for DELETE (new_value empty) use zero hash
     ZERO_HASH = b"\x00" * 32
-    old_leaf_hash = _mpt.leaf_hash(address, old_value) if old_value else ZERO_HASH
-    new_leaf_hash = _mpt.leaf_hash(address, new_value) if new_value else ZERO_HASH
+    old_leaf_hash = _mpt.leaf_hash(address, old_counter, old_value) if old_value else ZERO_HASH
+    new_leaf_hash = _mpt.leaf_hash(address, new_counter, new_value) if new_value else ZERO_HASH
 
     # Verify MAC-based pre-authorization when supplied by the host
     if msg.mac is not None and msg.device_id is not None:
@@ -72,29 +74,20 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     stored_root = authdb.get_root(wallet_id)
     try:
         new_root = _mpt.compute_new_root(
-            address, old_value, new_value, proof, stored_root,
-            msg.witness_address, msg.witness_value,
+            address, old_counter, old_value, new_counter, new_value, proof, stored_root,
+            witness_address=msg.witness_address,
+            witness_counter=msg.witness_counter,
+            witness_value=msg.witness_value,
         )
     except ValueError as e:
         raise DataError(str(e))
 
-    # Persist the new root.
-    #
-    # increment_counter() requires the wallet's storage record to already
-    # exist. clear_root() no longer deletes that record (it sets the root
-    # field to the EMPTY_ROOT sentinel and leaves counter/
-    # last_applied_sequence untouched, see storage/authdb.py), so either
-    # order is correct here now; kept as increment-then-clear for a DELETE
-    # for symmetry with apply_offline_operations.py's per-op commit, which
-    # bumps the counter as part of the same atomic write regardless of
-    # ordering. On a first-ever INIT, set_root() must still run first since
-    # it's what creates the record.
-    if new_root is None:
-        counter = authdb.increment_counter(wallet_id)
-        authdb.clear_root(wallet_id)
-    else:
-        authdb.set_root(wallet_id, new_root)
-        counter = authdb.increment_counter(wallet_id)
+    # Persist root+counter as a single atomic storage write (see
+    # storage/authdb.py's commit_root_and_counter()) -- root and counter
+    # always move together, so a crash can never leave one advanced without
+    # the other, the same property commit_applied_operation() gives the
+    # offline-sync apply path.
+    counter = authdb.commit_root_and_counter(wallet_id, new_root)
 
     if __debug__:
         from trezor import log
