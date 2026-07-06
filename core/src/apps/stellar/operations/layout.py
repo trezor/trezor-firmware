@@ -518,7 +518,7 @@ def _format_sc_address(addr: StellarSCAddress) -> str:
     }
     version = strkey_version_map.get(addr.type)
     if version is None:
-        raise ProcessError(f"Stellar: unsupport SCAddress type: {addr.type}")
+        raise ProcessError(f"Stellar: unsupported SCAddress type: {addr.type}")
     return helpers.encode_strkey(version, addr.address)
 
 
