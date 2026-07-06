@@ -514,16 +514,36 @@ def test_set_root_forged_mac_rejected(session: Session) -> None:
 
 
 @pytest.mark.models("core")
-def test_set_root_missing_mac_rejected(session: Session) -> None:
-    """AuthDbSetRoot now requires mac+device_id unconditionally (see
-    core/src/apps/authdb/set_root.py); calling it bare must fail, not
-    silently inject the root. This guards against regressing back to the
-    pre-MAC behaviour where an unauthenticated root could be injected."""
+def test_set_root_without_mac_allowed_in_debug(session: Session) -> None:
+    """mac/device_id are OPTIONAL on AuthDbSetRoot, not required: without
+    them it's a plain debug-only unauthenticated root injection, allowed
+    here because device tests always run against a debug build. Regression
+    guard: an earlier revision made both unconditionally required, which
+    broke every bare set_root() call in this file (see
+    core/src/apps/authdb/set_root.py)."""
     tree = AuthDbTree()
     tree.insert(b"alice", b"data_alice")
 
+    counter, wallet_id = authdb.set_root(session, tree.get_root_hash())
+    assert counter > 0
+    assert wallet_id is not None
+
+
+@pytest.mark.models("core")
+def test_set_root_mac_optional_but_verified_when_present(session: Session) -> None:
+    """If mac/device_id ARE supplied, they're still verified even though
+    this handler is debug-only either way -- a forged mac on an otherwise
+    bare call must not silently succeed just because the no-mac path would
+    have allowed it."""
+    tree = AuthDbTree()
+    tree.insert(b"alice", b"data_alice")
+    wallet_id = sha256(b"set-root-optional-mac").digest()
+    authdb.set_device_id(session, wallet_id)
+
     with pytest.raises(TrezorFailure):
-        authdb.set_root(session, tree.get_root_hash())
+        authdb.set_root(
+            session, tree.get_root_hash(), mac=b"\x11" * 32, device_id=wallet_id
+        )
 
 
 # ---------------------------------------------------------------------------
