@@ -37,8 +37,7 @@
 #include <sys/systick.h>
 
 #ifdef USE_APP_LOADING
-#include <io/app_cache.h>
-#include <io/app_loader.h>
+#include <io/app_arena.h>
 #endif
 
 #ifdef USE_BUTTON
@@ -216,11 +215,8 @@ void drivers_init() {
 #endif
 
 #ifdef USE_APP_LOADING
-  status = app_cache_init();
-  ensure_ok(status, "app_cache_init failed");
-
-  status = app_loader_init();
-  ensure_ok(status, "app_loader_init failed");
+  status = app_arena_init();
+  ensure_ok(status, "app_arena_init failed");
 #endif
 }
 
