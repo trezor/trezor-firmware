@@ -144,6 +144,9 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},
     {MP_ROM_QSTR(MP_QSTR_ipc_send), MP_ROM_PTR(&mod_trezorio_ipc_send_obj)},
 #endif
+#ifdef USE_APP_LOADING
+    {MP_ROM_QSTR(MP_QSTR_APP_ARENA_EVENT), MP_ROM_INT(SYSHANDLE_APP_ARENA)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezorio_USB_type)},
     {MP_ROM_QSTR(MP_QSTR_USBIF), MP_ROM_PTR(&mod_trezorio_USBIF_type)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_WIRE), MP_ROM_INT(SYSHANDLE_USB_WIRE)},
