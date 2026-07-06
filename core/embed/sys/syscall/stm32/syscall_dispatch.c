@@ -38,6 +38,10 @@
 #include <sys/system.h>
 #include <sys/systick.h>
 
+#ifdef USE_APP_LOADING
+#include <io/app_arena.h>
+#endif
+
 #ifdef USE_SECRET
 #include <sec/secret.h>
 #endif
@@ -204,7 +208,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t filter_len = (size_t)args[1];
       args[0] = syslog_set_filter__verified(filter, filter_len);
     } break;
-
 #endif
 
 #ifdef USE_IPC
@@ -974,52 +977,83 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
 #ifdef USE_APP_LOADING
-    case SYSCALL_APP_TASK_SPAWN: {
-      const app_hash_t *hash = (const app_hash_t *)args[0];
+    case SYSCALL_APP_ARENA_GET_INFO: {
+      app_arena_info_t *info = (app_arena_info_t *)args[0];
+      ts_t status = app_arena_get_info__verified(info);
+      args[0] = ts_code(status);
+    } break;
+
+    case SYSCALL_APP_ARENA_CLEAR_EVENT: {
+      ts_t status = app_arena_clear_event();
+      args[0] = ts_code(status);
+    } break;
+
+    case SYSCALL_APP_ARENA_CREATE_IMAGE: {
+      const void *header = (const void *)args[0];
+      size_t header_size = (size_t)args[1];
+      const sha256_digest_t *proof = (const sha256_digest_t *)args[2];
+      size_t proof_size = (size_t)args[3];
+      app_image_handle_t *handle = (app_image_handle_t *)args[4];
+      ts_t status = app_arena_create_image__verified(header, header_size, proof,
+                                                     proof_size, handle);
+      args[0] = ts_code(status);
+    } break;
+
+    case SYSCALL_APP_ARENA_GET_IMAGE_BY_INDEX: {
+      size_t idx = (size_t)args[0];
+      app_image_handle_t *handle = (app_image_handle_t *)args[1];
+      ts_t status = app_arena_get_image_by_index__verified(idx, handle);
+      args[0] = ts_code(status);
+    } break;
+
+    case SYSCALL_APP_IMAGE_GET_INFO: {
+      app_image_handle_t handle = (app_image_handle_t)args[0];
+      app_image_info_t *info = (app_image_info_t *)args[1];
+      ts_t status = app_image_get_info__verified(handle, info);
+      args[0] = ts_code(status);
+    } break;
+
+    case SYSCALL_APP_IMAGE_WRITE_CHUNK: {
+      app_image_handle_t handle = (app_image_handle_t)args[0];
+      const void *data = (const void *)args[1];
+      size_t size = (size_t)args[2];
+      sha256_digest_t *hash = (sha256_digest_t *)args[3];
+      ts_t status = app_image_write_chunk__verified(handle, data, size, hash);
+      args[0] = ts_code(status);
+    } break;
+
+    case SYSCALL_APP_IMAGE_DELETE: {
+      app_image_handle_t handle = (app_image_handle_t)args[0];
+      ts_t status = app_image_delete(handle);
+      args[0] = ts_code(status);
+    } break;
+
+    case SYSCALL_APP_IMAGE_RUN: {
+      app_image_handle_t handle = (app_image_handle_t)args[0];
       systask_id_t *task_id = (systask_id_t *)args[1];
-      ts_t status = app_task_spawn__verified(hash, task_id);
+      ts_t status = app_image_run__verified(handle, task_id);
       args[0] = ts_code(status);
     } break;
 
-    case SYSCALL_APP_TASK_IS_RUNNING: {
-      systask_id_t task_id = (systask_id_t)args[0];
-      args[0] = app_task_is_running(task_id);
+    case SYSCALL_APP_IMAGE_STOP: {
+      app_image_handle_t handle = (app_image_handle_t)args[0];
+      ts_t status = app_image_stop(handle);
+      args[0] = ts_code(status);
     } break;
 
-    case SYSCALL_APP_TASK_GET_PMINFO: {
-      systask_id_t task_id = (systask_id_t)args[0];
+    case SYSCALL_APP_IMAGE_GET_PMINFO: {
+      app_image_handle_t handle = (app_image_handle_t)args[0];
       systask_postmortem_t *pminfo = (systask_postmortem_t *)args[1];
-      ts_t status = app_task_get_pminfo__verified(task_id, pminfo);
+      ts_t status = app_image_get_pminfo__verified(handle, pminfo);
       args[0] = ts_code(status);
     } break;
 
-    case SYSCALL_APP_TASK_UNLOAD: {
-      systask_id_t task_id = (systask_id_t)args[0];
-      app_task_unload(task_id);
-    } break;
-
-    case SYSCALL_APP_CACHE_CREATE_IMAGE: {
-      const app_hash_t *hash = (const app_hash_t *)args[0];
-      size_t image_size = (size_t)args[1];
-      args[0] = (uintptr_t)app_cache_create_image__verified(hash, image_size);
-    } break;
-
-    case SYSCALL_APP_CACHE_WRITE_IMAGE: {
-      app_cache_handle_t handle = (app_cache_handle_t)args[0];
-      uintptr_t offset = (uintptr_t)args[1];
-      const void *data = (const void *)args[2];
-      size_t size = (size_t)args[3];
-      ts_t status = app_cache_write_image__verified(handle, offset, data, size);
+    case SYSCALL_APP_GET_HEAP: {
+      void **heap_ptr = (void **)args[0];
+      size_t *heap_size = (size_t *)args[1];
+      ts_t status = app_get_heap__verified(heap_ptr, heap_size);
       args[0] = ts_code(status);
     } break;
-
-    case SYSCALL_APP_CACHE_FINALIZE_IMAGE: {
-      app_cache_handle_t handle = (app_cache_handle_t)args[0];
-      bool accept = (bool)args[1];
-      ts_t status = app_cache_finalize_image(handle, accept);
-      args[0] = ts_code(status);
-    } break;
-
 #endif
 
     default:

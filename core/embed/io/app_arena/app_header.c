@@ -17,24 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <io/app_header.h>
 
-#include <trezor_types.h>
+const app_header_t* app_header_verify(const void* header_ptr,
+                                      size_t header_size) {
+  TSH_DECLARE;
+  const app_header_t* retval = NULL;
 
-#include <sys/applet.h>
+  TSH_CHECK(header_ptr != NULL, TS_EINVAL);
+  TSH_CHECK(header_size >= sizeof(app_header_t), TS_EINVAL);
 
-/**
- * Loads an ELF image using the system dynamic loader.
- *
- * ELF file is expected to be loaded in SRAM in the block allocated
- * in app_arena memory (SRAM).
- *
- * @param applet Pointer to the applet_t structure to be initialized
- * @param elf_ptr Pointer to the pointer to the ELF image loaded in memory
- * @param elf_size Size of the ELF image in memory
- *
- * @return TS_OK on success, or an error code on failure:
- *         TS_ENOMEM if there is not enough memory
- *         TS_EINVAL if the ELF image is invalid
- */
-ts_t __wur elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size);
+  const app_header_t* header = (const app_header_t*)header_ptr;
+
+  TSH_CHECK(header->magic == APP_HEADER_MAGIC, TS_EBADMSG);
+  TSH_CHECK(header->header_size == header_size, TS_EBADMSG);
+  TSH_CHECK(header->abi_version == 1, TS_EBADMSG);
+
+  retval = header;
+
+cleanup:
+  return retval;
+}

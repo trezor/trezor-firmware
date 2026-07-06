@@ -65,4 +65,23 @@ applet_t* applet_active(void) {
   return (applet_t*)task->applet;
 }
 
+void applet_set_heap(applet_t* applet, void* heap_ptr, size_t heap_size) {
+  applet->heap_ptr = heap_ptr;
+  applet->heap_size = heap_size;
+}
+
+ts_t applet_get_heap(applet_t* applet, void** heap_ptr, size_t* heap_size) {
+  TSH_DECLARE;
+
+  TSH_CHECK_ARG(applet != NULL);
+  TSH_CHECK_ARG(heap_ptr != NULL);
+  TSH_CHECK_ARG(heap_size != NULL);
+
+  *heap_ptr = applet->heap_ptr;
+  *heap_size = applet->heap_size;
+
+cleanup:
+  return TS_OK;
+}
+
 #endif  // USE_APPLETS && KERNEL_MODE
