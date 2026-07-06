@@ -1,12 +1,17 @@
 # AuthDB synchronization: counter-in-leaf-and-root proposal
 
-**Status: proposal / evaluation document, not implemented.** Nothing in this document has landed
-in firmware, storage, or the wire protocol. `docs/authdb.md` describes what is actually shipped
-today; this document proposes what would need to change to support (1) a Suite-mediated
-multi-device sync architecture that is global per `wallet_id` rather than siloed per `device_id`,
-and (2) fully offline Bluetooth peer-to-peer sync between two Trezors with no Suite database
-mediating. Follow-on implementation work should be planned separately once the open questions
-below are resolved, in the same spirit as the evaluation that preceded this one.
+**Status: Part 1 is implemented and shipped.** The leaf-counter design below (breaking change to
+the leaf-hash preimage, `new_counter == old_counter + 1` enforcement, and the wire/handler changes
+in the table at the end of Part 1) has landed in firmware, storage, and the wire protocol exactly
+as described — `docs/authdb.md` now documents it as shipped. **Part 2 (Bluetooth peer-to-peer
+sync) and Part 3 (cross-device conflict history) remain proposal/design-only, not implemented.**
+Part 3 in particular is a **Suite-side design spec**: firmware exposes everything it needs
+(attribution via `Features.device_id`, per-op old/new value and counter via
+`AuthDbGetOfflineOperations`), but the actual history log can only be held by Suite, since only
+Suite ever observes every device's queue contents before replaying them — implementing it requires
+work in the Suite repository, out of this repo's scope. Follow-on implementation work for Parts 2
+and 3 should be planned separately once their open questions are resolved, in the same spirit as
+the evaluation that preceded Part 1's implementation.
 
 ## Current state and prerequisite bugs
 
@@ -20,8 +25,8 @@ throughout — a host can only replay attestations a device itself produced, sin
 wallet-derived (seed+passphrase), not device-derived, and are therefore portable across every
 physical Trezor holding the same wallet.
 
-Two bugs were found while reviewing this pipeline. They are orthogonal to the sync design below,
-but block testing any of it end-to-end, so they're recorded here:
+Two bugs were found while reviewing this pipeline, and have since been fixed (both were
+prerequisites for testing the design below end-to-end):
 
 - `_derive_mac_key()` (`core/src/apps/authdb/__init__.py:47`) is declared with **zero parameters**,
   but every call site — `update_leaf.py:28-29`, `set_root.py:31`, `fast_forward_root.py:42`,
@@ -45,6 +50,12 @@ parses or checks it.
 ---
 
 ## Part 1 — counter-in-leaf-and-root for Suite-mediated sync
+
+**Implemented as described in this section.** `AuthDbSetRoot` additionally now absorbs
+`AuthDbApplyOfflineOperations`'s replay step in the same call (an `operations` field, verified with
+the shared `_replay.py` logic also used by `AuthDbApplyOfflineOperations`) — see `docs/authdb.md`'s
+`AuthDbSetRoot` section for the shipped shape; that particular addition was not anticipated by this
+proposal document but builds directly on the leaf counter described below.
 
 ### The user's target architecture
 
@@ -219,12 +230,71 @@ ancestor root and must merge without a central arbiter.
 
 ---
 
+## Part 3 — conflict display: cross-device history for an address
+
+**Design spec only — Suite-side, not implementable in this repository.** The device never retains
+a "previous canonical root" or any history: only the current `root`/counter and its own
+not-yet-garbage-collected offline queue. "What happened on this address, on every Trezor, since
+the last canonical root" is not a question firmware can answer alone — it requires an **append-only
+log of applied operations**, which only Suite can hold, since only Suite ever observes every
+device's queue contents (via `AuthDbGetOfflineOperations`) before rebasing and replaying them.
+
+The good news: firmware already exposes everything the log needs, with **no firmware or protocol
+change required**:
+
+- `AuthDbGetOfflineOperations` already returns each queued operation's `address`, `old_value`,
+  `new_value`, and (per Part 1) `old_counter`/`new_counter`.
+- Each batch can already be attributed to the specific physical Trezor that produced it via
+  `Features.device_id` of the connection that uploaded it — no AuthDB-specific device identifier is
+  needed for attribution, since `Features.device_id` is already exposed today.
+- `AuthDbApplyOfflineOperationsResponse`/`AuthDbSetRootResponse` already return the root-level
+  `counter` reached immediately after each applied op, giving a stable point to anchor a history
+  entry to ("this op landed when the tree's root counter became N").
+
+What's missing is Suite *retaining* this as a durable, queryable log instead of discarding it after
+each apply — that's the only piece this section designs.
+
+### Proposed Suite-side schema/functions
+
+```
+# Called once per successfully-applied operation, at the same time Suite persists the new
+# canonical root/counter reached by that operation (i.e. right after each AuthDbApplyOfflineOperations
+# or AuthDbSetRoot call that reports applied_count > 0, once per applied op in the batch):
+record_history_entry(
+    wallet_id, address, device_id,        # device_id = Features.device_id of the uploading connection
+    old_value, new_value,
+    old_counter, new_counter,             # from Part 1's leaf counter, threaded straight through
+    applied_at_root_counter,              # the wallet's root-level counter value right after this op
+)
+
+# "What changed on address X between two canonical states":
+get_address_history(wallet_id, address, since_root_counter, until_root_counter)
+    -> ordered list of (device_id, old_value, new_value, old_counter, new_counter, applied_at_root_counter)
+```
+
+`get_address_history` is what lets a UI answer "what happened on all Trezors since the last
+canonical root I saw" for one address: `since_root_counter` is the counter the caller last observed
+(e.g. from its own last `AuthDbLookup`/`AuthDbGetOfflineOperations` call), `until_root_counter` is
+the wallet's current counter, and the ordered result is exactly the sequence of writes — each
+tagged with which physical device produced it — that moved the address from its old state to its
+current one.
+
+### Why this is out of firmware/this-repo's scope
+
+This is a schema/function-signature design, not code that can land in `trezor-firmware`. It belongs
+in the Suite repository (the host application holding the canonical database), which was not added
+to this session (`trezor/trezor-firmware` only) — implementing `record_history_entry`/
+`get_address_history` for real requires that repository and is tracked as separate follow-up work.
+
+---
+
 ## File index
 
 | File | Description |
 |---|---|
 | `docs/authdb.md` | Shipped AuthDB protocol, wire messages, and security notes |
-| `common/protob/messages-authdb.proto` | Current protobuf message definitions (Part 1 proposes additive fields only) |
-| `core/src/storage/authdb.py` | Current persistent storage: `_ROOTS`/`_CACHE`/`_QUEUE`/`_SYNC` |
-| `core/src/apps/authdb/_mpt.py` | Current shared MPT hash/proof primitives (Part 1 proposes the leaf-hash preimage change) |
-| `core/src/apps/authdb/__init__.py` | Current `device_id`/`wallet_id`/MAC-key derivation (contains the prerequisite `_derive_mac_key` bug) |
+| `common/protob/messages-authdb.proto` | Protobuf message definitions (Part 1's leaf-counter fields are shipped) |
+| `core/src/storage/authdb.py` | Persistent storage: `_ROOTS`/`_CACHE`/`_QUEUE` (the old `_SYNC` sequence-reservation table was removed; next sequence is now derived, not separately persisted) |
+| `core/src/apps/authdb/_mpt.py` | Shared MPT hash/proof primitives, including Part 1's counter-aware leaf hash |
+| `core/src/apps/authdb/_replay.py` | Shared offline-op replay loop (extracted so `AuthDbApplyOfflineOperations` and `AuthDbSetRoot`'s embedded replay share one implementation) |
+| `core/src/apps/authdb/__init__.py` | `device_id`/`wallet_id`/MAC-key derivation (the prerequisite `_derive_mac_key` bug noted above is fixed) |
