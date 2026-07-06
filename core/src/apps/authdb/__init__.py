@@ -44,10 +44,15 @@ async def _get_wallet_id() -> bytes:
     return node.key()
 
 
-async def _derive_mac_key() -> bytes:
+async def _derive_mac_key(domain: bytes) -> bytes:
     """Derive the 32-byte wallet MAC key for AuthDB tokens via SLIP-0021.
 
-    mac_key = HMAC-SHA256(SLIP21(seed_with_passphrase, [b"AUTHDB MAC v1"]).key(), wallet_id)
+    mac_key = HMAC-SHA256(SLIP21(seed_with_passphrase, [b"AUTHDB MAC v1", domain]).key(), wallet_id)
+
+    `domain` (e.g. b"root_mac" or b"leaf_approval") is a purpose label folded
+    into the SLIP-21 path itself, so each purpose gets a distinct base key --
+    a MAC minted for one purpose must not validate for another, even though
+    both are ultimately derived from the same wallet.
 
     Scoped to wallet_id (not device_id): a MAC computed for one hidden
     wallet on this device must not validate against a different hidden
@@ -63,7 +68,7 @@ async def _derive_mac_key() -> bytes:
 
     s = await seed_module.get_seed()
     node = Slip21Node(s)
-    node.derive_path([b"AUTHDB MAC v1"])
+    node.derive_path([b"AUTHDB MAC v1", domain])
     base_key = node.key()
 
     # bind the base key to the wallet_id
