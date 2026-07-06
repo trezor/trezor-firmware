@@ -259,6 +259,10 @@ The device always **computes** the new root from the supplied proof and the old/
 
 Every write operation (set_root, update_leaf) increments a persistent monotonic counter.  Callers can use the counter to detect replay attacks or concurrent modifications.
 
+This is a tree-wide "root counter" — it says the tree changed, not which address changed.  See
+[`docs/authdb-sync-proposal.md`](authdb-sync-proposal.md) for a proposed, not-yet-implemented,
+per-address "leaf counter" that would sit alongside it.
+
 ---
 
 ## Offline synchronization
@@ -344,6 +348,11 @@ while it still holds locally-queued-but-unapplied offline operations from
 via `AuthDbApplyOfflineOperations` afterward is not currently specified --
 see the firmware requirements doc for this feature for further discussion.
 
+[`docs/authdb-sync-proposal.md`](authdb-sync-proposal.md) proposes a per-leaf counter that would
+give a Suite-side database a structured signal for detecting this kind of conflict, and separately
+proposes how the same primitives extend to fully offline Bluetooth peer-to-peer sync between two
+Trezors. Neither is implemented.
+
 ## CLI
 
 ```
@@ -420,6 +429,7 @@ tree.delete(b"alice")    # or tree.insert(b"alice", b"")
 | `core/src/apps/authdb/apply_offline_operations.py` | `AuthDbApplyOfflineOperations` handler |
 | `core/src/apps/authdb/delete_offline_operations.py` | `AuthDbDeleteOfflineOperations` handler |
 | `core/src/apps/authdb/fast_forward_root.py` | `AuthDbFastForwardRoot` handler |
+| `docs/authdb-sync-proposal.md` | Proposed (not implemented) counter-in-leaf-and-root sync design + Bluetooth peer-sync extension |
 | `core/src/apps/workflow_handlers.py` | Message → handler routing |
 | `python/src/trezorlib/authdb_tree.py` | Host-side MPT (insert, delete, proofs) |
 | `python/src/trezorlib/authdb.py` | Host-side RPC wrappers + `sync_offline_queue()` |
