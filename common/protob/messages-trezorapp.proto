@@ -1,0 +1,106 @@
+syntax = "proto2";
+package hw.trezor.messages.trezorapps;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "MessageTrezorApp";
+
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
+
+/**
+ * Request: Load an external application onto the device.
+ *
+ * If the app is present in the app cache, it will be loaded into memory.
+ * Otherwise, a TrezorAppDataChunkRequest flow will be initiated to download the app
+ * into Trezor.
+ *
+ * @start
+ * @next TrezorAppLoaded
+ * @next TrezorAppHeaderRequest
+ */
+message TrezorAppLoad {
+    // Application id
+    required string id = 1;
+    // Minimal required version
+    repeated uint32 version = 2;
+    /// Hash of the app to load (optional)
+    required bytes hash = 3 [default = ''];
+}
+
+/**
+ * Response: External application loaded
+ * @end
+ */
+message TrezorAppLoaded {
+    /// Instance ID of the loaded app, referred to in TrezorAppRun
+    required uint32 instance_id = 1;
+}
+
+/**
+ * Request: Ask for application header and merkle proof
+ *
+ * @next TrezorAppHeaderAck
+ */
+message TrezorAppHeaderRequest {}
+
+/**
+ * Response: Application header and merkle proof
+ *
+ * @next TrezorAppDataChunkRequest
+ */
+message TrezorAppHeaderAck {
+    // Application header
+    required bytes header = 1;
+    // Merkle proof
+    required bytes proof = 2;
+}
+
+/**
+ * Response: Device asks for more data from application image.
+ * @end
+ * @next TrezorAppDataChunkAck
+ */
+message TrezorAppDataChunkRequest {
+    required uint32 index = 1;  // Index of requested chunk
+}
+
+/**
+ * Request: Data chunk sent to the device
+ *
+ * @next TrezorAppDataChunkRequest
+ * @next Success
+ */
+message TrezorAppDataChunkAck {
+    required bytes data = 1;  // Bytes from the application image
+    required bytes hash = 2;  // Hash used for the chunk verification
+}
+
+/**
+ * Request: Run a workflow in an external application.
+ *
+ * @start
+ * @next TrezorAppResponse
+ */
+message TrezorAppMessage {
+    /// Instance ID of a loaded external application, result of TrezorAppLoad.
+    required uint32 instance_id = 1;
+    /// Message ID to pass to the external app.
+    required uint32 message_id = 2;
+    /// Data to pass to the external app.
+    required bytes data = 3;
+}
+
+/**
+ * Response: Response of a workflow in the external application.
+ * @next TrezorAppMessage
+ */
+message TrezorAppResponse {
+    /// Message ID of the response.
+    required uint32 message_id = 1;
+    /// Data returned by the external application.
+    required bytes data = 2;
+    /// Indicator whether the workflow is finished.
+    optional bool finished = 3 [default = false];
+}
