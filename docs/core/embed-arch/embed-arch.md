@@ -343,11 +343,11 @@ Application lifecycle can be described by a simple diagram:
 
 ![App Lifecycle](app-lifecycle.drawio.svg)
 
-**LOADING:** The kernel first loads the image into the application arena from USB, Bluetooth, or, in the future, a flash-memory cache.
+**LOADING:** The kernel allocates a slot in the arena and validates the application header (magic number, size, and ABI version). The payload is then received in chunks — each chunk is verified against a SHA-256 hash chain anchored to the expected payload hash stored in the header. Once all chunks have been written, the payload is checked for structural integrity (segment bounds, relocation table, entry point). On success the image transitions to READY.
 
-**VERIFICATION:** The loaded image is then verified before execution. The verification process includes both integrity checks and security checks. Integrity checks ensure that the application header is valid and that the application image is not malformed. Security checks include signature verification.
+**READY:** The image is fully received and its integrity has been verified. The writable memory region (RW data, stack, and heap) occupies the tail of the same pre-allocated arena block but is not yet initialized. The image can be started or deleted.
 
-**EXECUTION:** Once verification succeeds, the application can be started. Before it can run, additional memory within the arena must also be allocated for the application's writable data, stack, and heap. The writable data area is initialized, the stack and heap are cleared. When the application stops, the writable SRAM region to which it had access is cleared as well.
+**RUNNING:** When the application is started, the RW segment's initialized data is copied from the init-data section embedded in the read-only payload, and position-independent relocations are applied. An applet task is then created with the specified entry point and stack. When the application stops, the entire writable region is zeroed to remove any sensitive data before the arena slot is reused.
 
 For more information, see `core/embed/io/app_arena`.
 
