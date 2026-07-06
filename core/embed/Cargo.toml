@@ -82,6 +82,7 @@ num-derive = "0.4.2"
 num-traits = { version = "0.2.19", default-features = false, features = ["libm"] }
 pareen = { version = "0.3.3", path = "../../rust/pareen", default-features = false, features = ["libm", "easer"] }
 qrcodegen = { version = "1.8.0", path = "../vendor/QR-Code-generator/rust-no-heap" }
+rkyv = { version = "0.8.0", default-features = false }
 spin = { version = "0.9.8", features = ["rwlock", "spin_mutex", "lazy"], default-features = false }
 static-alloc = "0.2.6"
 trezor-thp = { path = "../../rust/trezor-thp" }
@@ -98,6 +99,7 @@ sec = { path = "sec" }
 io = { path = "io" }
 upymod = { path = "upymod" }
 trezor_lib = { path = "rust", default-features = false }
+trezor-app-sdk = { version = "0.1.0", path = "../../sdk/crates/trezor-app-sdk", default-features = false }
 
 # xbuild and xtask dependencies
 
