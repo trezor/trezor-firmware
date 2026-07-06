@@ -38,3 +38,13 @@ See the [upgrade-tests.md](upgrade-tests.md) for instructions how to run it.
 ## Persistence tests
 
 These tests test the Persistence mode, which is currently used in the device recovery. These tests launch the emulator themselves and they are capable of restarting or stopping it simulating user's plugging in or plugging out the device.
+
+## Prodtest tests
+
+These tests test the production test firmware (prodtest) CLI against the prodtest emulator. The tests are located in `prodtest_tests/` and have their own `conftest.py`, isolated from the device-test suite.
+
+Run them with:
+
+```sh
+make -C core test_emu_prodtest
+```
