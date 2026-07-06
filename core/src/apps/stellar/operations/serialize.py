@@ -15,9 +15,8 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
-    from typing import Callable, TypeVar
-
     from buffer_types import AnyBytes
+    from typing import Callable, TypeVar
 
     from trezor.messages import (
         StellarAccountMergeOp,

@@ -84,13 +84,18 @@ class TestStellarFormatIntegers(unittest.TestCase):
             (StellarInt256Parts(hi_hi=0, hi_lo=0, lo_hi=1, lo_lo=0), str(2**64)),
             (
                 StellarInt256Parts(
-                    hi_hi=-1, hi_lo=0xFFFFFFFFFFFFFFFF, lo_hi=0xFFFFFFFFFFFFFFFF, lo_lo=0
+                    hi_hi=-1,
+                    hi_lo=0xFFFFFFFFFFFFFFFF,
+                    lo_hi=0xFFFFFFFFFFFFFFFF,
+                    lo_lo=0,
                 ),
                 str(-(2**64)),
             ),
             (StellarInt256Parts(hi_hi=0, hi_lo=1, lo_hi=0, lo_lo=0), str(2**128)),
             (
-                StellarInt256Parts(hi_hi=-1, hi_lo=0xFFFFFFFFFFFFFFFF, lo_hi=0, lo_lo=0),
+                StellarInt256Parts(
+                    hi_hi=-1, hi_lo=0xFFFFFFFFFFFFFFFF, lo_hi=0, lo_lo=0
+                ),
                 str(-(2**128)),
             ),
             (StellarInt256Parts(hi_hi=1, hi_lo=0, lo_hi=0, lo_lo=0), str(2**192)),
@@ -105,7 +110,9 @@ class TestStellarFormatIntegers(unittest.TestCase):
                 str(2**255 - 1),
             ),
             (
-                StellarInt256Parts(hi_hi=-0x8000000000000000, hi_lo=0, lo_hi=0, lo_lo=0),
+                StellarInt256Parts(
+                    hi_hi=-0x8000000000000000, hi_lo=0, lo_hi=0, lo_lo=0
+                ),
                 str(-(2**255)),
             ),
         ]
