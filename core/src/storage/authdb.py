@@ -13,14 +13,37 @@ _SYNC               = const(0x04)  # per-wallet offline-sync counters
 WALLET_ID_LENGTH = const(32)
 ROOT_LENGTH      = const(32)
 MAX_WALLETS      = const(16)
-# Record layout: [root: 32][wallet_id: 32][counter: 4]
+# Record layout: [root: 32][wallet_id: 32][counter: 4][last_applied_sequence: 4]
 #
 # NOTE: this table can hold one root per wallet_id (up to MAX_WALLETS), but
 # host-facing root sync (e.g. a future AuthDbGetOfflineOperations-style
 # upload) must only ever read/sync the root for the CURRENTLY ACTIVE
 # wallet_id -- never enumerate or sync roots across every wallet_id stored
 # on this physical device.
-_RECORD_SIZE     = const(68)
+#
+# last_applied_sequence lives HERE (not in a separate table) so that
+# apply_offline_operations.py's per-op commit -- root, counter, and
+# last_applied_sequence together -- is a single _load_table()/_save_table()
+# round trip, i.e. one storage write. Previously these were 3 separate
+# writes across 2 tables; a crash between them could leave root already
+# advanced with no record of it anywhere, and no way to retry (the retry's
+# proof was built for the now-superseded old root) -- see
+# commit_applied_operation() below.
+#
+# clear_root() does NOT delete this record anymore (see EMPTY_ROOT below) --
+# it stays alive, sentinel-marked, specifically so last_applied_sequence
+# (and the counter) survive a DELETE-to-empty. A wallet_id, once used, keeps
+# its MAX_WALLETS slot permanently (no longer reclaimed by clear_root); with
+# only 16 slots this is an acceptable trade for not losing sync bookkeeping.
+_RECORD_SIZE     = const(72)
+
+# Sentinel meaning "no root" for a wallet_id that DOES have a storage
+# record (counter/last_applied_sequence already in use). A real Merkle root
+# being all-zero is not just unlikely but cryptographically meaningless here
+# (SHA-256 output), so this sentinel can't collide with genuine data --
+# matches the EMPTY_ROOT convention already used in authdb_tree.py /
+# docs/authdb.md for the same "no root" concept.
+EMPTY_ROOT = b"\x00" * 32
 
 MAX_CACHE_ENTRIES = const(64)
 # Cache record layout (variable length):
@@ -42,11 +65,15 @@ MAX_OFFLINE_QUEUE_ENTRIES = const(64)  # per wallet
 # and therefore leaks entries across wallets sharing one device.
 
 MAX_SYNC_WALLETS = const(16)
-# Sync record layout: [wallet_id: 32][next_sequence: 4][last_applied_sequence: 4]
-# Kept separate from `_ROOTS` on purpose: `clear_root()` deletes the entire
-# wallet row (including its counter) whenever the tree becomes empty via a
-# DELETE, which would otherwise silently reset offline-sync bookkeeping too.
-_SYNC_RECORD_SIZE = const(40)
+# Sync record layout: [wallet_id: 32][next_sequence: 4]
+#
+# Only next_sequence lives here now -- last_applied_sequence moved into the
+# `_ROOTS` record (see its comment above) so it can be committed atomically
+# together with root/counter. next_sequence doesn't need that: it's only
+# ever touched by queue_offline_operation(), a completely separate write
+# path from apply_offline_operations()'s per-op commit, so it was never part
+# of that crash window.
+_SYNC_RECORD_SIZE = const(36)
 
 
 def _load_table() -> bytearray:
@@ -67,7 +94,7 @@ def _find_record(table: bytearray, wallet_id: bytes) -> int:
 
 
 def get_root(wallet_id: bytes) -> bytes | None:
-    """Look up the root for wallet_id.
+    """Look up the root for wallet_id. None if absent OR cleared (EMPTY_ROOT).
 
     NOTE: callers doing host-facing sync must only ever call this for the
     currently active wallet_id -- never iterate this table across wallets.
@@ -76,12 +103,15 @@ def get_root(wallet_id: bytes) -> bytes | None:
     off = _find_record(table, wallet_id)
     if off < 0:
         return None
-    return bytes(table[off : off + ROOT_LENGTH])
+    root = bytes(table[off : off + ROOT_LENGTH])
+    return None if root == EMPTY_ROOT else root
 
 
 def set_root(wallet_id: bytes, root: bytes) -> None:
     if len(root) != ROOT_LENGTH:
         raise ValueError("Root must be 32 bytes")
+    if root == EMPTY_ROOT:
+        raise ValueError("Root cannot be the empty-root sentinel; use clear_root() instead")
     table = _load_table()
     off = _find_record(table, wallet_id)
     if off >= 0:
@@ -89,16 +119,24 @@ def set_root(wallet_id: bytes, root: bytes) -> None:
     else:
         if len(table) // _RECORD_SIZE >= MAX_WALLETS:
             raise ValueError("Too many wallets")
-        table += root + wallet_id + b"\x00\x00\x00\x00"
+        # counter=0, last_applied_sequence=0
+        table += root + wallet_id + b"\x00\x00\x00\x00" + b"\x00\x00\x00\x00"
     _save_table(table)
 
 
 def clear_root(wallet_id: bytes) -> None:
+    """Mark wallet_id's tree as empty, WITHOUT deleting its storage record.
+
+    Sets the root field to EMPTY_ROOT but leaves counter and
+    last_applied_sequence untouched -- unlike the old behavior of deleting
+    the whole record, which silently reset both. No-op if wallet_id has no
+    record at all yet (nothing to clear).
+    """
     table = _load_table()
     off = _find_record(table, wallet_id)
     if off < 0:
         return
-    table[off : off + _RECORD_SIZE] = b""
+    table[off : off + ROOT_LENGTH] = EMPTY_ROOT
     _save_table(table)
 
 
@@ -139,6 +177,77 @@ def set_counter(wallet_id: bytes, counter: int) -> None:
     ctr_off = off + ROOT_LENGTH + WALLET_ID_LENGTH
     table[ctr_off : ctr_off + 4] = counter.to_bytes(4, "big")
     _save_table(table)
+
+
+def get_last_applied_sequence(wallet_id: bytes) -> int:
+    table = _load_table()
+    off = _find_record(table, wallet_id)
+    if off < 0:
+        return 0
+    seq_off = off + ROOT_LENGTH + WALLET_ID_LENGTH + 4
+    return int.from_bytes(table[seq_off : seq_off + 4], "big")
+
+
+def set_last_applied_sequence(wallet_id: bytes, sequence: int) -> None:
+    """Persist the highest sequence this device has itself verified and applied.
+
+    This is the ONLY value AuthDbDeleteOfflineOperations trusts for garbage
+    collection -- it is never taken from a host-supplied argument. Prefer
+    commit_applied_operation() when also updating root/counter for the same
+    operation, so all three land in one storage write.
+
+    Creates wallet_id's record (root=EMPTY_ROOT, counter=0) if it doesn't
+    exist yet, e.g. sequence bookkeeping tracked before any root write.
+    """
+    table = _load_table()
+    off = _find_record(table, wallet_id)
+    if off < 0:
+        if len(table) // _RECORD_SIZE >= MAX_WALLETS:
+            raise ValueError("Too many wallets")
+        table += EMPTY_ROOT + wallet_id + b"\x00\x00\x00\x00" + sequence.to_bytes(4, "big")
+        _save_table(table)
+        return
+    seq_off = off + ROOT_LENGTH + WALLET_ID_LENGTH + 4
+    table[seq_off : seq_off + 4] = sequence.to_bytes(4, "big")
+    _save_table(table)
+
+
+def commit_applied_operation(wallet_id: bytes, new_root: bytes | None, sequence: int) -> int:
+    """Atomically persist the result of ONE applied offline operation: root
+    (or EMPTY_ROOT), incremented counter, and last_applied_sequence -- in a
+    single _load_table()/_save_table() round trip (one storage write), so a
+    crash mid-operation can never leave them mutually inconsistent the way
+    three separate set_root()/increment_counter()/set_last_applied_sequence()
+    calls could (root already advanced but counter/sequence stale and
+    unattested, with no way to retry since the retry's proof targets the
+    now-superseded old root).
+
+    Returns the new counter value. Raises ValueError if new_root is None
+    (a DELETE) but no record exists yet -- can't happen in practice, since
+    compute_new_root() itself requires an existing root for DELETE/UPDATE.
+    """
+    if new_root is not None and len(new_root) != ROOT_LENGTH:
+        raise ValueError("Root must be 32 bytes")
+    table = _load_table()
+    off = _find_record(table, wallet_id)
+    if off < 0:
+        if new_root is None:
+            raise ValueError("No record for wallet_id")
+        if len(table) // _RECORD_SIZE >= MAX_WALLETS:
+            raise ValueError("Too many wallets")
+        new_counter = 1
+        table += new_root + wallet_id + new_counter.to_bytes(4, "big") + sequence.to_bytes(4, "big")
+        _save_table(table)
+        return new_counter
+
+    ctr_off = off + ROOT_LENGTH + WALLET_ID_LENGTH
+    seq_off = ctr_off + 4
+    new_counter = int.from_bytes(table[ctr_off : ctr_off + 4], "big") + 1
+    table[off : off + ROOT_LENGTH] = new_root if new_root is not None else EMPTY_ROOT
+    table[ctr_off : ctr_off + 4] = new_counter.to_bytes(4, "big")
+    table[seq_off : seq_off + 4] = sequence.to_bytes(4, "big")
+    _save_table(table)
+    return new_counter
 
 
 # ---------------------------------------------------------------------------
@@ -261,7 +370,9 @@ def set_device_id_override(device_id: bytes) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Offline-sync counters (next_sequence / last_applied_sequence) per wallet
+# Offline-sync: next_sequence per wallet (see get/set_last_applied_sequence
+# and commit_applied_operation() above for last_applied_sequence, which now
+# lives in the `_ROOTS` record instead)
 # ---------------------------------------------------------------------------
 
 def _load_sync() -> bytearray:
@@ -288,7 +399,7 @@ def _ensure_sync_record(table: bytearray, wallet_id: bytes) -> int:
     if len(table) // _SYNC_RECORD_SIZE >= MAX_SYNC_WALLETS:
         raise ValueError("Too many wallets")
     off = len(table)
-    table += wallet_id + (1).to_bytes(4, "big") + (0).to_bytes(4, "big")
+    table += wallet_id + (1).to_bytes(4, "big")
     return off
 
 
@@ -311,28 +422,6 @@ def take_next_sequence(wallet_id: bytes) -> int:
     table[seq_off : seq_off + 4] = (sequence + 1).to_bytes(4, "big")
     _save_sync(table)
     return sequence
-
-
-def get_last_applied_sequence(wallet_id: bytes) -> int:
-    table = _load_sync()
-    off = _find_sync_record(table, wallet_id)
-    if off < 0:
-        return 0
-    seq_off = off + WALLET_ID_LENGTH + 4
-    return int.from_bytes(table[seq_off : seq_off + 4], "big")
-
-
-def set_last_applied_sequence(wallet_id: bytes, sequence: int) -> None:
-    """Persist the highest sequence this device has itself verified and applied.
-
-    This is the ONLY value AuthDbDeleteOfflineOperations trusts for garbage
-    collection -- it is never taken from a host-supplied argument.
-    """
-    table = _load_sync()
-    off = _ensure_sync_record(table, wallet_id)
-    seq_off = off + WALLET_ID_LENGTH + 4
-    table[seq_off : seq_off + 4] = sequence.to_bytes(4, "big")
-    _save_sync(table)
 
 
 # ---------------------------------------------------------------------------

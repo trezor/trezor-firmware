@@ -81,13 +81,14 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     # Persist the new root.
     #
     # increment_counter() requires the wallet's storage record to already
-    # exist, and clear_root() deletes that record outright (wallet_id, root
-    # AND counter). So on a DELETE that empties the tree, the counter must be
-    # bumped BEFORE clearing the root (the record still exists from the prior
-    # operation); for every other transition, set_root() -- which creates the
-    # record on a first-ever INIT -- must run first instead. Doing this in
-    # the other order raises "No record for wallet_id" on every delete-to-
-    # empty-tree call.
+    # exist. clear_root() no longer deletes that record (it sets the root
+    # field to the EMPTY_ROOT sentinel and leaves counter/
+    # last_applied_sequence untouched, see storage/authdb.py), so either
+    # order is correct here now; kept as increment-then-clear for a DELETE
+    # for symmetry with apply_offline_operations.py's per-op commit, which
+    # bumps the counter as part of the same atomic write regardless of
+    # ordering. On a first-ever INIT, set_root() must still run first since
+    # it's what creates the record.
     if new_root is None:
         counter = authdb.increment_counter(wallet_id)
         authdb.clear_root(wallet_id)

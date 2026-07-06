@@ -74,17 +74,15 @@ async def apply_offline_operations(
                 )
             break
 
-        # Persist this operation's transition before moving to the next, so
-        # a power loss mid-batch always leaves root/counter/
-        # last_applied_sequence mutually consistent (same ordering fix as
-        # update_leaf.py: bump counter before clear_root on delete-to-empty).
-        if new_root is None:
-            authdb.increment_counter(wallet_id)
-            authdb.clear_root(wallet_id)
-        else:
-            authdb.set_root(wallet_id, new_root)
-            authdb.increment_counter(wallet_id)
-        authdb.set_last_applied_sequence(wallet_id, op.sequence)
+        # Persist this operation's transition as ONE atomic storage write --
+        # root, counter, and last_applied_sequence together via
+        # commit_applied_operation() -- so a power loss mid-batch can never
+        # leave them mutually inconsistent. Three separate writes (as this
+        # used to be) could leave root already advanced with no record of
+        # it anywhere, and no way to retry: the retry's proof is built for
+        # the now-superseded old root, so it fails forever, permanently
+        # stranding this wallet's offline queue.
+        authdb.commit_applied_operation(wallet_id, new_root, op.sequence)
 
         current_root = new_root
         applied_count += 1

@@ -436,12 +436,75 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         authdb.set_last_applied_sequence(wallet_id, 7)
         self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 7)
 
-        # Unrelated to the root/counter table: clearing a (hypothetical) root
-        # for this wallet_id must not reset sync bookkeeping, since they are
-        # deliberately stored in separate namespaces (_ROOTS vs _SYNC).
+        # last_applied_sequence lives in the same _ROOTS record as root/
+        # counter (see commit_applied_operation()), but clear_root() only
+        # ever sets the root field to the EMPTY_ROOT sentinel -- it no
+        # longer deletes the record -- so clearing a root must not reset
+        # sync bookkeeping.
         authdb.set_root(wallet_id, _sha256d(b"some-root"))
         authdb.clear_root(wallet_id)
         self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 7)
+        self.assertIsNone(authdb.get_root(wallet_id))
+
+    @mock_storage
+    def test_clear_root_preserves_counter_and_record(self):
+        """clear_root() must not delete the wallet's storage record anymore
+        (regression guard: it used to, which broke increment_counter() on
+        the very next write -- see update_leaf.py/apply_offline_operations.py
+        history). Counter must survive a clear, and re-adding a root for the
+        same wallet_id must not consume a fresh MAX_WALLETS slot."""
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        authdb.set_root(wallet_id, _sha256d(b"root-1"))
+        authdb.increment_counter(wallet_id)
+        authdb.increment_counter(wallet_id)
+        self.assertEqual(authdb.get_counter(wallet_id), 2)
+
+        authdb.clear_root(wallet_id)
+        self.assertIsNone(authdb.get_root(wallet_id))
+        self.assertEqual(authdb.get_counter(wallet_id), 2)  # survives the clear
+
+        # Counter continues from where it left off, not reset to 0.
+        authdb.set_root(wallet_id, _sha256d(b"root-2"))
+        self.assertEqual(authdb.increment_counter(wallet_id), 3)
+
+    @mock_storage
+    def test_set_root_rejects_empty_root_sentinel(self):
+        import storage.authdb as authdb
+
+        with self.assertRaises(ValueError):
+            authdb.set_root(self._id(1), authdb.EMPTY_ROOT)
+
+    @mock_storage
+    def test_commit_applied_operation_is_a_single_write(self):
+        """The atomicity fix: root, counter, and last_applied_sequence must
+        all update together via ONE call, and a delete-to-empty (new_root is
+        None) must not lose the record the way the old clear_root()-deletes-
+        everything behavior did."""
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+
+        # First-ever INIT via commit_applied_operation itself (creates the record).
+        counter = authdb.commit_applied_operation(wallet_id, _sha256d(b"root-1"), 1)
+        self.assertEqual(counter, 1)
+        self.assertEqual(authdb.get_root(wallet_id), _sha256d(b"root-1"))
+        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 1)
+
+        # UPDATE
+        counter = authdb.commit_applied_operation(wallet_id, _sha256d(b"root-2"), 2)
+        self.assertEqual(counter, 2)
+        self.assertEqual(authdb.get_root(wallet_id), _sha256d(b"root-2"))
+        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 2)
+
+        # DELETE-to-empty: root clears, counter/sequence still advance, and
+        # the record survives (unlike the old 3-separate-writes behavior).
+        counter = authdb.commit_applied_operation(wallet_id, None, 3)
+        self.assertEqual(counter, 3)
+        self.assertIsNone(authdb.get_root(wallet_id))
+        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 3)
+        self.assertEqual(authdb.get_counter(wallet_id), 3)  # not reset by the delete
 
     @mock_storage
     def test_sync_wallet_table_capacity_enforced(self):
