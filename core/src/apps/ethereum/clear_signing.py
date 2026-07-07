@@ -432,9 +432,7 @@ class RawFormatter(FieldFormatter):
         elif isinstance(value, str):
             return value, None, None
         elif isinstance(value, (bytes, bytearray)):
-            from ubinascii import hexlify
-
-            return hexlify(value).decode(), None, None
+            return value.hex(), None, None
         elif isinstance(value, bool):
             return str(value), None, None
         elif isinstance(value, int):

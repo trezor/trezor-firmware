@@ -35,24 +35,26 @@ class TestCryptoSha3_256(unittest.TestCase):
 
     def test_digest(self):
         for b, d in self.vectors:
-            self.assertEqual(hashlib.sha3_256(b).digest(), unhexlify(d))
+            self.assertEqual(hashlib.sha3_256(b).digest(), bytes.fromhex(d))
 
     def test_digest_keccak(self):
         for b, d in self.vectors_keccak:
-            self.assertEqual(hashlib.sha3_256(b, keccak=True).digest(), unhexlify(d))
+            self.assertEqual(
+                hashlib.sha3_256(b, keccak=True).digest(), bytes.fromhex(d)
+            )
 
     def test_update(self):
         for b, d in self.vectors:
             x = hashlib.sha3_256()
             x.update(b)
-            self.assertEqual(x.digest(), unhexlify(d))
+            self.assertEqual(x.digest(), bytes.fromhex(d))
 
         x = hashlib.sha3_256()
         for _ in range(1000000):
             x.update(b"a")
         self.assertEqual(
             x.digest(),
-            unhexlify(
+            bytes.fromhex(
                 "5c8875ae474a3634ba4fd55ec85bffd661f32aca75c6d699d0cdcb6c115891c1"
             ),
         )
@@ -60,13 +62,13 @@ class TestCryptoSha3_256(unittest.TestCase):
         # x = hashlib.sha3_256()
         # for i in range(16777216):
         #     x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
-        # self.assertEqual(x.digest(), unhexlify('ecbbc42cbf296603acb2c6bc0410ef4378bafb24b710357f12df607758b33e2b'))
+        # self.assertEqual(x.digest(), bytes.fromhex('ecbbc42cbf296603acb2c6bc0410ef4378bafb24b710357f12df607758b33e2b'))
 
     def test_update_keccak(self):
         for b, d in self.vectors_keccak:
             x = hashlib.sha3_256(keccak=True)
             x.update(b)
-            self.assertEqual(x.digest(), unhexlify(d))
+            self.assertEqual(x.digest(), bytes.fromhex(d))
 
     def test_digest_multi(self):
         x = hashlib.sha3_256()

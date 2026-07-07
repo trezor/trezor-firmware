@@ -10,8 +10,6 @@ if TYPE_CHECKING:
 
 @auto_keychain(__name__)
 async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSignature:
-    from ubinascii import hexlify
-
     from trezor import TR
     from trezor.crypto.curve import bip340
     from trezor.crypto.hashlib import sha256
@@ -46,7 +44,9 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     ]
     await confirm_value(title, content, "", "nostr_sign_event", info_items=info_items)
 
-    serialized_event = f'[0,"{hexlify(pk).decode()}",{created_at},{kind},[{serialized_tags}],"{content}"]'
+    serialized_event = (
+        f'[0,"{pk.hex()}",{created_at},{kind},[{serialized_tags}],"{content}"]'
+    )
     event_id = sha256(serialized_event).digest()
 
     # The event signature is basically the signature of the event ID computed above

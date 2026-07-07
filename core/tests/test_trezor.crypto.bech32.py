@@ -207,7 +207,7 @@ class TestCryptoBech32(unittest.TestCase):
             witver, witprog = bech32.decode(hrp, address)
             self.assertIsNotNone(witver)
             scriptpubkey = segwit_scriptpubkey(witver, witprog)
-            self.assertEqual(scriptpubkey, unhexlify(hexscript))
+            self.assertEqual(scriptpubkey, bytes.fromhex(hexscript))
             addr = bech32.encode(hrp, witver, witprog)
             self.assertEqual(address.lower(), addr)
 

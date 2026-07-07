@@ -9,19 +9,19 @@ class TestCryptoCrc(unittest.TestCase):
     vectors_crc32 = [
         ("123456789", 0xCBF43926),
         (
-            unhexlify(
+            bytes.fromhex(
                 "0000000000000000000000000000000000000000000000000000000000000000"
             ),
             0x190A55AD,
         ),
         (
-            unhexlify(
+            bytes.fromhex(
                 "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
             ),
             0xFF6CAB0B,
         ),
         (
-            unhexlify(
+            bytes.fromhex(
                 "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F"
             ),
             0x91267E8A,

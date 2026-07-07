@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 from trezor import TR
 from trezor.enums import ButtonRequestType
@@ -290,7 +289,7 @@ async def require_confirm_vault_tx(
     account, account_path = get_account_and_path(address_n)
 
     extra_data_str: str | None = (
-        "0x" + hexlify(extra_data).decode() if extra_data is not None else None
+        "0x" + extra_data.hex() if extra_data is not None else None
     )
 
     await confirm_ethereum_vault_tx(
@@ -402,11 +401,9 @@ def require_confirm_address(
     br_name: str | None = None,
     footer: str | None = None,
 ) -> Awaitable[None]:
-    from ubinascii import hexlify
-
     from trezor.ui.layouts import confirm_address
 
-    address_hex = "0x" + hexlify(address_bytes).decode()
+    address_hex = "0x" + address_bytes.hex()
     return confirm_address(
         title or TR.ethereum__title_signing_address,
         address_hex,
@@ -419,11 +416,9 @@ def require_confirm_address(
 
 
 async def confirm_message_hash(message_hash: bytes) -> None:
-    from ubinascii import hexlify
-
     from trezor.ui.layouts import confirm_value
 
-    message_hash_hex = "0x" + hexlify(message_hash).decode()
+    message_hash_hex = "0x" + message_hash.hex()
 
     await confirm_value(
         TR.ethereum__title_confirm_message_hash,

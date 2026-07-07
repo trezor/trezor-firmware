@@ -16,7 +16,7 @@ class TestSignTxOmni(unittest.TestCase):
             "6f6d6e69000000000000001f0000000020c855": True,
         }
         for k, v in VECTORS.items():
-            k = unhexlify(k)
+            k = bytes.fromhex(k)
             self.assertEqual(is_valid(k), v)
 
     def test_parse(self):
@@ -28,7 +28,7 @@ class TestSignTxOmni(unittest.TestCase):
             "6f6d6e6901000000": "Unknown transaction",
         }
         for k, v in VECTORS.items():
-            k = unhexlify(k)
+            k = bytes.fromhex(k)
             self.assertEqual(parse(k), v)
 
 

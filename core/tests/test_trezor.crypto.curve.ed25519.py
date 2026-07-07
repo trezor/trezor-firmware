@@ -53,20 +53,20 @@ class TestCryptoEd25519(unittest.TestCase):
 
     def test_publickey(self):
         for sk, pk, _ in self.vectors:
-            pk2 = ed25519.publickey(unhexlify(sk))
-            self.assertEqual(pk2, unhexlify(pk))
+            pk2 = ed25519.publickey(bytes.fromhex(sk))
+            self.assertEqual(pk2, bytes.fromhex(pk))
 
     def test_sign(self):
         for sk, pk, sig in self.vectors:
             # msg = pk
-            sig2 = ed25519.sign(unhexlify(sk), unhexlify(pk))
-            self.assertEqual(sig2, unhexlify(sig))
+            sig2 = ed25519.sign(bytes.fromhex(sk), bytes.fromhex(pk))
+            self.assertEqual(sig2, bytes.fromhex(sig))
 
     def test_verify(self):
         for _, pk, sig in self.vectors:
             # msg = pk
             self.assertTrue(
-                ed25519.verify(unhexlify(pk), unhexlify(sig), unhexlify(pk))
+                ed25519.verify(bytes.fromhex(pk), bytes.fromhex(sig), bytes.fromhex(pk))
             )
             pass
 

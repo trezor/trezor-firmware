@@ -33,7 +33,7 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
 
     def test_chacha20_encrypt(self):
         for vector in self.vectors:
-            plaintext, _, key, nonce, ciphertext, _ = map(unhexlify, vector)
+            plaintext, _, key, nonce, ciphertext, _ = map(bytes.fromhex, vector)
 
             ctx = chacha20poly1305_encrypt(key, nonce)
             out = ctx.encrypt(plaintext)
@@ -41,14 +41,14 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
 
     def test_chacha20_decrypt(self):
         for vector in self.vectors:
-            plaintext, _, key, nonce, ciphertext, _ = map(unhexlify, vector)
+            plaintext, _, key, nonce, ciphertext, _ = map(bytes.fromhex, vector)
             ctx = chacha20poly1305_decrypt(key, nonce)
             out = ctx.decrypt(ciphertext)
             self.assertEqual(out, plaintext)
 
     def test_chacha20poly1305_encrypt_mac(self):
         for vector in self.vectors:
-            plaintext, aad, key, nonce, ciphertext, tag = map(unhexlify, vector)
+            plaintext, aad, key, nonce, ciphertext, tag = map(bytes.fromhex, vector)
 
             ctx = chacha20poly1305_encrypt(key, nonce)
             ctx.auth(aad)
@@ -59,7 +59,7 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
 
     def test_chacha20poly1305_decrypt_mac(self):
         for vector in self.vectors:
-            plaintext, aad, key, nonce, ciphertext, tag = map(unhexlify, vector)
+            plaintext, aad, key, nonce, ciphertext, tag = map(bytes.fromhex, vector)
 
             ctx = chacha20poly1305_decrypt(key, nonce)
             ctx.auth(aad)
@@ -69,7 +69,7 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
 
     def test_chacha20poly1305_invalid_mac_len(self):
         for vector in self.vectors:
-            _, aad, key, nonce, ciphertext, _mac = map(unhexlify, vector)
+            _, aad, key, nonce, ciphertext, _mac = map(bytes.fromhex, vector)
             invalid_macs = [
                 b"",
                 b"\x00",
@@ -91,7 +91,7 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
     def test_chacha20poly1305_invalid_mac(self):
         invalid_mac = b"\xab" * 16
         for vector in self.vectors:
-            _, aad, key, nonce, ciphertext, _ = map(unhexlify, vector)
+            _, aad, key, nonce, ciphertext, _ = map(bytes.fromhex, vector)
 
             ctx = chacha20poly1305_decrypt(key, nonce)
             ctx.auth(aad)

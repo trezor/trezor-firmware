@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import unhexlify
 
 from trezor.utils import BufferReader
 from trezor.wire import DataError
@@ -13,18 +12,18 @@ if TYPE_CHECKING:
     from .keychain import MsgInSignTx
 
 
-FUNC_SIG_STAKE = unhexlify("3a29dbae")
-FUNC_SIG_UNSTAKE = unhexlify("76ec871c")
-FUNC_SIG_CLAIM = unhexlify("33986ffa")
+FUNC_SIG_STAKE = b"\x3a\x29\xdb\xae"
+FUNC_SIG_UNSTAKE = b"\x76\xec\x87\x1c"
+FUNC_SIG_CLAIM = b"\x33\x98\x6f\xfa"
 
 # addresses for pool (stake/unstake) and accounting (claim) operations
 ADDRESSES_POOL = (
-    unhexlify("AFA848357154a6a624686b348303EF9a13F63264"),  # Hoodi testnet
-    unhexlify("D523794C879D9eC028960a231F866758e405bE34"),  # mainnet
+    b"\xaf\xa8\x48\x35\x71\x54\xa6\xa6\x24\x68\x6b\x34\x83\x03\xef\x9a\x13\xf6\x32\x64",  # Hoodi testnet
+    b"\xd5\x23\x79\x4c\x87\x9d\x9e\xc0\x28\x96\x0a\x23\x1f\x86\x67\x58\xe4\x05\xbe\x34",  # mainnet
 )
 ADDRESSES_ACCOUNTING = (
-    unhexlify("624087DD1904ab122A32878Ce9e933C7071F53B9"),  # Hoodi testnet
-    unhexlify("7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e"),  # mainnet
+    b"\x62\x40\x87\xdd\x19\x04\xab\x12\x2a\x32\x87\x8c\xe9\xe9\x33\xc7\x07\x1f\x53\xb9",  # Hoodi testnet
+    b"\x7a\x7f\x0b\x3c\x23\xc2\x3a\x31\xcf\xcb\x0c\x44\x70\x9b\xe7\x0d\x4d\x54\x5c\x6e",  # mainnet
 )
 
 

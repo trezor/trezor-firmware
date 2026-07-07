@@ -7,7 +7,6 @@ class TestCheckEvoluCommandsRegistrationRequest(unittest.TestCase):
 
     def test_proof_sign_registration_request(self):
         from trezorutils import delegated_identity
-        from ubinascii import unhexlify
 
         from storage.device import get_delegated_identity_key_rotation_index
         from trezor.crypto.curve import nist256p1
@@ -22,7 +21,7 @@ class TestCheckEvoluCommandsRegistrationRequest(unittest.TestCase):
         sign_request_challenge: str = "1234"
         sign_request_size: int = 10
         arguments = [
-            unhexlify(sign_request_challenge),
+            bytes.fromhex(sign_request_challenge),
             sign_request_size.to_bytes(4, "big"),
         ]
 
@@ -41,13 +40,11 @@ class TestCheckEvoluCommandsRegistrationRequest(unittest.TestCase):
         self.assertTrue(check_delegated_identity_proof(proof, header, arguments))
 
     def test_proof_sign_registration_request_invalid_size(self):
-        from ubinascii import unhexlify
-
         from trezor.wire import DataError
 
         from apps.evolu.sign_registration_request import _check_data
 
-        sign_request_challenge = unhexlify("1234")
+        sign_request_challenge = bytes.fromhex("1234")
         sign_request_size: int = 256**4 + 5  # invalid size
 
         with self.assertRaises(DataError):

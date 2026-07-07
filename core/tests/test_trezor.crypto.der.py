@@ -75,8 +75,8 @@ class TestCryptoDer(unittest.TestCase):
     def test_der_encode_decode_signature(self):
 
         for s, d in self.vectors_sig:
-            s = tuple(unhexlify(i) for i in s)
-            d = unhexlify(d)
+            s = tuple(bytes.fromhex(i) for i in s)
+            d = bytes.fromhex(d)
             sig = b"".join(s)
             d2 = der.encode_signature(sig)
             self.assertEqual(d2, d)

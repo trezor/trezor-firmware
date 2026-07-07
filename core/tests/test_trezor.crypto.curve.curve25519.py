@@ -22,8 +22,8 @@ class TestCryptoCurve25519(unittest.TestCase):
 
     def test_multiply(self):
         for sk, pk, session in self.vectors:
-            session2 = curve25519.multiply(unhexlify(sk), unhexlify(pk))
-            self.assertEqual(session2, unhexlify(session))
+            session2 = curve25519.multiply(bytes.fromhex(sk), bytes.fromhex(pk))
+            self.assertEqual(session2, bytes.fromhex(session))
 
     def test_multiply_random(self):
         for _ in range(100):

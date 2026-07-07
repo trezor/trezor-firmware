@@ -26,7 +26,7 @@ class TestCardanoCbor(unittest.TestCase):
             ((2**64) - 1, "9bffffffffffffffff"),
         ]
         for val, header_hex in test_vectors:
-            header = unhexlify(header_hex)
+            header = bytes.fromhex(header_hex)
             self.assertEqual(create_array_header(val), header)
 
         with self.assertRaises(NotImplementedError):
@@ -42,7 +42,7 @@ class TestCardanoCbor(unittest.TestCase):
             ((2**64) - 1, "d901029bffffffffffffffff"),
         ]
         for val, header_hex in test_vectors:
-            header = unhexlify(header_hex)
+            header = bytes.fromhex(header_hex)
             self.assertEqual(create_tagged_set_header(val), header)
 
         with self.assertRaises(NotImplementedError):
@@ -58,7 +58,7 @@ class TestCardanoCbor(unittest.TestCase):
             ((2**64) - 1, "bbffffffffffffffff"),
         ]
         for val, header_hex in test_vectors:
-            header = unhexlify(header_hex)
+            header = bytes.fromhex(header_hex)
             self.assertEqual(create_map_header(val), header)
 
         with self.assertRaises(NotImplementedError):
@@ -74,7 +74,7 @@ class TestCardanoCbor(unittest.TestCase):
             ((2**64) - 1, "d8185bffffffffffffffff"),
         ]
         for val, header_hex in test_vectors:
-            header = unhexlify(header_hex)
+            header = bytes.fromhex(header_hex)
             self.assertEqual(create_embedded_cbor_bytes_header(val), header)
 
         with self.assertRaises(NotImplementedError):
@@ -105,7 +105,7 @@ class TestCardanoCbor(unittest.TestCase):
             (-1000000000000, "3B000000E8D4A50FFF"),
             # binary strings
             (b"", "40"),
-            (unhexlify("01020304"), "4401020304"),
+            (bytes.fromhex("01020304"), "4401020304"),
             # text strings
             ("", "60"),
             ("Fun", "6346756e"),
@@ -115,7 +115,7 @@ class TestCardanoCbor(unittest.TestCase):
             ),
             # tags
             (Tagged(1, 1363896240), "c11a514b67b0"),
-            (Tagged(23, unhexlify("01020304")), "d74401020304"),
+            (Tagged(23, bytes.fromhex("01020304")), "d74401020304"),
             # arrays
             ([], "80"),
             ([1, 2, 3], "83010203"),
@@ -142,7 +142,7 @@ class TestCardanoCbor(unittest.TestCase):
             (None, "f6"),
         ]
         for val, encoded_hex in test_vectors:
-            encoded = unhexlify(encoded_hex)
+            encoded = bytes.fromhex(encoded_hex)
             self.assertEqual(encode(val), encoded)
             self.assertEqual(decode(encoded), val)
 
@@ -161,7 +161,7 @@ class TestCardanoCbor(unittest.TestCase):
         ]
         for val, encoded_hex in test_vectors:
             value_tuple = tuple(val)
-            encoded = unhexlify(encoded_hex)
+            encoded = bytes.fromhex(encoded_hex)
             self.assertEqual(encode(value_tuple), encoded)
             self.assertEqual(decode(encoded), val)
 
@@ -180,7 +180,7 @@ class TestCardanoCbor(unittest.TestCase):
             for key, value in val:
                 ordered_map[key] = value
 
-            encoded = unhexlify(encoded_hex)
+            encoded = bytes.fromhex(encoded_hex)
             self.assertEqual(encode(ordered_map), encoded)
             self.assertEqual(decode(encoded), {k: v for k, v in val})
 

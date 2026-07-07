@@ -38,7 +38,7 @@ class TestCryptoBip340(unittest.TestCase):
 
     def test_publickey(self):
         for sk, pk in self.vectors:
-            pk_computed = hexlify(bip340.publickey(unhexlify(sk))).decode()
+            pk_computed = bip340.publickey(bytes.fromhex(sk)).hex()
             self.assertEqual(str(pk_computed).upper(), pk)
 
     def test_sign_verify_random(self):

@@ -2,8 +2,6 @@
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
-    import ubinascii
-
     from trezor.crypto import monero as tcry
     from trezor.crypto import random
 
@@ -162,17 +160,15 @@ class TestMoneroClsag(unittest.TestCase):
         return msg, scalars, sc1, sI, sD, ring2, Cp
 
     def verify_monero_generated(self, clsag):
-        msg = ubinascii.unhexlify(clsag["msg"])
-        sI = crypto_helpers.decodepoint(ubinascii.unhexlify(clsag["sI"]))
-        sD = crypto_helpers.decodepoint(ubinascii.unhexlify(clsag["sD"]))
-        sc1 = crypto_helpers.decodeint(ubinascii.unhexlify(clsag["sc1"]))
-        Cout = crypto_helpers.decodepoint(ubinascii.unhexlify(clsag["cout"]))
-        scalars = [
-            crypto_helpers.decodeint(ubinascii.unhexlify(x)) for x in clsag["ss"]
-        ]
+        msg = bytes.fromhex(clsag["msg"])
+        sI = crypto_helpers.decodepoint(bytes.fromhex(clsag["sI"]))
+        sD = crypto_helpers.decodepoint(bytes.fromhex(clsag["sD"]))
+        sc1 = crypto_helpers.decodeint(bytes.fromhex(clsag["sc1"]))
+        Cout = crypto_helpers.decodepoint(bytes.fromhex(clsag["cout"]))
+        scalars = [crypto_helpers.decodeint(bytes.fromhex(x)) for x in clsag["ss"]]
         ring = []
         for e in clsag["ring"]:
-            ring.append(TmpKey(ubinascii.unhexlify(e[0]), ubinascii.unhexlify(e[1])))
+            ring.append(TmpKey(bytes.fromhex(e[0]), bytes.fromhex(e[1])))
 
         self.verify_clsag(msg, scalars, sc1, sI, sD, ring, Cout)
 

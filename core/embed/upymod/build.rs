@@ -129,7 +129,7 @@ fn main() -> Result<()> {
         lib.add_sources_in_dir(
             mpy_dir,
             [
-                "extmod/modubinascii.c",
+                "extmod/modbinascii.c",
                 "extmod/moduheapq.c",
                 "extmod/modutimeq.c",
                 "extmod/utime_mphal.c",

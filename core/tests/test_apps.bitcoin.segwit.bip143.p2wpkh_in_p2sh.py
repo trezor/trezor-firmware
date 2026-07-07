@@ -27,7 +27,7 @@ class TestSegwitBip143(unittest.TestCase):
     inp1 = TxInput(
         address_n=[0],
         # Trezor expects hash in reversed format
-        prev_hash=unhexlify(
+        prev_hash=bytes.fromhex(
             "77541aeb3c4dac9260b68f74f44c973081a9d4cb2ebe8038b2d70faa201b6bdb"
         ),
         prev_index=1,
@@ -57,8 +57,8 @@ class TestSegwitBip143(unittest.TestCase):
         sig_hasher.add_input(self.inp1, b"")
         prevouts_hash = get_tx_hash(sig_hasher.h_prevouts, double=coin.sign_hash_double)
         self.assertEqual(
-            hexlify(prevouts_hash),
-            b"b0287b4a252ac05af83d2dcef00ba313af78a3e9c329afa216eb3aa2a7b4613a",
+            prevouts_hash.hex(),
+            "b0287b4a252ac05af83d2dcef00ba313af78a3e9c329afa216eb3aa2a7b4613a",
         )
 
     def test_bip143_sequence(self):
@@ -69,8 +69,8 @@ class TestSegwitBip143(unittest.TestCase):
             sig_hasher.h_sequences, double=coin.sign_hash_double
         )
         self.assertEqual(
-            hexlify(sequence_hash),
-            b"18606b350cd8bf565266bc352f0caddcf01e8fa789dd8a15386327cf8cabe198",
+            sequence_hash.hex(),
+            "18606b350cd8bf565266bc352f0caddcf01e8fa789dd8a15386327cf8cabe198",
         )
 
     def test_bip143_outputs(self):
@@ -84,8 +84,8 @@ class TestSegwitBip143(unittest.TestCase):
 
         outputs_hash = get_tx_hash(sig_hasher.h_outputs, double=coin.sign_hash_double)
         self.assertEqual(
-            hexlify(outputs_hash),
-            b"de984f44532e2173ca0d64314fcefe6d30da6f8cf27bafa706da61df8a226c83",
+            outputs_hash.hex(),
+            "de984f44532e2173ca0d64314fcefe6d30da6f8cf27bafa706da61df8a226c83",
         )
 
     def test_bip143_preimage_testdata(self):
@@ -109,8 +109,8 @@ class TestSegwitBip143(unittest.TestCase):
             self.inp1, [node.public_key()], 1, self.tx, coin, SigHashType.SIGHASH_ALL
         )
         self.assertEqual(
-            hexlify(result),
-            b"6e28aca7041720995d4acf59bbda64eef5d6f23723d23f2e994757546674bbd9",
+            result.hex(),
+            "6e28aca7041720995d4acf59bbda64eef5d6f23723d23f2e994757546674bbd9",
         )
 
 
