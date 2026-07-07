@@ -236,14 +236,10 @@ if False:  # noqa
             self.data = ""
 
         def update(self, data: bytes) -> None:
-            from ubinascii import hexlify
-
             self.ctx.update(data)
-            self.data += hexlify(data).decode() + " "
+            self.data += data.hex() + " "
 
         def digest(self) -> bytes:
-            from ubinascii import hexlify
-
             from trezor import log
 
             digest = self.ctx.digest()
@@ -251,7 +247,7 @@ if False:  # noqa
                 __name__,
                 "%s hash: %s, data: %s",
                 self.ctx.__class__.__name__,
-                hexlify(digest).decode(),
+                digest.hex(),
                 self.data,
             )
             return digest
@@ -410,9 +406,7 @@ def hexlify_if_bytes(data: str | bytes | bytearray | memoryview) -> str:
     if isinstance(data, str):
         return data
     elif isinstance(data, (bytes, bytearray, memoryview)):
-        from ubinascii import hexlify
-
-        return hexlify(data).decode()
+        return data.hex()
     else:
         raise TypeError("Expected str, bytes, bytearray, or memoryview")
 

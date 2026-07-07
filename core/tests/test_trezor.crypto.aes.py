@@ -9,11 +9,11 @@ class TestCryptoAes(unittest.TestCase):
     # test vectors from NIST Special Publication 800-38A (Appendix F)
     # https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-38a.pdf
 
-    iv = unhexlify("000102030405060708090a0b0c0d0e0f")
-    ctr = unhexlify("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff")
-    key128 = unhexlify("2b7e151628aed2a6abf7158809cf4f3c")
-    key192 = unhexlify("8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b")
-    key256 = unhexlify(
+    iv = bytes.fromhex("000102030405060708090a0b0c0d0e0f")
+    ctr = bytes.fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff")
+    key128 = bytes.fromhex("2b7e151628aed2a6abf7158809cf4f3c")
+    key192 = bytes.fromhex("8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b")
+    key256 = bytes.fromhex(
         "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"
     )
 
@@ -44,7 +44,7 @@ class TestCryptoAes(unittest.TestCase):
             ctx1 = aes(aes.ECB, key)
             ctx2 = aes(aes.ECB, key)
             for plain, cipher in vec:
-                plain, cipher = unhexlify(plain), unhexlify(cipher)
+                plain, cipher = bytes.fromhex(plain), bytes.fromhex(cipher)
                 e = ctx1.encrypt(plain)
                 self.assertEqual(e, cipher)
                 d = ctx2.decrypt(cipher)
@@ -77,7 +77,7 @@ class TestCryptoAes(unittest.TestCase):
             ctx1 = aes(aes.CBC, key, self.iv)
             ctx2 = aes(aes.CBC, key, self.iv)
             for plain, cipher in vec:
-                plain, cipher = unhexlify(plain), unhexlify(cipher)
+                plain, cipher = bytes.fromhex(plain), bytes.fromhex(cipher)
                 e = ctx1.encrypt(plain)
                 self.assertEqual(e, cipher)
                 d = ctx2.decrypt(cipher)
@@ -110,7 +110,7 @@ class TestCryptoAes(unittest.TestCase):
             ctx1 = aes(aes.CFB, key, self.iv)
             ctx2 = aes(aes.CFB, key, self.iv)
             for plain, cipher in vec:
-                plain, cipher = unhexlify(plain), unhexlify(cipher)
+                plain, cipher = bytes.fromhex(plain), bytes.fromhex(cipher)
                 e = ctx1.encrypt(plain)
                 self.assertEqual(e, cipher)
                 d = ctx2.decrypt(cipher)
@@ -143,7 +143,7 @@ class TestCryptoAes(unittest.TestCase):
             ctx1 = aes(aes.OFB, key, self.iv)
             ctx2 = aes(aes.OFB, key, self.iv)
             for plain, cipher in vec:
-                plain, cipher = unhexlify(plain), unhexlify(cipher)
+                plain, cipher = bytes.fromhex(plain), bytes.fromhex(cipher)
                 e = ctx1.encrypt(plain)
                 self.assertEqual(e, cipher)
                 d = ctx2.decrypt(cipher)
@@ -176,7 +176,7 @@ class TestCryptoAes(unittest.TestCase):
             ctx1 = aes(aes.CTR, key, self.ctr)
             ctx2 = aes(aes.CTR, key, self.ctr)
             for plain, cipher in vec:
-                plain, cipher = unhexlify(plain), unhexlify(cipher)
+                plain, cipher = bytes.fromhex(plain), bytes.fromhex(cipher)
                 e = ctx1.encrypt(plain)
                 self.assertEqual(e, cipher)
                 d = ctx2.decrypt(cipher)

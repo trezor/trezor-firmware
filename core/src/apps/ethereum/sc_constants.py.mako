@@ -5,10 +5,8 @@
 
 from typing import Iterator
 <%
-from binascii import unhexlify
-
 def fmt_addr(addr_hex: str) -> str:
-    data = "".join(f'\\x{b:02x}' for b in unhexlify(addr_hex))
+    data = "".join(f'\\x{b:02x}' for b in bytes.fromhex(addr_hex))
     return f'b"{data}"'
 
 

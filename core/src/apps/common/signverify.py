@@ -29,12 +29,10 @@ def message_digest(coin: CoinInfo, message: AnyBytes) -> bytes:
 
 
 def decode_message(message: AnyBytes) -> str:
-    from ubinascii import hexlify
-
     try:
         return bytes(message).decode()
     except UnicodeError:
-        return f"hex({hexlify(message).decode()})"
+        return f"hex({message.hex()})"
 
 
 def is_printable_ascii(bytestring: AnyBytes) -> bool:

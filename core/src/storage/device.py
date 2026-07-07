@@ -103,12 +103,11 @@ def is_initialized() -> bool:
 
 def get_device_id() -> str:
     from trezorcrypto import random  # avoid pulling in trezor.crypto
-    from ubinascii import hexlify
 
     dev_id = common.get(_NAMESPACE, DEVICE_ID, public=True)
     if not dev_id:
         # _new_device_id
-        new_dev_id_str = hexlify(random.bytes(12)).decode().upper()
+        new_dev_id_str = random.bytes(12).hex().upper()
         dev_id = new_dev_id_str.encode()
         common.set(_NAMESPACE, DEVICE_ID, dev_id, public=True)
     return dev_id.decode()

@@ -13,8 +13,6 @@ _REBOOT_SUCCESS_TIMEOUT_MS = const(500)
 
 
 async def install_upgrade(firmware_header: AnyBytes) -> AnyBytes:
-    from ubinascii import hexlify
-
     from trezor import TR, utils, wire
     from trezor.ui.layouts import confirm_firmware_update
 
@@ -38,7 +36,7 @@ async def install_upgrade(firmware_header: AnyBytes) -> AnyBytes:
         description=TR.reboot_to_bootloader__version_by_template.format(
             version_str, hdr.vendor
         ),
-        fingerprint=hexlify(hdr.fingerprint).decode(),
+        fingerprint=hdr.fingerprint.hex(),
     )
 
     return hdr.hash

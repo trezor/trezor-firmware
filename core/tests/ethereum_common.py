@@ -1,5 +1,3 @@
-from ubinascii import unhexlify  # noqa: F401
-
 from trezor import messages, protobuf
 from trezor.crypto import cosi
 from trezor.crypto.curve import ed25519

@@ -56,7 +56,8 @@ class TestCardanoUtils(unittest.TestCase):
 
         for params, expected in test_vectors:
             actual = format_asset_fingerprint(
-                policy_id=unhexlify(params[0]), asset_name_bytes=unhexlify(params[1])
+                policy_id=bytes.fromhex(params[0]),
+                asset_name_bytes=bytes.fromhex(params[1]),
             )
             self.assertEqual(actual, expected)
 

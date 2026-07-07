@@ -235,11 +235,9 @@ class TestCryptoNist256p1(unittest.TestCase):
             if len(sk) < 64:
                 sk = "0" * (64 - len(sk)) + sk
             pk = pk.lower()
-            pk65 = hexlify(
-                nist256p1.publickey(unhexlify(sk), False)
-            ).decode()  # uncompressed
+            pk65 = nist256p1.publickey(bytes.fromhex(sk), False).hex()  # uncompressed
             self.assertEqual(str(pk65), "04" + pk)
-            pk33 = hexlify(nist256p1.publickey(unhexlify(sk))).decode()
+            pk33 = nist256p1.publickey(bytes.fromhex(sk)).hex()
             if pk[-1] in "02468ace":
                 self.assertEqual(pk33, "02" + pk[:64])
             else:

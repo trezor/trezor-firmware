@@ -81,7 +81,7 @@ class TestEthereumClearSigningDefinitions(unittest.TestCase):
             self.assertIn(
                 func_sig,
                 expected,
-                msg=f"selector {hexlify(func_sig).decode()} (intent {display_format.intent}) matches no known Solidity signature",
+                msg=f"selector {func_sig.hex()} (intent {display_format.intent}) matches no known Solidity signature",
             )
             seen.add(func_sig)
 

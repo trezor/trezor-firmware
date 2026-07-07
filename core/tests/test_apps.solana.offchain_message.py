@@ -1,6 +1,4 @@
 # flake8: noqa: F403,F405
-from ubinascii import unhexlify
-
 from trezor.crypto import base58
 from trezor.wire import DataError
 
@@ -58,7 +56,7 @@ class TestMessageV1(unittest.TestCase):
         for vector in TEST_VECTORS:
             signers = [base58.decode(signer) for signer in vector["signers"]]
             serialized = self.serialize(signers, vector["message"])
-            self.assertEqual(serialized, unhexlify(vector["hex"]))
+            self.assertEqual(serialized, bytes.fromhex(vector["hex"]))
 
     def test_signers_empty(self):
         with self.assertRaises(DataError):

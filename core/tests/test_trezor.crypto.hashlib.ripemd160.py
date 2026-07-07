@@ -29,19 +29,19 @@ class TestCryptoRipemd160(unittest.TestCase):
 
     def test_digest(self):
         for b, d in self.vectors:
-            self.assertEqual(hashlib.ripemd160(b).digest(), unhexlify(d))
+            self.assertEqual(hashlib.ripemd160(b).digest(), bytes.fromhex(d))
 
     def test_update(self):
         for b, d in self.vectors:
             x = hashlib.ripemd160()
             x.update(b)
-            self.assertEqual(x.digest(), unhexlify(d))
+            self.assertEqual(x.digest(), bytes.fromhex(d))
 
         x = hashlib.ripemd160()
         for _ in range(8):
             x.update(b"1234567890")
         self.assertEqual(
-            x.digest(), unhexlify("9b752e45573d4b39f4dbd3323cab82bf63326bfb")
+            x.digest(), bytes.fromhex("9b752e45573d4b39f4dbd3323cab82bf63326bfb")
         )
 
     def test_digest_multi(self):

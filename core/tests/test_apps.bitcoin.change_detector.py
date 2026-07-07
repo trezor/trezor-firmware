@@ -12,10 +12,10 @@ xpub1 = HDNodeType(
     depth=2,
     fingerprint=50263508,
     child_num=0,
-    chain_code=unhexlify(
+    chain_code=bytes.fromhex(
         "8eb1f96a45dcb693dbad61f5184871d999127a37f1b0d4dae9964eaf3fb0e15b"
     ),
-    public_key=unhexlify(
+    public_key=bytes.fromhex(
         "03922315cd2d2d874e4c55add2e0ea41af9c2957f02c0abe0f55285d364a067b61"
     ),
 )
@@ -25,10 +25,10 @@ xpub2 = HDNodeType(
     depth=2,
     fingerprint=50263508,
     child_num=1,
-    chain_code=unhexlify(
+    chain_code=bytes.fromhex(
         "acad50a7e52e44841d42bec6886df516974f8d366bc471a8515dfc69a6692700"
     ),
-    public_key=unhexlify(
+    public_key=bytes.fromhex(
         "02e6f3bf3093b45705e3d838490377e0d99eed911ca01990d1e94acd445dee59e8"
     ),
 )
@@ -38,10 +38,10 @@ xpub3 = HDNodeType(
     depth=2,
     fingerprint=50263508,
     child_num=2,
-    chain_code=unhexlify(
+    chain_code=bytes.fromhex(
         "5204b124a264b0bbf86360e365f0c9a0cb6e3ea57dda97196af015d64ccfa6b1"
     ),
-    public_key=unhexlify(
+    public_key=bytes.fromhex(
         "021cd5d138ba442c7f8ee9a2b8f4e254dc599a57d42c69b7194074135a0ba82926"
     ),
 )

@@ -26,7 +26,7 @@ class TestRippleSerializer(unittest.TestCase):
         )
         self.assertEqual(
             serialize(common, source_address, pubkey=None),
-            unhexlify(
+            bytes.fromhex(
                 "120000240000000161400000000bebc20068400000000000000a811450f97a072f1c4357f1ad84566a609479d927c9428314550fc62003e785dc231a1058a05e56e3f09cf4e6"
             ),
         )
@@ -45,7 +45,7 @@ class TestRippleSerializer(unittest.TestCase):
         )
         self.assertEqual(
             serialize(common, source_address, pubkey=None),
-            unhexlify(
+            bytes.fromhex(
                 "12000024000000636140000000000000016840000000000000638114550fc62003e785dc231a1058a05e56e3f09cf4e6831450f97a072f1c4357f1ad84566a609479d927c942"
             ),
         )
@@ -65,7 +65,7 @@ class TestRippleSerializer(unittest.TestCase):
         )
         self.assertEqual(
             serialize(common, source_address, pubkey=None),
-            unhexlify(
+            bytes.fromhex(
                 "120000220000000024000000026140000000017d784068400000000000000a81145ccb151f6e9d603f394ae778acf10d3bece874f68314e851bbbe79e328e43d68f43445368133df5fba5a"
             ),
         )
@@ -86,7 +86,7 @@ class TestRippleSerializer(unittest.TestCase):
         # 201b005ee9ba removed from the test vector because last ledger sequence is not supported
         self.assertEqual(
             serialize(common, source_address, pubkey=None),
-            unhexlify(
+            bytes.fromhex(
                 "12000022000000002400000090614000000000030d4068400000000000000f8114aa1bd19d9e87be8069fdbf6843653c43837c03c6831467fe6ec28e0464dd24fb2d62a492aac697cfad02"
             ),
         )
@@ -108,7 +108,7 @@ class TestRippleSerializer(unittest.TestCase):
         )
         self.assertEqual(
             serialize(common, source_address, pubkey=None),
-            unhexlify(
+            bytes.fromhex(
                 "120000220000000024000000012ef72d50ca6140000000017d784068400000000000000c8114e851bbbe79e328e43d68f43445368133df5fba5a831476dac5e814cd4aa74142c3ab45e69a900e637aa2"
             ),
         )
@@ -131,30 +131,30 @@ class TestRippleSerializer(unittest.TestCase):
         tx = serialize(
             common,
             source_address,
-            pubkey=unhexlify(
+            pubkey=bytes.fromhex(
                 "ed5f5ac8b98974a3ca843326d9b88cebd0560177b973ee0b149f782cfaa06dc66a"
             ),
         )
         network_prefix = helpers.HASH_TX_SIGN.to_bytes(4, "big")
         tx = network_prefix + tx
 
-        self.assertEqual(tx[0:4], unhexlify("53545800"))  # signing prefix
-        self.assertEqual(tx[4:7], unhexlify("120000"))  # transaction type
-        self.assertEqual(tx[7:12], unhexlify("2280000000"))  # flags
-        self.assertEqual(tx[12:17], unhexlify("2400000001"))  # sequence
-        self.assertEqual(tx[17:26], unhexlify("6140000000000003e8"))  # amount
-        self.assertEqual(tx[26:35], unhexlify("68400000000000000a"))  # fee
+        self.assertEqual(tx[0:4], bytes.fromhex("53545800"))  # signing prefix
+        self.assertEqual(tx[4:7], bytes.fromhex("120000"))  # transaction type
+        self.assertEqual(tx[7:12], bytes.fromhex("2280000000"))  # flags
+        self.assertEqual(tx[12:17], bytes.fromhex("2400000001"))  # sequence
+        self.assertEqual(tx[17:26], bytes.fromhex("6140000000000003e8"))  # amount
+        self.assertEqual(tx[26:35], bytes.fromhex("68400000000000000a"))  # fee
         self.assertEqual(
             tx[35:70],
-            unhexlify(
+            bytes.fromhex(
                 "7321ed5f5ac8b98974a3ca843326d9b88cebd0560177b973ee0b149f782cfaa06dc66a"
             ),
         )  # signing pub key
         self.assertEqual(
-            tx[70:92], unhexlify("81145b812c9d57731e27a2da8b1830195f88ef32a3b6")
+            tx[70:92], bytes.fromhex("81145b812c9d57731e27a2da8b1830195f88ef32a3b6")
         )  # account
         self.assertEqual(
-            tx[92:114], unhexlify("8314b5f762798a53d543a014caf8b297cff8f2f937e8")
+            tx[92:114], bytes.fromhex("8314b5f762798a53d543a014caf8b297cff8f2f937e8")
         )  # destination
         self.assertEqual(len(tx[114:]), 0)  # that's it
 

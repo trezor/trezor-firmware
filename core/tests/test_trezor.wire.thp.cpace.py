@@ -58,15 +58,17 @@ class TestTrezorHostProtocolCPace(unittest.TestCase):
 
     def test_compute_shared_secret(self):
         ctx = cpace.Cpace(b"")
-        s = unhexlify(
+        s = bytes.fromhex(
             "af46e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449aff"
         )
         ctx.trezor_private_key = s
         for _, input in self.vectors_raise:
-            self.assertRaises(ValueError, ctx.compute_shared_secret, unhexlify(input))
+            self.assertRaises(
+                ValueError, ctx.compute_shared_secret, bytes.fromhex(input)
+            )
         for _, input, expected_out in self.vectors_valid:
-            ctx.compute_shared_secret(unhexlify(input))
-            self.assertEqual(hexlify(ctx.shared_secret).decode(), expected_out)
+            ctx.compute_shared_secret(bytes.fromhex(input))
+            self.assertEqual(ctx.shared_secret.hex(), expected_out)
 
 
 if __name__ == "__main__":

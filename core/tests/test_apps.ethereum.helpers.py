@@ -22,7 +22,7 @@ class TestEthereumGetAddress(unittest.TestCase):
             "0xD1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb",
         ]
         for s in eip55:
-            b = unhexlify(s[2:])
+            b = bytes.fromhex(s[2:])
             h = address_from_bytes(b)
             self.assertEqual(h, s)
 
@@ -43,13 +43,13 @@ class TestEthereumGetAddress(unittest.TestCase):
 
         n = make_eth_network(chain_id=30)
         for s in rskip60_chain_30:
-            b = unhexlify(s[2:])
+            b = bytes.fromhex(s[2:])
             h = address_from_bytes(b, n)
             self.assertEqual(h, s)
 
         n = make_eth_network(chain_id=31)
         for s in rskip60_chain_31:
-            b = unhexlify(s[2:])
+            b = bytes.fromhex(s[2:])
             h = address_from_bytes(b, n)
             self.assertEqual(h, s)
 

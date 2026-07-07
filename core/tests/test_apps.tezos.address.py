@@ -14,19 +14,19 @@ class TestTezosAddress(unittest.TestCase):
         contracts = [
             TezosContractID(
                 tag=TezosContractType.Implicit,
-                hash=unhexlify("0090ec585b4d5fa39b20213e46b232cc57a4cfab4b"),
+                hash=bytes.fromhex("0090ec585b4d5fa39b20213e46b232cc57a4cfab4b"),
             ),
             TezosContractID(
                 tag=TezosContractType.Implicit,
-                hash=unhexlify("017dfb3fef44082eca8cd3eccebd77db44633ffc9e"),
+                hash=bytes.fromhex("017dfb3fef44082eca8cd3eccebd77db44633ffc9e"),
             ),
             TezosContractID(
                 tag=TezosContractType.Implicit,
-                hash=unhexlify("02c1fc1b7e503825068ff4fe2f8916f98af981eab1"),
+                hash=bytes.fromhex("02c1fc1b7e503825068ff4fe2f8916f98af981eab1"),
             ),
             TezosContractID(
                 tag=TezosContractType.Originated,
-                hash=unhexlify("65671dedc69669f066f45d586a2ecdeddacc95af00"),
+                hash=bytes.fromhex("65671dedc69669f066f45d586a2ecdeddacc95af00"),
             ),
         ]
 

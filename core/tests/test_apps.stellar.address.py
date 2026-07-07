@@ -24,7 +24,7 @@ class TestStellarAddress(unittest.TestCase):
             public_key_from_address(
                 "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
             ),
-            unhexlify(
+            bytes.fromhex(
                 "5d55642466b185b843152e9e219151dbc5892027ec40101a517bed5ca030c2e0"
             ),
         )
@@ -33,14 +33,14 @@ class TestStellarAddress(unittest.TestCase):
             public_key_from_address(
                 "GCN2K2HG53AWX2SP5UHRPMJUUHLJF2XBTGSXROTPWRGAYJCDDP63J2U6"
             ),
-            unhexlify(
+            bytes.fromhex(
                 "9ba568e6eec16bea4fed0f17b134a1d692eae199a578ba6fb44c0c24431bfdb4"
             ),
         )
 
     def test_pubkey_to_address(self):
         addr = address_from_public_key(
-            unhexlify(
+            bytes.fromhex(
                 "5d55642466b185b843152e9e219151dbc5892027ec40101a517bed5ca030c2e0"
             )
         )
@@ -49,7 +49,7 @@ class TestStellarAddress(unittest.TestCase):
         )
 
         addr = address_from_public_key(
-            unhexlify(
+            bytes.fromhex(
                 "9ba568e6eec16bea4fed0f17b134a1d692eae199a578ba6fb44c0c24431bfdb4"
             )
         )
@@ -58,21 +58,21 @@ class TestStellarAddress(unittest.TestCase):
         )
 
     def test_both(self):
-        pubkey = unhexlify(
+        pubkey = bytes.fromhex(
             "dfcc77d08588601702e02de2dc603f5c5281bea23baa894ae3b3b4778e5bbe40"
         )
         self.assertEqual(
             public_key_from_address(address_from_public_key(pubkey)), pubkey
         )
 
-        pubkey = unhexlify(
+        pubkey = bytes.fromhex(
             "53214e6155469c32fb882b1b1d94930d5445a78202867b7ddc6a33ad42ff4464"
         )
         self.assertEqual(
             public_key_from_address(address_from_public_key(pubkey)), pubkey
         )
 
-        pubkey = unhexlify(
+        pubkey = bytes.fromhex(
             "5ed4690134e5ef79b290ea1e7a4b8f3b6b3bcf287463c18bfe36baa030e7efbd"
         )
         self.assertEqual(
@@ -91,7 +91,7 @@ class TestStellarAddress(unittest.TestCase):
     # and decode_strkey(strkey) -> (version, data).
     def test_strkey_account(self):
         # ED25519 public key (G... address)
-        pubkey = unhexlify(
+        pubkey = bytes.fromhex(
             "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"
         )
         strkey = "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
@@ -100,7 +100,7 @@ class TestStellarAddress(unittest.TestCase):
 
     def test_strkey_contract(self):
         # contract address (C... address)
-        contract_hash = unhexlify(
+        contract_hash = bytes.fromhex(
             "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"
         )
         strkey = "CA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUWDA"
@@ -129,13 +129,13 @@ class TestStellarAddress(unittest.TestCase):
                 "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAEABLYI",
             ),
         ):
-            muxed_data = unhexlify(pubkey + muxed_id)
+            muxed_data = bytes.fromhex(pubkey + muxed_id)
             self.assertEqual(encode_strkey(STRKEY_MUXED_ACCOUNT, muxed_data), strkey)
             self.assertEqual(decode_strkey(strkey), (STRKEY_MUXED_ACCOUNT, muxed_data))
 
     def test_strkey_claimable_balance(self):
         # claimable balance (B... address): 1 byte type (v0 = 0x00) + 32 bytes hash
-        balance_id = unhexlify(
+        balance_id = bytes.fromhex(
             "00"  # type v0
             "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"  # hash
         )
@@ -145,7 +145,7 @@ class TestStellarAddress(unittest.TestCase):
 
     def test_strkey_liquidity_pool(self):
         # liquidity pool (L... address): 32 bytes hash
-        pool_id = unhexlify(
+        pool_id = bytes.fromhex(
             "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"
         )
         strkey = "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN"

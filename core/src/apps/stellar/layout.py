@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 import trezor.ui.layouts as layouts
 from trezor import TR, strings, wire
@@ -394,7 +393,7 @@ def _format_sc_val(val: StellarSCVal) -> str:
     elif t == StellarSCValType.SCV_BYTES:
         if val.bytes is None:
             raise DataError("Stellar: missing bytes value")
-        return "0x" + hexlify(val.bytes).decode()
+        return "0x" + val.bytes.hex()
     elif t == StellarSCValType.SCV_STRING:
         if val.string is None:
             raise DataError("Stellar: missing string value")
@@ -404,7 +403,7 @@ def _format_sc_val(val: StellarSCVal) -> str:
         try:
             return f'"{_escape_str(bytes(val.string).decode())}"'
         except UnicodeError:
-            return "0x" + hexlify(val.string).decode()
+            return "0x" + val.string.hex()
     elif t == StellarSCValType.SCV_SYMBOL:
         if val.symbol is None:
             raise DataError("Stellar: missing symbol value")

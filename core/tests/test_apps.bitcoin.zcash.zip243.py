@@ -38,10 +38,10 @@ class TestZcashZip243(unittest.TestCase):
             "version": 4,
             "version_group_id": 0x892F2085,
             "branch_id": 0x76B809BB,
-            "prevouts_hash": b"bd4318eecf841a0cf01c2be532cf4bc3303e881e2aface159f1882f153152688",
-            "sequence_hash": b"9ac6a31952ff626bf5a0a30d3d8ac63a0d4298d33d7bc38854bfa5860695e30a",
-            "outputs_hash": b"d0cadf116b4441f5e1e17814908dee509ec262a79f3c88f7f3389e8200658992",
-            "preimage_hash": b"f8772c6ecf9d903698fb8c51cd7b99605af298478989945936935da65e064695",
+            "prevouts_hash": "bd4318eecf841a0cf01c2be532cf4bc3303e881e2aface159f1882f153152688",
+            "sequence_hash": "9ac6a31952ff626bf5a0a30d3d8ac63a0d4298d33d7bc38854bfa5860695e30a",
+            "outputs_hash": "d0cadf116b4441f5e1e17814908dee509ec262a79f3c88f7f3389e8200658992",
+            "preimage_hash": "f8772c6ecf9d903698fb8c51cd7b99605af298478989945936935da65e064695",
         },
         {
             "expiry": 231041495,
@@ -75,10 +75,10 @@ class TestZcashZip243(unittest.TestCase):
             "version": 4,
             "version_group_id": 0x892F2085,
             "branch_id": 0x76B809BB,
-            "prevouts_hash": b"8e286c6c0dde3119271c9c1398ef46614b0253c502b00a3691cec2e9047da35b",
-            "sequence_hash": b"58477fd9ecd5faf3e08159e0ab5fdaab66cab364d081498ddcef41de0af3624e",
-            "outputs_hash": b"c518797fc6f2c08fc22aa3f66122047b360e1db4df5c3feb28573c00cdf45fa1",
-            "preimage_hash": b"0eb47dc51d89cc52378fc182242f78ebd3609544a365d2270c23b4052f301025",
+            "prevouts_hash": "8e286c6c0dde3119271c9c1398ef46614b0253c502b00a3691cec2e9047da35b",
+            "sequence_hash": "58477fd9ecd5faf3e08159e0ab5fdaab66cab364d081498ddcef41de0af3624e",
+            "outputs_hash": "c518797fc6f2c08fc22aa3f66122047b360e1db4df5c3feb28573c00cdf45fa1",
+            "preimage_hash": "0eb47dc51d89cc52378fc182242f78ebd3609544a365d2270c23b4052f301025",
         },
         {
             "expiry": 186996458,
@@ -99,10 +99,10 @@ class TestZcashZip243(unittest.TestCase):
             "version": 4,
             "version_group_id": 0x892F2085,
             "branch_id": 0x76B809BB,
-            "prevouts_hash": b"445bc6328cd33b3c86259953dd674bded341ff1e1104dc21856919e9761036dd",
-            "sequence_hash": b"42e1d5c2636f165afaa954afa6d7a50779eb145e947bf668f1a40dd771c711fc",
-            "outputs_hash": b"869eda84eecf7257f9979a4848bbf52f4969a5736594ab7ba41452e7bb906824",
-            "preimage_hash": b"7f6b5439a64b20faf6f9f9460bc75c333c4799e9b04c80c26a79b8e801b8b6e1",
+            "prevouts_hash": "445bc6328cd33b3c86259953dd674bded341ff1e1104dc21856919e9761036dd",
+            "sequence_hash": "42e1d5c2636f165afaa954afa6d7a50779eb145e947bf668f1a40dd771c711fc",
+            "outputs_hash": "869eda84eecf7257f9979a4848bbf52f4969a5736594ab7ba41452e7bb906824",
+            "preimage_hash": "7f6b5439a64b20faf6f9f9460bc75c333c4799e9b04c80c26a79b8e801b8b6e1",
         },
         {
             "expiry": 254788522,
@@ -135,10 +135,10 @@ class TestZcashZip243(unittest.TestCase):
             "version": 4,
             "version_group_id": 0x892F2085,
             "branch_id": 0x76B809BB,
-            "prevouts_hash": b"509abdfafcc75265037f1ce6a4658ac9ecadd7b82378c3fbaeb48ab437ff6898",
-            "sequence_hash": b"2b13f671cd1a9aa04c1e250eef74a316d7d2b049360d20604514ddc2dfacfd23",
-            "outputs_hash": b"4f01b8785e80779290aa86c16b24952f9b7f8bc09da44e68f760ab1920ab8f2a",
-            "preimage_hash": b"46152b79ebeba4089d05724e33d4a5e6d6ea9e3a2fe777af6644318ba93a1ca0",
+            "prevouts_hash": "509abdfafcc75265037f1ce6a4658ac9ecadd7b82378c3fbaeb48ab437ff6898",
+            "sequence_hash": "2b13f671cd1a9aa04c1e250eef74a316d7d2b049360d20604514ddc2dfacfd23",
+            "outputs_hash": "4f01b8785e80779290aa86c16b24952f9b7f8bc09da44e68f760ab1920ab8f2a",
+            "preimage_hash": "46152b79ebeba4089d05724e33d4a5e6d6ea9e3a2fe777af6644318ba93a1ca0",
         },
         # "Test vector 3" from https://github.com/zcash/zips/blob/master/zip-0243.rst
         {
@@ -169,10 +169,10 @@ class TestZcashZip243(unittest.TestCase):
             "version": 4,
             "version_group_id": 0x892F2085,
             "branch_id": 0x76B809BB,
-            "prevouts_hash": b"fae31b8dec7b0b77e2c8d6b6eb0e7e4e55abc6574c26dd44464d9408a8e33f11",
-            "sequence_hash": b"6c80d37f12d89b6f17ff198723e7db1247c4811d1a695d74d930f99e98418790",
-            "outputs_hash": b"d2b04118469b7810a0d1cc59568320aad25a84f407ecac40b4f605a4e6868454",
-            "preimage_hash": b"6c210ce6417539d4aa9546f6184e33ca89224ac4559d2a9c4cf090b646692bd9",
+            "prevouts_hash": "fae31b8dec7b0b77e2c8d6b6eb0e7e4e55abc6574c26dd44464d9408a8e33f11",
+            "sequence_hash": "6c80d37f12d89b6f17ff198723e7db1247c4811d1a695d74d930f99e98418790",
+            "outputs_hash": "d2b04118469b7810a0d1cc59568320aad25a84f407ecac40b4f605a4e6868454",
+            "preimage_hash": "6c210ce6417539d4aa9546f6184e33ca89224ac4559d2a9c4cf090b646692bd9",
         },
     ]
 
@@ -196,7 +196,7 @@ class TestZcashZip243(unittest.TestCase):
             for i in v["inputs"]:
                 txi = TxInput(
                     amount=i["amount"],
-                    prev_hash=unhexlify(i["prevout"][0]),
+                    prev_hash=bytes.fromhex(i["prevout"][0]),
                     prev_index=i["prevout"][1],
                     script_type=i["script_type"],
                     sequence=i["sequence"],
@@ -206,28 +206,22 @@ class TestZcashZip243(unittest.TestCase):
             for o in v["outputs"]:
                 txo = PrevOutput(
                     amount=o["amount"],
-                    script_pubkey=unhexlify(o["script_pubkey"]),
+                    script_pubkey=bytes.fromhex(o["script_pubkey"]),
                 )
                 zip243.add_output(txo, txo.script_pubkey)
 
+            self.assertEqual(get_tx_hash(zip243.h_prevouts).hex(), v["prevouts_hash"])
+            self.assertEqual(get_tx_hash(zip243.h_sequence).hex(), v["sequence_hash"])
+            self.assertEqual(get_tx_hash(zip243.h_outputs).hex(), v["outputs_hash"])
             self.assertEqual(
-                hexlify(get_tx_hash(zip243.h_prevouts)), v["prevouts_hash"]
-            )
-            self.assertEqual(
-                hexlify(get_tx_hash(zip243.h_sequence)), v["sequence_hash"]
-            )
-            self.assertEqual(hexlify(get_tx_hash(zip243.h_outputs)), v["outputs_hash"])
-            self.assertEqual(
-                hexlify(
-                    zip243.hash143(
-                        txi,
-                        [unhexlify(i["pubkey"])],
-                        1,
-                        tx,
-                        coin,
-                        SigHashType.SIGHASH_ALL,
-                    )
-                ),
+                zip243.hash143(
+                    txi,
+                    [bytes.fromhex(i["pubkey"])],
+                    1,
+                    tx,
+                    coin,
+                    SigHashType.SIGHASH_ALL,
+                ).hex(),
                 v["preimage_hash"],
             )
 
