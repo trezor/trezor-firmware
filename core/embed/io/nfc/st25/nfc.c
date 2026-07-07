@@ -243,13 +243,13 @@ ts_t nfc_stop_discovery(void) {
 
   // In case the NFC state machine is active, deactivate to idle before
   // registering a new card emulation technology.
-  TSH_CHECK(rfalNfcGetState() == RFAL_NFC_STATE_IDLE, TS_ENOSTATE);
-
-  ReturnCode ret = rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_IDLE);
-  TSH_CHECK_ARG(ret == RFAL_ERR_NONE);
-  do {
-    rfalNfcWorker();
-  } while (rfalNfcGetState() != RFAL_NFC_STATE_IDLE);
+  if (rfalNfcGetState() != RFAL_NFC_STATE_IDLE) {
+    ReturnCode ret = rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_IDLE);
+    TSH_CHECK_ARG(ret == RFAL_ERR_NONE);
+    do {
+      rfalNfcWorker();
+    } while (rfalNfcGetState() != RFAL_NFC_STATE_IDLE);
+  }
 
 cleanup:
   TSH_RETURN;
