@@ -62,9 +62,13 @@ bool nfc_get_event(nfc_event_t* event) {
   assert(event != NULL);
   nfc_fsm_t* fsm = &g_nfc_tls[systask_id(systask_active())];
 
-  *event = fsm->events;
-  fsm->events = NFC_NO_EVENT;
-  return true;
+  *event = NFC_NO_EVENT;
+  if (fsm->events != NFC_NO_EVENT) {
+    *event = fsm->events;
+    fsm->events = NFC_NO_EVENT;
+    return true;
+  }
+  return false;
 }
 
 bool nfc_get_state(void) { return nfc_card_connected; }
