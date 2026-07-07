@@ -24,6 +24,11 @@
 #define NFC_MAX_UID_LEN 10
 #define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
+/**
+ * @brief Must corespond to RFAL_FEATURE_ISO_DEP_APDU_MAX_LEN in rfal_platform.h
+ */
+#define NFC_MAX_APDU_LEN 512
+
 /** @brief Supported NFC types. **/
 typedef enum {
   NFC_DEV_TYPE_A,
@@ -68,8 +73,9 @@ typedef struct {
 
 /** @brief NFC APDU response buffer pointers */
 typedef struct {
-  uint8_t **data;
-  uint16_t **data_len;
+  uint8_t *data;       //!< [out] Pointer to the buffer to store received data.
+  uint16_t *data_len;  //!< [in/out] Pointer to the length of the buffer.
+  // On return,  it will contain the actual length of the received data.
 } nfc_apdu_response_t;
 
 /**

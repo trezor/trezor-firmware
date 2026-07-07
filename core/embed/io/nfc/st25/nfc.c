@@ -460,9 +460,11 @@ void NFC_EXTI_INTERRUPT_HANDLER(void) {
 static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
                                     nfc_apdu_response_t resp) {
   TSH_DECLARE;
-  ReturnCode err =
-      rfalNfcDataExchangeStart((uint8_t *)cmd.data, cmd.data_len, resp.data,
-                               resp.data_len, RFAL_FWT_NONE);
+  uint8_t *rx_data = NULL;
+  uint16_t *rx_data_len = NULL;
+
+  ReturnCode err = rfalNfcDataExchangeStart(
+      (uint8_t *)cmd.data, cmd.data_len, &rx_data, &rx_data_len, RFAL_FWT_NONE);
 
   if (err == RFAL_ERR_WRONG_STATE) {
     return TS_ENOSTATE;
@@ -475,6 +477,18 @@ static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
     err = rfalNfcDataExchangeGetStatus();
   } while (err == RFAL_ERR_BUSY);
   TSH_CHECK(err == RFAL_ERR_NONE, TS_ENOEN);
+
+  // copy Rx APDU data and length
+  if ((rx_data != NULL) && (rx_data_len != NULL) && (resp.data != NULL) &&
+      (resp.data_len != NULL)) {
+    if (*rx_data_len > *resp.data_len) {
+      return TS_ENOMEM;
+    }
+    memcpy(resp.data, rx_data, *rx_data_len);
+    *resp.data_len = *rx_data_len;
+  } else {
+    return TS_EINVAL;
+  }
 
 cleanup:
   TSH_RETURN;
