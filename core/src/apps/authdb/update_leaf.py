@@ -38,17 +38,54 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
 
     if __debug__:
         from trezor import log
+        from ubinascii import hexlify
+
+        def _hex(b):
+            return hexlify(b).decode() if b else "none"
+
+        # Classify the operation for readability (matches the docstring's 4 cases).
+        if not old_value and new_value:
+            op = "INIT" if len(proof) == 0 and msg.witness_address is None else "INSERT"
+        elif old_value and not new_value:
+            op = "DELETE"
+        elif old_value and new_value:
+            op = "UPDATE"
+        else:
+            op = "INVALID(empty->empty)"
         log.debug(
             __name__,
-            "update_leaf: address=%s old_value=%s new_value=%s old_counter=%d new_counter=%d proof_len=%d",
-            address, old_value, new_value, old_counter, new_counter, len(proof),
+            "update_leaf: ENTER op=%s wallet_id=%s address=%s",
+            op, _hex(wallet_id), _hex(address),
         )
+        log.debug(
+            __name__,
+            "update_leaf:   old_value=%s (counter=%d) new_value=%s (counter=%d) proof_len=%d",
+            _hex(old_value), old_counter, _hex(new_value), new_counter, len(proof),
+        )
+        log.debug(
+            __name__,
+            "update_leaf:   witness_address=%s witness_value=%s witness_counter=%s mac=%s device_id=%s",
+            _hex(msg.witness_address),
+            _hex(msg.witness_value),
+            msg.witness_counter if msg.witness_counter is not None else "none",
+            _hex(msg.mac),
+            _hex(msg.device_id),
+        )
+        for i, elem in enumerate(proof):
+            log.debug(__name__, "update_leaf:   proof[%d]=%s", i, _hex(elem))
 
     # Leaf hashes for old and new state (used for MAC verification and auth_mac)
     # For INIT (old_value empty) use zero hash; for DELETE (new_value empty) use zero hash
     ZERO_HASH = b"\x00" * 32
     old_leaf_hash = _mpt.leaf_hash(address, old_counter, old_value) if old_value else ZERO_HASH
     new_leaf_hash = _mpt.leaf_hash(address, new_counter, new_value) if new_value else ZERO_HASH
+
+    if __debug__:
+        log.debug(
+            __name__,
+            "update_leaf:   old_leaf_hash=%s new_leaf_hash=%s",
+            _hex(old_leaf_hash), _hex(new_leaf_hash),
+        )
 
     # Verify MAC-based pre-authorization when supplied by the host
     if msg.mac is not None and msg.device_id is not None:
@@ -72,6 +109,12 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         pass  # TODO: show address+new_value confirmation dialog when UI ready (production)
 
     stored_root = authdb.get_root(wallet_id)
+    if __debug__:
+        log.debug(
+            __name__,
+            "update_leaf:   stored_root=%s -> computing new root",
+            _hex(stored_root) if stored_root else "EMPTY",
+        )
     try:
         new_root = _mpt.compute_new_root(
             address, old_counter, old_value, new_counter, new_value, proof, stored_root,
@@ -80,6 +123,8 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
             witness_value=msg.witness_value,
         )
     except ValueError as e:
+        if __debug__:
+            log.error(__name__, "update_leaf: REJECTED by compute_new_root: %s", str(e))
         raise DataError(str(e))
 
     # Persist root+counter as a single atomic storage write (see
@@ -93,8 +138,8 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
         from trezor import log
         log.debug(
             __name__,
-            "update_leaf: new_root=%s counter=%d",
-            new_root if new_root else "empty",
+            "update_leaf: COMMITTED new_root=%s counter=%d",
+            _hex(new_root) if new_root else "EMPTY(tree now empty)",
             counter,
         )
 
@@ -108,13 +153,16 @@ async def update_leaf(msg: AuthDbUpdateLeaf) -> AuthDbUpdateLeafResponse:
     )
     
     update_leaf_auth_mac = _compute_mac(leaf_approval_mac_key, old_leaf_hash, new_leaf_hash) if __debug__ else None
-    
+
     if __debug__:
         from trezor import log
         log.debug(
             __name__,
-            "update_leaf: auto-approve new_mac=%s (reuse as mac= in next pre-approved call)",
-            new_root_mac,
+            "update_leaf: RESPONSE counter=%d new_root=%s root_mac=%s auth_mac=%s",
+            counter,
+            _hex(new_root) if new_root else "none",
+            _hex(new_root_mac),
+            _hex(update_leaf_auth_mac),
         )
     return AuthDbUpdateLeafResponse(
         counter=counter,

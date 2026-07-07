@@ -15,25 +15,56 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
 
     wallet_id = await _get_wallet_id()
     stored_root = authdb.get_root(wallet_id)
+
+    if __debug__:
+        from trezor import log
+        from ubinascii import hexlify
+
+        def _hex(b):
+            return hexlify(b).decode() if b else "none"
+
+        log.debug(
+            __name__,
+            "lookup: ENTER wallet_id=%s query=%s stored_root=%s stored_counter=%d",
+            _hex(wallet_id),
+            "membership" if membership_query else "non-membership",
+            _hex(stored_root) if stored_root else "EMPTY",
+            authdb.get_counter(wallet_id),
+        )
+        log.debug(
+            __name__,
+            "lookup:   address=%s value=%s counter=%s proof_len=%d",
+            _hex(msg.address),
+            _hex(msg.value),
+            msg.counter if msg.counter is not None else "none",
+            len(msg.proof),
+        )
+        log.debug(
+            __name__,
+            "lookup:   witness_address=%s witness_value=%s witness_counter=%s",
+            _hex(msg.witness_address),
+            _hex(msg.witness_value),
+            msg.witness_counter if msg.witness_counter is not None else "none",
+        )
+        for i, elem in enumerate(msg.proof):
+            log.debug(__name__, "lookup:   proof[%d]=%s", i, _hex(elem))
+
     if stored_root is None:
         # Empty tree: membership is trivially false, non-membership is trivially true.
         counter = authdb.get_counter(wallet_id)
+        if __debug__:
+            log.debug(
+                __name__,
+                "lookup: EMPTY tree -> valid=%s membership=%s counter=%d",
+                not membership_query,
+                membership_query,
+                counter,
+            )
         return AuthDbLookupResponse(
             valid=not membership_query,
             counter=counter,
             membership=membership_query,
             wallet_id=wallet_id,
-        )
-
-    if __debug__:
-        from trezor import log
-        log.debug(
-            __name__,
-            "lookup: address=%s proof_len=%d witness=%s membership_query=%s",
-            msg.address,
-            len(msg.proof),
-            msg.witness_address if msg.witness_address else "none",
-            membership_query,
         )
 
     if not membership_query:
@@ -52,11 +83,17 @@ async def lookup(msg: AuthDbLookup) -> AuthDbLookupResponse:
         valid = _verify_proof(msg.address, msg.counter, msg.value, msg.proof, stored_root)
         membership = True
 
-    if __debug__:
-        from trezor import log
-        log.debug(__name__, "lookup: result valid=%s membership=%s", valid, membership)
-
     counter = authdb.get_counter(wallet_id)
+    if __debug__:
+        log.debug(
+            __name__,
+            "lookup: RESULT valid=%s membership=%s counter=%d (verified against stored_root=%s)",
+            valid,
+            membership,
+            counter,
+            _hex(stored_root),
+        )
+
     return AuthDbLookupResponse(valid=valid, counter=counter, membership=membership, wallet_id=wallet_id)
 
 

@@ -75,6 +75,15 @@ MAX_OFFLINE_QUEUE_ENTRIES = const(64)  # per wallet
 
 def _load_table() -> bytearray:
     raw = common.get(_NAMESPACE, _ROOTS, public=True)
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "storage: opened _ROOTS table (%d bytes, %d wallet record(s))",
+            len(raw) if raw else 0,
+            (len(raw) // _RECORD_SIZE) if raw else 0,
+        )
     return bytearray(raw) if raw else bytearray()
 
 
@@ -99,9 +108,29 @@ def get_root(wallet_id: bytes) -> bytes | None:
     table = _load_table()
     off = _find_record(table, wallet_id)
     if off < 0:
+        if __debug__:
+            from trezor import log
+            from ubinascii import hexlify
+
+            log.debug(
+                __name__,
+                "storage: get_root(wallet_id=%s) -> no record (empty tree)",
+                hexlify(wallet_id).decode(),
+            )
         return None
     root = bytes(table[off : off + ROOT_LENGTH])
-    return None if root == EMPTY_ROOT else root
+    result = None if root == EMPTY_ROOT else root
+    if __debug__:
+        from trezor import log
+        from ubinascii import hexlify
+
+        log.debug(
+            __name__,
+            "storage: get_root(wallet_id=%s) -> %s",
+            hexlify(wallet_id).decode(),
+            hexlify(result).decode() if result else "EMPTY (cleared)",
+        )
+    return result
 
 
 def set_root(wallet_id: bytes, root: bytes) -> None:
