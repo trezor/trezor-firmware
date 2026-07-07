@@ -43,37 +43,34 @@ def get_artifact(model: str, dirpath: Path, filenames: list[str]) -> Artifact | 
     if len(fingerprints) != 1:
         return None
 
-    fingerprint_file = fingerprints[0]
-    bin_file = fingerprint_file.removesuffix(".fingerprint")
-    if not bin_file.endswith(".bin"):
+    fingerprint_file = dirpath / fingerprints[0]
+    bin_file = fingerprint_file.with_suffix("")
+    if not bin_file.suffix == ".bin":
         return None
-    if not (dirpath / bin_file).is_file():
+    if not bin_file.is_file():
         return None
 
-    digest = hashlib.sha256((dirpath / bin_file).read_bytes()).hexdigest()
+    digest = hashlib.sha256(bin_file.read_bytes()).hexdigest()
 
     fullnames = [
         f
         for f in filenames
-        if f.startswith(f"{bin_file[:-4]}-{model}-") and f.endswith(".bin")
+        if f.startswith(f"{bin_file.with_suffix('').name}-{model}-")
+        and f.endswith(".bin")
     ]
     if len(fullnames) > 1:
         raise RuntimeError(f"Ambiguous files: {' '.join(fullnames)}")
     if len(fullnames) == 1:
-        fullname_bin_file = fullnames[0]
-        fullname_digest = hashlib.sha256(
-            (dirpath / fullname_bin_file).read_bytes()
-        ).hexdigest()
+        fullname_bin_file = dirpath / fullnames[0]
+        fullname_digest = hashlib.sha256(fullname_bin_file.read_bytes()).hexdigest()
         if digest != fullname_digest:
-            raise RuntimeError(
-                f"Files not identical: {dirpath / bin_file}, {dirpath / fullname_bin_file}"
-            )
+            raise RuntimeError(f"Files not identical: {bin_file}, {fullname_bin_file}")
         bin_file = fullname_bin_file
 
-    fingerprint = (dirpath / fingerprint_file).read_text().strip()
+    fingerprint = fingerprint_file.read_text().strip()
     return Artifact(
-        path=dirpath / bin_file,
-        filename=bin_file,
+        path=bin_file,
+        filename=bin_file.name,
         model=model,
         fingerprint=fingerprint,
         sha256=digest,
