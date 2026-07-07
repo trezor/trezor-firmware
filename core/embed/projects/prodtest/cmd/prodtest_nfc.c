@@ -245,11 +245,11 @@ static void prodtest_nfc_write_card(cli_t* cli) {
 
       cli_trace(cli, "Writing URI to NFC tag %s", dev_info.uid);
       uint8_t uri_buffer[128] = {0};
-      uint8_t* rx_buff_ptr = NULL;
-      uint16_t* rx_buff_len = NULL;
+      uint8_t nfc_rx_buffer[NFC_MAX_APDU_LEN] = {0};
+      uint16_t nfc_rx_len = sizeof(nfc_rx_buffer);
       nfc_apdu_cmd_t tx_buf = {.data = uri_buffer, .data_len = 0};
-      nfc_apdu_response_t rx_buf = {.data = &rx_buff_ptr,
-                                    .data_len = &rx_buff_len};
+      nfc_apdu_response_t rx_buf = {.data = nfc_rx_buffer,
+                                    .data_len = &nfc_rx_len};
 
       tx_buf.data_len =
           nfc_compose_uri("trezor.io/", uri_buffer, sizeof(uri_buffer));
