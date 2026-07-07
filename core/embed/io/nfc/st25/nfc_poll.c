@@ -74,7 +74,7 @@ ts_t nfc_get_device_info(nfc_dev_info_t* dev_info) {
     memcpy(dev_info, &nfc_card_info, sizeof(nfc_dev_info_t));
     return TS_OK;
   } else {
-    memset(&nfc_card_info, 0, sizeof(nfc_dev_info_t));
+    memset(dev_info, 0, sizeof(nfc_dev_info_t));
     return TS_ENOSTATE;
   }
 }
