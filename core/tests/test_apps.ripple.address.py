@@ -9,21 +9,21 @@ if not utils.BITCOIN_ONLY:
 class TestRippleAddress(unittest.TestCase):
     def test_pubkey_to_address(self):
         addr = address_from_public_key(
-            unhexlify(
+            bytes.fromhex(
                 "ed9434799226374926eda3b54b1b461b4abf7237962eae18528fea67595397fa32"
             )
         )
         self.assertEqual(addr, "rDTXLQ7ZKZVKz33zJbHjgVShjsBnqMBhmN")
 
         addr = address_from_public_key(
-            unhexlify(
+            bytes.fromhex(
                 "03e2b079e9b09ae8916da8f5ee40cbda9578dbe7c820553fe4d5f872eec7b1fdd4"
             )
         )
         self.assertEqual(addr, "rhq549rEtUrJowuxQC2WsHNGLjAjBQdAe8")
 
         addr = address_from_public_key(
-            unhexlify(
+            bytes.fromhex(
                 "0282ee731039929e97db6aec242002e9aa62cd62b989136df231f4bb9b8b7c7eb2"
             )
         )

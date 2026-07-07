@@ -46,7 +46,7 @@ class TestCryptoAes(unittest.TestCase):
 
     def test_gcm(self):
         for vector in self.vectors:
-            key, iv, pt, aad, ct, tag = map(unhexlify, vector)
+            key, iv, pt, aad, ct, tag = map(bytes.fromhex, vector)
 
             # Test encryption.
             ctx = aesgcm_encrypt(key, iv)
@@ -64,7 +64,7 @@ class TestCryptoAes(unittest.TestCase):
 
     def test_gcm_in_place(self):
         for vector in self.vectors:
-            key, iv, pt, aad, ct, tag = map(unhexlify, vector)
+            key, iv, pt, aad, ct, tag = map(bytes.fromhex, vector)
             buffer = bytearray(pt)
 
             # Test encryption.
@@ -87,7 +87,7 @@ class TestCryptoAes(unittest.TestCase):
 
     def test_gcm_chunks(self):
         for vector in self.vectors:
-            key, iv, pt, aad, ct, tag = map(unhexlify, vector)
+            key, iv, pt, aad, ct, tag = map(bytes.fromhex, vector)
 
             chunk1 = len(pt) // 3
 
@@ -109,7 +109,7 @@ class TestCryptoAes(unittest.TestCase):
 
     def test_gcm_chunks_in_place(self):
         for vector in self.vectors:
-            key, iv, pt, aad, ct, tag = map(unhexlify, vector)
+            key, iv, pt, aad, ct, tag = map(bytes.fromhex, vector)
             buffer = bytearray(ct)
             chunk1_length = len(pt) // 3
             chunk2_length = len(pt) - chunk1_length
@@ -138,7 +138,7 @@ class TestCryptoAes(unittest.TestCase):
 
     def test_gcm_invalid_tag_len(self):
         for vector in self.vectors:
-            key, iv, pt, aad, ct, _tag = map(unhexlify, vector)
+            key, iv, pt, aad, ct, _tag = map(bytes.fromhex, vector)
             invalid_tags = [
                 b"",
                 b"\x00",
@@ -164,7 +164,7 @@ class TestCryptoAes(unittest.TestCase):
     def test_gcm_invalid_tag(self):
         invalid_tag = b"\xab" * 16
         for vector in self.vectors:
-            key, iv, pt, aad, ct, _ = map(unhexlify, vector)
+            key, iv, pt, aad, ct, _ = map(bytes.fromhex, vector)
             ctx = aesgcm_decrypt(key, iv)
             if aad:
                 ctx.auth(aad)

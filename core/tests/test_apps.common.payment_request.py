@@ -80,7 +80,9 @@ def _get_request_without_memos() -> PaymentRequest:
         "e55efcc85de5ab52a57a8ecf675d8454d6204c98298f93faf71c668fec9340070"
     )
     return PaymentRequest(
-        recipient_name="TEST Recipient", signature=unhexlify(debug_signature), memos=[]
+        recipient_name="TEST Recipient",
+        signature=bytes.fromhex(debug_signature),
+        memos=[],
     )
 
 
@@ -116,14 +118,14 @@ def _get_request_with_coin_purchase_memo() -> PaymentRequest:
 def _get_sell_payment_request(include_nonce=b"DEBUG NONCE") -> PaymentRequest:
     text_memo = TextMemo(text="text memo text")
     mac = "a7594205d318491c7335d460acfebadc3c862b803abfd5a0fcf7ea6082bff1dc"
-    refund_memo = RefundMemo(address="ADDRESS", mac=unhexlify(mac))
+    refund_memo = RefundMemo(address="ADDRESS", mac=bytes.fromhex(mac))
     debug_signature = (
         "20a71af90876caf75f987c432d7769311e04e0cf23afb31279acdf5563a0154a2"
         "372a44d16c605b0710e9c7c93a0e9a382d946d99c43490edfcdf366bdbca5305c"
     )
     return PaymentRequest(
         recipient_name="TEST Recipient",
-        signature=unhexlify(debug_signature),
+        signature=bytes.fromhex(debug_signature),
         nonce=include_nonce,
         memos=[
             PaymentRequestMemo(text_memo=text_memo),
@@ -140,12 +142,12 @@ def _get_coin_swap_request(include_nonce=b"DEBUG NONCE") -> PaymentRequest:
         "e4c26c0ee3666380476deff2ac3d1899e86a298d98e249302207ffd14e70a3030"
     )
     coin_purchase_memo = CoinPurchaseMemo(
-        coin_type=0, amount="AMOUNT", address="ADDRESS", mac=unhexlify(mac)
+        coin_type=0, amount="AMOUNT", address="ADDRESS", mac=bytes.fromhex(mac)
     )
-    refund_memo = RefundMemo(address="Refund address", mac=unhexlify(mac2))
+    refund_memo = RefundMemo(address="Refund address", mac=bytes.fromhex(mac2))
     return PaymentRequest(
         recipient_name="TEST Recipient",
-        signature=unhexlify(debug_signature),
+        signature=bytes.fromhex(debug_signature),
         nonce=include_nonce,
         memos=[
             PaymentRequestMemo(coin_purchase_memo=coin_purchase_memo),

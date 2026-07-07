@@ -48,7 +48,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             # 49'/1'/0'/1/0" - 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
             address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
             amount=123456789,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "09a48bce2f9d5c6e4f0cb9ea1b32d0891855e8acfe5334f9ebd72b9ad2de60cf"
             ),
             prev_index=0,
@@ -64,21 +64,23 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             extra_data_len=0,
         )
         pinp1 = PrevInput(
-            script_sig=unhexlify(
+            script_sig=bytes.fromhex(
                 "47304402201f8f57f708144c3a11da322546cb37bd385aa825d940c37e8016f0efd6ec3e9402202a41bc02c29e4f3f13efd4bededbcd4308a6393279111d614ee1f7635cf3e65701210371546a36bdf6bc82087301b3f6e759736dc8790150673d2e7e2715d2ad72f3a4"
             ),
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1"
             ),
             prev_index=1,
             sequence=4294967294,
         )
         pout1 = PrevOutput(
-            script_pubkey=unhexlify("a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"),
+            script_pubkey=bytes.fromhex(
+                "a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"
+            ),
             amount=123456789,
         )
         pout2 = PrevOutput(
-            script_pubkey=unhexlify(
+            script_pubkey=bytes.fromhex(
                 "76a91435528b20e9a793cf2c3a1cf9cff1f2127ad377da88ac"
             ),
             amount=9764242764,
@@ -188,7 +190,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     # returned serialized header
-                    serialized_tx=unhexlify("01000000000101"),
+                    serialized_tx=bytes.fromhex("01000000000101"),
                 ),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
@@ -197,7 +199,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     # returned serialized inp1
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "cf60ded29a2bd7ebf93453feace8551889d0321beab90c4f6e5c9d2fce8ba4090000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5feffffff02"
                     ),
                 ),
@@ -208,7 +210,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     # returned serialized out1
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "e0aebb00000000001976a914a579388225827d9f2fe9014add644487808c695d88ac"
                     ),
                     signature_index=None,
@@ -222,7 +224,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     # returned serialized out2
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "3df39f060000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"
                     ),
                     signature_index=None,
@@ -234,11 +236,11 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 request_type=TXFINISHED,
                 details=TxRequestDetailsType(),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "02483045022100b7ce2972bcbc3a661fe320ba901e680913b2753fcb47055c9c6ba632fc4acf81022001c3cfd6c2fe92eb60f5176ce0f43707114dd7223da19c56f2df89c13c2fef80012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7904ee0900"
                     ),
                     signature_index=0,
-                    signature=unhexlify(
+                    signature=bytes.fromhex(
                         "3045022100b7ce2972bcbc3a661fe320ba901e680913b2753fcb47055c9c6ba632fc4acf81022001c3cfd6c2fe92eb60f5176ce0f43707114dd7223da19c56f2df89c13c2fef80"
                     ),
                 ),
@@ -265,7 +267,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             # 49'/1'/0'/1/0" - 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
             address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
             amount=123456789,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "09a48bce2f9d5c6e4f0cb9ea1b32d0891855e8acfe5334f9ebd72b9ad2de60cf"
             ),
             prev_index=0,
@@ -281,21 +283,23 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             extra_data_len=0,
         )
         pinp1 = PrevInput(
-            script_sig=unhexlify(
+            script_sig=bytes.fromhex(
                 "47304402201f8f57f708144c3a11da322546cb37bd385aa825d940c37e8016f0efd6ec3e9402202a41bc02c29e4f3f13efd4bededbcd4308a6393279111d614ee1f7635cf3e65701210371546a36bdf6bc82087301b3f6e759736dc8790150673d2e7e2715d2ad72f3a4"
             ),
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1"
             ),
             prev_index=1,
             sequence=4294967294,
         )
         pout1 = PrevOutput(
-            script_pubkey=unhexlify("a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"),
+            script_pubkey=bytes.fromhex(
+                "a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"
+            ),
             amount=123456789,
         )
         pout2 = PrevOutput(
-            script_pubkey=unhexlify(
+            script_pubkey=bytes.fromhex(
                 "76a91435528b20e9a793cf2c3a1cf9cff1f2127ad377da88ac"
             ),
             amount=9764242764,
@@ -401,7 +405,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     # returned serialized header
-                    serialized_tx=unhexlify("01000000000101"),
+                    serialized_tx=bytes.fromhex("01000000000101"),
                 ),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
@@ -410,7 +414,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     # returned serialized inp1
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "cf60ded29a2bd7ebf93453feace8551889d0321beab90c4f6e5c9d2fce8ba4090000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5feffffff02"
                     ),
                 ),
@@ -422,7 +426,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     # returned serialized out1
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "e0aebb00000000001976a914a579388225827d9f2fe9014add644487808c695d88ac"
                     ),
                     signature_index=None,
@@ -436,7 +440,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     # returned serialized out2
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "3df39f060000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"
                     ),
                     signature_index=None,
@@ -448,11 +452,11 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 request_type=TXFINISHED,
                 details=TxRequestDetailsType(),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "02483045022100b7ce2972bcbc3a661fe320ba901e680913b2753fcb47055c9c6ba632fc4acf81022001c3cfd6c2fe92eb60f5176ce0f43707114dd7223da19c56f2df89c13c2fef80012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7904ee0900"
                     ),
                     signature_index=0,
-                    signature=unhexlify(
+                    signature=bytes.fromhex(
                         "3045022100b7ce2972bcbc3a661fe320ba901e680913b2753fcb47055c9c6ba632fc4acf81022001c3cfd6c2fe92eb60f5176ce0f43707114dd7223da19c56f2df89c13c2fef80"
                     ),
                 ),

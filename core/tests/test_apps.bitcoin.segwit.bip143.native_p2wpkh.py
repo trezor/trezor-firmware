@@ -27,7 +27,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
     inp1 = TxInput(
         address_n=[0],
         # Trezor expects hash in reversed format
-        prev_hash=unhexlify(
+        prev_hash=bytes.fromhex(
             "9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff"
         ),
         prev_index=0,
@@ -39,7 +39,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
     inp2 = TxInput(
         address_n=[1],
         # Trezor expects hash in reversed format
-        prev_hash=unhexlify(
+        prev_hash=bytes.fromhex(
             "8ac60eb9575db5b2d987e29f301b5b819ea83a5c6579d282d189cc04b8e151ef"
         ),
         prev_index=1,
@@ -70,8 +70,8 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         sig_hasher.add_input(self.inp2, b"")
         prevouts_hash = get_tx_hash(sig_hasher.h_prevouts, double=coin.sign_hash_double)
         self.assertEqual(
-            hexlify(prevouts_hash),
-            b"96b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd37",
+            prevouts_hash.hex(),
+            "96b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd37",
         )
 
     def test_sequence(self):
@@ -83,8 +83,8 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
             sig_hasher.h_sequences, double=coin.sign_hash_double
         )
         self.assertEqual(
-            hexlify(sequence_hash),
-            b"52b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3b",
+            sequence_hash.hex(),
+            "52b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3b",
         )
 
     def test_outputs(self):
@@ -98,8 +98,8 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
 
         outputs_hash = get_tx_hash(sig_hasher.h_outputs, double=coin.sign_hash_double)
         self.assertEqual(
-            hexlify(outputs_hash),
-            b"863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e5",
+            outputs_hash.hex(),
+            "863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e5",
         )
 
     def test_preimage_testdata(self):
@@ -127,8 +127,8 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
             self.inp2, [node.public_key()], 1, self.tx, coin, SigHashType.SIGHASH_ALL
         )
         self.assertEqual(
-            hexlify(result),
-            b"2fa3f1351618b2532228d7182d3221d95c21fd3d496e7e22e9ded873cf022a8b",
+            result.hex(),
+            "2fa3f1351618b2532228d7182d3221d95c21fd3d496e7e22e9ded873cf022a8b",
         )
 
 

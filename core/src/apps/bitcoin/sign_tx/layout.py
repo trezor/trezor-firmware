@@ -226,11 +226,9 @@ async def show_payment_request_details(
 
 
 async def confirm_replacement(title: str, txid: AnyBytes) -> None:
-    from ubinascii import hexlify
-
     await layouts.confirm_replacement(
         title,
-        hexlify(txid).decode(),
+        txid.hex(),
     )
 
 

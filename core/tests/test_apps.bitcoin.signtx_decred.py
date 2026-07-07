@@ -43,22 +43,26 @@ if (
         version=1, lock_time=0, inputs_count=1, outputs_count=2, extra_data_len=0
     )
     pinp1 = PrevInput(
-        script_sig=unhexlify(
+        script_sig=bytes.fromhex(
             "47304402207d127d59a44187952d9d0de94ad34a19dd9a84beb124fd8a3fb439c862544d3202206618f321385c30bda96fb01ce03f70a269d78a301c0b0c2e3e3689dfae3f4733012102ae1f6b51086bd753f072f94eb8ffe6806d3570c088a3ede46c678b6ea47d1675"
         ),
-        prev_hash=unhexlify(
+        prev_hash=bytes.fromhex(
             "21012b08c5077036460e8f75bbc57beb11d7bc30e7ad224ad5e67d15bd086500"
         ),
         prev_index=2,
         sequence=0xFFFF_FFFF,
     )
     pout1 = PrevOutput(
-        script_pubkey=unhexlify("76a914e4111051ae0349ab5589cf2b7e125c6da694a1a188ac"),
+        script_pubkey=bytes.fromhex(
+            "76a914e4111051ae0349ab5589cf2b7e125c6da694a1a188ac"
+        ),
         amount=153_185_001,
         decred_script_version=0,
     )
     pout2 = PrevOutput(
-        script_pubkey=unhexlify("76a914dc1a98d791735eb9a8715a2a219c23680edcedad88ac"),
+        script_pubkey=bytes.fromhex(
+            "76a914dc1a98d791735eb9a8715a2a219c23680edcedad88ac"
+        ),
         amount=200_000_000,
         decred_script_version=0,
     )
@@ -72,7 +76,7 @@ class TestSignTxDecred(unittest.TestCase):
     def test_one_one_fee(self):
         inp1 = TxInput(
             address_n=[44 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
             ),
             prev_index=1,
@@ -103,7 +107,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("0100000001")
+                    serialized_tx=bytes.fromhex("0100000001")
                 ),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
@@ -111,7 +115,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "1064cbf0f0889b919ce083c82065612710b1a6adcdb3f15d7ffc5e6de2cd8a4d0100000000ffffffff01"
                     )
                 ),
@@ -134,7 +138,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "603bea0b0000000000001976a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac0000000000000000"
                     )
                 ),
@@ -144,7 +148,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXMETA,
                 details=TxRequestDetailsType(
                     request_index=None,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
@@ -155,7 +159,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(
                     request_index=0,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
@@ -166,7 +170,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(
                     request_index=0,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
@@ -177,7 +181,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(
                     request_index=1,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
@@ -187,7 +191,7 @@ class TestSignTxDecred(unittest.TestCase):
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
-                serialized=TxRequestSerializedType(serialized_tx=unhexlify("01")),
+                serialized=TxRequestSerializedType(serialized_tx=bytes.fromhex("01")),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
             TxRequest(
@@ -195,10 +199,10 @@ class TestSignTxDecred(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=None, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     signature_index=0,
-                    signature=unhexlify(
+                    signature=bytes.fromhex(
                         "304402205ea5a0aec7e405eb3c792165f103f61f8ef862e76a2b0146bec1082b243cfbff022061e307113d389b969313bbee2c9a149fad4afdf715e8bd78df579438ef692814"
                     ),
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "00c2eb0b0000000000000000ffffffff6a47304402205ea5a0aec7e405eb3c792165f103f61f8ef862e76a2b0146bec1082b243cfbff022061e307113d389b969313bbee2c9a149fad4afdf715e8bd78df579438ef6928140121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
                     ),
                 ),
@@ -226,7 +230,7 @@ class TestSignTxDecred(unittest.TestCase):
     def test_purchase_ticket(self):
         inp1 = TxInput(
             address_n=[44 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
             ),
             prev_index=1,
@@ -270,7 +274,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("0100000001")
+                    serialized_tx=bytes.fromhex("0100000001")
                 ),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
@@ -278,7 +282,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "1064cbf0f0889b919ce083c82065612710b1a6adcdb3f15d7ffc5e6de2cd8a4d0100000000ffffffff03"
                     )
                 ),
@@ -292,7 +296,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "603bea0b0000000000001aba76a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac"
                     )
                 ),
@@ -302,7 +306,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=2, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "00000000000000000000206a1edc1a98d791735eb9a8715a2a219c23680edcedad00c2eb0b000000000058"
                     )
                 ),
@@ -321,7 +325,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "000000000000000000001abd76a914000000000000000000000000000000000000000088ac0000000000000000"
                     )
                 ),
@@ -331,7 +335,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXMETA,
                 details=TxRequestDetailsType(
                     request_index=None,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
@@ -342,7 +346,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(
                     request_index=0,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
@@ -353,7 +357,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(
                     request_index=0,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
@@ -364,7 +368,7 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(
                     request_index=1,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
@@ -374,7 +378,7 @@ class TestSignTxDecred(unittest.TestCase):
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
-                serialized=TxRequestSerializedType(serialized_tx=unhexlify("01")),
+                serialized=TxRequestSerializedType(serialized_tx=bytes.fromhex("01")),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
             TxRequest(
@@ -382,10 +386,10 @@ class TestSignTxDecred(unittest.TestCase):
                 details=TxRequestDetailsType(),
                 serialized=TxRequestSerializedType(
                     signature_index=0,
-                    signature=unhexlify(
+                    signature=bytes.fromhex(
                         "3045022100b3a11ff4befcc035623de7665aaa76dacc9252e53aabf2a5d61238151e696532022004cbcc537c1d539e04c823140bac4524bdba09f528f5c4b76f3f1022b7dc0ad4"
                     ),
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "00c2eb0b0000000000000000ffffffff6b483045022100b3a11ff4befcc035623de7665aaa76dacc9252e53aabf2a5d61238151e696532022004cbcc537c1d539e04c823140bac4524bdba09f528f5c4b76f3f1022b7dc0ad40121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
                     ),
                 ),

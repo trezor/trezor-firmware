@@ -1,1 +1,0 @@
-../ubinascii.pyi

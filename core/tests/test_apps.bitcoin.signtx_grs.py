@@ -52,17 +52,17 @@ class TestSignTx_GRS(unittest.TestCase):
             extra_data_len=0,
         )
         pinp1 = PrevInput(
-            script_sig=unhexlify(
+            script_sig=bytes.fromhex(
                 "48304502210096a287593b1212a188e778596eb8ecd4cc169b93a4d115226460d8e3deae431c02206c78ec09b3df977f04a6df5eb53181165c4ea5a0b35f826551349130f879d6b8012102cf5126ff54e38a80a919579d7091cafe24840eab1d30fe2b4d59bdd9d267cad8"
             ),
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "7dc74a738c50c2ae1228ce9890841e5355fd6d7f2c1367e0a74403ab60db3224"
             ),
             prev_index=0,
             sequence=4294967294,
         )
         pout1 = PrevOutput(
-            script_pubkey=unhexlify(
+            script_pubkey=bytes.fromhex(
                 "76a914172b4e06e9b7881a48d2ee8062b495d0b2517fe888ac"
             ),
             amount=210016,
@@ -76,7 +76,7 @@ class TestSignTx_GRS(unittest.TestCase):
                 0,
                 2,
             ],  #  FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a"
             ),
             prev_index=0,
@@ -131,7 +131,7 @@ class TestSignTx_GRS(unittest.TestCase):
                 request_type=TXMETA,
                 details=TxRequestDetailsType(
                     request_index=None,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a"
                     ),
                 ),
@@ -142,7 +142,7 @@ class TestSignTx_GRS(unittest.TestCase):
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(
                     request_index=0,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a"
                     ),
                 ),
@@ -153,7 +153,7 @@ class TestSignTx_GRS(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(
                     request_index=0,
-                    tx_hash=unhexlify(
+                    tx_hash=bytes.fromhex(
                         "cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a"
                     ),
                 ),
@@ -168,7 +168,7 @@ class TestSignTx_GRS(unittest.TestCase):
                 serialized=TxRequestSerializedType(
                     signature_index=None,
                     signature=None,
-                    serialized_tx=unhexlify("0100000001"),
+                    serialized_tx=bytes.fromhex("0100000001"),
                 ),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
@@ -183,10 +183,10 @@ class TestSignTx_GRS(unittest.TestCase):
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
                     signature_index=0,
-                    signature=unhexlify(
+                    signature=bytes.fromhex(
                         "304402201fb96d20d0778f54520ab59afe70d5fb20e500ecc9f02281cf57934e8029e8e10220383d5a3e80f2e1eb92765b6da0f23d454aecbd8236f083d483e9a74302368761"
                     ),
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "4a9d1fdba915e0907ab02f04f88898863112a2b4fdcf872c7414588c47c874cb000000006a47304402201fb96d20d0778f54520ab59afe70d5fb20e500ecc9f02281cf57934e8029e8e10220383d5a3e80f2e1eb92765b6da0f23d454aecbd8236f083d483e9a7430236876101210331693756f749180aeed0a65a0fab0625a2250bd9abca502282a4cf0723152e67ffffffff01"
                     ),
                 ),
@@ -198,7 +198,7 @@ class TestSignTx_GRS(unittest.TestCase):
                 serialized=TxRequestSerializedType(
                     signature_index=None,
                     signature=None,
-                    serialized_tx=unhexlify(
+                    serialized_tx=bytes.fromhex(
                         "a0330300000000001976a914fe40329c95c5598ac60752a5310b320cb52d18e688ac00000000"
                     ),
                 ),

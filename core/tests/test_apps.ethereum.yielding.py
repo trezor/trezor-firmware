@@ -34,7 +34,7 @@ class TestEthereumYielding(unittest.TestCase):
         # https://etherscan.io/address/0x3ef3d8ba38ebe18db133cec108f4d14ce00dd9ae
         self.assertEqual(
             yielding._MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR,
-            unhexlify("3ef3d8ba38ebe18db133cec108f4d14ce00dd9ae"),
+            bytes.fromhex("3ef3d8ba38ebe18db133cec108f4d14ce00dd9ae"),
         )
 
 

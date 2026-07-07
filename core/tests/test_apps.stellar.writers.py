@@ -24,7 +24,7 @@ class TestStellarWriters(unittest.TestCase):
         for value, expected in TESTS:
             w = bytearray()
             write_int32(w, value)
-            self.assertEqual(w, unhexlify(expected), msg=f"write_int32({value})")
+            self.assertEqual(w, bytes.fromhex(expected), msg=f"write_int32({value})")
 
     def test_write_int32_out_of_range(self):
         TESTS = [
@@ -52,7 +52,7 @@ class TestStellarWriters(unittest.TestCase):
         for value, expected in TESTS:
             w = bytearray()
             write_int64(w, value)
-            self.assertEqual(w, unhexlify(expected), msg=f"write_int64({value})")
+            self.assertEqual(w, bytes.fromhex(expected), msg=f"write_int64({value})")
 
     def test_write_int64_out_of_range(self):
         TESTS = [

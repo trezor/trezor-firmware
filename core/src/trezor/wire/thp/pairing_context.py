@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 from trezor import loop, protobuf, workflow
 from trezor.wire import context, message_handler, protocol_common
@@ -167,7 +166,7 @@ class PairingContext(Context):
 
     def _get_code_qr_code_str(self) -> str:
         if self.code_qr_code is not None:
-            code_str = (hexlify(self.code_qr_code)).decode("utf-8")
+            code_str = self.code_qr_code.hex()
             if __debug__:
                 log.debug(
                     __name__, "code_qr_code_hexlified: %s", code_str, iface=self.iface

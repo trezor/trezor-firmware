@@ -465,9 +465,7 @@ class RawFormatter(FieldFormatter):
         elif isinstance(value, str):
             return value, None, None
         elif isinstance(value, (bytes, bytearray)):
-            from ubinascii import hexlify
-
-            return hexlify(value).decode(), None, None
+            return value.hex(), None, None
         elif isinstance(value, bool):
             return str(value), None, None
         elif isinstance(value, int):
@@ -1251,8 +1249,6 @@ async def _expand_one_subcall(
 
     def raw_rows() -> list[DisplayedField]:
         """No subparsing. Show the callee and the raw hex blob."""
-        from ubinascii import hexlify
-
         to_label = TR.ethereum__subcall_to
         blob_label = field_definition.label
         if index is not None:
@@ -1260,7 +1256,7 @@ async def _expand_one_subcall(
             blob_label = f"({subcall}) {blob_label}"
         return [
             ((to_label, callee_str(), None), None, None),
-            ((blob_label, hexlify(blob).decode(), None), None, None),
+            ((blob_label, blob.hex(), None), None, None),
         ]
 
     if nested:

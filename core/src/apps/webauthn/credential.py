@@ -1,7 +1,6 @@
 import ustruct
 from micropython import const
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 import storage.device as storage_device
 from trezor import utils
@@ -301,7 +300,7 @@ class Fido2Credential(Credential):
         elif self.user_display_name:
             return self.user_display_name
         elif self.user_id:
-            return hexlify(self.user_id).decode()
+            return self.user_id.hex()
         else:
             return None
 
@@ -439,8 +438,8 @@ class U2fCredential(Credential):
         if app is not None:
             return app.label
 
-        start = hexlify(self.rp_id_hash[:4]).decode()
-        end = hexlify(self.rp_id_hash[-4:]).decode()
+        start = self.rp_id_hash[:4].hex()
+        end = self.rp_id_hash[-4:].hex()
         return f"{start}...{end}"
 
     @staticmethod

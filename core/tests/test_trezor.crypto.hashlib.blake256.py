@@ -81,14 +81,16 @@ class TestCryptoBlake256(unittest.TestCase):
 
     def test_digest(self):
         for b, d in self.vectors:
-            self.assertEqual(hashlib.blake256(unhexlify(b)).digest(), unhexlify(d))
+            self.assertEqual(
+                hashlib.blake256(bytes.fromhex(b)).digest(), bytes.fromhex(d)
+            )
 
     def test_update(self):
 
         for b, d in self.vectors:
             x = hashlib.blake256()
-            x.update(unhexlify(b))
-            self.assertEqual(x.digest(), unhexlify(d))
+            x.update(bytes.fromhex(b))
+            self.assertEqual(x.digest(), bytes.fromhex(d))
 
     def test_digest_multi(self):
         x = hashlib.blake256()

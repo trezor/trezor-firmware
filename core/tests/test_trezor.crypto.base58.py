@@ -236,18 +236,18 @@ class TestCryptoBase58(unittest.TestCase):
 
     def test_decode_check(self):
         for a, b in self.vectors:
-            self.assertEqual(base58.decode_check(b), unhexlify(a))
+            self.assertEqual(base58.decode_check(b), bytes.fromhex(a))
         for a, b in self.vectors_graphene:
             self.assertEqual(
-                base58.decode_check(b, digestfunc=digestfunc_graphene), unhexlify(a)
+                base58.decode_check(b, digestfunc=digestfunc_graphene), bytes.fromhex(a)
             )
 
     def test_encode_check(self):
         for a, b in self.vectors:
-            self.assertEqual(base58.encode_check(unhexlify(a)), b)
+            self.assertEqual(base58.encode_check(bytes.fromhex(a)), b)
         for a, b in self.vectors_graphene:
             self.assertEqual(
-                base58.encode_check(unhexlify(a), digestfunc=digestfunc_graphene), b
+                base58.encode_check(bytes.fromhex(a), digestfunc=digestfunc_graphene), b
             )
 
 

@@ -27,13 +27,13 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
@@ -44,14 +44,14 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 deposit=2000000,
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 deposit=2000000,
@@ -59,25 +59,25 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DELEGATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DELEGATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
             ),
@@ -87,13 +87,13 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
@@ -104,14 +104,14 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 deposit=2000000,
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 deposit=2000000,
@@ -119,10 +119,10 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_POOL_REGISTRATION,
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -137,38 +137,38 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.KEY_HASH,
-                    key_hash=unhexlify(
+                    key_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.SCRIPT_HASH,
-                    script_hash=unhexlify(
+                    script_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(type=CardanoDRepType.ABSTAIN),
             ),
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(type=CardanoDRepType.NO_CONFIDENCE),
@@ -184,17 +184,17 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
             # STAKE_REGISTRATION both script_hash and key_hash are set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
@@ -202,7 +202,7 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
             ),
@@ -217,10 +217,10 @@ class TestCardanoCertificate(unittest.TestCase):
                 type=CardanoCertificateType.STAKE_REGISTRATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -241,7 +241,7 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 deposit=2000000,
@@ -249,10 +249,10 @@ class TestCardanoCertificate(unittest.TestCase):
             # STAKE_REGISTRATION_CONWAY both script_hash and key_hash are set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 deposit=2000000,
@@ -261,7 +261,7 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
                 deposit=2000000,
@@ -276,10 +276,10 @@ class TestCardanoCertificate(unittest.TestCase):
                 type=CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -295,7 +295,7 @@ class TestCardanoCertificate(unittest.TestCase):
             # STAKE_DELEGATION neither path or script_hash is set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DELEGATION,
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
             ),
@@ -303,23 +303,23 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DELEGATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
             ),
             # STAKE_DELEGATION both script_hash and key_hash are set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DELEGATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
             ),
@@ -327,14 +327,14 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DELEGATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -354,17 +354,17 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
             # STAKE_DEREGISTRATION both script_hash and key_hash are set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
@@ -372,7 +372,7 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
             ),
@@ -387,10 +387,10 @@ class TestCardanoCertificate(unittest.TestCase):
                 type=CardanoCertificateType.STAKE_DEREGISTRATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -411,7 +411,7 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 deposit=2000000,
@@ -419,10 +419,10 @@ class TestCardanoCertificate(unittest.TestCase):
             # STAKE_DEREGISTRATION_CONWAY both script_hash and key_hash are set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 deposit=2000000,
@@ -431,7 +431,7 @@ class TestCardanoCertificate(unittest.TestCase):
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
                 deposit=2000000,
@@ -446,10 +446,10 @@ class TestCardanoCertificate(unittest.TestCase):
                 type=CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -471,10 +471,10 @@ class TestCardanoCertificate(unittest.TestCase):
                 type=CardanoCertificateType.STAKE_POOL_REGISTRATION,
                 path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -489,14 +489,14 @@ class TestCardanoCertificate(unittest.TestCase):
             # STAKE_POOL_REGISTRATION script hash is set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_POOL_REGISTRATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -511,14 +511,14 @@ class TestCardanoCertificate(unittest.TestCase):
             # STAKE_POOL_REGISTRATION key hash is set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_POOL_REGISTRATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -533,17 +533,17 @@ class TestCardanoCertificate(unittest.TestCase):
             # STAKE_POOL_REGISTRATION pool is set
             CardanoTxCertificate(
                 type=CardanoCertificateType.STAKE_POOL_REGISTRATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
-                pool=unhexlify(
+                pool=bytes.fromhex(
                     "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                 ),
                 pool_parameters=CardanoPoolParametersType(
-                    pool_id=unhexlify(
+                    pool_id=bytes.fromhex(
                         "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
                     ),
-                    vrf_key_hash=unhexlify(
+                    vrf_key_hash=bytes.fromhex(
                         "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
                     ),
                     pledge=500000000,
@@ -558,14 +558,14 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION missing drep
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
             ),
             # VOTE_REGISTRATION missing key hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(type=CardanoDRepType.KEY_HASH),
@@ -573,7 +573,7 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION missing script hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(type=CardanoDRepType.SCRIPT_HASH),
@@ -581,12 +581,12 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION unexpected script hash set instead of key hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.KEY_HASH,
-                    script_hash=unhexlify(
+                    script_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -594,12 +594,12 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION unexpected key hash set instead of script hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.SCRIPT_HASH,
-                    key_hash=unhexlify(
+                    key_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -607,15 +607,15 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION key hash set but unexpected script hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.KEY_HASH,
-                    key_hash=unhexlify(
+                    key_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
-                    script_hash=unhexlify(
+                    script_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -623,28 +623,15 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION script hash set but unexpected key hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                script_hash=unhexlify(
+                script_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.SCRIPT_HASH,
-                    key_hash=unhexlify(
+                    key_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
-                    script_hash=unhexlify(
-                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
-                    ),
-                ),
-            ),
-            # VOTE_REGISTRATION unexpected key hash
-            CardanoTxCertificate(
-                type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
-                    "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
-                ),
-                drep=CardanoDRep(
-                    type=CardanoDRepType.ABSTAIN,
-                    key_hash=unhexlify(
+                    script_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -652,12 +639,25 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION unexpected key hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
+                    "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                ),
+                drep=CardanoDRep(
+                    type=CardanoDRepType.ABSTAIN,
+                    key_hash=bytes.fromhex(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                ),
+            ),
+            # VOTE_REGISTRATION unexpected key hash
+            CardanoTxCertificate(
+                type=CardanoCertificateType.VOTE_DELEGATION,
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.NO_CONFIDENCE,
-                    key_hash=unhexlify(
+                    key_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -665,12 +665,12 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION unexpected script hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.ABSTAIN,
-                    script_hash=unhexlify(
+                    script_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -678,12 +678,12 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION unexpected script hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.NO_CONFIDENCE,
-                    script_hash=unhexlify(
+                    script_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -691,15 +691,15 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION unexpected script hash and key hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.ABSTAIN,
-                    key_hash=unhexlify(
+                    key_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
-                    script_hash=unhexlify(
+                    script_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -707,15 +707,15 @@ class TestCardanoCertificate(unittest.TestCase):
             # VOTE_REGISTRATION unexpected script hash and key hash
             CardanoTxCertificate(
                 type=CardanoCertificateType.VOTE_DELEGATION,
-                key_hash=unhexlify(
+                key_hash=bytes.fromhex(
                     "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                 ),
                 drep=CardanoDRep(
                     type=CardanoDRepType.NO_CONFIDENCE,
-                    key_hash=unhexlify(
+                    key_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
-                    script_hash=unhexlify(
+                    script_hash=bytes.fromhex(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),

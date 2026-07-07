@@ -22,20 +22,20 @@ class TestCryptoSha256(unittest.TestCase):
 
     def test_digest(self):
         for b, d in self.vectors:
-            self.assertEqual(hashlib.sha256(b).digest(), unhexlify(d))
+            self.assertEqual(hashlib.sha256(b).digest(), bytes.fromhex(d))
 
     def test_update(self):
         for b, d in self.vectors:
             x = hashlib.sha256()
             x.update(b)
-            self.assertEqual(x.digest(), unhexlify(d))
+            self.assertEqual(x.digest(), bytes.fromhex(d))
 
         x = hashlib.sha256()
         for _ in range(1000000):
             x.update(b"a")
         self.assertEqual(
             x.digest(),
-            unhexlify(
+            bytes.fromhex(
                 "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0"
             ),
         )
@@ -43,7 +43,7 @@ class TestCryptoSha256(unittest.TestCase):
         # x = hashlib.sha256()
         # for i in range(16777216):
         #     x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
-        # self.assertEqual(x.digest(), unhexlify('50e72a0e26442fe2552dc3938ac58658228c0cbfb1d2ca872ae435266fcd055e'))
+        # self.assertEqual(x.digest(), bytes.fromhex('50e72a0e26442fe2552dc3938ac58658228c0cbfb1d2ca872ae435266fcd055e'))
 
     def test_digest_multi(self):
         x = hashlib.sha256()
