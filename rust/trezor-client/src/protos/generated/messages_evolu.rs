@@ -703,7 +703,7 @@ impl EvoluRegistrationRequest {
         self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // required uint32 rotation_index = 3;
+    // optional uint32 rotation_index = 3;
 
     pub fn rotation_index(&self) -> u32 {
         self.rotation_index.unwrap_or(0)
@@ -753,9 +753,6 @@ impl ::protobuf::Message for EvoluRegistrationRequest {
 
     fn is_initialized(&self) -> bool {
         if self.signature.is_none() {
-            return false;
-        }
-        if self.rotation_index.is_none() {
             return false;
         }
         true
@@ -1584,7 +1581,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     (\x0cR\x18proofOfDelegatedIdentity\"\x8c\x01\n\x18EvoluRegistrationReque\
     st\x12+\n\x11certificate_chain\x18\x01\x20\x03(\x0cR\x10certificateChain\
     \x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\x12%\n\x0erotatio\
-    n_index\x18\x03\x20\x02(\rR\rrotationIndex\"\x8a\x01\n\x1cEvoluGetDelega\
+    n_index\x18\x03\x20\x01(\rR\rrotationIndex\"\x8a\x01\n\x1cEvoluGetDelega\
     tedIdentityKey\x12%\n\x0ethp_credential\x18\x01\x20\x01(\x0cR\rthpCreden\
     tial\x12%\n\x0erotation_index\x18\x03\x20\x01(\rR\rrotationIndex\x12\x16\
     \n\x06rotate\x18\x04\x20\x01(\x08R\x06rotateJ\x04\x08\x02\x10\x03\"c\n\
