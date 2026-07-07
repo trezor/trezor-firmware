@@ -89,7 +89,7 @@ static st25_driver_t g_st25_driver = {
 static uint8_t isodep_block_number = 0;
 
 static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
-                                    nfc_apdu_response_t resp, uint32_t fwt);
+                                    nfc_apdu_response_t resp);
 
 static ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 
@@ -365,7 +365,7 @@ ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp) {
     return TS_ENOSTATE;
   }
 
-  return nfc_transceive_blocking(cmd, resp, RFAL_FWT_NONE);
+  TSH_CHECK_OK(nfc_transceive_blocking(cmd, resp));
   nfc_isodep_toggle_block();
 
 cleanup:
@@ -458,10 +458,11 @@ void NFC_EXTI_INTERRUPT_HANDLER(void) {
 }
 
 static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
-                                    nfc_apdu_response_t resp, uint32_t fwt) {
+                                    nfc_apdu_response_t resp) {
   TSH_DECLARE;
-  ReturnCode err = rfalNfcDataExchangeStart((uint8_t *)cmd.data, cmd.data_len,
-                                            resp.data, resp.data_len, fwt);
+  ReturnCode err =
+      rfalNfcDataExchangeStart((uint8_t *)cmd.data, cmd.data_len, resp.data,
+                               resp.data_len, RFAL_FWT_NONE);
 
   if (err == RFAL_ERR_WRONG_STATE) {
     return TS_ENOSTATE;
