@@ -123,9 +123,14 @@ jobs:
 
       - run: mkdir _artifacts/
 
+      - name: Initialize build environment
+        run: ./build-docker.sh --init-only ${REF}
+
       - name: Build prodtest & bootloader
+        # The T1B1 bootloader is built by the monolithic legacy build in the firmware step.
+        if: ${{ matrix.model != 'T1B1' }}
         run: |
-          ./build-docker.sh --models ${{ matrix.model }} --targets 'prodtest,bootloader' --skip-bitcoinonly ${REF}
+          ./build-docker.sh --no-init --models ${{ matrix.model }} --targets 'prodtest,bootloader' --skip-bitcoinonly ${REF}
           cd build/ && cp -v --recursive --parents * ../_artifacts/
 
       - name: Build secmon

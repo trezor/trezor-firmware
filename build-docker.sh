@@ -473,7 +473,7 @@ fi
 
 # build legacy
 
-if echo "${MODELS[@]}" | grep -q T1B1 ; then
+if echo "${MODELS[@]}" | grep -q T1B1 && echo "${CORE_TARGETS[@]}" | grep -qw firmware ; then
   for BITCOIN_ONLY in ${VARIANTS[@]}; do
 
     DIRSUFFIX=${BITCOIN_ONLY/1/-bitcoinonly}
