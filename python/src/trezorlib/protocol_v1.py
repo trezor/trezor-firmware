@@ -43,20 +43,30 @@ HEADER_FMT = ">HL"
 HEADER_LEN = struct.calcsize(HEADER_FMT)
 
 
-def write(transport: Transport, message_type: int, message_data: bytes) -> None:
-    """Write message bytes to transport, chunked according to protocol v1."""
-    chunk_size = transport.CHUNK_SIZE
+def _iter_chunks(
+    message_type: int,
+    message_data: bytes,
+    *,
+    chunk_size: int | None,
+) -> t.Generator[bytes, None, None]:
     header = struct.pack(HEADER_FMT, message_type, len(message_data))
 
     if chunk_size is None:
-        transport.write_chunk(header + message_data)
+        yield header + message_data
         return
 
     buffer = io.BytesIO(b"##" + header + message_data)
     while chunk_payload := buffer.read(chunk_size - 1):
         chunk = b"?" + chunk_payload
         # pad to chunk size
-        chunk = chunk.ljust(chunk_size, b"\x00")
+        yield chunk.ljust(chunk_size, b"\x00")
+
+
+def write(transport: Transport, message_type: int, message_data: bytes) -> None:
+    """Write message bytes to transport, chunked according to protocol v1."""
+    for chunk in _iter_chunks(
+        message_type, message_data, chunk_size=transport.CHUNK_SIZE
+    ):
         transport.write_chunk(chunk)
 
 
