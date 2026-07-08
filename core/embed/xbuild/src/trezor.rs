@@ -93,7 +93,7 @@ fn get_firmware_vendor() -> Result<&'static str> {
         "unsafe_signed_prod"
     } else if current_model_id()? == "T2T1" {
         "satoshilabs_signed_prod"
-    } else if has_feature("bitcoin_only") {
+    } else if !has_feature("universal_fw") {
         "trezor_btconly_signed_prod"
     } else {
         "trezor_signed_prod"
