@@ -14,3 +14,8 @@ panel = "io/touch_panel_lx154a2422cpt23"
 
 [optiga]
 
+[ble]
+
+[nrf]
+
+[nrf_auth]

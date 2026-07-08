@@ -32,7 +32,7 @@ MODEL = ModelData(
     aliases=(),
     model_class=ModelClass.CORE,
     layout=Layout.DELIZIA,
-    ble_capable=False,
+    ble_capable=True,
     prod_keys=KeySet(
         production=True,
         # TODO replace with production keys (matches firmware/models.py today)

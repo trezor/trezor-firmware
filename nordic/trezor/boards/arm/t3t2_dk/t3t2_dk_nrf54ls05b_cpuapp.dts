@@ -1,0 +1,80 @@
+/*
+ * Copyright (c) 2025 Trezor Company s.r.o.
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/dts-v1/;
+
+#include "nrf54ls05b_cpuapp_common.dtsi"
+
+/ {
+	compatible = "trezor,t3t2_dk_nrf54ls05b-cpuapp";
+	model = "T3T2 DK NRF54LS05B Application MCU";
+
+	chosen {
+		zephyr,code-partition = &slot0_partition;
+		zephyr,sram = &cpuapp_sram;
+		zephyr,bt-hci = &bt_hci_sdc;
+	};
+
+	/*
+	 * GPIO handshake / control signals to the STM32 main SoC.
+	 * These are defined at board level (not in the app overlay) so the
+	 * separate MCUboot image sees them too. Net mapping per schematic:
+	 *   output_1  spi-request         BLE_GPIO0  P1.18  (nRF -> STM, STM PE0)
+	 *   input_1   spi-ready           BLE_GPIO1  P1.19  (STM -> nRF, STM PC13)
+	 *   input_0   stay-in-bootloader  BLE_GPIO2  P1.20  (STM -> nRF, STM PE2)
+	 *   output_0  reserved-output     BLE_GPIO3  P1.21  (nRF -> STM, STM PC7)
+	 */
+	outputs {
+		compatible = "gpio-leds";
+		output_0: output_0 {
+			gpios = <&gpio1 21 GPIO_ACTIVE_HIGH>;
+		};
+		output_1: output_1 {
+			gpios = <&gpio1 18 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	inputs {
+		compatible = "gpio-keys";
+		input_0: input_0 {
+			gpios = <&gpio1 20 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+		};
+		input_1: input_1 {
+			gpios = <&gpio1 19 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+		};
+	};
+
+	aliases {
+		/* MCUboot serial-recovery entry is the STM-driven stay-in-bootloader
+		 * line; there is no dedicated recovery button (as on t3w1). */
+		mcuboot-button0 = &input_0;
+		spi-ready = &input_1;
+		spi-request = &output_1;
+		stay-in-bootloader = &input_0;
+		reserved-output = &output_0;
+	};
+};
+
+&bt_hci_sdc {
+	status = "okay";
+};
+
+&bt_hci_controller {
+	status = "disabled";
+};
+
+&spi21 {
+	compatible = "nordic,nrf-spim";
+	status = "okay";
+	pinctrl-0 = <&spi_default>;
+	pinctrl-1 = <&spi_sleep>;
+	pinctrl-names = "default", "sleep";
+	/* CS = BLE_NSS, P1.05 */
+	cs-gpios = <&gpio1 5 GPIO_ACTIVE_LOW>;
+	trezor_spi_dev: spi-dev-a@0 {
+		reg = <0>;
+	};
+};

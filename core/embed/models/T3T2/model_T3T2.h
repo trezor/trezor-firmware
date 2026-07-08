@@ -32,6 +32,7 @@
 #define MODEL_USB_MANUFACTURER "Trezor Company"
 #define MODEL_USB_PRODUCT MODEL_FULL_NAME
 #define MODEL_HOMESCREEN_MAXSIZE 16384
+#define MODEL_BLE_CODE 7
 
 // todo replace with production keys
 #define MODEL_BOARDLOADER_KEYS \
