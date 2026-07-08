@@ -137,7 +137,7 @@ if [ -n "${DIRSUFFIX_OVERRIDE:-}" ] && [ "$OPT_BUILD_NORMAL" -eq 1 ] && [ "$OPT_
 fi
 
 TAG="$1"
-COMMIT_HASH="$(git rev-parse "$TAG")"
+COMMIT_HASH="$(git rev-parse "$TAG^{commit}")"
 PRODUCTION=${PRODUCTION:-1}
 
 if which wget > /dev/null ; then
@@ -216,6 +216,29 @@ EOF
 fi  # init
 
 # append common part to script
+cat <<EOF >> "$SCRIPT_NAME"
+  # With --no-init the snapshot's checkout is pinned at the commit it was
+  # created from. Bring it to the requested commit, so that the environment can
+  # be reused when only the sources moved (e.g. a signed secmon binary was
+  # committed between the secmon and firmware builds). Toolchain changes still
+  # require a re-init.
+  if [ "\$(git rev-parse HEAD)" != "${COMMIT_HASH}" ]; then
+    echo ">>> UPDATING CHECKOUT TO $TAG (${COMMIT_HASH})"
+    git fetch --depth=1 origin "$TAG"
+    git checkout --detach "${COMMIT_HASH}"
+  fi
+EOF
+
+if [ $INIT -eq 0 ]; then
+  cat <<EOF >> "$SCRIPT_NAME"
+  if ! sed "s|./ci/|./|" shell.nix | cmp -s - /shell.nix; then
+    echo "shell.nix changed since this environment was initialized."
+    echo "Re-run without --no-init to rebuild it."
+    exit 1
+  fi
+EOF
+fi
+
 cat <<EOF >> "$SCRIPT_NAME"
   $GIT_CLEAN_REPO
   git submodule update --init --recursive --depth 1
