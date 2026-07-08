@@ -7,10 +7,12 @@ Hashing scheme (matches merkletree.ts and apps.authdb._mpt):
   leaf hash     : SHA-256(b"\\x00" + address + counter(4B BE) + value)
   internal hash : SHA-256(b"\\x01" + left + right)  — positional, no sorting
 
-counter is a first-class, cryptographically-committed per-address version
-number (docs/authdb-sync-proposal.md Part 1) -- not just text embedded in
-the opaque value blob. INSERT sets counter=1; each subsequent insert() call
-for the same address bumps it by exactly 1 (UPDATE semantics).
+counter is a first-class, cryptographically-committed version number -- not
+just text embedded in the opaque value blob. insert() supports two models:
+the legacy per-address model (counter=None: 1 on first insert, +1 per update)
+and the global model (counter passed explicitly: the leaf is stamped with the
+new global root counter on each change, matching the current firmware and
+AuthDbInit / dbinsert).
 
 Proof format (leaf→root order):
   Each element is 33 bytes: 1-byte bit-position (0-255) + 32-byte sibling hash.
@@ -141,22 +143,37 @@ class AuthDbTree:
         entry = self._leaves.get(_sha256d(address))
         return entry[1] if entry is not None else 0
 
-    def insert(self, address: bytes, value: bytes) -> int:
+    def get_value(self, address: bytes) -> bytes:
+        """Return address's current value, or b"" if absent."""
+        entry = self._leaves.get(_sha256d(address))
+        return entry[2] if entry is not None else b""
+
+    def insert(
+        self, address: bytes, value: bytes, counter: Optional[int] = None
+    ) -> int:
         """Insert or update the entry for *address*.
 
-        Empty value is a virtual delete. Otherwise the counter becomes 1 on
-        first insert, or the previous counter + 1 on every subsequent call
-        for the same address (UPDATE semantics). Returns the new counter (0
-        if this call was a delete).
+        Empty value is a virtual delete. Returns the new counter (0 if this
+        call was a delete).
+
+        `counter` selects the leaf-counter model:
+
+        - Given (global model): the leaf is stamped with exactly this value.
+          Callers on the global-counter model (AuthDbInit / dbinsert) pass the
+          new global root counter, matching what the device stamps on change.
+        - None (legacy per-address model): the counter becomes 1 on first
+          insert, or the previous counter + 1 on every subsequent call for the
+          same address.
         """
         addr_hash = _sha256d(address)
         if len(value) == 0:
             self._leaves.pop(addr_hash, None)
             return 0
-        existing = self._leaves.get(addr_hash)
-        new_counter = existing[1] + 1 if existing is not None else 1
-        self._leaves[addr_hash] = (address, new_counter, value)
-        return new_counter
+        if counter is None:
+            existing = self._leaves.get(addr_hash)
+            counter = existing[1] + 1 if existing is not None else 1
+        self._leaves[addr_hash] = (address, counter, value)
+        return counter
 
     def delete(self, address: bytes) -> None:
         """Remove *address* from the tree (same as inserting with empty value)."""

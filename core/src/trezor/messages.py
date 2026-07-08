@@ -7633,7 +7633,7 @@ if TYPE_CHECKING:
     class AuthDbSetRoot(protobuf.MessageType):
         root: "AnyBytes"
         mac: "AnyBytes"
-        device_id: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
         counter: "int | None"
 
         def __init__(
@@ -7641,7 +7641,7 @@ if TYPE_CHECKING:
             *,
             root: "AnyBytes",
             mac: "AnyBytes",
-            device_id: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
             counter: "int | None" = None,
         ) -> None:
             pass

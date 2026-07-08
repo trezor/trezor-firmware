@@ -58,7 +58,7 @@ message AuthDbInitResponse {
  *   - `mac` == 32 zero bytes: a plain unauthenticated root injection, accepted
  *     ONLY on debug builds (increments the counter by 1, ignores counter/device_id);
  *     rejected on production firmware.
- *   - Any other `mac`: `device_id` must equal this wallet's wallet_id, `counter`
+ *   - Any other `mac`: `wallet_id` must equal this wallet's wallet_id, `counter`
  *     must be strictly greater than the currently stored counter (anti-rollback),
  *     and `mac` must equal HMAC(root_mac_key, wallet_id||counter||root). The only
  *     way to obtain a verifying mac is to already hold one a device itself produced
@@ -70,7 +70,7 @@ message AuthDbInitResponse {
 message AuthDbSetRoot {
     required bytes  root       = 1;  // 32-byte Merkle root to install
     required bytes  mac        = 2;  // required; all-zero accepted only in debug builds
-    optional bytes  device_id  = 3;  // must equal wallet_id when mac is non-zero
+    optional bytes  wallet_id  = 3;  // must equal this wallet's wallet_id when mac is non-zero
     optional uint32 counter    = 4;  // target counter; required when mac is non-zero
 }
 

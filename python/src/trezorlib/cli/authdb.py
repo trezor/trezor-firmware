@@ -17,18 +17,78 @@ def cli() -> None:
 
 
 @cli.command()
-@click.argument("root_hex")
+@click.option("--qm-counter", "qm_counter", type=int, required=True, help="Latest QM counter.")
+@click.option(
+    "--qm-signature",
+    "qm_signature_hex",
+    required=True,
+    help="QM Ed25519 signature (hex) over b'AUTHDB QM v1'||wallet_id||counter(4B BE).",
+)
+@click.option("--root", "root_hex", default=None, help="Root from Evolu (hex); omit for a fresh wallet.")
+@click.option("--counter", "counter", type=int, default=None, help="Counter the root was attested at.")
+@click.option("--root-mac", "root_mac_hex", default=None, help="root_mac (hex) for the supplied root.")
 @with_session
-def set_root(session: "Session", root_hex: str) -> str:
-    """Store a new Merkle root (32 bytes, hex-encoded) on the device.
+def init(
+    session: "Session",
+    qm_counter: int,
+    qm_signature_hex: str,
+    root_hex: str | None,
+    counter: int | None,
+    root_mac_hex: str | None,
+) -> str:
+    """Bootstrap the device AuthDB state from the QM counter + stored root.
 
-    DEBUG BUILDS ONLY.  On production firmware the root is derived by the
-    device itself via the update-leaf command.
+    The device verifies the QM Ed25519 signature, stores qm_counter as the
+    qm_last_counter anti-rollback ceiling, and — if a root is supplied —
+    verifies counter == qm_counter and root_mac before installing it.
+    """
+    root = bytes.fromhex(root_hex) if root_hex else None
+    root_mac = bytes.fromhex(root_mac_hex) if root_mac_hex else None
+    qm_last, wallet_id, out_counter, out_root, out_mac = authdb.init(
+        session,
+        qm_counter=qm_counter,
+        qm_signature=bytes.fromhex(qm_signature_hex),
+        root=root,
+        counter=counter,
+        root_mac=root_mac,
+    )
+    id_hex = wallet_id.hex() if wallet_id else "(none)"
+    root_out = out_root.hex() if out_root else "(empty)"
+    mac_out = out_mac.hex() if out_mac else "(none)"
+    return (
+        f"Initialized. QM last counter: {qm_last}. Wallet ID: {id_hex}. "
+        f"Counter: {out_counter}. Root: {root_out}. Root-MAC: {mac_out}"
+    )
+
+
+@cli.command(name="set-root")
+@click.argument("root_hex")
+@click.option("--mac", "mac_hex", default=None, help="Root-attestation MAC (hex) from update-leaf.")
+@click.option("--wallet-id", "wallet_id_hex", default=None, help="Wallet ID (hex); required with a real mac.")
+@click.option("--counter", "counter", type=int, default=None, help="Target counter; required with a real mac.")
+@with_session
+def set_root(
+    session: "Session",
+    root_hex: str,
+    mac_hex: str | None,
+    wallet_id_hex: str | None,
+    counter: int | None,
+) -> str:
+    """Install a Merkle root (32 bytes, hex-encoded) on the device.
+
+    With no --mac this is a debug-only unauthenticated injection. Supply
+    --mac (a device-produced root-attestation token) plus --wallet-id and
+    --counter for the production-safe, MAC-verified path.
     """
     root = bytes.fromhex(root_hex)
-    counter, wallet_id = authdb.set_root(session, root)
+    mac = bytes.fromhex(mac_hex) if mac_hex else None
+    wallet_id_arg = bytes.fromhex(wallet_id_hex) if wallet_id_hex else None
+    out_counter, wallet_id, new_root, root_mac = authdb.set_root(
+        session, root, mac=mac, wallet_id=wallet_id_arg, counter=counter
+    )
     id_hex = wallet_id.hex() if wallet_id else "(none)"
-    return f"Root stored. Counter: {counter}. Wallet ID: {id_hex}"
+    mac_out = root_mac.hex() if root_mac else "(none)"
+    return f"Root stored. Counter: {out_counter}. Wallet ID: {id_hex}. Root-MAC: {mac_out}"
 
 
 @cli.command()
@@ -41,6 +101,7 @@ def set_root(session: "Session", root_hex: str) -> str:
     multiple=True,
     help="Sibling hash (hex, 33 bytes) at each level, leaf-to-root order.",
 )
+@click.option("--counter", "counter", type=int, default=None, help="Leaf counter for a membership proof.")
 @click.option(
     "--witness-address",
     "witness_address_hex",
@@ -53,14 +114,23 @@ def set_root(session: "Session", root_hex: str) -> str:
     default=None,
     help="Witness value (hex) for non-membership proof.",
 )
+@click.option(
+    "--witness-counter",
+    "witness_counter",
+    type=int,
+    default=None,
+    help="Witness leaf counter for non-membership proof.",
+)
 @with_session
 def lookup(
     session: "Session",
     address_hex: str,
     value_hex: str,
     proof_hexes: tuple[str, ...],
+    counter: int | None,
     witness_address_hex: str | None,
     witness_value_hex: str | None,
+    witness_counter: int | None,
 ) -> str:
     """Verify an MPT proof against the stored root.
 
@@ -68,11 +138,11 @@ def lookup(
     VALUE_HEX    hex-encoded value (required for membership proof; omit for non-membership).
 
     For a membership proof:
-        trezorctl authdb lookup <addr_hex> <val_hex> -p <sib1> -p <sib2> ...
+        trezorctl authdb lookup <addr_hex> <val_hex> --counter <n> -p <sib1> ...
 
     For a non-membership proof:
         trezorctl authdb lookup <addr_hex> -p <sib1> ... \\
-            --witness-address <w_addr_hex> --witness-value <w_val_hex>
+            --witness-address <w_addr_hex> --witness-value <w_val_hex> --witness-counter <n>
     """
     address = bytes.fromhex(address_hex)
     value = bytes.fromhex(value_hex) if value_hex else None
@@ -80,24 +150,40 @@ def lookup(
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
 
-    valid, membership, counter, wallet_id = authdb.lookup(
+    valid, membership, out_counter, wallet_id = authdb.lookup(
         session,
         address=address,
         value=value,
         proof=proof,
+        counter=counter,
         witness_address=witness_address,
         witness_value=witness_value,
+        witness_counter=witness_counter,
     )
     proof_type = "membership" if membership else "non-membership"
     status = "VALID" if valid else "INVALID"
     id_hex = wallet_id.hex() if wallet_id else "(none)"
-    return f"Proof {status} ({proof_type}). Counter: {counter}. Wallet ID: {id_hex}"
+    return f"Proof {status} ({proof_type}). Counter: {out_counter}. Wallet ID: {id_hex}"
 
 
 @cli.command(name="update-leaf")
 @click.argument("address_hex")
 @click.argument("old_value_hex")
 @click.argument("new_value_hex")
+@click.option(
+    "--new-counter",
+    "new_counter",
+    type=int,
+    required=True,
+    help="New global counter to stamp the leaf with (current root counter + 1).",
+)
+@click.option(
+    "--old-counter",
+    "old_counter",
+    type=int,
+    default=None,
+    help="The leaf's previous global stamp (UPDATE/DELETE).",
+)
 @click.option(
     "-p",
     "--proof",
@@ -118,16 +204,11 @@ def lookup(
     help="Witness value (hex) for INSERT non-membership proof.",
 )
 @click.option(
-    "--mac",
-    "mac_hex",
+    "--witness-counter",
+    "witness_counter",
+    type=int,
     default=None,
-    help="MAC token (hex) from a prior approve call — skips confirmation dialog.",
-)
-@click.option(
-    "--device-id",
-    "device_id_hex",
-    default=None,
-    help="Device identifier (hex) matching the MAC token.",
+    help="Witness leaf counter for INSERT non-membership proof.",
 )
 @with_session
 def update_leaf(
@@ -135,11 +216,12 @@ def update_leaf(
     address_hex: str,
     old_value_hex: str,
     new_value_hex: str,
+    new_counter: int,
+    old_counter: int | None,
     proof_hexes: tuple[str, ...],
     witness_address_hex: str | None,
     witness_value_hex: str | None,
-    mac_hex: str | None,
-    device_id_hex: str | None,
+    witness_counter: int | None,
 ) -> str:
     """Atomically update a leaf in the Merkle tree.
 
@@ -151,21 +233,7 @@ def update_leaf(
       INIT    old_value "",        new_value non-empty  – no proof, empty tree
 
     Pass "" (empty string) for old_value when inserting, or for new_value when deleting.
-
-    \b
-    Examples:
-      # UPDATE alice's value:
-      trezorctl authdb update-leaf <addr_hex> <old_hex> <new_hex> -p <sib> ...
-
-      # DELETE alice:
-      trezorctl authdb update-leaf <addr_hex> <old_hex> "" -p <sib> ...
-
-      # INSERT into existing tree (supply witness from non-membership proof):
-      trezorctl authdb update-leaf <addr_hex> "" <new_hex> -p <sib> ... \\
-          --witness-address <w_addr_hex> --witness-value <w_val_hex>
-
-      # INIT (first entry, tree was empty):
-      trezorctl authdb update-leaf <addr_hex> "" <new_hex>
+    --new-counter must equal the current root counter + 1 (global-counter model).
     """
     address = bytes.fromhex(address_hex)
     old_value = bytes.fromhex(old_value_hex) if old_value_hex else b""
@@ -173,39 +241,42 @@ def update_leaf(
     proof = [bytes.fromhex(h) for h in proof_hexes]
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
-    mac = bytes.fromhex(mac_hex) if mac_hex else None
-    device_id = bytes.fromhex(device_id_hex) if device_id_hex else None
 
-    counter, new_root, wallet_id, new_mac, auth_mac = authdb.update_leaf(
+    counter, new_root, wallet_id, new_mac = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
         new_value=new_value,
+        new_counter=new_counter,
+        old_counter=old_counter,
         proof=proof,
         witness_address=witness_address,
         witness_value=witness_value,
-        mac=mac,
-        device_id=device_id,
+        witness_counter=witness_counter,
     )
     root_hex = new_root.hex() if new_root else "(empty)"
     id_hex = wallet_id.hex() if wallet_id else "(none)"
     mac_out = new_mac.hex() if new_mac else "(none)"
-    auth_mac_out = auth_mac.hex() if auth_mac else "(none)"
-    return f"Updated. Counter: {counter}. New root: {root_hex}. Wallet ID: {id_hex}. MAC: {mac_out}. Auth-MAC: {auth_mac_out}"
-
-
-@cli.command(name="clear-root")
-@with_session
-def clear_root(session: "Session") -> str:
-    """Wipe the stored Merkle root and bump the counter. DEBUG BUILDS ONLY."""
-    wallet_id = authdb.clear_root(session)
-    id_hex = wallet_id.hex() if wallet_id else "(none)"
-    return f"Root cleared. Wallet ID: {id_hex}"
+    return f"Updated. Counter: {counter}. New root: {root_hex}. Wallet ID: {id_hex}. MAC: {mac_out}"
 
 
 @cli.command()
 @click.argument("address_hex")
 @click.argument("old_value_hex")
+@click.option(
+    "--new-counter",
+    "new_counter",
+    type=int,
+    required=True,
+    help="New global counter to stamp (current root counter + 1).",
+)
+@click.option(
+    "--old-counter",
+    "old_counter",
+    type=int,
+    default=None,
+    help="The leaf's previous global stamp.",
+)
 @click.option(
     "-p",
     "--proof",
@@ -218,261 +289,27 @@ def delete(
     session: "Session",
     address_hex: str,
     old_value_hex: str,
+    new_counter: int,
+    old_counter: int | None,
     proof_hexes: tuple[str, ...],
 ) -> str:
     """Delete an entry from the Merkle tree.
 
-    Equivalent to update-leaf <addr> <old_val> "" [-p ...].
-
-    ADDRESS_HEX    hex-encoded address to delete.
-    OLD_VALUE_HEX  hex-encoded current value (required to prove membership).
+    Equivalent to update-leaf <addr> <old_val> "" --new-counter <n> [-p ...].
     """
     address = bytes.fromhex(address_hex)
     old_value = bytes.fromhex(old_value_hex)
     proof = [bytes.fromhex(h) for h in proof_hexes]
 
-    counter, new_root, wallet_id, _mac, _auth_mac = authdb.update_leaf(
+    counter, new_root, wallet_id, _mac = authdb.update_leaf(
         session,
         address=address,
         old_value=old_value,
         new_value=b"",
+        new_counter=new_counter,
+        old_counter=old_counter,
         proof=proof,
     )
     root_hex = new_root.hex() if new_root else "(empty)"
     id_hex = wallet_id.hex() if wallet_id else "(none)"
     return f"Deleted. Counter: {counter}. New root: {root_hex}. Wallet ID: {id_hex}"
-
-
-@cli.command()
-@click.argument("address_hex")
-@click.argument("old_value_hex")
-@click.argument("new_value_hex")
-@with_session
-def approve(session: "Session", address_hex: str, old_value_hex: str, new_value_hex: str) -> str:
-    """Pre-authorize an address old_value->new_value transition on the device.
-
-    The user confirms on-screen; the device returns a MAC token computed the
-    same way update-leaf verifies it. Use the returned MAC with update-leaf
-    --mac (for this exact address/old_value/new_value) to skip future
-    confirmation dialogs.
-
-    ADDRESS_HEX    hex-encoded address to authorize.
-    OLD_VALUE_HEX  hex-encoded current value; "" if the address is absent (INSERT/INIT).
-    NEW_VALUE_HEX  hex-encoded value to authorize at that address.
-    """
-    address = bytes.fromhex(address_hex)
-    old_value = bytes.fromhex(old_value_hex) if old_value_hex else None
-    new_value = bytes.fromhex(new_value_hex)
-    mac, wallet_id = authdb.approve(session, address=address, new_value=new_value, old_value=old_value)
-    mac_hex = mac.hex()
-    id_hex = wallet_id.hex() if wallet_id else "(none)"
-    return f"Approved. MAC: {mac_hex}. Wallet ID: {id_hex}"
-
-
-@cli.command(name="set-cache-entry")
-@click.argument("address_hex")
-@click.option("--label", "label", default=None, help="Human-readable label for the address.")
-@click.option("--data-mac", "data_mac_hex", default=None, help="MAC authorizing the data field (hex).")
-@with_session
-def set_cache_entry(
-    session: "Session",
-    address_hex: str,
-    label: str | None,
-    data_mac_hex: str | None,
-) -> str:
-    """Store offline-cache metadata (label and/or data_mac) for an address.
-
-    ADDRESS_HEX  hex-encoded address key.
-    """
-    address = bytes.fromhex(address_hex)
-    data_mac = bytes.fromhex(data_mac_hex) if data_mac_hex else None
-    identifier_crc = authdb.set_cache_entry(session, address=address, label=label, data_mac=data_mac)
-    return f"Cache entry stored. Identifier CRC: {identifier_crc:#010x}"
-
-
-@cli.command(name="get-cache-entry")
-@click.argument("address_hex")
-@with_session
-def get_cache_entry(session: "Session", address_hex: str) -> str:
-    """Retrieve offline-cache metadata for an address.
-
-    ADDRESS_HEX  hex-encoded address key.
-    """
-    address = bytes.fromhex(address_hex)
-    found, label, data_mac = authdb.get_cache_entry(session, address=address)
-    if not found:
-        return "Not found."
-    label_out = label if label else "(none)"
-    mac_out = data_mac.hex() if data_mac else "(none)"
-    return f"Found. Label: {label_out}. Data-MAC: {mac_out}"
-
-
-@cli.command(name="get-all-cache")
-@with_session
-def get_all_cache(session: "Session") -> str:
-    """Return all offline-cache entries stored on the device."""
-    entries = authdb.get_all_cache(session)
-    if not entries:
-        return "Cache is empty."
-    lines = ["address | label | data_mac"]
-    for address, label, data_mac in entries:
-        label_out = label if label else "(none)"
-        mac_out = data_mac.hex() if data_mac else "(none)"
-        lines.append(f"{address.hex()} | {label_out} | {mac_out}")
-    return "\n".join(lines)
-
-
-@cli.command(name="wipe-cache")
-@with_session
-def wipe_cache(session: "Session") -> str:
-    """Wipe all offline-cache entries from the device."""
-    authdb.wipe_cache(session)
-    return "Cache wiped."
-
-
-@cli.command(name="set-device-id")
-@click.argument("device_id_hex")
-@with_session
-def set_device_id(session: "Session", device_id_hex: str) -> str:
-    """Override the device_id on the device. DEBUG BUILDS ONLY.
-
-    DEVICE_ID_HEX  32-byte device identifier (hex, 64 chars).
-    """
-    device_id = bytes.fromhex(device_id_hex)
-    echoed = authdb.set_device_id(session, device_id=device_id)
-    return f"device_id set to: {echoed.hex()}"
-
-
-# ---------------------------------------------------------------------------
-# Offline synchronization
-# ---------------------------------------------------------------------------
-
-
-@cli.command(name="queue-offline-operation")
-@click.argument("address_hex")
-@click.argument("old_value_hex")
-@click.argument("new_value_hex")
-@with_session
-def queue_offline_operation(
-    session: "Session", address_hex: str, old_value_hex: str, new_value_hex: str
-) -> str:
-    """Sign and append an offline operation to the on-device queue.
-
-    Use when the host database is unreachable.
-
-    ADDRESS_HEX    hex-encoded address.
-    OLD_VALUE_HEX  hex-encoded current value; "" if the address is absent (INSERT).
-    NEW_VALUE_HEX  hex-encoded new value; "" to delete.
-    """
-    address = bytes.fromhex(address_hex)
-    old_value = bytes.fromhex(old_value_hex) if old_value_hex else b""
-    new_value = bytes.fromhex(new_value_hex) if new_value_hex else b""
-    sequence, mac, wallet_id = authdb.queue_offline_operation(
-        session, address=address, old_value=old_value, new_value=new_value
-    )
-    id_hex = wallet_id.hex() if wallet_id else "(none)"
-    return f"Queued. Sequence: {sequence}. MAC: {mac.hex()}. Wallet ID: {id_hex}"
-
-
-@cli.command(name="get-offline-operations")
-@with_session
-def get_offline_operations_cmd(session: "Session") -> str:
-    """Return the current root/counter plus every queued offline operation."""
-    current_root, counter, wallet_id, operations = authdb.get_offline_operations(session)
-    root_hex = current_root.hex() if current_root else "(empty)"
-    id_hex = wallet_id.hex() if wallet_id else "(none)"
-    lines = [
-        f"Wallet ID: {id_hex}. Current root: {root_hex}. Counter: {counter}.",
-        "sequence | address | old_value | new_value | mac",
-    ]
-    for op in operations:
-        lines.append(
-            f"{op.sequence} | {op.address.hex()} | "
-            f"{op.old_value.hex() if op.old_value else ''} | "
-            f"{op.new_value.hex() if op.new_value else ''} | {op.mac.hex()}"
-        )
-    return "\n".join(lines)
-
-
-@cli.command(name="apply-offline-operations")
-@click.option(
-    "--file",
-    "file_path",
-    required=True,
-    type=click.Path(exists=True, dir_okay=False),
-    help="JSON file: a list of rebased operations, each with hex-encoded "
-    "sequence/address/old_value/new_value/mac/proof/witness_address/witness_value "
-    "(proof is a list of hex strings; old_value/new_value/witness_* may be omitted).",
-)
-@with_session
-def apply_offline_operations_cmd(session: "Session", file_path: str) -> str:
-    """Apply a batch of host-rebased offline operations from a JSON file."""
-    import json
-
-    with open(file_path) as f:
-        raw_ops = json.load(f)
-
-    operations = [
-        authdb.RebasedOperation(
-            sequence=op["sequence"],
-            address=bytes.fromhex(op["address"]),
-            old_value=bytes.fromhex(op["old_value"]) if op.get("old_value") else b"",
-            new_value=bytes.fromhex(op["new_value"]) if op.get("new_value") else b"",
-            mac=bytes.fromhex(op["mac"]),
-            proof=[bytes.fromhex(h) for h in op.get("proof", [])],
-            witness_address=bytes.fromhex(op["witness_address"]) if op.get("witness_address") else None,
-            witness_value=bytes.fromhex(op["witness_value"]) if op.get("witness_value") else None,
-        )
-        for op in raw_ops
-    ]
-
-    applied_count, new_root, counter, last_applied_sequence, wallet_id, root_mac = (
-        authdb.apply_offline_operations(session, operations)
-    )
-    root_hex = new_root.hex() if new_root else "(empty)"
-    id_hex = wallet_id.hex() if wallet_id else "(none)"
-    mac_hex = root_mac.hex() if root_mac else "(none)"
-    return (
-        f"Applied: {applied_count}/{len(operations)}. New root: {root_hex}. "
-        f"Counter: {counter}. Last applied sequence: {last_applied_sequence}. "
-        f"Wallet ID: {id_hex}. Root-attestation MAC: {mac_hex}"
-    )
-
-
-@cli.command(name="delete-offline-operations")
-@with_session
-def delete_offline_operations_cmd(session: "Session") -> str:
-    """Garbage-collect queued operations up to the device's own last_applied_sequence."""
-    deleted, remaining = authdb.delete_offline_operations(session)
-    return f"Deleted: {deleted}. Remaining: {remaining}."
-
-
-@cli.command(name="fast-forward-root")
-@click.argument("new_root_hex")
-@click.argument("counter", type=int)
-@click.argument("wallet_id_hex")
-@click.argument("mac_hex")
-@with_session
-def fast_forward_root(
-    session: "Session", new_root_hex: str, counter: int, wallet_id_hex: str, mac_hex: str
-) -> str:
-    """Fast-forward this wallet's root to a state some device already attested to.
-
-    MAC_HEX must be a root-attestation token previously returned as the
-    `mac`/root_mac field from update-leaf or apply-offline-operations (on
-    this device or on any other physical device sharing this wallet).
-
-    NEW_ROOT_HEX  hex-encoded target root (32 bytes).
-    COUNTER       target counter value; must be greater than the wallet's current counter.
-    WALLET_ID_HEX hex-encoded wallet_id the attestation was issued for.
-    MAC_HEX       hex-encoded root-attestation token.
-    """
-    new_root = bytes.fromhex(new_root_hex)
-    wallet_id = bytes.fromhex(wallet_id_hex)
-    mac = bytes.fromhex(mac_hex)
-    new_counter, echoed_root, echoed_wallet_id = authdb.fast_forward_root(
-        session, new_root=new_root, counter=counter, wallet_id=wallet_id, mac=mac
-    )
-    root_hex = echoed_root.hex() if echoed_root else "(none)"
-    id_hex = echoed_wallet_id.hex() if echoed_wallet_id else "(none)"
-    return f"Fast-forwarded. Counter: {new_counter}. Root: {root_hex}. Wallet ID: {id_hex}"

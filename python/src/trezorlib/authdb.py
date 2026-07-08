@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional, Protocol, Tuple
 
 from . import messages
+from .authdb_tree import AuthDbTree
 
 if TYPE_CHECKING:
     from .transport.session import Session
@@ -11,60 +12,77 @@ if TYPE_CHECKING:
 ZERO_MAC = b"\x00" * 32
 
 
+# ---------------------------------------------------------------------------
+# Wire wrappers — one per device interface (init / set_root / lookup / update_leaf)
+# ---------------------------------------------------------------------------
+
+
+def init(
+    session: "Session",
+    qm_counter: int,
+    qm_signature: bytes,
+    root: Optional[bytes] = None,
+    counter: Optional[int] = None,
+    root_mac: Optional[bytes] = None,
+) -> tuple[int, Optional[bytes], Optional[int], Optional[bytes], Optional[bytes]]:
+    """Bootstrap the device's trusted AuthDB state from untrusted host storage.
+
+    The device verifies the Quota-Manager Ed25519 signature over
+    b"AUTHDB QM v1" || wallet_id || qm_counter(4B BE) against its provisioned
+    QM public key and stores qm_counter as the qm_last_counter anti-rollback
+    ceiling. If `root` is supplied (from Evolu), the device also verifies
+    counter == qm_counter and root_mac == HMAC(root_mac_key, wallet_id ||
+    counter || root) before installing it; a fresh wallet supplies no root.
+
+    Returns (qm_last_counter, wallet_id, counter, root, root_mac).
+    """
+    resp = session.call(
+        messages.AuthDbInit(
+            qm_counter=qm_counter,
+            qm_signature=qm_signature,
+            root=root,
+            counter=counter,
+            root_mac=root_mac,
+        ),
+        expect=messages.AuthDbInitResponse,
+    )
+    return (
+        resp.qm_last_counter,
+        resp.wallet_id,
+        resp.counter,
+        resp.root,
+        resp.root_mac,
+    )
+
+
 def set_root(
     session: "Session",
     root: bytes,
     mac: Optional[bytes] = None,
-    device_id: Optional[bytes] = None,
+    wallet_id: Optional[bytes] = None,
     counter: Optional[int] = None,
-    operations: Optional[list["RebasedOperation"]] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes], int, int, Optional[bytes]]:
-    """Install a (root, counter) state and replay `operations` (this wallet's
-    own pending queue, if any) on top of it, in one call.
+) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
+    """Install a (root, counter) state attested by a device-produced MAC.
 
     mac defaults to the all-zero sentinel -- a plain unauthenticated root
-    injection, accepted ONLY on debug builds (matches this wrapper's
-    historical "DEBUG BUILDS ONLY, bare call" ergonomics). Supply a real mac
-    (from update_leaf()'s `mac` or apply_offline_operations()'s `root_mac`)
-    plus device_id=wallet_id and the attested counter to use the
-    production-safe path instead -- verified exactly like fast_forward_root().
+    injection, accepted ONLY on debug builds. Supply a real mac (from
+    update_leaf()'s `mac`) plus wallet_id and the attested counter to use the
+    production-safe path: the device checks wallet_id == its own wallet_id,
+    counter strictly greater than the stored counter (anti-rollback), and
+    mac == HMAC(root_mac_key, wallet_id || counter || root).
 
-    Returns (counter, wallet_id, new_root, applied_count, last_applied_sequence, root_mac)
-    -- all reflecting install + replay combined.
+    Returns (counter, wallet_id, new_root, root_mac).
     """
     resp = session.call(
         messages.AuthDbSetRoot(
             root=root,
             mac=mac if mac is not None else ZERO_MAC,
-            device_id=device_id,
+            wallet_id=wallet_id,
             counter=counter,
-            operations=[
-                messages.AuthDbRebasedOperation(
-                    sequence=op.sequence,
-                    address=op.address,
-                    old_value=op.old_value,
-                    new_value=op.new_value,
-                    new_counter=op.new_counter,
-                    mac=op.mac,
-                    proof=op.proof,
-                    witness_address=op.witness_address,
-                    witness_value=op.witness_value,
-                    old_counter=op.old_counter,
-                    witness_counter=op.witness_counter,
-                )
-                for op in (operations or [])
-            ],
         ),
         expect=messages.AuthDbSetRootResponse,
     )
-    return (
-        resp.counter,
-        resp.wallet_id,
-        resp.new_root,
-        resp.applied_count,
-        resp.last_applied_sequence,
-        resp.root_mac,
-    )
+    return resp.counter, resp.wallet_id, resp.new_root, resp.root_mac
 
 
 def lookup(
@@ -84,7 +102,7 @@ def lookup(
     witness_counter, and witness_value; value/counter may be None.
 
     Returns (valid, membership, counter, wallet_id). The response `counter`
-    is the ROOT-level counter, not the leaf counter passed in.
+    is the ROOT-level (global) counter, not the leaf counter passed in.
     """
     resp = session.call(
         messages.AuthDbLookup(
@@ -102,18 +120,6 @@ def lookup(
     return resp.valid, membership, resp.counter, resp.wallet_id
 
 
-def clear_root(session: "Session") -> Optional[bytes]:
-    """Wipe the stored Merkle root. DEBUG BUILDS ONLY.
-
-    Returns wallet_id.
-    """
-    resp = session.call(
-        messages.AuthDbClearRoot(),
-        expect=messages.AuthDbClearRootResponse,
-    )
-    return resp.wallet_id
-
-
 def update_leaf(
     session: "Session",
     address: bytes,
@@ -125,21 +131,18 @@ def update_leaf(
     witness_address: Optional[bytes] = None,
     witness_value: Optional[bytes] = None,
     witness_counter: Optional[int] = None,
-    mac: Optional[bytes] = None,
-    device_id: Optional[bytes] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes], Optional[bytes]]:
+) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
     """Atomically update a leaf in the Merkle tree.
 
     old_value=b"" means the address is currently absent (INSERT / INIT).
     new_value=b"" means delete the address (DELETE).
-    new_counter must be 1 for INSERT/INIT, or old_counter+1 for UPDATE/DELETE
-    -- the device enforces this and rejects otherwise (leaf counter, see
-    docs/authdb-sync-proposal.md Part 1).
-    mac + device_id skip the on-screen confirmation if they match a prior approve() call.
 
-    Returns (counter, new_root, wallet_id, mac, auth_mac).
-    new_root/mac are None if tree is now empty.
-    auth_mac is set in debug/auto-approve mode: HMAC(device_key, old_leafHash||new_leafHash).
+    Global-counter model: new_counter must equal the current root counter + 1
+    -- the device stamps the changed leaf with that new global counter and
+    rejects any other value. old_counter is the leaf's previous global stamp.
+
+    Returns (counter, new_root, wallet_id, mac). new_root/mac are None if the
+    tree is now empty.
     """
     resp = session.call(
         messages.AuthDbUpdateLeaf(
@@ -152,348 +155,164 @@ def update_leaf(
             witness_address=witness_address,
             witness_value=witness_value,
             witness_counter=witness_counter,
-            mac=mac,
-            device_id=device_id,
         ),
         expect=messages.AuthDbUpdateLeafResponse,
     )
-    return resp.counter, resp.new_root, resp.wallet_id, resp.mac, resp.auth_mac
+    return resp.counter, resp.new_root, resp.wallet_id, resp.mac
 
 
-def set_cache_entry(
+# ---------------------------------------------------------------------------
+# dbinsert — QM-attested, Evolu-backed insert with a host offline queue
+# ---------------------------------------------------------------------------
+
+
+class QuotaManager(Protocol):
+    """The authoritative per-wallet global counter, external to the device.
+
+    get_signed_counter() returns (counter, signature) where signature is the
+    QM's Ed25519 signature over b"AUTHDB QM v1" || wallet_id || counter(4B BE)
+    -- exactly what AuthDbInit verifies on-device against the provisioned QM
+    public key.
+    """
+
+    def get_signed_counter(self) -> Tuple[int, bytes]: ...
+
+
+class EvoluStore(Protocol):
+    """The untrusted host store holding the attested root blob (Evolu's role)."""
+
+    def get_root(self) -> Tuple[Optional[bytes], int, Optional[bytes]]:
+        """Return (root, counter, root_mac); root/root_mac None for a fresh wallet."""
+        ...
+
+    def put_root(self, root: bytes, counter: int, root_mac: bytes) -> None:
+        """Persist a freshly attested (root, counter, root_mac)."""
+        ...
+
+
+def dbinsert(
     session: "Session",
+    qm: QuotaManager,
+    evolu: EvoluStore,
+    tree: AuthDbTree,
+    queue: List[Tuple[bytes, bytes]],
     address: bytes,
-    label: Optional[str] = None,
-    data_mac: Optional[bytes] = None,
+    value: bytes,
+    online: bool = True,
 ) -> int:
-    """Store label and/or data_mac for address in the device offline cache.
+    """Insert (address, value), draining the host offline queue while online.
 
-    Returns identifier_crc (low 4 bytes of device_id) for sanity-checking.
+    Mirrors the reference algorithm:
+
+        last_counter_qm            <- Quota Manager
+        root, counter_e, root_mac  <- Evolu
+        # AuthDbInit does the authoritative verification on-device:
+        #   verify QM Ed25519 signature, verify counter_e == last_counter_qm,
+        #   verify root_mac over (root, counter_e), then install the root.
+        insertToOfflineQueue(address, value)          # push last
+        while online:
+            set_root                                   # (re)install attested root
+            (addr, val) <- first queued
+            dbchange                                   # update_leaf, global stamp
+            upload_root                                # -> Evolu
+            latest_counter_qm <- Quota Manager
+            verify latest_counter_qm == last_counter_qm + 1
+            dblookup(addr) ; verify the leaf is a member at its new stamp
+            on success -> deleteFromOfflineQueue (drop first)
+
+    `tree` is the host's mirror of the Merkle tree, used to build proofs and
+    kept in sync (leaves stamped with the global counter). `queue` is the
+    caller-owned offline queue, mutated in place so pending items from earlier
+    calls drain here too.
+
+    Returns the number of queued entries applied this call.
     """
-    resp = session.call(
-        messages.AuthDbSetCacheEntry(address=address, label=label, data_mac=data_mac),
-        expect=messages.AuthDbSetCacheEntryResponse,
+    # --- bootstrap: AuthDbInit does the authoritative QM-sig / counter / MAC checks ---
+    last_counter_qm, qm_sig = qm.get_signed_counter()
+    root, counter_e, root_mac = evolu.get_root()
+    if root is not None and last_counter_qm != counter_e:
+        # cheap host-side early-out; the device re-checks this in init()
+        raise ValueError("QM counter != Evolu counter")
+
+    _qm_last, wallet_id, _counter, _root, _root_mac = init(
+        session,
+        qm_counter=last_counter_qm,
+        qm_signature=qm_sig,
+        root=root,
+        counter=counter_e if root is not None else None,
+        root_mac=root_mac if root is not None else None,
     )
-    return resp.identifier_crc
 
+    # --- queue the change (push last) ---
+    queue.append((address, value))
 
-def get_cache_entry(
-    session: "Session",
-    address: bytes,
-) -> tuple[bool, Optional[str], Optional[bytes]]:
-    """Retrieve cached metadata for address.
+    # --- drain while online ---
+    applied = 0
+    while online and queue:
+        cur_root, cur_counter, cur_root_mac = evolu.get_root()
+        # (re)install the currently attested root on the device before changing it
+        if cur_root is not None and cur_root_mac is not None:
+            set_root(
+                session,
+                cur_root,
+                mac=cur_root_mac,
+                wallet_id=wallet_id,
+                counter=cur_counter,
+            )
 
-    Returns (found, label, data_mac).
-    """
-    resp = session.call(
-        messages.AuthDbGetCacheEntry(address=address),
-        expect=messages.AuthDbGetCacheEntryResponse,
-    )
-    return resp.found, resp.label, resp.data_mac
+        addr, val = queue[0]
 
+        # dbchange: build the proof of the OLD state and update the leaf. The new
+        # leaf is stamped with the new GLOBAL counter (current root counter + 1).
+        new_global = (cur_counter + 1) if cur_root is not None else 1
+        old_counter = tree.get_counter(addr)
+        if old_counter:  # UPDATE
+            old_value = tree.get_value(addr)
+            proof = tree.get_proof(addr)
+            witness_address = witness_value = None
+            witness_counter = None
+        else:  # INSERT (or INIT on an empty tree)
+            old_value = b""
+            proof, witness_address, witness_counter, witness_value = (
+                tree.get_nonmembership_proof(addr)
+            )
 
-def get_all_cache(
-    session: "Session",
-) -> list[tuple[bytes, Optional[str], Optional[bytes]]]:
-    """Return all cached entries as (address, label, data_mac) tuples."""
-    resp = session.call(
-        messages.AuthDbGetAllCache(),
-        expect=messages.AuthDbGetAllCacheResponse,
-    )
-    return [(e.address, e.label, e.data_mac) for e in resp.entries]
-
-
-def wipe_cache(session: "Session") -> None:
-    """Wipe all offline-cache entries from the device."""
-    session.call(messages.AuthDbWipeCache(), expect=messages.AuthDbWipeCacheResponse)
-
-
-def set_device_id(
-    session: "Session",
-    device_id: bytes,
-) -> bytes:
-    """Override the device_id on the device. DEBUG BUILDS ONLY.
-
-    Returns the echoed device_id.
-    """
-    resp = session.call(
-        messages.AuthDbSetDeviceId(device_id=device_id),
-        expect=messages.AuthDbSetDeviceIdResponse,
-    )
-    return resp.device_id
-
-
-def approve(
-    session: "Session",
-    address: bytes,
-    new_value: bytes,
-    old_value: Optional[bytes] = None,
-) -> tuple[bytes, Optional[bytes]]:
-    """Pre-authorize an address old_value->new_value transition on the device.
-
-    old_value=None/b"" means the address is currently absent (INSERT/INIT),
-    matching update_leaf's convention -- the MAC is computed the same way
-    update_leaf verifies it, so it can only be used to pre-approve this exact
-    transition.
-
-    The user confirms on-screen; the device returns a MAC token that can be
-    passed to a future update_leaf call for this same address/old_value/
-    new_value to skip the confirmation dialog.
-
-    Returns (mac, wallet_id).
-    """
-    resp = session.call(
-        messages.AuthDbApprove(address=address, new_value=new_value, old_value=old_value),
-        expect=messages.AuthDbApproveResponse,
-    )
-    return resp.mac, resp.wallet_id
-
-
-# ---------------------------------------------------------------------------
-# Offline synchronization
-# ---------------------------------------------------------------------------
-
-def queue_offline_operation(
-    session: "Session",
-    address: bytes,
-    old_value: bytes,
-    new_value: bytes,
-    new_counter: int,
-    old_counter: Optional[int] = None,
-) -> tuple[int, bytes, Optional[bytes]]:
-    """Create a signed offline operation when the host database is unreachable.
-
-    old_value=b"" means the address is currently absent (INSERT).
-    new_value=b"" means delete the address (DELETE).
-    new_counter must be 1 for INSERT, or old_counter+1 otherwise.
-
-    Returns (sequence, mac, wallet_id). Does not touch the Merkle root.
-    """
-    resp = session.call(
-        messages.AuthDbQueueOfflineOperation(
-            address=address,
-            old_value=old_value,
-            new_value=new_value,
-            new_counter=new_counter,
-            old_counter=old_counter,
-        ),
-        expect=messages.AuthDbQueueOfflineOperationResponse,
-    )
-    return resp.sequence, resp.mac, resp.wallet_id
-
-
-class OfflineOperation:
-    """One entry of the on-device offline queue, as returned by get_offline_operations()."""
-
-    def __init__(
-        self,
-        sequence: int,
-        address: bytes,
-        old_value: bytes,
-        new_value: bytes,
-        new_counter: int,
-        mac: bytes,
-        old_counter: int = 0,
-    ) -> None:
-        self.sequence = sequence
-        self.address = address
-        self.old_value = old_value
-        self.new_value = new_value
-        self.new_counter = new_counter
-        self.old_counter = old_counter
-        self.mac = mac
-
-
-def get_offline_operations(
-    session: "Session",
-) -> tuple[Optional[bytes], int, Optional[bytes], list[OfflineOperation]]:
-    """Fetch the current root/counter plus every queued offline operation, for upload.
-
-    Returns (current_root, counter, wallet_id, operations).
-    """
-    resp = session.call(
-        messages.AuthDbGetOfflineOperations(),
-        expect=messages.AuthDbGetOfflineOperationsResponse,
-    )
-    operations = [
-        OfflineOperation(
-            sequence=op.sequence,
-            address=op.address,
-            old_value=op.old_value if op.old_value else b"",
-            new_value=op.new_value if op.new_value else b"",
-            new_counter=op.new_counter,
-            old_counter=op.old_counter if op.old_counter else 0,
-            mac=op.mac,
+        counter, new_root, _wid, mac = update_leaf(
+            session,
+            addr,
+            old_value,
+            val,
+            new_global,
+            proof,
+            old_counter=old_counter or None,
+            witness_address=witness_address,
+            witness_value=witness_value,
+            witness_counter=witness_counter,
         )
-        for op in resp.operations
-    ]
-    return resp.current_root, resp.counter, resp.wallet_id, operations
+        # keep the host mirror in sync, stamping the leaf with the global counter
+        tree.insert(addr, val, counter=new_global)
 
+        # upload_root: persist the freshly attested state to Evolu
+        if new_root is not None and mac is not None:
+            evolu.put_root(new_root, counter, mac)
 
-class RebasedOperation:
-    """One operation, rebased by the host against the current canonical root.
+        # verify the QM advanced by exactly one (the Ed25519 signature itself is
+        # verified authoritatively on-device by the next AuthDbInit).
+        latest_counter_qm, _latest_sig = qm.get_signed_counter()
+        if latest_counter_qm != last_counter_qm + 1:
+            raise ValueError("QM counter did not advance by exactly 1")
 
-    sequence/address/old_value/new_value/old_counter/new_counter/mac must be
-    forwarded byte-for-byte (value-for-value) from the OfflineOperation it
-    originates from -- rebase may choose whether to forward an operation,
-    never alter its signed fields. proof/witness_* are freshly computed by
-    the host against the root the operation will actually be applied to.
-    """
+        # dblookup: confirm the entry is now a member at its new global stamp
+        # (== latest_counter_qm == last_counter_qm + 1).
+        valid, membership, _root_counter, _wid = lookup(
+            session, addr, val, tree.get_proof(addr), counter=new_global
+        )
+        if not (valid and membership):
+            raise ValueError("post-insert lookup verification failed")
 
-    def __init__(
-        self,
-        sequence: int,
-        address: bytes,
-        old_value: bytes,
-        new_value: bytes,
-        new_counter: int,
-        mac: bytes,
-        proof: list[bytes],
-        old_counter: Optional[int] = None,
-        witness_address: Optional[bytes] = None,
-        witness_value: Optional[bytes] = None,
-        witness_counter: Optional[int] = None,
-    ) -> None:
-        self.sequence = sequence
-        self.address = address
-        self.old_value = old_value
-        self.new_value = new_value
-        self.new_counter = new_counter
-        self.old_counter = old_counter
-        self.mac = mac
-        self.proof = proof
-        self.witness_address = witness_address
-        self.witness_value = witness_value
-        self.witness_counter = witness_counter
+        # on success: drop the first entry and advance
+        queue.pop(0)
+        applied += 1
+        last_counter_qm = latest_counter_qm
 
-
-def apply_offline_operations(
-    session: "Session",
-    operations: list[RebasedOperation],
-) -> tuple[int, Optional[bytes], int, int, Optional[bytes], Optional[bytes]]:
-    """Apply a batch of host-rebased offline operations.
-
-    The device independently verifies each operation's MAC and Merkle proof
-    and computes the resulting root itself; it never accepts a host-supplied
-    root. Processing stops at the first operation that fails verification or
-    is not the immediate next expected sequence.
-
-    Returns (applied_count, new_root, counter, last_applied_sequence,
-    wallet_id, root_mac). root_mac is a root-attestation token (absent if
-    the tree is now empty) that can be replayed via fast_forward_root() (or
-    set_root()'s verified path) on any other physical device sharing this
-    wallet.
-    """
-    resp = session.call(
-        messages.AuthDbApplyOfflineOperations(
-            operations=[
-                messages.AuthDbRebasedOperation(
-                    sequence=op.sequence,
-                    address=op.address,
-                    old_value=op.old_value,
-                    new_value=op.new_value,
-                    new_counter=op.new_counter,
-                    old_counter=op.old_counter,
-                    mac=op.mac,
-                    proof=op.proof,
-                    witness_address=op.witness_address,
-                    witness_value=op.witness_value,
-                    witness_counter=op.witness_counter,
-                )
-                for op in operations
-            ]
-        ),
-        expect=messages.AuthDbApplyOfflineOperationsResponse,
-    )
-    return (
-        resp.applied_count,
-        resp.new_root,
-        resp.counter,
-        resp.last_applied_sequence,
-        resp.wallet_id,
-        resp.root_mac,
-    )
-
-
-def delete_offline_operations(session: "Session") -> tuple[int, int]:
-    """Delete every queued operation with sequence <= the device's own last_applied_sequence.
-
-    Takes no input: the device is the sole source of truth for what it has
-    actually applied, so garbage collection cannot be tricked into deleting
-    an operation that was never really committed.
-
-    Returns (deleted_count, remaining_count).
-    """
-    resp = session.call(
-        messages.AuthDbDeleteOfflineOperations(),
-        expect=messages.AuthDbDeleteOfflineOperationsResponse,
-    )
-    return resp.deleted_count, resp.remaining_count
-
-
-def fast_forward_root(
-    session: "Session",
-    new_root: bytes,
-    counter: int,
-    wallet_id: bytes,
-    mac: bytes,
-) -> tuple[int, Optional[bytes], Optional[bytes]]:
-    """Fast-forward this wallet's root to a state some device already attested to.
-
-    `mac` must be a root-attestation token previously returned as `mac` from
-    update_leaf() or as `root_mac` from apply_offline_operations() -- by this
-    device or by any other physical device that has unlocked the same
-    wallet_id (the underlying mac_key is wallet-derived, not device-derived).
-    Safe on production firmware: a host cannot mint a new token, only replay
-    one a device already produced, and the device independently re-derives
-    its own mac_key to verify it.
-
-    Returns (counter, new_root, wallet_id).
-    """
-    resp = session.call(
-        messages.AuthDbFastForwardRoot(
-            new_root=new_root, counter=counter, wallet_id=wallet_id, mac=mac
-        ),
-        expect=messages.AuthDbFastForwardRootResponse,
-    )
-    return resp.counter, resp.new_root, resp.wallet_id
-
-
-def sync_offline_queue(
-    session: "Session",
-    persist_and_rebase,
-    delete_after_apply: bool = True,
-) -> tuple[int, int]:
-    """Drive one full offline-sync cycle for this device's active wallet.
-
-    1. Fetch the queue via get_offline_operations().
-    2. Call persist_and_rebase(operations) -- caller-supplied callback that
-       MUST durably commit each operation to the host's canonical database
-       BEFORE returning rebased proofs. This ordering is intentionally hard
-       to get wrong: rebased proofs cannot be produced without the caller
-       already having the canonical (post-write) tree state, which for a
-       real backend implies the write already landed.
-    3. apply_offline_operations() -- device verifies + applies, returns
-       last_applied_sequence.
-    4. If delete_after_apply and applied_count > 0: delete_offline_operations().
-       Pass delete_after_apply=False to apply now and delete in a later,
-       separate call (e.g. after an out-of-band durability confirmation such
-       as a DB replica ack) -- apply and delete are intentionally separate
-       RPCs, so this wrapper preserves that separation instead of hiding it.
-
-    Returns (applied_count, deleted_count) (deleted_count=0 if skipped).
-    """
-    _current_root, _counter, _wallet_id, operations = get_offline_operations(session)
-    if not operations:
-        return 0, 0
-
-    rebased = persist_and_rebase(operations)
-    applied_count, _new_root, _counter, _last_applied_sequence, _wallet_id, _root_mac = (
-        apply_offline_operations(session, rebased)
-    )
-
-    deleted_count = 0
-    if delete_after_apply and applied_count > 0:
-        deleted_count, _remaining = delete_offline_operations(session)
-
-    return applied_count, deleted_count
+    return applied

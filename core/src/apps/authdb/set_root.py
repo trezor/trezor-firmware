@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 #   itself (AuthDbUpdateLeaf), never accept one directly -- so the zero-mac
 #   path is rejected outright on production firmware.
 #
-#   Any other mac: device_id must match this wallet's wallet_id, counter must
+#   Any other mac: wallet_id must match this wallet's wallet_id, counter must
 #   be strictly greater than the current counter (anti-rollback), and
 #   mac == HMAC(root_mac_key, wallet_id||counter||root). Safe on PRODUCTION
 #   firmware: the only way to hold a verifying mac is to already have one a
@@ -37,10 +37,10 @@ async def set_root(msg: AuthDbSetRoot) -> AuthDbSetRootResponse:
     else:
         if msg.mac == ZERO_MAC:
             raise DataError("zero mac is only accepted in debug builds")
-        if msg.device_id is None or msg.counter is None:
-            raise DataError("device_id and counter are required with a non-zero mac")
-        if msg.device_id != wallet_id:
-            raise DataError("device_id mismatch")
+        if msg.wallet_id is None or msg.counter is None:
+            raise DataError("wallet_id and counter are required with a non-zero mac")
+        if msg.wallet_id != wallet_id:
+            raise DataError("wallet_id mismatch")
 
         current_counter = authdb.get_counter(wallet_id)
         if msg.counter <= current_counter:

@@ -9512,14 +9512,65 @@ class WebAuthnCredential(protobuf.MessageType):
         self.curve = curve
 
 
+class AuthDbInit(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2306
+    FIELDS = {
+        1: protobuf.Field("qm_counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("qm_signature", "bytes", repeated=False, required=True),
+        3: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        qm_counter: "int",
+        qm_signature: "bytes",
+        root: Optional["bytes"] = None,
+        counter: Optional["int"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.qm_counter = qm_counter
+        self.qm_signature = qm_signature
+        self.root = root
+        self.counter = counter
+        self.root_mac = root_mac
+
+
+class AuthDbInitResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2307
+    FIELDS = {
+        1: protobuf.Field("qm_last_counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        qm_last_counter: "int",
+        wallet_id: Optional["bytes"] = None,
+        counter: Optional["int"] = None,
+        root: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.qm_last_counter = qm_last_counter
+        self.wallet_id = wallet_id
+        self.counter = counter
+        self.root = root
+        self.root_mac = root_mac
+
+
 class AuthDbSetRoot(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2300
     FIELDS = {
         1: protobuf.Field("root", "bytes", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=True),
-        3: protobuf.Field("device_id", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
-        5: protobuf.Field("operations", "AuthDbRebasedOperation", repeated=True, required=False, default=None),
     }
 
     def __init__(
@@ -9527,15 +9578,13 @@ class AuthDbSetRoot(protobuf.MessageType):
         *,
         root: "bytes",
         mac: "bytes",
-        device_id: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
         counter: Optional["int"] = None,
-        operations: Optional[Sequence["AuthDbRebasedOperation"]] = None,
     ) -> None:
         self.root = root
         self.mac = mac
-        self.device_id = device_id
+        self.wallet_id = wallet_id
         self.counter = counter
-        self.operations: Sequence["AuthDbRebasedOperation"] = operations if operations is not None else []
 
 
 class AuthDbSetRootResponse(protobuf.MessageType):
@@ -9544,24 +9593,18 @@ class AuthDbSetRootResponse(protobuf.MessageType):
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("applied_count", "uint32", repeated=False, required=True),
-        5: protobuf.Field("last_applied_sequence", "uint32", repeated=False, required=True),
-        6: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         counter: "int",
-        applied_count: "int",
-        last_applied_sequence: "int",
         wallet_id: Optional["bytes"] = None,
         new_root: Optional["bytes"] = None,
         root_mac: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
-        self.applied_count = applied_count
-        self.last_applied_sequence = last_applied_sequence
         self.wallet_id = wallet_id
         self.new_root = new_root
         self.root_mac = root_mac
@@ -9631,8 +9674,6 @@ class AuthDbUpdateLeaf(protobuf.MessageType):
         4: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
         5: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
-        7: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        8: protobuf.Field("device_id", "bytes", repeated=False, required=False, default=None),
         9: protobuf.Field("old_counter", "uint32", repeated=False, required=False, default=None),
         10: protobuf.Field("new_counter", "uint32", repeated=False, required=True),
         11: protobuf.Field("witness_counter", "uint32", repeated=False, required=False, default=None),
@@ -9648,21 +9689,17 @@ class AuthDbUpdateLeaf(protobuf.MessageType):
         proof: Optional[Sequence["bytes"]] = None,
         witness_address: Optional["bytes"] = None,
         witness_value: Optional["bytes"] = None,
-        mac: Optional["bytes"] = None,
-        device_id: Optional["bytes"] = None,
         old_counter: Optional["int"] = None,
         witness_counter: Optional["int"] = None,
     ) -> None:
         self.address = address
         self.old_value = old_value
         self.new_value = new_value
-        self.new_counter = new_counter
         self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.witness_address = witness_address
         self.witness_value = witness_value
-        self.mac = mac
-        self.device_id = device_id
         self.old_counter = old_counter
+        self.new_counter = new_counter
         self.witness_counter = witness_counter
 
 
@@ -9673,7 +9710,6 @@ class AuthDbUpdateLeafResponse(protobuf.MessageType):
         2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("auth_mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9683,487 +9719,8 @@ class AuthDbUpdateLeafResponse(protobuf.MessageType):
         new_root: Optional["bytes"] = None,
         wallet_id: Optional["bytes"] = None,
         mac: Optional["bytes"] = None,
-        auth_mac: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
         self.new_root = new_root
         self.wallet_id = wallet_id
         self.mac = mac
-        self.auth_mac = auth_mac
-
-
-class AuthDbClearRoot(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2306
-    FIELDS: dict = {}
-
-    def __init__(self) -> None:
-        pass
-
-
-class AuthDbClearRootResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2307
-    FIELDS = {
-        1: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        wallet_id: Optional["bytes"] = None,
-    ) -> None:
-        self.wallet_id = wallet_id
-
-
-class AuthDbApprove(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2308
-    FIELDS = {
-        1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("new_value", "bytes", repeated=False, required=True),
-        3: protobuf.Field("old_value", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        address: "bytes",
-        new_value: "bytes",
-        old_value: Optional["bytes"] = None,
-    ) -> None:
-        self.address = address
-        self.new_value = new_value
-        self.old_value = old_value
-
-
-class AuthDbApproveResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2309
-    FIELDS = {
-        1: protobuf.Field("mac", "bytes", repeated=False, required=True),
-        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        mac: "bytes",
-        wallet_id: Optional["bytes"] = None,
-    ) -> None:
-        self.mac = mac
-        self.wallet_id = wallet_id
-
-
-class AuthDbSetCacheEntry(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2310
-    FIELDS = {
-        1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("label", "string", repeated=False, required=False, default=None),
-        3: protobuf.Field("data_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        address: "bytes",
-        label: Optional["str"] = None,
-        data_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.address = address
-        self.label = label
-        self.data_mac = data_mac
-
-
-class AuthDbSetCacheEntryResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2311
-    FIELDS = {
-        1: protobuf.Field("identifier_crc", "uint32", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        identifier_crc: "int",
-    ) -> None:
-        self.identifier_crc = identifier_crc
-
-
-class AuthDbGetCacheEntry(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2312
-    FIELDS = {
-        1: protobuf.Field("address", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        address: "bytes",
-    ) -> None:
-        self.address = address
-
-
-class AuthDbGetCacheEntryResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2313
-    FIELDS = {
-        1: protobuf.Field("found", "bool", repeated=False, required=True),
-        2: protobuf.Field("label", "string", repeated=False, required=False, default=None),
-        3: protobuf.Field("data_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        found: "bool",
-        label: Optional["str"] = None,
-        data_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.found = found
-        self.label = label
-        self.data_mac = data_mac
-
-
-class AuthDbGetAllCacheEntry(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("label", "string", repeated=False, required=False, default=None),
-        3: protobuf.Field("data_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        address: "bytes",
-        label: Optional["str"] = None,
-        data_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.address = address
-        self.label = label
-        self.data_mac = data_mac
-
-
-class AuthDbGetAllCache(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2314
-    FIELDS: dict = {}
-
-    def __init__(self) -> None:
-        pass
-
-
-class AuthDbGetAllCacheResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2315
-    FIELDS = {
-        1: protobuf.Field("entries", "AuthDbGetAllCacheEntry", repeated=True, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        entries: Optional[list["AuthDbGetAllCacheEntry"]] = None,
-    ) -> None:
-        self.entries = entries if entries is not None else []
-
-
-class AuthDbWipeCache(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2316
-    FIELDS: dict = {}
-
-    def __init__(self) -> None:
-        pass
-
-
-class AuthDbWipeCacheResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2317
-    FIELDS: dict = {}
-
-    def __init__(self) -> None:
-        pass
-
-
-class AuthDbSetDeviceId(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2318
-    FIELDS = {
-        1: protobuf.Field("device_id", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        device_id: "bytes",
-    ) -> None:
-        self.device_id = device_id
-
-
-class AuthDbSetDeviceIdResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2319
-    FIELDS = {
-        1: protobuf.Field("device_id", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        device_id: "bytes",
-    ) -> None:
-        self.device_id = device_id
-
-
-class AuthDbOfflineOperation(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("sequence", "uint32", repeated=False, required=True),
-        2: protobuf.Field("address", "bytes", repeated=False, required=True),
-        3: protobuf.Field("old_value", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("new_value", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("mac", "bytes", repeated=False, required=True),
-        6: protobuf.Field("old_counter", "uint32", repeated=False, required=False, default=None),
-        7: protobuf.Field("new_counter", "uint32", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        sequence: "int",
-        address: "bytes",
-        mac: "bytes",
-        new_counter: "int",
-        old_value: Optional["bytes"] = None,
-        new_value: Optional["bytes"] = None,
-        old_counter: Optional["int"] = None,
-    ) -> None:
-        self.sequence = sequence
-        self.address = address
-        self.mac = mac
-        self.new_counter = new_counter
-        self.old_value = old_value
-        self.new_value = new_value
-        self.old_counter = old_counter
-
-
-class AuthDbQueueOfflineOperation(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2320
-    FIELDS = {
-        1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("old_value", "bytes", repeated=False, required=True),
-        3: protobuf.Field("new_value", "bytes", repeated=False, required=True),
-        4: protobuf.Field("old_counter", "uint32", repeated=False, required=False, default=None),
-        5: protobuf.Field("new_counter", "uint32", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        address: "bytes",
-        old_value: "bytes",
-        new_value: "bytes",
-        new_counter: "int",
-        old_counter: Optional["int"] = None,
-    ) -> None:
-        self.address = address
-        self.old_value = old_value
-        self.new_value = new_value
-        self.new_counter = new_counter
-        self.old_counter = old_counter
-
-
-class AuthDbQueueOfflineOperationResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2321
-    FIELDS = {
-        1: protobuf.Field("sequence", "uint32", repeated=False, required=True),
-        2: protobuf.Field("mac", "bytes", repeated=False, required=True),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        sequence: "int",
-        mac: "bytes",
-        wallet_id: Optional["bytes"] = None,
-    ) -> None:
-        self.sequence = sequence
-        self.mac = mac
-        self.wallet_id = wallet_id
-
-
-class AuthDbGetOfflineOperations(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2322
-    FIELDS: dict = {}
-
-    def __init__(self) -> None:
-        pass
-
-
-class AuthDbGetOfflineOperationsResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2323
-    FIELDS = {
-        1: protobuf.Field("current_root", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("operations", "AuthDbOfflineOperation", repeated=True, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        current_root: Optional["bytes"] = None,
-        wallet_id: Optional["bytes"] = None,
-        operations: Optional[list["AuthDbOfflineOperation"]] = None,
-    ) -> None:
-        self.counter = counter
-        self.current_root = current_root
-        self.wallet_id = wallet_id
-        self.operations = operations if operations is not None else []
-
-
-class AuthDbRebasedOperation(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("sequence", "uint32", repeated=False, required=True),
-        2: protobuf.Field("address", "bytes", repeated=False, required=True),
-        3: protobuf.Field("old_value", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("new_value", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("mac", "bytes", repeated=False, required=True),
-        6: protobuf.Field("proof", "bytes", repeated=True, required=False),
-        7: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
-        8: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
-        9: protobuf.Field("old_counter", "uint32", repeated=False, required=False, default=None),
-        10: protobuf.Field("new_counter", "uint32", repeated=False, required=True),
-        11: protobuf.Field("witness_counter", "uint32", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        sequence: "int",
-        address: "bytes",
-        mac: "bytes",
-        new_counter: "int",
-        old_value: Optional["bytes"] = None,
-        new_value: Optional["bytes"] = None,
-        proof: Optional[list["bytes"]] = None,
-        witness_address: Optional["bytes"] = None,
-        witness_value: Optional["bytes"] = None,
-        old_counter: Optional["int"] = None,
-        witness_counter: Optional["int"] = None,
-    ) -> None:
-        self.sequence = sequence
-        self.address = address
-        self.mac = mac
-        self.new_counter = new_counter
-        self.old_value = old_value
-        self.new_value = new_value
-        self.proof = proof if proof is not None else []
-        self.witness_address = witness_address
-        self.witness_value = witness_value
-        self.old_counter = old_counter
-        self.witness_counter = witness_counter
-
-
-class AuthDbApplyOfflineOperations(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2324
-    FIELDS = {
-        1: protobuf.Field("operations", "AuthDbRebasedOperation", repeated=True, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        operations: Optional[list["AuthDbRebasedOperation"]] = None,
-    ) -> None:
-        self.operations = operations if operations is not None else []
-
-
-class AuthDbApplyOfflineOperationsResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2325
-    FIELDS = {
-        1: protobuf.Field("applied_count", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        4: protobuf.Field("last_applied_sequence", "uint32", repeated=False, required=True),
-        5: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        6: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        applied_count: "int",
-        counter: "int",
-        last_applied_sequence: "int",
-        new_root: Optional["bytes"] = None,
-        wallet_id: Optional["bytes"] = None,
-        root_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.applied_count = applied_count
-        self.counter = counter
-        self.last_applied_sequence = last_applied_sequence
-        self.new_root = new_root
-        self.wallet_id = wallet_id
-        self.root_mac = root_mac
-
-
-class AuthDbDeleteOfflineOperations(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2326
-    FIELDS: dict = {}
-
-    def __init__(self) -> None:
-        pass
-
-
-class AuthDbDeleteOfflineOperationsResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2327
-    FIELDS = {
-        1: protobuf.Field("deleted_count", "uint32", repeated=False, required=True),
-        2: protobuf.Field("remaining_count", "uint32", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        deleted_count: "int",
-        remaining_count: "int",
-    ) -> None:
-        self.deleted_count = deleted_count
-        self.remaining_count = remaining_count
-
-
-class AuthDbFastForwardRoot(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2328
-    FIELDS = {
-        1: protobuf.Field("new_root", "bytes", repeated=False, required=True),
-        2: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=True),
-        4: protobuf.Field("mac", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        new_root: "bytes",
-        counter: "int",
-        wallet_id: "bytes",
-        mac: "bytes",
-    ) -> None:
-        self.new_root = new_root
-        self.counter = counter
-        self.wallet_id = wallet_id
-        self.mac = mac
-
-
-class AuthDbFastForwardRootResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2329
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        new_root: Optional["bytes"] = None,
-        wallet_id: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.wallet_id = wallet_id
