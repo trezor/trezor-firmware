@@ -51,7 +51,7 @@ _CBOR_SET_TAG = const(0x102)  # Tag 258
 
 
 def _header(typ: int, l: int) -> bytes:
-    from ustruct import pack
+    from struct import pack
 
     if l < 24:
         return pack(">B", typ + l)

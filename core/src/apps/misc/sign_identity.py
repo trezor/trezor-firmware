@@ -91,7 +91,7 @@ def serialize_identity_without_proto(identity: IdentityType) -> str:
 
 
 def get_identity_path(identity: str, index: int, num: int) -> Bip32Path:
-    from ustruct import pack, unpack
+    from struct import pack, unpack
 
     from apps.common.paths import HARDENED
 

@@ -1,10 +1,10 @@
 import micropython
 import sys
+from io import open
+from os import getenv
 from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 
 import coveragedata
-from uio import open
-from uos import getenv
 
 if TYPE_CHECKING:
     from types import FrameType

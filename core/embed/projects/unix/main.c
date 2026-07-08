@@ -71,7 +71,7 @@ STATIC void stderr_print_strn(void *env, const char *str, size_t len) {
 #ifdef USE_DBG_CONSOLE
   dbg_console_write(str, len);
 #endif
-  mp_uos_dupterm_tx_strn(str, len);
+  mp_os_dupterm_tx_strn(str, len);
 }
 
 const mp_print_t mp_stderr_print = {NULL, stderr_print_strn};
@@ -746,5 +746,3 @@ void nlr_jump_fail(void *val) {
   printf("FATAL: uncaught NLR %p\n", val);
   exit(1);
 }
-
-MP_REGISTER_MODULE(MP_QSTR_uos, mp_module_uos);
