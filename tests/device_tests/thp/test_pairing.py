@@ -37,6 +37,10 @@ MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 pytestmark = [pytest.mark.protocol("thp")]
 
+ignore_ephemeral_keypair_warning = pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+
 
 @contextmanager
 def deterministic_secrets() -> t.Generator[None, None, None]:
@@ -73,9 +77,7 @@ def test_pairing_qr_code(test_ctx: TrezorTestContext) -> None:
     pairing.finish()
 
 
-@pytest.mark.filterwarnings(
-    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
-)
+@ignore_ephemeral_keypair_warning
 @deterministic_secrets()
 def test_pairing_code_entry(test_ctx: TrezorTestContext) -> None:
     pairing = prepare_channel_for_pairing(test_ctx, fixed_entropy=True)
@@ -92,9 +94,7 @@ def test_pairing_code_entry(test_ctx: TrezorTestContext) -> None:
     pairing.finish()
 
 
-@pytest.mark.filterwarnings(
-    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
-)
+@ignore_ephemeral_keypair_warning
 @deterministic_secrets()
 def test_pairing_code_entry_invalid_cpace_key(test_ctx: TrezorTestContext) -> None:
     pairing = prepare_channel_for_pairing(test_ctx, fixed_entropy=True)
@@ -117,9 +117,7 @@ def test_pairing_code_entry_invalid_cpace_key(test_ctx: TrezorTestContext) -> No
         method.send_code(code_str)
 
 
-@pytest.mark.filterwarnings(
-    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
-)
+@ignore_ephemeral_keypair_warning
 @deterministic_secrets()
 def test_pairing_code_entry_invalid_cpace_key_length(
     test_ctx: TrezorTestContext,
@@ -145,9 +143,7 @@ def test_pairing_code_entry_invalid_cpace_key_length(
         method.send_code(code_str)
 
 
-@pytest.mark.filterwarnings(
-    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
-)
+@ignore_ephemeral_keypair_warning
 @deterministic_secrets()
 def test_pairing_code_entry_cancel(test_ctx: TrezorTestContext) -> None:
     pairing = prepare_channel_for_pairing(test_ctx, fixed_entropy=True)

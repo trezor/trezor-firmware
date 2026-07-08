@@ -397,6 +397,11 @@ def _prepared_test_ctx(
     if request.node.get_closest_marker("altcoin") and is_btc_only:
         pytest.skip("Skipping altcoin test")
 
+    # Optiga's presence is detected from the presence of its security counter.
+    has_optiga = _raw_test_ctx.features.optiga_sec is not None
+    if request.node.get_closest_marker("xfail_if_no_optiga") and not has_optiga:
+        pytest.xfail("Optiga is not available on this device.")
+
     _check_protocol(request, _raw_test_ctx)
 
     sd_marker = request.node.get_closest_marker("sd_card")
