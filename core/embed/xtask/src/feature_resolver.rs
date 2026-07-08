@@ -159,7 +159,8 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
     if args.disable_optiga {
         board_feat.retain(|f| f != "optiga");
     }
-    if args.disable_tropic.unwrap_or(args.emulator) {
+    let default_disable_tropic = args.emulator && args.project != Project::Prodtest;
+    if args.disable_tropic.unwrap_or(default_disable_tropic) {
         board_feat.retain(|f| f != "tropic");
     }
     features.extend(board_feat);
