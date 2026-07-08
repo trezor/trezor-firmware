@@ -2,7 +2,10 @@
 
 Welcome to the **Trezor BLE Gateway** project!
 This repository contains the source code and instructions to build and flash the
-application.
+application. Two boards are supported, each tied to a specific nRF Connect SDK:
+the `t3w1_revA_nrf52832` board on the regulatory-frozen **NCS v2.9.0**, and the
+`t3t2_dk` (nRF54LS05B) board on the default **NCS v3.3.0** — see
+[Selecting the nRF Connect SDK version](#selecting-the-nrf-connect-sdk-version).
 
 ## Table of Contents
 
@@ -91,8 +94,12 @@ west update
 Each board is tied to one SDK — build the matching board for the active manifest:
 
 | Manifest          | SDK        | Board to build                |
+|-------------------|------------|-------------------------------|
+| `west.yml`        | NCS v3.3.0 | `t3t2_dk/nrf54ls05b/cpuapp` |
 | `west-ncs2.9.yml` | NCS v2.9.0 | `t3w1_revA_nrf52832`          |
 
+The nRF54L (t3t2_dk) is not supported on NCS 2.9, so it can only be built under
+the default manifest.
 
 Notes:
 - Only one SDK is checked out at a time, so always rebuild with
@@ -114,9 +121,21 @@ Notes:
 
 ### Building and signing using script: debug, production
 To be invoked from nix-shell in nordic/trezor folder.
+
+`-b` accepts either a full board target (e.g. `t3t2_dk/nrf54ls05b/cpuapp`) or a
+short model alias that expands to that model's default board: `t3t2` →
+`t3t2_dk/nrf54ls05b/cpuapp`, `t3w1` → `t3w1_revA_nrf52832`.
 ```sh
-./scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -d -s
-./scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -p -s
+./scripts/build_sign_flash.sh -b t3w1 -d -s
+./scripts/build_sign_flash.sh -b t3w1 -p -s
+```
+
+For the `t3t2_dk` (nRF54LS05B) board, first make sure the default NCS v3.3.0
+manifest and toolchain are active (see
+[Selecting the nRF Connect SDK version](#selecting-the-nrf-connect-sdk-version)):
+```sh
+./scripts/build_sign_flash.sh -b t3t2 -d -s
+./scripts/build_sign_flash.sh -b t3t2 -p -s
 ```
 
 ## Alternative build methods
@@ -149,6 +168,13 @@ Build the application for the t3w1_revA_nrf52832 board:
 
 ```sh
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild -- -DOVERLAY_CONFIG=debug.conf
+```
+
+To build for the `t3t2_dk` (nRF54LS05B) board, switch to the default NCS v3.3.0
+manifest first (see [Selecting the nRF Connect SDK version](#selecting-the-nrf-connect-sdk-version)):
+
+```sh
+west build ./trezor-ble -b t3t2_dk/nrf54ls05b/cpuapp --sysbuild -- -DOVERLAY_CONFIG=debug.conf
 ```
 
 

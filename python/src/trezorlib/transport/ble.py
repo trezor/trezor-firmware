@@ -25,7 +25,7 @@ from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 
 from ..log import DUMP_PACKETS
-from ..models import T3W1
+from ..models import T3T2, T3W1
 from . import Timeout, Transport, TransportException
 from .udp import UdpTransport
 
@@ -78,7 +78,7 @@ class BleTransport(Transport):
         cls, models: t.Iterable[TrezorModel] | None = None
     ) -> t.Iterable[BleTransport]:
         # TODO use manufacturer_data
-        if models and T3W1 not in models:
+        if models and T3W1 not in models and T3T2 not in models:
             return []
         devices = cls.ble_proxy().scan()
         return [BleTransport(device[0]) for device in devices]
