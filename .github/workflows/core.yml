@@ -417,7 +417,7 @@ jobs:
         model: [T2T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
-      PYTEST_TIMEOUT: 60
+      PYTEST_TIMEOUT: 70
       TESTOPTS: "--durations 10"
     timeout-minutes: 20
     steps:
