@@ -112,37 +112,13 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.PaymentNotification:
         return "apps.misc.payment_notification"
 
-    # authdb
+    # authdb (trimmed to the 3 online interfaces: setroot / dblookup / dbchange)
     if msg_type == MessageType.AuthDbSetRoot:
         return "apps.authdb.set_root"
     if msg_type == MessageType.AuthDbLookup:
         return "apps.authdb.lookup"
     if msg_type == MessageType.AuthDbUpdateLeaf:
         return "apps.authdb.update_leaf"
-    if msg_type == MessageType.AuthDbClearRoot:
-        return "apps.authdb.clear_root"
-    if msg_type == MessageType.AuthDbApprove:
-        return "apps.authdb.approve"
-    if msg_type == MessageType.AuthDbSetCacheEntry:
-        return "apps.authdb.set_cache_entry"
-    if msg_type == MessageType.AuthDbGetCacheEntry:
-        return "apps.authdb.get_cache_entry"
-    if msg_type == MessageType.AuthDbGetAllCache:
-        return "apps.authdb.get_all_cache"
-    if msg_type == MessageType.AuthDbWipeCache:
-        return "apps.authdb.wipe_cache"
-    if msg_type == MessageType.AuthDbSetDeviceId:
-        return "apps.authdb.set_device_id"
-    if msg_type == MessageType.AuthDbQueueOfflineOperation:
-        return "apps.authdb.queue_offline_operation"
-    if msg_type == MessageType.AuthDbGetOfflineOperations:
-        return "apps.authdb.get_offline_operations"
-    if msg_type == MessageType.AuthDbApplyOfflineOperations:
-        return "apps.authdb.apply_offline_operations"
-    if msg_type == MessageType.AuthDbDeleteOfflineOperations:
-        return "apps.authdb.delete_offline_operations"
-    if msg_type == MessageType.AuthDbFastForwardRoot:
-        return "apps.authdb.fast_forward_root"
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:

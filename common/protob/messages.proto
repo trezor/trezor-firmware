@@ -388,30 +388,8 @@ enum MessageType {
     MessageType_AuthDbLookupResponse = 2303 [(wire_out) = true];
     MessageType_AuthDbUpdateLeaf = 2304 [(wire_in) = true];
     MessageType_AuthDbUpdateLeafResponse = 2305 [(wire_out) = true];
-    MessageType_AuthDbClearRoot = 2306 [(wire_in) = true];
-    MessageType_AuthDbClearRootResponse = 2307 [(wire_out) = true];
-    MessageType_AuthDbApprove = 2308 [(wire_in) = true];
-    MessageType_AuthDbApproveResponse = 2309 [(wire_out) = true];
-    MessageType_AuthDbSetCacheEntry = 2310 [(wire_in) = true];
-    MessageType_AuthDbSetCacheEntryResponse = 2311 [(wire_out) = true];
-    MessageType_AuthDbGetCacheEntry = 2312 [(wire_in) = true];
-    MessageType_AuthDbGetCacheEntryResponse = 2313 [(wire_out) = true];
-    MessageType_AuthDbGetAllCache = 2314 [(wire_in) = true];
-    MessageType_AuthDbGetAllCacheResponse = 2315 [(wire_out) = true];
-    MessageType_AuthDbWipeCache = 2316 [(wire_in) = true];
-    MessageType_AuthDbWipeCacheResponse = 2317 [(wire_out) = true];
-    MessageType_AuthDbSetDeviceId = 2318 [(wire_in) = true];
-    MessageType_AuthDbSetDeviceIdResponse = 2319 [(wire_out) = true];
-    MessageType_AuthDbQueueOfflineOperation = 2320 [(wire_in) = true];
-    MessageType_AuthDbQueueOfflineOperationResponse = 2321 [(wire_out) = true];
-    MessageType_AuthDbGetOfflineOperations = 2322 [(wire_in) = true];
-    MessageType_AuthDbGetOfflineOperationsResponse = 2323 [(wire_out) = true];
-    MessageType_AuthDbApplyOfflineOperations = 2324 [(wire_in) = true];
-    MessageType_AuthDbApplyOfflineOperationsResponse = 2325 [(wire_out) = true];
-    MessageType_AuthDbDeleteOfflineOperations = 2326 [(wire_in) = true];
-    MessageType_AuthDbDeleteOfflineOperationsResponse = 2327 [(wire_out) = true];
-    MessageType_AuthDbFastForwardRoot = 2328 [(wire_in) = true];
-    MessageType_AuthDbFastForwardRootResponse = 2329 [(wire_out) = true];
+    // 2306-2329 reserved: removed AuthDb interfaces (clear_root, approve, offline cache,
+    // device-id override, offline-queue/apply/delete/get, fast-forward). Do not reuse.
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

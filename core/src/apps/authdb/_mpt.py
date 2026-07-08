@@ -1,19 +1,16 @@
 """Shared Merkle Patricia Trie hash/proof primitives.
 
-Used by update_leaf.py, lookup.py, queue_offline_operation.py, and
-apply_offline_operations.py so the proof-verification logic -- including the
-INIT/INSERT/UPDATE/DELETE state machine in compute_new_root() -- is
-implemented and audited exactly once, the property docs/authdb.md calls out
+Used by update_leaf.py and lookup.py so the proof-verification logic --
+including the INIT/INSERT/UPDATE/DELETE state machine in compute_new_root() --
+is implemented and audited exactly once, the property docs/authdb.md calls out
 as the reason production firmware never accepts a host-supplied root. See
 docs/authdb.md for the hashing scheme and proof format.
 
-Leaf counter: every leaf hash is now `sha256d(0x00||address||counter(4B BE)||value)`
--- counter is a first-class, cryptographically-committed per-address version
-number (docs/authdb-sync-proposal.md Part 1), not just text an application
-happens to embed inside the opaque `value` blob. INIT/INSERT require
-new_counter == 1; UPDATE requires new_counter == old_counter + 1, enforced
-here so a "conflict is only a counter race, not a real content conflict" can
-be a device-checked fact rather than an unverified host claim.
+Leaf counter: every leaf hash is `sha256d(0x00||address||counter(4B BE)||value)`
+-- counter is the GLOBAL root counter stamped onto the leaf on change, so each
+leaf records which generation last wrote it. compute_new_root() uses the
+supplied old_counter/new_counter for hashing but does NOT enforce a per-address
++1 rule; update_leaf.py enforces new_counter == current root counter + 1.
 """
 
 
@@ -111,20 +108,15 @@ def compute_new_root(
     leaf-counter transition rule, then compute the new root.
 
     Returns the new root (None if the tree becomes/stays empty), or raises
-    ValueError if the old-state proof does not verify, or if the counter
-    transition is invalid. This is the single shared implementation of the
-    INIT/INSERT/UPDATE/DELETE state machine -- update_leaf.py,
-    apply_offline_operations.py, and set_root.py's replay path all call this
-    rather than each maintaining their own copy, so a bug fixed here is fixed
-    for every mutating RPC at once.
+    ValueError if the old-state proof does not verify. This is the single
+    implementation of the INIT/INSERT/UPDATE/DELETE state machine, called by
+    update_leaf.py.
 
-    Counter rule: INIT/INSERT require new_counter == 1. UPDATE requires
-    new_counter == old_counter + 1 -- the actual cryptographic enforcement
-    that makes "this conflict is only a counter race" a device-checkable
-    fact. DELETE only needs old_counter (to reconstruct the current leaf for
-    the membership proof); new_counter is ignored, since a deleted leaf is
-    virtual (empty value) and the counter becomes irrelevant once a leaf is
-    virtual.
+    Counter: new_counter is the GLOBAL root-counter stamp for the new leaf;
+    old_counter is the leaf's previous stamp (used to reconstruct the current
+    leaf for the membership proof). This function does not enforce a counter
+    relation -- update_leaf.py checks new_counter == current root counter + 1.
+    DELETE ignores new_counter (the leaf becomes virtual/empty).
 
     Deliberately STRICTER than update_leaf.py's original inline logic in
     one edge case: the witness-membership check for INSERT now runs
@@ -147,9 +139,8 @@ def compute_new_root(
     addr_hash = sha256d(address)
 
     if inserting:
-        if new_counter != 1:
-            raise ValueError("new_counter must be 1 for INIT/INSERT")
-
+        # Counter is the global root-counter stamp, validated by update_leaf.py
+        # (new_counter == current root counter + 1); no per-address +1 rule here.
         if len(proof) == 0 and witness_address is None:
             # INIT: tree was empty
             if stored_root is not None:
@@ -200,9 +191,7 @@ def compute_new_root(
         sibling_hash = bytes(proof[0][1:])
         return reconstruct(sibling_hash, proof[1:], addr_hash)
 
-    # UPDATE
-    if new_counter != old_counter + 1:
-        raise ValueError("new_counter must be old_counter + 1 for UPDATE")
+    # UPDATE (new_counter is the global stamp; validated by update_leaf.py)
     if stored_root is None:
         raise ValueError("No Merkle root stored on device")
     current_leaf = leaf_hash(address, old_counter, old_value)
