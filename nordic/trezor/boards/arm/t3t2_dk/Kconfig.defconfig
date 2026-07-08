@@ -1,0 +1,16 @@
+# Copyright (c) 2025 Nordic Semiconductor ASA
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+
+if BOARD_T3T2_DK_NRF54LS05B_CPUAPP
+
+config ROM_START_OFFSET
+	default 0 if PARTITION_MANAGER_ENABLED
+	default 0x800 if BOOTLOADER_MCUBOOT
+
+config SOC_NRF54LX_SKIP_GLITCHDETECTOR_DISABLE
+	default y
+
+config NRF_RRAM_WRITE_BUFFER_SIZE
+	default 8
+
+endif # BOARD_T3T2_DK_NRF54LS05B_CPUAPP

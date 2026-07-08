@@ -1,0 +1,106 @@
+/*
+ * Copyright (c) 2025 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+#include <nordic/nrf54ls05b_cpuapp.dtsi>
+#include "t3t2_dk_nrf54ls05b-common.dtsi"
+
+/ {
+	chosen {
+		zephyr,console = &uart20;
+		zephyr,shell-uart = &uart20;
+		zephyr,uart-mcumgr = &uart20;
+		zephyr,bt-mon-uart = &uart20;
+		zephyr,bt-c2h-uart = &uart20;
+		zephyr,flash-controller = &rram_controller;
+		zephyr,flash = &cpuapp_rram;
+		zephyr,bt-hci = &bt_hci_sdc;
+	};
+};
+
+&cpuapp_sram {
+	status = "okay";
+};
+
+&hfxo {
+	load-capacitors = "internal";
+	load-capacitance-femtofarad = <15000>;
+};
+
+&vregmain {
+	status = "okay";
+	regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
+};
+
+&grtc {
+	owned-channels = <0 1 2 3 4 5 6 7 8 9 10 11>;
+	/* Channels 7-11 reserved for Zero Latency IRQs */
+	child-owned-channels = <7 8 9 10 11>;
+	status = "okay";
+};
+
+&cpuapp_rram {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		/* nRF54L mcuboot FPROTECT can protect at most 62 KB, and with
+		 * SB_CONFIG_PARTITION_MANAGER=n it protects the whole boot
+		 * partition. Keep this <= 62 KB (60 KB, 4 KB-aligned). slot0
+		 * stays at 0x10000, leaving a small unused gap after mcuboot. */
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x0 DT_SIZE_K(60)>;
+		};
+
+		/* Single-slot mcuboot (see trezor-ble/sysbuild.conf:
+		 * SB_CONFIG_MCUBOOT_MODE_SINGLE_APP=y) - no secondary slot is
+		 * needed, so slot0 spans the space a slot1 would have used,
+		 * matching the t3w1 layout. */
+		slot0_partition: partition@10000 {
+			label = "image-0";
+			reg = <0x10000 DT_SIZE_K(408)>;
+		};
+
+		storage_partition: partition@76000 {
+			label = "storage";
+			reg = <0x76000 DT_SIZE_K(36)>;
+		};
+	};
+};
+
+&uart20 {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&gpiote20 {
+	status = "okay";
+};
+
+&gpiote30 {
+	status = "okay";
+};
+
+&radio {
+	status = "okay";
+};
+
+&temp {
+	status = "okay";
+};
+
+&clock {
+	status = "okay";
+};

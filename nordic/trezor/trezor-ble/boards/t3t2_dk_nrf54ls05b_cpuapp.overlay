@@ -1,0 +1,25 @@
+/*
+ * Copyright (c) 2025 Trezor Company s.r.o.
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * trezor-ble application devicetree glue for the t3t2_dk board.
+ *
+ * The UART link, SPI master (incl. trezor_spi_dev / CS) and the GPIO
+ * handshake signals (spi-ready, spi-request, stay-in-bootloader,
+ * reserved-output) are defined at board level in
+ * boards/arm/t3t2_dk/, so they are shared with the MCUboot
+ * image. This overlay only binds the app's logical contract to them, the
+ * same way the t3w1 app overlay does.
+ */
+
+/ {
+	chosen {
+		/* Shares uart20 with the console, as t3w1 shares uart0. */
+		trezor,trz-uart = &uart20;
+	};
+
+	aliases {
+		spi-master = &spi21;
+	};
+};

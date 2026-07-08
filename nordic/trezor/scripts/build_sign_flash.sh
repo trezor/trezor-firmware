@@ -74,7 +74,8 @@ usage() {
     echo "$0 [-b board_name] [-a app_dir] [-p] [-d] [-r] [-s] [-f]"
     cat <<END
     Parameters:
-    -b board_name: build with board name as param
+    -b board: full board target (e.g. t3t2_dk/nrf54ls05b/cpuapp) or a model
+              alias (t3t2, t3w1) that expands to that model's default board
     -a app_dir: specify application directory (default: trezor-ble)
     -p: production build
     -d: use debug overlay when building
@@ -117,14 +118,15 @@ parse_partition_info() {
 }
 
 # Verify the active nRF Connect SDK / toolchain match the target board before
-# building. Each board is pinned to one SDK: t3w1 -> NCS 2.9 (west-ncs2.9.yml).
-# Building with the wrong SDK or toolchain active produces confusing,
-# hard-to-diagnose failures.
+# building. Each board is pinned to one SDK: t3w1 -> NCS 2.9 (west-ncs2.9.yml),
+# t3t2_dk/nRF54L -> NCS 3.3 (west.yml, default). Building with the wrong SDK or
+# toolchain active produces confusing, hard-to-diagnose failures.
 verify_environment() {
     local board="$1"
     local required_major expected_manifest
     case "$board" in
         t3w1*)   required_major=2; expected_manifest="west-ncs2.9.yml" ;;
+        t3t2_dk*) required_major=3; expected_manifest="west.yml" ;;
         *)
             echo "verify: board '$board' has no known SDK pairing; skipping SDK/toolchain check."
             return 0
@@ -195,6 +197,19 @@ Install it with:
     echo "verify: OK - board '$board' <-> NCS v${sdk_version}, toolchain ${NCS_TOOLCHAIN_VERSION:-<pre-set>} (manifest ${expected_manifest})."
 }
 
+# Resolve a friendly board alias to its canonical Zephyr board target. Lets you
+# pass just a model name (e.g. "t3t2") and get that model's default board, while
+# a full board target (anything containing '/', e.g. "t3t2_dk/nrf54ls05b/cpuapp")
+# or any unrecognised value passes through unchanged - so a specific board can
+# always be selected explicitly.
+resolve_board() {
+    case "$1" in
+        t3t2)  echo "t3t2_dk/nrf54ls05b/cpuapp" ;;
+        t3w1)  echo "t3w1_revA_nrf52832" ;;
+        *)     echo "$1" ;;
+    esac
+}
+
 while getopts ${OPTSTRING} opt; do
   case ${opt} in
     b)
@@ -229,6 +244,11 @@ while getopts ${OPTSTRING} opt; do
 done
 
 if [ -n "$BOARD" ]; then
+    resolved_board=$(resolve_board "$BOARD")
+    if [ "$resolved_board" != "$BOARD" ]; then
+        echo "board: alias '$BOARD' -> '$resolved_board'"
+        BOARD="$resolved_board"
+    fi
     verify_environment "$BOARD"
     run_under_ncs_subshell \
         "west build ./$APP_DIR -b $BOARD --sysbuild $PRISTINE $DEBUG $PRODUCTION"
