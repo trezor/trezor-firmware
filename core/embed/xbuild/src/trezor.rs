@@ -82,6 +82,10 @@ pub fn vendor_header_path(models_dir: impl AsRef<Path>, target: &str) -> Result<
         .join(format!("vendorheader_{}.bin", vendor)))
 }
 
+fn is_bitcoin_only() -> bool {
+    !has_feature("universal_fw")
+}
+
 fn get_firmware_vendor() -> Result<&'static str> {
     Ok(if has_feature("bootloader_devel") {
         if has_feature("unsafe_fw") {
@@ -93,7 +97,7 @@ fn get_firmware_vendor() -> Result<&'static str> {
         "unsafe_signed_prod"
     } else if current_model_id()? == "T2T1" {
         "satoshilabs_signed_prod"
-    } else if has_feature("bitcoin_only") {
+    } else if is_bitcoin_only() {
         "trezor_btconly_signed_prod"
     } else {
         "trezor_signed_prod"
