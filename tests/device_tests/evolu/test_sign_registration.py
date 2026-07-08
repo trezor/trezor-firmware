@@ -27,11 +27,6 @@ def signing_buffer(
     return b"".join((compact_size(len(comp)) + comp) for comp in components)
 
 
-def optiga_unavailable(client: Client) -> bool:
-    """Check if Optiga is unavailable from the presence of its security counter."""
-    return client.features.optiga_sec is None
-
-
 @pytest.mark.models("t2t1")
 def test_evolu_sign_request_t2t1(client: Client):
     challenge = bytes.fromhex("1234")
@@ -53,9 +48,8 @@ def test_evolu_sign_request_t2t1(client: Client):
 
 
 @pytest.mark.models("safe")
+@pytest.mark.xfail_if_no_optiga
 def test_evolu_sign_request(client: Client):
-    if optiga_unavailable(client):
-        pytest.xfail("Optiga is not available on this device.")
     delegated_identity_key = get_delegated_identity_key(client).private_key
     challenge = bytes.fromhex("1234")
     size = 10
@@ -81,9 +75,8 @@ def test_evolu_sign_request(client: Client):
 
 
 @pytest.mark.models("safe")
+@pytest.mark.xfail_if_no_optiga
 def test_evolu_sign_request_invalid_proof(client: Client):
-    if optiga_unavailable(client):
-        pytest.xfail("Optiga is not available on this device.")
     challenge = bytes.fromhex("1234")
     size = 10
     invalid_proof = get_invalid_proof(
@@ -103,9 +96,8 @@ def test_evolu_sign_request_invalid_proof(client: Client):
 
 
 @pytest.mark.models("safe")
+@pytest.mark.xfail_if_no_optiga
 def test_evolu_sign_request_challenge_too_long(client: Client):
-    if optiga_unavailable(client):
-        pytest.xfail("Optiga is not available on this device.")
     challenge = b"\x01" * 300  # 300 bytes, max is 255
     size = 10
     proof = get_proof(
@@ -125,9 +117,8 @@ def test_evolu_sign_request_challenge_too_long(client: Client):
 
 
 @pytest.mark.models("safe")
+@pytest.mark.xfail_if_no_optiga
 def test_evolu_sign_request_challenge_too_short(client: Client):
-    if optiga_unavailable(client):
-        pytest.xfail("Optiga is not available on this device.")
     challenge = b""  # 0 bytes, minimum is 1
     size = 10
     proof = get_proof(
@@ -147,9 +138,8 @@ def test_evolu_sign_request_challenge_too_short(client: Client):
 
 
 @pytest.mark.models("safe")
+@pytest.mark.xfail_if_no_optiga
 def test_evolu_sign_request_size_too_small(client: Client):
-    if optiga_unavailable(client):
-        pytest.xfail("Optiga is not available on this device.")
     challenge = bytes.fromhex("1234")
     size = -10
     proof = get_proof(
@@ -171,9 +161,8 @@ def test_evolu_sign_request_size_too_small(client: Client):
 
 
 @pytest.mark.models("safe")
+@pytest.mark.xfail_if_no_optiga
 def test_evolu_sign_request_size_too_large(client: Client):
-    if optiga_unavailable(client):
-        pytest.xfail("Optiga is not available on this device.")
     challenge = bytes.fromhex("1234")
     size = 0xFFFFFFFF + 1
     proof = get_proof(
@@ -193,9 +182,8 @@ def test_evolu_sign_request_size_too_large(client: Client):
 
 
 @pytest.mark.models("safe")
+@pytest.mark.xfail_if_no_optiga
 def test_evolu_sign_request_data_higher_bound(client: Client):
-    if optiga_unavailable(client):
-        pytest.xfail("Optiga is not available on this device.")
     delegated_identity_key = get_delegated_identity_key(client).private_key
     challenge = b"\x12" * 255
     size = 0xFFFFFFFF
@@ -222,12 +210,10 @@ def test_evolu_sign_request_data_higher_bound(client: Client):
 
 @pytest.mark.models("safe")
 @pytest.mark.parametrize("rotation_index", [None, 0, 1, 2, 42])
+@pytest.mark.xfail_if_no_optiga
 def test_evolu_sign_request_with_different_rotation_indices(
     client: Client, rotation_index
 ):
-    if optiga_unavailable(client):
-        pytest.xfail("Optiga is not available on this device.")
-
     evolu.index_management(client.get_session(), rotation_index=rotation_index)
     delegated_identity_key = get_delegated_identity_key(client).private_key
     challenge = bytes.fromhex("1234")
