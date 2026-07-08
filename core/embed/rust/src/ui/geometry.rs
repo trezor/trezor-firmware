@@ -373,7 +373,7 @@ impl Rect {
 
     /// Checks if the rectangle is empty.
     ///
-    /// It is possible to custruct a rectangle with negative width or height.
+    /// It is possible to construct a rectangle with negative width or height.
     /// All such rectangles are considered as empty.
     pub const fn is_empty(&self) -> bool {
         self.x0 >= self.x1 || self.y0 >= self.y1

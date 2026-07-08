@@ -20,7 +20,7 @@ def is_valid(data: AnyBytes) -> bool:
 
 
 def parse(data: AnyBytes) -> str:
-    from ustruct import unpack
+    from struct import unpack
 
     from trezor import TR
     from trezor.strings import format_amount, format_amount_unit

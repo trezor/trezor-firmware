@@ -1,6 +1,6 @@
 from micropython import const
+from struct import pack_into
 from typing import TYPE_CHECKING
-from ustruct import pack_into
 
 from trezor import protobuf, wire
 from trezorthp import APP_HEADER_LEN, SEND_BUFFER_OVERHEAD

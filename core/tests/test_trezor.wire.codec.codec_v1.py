@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-import ustruct
+import struct
 
 from mock_wire_interface import MockHID
 from trezor import io
@@ -11,11 +11,11 @@ from trezor.wire.protocol_common import WireError
 
 MESSAGE_TYPE = 0x4242
 
-HEADER_PAYLOAD_LENGTH = MockHID.RX_PACKET_LEN - 3 - ustruct.calcsize(">HL")
+HEADER_PAYLOAD_LENGTH = MockHID.RX_PACKET_LEN - 3 - struct.calcsize(">HL")
 
 
 def make_header(mtype, length):
-    return b"?##" + ustruct.pack(">HL", mtype, length)
+    return b"?##" + struct.pack(">HL", mtype, length)
 
 
 class TestWireCodecV1(unittest.TestCase):
