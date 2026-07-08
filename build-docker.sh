@@ -294,8 +294,19 @@ for TREZOR_MODEL in ${MODELS[@]}; do
 
     MAKE_TARGETS=""
     for TARGET in ${CORE_TARGETS[@]}; do
+      if [ "$BITCOIN_ONLY" = "1" ]; then
+        # Skip targets that have no bitcoin-only variant.
+        case "$TARGET" in boardloader|bootloader|secmon|prodtest)
+            continue
+            ;;
+        esac
+      fi
       MAKE_TARGETS="$MAKE_TARGETS build_$TARGET"
     done
+
+    if [ -z "$MAKE_TARGETS" ]; then
+      continue
+    fi
 
     SCRIPT_NAME=".build_core_${TREZOR_MODEL}_${BITCOIN_ONLY}.sh"
     cat <<EOF > "build/$SCRIPT_NAME"
