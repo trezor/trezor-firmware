@@ -1,0 +1,6 @@
+board:
+  name: t3t2_dk
+  full_name: t3t2_dk
+  vendor: trezor
+  socs:
+  - name: nrf54ls05b
