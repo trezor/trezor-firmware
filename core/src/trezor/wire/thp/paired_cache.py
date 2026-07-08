@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
 _ENABLE_EXPERIMENTAL = const(False)
+_TRACE = const(False)
 
 
 def load() -> list[ThpPairedCacheEntry]:
@@ -21,7 +22,7 @@ def load() -> list[ThpPairedCacheEntry]:
         return []  # an empty cache
 
     cache = decode(blob, ThpPairedCache, _ENABLE_EXPERIMENTAL)
-    if __debug__:
+    if __debug__ and _TRACE:
         log.debug(__name__, "loaded THP cache:\n%s", utils.dump_protobuf(cache))
 
     return cache.entries
@@ -41,7 +42,7 @@ def store(entries: list[ThpPairedCacheEntry], _bonds: set[bytes] | None = None) 
     entries = [e for e in entries if e.mac_addr in _bonds]
 
     cache = ThpPairedCache(entries=entries)
-    if __debug__:
+    if __debug__ and _TRACE:
         log.debug(__name__, "storing THP cache:\n%s", utils.dump_protobuf(cache))
 
     set_thp_paired_names(dump_message_buffer(cache))
@@ -49,7 +50,7 @@ def store(entries: list[ThpPairedCacheEntry], _bonds: set[bytes] | None = None) 
 
 def cache_host_info(mac_addr: AnyBytes | None, host_name: str, app_name: str) -> None:
     if mac_addr is None:
-        if __debug__:
+        if __debug__ and _TRACE:
             log.debug(__name__, "no MAC address: host=%s app=%s", host_name, app_name)
         return
 
@@ -59,7 +60,7 @@ def cache_host_info(mac_addr: AnyBytes | None, host_name: str, app_name: str) ->
     entries = load()
     for e in entries:
         if mac_addr == e.mac_addr:
-            if __debug__:
+            if __debug__ and _TRACE:
                 log.debug(
                     __name__,
                     "found cached MAC %s:\n%s",
