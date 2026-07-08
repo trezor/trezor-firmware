@@ -5,10 +5,51 @@ package hw.trezor.messages.authdb;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageAuthDb";
 
-// AuthDB is trimmed to three online interfaces: AuthDbSetRoot (setroot),
-// AuthDbLookup (dblookup) and AuthDbUpdateLeaf (dbchange). The offline-queue /
-// sync / cache / pre-approval / fast-forward interfaces were removed (their
-// MessageType ids 2306-2329 are reserved, see messages.proto).
+// AuthDB exposes four online interfaces: AuthDbInit (initialization),
+// AuthDbSetRoot (setroot), AuthDbLookup (dblookup) and AuthDbUpdateLeaf
+// (dbchange). The offline-queue / sync / cache / pre-approval / fast-forward
+// interfaces were removed (their MessageType ids 2308-2329 are reserved, see
+// messages.proto).
+
+/**
+ * Request: Initialize the device's trusted AuthDB state from untrusted host storage.
+ *
+ * The host has no authority of its own; it merely relays two things the device can
+ * verify on its own:
+ *   1. The latest counter from the Quota Manager (QM), signed by the QM. The device
+ *      verifies the signature against its provisioned QM public key (Ed25519) and
+ *      stores the value as qm_last_counter -- the anti-rollback ceiling. The signature
+ *      covers b"AUTHDB QM v1" || wallet_id || qm_counter(4B BE), so it is bound to this
+ *      specific hidden wallet and cannot be replayed onto another wallet or device.
+ *   2. The latest root (from Evolu), together with the counter it was attested at and
+ *      the device-produced root_mac. Supplied only if the wallet already has a root.
+ *      The device verifies counter == qm_last_counter (the QM and the stored root agree
+ *      on where the wallet is) and that root_mac == HMAC(root_mac_key, wallet_id ||
+ *      counter || root) -- i.e. that THIS device produced the root. Only then is the
+ *      root installed.
+ * @start
+ * @next AuthDbInitResponse
+ * @next Failure
+ */
+message AuthDbInit {
+    required uint32 qm_counter    = 1;  // latest counter reported by the Quota Manager
+    required bytes  qm_signature  = 2;  // Ed25519 sig over b"AUTHDB QM v1"||wallet_id||qm_counter(4B BE)
+    optional bytes  root          = 3;  // 32-byte root from Evolu; absent for a fresh wallet
+    optional uint32 counter       = 4;  // counter the root was attested at; required with root
+    optional bytes  root_mac      = 5;  // HMAC(root_mac_key, wallet_id||counter||root); required with root
+}
+
+/**
+ * Response: The device's trusted state after initialization.
+ * @end
+ */
+message AuthDbInitResponse {
+    required uint32 qm_last_counter = 1;  // stored anti-rollback ceiling (== qm_counter)
+    optional bytes  wallet_id       = 2;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
+    optional uint32 counter         = 3;  // current root counter after init
+    optional bytes  root            = 4;  // current root; absent if the tree is empty
+    optional bytes  root_mac        = 5;  // HMAC(root_mac_key, wallet_id||counter||root); absent if empty
+}
 
 /**
  * Request: Install a (root, counter) state attested by a device-produced MAC.

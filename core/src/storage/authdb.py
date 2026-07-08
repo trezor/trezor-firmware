@@ -11,14 +11,14 @@ _ROOTS = const(0x00)  # flat table of wallet records
 WALLET_ID_LENGTH = const(32)
 ROOT_LENGTH = const(32)
 MAX_WALLETS = const(16)
-# Record layout: [root: 32][wallet_id: 32][counter: 4][reserved: 4]
+# Record layout: [root: 32][wallet_id: 32][counter: 4][qm_last_counter: 4]
 #
 # NOTE: holds one root per wallet_id (up to MAX_WALLETS). Callers must only ever
 # read the root for the CURRENTLY ACTIVE wallet_id -- never enumerate across wallets.
 #
-# The trailing 4 bytes are reserved (formerly last_applied_sequence, used by the removed
-# offline-sync path); kept so the record size is unchanged. A wallet_id, once used, keeps
-# its slot permanently.
+# The trailing 4 bytes hold qm_last_counter: the Quota-Manager-attested anti-rollback
+# ceiling written by AuthDbInit (formerly reserved / last_applied_sequence). A wallet_id,
+# once used, keeps its slot permanently.
 _RECORD_SIZE = const(72)
 
 # Sentinel meaning "no root" for a wallet_id that DOES have a storage record (its counter
@@ -90,6 +90,52 @@ def get_counter(wallet_id: bytes) -> int:
         return 0
     ctr_off = off + ROOT_LENGTH + WALLET_ID_LENGTH
     return int.from_bytes(table[ctr_off : ctr_off + 4], "big")
+
+
+def get_qm_counter(wallet_id: bytes) -> int:
+    """Return the stored Quota-Manager counter (anti-rollback ceiling) for wallet_id, or 0."""
+    table = _load_table()
+    off = _find_record(table, wallet_id)
+    if off < 0:
+        return 0
+    qm_off = off + ROOT_LENGTH + WALLET_ID_LENGTH + 4
+    return int.from_bytes(table[qm_off : qm_off + 4], "big")
+
+
+def commit_init(
+    wallet_id: bytes, qm_counter: int, new_root: bytes | None, counter: int | None
+) -> None:
+    """Persist AuthDbInit's verified state in a single atomic write.
+
+    Always stores qm_counter as the wallet's qm_last_counter. When new_root is supplied,
+    also installs (root, counter); when it is None, the existing root/counter are left
+    untouched (a fresh wallet with no root yet gets EMPTY_ROOT / counter 0).
+    """
+    if new_root is not None and len(new_root) != ROOT_LENGTH:
+        raise ValueError("Root must be 32 bytes")
+    table = _load_table()
+    off = _find_record(table, wallet_id)
+    if off < 0:
+        if len(table) // _RECORD_SIZE >= MAX_WALLETS:
+            raise ValueError("Too many wallets")
+        stored_root = new_root if new_root is not None else EMPTY_ROOT
+        stored_counter = counter if (new_root is not None and counter is not None) else 0
+        table += (
+            stored_root
+            + wallet_id
+            + stored_counter.to_bytes(4, "big")
+            + qm_counter.to_bytes(4, "big")
+        )
+        _save_table(table)
+        return
+
+    ctr_off = off + ROOT_LENGTH + WALLET_ID_LENGTH
+    qm_off = ctr_off + 4
+    if new_root is not None:
+        table[off : off + ROOT_LENGTH] = new_root
+        table[ctr_off : ctr_off + 4] = (counter or 0).to_bytes(4, "big")
+    table[qm_off : qm_off + 4] = qm_counter.to_bytes(4, "big")
+    _save_table(table)
 
 
 def commit_root_and_counter(wallet_id: bytes, new_root: bytes | None) -> int:

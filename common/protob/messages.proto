@@ -388,7 +388,9 @@ enum MessageType {
     MessageType_AuthDbLookupResponse = 2303 [(wire_out) = true];
     MessageType_AuthDbUpdateLeaf = 2304 [(wire_in) = true];
     MessageType_AuthDbUpdateLeafResponse = 2305 [(wire_out) = true];
-    // 2306-2329 reserved: removed AuthDb interfaces (clear_root, approve, offline cache,
+    MessageType_AuthDbInit = 2306 [(wire_in) = true];
+    MessageType_AuthDbInitResponse = 2307 [(wire_out) = true];
+    // 2308-2329 reserved: removed AuthDb interfaces (clear_root, approve, offline cache,
     // device-id override, offline-queue/apply/delete/get, fast-forward). Do not reuse.
 
     // Benchmark

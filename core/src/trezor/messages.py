@@ -7586,12 +7586,55 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WebAuthnCredential"]:
             return isinstance(msg, cls)
 
+    class AuthDbInit(protobuf.MessageType):
+        qm_counter: "int"
+        qm_signature: "AnyBytes"
+        root: "AnyBytes | None"
+        counter: "int | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            qm_counter: "int",
+            qm_signature: "AnyBytes",
+            root: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbInit"]:
+            return isinstance(msg, cls)
+
+    class AuthDbInitResponse(protobuf.MessageType):
+        qm_last_counter: "int"
+        wallet_id: "AnyBytes | None"
+        counter: "int | None"
+        root: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            qm_last_counter: "int",
+            wallet_id: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+            root: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbInitResponse"]:
+            return isinstance(msg, cls)
+
     class AuthDbSetRoot(protobuf.MessageType):
         root: "AnyBytes"
         mac: "AnyBytes"
         device_id: "AnyBytes | None"
         counter: "int | None"
-        operations: 'list["AuthDbRebasedOperation"]'
 
         def __init__(
             self,
@@ -7600,7 +7643,6 @@ if TYPE_CHECKING:
             mac: "AnyBytes",
             device_id: "AnyBytes | None" = None,
             counter: "int | None" = None,
-            operations: 'list["AuthDbRebasedOperation"] | None' = None,
         ) -> None:
             pass
 
@@ -7612,16 +7654,12 @@ if TYPE_CHECKING:
         counter: "int"
         wallet_id: "AnyBytes | None"
         new_root: "AnyBytes | None"
-        applied_count: "int"
-        last_applied_sequence: "int"
         root_mac: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             counter: "int",
-            applied_count: "int",
-            last_applied_sequence: "int",
             wallet_id: "AnyBytes | None" = None,
             new_root: "AnyBytes | None" = None,
             root_mac: "AnyBytes | None" = None,
@@ -7682,13 +7720,11 @@ if TYPE_CHECKING:
         address: "AnyBytes"
         old_value: "AnyBytes"
         new_value: "AnyBytes"
+        new_counter: "int"
         proof: "list[AnyBytes]"
         witness_address: "AnyBytes | None"
         witness_value: "AnyBytes | None"
-        mac: "AnyBytes | None"
-        device_id: "AnyBytes | None"
         old_counter: "int | None"
-        new_counter: "int"
         witness_counter: "int | None"
 
         def __init__(
@@ -7701,8 +7737,6 @@ if TYPE_CHECKING:
             proof: "list[AnyBytes] | None" = None,
             witness_address: "AnyBytes | None" = None,
             witness_value: "AnyBytes | None" = None,
-            mac: "AnyBytes | None" = None,
-            device_id: "AnyBytes | None" = None,
             old_counter: "int | None" = None,
             witness_counter: "int | None" = None,
         ) -> None:
@@ -7717,7 +7751,6 @@ if TYPE_CHECKING:
         new_root: "AnyBytes | None"
         wallet_id: "AnyBytes | None"
         mac: "AnyBytes | None"
-        auth_mac: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7726,7 +7759,6 @@ if TYPE_CHECKING:
             new_root: "AnyBytes | None" = None,
             wallet_id: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
-            auth_mac: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7734,434 +7766,3 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbUpdateLeafResponse"]:
             return isinstance(msg, cls)
 
-    class AuthDbClearRoot(protobuf.MessageType):
-        def __init__(self) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbClearRoot"]:
-            return isinstance(msg, cls)
-
-    class AuthDbClearRootResponse(protobuf.MessageType):
-        wallet_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            wallet_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbClearRootResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbApprove(protobuf.MessageType):
-        address: "AnyBytes"
-        new_value: "AnyBytes"
-        old_value: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            address: "AnyBytes",
-            new_value: "AnyBytes",
-            old_value: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbApprove"]:
-            return isinstance(msg, cls)
-
-    class AuthDbApproveResponse(protobuf.MessageType):
-        mac: "AnyBytes"
-        wallet_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            mac: "AnyBytes",
-            wallet_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbApproveResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbSetCacheEntry(protobuf.MessageType):
-        address: "AnyBytes"
-        label: "str | None"
-        data_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            address: "AnyBytes",
-            label: "str | None" = None,
-            data_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetCacheEntry"]:
-            return isinstance(msg, cls)
-
-    class AuthDbSetCacheEntryResponse(protobuf.MessageType):
-        identifier_crc: "int"
-
-        def __init__(
-            self,
-            *,
-            identifier_crc: "int",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetCacheEntryResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbGetCacheEntry(protobuf.MessageType):
-        address: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            address: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetCacheEntry"]:
-            return isinstance(msg, cls)
-
-    class AuthDbGetCacheEntryResponse(protobuf.MessageType):
-        found: "bool"
-        label: "str | None"
-        data_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            found: "bool",
-            label: "str | None" = None,
-            data_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetCacheEntryResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbGetAllCacheEntry(protobuf.MessageType):
-        address: "AnyBytes"
-        label: "str | None"
-        data_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            address: "AnyBytes",
-            label: "str | None" = None,
-            data_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetAllCacheEntry"]:
-            return isinstance(msg, cls)
-
-    class AuthDbGetAllCache(protobuf.MessageType):
-        def __init__(self) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetAllCache"]:
-            return isinstance(msg, cls)
-
-    class AuthDbGetAllCacheResponse(protobuf.MessageType):
-        entries: 'list["AuthDbGetAllCacheEntry"]'
-
-        def __init__(
-            self,
-            *,
-            entries: 'list["AuthDbGetAllCacheEntry"] | None' = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetAllCacheResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbWipeCache(protobuf.MessageType):
-        def __init__(self) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbWipeCache"]:
-            return isinstance(msg, cls)
-
-    class AuthDbWipeCacheResponse(protobuf.MessageType):
-        def __init__(self) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbWipeCacheResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbSetDeviceId(protobuf.MessageType):
-        device_id: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            device_id: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetDeviceId"]:
-            return isinstance(msg, cls)
-
-    class AuthDbSetDeviceIdResponse(protobuf.MessageType):
-        device_id: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            device_id: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbSetDeviceIdResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbOfflineOperation(protobuf.MessageType):
-        sequence: "int"
-        address: "AnyBytes"
-        old_value: "AnyBytes | None"
-        new_value: "AnyBytes | None"
-        mac: "AnyBytes"
-        old_counter: "int | None"
-        new_counter: "int"
-
-        def __init__(
-            self,
-            *,
-            sequence: "int",
-            address: "AnyBytes",
-            mac: "AnyBytes",
-            new_counter: "int",
-            old_value: "AnyBytes | None" = None,
-            new_value: "AnyBytes | None" = None,
-            old_counter: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbOfflineOperation"]:
-            return isinstance(msg, cls)
-
-    class AuthDbQueueOfflineOperation(protobuf.MessageType):
-        address: "AnyBytes"
-        old_value: "AnyBytes"
-        new_value: "AnyBytes"
-        old_counter: "int | None"
-        new_counter: "int"
-
-        def __init__(
-            self,
-            *,
-            address: "AnyBytes",
-            old_value: "AnyBytes",
-            new_value: "AnyBytes",
-            new_counter: "int",
-            old_counter: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbQueueOfflineOperation"]:
-            return isinstance(msg, cls)
-
-    class AuthDbQueueOfflineOperationResponse(protobuf.MessageType):
-        sequence: "int"
-        mac: "AnyBytes"
-        wallet_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            sequence: "int",
-            mac: "AnyBytes",
-            wallet_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbQueueOfflineOperationResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbGetOfflineOperations(protobuf.MessageType):
-        def __init__(self) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetOfflineOperations"]:
-            return isinstance(msg, cls)
-
-    class AuthDbGetOfflineOperationsResponse(protobuf.MessageType):
-        current_root: "AnyBytes | None"
-        counter: "int"
-        wallet_id: "AnyBytes | None"
-        operations: 'list["AuthDbOfflineOperation"]'
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            current_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            operations: 'list["AuthDbOfflineOperation"] | None' = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbGetOfflineOperationsResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbRebasedOperation(protobuf.MessageType):
-        sequence: "int"
-        address: "AnyBytes"
-        old_value: "AnyBytes | None"
-        new_value: "AnyBytes | None"
-        mac: "AnyBytes"
-        proof: "list[AnyBytes]"
-        witness_address: "AnyBytes | None"
-        witness_value: "AnyBytes | None"
-        old_counter: "int | None"
-        new_counter: "int"
-        witness_counter: "int | None"
-
-        def __init__(
-            self,
-            *,
-            sequence: "int",
-            address: "AnyBytes",
-            mac: "AnyBytes",
-            new_counter: "int",
-            old_value: "AnyBytes | None" = None,
-            new_value: "AnyBytes | None" = None,
-            proof: "list[AnyBytes] | None" = None,
-            witness_address: "AnyBytes | None" = None,
-            witness_value: "AnyBytes | None" = None,
-            old_counter: "int | None" = None,
-            witness_counter: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbRebasedOperation"]:
-            return isinstance(msg, cls)
-
-    class AuthDbApplyOfflineOperations(protobuf.MessageType):
-        operations: 'list["AuthDbRebasedOperation"]'
-
-        def __init__(
-            self,
-            *,
-            operations: 'list["AuthDbRebasedOperation"] | None' = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbApplyOfflineOperations"]:
-            return isinstance(msg, cls)
-
-    class AuthDbApplyOfflineOperationsResponse(protobuf.MessageType):
-        applied_count: "int"
-        new_root: "AnyBytes | None"
-        counter: "int"
-        last_applied_sequence: "int"
-        wallet_id: "AnyBytes | None"
-        root_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            applied_count: "int",
-            counter: "int",
-            last_applied_sequence: "int",
-            new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            root_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbApplyOfflineOperationsResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbDeleteOfflineOperations(protobuf.MessageType):
-        def __init__(self) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbDeleteOfflineOperations"]:
-            return isinstance(msg, cls)
-
-    class AuthDbDeleteOfflineOperationsResponse(protobuf.MessageType):
-        deleted_count: "int"
-        remaining_count: "int"
-
-        def __init__(
-            self,
-            *,
-            deleted_count: "int",
-            remaining_count: "int",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbDeleteOfflineOperationsResponse"]:
-            return isinstance(msg, cls)
-
-    class AuthDbFastForwardRoot(protobuf.MessageType):
-        new_root: "AnyBytes"
-        counter: "int"
-        wallet_id: "AnyBytes"
-        mac: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            new_root: "AnyBytes",
-            counter: "int",
-            wallet_id: "AnyBytes",
-            mac: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbFastForwardRoot"]:
-            return isinstance(msg, cls)
-
-    class AuthDbFastForwardRootResponse(protobuf.MessageType):
-        counter: "int"
-        new_root: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["AuthDbFastForwardRootResponse"]:
-            return isinstance(msg, cls)

@@ -112,7 +112,9 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.PaymentNotification:
         return "apps.misc.payment_notification"
 
-    # authdb (trimmed to the 3 online interfaces: setroot / dblookup / dbchange)
+    # authdb (four online interfaces: init / setroot / dblookup / dbchange)
+    if msg_type == MessageType.AuthDbInit:
+        return "apps.authdb.init"
     if msg_type == MessageType.AuthDbSetRoot:
         return "apps.authdb.set_root"
     if msg_type == MessageType.AuthDbLookup:
