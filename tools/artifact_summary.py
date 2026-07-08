@@ -45,7 +45,7 @@ def get_artifact(model: str, dirpath: Path, filenames: list[str]) -> Artifact | 
 
     fingerprint_file = dirpath / fingerprints[0]
     bin_file = fingerprint_file.with_suffix("")
-    if not bin_file.suffix == ".bin":
+    if bin_file.suffix != ".bin":
         return None
     if not bin_file.is_file():
         return None
