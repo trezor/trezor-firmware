@@ -87,18 +87,16 @@ def _ensure_dst_key(dst: bytearray | None = None) -> bytearray:
 
 
 def memcpy(
-    dst: bytearray | None,
+    dst: bytearray,
     dst_off: int,
     src: AnyBytes,
     src_off: int,
     length: int,
-) -> bytearray | None:
+) -> bytearray:
     from trezor.utils import memcpy as tmemcpy
 
-    if dst is not None:
-        tmemcpy(dst, dst_off, src, src_off, length)
+    tmemcpy(dst, dst_off, src, src_off, length)
     return dst
-
 
 def _copy_key(dst: bytearray | None, src: bytes) -> bytearray:
     dst = _ensure_dst_key(dst)
@@ -654,7 +652,7 @@ class KeyVEval(KeyVBase):
                 return self_buff
             else:
                 raise ValueError("Not supported")
-        else:
+        elif buff is not None:
             memcpy(buff, offset, self_buff, 0, 32)
         return buff if buff else self_buff
 
@@ -687,8 +685,11 @@ class KeyVPrecomp(KeyVBase):
         if item < len(self.precomp_prefix):
             return self.precomp_prefix.to(item, buff if buff else self_buff, offset)
         self.aux_comp_fnc(item, self_buff)
-        memcpy(buff, offset, self_buff, 0, 32)
-        return buff if buff else self_buff
+        if buff:
+            memcpy(buff, offset, self_buff, 0, 32)
+            return buff
+        else:
+            return self_buff
 
 
 class KeyVSliced(KeyVBase):
