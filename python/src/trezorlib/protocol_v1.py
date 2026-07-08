@@ -388,7 +388,7 @@ def sync_responses(
     transport: Transport,
     *,
     mapping: ProtobufMapping = mapping.DEFAULT_MAPPING,
-    retries: int = 10,
+    _chunks_to_skip: int = 100,
 ) -> None:
     """Sync responses from the transport."""
     # cancel anything on screen -- on T1B1 this is the only way to exit e.g. a PIN prompt.
@@ -398,12 +398,15 @@ def sync_responses(
     # prepare an unique message to wait for
     sync_string = "SYNC" + secrets.token_hex(8)
     ping_msg = mapping.encode(messages.Ping(message=sync_string))
-    # prepare
     write(transport, *ping_msg)
 
-    for _ in range(retries):
-        resp_type, resp_bytes = read(transport, _ignore_bad_magic=True)
-        resp = mapping.decode(resp_type, resp_bytes)
-        if isinstance(resp, messages.Success) and resp.message == sync_string:
+    # response must fit into one chunk
+    resp_msg = mapping.encode(messages.Success(message=sync_string))
+    [expected_chunk] = _iter_chunks(*resp_msg, chunk_size=transport.CHUNK_SIZE)
+
+    for _ in range(_chunks_to_skip):
+        # skip chunks from previous responses
+        chunk = transport.read_chunk(timeout=client._DEFAULT_READ_TIMEOUT)
+        if expected_chunk == chunk:
             return
     raise exceptions.ProtocolError("Failed to sync responses")
