@@ -1,19 +1,23 @@
 async def _get_wallet_id() -> bytes:
     """Derive the wallet identifier (specific mnemonic + passphrase combination).
 
-    wallet_id = SLIP21(seed_with_passphrase, [b"AUTHDB WALLET ID"]).key()  -- 32 bytes
+    wallet_id = RIPEMD160(SHA256(compressed master public key))  -- 20 bytes
 
-    Uses the passphrase-including seed, so distinct passphrases on the same
-    mnemonic (distinct hidden wallets) get distinct wallet_ids and therefore
-    distinct Merkle trees.
+    This is the BIP32 identifier (Hash160) of the wallet's master extended
+    public key K (chain code ignored) -- the same construction as a traditional
+    Bitcoin address, applied to the master node. It is derived from the
+    passphrase-including seed, so distinct passphrases on the same mnemonic
+    (distinct hidden wallets) get distinct wallet_ids -- and therefore distinct
+    Merkle trees and counters in the LRU cache.
     """
+    from trezor.crypto import bip32
+    from trezor.crypto.scripts import sha256_ripemd160
     from apps.common import seed as seed_module
-    from apps.common.seed import Slip21Node
 
     s = await seed_module.get_seed()
-    node = Slip21Node(s)
-    node.derive_path([b"AUTHDB WALLET ID"])
-    return node.key()
+    node = bip32.from_seed(s, "secp256k1")
+    # public_key() returns the 33-byte compressed SEC1 public key.
+    return sha256_ripemd160(node.public_key()).digest()
 
 
 async def _derive_mac_key(domain: bytes) -> bytes:

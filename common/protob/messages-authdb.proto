@@ -45,7 +45,7 @@ message AuthDbInit {
  */
 message AuthDbInitResponse {
     required uint32 qm_last_counter = 1;  // stored anti-rollback ceiling (== qm_counter)
-    optional bytes  wallet_id       = 2;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
+    optional bytes  wallet_id       = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
     optional uint32 counter         = 3;  // current root counter after init
     optional bytes  root            = 4;  // current root; absent if the tree is empty
     optional bytes  root_mac        = 5;  // HMAC(root_mac_key, wallet_id||counter||root); absent if empty
@@ -80,7 +80,7 @@ message AuthDbSetRoot {
  */
 message AuthDbSetRootResponse {
     required uint32 counter   = 1;  // counter after install
-    optional bytes  wallet_id = 2;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
+    optional bytes  wallet_id = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
     optional bytes  new_root  = 3;  // installed root; absent if tree is empty
     optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if tree is empty
 }
@@ -121,7 +121,7 @@ message AuthDbLookupResponse {
     required bool   valid      = 1;  // true if proof is valid against stored root
     required uint32 counter    = 2;  // current global counter
     optional bool   membership = 3;  // true = membership proof, false = non-membership
-    optional bytes  wallet_id  = 4;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
+    optional bytes  wallet_id  = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
 }
 
 /**
@@ -166,6 +166,6 @@ message AuthDbUpdateLeaf {
 message AuthDbUpdateLeafResponse {
     required uint32 counter   = 1;  // global counter after this update (previous + 1)
     optional bytes  new_root  = 2;  // absent if the tree is now empty
-    optional bytes  wallet_id = 3;  // SLIP21(seed-without-passphrase, "AUTHDB DEVICE ID"), scopes the tree
+    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
     optional bytes  mac       = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if tree is now empty
 }
