@@ -51,7 +51,7 @@ class Zip243SigHasher:
         coin: CoinInfo,
         hash_type: int,
     ) -> bytes:
-        import ustruct as struct
+        import struct
 
         from ..scripts import write_bip143_script_code_prefixed
         from ..writers import get_tx_hash, write_bytes_fixed

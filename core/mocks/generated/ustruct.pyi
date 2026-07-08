@@ -1,1 +1,0 @@
-../ustruct.pyi

@@ -89,10 +89,10 @@ if __debug__:
         from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
 
     if EMULATOR:
-        import uos
+        import os
 
-        DISABLE_ANIMATION = uos.getenv("TREZOR_DISABLE_ANIMATION") == "1"
-        LOG_MEMORY = uos.getenv("TREZOR_LOG_MEMORY") == "1"
+        DISABLE_ANIMATION = os.getenv("TREZOR_DISABLE_ANIMATION") == "1"
+        LOG_MEMORY = os.getenv("TREZOR_LOG_MEMORY") == "1"
     else:
         from trezorutils import DISABLE_ANIMATION
 

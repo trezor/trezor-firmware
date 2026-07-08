@@ -14,7 +14,7 @@ _b32rev = {ord(v): k for k, v in enumerate(_b32alphabet)}
 
 
 def encode(s: AnyBytes) -> str:
-    from ustruct import unpack
+    from struct import unpack
 
     s = bytes(s)
     quanta, leftover = divmod(len(s), 5)
