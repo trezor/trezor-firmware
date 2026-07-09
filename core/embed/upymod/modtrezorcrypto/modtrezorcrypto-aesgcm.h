@@ -58,8 +58,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_make_new(const mp_obj_type_t *type,
         "Invalid length of key (has to be 128, 192 or 256 bits)."));
   }
 
-  mp_obj_AesGcm_t *o = m_new_obj_with_finaliser(mp_obj_AesGcm_t);
-  o->base.type = type;
+  mp_obj_AesGcm_t *o = mp_obj_malloc_with_finaliser(mp_obj_AesGcm_t, type);
   o->state = STATE_INIT;
   if (gcm_init_and_key(key.buf, key.len, &(o->ctx)) != RETURN_GOOD ||
       gcm_init_message(iv.buf, iv.len, &(o->ctx)) != RETURN_GOOD) {

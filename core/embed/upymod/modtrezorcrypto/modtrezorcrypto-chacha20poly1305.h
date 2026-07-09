@@ -61,9 +61,8 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of nonce"));
   }
   mp_obj_ChaCha20Poly1305_t *o =
-      m_new_obj_with_finaliser(mp_obj_ChaCha20Poly1305_t);
+      mp_obj_malloc_with_finaliser(mp_obj_ChaCha20Poly1305_t, type);
   rfc7539_init(&(o->ctx), key.buf, nonce.buf);
-  o->base.type = type;
   o->alen = 0;
   o->plen = 0;
   o->state = INIT;

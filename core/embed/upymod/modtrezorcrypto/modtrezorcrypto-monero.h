@@ -79,8 +79,8 @@ static inline void assert_scalar(const mp_obj_t o) {
 }
 
 STATIC mp_obj_t mp_obj_new_scalar() {
-  mp_obj_bignum256modm_t *o = m_new_obj_with_finaliser(mp_obj_bignum256modm_t);
-  o->base.type = &mod_trezorcrypto_monero_bignum256modm_type;
+  mp_obj_bignum256modm_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_bignum256modm_t, &mod_trezorcrypto_monero_bignum256modm_type);
   set256_modm(o->p, 0);
   return MP_OBJ_FROM_PTR(o);
 }
@@ -95,8 +95,8 @@ STATIC mp_obj_t mp_obj_new_scalar_r(mp_obj_t r) {
 }
 
 STATIC mp_obj_t mp_obj_new_ge25519() {
-  mp_obj_ge25519_t *o = m_new_obj_with_finaliser(mp_obj_ge25519_t);
-  o->base.type = &mod_trezorcrypto_monero_ge25519_type;
+  mp_obj_ge25519_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_ge25519_t, &mod_trezorcrypto_monero_ge25519_type);
   ge25519_set_neutral(&o->p);
   return MP_OBJ_FROM_PTR(o);
 }
@@ -151,8 +151,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_ge25519_t *o = m_new_obj_with_finaliser(mp_obj_ge25519_t);
-  o->base.type = type;
+  mp_obj_ge25519_t *o = mp_obj_malloc_with_finaliser(mp_obj_ge25519_t, type);
 
   if (n_args == 0 || args[0] == mp_const_none) {
     ge25519_set_neutral(&o->p);
@@ -190,8 +189,8 @@ STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_bignum256modm_t *o = m_new_obj_with_finaliser(mp_obj_bignum256modm_t);
-  o->base.type = type;
+  mp_obj_bignum256modm_t *o =
+      mp_obj_malloc_with_finaliser(mp_obj_bignum256modm_t, type);
 
   if (n_args == 0 || args[0] == mp_const_none) {
     set256_modm(o->p, 0);

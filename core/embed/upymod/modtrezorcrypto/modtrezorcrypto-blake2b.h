@@ -84,8 +84,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type,
         MP_ERROR_TEXT("Cannot use Blake2b key and personal at the same time"));
   }
 
-  mp_obj_Blake2b_t *o = m_new_obj_with_finaliser(mp_obj_Blake2b_t);
-  o->base.type = type;
+  mp_obj_Blake2b_t *o = mp_obj_malloc_with_finaliser(mp_obj_Blake2b_t, type);
   int res = 0;
 
   if (key_len > 0) {
