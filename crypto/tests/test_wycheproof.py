@@ -227,6 +227,8 @@ def add_pkcs_padding(data):
 
 
 def remove_pkcs_padding(data):
+    if len(data) == 0:
+        return False
     padding_length = data[-1]
     if not (
         0 < padding_length <= 16
@@ -497,11 +499,11 @@ def generate_ecdsa(filename):
         raise DataError()
 
     for test_group in data["testGroups"]:
-        if not keys_in_dict(test_group, {"tests", "keyDer", "sha"}):
+        if not keys_in_dict(test_group, {"tests", "publicKeyDer", "sha"}):
             raise DataError()
 
         try:
-            public_key = unhexlify(test_group["keyDer"])
+            public_key = unhexlify(test_group["publicKeyDer"])
         except Exception:
             raise DataError()
 
@@ -562,11 +564,11 @@ def generate_eddsa(filename):
         raise DataError()
 
     for test_group in data["testGroups"]:
-        if not keys_in_dict(test_group, {"tests", "keyDer"}):
+        if not keys_in_dict(test_group, {"tests", "publicKeyDer"}):
             raise DataError()
 
         try:
-            public_key = unhexlify(test_group["keyDer"])
+            public_key = unhexlify(test_group["publicKeyDer"])
         except Exception:
             raise DataError()
 
@@ -605,20 +607,16 @@ dir = os.path.abspath(os.path.dirname(__file__))
 lib = ctypes.cdll.LoadLibrary(os.path.join(dir, "libtrezor-crypto.so"))
 if not lib.zkp_context_is_initialized():
     assert lib.zkp_context_init() == 0
-testvectors_directory = os.path.join(dir, "wycheproof/testvectors")
+testvectors_directory = os.path.join(dir, "wycheproof/testvectors_v1")
 context_structure_length = 1024
 
 curve25519_dh_vectors = generate_curve25519_dh("x25519_test.json")
-eddsa_vectors = generate_eddsa("eddsa_test.json")
-ecdsa_vectors = (
-    generate_ecdsa("ecdsa_test.json")
-    + generate_ecdsa("ecdsa_secp256k1_sha256_test.json")
-    + generate_ecdsa("ecdsa_secp256r1_sha256_test.json")
+eddsa_vectors = generate_eddsa("ed25519_test.json")
+ecdsa_vectors = generate_ecdsa("ecdsa_secp256k1_sha256_test.json") + generate_ecdsa(
+    "ecdsa_secp256r1_sha256_test.json"
 )
-ecdh_vectors = (
-    generate_ecdh("ecdh_test.json")
-    + generate_ecdh("ecdh_secp256k1_test.json")
-    + generate_ecdh("ecdh_secp256r1_test.json")
+ecdh_vectors = generate_ecdh("ecdh_secp256k1_test.json") + generate_ecdh(
+    "ecdh_secp256r1_test.json"
 )
 chacha_poly_vectors = generate_chacha_poly("chacha20_poly1305_test.json")
 aes_vectors = generate_aes("aes_cbc_pkcs5_test.json")
