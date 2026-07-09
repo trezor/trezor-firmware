@@ -115,8 +115,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type,
     mp_raise_ValueError(MP_ERROR_TEXT("curve_name is invalid"));
   }
 
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
-  o->base.type = type;
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(mp_obj_HDNode_t, type);
   o->fingerprint = fingerprint;
   o->hdnode.depth = depth;
   o->hdnode.child_num = child_num;
@@ -249,8 +248,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_public_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_clone(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-  mp_obj_HDNode_t *copy = m_new_obj_with_finaliser(mp_obj_HDNode_t);
-  copy->base.type = &mod_trezorcrypto_HDNode_type;
+  mp_obj_HDNode_t *copy = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
   copy->hdnode = o->hdnode;
   copy->fingerprint = o->fingerprint;
   return MP_OBJ_FROM_PTR(copy);
@@ -542,8 +541,8 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
     mp_raise_ValueError(MP_ERROR_TEXT("Failed to derive the root node"));
   }
 
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
-  o->base.type = &mod_trezorcrypto_HDNode_type;
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
   o->hdnode = hdnode;
   o->fingerprint = 0;
   return MP_OBJ_FROM_PTR(o);

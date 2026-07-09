@@ -78,8 +78,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
   }
 
   mp_uint_t prf = trezor_obj_get_uint(args[0]);
-  mp_obj_Pbkdf2_t *o = m_new_obj_with_finaliser(mp_obj_Pbkdf2_t);
-  o->base.type = type;
+  mp_obj_Pbkdf2_t *o = mp_obj_malloc_with_finaliser(mp_obj_Pbkdf2_t, type);
   o->prf = prf;
   if (o->prf == PRF_HMAC_SHA256) {
     pbkdf2_hmac_sha256_Init(&(o->ctx256), password.buf, password.len, salt.buf,
