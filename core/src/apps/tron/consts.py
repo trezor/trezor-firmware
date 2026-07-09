@@ -15,14 +15,12 @@ CONTRACT_TYPES = (
     MessageType.TronFreezeBalanceV2Contract,
     MessageType.TronUnfreezeBalanceV2Contract,
     MessageType.TronWithdrawUnfreeze,
-    MessageType.TronWithdrawBalance,
 )
 
 # https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L339-L379
 CONTRACT_TYPE_NAMES = {
     1: "TransferContract",
     4: "VoteWitnessContract",
-    13: "WithdrawBalanceContract",
     31: "TriggerSmartContract",
     54: "FreezeBalanceV2Contract",
     55: "UnfreezeBalanceV2Contract",

@@ -83,10 +83,6 @@ impl Duration {
         self.millis.checked_sub(rhs.millis).map(Self::from_millis)
     }
 
-    pub fn saturating_add(self, rhs: Self) -> Self {
-        Self::from_millis(self.millis.saturating_add(rhs.millis))
-    }
-
     /// Returns a new Duration containing only the largest complete time unit
     /// (days, hours, minutes, or seconds)
     ///

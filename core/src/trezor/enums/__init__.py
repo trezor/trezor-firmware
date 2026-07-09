@@ -327,8 +327,6 @@ if TYPE_CHECKING:
         FORMATTER_AMOUNT = 1
         FORMATTER_TOKEN_AMOUNT = 2
         FORMATTER_UNIT = 3
-        FORMATTER_RAW = 4
-        FORMATTER_DATE = 5
 
     class EthereumERC7730ContainerPath(IntEnum):
         FROM = 1
@@ -428,7 +426,6 @@ if TYPE_CHECKING:
     class TronRawContractType(IntEnum):
         TransferContract = 1
         VoteWitnessContract = 4
-        WithdrawBalanceContract = 13
         TriggerSmartContract = 31
         FreezeBalanceV2Contract = 54
         UnfreezeBalanceV2Contract = 55
@@ -719,7 +716,6 @@ if TYPE_CHECKING:
         TronUnfreezeBalanceV2Contract = 2208
         TronWithdrawUnfreeze = 2209
         TronVoteWitnessContract = 2210
-        TronWithdrawBalance = 2213
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

@@ -7,12 +7,10 @@ use crate::{
         component::{
             Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, Timer,
         },
-        constant,
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer},
-        util::split_two_lines,
     },
 };
 
@@ -194,26 +192,15 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
+                let width = text.map(|c| style.font.text_width(c));
                 let height = style.font.text_height();
-                let mut show_line = |line: &str, y_offset: i16| {
-                    let width = style.font.text_width(line);
-                    let start_of_baseline = self.area.center()
-                        + Offset::new(-width / 2, height / 2)
-                        + Offset::y(Self::BASELINE_OFFSET + y_offset);
-                    shape::Text::new(start_of_baseline, line, style.font)
+                let start_of_baseline = self.area.center()
+                    + Offset::new(-width / 2, height / 2)
+                    + Offset::y(Self::BASELINE_OFFSET);
+                text.map(|text| {
+                    shape::Text::new(start_of_baseline, text, style.font)
                         .with_fg(style.text_color)
                         .render(target);
-                };
-                text.map(|text| {
-                    let (t1, t2) = split_two_lines(text, style.font, self.area.width());
-                    if t1.is_empty() || t2.is_empty() {
-                        // The text fits on a single line (or has no place to break).
-                        show_line(text, 0);
-                    } else {
-                        let half = (height + constant::LINE_SPACE) / 2;
-                        show_line(t1, -half);
-                        show_line(t2, half);
-                    }
                 });
             }
             ButtonContent::Icon(icon) => {

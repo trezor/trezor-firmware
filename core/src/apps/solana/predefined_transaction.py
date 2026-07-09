@@ -138,7 +138,6 @@ async def try_confirm_token_transfer_transaction(
     blockhash: bytes,
     additional_info: AdditionalTxInfo,
     verified_payment_request: PaymentRequest | None,
-    chunkify: bool,
 ) -> bool:
     from .definitions import unknown_token
     from .layout import confirm_payment_request, confirm_token_transfer
@@ -200,7 +199,6 @@ async def try_confirm_token_transfer_transaction(
             transfer_token_instructions[0].decimals,
             fee,
             blockhash,
-            chunkify,
         )
     return True
 
@@ -213,7 +211,6 @@ async def try_confirm_predefined_transaction(
     blockhash: bytes,
     additional_info: AdditionalTxInfo,
     verified_payment_request: PaymentRequest | None,
-    chunkify: bool,
 ) -> bool:
     from .layout import confirm_system_transfer
     from .transaction.instructions import SystemProgramTransferInstruction
@@ -232,12 +229,7 @@ async def try_confirm_predefined_transaction(
     if instructions_count == 1:
         if SystemProgramTransferInstruction.is_type_of(instructions[0]):
             await confirm_system_transfer(
-                instructions[0],
-                fee,
-                signer_path,
-                blockhash,
-                verified_payment_request,
-                chunkify,
+                instructions[0], fee, signer_path, blockhash, verified_payment_request
             )
             return True
 
@@ -247,7 +239,6 @@ async def try_confirm_predefined_transaction(
         signer_path,
         signer_public_key,
         blockhash,
-        chunkify,
     ):
         return True
 
@@ -258,7 +249,6 @@ async def try_confirm_predefined_transaction(
         blockhash,
         additional_info,
         verified_payment_request,
-        chunkify,
     )
 
 
@@ -268,7 +258,6 @@ async def try_confirm_staking_transaction(
     signer_path: list[int],
     signer_public_key: bytes,
     blockhash: bytes,
-    chunkify: bool,
 ) -> bool:
     from .transaction.instructions import (
         StakeProgramDeactivateInstruction,
@@ -303,7 +292,7 @@ async def try_confirm_staking_transaction(
         if signer_public_key != create.base:
             return False
         if signer_public_key != init.withdrawer:
-            await confirm_stake_withdrawer(init.withdrawer, chunkify)
+            await confirm_stake_withdrawer(init.withdrawer)
         if signer_public_key != init.staker:
             return False
         if signer_public_key != delegate.stake_authority[0]:
@@ -329,7 +318,6 @@ async def try_confirm_staking_transaction(
             blockhash=blockhash,
             create=create,
             delegate=delegate,
-            chunkify=chunkify,
         )
         return True
 
@@ -341,7 +329,7 @@ async def try_confirm_staking_transaction(
                 return False
 
         await confirm_unstake_transaction(
-            fee=fee, signer_path=signer_path, blockhash=blockhash, chunkify=chunkify
+            fee=fee, signer_path=signer_path, blockhash=blockhash
         )
         return True
 
@@ -355,7 +343,7 @@ async def try_confirm_staking_transaction(
             if is_address_reference(withdraw.recipient_account):
                 return False
             if signer_public_key != withdraw.recipient_account[0]:
-                await confirm_claim_recipient(withdraw.recipient_account[0], chunkify)
+                await confirm_claim_recipient(withdraw.recipient_account[0])
             total_amount += withdraw.lamports
 
         await confirm_claim_transaction(
@@ -363,7 +351,6 @@ async def try_confirm_staking_transaction(
             signer_path=signer_path,
             blockhash=blockhash,
             total_amount=total_amount,
-            chunkify=chunkify,
         )
 
         return True

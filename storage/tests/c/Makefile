@@ -30,8 +30,6 @@ SRC += crypto/chacha20poly1305/chacha_merged.c
 SRC += crypto/hmac.c
 SRC += crypto/sha2.c
 SRC += crypto/memzero.c
-SRC += crypto/consteq.c
-SRC += crypto/fault_handler_noop.c
 
 OBJ = $(SRC:%.c=build/%.o)
 OBJ_QW = $(SRC:%.c=build_qw/%.o)

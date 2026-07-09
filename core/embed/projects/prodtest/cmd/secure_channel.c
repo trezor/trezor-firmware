@@ -35,7 +35,7 @@ typedef enum {
 } noise_state_t;
 
 static noise_state_t noise_state = SECURE_CHANNEL_STATE_0;
-static noise_kk1_context_t noise_context = {0};
+static noise_context_t noise_context = {0};
 
 static curve25519_key prodtest_private_key = {
     0xc8, 0x56, 0x36, 0x89, 0xf5, 0xa6, 0x70, 0x66, 0x43, 0xeb, 0xe3,
@@ -56,8 +56,8 @@ static curve25519_key hsm_public_keys[] = {
 };
 
 bool secure_channel_handshake_1(uint8_t output[SECURE_CHANNEL_OUTPUT_SIZE]) {
-  if (!noise_kk1_create_handshake_request(&noise_context,
-                                          (noise_kk1_request_t*)output)) {
+  if (!noise_create_handshake_request(&noise_context,
+                                      (noise_request_t*)output)) {
     return false;
   }
 
@@ -72,10 +72,10 @@ bool secure_channel_handshake_2(
     return false;
   }
 
-  if (!noise_kk1_handle_handshake_response_multiple_keys(
+  if (!noise_handle_handshake_response_multiple_keys(
           &noise_context, prodtest_private_key, hsm_public_keys,
           sizeof(hsm_public_keys) / sizeof(hsm_public_keys[0]),
-          (const noise_kk1_response_t*)input)) {
+          (const noise_response_t*)input)) {
     return false;
   }
 
@@ -91,7 +91,7 @@ bool secure_channel_encrypt(const uint8_t* plaintext, size_t plaintext_length,
     return false;
   }
 
-  return noise_kk1_send_message(&noise_context, associated_data,
-                                associated_data_length, plaintext,
-                                plaintext_length, ciphertext);
+  return noise_send_message(&noise_context, associated_data,
+                            associated_data_length, plaintext, plaintext_length,
+                            ciphertext);
 }

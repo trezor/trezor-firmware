@@ -1,6 +1,6 @@
 use core::pin::Pin;
 
-use zeroize::{Zeroize, ZeroizeOnDrop};
+use zeroize::Zeroize as _;
 
 use super::{
     ffi,
@@ -10,7 +10,6 @@ use super::{
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct HmacSha256<'a> {
     ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>,
 }
@@ -35,6 +34,12 @@ impl<'a> HmacSha256<'a> {
     pub fn finalize_into(mut self, out: &mut Digest) {
         // SAFETY: ffi
         unsafe { ffi::hmac_sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
+    }
+}
+
+impl Drop for HmacSha256<'_> {
+    fn drop(&mut self) {
+        self.ctx.zeroize();
     }
 }
 

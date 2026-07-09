@@ -115,8 +115,6 @@ macro_rules! obj_type {
      $(make_new_fn: $make_new_fn:path,)?
      $(attr_fn: $attr_fn:path,)?
      $(call_fn: $call_fn:path,)?
-     $(print_fn: $print_fn:path,)?
-     $(parent: $parent:path,)?
     ) => {{
         #[allow(unused_unsafe)]
         unsafe {
@@ -144,16 +142,6 @@ macro_rules! obj_type {
             let mut make_new: ffi::mp_make_new_fun_t = None;
             $(make_new = Some($make_new_fn);)?
 
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut print: ffi::mp_print_fun_t = None;
-            $(print = Some($print_fn);)?
-
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut parent: *const cty::c_void = ::core::ptr::null_mut();
-            $(parent = $parent as *const _ as *mut _;)?
-
             // TODO: This is safe only if we pass in `Dict` with fixed `Map` (created by
             // `Map::fixed()`, usually through `obj_map!`), because only then will
             // MicroPython treat `locals_dict` as immutable, and make the mutable cast safe.
@@ -168,7 +156,7 @@ macro_rules! obj_type {
                 },
                 flags: 0,
                 name,
-                print,
+                print: None,
                 make_new,
                 call,
                 unary_op: None,
@@ -179,7 +167,7 @@ macro_rules! obj_type {
                 iternext: None,
                 buffer_p: ffi::mp_buffer_p_t { get_buffer: None },
                 protocol: ::core::ptr::null(),
-                parent,
+                parent: ::core::ptr::null(),
                 locals_dict,
             }
         }

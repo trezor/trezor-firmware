@@ -279,7 +279,7 @@ impl LayoutObjInner {
         let msg = root.event(&mut self.event_ctx, event);
 
         match msg {
-            Some(LayoutState::Done) => return msg.try_into(), // short-circuit
+            Some(LayoutState::Done) => return Ok(msg.into()), // short-circuit
             Some(LayoutState::Attached(br)) => {
                 assert!(self.button_request.is_none());
                 self.button_request = br;
@@ -319,7 +319,7 @@ impl LayoutObjInner {
             self.page_count = count;
         }
 
-        msg.try_into()
+        Ok(msg.into())
     }
 
     /// Run a paint pass over the component tree. Returns true if any component

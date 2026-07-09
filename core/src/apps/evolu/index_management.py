@@ -26,8 +26,6 @@ async def index_management(msg: EvoluIndexManagement) -> EvoluIndexManagementRes
             set_delegated_identity_key_rotation_index(msg.rotation_index)
             stored_index = msg.rotation_index
         else:
-            from trezor.wire import ProcessError
-
-            raise ProcessError("Rotation index already set.")
+            raise ValueError("Rotation index already set.")
 
     return EvoluIndexManagementResponse(rotation_index=stored_index)

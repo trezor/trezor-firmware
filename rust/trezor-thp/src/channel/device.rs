@@ -4,17 +4,15 @@ use crate::{
     Backend, ChannelIO, Device, Error,
     alternating_bit::SyncBits,
     channel::{
-        HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, MAX_DEVICE_PROPERTIES_LEN, Nonce,
-        PRIVKEY_LEN, PacketInResult, PairingState, Phase, ReceiveState, SendState,
-        noise::NoiseHandshake,
+        HANDSHAKE_BUFFER_DTH_LEN, HANDSHAKE_BUFFER_HTD_LEN, Nonce, PRIVKEY_LEN, PacketInResult,
+        PairingState, ReceiveState, SendState, noise::NoiseHandshake,
     },
-    control_byte::ControlByte,
     credential::CredentialVerifier,
     error::TransportError,
     fragment::{Fragmenter, Reassembler},
     header::{
         BROADCAST_CHANNEL_ID, HandshakeMessage, Header, MAX_CHANNEL_ID, MIN_CHANNEL_ID,
-        channel_id_valid, parse_channel_length,
+        channel_id_valid, parse_cb_channel,
     },
     util::prepare_zeroed,
 };
@@ -40,7 +38,6 @@ pub type Channel<B> = super::Channel<Device, B>;
 pub struct Mux<B> {
     outgoing: heapless::Deque<MuxOutgoing, BROADCAST_OUTGOING_QUEUE_LEN>,
     new_channel: Option<Nonce>,
-    device_properties: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
     _phantom: PhantomData<B>,
 }
 
@@ -64,22 +61,17 @@ impl<B> Mux<B>
 where
     B: Backend,
 {
-    pub fn new(device_properties: &[u8]) -> Result<Self, Error> {
-        let device_properties = heapless::Vec::from_slice(device_properties)
-            .map_err(|_| Error::insufficient_buffer())?;
-        Ok(Self {
+    pub const fn new() -> Self {
+        Self {
             outgoing: heapless::Deque::new(),
             new_channel: None,
-            device_properties,
             _phantom: PhantomData,
-        })
+        }
     }
 
     /// Reset everything to initial state - discard outgoing messages and channel allocation.
-    /// Keep device_properties.
     pub fn reset(&mut self) {
-        self.outgoing.clear();
-        self.new_channel = None;
+        *self = Self::new()
     }
 
     /// Create new [`ChannelOpen`] when channel allocation request is pending.
@@ -97,7 +89,7 @@ where
         let Some(nonce) = self.new_channel.take() else {
             return Err(Error::not_ready());
         };
-        ChannelOpen::<C, B>::new(channel_id, nonce, &self.device_properties, cred_verif)
+        ChannelOpen::<C, B>::new(channel_id, nonce, cred_verif)
     }
 
     /// Returns `true` if there is channel allocation request pending.
@@ -185,24 +177,33 @@ where
     }
 }
 
+impl<B> Default for Mux<B>
+where
+    B: Backend,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<B> ChannelIO for Mux<B>
 where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
-        let Ok((cb, _)) = ControlByte::parse(packet_buffer) else {
-            // ControlByte::parse already writes to log
+        let Ok((cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
+            // parse_cb_channel already writes to log
             return PacketInResult::ignore(Error::malformed_data());
         };
         if cb.is_codec_v1() {
             return self.handle_v1(packet_buffer);
         }
-        let Ok((channel_id, len)) = parse_channel_length(cb, packet_buffer) else {
-            // parse_channel_length already writes to log
+        if !channel_id_valid(channel_id) {
+            log::warn!("Invalid channel id {:04x}.", channel_id);
             return PacketInResult::ignore(Error::malformed_data());
-        };
+        }
         if channel_id != BROADCAST_CHANNEL_ID {
-            return PacketInResult::route(channel_id, len);
+            return PacketInResult::route(channel_id);
         }
         PacketInResult::from_result(self.handle_broadcast(packet_buffer).map(|is_allocation| {
             if is_allocation {
@@ -270,10 +271,6 @@ where
     fn message_retransmit(&mut self) -> Result<(), Error> {
         Ok(())
     }
-
-    fn channel_id(&self) -> u16 {
-        BROADCAST_CHANNEL_ID
-    }
 }
 
 #[derive(Copy, Clone)]
@@ -300,12 +297,7 @@ pub struct ChannelOpen<C: CredentialVerifier, B: Backend> {
 }
 
 impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
-    fn new(
-        channel_id: u16,
-        nonce: Nonce,
-        device_properties: &[u8],
-        cred_verif: C,
-    ) -> Result<Self, Error> {
+    fn new(channel_id: u16, nonce: Nonce, cred_verif: C) -> Result<Self, Error> {
         let mut send_buffer = heapless::Vec::new();
         send_buffer
             .extend_from_slice(nonce.as_slice())
@@ -314,7 +306,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
             .extend_from_slice(&channel_id.to_be_bytes())
             .map_err(|_| Error::insufficient_buffer())?;
         send_buffer
-            .extend_from_slice(device_properties)
+            .extend_from_slice(cred_verif.device_properties())
             .map_err(|_| Error::insufficient_buffer())?;
         let mut receive_buffer = heapless::Vec::new();
         prepare_zeroed(&mut receive_buffer);
@@ -325,7 +317,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         Ok(Self {
             channel,
             state: HandshakeState::SendingChannelResponse,
-            noise: NoiseHandshake::prepare_responder(device_properties),
+            noise: NoiseHandshake::prepare_responder(cred_verif.device_properties()),
             send_buffer,
             receive_buffer,
             cred_verif,
@@ -446,13 +438,15 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         log::debug!("[{:04x}] Handshake complete.", self.channel_id());
         Ok(match self.state {
             HandshakeState::SendingCompletionResponse { pairing_state } => {
-                self.channel.phase = Phase::PairingCredential {
-                    handshake_pairing_state: pairing_state,
-                };
+                self.channel.pairing_state = pairing_state;
                 self.channel
             }
             _ => return Err(Error::unexpected_input()),
         })
+    }
+
+    pub fn channel_id(&self) -> u16 {
+        self.channel.channel_id
     }
 
     pub fn sending_retry(&self) -> Option<u8> {
@@ -554,10 +548,6 @@ where
 
     fn message_retransmit(&mut self) -> Result<(), Error> {
         self.channel.message_retransmit()
-    }
-
-    fn channel_id(&self) -> u16 {
-        self.channel.channel_id()
     }
 }
 

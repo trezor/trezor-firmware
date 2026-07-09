@@ -59,14 +59,13 @@ async def sign_registration_request(
     ):
         raise ValueError("Invalid proof")
 
-    signature, rotation_index = _get_signature(challenge_bytes, size_bytes)
+    signature = _get_signature(challenge_bytes, size_bytes)
     r = BufferReader(optiga.get_certificate(optiga.DEVICE_CERT_INDEX))
     certificates = parse_cert_chain(r)
 
     return EvoluRegistrationRequest(
         certificate_chain=certificates,
         signature=signature,
-        rotation_index=rotation_index,
     )
 
 
@@ -83,7 +82,9 @@ def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
     return challenge, size_to_acquire_bytes
 
 
-def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> tuple[bytes, int]:
+def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
+    from trezorutils import delegated_identity
+
     from storage.device import get_delegated_identity_key_rotation_index
     from trezor import utils, wire
     from trezor.crypto import optiga
@@ -91,20 +92,18 @@ def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> tuple[bytes,
 
     from apps.common.writers import write_compact_size
 
-    from .common import get_public_key
+    from .common import get_public_key_from_private_key
 
-    rotation_index = get_delegated_identity_key_rotation_index() or 0
-    public_key = get_public_key()
+    private_key = delegated_identity(get_delegated_identity_key_rotation_index() or 0)
+    public_key = get_public_key_from_private_key(private_key)
 
-    header = b"EvoluSignRegistrationRequestV2:"
+    header = b"EvoluSignRegistrationRequestV1:"
     components = [
         header,
         public_key,
         challenge_bytes,
         size_bytes,
-        rotation_index.to_bytes(BYTES_IN_UINT32, "big"),
     ]
-
     hash_writer = utils.HashWriter(sha256())
     for component in components:
         write_compact_size(hash_writer, len(component))
@@ -114,5 +113,4 @@ def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> tuple[bytes,
         signature = optiga.sign(optiga.DEVICE_ECC_KEY_INDEX, hash_writer.get_digest())
     except optiga.SigningInaccessible:
         raise wire.ProcessError("Signing inaccessible.")
-
-    return signature, rotation_index
+    return signature

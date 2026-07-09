@@ -28,7 +28,7 @@
 
 #ifdef USE_MCU_ATTESTATION
 secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
-  _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH, "");
+  _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH);
   memset(dest, 3, SHA256_DIGEST_LENGTH);
   return sectrue;
 }

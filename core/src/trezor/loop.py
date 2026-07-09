@@ -238,9 +238,8 @@ class sleep(Syscall[int]):
 class wait(Syscall[T]):
     """
     Pause current task, and resume only after a message on `msg_iface` is
-    received.  Messages are received either from an USB/BLE interface,
-    or the touch display, or a physical button.  Result value is a tuple of
-    message values.
+    received.  Messages are received either from an USB interface, or the
+    touch display.  Result value is a tuple of message values.
 
     Example:
 
@@ -448,12 +447,9 @@ class mailbox(Syscall[T]):
         if not self.is_empty():
             value = self.value
             self.clear()
-            if isinstance(value, BaseException):
-                raise value
-            else:
-                # XXX self.value is of type T | object, but we are returning it as T
-                # what we want to say is `assert isinstance(value, T)` but that doesn't work
-                return value  # type: ignore [Type "T@mailbox | object" is not assignable to type "T@mailbox"]
+            # XXX self.value is of type T | object, but we are returning it as T
+            # what we want to say is `assert isinstance(value, T)` but that doesn't work
+            return value  # type: ignore [Type "T@mailbox | object" is not assignable to type "T@mailbox"]
 
         # otherwise, wait for a value
         try:

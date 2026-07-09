@@ -160,12 +160,10 @@ static bool display_dsi_init(display_driver_t *drv) {
   drv->DSIVidCfg.PacketSize = HACT;
   drv->DSIVidCfg.NumberOfChunks = 0;  // No chunks in burst mode
   drv->DSIVidCfg.NullPacketSize = 0;  // No null packet in burst mode
-  drv->DSIVidCfg.HorizontalSyncActive =
-      (uint32_t)(HSYNC * LANE_BYTE_2_PIXEL_CLK_RATIO);
-  drv->DSIVidCfg.HorizontalBackPorch =
-      (uint32_t)(HBP * LANE_BYTE_2_PIXEL_CLK_RATIO);
+  drv->DSIVidCfg.HorizontalSyncActive = HSYNC * LANE_BYTE_2_PIXEL_CLK_RATIO;
+  drv->DSIVidCfg.HorizontalBackPorch = HBP * LANE_BYTE_2_PIXEL_CLK_RATIO;
   drv->DSIVidCfg.HorizontalLine =
-      (uint32_t)((HSYNC + HBP + HACT + HFP) * LANE_BYTE_2_PIXEL_CLK_RATIO);
+      (HSYNC + HBP + HACT + HFP) * LANE_BYTE_2_PIXEL_CLK_RATIO;
   drv->DSIVidCfg.VerticalSyncActive = VSYNC;
   drv->DSIVidCfg.VerticalBackPorch = VBP;
   drv->DSIVidCfg.VerticalFrontPorch = VFP;

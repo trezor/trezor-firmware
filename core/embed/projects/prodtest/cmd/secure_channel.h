@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include "noise_kk1.h"
+#include "noise.h"
 
-#define SECURE_CHANNEL_INPUT_SIZE (sizeof(noise_kk1_response_t))
-#define SECURE_CHANNEL_OUTPUT_SIZE (sizeof(noise_kk1_request_t))
-#define SECURE_CHANNEL_TAG_SIZE (NOISE_KK1_TAG_SIZE)
+#define SECURE_CHANNEL_INPUT_SIZE (sizeof(noise_response_t))
+#define SECURE_CHANNEL_OUTPUT_SIZE (sizeof(noise_request_t))
+#define SECURE_CHANNEL_TAG_SIZE (NOISE_TAG_SIZE)
 
 bool secure_channel_handshake_1(uint8_t output[SECURE_CHANNEL_OUTPUT_SIZE]);
 bool secure_channel_handshake_2(const uint8_t input[SECURE_CHANNEL_INPUT_SIZE]);

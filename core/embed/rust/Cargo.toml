@@ -7,7 +7,7 @@ build = "build.rs"
 
 [features]
 default = ["layout_bolt"]
-crypto = ["dep:zeroize"]
+crypto = ["zeroize"]
 layout_bolt = []
 layout_caesar = []
 layout_delizia = []
@@ -63,13 +63,11 @@ translations = ["crypto"]
 secmon_layout = []
 dbg_console = []
 app_loading = []
-thp = ["crypto", "dep:trezor-thp", "dep:zeroize"]
 test = [
     "backlight",
     "button",
     "cc",
     "crypto",
-    "dbg_console",
     "dma2d",
     "debug",
     "glob",
@@ -79,10 +77,8 @@ test = [
     "protobuf",
     "smp",
     "storage",
-    "thp",
     "touch",
     "translations",
-    "trezor-thp?/use_std",
     "ui",
     "ui_jpeg",
     "ui_font_kerning",
@@ -117,11 +113,10 @@ trezor-tjpgdec.workspace = true
 ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
+zeroize = { workspace = true, optional = true }
 
 io = { workspace = true, optional = true }
-trezor-thp = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }
-zeroize = { workspace = true, optional = true }
 
 [build-dependencies]
 bindgen.workspace = true

@@ -107,10 +107,14 @@ _progress_obj: ProgressLayout | None = None
 
 
 def _start_progress() -> None:
+    from trezor import workflow
     from trezor.ui.layouts.progress import progress
 
     global _progress_obj
 
+    # Because we are drawing to the screen manually, without a layout, we
+    # should make sure that no other layout is running.
+    workflow.close_others()
     _progress_obj = progress()
 
 

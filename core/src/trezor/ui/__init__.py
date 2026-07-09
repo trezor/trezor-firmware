@@ -568,8 +568,6 @@ class ProgressLayout:
         self.value = value
 
     def start(self) -> None:
-        workflow.close_others()  # request exclusive UI access
-
         if CURRENT_LAYOUT is not self and CURRENT_LAYOUT is not None:
             CURRENT_LAYOUT.stop()
 

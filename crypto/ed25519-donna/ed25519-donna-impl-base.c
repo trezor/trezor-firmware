@@ -1,5 +1,4 @@
 #include <assert.h>
-#include "consteq.h"
 #include "ed25519-donna.h"
 #include "memzero.h"
 #include "options.h"
@@ -29,6 +28,16 @@ static const bignum25519 ALIGN(16) fe_fffb3 = {
 static const bignum25519 ALIGN(16) fe_fffb4 = {
 		0x2b39186, 0x14640ed, 0x14930a7, 0x04509fa, 0x3b91bf0, 0x0f7432e, 0x07a443f, 0x17f24d8, 0x031067d, 0x0690fcc}; /* sqrt(sqrt(-1) * A * (A + 2)) */
 
+
+/*
+	Timing safe memory compare
+*/
+int ed25519_verify(const unsigned char *x, const unsigned char *y, size_t len) {
+	size_t differentbits = 0;
+	while (len--)
+		differentbits |= (*x++ ^ *y++);
+	return (int) (1 & ((differentbits - 1) >> 8));
+}
 
 /*
 	conversions
@@ -226,10 +235,10 @@ int ge25519_unpack_negative_vartime(ge25519 *r, const unsigned char p[32]) {
 	curve25519_mul(t, t, den);
 	curve25519_sub_reduce(root, t, num);
 	curve25519_contract(check, root);
-	if (!consteq(check, zero, 32)) {
+	if (!ed25519_verify(check, zero, 32)) {
 		curve25519_add_reduce(t, t, num);
 		curve25519_contract(check, t);
-		if (!consteq(check, zero, 32))
+		if (!ed25519_verify(check, zero, 32))
 			return 0;
 		curve25519_mul(r->x, r->x, ge25519_sqrtneg1);
 	}

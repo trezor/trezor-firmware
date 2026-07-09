@@ -69,8 +69,7 @@
 #include "monero/monero.h"
 #include "nem.h"
 #include "nist256p1.h"
-#include "noise_kk1.h"
-#include "noise_xxpsk3.h"
+#include "noise.h"
 #include "pbkdf2.h"
 #include "rand.h"
 #include "rc4.h"
@@ -11503,7 +11502,7 @@ START_TEST(test_elligator2) {
 }
 END_TEST
 
-START_TEST(test_noise_kk1) {
+START_TEST(test_noise) {
   // Inject the seed to the random number generator to make the test
   // deterministic
   random_reseed(2748932008);
@@ -11517,11 +11516,11 @@ START_TEST(test_noise_kk1) {
   curve25519_scalarmult_basepoint(initiator_public_key, initiator_private_key);
   curve25519_scalarmult_basepoint(responder_public_key, responder_private_key);
 
-  noise_kk1_context_t initiator_context = {0};
-  noise_kk1_context_t responder_context = {0};
+  noise_context_t initiator_context = {0};
+  noise_context_t responder_context = {0};
 
-  noise_kk1_request_t request = {0};
-  noise_kk1_response_t response = {0};
+  noise_request_t request = {0};
+  noise_response_t response = {0};
 
   uint8_t message1[] = "message1";
   uint8_t associated_data1[] = "associated_data1";
@@ -11548,483 +11547,93 @@ START_TEST(test_noise_kk1) {
       "5e21772c915f1bbfeff75c87c7c2a1589dcb5fe791656c9332";
 
   uint8_t plaintext1[sizeof(message1)] = {0};
-  uint8_t ciphertext1[sizeof(plaintext1) + NOISE_KK1_TAG_SIZE];
+  uint8_t ciphertext1[sizeof(plaintext1) + NOISE_TAG_SIZE];
   uint8_t plaintext2[sizeof(message2)] = {0};
-  uint8_t ciphertext2[sizeof(plaintext2) + NOISE_KK1_TAG_SIZE] = {0};
+  uint8_t ciphertext2[sizeof(plaintext2) + NOISE_TAG_SIZE] = {0};
   uint8_t plaintext3[sizeof(message3)] = {0};
-  uint8_t ciphertext3[sizeof(plaintext3) + NOISE_KK1_TAG_SIZE] = {0};
+  uint8_t ciphertext3[sizeof(plaintext3) + NOISE_TAG_SIZE] = {0};
   uint8_t plaintext4[sizeof(message4)] = {0};
-  uint8_t ciphertext4[sizeof(plaintext4) + NOISE_KK1_TAG_SIZE] = {0};
+  uint8_t ciphertext4[sizeof(plaintext4) + NOISE_TAG_SIZE] = {0};
 
   bool ret = false;
 
   // Initiator sends request
-  ret = noise_kk1_create_handshake_request(&initiator_context, &request);
+  ret = noise_create_handshake_request(&initiator_context, &request);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(&request, fromhex(expected_request_hex), sizeof(request));
 
   // Responder receives request and sends response
-  ret = noise_kk1_handle_handshake_request(
-      &responder_context, initiator_public_key, responder_private_key, &request,
-      &response);
+  ret = noise_handle_handshake_request(&responder_context, initiator_public_key,
+                                       responder_private_key, &request,
+                                       &response);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(&response, fromhex(expected_response_hex), sizeof(response));
 
   // Initiator receives response
-  ret = noise_kk1_handle_handshake_response(&initiator_context,
-                                            initiator_private_key,
-                                            responder_public_key, &response);
+  ret =
+      noise_handle_handshake_response(&initiator_context, initiator_private_key,
+                                      responder_public_key, &response);
   ck_assert_int_eq(ret, true);
 
   // Initiator sends message1
-  ret = noise_kk1_send_message(&initiator_context, associated_data1,
-                               sizeof(associated_data1), message1,
-                               sizeof(message1), ciphertext1);
+  ret = noise_send_message(&initiator_context, associated_data1,
+                           sizeof(associated_data1), message1, sizeof(message1),
+                           ciphertext1);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(ciphertext1, fromhex(expected_message1_hex),
                    sizeof(ciphertext1));
 
   // Initiator sends message2
-  ret = noise_kk1_send_message(&initiator_context, associated_data2,
-                               sizeof(associated_data2), message2,
-                               sizeof(message2), ciphertext2);
+  ret = noise_send_message(&initiator_context, associated_data2,
+                           sizeof(associated_data2), message2, sizeof(message2),
+                           ciphertext2);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(ciphertext2, fromhex(expected_message2_hex),
                    sizeof(ciphertext2));
 
   // Responder sends message3
-  ret = noise_kk1_send_message(&responder_context, associated_data3,
-                               sizeof(associated_data3), message3,
-                               sizeof(message3), ciphertext3);
+  ret = noise_send_message(&responder_context, associated_data3,
+                           sizeof(associated_data3), message3, sizeof(message3),
+                           ciphertext3);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(ciphertext3, fromhex(expected_message3_hex),
                    sizeof(ciphertext3));
 
   // Responder sends message4
-  ret = noise_kk1_send_message(&responder_context, associated_data4,
-                               sizeof(associated_data4), message4,
-                               sizeof(message4), ciphertext4);
+  ret = noise_send_message(&responder_context, associated_data4,
+                           sizeof(associated_data4), message4, sizeof(message4),
+                           ciphertext4);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(ciphertext4, fromhex(expected_message4_hex),
                    sizeof(ciphertext4));
 
   // Responder receives message1
-  ret = noise_kk1_receive_message(&responder_context, associated_data1,
-                                  sizeof(associated_data1), ciphertext1,
-                                  sizeof(ciphertext1), plaintext1);
+  ret = noise_receive_message(&responder_context, associated_data1,
+                              sizeof(associated_data1), ciphertext1,
+                              sizeof(ciphertext1), plaintext1);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(plaintext1, message1, sizeof(message1));
 
   // Responder receives message2
-  ret = noise_kk1_receive_message(&responder_context, associated_data2,
-                                  sizeof(associated_data2), ciphertext2,
-                                  sizeof(ciphertext2), plaintext2);
+  ret = noise_receive_message(&responder_context, associated_data2,
+                              sizeof(associated_data2), ciphertext2,
+                              sizeof(ciphertext2), plaintext2);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(plaintext2, message2, sizeof(message2));
 
   // Initiator receives message3
-  ret = noise_kk1_receive_message(&initiator_context, associated_data3,
-                                  sizeof(associated_data3), ciphertext3,
-                                  sizeof(ciphertext3), plaintext3);
+  ret = noise_receive_message(&initiator_context, associated_data3,
+                              sizeof(associated_data3), ciphertext3,
+                              sizeof(ciphertext3), plaintext3);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(plaintext3, message3, sizeof(message3));
 
   // Initiator receives message4
-  ret = noise_kk1_receive_message(&initiator_context, associated_data4,
-                                  sizeof(associated_data4), ciphertext4,
-                                  sizeof(ciphertext4), plaintext4);
+  ret = noise_receive_message(&initiator_context, associated_data4,
+                              sizeof(associated_data4), ciphertext4,
+                              sizeof(ciphertext4), plaintext4);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(plaintext4, message4, sizeof(message4));
-}
-END_TEST
-
-START_TEST(test_noise_xxpsk3) {
-  // Inject the seed to the random number generator to make the test
-  // deterministic
-  random_reseed(2748932008);
-
-  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
-
-  uint8_t initiator_private_key[32] = {0};
-  uint8_t responder_private_key[32] = {0};
-  random_buffer(initiator_private_key, sizeof(initiator_private_key));
-  random_buffer(responder_private_key, sizeof(responder_private_key));
-
-  noise_xxpsk3_initiator_t initiator = {0};
-  noise_xxpsk3_responder_t responder = {0};
-
-  bool ret = false;
-
-  // Initialize initiator and responder
-  ret = noise_xxpsk3_initiator_init(&initiator, psk, initiator_private_key);
-  ck_assert_int_eq(ret, true);
-
-  ret = noise_xxpsk3_responder_init(&responder, psk, responder_private_key);
-  ck_assert_int_eq(ret, true);
-
-  // --- Handshake ---
-
-  // Initiator creates request1
-  uint8_t request1[256] = {0};
-  size_t request1_size = 0;
-  ret = noise_xxpsk3_initiator_create_request1(
-      &initiator, NULL, 0, request1, sizeof(request1), &request1_size);
-  ck_assert_int_eq(ret, true);
-  ck_assert_int_eq(request1_size,
-                   32 + 0 + 16);  // NOISE_XXPSK3_DHLEN + payload + tag
-
-  // Responder handles request1
-  ret = noise_xxpsk3_responder_handle_request1(&responder, request1,
-                                               request1_size, NULL, 0, NULL);
-  ck_assert_int_eq(ret, true);
-
-  // Responder creates response1
-  uint8_t response1[256] = {0};
-  size_t response1_size = 0;
-  ret = noise_xxpsk3_responder_create_response1(
-      &responder, NULL, 0, response1, sizeof(response1), &response1_size);
-  ck_assert_int_eq(ret, true);
-  // response1 = ephemeral_pub[32] + enc_static_pub[48] + enc_payload[0+16]
-  ck_assert_int_eq(response1_size, 32 + 48 + 16);
-
-  // Initiator handles response1
-  ret = noise_xxpsk3_initiator_handle_response1(&initiator, response1,
-                                                response1_size, NULL, 0, NULL);
-  ck_assert_int_eq(ret, true);
-
-  // Initiator creates request2
-  uint8_t request2[256] = {0};
-  size_t request2_size = 0;
-  ret = noise_xxpsk3_initiator_create_request2(
-      &initiator, NULL, 0, request2, sizeof(request2), &request2_size);
-  ck_assert_int_eq(ret, true);
-  // request2 = enc_static_pub[48] + enc_payload[0+16]
-  ck_assert_int_eq(request2_size, 48 + 16);
-
-  // Responder handles request2 — handshake complete
-  ret = noise_xxpsk3_responder_handle_request2(&responder, request2,
-                                               request2_size, NULL, 0, NULL);
-  ck_assert_int_eq(ret, true);
-
-  // --- Transport phase: both directions ---
-
-  // Responder -> Initiator
-  uint8_t msg_r2i[] = "hello from responder";
-  uint8_t ct_r2i[sizeof(msg_r2i) + 16] = {0};
-  size_t ct_r2i_size = 0;
-  ret = noise_xxpsk3_send_message(&responder.transport_state, msg_r2i,
-                                  sizeof(msg_r2i), ct_r2i, sizeof(ct_r2i),
-                                  &ct_r2i_size);
-  ck_assert_int_eq(ret, true);
-  ck_assert_int_eq(ct_r2i_size, sizeof(msg_r2i) + 16);
-  ck_assert_int_eq(memcmp(ct_r2i, msg_r2i, sizeof(msg_r2i)) != 0, true);
-
-  uint8_t pt_r2i[256] = {0};
-  size_t pt_r2i_size = 0;
-  ret = noise_xxpsk3_receive_message(&initiator.transport_state, ct_r2i,
-                                     ct_r2i_size, pt_r2i, sizeof(pt_r2i),
-                                     &pt_r2i_size);
-  ck_assert_int_eq(ret, true);
-  ck_assert_int_eq(pt_r2i_size, sizeof(msg_r2i));
-  ck_assert_mem_eq(pt_r2i, msg_r2i, sizeof(msg_r2i));
-
-  // Initiator -> Responder
-  uint8_t msg_i2r[] = "hello from initiator";
-  uint8_t ct_i2r[sizeof(msg_i2r) + 16] = {0};
-  size_t ct_i2r_size = 0;
-  ret = noise_xxpsk3_send_message(&initiator.transport_state, msg_i2r,
-                                  sizeof(msg_i2r), ct_i2r, sizeof(ct_i2r),
-                                  &ct_i2r_size);
-  ck_assert_int_eq(ret, true);
-  ck_assert_int_eq(ct_i2r_size, sizeof(msg_i2r) + 16);
-
-  uint8_t pt_i2r[256] = {0};
-  size_t pt_i2r_size = 0;
-  ret = noise_xxpsk3_receive_message(&responder.transport_state, ct_i2r,
-                                     ct_i2r_size, pt_i2r, sizeof(pt_i2r),
-                                     &pt_i2r_size);
-  ck_assert_int_eq(ret, true);
-  ck_assert_mem_eq(pt_i2r, msg_i2r, sizeof(msg_i2r));
-
-  // Multiple messages in one direction advance the nonce correctly
-  uint8_t msg_a[] = "first";
-  uint8_t msg_b[] = "second";
-  uint8_t ct_a[sizeof(msg_a) + 16] = {0}, ct_b[sizeof(msg_b) + 16] = {0};
-  size_t ct_a_size = 0, ct_b_size = 0;
-  ret =
-      noise_xxpsk3_send_message(&responder.transport_state, msg_a,
-                                sizeof(msg_a), ct_a, sizeof(ct_a), &ct_a_size);
-  ck_assert_int_eq(ret, true);
-  ret =
-      noise_xxpsk3_send_message(&responder.transport_state, msg_b,
-                                sizeof(msg_b), ct_b, sizeof(ct_b), &ct_b_size);
-  ck_assert_int_eq(ret, true);
-
-  uint8_t pt_a[64] = {0}, pt_b[64] = {0};
-  size_t pt_a_size = 0, pt_b_size = 0;
-  ret = noise_xxpsk3_receive_message(&initiator.transport_state, ct_a,
-                                     ct_a_size, pt_a, sizeof(pt_a), &pt_a_size);
-  ck_assert_int_eq(ret, true);
-  ck_assert_mem_eq(pt_a, msg_a, sizeof(msg_a));
-  ret = noise_xxpsk3_receive_message(&initiator.transport_state, ct_b,
-                                     ct_b_size, pt_b, sizeof(pt_b), &pt_b_size);
-  ck_assert_int_eq(ret, true);
-  ck_assert_mem_eq(pt_b, msg_b, sizeof(msg_b));
-
-  // A tampered ciphertext must fail to decrypt
-  uint8_t tampered[sizeof(msg_r2i) + 16] = {0};
-  size_t tampered_size = 0;
-  ret = noise_xxpsk3_send_message(&responder.transport_state, msg_r2i,
-                                  sizeof(msg_r2i), tampered, sizeof(tampered),
-                                  &tampered_size);
-  ck_assert_int_eq(ret, true);
-  tampered[0] ^= 0xFF;  // flip a bit
-  uint8_t pt_bad[256] = {0};
-  size_t pt_bad_size = 0;
-  ret = noise_xxpsk3_receive_message(&initiator.transport_state, tampered,
-                                     tampered_size, pt_bad, sizeof(pt_bad),
-                                     &pt_bad_size);
-  ck_assert_int_eq(ret, false);
-
-  // --- Double-init should fail ---
-  ret = noise_xxpsk3_initiator_init(&initiator, psk, initiator_private_key);
-  ck_assert_int_eq(ret, false);
-
-  ret = noise_xxpsk3_responder_init(&responder, psk, responder_private_key);
-  ck_assert_int_eq(ret, false);
-
-  // Both sides must have the same handshake hash
-  ck_assert_mem_eq(initiator.transport_state.handshake_hash,
-                   responder.transport_state.handshake_hash,
-                   NOISE_XXPSK3_HASHLEN);
-
-  // Cleanup
-  noise_xxpsk3_initiator_deinit(&initiator);
-  noise_xxpsk3_responder_deinit(&responder);
-
-  // Verify structures are zeroed after deinit
-  noise_xxpsk3_initiator_t zeroed_intr = {0};
-  noise_xxpsk3_responder_t zeroed_rspn = {0};
-  ck_assert_int_eq(memcmp(&initiator, &zeroed_intr, sizeof(initiator)), 0);
-  ck_assert_int_eq(memcmp(&responder, &zeroed_rspn, sizeof(responder)), 0);
-}
-END_TEST
-
-START_TEST(test_noise_xxpsk3_vectors) {
-  static const struct {
-    uint32_t seed;
-    const char *psk;
-    const char *req1_payload;
-    const char *rsp1_payload;
-    const char *req2_payload;
-    const char *transport_msg;
-    const char *expected_request1;
-    const char *expected_response1;
-    const char *expected_request2;
-    const char *expected_response2;
-    const char *expected_handshake_hash;
-  } vectors[] = {
-      {
-          2748932008,
-          "746869735f69735f615f3332627974655f7072657368617265645f6b65792121",
-          "",
-          "",
-          "",
-          "68656c6c6f2066726f6d20726573706f6e646572",
-          "4f1c3515b7d561226b4917ddbc79eae44542dab2ae54e294c83f39328f126562bd5a"
-          "c13828cd032dcfed74f61910e06c",
-          "cdfe8958fc5f10a893c8441e73207909778d8cc66241309ad4ee07fb9d06a4015b7c"
-          "6f0daa18510d44c057f0ba47ac8ec27ad6d856fc6785b0edc0c76e365c66f82fe2fd"
-          "ed7e433549f61ff8e52b7892734fda1ef38e0a7a5edb94873ff42d61",
-          "3c0f1764415f85a2c1d32fa662c2fc5eff8881c213305872e2dedbad029beaf26f33"
-          "eb6bcf7f7cb49f2b4008f5e22e828113fcebfcc397c2d15ad2143acda60c",
-          "84e5c9691e9f0395a74341ad18c672962ea4bcd575af5fb5b72b843f3c55fe28d528"
-          "48f0",
-          "59849c6fa61ecef55d169cc05d632b3ac1f5387b16a7481ebdce34d409404609",
-      },
-      {
-          1234567890,
-          "616e6f746865725f3332627974655f7072657368617265645f6b65795f787821",
-          "6869",
-          "",
-          "",
-          "7365636f6e64206d657373616765",
-          "7f3d27a6667277f437cfab7b6608bbdf8ef0a1ba9c5e60b3e67e4deb4dd6d62626e6"
-          "873d44a9ec37ae6d6be010c11d85cd34",
-          "dbb97a078d097ee78d8df6c68c4a60b48384b9ec786e2c7c39c0a407fe312b278482"
-          "9e807fb5be4d2b86947832657dc1e2a054afb900a0a8a9d27500b88049bdb2524036"
-          "ea2283b7a168a84982c111583a62aed1e05c4a4f772b90493e0b3ab9",
-          "d5cc0a789761819b15731432b19b2a33e40c335e41f0261a82a2a7ec24e32e65d57d"
-          "063903224ff97426ff08083e4701be63f27a04b43bb187ce0c052dc0d23c",
-          "112c0758fc19bee17e15f64699fb32b678460086f4272f2d6ecbff145868",
-          "3c41fb49fcb607180753894e365237aab98b5958b681820728b68d7ab2e09f62",
-      },
-      {
-          42,
-          "7965745f616e6f746865725f3332627974655f7072657368617265645f6b6579",
-          "",
-          "7265737031",
-          "",
-          "7468697264",
-          "a37f3ceff71f0612f4d35d853f80698f629ae9bb637de1913e6ee16f51caeb76094c"
-          "2e9e08155b296a18f971e829bd62",
-          "1a8c742a7d394df33a81fc6a826dc0cb69a2655d7765441b480ae3ffc534f51ff2ac"
-          "6bb5804ead648b82e7a3f0cc4a429a30bf3117e18873e76372f213f45f5aa53322d8"
-          "1f4d233247601527d404d5b08447b88eb2efec64b80ea8cbc58f05ff576d58d662",
-          "9778efde6ba8636f48975d6cf93387fe2897e977e547d0c84682da33744914662f2e"
-          "64bb96cc91ec2d06ba44a63f07c65857e2b89423f17b749b88b93f239008",
-          "9ab227703e18c353b931eafa629159138d926ff1bc",
-          "1dcd038e6706a62b35d3facaa1baddba5ed70a7f08c7e3a59c74eeb38200d207",
-      },
-      {
-          2748932008,
-          "746869735f69735f615f3332627974655f7072657368617265645f6b65792121",
-          "",
-          "",
-          "72657132",
-          "6d61792074686520666f75727468206265207769746820796f75",
-          "4f1c3515b7d561226b4917ddbc79eae44542dab2ae54e294c83f39328f126562bd5a"
-          "c13828cd032dcfed74f61910e06c",
-          "cdfe8958fc5f10a893c8441e73207909778d8cc66241309ad4ee07fb9d06a4015b7c"
-          "6f0daa18510d44c057f0ba47ac8ec27ad6d856fc6785b0edc0c76e365c66f82fe2fd"
-          "ed7e433549f61ff8e52b7892734fda1ef38e0a7a5edb94873ff42d61",
-          "3c0f1764415f85a2c1d32fa662c2fc5eff8881c213305872e2dedbad029beaf26f33"
-          "eb6bcf7f7cb49f2b4008f5e22e82ab45e15af4182a406a517429271780b64ce5a1a"
-          "2",
-          "81e1dc2505d700c7ae4114ad09dd229b25e0aece4e1faff58b1f17b78e4bfdf652ea"
-          "7c71c7101edd7108",
-          "e4f7077c6783be54aa0b9e23646e34a8916232a14b53b64ad293e0d66864026a",
-      },
-      {
-          2748932008,
-          "746869735f69735f615f3332627974655f7072657368617265645f6b65792121",
-          "746869732069732073616e6470697420747572746c65",
-          "706172616c797a65642065656c",
-          "7269646963756c6f757320636f76656e616e74",
-          "726576656e6765206f6620746865206669667468",
-          "4f1c3515b7d561226b4917ddbc79eae44542dab2ae54e294c83f39328f126562bb57"
-          "4efd1466ac1a3e28e4d294a1ef8e9d81d6782aef5f202d0b12e566654c9897b65fa6"
-          "8884",
-          "cdfe8958fc5f10a893c8441e73207909778d8cc66241309ad4ee07fb9d06a4015b7c"
-          "6f0daa18510d44c057f0ba47ac8ec27ad6d856fc6785b0edc0c76e365c66f091c160"
-          "57d5e0beea4d99b21a456d98279d9c64af940a56cc89a4348f182152222008d64d6e"
-          "997c7a34ab4139",
-          "3c0f1764415f85a2c1d32fa662c2fc5eff8881c213305872e2dedbad029beaf248ff"
-          "a2f2aa8c75f6ac5330c4ec82abf8ab49f401e333ae64fe3577fa8b47531cf6542fec"
-          "2bfa115d4ed379dfad10f47bdcbe93",
-          "9ee5d3601fd800c7a74841ab15d0229f29a6adcfd1e4ce6c6ffe9d39c152d16f49f5"
-          "4d5f",
-          "73b0823f46b0e23560501cf82732c9e486673eadac549d38a4d71252face472a",
-      },
-  };
-
-  for (size_t v = 0; v < sizeof(vectors) / sizeof(*vectors); v++) {
-    random_reseed(vectors[v].seed);
-
-    uint8_t psk[32];
-    memcpy(psk, fromhex(vectors[v].psk), 32);
-
-    uint8_t initiator_private_key[32] = {0};
-    uint8_t responder_private_key[32] = {0};
-    random_buffer(initiator_private_key, sizeof(initiator_private_key));
-    random_buffer(responder_private_key, sizeof(responder_private_key));
-
-    size_t req1_plen = strlen(vectors[v].req1_payload) / 2;
-    size_t rsp1_plen = strlen(vectors[v].rsp1_payload) / 2;
-    size_t req2_plen = strlen(vectors[v].req2_payload) / 2;
-    size_t tmsg_len = strlen(vectors[v].transport_msg) / 2;
-
-    uint8_t req1_payload[256] = {0}, rsp1_payload[256] = {0},
-            req2_payload[256] = {0}, tmsg[256] = {0};
-    if (req1_plen)
-      memcpy(req1_payload, fromhex(vectors[v].req1_payload), req1_plen);
-    if (rsp1_plen)
-      memcpy(rsp1_payload, fromhex(vectors[v].rsp1_payload), rsp1_plen);
-    if (req2_plen)
-      memcpy(req2_payload, fromhex(vectors[v].req2_payload), req2_plen);
-    if (tmsg_len) memcpy(tmsg, fromhex(vectors[v].transport_msg), tmsg_len);
-
-    noise_xxpsk3_initiator_t initiator = {0};
-    noise_xxpsk3_responder_t responder = {0};
-    bool ret;
-
-    ret = noise_xxpsk3_initiator_init(&initiator, psk, initiator_private_key);
-    ck_assert_int_eq(ret, true);
-    ret = noise_xxpsk3_responder_init(&responder, psk, responder_private_key);
-    ck_assert_int_eq(ret, true);
-
-    uint8_t req1[512] = {0};
-    size_t req1_size = 0;
-    ret = noise_xxpsk3_initiator_create_request1(
-        &initiator, req1_payload, req1_plen, req1, sizeof(req1), &req1_size);
-    ck_assert_int_eq(ret, true);
-    ck_assert_mem_eq(req1, fromhex(vectors[v].expected_request1), req1_size);
-
-    uint8_t req1_dec[512] = {0};
-    size_t req1_dec_size = 0;
-    ret = noise_xxpsk3_responder_handle_request1(&responder, req1, req1_size,
-                                                 req1_dec, sizeof(req1_dec),
-                                                 &req1_dec_size);
-    ck_assert_int_eq(ret, true);
-    ck_assert_int_eq(req1_dec_size, req1_plen);
-    if (req1_plen) ck_assert_mem_eq(req1_dec, req1_payload, req1_plen);
-
-    uint8_t rsp1[512] = {0};
-    size_t rsp1_size = 0;
-    ret = noise_xxpsk3_responder_create_response1(
-        &responder, rsp1_payload, rsp1_plen, rsp1, sizeof(rsp1), &rsp1_size);
-    ck_assert_int_eq(ret, true);
-    ck_assert_mem_eq(rsp1, fromhex(vectors[v].expected_response1), rsp1_size);
-
-    uint8_t rsp1_dec[512] = {0};
-    size_t rsp1_dec_size = 0;
-    ret = noise_xxpsk3_initiator_handle_response1(&initiator, rsp1, rsp1_size,
-                                                  rsp1_dec, sizeof(rsp1_dec),
-                                                  &rsp1_dec_size);
-    ck_assert_int_eq(ret, true);
-    ck_assert_int_eq(rsp1_dec_size, rsp1_plen);
-    if (rsp1_plen) ck_assert_mem_eq(rsp1_dec, rsp1_payload, rsp1_plen);
-
-    uint8_t req2[512] = {0};
-    size_t req2_size = 0;
-    ret = noise_xxpsk3_initiator_create_request2(
-        &initiator, req2_payload, req2_plen, req2, sizeof(req2), &req2_size);
-    ck_assert_int_eq(ret, true);
-    ck_assert_mem_eq(req2, fromhex(vectors[v].expected_request2), req2_size);
-
-    uint8_t req2_dec[512] = {0};
-    size_t req2_dec_size = 0;
-    ret = noise_xxpsk3_responder_handle_request2(&responder, req2, req2_size,
-                                                 req2_dec, sizeof(req2_dec),
-                                                 &req2_dec_size);
-    ck_assert_int_eq(ret, true);
-    ck_assert_int_eq(req2_dec_size, req2_plen);
-    if (req2_plen) ck_assert_mem_eq(req2_dec, req2_payload, req2_plen);
-
-    uint8_t rsp2[512] = {0};
-    size_t rsp2_size = 0;
-    ret = noise_xxpsk3_send_message(&responder.transport_state, tmsg, tmsg_len,
-                                    rsp2, sizeof(rsp2), &rsp2_size);
-    ck_assert_int_eq(ret, true);
-    ck_assert_mem_eq(rsp2, fromhex(vectors[v].expected_response2), rsp2_size);
-
-    uint8_t rsp2_dec[512] = {0};
-    size_t rsp2_dec_size = 0;
-    ret = noise_xxpsk3_receive_message(&initiator.transport_state, rsp2,
-                                       rsp2_size, rsp2_dec, sizeof(rsp2_dec),
-                                       &rsp2_dec_size);
-    ck_assert_int_eq(ret, true);
-    ck_assert_int_eq(rsp2_dec_size, tmsg_len);
-    if (tmsg_len) ck_assert_mem_eq(rsp2_dec, tmsg, tmsg_len);
-
-    // Check handshake hash
-    ck_assert_mem_eq(initiator.transport_state.handshake_hash,
-                     responder.transport_state.handshake_hash,
-                     NOISE_XXPSK3_HASHLEN);
-    ck_assert_mem_eq(initiator.transport_state.handshake_hash,
-                     fromhex(vectors[v].expected_handshake_hash),
-                     NOISE_XXPSK3_HASHLEN);
-  }
 }
 END_TEST
 
@@ -12386,9 +11995,7 @@ Suite *test_suite(void) {
   suite_add_tcase(s, tc);
 
   tc = tcase_create("noise");
-  tcase_add_test(tc, test_noise_kk1);
-  tcase_add_test(tc, test_noise_xxpsk3);
-  tcase_add_test(tc, test_noise_xxpsk3_vectors);
+  tcase_add_test(tc, test_noise);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO

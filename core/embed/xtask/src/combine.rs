@@ -134,7 +134,6 @@ pub fn combine(args: CombineArgs) -> Result<()> {
         args.model,
         &version_file,
         Some(COMBINED_PREFIX),
-        None,
     )?;
 
     Ok(())

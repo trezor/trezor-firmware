@@ -14,7 +14,6 @@ if TYPE_CHECKING:
         messages.TronFreezeBalanceV2Contract,
         messages.TronUnfreezeBalanceV2Contract,
         messages.TronWithdrawUnfreeze,
-        messages.TronWithdrawBalance,
         messages.TronVoteWitnessContract,
     ]
 
@@ -86,14 +85,6 @@ def from_raw_data(
             messages.TronWithdrawUnfreeze,
         )
         contract = messages.TronWithdrawUnfreeze(
-            owner_address=raw_contract.owner_address,
-        )
-    elif contract_type == messages.TronRawContractType.WithdrawBalanceContract:
-        raw_contract = load_message(
-            io.BytesIO(parameter_value),
-            messages.TronWithdrawBalance,
-        )
-        contract = messages.TronWithdrawBalance(
             owner_address=raw_contract.owner_address,
         )
     elif contract_type == messages.TronRawContractType.VoteWitnessContract:

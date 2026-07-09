@@ -51,7 +51,6 @@ XTASK_BUILD_OPTS += --pyopt true
 else ifeq ($(PYOPT),0)
 XTASK_BUILD_OPTS += --pyopt false
 XTASK_BUILD_OPTS += --disable-animation
-XTASK_BUILD_OPTS += --dbg-console vcp
 endif
 ifeq ($(TREZOR_MEMPERF),1)
 XTASK_BUILD_OPTS += --mem-perf

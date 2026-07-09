@@ -131,15 +131,6 @@ impl ControlByte {
     pub fn with_sync_bits(self, sb: SyncBits) -> Self {
         Self(self.0 & !SYNC_MASK | <SyncBits as Into<u8>>::into(sb))
     }
-
-    pub fn parse(packet_buffer: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let Some((first_byte, rest)) = packet_buffer.split_first() else {
-            log::error!("Packet is empty.");
-            return Err(Error::malformed_data());
-        };
-        let cb = Self::try_from(*first_byte)?;
-        Ok((cb, rest))
-    }
 }
 
 impl TryFrom<u8> for ControlByte {

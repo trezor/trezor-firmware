@@ -47,8 +47,6 @@ def test_sign_tx(session: Session, parameters: dict, result: dict):
         "Note_hello_world",
         "TriggerSmartContract_USDT_transfer",
         "Stake_for_Energy",
-        "Claim_Voting_Rewards_different_owner",
-        "Claim_Unfrozen_Balance_different_owner",
     ],
 )
 def test_cancel_sign_tx(session: Session, fixture: str):

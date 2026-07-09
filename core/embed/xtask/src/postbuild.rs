@@ -264,28 +264,23 @@ pub fn merge_compile_commands(inputs: &[&Path], output: &Path) -> Result<()> {
 /// Copies a built binary to `artifacts/pub`.
 /// The filename includes the project, model, version, git revision,
 /// and dirty state, for example `bootloader-T3W1-2.1.17-9e4bbc68-dirty.bin`.
-/// Prefix goes at the very beginning of the filename. Infix goes between
-/// model and version.
 pub fn publish_artifact(
     binary: &Path,
     project: Project,
     model: Model,
     version_file: &Path,
     prefix: Option<&str>,
-    infix: Option<&str>,
 ) -> Result<()> {
     let pub_dir = helpers::publish_dir()?;
     helpers::ensure_directory(&pub_dir)?;
 
     let prefix = prefix.unwrap_or("");
-    let infix = infix.map(|s| format!("-{s}")).unwrap_or("".into());
 
     let name = format!(
-        "{}{}-{}{}-{}-{}{}.bin",
+        "{}{}-{}-{}-{}{}.bin",
         prefix,
         project.binary_name(),
         model.model_id(),
-        infix,
         &helpers::parse_version_file(version_file)?,
         &helpers::git_revision()?[..8],
         if helpers::git_modified()? {

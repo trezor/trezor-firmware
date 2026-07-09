@@ -32,11 +32,6 @@
 #define PANEL_INIT_SEQ lx154a2482_init_seq
 #define PANEL_ROTATE lx154a2482_rotate
 #define PANEL_REINIT lx154a2482_init_seq
-#elif defined(DISPLAY_PANEL_DEM240320B1)
-#include "panels/dem240320b1.h"
-#define PANEL_INIT_SEQ dem240320b1_init_seq
-#define PANEL_ROTATE dem240320b1_rotate
-#define PANEL_REINIT dem240320b1_init_seq
 #elif defined(DISPLAY_PANEL_LHS200KB_IF21)
 #include "panels/lhs200kb-if21.h"
 #define PANEL_INIT_SEQ lhs200kb_if21_init_seq
@@ -197,15 +192,13 @@ void display_panel_preserve_inversion(void) { t2t1_preserve_inversion(); }
 #endif
 
 void display_panel_init(void) {
-  HAL_GPIO_WritePin(DISPLAY_RST_PORT, DISPLAY_RST_PIN,
-                    GPIO_PIN_RESET);  // LCD_RST
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
   // wait 10 milliseconds. only needs to be low for 10 microseconds.
   // my dev display module ties display reset and touch panel reset together.
   // keeping this low for max(display_reset_time, ctpm_reset_time) aids
   // development and does not hurt.
   HAL_Delay(10);
-  HAL_GPIO_WritePin(DISPLAY_RST_PORT, DISPLAY_RST_PIN,
-                    GPIO_PIN_SET);  // LCD_RST
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);  // LCD_RST/PC14
   // max wait time for hardware reset is 120 milliseconds
   // (experienced display flakiness using only 5ms wait before sending commands)
   HAL_Delay(120);

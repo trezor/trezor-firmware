@@ -19,8 +19,6 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 fn add_stm32u5_bsp(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "mcu_stm32u5g") {
         lib.add_define("STM32U5G9xx", None);
-    } else if cfg!(feature = "mcu_stm32u5a") {
-        lib.add_define("STM32U5A5xx", None);
     } else if cfg!(feature = "mcu_stm32u58") {
         lib.add_define("STM32U585xx", None);
     } else {

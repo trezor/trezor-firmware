@@ -31,14 +31,13 @@ if TYPE_CHECKING:
 
     # Represents values that have been parsed from the calldata
     # into our internal representation.
-    # TODO: Revisit simplifying this.
     Value = int | bytes | bool | str | None | list["Value"]
     TupleValue = tuple[Value, ...]
     ListValue = list[TupleValue]
-    AnyValue = Value | TupleValue | list["AnyValue"]
+    AnyValue = Value | TupleValue | ListValue | list[Value | TupleValue | ListValue]
 
     Path = tuple[int | tuple[int] | tuple[int, int], ...] | int
-    PathWalker = Callable[[Path], AnyValue]
+    PathWalker = Callable[[Path], Value]
 
     # Parses a Value from a slice of the calldata.
     # Assumes that the memoryview contains just that value.
@@ -296,13 +295,11 @@ class AmountFormatter(FieldFormatter):
 class TokenAmountFormatter(FieldFormatter):
     def __init__(
         self,
-        token_path: Path | None = None,
-        const_token_address: bytes | None = None,
+        token_path: Path,
         native_currency_address: list[bytes] | None = None,
         threshold: int | None = None,
     ) -> None:
         self.token_path = token_path
-        self.const_token_address = const_token_address
         self.native_currency_address = native_currency_address
         self.threshold = threshold
 
@@ -323,15 +320,8 @@ class TokenAmountFormatter(FieldFormatter):
         if not isinstance(amount, int):
             raise InvalidFormatDefinition
 
-        if self.const_token_address is not None:
-            # token given as a literal constant address
-            token_address = self.const_token_address
-        elif self.token_path is not None:
-            walked = path_walker(self.token_path)
-            if not isinstance(walked, bytes):
-                raise InvalidFormatDefinition
-            token_address = walked
-        else:
+        token_address = path_walker(self.token_path)
+        if not isinstance(token_address, bytes):
             raise InvalidFormatDefinition
 
         if self.native_currency_address is not None:
@@ -407,104 +397,6 @@ class UnitFormatter(FieldFormatter):
             prefix_symbol = si_prefixes.get(exponent, "")
 
             return f"{significand:g}{prefix_symbol}{self.base}", None, None
-
-
-class RawFormatter(FieldFormatter):
-    """Lazy placeholder. Simply adds label to the value and show it essentially as-is.
-    ERC-7730 `raw` format: display the decoded value with no transformation,
-    rendering by its Solidity type per the spec:
-      * int    -> decimal string (natural representation)
-      * string -> the UTF-8 string as-is
-      * bytes  -> hex-encoded string
-    """
-
-    async def format(
-        self,
-        value: AnyValue,
-        _msg: MsgInSignTx,
-        _definitions: Definitions,
-        _path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
-        if value is None:
-            return None, None, None
-        elif isinstance(value, str):
-            return value, None, None
-        elif isinstance(value, (bytes, bytearray)):
-            from ubinascii import hexlify
-
-            return hexlify(value).decode(), None, None
-        elif isinstance(value, bool):
-            return str(value), None, None
-        elif isinstance(value, int):
-            return str(value), None, None
-        else:
-            raise InvalidFormatDefinition
-
-
-class DateFormatter(FieldFormatter):
-    """ERC-7730 `date` format with `encoding: timestamp` (the only encoding used
-    by the supported definitions). Renders a unix timestamp (seconds) as a
-    human-readable date."""
-
-    async def format(
-        self,
-        value: AnyValue,
-        _msg: MsgInSignTx,
-        _definitions: Definitions,
-        _path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
-        from trezor.strings import format_timestamp
-
-        if value is None:
-            return None, None, None
-        if isinstance(value, int):
-            return format_timestamp(value), None, None
-        raise InvalidFormatDefinition
-
-
-async def _format_field_value(
-    formatter: FieldFormatter,
-    value: AnyValue,
-    msg: MsgInSignTx,
-    defs: Definitions,
-    path_walker: PathWalker,
-) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
-    """Format a field value.
-
-    When the field's path resolves to an array (a `list`), the formatter is
-    applied to each element and the rendered values are joined with newlines,
-    so the field is shown as one value per line - eg. an `amount.[]` field over
-    `[1, 2]` renders as "1 token\n2 token". This works for any formatter pointed
-    at an array (amount, address, raw, ...). A non-list value is formatted
-    directly.
-
-    Only flat arrays of formattable leaves are handled."""
-    if not isinstance(value, list):
-        return await formatter.format(value, msg, defs, path_walker)
-
-    from trezor.ui.layouts.properties import AboveThreshold
-
-    lines: list[str] = []
-    # The same formatter instance is reused for every element, so a
-    # `tokenAmount`'s single `token_path` resolves to the same token on each
-    # iteration: the token is shared across the array and returned once.
-    token: EthereumTokenInfo | None = None
-    token_address: AnyBytes | None = None
-    for element in value:
-        formatted, element_token, element_address = await formatter.format(
-            element, msg, defs, path_walker
-        )
-        if isinstance(formatted, AboveThreshold):
-            formatted = formatted.message
-        if formatted is None:
-            # Raise if any member returns None.
-            raise InvalidFormatDefinition
-        lines.append(formatted)
-        if element_token is not None:
-            token = element_token
-        if element_address is not None:
-            token_address = element_address
-    return "\n".join(lines), token, token_address
 
 
 # https://eips.ethereum.org/EIPS/eip-7730#context-section
@@ -742,10 +634,6 @@ class FieldDefinition:
             formatter_params = {}
             if info.token_path is not None:
                 formatter_params["token_path"] = decode_path(info.token_path)
-            if info.const_token_address is not None:
-                formatter_params["const_token_address"] = bytes(
-                    info.const_token_address
-                )
             if info.threshold is not None:
                 formatter_params["threshold"] = int.from_bytes(info.threshold, "big")
             formatter = TokenAmountFormatter(**formatter_params)
@@ -758,10 +646,6 @@ class FieldDefinition:
             if info.prefix is not None:
                 formatter_params["prefix"] = info.prefix
             formatter = UnitFormatter(**formatter_params)
-        elif fmt_type == FT.FORMATTER_RAW:
-            formatter = RawFormatter
-        elif fmt_type == FT.FORMATTER_DATE:
-            formatter = DateFormatter
         else:
             raise InvalidFormatDefinition
 
@@ -819,22 +703,11 @@ class DisplayFormat:
 
         offset = 0
         for parameter_definition in self.parameter_definitions:
-            try:
-                value, consumed = parameter_definition.parse(calldata, offset)
-            except Exception as e:
-                if __debug__:
-                    from trezor import log
-
-                    log.debug(
-                        __name__,
-                        "clear signing: failed to parse calldata parameters (%s)",
-                        type(e).__name__,
-                    )
-                raise
+            value, consumed = parameter_definition.parse(calldata, offset)
             parameters.append(value)
             offset += consumed
 
-        def get_value_for_path(path: Path) -> AnyValue:
+        def get_value_for_path(path: Path) -> Value:
             if isinstance(path, int):  # ContainerPath
                 # standard container paths like @.from, @.value...
                 if path == ContainerPath.From:
@@ -875,8 +748,9 @@ class DisplayFormat:
                     else:
                         # can't walk inside basic types
                         raise InvalidFormatDefinition
-                if isinstance(p, tuple):
-                    # Array/list makes sense. Not expecting tuples here.
+                if isinstance(p, (list, tuple)):
+                    # at the end of the path, we must have arrived somewhere
+                    # ie. not on an Array or Tuple
                     raise InvalidFormatDefinition
                 return p
 
@@ -888,23 +762,12 @@ class DisplayFormat:
             ]
         ] = []
         for field_definition in self.field_definitions:
-            try:
-                value = get_value_for_path(field_definition.path)
-                formatter = field_definition.get_formatter()
-                formatted, token, token_address = await _format_field_value(
-                    formatter, value, msg, defs, get_value_for_path
-                )
-            except Exception as e:
-                if __debug__:
-                    from trezor import log
+            value = get_value_for_path(field_definition.path)
+            formatter = field_definition.get_formatter()
 
-                    log.debug(
-                        __name__,
-                        'clear signing: failed to display field "%s" (%s)',
-                        field_definition.label,
-                        type(e).__name__,
-                    )
-                raise
+            formatted, token, token_address = await formatter.format(
+                value, msg, defs, get_value_for_path
+            )
 
             fields.append(
                 (
@@ -976,9 +839,9 @@ async def try_confirm(
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> bool:
     from .clear_signing_definitions import (
+        ALL_DISPLAY_FORMATS,
         APPROVE_DISPLAY_FORMAT,
         TRANSFER_DISPLAY_FORMAT,
-        all_display_formats,
     )
 
     if not address_bytes:
@@ -990,7 +853,7 @@ async def try_confirm(
     func_sig = bytes(data[0:SC_FUNC_SIG_BYTES])
 
     display_format = None
-    for f in all_display_formats():
+    for f in ALL_DISPLAY_FORMATS:
         # Start by trying built-in definitions...
         if f.func_sig == func_sig and f.matches_context(msg.chain_id, address_bytes):
             display_format = f
@@ -1067,17 +930,10 @@ async def _handle_approve(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
 ) -> None:
+    from .clear_signing_definitions import SC_FUNC_APPROVE_REVOKE_AMOUNT
     from .layout import require_confirm_approve
     from .sc_constants import KNOWN_ADDRESSES
     from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
-
-    # approve() is not payable; surface any native ETH sent along with it.
-    native_value = int.from_bytes(msg.value, "big")
-    native_amount = (
-        format_ethereum_amount(native_value, None, defs.network)
-        if native_value
-        else None
-    )
 
     args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
@@ -1099,14 +955,13 @@ async def _handle_approve(
 
     assert isinstance(arg1_raw_value, int)
 
-    recipient_str = KNOWN_ADDRESSES.get((msg.chain_id, arg0_raw_value))
+    recipient_str = KNOWN_ADDRESSES.get(arg0_raw_value)
     if recipient_str is None:
         vault = lookup_vault(defs.network, arg0_raw_value)
         if vault is not UNKNOWN_VAULT:
             recipient_str = vault.name
 
-    # In revocation, the approved amount is set to zero:
-    is_revoke = arg1_raw_value == 0
+    is_revoke = arg1_raw_value == SC_FUNC_APPROVE_REVOKE_AMOUNT
 
     await require_confirm_approve(
         recipient_addr,
@@ -1121,7 +976,6 @@ async def _handle_approve(
         address_bytes,
         is_revoke,
         bool(msg.chunkify),
-        native_amount=native_amount,
     )
 
 
@@ -1136,14 +990,6 @@ async def _handle_transfer(
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> None:
     from .layout import require_confirm_payment_request, require_confirm_tx
-
-    # transfer() is not payable; surface any native ETH sent along with it.
-    native_value = int.from_bytes(msg.value, "big")
-    native_amount = (
-        format_ethereum_amount(native_value, None, defs.network)
-        if native_value
-        else None
-    )
 
     args, fields = await display_format.parse_calldata(calldata, msg, defs)
 
@@ -1193,7 +1039,6 @@ async def _handle_transfer(
             actual_token or defs.get_token(address_bytes),
             is_send=True,
             chunkify=bool(msg.chunkify),
-            native_amount=native_amount,
         )
 
 
@@ -1210,23 +1055,6 @@ async def _handle_generic_ui(
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
     from .sc_constants import KNOWN_ADDRESSES
-
-    # Surface the native ETH value in the summary when non-zero - unless the
-    # display format already renders it as an `AmountFormatter` field (e.g. a
-    # swap's "Amount to Send"). That field shows the same canonical string the
-    # summary would, so repeating it there is pure duplication. A `@.value`
-    # field formatted any other way still gets its own summary line.
-    value = int.from_bytes(msg.value, "big")
-    value_shown_as_amount_field = any(
-        fd.path == ContainerPath.Value
-        and isinstance(fd.get_formatter(), AmountFormatter)
-        for fd in display_format.field_definitions
-    )
-    amount = (
-        format_ethereum_amount(value, None, defs.network)
-        if value and not value_shown_as_amount_field
-        else None
-    )
 
     _, fields = await display_format.parse_calldata(calldata, msg, defs)
 
@@ -1246,10 +1074,8 @@ async def _handle_generic_ui(
             )
             properties_to_confirm.append(token_address_property)
 
-    recipient_str = KNOWN_ADDRESSES.get(
-        (msg.chain_id, bytes_from_address(msg.to)), msg.to
-    )
+    recipient_str = KNOWN_ADDRESSES.get(bytes_from_address(msg.to), msg.to)
 
     await require_confirm_clear_signing(
-        recipient_str, display_format.intent, properties_to_confirm, maximum_fee, amount
+        recipient_str, display_format.intent, properties_to_confirm, maximum_fee
     )

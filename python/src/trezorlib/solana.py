@@ -65,7 +65,6 @@ def sign_tx(
     serialized_tx: bytes,
     additional_info: Optional[messages.SolanaTxAdditionalInfo],
     payment_req: Optional[messages.PaymentRequest] = None,
-    chunkify: bool = False,
 ) -> bytes:
     return session.call(
         messages.SolanaSignTx(
@@ -73,7 +72,6 @@ def sign_tx(
             serialized_tx=serialized_tx,
             additional_info=additional_info,
             payment_req=payment_req,
-            chunkify=chunkify,
         ),
         expect=messages.SolanaTxSignature,
     ).signature

@@ -31,7 +31,6 @@
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 
-#include "bignum.h"
 #include "ecdsa.h"
 #include "memzero.h"
 #include "nist256p1.h"
@@ -43,7 +42,6 @@
 #include "libtropic_l2.h"
 
 #include <sec/tropic.h>
-#include <sec/tropic_configs.h>
 
 #include "secure_channel.h"
 
@@ -60,33 +58,425 @@ static tropic_handshake_state_t g_tropic_handshake_state =
 // TODO: Update this link to correspond with the latest chip revision when it
 // becomes available.
 // https://github.com/tropicsquare/tropic01/blob/da459d18db7aea107419035b9cdf316d89a73445/doc/api/tropic01_user_api_v1.1.2.pdf
+// TODO: Adjust the configuration to match the revision of the provisioned
+// tropics.
+// clang-format off
+static const struct lt_config_t g_irreversible_configuration = {
+    .obj = {
+        // # CFG_START_UP (0x00)
+        // | Setting                 | Value                   |
+        // |-------------------------|-------------------------|
+        // | RFU_1 (bit 0)           | 1                       |
+        // | MBIST_DIS (bit 1)       | 0 (TEST_ON)             |
+        // | RNGTEST_DIS (bit 2)     | 0 (TEST_ON)             |
+        // | MAINTENANCE_ENA (bit 3) | 1 (MAINTENANCE_ALLOWED) |
+        ~0U & ~BIT(1) & ~BIT(2),
+        // # CFG_SENSORS (0x08)
+        // | Setting                         | Value                |
+        // |---------------------------------|----------------------|
+        // | PTRNG0_TEST_DIS (bit 0)         | 1 (NO_ACTION)        |
+        // | PTRNG1_TEST_DIS (bit 1)         | 1 (NO_ACTION)        |
+        // | OSCILLATOR_MON_DIS (bit 2)      | 1 (NO_ACTION)        |
+        // | SHIELD_DIS (bit 3)              | 1 (NO_ACTION)        |
+        // | VOLTAGE_MON_DIS (bit 4)         | 1 (NO_ACTION)        |
+        // | GLITCH_DET_DIS (bit 5)          | 1 (NO_ACTION)        |
+        // | TEMP_SENS_DIS (bit 6)           | 1 (NO_ACTION)        |
+        // | LASER_DET_DIS (bit 7)           | 1 (NO_ACTION)        |
+        // | EM_PULSE_DET_DIS (bit 8)        | 1 (NO_ACTION)        |
+        // | CPU_ALERT_DIS (bit 9)           | 1 (NO_ACTION)        |
+        // | PIN_VERIF_BIT_FLIP_DIS (bit 10) | 1 (NO_ACTION)        |
+        // | SCB_BIT_FLIP_DIS (bit 11)       | 1 (NO_ACTION)        |
+        // | CPB_BIT_FLIP_DIS (bit 12)       | 1 (NO_ACTION)        |
+        // | ECC_BIT_FLIP_DIS (bit 13)       | 1 (NO_ACTION)        |
+        // | R_MEM_BIT_FLIP_DIS (bit 14)     | 1 (NO_ACTION)        |
+        // | EKDB_BIT_FLIP_DIS (bit 15)      | 1 (NO_ACTION)        |
+        // | I_MEM_BIT_FLIP_DIS (bit 16)     | 1 (NO_ACTION)        |
+        // | PLATFORM_BIT_FLIP_DIS (bit 17)  | 1 (NO_ACTION)        |
+        ~0U,
+        // # CFG_DEBUG (0x10)
+        // | Setting           | Value |
+        // |-------------------|-------|
+        // | FW_LOG_EN (bit 0) | 0     |
+        ~0U & ~BIT(0),
+        // # CFG_GPO (0x14)
+        ~0U,
+        // # CFG_SLEEP_MODE (0x18)
+        // | Setting               | Value |
+        // |-----------------------|-------|
+        // | SLEEP_MODE_EN (bit 0) | 1     |
+        ~0U,
+        // # CFG_UAP_PAIRING_KEY_WRITE (0x20)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | WRITE_PKEY_SLOT_0        | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | WRITE_PKEY_SLOT_1        | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | WRITE_PKEY_SLOT_2        | 0 (bit 16)    | 0 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | WRITE_PKEY_SLOT_3        | 0 (bit 24)    | 0 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(17) & ~BIT(24) & ~BIT(25),
+        // # CFG_UAP_PAIRING_KEY_READ (0x24)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | READ_PKEY_SLOT_0         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | READ_PKEY_SLOT_1         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | READ_PKEY_SLOT_2         | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | READ_PKEY_SLOT_3         | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_PAIRING_KEY_INVALIDATE (0x28)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | INVALIDATE_PKEY_SLOT_0   |   0 (bit 0)   |   1 (bit 1)   |   1 (bit 2)   |   1 (bit 3)   |
+        // | INVALIDATE_PKEY_SLOT_1   |   0 (bit 8)   |   1 (bit 9)   |   1 (bit 10)  |   1 (bit 11)  |
+        // | INVALIDATE_PKEY_SLOT_2   |   0 (bit 16)  |   1 (bit 17)  |   1 (bit 18)  |   1 (bit 19)  |
+        // | INVALIDATE_PKEY_SLOT_3   |   0 (bit 24)  |   1 (bit 25)  |   1 (bit 26)  |   1 (bit 27)  |
+        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_R_CONFIG_WRITE_ERASE (0x30)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | R_CONFIG_WRITE_ERASE     | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        ~0U & ~BIT(0) & ~BIT(1),
+        // # CFG_UAP_R_CONFIG_READ (0x34)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | R_CONFIG_READ_CFG        | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | R_CONFIG_READ_FUNC       | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        ~0U & ~BIT(0) & ~BIT(8),
+        // # CFG_UAP_I_CONFIG_WRITE (0x40)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | I_CONFIG_WRITE_CFG       | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | I_CONFIG_WRITE_FUNC      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        ~0U & ~BIT(0) & ~BIT(8),
+        // # CFG_UAP_I_CONFIG_READ (0x44)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | I_CONFIG_READ_CFG        | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | I_CONFIG_READ_FUNC       | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        ~0U & ~BIT(0) & ~BIT(8),
+        // # CFG_UAP_PING (0x100)
+        // | Setting | Pairing Key 0  | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |---------|----------------|---------------|---------------|---------------|
+        // | PING    | 0 (bit 0)      | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        ~0U & ~BIT(0),
+        // # CFG_UAP_R_MEM_DATA_WRITE (0x110)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | WRITE_UDATA_SLOT_0_127   | 0 (bit 0)   | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | WRITE_UDATA_SLOT_128_255 | 0 (bit 8)   | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | WRITE_UDATA_SLOT_256_383 | 0 (bit 16)  | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | WRITE_UDATA_SLOT_384_511 | 0 (bit 24)  | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_R_MEM_DATA_READ (0x114)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | READ_UDATA_SLOT_0_127    | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | READ_UDATA_SLOT_128_255  | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | READ_UDATA_SLOT_256_383  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | READ_UDATA_SLOT_384_511  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_R_MEM_DATA_ERASE (0x118)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | ERASE_UDATA_SLOT_0_127   | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | ERASE_UDATA_SLOT_128_255 | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | ERASE_UDATA_SLOT_256_383 | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | ERASE_UDATA_SLOT_384_511 | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_RANDOM_VALUE_GET (0x120)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | RANDOM_VALUE_GET         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        ~0U & ~BIT(0),
+        // # CFG_UAP_ECC_KEY_GENERATE (0x130)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | GEN_ECCKEY_SLOT_0_7      | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | GEN_ECCKEY_SLOT_8_15     | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | GEN_ECCKEY_SLOT_16_23    | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | GEN_ECCKEY_SLOT_24_31    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_ECC_KEY_STORE (0x134)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | STORE_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | STORE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | STORE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | STORE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_ECC_KEY_READ (0x138)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | READ_ECCKEY_SLOT_0_7     | 0 (bit 0)    | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | READ_ECCKEY_SLOT_8_15    | 0 (bit 8)    | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | READ_ECCKEY_SLOT_16_23   | 0 (bit 16)   | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | READ_ECCKEY_SLOT_24_31   | 0 (bit 24)   | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_ECC_KEY_ERASE (0x13c)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | ERASE_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | ERASE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | ERASE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | ERASE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_ECDSA_SIGN (0x140)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | ECDSA_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | ECDSA_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | ECDSA_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | ECDSA_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_EDDSA_SIGN (0x144)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | EDDSA_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | EDDSA_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | EDDSA_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | EDDSA_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_MCOUNTER_INIT (0x150)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | MCOUNTER_INIT_0_3        | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | MCOUNTER_INIT_4_7        | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | MCOUNTER_INIT_8_11       | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | MCOUNTER_INIT_12_15      | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_MCOUNTER_GET (0x154)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | MCOUNTER_GET_0_3         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | MCOUNTER_GET_4_7         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | MCOUNTER_GET_8_11        | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | MCOUNTER_GET_12_15       | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_MCOUNTER_UPDATE (0x158)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | MCOUNTER_UPDATE_0_3      | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | MCOUNTER_UPDATE_4_7      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | MCOUNTER_UPDATE_8_11     | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | MCOUNTER_UPDATE_12_15    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        // # CFG_UAP_MAC_AND_DESTROY (0x160)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
+        // | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
+    }};
 
-// Total number of MAC-and-destroy slots.
-#define TROPIC_MAC_AND_DESTROY_SLOT_TOTAL \
-  (2 * TROPIC_MAC_AND_DESTROY_SLOT_COUNT)
-
-// Number of monotonic counters.
-#define TROPIC_MCOUNTER_COUNT (TR01_MCOUNTER_INDEX_15 + 1)
-// For unprivileged sessions, counter initialization is restricted to counters
-// 4-15. Mirrors `CFG_UAP_MCOUNTER_INIT`.
-#define TROPIC_FIRST_UNPRIVILEGED_MCOUNTER 4
-
-// R-memory range used by the writable-slot test. Starts right after the
-// certificate slots (0-5) and Tropic config distribution version slots (6, 7),
-// which must not be overwritten.
-#define TROPIC_RMEM_TEST_FIRST 8
-#define TROPIC_RMEM_TEST_LAST TR01_R_MEM_DATA_SLOT_MAX
-#define TROPIC_RMEM_TEST_COUNT \
-  (TROPIC_RMEM_TEST_LAST - TROPIC_RMEM_TEST_FIRST + 1)
-// For unprivileged sessions, R-memory writes are restricted to slots 256-511.
-// Mirrors `CFG_UAP_R_MEM_DATA_WRITE`,
-#define TROPIC_RMEM_UNPRIVILEGED_FIRST 256
-// Amount of data written and read back per R-memory slot in the test.
-#define TROPIC_RMEM_TEST_DATA_SIZE 64
-
-// First ECC key slot that is not provisioned (device key is slot 0, FIDO key is
-// slot 1).
-#define TROPIC_ECC_TEST_FIRST TR01_ECC_SLOT_2
+// TODO: Adjust the configuration to match the revision of the provisioned
+// tropics.
+static const struct lt_config_t g_reversible_configuration = {
+    .obj = {
+        // # CFG_START_UP (0x00)
+        // | Setting                 | Value                     |
+        // |-------------------------|---------------------------|
+        // | RFU_1 (bit 0)           | 1                         |
+        // | MBIST_DIS (bit 1)       | 0 (TEST_ON)               |
+        // | RNGTEST_DIS (bit 2)     | 0 (TEST_ON)               |
+        // | MAINTENANCE_ENA (bit 3) | 0 (MAINTENANCE_FORBIDDEN) |
+        BIT(0),
+        // # CFG_SENSORS (0x08)
+        // | Setting                         | Value                |
+        // |---------------------------------|----------------------|
+        // | PTRNG0_TEST_DIS (bit 0)         | 0 (ENTER_ALARM_MODE) |
+        // | PTRNG1_TEST_DIS (bit 1)         | 0 (ENTER_ALARM_MODE) |
+        // | OSCILLATOR_MON_DIS (bit 2)      | 0 (ENTER_ALARM_MODE) |
+        // | SHIELD_DIS (bit 3)              | 0 (ENTER_ALARM_MODE) |
+        // | VOLTAGE_MON_DIS (bit 4)         | 0 (ENTER_ALARM_MODE) |
+        // | GLITCH_DET_DIS (bit 5)          | 0 (ENTER_ALARM_MODE) |
+        // | TEMP_SENS_DIS (bit 6)           | 0 (ENTER_ALARM_MODE) |
+        // | LASER_DET_DIS (bit 7)           | 0 (ENTER_ALARM_MODE) |
+        // | EM_PULSE_DET_DIS (bit 8)        | 0 (ENTER_ALARM_MODE) |
+        // | CPU_ALERT_DIS (bit 9)           | 0 (ENTER_ALARM_MODE) |
+        // | PIN_VERIF_BIT_FLIP_DIS (bit 10) | 0 (ENTER_ALARM_MODE) |
+        // | SCB_BIT_FLIP_DIS (bit 11)       | 0 (ENTER_ALARM_MODE) |
+        // | CPB_BIT_FLIP_DIS (bit 12)       | 0 (ENTER_ALARM_MODE) |
+        // | ECC_BIT_FLIP_DIS (bit 13)       | 0 (ENTER_ALARM_MODE) |
+        // | R_MEM_BIT_FLIP_DIS (bit 14)     | 0 (ENTER_ALARM_MODE) |
+        // | EKDB_BIT_FLIP_DIS (bit 15)      | 0 (ENTER_ALARM_MODE) |
+        // | I_MEM_BIT_FLIP_DIS (bit 16)     | 0 (ENTER_ALARM_MODE) |
+        // | PLATFORM_BIT_FLIP_DIS (bit 17)  | 0 (ENTER_ALARM_MODE) |
+        0,
+        // # CFG_DEBUG (0x10)
+        // | Setting           | Value |
+        // |-------------------|-------|
+        // | FW_LOG_EN (bit 0) | 0     |
+        0,
+        // # CFG_GPO (0x14)
+        0,
+        // # CFG_SLEEP_MODE (0x18)
+        // | Setting               | Value |
+        // |-----------------------|-------|
+        // | SLEEP_MODE_EN (bit 0) | 1     |
+        BIT(0),
+        // # CFG_UAP_PAIRING_KEY_WRITE (0x20)
+        // | Target                   | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | WRITE_PKEY_SLOT_0        | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | WRITE_PKEY_SLOT_1        | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | WRITE_PKEY_SLOT_2        | 0 (bit 16)    | 0 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | WRITE_PKEY_SLOT_3        | 0 (bit 24)    | 0 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(2) | BIT(10) | BIT(18) | BIT(26),
+        // # CFG_UAP_PAIRING_KEY_READ (0x24)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | READ_PKEY_SLOT_0         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | READ_PKEY_SLOT_1         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | READ_PKEY_SLOT_2         | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | READ_PKEY_SLOT_3         | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_PAIRING_KEY_INVALIDATE (0x28)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | INVALIDATE_PKEY_SLOT_0   |   0 (bit 0)   |   1 (bit 1)   |   1 (bit 2)   |   0 (bit 3)   |
+        // | INVALIDATE_PKEY_SLOT_1   |   0 (bit 8)   |   1 (bit 9)   |   1 (bit 10)  |   0 (bit 11)  |
+        // | INVALIDATE_PKEY_SLOT_2   |   0 (bit 16)  |   1 (bit 17)  |   1 (bit 18)  |   0 (bit 19)  |
+        // | INVALIDATE_PKEY_SLOT_3   |   0 (bit 24)  |   1 (bit 25)  |   1 (bit 26)  |   0 (bit 27)  |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_R_CONFIG_WRITE_ERASE (0x30)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | R_CONFIG_WRITE_ERASE     | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        BIT(2),
+        // # CFG_UAP_R_CONFIG_READ (0x34)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | R_CONFIG_READ_CFG        | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | R_CONFIG_READ_FUNC       | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10),
+        // # CFG_UAP_I_CONFIG_WRITE (0x40)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | I_CONFIG_WRITE_CFG       | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | I_CONFIG_WRITE_FUNC      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10),
+        // # CFG_UAP_I_CONFIG_READ (0x44)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | I_CONFIG_READ_CFG        | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | I_CONFIG_READ_FUNC       | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10),
+        // # CFG_UAP_PING (0x100)
+        // | Setting | Pairing Key 0  | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |---------|----------------|---------------|---------------|---------------|
+        // | PING    | 0 (bit 0)      | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        BIT(1) | BIT(2),
+        // # CFG_UAP_R_MEM_DATA_WRITE (0x110)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | WRITE_UDATA_SLOT_0_127   | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | WRITE_UDATA_SLOT_128_255 | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | WRITE_UDATA_SLOT_256_383 | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | WRITE_UDATA_SLOT_384_511 | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_R_MEM_DATA_READ (0x114)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | READ_UDATA_SLOT_0_127    | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | READ_UDATA_SLOT_128_255  | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | READ_UDATA_SLOT_256_383  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | READ_UDATA_SLOT_384_511  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(1) | BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_R_MEM_DATA_ERASE (0x118)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | ERASE_UDATA_SLOT_0_127   | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | ERASE_UDATA_SLOT_128_255 | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | ERASE_UDATA_SLOT_256_383 | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | ERASE_UDATA_SLOT_384_511 | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(1) | BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_RANDOM_VALUE_GET (0x120)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | RANDOM_VALUE_GET         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        BIT(1) | BIT(2),
+        // # CFG_UAP_ECC_KEY_GENERATE (0x130)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | GEN_ECCKEY_SLOT_0_7      | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | GEN_ECCKEY_SLOT_8_15     | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | GEN_ECCKEY_SLOT_16_23    | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | GEN_ECCKEY_SLOT_24_31    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_ECC_KEY_STORE (0x134)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | STORE_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | STORE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | STORE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | STORE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_ECC_KEY_READ (0x138)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | READ_ECCKEY_SLOT_0_7     | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | READ_ECCKEY_SLOT_8_15    | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | READ_ECCKEY_SLOT_16_23   | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | READ_ECCKEY_SLOT_24_31   | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_ECC_KEY_ERASE (0x13c)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | ERASE_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | ERASE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | ERASE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | ERASE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_ECDSA_SIGN (0x140)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | ECDSA_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | ECDSA_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | ECDSA_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | ECDSA_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_EDDSA_SIGN (0x144)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | EDDSA_ECCKEY_0_7         | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | EDDSA_ECCKEY_8_15        | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | EDDSA_ECCKEY_16_23       | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | EDDSA_ECCKEY_24_31       | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_MCOUNTER_INIT (0x148)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | MCOUNTER_INIT_0_3        | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | MCOUNTER_INIT_4_7        | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | MCOUNTER_INIT_8_11       | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | MCOUNTER_INIT_12_15      | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_MCOUNTER_GET (0x154)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | MCOUNTER_GET_0_3         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | MCOUNTER_GET_4_7         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | MCOUNTER_GET_8_11        | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | MCOUNTER_GET_12_15       | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_MCOUNTER_UPDATE (0x158)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | MCOUNTER_UPDATE_0_3      | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | MCOUNTER_UPDATE_4_7      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | MCOUNTER_UPDATE_8_11     | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | MCOUNTER_UPDATE_12_15    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        // # CFG_UAP_MAC_AND_DESTROY (0x160)
+        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
+        // |--------------------------|---------------|---------------|---------------|---------------|
+        // | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
+        // | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
+        BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+    }};
+// clang-format on
 
 static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -138,7 +528,7 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
-  lt_chip_id_t chip_id;
+  struct lt_chip_id_t chip_id;
   lt_ret_t ret = lt_get_info_chip_id(tropic_handle, &chip_id);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_CHIP_ID,
@@ -222,89 +612,38 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     }
   }
 
-  tropic_expected_config_t config = {0};
-  if (!tropic_get_expected_tropic_config_from_distribution_version(
-          tropic_prodtest_config_distribution_version, &config)) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_EXPECTED_CONFIG,
-              "Prodtest expected configuration not found.");
-    return TROPIC_LOCKED_ERROR;
-  }
+  struct lt_config_t configuration_read = {0};
 
-  lt_config_t configuration_read = {0};
-  ret = lt_read_whole_R_config_retry(tropic_handle, &configuration_read);
+  ret = lt_read_whole_R_config(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_R_CONFIG_READ,
-              "`lt_read_whole_R_config_retry()` failed with error '%s'",
+              "`lt_read_whole_R_config()` failed with error '%s'",
               lt_ret_verbose(ret));
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(config.max_r_config, (uint8_t*)&configuration_read,
-             sizeof(*config.max_r_config)) != 0) {
+  if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
+             sizeof(g_reversible_configuration)) != 0) {
     cli_trace(cli,
               "The reversible configuration read does not match the expected "
               "reversible configuration.");
     return TROPIC_LOCKED_FALSE;
   }
 
-  ret = lt_read_whole_I_config_retry(tropic_handle, &configuration_read);
+  ret = lt_read_whole_I_config(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_I_CONFIG_READ,
-              "`lt_read_whole_I_config_retry()` failed with error '%s'",
+              "`lt_read_whole_I_config()` failed with error '%s'",
               lt_ret_verbose(ret));
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(config.i_config, (uint8_t*)&configuration_read,
-             sizeof(*config.i_config)) != 0) {
+  if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
+             sizeof(g_irreversible_configuration)) != 0) {
     cli_trace(cli,
               "The irreversible configuration read does not match the expected "
               "irreversible configuration.");
     return TROPIC_LOCKED_FALSE;
-  }
-
-  uint8_t distribution_version_bytes[sizeof(
-      tropic_prodtest_config_distribution_version)] = {0};
-  uint16_t distribution_version_read_length = 0;
-  ret = lt_r_mem_data_read(
-      tropic_handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
-      distribution_version_bytes, sizeof(distribution_version_bytes),
-      &distribution_version_read_length);
-  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
-    cli_trace(cli, "The distribution version slot is empty.");
-    return TROPIC_LOCKED_FALSE;
-  } else if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_DISTR_VERSION_READ,
-              "`lt_r_mem_data_read()` failed with error '%s'",
-              lt_ret_verbose(ret));
-    return TROPIC_LOCKED_ERROR;
-  }
-
-  if (distribution_version_read_length != sizeof(distribution_version_bytes) ||
-      read_be(distribution_version_bytes) !=
-          tropic_prodtest_config_distribution_version) {
-    cli_trace(cli,
-              "The distribution version read does not match the expected "
-              "distribution version.");
-    return TROPIC_LOCKED_FALSE;
-  }
-
-  ret = lt_r_mem_data_read(
-      tropic_handle, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
-      distribution_version_bytes, sizeof(distribution_version_bytes),
-      &distribution_version_read_length);
-
-  switch (ret) {
-    case LT_L3_R_MEM_DATA_READ_SLOT_EMPTY:
-      break;  // the backup slot is expected to be empty
-    case LT_OK:
-      cli_trace(cli, "The backup distribution version slot is not empty.");
-      return TROPIC_LOCKED_FALSE;
-    default:
-      cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_BACKUP_DISTR_VERSION_READ,
-                "`lt_r_mem_data_read()` failed with error '%s'",
-                lt_ret_verbose(ret));
-      return TROPIC_LOCKED_ERROR;
   }
 
   return TROPIC_LOCKED_TRUE;
@@ -399,7 +738,7 @@ cleanup:
 }
 
 static void prodtest_tropic_pair(cli_t* cli) {
-  // If this function successfully completes, it is ensured that:
+  // If this functions successfully completes, it is ensured that:
   //  * The public tropic key is written to MCU's flash.
   //  * The factory pairing key in tropic's `TR01_PAIRING_KEY_SLOT_INDEX_0` is
   //  invalidated.
@@ -563,7 +902,7 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
     goto cleanup;
   }
 
-  uint8_t output[sizeof(unprivileged_private) + NOISE_KK1_TAG_SIZE] = {0};
+  uint8_t output[sizeof(unprivileged_private) + NOISE_TAG_SIZE] = {0};
   if (!secure_channel_encrypt((uint8_t*)unprivileged_private,
                               sizeof(unprivileged_private), tropic_public,
                               sizeof(curve25519_key), output)) {
@@ -592,7 +931,7 @@ static void prodtest_tropic_get_fido_masking_key(cli_t* cli) {
     goto cleanup;
   }
 
-  uint8_t output[sizeof(fido_masking_key) + NOISE_KK1_TAG_SIZE] = {0};
+  uint8_t output[sizeof(fido_masking_key) + NOISE_TAG_SIZE] = {0};
   if (!secure_channel_encrypt(fido_masking_key, sizeof(fido_masking_key), NULL,
                               0, output)) {
     // `secure_channel_handshake_2()` might not have been called
@@ -834,103 +1173,6 @@ static void prodtest_tropic_send_command(cli_t* cli) {
   cli_ok_hexdata(cli, output, output_length);
 }
 
-// Brings the non-provisioned slots into a clean state in case a test fails to
-// clean them up.
-static bool tropic_tests_cleanup(cli_t* cli, lt_handle_t* h,
-                                 bool unprivileged) {
-  if (unprivileged) {
-    cli_trace(cli,
-              "Privileged session unavailable; cleaning only the unprivileged "
-              "slot ranges.");
-  }
-
-  // R-memory data slots that were tested and can be erased.
-  uint16_t rmem_first =
-      unprivileged ? TROPIC_RMEM_UNPRIVILEGED_FIRST : TROPIC_RMEM_TEST_FIRST;
-  for (uint16_t slot = rmem_first; slot <= TROPIC_RMEM_TEST_LAST; slot++) {
-    uint8_t data[TROPIC_RMEM_TEST_DATA_SIZE] = {0};
-    uint16_t read_size = 0;
-    lt_ret_t res = lt_r_mem_data_read(h, slot, data, sizeof(data), &read_size);
-    if (res == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
-      continue;  // Expected: already empty.
-    }
-    cli_trace(cli, "WARNING: data slot %d was not empty (read '%s'); erasing.",
-              slot, lt_ret_verbose(res));
-    res = lt_r_mem_data_erase(h, slot);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_RMEM,
-                "Failed to erase data slot %d: '%s'", slot,
-                lt_ret_verbose(res));
-      return false;
-    }
-    res = lt_r_mem_data_read(h, slot, data, sizeof(data), &read_size);
-    if (res != LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_RMEM,
-                "Data slot %d still not empty after erase ('%s').", slot,
-                lt_ret_verbose(res));
-      return false;
-    }
-  }
-
-  // ECC key slots above the device and FIDO keys.
-  for (lt_ecc_slot_t slot = TROPIC_ECC_TEST_FIRST; slot <= TR01_ECC_SLOT_31;
-       slot++) {
-    uint8_t pubkey[64] = {0};
-    lt_ecc_curve_type_t curve = 0;
-    lt_ecc_key_origin_t origin = 0;
-    lt_ret_t res =
-        lt_ecc_key_read(h, slot, pubkey, sizeof(pubkey), &curve, &origin);
-    if (res == LT_L3_INVALID_KEY) {
-      continue;  // Expected: already empty.
-    }
-    cli_trace(cli, "WARNING: ECC slot %d was not empty (read '%s'); erasing.",
-              slot, lt_ret_verbose(res));
-    res = lt_ecc_key_erase(h, slot);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_ECC,
-                "Failed to erase ECC slot %d: '%s'", slot, lt_ret_verbose(res));
-      return false;
-    }
-    res = lt_ecc_key_read(h, slot, pubkey, sizeof(pubkey), &curve, &origin);
-    if (res != LT_L3_INVALID_KEY) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_ECC,
-                "ECC slot %d still not empty after erase ('%s').", slot,
-                lt_ret_verbose(res));
-      return false;
-    }
-  }
-
-  // Monotonic counters cannot be de-initialized, so at least ensure that the
-  // ones we can reinitialize are set to the maximum value if they were touched.
-  lt_mcounter_index_t counter_first =
-      unprivileged ? TROPIC_FIRST_UNPRIVILEGED_MCOUNTER : 0;
-  for (lt_mcounter_index_t idx = counter_first; idx < TROPIC_MCOUNTER_COUNT;
-       idx++) {
-    uint32_t value = 0;
-    lt_ret_t res = lt_mcounter_get(h, idx, &value);
-    if (res == LT_L3_COUNTER_INVALID ||
-        (res == LT_OK && value == TR01_MCOUNTER_VALUE_MAX)) {
-      continue;  // Uninitialized or already at maximum.
-    }
-    res = lt_mcounter_init(h, idx, TR01_MCOUNTER_VALUE_MAX);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_COUNTER,
-                "Failed to reset counter %d to max: '%s'", idx,
-                lt_ret_verbose(res));
-      return false;
-    }
-    res = lt_mcounter_get(h, idx, &value);
-    if (res != LT_OK || value != TR01_MCOUNTER_VALUE_MAX) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TESTS_CLEANUP_COUNTER,
-                "Counter %d not at max after reset (value %u, '%s').", idx,
-                (unsigned)value, lt_ret_verbose(res));
-      return false;
-    }
-  }
-
-  return true;
-}
-
 static void prodtest_tropic_lock(cli_t* cli) {
   // This function is:
   //   * idempotent (it can be called multiple times without changing the state
@@ -962,15 +1204,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  tropic_expected_config_t config = {0};
-  if (!tropic_get_expected_tropic_config_from_distribution_version(
-          tropic_prodtest_config_distribution_version, &config)) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_EXPECTED_CONFIG,
-              "Prodtest expected configuration not found.");
-    return;
-  }
-
-  lt_config_t configuration_read = {0};
+  struct lt_config_t configuration_read = {0};
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   ret = lt_r_config_erase(tropic_handle);
@@ -981,7 +1215,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = lt_write_whole_R_config(tropic_handle, config.max_r_config);
+  ret = lt_write_whole_R_config(tropic_handle, &g_reversible_configuration);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_R_CONFIG_WRITE,
               "`lt_write_whole_R_config()` failed with error '%s'",
@@ -997,14 +1231,14 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (memcmp(config.max_r_config, (uint8_t*)&configuration_read,
-             sizeof(*config.max_r_config)) != 0) {
+  if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
+             sizeof(g_reversible_configuration)) != 0) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_MISMATCH,
               "Reversible configuration mismatch after write.");
     return;
   }
 
-  ret = lt_write_whole_I_config(tropic_handle, config.i_config);
+  ret = lt_write_whole_I_config(tropic_handle, &g_irreversible_configuration);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_WRITE,
               "`lt_write_whole_I_config()` failed with error '%s'",
@@ -1012,96 +1246,19 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = lt_read_whole_I_config_retry(tropic_handle, &configuration_read);
+  ret = lt_read_whole_I_config(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_VERIFY_READ,
-              "`lt_read_whole_I_config_retry()` failed with error '%s'",
+              "`lt_read_whole_I_config()` failed with error '%s'",
               lt_ret_verbose(ret));
     return;
   }
 
-  if (memcmp(config.i_config, (uint8_t*)&configuration_read,
-             sizeof(*config.i_config)) != 0) {
+  if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
+             sizeof(g_irreversible_configuration)) != 0) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_MISMATCH,
               "Irreversible configuration mismatch after write.");
     return;
-  }
-
-  ret = lt_r_mem_data_erase(tropic_handle,
-                            TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT);
-  if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_ERASE,
-              "`lt_r_mem_data_erase()` failed with error '%s'",
-              lt_ret_verbose(ret));
-    return;
-  }
-
-  uint8_t distribution_version_bytes[sizeof(config.distribution_version)] = {0};
-  write_be(distribution_version_bytes, config.distribution_version);
-  ret = lt_r_mem_data_write(
-      tropic_handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
-      distribution_version_bytes, sizeof(distribution_version_bytes));
-  if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_WRITE,
-              "`lt_r_mem_data_write()` failed with error '%s'",
-              lt_ret_verbose(ret));
-    return;
-  }
-
-  uint16_t distribution_version_read_length = 0;
-  ret = lt_r_mem_data_read(
-      tropic_handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
-      distribution_version_bytes, sizeof(distribution_version_bytes),
-      &distribution_version_read_length);
-  if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_READ,
-              "`lt_r_mem_data_read()` failed with error '%s'",
-              lt_ret_verbose(ret));
-    return;
-  }
-
-  if (distribution_version_read_length != sizeof(distribution_version_bytes)) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_LEN,
-              "Distribution version length mismatch after write. Expected %zu, "
-              "got %u.",
-              sizeof(distribution_version_bytes),
-              (unsigned int)distribution_version_read_length);
-    return;
-  }
-
-  if (config.distribution_version != read_be(distribution_version_bytes)) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_MISMATCH,
-              "Distribution version mismatch after write. Expected %u, got %u.",
-              (unsigned int)config.distribution_version,
-              (unsigned int)read_be(distribution_version_bytes));
-    return;
-  }
-
-  ret = lt_r_mem_data_erase(tropic_handle,
-                            TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT);
-  if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_ERASE,
-              "`lt_r_mem_data_erase()` failed with error '%s'",
-              lt_ret_verbose(ret));
-    return;
-  }
-
-  ret = lt_r_mem_data_read(
-      tropic_handle, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
-      distribution_version_bytes, sizeof(distribution_version_bytes),
-      &distribution_version_read_length);
-  switch (ret) {
-    case LT_L3_R_MEM_DATA_READ_SLOT_EMPTY:
-      break;  // the backup slot is expected to be empty
-    case LT_OK:
-      cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_NOT_EMPTY,
-                "The backup distribution version slot is not empty.");
-      return;
-    default:
-      cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_READ,
-                "`lt_r_mem_data_read()` failed with error '%s'",
-                lt_ret_verbose(ret));
-      return;
   }
 
   cli_ok(cli, "");
@@ -1497,725 +1654,28 @@ cleanup:
   tropic_deinit();
 }
 
-// Per-command identifiers used as PRNG seeds so that different commands sample
-// different slot subsets.
-typedef enum {
-  TROPIC_CMD_STRESS_MAC_AND_DESTROY = 1,
-  TROPIC_CMD_TEST_MAC_AND_DESTROY,
-  TROPIC_CMD_TEST_COUNTER,
-  TROPIC_CMD_TEST_RMEM,
-} tropic_command_id_t;
+static bool find_pairing_key(cli_t* cli, lt_pkey_index_t* pairing_key_index) {
+  *pairing_key_index = -1;
 
-// Deterministic PRNG (xorshift32) used for slot selection only.
-static uint32_t tropic_prng_next(uint32_t* state) {
-  uint32_t x = *state;
-  x ^= x << 13;
-  x ^= x >> 17;
-  x ^= x << 5;
-  *state = x;
-  return x;
-}
-
-// Selects slots for a slot-based test, writing them to `out`. [lo, hi) is the
-// valid range of slots for the test. `*slot_count` is the requested number of
-// slots; it is clamped in place to the number available (`hi - lo`). Returns
-// false (after reporting via `cli`) only for an invalid explicit-slot request.
-static bool tropic_select_slots(cli_t* cli, tropic_command_id_t command_id,
-                                uint16_t lo, uint16_t hi, uint32_t* slot_count,
-                                int32_t explicit_slot, uint16_t* out) {
-  if (explicit_slot >= 0) {
-    if (*slot_count != 1) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_EXPLICIT_SLOT_COUNT,
-                "An explicit slot requires a slot count of 1.");
-      return false;
-    }
-    if (explicit_slot < lo || explicit_slot >= hi) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_EXPLICIT_SLOT_RANGE,
-                "Slot %d is outside the valid range [%d, %d).", explicit_slot,
-                lo, hi);
-      return false;
-    }
-    out[0] = explicit_slot;
-    return true;
-  }
-
-  size_t max_slots = hi - lo;
-  if (*slot_count > max_slots) {
-    cli_trace(cli, "Clamping slot count to %u available slots.",
-              (unsigned)max_slots);
-    *slot_count = max_slots;
-  }
-
-  uint16_t candidates[max_slots];
-  for (size_t i = 0; i < max_slots; i++) {
-    candidates[i] = lo + i;
-  }
-
-  uint32_t prng_state = ((uint32_t)command_id << 24) ^ *slot_count;
-  for (size_t i = 0; i < *slot_count; i++) {
-    // A Fisher-Yates shuffle step to select a random slot from the remaining
-    // candidates.
-    size_t j = i + (tropic_prng_next(&prng_state) % (max_slots - i));
-    out[i] = candidates[j];
-    candidates[j] = candidates[i];
-  }
-  return true;
-}
-
-// Ensures a secure session is established and reports which pairing key was
-// used if `pairing_key_index` is non-NULL.
-static bool tropic_ensure_session(cli_t* cli,
-                                  lt_pkey_index_t* pairing_key_index) {
-  static const lt_pkey_index_t keys[] = {
-      TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
-      TROPIC_FACTORY_PAIRING_KEY_SLOT,
-      TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT,
-  };
-  lt_ret_t results[ARRAY_LENGTH(keys)];
-  for (size_t i = 0; i < ARRAY_LENGTH(keys); i++) {
-    results[i] = tropic_custom_session_start(NULL, keys[i]);
-    if (results[i] == LT_OK) {
-      if (pairing_key_index != NULL) {
-        *pairing_key_index = keys[i];
-      }
+  for (lt_pkey_index_t i = TROPIC_FACTORY_PAIRING_KEY_SLOT;
+       i <= TROPIC_PRIVILEGED_PAIRING_KEY_SLOT; i++) {
+    lt_ret_t res = tropic_custom_session_start(cli, i);
+    if (res == LT_OK) {
+      *pairing_key_index = i;
       return true;
     }
+    if (res != LT_L2_HSK_ERR) {
+      cli_trace(
+          cli,
+          "`tropic_custom_session_start()` for key %d failed with error '%s'",
+          i, lt_ret_verbose(res));
+    }
   }
 
-  // No key worked. Explain why each attempt failed.
-  for (size_t i = 0; i < ARRAY_LENGTH(keys); i++) {
-    cli_trace(
-        cli,
-        "`tropic_custom_session_start()` for key %d failed with error '%s'",
-        keys[i], lt_ret_verbose(results[i]));
-  }
-  cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_NO_PAIRING_KEY,
-            "No pairing key is available");
   return false;
 }
 
-static bool tropic_parse_iterations(cli_t* cli, uint32_t* iterations);
-static bool tropic_parse_iterations_and_slots(cli_t* cli, uint32_t* iterations,
-                                              uint32_t* slot_count,
-                                              int32_t* explicit_slot);
-
-// Stress test: reinitialize the chip repeatedly to provoke startup faults.
-static void prodtest_tropic_stress_init(cli_t* cli) {
-  uint32_t iterations = 100;
-  uint32_t delay_ms = 0;
-  uint32_t argc = cli_arg_count(cli);
-  if (argc > 2) {
-    cli_error_arg_count(cli);
-    return;
-  }
-  if (argc >= 1 && !cli_arg_uint32(cli, "iterations", &iterations)) {
-    cli_error_arg(cli, "Expecting number of iterations.");
-    return;
-  }
-  if (argc >= 2 && !cli_arg_uint32(cli, "delay-ms", &delay_ms)) {
-    cli_error_arg(cli, "Expecting init delay in ms.");
-    return;
-  }
-  if (iterations == 0) {
-    cli_error_arg(cli, "Iterations must be greater than 0.");
-    return;
-  }
-  cli_trace(cli, "Initialization iterations: %u. Init delay: %u ms.",
-            (unsigned)iterations, (unsigned)delay_ms);
-
-  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
-
-  for (int i = 0; i < iterations; i++) {
-    tropic_deinit();
-    // Simulate a delay between suspend and wake-up.
-    systick_delay_ms(delay_ms);
-    if (!tropic_init()) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_INIT,
-                "Call #%d of `tropic_init()` failed", i + 1);
-      return;
-    }
-    if (!tropic_wait_for_ready(cli)) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_READY,
-                "Call #%d of `tropic_wait_for_ready()` failed", i + 1);
-      return;
-    }
-  }
-  cli_ok(cli, "");
-}
-
-// Stress test: tear down and re-establish the secure session repeatedly.
-static void prodtest_tropic_stress_session(cli_t* cli) {
-  uint32_t iterations = 5;
-  if (!tropic_parse_iterations(cli, &iterations)) {
-    return;
-  }
-  cli_trace(cli, "Session iterations: %u.", (unsigned)iterations);
-
-  lt_pkey_index_t pairing_key_index = -1;
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
-    return;
-  }
-
-  for (int i = 0; i < iterations; i++) {
-    lt_ret_t res = tropic_session_invalidate();
-    if (res != LT_OK) {
-      cli_error(
-          cli, PRODTEST_ERR_TROPIC_STRESS_SESSION_INVALIDATE,
-          "Call #%d of `tropic_session_invalidate()` failed with error '%s'",
-          i + 1, lt_ret_verbose(res));
-      return;
-    }
-    res = tropic_custom_session_start(cli, pairing_key_index);
-    if (res != LT_OK) {
-      cli_error(
-          cli, PRODTEST_ERR_TROPIC_STRESS_SESSION_START,
-          "Call #%d of `tropic_custom_session_start()` failed with error '%s'",
-          i + 1, lt_ret_verbose(res));
-      return;
-    }
-  }
-  cli_ok(cli, "");
-}
-
-// Stress test: hammer MAC-and-destroy on a sample of slots with random inputs,
-// without checking the results, to provoke alarm mode.
-static void prodtest_tropic_stress_mac_and_destroy(cli_t* cli) {
-  uint32_t iterations = 3;
-  uint32_t slot_count = TROPIC_MAC_AND_DESTROY_SLOT_TOTAL;
-  int32_t explicit_slot = -1;
-  if (!tropic_parse_iterations_and_slots(cli, &iterations, &slot_count,
-                                         &explicit_slot)) {
-    return;
-  }
-  cli_trace(cli, "Iterations per slot: %u. Slot count: %u. Explicit slot: %d.",
-            (unsigned)iterations, (unsigned)slot_count, (int)explicit_slot);
-
-  lt_pkey_index_t pairing_key_index = -1;
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
-    return;
-  }
-  bool unprivileged = pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
-  if (unprivileged) {
-    cli_trace(cli,
-              "Privileged session unavailable; sampling only the unprivileged "
-              "MAC-and-destroy range.");
-  }
-  uint16_t first = unprivileged ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED
-                                : TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED;
-
-  uint16_t slots[TROPIC_MAC_AND_DESTROY_SLOT_TOTAL];
-  if (!tropic_select_slots(cli, TROPIC_CMD_STRESS_MAC_AND_DESTROY, first,
-                           TROPIC_MAC_AND_DESTROY_SLOT_TOTAL, &slot_count,
-                           explicit_slot, slots)) {
-    return;
-  }
-
-  lt_handle_t* h = tropic_get_handle();
-  for (int s = 0; s < slot_count; s++) {
-    lt_mac_and_destroy_slot_t slot = slots[s];
-    for (int i = 0; i < iterations; i++) {
-      uint8_t buffer[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
-      rng_fill_buffer(buffer, sizeof(buffer));
-      lt_ret_t res = lt_mac_and_destroy(h, slot, buffer, buffer);
-      if (res != LT_OK) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_MAC_AND_DESTROY,
-                  "Call #%d of `lt_mac_and_destroy()` for slot %d failed with "
-                  "error '%s'",
-                  i + 1, slot, lt_ret_verbose(res));
-        return;
-      }
-    }
-  }
-  cli_ok(cli, "");
-}
-
-// Integrity test: verify MAC-and-destroy produces consistent results on a
-// sample of slots.
-// for each slot in sample_slots:
-//   generate reset_key and input randomly
-//   M&D(reset_key)
-//   output_0 = M&D(input)
-//   for i in 1..iterations:
-//     M&D(reset_key)
-//     output = M&D(input)
-//     assert output == output_0
-static void prodtest_tropic_test_mac_and_destroy(cli_t* cli) {
-  uint32_t iterations = 2;
-  uint32_t slot_count = TROPIC_MAC_AND_DESTROY_SLOT_TOTAL / 2;
-  int32_t explicit_slot = -1;
-  if (!tropic_parse_iterations_and_slots(cli, &iterations, &slot_count,
-                                         &explicit_slot)) {
-    return;
-  }
-  cli_trace(cli, "Iterations per slot: %u. Slot count: %u. Explicit slot: %d.",
-            (unsigned)iterations, (unsigned)slot_count, (int)explicit_slot);
-
-  lt_pkey_index_t pairing_key_index = -1;
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
-    return;
-  }
-  bool unprivileged = pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
-  if (unprivileged) {
-    cli_trace(cli,
-              "Privileged session unavailable; sampling only the unprivileged "
-              "MAC-and-destroy range.");
-  }
-  uint16_t first = unprivileged ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED
-                                : TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED;
-
-  uint16_t slots[TROPIC_MAC_AND_DESTROY_SLOT_TOTAL];
-  if (!tropic_select_slots(cli, TROPIC_CMD_TEST_MAC_AND_DESTROY, first,
-                           TROPIC_MAC_AND_DESTROY_SLOT_TOTAL, &slot_count,
-                           explicit_slot, slots)) {
-    return;
-  }
-
-  lt_handle_t* h = tropic_get_handle();
-  for (int s = 0; s < slot_count; s++) {
-    lt_mac_and_destroy_slot_t slot = slots[s];
-
-    uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
-    uint8_t input[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
-    uint8_t output_0[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
-    uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
-    rng_fill_buffer(reset_key, sizeof(reset_key));
-    rng_fill_buffer(input, sizeof(input));
-
-    // Setup: M&D(reset_key)
-    lt_ret_t res = lt_mac_and_destroy(h, slot, reset_key, output);
-    if (res != LT_OK) {
-      cli_error(
-          cli, PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY,
-          "`lt_mac_and_destroy()` setup for slot %d failed with error '%s'",
-          slot, lt_ret_verbose(res));
-      return;
-    }
-    // Measure: output_0 = M&D(input)
-    res = lt_mac_and_destroy(h, slot, input, output_0);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY,
-                "`lt_mac_and_destroy()` initial measurement for slot %d failed "
-                "with error '%s'",
-                slot, lt_ret_verbose(res));
-      return;
-    }
-
-    for (int i = 0; i < iterations; i++) {
-      // Reset: M&D(reset_key)
-      res = lt_mac_and_destroy(h, slot, reset_key, output);
-      if (res != LT_OK) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY,
-                  "`lt_mac_and_destroy()` reset for slot %d failed at "
-                  "iteration #%d with error '%s'",
-                  slot, i + 1, lt_ret_verbose(res));
-        return;
-      }
-      // Re-measure: output = M&D(input)
-      res = lt_mac_and_destroy(h, slot, input, output);
-      if (res != LT_OK) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY,
-                  "`lt_mac_and_destroy()` re-measurement for slot %d failed at "
-                  "iteration #%d with error '%s'",
-                  slot, i + 1, lt_ret_verbose(res));
-        return;
-      }
-      if (memcmp(output, output_0, sizeof(output_0)) != 0) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY_MISMATCH,
-                  "MAC-and-destroy inconsistent on slot %d at iteration #%d",
-                  slot, i + 1);
-        return;
-      }
-    }
-  }
-  cli_ok(cli, "");
-}
-
-// Integrity test: generate an ECC key, then sign random messages and verify
-// each signature against the slot's public key.
-static void prodtest_tropic_test_sign(cli_t* cli) {
-  uint32_t iterations = 10;
-  if (!tropic_parse_iterations(cli, &iterations)) {
-    return;
-  }
-  cli_trace(cli, "Signing iterations: %u. ECC slot: %d.", (unsigned)iterations,
-            TR01_ECC_SLOT_31);
-
-  if (!tropic_ensure_session(cli, NULL)) {
-    return;
-  }
-
-  lt_handle_t* h = tropic_get_handle();
-  // Slot 31 is usable by both privileged and unprivileged sessions.
-  lt_ecc_slot_t ecc_slot = TR01_ECC_SLOT_31;
-
-  ed25519_public_key public_key = {0};
-  uint8_t message[32] = {0};
-  ed25519_signature signature = {0};
-
-  lt_ret_t res = lt_ecc_key_generate(h, ecc_slot, TR01_CURVE_ED25519);
-  if (res != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_KEY_GENERATE,
-              "`lt_ecc_key_generate()` for slot %d failed with error '%s'",
-              ecc_slot, lt_ret_verbose(res));
-    goto cleanup_error;
-  }
-
-  lt_ecc_curve_type_t curve_type = 0;
-  lt_ecc_key_origin_t origin = 0;
-  res = lt_ecc_key_read(h, ecc_slot, public_key, sizeof(public_key),
-                        &curve_type, &origin);
-  if (res != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_TEST_SIGN_KEY_READ,
-              "`lt_ecc_key_read()` for slot %d failed with error '%s'",
-              ecc_slot, lt_ret_verbose(res));
-    goto cleanup_error;
-  }
-  if (curve_type != TR01_CURVE_ED25519) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_TEST_SIGN_CURVE,
-              "Curve type on slot %d is not Ed25519 (got %d)", ecc_slot,
-              curve_type);
-    goto cleanup_error;
-  }
-
-  for (int i = 0; i < iterations; i++) {
-    rng_fill_buffer(message, sizeof(message));
-    res = lt_ecc_eddsa_sign(h, ecc_slot, message, sizeof(message), signature);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_EDDSA_SIGN,
-                "Call #%d of `lt_ecc_eddsa_sign()` for slot %d failed with "
-                "error '%s'",
-                i + 1, ecc_slot, lt_ret_verbose(res));
-      goto cleanup_error;
-    }
-    if (ed25519_sign_open(message, sizeof(message), public_key, signature) !=
-        0) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_SIGN_VERIFY,
-                "Signature #%d for slot %d failed verification", i + 1,
-                ecc_slot);
-      goto cleanup_error;
-    }
-  }
-
-  res = lt_ecc_key_erase(h, ecc_slot);
-  if (res != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_KEY_ERASE,
-              "`lt_ecc_key_erase()` for slot %d failed with error '%s'",
-              ecc_slot, lt_ret_verbose(res));
-    return;
-  }
-  cli_ok(cli, "");
-  return;
-
-cleanup_error:
-  lt_ecc_key_erase(h, ecc_slot);
-  return;
-}
-
-// Integrity test: verify monotonic counters set, read back, and decrement
-// correctly on a sample of counters.
-static void prodtest_tropic_test_counter(cli_t* cli) {
-  uint32_t iterations = 5;
-  uint32_t slot_count = TROPIC_MCOUNTER_COUNT;
-  int32_t explicit_slot = -1;
-  if (!tropic_parse_iterations_and_slots(cli, &iterations, &slot_count,
-                                         &explicit_slot)) {
-    return;
-  }
-  cli_trace(cli,
-            "Iterations per counter: %u. Counters: %u. Explicit counter: %d.",
-            (unsigned)iterations, (unsigned)slot_count, (int)explicit_slot);
-
-  lt_pkey_index_t pairing_key_index = -1;
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
-    return;
-  }
-  bool unprivileged = pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
-  if (unprivileged) {
-    cli_trace(cli,
-              "Privileged session unavailable; testing only the unprivileged "
-              "counters.");
-  }
-
-  uint16_t slots[TROPIC_MCOUNTER_COUNT];
-  uint16_t first = unprivileged ? TROPIC_FIRST_UNPRIVILEGED_MCOUNTER : 0;
-  if (!tropic_select_slots(cli, TROPIC_CMD_TEST_COUNTER, first,
-                           TROPIC_MCOUNTER_COUNT, &slot_count, explicit_slot,
-                           slots)) {
-    return;
-  }
-
-  lt_handle_t* h = tropic_get_handle();
-  for (int s = 0; s < slot_count; s++) {
-    lt_mcounter_index_t idx = slots[s];
-
-    lt_ret_t res = lt_mcounter_init(h, idx, iterations);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT,
-                "`lt_mcounter_init()` for counter %d failed with error '%s'",
-                idx, lt_ret_verbose(res));
-      return;
-    }
-
-    uint32_t value = 0;
-    res = lt_mcounter_get(h, idx, &value);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_GET,
-                "`lt_mcounter_get()` for counter %d failed with error '%s'",
-                idx, lt_ret_verbose(res));
-      return;
-    }
-    if (value != iterations) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT_MISMATCH,
-                "Counter %d read %d after init, expected %d", idx, value,
-                iterations);
-      return;
-    }
-
-    for (int i = 0; i < iterations; i++) {
-      res = lt_mcounter_update(h, idx);
-      if (res != LT_OK) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_UPDATE,
-                  "`lt_mcounter_update()` for counter %d failed at iteration "
-                  "#%d with error '%s'",
-                  idx, i + 1, lt_ret_verbose(res));
-        return;
-      }
-      res = lt_mcounter_get(h, idx, &value);
-      if (res != LT_OK) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_GET,
-                  "`lt_mcounter_get()` for counter %d failed at iteration #%d "
-                  "with error '%s'",
-                  idx, i + 1, lt_ret_verbose(res));
-        return;
-      }
-      uint32_t expected = iterations - i - 1;
-      if (value != expected) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_MISMATCH,
-                  "Counter %d read %d after %d decrements, expected %d", idx,
-                  value, i + 1, expected);
-        return;
-      }
-    }
-
-    // Re-initialize counter so it is never left depleted.
-    res = lt_mcounter_init(h, idx, TR01_MCOUNTER_VALUE_MAX);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT,
-                "`lt_mcounter_init()` for counter %d failed with error '%s'",
-                idx, lt_ret_verbose(res));
-      return;
-    }
-  }
-  cli_ok(cli, "");
-}
-
-// Integrity test: write random data to a sample of R-memory slots and read it
-// back. Restricted to the range above the certificate slots so it can never
-// overwrite them.
-static void prodtest_tropic_test_rmem(cli_t* cli) {
-  uint32_t iterations = 1;
-  uint32_t slot_count = 25;
-  int32_t explicit_slot = -1;
-  if (!tropic_parse_iterations_and_slots(cli, &iterations, &slot_count,
-                                         &explicit_slot)) {
-    return;
-  }
-  cli_trace(cli, "Iterations per slot: %u. Slot count: %u. Explicit slot: %d.",
-            (unsigned)iterations, (unsigned)slot_count, (int)explicit_slot);
-
-  lt_pkey_index_t pairing_key_index = -1;
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
-    return;
-  }
-  bool unprivileged = pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
-  if (unprivileged) {
-    cli_trace(cli,
-              "Privileged session unavailable; testing only the unprivileged "
-              "R-memory range.");
-  }
-
-  uint16_t slots[TROPIC_RMEM_TEST_COUNT];
-  uint16_t first =
-      unprivileged ? TROPIC_RMEM_UNPRIVILEGED_FIRST : TROPIC_RMEM_TEST_FIRST;
-  if (!tropic_select_slots(cli, TROPIC_CMD_TEST_RMEM, first,
-                           TROPIC_RMEM_TEST_LAST + 1, &slot_count,
-                           explicit_slot, slots)) {
-    return;
-  }
-
-  lt_handle_t* h = tropic_get_handle();
-  for (int s = 0; s < slot_count; s++) {
-    uint16_t slot = slots[s];
-    for (int i = 0; i < iterations; i++) {
-      uint8_t write_data[TROPIC_RMEM_TEST_DATA_SIZE] = {0};
-      uint8_t read_data[TROPIC_RMEM_TEST_DATA_SIZE] = {0};
-      rng_fill_buffer(write_data, sizeof(write_data));
-
-      // A write to a non-empty slot fails, so erase first (this also clears the
-      // data written by the previous iteration).
-      lt_ret_t res = lt_r_mem_data_erase(h, slot);
-      if (res != LT_OK) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_ERASE,
-                  "`lt_r_mem_data_erase()` for slot %d failed at iteration #%d "
-                  "with error '%s'",
-                  slot, i + 1, lt_ret_verbose(res));
-        return;
-      }
-      res = lt_r_mem_data_write(h, slot, write_data, sizeof(write_data));
-      if (res != LT_OK) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_WRITE,
-                  "`lt_r_mem_data_write()` for slot %d failed at iteration #%d "
-                  "with error '%s'",
-                  slot, i + 1, lt_ret_verbose(res));
-        lt_r_mem_data_erase(h, slot);
-        return;
-      }
-      uint16_t read_size = 0;
-      res =
-          lt_r_mem_data_read(h, slot, read_data, sizeof(read_data), &read_size);
-      if (res != LT_OK) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_READ,
-                  "`lt_r_mem_data_read()` for slot %d failed at iteration #%d "
-                  "with error '%s'",
-                  slot, i + 1, lt_ret_verbose(res));
-        lt_r_mem_data_erase(h, slot);
-        return;
-      }
-      if (read_size != sizeof(write_data) ||
-          memcmp(read_data, write_data, sizeof(write_data)) != 0) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_MISMATCH,
-                  "R-memory slot %d read-back mismatch at iteration #%d", slot,
-                  i + 1);
-        lt_r_mem_data_erase(h, slot);
-        return;
-      }
-    }
-
-    // Leave the slot empty.
-    lt_ret_t res = lt_r_mem_data_erase(h, slot);
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_ERASE,
-                "`lt_r_mem_data_erase()` for slot %d failed with error '%s'",
-                slot, lt_ret_verbose(res));
-      return;
-    }
-  }
-  cli_ok(cli, "");
-}
-
-// Integrity test: sanity-check the TRNG output (non-zero and not identical to
-// the previous value).
-static void prodtest_tropic_test_rng(cli_t* cli) {
-  uint32_t iterations = 100;
-  if (!tropic_parse_iterations(cli, &iterations)) {
-    return;
-  }
-  cli_trace(cli, "RNG iterations: %u.", (unsigned)iterations);
-
-  if (!tropic_ensure_session(cli, NULL)) {
-    return;
-  }
-
-  lt_handle_t* h = tropic_get_handle();
-  uint8_t previous[32] = {0};
-  for (int i = 0; i < iterations; i++) {
-    uint8_t value[32] = {0};
-    lt_ret_t res = lt_random_value_get(h, value, sizeof(value));
-    if (res != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_RANDOM_GET,
-                "Call #%d of `lt_random_value_get()` failed with error '%s'",
-                i + 1, lt_ret_verbose(res));
-      return;
-    }
-
-    bool all_zero = true;
-    for (size_t j = 0; j < sizeof(value); j++) {
-      if (value[j] != 0) {
-        all_zero = false;
-        break;
-      }
-    }
-    if (all_zero) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RNG_ZERO,
-                "RNG returned an all-zero value at iteration #%d", i + 1);
-      return;
-    }
-    if (i > 0 && memcmp(value, previous, sizeof(value)) == 0) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RNG_REPEAT,
-                "RNG returned a repeated value at iteration #%d", i + 1);
-      return;
-    }
-    memcpy(previous, value, sizeof(value));
-  }
-  cli_ok(cli, "");
-}
-
-static bool tropic_parse_iterations(cli_t* cli, uint32_t* iterations) {
-  if (cli_arg_count(cli) > 1) {
-    cli_error_arg_count(cli);
-    return false;
-  }
-  if (cli_arg_count(cli) != 0 &&
-      !cli_arg_uint32(cli, "iterations", iterations)) {
-    cli_error_arg(cli, "Expecting number of iterations.");
-    return false;
-  }
-  if (*iterations == 0) {
-    cli_error_arg(cli, "Iterations must be greater than 0.");
-    return false;
-  }
-  return true;
-}
-
-// Parses `[<iterations> <slot_count> [<slot>]]`. `iterations` is the number of
-// test iterations per slot. The optional third argument pins the exact slot to
-// use (only valid with a slot count of 1).
-static bool tropic_parse_iterations_and_slots(cli_t* cli, uint32_t* iterations,
-                                              uint32_t* slot_count,
-                                              int32_t* explicit_slot) {
-  *explicit_slot = -1;
-  uint32_t argc = cli_arg_count(cli);
-  if (argc != 0 && argc != 2 && argc != 3) {
-    cli_error_arg_count(cli);
-    return false;
-  }
-  if (argc >= 2) {
-    if (!cli_arg_uint32(cli, "iterations", iterations)) {
-      cli_error_arg(cli, "Expecting number of iterations.");
-      return false;
-    }
-    if (!cli_arg_uint32(cli, "slot-count", slot_count)) {
-      cli_error_arg(cli, "Expecting slot count.");
-      return false;
-    }
-  }
-  if (*iterations == 0) {
-    cli_error_arg(cli, "Iterations must be greater than 0.");
-    return false;
-  }
-  if (*slot_count == 0) {
-    cli_error_arg(cli, "Slot count must be greater than 0.");
-    return false;
-  }
-  if (argc == 3) {
-    uint32_t slot = 0;
-    if (!cli_arg_uint32(cli, "slot", &slot)) {
-      cli_error_arg(cli, "Expecting slot number.");
-      return false;
-    }
-    *explicit_slot = slot;
-  }
-  return true;
-}
-
-// DEPRECATED: superseded by the `tropic-stress-*` and `tropic-test-*` commands;
-// will be removed in a future release. Retains its original behavior and
-// parameter set for backward compatibility.
 static void prodtest_tropic_stress_test(cli_t* cli) {
-  cli_trace(
-      cli,
-      "DEPRECATED: `tropic-stress-test` will be removed; use `tropic-test`.");
-
   if (cli_arg_count(cli) > 6) {
     cli_error_arg_count(cli);
     return;
@@ -2290,7 +1750,9 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   lt_ret_t res = LT_FAIL;
   lt_pkey_index_t pairing_key_index = -1;
 
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
+  if (!find_pairing_key(cli, &pairing_key_index)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_NO_PAIRING_KEY,
+              "No pairing key is available");
     return;
   }
 
@@ -2393,7 +1855,9 @@ static void prodtest_tropic_benchmark(cli_t* cli) {
   lt_ret_t res = LT_FAIL;
   lt_pkey_index_t pairing_key_index = -1;
 
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
+  if (!find_pairing_key(cli, &pairing_key_index)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_BENCHMARK_NO_PAIRING_KEY,
+              "No pairing key is available");
     return;
   }
 
@@ -2661,57 +2125,49 @@ static void prodtest_tropic_erase_all_slots(cli_t* cli) {
 }
 
 static void prodtest_tropic_set_sensors(cli_t* cli) {
-  if (cli_arg_count(cli) > 1) {
+  if (cli_arg_count(cli) != 1) {
     cli_error_arg_count(cli);
     return;
   }
 
-  // Default to 0x00000000, which enables all sensors.
-  uint32_t new_sensors_config = 0;
-  if (cli_arg_count(cli) == 1) {
-    uint8_t input[4] = {0};
-    size_t input_length = 0;
-    if (!cli_arg_hex(cli, "hex-data", input, sizeof(input), &input_length)) {
-      if (input_length == sizeof(input)) {
-        cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_INPUT_LONG,
-                  "Input too long.");
-      } else {
-        cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_HEX_DECODE,
-                  "Hexadecimal decoding error.");
-      }
-      return;
+  uint8_t input[4] = {0};
+  size_t input_length = 0;
+  if (!cli_arg_hex(cli, "hex-data", input, sizeof(input), &input_length)) {
+    if (input_length == sizeof(input)) {
+      cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_INPUT_LONG, "Input too long.");
+    } else {
+      cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_HEX_DECODE,
+                "Hexadecimal decoding error.");
     }
-
-    if (input_length != sizeof(input)) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_INPUT_LEN,
-                "Expected 4 bytes (8 hex digits) for uint32.");
-      return;
-    }
-
-    new_sensors_config = ((uint32_t)input[0] << 24) |
-                         ((uint32_t)input[1] << 16) |
-                         ((uint32_t)input[2] << 8) | ((uint32_t)input[3]);
+    return;
   }
 
-  lt_pkey_index_t pairing_key_index = 0;
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
+  if (input_length != sizeof(input)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_INPUT_LEN,
+              "Expected 4 bytes (8 hex digits) for uint32.");
+    return;
+  }
+
+  uint32_t new_sensors_config =
+      ((uint32_t)input[0] << 24) | ((uint32_t)input[1] << 16) |
+      ((uint32_t)input[2] << 8) | ((uint32_t)input[3]);
+
+  if (!privileged_session_start(cli)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_SESSION,
+              "`privileged_session_start()` failed.");
     return;
   }
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
-  // No need to wipe under a factory session. Tropic is unprovisioned.
-  if (pairing_key_index != TROPIC_FACTORY_PAIRING_KEY_SLOT) {
-    lt_ret_t ret = tropic_erase_all_slots_internal(cli, tropic_handle);
-    if (ret != LT_OK) {
-      cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_ERASE,
-                "Erase operation failed");
-      return;
-    }
+  lt_ret_t ret = tropic_erase_all_slots_internal(cli, tropic_handle);
+  if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_ERASE, "Erase operation failed");
+    return;
   }
 
-  lt_config_t configuration = {0};
-  lt_ret_t ret = lt_read_whole_R_config_retry(tropic_handle, &configuration);
+  struct lt_config_t configuration = {0};
+  ret = lt_read_whole_R_config_retry(tropic_handle, &configuration);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_READ_CONFIG,
               "`lt_read_whole_R_config()` failed with error %s",
@@ -2731,7 +2187,7 @@ static void prodtest_tropic_set_sensors(cli_t* cli) {
   }
 
   // Verify the write
-  lt_config_t verify_configuration = {0};
+  struct lt_config_t verify_configuration = {0};
   ret = lt_read_whole_R_config_retry(tropic_handle, &verify_configuration);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_SLOT_READ,
@@ -2744,20 +2200,6 @@ static void prodtest_tropic_set_sensors(cli_t* cli) {
              sizeof(verify_configuration)) != 0) {
     cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_WRITE_VERIFY,
               "Configuration was not written correctly.");
-    return;
-  }
-
-  // The sensor configuration only takes effect after a reboot.
-  ret = lt_reboot(tropic_handle, TR01_REBOOT);
-  if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_REBOOT,
-              "`lt_reboot()` failed with error %s", lt_ret_verbose(ret));
-    return;
-  }
-  tropic_deinit();
-  if (!tropic_init() || !tropic_wait_for_ready(cli)) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_REBOOT,
-              "Re-initialization after reboot failed.");
     return;
   }
 
@@ -2806,7 +2248,7 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
   }
 
   // read reversible configuration
-  lt_config_t r_config = {0};
+  struct lt_config_t r_config = {0};
   lt_ret_t ret = lt_read_whole_R_config_retry(tropic_handle, &r_config);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_R_CONFIG,
@@ -2822,12 +2264,11 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
   }
 
   // read irreversible configuration
-  lt_config_t i_config = {0};
-  ret = lt_read_whole_I_config_retry(tropic_handle, &i_config);
+  struct lt_config_t i_config = {0};
+  ret = lt_read_whole_I_config(tropic_handle, &i_config);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_I_CONFIG,
-
-              "`lt_read_whole_I_config_retry()` failed with error %s",
+              "`lt_read_whole_I_config()` failed with error %s",
               lt_ret_verbose(ret));
     return;
   }
@@ -2839,77 +2280,10 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
               i_config.obj[i], i * 0x08);
   }
 
-  cli_trace(cli, "");
-  cli_trace(cli, "=== Configuration Distribution Version ===");
-  uint8_t read_value_bytes[sizeof(uint32_t)] = {0};
-  uint16_t read_length = 0;
-  ret = lt_r_mem_data_read(
-      tropic_get_handle(), TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
-      read_value_bytes, sizeof(read_value_bytes), &read_length);
-  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
-    cli_trace(cli, "Configuration distribution version: empty");
-  } else if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_DISTR_VERSION_READ,
-              "`lt_r_mem_data_read()` failed with error %s",
-              lt_ret_verbose(ret));
-    return;
-  } else if (read_length != sizeof(read_value_bytes)) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_DISTR_VERSION_LEN,
-              "Unexpected length of configuration distribution version data");
-    return;
-  } else {
-    cli_trace(cli, "Configuration distribution version: %u",
-              (unsigned int)read_be(read_value_bytes));
-  }
-  read_length = 0;
-  ret = lt_r_mem_data_read(
-      tropic_get_handle(), TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
-      read_value_bytes, sizeof(read_value_bytes), &read_length);
-  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
-    cli_trace(cli, "Configuration backup distribution version: empty");
-  } else if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_BACKUP_DISTR_VERSION_READ,
-              "`lt_r_mem_data_read()` failed with error %s",
-              lt_ret_verbose(ret));
-    return;
-  } else if (read_length != sizeof(read_value_bytes)) {
-    cli_error(
-        cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_BACKUP_DISTR_VERSION_LEN,
-        "Unexpected length of configuration backup distribution version data");
-    return;
-  } else {
-    cli_trace(cli, "Configuration backup distribution version: %u",
-              (unsigned int)read_be(read_value_bytes));
-  }
-
-  cli_ok(cli, "");
-}
-
-static void prodtest_tropic_tests_cleanup(cli_t* cli) {
-  if (cli_arg_count(cli) != 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
-  lt_pkey_index_t pairing_key_index = -1;
-  if (!tropic_ensure_session(cli, &pairing_key_index)) {
-    return;
-  }
-  bool unprivileged = pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
-  if (!tropic_tests_cleanup(cli, tropic_get_handle(), unprivileged)) {
-    // Error already reported by tropic_tests_cleanup().
-    return;
-  }
   cli_ok(cli, "");
 }
 
 // clang-format off
-
-PRODTEST_CLI_CMD(
-  .name = "tropic-tests-cleanup",
-  .func = prodtest_tropic_tests_cleanup,
-  .info = "Reset the slots written by the tropic-test-* commands to a clean state",
-  .args = ""
-);
 
 PRODTEST_CLI_CMD(
   .name = "tropic-get-riscv-fw-version",
@@ -3031,65 +2405,9 @@ PRODTEST_CLI_CMD(
 );
 
 PRODTEST_CLI_CMD(
-  .name = "tropic-stress-init",
-  .func = prodtest_tropic_stress_init,
-  .info = "Stress test Tropic initialization",
-  .args = "[<iterations> [<delay-ms>]]"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "tropic-stress-session",
-  .func = prodtest_tropic_stress_session,
-  .info = "Stress test Tropic session establishment",
-  .args = "[<iterations>]"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "tropic-stress-mac-and-destroy",
-  .func = prodtest_tropic_stress_mac_and_destroy,
-  .info = "Stress test Tropic MAC-and-destroy, one MAC-and-destroy per iteration",
-  .args = "[<iterations> <slot-count> [<slot>]]"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "tropic-test-mac-and-destroy",
-  .func = prodtest_tropic_test_mac_and_destroy,
-  .info = "Check Tropic MAC-and-destroy, one consistency check per iteration against first result",
-  .args = "[<iterations> <slot-count> [<slot>]]"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "tropic-test-sign",
-  .func = prodtest_tropic_test_sign,
-  .info = "Check Tropic EdDSA signing, one sign & verify per iteration",
-  .args = "[<iterations>]"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "tropic-test-counter",
-  .func = prodtest_tropic_test_counter,
-  .info = "Check Tropic monotonic counter integrity, one decrement & check per iteration",
-  .args = "[<iterations> <slot-count> [<slot>]]"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "tropic-test-rmem",
-  .func = prodtest_tropic_test_rmem,
-  .info = "Check Tropic R-memory slot integrity, one write & read cycle per iteration",
-  .args = "[<iterations> <slot-count> [<slot>]]"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "tropic-test-rng",
-  .func = prodtest_tropic_test_rng,
-  .info = "Sanity-check Tropic TRNG output",
-  .args = "[<iterations>]"
-);
-
-PRODTEST_CLI_CMD(
   .name = "tropic-stress-test",
   .func = prodtest_tropic_stress_test,
-  .info = "DEPRECATED: use tropic-test; will be removed",
+  .info = "Run stress test for Tropic",
   .args = "[<init-iterations> <start-session-iterations> <mac-and-destroy-slot-count> <mac-and-destroy-per-slot-iterations> <signing-iterations> <rng-iterations>]"
 );
 
@@ -3103,8 +2421,8 @@ PRODTEST_CLI_CMD(
 PRODTEST_CLI_CMD(
   .name = "tropic-set-sensors",
   .func = prodtest_tropic_set_sensors,
-  .info = "Set the reversible sensor configuration and reboot Tropic to apply it. Enables all sensors by default.",
-  .args = "[<hex-data>]"
+  .info = "Set the reversible configuration of the sensors in Tropic",
+  .args = "<hex-data>"
 );
 
 PRODTEST_CLI_CMD(

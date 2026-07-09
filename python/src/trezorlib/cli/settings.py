@@ -156,7 +156,7 @@ def image_to_jpeg(filename: Path, width: int, height: int, quality: int = 90) ->
         needs_regeneration = True
 
     if filename.suffix in (".jpg", ".jpeg"):
-        if image.info.get("progressive"):  # type: ignore [Cannot access attribute "info" for class "Image"]
+        if image.info.get("progressive"):  # pyright: ignore[reportAttributeAccessIssue]
             needs_regeneration = True
 
     if needs_regeneration:

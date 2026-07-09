@@ -358,10 +358,8 @@ def _prepared_test_ctx(
     try:
         _raw_test_ctx.sync_responses()
     except Exception:
-        msg = "Failed to communicate with Trezor"
-        LOG.exception(msg)
-        request.session.shouldstop = msg
-        pytest.fail(msg)
+        request.session.shouldstop = "Failed to communicate with Trezor"
+        pytest.fail("Failed to communicate with Trezor")
 
     # Use DebugLink to wipe (since THP channel requires unlocked device)
     _raw_test_ctx.wipe_device()

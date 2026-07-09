@@ -3391,7 +3391,6 @@ if TYPE_CHECKING:
         decimals: "int | None"
         base: "str | None"
         prefix: "bool | None"
-        const_token_address: "AnyBytes | None"
 
         def __init__(
             self,
@@ -3404,7 +3403,6 @@ if TYPE_CHECKING:
             decimals: "int | None" = None,
             base: "str | None" = None,
             prefix: "bool | None" = None,
-            const_token_address: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4471,14 +4469,12 @@ if TYPE_CHECKING:
     class EvoluRegistrationRequest(protobuf.MessageType):
         certificate_chain: "list[AnyBytes]"
         signature: "AnyBytes"
-        rotation_index: "int | None"
 
         def __init__(
             self,
             *,
             signature: "AnyBytes",
             certificate_chain: "list[AnyBytes] | None" = None,
-            rotation_index: "int | None" = None,
         ) -> None:
             pass
 
@@ -6031,7 +6027,6 @@ if TYPE_CHECKING:
         serialized_tx: "AnyBytes"
         additional_info: "SolanaTxAdditionalInfo | None"
         payment_req: "PaymentRequest | None"
-        chunkify: "bool | None"
 
         def __init__(
             self,
@@ -6040,7 +6035,6 @@ if TYPE_CHECKING:
             address_n: "list[int] | None" = None,
             additional_info: "SolanaTxAdditionalInfo | None" = None,
             payment_req: "PaymentRequest | None" = None,
-            chunkify: "bool | None" = None,
         ) -> None:
             pass
 
@@ -7388,20 +7382,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TronWithdrawUnfreeze"]:
-            return isinstance(msg, cls)
-
-    class TronWithdrawBalance(protobuf.MessageType):
-        owner_address: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            owner_address: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TronWithdrawBalance"]:
             return isinstance(msg, cls)
 
     class TronSignature(protobuf.MessageType):

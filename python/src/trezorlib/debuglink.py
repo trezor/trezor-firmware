@@ -86,7 +86,7 @@ class LayoutType(Enum):
             return cls.Bolt
         if model in (models.T2B1, models.T3B1):
             return cls.Caesar
-        if model in (models.T3T1, models.T3T2):
+        if model in (models.T3T1,):
             return cls.Delizia
         if model in (models.T3W1,):
             return cls.Eckhart
@@ -103,7 +103,7 @@ class LayoutType(Enum):
             return cls.Bolt
         if internal_name in (models.T2B1.internal_name, models.T3B1.internal_name):
             return cls.Caesar
-        if internal_name in (models.T3T1.internal_name, models.T3T2.internal_name):
+        if internal_name in (models.T3T1.internal_name,):
             return cls.Delizia
         if internal_name in (models.T3W1.internal_name,):
             return cls.Eckhart
@@ -540,7 +540,7 @@ class DebugLink:
         self.allow_interactions = auto_interact
         self.mapping = mapping.DEFAULT_MAPPING
 
-        # To be set by TrezorTestContext (is not known during creation time)
+        # To be set by TrezorClientDebugLink (is not known during creation time)
         self.model: models.TrezorModel | None = None
         self.version: tuple[int, int, int] = (0, 0, 0)
 
@@ -1127,11 +1127,7 @@ class DebugUI:
         is_flow_menu = False
         if layout.has_menu():
             is_menu = True
-            if self.debuglink.layout_type is LayoutType.Caesar:
-                self.debuglink.press_right()
-            else:
-                self.debuglink.click(self.debuglink.screen_buttons.menu())
-
+            self.debuglink.press_info()
         elif layout.has_flow_menu():
             is_flow_menu = True
             self.debuglink.click(self.debuglink.screen_buttons.menu())
@@ -1489,9 +1485,6 @@ class TrezorTestContext:
         if self.is_thp():
             assert isinstance(self.client, TrezorClientThp)
             self.client.channel = channel
-            # destroy the old interactive context associated with the previous channel
-            # tests in device_tests/thp/test_handshake.py don't work without it
-            self.client._interact_ctx = self.client._interact()
             return
         raise AttributeError("Channel is not available for this protocol")
 

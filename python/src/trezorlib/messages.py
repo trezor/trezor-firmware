@@ -370,8 +370,6 @@ class EthereumERC7730FieldFormatterType(IntEnum):
     FORMATTER_AMOUNT = 1
     FORMATTER_TOKEN_AMOUNT = 2
     FORMATTER_UNIT = 3
-    FORMATTER_RAW = 4
-    FORMATTER_DATE = 5
 
 
 class EthereumERC7730ContainerPath(IntEnum):
@@ -487,7 +485,6 @@ class TronResourceCode(IntEnum):
 class TronRawContractType(IntEnum):
     TransferContract = 1
     VoteWitnessContract = 4
-    WithdrawBalanceContract = 13
     TriggerSmartContract = 31
     FreezeBalanceV2Contract = 54
     UnfreezeBalanceV2Contract = 55
@@ -779,7 +776,6 @@ class MessageType(IntEnum):
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
-    TronWithdrawBalance = 2213
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -4808,7 +4804,6 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         6: protobuf.Field("decimals", "uint32", repeated=False, required=False, default=None),
         7: protobuf.Field("base", "string", repeated=False, required=False, default=None),
         8: protobuf.Field("prefix", "bool", repeated=False, required=False, default=None),
-        9: protobuf.Field("const_token_address", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4822,7 +4817,6 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         decimals: Optional["int"] = None,
         base: Optional["str"] = None,
         prefix: Optional["bool"] = None,
-        const_token_address: Optional["bytes"] = None,
     ) -> None:
         self.path = path
         self.label = label
@@ -4832,7 +4826,6 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         self.decimals = decimals
         self.base = base
         self.prefix = prefix
-        self.const_token_address = const_token_address
 
 
 class EthereumDisplayFormatInfo(protobuf.MessageType):
@@ -6035,7 +6028,6 @@ class EvoluRegistrationRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("certificate_chain", "bytes", repeated=True, required=False, default=None),
         2: protobuf.Field("signature", "bytes", repeated=False, required=True),
-        3: protobuf.Field("rotation_index", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -6043,11 +6035,9 @@ class EvoluRegistrationRequest(protobuf.MessageType):
         *,
         signature: "bytes",
         certificate_chain: Optional[Sequence["bytes"]] = None,
-        rotation_index: Optional["int"] = None,
     ) -> None:
         self.certificate_chain: Sequence["bytes"] = certificate_chain if certificate_chain is not None else []
         self.signature = signature
-        self.rotation_index = rotation_index
 
 
 class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
@@ -7788,7 +7778,6 @@ class SolanaSignTx(protobuf.MessageType):
         2: protobuf.Field("serialized_tx", "bytes", repeated=False, required=True),
         3: protobuf.Field("additional_info", "SolanaTxAdditionalInfo", repeated=False, required=False, default=None),
         4: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
-        5: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -7798,13 +7787,11 @@ class SolanaSignTx(protobuf.MessageType):
         address_n: Optional[Sequence["int"]] = None,
         additional_info: Optional["SolanaTxAdditionalInfo"] = None,
         payment_req: Optional["PaymentRequest"] = None,
-        chunkify: Optional["bool"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.serialized_tx = serialized_tx
         self.additional_info = additional_info
         self.payment_req = payment_req
-        self.chunkify = chunkify
 
 
 class SolanaTxSignature(protobuf.MessageType):
@@ -9290,20 +9277,6 @@ class TronUnfreezeBalanceV2Contract(protobuf.MessageType):
 
 class TronWithdrawUnfreeze(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2209
-    FIELDS = {
-        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        owner_address: "bytes",
-    ) -> None:
-        self.owner_address = owner_address
-
-
-class TronWithdrawBalance(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2213
     FIELDS = {
         1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
     }

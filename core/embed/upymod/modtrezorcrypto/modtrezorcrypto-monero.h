@@ -24,7 +24,6 @@
 #include "../trezorobj.h"
 
 #include "bignum.h"
-#include "consteq.h"
 #include "memzero.h"
 #include "monero/monero.h"
 
@@ -1074,7 +1073,7 @@ STATIC mp_obj_t mod_trezorcrypto_ct_equals(const mp_obj_t a, const mp_obj_t b) {
     return MP_OBJ_NEW_SMALL_INT(0);
   }
 
-  int r = consteq(buff_a.buf, buff_b.buf, buff_a.len);
+  int r = ed25519_verify(buff_a.buf, buff_b.buf, buff_a.len);
   return MP_OBJ_NEW_SMALL_INT(r);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ct_equals_obj,

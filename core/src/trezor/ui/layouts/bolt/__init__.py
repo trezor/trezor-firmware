@@ -1099,14 +1099,8 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
-        native_amount: str | None = None,
     ) -> None:
         from ..properties import with_colon
-
-        if native_amount is not None:
-            # A non-zero native ETH value carried alongside a token transfer;
-            # show it next to the token amount so it can't be signed unseen.
-            total_amount = f"{total_amount}\n{native_amount}"
 
         if is_send:
             description = f"{TR.words__recipient}:"
@@ -1187,7 +1181,6 @@ if not utils.BITCOIN_ONLY:
         maximum_fee: str,
         fee_info_items: Iterable[StrPropertyType],
         chunkify: bool = False,
-        native_amount: str | None = None,
     ) -> None:
         from ..properties import AboveThreshold
 
@@ -1276,8 +1269,8 @@ if not utils.BITCOIN_ONLY:
         )
 
         await _confirm_summary(
-            native_amount,
-            f"{TR.words__amount}:" if native_amount else None,
+            None,
+            None,
             maximum_fee,
             TR.send__maximum_fee,
             TR.words__title_summary,
@@ -1292,7 +1285,6 @@ if not utils.BITCOIN_ONLY:
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
-        amount: str | None = None,
     ) -> None:
         from ..properties import with_colon
 
@@ -1304,8 +1296,8 @@ if not utils.BITCOIN_ONLY:
             properties,
         )
         with trezorui_api.confirm_summary(
-            amount=amount,
-            amount_label=with_colon(TR.words__amount) if amount is not None else None,
+            amount=None,
+            amount_label=None,
             fee=maximum_fee,
             fee_label=with_colon(TR.send__maximum_fee),
             extra_items=None,
@@ -1509,7 +1501,6 @@ if not utils.BITCOIN_ONLY:
         items: Iterable[StrPropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
-        chunkify: bool = False,
     ) -> Awaitable[None]:
         return confirm_value(
             title=title,
@@ -1519,7 +1510,6 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
             verb=TR.buttons__continue,
             info_items=items,
-            chunkify=chunkify,
         )
 
     def confirm_solana_tx(
@@ -1558,7 +1548,6 @@ if not utils.BITCOIN_ONLY:
         fee_item: StrPropertyType,
         fee_details: Iterable[StrPropertyType],
         blockhash_item: StrPropertyType,
-        chunkify: bool,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
@@ -1574,7 +1563,6 @@ if not utils.BITCOIN_ONLY:
             value=vote_account,
             verb=TR.buttons__continue,
             info=True,
-            chunkify=chunkify,
         )
 
         items: list[StrPropertyType] = [
@@ -1716,33 +1704,6 @@ if not utils.BITCOIN_ONLY:
                 asset=asset,
                 description=amount_description or TR.words__amount,
             )
-
-    async def confirm_tron_claim(
-        title: str,
-        intro_question: str,
-        account: str | None,
-        account_path: str | None,
-        br_name: str = "tron/claim",
-        br_code: ButtonRequestType = ButtonRequestType.SignTx,
-    ) -> None:
-        account_properties: list[StrPropertyType] = []
-        if account:
-            account_properties.append((TR.words__account, account, None))
-        if account_path:
-            account_properties.append(
-                (TR.address_details__derivation_path, account_path, None)
-            )
-        await confirm_value(
-            title=title,
-            value=intro_question,
-            description="",
-            br_name=br_name,
-            br_code=br_code,
-            is_data=False,
-            hold=True,
-            info_items=account_properties,
-            info_title=TR.address_details__account_info,
-        )
 
     async def confirm_tron_summary(
         title: str | None,

@@ -30,10 +30,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core"
 )
 def test_solana_get_address(session: Session, parameters, result):
     actual_result = get_address(
-        session,
-        address_n=parse_path(parameters["path"]),
-        show_display=True,
-        chunkify=parameters.get("chunkify", False),
+        session, address_n=parse_path(parameters["path"]), show_display=True
     )
 
     assert actual_result == result["expected_address"]

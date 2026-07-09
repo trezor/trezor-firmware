@@ -113,15 +113,6 @@ core_only = pytest.mark.skipif(
 )
 
 
-def model_only(*model_names: str) -> "MarkDecorator":
-    """Skip the test unless the local build matches one of the given model names."""
-    enabled = any(_is_model_enabled(by_internal_name(m)) for m in model_names)
-    names = "/".join(model_names)
-    return pytest.mark.skipif(
-        not enabled, reason=f"This test requires {names} emulator"
-    )
-
-
 def version_from_tag(tag: str | None) -> tuple | None:
     if tag is None or not tag.startswith("v"):
         return None

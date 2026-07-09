@@ -29,21 +29,6 @@ struct CompileUnit {
     attrs: Option<CompileAttrs>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum OutputType {
-    Object,
-    Preprocessed(&'static str),
-}
-
-impl OutputType {
-    pub fn extension(&self) -> &'static str {
-        match self {
-            OutputType::Object => "o",
-            OutputType::Preprocessed(ext) => ext,
-        }
-    }
-}
-
 // Represents the result of compiling a single source file
 struct CompileArtifact {
     // Index of the compile unit, used to maintain the original order of units
@@ -67,7 +52,7 @@ impl CompileUnit {
             cmd.arg("-MMD").arg("-MF").arg(cc_dep);
         }
 
-        cmd.arg("-o").arg(&self.output).arg(&self.input);
+        cmd.arg("-c").arg("-o").arg(&self.output).arg(&self.input);
 
         run_command_with_cc_dep(
             &mut cmd,
@@ -98,7 +83,7 @@ impl CLibrary {
 
         measure_time(format!("@@ {} compiled in", lib_name), || {
             // Run parallel build on all sources
-            let objects = self.process_sources(OutputType::Object, None, None)?;
+            let objects = self.process_sources("o", None, None)?;
             // Append manually added objects (e.g., vendor header)
             let objects = objects
                 .into_iter()
@@ -125,7 +110,7 @@ impl CLibrary {
     /// A vector of paths to the generated output files.
     pub fn process_sources(
         &self,
-        output_type: OutputType,
+        output_ext: &str,
         extra_args: Option<&[&str]>,
         extra_sources: Option<&[PathBuf]>,
     ) -> Result<Vec<PathBuf>> {
@@ -147,10 +132,10 @@ impl CLibrary {
         for (index, (src, attrs)) in sources.into_iter().enumerate() {
             // Derive absolute paths for input and output files
             let input = join_paths_lexically(&base_dir, &src);
-            let output = derive_output_path(&base_dir, &src, &out_dir, output_type.extension());
+            let output = derive_output_path(&base_dir, &src, &out_dir, output_ext);
 
             // Only generate .d files for object files compiled from C/C++ sources
-            let cc_dep = if matches!(output_type, OutputType::Object)
+            let cc_dep = if output_ext == "o"
                 && src
                     .extension()
                     .is_some_and(|ext| ext == "c" || ext == "cpp" || ext == "cc")
@@ -178,15 +163,6 @@ impl CLibrary {
         if let Some(args) = extra_args {
             for arg in args {
                 attrs.add_flag(arg);
-            }
-        }
-
-        match output_type {
-            OutputType::Object => {
-                attrs.add_flag("-c");
-            }
-            OutputType::Preprocessed(..) => {
-                attrs.add_flag("-E");
             }
         }
 

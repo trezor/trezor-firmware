@@ -38,11 +38,7 @@ const HANDSHAKE_BUFFER_DTH_LEN: usize = max(
     2 * PUBKEY_LEN + 2 * TAG_LEN + CHECKSUM_LEN, // HandshakeInitiationResponse
 );
 
-pub const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
-
-/// Required size of the send buffer in addition to serialized message length.
-/// Session ID (1B) + message type (2B) + AEAD tag (16B).
-pub const SEND_BUFFER_OVERHEAD: usize = APP_HEADER_LEN + TAG_LEN;
+const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
 /// Used during channel allocation on broadcast channel.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -70,7 +66,6 @@ impl Nonce {
 }
 
 /// Sent by device after successful handshake to indicate whether pairing is required.
-#[cfg_attr(any(test, debug_assertions), derive(Debug))]
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PairingState {
@@ -142,37 +137,6 @@ enum ReceiveState<R: Role> {
     Failed,
 }
 
-/// Whether pairing and credential phase has finished.
-///
-/// After channel is allocated, it goes through several phases until application
-/// messages can be securely exchanged.
-/// 1. Handshake phase
-/// 2. Pairing phase
-/// 3. Credential phase
-/// 4. Encrypted transport phase
-///
-/// Channel in handshake phase has distinct type and a [`ChannelOpen::complete()`]
-/// method to obtain channel in pairing or credential phase. In pairing and credential
-/// phase peers exchange protobuf messages, and by exchanging `EndRequest` and `EndResponse`,
-/// transition to encrypted transport phase is indicated. While application messages in
-/// encrypted transport phase can also use protobuf messages, their meaning is generally
-/// different than in the other phases.
-/// Application can use this enum to distinguish the context.
-#[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[repr(u8)]
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Phase {
-    /// Channel is in pairing or credential phase, depending on the outcome of the handshake
-    /// phase.
-    PairingCredential {
-        handshake_pairing_state: PairingState,
-    },
-    /// Channel is in encrypted transport phase. Because this library doesn't understand
-    /// protobuf, application must call [`Channel::end_pairing`] to indicate successful
-    /// end of pairing/credential phase.
-    EncryptedTransport,
-}
-
 /// THP channel with established secure layer.
 ///
 /// There is no constructor, to obtain a channel please use [`host::Mux`]
@@ -185,7 +149,7 @@ pub struct Channel<R: Role, B: Backend> {
     send_ack: Option<SyncBits>,
     send_state: SendState<R>,
     receive_state: ReceiveState<R>,
-    phase: Phase,
+    pairing_state: PairingState,
 }
 
 impl<R: Role, B: Backend> Channel<R, B> {
@@ -197,11 +161,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
             send_ack: None,
             send_state: SendState::Idle,
             receive_state: ReceiveState::Idle,
-            // ChannelOpen must set this when returning Channel.
-            // Use the least privileged value as a default.
-            phase: Phase::PairingCredential {
-                handshake_pairing_state: PairingState::Unpaired,
-            },
+            pairing_state: PairingState::Unpaired,
         }
     }
 
@@ -209,25 +169,19 @@ impl<R: Role, B: Backend> Channel<R, B> {
         self.noise.as_mut().ok_or_else(Error::unexpected_input)
     }
 
+    pub fn channel_id(&self) -> u16 {
+        self.channel_id
+    }
+
     pub fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
         self.noise.as_ref().unwrap().handshake_hash()
     }
 
-    /// Returns channel establishment state.
-    pub fn phase(&self) -> Phase {
-        self.phase
-    }
-
-    /// True if pairing/credential phase has finished and channel can be used to exchange
-    /// application messages.
-    pub fn is_encrypted_transport(&self) -> bool {
-        matches!(self.phase, Phase::EncryptedTransport)
-    }
-
-    /// Application should call this whenever transitioning to the encrypted transport
-    /// state.
-    pub fn end_pairing(&mut self) {
-        self.phase = Phase::EncryptedTransport;
+    /// Returns the channel pairing state at the end of the handshake.
+    /// This is read-only attribute to inform the application whether it needs to perform
+    /// pairing, or can directly transition to encrypted transport state.
+    pub fn handshake_pairing_state(&self) -> PairingState {
+        self.pairing_state
     }
 
     pub fn remote_static_pubkey(&self) -> &[u8; PUBKEY_LEN] {
@@ -522,15 +476,6 @@ pub enum PacketInResult {
     Route {
         /// Channel id of the destination. Never a broadcast.
         channel_id: u16,
-        /// If Some, initiation packet was received for message with the given payload length.
-        /// Make sure you're calling [`ChannelIO::packet_in`] with receive buffer at least as large.
-        /// Please note the size is returned before checksum verification and can be unusually
-        /// large in presence of bit errors.
-        /// In particular, this is `None` for ACK messages, continuations and transport errors.
-        // NOTE: would be neat to get PacketInResult to fit in 32bit word but how? Buffer size can
-        // be e.g. 12 bit integer denoting 16-byte blocks but not sure how to pack it. The buffer
-        // size in `Accepted` is not very important and can probably be turned into a bool.
-        buffer_size: Option<NonZeroU16>,
     },
     /// Channel allocation request/response was received. Event loop should call
     /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and [`host::Mux`]
@@ -571,18 +516,8 @@ impl PacketInResult {
         Self::TransportError { error: e }
     }
 
-    const fn route(channel_id: u16, payload_len: Option<u16>) -> Self {
-        let buffer_size = match payload_len {
-            // Using larger buffer should be safe. Empty messages are valid on the transport
-            // layer but they will fail the minimum app header length check anyway.
-            Some(0) => Some(NonZeroU16::new(1).unwrap()),
-            Some(n) => Some(NonZeroU16::new(n).unwrap()),
-            None => None,
-        };
-        Self::Route {
-            channel_id,
-            buffer_size,
-        }
+    const fn route(channel_id: u16) -> Self {
+        Self::Route { channel_id }
     }
 
     const fn fail(error: Error) -> Self {
@@ -674,6 +609,9 @@ impl PacketInResult {
 /// to be passed along every call. You can wrap the channel in [`buffered::Buffered`] to
 /// handle the buffers for you.
 pub trait ChannelIO {
+    /// Session ID (1B) + message type (2B) + AEAD tag (16B).
+    const BUFFER_OVERHEAD: usize = APP_HEADER_LEN + TAG_LEN;
+
     /// Pass incoming packet into a channel.
     ///
     /// Please note the caller should first check whether channel ID matches.
@@ -735,8 +673,8 @@ pub trait ChannelIO {
 
     /// Submit message for channel to encrypt and fragment into packets.
     ///
-    /// The length of `send_buffer` must be at least [`SEND_BUFFER_OVERHEAD`] more than
-    /// the message length.
+    /// The length of `send_buffer` must be at least [`Self::BUFFER_OVERHEAD`] more
+    /// than the message length.
     ///
     /// Returns [`Error::NotReady`] if the channel hasn't finished sending the previous message
     /// (did not send all fragments or did not receive valid ACK), or if the channel is
@@ -760,9 +698,6 @@ pub trait ChannelIO {
         send_buffer[3..plaintext_len].copy_from_slice(message);
         self.message_in(plaintext_len, send_buffer)
     }
-
-    /// Get channel identifier, or `BROADCAST_CHANNEL_ID` for muxes.
-    fn channel_id(&self) -> u16;
 }
 
 impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
@@ -892,24 +827,12 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             log::warn!("[{:04x}] Nothing to retransmit.", self.channel_id);
             return Ok(());
         };
-        log::debug!(
-            "[{:04x}] Retransmitting message, retry {}.",
-            self.channel_id,
-            retry
-        );
+        log::debug!("[{:04x}] Retransmitting message.", self.channel_id);
         fragmenter.reset();
         *retry = retry.saturating_add(1);
         Ok(())
     }
-
-    fn channel_id(&self) -> u16 {
-        self.channel_id
-    }
 }
-
-/// The maximum number of transport payload retransmissions that the sender should attempt.
-/// Defined in the specification, applications are free to use lower number.
-pub const MAX_RETRANSMISSION_COUNT: u8 = 50;
 
 /// Returns how many milliseconds to wait for an ACK for a given retransmission attempt.
 /// First timeout (0th retry) is after 200ms till ~3.52s.
@@ -918,6 +841,7 @@ pub const MAX_RETRANSMISSION_COUNT: u8 = 50;
 /// you are free to use different function. It is recommended to measure the duration between
 /// sending last packet and receiving an ACK ("ack_latency") and add it to this number.
 pub fn retransmit_after_ms(retry: u8) -> u32 {
+    const MAX_RETRANSMISSION_COUNT: u8 = 50;
     let retry: u32 = retry.min(MAX_RETRANSMISSION_COUNT - 1).into();
 
     10300 - 1010000 / retry.saturating_add(100)

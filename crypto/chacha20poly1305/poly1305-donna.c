@@ -1,5 +1,4 @@
 #include "poly1305-donna.h"
-#include "consteq.h"
 #include "poly1305-donna-32.h"
 
 void
@@ -49,7 +48,12 @@ poly1305_auth(unsigned char mac[16], const unsigned char *m, size_t bytes, const
 
 int
 poly1305_verify(const unsigned char mac1[16], const unsigned char mac2[16]) {
-	return consteq(mac1, mac2, 16);
+	size_t i = 0;
+	unsigned int dif = 0;
+	for (i = 0; i < 16; i++)
+		dif |= (mac1[i] ^ mac2[i]);
+	dif = (dif - 1) >> ((sizeof(unsigned int) * 8) - 1);
+	return (dif & 1);
 }
 
 

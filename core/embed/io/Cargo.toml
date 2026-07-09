@@ -24,7 +24,6 @@ mcu_stm32f427 = ["sec/mcu_stm32f427", "mcu_stm32f4"]
 mcu_stm32f429 = ["sec/mcu_stm32f429", "mcu_stm32f4"]
 mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
-mcu_stm32u5a = ["sec/mcu_stm32u5a", "mcu_stm32u5"]
 
 # --------------------------------------------------------------------------
 # Privilege mode features
@@ -61,7 +60,7 @@ sbu = []
 sd_card = []
 smp = []
 suspend = ["sec/suspend"]
-touch = []
+touch = ["sys/i2c_bus"]
 touch_wakeup = []
 usb_iface_debug = ["usb"]
 usb_iface_vcp = ["usb"]
@@ -91,13 +90,12 @@ usb = []
 backlight_tps61043 = []
 backlight_tps61062 = []
 backlight_pin = []
-backlight_pwm = []
 
-touch_none = []
-touch_ft6x36 = ["sys/i2c_bus"]
-touch_ft3168 = ["sys/i2c_bus"]
-touch_stmpe811 = ["sys/i2c_bus"]
-touch_sitronix = ["sys/i2c_bus"]
+# touch drivers
+touch_ft6x36 = []
+touch_ft3168 = []
+touch_stmpe811 = []
+touch_sitronix = []
 
 # touch panels (coordinate correction); selected alongside the driver by the
 # board TOML, mirroring the display driver/panel split below.
@@ -112,7 +110,6 @@ framebuffer = []
 # to also advertise `framebuffer` in its project.toml. display_st7789 supports
 # both modes — the model.toml decides.
 # The emulator's unix driver is selected by display/build.rs (not a feature).
-display_none = []
 display_ltdc_dsi = ["framebuffer"]
 display_st7789 = []
 display_vg2864 = ["framebuffer"]
@@ -122,6 +119,5 @@ display_panel_lx250a2401a = []
 display_panel_stm32u5a9j_dk = []
 display_panel_t2t1 = []
 display_panel_lx154a2482 = []
-display_panel_dem240320b1 = []
 display_panel_vg2864 = []
 

@@ -46,13 +46,13 @@
 #define NPM1300_ADC_READOUT_DELAY 80
 
 // Minimum temperature that counts as valid data
-#define NPM1300_NTC_TEMP_VALID_MIN (-80.0f)
+#define NPM1300_NTC_TEMP_VALID_MIN (-80.0)
 
 // Minimum temperature that counts as valid data
-#define NPM1300_NTC_TEMP_VALID_MAX (100.0f)
+#define NPM1300_NTC_TEMP_VALID_MAX (100.0)
 
 // Minimum battery voltage that counts as valid data
-#define NPM1300_BATT_VOLTAGE_VALID_MIN (0.5f)
+#define NPM1300_BATT_VOLTAGE_VALID_MIN (0.5)
 
 // NPM1300 FSM states
 typedef enum {
@@ -685,16 +685,16 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   // If charging, use the charge current limit (i_charge).
   // See the NPM1300 datasheet for details.
   if (ibat_discharging) {
-    report->ibat = ((int)ibat_adc * drv->i_limit) / 1250.0f;
+    report->ibat = ((int)ibat_adc * drv->i_limit) / 1250.0;
   } else if (ibat_charging) {
-    report->ibat = -((int)ibat_adc * drv->i_charge) / 800.0f;
+    report->ibat = -((int)ibat_adc * drv->i_charge) / 800.0;
   } else {
     report->ibat = 0;
   }
 
   // Calculate the battery voltage (VBAT) from the ADC value.
   // VBAT is scaled by the voltage divider ratio and ADC resolution.
-  report->vbat = (vbat_adc * 5.0f) / 1023.0f;
+  report->vbat = (vbat_adc * 5.0) / 1023.0;
 
   // if the battery voltage is below the accepted minimum, flag the battery as
   // disconnected
@@ -704,10 +704,10 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   // Calculate the temperature from the NTC (thermistor).
   // Beta value for the thermistor is specified as 3380.
   // The equation is derived from the NPM1300 datasheet.
-  float beta = 3380.0f;
+  float beta = 3380;
   report->ntc_temp =
-      1 / (1 / 298.15f - (1 / beta) * logf(1024.0f / ntc_adc - 1)) - 298.15f +
-      25.0f;
+      1 / (1 / 298.15 - (1 / beta) * logf(1024.0 / ntc_adc - 1)) - 298.15 +
+      25.0;
 
   // if the temperature is below the accepted minimum, flag the NTC as
   // disconnected
@@ -716,12 +716,12 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
 
   // Calculate the die temperature from the die ADC reading.
   // The equation is derived from the NPM1300 datasheet.
-  report->die_temp = 394.67f - 0.7926f * die_adc;
+  report->die_temp = 394.67 - 0.7926 * die_adc;
 
   // Calculate the system voltage (VSYS) from the ADC value.
   // VSYS is scaled based on the system voltage divider ratio and ADC
   // resolution.
-  report->vsys = (vsys_adc * 6.375f) / 1023.0f;
+  report->vsys = (vsys_adc * 6.375) / 1023.0;
 
   // Populate measurement and status flags from the raw data
   report->ibat_meas_status = r->adc_ibat_meas_status;

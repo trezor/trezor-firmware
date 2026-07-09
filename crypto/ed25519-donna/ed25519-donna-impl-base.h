@@ -1,4 +1,9 @@
 /*
+	Timing safe memory compare
+*/
+int ed25519_verify(const unsigned char *x, const unsigned char *y, size_t len);
+
+/*
 	conversions
 */
 

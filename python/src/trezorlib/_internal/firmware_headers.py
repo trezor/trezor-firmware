@@ -313,7 +313,7 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
     DEV_KEYS: t.ClassVar[t.Sequence[bytes]] = _make_dev_keys(b"\x44", b"\x45")
 
     SUBCON = c.Struct(
-        *firmware.VendorHeader.SUBCON.subcons,  # type: ignore [Cannot access attribute]
+        *firmware.VendorHeader.SUBCON.subcons,
         c.Terminated,
     )
 
@@ -516,7 +516,7 @@ class BootloaderV2Image(firmware.BootableImage):
             raise ValueError("Sigmask specifies more public keys than provided.")
 
         # Verify ed25519 signatures
-        if mask.bit_count() != len(  # type: ignore [Cannot access attribute] # bit_count() is not available with Python 3.9
+        if mask.bit_count() != len(  # pyright: ignore[reportAttributeAccessIssue] # bit_count() is not available with Python 3.9
             self.unauth.ec_signatures
         ):
             raise ValueError("Sigmask does not specify valid number of ed25519 keys.")
@@ -533,7 +533,7 @@ class BootloaderV2Image(firmware.BootableImage):
             sig_idx += 1
 
         # Verify slh-dsa signatures
-        if mask.bit_count() != len(  # type: ignore [Cannot access attribute] # bit_count() is not available with Python 3.9
+        if mask.bit_count() != len(  # pyright: ignore[reportAttributeAccessIssue] # bit_count() is not available with Python 3.9
             self.unauth.slh_signatures
         ):
             raise ValueError("Sigmask does not specify valid number of slh-dsa keys.")

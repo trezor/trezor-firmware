@@ -47,7 +47,7 @@
 #error "VDD_3V3 or VDD_1V8 must be defined"
 #endif
 
-#if defined STM32U5A9xx || defined STM32U5G9xx || defined STM32U5A5xx
+#if defined STM32U5A9xx | defined STM32U5G9xx
 #define WRP_DEFAULT_VALUE 0xFF00FFFF
 #define SEC_WM1R1_DEFAULT_VALUE 0xFF00FF00
 #define SEC_WM1R2_DEFAULT_VALUE 0x7F007F00

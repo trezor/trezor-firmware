@@ -112,8 +112,7 @@ SRCS  += ed25519-donna/ed25519.c ed25519-donna/curve25519-donna-scalarmult-base.
 SRCS  += monero/base58.c
 SRCS  += monero/serialize.c
 SRCS  += monero/xmr.c
-SRCS  += noise_kk1.c
-SRCS  += noise_xxpsk3.c
+SRCS  += noise.c
 SRCS  += blake256.c
 SRCS  += blake2b.c blake2s.c
 SRCS  += chacha_drbg.c
@@ -136,8 +135,6 @@ SRCS  += tls_prf.c
 SRCS  += hash_to_curve.c
 SRCS  += buffer.c der.c
 SRCS  += elligator2.c
-SRCS  += consteq.c
-SRCS  += fault_handler_noop.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o

@@ -53,7 +53,6 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Coroutine, Generic, Type, TypeVar
 
     from trezor.wire.thp.channel import Channel
-    from trezor.wire.thp.interface_context import InterfaceContext
 
     T = TypeVar("T")
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
@@ -110,17 +109,15 @@ if utils.USE_THP:
     THP_BUFFERS_PROVIDER = Provider((ThpBuffer(), ThpBuffer()))
 
     if __debug__:
-        _THP_IFACES: list[InterfaceContext] = []
+        _THP_CHANNELS = []
 
         def find_thp_channel(channel_id: AnyBytes) -> Channel | None:
-            """Used by `DebugLinkGetPairingInfo` (only for tests). Currently only
-            works with channels that have active workflow (e.g. pairing)."""
-            for ifctx in _THP_IFACES:
-                if (
-                    ifctx.active_channel
-                    and ifctx.active_channel.channel_id_bytes() == channel_id
-                ):
-                    return ifctx.active_channel
+            """Used by `DebugLinkGetPairingInfo` (only for tests)."""
+            key = int.from_bytes(channel_id, "big")
+            for channels in _THP_CHANNELS:
+                result = channels.get(key)
+                if result is not None:
+                    return result
             return None
 
     def setup(*ifaces: WireInterface) -> None:
@@ -130,23 +127,15 @@ if utils.USE_THP:
     async def handle_session_thp(*ifaces: WireInterface) -> None:
         ctx = ThpContext(*ifaces)
         if __debug__:
-            _THP_IFACES[:] = ctx._iface_ctxs
+            _THP_CHANNELS.extend(iface_ctx._channels for iface_ctx in ctx._iface_ctxs)
 
         try:
-            # wait until channel activity (on any interface)
-            channel = await ctx.get_active_channel()
+            while (channel := await ctx.get_next_message()) is None:
+                # wait until a new channel is established (on any interface)
+                pass
 
-            # at this point channel has valid message waiting
-            # process messages until it returns do_not_restart=False
             while await received_message_handler.handle_received_message(channel):
-                if __debug__:
-                    log.debug(
-                        __name__,
-                        "Skipping THP session restart on channel %04x",
-                        channel.channel_id,
-                        iface=channel.iface,
-                    )
-
+                pass
         finally:
             if __debug__:
                 log.debug(__name__, "Finished THP session: %s", ifaces)
@@ -156,8 +145,6 @@ if utils.USE_THP:
                 import apps.debug
 
                 await apps.debug.close_session()
-            # Send out any queued messages.
-            await ctx.close()
             loop.clear()
 
 else:

@@ -54,7 +54,6 @@ default = [
 
 mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
-mcu_stm32u5a = ["sec/mcu_stm32u5a", "mcu_stm32u5"]
 mcu_stm32u5 = ["sec/trustzone"]
 
 backup_ram = ["sec/backup_ram"]

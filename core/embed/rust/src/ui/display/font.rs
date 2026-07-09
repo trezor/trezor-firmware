@@ -1,5 +1,3 @@
-use core::num::Saturating;
-
 #[cfg(feature = "translations")]
 use spin::RwLockReadGuard;
 
@@ -244,9 +242,7 @@ fn calculate_glyph_size(header: &[u8]) -> usize {
 impl FontInfo {
     /// Supports UTF8 characters
     pub fn text_width(&'static self, text: &str) -> i16 {
-        // Really long text makes width overflow into negative values.
-        // It's better to return i16::MAX in that case.
-        let mut width = Saturating(0);
+        let mut width = 0;
         let mut prev_char: Option<char> = None;
 
         for c in text.chars() {
@@ -254,7 +250,7 @@ impl FontInfo {
             width += self.char_width(c);
             prev_char = Some(c);
         }
-        width.0
+        width
     }
 
     /// Width of the text that is visible.

@@ -390,7 +390,6 @@ dependencies = [
  "stable_deref_trait",
  "ufmt",
  "ufmt-write",
- "zeroize",
 ]
 
 [[package]]
@@ -931,24 +930,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
-name = "trezor-noise-protocol"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d23e260001c4bb916c2710f5c80af007f4a760bce38302c2176dbb2053f051a5"
-dependencies = [
- "heapless",
-]
-
-[[package]]
-name = "trezor-thp"
-version = "0.1.0"
-dependencies = [
- "heapless",
- "log",
- "trezor-noise-protocol",
-]
-
-[[package]]
 name = "trezor-tjpgdec"
 version = "0.1.0"
 
@@ -974,7 +955,6 @@ dependencies = [
  "serde_json",
  "spin",
  "static-alloc",
- "trezor-thp",
  "trezor-tjpgdec",
  "ufmt",
  "unsize",
@@ -1127,20 +1107,6 @@ name = "zeroize"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b97154e67e32c85465826e8bcc1c59429aaaf107c1e4a9e53c8d8ccd5eff88d0"
-dependencies = [
- "zeroize_derive",
-]
-
-[[package]]
-name = "zeroize_derive"
-version = "1.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85a5b4158499876c763cb03bc4e49185d3cccbabb15b33c627f7884f43db852e"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
 
 [[package]]
 name = "zlib-rs"

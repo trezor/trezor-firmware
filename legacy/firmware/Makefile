@@ -125,8 +125,6 @@ OBJS += ../vendor/trezor-crypto/chacha20poly1305/chacha_merged.o
 OBJS += ../vendor/trezor-crypto/chacha20poly1305/poly1305-donna.o
 OBJS += ../vendor/trezor-crypto/chacha20poly1305/rfc7539.o
 
-OBJS += ../vendor/trezor-crypto/consteq.o
-
 OBJS += ../vendor/trezor-crypto/nem.o
 
 OBJS += ../vendor/QR-Code-generator/c/qrcodegen.o

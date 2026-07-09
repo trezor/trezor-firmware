@@ -19,12 +19,10 @@ xbuild.workspace = true
 
 model_d001 = []
 model_d002 = []
-model_d003 = []
 model_t2t1 = []
 model_t2b1 = []
 model_t3b1 = []
 model_t3t1 = []
-model_t3t2 = []
 model_t3w1 = []
 
 # --------------------------------------------------------------------------
@@ -35,7 +33,6 @@ mcu_stm32f427 = ["mcu_stm32f4"]
 mcu_stm32f429 = ["mcu_stm32f4"]
 mcu_stm32u58 = ["mcu_stm32u5"]
 mcu_stm32u5g = ["mcu_stm32u5"]
-mcu_stm32u5a = ["mcu_stm32u5"]
 
 # --------------------------------------------------------------------------
 # Privilege mode features

@@ -3,13 +3,10 @@ import time
 
 import pytest
 
-from trezorlib.debuglink import TrezorTestContext
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.thp.channel import Channel
 from trezorlib.thp.exceptions import ThpError, ThpErrorCode
 
-from .connect import prepare_channel_for_pairing
-
-Client = TrezorTestContext
 pytestmark = [pytest.mark.protocol("thp")]
 
 
@@ -20,30 +17,18 @@ def _new_channel(client) -> Channel:
 
 
 def test_concurrent_handshakes(client: Client) -> None:
-    MAX = 4  # See `MAX_CHANNELS_OPENING` in core/embed/rust/src/thp/mod.rs
-    channels = []
+    channel_1 = _new_channel(client)
+    channel_2 = _new_channel(client)
 
-    # Start the handshake for MAX+1 channels
-    for _ in range(MAX + 1):
-        channel = _new_channel(client)
-        channel.BUSY_RETRIES = 0
-        channel._send_handshake_init_request(unlock=False)
-        channel._read_handshake_init_response()
-        channels.append(channel)
+    # The first host starts handshake
+    channel_1._send_handshake_init_request(unlock=False)
+    channel_1._read_handshake_init_response()
 
-    # Oldest handshake is forgotten
+    channel_2.BUSY_RETRIES = 0
     with pytest.raises(ThpError) as err:
-        channels[0]._send_handshake_completion_request([])
-        channels[0]._read_handshake_completion_response()
-    assert err.value.code == ThpErrorCode.UNALLOCATED_CHANNEL
-
-    # Others finish successfully
-    for channel in channels[1:]:
-        channel._send_handshake_completion_request([])
-        channel._read_handshake_completion_response()
-        channel._flush_ack()
-
-    assert all(channel.is_open() for channel in channels[1:])
+        # The second host should not be able to interrupt the first host's handshake immediately
+        channel_2.open([])
+    assert err.value.code == ThpErrorCode.TRANSPORT_BUSY
 
 
 def test_concurrent_handshakes_busy_retries(client: Client) -> None:
@@ -75,30 +60,3 @@ def test_concurrent_handshakes_busy_retries(client: Client) -> None:
     # both channels should be open
     assert channel_1.is_open()
     assert channel_2.is_open()
-
-
-def test_concurrent_channels(test_ctx: TrezorTestContext) -> None:
-    MAX = 10  # See `MAX_CHANNELS_APPDATA` in core/embed/rust/src/thp/mod.rs
-    channels = []
-
-    # Open MAX+1 channels
-    for _ in range(MAX + 1):
-        pairing = prepare_channel_for_pairing(test_ctx)
-        pairing.skip()
-        pairing.finish()
-        channels.append(pairing.client.channel)
-
-    # Oldest channel gets evicted
-    with pytest.raises(ThpError) as err:
-        test_ctx.channel = channels[0]
-        test_ctx.ping("will raise")
-    assert err.value.code == ThpErrorCode.UNALLOCATED_CHANNEL
-
-    # Others keep working
-    for channel in channels[1:]:
-        test_ctx.channel = channel
-        test_ctx.ping("hi")
-
-    for channel in channels[1:]:
-        test_ctx.channel = channel
-        test_ctx.ping("hi2")

@@ -2,16 +2,9 @@ use core::{convert::Infallible, ffi::CStr, num::TryFromIntError};
 
 #[cfg(feature = "micropython")]
 use {
-    crate::micropython::{
-        exception::{self, new_exception, new_exception_arg_from, new_exception_args},
-        obj::Obj,
-        qstr::Qstr,
-    },
+    crate::micropython::{ffi, obj::Obj, qstr::Qstr},
     core::convert::TryInto,
 };
-
-#[cfg(feature = "thp")]
-use crate::thp::micropython::ThpError;
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
 #[derive(Clone, Copy, Debug)]
@@ -33,8 +26,6 @@ pub enum Error {
     ValueErrorParam(&'static CStr, Obj),
     RuntimeError(&'static CStr),
     NotImplementedError,
-    #[cfg(feature = "thp")]
-    ThpError(&'static CStr),
 }
 
 #[allow(unused_macros)]
@@ -58,26 +49,44 @@ impl Error {
             // SAFETY: First argument is a reference to a valid exception type.
             // EXCEPTION: Sensibly, `new_exception_*` does not raise.
             match self {
-                Error::TypeError => new_exception(exception::TypeError),
-                Error::OutOfRange => new_exception(exception::OverflowError),
-                Error::MissingKwargs => new_exception(exception::TypeError),
-                Error::AllocationFailed => new_exception(exception::MemoryError),
-                Error::IndexError => new_exception(exception::IndexError),
+                Error::TypeError => ffi::mp_obj_new_exception(&ffi::mp_type_TypeError),
+                Error::OutOfRange => ffi::mp_obj_new_exception(&ffi::mp_type_OverflowError),
+                Error::MissingKwargs => ffi::mp_obj_new_exception(&ffi::mp_type_TypeError),
+                Error::AllocationFailed => ffi::mp_obj_new_exception(&ffi::mp_type_MemoryError),
+                Error::IndexError => ffi::mp_obj_new_exception(&ffi::mp_type_IndexError),
                 Error::CaughtException(obj) => obj,
-                Error::KeyError(key) => new_exception_arg_from(exception::KeyError, key),
-                Error::ValueError(msg) => new_exception_arg_from(exception::ValueError, msg),
-                Error::ValueErrorParam(msg, param) => match msg.try_into() {
-                    Ok(msg) => new_exception_args(exception::ValueError, &[msg, param]),
-                    _ => new_exception(exception::ValueError),
-                },
-                Error::AttributeError(attr) => {
-                    new_exception_arg_from(exception::AttributeError, attr)
+                Error::KeyError(key) => {
+                    ffi::mp_obj_new_exception_args(&ffi::mp_type_KeyError, 1, &key)
                 }
-                Error::EOFError => new_exception(exception::EOFError),
-                Error::RuntimeError(msg) => new_exception_arg_from(exception::RuntimeError, msg),
-                Error::NotImplementedError => new_exception(exception::NotImplementedError),
-                #[cfg(feature = "thp")]
-                Error::ThpError(msg) => new_exception_arg_from(&ThpError, msg),
+                Error::ValueError(msg) => {
+                    if let Ok(msg) = msg.try_into() {
+                        ffi::mp_obj_new_exception_args(&ffi::mp_type_ValueError, 1, &msg)
+                    } else {
+                        ffi::mp_obj_new_exception(&ffi::mp_type_ValueError)
+                    }
+                }
+                Error::ValueErrorParam(msg, param) => {
+                    if let Ok(msg) = msg.try_into() {
+                        let args = [msg, param];
+                        ffi::mp_obj_new_exception_args(&ffi::mp_type_ValueError, 2, args.as_ptr())
+                    } else {
+                        ffi::mp_obj_new_exception(&ffi::mp_type_ValueError)
+                    }
+                }
+                Error::AttributeError(attr) => {
+                    ffi::mp_obj_new_exception_args(&ffi::mp_type_AttributeError, 1, &attr.into())
+                }
+                Error::EOFError => ffi::mp_obj_new_exception(&ffi::mp_type_EOFError),
+                Error::RuntimeError(msg) => {
+                    if let Ok(msg) = msg.try_into() {
+                        ffi::mp_obj_new_exception_args(&ffi::mp_type_RuntimeError, 1, &msg)
+                    } else {
+                        ffi::mp_obj_new_exception(&ffi::mp_type_RuntimeError)
+                    }
+                }
+                Error::NotImplementedError => {
+                    ffi::mp_obj_new_exception(&ffi::mp_type_NotImplementedError)
+                }
             }
         }
     }
@@ -95,19 +104,5 @@ impl From<Infallible> for Error {
 impl From<TryFromIntError> for Error {
     fn from(_: TryFromIntError) -> Self {
         Self::OutOfRange
-    }
-}
-
-#[cfg(feature = "thp")]
-impl From<trezor_thp::Error> for Error {
-    fn from(error: trezor_thp::Error) -> Self {
-        match error {
-            trezor_thp::Error::UnexpectedInput => Error::ThpError(c"Unexpected input"),
-            trezor_thp::Error::NotReady => Error::ThpError(c"Not ready"),
-            trezor_thp::Error::MalformedData => Error::ThpError(c"Malformed data"),
-            trezor_thp::Error::InvalidChecksum => Error::ThpError(c"Invalid checksum"),
-            trezor_thp::Error::InsufficientBuffer => Error::ThpError(c"Insufficient buffer"),
-            trezor_thp::Error::CryptoError => Error::ThpError(c"Crypto error"),
-        }
     }
 }

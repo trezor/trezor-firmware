@@ -2,13 +2,7 @@
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
-    from trezor.crypto.hashlib import sha3_256
-
-    from apps.tron.helpers import get_encoded_address
-
-    def address_from_public_key(pubkey: bytes) -> str:
-        address_bytes = b"\x41" + sha3_256(pubkey[1:], keccak=True).digest()[12:]
-        return get_encoded_address(address_bytes)
+    from apps.tron.helpers import address_from_public_key
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

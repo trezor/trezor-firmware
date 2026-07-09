@@ -38,7 +38,6 @@
 #include <sys/types.h>
 #include "../base58.h"
 #include "../byte_order.h"
-#include "consteq.h"
 #include "int-util.h"
 #include "sha2.h"
 
@@ -275,7 +274,8 @@ int xmr_base58_addr_decode_check(const char *addr, size_t sz, uint64_t *tag,
   }
 
   hasher_Raw(HASHER_SHA3K, buf, buflen - addr_checksum_size, hash);
-  if (!consteq(hash, buf + buflen - addr_checksum_size, addr_checksum_size)) {
+  if (memcmp(hash, buf + buflen - addr_checksum_size, addr_checksum_size) !=
+      0) {
     return 0;
   }
 

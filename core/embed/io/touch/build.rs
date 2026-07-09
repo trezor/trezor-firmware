@@ -23,9 +23,6 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         // builds the unix driver instead of the HW one. The unix driver does no
         // panel correction, so the selected panel feature is ignored here.
         lib.add_source("touch/unix/touch.c");
-    } else if cfg!(feature = "touch_none") {
-        // Headless boards: touch API present but never reports activity.
-        lib.add_source("touch/none/touch.c");
     } else if cfg!(feature = "touch_ft3168") {
         add_driver_ft3168(lib)?;
     } else if cfg!(feature = "touch_ft6x36") {

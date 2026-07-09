@@ -1,6 +1,6 @@
 use crate::{
     ChannelIO,
-    channel::{APP_HEADER_LEN, PacketInResult, SEND_BUFFER_OVERHEAD},
+    channel::{APP_HEADER_LEN, PacketInResult},
     error::Result,
 };
 
@@ -27,10 +27,6 @@ impl<C: ChannelIO> Buffered<C> {
             send_buffer: Vec::new(),
             receive_buffer: vec![0u8; INITIAL_BUFFER_LEN],
         }
-    }
-
-    pub fn packet_len(&self) -> usize {
-        self.packet_len
     }
 
     pub fn set_packet_len(&mut self, packet_len: usize) {
@@ -70,7 +66,7 @@ impl<C: ChannelIO> Buffered<C> {
     }
 
     pub fn message_in(&mut self, session_id: u8, message_type: u16, message: &[u8]) -> Result<()> {
-        let mut send_buffer = vec![0; message.len() + SEND_BUFFER_OVERHEAD];
+        let mut send_buffer = vec![0; message.len() + C::BUFFER_OVERHEAD];
         let res = self.channel.message_in_from(
             session_id,
             message_type,

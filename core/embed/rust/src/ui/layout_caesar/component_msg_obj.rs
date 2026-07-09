@@ -61,7 +61,6 @@ where
         match msg {
             PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             PageMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            PageMsg::Info => Ok(INFO.as_obj()),
             _ => Err(Error::TypeError),
         }
     }

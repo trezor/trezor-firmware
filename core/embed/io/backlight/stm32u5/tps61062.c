@@ -27,7 +27,7 @@
 
 #include <io/backlight.h>
 
-#include "../backlight_gamma.h"
+#include <math.h>
 
 #define BACKLIGHT_CONTROL_T_UP_US 30     // may be in range 1-75
 #define BACKLIGHT_CONTROL_T_DOWN_US 198  // may be in range 180-300
@@ -178,6 +178,37 @@ static inline void buffer_steps_duty_cycle_set(uint8_t buf_idx) {
       TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US);
 
   drv->pwm_data_dirty[buf_idx] = true;
+}
+
+// Applies gamma correction to a brightness input value.
+//
+// eq: OUT = ( ( (IN - k) / d ) ^ GAMMA) * q
+//
+// Parameters:
+//   in        - Input brightness value (e.g., 0-255).
+//   in_offset - Minimum input value (k in the equation),
+//               below which input is clamped.
+//   in_max    - Maximum input value (d + k in the equation).
+//   gamma_exp - Gamma exponent (GAMMA in the equation).
+//   out_max   - Maximum output value (q in the equation).
+//
+// The transformation performed is:
+//   OUT = ( ( (max(IN, in_offset) - in_offset) / (in_max - in_offset) ) ^
+//         gamma_exp) * out_max
+//
+// This normalizes the input, applies gamma correction, and scales to the output
+// range.
+static inline uint32_t gamma_correction(uint8_t in, uint8_t in_offset,
+                                        uint8_t in_max, float gamma_exp,
+                                        uint32_t out_max) {
+  float out;
+
+  out = (float)(MAX(in, in_offset) - in_offset) /
+        (in_max - in_offset);  // Input normalization to <0;1>
+  out = powf(out, gamma_exp);  // Gamma correction
+  out = out * out_max;         // Output denormalization to <0;out_max>
+
+  return (uint32_t)out;
 }
 
 bool backlight_init(backlight_action_t action, float gamma_exp) {
@@ -376,9 +407,9 @@ bool backlight_set(uint8_t val) {
   drv->requested_level_limited = requested_level_limited;
 
   // Perform gamma correction of the requested level
-  drv->requested_level_corrected = backlight_gamma_correct(
-      drv->requested_level_limited, INPUT_OFFSET, BACKLIGHT_MAX_LEVEL,
-      drv->gamma_exp, USTEPS_COUNT);
+  drv->requested_level_corrected =
+      gamma_correction(drv->requested_level_limited, INPUT_OFFSET,
+                       BACKLIGHT_MAX_LEVEL, drv->gamma_exp, USTEPS_COUNT);
 
   // Calculate the mapping of requested level to steps (quotient)
   drv->requested_step =

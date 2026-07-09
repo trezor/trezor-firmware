@@ -14,8 +14,7 @@
     },
     {
       "parameters": {
-        "path": "m/44'/501'/0'",
-        "chunkify": true
+        "path": "m/44'/501'/0'"
       },
       "result": {
         "expected_address": "4UR47Kp4FxGJiJZZGSPAzXqRgMmZ27oVfGhHoLmcHakE"
@@ -23,8 +22,7 @@
     },
     {
       "parameters": {
-        "path": "m/44'/501'/0'/0'",
-        "chunkify": false
+        "path": "m/44'/501'/0'/0'"
       },
       "result": {
         "expected_address": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"

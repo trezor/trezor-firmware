@@ -49,12 +49,6 @@
     "address__title_receive_address": "Receive address",
     "address__title_refund_address": "Refund address",
     "address__title_yours": "Yours",
-    "address__warning_not_yours": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "This is NOT your address"
-    },
     "address__xpub": {
       "Bolt": "XPUB",
       "Caesar": "XPUB",
@@ -2889,9 +2883,6 @@
       "Delizia": "",
       "Eckhart": "Scan QR code to pair"
     },
-    "tron__claim_unfrozen_balance": "Claim unfrozen balance?",
-    "tron__claim_voting_rewards": "Claim voting rewards?",
-    "tron__owner_address": "Owner address",
     "tutorial__continue": "Continue tutorial",
     "tutorial__did_you_know": {
       "Bolt": "",

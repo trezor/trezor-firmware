@@ -76,12 +76,6 @@ impl Obj {
         unsafe { Self::from_bits(0) }
     }
 
-    pub const fn const_sentinel() -> Self {
-        // micropython/py/obj.h
-        // #define MP_OBJ_SENTINEL (MP_OBJ_FROM_PTR((void *)4))
-        unsafe { Self::from_bits(4) }
-    }
-
     pub const fn const_none() -> Self {
         // micropython/py/obj.h
         // #define mp_const_none MP_OBJ_NEW_IMMEDIATE_OBJ(0)
@@ -388,16 +382,6 @@ impl TryFrom<Obj> for u16 {
     }
 }
 
-impl TryFrom<Obj> for i16 {
-    type Error = Error;
-
-    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let val = i32::try_from(obj)?;
-        let this = Self::try_from(val)?;
-        Ok(this)
-    }
-}
-
 impl TryFrom<Obj> for u32 {
     type Error = Error;
 
@@ -430,17 +414,14 @@ impl TryFrom<Obj> for usize {
     }
 }
 
-impl<T, E> TryFrom<Option<T>> for Obj
+impl<T> From<Option<T>> for Obj
 where
-    T: TryInto<Obj, Error = E>,
-    E: Into<Error>,
+    T: Into<Obj>,
 {
-    type Error = Error;
-
-    fn try_from(val: Option<T>) -> Result<Self, Error> {
+    fn from(val: Option<T>) -> Self {
         match val {
-            Some(v) => v.try_into().map_err(|e| e.into()),
-            None => Ok(Self::const_none()),
+            Some(v) => v.into(),
+            None => Self::const_none(),
         }
     }
 }

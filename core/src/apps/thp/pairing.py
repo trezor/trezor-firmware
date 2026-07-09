@@ -144,7 +144,8 @@ async def handle_pairing_request(
             # Should raise UnexpectedMessageException
             result = await ctx.show_pairing_method_screen()
         except UnexpectedMessageException as e:
-            raw_response = e.msg
+            if (raw_response := e.msg) is None:
+                raise  # propagate stale channel preemption
             req_type = protobuf.type_for_wire(
                 ctx.message_type_enum_name, raw_response.type
             )
@@ -190,7 +191,7 @@ async def handle_credential_phase(
     if credential is not None:
         autoconnect = is_credential_autoconnect(credential)
         if not autoconnect:
-            autoconnect = ctx.channel_ctx.is_autoconnected()
+            autoconnect = ctx.channel_ctx.is_channel_to_replace()
         if credential.cred_metadata is not None:
             ctx.host_name = credential.cred_metadata.host_name
             ctx.app_name = credential.cred_metadata.app_name
@@ -403,10 +404,13 @@ async def _handle_credential_request(
         # Cannot ask for autoconnect=True credential directly after pairing
         if ctx.channel_ctx.credential is None:
             raise DataError("Cannot ask for autoconnect credential after pairing")
+        from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY
 
         from .credential_manager import validate_credential
 
-        host_static_public_key = ctx.channel_ctx.get_host_static_public_key()
+        host_static_public_key = ctx.channel_ctx.channel_cache.get(
+            CHANNEL_HOST_STATIC_PUBKEY
+        )
 
         if not host_static_public_key or not validate_credential(
             credential=ctx.channel_ctx.credential,
@@ -450,7 +454,7 @@ async def _handle_end_request(
 
 
 async def _end_pairing(ctx: PairingContext) -> ThpEndResponse:
-    ctx.channel_ctx.end_pairing_and_replace()
+    ctx.channel_ctx.replace_old_channels_with_the_same_host_public_key()
     ctx.channel_ctx.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
     return ThpEndResponse()
 

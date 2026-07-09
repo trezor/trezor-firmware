@@ -392,7 +392,7 @@ def sync_responses(
     write(transport, *ping_msg)
 
     for _ in range(retries):
-        resp_type, resp_bytes = read(transport, _ignore_bad_magic=True)
+        resp_type, resp_bytes = read(transport)
         resp = mapping.decode(resp_type, resp_bytes)
         if isinstance(resp, messages.Success) and resp.message == sync_string:
             return

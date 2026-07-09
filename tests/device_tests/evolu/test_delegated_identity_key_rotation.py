@@ -89,7 +89,7 @@ def test_rotate_affects_index_management(client: Client):
 
     with pytest.raises(
         TrezorFailure,
-        match=r"ProcessError: Rotation index already set.",
+        match=r"FirmwareError: Rotation index already set.",
     ):
         evolu.index_management(client.get_session(), rotation_index=50)
 
@@ -103,13 +103,13 @@ def test_index_management_cannot_overwrite_existing_index(client: Client):
 
     with pytest.raises(
         TrezorFailure,
-        match=r"ProcessError: Rotation index already set.",
+        match=r"FirmwareError: Rotation index already set.",
     ):
         evolu.index_management(client.get_session(), rotation_index=5)
 
     with pytest.raises(
         TrezorFailure,
-        match=r"ProcessError: Rotation index already set.",
+        match=r"FirmwareError: Rotation index already set.",
     ):
         evolu.index_management(client.get_session(), rotation_index=15)
 

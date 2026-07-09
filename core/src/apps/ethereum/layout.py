@@ -47,7 +47,6 @@ async def require_confirm_approve(
     token_address: AnyBytes,
     is_revoke: bool,
     chunkify: bool,
-    native_amount: str | None = None,
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_approve
 
@@ -82,22 +81,15 @@ async def require_confirm_approve(
         maximum_fee,
         fee_info_items,
         chunkify=chunkify,
-        native_amount=native_amount,
     )
 
 
 async def require_confirm_clear_signing(
-    recipient_str: str,
-    intent: str,
-    properties: list[StrPropertyType],
-    maximum_fee: str,
-    amount: str | None = None,
+    recipient_str: str, intent: str, properties: list[StrPropertyType], maximum_fee: str
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_clear_signing
 
-    await confirm_ethereum_clear_signing(
-        recipient_str, intent, properties, maximum_fee, amount
-    )
+    await confirm_ethereum_clear_signing(recipient_str, intent, properties, maximum_fee)
 
 
 async def require_confirm_tx(
@@ -110,7 +102,6 @@ async def require_confirm_tx(
     token: EthereumTokenInfo | None,
     is_send: bool,
     chunkify: bool,
-    native_amount: str | None = None,
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_tx, ethereum_address_title
 
@@ -141,7 +132,6 @@ async def require_confirm_tx(
         maximum_fee,
         fee_info_items,
         is_send,
-        native_amount=native_amount,
         chunkify=chunkify,
     )
 

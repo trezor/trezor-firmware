@@ -336,7 +336,6 @@ pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn show_device_menu(
         init_submenu_idx: Option<u8>,
-        init_submenu_offset: i16,
         backup_failed: bool,
         backup_needed: bool,
         ble_enabled: bool,

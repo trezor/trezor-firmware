@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "bitmaps.h"
-#include "fault_handler.h"
 #include "firmware/usb.h"
 #include "hmac_drbg.h"
 #include "layout.h"
@@ -131,5 +130,3 @@ void show_pin_too_many_screen(void) {
   error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.",
                  NULL);
 }
-
-void tc_fault_handler(const char *msg) { ensure(secfalse, msg); }

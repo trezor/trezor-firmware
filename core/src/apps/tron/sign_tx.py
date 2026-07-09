@@ -34,8 +34,6 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
     from apps.common import paths
 
-    from .helpers import get_encoded_address
-
     await paths.validate_path(keychain, msg.address_n)
     await _validate_tx_fields(msg)
 
@@ -46,13 +44,8 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
         paths.address_n_to_str(msg.address_n),
     )
 
-    node = keychain.derive(msg.address_n)
-    signer_address = get_encoded_address(b"\x41" + node.ethereum_pubkeyhash())
-
     fee_limit = msg.fee_limit or 0
-    raw_contract = await process_contract(
-        contract, fee_limit, account_details, signer_address
-    )
+    raw_contract = await process_contract(contract, fee_limit, account_details)
 
     raw_tx = messages.TronRawTransaction(
         ref_block_bytes=msg.ref_block_bytes,
@@ -66,6 +59,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     serialized_tx = dump_message_buffer(raw_tx)
 
     w_hash = sha256(serialized_tx).digest()
+    node = keychain.derive(msg.address_n)
 
     # https://tronprotocol.github.io/documentation-en/mechanism-algorithm/account/#algorithm
     signature = secp256k1.sign(node.private_key(), w_hash, False)
@@ -77,10 +71,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
 
 async def process_contract(
-    contract: MessageType,
-    fee_limit: int,
-    account_details: tuple[str | None, str],
-    signer_address: str,
+    contract: MessageType, fee_limit: int, account_details: tuple[str | None, str]
 ) -> TronRawContract:
 
     # Importing individual enums would de-clutter the code a bit.
@@ -88,20 +79,7 @@ async def process_contract(
     from trezor import TR
     from trezor.enums import TronRawContractType
 
-    from .helpers import get_encoded_address
-
     _INT64_MAX = const(9_223_372_036_854_775_807)
-
-    # Every Tron contract carries an `owner_address` (proto field 1). Encode it
-    # and compare against the signing address once here so any contract branch
-    # can reuse `is_different_owner`.
-    owner_address_bytes = getattr(contract, "owner_address", None)
-    owner_address = (
-        get_encoded_address(owner_address_bytes)
-        if owner_address_bytes is not None
-        else None
-    )
-    is_different_owner = owner_address is not None and owner_address != signer_address
 
     if messages.TronTransferContract.is_type_of(contract):
         from .layout import confirm_trx_transfer
@@ -157,19 +135,7 @@ async def process_contract(
 
     elif messages.TronWithdrawUnfreeze.is_type_of(contract):
         contract_type = TronRawContractType.WithdrawExpireUnfreezeContract
-        await layout.confirm_claim(
-            owner_address if is_different_owner else None,
-            account_details,
-            TR.tron__claim_unfrozen_balance,
-        )
-
-    elif messages.TronWithdrawBalance.is_type_of(contract):
-        contract_type = TronRawContractType.WithdrawBalanceContract
-        await layout.confirm_claim(
-            owner_address if is_different_owner else None,
-            account_details,
-            TR.tron__claim_voting_rewards,
-        )
+        await layout.confirm_withdraw_unfreeze(contract.owner_address)
 
     elif messages.TronVoteWitnessContract.is_type_of(contract):
         if len(contract.votes) > 9:

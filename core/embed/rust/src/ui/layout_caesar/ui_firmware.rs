@@ -562,11 +562,9 @@ impl FirmwareUI for UICaesar {
                     if let Some(amount) = amount {
                         if let Some(amount_label) = amount_label {
                             has_amount = true;
-                            ops.add_text_with_font(amount_label, fonts::FONT_BOLD);
-                            if !amount_label.is_empty() && !amount.is_empty() {
-                                ops.add_newline();
-                            }
-                            ops.add_text_with_font(amount, fonts::FONT_MONO);
+                            ops.add_text_with_font(amount_label, fonts::FONT_BOLD)
+                                .add_newline()
+                                .add_text_with_font(amount, fonts::FONT_MONO);
                         }
                     }
 
@@ -1100,7 +1098,6 @@ impl FirmwareUI for UICaesar {
 
     fn show_device_menu(
         _init_submenu_idx: Option<u8>,
-        _init_submenu_offset: i16,
         _backup_failed: bool,
         _backup_needed: bool,
         _ble_enabled: bool,

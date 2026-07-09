@@ -9,4 +9,3 @@ Topics that do not fit elsewhere:
 - [Running Trezor firmware on STM32F429I-DISC1](disc1.md)
 - [Translation data format](translations.md)
 - [Optiga configuration](optiga.md)
-- [Tropic configurations](tropic_configs.md)

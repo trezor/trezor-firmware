@@ -8,8 +8,8 @@ use std::{
 };
 
 use xbuild::{
-    CLibrary, InputFiles, OutputType, Result, WrapErr, bail, bail_unsupported, current_model_id,
-    ensure, model_ids,
+    CLibrary, InputFiles, Result, WrapErr, bail, bail_unsupported, current_model_id, ensure,
+    model_ids,
 };
 
 fn main() -> Result<()> {
@@ -118,20 +118,11 @@ fn main() -> Result<()> {
 
         lib.add_sources_in_dir_with_attrs(mpy_dir, ["py/gc.c", "py/pystack.c", "py/vm.c"], attrs);
 
-        // silence warning about unterminated string literals
-        // TODO: remove this after we upgrade MicroPython
-        let attrs_silence_unterminated =
-            xbuild::CompileAttrs::new().with_flag("-Wno-unterminated-string-initialization");
-        lib.add_sources_in_dir_with_attrs(
-            mpy_dir,
-            ["extmod/moductypes.c"],
-            Some(attrs_silence_unterminated),
-        );
-
         lib.add_sources_in_dir(
             mpy_dir,
             [
                 "extmod/modubinascii.c",
+                "extmod/moductypes.c",
                 "extmod/moduheapq.c",
                 "extmod/modutimeq.c",
                 "extmod/utime_mphal.c",
@@ -462,8 +453,8 @@ impl<'a> MpyBuilder<'a> {
         // the preprocessed output in corresponding .upydef files next to
         // each object file.
         let upydefs = self.lib.process_sources(
-            OutputType::Preprocessed("upydef"),
-            Some(&["-DNO_QSTR", "-DN_X64", "-DN_X86", "-DN_THUMB"]),
+            "upydef",
+            Some(&["-E", "-DNO_QSTR", "-DN_X64", "-DN_X86", "-DN_THUMB"]),
             Some(&extra_sources),
         )?;
 

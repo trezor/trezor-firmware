@@ -5,12 +5,9 @@ from trezor.crypto import hmac
 from trezor.messages import (
     ThpAuthenticatedCredentialData,
     ThpCredentialMetadata,
-    ThpHandshakeCompletionReqNoisePayload,
     ThpPairingCredential,
 )
-from trezor.utils import truncate_utf8
 from trezor.wire.message_handler import wrap_protobuf_load
-from trezorthp import MAX_CREDENTIAL_LEN
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -56,20 +53,6 @@ def issue_credential(
     Issue a pairing credential binded to the provided host static public key
     and credential metadata.
     """
-    # Truncate app_name and host_name to fit MAX_CREDENTIAL_LEN
-    if (
-        len(credential_metadata.app_name.encode())
-        + len(credential_metadata.host_name.encode())
-        > 80
-    ):
-        credential_metadata.host_name = truncate_utf8(credential_metadata.host_name, 40)
-    if (
-        len(credential_metadata.app_name.encode())
-        + len(credential_metadata.host_name.encode())
-        > 80
-    ):
-        credential_metadata.app_name = truncate_utf8(credential_metadata.app_name, 40)
-
     cred_auth_key = derive_cred_auth_key()
     proto_msg = ThpAuthenticatedCredentialData(
         host_static_public_key=host_static_public_key,
@@ -80,17 +63,7 @@ def issue_credential(
 
     proto_msg = ThpPairingCredential(cred_metadata=credential_metadata, mac=mac)
     credential_raw = _encode_message_into_new_buffer(proto_msg)
-    if len(credential_raw) > MAX_CREDENTIAL_LEN:
-        raise ValueError("Credential too long")
     return credential_raw
-
-
-def unwrap_credential(encoded_noise_payload: AnyBytes) -> AnyBytes | None:
-    expected_type = protobuf.type_for_name("ThpHandshakeCompletionReqNoisePayload")
-    msg = wrap_protobuf_load(encoded_noise_payload, expected_type)
-    if not ThpHandshakeCompletionReqNoisePayload.is_type_of(msg):
-        raise TypeError
-    return msg.host_pairing_credential
 
 
 def decode_credential(
@@ -101,8 +74,7 @@ def decode_credential(
     """
     expected_type = protobuf.type_for_name("ThpPairingCredential")
     credential = wrap_protobuf_load(encoded_pairing_credential_message, expected_type)
-    if not ThpPairingCredential.is_type_of(credential):
-        raise TypeError
+    assert ThpPairingCredential.is_type_of(credential)
     return credential
 
 

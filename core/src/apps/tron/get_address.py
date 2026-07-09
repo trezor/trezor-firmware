@@ -15,18 +15,20 @@ if TYPE_CHECKING:
 )
 async def get_address(msg: TronGetAddress, keychain: Keychain) -> TronAddress:
     from trezor import TR
+    from trezor.crypto.curve import secp256k1
     from trezor.messages import TronAddress
     from trezor.ui.layouts import show_address
 
     from apps.common import paths
     from apps.common.address_mac import get_address_mac
 
-    from .helpers import get_encoded_address
+    from .helpers import address_from_public_key
 
     address_n = msg.address_n
     await paths.validate_path(keychain, address_n)
     node = keychain.derive(address_n)
-    address = get_encoded_address(b"\x41" + node.ethereum_pubkeyhash())
+    public_key = secp256k1.publickey(node.private_key(), False)
+    address = address_from_public_key(public_key)
     mac = get_address_mac(address, SLIP44_ID, address_n, keychain)
 
     if msg.show_display:

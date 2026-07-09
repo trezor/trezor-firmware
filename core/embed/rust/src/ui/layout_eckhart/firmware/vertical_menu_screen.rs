@@ -35,8 +35,6 @@ pub struct VerticalMenuScreen<T> {
     swipe_config: SwipeConfig,
     /// Inertia scrolling state
     inertia: InertiaState,
-    /// Initial vertical offset
-    initial_offset: i16,
 }
 
 pub enum VerticalMenuScreenMsg {
@@ -70,7 +68,6 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
                 .with_swipe(Direction::Up, SwipeSettings::Default)
                 .with_swipe(Direction::Down, SwipeSettings::Default),
             inertia: InertiaState::new(),
-            initial_offset: 0,
         }
     }
 
@@ -89,25 +86,13 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
         self
     }
 
-    pub fn with_initial_offset(mut self, offset: i16) -> Self {
-        self.initial_offset = offset;
-        self
-    }
-
-    pub fn get_offset(&self) -> i16 {
-        self.menu.get_offset()
-    }
-
     /// Update swipe detection and buttons state based on menu size
     pub fn initialize_screen(&mut self, ctx: &mut EventCtx) {
-        // `self.initial_offset` replaced with 0, so next screens are not "resumed".
-        let initial_offset = core::mem::take(&mut self.initial_offset);
-
         if animation_disabled() {
             self.swipe = Some(SwipeDetect::new());
             ctx.enable_swipe();
             // Set default position for the sliding window
-            self.menu.set_offset(initial_offset);
+            self.menu.set_offset(0);
             // Update the menu buttons state
             self.menu.update_button_states(ctx);
             return;
@@ -125,7 +110,7 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
         }
 
         // Set default position for the sliding window
-        self.menu.set_offset(initial_offset);
+        self.menu.set_offset(0);
         // Update button states
         self.menu.update_button_states(ctx);
     }

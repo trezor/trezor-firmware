@@ -70,10 +70,11 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         except Exception:
             msg_type = f"{msg.type} - unknown message type"
         if utils.USE_THP:
+            cid = utils.hexlify_if_bytes(ctx.channel_id)
             log.info(
                 __name__,
-                "(cid: %04x) received message: %s",
-                ctx.channel_id,
+                "(cid: %s) received message: %s",
+                cid,
                 msg_type,
                 iface=ctx.iface,
             )
@@ -178,9 +179,11 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     return msg.type in AVOID_RESTARTING_FOR
 
 
-# Don't restart MicroPython event loop, to lower device interaction latency.
-# Allows keeping T3W1 device menu open when `GetFeatures` is received (#6211).
-AVOID_RESTARTING_FOR: Container[int] = (MessageType.GetFeatures,)
+if utils.UI_LAYOUT == "ECKHART":
+    # Don't close device menu when `GetFeatures` is received.
+    AVOID_RESTARTING_FOR: Container[int] = (MessageType.GetFeatures,)
+else:
+    AVOID_RESTARTING_FOR: Container[int] = ()
 
 
 def failure(exc: BaseException) -> Failure:

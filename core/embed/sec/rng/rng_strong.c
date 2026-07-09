@@ -34,7 +34,6 @@
 #include "memzero.h"
 #include "rand.h"
 
-#if defined(USE_OPTIGA) || defined(USE_TROPIC)
 bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   rng_fill_buffer(buffer, buffer_size);
 
@@ -70,13 +69,6 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   memzero(block, sizeof(block));
   return true;
 }
-
-#else  // defined(USE_OPTIGA) || defined(USE_TROPIC)
-bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
-  rng_fill_buffer(buffer, buffer_size);
-  return true;
-}
-#endif
 
 void rng_fill_buffer_strong_time(uint32_t* time_ms) {
   // Assuming the buffer size is 32 bytes

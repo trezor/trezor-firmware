@@ -225,8 +225,6 @@ impl CLibrary {
             // final binary according to the selected binary type.
             let target_ld = if has_feature("mcu_stm32u5g") {
                 format!("sys/linker/stm32u5g/{binary_type}.ld")
-            } else if has_feature("mcu_stm32u5a") {
-                format!("sys/linker/stm32u5a/{binary_type}.ld")
             } else if has_feature("mcu_stm32u58") {
                 format!("sys/linker/stm32u58/{binary_type}.ld")
             } else if has_feature("mcu_stm32f4") {

@@ -205,7 +205,7 @@ fn add_crypto(lib: &mut xbuild::CLibrary) -> Result<()> {
     }
 
     if cfg!(feature = "noise") {
-        lib.add_sources_in_dir_with_attrs(crypto_path, ["noise_kk1.c"], Some(crypto_attrs.clone()));
+        lib.add_sources_in_dir_with_attrs(crypto_path, ["noise.c"], Some(crypto_attrs.clone()));
     }
 
     if cfg!(feature = "secp256k1_zkp") {

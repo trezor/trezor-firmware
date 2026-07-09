@@ -25,7 +25,7 @@ impl Type {
         unsafe { Obj::from_ptr(self as *const _ as *mut _) }
     }
 
-    #[cfg(any(feature = "debug", feature = "dbg_console"))]
+    #[cfg(feature = "debug")]
     pub fn name(&self) -> &'static str {
         use super::qstr::Qstr;
 

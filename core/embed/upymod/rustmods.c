@@ -36,14 +36,10 @@ MP_REGISTER_MODULE(MP_QSTR_trezortranslate, mp_module_trezortranslate);
 MP_REGISTER_MODULE(MP_QSTR_trezorble, mp_module_trezorble);
 #endif
 
-#ifdef USE_THP
-MP_REGISTER_MODULE(MP_QSTR_trezorthp, mp_module_trezorthp);
-#endif
-
 #if defined(TREZOR_EMULATOR) && PYOPT == 0
 MP_REGISTER_MODULE(MP_QSTR_coveragedata, mp_module_coveragedata);
 #endif
 
-#if defined(USE_DBG_CONSOLE)
+#if !PYOPT
 MP_REGISTER_MODULE(MP_QSTR_trezorlog, mp_module_trezorlog);
 #endif

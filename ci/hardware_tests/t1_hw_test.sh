@@ -15,5 +15,5 @@ set -x # trace commands
 ./record_video.sh ${T1_CAMERA} ${SHA} start
 (cd ../.. && uv sync)
 #uv run python bootstrap.py T1B1  # install official firmware first
-uv run python bootstrap.py T1B1 ../../legacy/firmware/firmware-T1B1-*.bin
+uv run python bootstrap.py T1B1 ../../firmware-T1*.bin
 uv run pytest ../../tests/device_tests

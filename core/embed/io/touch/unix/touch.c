@@ -82,15 +82,13 @@ static bool is_inside_display(int x, int y) {
 }
 
 static void handle_mouse_events(touch_driver_t* drv, SDL_Event* event) {
-  int button_x = (int)event->button.x;
-  int button_y = (int)event->button.y;
-  bool inside_display = is_inside_display(button_x, button_y);
+  bool inside_display = is_inside_display(event->button.x, event->button.y);
 
   switch (event->type) {
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
       if (inside_display) {
-        int x = button_x - sdl_touch_offset_x;
-        int y = button_y - sdl_touch_offset_y;
+        int x = event->button.x - sdl_touch_offset_x;
+        int y = event->button.y - sdl_touch_offset_y;
         drv->last_event = TOUCH_START | touch_pack_xy(x, y);
         drv->state = MOUSE_DOWN_INSIDE;
       }
@@ -98,9 +96,9 @@ static void handle_mouse_events(touch_driver_t* drv, SDL_Event* event) {
 
     case SDL_EVENT_MOUSE_BUTTON_UP:
       if (drv->state != IDLE) {
-        int x = inside_display ? button_x - sdl_touch_offset_x
+        int x = inside_display ? event->button.x - sdl_touch_offset_x
                                : touch_unpack_x(drv->last_event);
-        int y = inside_display ? button_y - sdl_touch_offset_y
+        int y = inside_display ? event->button.y - sdl_touch_offset_y
                                : touch_unpack_y(drv->last_event);
         ;
         drv->last_event = TOUCH_END | touch_pack_xy(x, y);
@@ -111,8 +109,8 @@ static void handle_mouse_events(touch_driver_t* drv, SDL_Event* event) {
     case SDL_EVENT_MOUSE_MOTION:
       if (drv->state != IDLE) {
         if (inside_display) {
-          int x = (int)event->motion.x - sdl_touch_offset_x;
-          int y = (int)event->motion.y - sdl_touch_offset_y;
+          int x = event->motion.x - sdl_touch_offset_x;
+          int y = event->motion.y - sdl_touch_offset_y;
           // simulate TOUCH_START if pressed in mouse returned on visible area
           if (drv->state == MOUSE_DOWN_OUTSIDE) {
             drv->last_event = TOUCH_START | touch_pack_xy(x, y);

@@ -480,7 +480,7 @@ def make_label_checker(
         if absent:
             seen_absent.update(label for label in absent if label in text)
 
-    on_page.seen = seen  # type: ignore [attr-defined]
+    on_page.seen = seen  # type: ignore[attr-defined]
 
     def assert_all_seen() -> None:
         assert seen == (expected or set())

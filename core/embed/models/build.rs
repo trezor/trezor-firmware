@@ -10,16 +10,12 @@ fn main() -> Result<()> {
         "T3B1"
     } else if cfg!(feature = "model_t3t1") {
         "T3T1"
-    } else if cfg!(feature = "model_t3t2") {
-        "T3T2"
     } else if cfg!(feature = "model_t3w1") {
         "T3W1"
     } else if cfg!(feature = "model_d001") {
         "D001"
     } else if cfg!(feature = "model_d002") {
         "D002"
-    } else if cfg!(feature = "model_d003") {
-        "D003"
     } else {
         ""
     };
@@ -53,9 +49,8 @@ fn main() -> Result<()> {
             "-Wno-enum-conversion",
             "-Wno-type-limits",
             "-Wno-shift-negative-value",
-            "-Wfloat-conversion",
-            "-Wdouble-promotion",
             "-fno-common",
+            "-fsingle-precision-constant",
             "-fdata-sections",
             "-ffunction-sections",
             "-g",
@@ -168,16 +163,12 @@ fn main() -> Result<()> {
             define_model_t3b1(lib, &board_header)?;
         } else if cfg!(feature = "model_t3t1") {
             define_model_t3t1(lib, &board_header)?;
-        } else if cfg!(feature = "model_t3t2") {
-            define_model_t3t2(lib, &board_header)?;
         } else if cfg!(feature = "model_t3w1") {
             define_model_t3w1(lib, &board_header)?;
         } else if cfg!(feature = "model_d001") {
             define_model_d001(lib, &board_header)?;
         } else if cfg!(feature = "model_d002") {
             define_model_d002(lib, &board_header)?;
-        } else if cfg!(feature = "model_d003") {
-            define_model_d003(lib, &board_header)?;
         } else {
             bail_unsupported!();
         }
@@ -292,28 +283,6 @@ fn define_model_t3t1(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     Ok(())
 }
 
-fn define_model_t3t2(lib: &mut CLibrary, board_header: &str) -> Result<()> {
-    lib.add_defines([
-        ("TREZOR_MODEL_T3T2", None),
-        ("TREZOR_BOARD", Some(board_header)),
-        ("MODEL_HEADER", Some("\"T3T2/model_T3T2.h\"")),
-        ("VERSIONS_HEADER", Some("\"T3T2/versions.h\"")),
-        ("OTP_LAYOUT_HEADER", Some("\"T3T2/otp_layout.h\"")),
-        (
-            "UNIT_PROPERTIES_CONTENT_HEADER",
-            Some("\"T3T2/unit_properties_content.h\""),
-        ),
-        ("HW_MODEL", Some(model_to_num("T3T2").to_string().as_str())),
-        ("HW_REVISION", Some("0")),
-        ("USE_BOOTARGS_RSOD", Some("1")),
-        ("LSI_VALUE", Some("250")),
-        ("USE_LSI", Some("1")),
-        ("USE_OEM_KEYS_CHECK", Some("1")),
-    ]);
-
-    Ok(())
-}
-
 fn define_model_t3b1(lib: &mut CLibrary, board_header: &str) -> Result<()> {
     lib.add_defines([
         ("TREZOR_MODEL_T3B1", None),
@@ -406,29 +375,6 @@ fn define_model_d002(lib: &mut CLibrary, board_header: &str) -> Result<()> {
         ),
         ("HW_MODEL", Some(model_to_num("D002").to_string().as_str())),
         ("HW_REVISION", Some("0")),
-        ("HSE_VALUE", Some("16000000")),
-        ("USE_HSE", Some("1")),
-        ("USE_BOOTARGS_RSOD", Some("1")),
-    ]);
-
-    Ok(())
-}
-
-fn define_model_d003(lib: &mut CLibrary, board_header: &str) -> Result<()> {
-    lib.add_defines([
-        ("TREZOR_MODEL_D003", None),
-        ("TREZOR_BOARD", Some(board_header)),
-        ("MODEL_HEADER", Some("\"D003/model_D003.h\"")),
-        ("VERSIONS_HEADER", Some("\"D003/versions.h\"")),
-        ("OTP_LAYOUT_HEADER", Some("\"D003/otp_layout.h\"")),
-        (
-            "UNIT_PROPERTIES_CONTENT_HEADER",
-            Some("\"D003/unit_properties_content.h\""),
-        ),
-        ("HW_MODEL", Some(model_to_num("D003").to_string().as_str())),
-        ("HW_REVISION", Some("0")),
-        // 16 MHz HSE crystal, same as the U5G9J-DK, matching the board's
-        // CubeMX clock configuration (160 MHz SYSCLK).
         ("HSE_VALUE", Some("16000000")),
         ("USE_HSE", Some("1")),
         ("USE_BOOTARGS_RSOD", Some("1")),

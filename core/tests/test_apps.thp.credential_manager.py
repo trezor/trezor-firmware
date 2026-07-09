@@ -7,10 +7,8 @@ if utils.USE_THP:
 
     from apps.thp import credential_manager
 
-    def _issue_credential(
-        host_name: str, host_static_public_key: bytes, app_name: str = "APP"
-    ) -> bytes:
-        metadata = ThpCredentialMetadata(host_name=host_name, app_name=app_name)
+    def _issue_credential(host_name: str, host_static_public_key: bytes) -> bytes:
+        metadata = ThpCredentialMetadata(host_name=host_name, app_name="APP")
         return credential_manager.issue_credential(host_static_public_key, metadata)
 
     def _dummy_log(name: str, msg: str, *args):
@@ -71,27 +69,6 @@ class TestTrezorHostProtocolCredentialManager(unittest.TestCase):
         )
         self.assertTrue(
             credential_manager.decode_and_validate_credential(cred_4, DUMMY_KEY_1)
-        )
-
-    def test_credentials_truncate(self):
-        app_name = "a" * 100
-        host_name = "h" * 100
-
-        cred_long = _issue_credential(host_name, DUMMY_KEY_1, app_name)
-
-        self.assertTrue(len(cred_long) < 200)
-        self.assertTrue(
-            credential_manager.decode_and_validate_credential(cred_long, DUMMY_KEY_1)
-        )
-
-        app_name = "🐧" * 100
-        host_name = "Ř" * 100
-
-        cred_long = _issue_credential(host_name, DUMMY_KEY_1, app_name)
-
-        self.assertTrue(len(cred_long) < 200)
-        self.assertTrue(
-            credential_manager.decode_and_validate_credential(cred_long, DUMMY_KEY_1)
         )
 
     def test_protobuf_encoding(self):

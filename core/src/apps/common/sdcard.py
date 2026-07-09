@@ -55,6 +55,7 @@ async def _confirm_format_card() -> None:
         TR.sd_card__unknown_filesystem,
         TR.sd_card__use_different_card,
         verb=TR.buttons__format,
+        verb_cancel=TR.buttons__cancel,
         exc=SdCardUnavailable("SD card not formatted."),
     )
 

@@ -99,7 +99,6 @@ static void drivers_init(void) {
 
 #ifdef USE_TROPIC
   tropic_init();
-  ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
 #endif
 
   usb_configure(NULL);

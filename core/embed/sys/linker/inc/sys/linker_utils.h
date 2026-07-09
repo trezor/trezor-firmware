@@ -94,17 +94,6 @@ typedef struct {
             },                                    \
     };                                            \
   })
-#elif defined(STM32U5A5xx)
-#define MEMREGION_ALL_STARTUP_RAM                 \
-  ({                                              \
-    (memregion_t){                                \
-        .block =                                  \
-            {                                     \
-                MEMBLOCK(SRAM1_BASE, SIZE_2496K), \
-                MEMBLOCK(SRAM4_BASE, SIZE_16K),   \
-            },                                    \
-    };                                            \
-  })
 #else
 #error "Unknown STM32 family"
 #endif

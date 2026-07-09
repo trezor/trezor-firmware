@@ -36,7 +36,7 @@ from ..exceptions import (
 )
 from . import control_byte, curve25519, exceptions, thp_io
 from .credentials import TrezorPublicKeys, find_credential
-from .message import BROADCAST_CHANNEL_ID, Message
+from .message import Message
 
 if t.TYPE_CHECKING:
     from contextlib import AbstractContextManager
@@ -209,7 +209,7 @@ class Channel:
             message = Message.broadcast(control_byte.PING, nonce)
             thp_io.write_payload_to_wire(self.transport, message)
             for _ in range(1 + retries):
-                message = self._read(timeout=timeout, allow_broadcast=True)
+                message = self._read(timeout=timeout)
                 if not message.is_pong():
                     LOG.debug(
                         "Discarding non-pong message: %s", message.to_bytes().hex()
@@ -510,9 +510,7 @@ class Channel:
             self._send_ack(message)
             return self.noise.decrypt(bytes(message.data))
 
-    def _read(
-        self, timeout: float | None = None, allow_broadcast: bool = False
-    ) -> Message:
+    def _read(self, timeout: float | None = None) -> Message:
         if timeout is None:
             timeout = client._DEFAULT_READ_TIMEOUT
 
@@ -523,17 +521,6 @@ class Channel:
 
         while True:
             message = thp_io.read(self.transport, timeout)
-
-            if message.cid != self.channel_id and (
-                not allow_broadcast or message.cid != BROADCAST_CHANNEL_ID
-            ):
-                LOG.warning(
-                    "Received message with unexpected channel_id=%04x, expected=%04x",
-                    message.cid,
-                    self.channel_id,
-                )
-                continue
-
             if message.seq_bit is not None:
                 if message.seq_bit != self.sync_bit_receive:
                     LOG.warning(

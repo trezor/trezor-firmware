@@ -74,7 +74,6 @@ async def handle_device_menu() -> None:
     from trezor.wire.thp import paired_cache
 
     init_submenu_idx = None
-    init_submenu_offset = 0
 
     # Remain in the device loop until the menu is explicitly closed
     while True:
@@ -136,7 +135,6 @@ async def handle_device_menu() -> None:
 
         with trezorui_api.show_device_menu(
             init_submenu_idx=init_submenu_idx,
-            init_submenu_offset=init_submenu_offset,
             backup_failed=backup_failed,
             backup_needed=backup_needed,
             ble_enabled=ble_enabled,
@@ -167,13 +165,21 @@ async def handle_device_menu() -> None:
             production_year=production_year,
         ) as layout:
             menu_result = await interact(
-                layout, br_name=None, layout_type=UsbAwareLayout
+                layout,
+                br_name=None,
+                raise_on_cancel=None,
+                layout_type=UsbAwareLayout,
             )
 
-        if not isinstance(menu_result, tuple) or len(menu_result) != 4:
+        if not isinstance(menu_result, tuple) or len(menu_result) != 3:
             raise RuntimeError(f"Unknown menu {menu_result}")
 
-        action, arg, init_submenu_idx, init_submenu_offset = menu_result
+        action, arg, parent_submenu_idx = menu_result
+        # special handling
+        if action == DeviceMenuResult.RefreshMenu:
+            init_submenu_idx = arg
+            continue
+
         handler = _MENU_HANDLERS.get(action)
         if not handler:
             raise RuntimeError(f"Unknown menu {menu_result}")
@@ -186,12 +192,11 @@ async def handle_device_menu() -> None:
         except ExitDeviceMenu:
             break
         except (ActionCancelled, PinCancelled):
-            # return to the submenu if handler was cancelled / succeeded
+            # return to the submenu if flow was cancelled
             continue
-
-
-async def handle_Close() -> None:
-    raise ExitDeviceMenu  # return to homescreen
+        finally:
+            # return to submenu on success or cancellation
+            init_submenu_idx = parent_submenu_idx
 
 
 async def handle_ReviewFailedBackup() -> None:
@@ -488,12 +493,7 @@ async def handle_RebootToBootloader() -> None:
     raise RuntimeError
 
 
-async def handle_RefreshMenu() -> None:
-    pass
-
-
 _MENU_HANDLERS = {
-    DeviceMenuResult.Close: handle_Close,
     DeviceMenuResult.ReviewFailedBackup: handle_ReviewFailedBackup,
     DeviceMenuResult.DisconnectDevice: handle_DisconnectDevice,
     DeviceMenuResult.PairDevice: handle_PairDevice,
@@ -516,5 +516,4 @@ _MENU_HANDLERS = {
     DeviceMenuResult.TurnOff: handle_TurnOff,
     DeviceMenuResult.Reboot: handle_Reboot,
     DeviceMenuResult.RebootToBootloader: handle_RebootToBootloader,
-    DeviceMenuResult.RefreshMenu: handle_RefreshMenu,
 }

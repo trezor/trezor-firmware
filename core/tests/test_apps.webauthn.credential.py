@@ -5,17 +5,11 @@ import storage
 import storage.device
 from trezor.crypto.hashlib import sha256
 
-if not utils.BITCOIN_ONLY:
-    from apps.common import mnemonic
-    from apps.webauthn.credential import (
-        _NAME_MAX_LENGTH,
-        Fido2Credential,
-        U2fCredential,
-    )
-    from apps.webauthn.fido2 import _distinguishable_cred_list
+from apps.common import mnemonic
+from apps.webauthn.credential import _NAME_MAX_LENGTH, Fido2Credential, U2fCredential
+from apps.webauthn.fido2 import _distinguishable_cred_list
 
 
-@unittest.skipUnless(not utils.BITCOIN_ONLY, "fido2")
 class TestCredential(unittest.TestCase):
     def test_fido2_credential_decode(self):
         mnemonic_secret = b"all all all all all all all all all all all all"
