@@ -352,6 +352,13 @@ def _prepared_test_ctx(
             "  pytest -m 'not sd_card' <test path>"
         )
 
+    if (warnings_log_file := request.config.getoption("warnings_log_file")) is not None:
+        # See https://docs.python.org/3/library/logging.html#integration-with-the-warnings-module
+        logging.captureWarnings(True)
+        logging.getLogger("py.warnings").addHandler(
+            logging.FileHandler(warnings_log_file)
+        )
+
     fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
 
     _raw_test_ctx.reset_debug_features()
@@ -537,6 +544,12 @@ def pytest_addoption(parser: "Parser") -> None:
         action="store",
         default=None,
         help="File path for verbose logging",
+    )
+    parser.addoption(
+        "--warnings-log-file",
+        action="store",
+        default=None,
+        help="File path for logging warnings",
     )
     parser.addoption(
         "--ignore-gc-leak",
