@@ -143,11 +143,13 @@ class InterfaceContext:
             update_channel_last_used(channel.channel_id)
             return channel
 
-    def write_payload(self, header: PacketHeader, payload: AnyBytes) -> Awaitable[None]:
+    async def write_payload(self, header: PacketHeader, payload: AnyBytes) -> None:
         checksum_bytes = checksum.compute(
             payload, checksum.compute_int(header.to_bytes())
         )
-        return self._write_payload_chunks(header, payload, checksum_bytes)
+        from trezor import loop
+        await loop.sleep(100)
+        return await self._write_payload_chunks(header, payload, checksum_bytes)
 
     def _write_payload_chunks(
         self, header: PacketHeader, *chunks: AnyBytes
