@@ -58,8 +58,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_make_new(const mp_obj_type_t *type,
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
                             allowed_args, vals);
 
-  mp_obj_Sha3_256_t *o = m_new_obj_with_finaliser(mp_obj_Sha3_256_t);
-  o->base.type = type;
+  mp_obj_Sha3_256_t *o = mp_obj_malloc_with_finaliser(mp_obj_Sha3_256_t, type);
   o->keccak = 0;
   sha3_256_Init(&(o->ctx));
   if (vals[1].u_obj != MP_OBJ_NULL) {
@@ -116,8 +115,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha3_256_digest_obj,
 STATIC mp_obj_t mod_trezorcrypto_Sha3_256_copy(size_t n_args,
                                                const mp_obj_t *args) {
   mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(args[0]);
-  mp_obj_Sha3_256_t *out = m_new_obj_with_finaliser(mp_obj_Sha3_256_t);
-  out->base.type = o->base.type;
+  mp_obj_Sha3_256_t *out =
+      mp_obj_malloc_with_finaliser(mp_obj_Sha3_256_t, o->base.type);
   out->keccak = o->keccak;
   memcpy(&(out->ctx), &(o->ctx), sizeof(SHA3_CTX));
   return MP_OBJ_FROM_PTR(out);

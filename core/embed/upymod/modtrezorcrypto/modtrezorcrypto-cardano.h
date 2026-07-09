@@ -104,8 +104,8 @@ STATIC mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret length"));
   }
 
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
-  o->base.type = &mod_trezorcrypto_HDNode_type;
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
   const int res = hdnode_from_secret_cardano(bufinfo.buf, &o->hdnode);
   if (res != 1) {
     m_del_obj(mp_obj_HDNode_t, o);
@@ -147,8 +147,8 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
         MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
 
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
-  o->base.type = &mod_trezorcrypto_HDNode_type;
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
   o->hdnode = hdnode;
   o->fingerprint = hdnode_fingerprint(&o->hdnode);
   return MP_OBJ_FROM_PTR(o);
@@ -184,8 +184,8 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_ledger(mp_obj_t seed) {
         MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
 
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
-  o->base.type = &mod_trezorcrypto_HDNode_type;
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
   o->hdnode = hdnode;
   o->fingerprint = hdnode_fingerprint(&o->hdnode);
   return MP_OBJ_FROM_PTR(o);

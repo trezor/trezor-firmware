@@ -49,8 +49,7 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
                                           size_t n_args, size_t n_kw,
                                           const mp_obj_t *args) {
-  mp_obj_USB_t *o = m_new_obj_with_finaliser(mp_obj_USB_t);
-  o->base.type = type;
+  mp_obj_USB_t *o = mp_obj_malloc_with_finaliser(mp_obj_USB_t, type);
 
   return MP_OBJ_FROM_PTR(o);
 }

@@ -65,8 +65,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_make_new(const mp_obj_type_t *type,
     key.buf = "";
   }
 
-  mp_obj_Hmac_t *o = m_new_obj_with_finaliser(mp_obj_Hmac_t);
-  o->base.type = type;
+  mp_obj_Hmac_t *o = mp_obj_malloc_with_finaliser(mp_obj_Hmac_t, type);
   o->hashtype = trezor_obj_get_uint(args[0]);
   if (o->hashtype == SHA256) {
     hmac_sha256_Init(&(o->ctx256), key.buf, key.len);

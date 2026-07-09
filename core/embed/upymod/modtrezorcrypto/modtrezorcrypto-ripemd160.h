@@ -45,8 +45,8 @@ STATIC mp_obj_t mod_trezorcrypto_Ripemd160_make_new(const mp_obj_type_t *type,
                                                     size_t n_args, size_t n_kw,
                                                     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_Ripemd160_t *o = m_new_obj_with_finaliser(mp_obj_Ripemd160_t);
-  o->base.type = type;
+  mp_obj_Ripemd160_t *o =
+      mp_obj_malloc_with_finaliser(mp_obj_Ripemd160_t, type);
   ripemd160_init(&(o->ctx));
   // constructor called with bytes/str as first parameter
   if (n_args == 1) {

@@ -81,8 +81,7 @@ STATIC mp_obj_t mod_trezorcrypto_AES_make_new(const mp_obj_type_t *type,
     }
   }
 
-  mp_obj_AES_t *o = m_new_obj_with_finaliser(mp_obj_AES_t);
-  o->base.type = type;
+  mp_obj_AES_t *o = mp_obj_malloc_with_finaliser(mp_obj_AES_t, type);
   o->mode = mode;
   if (iv.len != 0) {
     memcpy(o->iv, iv.buf, AES_BLOCK_SIZE);
