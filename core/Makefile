@@ -125,6 +125,12 @@ test_emu_fido2: ## run fido2 device tests
 	cd $(TESTPATH)/fido_tests/fido2 ; \
 		$(EMU_TEST) --slip0014 $(PYTEST) --maxfail=5 --sim tests/standard/ --vendor trezor $(TESTOPTS)
 
+test_emu_fido2_ui: ## run fido2 device tests
+	cd $(TESTPATH)/fido_tests/fido2 ; \
+		PYTHONPATH=$(TESTPATH) \
+		$(EMU_TEST) --slip0014 $(PYTEST) --maxfail=5 --sim tests/standard/ --vendor trezor $(TESTOPTS) \
+		--ui=test --ui-check-missing --do-master-diff
+
 test_emu_click: ## run click tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS) --lang=$(TEST_LANG)
 
