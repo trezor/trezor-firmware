@@ -73,7 +73,7 @@ cannot be used bare:
 - `--production` — production build (signed, no dev keys).
 - `--frozen` — embed frozen MicroPython modules.
 - `--pyopt` — optimize MicroPython bytecode (on by default).
-- `--debug-link` — enable debug link (on by default when `pyopt` is off).
+- `--debug-link` — enable debug link (off by default; the `test` preset enables it).
 - `--dbg-console <none|vcp|swo|system-view>` — debug console backend.
 - `--disable-animation` — disable UI animations.
 - `--bootloader-devel` — use development bootloader.
