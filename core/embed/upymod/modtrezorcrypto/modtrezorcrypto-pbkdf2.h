@@ -141,7 +141,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
   } else {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid PRF"));
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
+  return mp_obj_new_bytes_from_vstr(&out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2_key_obj,
                                  mod_trezorcrypto_Pbkdf2_key);

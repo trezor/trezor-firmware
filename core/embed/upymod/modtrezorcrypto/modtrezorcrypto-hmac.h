@@ -125,7 +125,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_digest(mp_obj_t self) {
   } else {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid hashtype"));
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &mac);
+  return mp_obj_new_bytes_from_vstr(&mac);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Hmac_digest_obj,
                                  mod_trezorcrypto_Hmac_digest);

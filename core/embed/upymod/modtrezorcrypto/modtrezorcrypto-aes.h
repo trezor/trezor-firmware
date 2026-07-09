@@ -158,7 +158,7 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
                     aes_ctr_cbuf_inc, &(o->encrypt_ctx));
       break;
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 
 /// def encrypt(self, data: AnyBytes) -> bytes:

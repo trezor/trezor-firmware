@@ -430,7 +430,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_encodeint_into(size_t n_args,
     vstr_t out = {0};
     vstr_init_len(&out, 32);
     contract256_modm((uint8_t *)out.buf, MP_OBJ_C_SCALAR(args[1]));
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
+    return mp_obj_new_bytes_from_vstr(&out);
   } else {
     mp_buffer_info_t bufm = {0};
     mp_get_buffer_raise(args[0], &bufm, MP_BUFFER_WRITE);
@@ -690,7 +690,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_encodepoint_into(size_t n_args,
     vstr_t out = {0};
     vstr_init_len(&out, 32);
     ge25519_pack((uint8_t *)out.buf, &MP_OBJ_C_GE25519(args[1]));
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
+    return mp_obj_new_bytes_from_vstr(&out);
   } else {
     mp_buffer_info_t bufm = {0};
     mp_get_buffer_raise(args[0], &bufm, MP_BUFFER_WRITE);
@@ -748,7 +748,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_xmr_base58_addr_encode_check(
   }
   out.len = sz;
 
-  return mp_obj_new_str_from_vstr(&mp_type_str, &out);
+  return mp_obj_new_str_from_vstr(&out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(
     mod_trezorcrypto_monero_xmr_base58_addr_encode_check_obj,
@@ -777,7 +777,7 @@ mod_trezorcrypto_monero_xmr_base58_addr_decode_check(const mp_obj_t buff) {
   out.len = sz;
 
   mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-  tuple->items[0] = mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
+  tuple->items[0] = mp_obj_new_bytes_from_vstr(&out);
   tuple->items[1] = mp_obj_new_int_from_ull(tag);
   return MP_OBJ_FROM_PTR(tuple);
 }
@@ -836,9 +836,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_fast_hash_into(size_t n_args,
     mp_raise_ValueError(MP_ERROR_TEXT("Illegal offset/length"));
   }
   xmr_fast_hash(buff_use, (const char *)data.buf + offset, length);
-  return args[0] != mp_const_none
-             ? args[0]
-             : mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
+  return args[0] != mp_const_none ? args[0] : mp_obj_new_bytes_from_vstr(&out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_fast_hash_into_obj, 2, 4,

@@ -83,7 +83,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha1_digest(mp_obj_t self) {
   memcpy(&ctx, &(o->ctx), sizeof(SHA1_CTX));
   sha1_Final(&ctx, (uint8_t *)hash.buf);
   memzero(&ctx, sizeof(SHA1_CTX));
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
+  return mp_obj_new_bytes_from_vstr(&hash);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha1_digest_obj,
                                  mod_trezorcrypto_Sha1_digest);
