@@ -286,6 +286,7 @@ class InterfaceContext:
         # active channel
         if self.active_channel:
             while self.active_channel.write_packet(packet_buffer):
+                yield from loop.sleep(1000)
                 yield from self.write_packet(packet_buffer)
         # transport_busy for currently inactive channels
         while self.inactive_channels:
