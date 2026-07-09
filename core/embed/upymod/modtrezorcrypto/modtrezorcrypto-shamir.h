@@ -76,7 +76,7 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
     mp_raise_ValueError(
         MP_ERROR_TEXT("Share indices must be pairwise distinct."));
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_shamir_interpolate_obj,
                                  mod_trezorcrypto_shamir_interpolate);

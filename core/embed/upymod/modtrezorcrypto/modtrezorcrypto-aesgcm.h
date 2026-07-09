@@ -129,7 +129,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt(mp_obj_t self, mp_obj_t data) {
     o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_encrypt_obj,
                                  mod_trezorcrypto_AesGcm_encrypt);
@@ -174,7 +174,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt_finish(mp_obj_t self) {
     o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &tag);
+  return mp_obj_new_bytes_from_vstr(&tag);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_AesGcm_encrypt_finish_obj,
                                  mod_trezorcrypto_AesGcm_encrypt_finish);
@@ -221,7 +221,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt(mp_obj_t self, mp_obj_t data) {
     o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_decrypt_obj,
                                  mod_trezorcrypto_AesGcm_decrypt);

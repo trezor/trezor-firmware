@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index) {
   }
 
   cert.len = cert_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &cert);
+  return mp_obj_new_bytes_from_vstr(&cert);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_optiga_get_certificate_obj,
                                  mod_trezorcrypto_optiga_get_certificate);
@@ -104,7 +104,7 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
   }
 
   sig.len = sig_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
+  return mp_obj_new_bytes_from_vstr(&sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_optiga_sign_obj,
                                  mod_trezorcrypto_optiga_sign);
