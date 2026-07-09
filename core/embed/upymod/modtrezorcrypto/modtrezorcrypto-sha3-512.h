@@ -148,9 +148,9 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_Sha3_512_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Sha3_512_locals_dict,
                             mod_trezorcrypto_Sha3_512_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_Sha3_512_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_Sha3_512,
-    .make_new = mod_trezorcrypto_Sha3_512_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Sha3_512_locals_dict,
-};
+// clang-format off
+static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorcrypto_Sha3_512_type,
+  MP_QSTR_Sha3_512, MP_TYPE_FLAG_NONE,
+  make_new, mod_trezorcrypto_Sha3_512_make_new,
+  locals_dict, &mod_trezorcrypto_Sha3_512_locals_dict);
+// clang-format on

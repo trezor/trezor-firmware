@@ -206,9 +206,9 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_AES_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_AES_locals_dict,
                             mod_trezorcrypto_AES_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_AES_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_AES,
-    .make_new = mod_trezorcrypto_AES_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_AES_locals_dict,
-};
+// clang-format off
+static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorcrypto_AES_type,
+  MP_QSTR_AES, MP_TYPE_FLAG_NONE,
+  make_new, mod_trezorcrypto_AES_make_new,
+  locals_dict, &mod_trezorcrypto_AES_locals_dict);
+// clang-format on
