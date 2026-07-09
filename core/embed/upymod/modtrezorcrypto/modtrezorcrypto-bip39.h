@@ -86,7 +86,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_seed(size_t n_args,
     // generate without callback
     mnemonic_to_seed(pmnemonic, ppassphrase, (uint8_t *)seed.buf, NULL);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &seed);
+  return mp_obj_new_bytes_from_vstr(&seed);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_bip39_seed_obj, 2,
                                            3, mod_trezorcrypto_bip39_seed);

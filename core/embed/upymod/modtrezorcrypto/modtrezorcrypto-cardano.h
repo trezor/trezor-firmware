@@ -86,7 +86,7 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
                  MP_ERROR_TEXT("Unexpected failure in Icarus derivation."));
   }
 
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(

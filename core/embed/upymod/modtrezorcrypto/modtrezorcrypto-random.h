@@ -63,7 +63,7 @@ STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
   } else {
     rng_fill_buffer((uint8_t *)vstr.buf, len);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_random_bytes_obj, 1,
                                            2, mod_trezorcrypto_random_bytes);
