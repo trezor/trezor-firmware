@@ -116,9 +116,9 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict,
                             mod_trezorui_Display_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorui_Display_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_Display,
-    .make_new = mod_trezorui_Display_make_new,
-    .locals_dict = (void *)&mod_trezorui_Display_locals_dict,
-};
+// clang-format off
+MP_DEFINE_CONST_OBJ_TYPE(mod_trezorui_Display_type,
+  MP_QSTR_Display, MP_TYPE_FLAG_NONE,
+  make_new, mod_trezorui_Display_make_new,
+  locals_dict, &mod_trezorui_Display_locals_dict);
+// clang-format on
