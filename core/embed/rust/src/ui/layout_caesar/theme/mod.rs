@@ -97,7 +97,9 @@ include_icon!(ICON_WARNING, "layout_caesar/res/warning.toif"); // 11*12
 include_icon!(ICON_WARN_TITLE, "layout_caesar/res/bld_header_warn.toif");
 
 // props settings
-pub const PROP_INNER_SPACING: i16 = PARAGRAPH_BOTTOM_SPACE;
+// Smaller than the default paragraph spacing so that 4 lines
+// (2 key:value pairs) fit on the same screen
+pub const PROP_INNER_SPACING: i16 = 2;
 pub const PROPS_SPACING: i16 = PARAGRAPH_BOTTOM_SPACE;
 pub const PROPS_KEY_FONT: TextStyle = TEXT_BOLD;
 pub const PROPS_VALUE_FONT: TextStyle = TEXT_MONO;

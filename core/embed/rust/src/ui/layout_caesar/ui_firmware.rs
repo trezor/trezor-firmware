@@ -22,7 +22,7 @@ use crate::{
         geometry,
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmValueParams, RecoveryType},
+            util::{ConfirmValueParams, PropsList, RecoveryType},
         },
         notification::Notification,
         ui_firmware::{
@@ -439,7 +439,7 @@ impl FirmwareUI for UICaesar {
         verb: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = parse_properties(items)?;
+        let paragraphs = PropsList::new(items)?;
 
         let button_text = verb.unwrap_or(if hold {
             TR::buttons__hold_to_confirm.into()
@@ -1566,20 +1566,4 @@ fn add_paragraphs<'a>(
         };
         paragraphs.add(Paragraph::new(style, value));
     }
-}
-
-fn parse_properties(items: Obj) -> Result<ParagraphVecLong<'static>, Error> {
-    let mut paragraphs = ParagraphVecLong::new();
-
-    for para in IterBuf::new().try_iterate(items)? {
-        let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
-        add_paragraphs(
-            &mut paragraphs,
-            key.try_into_option()?,
-            value.try_into_option()?,
-            is_data.try_into()?,
-        );
-    }
-
-    Ok(paragraphs)
 }
