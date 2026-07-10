@@ -31,6 +31,8 @@
 
 #include "memzero.h"
 
+MP_REGISTER_ROOT_POINTER(mp_obj_t trezorconfig_ui_wait_callback);
+
 static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
                                         enum storage_ui_message_t message) {
   if (mp_obj_is_callable(MP_STATE_VM(trezorconfig_ui_wait_callback))) {

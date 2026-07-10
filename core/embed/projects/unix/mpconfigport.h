@@ -286,11 +286,6 @@ void mp_unix_mark_exec(void);
 // with EINTR, updates remaining timeout value.
 #define MICROPY_SELECT_REMAINING_TIME (1)
 
-#define MICROPY_PORT_ROOT_POINTERS \
-    const char *readline_hist[50]; \
-    void *mmap_region_head; \
-    mp_obj_t trezorconfig_ui_wait_callback; \
-
 // We need to provide a declaration/definition of alloca()
 // unless support for it is disabled.
 #if !defined(MICROPY_NO_ALLOCA) || MICROPY_NO_ALLOCA == 0

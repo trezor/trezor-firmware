@@ -30,7 +30,7 @@ def generate(env):
     )
 
     env["BUILDERS"]["CollectModules"] = SCons.Builder.Builder(
-        action="grep ^MP_REGISTER_MODULE $SOURCES > $TARGET"
+        action="grep -E '^MP_REGISTER(_EXTENSIBLE)?_MODULE' $SOURCES > $TARGET"
         # action="$CC -E $CCFLAGS_QSTR $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES"
         # " | $PYTHON $MODULECOL > $TARGET"
     )
@@ -41,6 +41,14 @@ def generate(env):
 
     env["BUILDERS"]["GenerateCompressed"] = SCons.Builder.Builder(
         action="$MAKECOMPRESSEDDATA $SOURCE > $TARGET",
+    )
+
+    env["BUILDERS"]["CollectRootPointers"] = SCons.Builder.Builder(
+        action="cat $SOURCES | sed -nr 's/.*(MP_REGISTER_ROOT_POINTER\\(.*\\);).*/\\1/p' > $TARGET",
+    )
+
+    env["BUILDERS"]["GenerateRootPointers"] = SCons.Builder.Builder(
+        action="$MAKEROOTPOINTERS $SOURCE > $TARGET"
     )
 
     def generate_frozen_module(source, target, env, for_signature):

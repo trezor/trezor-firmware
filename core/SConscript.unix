@@ -579,6 +579,7 @@ env.Replace(
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
+    MAKEROOTPOINTERS='$PYTHON vendor/micropython/py/make_root_pointers.py',
     MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
     MPY_CROSS='vendor/micropython/mpy-cross/build/mpy-cross -O' + BYTECODE_OPTIMIZATION,
@@ -655,6 +656,18 @@ compressed_data = env.GenerateCompressed(
     target='genhdr/compressed.data.h', source=compressed_collected)
 
 env.Ignore(micropy_defines, compressed_data)
+
+#
+# Micropython root pointers
+#
+
+rootpointers_collected = env.CollectRootPointers(
+    target='genhdr/root_pointers.collected', source=micropy_defines)
+
+rootpointers_data = env.GenerateRootPointers(
+    target='genhdr/root_pointers.h', source=rootpointers_collected)
+
+env.Ignore(micropy_defines, rootpointers_data)
 
 #
 # Micropython version

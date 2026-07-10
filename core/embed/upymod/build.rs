@@ -509,6 +509,14 @@ impl<'a> MpyBuilder<'a> {
         // can be included directly in firmware.
         self.build_compressed_data(&compressed_collected)?;
 
+        // Extract all MP_REGISTER_ROOT_POINTER(...); statements from preprocessed
+        // .upydef files and store them in root_pointers.collected.h.
+        let root_pointers_collected = self.build_root_pointers_collected(&upydefs)?;
+
+        // Run make_root_pointers.py on root_pointers.collected.h to generate
+        // root_pointers.h that micropython uses in the definition of `mp_state_vm_t`.
+        self.build_root_pointers_data(&root_pointers_collected)?;
+
         // Generate protobuf blobs based on .proto for Rust code.
         self.build_protobuf_blobs(&qstr_generated)?;
 
@@ -637,7 +645,7 @@ impl<'a> MpyBuilder<'a> {
         let output = self.genhdr_dir.join("moduledefs.collected.h");
         let mut cmd = std::process::Command::new("sh");
         cmd.arg("-c")
-            .arg(r#"out="$1"; shift; grep '^MP_REGISTER_MODULE' "$@" > "$out""#)
+            .arg(r#"out="$1"; shift; grep -E '^MP_REGISTER(_EXTENSIBLE)?_MODULE' "$@" > "$out""#)
             .arg("sh")
             .arg(&output)
             .args(upydef_files);
@@ -778,6 +786,35 @@ impl<'a> MpyBuilder<'a> {
         let inputs = [tool, compressed_collected.to_path_buf()];
         xbuild::run_command_to_file(&mut cmd, &inputs, &output)
             .context("Failed to build compressed data")?;
+        Ok(output)
+    }
+
+    fn build_root_pointers_collected(&self, upydef_files: &[PathBuf]) -> Result<PathBuf> {
+        let output = self.genhdr_dir.join("root_pointers.collected.h");
+        let mut cmd = std::process::Command::new("sh");
+        cmd
+            .arg("-c")
+            .arg(r#"out="$1"; shift; cat "$@" | sed -nr 's/.*(MP_REGISTER_ROOT_POINTER\(.*\);).*/\1/p' > "$out""#)
+            .arg("sh")
+            .arg(&output)
+            .args(upydef_files);
+
+        let inputs = upydef_files.iter().collect::<Vec<_>>();
+        xbuild::run_command(&mut cmd, &inputs, [&output])
+            .context("Failed to build root_pointers collected")?;
+
+        Ok(output)
+    }
+
+    fn build_root_pointers_data(&self, root_pointers_collected: &Path) -> Result<PathBuf> {
+        let mut cmd = std::process::Command::new("python3");
+        let tool = self.mpy_dir.join("py/make_root_pointers.py");
+        cmd.arg(&tool).arg(root_pointers_collected);
+
+        let output = self.genhdr_dir.join("root_pointers.h");
+        let inputs = [tool, root_pointers_collected.to_path_buf()];
+        xbuild::run_command_to_file(&mut cmd, &inputs, &output)
+            .context("Failed to build root_pointers data")?;
         Ok(output)
     }
 
