@@ -30,8 +30,16 @@ typedef enum {
   BOOT_COMMAND_NONE = 0x00000000,
   // Stop and wait for further instructions
   BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
-  // Do not ask anything, install an upgrade
+  // Do not ask anything, install an upgrade the user already confirmed in
+  // firmware. Set by firmware (via the reboot_and_upgrade syscall), so the
+  // firmware body was necessarily valid when it was set.
   BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
+  // Continue a two-phase install that the bootloader itself staged. Set by the
+  // bootloader, never by firmware: staging a new bootloader through the UCB can
+  // leave the installed firmware body invalid, which is exactly the state this
+  // command has to boot past -- see the boot-command dispatch in the
+  // bootloader's main().
+  BOOT_COMMAND_CONTINUE_UPGRADE = 0x6D2F84B1,
   // Show RSOD and wait for user input
   BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0,
   // Wipe the device

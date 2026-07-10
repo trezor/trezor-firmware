@@ -206,6 +206,10 @@ __attribute__((noreturn)) void reboot_and_upgrade(const uint8_t hash[32]) {
   reboot_with_args(BOOT_COMMAND_INSTALL_UPGRADE, hash, 32);
 }
 
+__attribute__((noreturn)) void reboot_and_continue_upgrade(void) {
+  reboot_with_args(BOOT_COMMAND_CONTINUE_UPGRADE, NULL, 0);
+}
+
 __attribute__((noreturn)) void reboot_device(void) {
   reboot_with_args(BOOT_COMMAND_REBOOT, NULL, 0);
 }
