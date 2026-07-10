@@ -23,6 +23,7 @@
 
 #include <sec/image.h>
 
+#include "fw_check.h"
 #include "rust_ui_bootloader.h"
 
 #ifdef TREZOR_MODEL_T3W1
@@ -42,11 +43,9 @@
 //   0 do not show any message
 //   > 0 show a message like "starting in %d s"
 //   < 0 show a message like "press button to continue"
-void ui_screen_boot(const vendor_header* const vhdr,
-                    const image_header* const hdr, int wait);
+void ui_screen_boot(const fw_ui_info_t* const info, int wait);
 
-uint32_t ui_screen_intro(const vendor_header* const vhdr,
-                         const image_header* const hdr, bool fw_ok);
+uint32_t ui_screen_intro(const fw_ui_info_t* const info, bool fw_ok);
 
 confirm_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
                                            const image_header* const hdr,
@@ -54,6 +53,7 @@ confirm_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
                                            secbool is_newvendor,
                                            secbool is_newinstall,
                                            int version_cmp);
+
 void ui_screen_install_start(bool wireless);
 void ui_screen_install_progress_erase(int pos, int len, bool wireless);
 void ui_screen_install_progress_upload(int pos, bool wireless);

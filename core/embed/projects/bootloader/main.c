@@ -417,101 +417,32 @@ cleanup:
 #endif
 
 void real_jump_to_firmware(void) {
-  const image_header *hdr = NULL;
-  vendor_header vhdr = {0};
+  // Verification + boot-policy resolution is layout-specific and lives behind
+  // firmware_prepare_boot (fw_check.c), so this stays layout-agnostic.
+  firmware_boot_info_t info = {0};
+  firmware_prepare_boot(&info);
 
-  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START,
-                            VENDOR_HEADER_MAX_SIZE, &vhdr),
-         "Firmware is corrupted");
-
-  ensure(check_vendor_header_keys(&vhdr), "Firmware is corrupted");
-
-  ensure(check_vendor_header_lock(&vhdr), "Unauthorized vendor keys");
-
-  hdr =
-      read_image_header((const uint8_t *)(size_t)(FIRMWARE_START + vhdr.hdrlen),
-                        FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
-
-  ensure(hdr == (const image_header *)(size_t)(FIRMWARE_START + vhdr.hdrlen)
-             ? sectrue
-             : secfalse,
-         "Firmware is corrupted");
-
-  ensure(check_image_model(hdr), "Wrong firmware model");
-
-  ensure(check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub),
-         "Firmware is corrupted");
-
-  ensure(check_firmware_min_version(hdr->monotonic),
-         "Firmware downgrade protection");
-
-  ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
-                              &FIRMWARE_AREA),
-         "Firmware is corrupted");
-
-  size_t secmon_code_offset = 0;
-
-#ifdef USE_SECMON_VERIFICATION
-  size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
-                                                 IMAGE_HEADER_SIZE);
-  const secmon_header_t *secmon_hdr =
-      read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
-
-  if (secmon_hdr != NULL) {
-    secmon_code_offset = IMAGE_CODE_ALIGN(SECMON_HEADER_SIZE);
-  }
-
-  ensure((secmon_hdr != NULL) * sectrue, "Secmon header not found");
-
-  ensure(check_secmon_model(secmon_hdr), "Wrong secmon model");
-
-  ensure(check_secmon_header_sig(secmon_hdr), "Invalid secmon signature");
-
-  ensure(check_secmon_min_version(secmon_hdr->monotonic),
-         "Secmon downgrade protection");
-
-  ensure(check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
-                               &FIRMWARE_AREA),
-         "Secmon is corrupted");
-#endif
-
-  // ensure minimal versions are properly stored for both firmware and secmon
-  ensure_firmware_min_version(hdr->monotonic);
-#ifdef USE_SECMON_VERIFICATION
-  ensure_secmon_min_version(secmon_hdr->monotonic);
+#ifdef USE_SECRET
+  secret_prepare_fw(info.secret_run_access, info.provisioning_access);
 #endif
 
 #ifdef USE_MCU_ATTESTATION
   pass_mcu_attestation_cert();
 #endif
 
-#ifdef USE_SECRET
-  secbool provisioning_access =
-      ((vhdr.vtrust & (VTRUST_ALLOW_PROVISIONING | VTRUST_SECRET_MASK)) ==
-       (VTRUST_SECRET_ALLOW | VTRUST_ALLOW_PROVISIONING)) *
-      sectrue;
-
-  secbool secret_run_access =
-      ((vhdr.vtrust & VTRUST_SECRET_MASK) == VTRUST_SECRET_ALLOW) * sectrue;
-
-  secret_prepare_fw(secret_run_access, provisioning_access);
-#endif
-
-  // if all warnings are disabled in VTRUST flags then skip the procedure
-  if ((vhdr.vtrust & VTRUST_NO_WARNING) != VTRUST_NO_WARNING) {
+  if (info.show_warning == sectrue) {
 #ifdef LAZY_DISPLAY_INIT
     display_touch_init(secfalse, NULL);
 #endif
 
     ui_fadeout();
-    ui_screen_boot(&vhdr, hdr, 0);
+    ui_screen_boot(&info.ui, 0);
     ui_fadein();
 
-    // The delay is encoded in bitwise complement form.
-    int delay = (vhdr.vtrust & VTRUST_WAIT_MASK) ^ VTRUST_WAIT_MASK;
+    int delay = info.warn_delay;
     if (delay > 1) {
       while (delay > 0) {
-        ui_screen_boot(&vhdr, hdr, delay);
+        ui_screen_boot(&info.ui, delay);
         hal_delay(1000);
         delay--;
       }
@@ -519,8 +450,8 @@ void real_jump_to_firmware(void) {
       hal_delay(1000);
     }
 
-    if ((vhdr.vtrust & VTRUST_NO_CLICK) == 0) {
-      ui_screen_boot(&vhdr, hdr, -1);
+    if (info.warn_click == sectrue) {
+      ui_screen_boot(&info.ui, -1);
       ui_click();
     }
 
@@ -532,10 +463,7 @@ void real_jump_to_firmware(void) {
   }
 
 #ifdef USE_IWDG
-  secbool allow_unlimited_run = ((vhdr.vtrust & VTRUST_ALLOW_UNLIMITED_RUN) ==
-                                 VTRUST_ALLOW_UNLIMITED_RUN) *
-                                sectrue;
-  if (sectrue != allow_unlimited_run) {
+  if (sectrue != info.allow_unlimited_run) {
     iwdg_start(60 * 60);  // 1 hour runtime limit
   }
 #endif
@@ -544,11 +472,7 @@ void real_jump_to_firmware(void) {
 
   system_deinit();
 
-  uint32_t vectbl_addr =
-      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE) +
-      secmon_code_offset;
-
-  jump_to_next_stage(vectbl_addr, startup_args_export());
+  jump_to_next_stage(info.entry_address, startup_args_export());
 }
 
 __attribute__((noreturn)) void reboot_with_fade(void) {
