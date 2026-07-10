@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.12.1] (2026-06-17)
+## [2.12.1] (17th June 2026)
 
 ### Added
 - Added support for `AccountDelete` transaction in Ripple.  [#6370]
@@ -118,7 +118,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Don't allocate tracebacks in optimized builds.  [#5526]
 - Allow backup check only when the backup exists.  [#5763]
 
-## [2.9.1] (17th Sep 2025)
+## [2.9.1] (17th September 2025)
 
 ### Added
 - Cardano: Add support for signing arbitrary messages.  [#3509]
@@ -196,7 +196,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix behavior of a button press during "hold to confirm".  [#3772]
 - Fix backup failing if middle button is pressed during confirmation.  [#4500]
 
-## [2.8.7] (22th January 2025)
+## [2.8.7] (22nd January 2025)
 
 ### Added
 - Add benchmark application.  [#4101]

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.20.1] (2026-05-11)
+## [0.20.1] (11th May 2026)
 [0.20.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.20.0...python/v0.20.1
 
 ### Added
@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Skip unrelated device response when probing transport.  [#6588]
 - Fix THP auto-connection after unlocking the device.  [#6633]
 
-## [0.20.0] (2026-02-10)
+## [0.20.0] (10th February 2026)
 [0.20.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.20.0-dev0...python/v0.20.0
 
 Version 0.20.0 introduces a set of **major breaking API changes**. All user code must be upgraded.
@@ -51,7 +51,7 @@ As announced, the API has changed significantly since the pre-release version 0.
 - trezorctl: BLE behavior on macOS was improved.  [#6449]
 - trezorctl: fix crash when device authentication allowlist is unavailable.  [#6449]
 
-## [0.20.0-dev0] (2025-10-21)
+## [0.20.0-dev0] (21st October 2025)
 [0.20.0-dev0]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.10...python/v0.20.0-dev0
 
 Version 0.20.0 introduces a set of **major breaking API changes**. All user code must be upgraded.
@@ -93,7 +93,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Fixed device restart handling during firmware update.  [#5000]
 - Fix broken interactive test mode.  [#5455]
 
-## [0.13.10] (2025-02-12)
+## [0.13.10] (12th February 2025)
 [0.13.10]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.9...python/v0.13.10
 
 ### Added
@@ -130,7 +130,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Return values in `solana` module were changed from the wrapping protobuf messages to the raw inner values (`str` for address, `bytes` for pubkey / signature).  [#4464]
 - `trezorctl device` commands whose default result is a success will not print anything to stdout anymore, in line with Unix philosophy.  [#4464]
 
-## [0.13.9] (2024-06-19)
+## [0.13.9] (19th June 2024)
 [0.13.9]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.8...python/v0.13.9
 
 ### Added
@@ -156,7 +156,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Minimum required Python version is now 3.8.
 
 
-## [0.13.8] (2023-10-19)
+## [0.13.8] (19th October 2023)
 [0.13.8]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.7...python/v0.13.8
 
 ### Added
@@ -179,7 +179,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Corrected vendor header signing keys for Safe 3 (T2B1).
 
 
-## [0.13.7] (2023-06-02)
+## [0.13.7] (2nd June 2023)
 [0.13.7]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.6...python/v0.13.7
 
 ### Added
@@ -189,7 +189,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Recognize hw model field in vendor headers.  [#3048]
 
 
-## [0.13.6] (2023-04-24)
+## [0.13.6] (24th April 2023)
 [0.13.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.5...python/v0.13.6
 
 ### Added
@@ -212,7 +212,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - When enabling passphrase force-on-device, do not also prompt to enable passphrase if it is already enabled.  [#2833]
 
 
-## [0.13.5] (2022-12-28)
+## [0.13.5] (28th December 2022)
 [0.13.5]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.4...python/v0.13.5
 
 ### Added
@@ -226,7 +226,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Instead of accepting a list of public keys, `FirmwareType.verify()` accepts a parameter configuring whether to use production or development keys.  [#2701]
 
 
-## [0.13.4] (2022-11-04)
+## [0.13.4] (4th November 2022)
 [0.13.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.3...python/v0.13.4
 
 ### Added
@@ -248,7 +248,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Refactored firmware parsing and validation to a more object oriented approach.  [#2576]
 
 
-## [0.13.3] (2022-07-13)
+## [0.13.3] (13th July 2022)
 [0.13.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.2...python/v0.13.3
 
 ### Added
@@ -258,7 +258,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Fix Click 7.x compatibility.  [#2364]
 
 
-## [0.13.2] (2022-06-30)
+## [0.13.2] (30th June 2022)
 [0.13.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.1...python/v0.13.2
 
 ### Fixed
@@ -267,7 +267,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Fix `trezorctl --version` crash.  [#1702]
 
 
-## [0.13.1] (2022-06-29)
+## [0.13.1] (29th June 2022)
 [0.13.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.0...python/v0.13.1
 
 ### Added
@@ -297,7 +297,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Add compatibility with Click 8.1  [#2199]
 
 
-## [0.13.0] - 2021-12-09
+## [0.13.0] - 9th December 2021
 [0.13.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.4...python/v0.13.0
 
 ### Added
@@ -354,14 +354,14 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - Cardano derivation now defaults to Icarus method. This will result in different keys for users with 24-word seed.  [#1783]
 
 
-## [0.12.4] - 2021-09-07
+## [0.12.4] - 7th September 2021
 [0.12.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.3...python/v0.12.4
 
 ### Fixed
 
 - trezorctl: fixed "Invalid value for <param>" when using Click 8 and param is not specified [#1798]
 
-## [0.12.3] - 2021-07-29
+## [0.12.3] - 29th July 2021
 [0.12.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.2...python/v0.12.3
 
 ### Added
@@ -385,7 +385,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - it is now possible to set safety checks for T1
 
 
-## [0.12.2] - 2020-08-27
+## [0.12.2] - 27th August 2020
 [0.12.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.1...python/v0.12.2
 
 ### Added
@@ -409,7 +409,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - removed option `--skip-vendor-header` from `trezorctl firmware-update` which did nothing  [#1210]
 
 
-## [0.12.1] - 2020-08-05
+## [0.12.1] - 5th August 2020
 [0.12.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.0...python/v0.12.1
 
 ### Added
@@ -434,7 +434,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - `TrezorClient.ping()` does not crash when device is PIN-locked
 
 
-## [0.12.0] - 2020-04-01
+## [0.12.0] - 1st April 2020
 [0.12.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.6...python/v0.12.0
 
 ### Incompatible changes
@@ -491,7 +491,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - `trezorlib.tools.CallException` was dropped, use `trezorlib.exceptions.TrezorFailure` instead
 
 
-## [0.11.6] - 2019-12-30
+## [0.11.6] - 30th December 2019
 [0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.5...python/v0.11.6
 
 ### Added
@@ -518,7 +518,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - support for "load device by xprv" was removed from firmware and trezorlib
 
 
-## [0.11.5] - 2019-09-26
+## [0.11.5] - 26th September 2019
 
 [0.11.5]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.4...python/v0.11.5
 
@@ -555,7 +555,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 
 - device test suite was moved out of trezor package
 
-## [0.11.4] - 2019-07-31
+## [0.11.4] - 31st July 2019
 
 [0.11.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.3...python/v0.11.4
 
@@ -564,7 +564,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - trezorctl support for SLIP-39 Shamir Backup
 - support for Binance Chain
 
-## [0.11.3] - 2019-05-29
+## [0.11.3] - 29th May 2019
 
 [0.11.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.2...python/v0.11.3
 
@@ -592,7 +592,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 
 - Tron and Ontology support removed until implementations exist in Trezor firmware
 
-## [0.11.2] - 2019-02-27
+## [0.11.2] - 27th February 2019
 
 [0.11.2]: https://github.com/trezor/python-trezor/compare/v0.11.1...v0.11.2
 
@@ -617,7 +617,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 
 - trezorctl: interactive signing with `sign-tx` is considered deprecated
 
-## [0.11.1] - 2018-12-28
+## [0.11.1] - 28th December 2018
 
 [0.11.1]: https://github.com/trezor/python-trezor/compare/v0.11.0...v0.11.1
 
@@ -626,7 +626,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - crash when entering passphrase on device with Trezor T
 - Qt widgets should only import QtCore [#349]
 
-## [0.11.0] - 2018-12-06
+## [0.11.0] - 6th December 2018
 
 [0.11.0]: https://github.com/trezor/python-trezor/compare/v0.10.2...v0.11.0
 
@@ -685,7 +685,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - bash completion fixed
 - Stellar: several bugs in the XDR parser were fixed
 
-## [0.10.2] - 2018-06-21
+## [0.10.2] - 21st June 2018
 
 [0.10.2]: https://github.com/trezor/python-trezor/compare/v0.10.1...v0.10.2
 
@@ -703,7 +703,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 
 - test support module was not included in the release, so code relying on the deprecated `ckd_public` module would fail [#280]
 
-## [0.10.1] - 2018-06-11
+## [0.10.1] - 11th June 2018
 
 [0.10.1]: https://github.com/trezor/python-trezor/compare/v0.10.0...v0.10.1
 
@@ -711,7 +711,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 
 - previous release fails to build on Windows [#274]
 
-## [0.10.0] - 2018-06-08
+## [0.10.0] - 8th June 2018
 
 [0.10.0]: https://github.com/trezor/python-trezor/compare/v0.9.1...v0.10.0
 
@@ -774,7 +774,7 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 - trezorctl: Matrix recovery on Windows wouldn't allow backspace [#207]
 - aes_encfs_getpass.py: fixed Python 3 bug [#169]
 
-## [0.9.1] - 2018-03-05
+## [0.9.1] - 5th March 2018
 
 [0.9.1]: https://github.com/trezor/python-trezor/compare/v0.9.0...v0.9.1
 
