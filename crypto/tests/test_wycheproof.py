@@ -228,24 +228,24 @@ def add_pkcs_padding(data):
 
 def remove_pkcs_padding(data):
     if len(data) == 0:
-        return False
+        return None
     padding_length = data[-1]
     if not (
         0 < padding_length <= 16
         and data[-padding_length:] == bytes([padding_length] * padding_length)
     ):
-        return False
+        return None
     else:
         return data[:-padding_length]
 
 
 def aes_encrypt_initialise(key, context):
     if len(key) == (128 / 8):
-        lib.aes_encrypt_key128(key, context)
+        return lib.aes_encrypt_key128(key, context)
     elif len(key) == (192 / 8):
-        lib.aes_encrypt_key192(key, context)
+        return lib.aes_encrypt_key192(key, context)
     elif len(key) == (256 / 8):
-        lib.aes_encrypt_key256(key, context)
+        return lib.aes_encrypt_key256(key, context)
     else:
         raise NotSupported("Unsupported key length: {}".format(len(key) * 8))
 
@@ -254,20 +254,24 @@ def aes_cbc_encrypt(key, iv, plaintext):
     plaintext = add_pkcs_padding(plaintext)
     context = bytes(context_structure_length)
     ciphertext = bytes(len(plaintext))
-    aes_encrypt_initialise(key, context)
-    lib.aes_cbc_encrypt(
+    result = aes_encrypt_initialise(key, context)
+    if result != 0:
+        return None
+    result = lib.aes_cbc_encrypt(
         plaintext, ciphertext, len(plaintext), bytes(bytearray(iv)), context
     )
+    if result != 0:
+        return None
     return ciphertext
 
 
 def aes_decrypt_initialise(key, context):
     if len(key) == (128 / 8):
-        lib.aes_decrypt_key128(key, context)
+        return lib.aes_decrypt_key128(key, context)
     elif len(key) == (192 / 8):
-        lib.aes_decrypt_key192(key, context)
+        return lib.aes_decrypt_key192(key, context)
     elif len(key) == (256 / 8):
-        lib.aes_decrypt_key256(key, context)
+        return lib.aes_decrypt_key256(key, context)
     else:
         raise NotSupported("Unsupported AES key length: {}".format(len(key) * 8))
 
@@ -275,9 +279,109 @@ def aes_decrypt_initialise(key, context):
 def aes_cbc_decrypt(key, iv, ciphertext):
     context = bytes(context_structure_length)
     plaintext = bytes(len(ciphertext))
-    aes_decrypt_initialise(key, context)
-    lib.aes_cbc_decrypt(ciphertext, plaintext, len(ciphertext), iv, context)
+    result = aes_decrypt_initialise(key, context)
+    if result != 0:
+        return None
+    result = lib.aes_cbc_decrypt(ciphertext, plaintext, len(ciphertext), iv, context)
+    if result != 0:
+        return None
     return remove_pkcs_padding(plaintext)
+
+
+def aes_gcm_encrypt(key, iv, associated_data, plaintext):
+    context = bytes(context_structure_length)
+    ciphertext = bytes(bytearray(plaintext))
+    tag = bytes(16)
+    result = lib.gcm_init_and_key(key, len(key), context)
+    if result != 0:
+        return None, None
+    result = lib.gcm_encrypt_message(
+        iv,
+        len(iv),
+        associated_data,
+        len(associated_data),
+        ciphertext,
+        len(ciphertext),
+        tag,
+        len(tag),
+        context,
+    )
+    if result != 0:
+        return None, None
+    result = lib.gcm_end(context)
+    if result != 0:
+        return None, None
+    return ciphertext, tag
+
+
+def aes_gcm_decrypt(key, iv, associated_data, ciphertext, tag):
+    context = bytes(context_structure_length)
+    plaintext = bytes(bytearray(ciphertext))
+    result = lib.gcm_init_and_key(key, len(key), context)
+    if result != 0:
+        return None
+    result = lib.gcm_decrypt_message(
+        iv,
+        len(iv),
+        associated_data,
+        len(associated_data),
+        plaintext,
+        len(plaintext),
+        tag,
+        len(tag),
+        context,
+    )
+    if result != 0:
+        return None
+    result = lib.gcm_end(context)
+    if result != 0:
+        return None
+    return plaintext
+
+
+def aes_ccm_encrypt(key, nonce, associated_data, plaintext, mac_len):
+    context = bytes(context_structure_length)
+    ciphertext = bytes(len(plaintext) + mac_len)
+    result = aes_encrypt_initialise(key, context)
+    if result != 0:
+        return None
+    result = lib.aes_ccm_encrypt(
+        context,
+        nonce,
+        len(nonce),
+        associated_data,
+        len(associated_data),
+        plaintext,
+        len(plaintext),
+        mac_len,
+        ciphertext,
+    )
+    if result != 0:
+        return None
+    return ciphertext[: len(plaintext)], ciphertext[len(plaintext) :]
+
+
+def aes_ccm_decrypt(key, nonce, associated_data, ciphertext, tag):
+    context = bytes(context_structure_length)
+    ciphertext_with_tag = ciphertext + tag
+    plaintext = bytes(len(ciphertext))
+    result = aes_encrypt_initialise(key, context)
+    if result != 0:
+        return None
+    result = lib.aes_ccm_decrypt(
+        context,
+        nonce,
+        len(nonce),
+        associated_data,
+        len(associated_data),
+        ciphertext_with_tag,
+        len(ciphertext_with_tag),
+        len(tag),
+        plaintext,
+    )
+    if result != 0:
+        return None
+    return plaintext
 
 
 def load_json_testvectors(filename):
@@ -375,6 +479,133 @@ def generate_chacha_poly(filename):
                     hexlify(plaintext),
                     hexlify(ciphertext),
                     hexlify(tag),
+                    result,
+                )
+            )
+    return vectors
+
+
+def generate_aead(filename, algorithm):
+    vectors = []
+
+    data = load_json_testvectors(filename)
+
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
+        raise DataError()
+
+    if data["algorithm"] != algorithm:
+        raise DataError()
+
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests"}):
+            raise DataError()
+
+        for test in test_group["tests"]:
+            if not keys_in_dict(
+                test, {"key", "iv", "aad", "msg", "ct", "tag", "result"}
+            ):
+                raise DataError()
+            try:
+                key = unhexlify(test["key"])
+                iv = unhexlify(test["iv"])
+                associated_data = unhexlify(test["aad"])
+                plaintext = unhexlify(test["msg"])
+                ciphertext = unhexlify(test["ct"])
+                tag = unhexlify(test["tag"])
+                result = parse_result(test["result"])
+            except Exception:
+                raise DataError()
+
+            if result is None:
+                continue
+
+            vectors.append(
+                (
+                    hexlify(key),
+                    hexlify(iv),
+                    hexlify(associated_data),
+                    hexlify(plaintext),
+                    hexlify(ciphertext),
+                    hexlify(tag),
+                    result,
+                )
+            )
+    return vectors
+
+
+def generate_hmac(filename, algorithm):
+    vectors = []
+
+    data = load_json_testvectors(filename)
+
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
+        raise DataError()
+
+    if data["algorithm"] != algorithm:
+        raise DataError()
+
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests"}):
+            raise DataError()
+
+        for test in test_group["tests"]:
+            if not keys_in_dict(test, {"key", "msg", "tag", "result"}):
+                raise DataError()
+            try:
+                key = unhexlify(test["key"])
+                message = unhexlify(test["msg"])
+                tag = unhexlify(test["tag"])
+                result = parse_result(test["result"])
+            except Exception:
+                raise DataError()
+
+            if result is None:
+                continue
+
+            vectors.append((hexlify(key), hexlify(message), hexlify(tag), result))
+    return vectors
+
+
+def generate_pbkdf2(filename, algorithm):
+    vectors = []
+
+    data = load_json_testvectors(filename)
+
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
+        raise DataError()
+
+    if data["algorithm"] != algorithm:
+        raise DataError()
+
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests"}):
+            raise DataError()
+
+        for test in test_group["tests"]:
+            if not keys_in_dict(
+                test, {"password", "salt", "iterationCount", "dkLen", "dk", "result"}
+            ):
+                raise DataError()
+            try:
+                password = unhexlify(test["password"])
+                salt = unhexlify(test["salt"])
+                iteration_count = test["iterationCount"]
+                dk_len = test["dkLen"]
+                dk = unhexlify(test["dk"])
+                result = parse_result(test["result"])
+            except Exception:
+                raise DataError()
+
+            if result is None:
+                continue
+
+            vectors.append(
+                (
+                    hexlify(password),
+                    hexlify(salt),
+                    iteration_count,
+                    dk_len,
+                    hexlify(dk),
                     result,
                 )
             )
@@ -610,6 +841,76 @@ if not lib.zkp_context_is_initialized():
 testvectors_directory = os.path.join(dir, "wycheproof/testvectors_v1")
 context_structure_length = 1024
 
+# Since these functions take more than six arguments, some end up passed on
+# the stack instead of in registers. Ctypes needs the exact declared widths
+# of the arguments to lay out the stack correctly.
+lib.gcm_encrypt_message.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_ulong,
+    ctypes.c_char_p,
+    ctypes.c_ulong,
+    ctypes.c_char_p,
+    ctypes.c_ulong,
+    ctypes.c_char_p,
+    ctypes.c_ulong,
+    ctypes.c_char_p,
+]
+lib.gcm_encrypt_message.restype = ctypes.c_int
+lib.gcm_decrypt_message.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_ulong,
+    ctypes.c_char_p,
+    ctypes.c_ulong,
+    ctypes.c_char_p,
+    ctypes.c_ulong,
+    ctypes.c_char_p,
+    ctypes.c_ulong,
+    ctypes.c_char_p,
+]
+lib.gcm_decrypt_message.restype = ctypes.c_int
+lib.aes_ccm_encrypt.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_size_t,
+    ctypes.c_char_p,
+]
+lib.aes_ccm_encrypt.restype = ctypes.c_int
+lib.aes_ccm_decrypt.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_size_t,
+    ctypes.c_char_p,
+]
+lib.aes_ccm_decrypt.restype = ctypes.c_int
+lib.pbkdf2_hmac_sha256.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_int,
+    ctypes.c_char_p,
+    ctypes.c_int,
+    ctypes.c_uint32,
+    ctypes.c_char_p,
+    ctypes.c_int,
+]
+lib.pbkdf2_hmac_sha512.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_int,
+    ctypes.c_char_p,
+    ctypes.c_int,
+    ctypes.c_uint32,
+    ctypes.c_char_p,
+    ctypes.c_int,
+]
+
 curve25519_dh_vectors = generate_curve25519_dh("x25519_test.json")
 eddsa_vectors = generate_eddsa("ed25519_test.json")
 ecdsa_vectors = generate_ecdsa("ecdsa_secp256k1_sha256_test.json") + generate_ecdsa(
@@ -620,6 +921,16 @@ ecdh_vectors = generate_ecdh("ecdh_secp256k1_test.json") + generate_ecdh(
 )
 chacha_poly_vectors = generate_chacha_poly("chacha20_poly1305_test.json")
 aes_vectors = generate_aes("aes_cbc_pkcs5_test.json")
+aes_gcm_vectors = generate_aead("aes_gcm_test.json", "AES-GCM")
+aes_ccm_vectors = generate_aead("aes_ccm_test.json", "AES-CCM")
+hmac_sha256_vectors = generate_hmac("hmac_sha256_test.json", "HMACSHA256")
+hmac_sha512_vectors = generate_hmac("hmac_sha512_test.json", "HMACSHA512")
+pbkdf2_sha256_vectors = generate_pbkdf2(
+    "pbkdf2_hmacsha256_test.json", "PBKDF2-HMACSHA256"
+)
+pbkdf2_sha512_vectors = generate_pbkdf2(
+    "pbkdf2_hmacsha512_test.json", "PBKDF2-HMACSHA512"
+)
 
 
 @pytest.mark.parametrize("public_key, message, signature, result", eddsa_vectors)
@@ -743,4 +1054,102 @@ def test_aes(key, iv, plaintext, ciphertext, result):
 
     computed_plaintext = aes_cbc_decrypt(key, bytes(iv), ciphertext)
     computed_result = plaintext == computed_plaintext
+    assert result == computed_result
+
+
+@pytest.mark.parametrize(
+    "key, iv, associated_data, plaintext, ciphertext, tag, result", aes_gcm_vectors
+)
+def test_aes_gcm(key, iv, associated_data, plaintext, ciphertext, tag, result):
+    key = unhexlify(key)
+    iv = unhexlify(iv)
+    associated_data = unhexlify(associated_data)
+    plaintext = unhexlify(plaintext)
+    ciphertext = unhexlify(ciphertext)
+    tag = unhexlify(tag)
+
+    computed_ciphertext, computed_tag = aes_gcm_encrypt(
+        key, iv, associated_data, plaintext
+    )
+    computed_result = ciphertext == computed_ciphertext and tag == computed_tag
+    assert result == computed_result
+
+    computed_plaintext = aes_gcm_decrypt(key, iv, associated_data, ciphertext, tag)
+    computed_result = plaintext == computed_plaintext
+    assert result == computed_result
+
+
+@pytest.mark.parametrize(
+    "key, iv, associated_data, plaintext, ciphertext, tag, result", aes_ccm_vectors
+)
+def test_aes_ccm(key, iv, associated_data, plaintext, ciphertext, tag, result):
+    key = unhexlify(key)
+    iv = unhexlify(iv)
+    associated_data = unhexlify(associated_data)
+    plaintext = unhexlify(plaintext)
+    ciphertext = unhexlify(ciphertext)
+    tag = unhexlify(tag)
+
+    computed = aes_ccm_encrypt(key, iv, associated_data, plaintext, len(tag))
+    computed_result = computed is not None and (ciphertext, tag) == computed
+    assert result == computed_result
+
+    computed_plaintext = aes_ccm_decrypt(key, iv, associated_data, ciphertext, tag)
+    computed_result = plaintext == computed_plaintext
+    assert result == computed_result
+
+
+@pytest.mark.parametrize("key, message, tag, result", hmac_sha256_vectors)
+def test_hmac_sha256(key, message, tag, result):
+    key = unhexlify(key)
+    message = unhexlify(message)
+    tag = unhexlify(tag)
+
+    computed_tag = bytes(32)
+    lib.hmac_sha256(key, len(key), message, len(message), computed_tag)
+    computed_result = tag == computed_tag[: len(tag)]
+    assert result == computed_result
+
+
+@pytest.mark.parametrize("key, message, tag, result", hmac_sha512_vectors)
+def test_hmac_sha512(key, message, tag, result):
+    key = unhexlify(key)
+    message = unhexlify(message)
+    tag = unhexlify(tag)
+
+    computed_tag = bytes(64)
+    lib.hmac_sha512(key, len(key), message, len(message), computed_tag)
+    computed_result = tag == computed_tag[: len(tag)]
+    assert result == computed_result
+
+
+@pytest.mark.parametrize(
+    "password, salt, iteration_count, dk_len, dk, result", pbkdf2_sha256_vectors
+)
+def test_pbkdf2_sha256(password, salt, iteration_count, dk_len, dk, result):
+    password = unhexlify(password)
+    salt = unhexlify(salt)
+    dk = unhexlify(dk)
+
+    computed_dk = bytes(dk_len)
+    lib.pbkdf2_hmac_sha256(
+        password, len(password), salt, len(salt), iteration_count, computed_dk, dk_len
+    )
+    computed_result = dk == computed_dk
+    assert result == computed_result
+
+
+@pytest.mark.parametrize(
+    "password, salt, iteration_count, dk_len, dk, result", pbkdf2_sha512_vectors
+)
+def test_pbkdf2_sha512(password, salt, iteration_count, dk_len, dk, result):
+    password = unhexlify(password)
+    salt = unhexlify(salt)
+    dk = unhexlify(dk)
+
+    computed_dk = bytes(dk_len)
+    lib.pbkdf2_hmac_sha512(
+        password, len(password), salt, len(salt), iteration_count, computed_dk, dk_len
+    )
+    computed_result = dk == computed_dk
     assert result == computed_result
