@@ -314,6 +314,7 @@ SOURCE_MOD += [
 
 # rust mods
 SOURCE_MOD += [
+    'embed/upymod/bindgen-static.c',
     'embed/upymod/rustmods.c',
 ]
 
