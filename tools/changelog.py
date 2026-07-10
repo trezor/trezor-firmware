@@ -19,6 +19,9 @@ MODELS_RE = re.compile(r"\[([A-Z0-9]{4})(,[A-Z0-9]{4})*\][ ]?")
 INTERNAL_MODELS = ("T2T1", "T2B1", "T3B1", "T3T1", "T3W1", "D001")
 INTERNAL_MODELS_SKIP = ("D001",)
 MODELS_MIN_VERSION = {
+    "T2B1": "2.6.3",
+    "T3B1": "2.8.3",
+    "T3T1": "2.7.2",
     "T3W1": "2.9.3",
 }
 

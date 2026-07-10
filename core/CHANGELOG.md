@@ -105,9 +105,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fixed Stellar Amount and Bitcoin lock time font.  [#6109]
-- Make sure to increment THP `seq_bit`.  [#6138]
+- [T3W1] Make sure to increment THP `seq_bit`.  [#6138]
 - [T3W1] Don't stall THP handling during PIN unlock.  [#6145]
-- Fixed external tamper trigger clearing.  [#6186]
+- [T3W1] Fixed external tamper trigger clearing.  [#6186]
 
 ## [2.9.5] (28th November 2025)
 
