@@ -19,9 +19,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved Tron TRX transfer flow.  [#6520]
 - Improve Stellar confirmations flows.  [#6709]
 
-### Security
-- Fix device locking if only SD card protection is enabled.  [#265]
-
 ## [2.12.0] (21st May 2026)
 
 ### Added
@@ -154,7 +151,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Exit pairing screen when already paired host connects.  [#5897]
 
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
-[#265]: https://github.com/trezor/trezor-firmware/pull/265
 [#5358]: https://github.com/trezor/trezor-firmware/pull/5358
 [#5723]: https://github.com/trezor/trezor-firmware/pull/5723
 [#5845]: https://github.com/trezor/trezor-firmware/pull/5845
