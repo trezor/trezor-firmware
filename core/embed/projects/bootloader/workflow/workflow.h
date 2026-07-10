@@ -36,26 +36,27 @@ workflow_result_t workflow_unlock_bootloader(protob_io_t *iface);
 
 workflow_result_t workflow_ping(protob_io_t *iface);
 
-workflow_result_t workflow_initialize(protob_io_t *iface, const fw_info_t *fw);
+workflow_result_t workflow_initialize(protob_io_t *iface,
+                                      const fw_check_info_t *fw);
 
 workflow_result_t workflow_get_features(protob_io_t *iface,
-                                        const fw_info_t *fw);
+                                        const fw_check_info_t *fw);
 
-workflow_result_t workflow_menu(const fw_info_t *fw, protob_ios_t *ios);
+workflow_result_t workflow_menu(const fw_check_info_t *fw, protob_ios_t *ios);
 
-workflow_result_t workflow_bootloader(const fw_info_t *fw);
+workflow_result_t workflow_bootloader(const fw_check_info_t *fw);
 
 workflow_result_t workflow_empty_device(void);
 
-workflow_result_t workflow_auto_update(const fw_info_t *fw);
+workflow_result_t workflow_auto_update(const fw_check_info_t *fw);
 
 #ifdef USE_BLE
 
 bool wipe_bonds(protob_io_t *iface);
 
-workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw);
+workflow_result_t workflow_ble_pairing_request(const fw_check_info_t *fw);
 
-workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
+workflow_result_t workflow_wireless_setup(const fw_check_info_t *fw,
                                           protob_ios_t *ios);
 #endif
 

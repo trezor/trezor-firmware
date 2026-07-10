@@ -116,7 +116,8 @@ typedef struct {
   const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
   uint8_t vstr_len;
   const char *vstr;
-  const uint8_t *vimg;
+  const uint8_t *vimg;  // vendor logo (TOIF); NULL when absent or malformed
+  uint32_t vimg_len;    // validated length of vimg; 0 when there is none
   uint8_t sigmask;
   uint8_t sig[64];
   const uint8_t *origin;  // pointer to the underlying data

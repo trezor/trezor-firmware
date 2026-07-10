@@ -24,25 +24,40 @@
 #include <sec/image.h>
 
 /**
+ * @brief Layout-agnostic firmware information for the screens that show it.
+ *
+ * Filled from whatever the installed firmware layout provides (the vendor +
+ * image headers). Keeps the `ui_*` layer (the vendor warning shown before
+ * running the firmware, and the bootloader intro) independent of the header
+ * format, so it never touches a scheme-specific header.
+ */
+typedef struct {
+  uint32_t version;          /**< firmware version (major|minor<<8|...) */
+  const char *vendor_str;    /**< vendor name; NULL to hide it */
+  size_t vendor_str_len;     /**< length of vendor_str */
+  const uint8_t *vendor_img; /**< vendor logo (TOIF); NULL for none */
+  uint32_t vendor_img_len;   /**< length of vendor_img, validated at parse */
+  secbool no_red;            /**< sectrue = black background, not the red
+                                  warning one (untrusted vendor) */
+} fw_ui_info_t;
+
+/**
  * @brief Firmware information collected by the bootloader when validating
  * images present in flash.
  *
  * This structure is filled by `fw_check()` and then used by the bootloader to
- * decide whether it can safely boot the firmware image.
+ * decide whether it can safely run the installed firmware, or must stay in the
+ * bootloader instead.
  */
 typedef struct {
-  vendor_header vhdr; /**< Parsed vendor header copied from flash.
-                           Contains vendor/product identifiers,
-                           versioning and policy flags (e.g.,
-                           lock, minimum versions). */
+  fw_ui_info_t ui; /**< Layout-agnostic display info (version, vendor). */
 
-  const image_header *hdr; /**< Pointer to the validated image header of
-                                the selected firmware (primary or
-                                backup). NULL if no valid header was
-                                found. */
-
-  volatile secbool header_present; /**< True if a header structure was
-                               found and passed basic checks. */
+  volatile secbool header_present; /**< True if the device is provisioned, i.e.
+                               a firmware is present with valid metadata to show
+                               (vendor/version) -- even if its body is corrupt.
+                               Drives menu-vs-empty-device routing, the Features
+                               reply, and the storage-wipe decision. (A valid
+                               signed firmware header.) */
 
   volatile secbool firmware_present; /**< True if a valid, bootable
 firmware image is present. */
@@ -50,7 +65,7 @@ firmware image is present. */
   volatile secbool firmware_present_backup; /**< True if a valid, bootable
                                         firmware image is present - backup for
                                       glitch protection. */
-} fw_info_t;
+} fw_check_info_t;
 
 /**
  * @brief Verify whether the vendor header is the same as the locked version.
@@ -72,4 +87,31 @@ secbool check_vendor_header_lock(const vendor_header *vhdr);
  *                provided by the caller and remain valid for subsequent boot
  *                decisions.
  */
-void fw_check(fw_info_t *fw_info);
+void fw_check(fw_check_info_t *fw_info);
+
+/**
+ * @brief Everything `real_jump_to_firmware()` needs to hand control to the
+ * installed firmware, resolved by the layout-specific verification/policy code.
+ */
+typedef struct {
+  uint32_t entry_address;      /**< vector table to jump to */
+  secbool secret_run_access;   /**< grant the firmware secret access */
+  secbool provisioning_access; /**< grant device-provisioning access */
+  secbool allow_unlimited_run; /**< if not sectrue, IWDG limits runtime */
+  secbool no_warning;          /**< sectrue = skip the boot warning */
+  int warn_delay;              /**< seconds to wait on the warning screen */
+  secbool no_click;            /**< sectrue = no click to leave the warning */
+  fw_ui_info_t ui;             /**< layout-agnostic info for the warning */
+} fw_run_info_t;
+
+/**
+ * @brief Verify the installed firmware and resolve the policy for running it.
+ *
+ * Performs the full image verification and downgrade check, then fills `info`
+ * with the entry point, secret/provisioning access, runtime-limit and warning
+ * decisions. Fatal-errors (via `ensure`) on any verification or downgrade
+ * failure, so on return the firmware is authentic and bootable.
+ *
+ * Implemented by the layout-specific verification code (fw_check.c).
+ */
+void fw_run_prepare(fw_run_info_t *info);

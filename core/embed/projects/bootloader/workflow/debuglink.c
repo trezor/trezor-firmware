@@ -160,7 +160,7 @@ static debuglink_result_t debuglink_process_record_screen(protob_io_t *io) {
 }
 
 debuglink_result_t debuglink_process(void) {
-  fw_info_t fw = {0};
+  fw_check_info_t fw = {0};
   fw_check(&fw);
 
   debuglink_result_t res = DEBUGLINK_RESULT_NONE;
