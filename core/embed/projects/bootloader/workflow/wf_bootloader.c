@@ -39,7 +39,7 @@
 #include "rust_ui_bootloader.h"
 #include "workflow.h"
 
-workflow_result_t workflow_menu(const fw_info_t* fw, protob_ios_t* ios) {
+workflow_result_t workflow_menu(const fw_check_info_t* fw, protob_ios_t* ios) {
   while (true) {
     uint32_t ui_result = 0;
     workflow_result_t result =
@@ -100,9 +100,9 @@ typedef enum {
 
 // Each handler returns either a next screen, or SCREEN_DONE and an out‑param
 // for the result.
-static screen_t handle_intro(const fw_info_t* fw,
+static screen_t handle_intro(const fw_check_info_t* fw,
                              workflow_result_t* out_result) {
-  intro_result_t ui = ui_screen_intro(&fw->vhdr, fw->hdr, fw->firmware_present);
+  intro_result_t ui = ui_screen_intro(&fw->ui, fw->firmware_present);
   if (ui == INTRO_MENU) return SCREEN_MENU;
   if (ui == INTRO_HOST) return SCREEN_WAIT_FOR_HOST;
   // no other valid INTRO result -> fatal
@@ -110,7 +110,7 @@ static screen_t handle_intro(const fw_info_t* fw,
   return SCREEN_DONE;
 }
 
-static screen_t handle_menu(const fw_info_t* fw,
+static screen_t handle_menu(const fw_check_info_t* fw,
                             workflow_result_t* out_result) {
   workflow_result_t res = workflow_menu(fw, NULL);
   switch (res) {
@@ -124,7 +124,7 @@ static screen_t handle_menu(const fw_info_t* fw,
   }
 }
 
-static screen_t handle_wait_for_host(const fw_info_t* fw,
+static screen_t handle_wait_for_host(const fw_check_info_t* fw,
                                      workflow_result_t* out_result) {
   uint32_t ui_res = 0;
 
@@ -201,7 +201,7 @@ static screen_t handle_wait_for_host(const fw_info_t* fw,
   return next_screen;
 }
 
-workflow_result_t workflow_bootloader(const fw_info_t* fw) {
+workflow_result_t workflow_bootloader(const fw_check_info_t* fw) {
   ui_set_initial_setup(false);
   screen_t screen = SCREEN_INTRO;
   workflow_result_t final_res = WF_ERROR_FATAL;

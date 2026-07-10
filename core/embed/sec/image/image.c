@@ -274,6 +274,9 @@ secbool check_secmon_contents(const secmon_header_t *const hdr,
 
 #endif  // USE_SECMON_VERIFICATION
 
+// TOIF preamble: magic(4) + width(2) + height(2) + payload length(4).
+#define TOIF_PREAMBLE_SIZE 12
+
 secbool __wur read_vendor_header(const uint8_t *const data, size_t data_size,
                                  vendor_header *const vhdr) {
   // Need at least 23 bytes to safely read all fixed-offset fields through
@@ -310,10 +313,12 @@ secbool __wur read_vendor_header(const uint8_t *const data, size_t data_size,
     return secfalse;
   }
 
+  const uint32_t body_len = vhdr->hdrlen - IMAGE_SIG_SIZE;
+
   // The public-key array and the vstr_len byte that follows it must all fit
-  // within the header body (the region before the trailing signature).
+  // within the header body.
   uint32_t vstr_len_offset = 32 + (uint32_t)vhdr->vsig_n * 32;
-  if (vstr_len_offset >= vhdr->hdrlen - IMAGE_SIG_SIZE) {
+  if (vstr_len_offset >= body_len) {
     return secfalse;
   }
 
@@ -326,11 +331,38 @@ secbool __wur read_vendor_header(const uint8_t *const data, size_t data_size,
 
   memcpy(&vhdr->vstr_len, data + 32 + vhdr->vsig_n * 32, 1);
 
+  // check that the vendor string fits within the header body
+  if ((uint32_t)vhdr->vstr_len > body_len - (vstr_len_offset + 1)) {
+    return secfalse;
+  }
+
   vhdr->vstr = (const char *)(data + 32 + vhdr->vsig_n * 32 + 1);
 
-  vhdr->vimg = data + 32 + vhdr->vsig_n * 32 + 1 + vhdr->vstr_len;
-  // align to 4 bytes
-  vhdr->vimg += (-(uintptr_t)vhdr->vimg) & 3;
+  // Vendor logo (TOIF), 4-byte aligned, immediately after the vendor string.
+  // Parse and BOUND its length here: this is the only place that knows both the
+  // header extent (hdrlen, validated against data_size above) and the payload,
+  // so no consumer has to trust the length baked into the image itself.
+  //
+  // A logo that does not fit is reported as absent rather than invalidating the
+  // whole header: it is cosmetic, a header may legitimately carry none, and
+  // vendor_header_hash does not cover it -- so this cannot change any hash or
+  // signature outcome.
+  const uint8_t *vimg = data + 32 + vhdr->vsig_n * 32 + 1 + vhdr->vstr_len;
+  vimg += (-(uintptr_t)vimg) & 3;
+  const size_t vimg_offset = (size_t)(vimg - data);
+
+  vhdr->vimg = NULL;
+  vhdr->vimg_len = 0;
+  if (vimg_offset + TOIF_PREAMBLE_SIZE <= body_len) {
+    uint32_t toif_datalen = 0;
+    memcpy(&toif_datalen, vimg + 8, sizeof(toif_datalen));
+    // Subtract rather than add, so an attacker-chosen datalen cannot overflow
+    // the comparison. The if above guarantees the right-hand side is >= 0.
+    if (toif_datalen <= body_len - vimg_offset - TOIF_PREAMBLE_SIZE) {
+      vhdr->vimg = vimg;
+      vhdr->vimg_len = TOIF_PREAMBLE_SIZE + toif_datalen;
+    }
+  }
 
   memcpy(&vhdr->sigmask, data + vhdr->hdrlen - IMAGE_SIG_SIZE, 1);
 

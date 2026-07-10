@@ -47,7 +47,7 @@ static workflow_result_t bootloader_process_comm(wire_iface_t *wire_iface) {
     return WF_OK;
   }
 
-  fw_info_t fw;
+  fw_check_info_t fw;
   memset(&fw, 0, sizeof(fw));
 
   switch (msg_id) {
