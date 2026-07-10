@@ -1,0 +1,1 @@
+Fixed bootloader updates that carry only a new boot header (no new bootloader code) being rejected.

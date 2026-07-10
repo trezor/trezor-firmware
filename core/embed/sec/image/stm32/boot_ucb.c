@@ -33,8 +33,20 @@
 #define BOOT_UCB_MAGIC 0x5A8C7BF3
 
 #if defined(BOOTLOADER) || defined(BOARDLOADER)
-void adjust_to_secure_flash(uint32_t* address) {
+// Normalizes a UCB address field to the secure flash alias.
+//
+// 0 is left alone: it is the "no address" sentinel (code_address == 0 means a
+// header-only update -- no new code to install, reuse the current code). Adding
+// the alias offset to it would produce (FLASH_BASE_S - FLASH_BASE_NS), which
+// then fails the range checks in boot_ucb_read() and rejects a valid
+// header-only update. Handled here rather than at the call site so a future
+// optional address field cannot re-introduce the same bug.
+static void adjust_to_secure_flash(uint32_t* address) {
 #ifndef TREZOR_EMULATOR
+  if (*address == 0) {
+    return;
+  }
+
   if (*address < FLASH_BASE_S) {
     // Address is in the non-secure flash region, adjust it to point to the
     // secure flash region.
