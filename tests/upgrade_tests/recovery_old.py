@@ -46,6 +46,12 @@ def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
     # After all words entered, poll for recovery status to appear
     import time
 
+    if (2, 4, 2) <= debug.version < (2, 5, 3):
+        # https://github.com/trezor/trezor-firmware/pull/1725 may crash the emulator.
+        # See https://github.com/trezor/trezor-firmware/issues/7052 for more details.
+        # As a workaround, wait a bit until the last ButtonRequest is sent and ACKed.
+        time.sleep(1)
+
     for _ in range(10):  # max 1 second total
         time.sleep(0.1)
         layout = debug.read_layout()
