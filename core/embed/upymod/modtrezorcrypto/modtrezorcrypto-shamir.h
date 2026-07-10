@@ -78,18 +78,18 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
   }
   return mp_obj_new_bytes_from_vstr(&vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_shamir_interpolate_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_shamir_interpolate_obj,
                                  mod_trezorcrypto_shamir_interpolate);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_shamir_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_shamir_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_shamir)},
     {MP_ROM_QSTR(MP_QSTR_interpolate),
      MP_ROM_PTR(&mod_trezorcrypto_shamir_interpolate_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_shamir_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_shamir_globals,
                             mod_trezorcrypto_shamir_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypto_shamir_module = {
+static const mp_obj_module_t mod_trezorcrypto_shamir_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_shamir_globals,
 };

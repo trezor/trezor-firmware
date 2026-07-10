@@ -57,8 +57,8 @@
 #include "py/stackctrl.h"
 
 // Command line options, with their defaults
-STATIC bool compile_only = false;
-STATIC uint emit_opt = MP_EMIT_OPT_NONE;
+static bool compile_only = false;
+static uint emit_opt = MP_EMIT_OPT_NONE;
 
 #if MICROPY_ENABLE_GC
 // Heap size of GC heap (if enabled)
@@ -66,7 +66,7 @@ STATIC uint emit_opt = MP_EMIT_OPT_NONE;
 long heap_size = 1024 * 1024 * (sizeof(mp_uint_t) / 4);
 #endif
 
-STATIC void stderr_print_strn(void *env, const char *str, size_t len) {
+static void stderr_print_strn(void *env, const char *str, size_t len) {
   (void)env;
 #ifdef USE_DBG_CONSOLE
   dbg_console_write(str, len);
@@ -80,7 +80,7 @@ const mp_print_t mp_stderr_print = {NULL, stderr_print_strn};
 // If exc is SystemExit, return value where FORCED_EXIT bit set,
 // and lower 8 bits are SystemExit value. For all other exceptions,
 // return 1.
-STATIC int handle_uncaught_exception(mp_obj_base_t *exc) {
+static int handle_uncaught_exception(mp_obj_base_t *exc) {
   // check for SystemExit
   if (mp_obj_is_subclass_fast(MP_OBJ_FROM_PTR(exc->type),
                               MP_OBJ_FROM_PTR(&mp_type_SystemExit))) {
@@ -106,7 +106,7 @@ STATIC int handle_uncaught_exception(mp_obj_base_t *exc) {
 // Returns standard error codes: 0 for success, 1 for all other errors,
 // except if FORCED_EXIT bit is set then script raised SystemExit and the
 // value of the exit is in the lower 8 bits of the return value
-STATIC int execute_from_lexer(int source_kind, const void *source,
+static int execute_from_lexer(int source_kind, const void *source,
                               mp_parse_input_kind_t input_kind, bool is_repl) {
   mp_hal_set_interrupt_char(CHAR_CTRL_C);
 
@@ -165,7 +165,7 @@ STATIC int execute_from_lexer(int source_kind, const void *source,
 #if MICROPY_USE_READLINE == 1
 #include "shared/readline/readline.h"
 #else
-STATIC char *strjoin(const char *s1, int sep_char, const char *s2) {
+static char *strjoin(const char *s1, int sep_char, const char *s2) {
   int l1 = strlen(s1);
   int l2 = strlen(s2);
   char *s = malloc(l1 + l2 + 2);
@@ -180,7 +180,7 @@ STATIC char *strjoin(const char *s1, int sep_char, const char *s2) {
 }
 #endif
 
-STATIC int do_repl(void) {
+static int do_repl(void) {
   mp_hal_stdout_tx_str("MicroPython " MICROPY_GIT_TAG " on " MICROPY_BUILD_DATE
                        "; " MICROPY_PY_SYS_PLATFORM
                        " version\nUse Ctrl-D to exit, Ctrl-E for paste mode\n");
@@ -296,15 +296,15 @@ STATIC int do_repl(void) {
 #endif
 }
 
-STATIC int do_file(const char *file) {
+static int do_file(const char *file) {
   return execute_from_lexer(LEX_SRC_FILENAME, file, MP_PARSE_FILE_INPUT, false);
 }
 
-STATIC int do_str(const char *str) {
+static int do_str(const char *str) {
   return execute_from_lexer(LEX_SRC_STR, str, MP_PARSE_FILE_INPUT, false);
 }
 
-STATIC int usage(char **argv) {
+static int usage(char **argv) {
   printf(
       "usage: %s [<opts>] [-X <implopt>] [-c <command>] [<filename>]\n"
       "Options:\n"
@@ -339,7 +339,7 @@ STATIC int usage(char **argv) {
 }
 
 // Process options which set interpreter init options
-STATIC void pre_process_options(int argc, char **argv) {
+static void pre_process_options(int argc, char **argv) {
   for (int a = 1; a < argc; a++) {
     if (argv[a][0] == '-') {
       if (strcmp(argv[a], "-X") == 0) {
@@ -403,7 +403,7 @@ STATIC void pre_process_options(int argc, char **argv) {
   }
 }
 
-STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
+static void set_sys_argv(char *argv[], int argc, int start_arg) {
   for (int i = start_arg; i < argc; i++) {
     mp_obj_list_append(mp_sys_argv, MP_OBJ_NEW_QSTR(qstr_from_str(argv[i])));
   }
@@ -725,7 +725,7 @@ mp_import_stat_t mp_import_stat(const char *path) {
 mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *pos_args,
                          mp_map_t *kwargs) {
   enum { ARG_file, ARG_mode };
-  STATIC const mp_arg_t allowed_args[] = {
+  static const mp_arg_t allowed_args[] = {
       {MP_QSTR_file, MP_ARG_OBJ | MP_ARG_REQUIRED, {.u_rom_obj = MP_ROM_NONE}},
       {MP_QSTR_mode, MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_QSTR(MP_QSTR_r)}},
       {MP_QSTR_buffering, MP_ARG_INT, {.u_int = -1}},

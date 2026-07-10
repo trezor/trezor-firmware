@@ -37,7 +37,7 @@ typedef struct _mp_obj_Display_t {
 ///     """
 ///     Initialize the display.
 ///     """
-STATIC mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type,
+static mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type,
                                               size_t n_args, size_t n_kw,
                                               const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 0, false);
@@ -52,7 +52,7 @@ STATIC mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type,
 ///     Call without the degrees parameter to just perform the read of the
 ///     value.
 ///     """
-STATIC mp_obj_t mod_trezorui_Display_orientation(size_t n_args,
+static mp_obj_t mod_trezorui_Display_orientation(size_t n_args,
                                                  const mp_obj_t *args) {
   mp_int_t deg;
   if (n_args > 1) {
@@ -66,7 +66,7 @@ STATIC mp_obj_t mod_trezorui_Display_orientation(size_t n_args,
   }
   return MP_OBJ_NEW_SMALL_INT(deg);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
                                            1, 2,
                                            mod_trezorui_Display_orientation);
 /// def record_start(
@@ -76,7 +76,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
 ///     Starts screen recording with specified target directory and refresh
 ///     index.
 ///     """
-STATIC mp_obj_t mod_trezorui_Display_record_start(mp_obj_t self,
+static mp_obj_t mod_trezorui_Display_record_start(mp_obj_t self,
                                                   mp_obj_t target_directory,
                                                   mp_obj_t refresh_index) {
 #ifdef TREZOR_EMULATOR
@@ -87,23 +87,23 @@ STATIC mp_obj_t mod_trezorui_Display_record_start(mp_obj_t self,
 #endif
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_record_start_obj,
+static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_record_start_obj,
                                  mod_trezorui_Display_record_start);
 
 /// def record_stop(self) -> None:
 ///     """
 ///     Stops screen recording.
 ///     """
-STATIC mp_obj_t mod_trezorui_Display_record_stop(mp_obj_t self) {
+static mp_obj_t mod_trezorui_Display_record_stop(mp_obj_t self) {
 #ifdef TREZOR_EMULATOR
   display_record_stop();
 #endif
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_record_stop_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_record_stop_obj,
                                  mod_trezorui_Display_record_stop);
 
-STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_orientation),
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
     {MP_ROM_QSTR(MP_QSTR_record_start),
@@ -113,7 +113,7 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_WIDTH), MP_ROM_INT(DISPLAY_RESX)},
     {MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_ROM_INT(DISPLAY_RESY)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict,
+static MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict,
                             mod_trezorui_Display_locals_dict_table);
 
 // clang-format off

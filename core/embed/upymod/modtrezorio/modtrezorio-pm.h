@@ -46,7 +46,7 @@
 ///     Returns the state of charge (SoC) in percent (0-100). Raises
 ///     RuntimeError on failure.
 ///     """
-STATIC mp_obj_t mod_trezorio_pm_soc() {
+static mp_obj_t mod_trezorio_pm_soc() {
   pm_state_t state = {0};
   pm_status_t res = pm_get_state(&state);
   if (res != PM_OK) {
@@ -55,7 +55,7 @@ STATIC mp_obj_t mod_trezorio_pm_soc() {
   }
   return mp_obj_new_int(state.soc);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_soc_obj, mod_trezorio_pm_soc);
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_soc_obj, mod_trezorio_pm_soc);
 
 /// def suspend() -> int:
 ///     """
@@ -63,7 +63,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_soc_obj, mod_trezorio_pm_soc);
 ///     failure.
 ///     Wakeup flags: BUTTON=1, POWER=2, BLE=4, NFC=8, RTC=16, USB=32, TOUCH=64
 ///     """
-STATIC mp_obj_t mod_trezorio_pm_suspend() {
+static mp_obj_t mod_trezorio_pm_suspend() {
   wakeup_flags_t wakeup_flags = 0;
   pm_status_t res = pm_suspend(&wakeup_flags);
   if (res != PM_OK) {
@@ -71,21 +71,21 @@ STATIC mp_obj_t mod_trezorio_pm_suspend() {
   }
   return mp_obj_new_int_from_uint(wakeup_flags);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_suspend_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_suspend_obj,
                                  mod_trezorio_pm_suspend);
 
 /// def hibernate() -> None:
 ///     """
 ///     Hibernates the device. Raises RuntimeError on failure.
 ///     """
-STATIC mp_obj_t mod_trezorio_pm_hibernate() {
+static mp_obj_t mod_trezorio_pm_hibernate() {
   pm_status_t res = pm_hibernate();
   if (res != PM_OK) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Failed to hibernate"));
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_hibernate_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_hibernate_obj,
                                  mod_trezorio_pm_hibernate);
 
 /// def is_usb_connected() -> bool:
@@ -93,7 +93,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_hibernate_obj,
 ///     Returns True if USB is connected, False otherwise. Raises RuntimeError
 ///     on failure.
 ///     """
-STATIC mp_obj_t mod_trezorio_pm_is_usb_connected() {
+static mp_obj_t mod_trezorio_pm_is_usb_connected() {
   pm_state_t state;
   pm_status_t res = pm_get_state(&state);
   if (res != PM_OK) {
@@ -102,7 +102,7 @@ STATIC mp_obj_t mod_trezorio_pm_is_usb_connected() {
   }
   return mp_obj_new_bool(state.usb_connected);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_usb_connected_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_usb_connected_obj,
                                  mod_trezorio_pm_is_usb_connected);
 
 /// def is_wireless_connected() -> bool:
@@ -110,7 +110,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_usb_connected_obj,
 ///     Returns True if Wireless power source is connected, False otherwise.
 ///     Raises RuntimeError on failure.
 ///     """
-STATIC mp_obj_t mod_trezorio_pm_is_wireless_connected() {
+static mp_obj_t mod_trezorio_pm_is_wireless_connected() {
   pm_state_t state;
   pm_status_t res = pm_get_state(&state);
   if (res != PM_OK) {
@@ -119,7 +119,7 @@ STATIC mp_obj_t mod_trezorio_pm_is_wireless_connected() {
   }
   return mp_obj_new_bool(state.wireless_connected);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_wireless_connected_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_wireless_connected_obj,
                                  mod_trezorio_pm_is_wireless_connected);
 
 #ifdef TREZOR_EMULATOR
@@ -138,7 +138,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_wireless_connected_obj,
 ///     Only available on emulator. Pass None to leave a field unchanged.
 ///     Charging status and power status are derived from connection states.
 ///     """
-STATIC mp_obj_t mod_trezorio_pm_set_emu_battery_state(size_t n_args,
+static mp_obj_t mod_trezorio_pm_set_emu_battery_state(size_t n_args,
                                                       const mp_obj_t* pos_args,
                                                       mp_map_t* kw_args) {
   static const mp_arg_t allowed_args[] = {
@@ -177,12 +177,12 @@ STATIC mp_obj_t mod_trezorio_pm_set_emu_battery_state(size_t n_args,
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorio_pm_set_emu_battery_state_obj, 0,
+static MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorio_pm_set_emu_battery_state_obj, 0,
                                   mod_trezorio_pm_set_emu_battery_state);
 #endif
 #endif
 
-STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_pm)},
     {MP_ROM_QSTR(MP_QSTR_soc), MP_ROM_PTR(&mod_trezorio_pm_soc_obj)},
     {MP_ROM_QSTR(MP_QSTR_suspend), MP_ROM_PTR(&mod_trezorio_pm_suspend_obj)},
@@ -222,10 +222,10 @@ STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_EVENT_BATTERY_TEMP_JUMP_UPDATED), MP_ROM_INT(1 << 9)},
     {MP_ROM_QSTR(MP_QSTR_EVENT_SOC_UPDATED), MP_ROM_INT(1 << 10)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_pm_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorio_pm_globals,
                             mod_trezorio_pm_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorio_pm_module = {
+static const mp_obj_module_t mod_trezorio_pm_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t*)&mod_trezorio_pm_globals,
 };

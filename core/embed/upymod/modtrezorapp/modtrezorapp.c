@@ -41,7 +41,7 @@
 ///     """
 ///     Spawns an application task from the app cache.
 ///     """
-STATIC mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
+static mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
   mp_buffer_info_t hash = {0};
   mp_get_buffer_raise(app_hash_obj, &hash, MP_BUFFER_READ);
 
@@ -63,14 +63,14 @@ STATIC mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
   o->task_id = task_id;
   return MP_OBJ_FROM_PTR(o);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_spawn_task_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_spawn_task_obj,
                                  mod_trezorapp_spawn_task);
 
 /// def create_image(app_hash: bytes, size: int) -> AppImage:
 ///     """
 ///     Creates a new application image in the app cache.
 ///     """
-STATIC mp_obj_t mod_trezorapp_create_image(mp_obj_t app_hash_obj,
+static mp_obj_t mod_trezorapp_create_image(mp_obj_t app_hash_obj,
                                            mp_obj_t size_obj) {
   mp_buffer_info_t hash = {0};
   mp_get_buffer_raise(app_hash_obj, &hash, MP_BUFFER_READ);
@@ -94,7 +94,7 @@ STATIC mp_obj_t mod_trezorapp_create_image(mp_obj_t app_hash_obj,
   o->image = image;
   return MP_OBJ_FROM_PTR(o);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_create_image_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_create_image_obj,
                                  mod_trezorapp_create_image);
 
 #ifdef TREZOR_EMULATOR
@@ -102,7 +102,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_create_image_obj,
 ///     """
 ///     Loads an application image from a file into the app cache.
 ///     """
-STATIC mp_obj_t mod_trezorapp_load_file(mp_obj_t app_hash_obj,
+static mp_obj_t mod_trezorapp_load_file(mp_obj_t app_hash_obj,
                                         mp_obj_t filename_obj) {
   mp_buffer_info_t hash = {0};
   mp_get_buffer_raise(app_hash_obj, &hash, MP_BUFFER_READ);
@@ -123,11 +123,11 @@ STATIC mp_obj_t mod_trezorapp_load_file(mp_obj_t app_hash_obj,
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_load_file_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_load_file_obj,
                                  mod_trezorapp_load_file);
 #endif  // TREZOR_EMULATOR
 
-STATIC const mp_rom_map_elem_t mp_module_trezorapp_globals_table[] = {
+static const mp_rom_map_elem_t mp_module_trezorapp_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorapp)},
 
     {MP_ROM_QSTR(MP_QSTR_spawn_task),
@@ -139,7 +139,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorapp_globals_table[] = {
 #endif
 };
 
-STATIC MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,
+static MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,
                             mp_module_trezorapp_globals_table);
 
 const mp_obj_module_t mp_module_trezorapp = {
