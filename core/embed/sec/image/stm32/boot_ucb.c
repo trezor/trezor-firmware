@@ -58,7 +58,13 @@ secbool boot_ucb_read(boot_ucb_t* ucb) {
   // flash regions.  We need to adjust them to point to the secure flash
   // region in order to proceed.
   adjust_to_secure_flash(&ucb->header_address);
-  adjust_to_secure_flash(&ucb->code_address);
+  // code_address == 0 is the "header-only" sentinel (no new code to install --
+  // reuse the current code). It must NOT be run through adjust_to_secure_flash:
+  // that would turn 0 into (FLASH_BASE_S - FLASH_BASE_NS) and then fail the
+  // code range check below, rejecting a valid header-only update.
+  if (ucb->code_address != 0) {
+    adjust_to_secure_flash(&ucb->code_address);
+  }
 #endif
 
   // Before reading the boot header fields, we need to ensure that it's
