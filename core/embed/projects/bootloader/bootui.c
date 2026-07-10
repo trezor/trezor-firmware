@@ -90,6 +90,26 @@ confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
                                 is_newinstall == sectrue, version_cmp);
 }
 
+#ifdef USE_BOOT_UCB
+confirm_result_t ui_screen_install_confirm_bootloader(
+    uint32_t fw_version, const uint8_t *const fingerprint,
+    secbool should_keep_seed, secbool is_newvendor, const char *vendor,
+    size_t vendor_len) {
+  char ver_str[VERSION_STRING_LEN];
+  // fw_version is the version to display, packed
+  // major|minor<<8|patch<<16|build<<24; the vendor string names what is being
+  // installed. Both are supplied by the caller.
+  format_ver(fw_version, ver_str, sizeof(ver_str));
+  // Reuse the firmware install-confirm screen. A false keep-seed makes it show
+  // the "SEED WILL BE ERASED!" warning, so this one screen doubles as the wipe
+  // confirm on a storage-domain change.
+  return screen_install_confirm(vendor, vendor_len, ver_str, fingerprint,
+                                should_keep_seed == sectrue,
+                                is_newvendor == sectrue,
+                                /*is_newinstall=*/false, 0);
+}
+#endif
+
 void ui_screen_install_start(bool wireless) {
   screen_install_progress(0, true, initial_setup, wireless);
 }
