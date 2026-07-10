@@ -65,6 +65,20 @@
 
 #define DISPLAY_JUMP_BEHAVIOR DISPLAY_RESET_CONTENT
 
+// The boardloader ALREADY SHIPPED on this model has a UCB bug: its
+// adjust_to_secure_flash() has no exemption for the code_address == 0
+// "header-only" sentinel, so it mangles 0 into (FLASH_BASE_S - FLASH_BASE_NS)
+// and then rejects the update on the range check.
+//
+// This describes the deployed binary, not current source -- boot_ucb.c exempts
+// the sentinel now, but the boardloader is immutable in the field, so that fix
+// only reaches devices flashed from new builds. Deployed devices keep the bug.
+//
+// This flag tells the bootloader's UCB staging to work around it: never use the
+// 0 sentinel, always stage a real code_address. Omit it on models whose field
+// boardloader already carries the fix.
+#define BOARDLOADER_UCB_ZERO_ADDR_BUG 1
+
 #define NORCOW_SECTOR_SIZE (16 * 8 * 1024)  // 128 kB
 #define NORCOW_MIN_VERSION 0x00000006
 
