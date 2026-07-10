@@ -9,7 +9,7 @@ use crate::micropython::module::Module;
 use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
-use crate::micropython::typ::Type;
+use crate::micropython::typ::FullType;
 use crate::micropython::util;
 
 extern "C" fn py_erase_bonds() -> Obj {
@@ -261,7 +261,7 @@ extern "C" fn py_iface_read(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-static BLE_INTERFACE_TYPE: Type = obj_type! {
+static BLE_INTERFACE_TYPE: FullType = obj_type! {
     name: Qstr::MP_QSTR_BLEIF,
     locals: &obj_dict!(obj_map! {
         Qstr::MP_QSTR_iface_num => obj_fn_1!(py_iface_num).as_obj(),

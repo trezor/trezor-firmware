@@ -11,7 +11,7 @@ use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::obj::{Obj, ObjBase};
 use crate::micropython::qstr::Qstr;
-use crate::micropython::typ::Type;
+use crate::micropython::typ::{FullType, Type};
 use crate::micropython::{ffi, util};
 
 #[repr(C)]
@@ -45,7 +45,7 @@ impl MsgObj {
     }
 
     fn obj_type() -> &'static Type {
-        static TYPE: Type = obj_type! {
+        static TYPE: FullType = obj_type! {
             name: Qstr::MP_QSTR_Msg,
             attr_fn: msg_obj_attr,
         };
@@ -165,7 +165,7 @@ impl MsgDefObj {
     }
 
     fn obj_type() -> &'static Type {
-        static TYPE: Type = obj_type! {
+        static TYPE: FullType = obj_type! {
             name: Qstr::MP_QSTR_MsgDef,
             attr_fn: msg_def_obj_attr,
             call_fn: msg_def_obj_call,
