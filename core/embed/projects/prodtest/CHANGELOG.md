@@ -86,7 +86,7 @@
 ### Incompatible changes
 - Completely redesigned. See the updated documentation for details.  [#4534]
 
-## 0.2.12 [22th January 2025]
+## 0.2.12 [22nd January 2025]
 
 ### Changed
 - Changed resolution of TOUCH_POWER command parameter to milliseconds.  [#4407]
@@ -167,7 +167,7 @@
 
 - [T2B1] Improve Optiga metadata handling.
 
-## 0.2.3 [06th October 2023]
+## 0.2.3 [6th October 2023]
 
 ### Added
 - Started changelog.
