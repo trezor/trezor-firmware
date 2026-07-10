@@ -26,6 +26,7 @@ fn main() -> Result<()> {
             "version_check.c",
             "workflow/wf_firmware_update.c",
             "workflow/wf_image_upload.c",
+            "workflow/wf_ucb_stage.c",
             "workflow/wf_wipe_device.c",
             "workflow/wf_get_features.c",
             "workflow/wf_initialize.c",
