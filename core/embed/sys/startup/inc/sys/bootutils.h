@@ -56,6 +56,17 @@ void __attribute__((noreturn)) reboot_to_bootloader(void);
 // with the firmware installation.
 void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 
+// Reboots the device and continues a two-phase install the bootloader staged
+// itself. Carries no arguments: what phase 2 installs is pinned in the staged
+// boot header, and deliberately NOT re-authorizing from bootargs is what keeps
+// the user's consent one-shot.
+//
+// Bootloader-internal: unlike reboot_and_upgrade this is never reachable from
+// firmware, so it has no syscall/smcall bridge. Kept distinct from
+// reboot_and_upgrade so the two cannot be confused at the boot-command
+// dispatch, where they need different gates on firmware validity.
+void __attribute__((noreturn)) reboot_and_continue_upgrade(void);
+
 #ifdef USE_BOOTARGS_RSOD
 // Resets the device with post-mortem information in bootargs
 // so that the bootloader can display it.
