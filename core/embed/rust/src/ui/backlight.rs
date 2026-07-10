@@ -3,7 +3,7 @@ use crate::micropython::macros::obj_type;
 use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
-use crate::micropython::typ::Type;
+use crate::micropython::typ::FullType;
 use crate::micropython::{ffi, util};
 use crate::ui::{CommonUI, ModelUI};
 
@@ -16,7 +16,7 @@ use crate::ui::{CommonUI, ModelUI};
  * things stay forever. Written in May 2024.)
  */
 
-static BACKLIGHT_LEVELS_TYPE: Type = obj_type! {
+static BACKLIGHT_LEVELS_TYPE: FullType = obj_type! {
     name: Qstr::MP_QSTR_BacklightLevels,
     attr_fn: backlight_levels_attr,
 };
