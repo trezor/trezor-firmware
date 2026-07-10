@@ -48,6 +48,38 @@ extern uint32_t _codelen;
 flash_area_t FIRMWARE_AREA = {0};
 #endif  // SECMON
 
+#ifdef USE_BOOT_UCB
+// Staging area for images installed by the boardloader (currently bootloader
+// updates, possibly larger image types in the future). It is reserved at the
+// tail of the firmware area, so the firmware header (at the start of the
+// firmware area) is never touched; the firmware body may be overwritten while
+// staging. Lies in the (non-secure) kernel region, well past the secmon.
+//
+// The reservation is sized independently of, and larger than,
+// BOOTLOADER_MAXSIZE so bigger images can be staged later. Individual workflows
+// still bound their own uploads: the bootloader update is limited to
+// BOOTLOADER_MAXSIZE. Reserving more does not reduce FIRMWARE_MAXSIZE (the
+// descriptor overlaps the firmware tail); it only widens the region clobbered
+// during an actual staging op.
+#ifndef STAGING_MAXSIZE
+#define STAGING_MAXSIZE (64 * 8 * 1024)  // 512 kB
+#endif
+#define STAGING_SECTOR_COUNT (STAGING_MAXSIZE / FLASH_PAGE_SIZE)
+_Static_assert(STAGING_MAXSIZE % FLASH_PAGE_SIZE == 0,
+               "STAGING_MAXSIZE must be a multiple of the flash sector size");
+_Static_assert(STAGING_SECTOR_COUNT <
+                   (FIRMWARE_SECTOR_END - FIRMWARE_SECTOR_START + 1),
+               "Staging area would reach the firmware header");
+const flash_area_t STAGING_AREA = {
+    .num_subareas = 1,
+    .subarea[0] =
+        {
+            .first_sector = FIRMWARE_SECTOR_END - STAGING_SECTOR_COUNT + 1,
+            .num_sectors = STAGING_SECTOR_COUNT,
+        },
+};
+#endif  // USE_BOOT_UCB
+
 void flash_init(void) {
 #ifdef SECMON
   // FIRMWARE_AREA is defined here because it depends on the
