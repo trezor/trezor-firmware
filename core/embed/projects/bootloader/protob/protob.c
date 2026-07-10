@@ -74,13 +74,16 @@ secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw) {
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
   MSG_SEND_ASSIGN_STRING(model, MODEL_NAME);
   MSG_SEND_ASSIGN_STRING(internal_model, MODEL_INTERNAL_NAME);
-  if (fw != NULL && fw->hdr != NULL && fw->header_present == sectrue) {
+  if (fw != NULL && fw->header_present == sectrue) {
     MSG_SEND_ASSIGN_VALUE(firmware_present, true);
-    MSG_SEND_ASSIGN_VALUE(fw_major, (fw->hdr->version & 0xFF));
-    MSG_SEND_ASSIGN_VALUE(fw_minor, ((fw->hdr->version >> 8) & 0xFF));
-    MSG_SEND_ASSIGN_VALUE(fw_patch, ((fw->hdr->version >> 16) & 0xFF));
-    MSG_SEND_ASSIGN_VALUE(fw_build, ((fw->hdr->version >> 24) & 0xFF));
-    MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, fw->vhdr.vstr, fw->vhdr.vstr_len);
+    MSG_SEND_ASSIGN_VALUE(fw_major, (fw->ui.version & 0xFF));
+    MSG_SEND_ASSIGN_VALUE(fw_minor, ((fw->ui.version >> 8) & 0xFF));
+    MSG_SEND_ASSIGN_VALUE(fw_patch, ((fw->ui.version >> 16) & 0xFF));
+    MSG_SEND_ASSIGN_VALUE(fw_build, ((fw->ui.version >> 24) & 0xFF));
+    if (fw->ui.vendor_str != NULL) {
+      MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, fw->ui.vendor_str,
+                                 fw->ui.vendor_str_len);
+    }
     MSG_SEND_ASSIGN_VALUE(firmware_corrupted, sectrue != fw->firmware_present);
   } else {
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
