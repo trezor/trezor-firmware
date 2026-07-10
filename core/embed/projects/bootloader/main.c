@@ -571,8 +571,14 @@ int bootloader_main(void) {
       stay_in_bootloader = sectrue;
       break;
     case BOOT_COMMAND_INSTALL_UPGRADE:
-      if (fw.firmware_present == sectrue) {
-        // continue without user interaction
+      // A pre-authorized update continuation on a provisioned device. Staging a
+      // new bootloader (via the UCB) can leave the currently installed firmware
+      // BODY invalid, so authorize continuing the update even if it no longer
+      // verifies -- but only for a provisioned device (valid header). The
+      // pending firmware hash in bootargs is the authorization. (Legacy gated
+      // this on firmware_present; header_present also admits a
+      // corrupt/incomplete body.)
+      if (fw.header_present == sectrue) {
         auto_upgrade = sectrue;
       }
       break;
@@ -637,7 +643,12 @@ int bootloader_main(void) {
 #endif
 
     if (fw.header_present == sectrue) {
-      if (auto_upgrade == sectrue && fw.firmware_present == sectrue) {
+      // Provisioned device (valid header). A pre-authorized update continues
+      // even if the firmware BODY is invalid/incomplete (mid-update, or
+      // invalidated by a bootloader update); otherwise show the bootloader
+      // menu. (Legacy also required firmware_present for the auto-update
+      // branch.)
+      if (auto_upgrade == sectrue) {
         result = workflow_auto_update(&fw);
       } else {
         result = workflow_bootloader(&fw);
