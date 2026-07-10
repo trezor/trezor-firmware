@@ -29,7 +29,7 @@
 ///     """
 ///     Validate a NEM address
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address,
+static mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address,
                                                       mp_obj_t network) {
   mp_buffer_info_t addr = {0};
   mp_get_buffer_raise(address, &addr, MP_BUFFER_READ);
@@ -37,14 +37,14 @@ STATIC mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address,
   uint32_t n = trezor_obj_get_uint(network);
   return mp_obj_new_bool(nem_validate_address(addr.buf, n));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj,
                                  mod_trezorcrypto_nem_validate_address);
 
 /// def compute_address(public_key: AnyBytes, network: int) -> str:
 ///     """
 ///     Compute a NEM address from a public key
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key,
+static mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key,
                                                      mp_obj_t network) {
   mp_buffer_info_t p = {0};
   mp_get_buffer_raise(public_key, &p, MP_BUFFER_READ);
@@ -58,21 +58,21 @@ STATIC mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key,
   }
   return mp_obj_new_str_from_cstr(address);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_compute_address_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_compute_address_obj,
                                  mod_trezorcrypto_nem_compute_address);
 
 // objects definition
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_nem_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_nem_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_validate_address),
      MP_ROM_PTR(&mod_trezorcrypto_nem_validate_address_obj)},
     {MP_ROM_QSTR(MP_QSTR_compute_address),
      MP_ROM_PTR(&mod_trezorcrypto_nem_compute_address_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_nem_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_nem_globals,
                             mod_trezorcrypto_nem_globals_table);
 
 // module definition
-STATIC const mp_obj_module_t mod_trezorcrypto_nem_module = {
+static const mp_obj_module_t mod_trezorcrypto_nem_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_nem_globals,
 };

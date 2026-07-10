@@ -85,9 +85,7 @@ fn main() -> Result<()> {
             lib.add_private_define("MICROPY_OOM_CALLBACK", Some("0"));
         } else {
             lib.add_define("PYOPT", Some("0"));
-            // This is needed to compile modtrezorutils-meminfo.h that
-            // calls STATIC functions in other modules
-            lib.add_private_defines([("STATIC", Some("")), ("MICROPY_OOM_CALLBACK", Some("1"))]);
+            lib.add_private_define("MICROPY_OOM_CALLBACK", Some("1"));
         }
 
         // TODO: remove this hack (causing cyclic dependence) by moving micropython
@@ -242,12 +240,6 @@ fn main() -> Result<()> {
             if cfg!(feature = "frozen") {
                 lib.add_define("TREZOR_EMULATOR_FROZEN", None);
             }
-
-            // TODO: refactor modtrezorutils-meminfo.h to avoid this
-            //
-            // The hack is needed to compile modtrezorutils-meminfo.h that
-            // calls STATIC functions in other modules
-            lib.add_private_define("STATIC", Some(""));
 
             lib.add_sources_in_dir(
                 mpy_dir,

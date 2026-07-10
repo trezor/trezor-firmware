@@ -744,7 +744,7 @@ static void dump_meminfo_json(FILE *out) {
 ///     Dumps map of micropython GC arena to a file.
 ///     The JSON file can be decoded by analyze-memory-dump.py
 ///     """
-STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
+static mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
   size_t fn_len;
   FILE *out = (filename == mp_const_none)
                   ? NULL
@@ -753,7 +753,7 @@ STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
   dump_meminfo_json(out);
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_meminfo_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_meminfo_obj,
                                  mod_trezorutils_meminfo);
 
 #define MEMINFO_DICT_ENTRIES \

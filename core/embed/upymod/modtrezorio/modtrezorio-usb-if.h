@@ -36,10 +36,10 @@ typedef struct _mp_obj_USBIF_t {
 /// ) -> None:
 ///     """
 ///     """
-STATIC mp_obj_t mod_trezorio_USBIF_make_new(const mp_obj_type_t *type,
+static mp_obj_t mod_trezorio_USBIF_make_new(const mp_obj_type_t *type,
                                             size_t n_args, size_t n_kw,
                                             const mp_obj_t *args) {
-  STATIC const mp_arg_t allowed_args[] = {
+  static const mp_arg_t allowed_args[] = {
       {MP_QSTR_handle,
        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT,
        {.u_int = 0}},
@@ -63,18 +63,18 @@ STATIC mp_obj_t mod_trezorio_USBIF_make_new(const mp_obj_type_t *type,
 ///     """
 ///     Returns the configured number of this interface.
 ///     """
-STATIC mp_obj_t mod_trezorio_USBIF_iface_num(mp_obj_t self) {
+static mp_obj_t mod_trezorio_USBIF_iface_num(mp_obj_t self) {
   mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(self);
   return MP_OBJ_NEW_SMALL_INT(o->handle);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USBIF_iface_num_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USBIF_iface_num_obj,
                                  mod_trezorio_USBIF_iface_num);
 
 /// def write(self, msg: AnyBytes) -> int:
 ///     """
 ///     Sends message using USB interface.
 ///     """
-STATIC mp_obj_t mod_trezorio_USBIF_write(mp_obj_t self, mp_obj_t msg) {
+static mp_obj_t mod_trezorio_USBIF_write(mp_obj_t self, mp_obj_t msg) {
   mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
@@ -91,14 +91,14 @@ STATIC mp_obj_t mod_trezorio_USBIF_write(mp_obj_t self, mp_obj_t msg) {
 
   return MP_OBJ_NEW_SMALL_INT(r);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USBIF_write_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USBIF_write_obj,
                                  mod_trezorio_USBIF_write);
 
 /// def write_blocking(self, msg: AnyBytes, timeout_ms: int) -> int:
 ///     """
 ///     Sends message using USB interface.
 ///     """
-STATIC mp_obj_t mod_trezorio_USBIF_write_blocking(mp_obj_t self, mp_obj_t msg,
+static mp_obj_t mod_trezorio_USBIF_write_blocking(mp_obj_t self, mp_obj_t msg,
                                                   mp_obj_t timeout_ms) {
   mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t buf = {0};
@@ -114,14 +114,14 @@ STATIC mp_obj_t mod_trezorio_USBIF_write_blocking(mp_obj_t self, mp_obj_t msg,
 
   return MP_OBJ_NEW_SMALL_INT(r);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_USBIF_write_blocking_obj,
+static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_USBIF_write_blocking_obj,
                                  mod_trezorio_USBIF_write_blocking);
 
 /// def read(self, buf: bytearray, offset: int = 0) -> int:
 ///     """
 ///     Reads message using USB interface
 ///     """
-STATIC mp_obj_t mod_trezorio_USBIF_read(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t mod_trezorio_USBIF_read(size_t n_args, const mp_obj_t *args) {
   mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(args[0]);
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(args[1], &buf, MP_BUFFER_WRITE);
@@ -155,7 +155,7 @@ STATIC mp_obj_t mod_trezorio_USBIF_read(size_t n_args, const mp_obj_t *args) {
 
   return MP_OBJ_NEW_SMALL_INT(r);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_USBIF_read_obj, 2, 3,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_USBIF_read_obj, 2, 3,
                                            mod_trezorio_USBIF_read);
 
 /// RX_PACKET_LEN: ClassVar[int]
@@ -164,7 +164,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_USBIF_read_obj, 2, 3,
 /// TX_PACKET_LEN: ClassVar[int]
 /// """Length of one USB TX packet."""
 
-STATIC const mp_rom_map_elem_t mod_trezorio_USBIF_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_trezorio_USBIF_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_iface_num),
      MP_ROM_PTR(&mod_trezorio_USBIF_iface_num_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_USBIF_write_obj)},
@@ -174,7 +174,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_USBIF_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_RX_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
     {MP_ROM_QSTR(MP_QSTR_TX_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_USBIF_locals_dict,
+static MP_DEFINE_CONST_DICT(mod_trezorio_USBIF_locals_dict,
                             mod_trezorio_USBIF_locals_dict_table);
 
 // clang-format off

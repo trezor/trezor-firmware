@@ -27,26 +27,26 @@
 ///     """
 ///     Enable/disable touch wakeup during suspend.
 ///     """
-STATIC mp_obj_t mod_trezorio_touch_wakeup_set_enabled(mp_obj_t enable) {
+static mp_obj_t mod_trezorio_touch_wakeup_set_enabled(mp_obj_t enable) {
   touch_wakeup_set_enabled(mp_obj_is_true(enable));
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_touch_wakeup_set_enabled_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_touch_wakeup_set_enabled_obj,
                                  mod_trezorio_touch_wakeup_set_enabled);
 
 /// def touch_wakeup_get_enabled() -> bool:
 ///     """
 ///     Return whether touch wakeup during suspend is enabled.
 ///     """
-STATIC mp_obj_t mod_trezorio_touch_wakeup_get_enabled(void) {
+static mp_obj_t mod_trezorio_touch_wakeup_get_enabled(void) {
   return mp_obj_new_bool(touch_wakeup_get_enabled());
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_touch_wakeup_get_enabled_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_touch_wakeup_get_enabled_obj,
                                  mod_trezorio_touch_wakeup_get_enabled);
 
 #endif  // USE_TOUCH_WAKEUP
 
-STATIC const mp_rom_map_elem_t mod_trezorio_touch_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorio_touch_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_touch)},
 #ifdef USE_TOUCH_WAKEUP
     {MP_ROM_QSTR(MP_QSTR_touch_wakeup_set_enabled),
@@ -55,10 +55,10 @@ STATIC const mp_rom_map_elem_t mod_trezorio_touch_globals_table[] = {
      MP_ROM_PTR(&mod_trezorio_touch_wakeup_get_enabled_obj)},
 #endif  // USE_TOUCH_WAKEUP
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_touch_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorio_touch_globals,
                             mod_trezorio_touch_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorio_touch_module = {
+static const mp_obj_module_t mod_trezorio_touch_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorio_touch_globals,
 };

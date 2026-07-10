@@ -42,7 +42,7 @@ typedef struct _mp_obj_Pbkdf2_t {
   uint32_t prf;
 } mp_obj_Pbkdf2_t;
 
-STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
+static mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 
 /// def __init__(
 ///     self,
@@ -55,7 +55,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 ///     """
 ///     Create a PBKDF2 context.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
+static mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
                                                  size_t n_args, size_t n_kw,
                                                  const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 3, 4, false);
@@ -101,7 +101,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
 ///     """
 ///     Update a PBKDF2 context.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self,
+static mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self,
                                                mp_obj_t iterations) {
   mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
   uint32_t iter = trezor_obj_get_uint(iterations);
@@ -115,14 +115,14 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self,
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Pbkdf2_update_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Pbkdf2_update_obj,
                                  mod_trezorcrypto_Pbkdf2_update);
 
 /// def key(self) -> bytes:
 ///     """
 ///     Retrieve derived key.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
+static mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
   mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
   vstr_t out = {0};
   if (o->prf == PRF_HMAC_SHA256) {
@@ -142,19 +142,19 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
   }
   return mp_obj_new_bytes_from_vstr(&out);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2_key_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2_key_obj,
                                  mod_trezorcrypto_Pbkdf2_key);
 
-STATIC mp_obj_t mod_trezorcrypto_Pbkdf2___del__(mp_obj_t self) {
+static mp_obj_t mod_trezorcrypto_Pbkdf2___del__(mp_obj_t self) {
   mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx256), sizeof(PBKDF2_HMAC_SHA256_CTX));
   memzero(&(o->ctx512), sizeof(PBKDF2_HMAC_SHA512_CTX));
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2___del___obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2___del___obj,
                                  mod_trezorcrypto_Pbkdf2___del__);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_Pbkdf2_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_Pbkdf2_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_update),
      MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_update_obj)},
     {MP_ROM_QSTR(MP_QSTR_key), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_key_obj)},
@@ -163,7 +163,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_Pbkdf2_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_HMAC_SHA256), MP_ROM_INT(PRF_HMAC_SHA256)},
     {MP_ROM_QSTR(MP_QSTR_HMAC_SHA512), MP_ROM_INT(PRF_HMAC_SHA512)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Pbkdf2_locals_dict,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_Pbkdf2_locals_dict,
                             mod_trezorcrypto_Pbkdf2_locals_dict_table);
 
 // clang-format off

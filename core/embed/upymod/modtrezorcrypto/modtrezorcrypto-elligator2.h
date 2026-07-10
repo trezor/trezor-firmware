@@ -46,19 +46,19 @@ mp_obj_t mod_trezorcrypto_elligator2_map_to_curve25519(mp_obj_t input) {
 
   return mp_obj_new_bytes_from_vstr(&output_vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(
+static MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_elligator2_map_to_curve25519_obj,
     mod_trezorcrypto_elligator2_map_to_curve25519);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_elligator2_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_elligator2_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_elligator2)},
     {MP_ROM_QSTR(MP_QSTR_map_to_curve25519),
      MP_ROM_PTR(&mod_trezorcrypto_elligator2_map_to_curve25519_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_elligator2_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_elligator2_globals,
                             mod_trezorcrypto_elligator2_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypto_elligator2_module = {
+static const mp_obj_module_t mod_trezorcrypto_elligator2_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_elligator2_globals,
 };

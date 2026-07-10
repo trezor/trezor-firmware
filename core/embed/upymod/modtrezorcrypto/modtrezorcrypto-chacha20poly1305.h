@@ -47,7 +47,7 @@ typedef struct _mp_obj_ChaCha20Poly1305_t {
 ///     Initialize the ChaCha20 + Poly1305 context for encryption
 ///     using a 32 byte key and 12 byte nonce as in the RFC 7539 style.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
+static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 2, 2, false);
@@ -75,7 +75,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
 ///     style with 16 byte padding. This must only be called once and prior
 ///     to encryption.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_auth(mp_obj_t self,
+static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_auth(mp_obj_t self,
                                                        mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != INIT) {
@@ -88,7 +88,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_auth(mp_obj_t self,
   o->alen += in.len;
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_auth_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_auth_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_auth);
 
 /// def encrypt(self, data: AnyBytes) -> bytes:
@@ -96,7 +96,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_auth_obj,
 ///     Encrypt data (length of data must be divisible by 64 except for the
 ///     final value).
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
+static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
                                                           mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != INIT && o->state != PROCESSING) {
@@ -111,15 +111,15 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
   o->plen += in.len;
   return mp_obj_new_bytes_from_vstr(&vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_encrypt);
 
 /// def finish(self) -> bytes:
 ///     """
 ///     Compute RFC 7539-style Poly1305 MAC.
 ///     """
-STATIC mp_obj_t
-mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish(mp_obj_t self) {
+static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish(
+    mp_obj_t self) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != INIT && o->state != PROCESSING) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
@@ -131,7 +131,7 @@ mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish(mp_obj_t self) {
   rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
   return mp_obj_new_bytes_from_vstr(&mac);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(
+static MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish_obj,
     mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish);
 
@@ -158,7 +158,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
 ///     Decrypt data (length of data must be divisible by 64 except for the
 ///     final value).
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
+static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
                                                           mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != INIT && o->state != PROCESSING) {
@@ -173,14 +173,14 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
   o->plen += in.len;
   return mp_obj_new_bytes_from_vstr(&vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_decrypt);
 
 /// def finish(self, expected_mac: AnyBytes) -> None:
 ///     """
 ///     Verify RFC 7539-style Poly1305 MAC.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish(
+static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish(
     mp_obj_t self, mp_obj_t expected_mac) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != INIT && o->state != PROCESSING) {
@@ -205,21 +205,21 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish(
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(
+static MP_DEFINE_CONST_FUN_OBJ_2(
     mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish_obj,
     mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish);
 
-STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305___del__(mp_obj_t self) {
+static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305___del__(mp_obj_t self) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx), sizeof(chacha20poly1305_ctx));
   o->alen = 0;
   o->plen = 0;
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ChaCha20Poly1305___del___obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ChaCha20Poly1305___del___obj,
                                  mod_trezorcrypto_ChaCha20Poly1305___del__);
 
-STATIC const mp_rom_map_elem_t
+static const mp_rom_map_elem_t
     mod_trezorcrypto_ChaCha20Poly1305Encrypt_locals_dict_table[] = {
         {MP_ROM_QSTR(MP_QSTR_encrypt),
          MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj)},
@@ -230,11 +230,11 @@ STATIC const mp_rom_map_elem_t
         {MP_ROM_QSTR(MP_QSTR___del__),
          MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305___del___obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(
+static MP_DEFINE_CONST_DICT(
     mod_trezorcrypto_ChaCha20Poly1305Encrypt_locals_dict,
     mod_trezorcrypto_ChaCha20Poly1305Encrypt_locals_dict_table);
 
-STATIC const mp_rom_map_elem_t
+static const mp_rom_map_elem_t
     mod_trezorcrypto_ChaCha20Poly1305Decrypt_locals_dict_table[] = {
         {MP_ROM_QSTR(MP_QSTR_decrypt),
          MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj)},
@@ -245,7 +245,7 @@ STATIC const mp_rom_map_elem_t
         {MP_ROM_QSTR(MP_QSTR___del__),
          MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305___del___obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(
+static MP_DEFINE_CONST_DICT(
     mod_trezorcrypto_ChaCha20Poly1305Decrypt_locals_dict,
     mod_trezorcrypto_ChaCha20Poly1305Decrypt_locals_dict_table);
 
