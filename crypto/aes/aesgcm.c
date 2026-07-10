@@ -165,6 +165,11 @@ ret_type gcm_init_message(                  /* initialise a new message     */
 {   uint32_t i = 0, n_pos = 0;
     uint8_t *p = NULL;
 
+    /* NIST SP 800-38D, Section 5.2.1.1 forbids IV length of 0 */
+    /* https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf */
+    if(iv_len == 0)
+        return RETURN_ERROR;
+
     memset(ctx->ctr_val, 0, BLOCK_SIZE);
     if(iv_len == CTR_POS)
     {
@@ -517,7 +522,8 @@ ret_type gcm_encrypt_message(               /* encrypt an entire message    */
             unsigned long tag_len,          /* and its length in bytes      */
             gcm_ctx ctx[1])                 /* the mode context             */
 {
-    gcm_init_message(iv, iv_len, ctx);
+    if(gcm_init_message(iv, iv_len, ctx) != RETURN_GOOD)
+        return RETURN_ERROR;
     gcm_auth_header(hdr, hdr_len, ctx);
     gcm_encrypt(msg, msg_len, ctx);
     return gcm_compute_tag(tag, tag_len, ctx) ? RETURN_ERROR : RETURN_GOOD;
@@ -536,7 +542,8 @@ ret_type gcm_decrypt_message(               /* decrypt an entire message    */
 {   uint8_t local_tag[BLOCK_SIZE] = {0};
     ret_type rr = 0;
 
-    gcm_init_message(iv, iv_len, ctx);
+    if(gcm_init_message(iv, iv_len, ctx) != RETURN_GOOD)
+        return RETURN_ERROR;
     gcm_auth_header(hdr, hdr_len, ctx);
     gcm_decrypt(msg, msg_len, ctx);
     rr = gcm_compute_tag(local_tag, tag_len, ctx);
