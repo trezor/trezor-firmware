@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import glob
 import os
+import shlex
 import subprocess
 
 TREZOR_REPO = "https://github.com/trezor"
@@ -40,7 +41,7 @@ def lines(s):
 
 def git(args):
     print("+ git:", args)
-    return subprocess.check_output("git " + args, universal_newlines=True, shell=True)
+    return subprocess.check_output(["git"] + shlex.split(args), universal_newlines=True)
 
 
 def move_to_subtree(remote, dst):
@@ -89,7 +90,7 @@ def generate_subrepo_file(remote):
     current_head = git("rev-parse main").strip()
     remote_head = git(f"rev-parse {remote}/main").strip()
     dst = SUBREPOS[remote]
-    with open(f"{dst}/.gitrepo", "w") as f:
+    with open(os.path.join(os.path.basename(dst), ".gitrepo"), "w") as f:
         f.write(GITSUBREPO_TEMPLATE.format(remote=remote, current_head=current_head, remote_head=remote_head))
     git(f"add {dst}/.gitrepo")
 
@@ -105,7 +106,7 @@ def main():
         merge_remote(remote, dst)
 
         if remote in PUBLISHED_SUBREPOS:
-            with open(f"{dst}/.gitmodules", "w") as f:
+            with open(os.path.join(os.path.basename(dst), ".gitmodules"), "w") as f:
                 f.write(git(f"show {remote}/main:.gitmodules"))
             git(f"add {dst}/.gitmodules")
 
