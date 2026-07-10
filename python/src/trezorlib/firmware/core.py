@@ -281,10 +281,16 @@ class BootHeaderUnauth(SanityCheckedStruct):
     slh_signatures: list[bytes]
     ec_signatures: list[bytes]
     firmware_type: int
+    firmware_proof_count: t.Optional[int]
+    firmware_proof_nodes: t.Optional[list[bytes]]
+
+    # Fixed number of firmware-proof node slots in the boot header
+    # (== BOOT_HEADER_FW_PROOF_MAX_NODES in sec/boot_header.h; keep in sync).
+    FW_PROOF_MAX_NODES = 4
 
     # fmt: off
     SUBCON = c.Struct(
-        # Merkle proof
+        # Merkle proof (the BOOTLOADER's own co-path in the founder bootloader tree)
         "merkle_proof" / c.PrefixedArray(c.Int32ul, c.Bytes(32)),
 
         # Signatures
@@ -293,6 +299,19 @@ class BootHeaderUnauth(SanityCheckedStruct):
 
         # Other fields that are not part of the signature
         "firmware_type" / c.Aligned(4, c.Byte),
+
+        # Firmware Merkle proof: co-path folding the installed variant_root up to
+        # the signed firmware_root. PRESENT ONLY in PQ_SECURE_BOOT bootloaders
+        # (boot_header_unauth_t #ifdef); non-pq / older boot_ucb bins end the
+        # unauth part here. Parsed as OPTIONAL within the FixedSized unauth region
+        # (see BootableImage): read iff bytes remain, so one parser handles both
+        # layouts. Future unauth fields are appended AFTER this as further
+        # Optionals -- older bins/parsers just see fewer/extra trailing bytes.
+        "firmware_proof_count" / c.Optional(c.Int32ul),
+        "firmware_proof_nodes" / c.If(
+            lambda ctx: ctx.firmware_proof_count is not None,
+            c.Bytes(32)[FW_PROOF_MAX_NODES],
+        ),
     )
     # fmt: on
 
@@ -312,7 +331,14 @@ class BootableImage(SanityCheckedStruct):
 
     SUBCON = c.Struct(
         "header" / BootHeader.SUBCON,
-        "unauth" / BootHeaderUnauth.SUBCON,
+        # The unauth part occupies exactly header_len - auth_len bytes (no trailing
+        # padding: auth_len = MAXSIZE - proof - sizeof(unauth)). Bounding it to that
+        # region locates the code at header_len regardless of which optional unauth
+        # fields (firmware_proof, future fields) a given bin carries.
+        "unauth" / c.FixedSized(
+            c.this.header.header_len - c.this.header.auth_len,
+            BootHeaderUnauth.SUBCON,
+        ),
         "_code_offset" / c.Tell,
         "code" / c.Bytes(c.this.header.code_length),
         c.Check(c.this.header.header_len == c.this._code_offset),

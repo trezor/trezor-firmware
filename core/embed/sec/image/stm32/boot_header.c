@@ -24,10 +24,23 @@
 
 #include <rtl/sizedefs.h>
 #include <sec/boot_header.h>
+#include <sec/image.h>
 #include <sec/image_hash_conf.h>
 
 #include <../vendor/sphincsplus/ref/api.h>
 #include <ed25519-donna/ed25519.h>
+
+// fw_variant_t shares the vendor_fw_type_t vocabulary (legacy vendor header /
+// model vendorheader JSONs) so a variant maps to the same firmware_type byte in
+// both schemes. Keep these in sync.
+_Static_assert((int)FW_VARIANT_NONE == (int)VENDOR_FW_TYPE_RESERVED,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_UNIVERSAL == (int)VENDOR_FW_TYPE_UNIVERSAL,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_BITCOIN_ONLY == (int)VENDOR_FW_TYPE_BTC_ONLY,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_PRODTEST == (int)VENDOR_FW_TYPE_PRODTEST,
+               "fw variant");
 
 static const uint8_t * const BOARDLOADER_PQ_KEYS[] = {
 #if BOOTLOADER_DEVEL
@@ -257,6 +270,11 @@ void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
     IMAGE_HASH_FINAL(&ctx, root->bytes);
   }
 }
+
+// Firmware Merkle tree math + module/type helpers, shared verbatim with the
+// host cross-validation harness so both compute an identical firmware_root.
+// Contains definitions -- include in this TU only.
+#include "boot_header_merkle.h"
 
 secbool bootloader_area_needs_update(const boot_header_auth_t* hdr,
                                      uint32_t code_address) {
