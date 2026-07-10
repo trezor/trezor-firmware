@@ -226,6 +226,7 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("gfx_mono8_blend_mono4")
             .allowlist_function("gfx_bitblt_wait")
             // uzlib
+            .allowlist_type("uzlib_uncomp_t")
             .allowlist_function("uzlib_uncompress_init")
             .allowlist_function("uzlib_uncompress")
             // bip39

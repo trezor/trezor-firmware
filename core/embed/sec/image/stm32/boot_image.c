@@ -56,10 +56,10 @@ _Static_assert(
     BOOTLOADER_MAXSIZE <= IMAGE_CHUNK_SIZE,
     "BOOTLOADER_MAXSIZE must be less than or equal to IMAGE_CHUNK_SIZE");
 
-static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
+static void uzlib_prepare(uzlib_uncomp_t *decomp, uint8_t *window,
                           const void *src, uint32_t srcsize, void *dest,
                           uint32_t destsize) {
-  memzero(decomp, sizeof(struct uzlib_uncomp));
+  memzero(decomp, sizeof(uzlib_uncomp_t));
   if (window) {
     memzero(window, UZLIB_WINDOW_SIZE);
   }
@@ -100,14 +100,14 @@ void boot_image_replace(const boot_image_t *image) {
 
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
-  struct uzlib_uncomp decomp = {0};
+  uzlib_uncomp_t decomp = {0};
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
   uint32_t decomp_out[IMAGE_HEADER_SIZE / sizeof(uint32_t)] = {0};
 
   uzlib_prepare(&decomp, decomp_window, image->image_ptr, image->image_size,
                 decomp_out, sizeof(decomp_out));
 
-  ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
+  ensure((uzlib_uncompress(&decomp) == UZLIB_OK) ? sectrue : secfalse,
          "Bootloader header decompression failed");
 
   const image_header *new_bld_hdr = read_image_header(
@@ -154,7 +154,7 @@ void boot_image_replace(const boot_image_t *image) {
     error_shutdown("Invalid bootloader contents");
   }
 
-  memset(&decomp, 0, sizeof(struct uzlib_uncomp));
+  memset(&decomp, 0, sizeof(uzlib_uncomp_t));
 
   // cannot find valid header for current bootloader, something is wrong
   ensure(current_bld_hdr == (const image_header *)bl_data ? sectrue : secfalse,
@@ -193,7 +193,7 @@ void boot_image_replace(const boot_image_t *image) {
   uzlib_prepare(&decomp, decomp_window, image->image_ptr, image->image_size,
                 decomp_out, sizeof(decomp_out));
 
-  ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
+  ensure((uzlib_uncompress(&decomp) == UZLIB_OK) ? sectrue : secfalse,
          "Bootloader decompression failed");
 
   do {

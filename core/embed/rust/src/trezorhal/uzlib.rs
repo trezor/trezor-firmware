@@ -1,64 +1,16 @@
 use core::cell::RefCell;
 use core::marker::PhantomData;
 use core::mem::MaybeUninit;
-use core::ptr;
 
 use super::ffi;
 use crate::io::BinaryData;
 
 pub const UZLIB_WINDOW_SIZE: usize = 1 << 10;
-pub use ffi::uzlib_uncomp;
+pub use ffi::uzlib_uncomp_t;
 
-impl Default for ffi::uzlib_uncomp {
+impl Default for ffi::uzlib_uncomp_t {
     fn default() -> Self {
         unsafe { MaybeUninit::<Self>::zeroed().assume_init() }
-    }
-}
-
-pub struct UzlibContext<'a> {
-    uncomp: ffi::uzlib_uncomp,
-    src_data: PhantomData<&'a [u8]>,
-}
-
-impl<'a> UzlibContext<'a> {
-    pub fn new(src: &'a [u8], window: Option<&'a mut [u8; UZLIB_WINDOW_SIZE]>) -> Self {
-        let mut ctx = Self {
-            uncomp: uzlib_uncomp::default(),
-            src_data: PhantomData,
-        };
-
-        unsafe {
-            ctx.uncomp.source = src.as_ptr();
-            ctx.uncomp.source_limit = src.as_ptr().add(src.len());
-
-            if let Some(w) = window {
-                ffi::uzlib_uncompress_init(
-                    &mut ctx.uncomp,
-                    w.as_mut_ptr() as _,
-                    UZLIB_WINDOW_SIZE as u32,
-                );
-            } else {
-                ffi::uzlib_uncompress_init(&mut ctx.uncomp, ptr::null_mut(), 0);
-            }
-        }
-
-        ctx
-    }
-
-    /// Returns `Ok(true)` if all data was read.
-    pub fn uncompress(&mut self, dest_buf: &mut [u8]) -> Result<bool, ()> {
-        unsafe {
-            self.uncomp.dest = dest_buf.as_mut_ptr();
-            self.uncomp.dest_limit = self.uncomp.dest.add(dest_buf.len());
-
-            let res = ffi::uzlib_uncompress(&mut self.uncomp);
-
-            match res {
-                0 => Ok(false),
-                1 => Ok(true),
-                _ => Err(()),
-            }
-        }
     }
 }
 
@@ -86,7 +38,7 @@ impl<'a> SourceReadContext<'a> {
     }
 
     /// Fill the uncomp struct with the appropriate pointers to the source data
-    pub fn prepare_uncomp(&self, uncomp: &mut ffi::uzlib_uncomp) {
+    pub fn prepare_uncomp(&self, uncomp: &mut ffi::uzlib_uncomp_t) {
         // SAFETY: the offsets are within the buffer bounds.
         // - buf_head is either 0 or advanced by uzlib to at most buf_tail (via
         //   advance())
@@ -104,7 +56,7 @@ impl<'a> SourceReadContext<'a> {
     /// The operation is only valid on an uncomp struct that has been filled via
     /// `prepare_uncomp` and the source pointer has been updated by the uzlib
     /// library after a single uncompress operation.
-    pub unsafe fn advance(&mut self, uncomp: &ffi::uzlib_uncomp) {
+    pub unsafe fn advance(&mut self, uncomp: &ffi::uzlib_uncomp_t) {
         unsafe {
             // SAFETY: we trust uzlib to move the `source` pointer only up to `source_limit`
             self.buf_head = uncomp.source.offset_from(self.buf.as_ptr()) as usize;
@@ -116,7 +68,7 @@ impl<'a> SourceReadContext<'a> {
     /// If the uncomp buffer is exhausted, a callback is invoked that should (a)
     /// read one byte of data, and optionally (b) update the uncomp buffer
     /// with more data.
-    pub fn reader_callback(&mut self, uncomp: &mut ffi::uzlib_uncomp) -> Option<u8> {
+    pub fn reader_callback(&mut self, uncomp: &mut ffi::uzlib_uncomp_t) -> Option<u8> {
         // fill the internal buffer first
         let bytes_read = self.data.read(self.offset, self.buf.as_mut());
         self.buf_head = 0;
@@ -142,7 +94,7 @@ pub struct ZlibInflate<'a> {
     /// Compressed data reader
     data: RefCell<SourceReadContext<'a>>,
     /// Uzlib context
-    uncomp: ffi::uzlib_uncomp,
+    uncomp: ffi::uzlib_uncomp_t,
     window: PhantomData<&'a [u8]>,
 }
 
@@ -158,7 +110,7 @@ impl<'a> ZlibInflate<'a> {
     ) -> Self {
         let mut inflate = Self {
             data: RefCell::new(SourceReadContext::new(data, offset)),
-            uncomp: uzlib_uncomp::default(),
+            uncomp: uzlib_uncomp_t::default(),
             window: PhantomData,
         };
 
@@ -185,6 +137,7 @@ impl<'a> ZlibInflate<'a> {
             self.uncomp.source_read_cb = Some(zlib_reader_callback);
             // Context for the source data callback
             self.uncomp.source_read_cb_context = &self.data as *const _ as *mut cty::c_void;
+            self.uncomp.source_read_data = &self.uncomp as *const _ as *mut cty::c_void;
 
             // Destination buffer
             self.uncomp.dest = dest.as_mut_ptr();
@@ -205,6 +158,7 @@ impl<'a> ZlibInflate<'a> {
 
         // Clear the source read callback (just for safety)
         self.uncomp.source_read_cb_context = core::ptr::null_mut();
+        self.uncomp.source_read_data = core::ptr::null_mut();
 
         match res {
             0 => Ok(false),
@@ -230,7 +184,8 @@ impl<'a> ZlibInflate<'a> {
 
 /// This function is called by the uzlib library to read more data from the
 /// input stream.
-unsafe extern "C" fn zlib_reader_callback(uncomp: *mut ffi::uzlib_uncomp) -> i32 {
+unsafe extern "C" fn zlib_reader_callback(arg: *mut cty::c_void) -> i32 {
+    let uncomp = arg as *mut ffi::uzlib_uncomp_t;
     // SAFETY: we assume that passed-in uncomp is not null and that we own it
     // exclusively (ensured by passing it as &mut into uzlib_uncompress())
     let uncomp = unwrap!(unsafe { uncomp.as_mut() });
