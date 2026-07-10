@@ -3200,6 +3200,68 @@ START_TEST(test_bip32_curve25519_vector_2) {
 }
 END_TEST
 
+START_TEST(test_curve25519_scalarmult_low_order_points) {
+  static const char *points[] = {
+      // Vectors from
+      // https://www.ietf.org/archive/id/draft-irtf-cfrg-cpace-21.html#name-test-vectors-for-g_x25519sc
+      // Vectors ending in `_256` have the last bit set to 1, this bit should
+      // be ignored according to section 5 of RFC 7748.
+
+      // u0: identity, same u-coordinate as 4 * curve25519 generator and 2 *
+      // twist generator
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      // u1: 2 * curve25519 generator, same u-coordinate as 6 * generator
+      "0100000000000000000000000000000000000000000000000000000000000000",
+      // u2: 1 * twist generator, same u-coordinate as 3 * twist generator
+      "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+      // u3: 1 * curve25519 generator, same u-coordinate as 7 * generator
+      "e0eb7a7c3b41b8ae1656e3faf19fc46ada098deb9c32b1fd866205165f49b800",
+      // u4: 3 * curve25519 generator, same u-coordinate as 5 * generator
+      "5f9c95bca3508c24b1d0b1559c83ef5b04445cc4581c8e86d8224eddd09f1157",
+      // u5: u0 with p added to the u-coordinate, non-canonical encoding
+      "edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+      // u7: u1 with p added to the u-coordinate, non-canonical encoding
+      "eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+      // u0_256: u0 with bit 255 set, non-canonical encoding
+      "0000000000000000000000000000000000000000000000000000000000000080",
+      // u1_256: u1 with bit 255 set, non-canonical encoding
+      "0100000000000000000000000000000000000000000000000000000000000080",
+      // u2_256: u2 with bit 255 set, non-canonical encoding
+      "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      // u3_256: u3 with bit 255 set, non-canonical encoding
+      "e0eb7a7c3b41b8ae1656e3faf19fc46ada098deb9c32b1fd866205165f49b880",
+      // u4_256: u4 with bit 255 set, non-canonical encoding
+      "5f9c95bca3508c24b1d0b1559c83ef5b04445cc4581c8e86d8224eddd09f11d7",
+      // u5_256: u5 with bit 255 set, non-canonical encoding
+      "edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      // u7_256: u7 with bit 255 set, non-canonical encoding
+      "eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  };
+
+  static const char *secrets[] = {
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  };
+
+  static const uint8_t zero[32] = {0};
+
+  for (size_t i = 0; i < sizeof(points) / sizeof(*points); i++) {
+    curve25519_key basepoint = {0};
+    memcpy(basepoint, fromhex(points[i]), 32);
+
+    for (size_t j = 0; j < sizeof(secrets) / sizeof(*secrets); j++) {
+      curve25519_key secret = {0};
+      curve25519_key result = {0};
+
+      memcpy(secret, fromhex(secrets[j]), 32);
+      curve25519_scalarmult(result, secret, basepoint);
+      ck_assert_mem_eq(result, zero, sizeof(zero));
+    }
+  }
+}
+END_TEST
+
 // test vector 1 from
 // https://github.com/decred/dcrd/blob/master/hdkeychain/extendedkey_test.go
 START_TEST(test_bip32_decred_vector_1) {
@@ -12291,6 +12353,10 @@ Suite *test_suite(void) {
   tc = tcase_create("scalar_point_mult");
   tcase_add_test(tc, test_scalar_point_mult_secp256k1);
   tcase_add_test(tc, test_scalar_point_mult_nist256p1);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("curve25519");
+  tcase_add_test(tc, test_curve25519_scalarmult_low_order_points);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("ed25519");
