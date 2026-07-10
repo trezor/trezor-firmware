@@ -571,8 +571,23 @@ int bootloader_main(void) {
       stay_in_bootloader = sectrue;
       break;
     case BOOT_COMMAND_INSTALL_UPGRADE:
+      // Consent obtained in the FIRMWARE UI: firmware parsed what the host
+      // offered, asked the user, and rebooted here carrying the identity it
+      // confirmed. Firmware was therefore running when it set this, so its body
+      // was necessarily valid -- keep the strict gate. The pending hash in
+      // bootargs is the authorization, compared before anything is installed.
       if (fw.firmware_present == sectrue) {
-        // continue without user interaction
+        auto_upgrade = sectrue;
+      }
+      break;
+    case BOOT_COMMAND_CONTINUE_UPGRADE:
+      // The bootloader's own two-phase install: phase 1 armed the UCB and
+      // rebooted so the boardloader could install the new boot header. That
+      // swap can leave the installed firmware BODY invalid -- which is the
+      // whole point of phase 2 -- so a valid HEADER (a provisioned device) is
+      // all that can be required here. This is the only command that needs the
+      // weaker gate, and it is unreachable from firmware.
+      if (fw.header_present == sectrue) {
         auto_upgrade = sectrue;
       }
       break;
@@ -637,7 +652,12 @@ int bootloader_main(void) {
 #endif
 
     if (fw.header_present == sectrue) {
-      if (auto_upgrade == sectrue && fw.firmware_present == sectrue) {
+      // Provisioned device (valid header). A pre-authorized update continues
+      // even if the firmware BODY is invalid/incomplete (mid-update, or
+      // invalidated by a bootloader update); otherwise show the bootloader
+      // menu. (Legacy also required firmware_present for the auto-update
+      // branch.)
+      if (auto_upgrade == sectrue) {
         result = workflow_auto_update(&fw);
       } else {
         result = workflow_bootloader(&fw);
