@@ -19,7 +19,7 @@ use crate::micropython::map::Map;
 use crate::micropython::obj::{Obj, ObjBase};
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
-use crate::micropython::typ::Type;
+use crate::micropython::typ::{FullType, Type};
 use crate::micropython::util;
 use crate::time::Duration;
 use crate::ui::button_request::ButtonRequest;
@@ -70,7 +70,7 @@ impl AttachType {
     }
 }
 
-static ATTACH_TYPE: Type = obj_type! {
+static ATTACH_TYPE: FullType = obj_type! {
     name: Qstr::MP_QSTR_AttachType,
     locals: &obj_dict!(obj_map! {
         Qstr::MP_QSTR_INITIAL => Obj::small_int(0u16),
@@ -395,7 +395,7 @@ impl LayoutObj {
     }
 
     fn obj_type() -> &'static Type {
-        static TYPE: Type = obj_type! {
+        static TYPE: FullType = obj_type! {
             name: Qstr::MP_QSTR_LayoutObj,
             locals: &obj_dict!(obj_map! {
                 Qstr::MP_QSTR_attach_timer_fn => obj_fn_3!(ui_layout_attach_timer_fn).as_obj(),

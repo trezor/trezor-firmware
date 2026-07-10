@@ -118,72 +118,102 @@ macro_rules! obj_type {
      $(print_fn: $print_fn:path,)?
      $(parent: $parent:path,)?
     ) => {{
-        #[allow(unused_unsafe)]
-        unsafe {
-            use $crate::micropython::ffi;
+        use $crate::micropython::ffi;
 
-            let name = $name.to_u16();
+        let name = $name.to_u16();
 
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut base_type: &'static ffi::mp_obj_type_t = &ffi::mp_type_type;
-            $(base_type = &$base;)?
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
+        // SAFETY: micropython ffi
+        let mut base_type: &'static ffi::mp_obj_type_t = unsafe { &ffi::mp_type_type };
+        $(base_type = &$base;)?
 
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut attr: ffi::mp_attr_fun_t = None;
-            $(attr = Some($attr_fn);)?
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
+        let mut attr: ffi::mp_attr_fun_t = None;
+        $(attr = Some($attr_fn);)?
 
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut call: ffi::mp_call_fun_t = None;
-            $(call = Some($call_fn);)?
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
+        let mut call: ffi::mp_call_fun_t = None;
+        $(call = Some($call_fn);)?
 
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut make_new: ffi::mp_make_new_fun_t = None;
-            $(make_new = Some($make_new_fn);)?
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
+        let mut make_new: ffi::mp_make_new_fun_t = None;
+        $(make_new = Some($make_new_fn);)?
 
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut print: ffi::mp_print_fun_t = None;
-            $(print = Some($print_fn);)?
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
+        let mut print: ffi::mp_print_fun_t = None;
+        $(print = Some($print_fn);)?
 
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut parent: *const cty::c_void = ::core::ptr::null_mut();
-            $(parent = $parent as *const _ as *mut _;)?
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
+        let mut parent: Option<&ffi::mp_obj_type_t> = None;
+        $(parent = Some($parent);)?
 
-            // TODO: This is safe only if we pass in `Dict` with fixed `Map` (created by
-            // `Map::fixed()`, usually through `obj_map!`), because only then will
-            // MicroPython treat `locals_dict` as immutable, and make the mutable cast safe.
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut locals_dict = ::core::ptr::null_mut();
-            $(locals_dict = $locals as *const _ as *mut _;)?
+        // TODO: This is safe only if we pass in `Dict` with fixed `Map` (created by
+        // `Map::fixed()`, usually through `obj_map!`), because only then will
+        // MicroPython treat `locals_dict` as immutable, and make the mutable cast safe.
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
+        let mut locals_dict: Option<&ffi::mp_obj_dict_t> = None;
+        $(locals_dict = Some($locals);)?
 
-            ffi::mp_obj_type_t {
-                base: ffi::mp_obj_base_t {
-                    type_: base_type,
-                },
-                flags: 0,
-                name,
-                print,
-                make_new,
-                call,
-                unary_op: None,
-                binary_op: None,
-                attr,
-                subscr: None,
-                getiter: None,
-                iternext: None,
-                buffer_p: ffi::mp_buffer_p_t { get_buffer: None },
-                protocol: ::core::ptr::null(),
-                parent,
-                locals_dict,
-            }
+        const fn slot<T>(val: &Option<T>, num: u8) -> u8 {
+            if val.is_some() { num } else { 0 }
+        }
+
+        ffi::mp_obj_full_type_t {
+            base: ffi::mp_obj_base_t {
+                type_: base_type,
+            },
+            flags: ffi::MP_TYPE_FLAG_NONE as u16,
+            name,
+
+            slot_index_make_new: slot(&make_new, 1),
+            slot_index_print: slot(&print, 2),
+            slot_index_call: slot(&call, 3),
+            slot_index_unary_op: 0,
+            slot_index_binary_op: 0,
+            slot_index_attr: slot(&attr, 4),
+            slot_index_subscr: 0,
+            slot_index_iter: 0,
+            slot_index_buffer: 0,
+            slot_index_protocol: 0,
+            slot_index_parent: slot(&parent, 5),
+            slot_index_locals_dict: slot(&locals_dict, 6),
+
+            slots: [
+                obj_type!(@cast_fn make_new),
+                obj_type!(@cast_fn print),
+                obj_type!(@cast_fn call),
+                obj_type!(@cast_fn attr),
+                obj_type!(@cast_ref parent),
+                obj_type!(@cast_ref locals_dict),
+                ::core::ptr::null(),
+                ::core::ptr::null(),
+                ::core::ptr::null(),
+                ::core::ptr::null(),
+                ::core::ptr::null(),
+            ],
         }
     }};
+    // Option<unsafe extern "C" fn(...)> => *const cty::c_void
+    (@cast_fn $e:expr) => {
+        match $e {
+            None => ::core::ptr::null(),
+            Some(x) => x as *const cty::c_void,
+        }
+    };
+    // Option<&T> => *const cty::c_void
+    (@cast_ref $e:expr) => {
+        match $e {
+            None => ::core::ptr::null(),
+            Some(x) => x as *const _ as *const cty::c_void,
+        }
+    };
 }
 
 /// Construct an upymod definition.
