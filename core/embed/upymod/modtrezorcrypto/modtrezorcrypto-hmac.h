@@ -42,7 +42,7 @@ typedef struct _mp_obj_Hmac_t {
   uint32_t hashtype;
 } mp_obj_Hmac_t;
 
-STATIC mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t data);
+static mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t data);
 
 /// def __init__(
 ///     self,
@@ -53,7 +53,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t data);
 ///     """
 ///     Create a HMAC context.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Hmac_make_new(const mp_obj_type_t *type,
+static mp_obj_t mod_trezorcrypto_Hmac_make_new(const mp_obj_type_t *type,
                                                size_t n_args, size_t n_kw,
                                                const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 2, 3, false);
@@ -86,7 +86,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_make_new(const mp_obj_type_t *type,
 ///     """
 ///     Update a HMAC context.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t message) {
+static mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t message) {
   mp_obj_Hmac_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
@@ -99,14 +99,14 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t message) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Hmac_update_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Hmac_update_obj,
                                  mod_trezorcrypto_Hmac_update);
 
 /// def digest(self) -> bytes:
 ///     """
 ///     Return the digest of processed data so far.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Hmac_digest(mp_obj_t self) {
+static mp_obj_t mod_trezorcrypto_Hmac_digest(mp_obj_t self) {
   mp_obj_Hmac_t *o = MP_OBJ_TO_PTR(self);
   vstr_t mac = {0};
   if (o->hashtype == SHA256) {
@@ -126,19 +126,19 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_digest(mp_obj_t self) {
   }
   return mp_obj_new_bytes_from_vstr(&mac);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Hmac_digest_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Hmac_digest_obj,
                                  mod_trezorcrypto_Hmac_digest);
 
-STATIC mp_obj_t mod_trezorcrypto_Hmac___del__(mp_obj_t self) {
+static mp_obj_t mod_trezorcrypto_Hmac___del__(mp_obj_t self) {
   mp_obj_Hmac_t *o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx256), sizeof(HMAC_SHA256_CTX));
   memzero(&(o->ctx512), sizeof(HMAC_SHA512_CTX));
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Hmac___del___obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Hmac___del___obj,
                                  mod_trezorcrypto_Hmac___del__);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_Hmac_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_Hmac_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_update),
      MP_ROM_PTR(&mod_trezorcrypto_Hmac_update_obj)},
     {MP_ROM_QSTR(MP_QSTR_digest),
@@ -148,7 +148,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_Hmac_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_SHA256), MP_ROM_INT(SHA256)},
     {MP_ROM_QSTR(MP_QSTR_SHA512), MP_ROM_INT(SHA512)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Hmac_locals_dict,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_Hmac_locals_dict,
                             mod_trezorcrypto_Hmac_locals_dict_table);
 
 // clang-format off

@@ -29,10 +29,10 @@
 ///     """
 ///     Returns True if SD card is detected, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorio_sdcard_is_present() {
+static mp_obj_t mod_trezorio_sdcard_is_present() {
   return mp_obj_new_bool(sdcard_is_present());
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_is_present_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_is_present_obj,
                                  mod_trezorio_sdcard_is_present);
 
 /// def power_on() -> None:
@@ -41,36 +41,36 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_is_present_obj,
 ///     Raises OSError if the SD card cannot be powered on, e.g., when there
 ///     is no SD card inserted.
 ///     """
-STATIC mp_obj_t mod_trezorio_sdcard_power_on() {
+static mp_obj_t mod_trezorio_sdcard_power_on() {
   if (sectrue != sdcard_power_on()) {
     mp_raise_OSError(MP_EIO);
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_power_on_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_power_on_obj,
                                  mod_trezorio_sdcard_power_on);
 
 /// def power_off() -> None:
 ///     """
 ///     Power off the SD card interface.
 ///     """
-STATIC mp_obj_t mod_trezorio_sdcard_power_off() {
+static mp_obj_t mod_trezorio_sdcard_power_off() {
   /* XXX should this call happen inside sdcard_power_off()? */
   _fatfs_unmount_instance();
   sdcard_power_off();
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_power_off_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_power_off_obj,
                                  mod_trezorio_sdcard_power_off);
 
 /// def capacity() -> int:
 ///     """
 ///     Returns capacity of the SD card in bytes, or zero if not present.
 ///     """
-STATIC mp_obj_t mod_trezorio_sdcard_capacity() {
+static mp_obj_t mod_trezorio_sdcard_capacity() {
   return mp_obj_new_int_from_ull(sdcard_get_capacity_in_bytes());
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_capacity_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_capacity_obj,
                                  mod_trezorio_sdcard_capacity);
 
 /// def read(block_num: int, buf: bytearray) -> None:
@@ -79,7 +79,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_capacity_obj,
 ///     Number of bytes read is length of buf rounded down to multiply of
 ///     SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorio_sdcard_read(mp_obj_t block_num, mp_obj_t buf) {
+static mp_obj_t mod_trezorio_sdcard_read(mp_obj_t block_num, mp_obj_t buf) {
   uint32_t block = trezor_obj_get_uint(block_num);
   mp_buffer_info_t bufinfo = {0};
   mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_WRITE);
@@ -89,7 +89,7 @@ STATIC mp_obj_t mod_trezorio_sdcard_read(mp_obj_t block_num, mp_obj_t buf) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_read_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_read_obj,
                                  mod_trezorio_sdcard_read);
 
 /// def write(block_num: int, buf: AnyBytes) -> None:
@@ -98,7 +98,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_read_obj,
 ///     Number of bytes written is length of buf rounded down to multiply of
 ///     SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorio_sdcard_write(mp_obj_t block_num, mp_obj_t buf) {
+static mp_obj_t mod_trezorio_sdcard_write(mp_obj_t block_num, mp_obj_t buf) {
   uint32_t block = trezor_obj_get_uint(block_num);
   mp_buffer_info_t bufinfo = {0};
   mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_READ);
@@ -108,10 +108,10 @@ STATIC mp_obj_t mod_trezorio_sdcard_write(mp_obj_t block_num, mp_obj_t buf) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_write_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_write_obj,
                                  mod_trezorio_sdcard_write);
 
-STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sdcard)},
 
     {MP_ROM_QSTR(MP_QSTR_is_present),
@@ -126,10 +126,10 @@ STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_sdcard_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_sdcard_write_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_sdcard_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorio_sdcard_globals,
                             mod_trezorio_sdcard_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorio_sdcard_module = {
+static const mp_obj_module_t mod_trezorio_sdcard_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorio_sdcard_globals,
 };

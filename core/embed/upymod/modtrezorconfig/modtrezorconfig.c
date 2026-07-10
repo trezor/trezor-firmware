@@ -55,7 +55,7 @@ static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
 ///     Locks the storage if it is currently unlocked, and allows setting
 ///     a new UI callback.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
   if (n_args > 0) {
     MP_STATE_VM(trezorconfig_ui_wait_callback) = args[0];
     storage_setup(wrapped_ui_wait_callback);
@@ -64,7 +64,7 @@ STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
                                            mod_trezorconfig_init);
 
 /// def unlock(pin: str, ext_salt: AnyBytes | None) -> bool:
@@ -72,7 +72,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
 ///     Attempts to unlock the storage with the given PIN and external salt.
 ///     Returns True on success, False on failure.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
+static mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
   mp_buffer_info_t pin_b = {0};
   mp_get_buffer_raise(pin, &pin_b, MP_BUFFER_READ);
 
@@ -137,7 +137,7 @@ STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
                    MP_ERROR_TEXT("Something went wrong during unlock."));
   }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj,
                                  mod_trezorconfig_unlock);
 
 /// def check_pin(pin: str, ext_salt: AnyBytes | None) -> bool:
@@ -145,57 +145,57 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj,
 ///     Check the given PIN with the given external salt.
 ///     Returns True on success, False on failure.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin, mp_obj_t ext_salt) {
+static mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin, mp_obj_t ext_salt) {
   return mod_trezorconfig_unlock(pin, ext_salt);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_check_pin_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_check_pin_obj,
                                  mod_trezorconfig_check_pin);
 
 /// def lock() -> None:
 ///     """
 ///     Locks the storage.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_lock(void) {
+static mp_obj_t mod_trezorconfig_lock(void) {
   storage_lock();
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_lock_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_lock_obj,
                                  mod_trezorconfig_lock);
 
 /// def is_unlocked() -> bool:
 ///     """
 ///     Returns True if storage is unlocked, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_is_unlocked(void) {
+static mp_obj_t mod_trezorconfig_is_unlocked(void) {
   if (sectrue != storage_is_unlocked()) {
     return mp_const_false;
   }
   return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_is_unlocked_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_is_unlocked_obj,
                                  mod_trezorconfig_is_unlocked);
 
 /// def has_pin() -> bool:
 ///     """
 ///     Returns True if storage has a configured PIN, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_has_pin(void) {
+static mp_obj_t mod_trezorconfig_has_pin(void) {
   if (sectrue != storage_has_pin()) {
     return mp_const_false;
   }
   return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_pin_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_pin_obj,
                                  mod_trezorconfig_has_pin);
 
 /// def get_pin_rem() -> int:
 ///     """
 ///     Returns the number of remaining PIN entry attempts.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_get_pin_rem(void) {
+static mp_obj_t mod_trezorconfig_get_pin_rem(void) {
   return mp_obj_new_int_from_uint(storage_get_pin_rem());
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
                                  mod_trezorconfig_get_pin_rem);
 
 /// def change_pin(
@@ -206,7 +206,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
 ///     Change PIN and external salt. Returns True on success, False on entering
 ///     the wipe code. Has to be run with unlocked storage.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
+static mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
                                             const mp_obj_t *args) {
   mp_buffer_info_t newpin = {0};
   mp_get_buffer_raise(args[0], &newpin, MP_BUFFER_READ);
@@ -245,33 +245,33 @@ STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
       mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Change PIN failed."));
   }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 2,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 2,
                                            2, mod_trezorconfig_change_pin);
 
 /// def ensure_not_wipe_code(pin: str) -> None:
 ///     """
 ///     Wipes the device if the entered PIN is the wipe code.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_ensure_not_wipe_code(mp_obj_t pin) {
+static mp_obj_t mod_trezorconfig_ensure_not_wipe_code(mp_obj_t pin) {
   mp_buffer_info_t pin_b = {0};
   mp_get_buffer_raise(pin, &pin_b, MP_BUFFER_READ);
   storage_ensure_not_wipe_code(pin_b.buf, pin_b.len);
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_ensure_not_wipe_code_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_ensure_not_wipe_code_obj,
                                  mod_trezorconfig_ensure_not_wipe_code);
 
 /// def has_wipe_code() -> bool:
 ///     """
 ///     Returns True if storage has a configured wipe code, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_has_wipe_code(void) {
+static mp_obj_t mod_trezorconfig_has_wipe_code(void) {
   if (sectrue != storage_has_wipe_code()) {
     return mp_const_false;
   }
   return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_wipe_code_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_wipe_code_obj,
                                  mod_trezorconfig_has_wipe_code);
 
 /// def change_wipe_code(
@@ -282,7 +282,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_wipe_code_obj,
 ///     """
 ///     Change wipe code. Returns True on success, False on failure.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_change_wipe_code(size_t n_args,
+static mp_obj_t mod_trezorconfig_change_wipe_code(size_t n_args,
                                                   const mp_obj_t *args) {
   mp_buffer_info_t pin_b = {0};
   mp_get_buffer_raise(args[0], &pin_b, MP_BUFFER_READ);
@@ -306,7 +306,7 @@ STATIC mp_obj_t mod_trezorconfig_change_wipe_code(size_t n_args,
   }
   return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorconfig_change_wipe_code_obj, 3, 3,
     mod_trezorconfig_change_wipe_code);
 
@@ -316,7 +316,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     Raises a RuntimeError if decryption or authentication of the stored
 ///     value fails.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
     mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
@@ -342,14 +342,14 @@ STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   }
   return mp_obj_new_bytes_from_vstr(&vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
                                            mod_trezorconfig_get);
 
 /// def set(app: int, key: int, value: AnyBytes, public: bool = False) -> None:
 ///     """
 ///     Sets a value of given key for given app.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
     mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
@@ -367,7 +367,7 @@ STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
                                            mod_trezorconfig_set);
 
 /// def delete(
@@ -376,7 +376,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
 ///     """
 ///     Deletes the given key of the given app.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
     mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
@@ -398,7 +398,7 @@ STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
   }
   return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 4,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 4,
                                            mod_trezorconfig_delete);
 
 /// def set_counter(
@@ -407,7 +407,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 4,
 ///     """
 ///     Sets the given key of the given app as a counter with the given value.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
+static mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
                                              const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
@@ -427,7 +427,7 @@ STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3,
                                            4, mod_trezorconfig_set_counter);
 
 /// def next_counter(
@@ -437,7 +437,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3,
 ///     Increments the counter stored under the given key of the given app and
 ///     returns the new value.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
+static mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
                                               const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
@@ -457,18 +457,18 @@ STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
   }
   return mp_obj_new_int_from_uint(count);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_next_counter_obj, 2,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_next_counter_obj, 2,
                                            3, mod_trezorconfig_next_counter);
 
 /// def wipe() -> None:
 ///     """
 ///     Erases the whole config. Use with caution!
 ///     """
-STATIC mp_obj_t mod_trezorconfig_wipe(void) {
+static mp_obj_t mod_trezorconfig_wipe(void) {
   storage_wipe();
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_wipe_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_wipe_obj,
                                  mod_trezorconfig_wipe);
 
 /// from enum import IntEnum
@@ -478,15 +478,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_wipe_obj,
 ///     PROCESSING_MSG = 2
 ///     STARTING_MSG = 3
 ///     WRONG_PIN_MSG = 4
-STATIC const qstr mod_trezorconfig_StorageMessage_fields[] = {
+static const qstr mod_trezorconfig_StorageMessage_fields[] = {
     MP_QSTR_NO_MSG, MP_QSTR_VERIFYING_PIN_MSG, MP_QSTR_PROCESSING_MSG,
     MP_QSTR_STARTING_MSG, MP_QSTR_WRONG_PIN_MSG};
-STATIC MP_DEFINE_ATTRTUPLE(
+static MP_DEFINE_ATTRTUPLE(
     mod_trezorconfig_StorageMessage_obj, mod_trezorconfig_StorageMessage_fields,
     (sizeof(mod_trezorconfig_StorageMessage_fields) / sizeof(qstr)),
     MP_ROM_INT(0), MP_ROM_INT(1), MP_ROM_INT(2), MP_ROM_INT(3), MP_ROM_INT(4));
 
-STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
+static const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorconfig)},
     {MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&mod_trezorconfig_init_obj)},
     {MP_ROM_QSTR(MP_QSTR_check_pin),
@@ -517,7 +517,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_StorageMessage),
      MP_ROM_PTR(&mod_trezorconfig_StorageMessage_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mp_module_trezorconfig_globals,
+static MP_DEFINE_CONST_DICT(mp_module_trezorconfig_globals,
                             mp_module_trezorconfig_globals_table);
 
 const mp_obj_module_t mp_module_trezorconfig = {

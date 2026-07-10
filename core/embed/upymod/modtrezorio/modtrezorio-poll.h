@@ -87,7 +87,7 @@ static mp_obj_t parse_ble_event_data(const ble_event_t *event) {
 ///
 ///     If timeout occurs, False is returned, True otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
+static mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
                                   mp_obj_t timeout_ms) {
   mp_obj_list_t *ret = MP_OBJ_TO_PTR(list_ref);
   if (!MP_OBJ_IS_TYPE(list_ref, &mp_type_list) || ret->len < 2) {
@@ -268,4 +268,4 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     }
   }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_poll_obj, mod_trezorio_poll);
+static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_poll_obj, mod_trezorio_poll);

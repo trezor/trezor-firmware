@@ -44,7 +44,7 @@
 ///     scheme. If `trezor_derivation` is True, the Icarus-Trezor variant is
 ///     used (see CIP-3).
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
+static mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
                                                        const mp_obj_t *args) {
   mp_buffer_info_t binary_mnemonic = {0}, phrase = {0};
   mp_get_buffer_raise(args[0], &binary_mnemonic, MP_BUFFER_READ);
@@ -89,7 +89,7 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
   return mp_obj_new_bytes_from_vstr(&vstr);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_cardano_derive_icarus_obj, 3, 4,
     mod_trezorcrypto_cardano_derive_icarus);
 
@@ -97,7 +97,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     """
 ///     Creates a Cardano HD node from a master secret.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
+static mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(secret, &bufinfo, MP_BUFFER_READ);
   if (bufinfo.len != CARDANO_SECRET_LENGTH) {
@@ -117,14 +117,14 @@ STATIC mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
   return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_secret_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_secret_obj,
                                  mod_trezorcrypto_from_secret);
 
 /// def from_seed_slip23(seed: AnyBytes) -> HDNode:
 ///     """
 ///     Creates a Cardano HD node from a seed via SLIP-23 derivation.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
+static mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(seed, &bufinfo, MP_BUFFER_READ);
   if (bufinfo.len == 0) {
@@ -154,14 +154,14 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
   return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_seed_slip23_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_seed_slip23_obj,
                                  mod_trezorcrypto_from_seed_slip23);
 
 /// def from_seed_ledger(seed: AnyBytes) -> HDNode:
 ///     """
 ///     Creates a Cardano HD node from a seed via Ledger derivation.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_from_seed_ledger(mp_obj_t seed) {
+static mp_obj_t mod_trezorcrypto_from_seed_ledger(mp_obj_t seed) {
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(seed, &bufinfo, MP_BUFFER_READ);
   if (bufinfo.len == 0) {
@@ -191,10 +191,10 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_ledger(mp_obj_t seed) {
   return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_seed_ledger_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_seed_ledger_obj,
                                  mod_trezorcrypto_from_seed_ledger);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_cardano_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_cardano_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_cardano)},
     {MP_ROM_QSTR(MP_QSTR_derive_icarus),
      MP_ROM_PTR(&mod_trezorcrypto_cardano_derive_icarus_obj)},
@@ -205,10 +205,10 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_cardano_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_from_seed_ledger),
      MP_ROM_PTR(&mod_trezorcrypto_from_seed_ledger_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_cardano_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_cardano_globals,
                             mod_trezorcrypto_cardano_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypto_cardano_module = {
+static const mp_obj_module_t mod_trezorcrypto_cardano_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_cardano_globals,
 };

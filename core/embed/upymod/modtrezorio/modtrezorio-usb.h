@@ -46,7 +46,7 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 /// ) -> None:
 ///     """
 ///     """
-STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
+static mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
                                           size_t n_args, size_t n_kw,
                                           const mp_obj_t *args) {
   mp_obj_USB_t *o = mp_obj_malloc_with_finaliser(mp_obj_USB_t, type);
@@ -58,7 +58,7 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
 ///     """
 ///     Initializes the USB stack.
 ///     """
-STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
+static mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
                                       mp_obj_t serial_number_obj) {
   const char *serial_number = get_0str(serial_number_obj, 0, USB_MAX_STR_SIZE);
   if (serial_number == NULL) {
@@ -80,33 +80,33 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USB_open_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USB_open_obj,
                                  mod_trezorio_USB_open);
 
 /// def close(self) -> None:
 ///     """
 ///     Cleans up the USB stack.
 ///     """
-STATIC mp_obj_t mod_trezorio_USB_close(mp_obj_t self) {
+static mp_obj_t mod_trezorio_USB_close(mp_obj_t self) {
   usb_stop();
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_close_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_close_obj,
                                  mod_trezorio_USB_close);
 
-STATIC mp_obj_t mod_trezorio_USB___del__(mp_obj_t self) {
+static mp_obj_t mod_trezorio_USB___del__(mp_obj_t self) {
   usb_stop();
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB___del___obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB___del___obj,
                                  mod_trezorio_USB___del__);
 
-STATIC const mp_rom_map_elem_t mod_trezorio_USB_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_trezorio_USB_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mod_trezorio_USB_open_obj)},
     {MP_ROM_QSTR(MP_QSTR_close), MP_ROM_PTR(&mod_trezorio_USB_close_obj)},
     {MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezorio_USB___del___obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_USB_locals_dict,
+static MP_DEFINE_CONST_DICT(mod_trezorio_USB_locals_dict,
                             mod_trezorio_USB_locals_dict_table);
 
 // clang-format off
