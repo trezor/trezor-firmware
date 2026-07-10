@@ -312,6 +312,9 @@ fn generate_micropython_bindings() {
 
     let bindings = prepare_bindings()
         .header("micropython.h")
+        // Needed to call header statics like mp_obj_list_set_len. See also upymod/build.rs.
+        .wrap_static_fns(true)
+        .wrap_static_fns_path(PathBuf::from(out_dir.clone()).join("bindgen-static"))
         // obj
         .new_type_alias("mp_obj_t")
         .allowlist_type("mp_obj_type_t")
