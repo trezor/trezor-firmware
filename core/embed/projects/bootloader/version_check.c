@@ -38,6 +38,14 @@ secbool check_firmware_min_version(uint8_t check_version) {
   return (check_version >= min_version) * sectrue;
 }
 
+secbool check_bootloader_min_version(uint8_t check_version) {
+  uint8_t min_version = 0;
+  ensure(monoctr_read(MONOCTR_BOOTLOADER_VERSION, &min_version),
+         "monoctr read");
+
+  return (check_version >= min_version) * sectrue;
+}
+
 void ensure_firmware_min_version(uint8_t version) {
   monoctr_write(MONOCTR_FIRMWARE_VERSION, version);
   uint8_t val = 0;

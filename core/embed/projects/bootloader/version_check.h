@@ -34,6 +34,11 @@ void ensure_bootloader_min_version(void);
 // stored version
 secbool check_firmware_min_version(uint8_t check_version);
 
+// Checks a version against the bootloader monotonic counter (the bootloader
+// analog of check_firmware_min_version); returns sectrue if check_version is
+// higher or equal to the stored minimum.
+secbool check_bootloader_min_version(uint8_t check_version);
+
 // Ensures firmware version is stored in monotonic counter
 // If the version cannot be written, the function will shutdown the device
 void ensure_firmware_min_version(uint8_t version);
