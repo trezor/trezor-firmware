@@ -369,7 +369,7 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
   struct ethereum_amount amount = {.value = "", .unit = ""};
   if (token == NULL) {
     if (bn_is_zero(&val)) {
-      strcpy(amount.value, _("message"));
+      strlcpy(amount.value, _("message"), sizeof(amount.value));
     } else {
       ethereumFormatAmount(&val, NULL, /*use_gwei=*/false, &amount);
     }
@@ -487,7 +487,8 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
 
   struct ethereum_amount tx_amount = {.value = "", .unit = ""};
   if (bn_is_zero(&val)) {
-    strcpy(tx_amount.value, is_token ? _("token") : _("message"));
+    strlcpy(tx_amount.value, is_token ? _("token") : _("message"),
+            sizeof(tx_amount.value));
   } else {
     ethereumFormatAmount(&val, NULL, /*use_gwei=*/false, &tx_amount);
   }
@@ -894,7 +895,9 @@ void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
   hash_rlp_field(params.value_bytes, params.value_size);
   hash_rlp_length(data_total, params.data_initial_chunk_bytes[0]);
   hash_data(params.data_initial_chunk_bytes, params.data_initial_chunk_size);
-  data_left = data_total - params.data_initial_chunk_size;
+  data_left = (params.data_initial_chunk_size <= data_total)
+                  ? data_total - params.data_initial_chunk_size
+                  : 0;
 
   memcpy(privkey, node->private_key, 32);
 
@@ -1011,7 +1014,9 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
   hash_rlp_field(params.value_bytes, params.value_size);
   hash_rlp_length(data_total, params.data_initial_chunk_bytes[0]);
   hash_data(params.data_initial_chunk_bytes, params.data_initial_chunk_size);
-  data_left = data_total - params.data_initial_chunk_size;
+  data_left = (params.data_initial_chunk_size <= data_total)
+                  ? data_total - params.data_initial_chunk_size
+                  : 0;
 
   /* make a copy of access_list, hash it after data is processed */
   memcpy(signing_access_list, msg->access_list, sizeof(signing_access_list));
