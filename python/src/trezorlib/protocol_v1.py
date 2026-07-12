@@ -381,19 +381,22 @@ def sync_responses(
     retries: int = 10,
 ) -> None:
     """Sync responses from the transport."""
+
+    def _call(msg: MessageType, is_expected: t.Callable[[MessageType], bool]) -> None:
+        write(transport, *mapping.encode(msg))
+        for _ in range(retries):
+            resp_type, resp_bytes = read(transport, _ignore_bad_magic=True)
+            resp = mapping.decode(resp_type, resp_bytes)
+            if is_expected(resp):
+                return
+        raise exceptions.ProtocolError("Failed to sync responses")
+
     # cancel anything on screen -- on T1B1 this is the only way to exit e.g. a PIN prompt.
-    cancel_msg = mapping.encode(messages.Cancel())
-    write(transport, *cancel_msg)
+    _call(messages.Cancel(), lambda msg: isinstance(msg, messages.Failure))
 
     # prepare an unique message to wait for
     sync_string = "SYNC" + secrets.token_hex(8)
-    ping_msg = mapping.encode(messages.Ping(message=sync_string))
-    # prepare
-    write(transport, *ping_msg)
-
-    for _ in range(retries):
-        resp_type, resp_bytes = read(transport, _ignore_bad_magic=True)
-        resp = mapping.decode(resp_type, resp_bytes)
-        if isinstance(resp, messages.Success) and resp.message == sync_string:
-            return
-    raise exceptions.ProtocolError("Failed to sync responses")
+    _call(
+        messages.Ping(message=sync_string),
+        lambda msg: isinstance(msg, messages.Success) and msg.message == sync_string,
+    )
