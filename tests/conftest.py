@@ -386,6 +386,7 @@ def _prepared_test_ctx(
 
     @pytest.mark.experimental
     """
+    # Early exit, if the test cannot be run:
     models_filter = ModelsFilter(request.node)
     if _raw_test_ctx.model not in models_filter:
         pytest.skip(f"Skipping test for model {_raw_test_ctx.model.internal_name}")
@@ -397,9 +398,10 @@ def _prepared_test_ctx(
     if request.node.get_closest_marker("altcoin") and is_btc_only:
         pytest.skip("Skipping altcoin test")
 
-    # Optiga's presence is detected from the presence of its security counter.
-    has_optiga = _raw_test_ctx.features.optiga_sec is not None
-    if request.node.get_closest_marker("xfail_if_no_optiga") and not has_optiga:
+    if (
+        request.node.get_closest_marker("xfail_if_no_optiga")
+        and not _raw_test_ctx.has_optiga
+    ):
         pytest.xfail("Optiga is not available on this device.")
 
     _check_protocol(request, _raw_test_ctx)
@@ -414,6 +416,7 @@ def _prepared_test_ctx(
 
     fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
 
+    # First, make sure the device is responsive:
     _raw_test_ctx.reset_debug_features()
     try:
         _raw_test_ctx.sync_responses()
