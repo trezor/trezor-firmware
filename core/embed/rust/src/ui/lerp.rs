@@ -66,10 +66,8 @@ macro_rules! impl_lerp_for_unsigned {
 }
 
 impl_lerp_for_signed!(i16);
-impl_lerp_for_signed!(i32);
 impl_lerp_for_unsigned!(u8);
 impl_lerp_for_unsigned!(u16);
-impl_lerp_for_unsigned!(u32);
 
 impl_lerp_for_signed!(f32);
 
@@ -79,18 +77,18 @@ mod tests {
 
     #[test]
     fn lerp_for_int_and_uint() {
-        assert_eq!(i32::lerp(0, 8, 0.5), 4);
-        assert_eq!(i32::lerp(0, 8, -1.0), -8);
-        assert_eq!(i32::lerp(8, 0, 0.5), 4);
-        assert_eq!(u32::lerp(0, 8, 0.5), 4);
-        assert_eq!(u32::lerp(8, 0, -1.0), 16);
+        assert_eq!(i16::lerp(0, 8, 0.5), 4);
+        assert_eq!(i16::lerp(0, 8, -1.0), -8);
+        assert_eq!(i16::lerp(8, 0, 0.5), 4);
+        assert_eq!(u16::lerp(0, 8, 0.5), 4);
+        assert_eq!(u16::lerp(8, 0, -1.0), 16);
     }
 
     #[test]
     fn inv_lerp_for_int_and_uint() {
-        assert!((i32::inv_lerp(0, 8, 4) - 0.5).abs() < f32::EPSILON);
-        assert!((i32::inv_lerp(0, 8, -8) - -1.0).abs() < f32::EPSILON);
-        assert!((i32::inv_lerp(8, 0, 4) - 0.5).abs() < f32::EPSILON);
-        assert!((u32::inv_lerp(0, 8, 4) - 0.5).abs() < f32::EPSILON);
+        assert!((i16::inv_lerp(0, 8, 4) - 0.5).abs() < f32::EPSILON);
+        assert!((i16::inv_lerp(0, 8, -8) - -1.0).abs() < f32::EPSILON);
+        assert!((i16::inv_lerp(8, 0, 4) - 0.5).abs() < f32::EPSILON);
+        assert!((u16::inv_lerp(0, 8, 4) - 0.5).abs() < f32::EPSILON);
     }
 }
