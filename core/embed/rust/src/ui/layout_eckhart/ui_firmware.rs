@@ -137,6 +137,7 @@ impl FirmwareUI for UIEckhart {
         _verb: Option<TString<'static>>,
         _info_button: bool,
         _chunkify: bool,
+        _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
@@ -872,6 +873,7 @@ impl FirmwareUI for UIEckhart {
         items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
         _current: usize,
         cancel: Option<TString<'static>>,
+        title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut menu = VerticalMenu::<ShortMenuVec>::empty();
         for text in &items {
@@ -881,7 +883,7 @@ impl FirmwareUI for UIEckhart {
             menu.item(Button::new_cancel_menu_item(text));
         }
         let screen = VerticalMenuScreen::new(menu)
-            .with_header(Header::new(TString::empty()).with_close_button())
+            .with_header(Header::new(title.unwrap_or(TString::empty())).with_close_button())
             .map(move |msg| {
                 let choice = match msg {
                     VerticalMenuScreenMsg::Selected(i) => i,
@@ -1381,6 +1383,7 @@ impl FirmwareUI for UIEckhart {
         title: TString<'static>,
         subtitle: Option<TString<'static>>,
         value: Obj,
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut vec = ParagraphVecShort::new();
         if Obj::is_str(value) {

@@ -272,6 +272,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__retry;
   MP_QSTR_buttons__select;
   MP_QSTR_buttons__set;
+  MP_QSTR_buttons__shift;
   MP_QSTR_buttons__show_all;
   MP_QSTR_buttons__show_details;
   MP_QSTR_buttons__show_words;
@@ -1051,6 +1052,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__led;
   MP_QSTR_words__made_in;
   MP_QSTR_words__manage;
+  MP_QSTR_words__menu;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;
   MP_QSTR_words__no;

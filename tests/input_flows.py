@@ -526,23 +526,36 @@ class InputFlowShowAddressQRCode(InputFlowBase):
     def input_flow_caesar(self) -> BRGeneratorType:
         # Find out the page-length of the address
         br = yield
-        if br.pages is not None:
-            address_swipes = br.pages - 1
-        else:
-            address_swipes = 0
-        for _ in range(address_swipes):
-            self.debug.press_right()
+        address_pages = br.pages if br.pages is not None else 1
 
-        # Go into details
-        self.debug.press_right()
-        # Go through details and back
-        self.debug.press_right()
+        # Open the menu. It is reachable from any page of the address screen,
+        # and focus starts on the first real item, "QR code".
         self.debug.press_left()
-        self.debug.press_left()
-        # Confirm
-        for _ in range(address_swipes):
-            self.debug.press_right()
+
+        # View the QR code and go back to the menu (focus stays on "QR code").
         self.debug.press_middle()
+        assert "Qr" in self.all_components()
+        self.debug.press_left()
+
+        # Visit the remaining menu items (e.g. "Account info", "Derivation
+        # path") one by one, generically -- how many of them exist depends on
+        # which of `account`/`path` the caller supplied to `show_address`.
+        # ASSUMPTION: `page_count()` on the menu screen reports the total
+        # carousel length (real items + the leading "Cancel?" item).
+        n_items = self.debug.read_layout().page_count() - 1
+        for _ in range(1, n_items):
+            self.debug.press_right()
+            self.debug.press_middle()
+            self.debug.press_left()
+
+        # Close the menu entirely: navigate left back to "Cancel?" and press
+        # left once more to actually close it (back to the address screen).
+        for _ in range(n_items + 1):
+            self.debug.press_left()
+
+        # Scroll through (if multi-page) and confirm the address.
+        for _ in range(address_pages):
+            self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
@@ -615,18 +628,17 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
-        yield
-        # Go into details
-        self.debug.press_right()
-        # Go through details and back
-        self.debug.press_right()
+        yield  # show address
+        # Open the menu (focus starts on the first real item, "QR code").
         self.debug.press_left()
+        # Move focus one item to the left, onto "Cancel?".
         self.debug.press_left()
-        # Cancel
-        self.debug.press_left()
-        # Confirm address mismatch
-        # Clicking right twice, as some languages can have two pages
-        self.debug.press_right()
+        # Select "Cancel?" -> opens the address-mismatch dialog.
+        self.debug.press_middle()
+        # Confirm ("QUIT") on the mismatch dialog -> raises ActionCancelled.
+        # ASSUMPTION: `show_mismatch` is unchanged by this navigation rework
+        # and always renders exactly one page (unlike the old comment here,
+        # which hedged for "some languages [with] two pages").
         self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
@@ -727,43 +739,64 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         yield  # multisig address warning
         self.debug.press_middle()
 
-        yield  # show address
+        br = yield  # show address
         layout = self.debug.read_layout()
         assert TR.address__title_receive_address in layout.title()
         assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
-        self.debug.press_right()
-        assert "Qr" in self.all_components()
+        # Menu (horizontal carousel) real items: QR code, Account info,
+        # Derivation path, XPUB -- all multisig xpubs are grouped into this
+        # single XPUB item so the carousel stays within `MAX_MENU_ITEMS`
+        # (see core/embed/rust/src/ui/ui_firmware.rs).
+        n_items = 4  # QR code, Account info, Derivation path, XPUB
 
-        self.debug.press_right()
-        layout = self.debug.read_layout()
-        # address details
-        # TODO: locate it more precisely
-        assert "Multisig 2 of 3" in layout.json_str
-
-        # Three xpub pages with the same testing logic
-        for xpub_num in range(3):
-            self.debug.press_right()
-            layout = self.debug.read_layout()
-            self._assert_xpub_title(layout.title(), xpub_num)
-            xpub_part_1 = layout.text_content().replace(" ", "")
-            # Press "SHOW MORE"
-            self.debug.press_middle()
-            layout = self.debug.read_layout()
-            xpub_part_2 = layout.text_content().replace(" ", "")
-            # Go back
-            self.debug.press_left()
-            assert self.xpubs[xpub_num] == xpub_part_1 + xpub_part_2
-
-        for _ in range(5):
-            self.debug.press_left()
-        # show address
+        # Open the menu; focus starts on the first real item, "QR code".
         self.debug.press_left()
-        # address mismatch
-        self.debug.press_left()
-        # show address
         self.debug.press_middle()
+        assert "Qr" in self.all_components()
+        self.debug.press_left()  # back to the menu, focus stays on "QR code"
+
+        # "Account info"
+        self.debug.press_right()
+        self.debug.press_middle()
+        layout = self.debug.read_layout()
+        assert "Multisig 2 of 3" in layout.text_content()
+        self.debug.press_left()  # back to the menu
+
+        # "Derivation path"
+        self.debug.press_right()
+        self.debug.press_middle()
+        layout = self.debug.read_layout()
+        assert TR.address_details__derivation_path in layout.title()
+        self.debug.press_left()  # back to the menu
+
+        # "XPUB": a single paginated detail screen listing all xpubs, each
+        # preceded by its "MULTISIG XPUB #n (...)" title paragraph.
+        self.debug.press_right()
+        self.debug.press_middle()
+        layouts = [self.debug.read_layout()]
+        pages = layouts[0].page_count()
+        for _ in range(pages - 1):
+            self.debug.press_right()
+            layouts.append(self.debug.read_layout())
+        content = multipage_content(layouts)
+        content_nospace = content.replace(" ", "")
+        for xpub_num in range(3):
+            self._assert_xpub_title(content, xpub_num)
+            assert self.xpubs[xpub_num] in content_nospace
+        # Close, back to the menu: LEFT closes from any page; on the last
+        # page (where we now are) RIGHT closes as well.
+        self.debug.press_right()
+
+        # Close the menu entirely: navigate left back to "Cancel?" and press
+        # left once more to actually close it (back to the address screen).
+        for _ in range(n_items + 1):
+            self.debug.press_left()
+
+        # Scroll through (if multi-page) and confirm the address.
+        for _ in range(br.pages if br.pages is not None else 1):
+            self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # multisig address warning
@@ -903,19 +936,36 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             self.debug.press_yes()
             br = yield
 
-        # Go into details
-        self.debug.press_right()
-        # Go through details and back
-        self.debug.press_right()
-        self.debug.press_right()
-        self.debug.press_right()
+        # Open the menu. It is reachable from any page of the address screen,
+        # and focus starts on the first real item, "QR code".
         self.debug.press_left()
-        self.debug.press_left()
-        assert br.pages is not None
-        for _ in range(br.pages - 1):
-            self.debug.press_right()
-        # Confirm
+
+        # View the QR code and go back to the menu (focus stays on "QR code").
         self.debug.press_middle()
+        assert "Qr" in self.all_components()
+        self.debug.press_left()
+
+        # Visit the remaining menu items (e.g. "Account info", "Derivation
+        # path") one by one, generically -- how many of them exist depends on
+        # whether `show_pubkey`'s caller supplied `account`/`path` (it may
+        # supply neither, either, or both).
+        # ASSUMPTION: `page_count()` on the menu screen reports the total
+        # carousel length (real items + the leading "Cancel?" item).
+        n_items = self.debug.read_layout().page_count() - 1
+        for _ in range(1, n_items):
+            self.debug.press_right()
+            self.debug.press_middle()
+            self.debug.press_left()
+
+        # Close the menu entirely: navigate left back to "Cancel?" and press
+        # left once more to actually close it (back to the address screen).
+        for _ in range(n_items + 1):
+            self.debug.press_left()
+
+        # Scroll through (if multi-page) and confirm.
+        assert br.pages is not None
+        for _ in range(br.pages):
+            self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         if self.passphrase_request_expected:

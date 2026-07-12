@@ -79,6 +79,7 @@ async def show_menu(
                 items=[child.name for child in menu.children],
                 current=current_item,
                 cancel=menu.cancel and menu.cancel.name,
+                title=menu.name or None,
             ) as layout:
                 choice = await interact(layout, br_name=None, raise_on_cancel=None)
 

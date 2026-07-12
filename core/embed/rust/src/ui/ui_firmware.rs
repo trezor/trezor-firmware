@@ -44,6 +44,7 @@ pub trait FirmwareUI {
         verb: Option<TString<'static>>,
         info_button: bool,
         chunkify: bool,
+        external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_trade(
@@ -278,6 +279,7 @@ pub trait FirmwareUI {
         items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
         current: usize,
         cancel: Option<TString<'static>>,
+        title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_word(
@@ -425,6 +427,7 @@ pub trait FirmwareUI {
         _title: TString<'static>,
         _subtitle: Option<TString<'static>>,
         _value: Obj,
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_remaining_shares(

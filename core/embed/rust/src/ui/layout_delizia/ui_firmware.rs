@@ -89,6 +89,7 @@ impl FirmwareUI for UIDelizia {
         _verb: Option<TString<'static>>,
         _info_button: bool,
         _chunkify: bool,
+        _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         // confirm_value is used instead
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
@@ -717,6 +718,7 @@ impl FirmwareUI for UIDelizia {
         items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
         mut current: usize,
         cancel: Option<TString<'static>>,
+        title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut menu_items = VerticalMenuItems::new();
         if let Some(text) = cancel {
@@ -728,7 +730,7 @@ impl FirmwareUI for UIDelizia {
         }
         let menu = ScrolledVerticalMenu::new(menu_items, current);
         let frame = Frame::with_header(
-            Header::left_aligned(TString::empty()).with_cancel_button(),
+            Header::left_aligned(title.unwrap_or(TString::empty())).with_cancel_button(),
             menu,
         );
         let layout = MsgMap::new(frame, move |msg| {
@@ -1104,6 +1106,7 @@ impl FirmwareUI for UIDelizia {
         title: TString<'static>,
         _subtitle: Option<TString<'static>>,
         value: Obj,
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         if Obj::is_str(value) {
             let confirm = ConfirmValue::new(title, value.try_into()?, None)

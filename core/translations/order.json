@@ -1237,5 +1237,7 @@
   "1235": "tron__claim_unfrozen_balance",
   "1236": "tron__claim_voting_rewards",
   "1237": "address__warning_not_yours",
-  "1238": "tron__owner_address"
+  "1238": "tron__owner_address",
+  "1239": "words__menu",
+  "1240": "buttons__shift"
 }

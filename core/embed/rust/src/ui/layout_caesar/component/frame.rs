@@ -128,6 +128,13 @@ where
         self.title = Some(Child::new(Title::new(title)));
         self
     }
+
+    /// Render the page indicator as a numeric "current/total" counter instead
+    /// of the dot scrollbar.
+    pub fn with_numeric_indicator(mut self) -> Self {
+        self.scrollbar = self.scrollbar.with_numeric();
+        self
+    }
 }
 
 impl<T> Component for ScrollableFrame<T>

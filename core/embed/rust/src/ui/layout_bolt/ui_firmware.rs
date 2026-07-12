@@ -96,6 +96,7 @@ impl FirmwareUI for UIBolt {
         verb: Option<TString<'static>>,
         info_button: bool,
         chunkify: bool,
+        _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         ConfirmValue::new(title, address, None, Some(verb), None, false)
@@ -726,6 +727,7 @@ impl FirmwareUI for UIBolt {
         _items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
         _current: usize,
         _cancel: Option<TString<'static>>,
+        _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
@@ -1150,6 +1152,7 @@ impl FirmwareUI for UIBolt {
         _title: TString<'static>,
         _subtitle: Option<TString<'static>>,
         _value: Obj,
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }

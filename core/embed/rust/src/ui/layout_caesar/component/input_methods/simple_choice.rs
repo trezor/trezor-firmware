@@ -1,9 +1,10 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Component, Event, EventCtx},
+        component::{Component, Event, EventCtx, Paginate},
         geometry::Rect,
         shape::Renderer,
+        util::Pager,
     },
 };
 
@@ -14,7 +15,8 @@ use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
-const MAX_LENGTH: usize = 5;
+// One more than `MAX_MENU_ITEMS` (5) to make room for the cancel item.
+const MAX_LENGTH: usize = 6;
 
 struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,
@@ -79,6 +81,7 @@ pub struct SimpleChoice {
     page_count: u16,
     return_index: bool,
     ignore_cancelled: bool,
+    cancel_first: bool,
 }
 
 impl SimpleChoice {
@@ -95,6 +98,7 @@ impl SimpleChoice {
             page_count,
             return_index: false,
             ignore_cancelled: false,
+            cancel_first: false,
         }
     }
 
@@ -128,6 +132,14 @@ impl SimpleChoice {
         self
     }
 
+    /// Treat the first item as the cancel item: selecting it returns
+    /// `CANCELLED`, and every other returned index is shifted down by one so
+    /// the caller sees indices into the original (cancel-less) item list.
+    pub fn with_cancel_first(mut self, cancel_first: bool) -> Self {
+        self.cancel_first = cancel_first;
+        self
+    }
+
     /// Translating the resulting index into actual string choice.
     pub fn result_by_index(&self, index: usize) -> TString<'static> {
         self.choice_page.choice_factory().get_string(index)
@@ -149,6 +161,18 @@ impl Component for SimpleChoice {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.choice_page.render(target);
     }
+}
+
+impl Paginate for SimpleChoice {
+    /// Reflect the current carousel position so a wrapping `ScrollableFrame`
+    /// can update its numeric counter as the user moves left/right.
+    fn pager(&self) -> Pager {
+        Pager::new(self.page_count).with_current(self.choice_page.page_index() as u16)
+    }
+
+    /// Navigation is driven internally by the carousel via button events, so
+    /// there is nothing to do here (and `ScrollableFrame` never calls this).
+    fn change_page(&mut self, _active_page: u16) {}
 }
 
 #[cfg(feature = "micropython")]
@@ -174,7 +198,16 @@ mod micropython {
                 }),
                 Self::Msg::Choice { item, .. } => {
                     if self.return_index {
-                        item.try_into()
+                        if self.cancel_first {
+                            // First item is the cancel item.
+                            if item == 0 {
+                                Ok(CANCELLED.as_obj())
+                            } else {
+                                (item - 1).try_into()
+                            }
+                        } else {
+                            item.try_into()
+                        }
                     } else {
                         let text = self.result_by_index(item);
                         text.try_into()

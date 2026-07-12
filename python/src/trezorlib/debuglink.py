@@ -1122,13 +1122,30 @@ class DebugUI:
         ):
             return layout
 
+        # Caesar has two menu navigation schemes. The legacy "info" screen is
+        # entered with a RIGHT press and confirmed with YES afterwards. The new
+        # action-bar navigation (external menu) is entered with a LEFT press and
+        # closed from within the menu, so it must not be confirmed afterwards.
+        # The mode is discriminated by the ``external_menu`` flag on the content
+        # layout trace (see ButtonPage's trace impl).
+        caesar_external_menu = (
+            self.debuglink.layout_type is LayoutType.Caesar
+            and layout.find_unique_value_by_key(
+                "external_menu", default=False, only_type=bool
+            )
+        )
+
         # enter menu layout and click its items
         is_menu = False
         is_flow_menu = False
         if layout.has_menu():
             is_menu = True
             if self.debuglink.layout_type is LayoutType.Caesar:
-                self.debuglink.press_right()
+                if caesar_external_menu:
+                    # New action-bar navigation: LEFT opens the menu.
+                    self.debuglink.press_left()
+                else:
+                    self.debuglink.press_right()
             else:
                 self.debuglink.click(self.debuglink.screen_buttons.menu())
 
@@ -1152,21 +1169,48 @@ class DebugUI:
                 raise UnexpectedMenuError(menu_layout.json_str)
         elif self.debuglink.layout_type is LayoutType.Caesar:
             assert gen is None, "Menu visiting callback not yet supported on Caesar"
-            menu_items_count = self.debuglink.read_layout().page_count()
-            for _ in range(menu_items_count):
-                self.debuglink.press_middle()
-                # paginate through all properties and confirm
-                self._paginate_and_confirm(None)
-                # paginate to next menu item
-                self.debuglink.press_right()
+            if caesar_external_menu:
+                self._visit_caesar_action_bar_menu()
+            else:
+                menu_items_count = self.debuglink.read_layout().page_count()
+                for _ in range(menu_items_count):
+                    self.debuglink.press_middle()
+                    # paginate through all properties and confirm
+                    self._paginate_and_confirm(None)
+                    # paginate to next menu item
+                    self.debuglink.press_right()
 
-        if is_menu:
-            # confirm info menu layout
+        if is_menu and not caesar_external_menu:
+            # confirm info menu layout (legacy caesar / other models)
             self.debuglink.press_yes()
         elif is_flow_menu:
             # close the menu
             self.debuglink.click(self.debuglink.screen_buttons.menu())
         return layout
+
+    def _visit_caesar_action_bar_menu(self) -> None:
+        """Visit every item of the caesar action-bar (external) menu.
+
+        The menu is a ``SimpleChoice`` carousel where MIDDLE selects (VIEW) the
+        focused item, RIGHT moves to the next item (absent/no-op on the last
+        one) and LEFT moves to the previous item (or closes the menu with ✕ on
+        the first item). Each opened detail screen is closed again with LEFT
+        (✕ works from any of its pages). The menu opens focused on the first
+        real item, so visiting from the current position to the last covers all
+        of them. Ends back on the content screen, so it is idempotent when
+        called on every content page by ``_paginate_and_confirm``.
+        """
+        menu = self.debuglink.read_layout()
+        item_count = menu.page_count()
+        # Visit each item from the current position to the last.
+        for _ in range(menu.active_page(), item_count):
+            self.debuglink.press_middle()  # VIEW - open the item detail
+            self.debuglink.press_left()  # ✕ - close the detail, back to menu
+            self.debuglink.press_right()  # next item (harmless no-op on last)
+        # Close the menu: step back to the first item, then ✕ once more.
+        for _ in range(self.debuglink.read_layout().active_page()):
+            self.debuglink.press_left()
+        self.debuglink.press_left()  # ✕ closes the menu, back to content screen
 
     def _paginate_and_confirm(
         self,

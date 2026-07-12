@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad, Paginate},
-    geometry::{Offset, Point, Rect},
+    geometry::{Alignment, Offset, Point, Rect},
     shape::{self, Renderer},
     util::Pager,
 };
@@ -13,6 +13,8 @@ use heapless::Vec;
 pub struct ScrollBar {
     pad: Pad,
     pager: Pager,
+    /// When set, render a numeric "current/total" counter instead of dots.
+    numeric: bool,
 }
 
 /// Carrying the appearance of the scrollbar dot.
@@ -41,6 +43,7 @@ impl ScrollBar {
         Self {
             pad: Pad::with_background(theme::BG),
             pager: Pager::new(page_count),
+            numeric: false,
         }
     }
 
@@ -49,12 +52,26 @@ impl ScrollBar {
         Self::new(1)
     }
 
+    /// Render a numeric "current/total" counter instead of the dots.
+    pub fn with_numeric(mut self) -> Self {
+        self.numeric = true;
+        self
+    }
+
     pub const fn dots_width(dots_shown: u16) -> i16 {
         Self::DOTS_INTERVAL * dots_shown as i16 - Self::DOTS_DISTANCE
     }
 
+    /// The "current/total" text shown in numeric mode.
+    fn numeric_text(&self) -> crate::strutil::ShortString {
+        uformat!("{}/{}", self.pager.current() + 1, self.pager.total())
+    }
+
     /// The width the scrollbar will really occupy.
     pub fn overall_width(&self) -> i16 {
+        if self.numeric {
+            return theme::FONT_HEADER.text_width(self.numeric_text().as_str());
+        }
         let dots_shown = self.pager.total().min(MAX_DOTS);
         Self::dots_width(dots_shown)
     }
@@ -190,12 +207,28 @@ impl ScrollBar {
             top_right.x -= Self::DOTS_INTERVAL;
         }
     }
+
+    /// Render the "current/total" counter, right-aligned in the header area.
+    fn render_numeric<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let area = self.pad.area;
+        let baseline = area.top_right() + Offset::y(theme::FONT_HEADER.text_height() - 1);
+        shape::Text::new(baseline, self.numeric_text().as_str(), theme::FONT_HEADER)
+            .with_align(Alignment::End)
+            .with_fg(theme::FG)
+            .render(target);
+    }
 }
 
 impl Component for ScrollBar {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        // In numeric mode take the whole header slice given to us so the counter
+        // baseline lines up with the title.
+        if self.numeric {
+            self.pad.place(bounds);
+            return bounds;
+        }
         // Occupying as little space as possible (according to the number of pages),
         // aligning to the right.
         let scrollbar_area = Rect::from_top_right_and_size(
@@ -212,13 +245,17 @@ impl Component for ScrollBar {
 
     /// Displaying one dot for each page.
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // Not showing the scrollbar dot when there is only one page
+        // Not showing the scrollbar when there is only one page
         if self.pager.is_single() {
             return;
         }
 
         self.pad.render(target);
-        self.render_horizontal(target);
+        if self.numeric {
+            self.render_numeric(target);
+        } else {
+            self.render_horizontal(target);
+        }
     }
 }
 

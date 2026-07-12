@@ -36,9 +36,9 @@ use crate::{
 use super::{
     component::{
         AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
-        CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen,
-        NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords,
-        ShowMore, SimpleChoice, WordlistEntry, WordlistType,
+        CoinJoinProgress, ConfirmHomescreen, ExternalMenuLeft, Flow, FlowPages, Frame, Homescreen,
+        Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame,
+        ShareWords, ShowMore, SimpleChoice, WordlistEntry, WordlistType,
     },
     constant, fonts, theme, UICaesar,
 };
@@ -94,23 +94,13 @@ impl FirmwareUI for UICaesar {
         verb: Option<TString<'static>>,
         info_button: bool,
         chunkify: bool,
+        external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         let address: TString = address.try_into()?;
 
-        let get_page = move |page_index| {
-            assert!(page_index == 0);
-            let (btn_layout, btn_actions) = if info_button {
-                (
-                    ButtonLayout::cancel_armed_info(verb),
-                    ButtonActions::cancel_confirm_info(),
-                )
-            } else {
-                (
-                    ButtonLayout::cancel_none_text(verb),
-                    ButtonActions::cancel_none_confirm(),
-                )
-            };
+        // Builds the address text (optional label + address) as a set of ops.
+        let build_ops = move || {
             let mut ops = OpTextLayout::new(theme::TEXT_MONO_DATA);
             if let Some(label) = address_label {
                 // NOTE: need to explicitly turn off the chunkification before rendering the
@@ -127,7 +117,38 @@ impl FirmwareUI for UICaesar {
                 ops.add_chunkify_text(Some((theme::MONO_CHUNKS, 2)));
             }
             ops.add_text_with_font(address, fonts::FONT_MONO);
-            let formatted = FormattedText::new(ops).vertically_centered();
+            ops
+        };
+
+        if external_menu {
+            // New action-bar navigation: menu on left, confirm/scroll on right,
+            // numeric page counter in the header.
+            let formatted = FormattedText::new(build_ops()).vertically_centered();
+            let content = ButtonPage::new(formatted, theme::BG)
+                .with_external_menu_nav(ExternalMenuLeft::Menu)
+                .with_confirm_btn(Some(ButtonDetails::text(verb)));
+            let mut frame = ScrollableFrame::new(content).with_numeric_indicator();
+            if !title.is_empty() {
+                frame = frame.with_title(title);
+            }
+            let obj = LayoutObj::new(frame)?;
+            return Ok(obj);
+        }
+
+        let get_page = move |page_index| {
+            assert!(page_index == 0);
+            let (btn_layout, btn_actions) = if info_button {
+                (
+                    ButtonLayout::cancel_armed_info(verb),
+                    ButtonActions::cancel_confirm_info(),
+                )
+            } else {
+                (
+                    ButtonLayout::cancel_none_text(verb),
+                    ButtonActions::cancel_none_confirm(),
+                )
+            };
+            let formatted = FormattedText::new(build_ops()).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted).with_title(title)
         };
         let pages = FlowPages::new(get_page, 1);
@@ -911,16 +932,36 @@ impl FirmwareUI for UICaesar {
 
     fn select_menu(
         items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
-        current: usize,
-        _cancel: Option<TString<'static>>,
+        mut current: usize,
+        cancel: Option<TString<'static>>,
+        title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        // Prepend the cancel item (when present) as the first carousel item.
+        let mut all_items: heapless::Vec<TString<'static>, { MAX_MENU_ITEMS + 1 }> =
+            heapless::Vec::new();
+        if let Some(text) = cancel {
+            unwrap!(all_items.push(text));
+            current += 1;
+        }
+        for text in items {
+            unwrap!(all_items.push(text));
+        }
+
         // Returning the index of the selected menu item
+        let choice = SimpleChoice::new(
+            all_items,
+            ChoiceControls::Cancellable,
+            TR::buttons__view.into(),
+        )
+        .with_initial_page_counter(current)
+        .with_show_incomplete()
+        .with_return_index()
+        .with_ignore_cancelled()
+        .with_cancel_first(cancel.is_some());
         let layout = RootComponent::new(
-            SimpleChoice::new(items, ChoiceControls::Cancellable, TR::buttons__view.into())
-                .with_initial_page_counter(current)
-                .with_show_incomplete()
-                .with_return_index()
-                .with_ignore_cancelled(),
+            ScrollableFrame::new(choice)
+                .with_title(title.unwrap_or_else(|| TR::words__menu.into()))
+                .with_numeric_indicator(),
         );
         Ok(layout)
     }
@@ -930,7 +971,7 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let words: Vec<TString<'static>, 5> = Vec::from_iter(words);
+        let words: Vec<TString<'static>, 6> = Vec::from_iter(words);
         // Returning the index of the selected word, not the word itself
         let layout = RootComponent::new(
             Frame::new(
@@ -946,7 +987,7 @@ impl FirmwareUI for UICaesar {
 
     fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
         let title: TString = TR::word_count__title.into();
-        let choices: Vec<TString<'static>, 5> = {
+        let choices: Vec<TString<'static>, 6> = {
             let nums: &[&str] = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
                 &["20", "33"]
             } else {
@@ -1278,6 +1319,7 @@ impl FirmwareUI for UICaesar {
         title: TString<'static>,
         _subtitle: Option<TString<'static>>,
         value: Obj,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         if Obj::is_str(value) {
@@ -1295,13 +1337,24 @@ impl FirmwareUI for UICaesar {
             }
         }
 
-        let page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-            .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
-            .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
-            .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
-            .with_confirm_btn(None);
+        let page = if external_menu {
+            // New action-bar navigation: close (✕) on the left, wide ⌄ scroll and
+            // a wide ▲ "close" on the last page (no confirm button).
+            ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+                .with_external_menu_nav(ExternalMenuLeft::Close)
+                .with_confirm_btn(None)
+        } else {
+            ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+                .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
+                .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
+                .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
+                .with_confirm_btn(None)
+        };
 
         let mut frame = ScrollableFrame::new(page);
+        if external_menu {
+            frame = frame.with_numeric_indicator();
+        }
         if !title.is_empty() {
             frame = frame.with_title(title);
         }

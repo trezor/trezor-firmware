@@ -381,6 +381,7 @@
     "buttons__retry": "Retry",
     "buttons__select": "Select",
     "buttons__set": "Set",
+    "buttons__shift": "Shift",
     "buttons__show_all": "Show all",
     "buttons__show_details": "Show details",
     "buttons__show_words": "Show words",
@@ -3156,7 +3157,7 @@
     "words__cancel_and_exit": "Cancel and exit",
     "words__cancel_question": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Cancel?",
       "Delizia": "",
       "Eckhart": "Cancel?"
     },
@@ -3221,6 +3222,7 @@
       "Eckhart": "Made in"
     },
     "words__manage": "Manage",
+    "words__menu": "Menu",
     "words__my_trezor": "My Trezor",
     "words__name": "Name",
     "words__no": "No",

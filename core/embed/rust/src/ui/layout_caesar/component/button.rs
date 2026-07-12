@@ -1,6 +1,7 @@
 use crate::{
     strutil::TString,
     time::Duration,
+    translations::TR,
     ui::{
         component::{Component, Event, EventCtx, Never},
         constant,
@@ -328,6 +329,16 @@ impl ButtonDetails {
     /// Cross-style-icon cancel button with no outline.
     pub fn cancel_icon() -> Self {
         Self::icon(theme::ICON_CANCEL).with_offset(Offset::new(3, -3))
+    }
+
+    /// Hamburger menu icon with no outline (matching `cancel_icon`).
+    pub fn menu_icon() -> Self {
+        Self::icon(theme::ICON_MENU).with_offset(Offset::new(3, -3))
+    }
+
+    /// Boxed "Shift" text button (used by the action-bar navigation).
+    pub fn shift_text() -> Self {
+        Self::text(TR::buttons__shift.into())
     }
 
     /// Info icon with an outline.
@@ -686,6 +697,67 @@ impl ButtonLayout {
     /// Only right arrow facing down.
     pub fn none_none_arrow_wide() -> Self {
         Self::new(None, None, Some(ButtonDetails::down_arrow_icon_wide()))
+    }
+
+    // Action-bar navigation vocabulary (opt-in external-menu mode).
+
+    /// Menu icon on left and WIDE down arrow on right.
+    pub fn menu_none_arrow_wide() -> Self {
+        Self::new(
+            Some(ButtonDetails::menu_icon()),
+            None,
+            Some(ButtonDetails::down_arrow_icon_wide()),
+        )
+    }
+
+    /// Menu icon on left and text on right.
+    pub fn menu_none_text(text: TString<'static>) -> Self {
+        Self::new(
+            Some(ButtonDetails::menu_icon()),
+            None,
+            Some(ButtonDetails::from_text_possible_icon(text)),
+        )
+    }
+
+    /// Menu icon on left and hold-to-confirm text on right.
+    pub fn menu_none_htc(text: TString<'static>) -> Self {
+        Self::new(
+            Some(ButtonDetails::menu_icon()),
+            None,
+            Some(ButtonDetails::text(text).with_default_duration()),
+        )
+    }
+
+    /// Menu icon on left and WIDE up arrow on right.
+    pub fn menu_none_up_arrow_wide() -> Self {
+        Self::new(
+            Some(ButtonDetails::menu_icon()),
+            None,
+            Some(ButtonDetails::up_arrow_icon_wide()),
+        )
+    }
+
+    /// "Shift" text on left and WIDE up arrow on right.
+    pub fn shift_none_up_arrow_wide() -> Self {
+        Self::new(
+            Some(ButtonDetails::shift_text()),
+            None,
+            Some(ButtonDetails::up_arrow_icon_wide()),
+        )
+    }
+
+    /// "Shift" text on left and nothing on right.
+    pub fn shift_none_none() -> Self {
+        Self::new(Some(ButtonDetails::shift_text()), None, None)
+    }
+
+    /// Cancel cross on left and WIDE up arrow on right (detail screen close).
+    pub fn cancel_none_up_arrow_wide() -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon()),
+            None,
+            Some(ButtonDetails::up_arrow_icon_wide()),
+        )
     }
 }
 

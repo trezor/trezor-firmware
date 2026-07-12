@@ -161,6 +161,7 @@ def confirm_address(
     verb: str | None = None,
     info_button: bool = False,
     chunkify: bool = False,
+    external_menu: bool = False,
 ) -> LayoutContext[UiResult]:
     """Confirm address."""
 
@@ -528,7 +529,8 @@ def select_menu(
     *,
     items: Iterable[str],
     current: int,
-    cancel: str | None = None
+    cancel: str | None = None,
+    title: str | None = None,
 ) -> LayoutContext[int]:
     """Select an item from a menu. Returns index in range `0..len(items)`."""
 
@@ -769,6 +771,7 @@ def show_properties(
     title: str,
     value: Sequence[PropertyType] | str,
     subtitle: str | None = None,
+    external_menu: bool = False,
 ) -> LayoutContext[None]:
     """Show a list of key-value pairs, or a monospace string."""
 

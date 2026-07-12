@@ -113,9 +113,17 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             .try_into_option()?;
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+        let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
-        let layout_obj =
-            ModelUI::confirm_address(title, address, address_label, verb, info_button, chunkify)?;
+        let layout_obj = ModelUI::confirm_address(
+            title,
+            address,
+            address_label,
+            verb,
+            info_button,
+            chunkify,
+            external_menu,
+        )?;
         Ok(layout_obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -386,8 +394,9 @@ extern "C" fn new_show_properties(n_args: usize, args: *const Obj, kwargs: *mut 
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
         let value: Obj = kwargs.get(Qstr::MP_QSTR_value)?;
+        let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
-        let layout = ModelUI::show_properties(title, subtitle, value)?;
+        let layout = ModelUI::show_properties(title, subtitle, value, external_menu)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -746,8 +755,12 @@ extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map)
             .get(Qstr::MP_QSTR_cancel)
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
+        let title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_title)
+            .and_then(Obj::try_into_option)
+            .unwrap_or(None);
 
-        let layout = ModelUI::select_menu(items, current, cancel)?;
+        let layout = ModelUI::select_menu(items, current, cancel, title)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1539,6 +1552,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb: str | None = None,
     ///     info_button: bool = False,
     ///     chunkify: bool = False,
+    ///     external_menu: bool = False,
     /// ) -> LayoutContext[UiResult]:
     ///     """Confirm address."""
     Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
@@ -1880,7 +1894,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     items: Iterable[str],
     ///     current: int,
-    ///     cancel: str | None = None
+    ///     cancel: str | None = None,
+    ///     title: str | None = None,
     /// ) -> LayoutContext[int]:
     ///     """Select an item from a menu. Returns index in range `0..len(items)`."""
     Qstr::MP_QSTR_select_menu => obj_fn_kw!(0, new_select_menu).as_obj(),
@@ -2099,6 +2114,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     value: Sequence[PropertyType] | str,
     ///     subtitle: str | None = None,
+    ///     external_menu: bool = False,
     /// ) -> LayoutContext[None]:
     ///     """Show a list of key-value pairs, or a monospace string."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),

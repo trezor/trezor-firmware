@@ -88,6 +88,7 @@ include_icon!(ICON_LOCK, "layout_caesar/res/lock.toif"); // 10*10
 include_icon!(ICON_LOCK_SMALL, "layout_caesar/res/lock_small.toif"); // 6*7
 include_icon!(ICON_LOGO, "layout_caesar/res/logo_22_33.toif"); // 22*33
 include_icon!(ICON_LOGO_EMPTY, "layout_caesar/res/logo_22_33_empty.toif");
+include_icon!(ICON_MENU, "layout_caesar/res/menu.toif"); // 10*7
 include_icon!(ICON_NEXT_PAGE, "layout_caesar/res/next_page.toif"); // 9*8
 include_icon!(ICON_PREV_PAGE, "layout_caesar/res/prev_page.toif"); // 8*10
 include_icon!(ICON_SPACE, "layout_caesar/res/space.toif"); // 12*3
