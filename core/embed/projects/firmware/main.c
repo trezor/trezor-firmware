@@ -64,6 +64,17 @@ extern const void nrf_app_size;
 
 #endif
 
+// The firmware variant stamped into the manifest (firmware/build.rs ->
+// FW_VARIANT, consumed by manifest_header.S) must be a known fw_variant_t. This
+// pins the build.rs numeric literals to the enum, so renumbering fw_variant_t
+// cannot silently desync the stamped, authenticated variant.
+#ifdef FW_VARIANT
+#include <sec/boot_header.h>
+_Static_assert(
+    FW_VARIANT == FW_VARIANT_UNIVERSAL || FW_VARIANT == FW_VARIANT_BITCOIN_ONLY,
+    "FW_VARIANT must be a known fw_variant_t (see firmware/build.rs)");
+#endif
+
 LOG_DECLARE(coreapp_main)
 
 int main_func(uint32_t cmd, void *arg) {

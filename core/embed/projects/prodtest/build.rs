@@ -12,6 +12,14 @@ fn main() -> Result<()> {
 
         if cfg!(feature = "emulator") {
             lib.add_source("emulator.c");
+        } else if cfg!(feature = "pq_secure_boot") {
+            // Merkle-tree layout: prodtest is a single secure module and its own
+            // variant. Emit its TRZM module header + the (single-entry) manifest,
+            // and stamp the prodtest variant. No legacy vendor/image/secmon header.
+            lib.add_define("PQ_SECURE_BOOT", Some("1"));
+            lib.add_source("module_header.S");
+            lib.add_source("manifest_header.S");
+            lib.add_define("FW_VARIANT", Some("4")); // FW_VARIANT_PRODTEST
         } else {
             lib.add_source("header.S");
 
@@ -69,10 +77,14 @@ fn main() -> Result<()> {
                 ],
             );
 
-            lib.embed_binary(
-                xbuild::vendor_header_path("../../models", "prodtest")?,
-                "vendorheader",
-            )?;
+            // The Merkle-tree layout has no legacy vendor header (the module
+            // header + manifest replace it).
+            if !cfg!(feature = "pq_secure_boot") {
+                lib.embed_binary(
+                    xbuild::vendor_header_path("../../models", "prodtest")?,
+                    "vendorheader",
+                )?;
+            }
         }
 
         Ok(())

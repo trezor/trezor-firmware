@@ -21,6 +21,7 @@
 #include <trezor_model.h>
 
 #include <sec/board_capabilities.h>
+#include <sec/boot_header.h>
 #include <sec/boot_image.h>
 #include <sec/option_bytes.h>
 #include <sec/random_delays.h>
@@ -157,7 +158,15 @@ static void secmon_panic(const systask_postmortem_t* pminfo) {
 // defined in linker script
 extern uint32_t _secmon_size;
 #define SECMON_SIZE ((uint32_t)&_secmon_size)
+
+#ifdef PQ_SECURE_BOOT
+// Merkle-tree layout: the kernel+coreapp module starts right after the secmon
+// module, but its code is preceded by the module header (TRZM). Skip that
+// reserved region to reach the kernel's vector table.
+#define KERNEL_START (FIRMWARE_START + SECMON_SIZE + FW_MODULE_HEADER_REGION)
+#else
 #define KERNEL_START (FIRMWARE_START + SECMON_SIZE)
+#endif
 
 int main(void) {
   tz_init();
