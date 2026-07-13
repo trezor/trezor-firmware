@@ -130,7 +130,7 @@ fn main() -> Result<()> {
         lib.add_sources_in_dir(
             mpy_dir,
             [
-                "extmod/utime_mphal.c",
+                "extmod/modtime.c",
                 "shared/timeutils/timeutils.c",
                 "py/argcheck.c",
                 "py/asmarm.c",

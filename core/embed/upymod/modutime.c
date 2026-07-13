@@ -24,7 +24,7 @@
  * THE SOFTWARE.
  */
 
-#include "extmod/utime_mphal.h"
+#include "extmod/modtime.h"
 #include "shared/timeutils/timeutils.h"
 
 // copy of ports/stm32/modutime.c:time_localtime, without support
