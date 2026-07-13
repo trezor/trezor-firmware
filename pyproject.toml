@@ -90,7 +90,7 @@ extra_standard_library = [
   "ustruct",
   "uctypes",
   "utime",
-  "utimeq",
+  "timeq",
   "trezorio",
   "trezorui",
   "trezorutils",

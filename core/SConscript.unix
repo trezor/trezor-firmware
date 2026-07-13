@@ -299,17 +299,16 @@ SOURCE_MOD += [
     'embed/upymod/rustmods.c',
 ]
 
-# modutime
+# modutime, modtimeq
 SOURCE_MOD += [
+    'embed/upymod/modtimeq.c',
     'embed/upymod/modutime.c',
 ]
 
 SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modbinascii.c',
     'vendor/micropython/extmod/moductypes.c',
-    'vendor/micropython/extmod/moduheapq.c',
     'vendor/micropython/extmod/moduos.c',
-    'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/shared/readline/readline.c',
     'vendor/micropython/shared/timeutils/timeutils.c',
