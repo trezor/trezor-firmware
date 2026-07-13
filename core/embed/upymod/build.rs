@@ -791,7 +791,6 @@ impl<'a> MpyBuilder<'a> {
 
         // Build mpy-cross in the folder common for all models and targets.
         let build_dir = xbuild::cargo_target_dir()?.join("mpy-cross");
-        let mpy_cross = build_dir.join("mpy-cross");
         let source_dir = self.mpy_dir.join("mpy-cross");
         let mpycross_include = self.crate_dir.join("mpycross_include");
 
@@ -801,7 +800,6 @@ impl<'a> MpyBuilder<'a> {
         cmd.args(["-j", &parallel_job_count.to_string()])
             .args(["-C", &source_dir.to_string_lossy()])
             .arg(format!("BUILD={}", &build_dir.to_string_lossy()))
-            .arg(format!("PROG={}", &mpy_cross.to_string_lossy()))
             .env("INC", format!("-I{}", &mpycross_include.to_string_lossy()));
 
         let cmd_output = cmd
@@ -813,7 +811,7 @@ impl<'a> MpyBuilder<'a> {
             bail!(xbuild::format_command_error(&cmd, &cmd_output));
         }
 
-        Ok(mpy_cross)
+        Ok(build_dir.join("mpy-cross"))
     }
 
     fn build_frozen_modules(&self, qstr_preprocessed: &Path) -> Result<PathBuf> {
