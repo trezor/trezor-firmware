@@ -26,9 +26,10 @@
 /**
  * @brief Layout-agnostic firmware information for display / boot screens.
  *
- * Filled from whatever the installed firmware layout provides (the vendor +
- * image headers). Keeps the UI (boot warning, bootloader intro) independent of
- * the header format, so callers never touch a scheme-specific header.
+ * Filled from whatever the installed firmware layout provides: the legacy
+ * vendor + image headers, or the Merkle-tree module headers. This lets the UI
+ * (boot warning, bootloader intro) work the same way for both, so callers never
+ * touch a scheme-specific header.
  */
 typedef struct {
   uint32_t version;          /**< firmware version (major|minor<<8|...) */
@@ -53,8 +54,9 @@ typedef struct {
                   a firmware is present with valid metadata to show
                   (vendor/version) -- even if its body is corrupt.
                   Drives menu-vs-empty-device routing, the Features
-                  reply, and the storage-wipe decision. (A valid signed
-                  firmware header.) TODO: rename to reflect "provisioned". */
+                  reply, and the storage-wipe decision. (legacy: a
+                  valid signed firmware header; tree: a valid boot
+                  header). TODO: rename to reflect "provisioned". */
 
   volatile secbool firmware_present; /**< True if a valid, bootable
 firmware image is present. */
@@ -109,6 +111,48 @@ typedef struct {
  * decisions. Fatal-errors (via `ensure`) on any verification or downgrade
  * failure, so on return the firmware is authentic and bootable.
  *
- * Implemented by the layout-specific verification code (fw_check.c).
+ * Implemented by exactly one of fw_check.c (legacy vendor/image/secmon headers)
+ * or fw_check_pq.c (Merkle-tree layout); the build selects which.
  */
 void firmware_prepare_boot(firmware_boot_info_t *info);
+
+#ifdef PQ_SECURE_BOOT
+/** Result of a successful firmware-tree verification. */
+typedef struct {
+  uint32_t variant;        /**< fw_variant_t of the installed firmware */
+  uint32_t version;        /**< firmware version (from kernel+coreapp module) */
+  uintptr_t entry_address; /**< secmon code entry point (jump target) */
+  secbool is_official;     /**< sectrue ONLY if the kernel+coreapp matched the
+                                founder manifest. FIH: the field carries the safe
+                                default -- a zeroed/glitched struct reads secfalse
+                                (unofficial), never a spurious official. */
+} firmware_tree_info_t;
+
+/**
+ * @brief Merkle-tree firmware verification (tree layout).
+ *
+ * Enumerates the fixed on-device module set (secmon + kernel+coreapp) at their
+ * flash locations, then verifies role-binding, authenticity (recomputed root ==
+ * the firmware_root signed into this bootloader's own boot header) and
+ * integrity (each module's code vs its chunk hashes). Replaces the legacy
+ * vendor/image/ secmon-header verification. On success, fills `info` with the
+ * firmware variant and the entry address (secmon code) to jump to.
+ *
+ * @return secbool -- sectrue iff the installed firmware tree is authentic.
+ */
+secbool firmware_verify_tree(firmware_tree_info_t *info);
+
+/**
+ * @brief Vendor identity string for the tree layout (no vendor header).
+ *
+ * Returns "UNSAFE, DO NOT USE!" for a custom/unofficial image (is_official not
+ * a positive sectrue), "UNSAFE, FACTORY TEST ONLY" for the founder-signed
+ * prodtest variant, otherwise the official name for the variant ("Trezor" or
+ * "Trezor Bitcoin-only"); an unknown variant also maps to UNSAFE. Shared by the
+ * boot warning, intro, install confirm and Features vendor so all surfaces
+ * agree. The returned pointer has static storage duration; `*out_len` receives
+ * its length.
+ */
+const char *tree_vendor_str(uint32_t variant, secbool is_official,
+                            size_t *out_len);
+#endif
