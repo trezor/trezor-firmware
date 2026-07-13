@@ -745,11 +745,11 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
-        # Menu (horizontal carousel) real items: QR code, Account info,
-        # Derivation path, XPUB -- all multisig xpubs are grouped into this
-        # single XPUB item so the carousel stays within `MAX_MENU_ITEMS`
-        # (see core/embed/rust/src/ui/ui_firmware.rs).
-        n_items = 4  # QR code, Account info, Derivation path, XPUB
+        # Menu (horizontal carousel) real items: QR code, Account info.
+        # All account/derivation-path/xpub details -- including every
+        # multisig xpub -- now live inside the single "Account info" screen
+        # (matching eckhart/delizia).
+        n_items = 2  # QR code, Account info
 
         # Open the menu; focus starts on the first real item, "QR code".
         self.debug.press_left()
@@ -757,22 +757,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         assert "Qr" in self.all_components()
         self.debug.press_left()  # back to the menu, focus stays on "QR code"
 
-        # "Account info"
-        self.debug.press_right()
-        self.debug.press_middle()
-        layout = self.debug.read_layout()
-        assert "Multisig 2 of 3" in layout.text_content()
-        self.debug.press_left()  # back to the menu
-
-        # "Derivation path"
-        self.debug.press_right()
-        self.debug.press_middle()
-        layout = self.debug.read_layout()
-        assert TR.address_details__derivation_path in layout.title()
-        self.debug.press_left()  # back to the menu
-
-        # "XPUB": a single paginated detail screen listing all xpubs, each
-        # preceded by its "MULTISIG XPUB #n (...)" title paragraph.
+        # "Account info": a single paginated detail screen listing the account,
+        # derivation path and all xpubs (each preceded by its "MULTISIG XPUB
+        # #n (...)" title paragraph).
         self.debug.press_right()
         self.debug.press_middle()
         layouts = [self.debug.read_layout()]
@@ -782,6 +769,8 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
             layouts.append(self.debug.read_layout())
         content = multipage_content(layouts)
         content_nospace = content.replace(" ", "")
+        assert "Multisig 2 of 3" in content
+        assert TR.address_details__derivation_path in content
         for xpub_num in range(3):
             self._assert_xpub_title(content, xpub_num)
             assert self.xpubs[xpub_num] in content_nospace

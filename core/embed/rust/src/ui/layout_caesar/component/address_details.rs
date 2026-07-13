@@ -27,6 +27,8 @@ pub struct AddressDetails {
     details_view: Paragraphs<ParagraphVecShort<'static>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
     xpubs: Vec<(StrBuffer, StrBuffer), MAX_XPUBS>,
+    /// Whether there is an account/derivation-path details page at all.
+    has_details: bool,
     current_page: usize,
     current_subpage: usize,
     area: Rect,
@@ -44,21 +46,21 @@ impl AddressDetails {
         let qr_code = qr_address
             .map(|s| Qr::new(s, case_sensitive))?
             .with_border(QR_BORDER);
-        let details_view = {
-            let mut para = ParagraphVecShort::new();
-            if let Some(account) = account {
-                para.add(Paragraph::new(&theme::TEXT_BOLD, TR::words__account_colon));
-                para.add(Paragraph::new(&theme::TEXT_MONO, account));
-            }
-            if let Some(path) = path {
-                para.add(Paragraph::new(
-                    &theme::TEXT_BOLD,
-                    TR::address_details__derivation_path_colon,
-                ));
-                para.add(Paragraph::new(&theme::TEXT_MONO, path));
-            }
-            Paragraphs::new(para)
-        };
+        let mut para = ParagraphVecShort::new();
+        if let Some(account) = account {
+            para.add(Paragraph::new(&theme::TEXT_BOLD, TR::words__account_colon));
+            para.add(Paragraph::new(&theme::TEXT_MONO, account));
+        }
+        if let Some(path) = path {
+            para.add(Paragraph::new(
+                &theme::TEXT_BOLD,
+                TR::address_details__derivation_path_colon,
+            ));
+            para.add(Paragraph::new(&theme::TEXT_MONO, path));
+        }
+        // The details page only exists when there is at least one detail to show.
+        let has_details = !para.is_empty();
+        let details_view = Paragraphs::new(para);
         let xpub_view = Frame::new(
             "".into(),
             Paragraph::new(&theme::TEXT_MONO_DATA, "").into_paragraphs(),
@@ -69,6 +71,7 @@ impl AddressDetails {
             details_view,
             xpub_view,
             xpubs: Vec::new(),
+            has_details,
             area: Rect::zero(),
             current_page: 0,
             current_subpage: 0,
@@ -88,8 +91,18 @@ impl AddressDetails {
         self.current_subpage > 0
     }
 
+    /// Index of the first xpub page (page 0 is the QR, page 1 is the optional
+    /// details page).
+    fn first_xpub_page(&self) -> usize {
+        1 + self.has_details as usize
+    }
+
+    fn is_qr_page(&self) -> bool {
+        self.current_page == 0
+    }
+
     fn is_xpub_page(&self) -> bool {
-        self.current_page > 1
+        self.current_page >= self.first_xpub_page()
     }
 
     fn is_last_page(&self) -> bool {
@@ -123,7 +136,13 @@ impl AddressDetails {
             };
             (left, None, right)
         } else {
-            let left = Some(ButtonDetails::left_arrow_icon());
+            // On the first (QR) page the left button closes the screen (✕), matching
+            // the new action-bar navigation; deeper pages keep the back arrow.
+            let left = if self.is_qr_page() {
+                Some(ButtonDetails::cancel_icon())
+            } else {
+                Some(ButtonDetails::left_arrow_icon())
+            };
             let middle = if self.is_xpub_page() && self.subpages_in_current_page() > 1 {
                 Some(ButtonDetails::armed_text(TR::buttons__show_all.into()))
             } else {
@@ -148,11 +167,11 @@ impl AddressDetails {
     }
 
     fn page_count(&self) -> usize {
-        2 + self.xpubs.len()
+        1 + self.has_details as usize + self.xpubs.len()
     }
 
     fn fill_xpub_page(&mut self, ctx: &mut EventCtx) {
-        let i = self.current_page - 2;
+        let i = self.current_page - self.first_xpub_page();
         self.xpub_view.update_title(ctx, self.xpubs[i].0.into());
         self.xpub_view.update_content(ctx, |p| {
             p.update(self.xpubs[i].1);
@@ -189,6 +208,11 @@ impl Component for AddressDetails {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
         self.details_view.place(content_area);
         self.xpub_view.place(content_area);
+        // Now that xpubs have been added, we know the final page count, so the
+        // initial button layout can be set correctly (e.g. no right arrow when the
+        // QR page is the only page).
+        let btn_layout = self.get_button_layout();
+        self.buttons = Child::new(ButtonController::new(btn_layout));
         self.buttons.place(button_area);
         self.area = content_area;
         bounds
@@ -196,11 +220,13 @@ impl Component for AddressDetails {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Possibly update the components that have e.g. marquee
-        match self.current_page {
-            0 => self.qr_code.event(ctx, event),
-            1 => self.details_view.event(ctx, event),
-            _ => self.xpub_view.event(ctx, event),
-        };
+        if self.is_qr_page() {
+            self.qr_code.event(ctx, event);
+        } else if self.is_xpub_page() {
+            self.xpub_view.event(ctx, event);
+        } else {
+            self.details_view.event(ctx, event);
+        }
 
         let button_event = self.buttons.event(ctx, event);
         if let Some(ButtonControllerMsg::Triggered(button, _)) = button_event {
@@ -250,10 +276,12 @@ impl Component for AddressDetails {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.buttons.render(target);
-        match self.current_page {
-            0 => self.qr_code.render(target),
-            1 => self.details_view.render(target),
-            _ => self.xpub_view.render(target),
+        if self.is_qr_page() {
+            self.qr_code.render(target);
+        } else if self.is_xpub_page() {
+            self.xpub_view.render(target);
+        } else {
+            self.details_view.render(target);
         }
     }
 }
@@ -262,10 +290,12 @@ impl Component for AddressDetails {
 impl crate::trace::Trace for AddressDetails {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("AddressDetails");
-        match self.current_page {
-            0 => t.child("qr_code", &self.qr_code),
-            1 => t.child("details_view", &self.details_view),
-            _ => t.child("xpub_view", &self.xpub_view),
+        if self.is_qr_page() {
+            t.child("qr_code", &self.qr_code);
+        } else if self.is_xpub_page() {
+            t.child("xpub_view", &self.xpub_view);
+        } else {
+            t.child("details_view", &self.details_view);
         }
     }
 }

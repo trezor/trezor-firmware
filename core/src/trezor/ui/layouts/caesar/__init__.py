@@ -372,25 +372,22 @@ async def show_address(
             ),
         )
     )
+    # Account info item: a single screen with account, derivation path and all
+    # multisig xpubs (matching eckhart/delizia).
+    from ..properties import with_colon
+
+    pairs: list[StrPropertyType] = []
     if account:
-        menu_items.append(
-            create_details(
-                TR.address_details__account_info, account, external_menu=True
-            )
-        )
+        pairs.append((TR.words__account, account, False))
     if path:
+        pairs.append((TR.address_details__derivation_path, path, False))
+    # Labels get a trailing colon, matching the other caesar property screens.
+    pairs = with_colon(pairs)
+    for i, xpub in enumerate(xpubs):
+        pairs.append((xpub_title(i), xpub, True))
+    if pairs:
         menu_items.append(
-            create_details(
-                TR.address_details__derivation_path, path, external_menu=True
-            )
-        )
-    if xpubs:
-        menu_items.append(
-            create_details(
-                TR.address__xpub,
-                [(xpub_title(i), xpub, True) for i, xpub in enumerate(xpubs)],
-                external_menu=True,
-            )
+            create_details(TR.address_details__account_info, pairs, external_menu=True)
         )
 
     menu = Menu.root(menu_items, cancel=Cancel(TR.words__cancel_question, _mismatch))
