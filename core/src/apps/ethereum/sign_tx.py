@@ -134,7 +134,9 @@ async def sign_tx(
         sender_bytes,
     )
 
-    await confirm_data_and_summary(confirmation, initial_data, data_length, sha)
+    await confirm_data_and_summary(
+        confirmation, initial_data, data_length, sha, msg.chunkify
+    )
 
     # eip 155 replay protection
     rlp.write(sha, msg.chain_id)
@@ -155,12 +157,21 @@ async def confirm_data_and_summary(
     initial_data: AnyBytes,
     data_length: int,
     sha: HashWriter,
+    chunkify: bool | None,
 ) -> None:
     if confirmation is None:
         return  # clear-signing took place - nothing more to confirm
 
+    from trezor.ui.layouts import confirm_value
+
+    from .helpers import get_keccak256_writer
+
     confirm_data_chunk, confirm_summary = confirmation
     await confirm_data_chunk(initial_data)
+    # https://ethereum-magicians.org/t/erc-8213-wallet-signature-and-calldata-digest-display/24295#p-59181-calldata-digest-9
+    calldata_hasher = get_keccak256_writer()
+    calldata_hasher.extend(data_length.to_bytes(32, "big"))
+    calldata_hasher.extend(initial_data)
 
     data_left = data_length - len(initial_data)
     while data_left > 0:
@@ -169,8 +180,17 @@ async def confirm_data_and_summary(
         await confirm_data_chunk(chunk)
         data_left -= len(chunk)
         sha.extend(chunk)
+        calldata_hasher.extend(chunk)
 
     # blind signer's summary
+    await confirm_value(
+        "Calldata",
+        calldata_hasher.get_digest(),
+        "ERC-8213 digest",
+        br_name="ethereum/calldata/digest",
+        chunkify=bool(chunkify),
+    )
+
     await confirm_summary
 
 
