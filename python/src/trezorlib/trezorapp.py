@@ -153,6 +153,7 @@ def load(
     binary: bytes,
     proof: bytes,
     min_version: Optional[Tuple[int, int, int, int]],
+    root_packet: Tuple[bytes, bytes],
     force_reload: bool = False,
 ) -> int:
     """Load an external application onto the device.

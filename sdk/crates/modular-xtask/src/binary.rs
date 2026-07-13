@@ -63,8 +63,12 @@ struct AppHeader {
     chunk_hash: [u8; 32],
     /// Size of each chunk of the binary payload in bytes
     chunk_size: U16<LittleEndian>,
+    /// Specifies privilege level of the app
+    app_ring: u8,
+    // Reserved for future use (zeroed)
+    reserved2: [u8; 3],
     /// Reserved field for runtime purposes (zeroed)
-    reserved2: U16<LittleEndian>,
+    reserved3: U16<LittleEndian>,
     // TODO logo
     // TODO bip32_paths
 }

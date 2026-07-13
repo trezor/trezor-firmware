@@ -49,13 +49,40 @@ message TrezorAppHeaderRequest {}
  * Response: Application header and merkle proof
  *
  * @next TrezorAppDataChunkRequest
+ * @next TrezorAppRootPacketRequest
  */
 message TrezorAppHeaderAck {
     // Application header
     required bytes header = 1;
     // Merkle proof
     required bytes proof = 2;
+    // Root packet timestamp
+    required uint32 timestamp = 3;
 }
+
+/**
+ * Request: 
+ *
+ * @next TrezorAppRootPacketAck
+ * @next TrezorAppHeaderAck
+ */
+
+message TrezorAppRootPacketRequest {
+    required uint32 app_ring = 1;
+    required bool host_timestamp_stale = 2;
+}
+
+/**
+ * Request: 
+ *
+ * @next TrezorAppDataChunkRequest
+ */
+
+message TrezorAppRootPacketAck {
+    required bytes root_packet = 1;
+}
+
+
 
 /**
  * Response: Device asks for more data from application image.
