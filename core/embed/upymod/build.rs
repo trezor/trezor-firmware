@@ -153,7 +153,6 @@ fn main() -> Result<()> {
                 "py/emitinlinethumb.c",
                 "py/formatfloat.c",
                 "py/frozenmod.c",
-                "py/lexer.c",
                 "py/malloc.c",
                 "py/map.c",
                 "py/modarray.c",
@@ -217,7 +216,6 @@ fn main() -> Result<()> {
                 "py/parsenumbase.c",
                 "py/persistentcode.c",
                 "py/qstr.c",
-                "py/reader.c",
                 "py/repl.c",
                 "py/runtime.c",
                 "py/runtime_utils.c",
@@ -241,16 +239,24 @@ fn main() -> Result<()> {
                 lib.add_define("TREZOR_EMULATOR_FROZEN", None);
             }
 
+            // needed for extmod/modvfs.c
+            lib.add_define("FFCONF_H", Some("\"lib/oofatfs/ffconf.h\""));
+
             lib.add_sources_in_dir(
                 mpy_dir,
                 [
+                    "extmod/vfs.c",
+                    "extmod/vfs_posix.c",
                     "extmod/vfs_posix_file.c",
+                    "extmod/vfs_reader.c",
                     "extmod/modos.c",
+                    "extmod/modvfs.c",
                     "py/emitnarm.c",
                     "py/emitnative.c",
                     "py/emitnthumb.c",
                     "py/emitnx64.c",
                     "py/emitnx86.c",
+                    "py/lexer.c",
                     "py/nlr.c",
                     "py/nlraarch64.c",
                     "py/nlrsetjmp.c",
@@ -258,11 +264,13 @@ fn main() -> Result<()> {
                     "py/nlrx64.c",
                     "py/nlrx86.c",
                     "py/profile.c",
+                    "py/reader.c",
                     "ports/unix/alloc.c",
                     "ports/unix/gccollect.c",
                     "ports/unix/input.c",
                     "ports/unix/unix_mphal.c",
                     "shared/runtime/gchelper_generic.c",
+                    "shared/runtime/pyexec.c",
                     "shared/readline/readline.c",
                 ],
             );

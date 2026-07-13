@@ -71,7 +71,7 @@
 #define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_CORE_FEATURES)
 
 // Python internal features
-#define MICROPY_READER_VFS          (0)
+#define MICROPY_READER_VFS          (1)
 #define MICROPY_ENABLE_GC           (1)
 #define MICROPY_ENABLE_FINALISER    (1)
 #define MICROPY_STACK_CHECK         (1)
@@ -92,11 +92,12 @@
 #define MICROPY_STREAMS_NON_BLOCK   (1)
 #define MICROPY_MODULE_WEAK_LINKS   (0)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (0)
-#define MICROPY_VFS_POSIX_FILE      (1)
+#define MICROPY_VFS_POSIX           (1)
 #define MICROPY_USE_INTERNAL_ERRNO  (0)
+#define MICROPY_PYEXEC_ENABLE_EXIT_CODE_HANDLING (1)
 #define MICROPY_ENABLE_SCHEDULER    (0)
 #define MICROPY_SCHEDULER_DEPTH     (0)
-#define MICROPY_VFS                 (0)
+#define MICROPY_VFS                 (1)
 
 // control over Python builtins
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
@@ -230,7 +231,8 @@ extern const struct _mp_print_t mp_stderr_print;
 
 // by default contains nearest git tag, which may not be present in shallow
 // repo, breaking reproducibility
-#define MICROPY_BANNER_NAME_AND_VERSION ""
+#define MICROPY_BANNER_NAME_AND_VERSION "MicroPython"
+#define MICROPY_BANNER_MACHINE "unix"
 
 // ============= this ends common config section ===================
 
