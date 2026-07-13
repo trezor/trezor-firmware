@@ -87,9 +87,9 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
         # Text: 4 bytes (size) + up to 28 bytes
         if memo_text is None:
             raise DataError("Stellar: Missing memo text")
-        if len(memo_text) > 28:
+        written = writers.write_string(w, memo_text)
+        if written > 28:
             raise ProcessError("Stellar: max length of a memo text is 28 bytes")
-        writers.write_string(w, memo_text)
         memo_confirm_text = memo_text
     elif memo_type == StellarMemoType.ID:
         # ID: 64 bit unsigned integer

@@ -73,9 +73,9 @@ def write_create_passive_sell_offer_op(
 
 
 def write_manage_data_op(w: Writer, msg: StellarManageDataOp) -> None:
-    if len(msg.key) > 64:
+    written = write_string(w, msg.key)
+    if written > 64:
         raise ProcessError("Stellar: max length of a key is 64 bytes")
-    write_string(w, msg.key)
     write_bool(w, bool(msg.value))
     if msg.value:
         write_string(w, msg.value)
@@ -165,9 +165,9 @@ def write_set_options_op(w: Writer, msg: StellarSetOptionsOp) -> None:
         write_bool(w, False)
     else:
         write_bool(w, True)
-        if len(msg.home_domain) > 32:
+        written = write_string(w, msg.home_domain)
+        if written > 32:
             raise ProcessError("Stellar: max length of a home domain is 32 bytes")
-        write_string(w, msg.home_domain)
 
     # signer
     if msg.signer_type is None:

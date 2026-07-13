@@ -13,8 +13,10 @@ if TYPE_CHECKING:
     from trezor.utils import Writer
 
 
-def write_string(w: Writer, s: StrOrBytes) -> None:
-    """Write XDR string padded to a multiple of 4 bytes."""
+def write_string(w: Writer, s: StrOrBytes) -> int:
+    """Write XDR string padded to a multiple of 4 bytes.
+    Returns the length of the string written to the buffer (without padding).
+    """
     # NOTE: 2 bytes smaller than if-else
     buf = s.encode() if isinstance(s, str) else s
     write_uint32(w, len(buf))
@@ -23,6 +25,7 @@ def write_string(w: Writer, s: StrOrBytes) -> None:
     remainder = len(buf) % 4
     if remainder:
         writers.write_bytes_unchecked(w, bytes([0] * (4 - remainder)))
+    return len(buf)
 
 
 def write_bool(w: Writer, val: bool) -> None:
