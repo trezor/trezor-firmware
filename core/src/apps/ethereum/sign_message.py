@@ -13,10 +13,9 @@ if TYPE_CHECKING:
 
 
 def message_digest(message: AnyBytes) -> bytes:
-    from trezor.crypto.hashlib import sha3_256
-    from trezor.utils import HashWriter
+    from .helpers import get_keccak256_writer
 
-    h = HashWriter(sha3_256(keccak=True))
+    h = get_keccak256_writer()
     signed_message_header = b"\x19Ethereum Signed Message:\n"
     h.extend(signed_message_header)
     h.extend(str(len(message)).encode())
