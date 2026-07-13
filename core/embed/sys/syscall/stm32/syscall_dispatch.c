@@ -977,6 +977,25 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
 #ifdef USE_APP_LOADING
+    case SYSCALL_APP_ROOT_UPDATE: {
+      const void *root_packet = (const void *)args[0];
+      size_t root_packet_size = (size_t)args[1];
+      ts_t status = app_root_update__verified(root_packet, root_packet_size);
+      args[0] = ts_code(status);
+    } break;
+
+    case SYSCALL_APP_ROOT_IS_LOADED: {
+      app_ring_t ring = (app_ring_t)args[0];
+      args[0] = (uint32_t)app_root_is_loaded(ring);
+    } break;
+
+    case SYSCALL_APP_ROOT_GET_TIMESTAMP: {
+      app_ring_t ring = (app_ring_t)args[0];
+      uint32_t *timestamp = (uint32_t *)args[1];
+      ts_t status = app_root_get_timestamp__verified(ring, timestamp);
+      args[0] = ts_code(status);
+    } break;
+
     case SYSCALL_APP_ARENA_GET_INFO: {
       app_arena_info_t *info = (app_arena_info_t *)args[0];
       ts_t status = app_arena_get_info__verified(info);

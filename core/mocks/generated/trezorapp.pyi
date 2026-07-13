@@ -102,6 +102,11 @@ class AppImage:
         Return the vendor of the application.
         """
 
+    def ring(self) -> int:
+        """
+        Return the privilege ring of the application.
+        """
+
     def header_hash(self) -> bytes:
         """
         Return the hash of the application image header.
@@ -132,6 +137,16 @@ class AppImage:
         """
         Stop the running application image. If the image is not running,
         this operation has no effect.
+        """
+
+    def allowed_curves() -> Iterator[str]:
+        """
+        Return an iterator over the allowed curves
+        """
+
+    def allowed_paths() -> Iterator[str]:
+        """
+        Return an iterator over the allowed BIP32 path prefixes.
         """
 
 
@@ -184,4 +199,35 @@ def mem_total() -> int:
 def mem_free() -> int:
     """
     Return the free memory available in the app arena.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def root_update(root_packet: AnyBytes) -> None:
+    """
+    Update the root-of-trust storage with the provided root packet.
+    The root packet is verified for integrity and validity before being
+    stored. If the verification fails, an AppArenaError is raised.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def root_is_loaded(ring: int) -> bool:
+    """
+    Return True if a root-of-trust is present for the specified ring,
+    otherwise return False.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def root_timestamp(ring: int) -> int:
+    """
+    Return the timestamp of the root-of-trust for the specified ring.
+    """
+
+
+# upymod/modtrezorapp/modtrezorapp.c
+def app_ring_from_header(header: AnyBytes) -> int:
+    """
+    Return the application privilege ring from the provided header.
     """

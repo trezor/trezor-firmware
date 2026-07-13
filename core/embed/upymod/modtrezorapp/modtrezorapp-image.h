@@ -239,6 +239,21 @@ STATIC mp_obj_t mod_trezorapp_AppImage_vendor(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_vendor_obj,
                                  mod_trezorapp_AppImage_vendor);
 
+/// def ring(self) -> int:
+///     """
+///     Return the privilege ring of the application.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_ring(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_int(info.ring);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_ring_obj,
+                                 mod_trezorapp_AppImage_ring);
+
 /// def header_hash(self) -> bytes:
 ///     """
 ///     Return the hash of the application image header.
@@ -355,6 +370,111 @@ STATIC mp_obj_t mod_trezorapp_AppImage_stop(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_stop_obj,
                                  mod_trezorapp_AppImage_stop);
 
+typedef struct {
+  mp_obj_base_t base;
+  // Handle of the AppImage being iterated over
+  app_image_handle_t handle;
+  // Offset in the curves array of the next curve to return
+  size_t offset;
+} mp_obj_AppCurveIter_t;
+
+STATIC mp_obj_t mod_trezorapp_AppCurveIter_iternext(mp_obj_t self_in) {
+  mp_obj_AppCurveIter_t *self = MP_OBJ_TO_PTR(self_in);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(self->handle, &info);
+
+  size_t offset = self->offset;
+  if (offset >= APP_HEADER_CURVES_MAX_LEN) {
+    return MP_OBJ_STOP_ITERATION;
+  }
+
+  size_t len = strnlen(info.curves + offset, sizeof(info.curves) - offset);
+  if (len == 0) {
+    return MP_OBJ_STOP_ITERATION;
+  }
+
+  self->offset = MIN(offset + len + 1, APP_HEADER_CURVES_MAX_LEN);
+
+  return mp_obj_new_str(info.curves + offset, len);
+}
+
+STATIC const mp_obj_type_t mod_trezorapp_AppCurveIter_type = {
+    {&mp_type_type},
+    .name = MP_QSTR_AppCurveIter,
+    .getiter = mp_identity_getiter,
+    .iternext = mod_trezorapp_AppCurveIter_iternext,
+};
+
+/// def allowed_curves() -> Iterator[str]:
+///     """
+///     Return an iterator over the allowed curves
+///     """
+STATIC mp_obj_t mod_trezorapp_allowed_curves(mp_obj_t self) {
+  mp_obj_AppImage_t *image = MP_OBJ_TO_PTR(self);
+
+  mp_obj_AppCurveIter_t *o =
+      mp_obj_malloc(mp_obj_AppCurveIter_t, &mod_trezorapp_AppCurveIter_type);
+  o->handle = image->handle;
+  o->offset = 0;
+  return MP_OBJ_FROM_PTR(o);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_allowed_curves_obj,
+                                 mod_trezorapp_allowed_curves);
+
+
+typedef struct {
+  mp_obj_base_t base;
+  // Handle of the AppImage being iterated over
+  app_image_handle_t handle;
+  // Offset in the paths array of the next path to return
+  size_t offset;
+} mp_obj_AppPathIter_t;
+
+STATIC mp_obj_t mod_trezorapp_AppPathIter_iternext(mp_obj_t self_in) {
+  mp_obj_AppPathIter_t *self = MP_OBJ_TO_PTR(self_in);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(self->handle, &info);
+
+  size_t offset = self->offset;
+  if (offset >= APP_HEADER_PATHS_MAX_LEN) {
+    return MP_OBJ_STOP_ITERATION;
+  }
+
+  size_t len = strnlen(info.paths + offset, sizeof(info.paths) - offset);
+  if (len == 0) {
+    return MP_OBJ_STOP_ITERATION;
+  }
+
+  self->offset = MIN(offset + len + 1, APP_HEADER_PATHS_MAX_LEN);
+
+  return mp_obj_new_str(info.paths + offset, len);
+}
+
+STATIC const mp_obj_type_t mod_trezorapp_AppPathIter_type = {
+    {&mp_type_type},
+    .name = MP_QSTR_AppPathIter,
+    .getiter = mp_identity_getiter,
+    .iternext = mod_trezorapp_AppPathIter_iternext,
+};
+
+/// def allowed_paths() -> Iterator[str]:
+///     """
+///     Return an iterator over the allowed BIP32 path prefixes.
+///     """
+STATIC mp_obj_t mod_trezorapp_allowed_paths(mp_obj_t self) {
+  mp_obj_AppImage_t *image = MP_OBJ_TO_PTR(self);
+
+  mp_obj_AppPathIter_t *o =
+      mp_obj_malloc(mp_obj_AppPathIter_t, &mod_trezorapp_AppPathIter_type);
+  o->handle = image->handle;
+  o->offset = 0;
+  return MP_OBJ_FROM_PTR(o);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_allowed_paths_obj,
+                                 mod_trezorapp_allowed_paths);
+
 STATIC const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_handle),
      MP_ROM_PTR(&mod_trezorapp_AppImage_handle_obj)},
@@ -373,6 +493,7 @@ STATIC const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_name), MP_ROM_PTR(&mod_trezorapp_AppImage_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_vendor),
      MP_ROM_PTR(&mod_trezorapp_AppImage_vendor_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ring), MP_ROM_PTR(&mod_trezorapp_AppImage_ring_obj)},
     {MP_ROM_QSTR(MP_QSTR_header_hash),
      MP_ROM_PTR(&mod_trezorapp_AppImage_header_hash_obj)},
     {MP_ROM_QSTR(MP_QSTR_write_chunk),
@@ -381,6 +502,10 @@ STATIC const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorapp_AppImage_delete_obj)},
     {MP_ROM_QSTR(MP_QSTR_run), MP_ROM_PTR(&mod_trezorapp_AppImage_run_obj)},
     {MP_ROM_QSTR(MP_QSTR_stop), MP_ROM_PTR(&mod_trezorapp_AppImage_stop_obj)},
+    {MP_ROM_QSTR(MP_QSTR_allowed_curves),
+     MP_ROM_PTR(&mod_trezorapp_allowed_curves_obj)},
+    {MP_ROM_QSTR(MP_QSTR_allowed_paths),
+     MP_ROM_PTR(&mod_trezorapp_allowed_paths_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorapp_AppImage_locals_dict,
                             mod_trezorapp_AppImage_locals_dict_table);

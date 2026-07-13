@@ -1441,6 +1441,31 @@ access_violation:
 
 #ifdef USE_APP_LOADING
 
+ts_t app_root_update__verified(const void *root_packet,
+                               size_t root_packet_size) {
+  if (!probe_read_access(root_packet, root_packet_size)) {
+    goto access_violation;
+  }
+
+  return app_root_update(root_packet, root_packet_size);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_root_get_timestamp__verified(app_ring_t ring, uint32_t *timestamp) {
+  if (!probe_write_access(timestamp, sizeof(*timestamp))) {
+    goto access_violation;
+  }
+
+  return app_root_get_timestamp(ring, timestamp);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
 ts_t app_arena_get_info__verified(app_arena_info_t *info) {
   if (!probe_write_access(info, sizeof(*info))) {
     goto access_violation;

@@ -37,7 +37,7 @@ secure_mode = ["sec/secure_mode"]
 # Selectable components
 # --------------------------------------------------------------------------
 
-app_loading = ["sys/app_loading"]
+app_loading = ["sys/app_loading", "sec/mldsa44"]
 backlight = []
 ble = ["nrf"]
 button = []
