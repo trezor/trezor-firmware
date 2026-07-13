@@ -210,6 +210,43 @@ secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
   return result;
 }
 
+#ifdef PQ_SECURE_BOOT
+typedef struct {
+  uint8_t *buffer;
+  size_t buffer_size;
+  size_t len;  // out: number of bytes decoded into buffer
+} buf_ctx_t;
+
+/* Decodes a bytes field straight into a caller-provided buffer. */
+static bool read_into_buffer(pb_istream_t *stream, const pb_field_t *field,
+                             void **arg) {
+  (void)field;
+  buf_ctx_t *c = (buf_ctx_t *)*arg;
+  if (stream->bytes_left > c->buffer_size) {
+    return false;
+  }
+  c->len = stream->bytes_left;
+  return pb_read(stream, (pb_byte_t *)c->buffer, stream->bytes_left);
+}
+
+secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
+                                uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
+                                uint8_t *mh_buf, size_t mh_size,
+                                size_t *mh_len) {
+  buf_ctx_t bh_ctx = {.buffer = bh_buf, .buffer_size = bh_size, .len = 0};
+  buf_ctx_t mh_ctx = {.buffer = mh_buf, .buffer_size = mh_size, .len = 0};
+
+  MSG_RECV_INIT(FirmwareBegin);
+  MSG_RECV_CALLBACK(boot_header, read_into_buffer, &bh_ctx);
+  MSG_RECV_CALLBACK(module_headers, read_into_buffer, &mh_ctx);
+  secbool result = MSG_RECV(FirmwareBegin);
+  memcpy(msg, &msg_recv, sizeof(FirmwareBegin));
+  *bh_len = bh_ctx.len;
+  *mh_len = mh_ctx.len;
+  return result;
+}
+#endif
+
 void recv_msg_unknown(protob_io_t *iface) {
   codec_flush(iface->wire, iface->msg_size, iface->buf);
   send_msg_failure(iface, FailureType_Failure_UnexpectedMessage,
