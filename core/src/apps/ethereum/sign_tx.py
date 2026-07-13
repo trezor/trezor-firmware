@@ -100,7 +100,7 @@ async def sign_tx(
 
     initial_data = await request_initial_data(msg, sha)
 
-    confirm_data_chunk, confirm_summary = await confirm_tx_data(
+    confirmation = await confirm_tx_data(
         initial_data,
         msg,
         defs,
@@ -111,9 +111,7 @@ async def sign_tx(
         sender_bytes,
     )
 
-    await confirm_data_and_summary(
-        confirm_data_chunk, confirm_summary, initial_data, data_length, sha
-    )
+    await confirm_data_and_summary(confirmation, initial_data, data_length, sha)
 
     # eip 155 replay protection
     rlp.write(sha, msg.chain_id)
@@ -130,29 +128,27 @@ async def sign_tx(
 
 
 async def confirm_data_and_summary(
-    confirm_data_chunk: ConfirmDataFn | None,
-    confirm_summary: Coroutine[Any, Any, None] | None,
+    confirmation: tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None,
     initial_data: AnyBytes,
     data_length: int,
     sha: HashWriter,
 ) -> None:
-    # `confirm_data_chunk` and `confirm_summary` can be `None`
-    # if we clear signed so there is nothing more to confirm
+    if confirmation is None:
+        return  # clear-signing took place - nothing more to confirm
 
-    if confirm_data_chunk is not None:
-        await confirm_data_chunk(initial_data)
+    confirm_data_chunk, confirm_summary = confirmation
+    await confirm_data_chunk(initial_data)
 
-        data_left = data_length - len(initial_data)
-        while data_left > 0:
-            resp = await _send_request_chunk(data_left)
-            chunk = resp.data_chunk
-            await confirm_data_chunk(chunk)
-            data_left -= len(chunk)
-            sha.extend(chunk)
+    data_left = data_length - len(initial_data)
+    while data_left > 0:
+        resp = await _send_request_chunk(data_left)
+        chunk = resp.data_chunk
+        await confirm_data_chunk(chunk)
+        data_left -= len(chunk)
+        sha.extend(chunk)
 
-    if confirm_summary is not None:
-        # blind signer's summary
-        await confirm_summary
+    # blind signer's summary
+    await confirm_summary
 
 
 _MAX_DATA_STORED = const(6144)
@@ -202,9 +198,9 @@ async def confirm_tx_data(
     fee_items: Sequence[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
     sender_bytes: AnyBytes,
-) -> tuple[ConfirmDataFn | None, Coroutine[Any, Any, None] | None]:
+) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
     """Returns data chunk callback and transaction summary layout to be awaited.
-    [None, None] implies clear signing attempted and succeeded."""
+    `None` implies clear signing attempted and succeeded."""
 
     from . import clear_signing, staking, yielding
     from .helpers import format_ethereum_amount
@@ -302,7 +298,7 @@ async def confirm_tx_data(
             chunkify=bool(msg.chunkify),
         )
     else:
-        return None, None
+        return None
 
 
 def _get_digest_length(msg: EthereumSignTx, data_total: int) -> int:
