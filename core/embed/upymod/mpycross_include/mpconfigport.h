@@ -28,6 +28,7 @@
 
 #define MICROPY_ALLOC_PATH_MAX (PATH_MAX)
 #define MICROPY_PERSISTENT_CODE_LOAD (0)
+#define MICROPY_PERSISTENT_CODE_LOAD_NATIVE (0)
 #define MICROPY_PERSISTENT_CODE_SAVE (1)
 
 #ifndef MICROPY_PERSISTENT_CODE_SAVE_FILE
@@ -47,11 +48,16 @@
 #define MICROPY_EMIT_XTENSA (1)
 #define MICROPY_EMIT_INLINE_XTENSA (1)
 #define MICROPY_EMIT_XTENSAWIN (1)
+#define MICROPY_EMIT_RV32 (1)
+#define MICROPY_EMIT_INLINE_RV32 (1)
+#define MICROPY_EMIT_NATIVE_DEBUG (1)
+#define MICROPY_EMIT_NATIVE_DEBUG_PRINTER (&mp_stdout_print)
 
 #define MICROPY_DYNAMIC_COMPILER (1)
 #define MICROPY_COMP_CONST_FOLDING (1)
 #define MICROPY_COMP_MODULE_CONST (1)
 #define MICROPY_COMP_CONST (1)
+#define MICROPY_COMP_CONST_FLOAT (1)
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)
 #define MICROPY_COMP_RETURN_IF_EXPR (1)
@@ -76,6 +82,7 @@
 #define MICROPY_USE_INTERNAL_PRINTF (0)
 
 #define MICROPY_PY_FSTRINGS (1)
+#define MICROPY_PY_TSTRINGS (1)
 #define MICROPY_PY_BUILTINS_STR_UNICODE (1)
 
 #if !(defined(MICROPY_GCREGS_SETJMP) || defined(__x86_64__) ||          \
@@ -86,34 +93,18 @@
 #define MICROPY_GCREGS_SETJMP (1)
 #endif
 
-#define MICROPY_PY___FILE__ (0)
+#define MICROPY_MODULE___FILE__ (0)
 #define MICROPY_PY_ARRAY (0)
 #define MICROPY_PY_ATTRTUPLE (0)
 #define MICROPY_PY_COLLECTIONS (0)
-#define MICROPY_PY_MATH (0)
+#define MICROPY_PY_MATH (MICROPY_COMP_CONST_FLOAT)
+#define MICROPY_PY_MATH_CONSTANTS (MICROPY_COMP_CONST_FLOAT)
 #define MICROPY_PY_CMATH (0)
 #define MICROPY_PY_GC (0)
 #define MICROPY_PY_IO (0)
 #define MICROPY_PY_SYS (0)
 
 // type definitions for the specific machine
-
-#ifdef __LP64__
-typedef long mp_int_t;            // must be pointer size
-typedef unsigned long mp_uint_t;  // must be pointer size
-#elif defined(__MINGW32__) && defined(_WIN64)
-#include <stdint.h>
-typedef __int64 mp_int_t;
-typedef unsigned __int64 mp_uint_t;
-#elif defined(_MSC_VER) && defined(_WIN64)
-typedef __int64 mp_int_t;
-typedef unsigned __int64 mp_uint_t;
-#else
-// These are definitions for machines where sizeof(int) == sizeof(void*),
-// regardless for actual size.
-typedef int mp_int_t;            // must be pointer size
-typedef unsigned int mp_uint_t;  // must be pointer size
-#endif
 
 // Cannot include <sys/types.h>, as it may lead to symbol name clashes
 #if _FILE_OFFSET_BITS == 64 && !defined(__LP64__)
@@ -125,7 +116,7 @@ typedef long mp_off_t;
 #define MP_PLAT_PRINT_STRN(str, len) (void)0
 
 // We need to provide a declaration/definition of alloca()
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__NetBSD__)
 #include <stdlib.h>
 #elif defined(_WIN32)
 #include <malloc.h>
@@ -139,8 +130,9 @@ typedef long mp_off_t;
 #ifdef _MSC_VER
 
 #define MP_ENDIANNESS_LITTLE (1)
-#define NORETURN __declspec(noreturn)
+#define MP_NORETURN __declspec(noreturn)
 #define MP_NOINLINE __declspec(noinline)
+#define MP_ALWAYSINLINE __forceinline
 #define MP_LIKELY(x) (x)
 #define MP_UNLIKELY(x) (x)
 #define MICROPY_PORT_CONSTANTS {MP_ROM_QSTR(MP_QSTR_dummy), MP_ROM_PTR(NULL)}
@@ -169,3 +161,5 @@ typedef int ssize_t;
 typedef mp_off_t off_t;
 
 #endif
+
+extern const struct _mp_print_t mp_stdout_print;
