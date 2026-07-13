@@ -43,7 +43,9 @@ void nrf_spi_init(nrf_driver_t *drv) {
   __HAL_RCC_GPDMA1_CLK_ENABLE();
   NRF_SPI_CLK_EN();
   NRF_SPI_SCK_CLK_EN();
+#ifdef NRF_SPI_NSS_PIN
   NRF_SPI_NSS_CLK_EN();
+#endif
   NRF_SPI_MISO_CLK_EN();
   NRF_SPI_MOSI_CLK_EN();
 
@@ -56,8 +58,10 @@ void nrf_spi_init(nrf_driver_t *drv) {
   GPIO_InitStructure.Pin = NRF_SPI_SCK_PIN;
   HAL_GPIO_Init(NRF_SPI_SCK_PORT, &GPIO_InitStructure);
 
+#ifdef NRF_SPI_NSS_PIN
   GPIO_InitStructure.Pin = NRF_SPI_NSS_PIN;
   HAL_GPIO_Init(NRF_SPI_NSS_PORT, &GPIO_InitStructure);
+#endif
 
   GPIO_InitStructure.Pin = NRF_SPI_MISO_PIN;
   HAL_GPIO_Init(NRF_SPI_MISO_PORT, &GPIO_InitStructure);
@@ -114,7 +118,16 @@ void nrf_spi_init(nrf_driver_t *drv) {
   drv->spi.Init.DataSize = SPI_DATASIZE_8BIT;
   drv->spi.Init.CLKPolarity = SPI_POLARITY_LOW;
   drv->spi.Init.CLKPhase = SPI_PHASE_1EDGE;
+#ifdef NRF_SPI_NSS_PIN
+  // Hardware chip-select: the master frames each transaction with the NSS pin.
   drv->spi.Init.NSS = SPI_NSS_HARD_INPUT;
+#else
+  // No NSS pin available: run the slave permanently selected (software NSS,
+  // SSI left low = selected). Transaction start is coordinated out-of-band via
+  // the SPI_READY GPIO handshake and framing relies on the fixed-length DMA
+  // (TSIZE) plus SPE cycling between transfers for re-synchronization.
+  drv->spi.Init.NSS = SPI_NSS_SOFT;
+#endif
   drv->spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   drv->spi.Init.FirstBit = SPI_FIRSTBIT_MSB;
   drv->spi.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -136,7 +149,9 @@ void nrf_spi_deinit(void) {
   NRF_SPI_RELEASE_RESET();
 
   HAL_GPIO_DeInit(NRF_SPI_SCK_PORT, NRF_SPI_SCK_PIN);
+#ifdef NRF_SPI_NSS_PIN
   HAL_GPIO_DeInit(NRF_SPI_NSS_PORT, NRF_SPI_NSS_PIN);
+#endif
   HAL_GPIO_DeInit(NRF_SPI_MISO_PORT, NRF_SPI_MISO_PIN);
   HAL_GPIO_DeInit(NRF_SPI_MOSI_PORT, NRF_SPI_MOSI_PIN);
 
