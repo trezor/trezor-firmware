@@ -105,7 +105,7 @@ async def sign_tx_eip1559(
 
     initial_data = await request_initial_data(msg, sha)
 
-    confirm_data_chunk, confirm_summary = await confirm_tx_data(
+    confirmation = await confirm_tx_data(
         initial_data,
         msg,
         defs,
@@ -116,9 +116,7 @@ async def sign_tx_eip1559(
         sender_bytes,
     )
 
-    await confirm_data_and_summary(
-        confirm_data_chunk, confirm_summary, initial_data, data_length, sha
-    )
+    await confirm_data_and_summary(confirmation, initial_data, data_length, sha)
 
     # write_access_list
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)
