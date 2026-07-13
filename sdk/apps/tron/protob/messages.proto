@@ -1,0 +1,24 @@
+syntax = "proto2";
+package hw.trezor.messages;
+
+/**
+ * Messages for Trezor communication
+ */
+
+/**
+ * Mapping between Trezor wire identifier (uint) and a protobuf message
+ */
+enum MessageType {
+    MessageType_GetAddress = 0;
+    MessageType_Address = 1;
+    MessageType_SignTx = 2;
+    MessageType_Signature = 3;
+    MessageType_ContractRequest = 4;
+    MessageType_TransferContract = 5;
+    MessageType_TriggerSmartContract = 6;
+    MessageType_FreezeBalanceV2Contract = 7;
+    MessageType_UnfreezeBalanceV2Contract = 8;
+    MessageType_WithdrawUnfreeze = 9;
+    MessageType_VoteWitnessContract = 10;
+    MessageType_WithdrawBalance = 11;
+}
