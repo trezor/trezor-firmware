@@ -37,13 +37,11 @@ async def sign_tx_eip1559(
 ) -> EthereumTxRequest:
     from trezor import TR, wire
     from trezor.crypto import rlp  # local_cache_global
-    from trezor.crypto.hashlib import sha3_256
     from trezor.ui.layouts import show_continue_in_app
-    from trezor.utils import HashWriter
 
     from apps.common import paths
 
-    from .helpers import format_ethereum_amount, get_fee_items_eip1559
+    from .helpers import format_ethereum_amount, get_fee_items_eip1559, keccak256
     from .sign_tx import (
         check_common_fields,
         confirm_data_and_summary,
@@ -86,7 +84,7 @@ async def sign_tx_eip1559(
             msg.payment_req, slip44_id, keychain, amount_size_bytes=32
         )
 
-    sha = HashWriter(sha3_256(keccak=True))
+    sha = keccak256()
 
     rlp.write(sha, _TX_TYPE)
     rlp.write_header(sha, _get_digest_length(msg, data_length), rlp.LIST_HEADER_BYTE)
