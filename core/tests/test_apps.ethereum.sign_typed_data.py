@@ -441,14 +441,14 @@ class TestEthereumSignTypedData(unittest.TestCase):
                 "EIP712Domain",
                 keccak256(
                     b"EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                ),
+                ).get_digest(),
             ),
-            ("Person", keccak256(b"Person(string name,address wallet)")),
+            ("Person", keccak256(b"Person(string name,address wallet)").get_digest()),
             (
                 "Mail",
                 keccak256(
                     b"Mail(Person from,Person to,string contents)Person(string name,address wallet)"
-                ),
+                ).get_digest(),
             ),
         )
 
@@ -497,12 +497,12 @@ class TestEthereumSignTypedData(unittest.TestCase):
             (
                 EFT(data_type=EDT.STRING, size=None),
                 b"Ether Mail",
-                keccak256(b"Ether Mail"),
+                keccak256(b"Ether Mail").get_digest(),
             ),
             (
                 EFT(data_type=EDT.STRING, size=None),
                 b"1",
-                keccak256(b"1"),
+                keccak256(b"1").get_digest(),
             ),
             (
                 EFT(data_type=EDT.UINT, size=32),

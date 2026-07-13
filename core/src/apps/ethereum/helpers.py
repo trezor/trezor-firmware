@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import EthereumFieldType, EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
+    from trezor.utils import HashWriter
 
     from .networks import EthereumNetworkInfo
 
@@ -27,21 +28,21 @@ def address_from_bytes(
     Converts address in bytes to a checksummed string as defined
     in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md
     """
-    from trezor.crypto.hashlib import sha3_256
-
     if network.chain_id in RSKIP60_NETWORKS:
         # rskip60 is a different way to calculate checksum
         prefix = str(network.chain_id) + "0x"
     else:
         prefix = ""
 
-    address_hex = hexlify(address_bytes).decode()
-    digest = sha3_256((prefix + address_hex).encode(), keccak=True).digest()
+    address_hex = hexlify(address_bytes)
+    writer = keccak256(prefix.encode())
+    writer.extend(address_hex)
+    digest = writer.get_digest()
 
     def _maybe_upper(i: int) -> str:
         """Uppercase i-th letter only if the corresponding nibble has high bit set."""
         digest_byte = digest[i // 2]
-        hex_letter = address_hex[i]
+        hex_letter = chr(address_hex[i])
         if i % 2 == 0:
             # even letter -> high nibble
             bit = 0x80
@@ -303,3 +304,10 @@ def get_data_confirmer(total_len: int) -> ConfirmDataFn:
                     return
 
     return confirm_fn
+
+
+def keccak256(data: AnyBytes | None = None) -> HashWriter:
+    from trezor.crypto.hashlib import sha3_256
+    from trezor.utils import HashWriter
+
+    return HashWriter(sha3_256(data=data, keccak=True))

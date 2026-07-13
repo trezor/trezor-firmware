@@ -4,7 +4,7 @@ from trezor.enums import EthereumDataType
 from trezor.wire import DataError
 from trezor.wire.context import call
 
-from .helpers import get_type_name
+from .helpers import get_type_name, keccak256
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 from .layout import should_show_struct
 
@@ -137,19 +137,9 @@ async def _generate_typed_data_hash(
 
     await confirm_typed_data_final()
 
-    return keccak256(b"\x19\x01" + domain_separator + message_hash)
-
-
-def get_hash_writer() -> HashWriter:
-    from trezor.crypto.hashlib import sha3_256
-    from trezor.utils import HashWriter
-
-    return HashWriter(sha3_256(keccak=True))
-
-
-def keccak256(message: AnyBytes) -> bytes:
-    h = get_hash_writer()
-    h.extend(message)
+    h = keccak256(b"\x19\x01")
+    h.extend(domain_separator)
+    h.extend(message_hash)
     return h.get_digest()
 
 
@@ -215,7 +205,7 @@ class TypedDataEnvelope:
         report_progress: Callable[[float], None] | None = None,
     ) -> bytes:
         """Generate a hash representation of the whole struct."""
-        w = get_hash_writer()
+        w = keccak256()
         self.hash_type(w, primary_type)
         await self.get_and_encode_data(
             w,
@@ -229,8 +219,7 @@ class TypedDataEnvelope:
 
     def hash_type(self, w: HashWriter, primary_type: str) -> None:
         """Create a representation of a type."""
-        result = keccak256(self.encode_type(primary_type))
-        w.extend(result)
+        w.extend(keccak256(self.encode_type(primary_type)).get_digest())
 
     def encode_type(self, primary_type: str) -> bytes:
         """
@@ -348,7 +337,7 @@ class TypedDataEnvelope:
                 else:
                     show_array = False
 
-                arr_w = get_hash_writer()
+                arr_w = keccak256()
                 el_member_path = member_value_path + [0]
                 for i in range(array_size):
                     el_member_path[-1] = i
@@ -435,7 +424,7 @@ def encode_field(
 
     if data_type == EDT.BYTES:
         if field.size is None:
-            w.extend(keccak256(value))
+            w.extend(keccak256(value).get_digest())
         else:
             # write_rightpad32
             assert len(value) <= 32
@@ -443,7 +432,7 @@ def encode_field(
             for _ in range(32 - len(value)):
                 w.append(0x00)
     elif data_type == EDT.STRING:
-        w.extend(keccak256(value))
+        w.extend(keccak256(value).get_digest())
     elif data_type == EDT.INT:
         write_leftpad32(w, value, signed=True)
     elif data_type in (

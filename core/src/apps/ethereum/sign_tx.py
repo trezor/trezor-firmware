@@ -42,13 +42,11 @@ async def sign_tx(
     keychain: Keychain,
     defs: Definitions,
 ) -> EthereumTxRequest:
-    from trezor.crypto.hashlib import sha3_256
     from trezor.ui.layouts import show_continue_in_app
-    from trezor.utils import HashWriter
 
     from apps.common import paths
 
-    from .helpers import format_ethereum_amount, get_fee_items_regular
+    from .helpers import format_ethereum_amount, get_fee_items_regular, keccak256
 
     # local_cache_attribute
     data_length = msg.data_length
@@ -89,7 +87,7 @@ async def sign_tx(
             amount_size_bytes=32,
         )
 
-    sha = HashWriter(sha3_256(keccak=True))
+    sha = keccak256()
     rlp.write_header(sha, _get_digest_length(msg, data_length), rlp.LIST_HEADER_BYTE)
 
     if tx_type is not None:
