@@ -56,7 +56,7 @@ STATIC mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key,
     mp_raise_ValueError(MP_ERROR_TEXT(
         "Failed to compute a NEM address from provided public key"));
   }
-  return mp_obj_new_str(address, strlen(address));
+  return mp_obj_new_str_from_cstr(address);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_compute_address_obj,
                                  mod_trezorcrypto_nem_compute_address);

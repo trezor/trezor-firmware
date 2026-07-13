@@ -63,7 +63,7 @@ STATIC mp_obj_t mod_trezorcrypto_bech32_decode(size_t n_args,
   }
 
   mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
-  tuple->items[0] = mp_obj_new_str(hrp, strlen(hrp));
+  tuple->items[0] = mp_obj_new_str_from_cstr(hrp);
   tuple->items[1] = data_list;
   tuple->items[2] = MP_OBJ_NEW_SMALL_INT(enc);
   return MP_OBJ_FROM_PTR(tuple);

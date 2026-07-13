@@ -149,7 +149,7 @@ STATIC mp_obj_t filinfo_to_tuple(const FILINFO *info) {
     attrs[4] = 'a';
   }
   tuple->items[1] = mp_obj_new_str(attrs, 5);
-  tuple->items[2] = mp_obj_new_str(info->fname, strlen(info->fname));
+  tuple->items[2] = mp_obj_new_str_from_cstr(info->fname);
   return MP_OBJ_FROM_PTR(tuple);
 }
 
