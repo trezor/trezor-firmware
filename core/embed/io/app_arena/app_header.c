@@ -19,6 +19,8 @@
 
 #include <io/app_header.h>
 
+#include <sha2.h>
+
 const app_header_t* app_header_verify(const void* header_ptr,
                                       size_t header_size) {
   TSH_DECLARE;
@@ -37,4 +39,45 @@ const app_header_t* app_header_verify(const void* header_ptr,
 
 cleanup:
   return retval;
+}
+
+ts_t app_header_calc_merkle_root(const app_header_t* header,
+                                 const sha256_digest_t* proof,
+                                 size_t proof_size, sha256_digest_t* root) {
+  TSH_DECLARE;
+
+  TSH_CHECK(root != NULL, TS_EINVAL);
+  memset(root, 0, sizeof(*root));
+
+  TSH_CHECK(header != NULL, TS_EINVAL);
+  TSH_CHECK(proof_size == 0 || proof != NULL, TS_EINVAL);
+  TSH_CHECK(proof_size % sizeof(sha256_digest_t) == 0, TS_EINVAL);
+
+  static const uint8_t prefix0[] = {0x00};
+  static const uint8_t prefix1[] = {0x01};
+
+  // Calculate header hash
+  SHA256_CTX ctx;
+  sha256_Init(&ctx);
+  sha256_Update(&ctx, prefix0, sizeof(prefix0));
+  sha256_Update(&ctx, (const uint8_t*)header, header->header_size);
+  sha256_Final(&ctx, root->bytes);
+
+  // Add the Merkle proof nodes to the hash
+  for (size_t i = 0; i < proof_size / sizeof(sha256_digest_t); i++) {
+    const sha256_digest_t* node = &proof[i];
+    sha256_Init(&ctx);
+    sha256_Update(&ctx, prefix1, sizeof(prefix1));
+    if (memcmp(node, root->bytes, sizeof(root->bytes)) < 0) {
+      sha256_Update(&ctx, node->bytes, sizeof(node->bytes));
+      sha256_Update(&ctx, root->bytes, sizeof(root->bytes));
+    } else {
+      sha256_Update(&ctx, root->bytes, sizeof(root->bytes));
+      sha256_Update(&ctx, node->bytes, sizeof(node->bytes));
+    }
+    sha256_Final(&ctx, root->bytes);
+  }
+
+cleanup:
+  TSH_RETURN;
 }

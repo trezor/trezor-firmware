@@ -91,3 +91,18 @@ typedef struct {
  */
 const app_header_t* app_header_verify(const void* header_ptr,
                                       size_t header_size);
+
+/**
+ * @brief Calculates the Merkle root of an application image header and its
+ * Merkle proof.
+ *
+ * @param header Pointer to the application header
+ * @param proof Pointer to the Merkle proof nodes (array of sha256_digest_t)
+ * @param proof_size Size of the Merkle proof in bytes (must be a multiple of
+ * sizeof(sha256_digest_t))
+ * @param root Pointer to the output buffer for the calculated Merkle root
+ * @return ts_t Status code indicating success or failure
+ */
+ts_t app_header_calc_merkle_root(const app_header_t* header,
+                                 const sha256_digest_t* proof,
+                                 size_t proof_size, sha256_digest_t* root);
