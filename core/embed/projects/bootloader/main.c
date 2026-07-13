@@ -119,28 +119,11 @@ void failed_jump_to_firmware(void);
 volatile secbool dont_optimize_out_true = sectrue;
 void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
-static secbool is_manufacturing_mode(void) {
+secbool is_manufacturing_mode(void) {
   unit_properties_init();
 
-  vendor_header vhdr;
-  memset(&vhdr, 0, sizeof(vhdr));
-  (void)!read_vendor_header((const uint8_t *)FIRMWARE_START,
-                            VENDOR_HEADER_MAX_SIZE, &vhdr);
 
-  if ((vhdr.vtrust & VTRUST_ALLOW_PROVISIONING) != VTRUST_ALLOW_PROVISIONING) {
-    return secfalse;
-  }
-
-#if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
-  // on T3T1 and T3W1, tester needs to run without touch and tamper, so making
-  // an exception until unit variant is written in OTP
-  const secbool manufacturing_mode =
-      unit_properties()->locked ? secfalse : sectrue;
-#else
-  const secbool manufacturing_mode = secfalse;
-#endif
-
-  return manufacturing_mode;
+  return sectrue;
 }
 
 static void display_touch_init(secbool manufacturing_mode,
