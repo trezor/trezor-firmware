@@ -131,7 +131,7 @@ fn main() -> Result<()> {
             mpy_dir,
             [
                 "extmod/modbinascii.c",
-                "extmod/utime_mphal.c",
+                "extmod/modtime.c",
                 "shared/timeutils/timeutils.c",
                 "py/argcheck.c",
                 "py/asmarm.c",
