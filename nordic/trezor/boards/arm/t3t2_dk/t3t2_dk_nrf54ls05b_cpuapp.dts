@@ -22,10 +22,10 @@
 	 * GPIO handshake / control signals to the STM32 main SoC.
 	 * These are defined at board level (not in the app overlay) so the
 	 * separate MCUboot image sees them too. Net mapping per schematic:
-	 *   output_1  spi-request         BLE_GPIO0  P1.18  (nRF -> STM, STM PE0)
+	 *   output_0  spi-request         BLE_GPIO3  P1.21  (nRF -> STM, STM PC7)
 	 *   input_1   spi-ready           BLE_GPIO1  P1.19  (STM -> nRF, STM PC13)
 	 *   input_0   stay-in-bootloader  BLE_GPIO2  P1.20  (STM -> nRF, STM PE2)
-	 *   output_0  reserved-output     BLE_GPIO3  P1.21  (nRF -> STM, STM PC7)
+	 *   output_1  reserved-output     BLE_GPIO0  P1.18  (nRF -> STM, STM PE0)
 	 */
 	outputs {
 		compatible = "gpio-leds";
@@ -52,9 +52,9 @@
 		 * line; there is no dedicated recovery button (as on t3w1). */
 		mcuboot-button0 = &input_0;
 		spi-ready = &input_1;
-		spi-request = &output_1;
+		spi-request = &output_0;
 		stay-in-bootloader = &input_0;
-		reserved-output = &output_0;
+		reserved-output = &output_1;
 	};
 };
 
