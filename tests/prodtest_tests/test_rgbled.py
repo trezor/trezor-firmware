@@ -66,10 +66,8 @@ def test_rgbled_set(client: ProdtestClient, r: str, g: str, b: str) -> None:
 def test_rgbled_set_rejects_out_of_range(
     client: ProdtestClient, r: str, g: str, b: str
 ) -> None:
-    """rgbled-set should reject a channel value above 255."""
-    resp = assert_command_fails(
-        client, ProdtestCommand(Cmd.RGBLED_SET, "256", "0", "0")
-    )
+    """rgbled-set should reject a channel value outside the 0-255 range."""
+    resp = assert_command_fails(client, ProdtestCommand(Cmd.RGBLED_SET, r, g, b))
     assert resp.error_code == CLI_ERROR_INVALID_ARG
 
 

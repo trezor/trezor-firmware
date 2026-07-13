@@ -67,24 +67,6 @@ _SENSORS_CONFIG_VALUE = "0000000F"
 # Reversible-config keys that ``lock`` is expected to change.
 _LOCK_CHANGED_R_CONFIG_KEYS = {"cfg_start_up"}
 
-# Self-test / diagnostic commands. Each runs against its own fresh model and
-# cleans up after itself, so we only assert it completes successfully. They are
-# skipped (via ``requires_command``) wherever the device doesn't offer them.
-_SELF_TEST_COMMANDS = [
-    pytest.param(command, marks=pytest.mark.requires_command(command))
-    for command in (
-        Cmd.TROPIC_BENCHMARK,
-        Cmd.TROPIC_STRESS_INIT,
-        Cmd.TROPIC_STRESS_SESSION,
-        Cmd.TROPIC_STRESS_MAC_AND_DESTROY,
-        Cmd.TROPIC_STRESS_TEST,
-        Cmd.TROPIC_TEST_MAC_AND_DESTROY,
-        Cmd.TROPIC_TEST_RMEM,
-        Cmd.TROPIC_TEST_SIGN,
-        Cmd.TROPIC_TESTS_CLEANUP,
-    )
-]
-
 
 # --- info / read-only commands ---------------------------------------------
 
