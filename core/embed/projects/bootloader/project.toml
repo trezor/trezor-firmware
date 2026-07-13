@@ -23,6 +23,7 @@ uses = [
     "nrf",
     "nrf_auth",
     "power_manager",
+    "pq_secure_boot",
     "pvd",
     "rgb_led",
     "rtc",

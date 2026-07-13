@@ -25,6 +25,8 @@ trezor_lib.workspace = true
 app_loading = ["io/app_loading", "io/ipc"]
 bootloader_devel = ["sec/bootloader_devel"]
 clippy = []
+# Merkle-tree layout: secmon prefix + module header instead of vendor/image header.
+pq_secure_boot = []
 emulator = ["io/emulator"]
 block_on_vcp = ["sys/block_on_vcp"]
 dbg_console_swo = ["dbg_console", "sys/dbg_console_swo"]

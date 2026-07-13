@@ -28,6 +28,8 @@ models.workspace = true
 
 bootloader_devel = ["sec/bootloader_devel"]
 clippy = []
+# Merkle-tree layout: module header instead of the legacy vendor/image header.
+pq_secure_boot = ["sec/pq_secure_boot"]
 emulator = ["sec/emulator"]
 dbg_console_swo = ["dbg_console"]
 dbg_console_system_view = ["dbg_console", "sys/system_view"]

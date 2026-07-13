@@ -17,6 +17,7 @@ uses = [
     "nrf_auth",
     "optiga",
     "power_manager",
+    "pq_secure_boot",
     "pvd",
     "rgb_led",
     "rtc",

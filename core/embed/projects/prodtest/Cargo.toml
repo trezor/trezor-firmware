@@ -24,6 +24,9 @@ models.workspace = true
 bootloader_devel = ["sec/bootloader_devel"]
 clippy = ["trezor_lib/clippy"]
 emulator = ["io/emulator"]
+# Merkle-tree firmware signing: prodtest as a single secure module (TRZM) +
+# manifest, instead of the legacy vendor + image + secmon (TSEC) headers.
+pq_secure_boot = []
 dbg_console_swo = ["dbg_console"]
 dbg_console_system_view = ["dbg_console", "sys/system_view"]
 debug = ["trezor_lib/debug"]

@@ -25,6 +25,9 @@ upymod.workspace = true
 
 block_on_vcp = ["sys/block_on_vcp"]
 bootloader_devel = ["sec/bootloader_devel"]
+# Merkle-tree firmware signing: module header (TRZM) instead of the legacy
+# vendor header + image header.
+pq_secure_boot = []
 benchmark = ["upymod/benchmark", "rtl/aes_gcm"]
 clippy = ["trezor_lib/clippy"]
 dbg_console = ["sys/dbg_console", "trezor_lib/dbg_console"]

@@ -24,6 +24,8 @@ models.workspace = true
 
 bootloader_devel = ["sec/bootloader_devel"]
 emulator = ["io/emulator"]
+# Merkle-tree firmware verification (tree layout).
+pq_secure_boot = []
 clippy = ["trezor_lib/clippy"]
 dbg_console_swo = ["dbg_console", "sys/dbg_console_swo"]
 dbg_console_vcp = ["dbg_console",  "sys/dbg_console_vcp",  "io/usb_iface_vcp"]

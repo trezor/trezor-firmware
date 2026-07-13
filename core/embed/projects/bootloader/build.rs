@@ -20,11 +20,9 @@ fn main() -> Result<()> {
 
         lib.add_sources([
             "bootui.c",
-            "fw_check.c",
             "main.c",
             "ui_helpers.c",
             "version_check.c",
-            "workflow/wf_firmware_update.c",
             "workflow/wf_image_upload.c",
             "workflow/wf_ucb_stage.c",
             "workflow/wf_wipe_device.c",
@@ -53,6 +51,19 @@ fn main() -> Result<()> {
 
         if cfg!(feature = "lockable_bootloader") {
             lib.add_source("workflow/wf_unlock_bootloader.c");
+        }
+
+        // Firmware presence/verification + firmware-update flow: the legacy
+        // vendor/image-header path (fw_check.c + wf_firmware_update.c) or the
+        // Merkle-tree path (fw_tree_verify.c + wf_firmware_update_tree.c).
+        // Exactly one; both provide `workflow_firmware_update`.
+        if cfg!(feature = "pq_secure_boot") {
+            lib.add_define("PQ_SECURE_BOOT", Some("1"));
+            lib.add_source("fw_tree_verify.c");
+            lib.add_source("workflow/wf_firmware_update_tree.c");
+        } else {
+            lib.add_source("fw_check.c");
+            lib.add_source("workflow/wf_firmware_update.c");
         }
 
         if cfg!(feature = "disable_animation") {

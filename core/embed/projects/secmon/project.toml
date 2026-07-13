@@ -7,6 +7,7 @@ uses = [
     "mcu_attestation",
     "nrf_auth",
     "optiga",
+    "pq_secure_boot",
     "secret",
     "secure_aes",
     "suspend",
@@ -15,4 +16,6 @@ uses = [
     "tropic",
 ]
 
-elf_sections = [".secmon_header", ".flash", ".data", ".gnu.sgstubs"]
+# ".header" is the TRZM module header in the Merkle-tree layout; ".secmon_header"
+# is the legacy TSEC header. Only one is present per build (the other is a no-op).
+elf_sections = [".secmon_header", ".header", ".flash", ".data", ".gnu.sgstubs"]
