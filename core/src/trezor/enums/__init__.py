@@ -500,6 +500,7 @@ if TYPE_CHECKING:
         FirmwareUpload = 7
         FirmwareRequest = 8
         ProdTestT1 = 32
+        FirmwareBegin = 106
         BleUnpair = 8001
         GetPublicKey = 11
         PublicKey = 12

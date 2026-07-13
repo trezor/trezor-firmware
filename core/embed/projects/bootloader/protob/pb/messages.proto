@@ -17,6 +17,7 @@ enum MessageType {
     MessageType_ButtonAck = 27;
     MessageType_GetFeatures = 55;
     MessageType_UnlockBootloader = 96;
+    MessageType_FirmwareBegin = 106;
 
     // Debug
     MessageType_DebugLinkDecision = 100;
@@ -143,6 +144,23 @@ message ButtonAck {}
  */
 message FirmwareErase {
     optional uint32 length = 1;  // length of new firmware
+}
+
+/**
+ * Request: Begin a firmware update (phase 1). Carries the new signed boot header
+ * and the new firmware's manifest + Merkle proof. The device authenticates them,
+ * confirms with the user, decides keep-seed, stages the boot header (with the
+ * resolved firmware_type) via the UCB and reboots; the firmware modules are
+ * installed by the freshly-booted bootloader (phase 2). If the bootloader code
+ * is unchanged this is a header-only update (no code streamed).
+ * @start
+ * @next FirmwareRequest
+ */
+message FirmwareBegin {
+    required bytes boot_header = 1;      // new signed boot header (TRZQ)
+    required bytes module_headers = 2;   // authenticated firmware manifest (TRZD variant leaf) + per-variant Merkle proof; device folds it to firmware_root
+    optional uint32 code_length = 3;     // new bootloader code available to stream; omit/0 => header-only
+    optional bool custom_install = 4;    // install an unofficial kernel+coreapp that may deviate from the manifest (requires unlocked bootloader; runs unprivileged with a warning)
 }
 
 /**

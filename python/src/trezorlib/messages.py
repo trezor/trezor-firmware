@@ -560,6 +560,7 @@ class MessageType(IntEnum):
     FirmwareUpload = 7
     FirmwareRequest = 8
     ProdTestT1 = 32
+    FirmwareBegin = 106
     BleUnpair = 8001
     GetPublicKey = 11
     PublicKey = 12
@@ -2137,6 +2138,29 @@ class FirmwareErase(protobuf.MessageType):
         length: Optional["int"] = None,
     ) -> None:
         self.length = length
+
+
+class FirmwareBegin(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 106
+    FIELDS = {
+        1: protobuf.Field("boot_header", "bytes", repeated=False, required=True),
+        2: protobuf.Field("module_headers", "bytes", repeated=False, required=True),
+        3: protobuf.Field("code_length", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("custom_install", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        boot_header: "bytes",
+        module_headers: "bytes",
+        code_length: Optional["int"] = None,
+        custom_install: Optional["bool"] = None,
+    ) -> None:
+        self.boot_header = boot_header
+        self.module_headers = module_headers
+        self.code_length = code_length
+        self.custom_install = custom_install
 
 
 class FirmwareRequest(protobuf.MessageType):
