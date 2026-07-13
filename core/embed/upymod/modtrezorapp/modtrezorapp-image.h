@@ -239,6 +239,21 @@ STATIC mp_obj_t mod_trezorapp_AppImage_vendor(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_vendor_obj,
                                  mod_trezorapp_AppImage_vendor);
 
+/// def ring(self) -> int:
+///     """
+///     Return the privilege ring of the application.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_ring(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_int(info.ring);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_ring_obj,
+                                 mod_trezorapp_AppImage_ring);
+
 /// def header_hash(self) -> bytes:
 ///     """
 ///     Return the hash of the application image header.
@@ -373,6 +388,7 @@ STATIC const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_name), MP_ROM_PTR(&mod_trezorapp_AppImage_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_vendor),
      MP_ROM_PTR(&mod_trezorapp_AppImage_vendor_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ring), MP_ROM_PTR(&mod_trezorapp_AppImage_ring_obj)},
     {MP_ROM_QSTR(MP_QSTR_header_hash),
      MP_ROM_PTR(&mod_trezorapp_AppImage_header_hash_obj)},
     {MP_ROM_QSTR(MP_QSTR_write_chunk),

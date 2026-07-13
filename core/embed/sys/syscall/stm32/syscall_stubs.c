@@ -970,6 +970,22 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
 
 #ifdef USE_APP_LOADING
 
+#include <io/app_root.h>
+
+ts_t app_root_update(const void *root_packet, size_t root_packet_size) {
+  return ts_make(syscall_invoke2((uint32_t)root_packet, root_packet_size,
+                                 SYSCALL_APP_ROOT_UPDATE));
+}
+
+bool app_root_is_loaded(app_ring_t ring) {
+  return (bool)syscall_invoke1(ring, SYSCALL_APP_ROOT_IS_LOADED);
+}
+
+ts_t app_root_get_timestamp(app_ring_t ring, uint32_t *timestamp) {
+  return ts_make(syscall_invoke2(ring, (uint32_t)timestamp,
+                                 SYSCALL_APP_ROOT_GET_TIMESTAMP));
+}
+
 #include <io/app_arena.h>
 
 ts_t app_arena_get_info(app_arena_info_t *info) {

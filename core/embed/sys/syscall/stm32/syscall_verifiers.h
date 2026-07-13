@@ -362,6 +362,13 @@ bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
 
 #ifdef USE_APP_LOADING
 
+#include <io/app_root.h>
+
+ts_t app_root_update__verified(const void *root_packet,
+                               size_t root_packet_size);
+
+ts_t app_root_get_timestamp__verified(app_ring_t ring, uint32_t *timestamp);
+
 #include <io/app_arena.h>
 
 ts_t app_arena_get_info__verified(app_arena_info_t *info);

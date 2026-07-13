@@ -4,7 +4,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("app_arena/inc");
 
     // USE_APP_LOADING is defined in sys layer
-    lib.add_sources(["app_arena/app_arena.c", "app_arena/app_header.c"]);
+    lib.add_sources([
+        "app_arena/app_arena.c",
+        "app_arena/app_header.c",
+        "app_arena/app_root.c",
+        "app_arena/root_packet.c",
+    ]);
 
     if cfg!(feature = "emulator") {
         lib.add_source("app_arena/unix/app_loader.c");

@@ -22,6 +22,8 @@
 #include <trezor_rtl.h>
 
 #include <io/app_arena.h>
+#include <io/app_header.h>
+#include <io/app_root.h>
 
 #include "py/mphal.h"
 #include "py/objstr.h"
@@ -199,6 +201,79 @@ STATIC mp_obj_t mod_trezorapp_arena_mem_free(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_mem_free_obj,
                                  mod_trezorapp_arena_mem_free);
 
+/// def root_update(root_packet: AnyBytes) -> None:
+///     """
+///     Update the root-of-trust storage with the provided root packet.
+///     The root packet is verified for integrity and validity before being
+///     stored. If the verification fails, an AppArenaError is raised.
+///     """
+STATIC mp_obj_t mod_trezorapp_root_update(mp_obj_t root_packet_obj) {
+  mp_buffer_info_t root_packet_buf;
+  mp_get_buffer_raise(root_packet_obj, &root_packet_buf, MP_BUFFER_READ);
+
+  ts_t status = app_root_update(root_packet_buf.buf, root_packet_buf.len);
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_update_obj,
+                                 mod_trezorapp_root_update);
+
+/// def root_is_loaded(ring: int) -> bool:
+///     """
+///     Return True if a root-of-trust is present for the specified ring,
+///     otherwise return False.
+///     """
+STATIC mp_obj_t mod_trezorapp_root_is_loaded(mp_obj_t ring_obj) {
+  mp_int_t ring = mp_obj_get_int(ring_obj);
+  return mp_obj_new_bool(app_root_is_loaded(ring));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_is_loaded_obj,
+                                 mod_trezorapp_root_is_loaded);
+
+/// def root_timestamp(ring: int) -> int:
+///     """
+///     Return the timestamp of the root-of-trust for the specified ring.
+///     """
+STATIC mp_obj_t mod_trezorapp_root_timestamp(mp_obj_t ring_obj) {
+  mp_int_t ring = mp_obj_get_int(ring_obj);
+
+  uint32_t timestamp = 0;
+
+  ts_t status = app_root_get_timestamp(ring, &timestamp);
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+
+  return mp_obj_new_int(timestamp);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_timestamp_obj,
+                                 mod_trezorapp_root_timestamp);
+
+/// def app_ring_from_header(header: AnyBytes) -> int:
+///     """
+///     Return the application privilege ring from the provided header.
+///     """
+STATIC mp_obj_t mod_trezorapp_app_ring_from_header(mp_obj_t header_obj) {
+  mp_buffer_info_t header_buf;
+  mp_get_buffer_raise(header_obj, &header_buf, MP_BUFFER_READ);
+
+  uint8_t app_ring = 0;
+
+  ts_t status =
+      app_header_get_app_ring(header_buf.buf, header_buf.len, &app_ring);
+
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+
+  return mp_obj_new_int(app_ring);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_app_ring_from_header_obj,
+                                 mod_trezorapp_app_ring_from_header);
+
 STATIC const mp_rom_map_elem_t mod_module_trezorapp_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorapp)},
     {MP_ROM_QSTR(MP_QSTR_AppError), MP_ROM_PTR(&mp_type_AppError)},
@@ -223,6 +298,14 @@ STATIC const mp_rom_map_elem_t mod_module_trezorapp_globals_table[] = {
      MP_ROM_PTR(&mod_trezorapp_arena_mem_total_obj)},
     {MP_ROM_QSTR(MP_QSTR_mem_free),
      MP_ROM_PTR(&mod_trezorapp_arena_mem_free_obj)},
+    {MP_ROM_QSTR(MP_QSTR_root_update),
+     MP_ROM_PTR(&mod_trezorapp_root_update_obj)},
+    {MP_ROM_QSTR(MP_QSTR_root_is_loaded),
+     MP_ROM_PTR(&mod_trezorapp_root_is_loaded_obj)},
+    {MP_ROM_QSTR(MP_QSTR_root_timestamp),
+     MP_ROM_PTR(&mod_trezorapp_root_timestamp_obj)},
+    {MP_ROM_QSTR(MP_QSTR_app_ring_from_header),
+     MP_ROM_PTR(&mod_trezorapp_app_ring_from_header_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,
                             mod_module_trezorapp_globals_table);

@@ -47,6 +47,8 @@ typedef struct {
   char vendor[APP_IMAGE_MAX_VENDOR_LEN];
   /** Version of the application. */
   uint32_t version;
+  /** Privilege ring of the application. */
+  uint8_t ring;
   /** ID of the running task  (or 0 if not running). */
   systask_id_t task_id;
   /** Size of the image code in bytes. */
