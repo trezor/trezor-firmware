@@ -1,0 +1,1 @@
+../timeq.pyi
