@@ -180,7 +180,8 @@
 
 // by default contains nearest git tag, which may not be present in shallow
 // repo, breaking reproducibility
-#define MICROPY_BANNER_NAME_AND_VERSION ""
+#define MICROPY_BANNER_NAME_AND_VERSION "MicroPython"
+#define MICROPY_BANNER_MACHINE "Trezor"
 
 // ============= this ends common config section ===================
 
