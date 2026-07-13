@@ -1,6 +1,6 @@
 {
   "source": "prodtest_error_codes.h",
-  "prodtest_version": "0.3.8.0",
+  "prodtest_version": "0.3.9.0",
   "framework_codes": [
     {
       "code": 10,
