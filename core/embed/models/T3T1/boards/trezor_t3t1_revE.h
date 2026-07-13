@@ -5,6 +5,9 @@
 
 #define DISPLAY_I8080_8BIT_DW 1
 
+// Use a single framebuffer to reduce RAM usage
+#define FRAME_BUFFER_COUNT 1
+
 #define DISPLAY_IDENTIFY 1
 #define DISPLAY_TE_PORT GPIOD
 #define DISPLAY_TE_PIN GPIO_PIN_12
