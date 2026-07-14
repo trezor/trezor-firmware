@@ -1542,15 +1542,6 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text)
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical());
-        let screen = TextScreen::new(paragraphs);
-        let layout = RootComponent::new(screen);
-        Ok(layout)
-    }
-
     fn show_warning(
         title: Option<TString<'static>>,
         button: TString<'static>,

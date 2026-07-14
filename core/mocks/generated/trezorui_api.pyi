@@ -828,11 +828,6 @@ def show_success(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_wait_text(message: str, /) -> LayoutObj[None]:
-    """Show single-line text in the middle of the screen."""
-
-
-# rust/src/ui/api/firmware_micropython.rs
 def show_warning(
     *,
     title: str | None,

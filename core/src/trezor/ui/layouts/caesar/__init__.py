@@ -2230,10 +2230,6 @@ def request_passphrase_on_host() -> None:
     draw_simple(trezorui_api.show_simple(title=None, text=TR.passphrase__please_enter))
 
 
-def show_wait_text(message: str) -> None:
-    draw_simple(trezorui_api.show_wait_text(message))
-
-
 async def request_passphrase_on_device(max_len: int) -> str:
     with trezorui_api.request_passphrase(
         prompt=TR.passphrase__title_enter,
