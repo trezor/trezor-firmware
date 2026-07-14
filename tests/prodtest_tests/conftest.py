@@ -15,14 +15,15 @@ from trezorlib.prodtest.prodtest_client import Cmd, ProdtestClient, ProdtestComm
 from trezorlib.prodtest.prodtest_emulator import get_prodtest_emulator
 from trezorlib.prodtest.prodtest_transport import VcpUdpTransport
 
-from .tropic_utils import TropicProdtest, TropicSession
+from .tropic_utils import (
+    DEFAULT_TROPIC_MODEL_CONFIGFILE,
+    TropicProdtest,
+    TropicSession,
+)
 
 # UDP base port for the dedicated Tropic test emulator. Tropic tests run one
 #  at a time and tear their emulator down, so a fixed base is safe.
 _TROPIC_EMULATOR_UDP_BASE_PORT = 31324
-
-ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

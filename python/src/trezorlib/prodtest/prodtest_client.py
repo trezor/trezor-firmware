@@ -190,6 +190,7 @@ class ProdtestClient:
         self, cmd: ProdtestCommand, timeout: float = DEFAULT_TIMEOUT
     ) -> ProdtestResponse:
 
+        LOG.debug(f"Command: {cmd.get(self.crc_enabled)}\n")
         self.transport.writeline(cmd.get(self.crc_enabled))
 
         progress_lines: list[str] = []
@@ -197,6 +198,7 @@ class ProdtestClient:
 
         while True:
             line = self._strip_crc(self.transport.readline(timeout))
+            LOG.debug(line)
             if line.startswith("OK"):
                 ok_args = line[2:].strip()
                 self._update_crc_state(cmd, ok_args)

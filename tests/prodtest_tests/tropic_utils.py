@@ -33,6 +33,9 @@ import yaml
 from trezorlib._internal.emulator import TropicModel
 from trezorlib.prodtest.prodtest_client import ProdtestClient
 
+ROOT = Path(__file__).resolve().parent.parent.parent
+DEFAULT_TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
+
 
 # TODO: remove once ts-tvl ships the plain-int-key dump from
 # https://github.com/tropicsquare/ts-tvl/pull/14 — then `from_file` can go back

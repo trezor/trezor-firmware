@@ -46,7 +46,11 @@ from . import (
     assert_command_fails,
     assert_hexdata,
 )
-from .tropic_utils import TropicProdtest
+from .tropic_utils import (
+    DEFAULT_TROPIC_MODEL_CONFIGFILE,
+    TropicModelState,
+    TropicProdtest,
+)
 
 # Fixed response sizes reported by libtropic (vendor/libtropic/include).
 _CHIP_ID_SIZE = 128  # TR01_L2_GET_INFO_CHIP_ID_SIZE
@@ -226,11 +230,11 @@ def test_tropic_lock(tropic_prodtest: TropicProdtest) -> None:
     fresh (unlocked) model as a baseline to show the reversible config actually
     changed.
     """
-    with tropic_prodtest() as baseline_session:
-        pass  # fresh model, no commands issued
-    baseline = baseline_session.state()
+    baseline = TropicModelState.from_file(DEFAULT_TROPIC_MODEL_CONFIGFILE)
 
-    with tropic_prodtest() as session:
+    with tropic_prodtest(
+        tropic_model_configfile=DEFAULT_TROPIC_MODEL_CONFIGFILE
+    ) as session:
         session.client.command_ok(ProdtestCommand(Cmd.TROPIC_LOCK))
     locked = session.state()
 
