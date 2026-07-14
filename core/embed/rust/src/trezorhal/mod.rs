@@ -54,6 +54,3 @@ pub mod irq;
 
 #[cfg(feature = "nrf")]
 pub mod nrf;
-
-#[cfg(feature = "dbg_console")]
-pub mod syslog;
