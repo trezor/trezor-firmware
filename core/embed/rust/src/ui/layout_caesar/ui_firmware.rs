@@ -1337,19 +1337,16 @@ impl FirmwareUI for UICaesar {
             }
         }
 
-        let page = if external_menu {
-            // New action-bar navigation: close (✕) on the left, wide ⌄ scroll and
-            // a wide ▲ "close" on the last page (no confirm button).
-            ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-                .with_external_menu_nav(ExternalMenuLeft::Close)
-                .with_confirm_btn(None)
-        } else {
-            ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-                .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
-                .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
-                .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
-                .with_confirm_btn(None)
-        };
+        // Classic paging scheme for both the internal and the external-menu
+        // callers: ✕ on page 1 (closes the screen), `<`/`>` arrows otherwise and
+        // no right button on the last page (no confirm, no middle button). The
+        // only difference for the external menu is the numeric page counter in
+        // the header (see below).
+        let page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+            .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
+            .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
+            .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
+            .with_confirm_btn(None);
 
         let mut frame = ScrollableFrame::new(page);
         if external_menu {

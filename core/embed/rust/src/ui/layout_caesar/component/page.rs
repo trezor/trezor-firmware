@@ -19,8 +19,6 @@ use super::{
 pub enum ExternalMenuLeft {
     /// Left slot is a hamburger icon; short press returns `PageMsg::Info`.
     Menu,
-    /// Left slot is a cancel cross; short press returns `PageMsg::Cancelled`.
-    Close,
 }
 
 pub struct ButtonPage<T>
@@ -163,10 +161,7 @@ where
             };
         }
 
-        let btn_left = match self.external_nav {
-            Some(ExternalMenuLeft::Close) => Some(ButtonDetails::cancel_icon()),
-            _ => Some(ButtonDetails::menu_icon()),
-        };
+        let btn_left = Some(ButtonDetails::menu_icon());
         let btn_right = if has_next {
             // Wide down arrow to scroll to the next page.
             Some(ButtonDetails::down_arrow_icon_wide())
@@ -208,7 +203,6 @@ where
                     self.update_buttons(ctx);
                     return Some(match external_nav {
                         ExternalMenuLeft::Menu => PageMsg::Info,
-                        ExternalMenuLeft::Close => PageMsg::Cancelled,
                     });
                 }
                 // Secondary action (right pressed while Shift held): scroll up.

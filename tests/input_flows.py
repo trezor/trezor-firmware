@@ -774,9 +774,12 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         for xpub_num in range(3):
             self._assert_xpub_title(content, xpub_num)
             assert self.xpubs[xpub_num] in content_nospace
-        # Close, back to the menu: LEFT closes from any page; on the last
-        # page (where we now are) RIGHT closes as well.
-        self.debug.press_right()
+        # Close, back to the menu: the detail now uses classic paging, so the
+        # only exit is ✕ on page 1. Page back to page 1 with LEFT, then LEFT
+        # once more presses ✕ (we are currently on the last page).
+        for _ in range(pages - 1):
+            self.debug.press_left()
+        self.debug.press_left()  # ✕ closes the detail, back to the menu
 
         # Close the menu entirely: navigate left back to "Cancel?" and press
         # left once more to actually close it (back to the address screen).

@@ -1,5 +1,6 @@
 use crate::{
     strutil::TString,
+    translations::TR,
     ui::{
         component::{Component, Event, EventCtx, Paginate},
         geometry::Rect,
@@ -22,6 +23,9 @@ struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,
     controls: ChoiceControls,
     select_text: TString<'static>,
+    /// When set, the first item is the cancel item and its armed middle button
+    /// reads "YES" instead of the shared `select_text`.
+    cancel_first: bool,
 }
 
 impl ChoiceFactorySimple {
@@ -34,7 +38,12 @@ impl ChoiceFactorySimple {
             choices,
             controls,
             select_text,
+            cancel_first: false,
         }
+    }
+
+    fn set_cancel_first(&mut self, cancel_first: bool) {
+        self.cancel_first = cancel_first;
     }
 
     fn get_string(&self, choice_index: usize) -> TString<'static> {
@@ -52,8 +61,15 @@ impl ChoiceFactory for ChoiceFactorySimple {
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let text = &self.choices[choice_index];
+        // The focused cancel item (index 0 in cancel-first mode) confirms with
+        // "YES"; every other item keeps the shared select text (e.g. "VIEW").
+        let select_text = if self.cancel_first && choice_index == 0 {
+            TR::words__yes.into()
+        } else {
+            self.select_text
+        };
         let mut choice_item =
-            text.map(|t| ChoiceItem::new(t, ButtonLayout::arrow_armed_arrow(self.select_text)));
+            text.map(|t| ChoiceItem::new(t, ButtonLayout::arrow_armed_arrow(select_text)));
 
         // Disabling prev/next buttons for the first/last choice when not in carousel.
         // (could be done to the same item if there is only one)
@@ -137,6 +153,9 @@ impl SimpleChoice {
     /// the caller sees indices into the original (cancel-less) item list.
     pub fn with_cancel_first(mut self, cancel_first: bool) -> Self {
         self.cancel_first = cancel_first;
+        self.choice_page
+            .choice_factory_mut()
+            .set_cancel_first(cancel_first);
         self
     }
 

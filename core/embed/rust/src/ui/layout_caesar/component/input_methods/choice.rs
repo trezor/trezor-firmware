@@ -422,6 +422,10 @@ where
         &self.choices
     }
 
+    pub fn choice_factory_mut(&mut self) -> &mut F {
+        &mut self.choices
+    }
+
     /// Check possibility of going left/right.
     fn can_move(&self, button: ButtonPos) -> bool {
         match button {
