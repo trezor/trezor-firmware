@@ -812,7 +812,7 @@ def show_simple(
     text: str,
     title: str | None = None,
     button: str | None = None,
-) -> LayoutContext[UiResult]:
+) -> LayoutObj[UiResult]:
     """Simple dialog with text. TT: optional button."""
 
 
@@ -829,7 +829,7 @@ def show_success(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_wait_text(message: str, /) -> LayoutContext[None]:
+def show_wait_text(message: str, /) -> LayoutObj[None]:
     """Show single-line text in the middle of the screen."""
 
 

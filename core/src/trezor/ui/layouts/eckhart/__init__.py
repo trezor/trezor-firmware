@@ -2309,15 +2309,11 @@ def error_popup(
 
 
 def request_passphrase_on_host() -> None:
-    with trezorui_api.show_simple(
-        title=None, text=TR.passphrase__please_enter
-    ) as layout:
-        draw_simple(layout)
+    draw_simple(trezorui_api.show_simple(title=None, text=TR.passphrase__please_enter))
 
 
 def show_wait_text(message: str) -> None:
-    with trezorui_api.show_wait_text(message) as layout:
-        draw_simple(layout)
+    draw_simple(trezorui_api.show_wait_text(message))
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
