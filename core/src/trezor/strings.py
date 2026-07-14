@@ -86,20 +86,23 @@ def format_plural(string: str, count: int, plurals: str) -> str:
     return string.format(count=count, plural=plural)
 
 
-def format_duration_ms(milliseconds: int, unit_plurals: dict[str, str]) -> str:
+def format_duration_ms(milliseconds: int) -> str:
     """
     Returns human-friendly representation of a duration. Truncates all decimals.
     """
+    from . import TR
+
     units: tuple[tuple[str, int], ...] = (
-        (unit_plurals["hour"], 60 * 60 * 1000),
-        (unit_plurals["minute"], 60 * 1000),
-        (unit_plurals["second"], 1000),
+        (TR.plurals__days, 24 * 60 * 60 * 1000),
+        (TR.plurals__hours, 60 * 60 * 1000),
+        (TR.plurals__minutes, 60 * 1000),
+        (TR.plurals__seconds, 1000),
     )
     for unit, divisor in units:
         if milliseconds >= divisor:
             break
     else:
-        unit = unit_plurals["millisecond"]
+        unit = TR.plurals__milliseconds
         divisor = 1
 
     return format_plural("{count} {plural}", milliseconds // divisor, unit)
@@ -120,30 +123,3 @@ def format_timestamp(timestamp: int) -> str:
     # that is used internally.
     d = utime.gmtime2000(timestamp - _SECONDS_1970_TO_2000)
     return f"{d[0]}-{d[1]:02d}-{d[2]:02d} {d[3]:02d}:{d[4]:02d}:{d[5]:02d}"
-
-
-def format_autolock_duration(auto_lock_ms: int) -> str:
-    """
-    Determine appropriate unit and count for auto-lock delay.
-    """
-    from . import TR
-
-    MS = 1000
-    MIN = MS * 60
-    HOUR = MIN * 60
-    DAY = HOUR * 24
-
-    if auto_lock_ms >= DAY:
-        auto_lock_num = auto_lock_ms // DAY
-        auto_lock_label = TR.plurals__lock_after_x_days
-    elif auto_lock_ms >= HOUR:
-        auto_lock_num = auto_lock_ms // HOUR
-        auto_lock_label = TR.plurals__lock_after_x_hours
-    elif auto_lock_ms >= MIN:
-        auto_lock_num = auto_lock_ms // MIN
-        auto_lock_label = TR.plurals__lock_after_x_minutes
-    else:
-        auto_lock_num = auto_lock_ms // MS
-        auto_lock_label = TR.plurals__lock_after_x_seconds
-
-    return format_plural("{count} {plural}", auto_lock_num, auto_lock_label)
