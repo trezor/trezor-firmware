@@ -812,7 +812,7 @@ def show_simple(
     text: str,
     title: str | None = None,
     button: str | None = None,
-) -> LayoutContext[UiResult]:
+) -> LayoutObj[UiResult]:
     """Simple dialog with text. TT: optional button."""
 
 
