@@ -5,7 +5,7 @@ from trezor import TR, ui, utils
 from trezor.enums import ButtonRequestType, RecoveryType
 from trezor.wire import ActionCancelled
 
-from ..common import draw_simple, interact, raise_if_not_confirmed
+from ..common import interact, interact_simple, raise_if_not_confirmed
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
@@ -2226,8 +2226,9 @@ def error_popup(
     )
 
 
-def request_passphrase_on_host() -> None:
-    draw_simple(trezorui_api.show_simple(title=None, text=TR.passphrase__please_enter))
+async def request_passphrase_on_host() -> None:
+    ctx = trezorui_api.show_simple(title=None, text=TR.passphrase__please_enter)
+    await interact_simple(ctx)
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
