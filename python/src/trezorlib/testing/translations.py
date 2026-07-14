@@ -50,7 +50,7 @@ _CURRENT_TRANSLATION = threading.local()
 def prepare_blob(
     lang_or_def: translations.JsonDef | Path | str,
     model: models.TrezorModel,
-    version: translations.VersionTuple | tuple[int, int, int] | None = None,
+    version: translations.VersionTuple | None = None,
 ) -> translations.TranslationsBlob:
     """
     Prepare a translation blob for a given language and device model.
@@ -72,9 +72,6 @@ def prepare_blob(
     # generate raw blob
     if version is None:
         version = translations.version_from_json(lang_or_def["header"]["version"])
-    elif len(version) == 3:
-        # version coming from client object does not have build item
-        version = *version, 0
     return translations.blob_from_defs(lang_or_def, order, model, version, FONTS_DIR)
 
 
@@ -113,7 +110,9 @@ def build_and_sign_blob(
     Returns:
         bytes: The signed translation blob.
     """
-    blob = prepare_blob(lang_or_def, session.model, session.version)
+    f = session.client.features
+    version = (f.major_version, f.minor_version, f.patch_version, f.build_version or 0)
+    blob = prepare_blob(lang_or_def, session.model, version)
     return sign_blob(blob)
 
 
