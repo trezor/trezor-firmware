@@ -477,9 +477,7 @@
     "cardano__message_text": "Texto del mensaje",
     "cardano__multisig_path": "ruta multi-firma",
     "cardano__nested_scripts_template": "Contiene {0} scripts anidados.",
-    "cardano__network": "Red",
     "cardano__no_output_tx": "La transacción no tiene salidas; la red no se puede verificar.",
-    "cardano__nonce": "Nonce",
     "cardano__other": "Otros",
     "cardano__path": "ruta",
     "cardano__pledge": "Compromiso",
@@ -643,12 +641,6 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "eos__delegate": {
-      "Bolt": "Delegar",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "eos__delete_auth": {
       "Bolt": "Eliminar autorización",
       "Caesar": "",
@@ -753,12 +745,6 @@
     },
     "eos__threshold": {
       "Bolt": "Umbral",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
-    "eos__to": {
-      "Bolt": "Para",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -3185,6 +3171,12 @@
     },
     "words__continue_anyway_question": "¿Continuar igualmente?",
     "words__continue_with": "Continuar con",
+    "words__delegate": {
+      "Bolt": "Delegar",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__deposit": "Depósito",
     "words__device": "Dispositivo",
     "words__disabled": {
@@ -3231,7 +3223,9 @@
     "words__manage": "Gestionar",
     "words__my_trezor": "Mi Trezor",
     "words__name": "Nombre",
+    "words__network": "Red",
     "words__no": "No",
+    "words__nonce": "Nonce",
     "words__not_recommended": {
       "Bolt": "",
       "Caesar": "",
@@ -3335,6 +3329,12 @@
     "words__title_threshold": {
       "Bolt": "",
       "Caesar": "Umbral",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__to": {
+      "Bolt": "Para",
+      "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },

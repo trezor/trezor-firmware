@@ -1032,6 +1032,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__continue_anyway;
   MP_QSTR_words__continue_anyway_question;
   MP_QSTR_words__continue_with;
+  MP_QSTR_words__delegate;
   MP_QSTR_words__deposit;
   MP_QSTR_words__device;
   MP_QSTR_words__disabled;
@@ -1053,7 +1054,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__manage;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;
+  MP_QSTR_words__network;
   MP_QSTR_words__no;
+  MP_QSTR_words__nonce;
   MP_QSTR_words__not_recommended;
   MP_QSTR_words__note;
   MP_QSTR_words__off;
@@ -1090,6 +1093,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__title_success;
   MP_QSTR_words__title_summary;
   MP_QSTR_words__title_threshold;
+  MP_QSTR_words__to;
   MP_QSTR_words__token;
   MP_QSTR_words__transaction_fee;
   MP_QSTR_words__try_again;
@@ -1163,9 +1167,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__message_text;
   MP_QSTR_cardano__multisig_path;
   MP_QSTR_cardano__nested_scripts_template;
-  MP_QSTR_cardano__network;
   MP_QSTR_cardano__no_output_tx;
-  MP_QSTR_cardano__nonce;
   MP_QSTR_cardano__other;
   MP_QSTR_cardano__path;
   MP_QSTR_cardano__pledge;
@@ -1237,7 +1239,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__contract;
   MP_QSTR_eos__cpu;
   MP_QSTR_eos__creator;
-  MP_QSTR_eos__delegate;
   MP_QSTR_eos__delete_auth;
   MP_QSTR_eos__from;
   MP_QSTR_eos__link_auth;
@@ -1256,7 +1257,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__sell_ram;
   MP_QSTR_eos__sender;
   MP_QSTR_eos__threshold;
-  MP_QSTR_eos__to;
   MP_QSTR_eos__transfer;
   MP_QSTR_eos__type;
   MP_QSTR_eos__undelegate;

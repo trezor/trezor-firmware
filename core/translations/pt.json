@@ -487,9 +487,7 @@
     "cardano__message_text": "Texto da mensagem",
     "cardano__multisig_path": "caminho multiassinatura",
     "cardano__nested_scripts_template": "Contém {0} scripts aninhados.",
-    "cardano__network": "Rede",
     "cardano__no_output_tx": "A transação não tem saídas; a rede não pode ser verificada.",
-    "cardano__nonce": "Nonce",
     "cardano__other": "Outros",
     "cardano__path": "caminho",
     "cardano__pledge": "Compromisso",
@@ -648,12 +646,6 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "eos__delegate": {
-      "Bolt": "Delegar",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "eos__delete_auth": {
       "Bolt": "Excluir autorização",
       "Caesar": "",
@@ -758,12 +750,6 @@
     },
     "eos__threshold": {
       "Bolt": "Limiar",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
-    "eos__to": {
-      "Bolt": "Para",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -3290,6 +3276,12 @@
       "Eckhart": "Continuar mesmo assim?"
     },
     "words__continue_with": "Continuar com",
+    "words__delegate": {
+      "Bolt": "Delegar",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__deposit": "Depósito",
     "words__device": "Dispositivo",
     "words__disabled": {
@@ -3336,7 +3328,9 @@
     "words__manage": "Gerenciar",
     "words__my_trezor": "Meu Trezor",
     "words__name": "Nome",
+    "words__network": "Rede",
     "words__no": "Não",
+    "words__nonce": "Nonce",
     "words__not_recommended": {
       "Bolt": "",
       "Caesar": "",
@@ -3440,6 +3434,12 @@
     "words__title_threshold": {
       "Bolt": "",
       "Caesar": "Limite mín.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__to": {
+      "Bolt": "Para",
+      "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },

@@ -193,12 +193,10 @@ pub enum TranslatedString {
     cardano__multisig_path = 148,  // "multi-sig path"
     #[cfg(feature = "universal_fw")]
     cardano__nested_scripts_template = 149,  // "Contains {0} nested scripts."
-    #[cfg(feature = "universal_fw")]
-    cardano__network = 150,  // "Network"
+    words__network = 150,  // "Network"
     #[cfg(feature = "universal_fw")]
     cardano__no_output_tx = 151,  // "Transaction has no outputs, network cannot be verified."
-    #[cfg(feature = "universal_fw")]
-    cardano__nonce = 152,  // "Nonce"
+    words__nonce = 152,  // "Nonce"
     #[cfg(feature = "universal_fw")]
     cardano__other = 153,  // "Other"
     #[cfg(feature = "universal_fw")]
@@ -354,8 +352,7 @@ pub enum TranslatedString {
     eos__cpu = 240,  // {"Bolt": "CPU", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
     eos__creator = 241,  // {"Bolt": "Creator", "Caesar": "", "Delizia": "", "Eckhart": ""}
-    #[cfg(feature = "universal_fw")]
-    eos__delegate = 242,  // {"Bolt": "Delegate", "Caesar": "", "Delizia": "", "Eckhart": ""}
+    words__delegate = 242,  // {"Bolt": "Delegate", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
     eos__delete_auth = 243,  // {"Bolt": "Delete Auth", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
@@ -393,8 +390,7 @@ pub enum TranslatedString {
     send__sign_transaction = 260,  // "Sign transaction"
     #[cfg(feature = "universal_fw")]
     eos__threshold = 261,  // {"Bolt": "Threshold", "Caesar": "", "Delizia": "", "Eckhart": ""}
-    #[cfg(feature = "universal_fw")]
-    eos__to = 262,  // {"Bolt": "To", "Caesar": "", "Delizia": "", "Eckhart": ""}
+    words__to = 262,  // {"Bolt": "To", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
     eos__transfer = 263,  // {"Bolt": "Transfer", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
@@ -41693,11 +41689,7 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__nested_scripts_template, Self::cardano__nested_scripts_template),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_cardano__network, Self::cardano__network),
-        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__no_output_tx, Self::cardano__no_output_tx),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_cardano__nonce, Self::cardano__nonce),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__other, Self::cardano__other),
         #[cfg(feature = "universal_fw")]
@@ -41860,8 +41852,6 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_eos__creator, Self::eos__creator),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_eos__delegate, Self::eos__delegate),
-        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_eos__delete_auth, Self::eos__delete_auth),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_eos__from, Self::eos__from),
@@ -41897,8 +41887,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_eos__sender, Self::eos__sender),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_eos__threshold, Self::eos__threshold),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_eos__to, Self::eos__to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_eos__transfer, Self::eos__transfer),
         #[cfg(feature = "universal_fw")]
@@ -42978,6 +42966,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__continue_anyway, Self::words__continue_anyway),
         (Qstr::MP_QSTR_words__continue_anyway_question, Self::words__continue_anyway_question),
         (Qstr::MP_QSTR_words__continue_with, Self::words__continue_with),
+        (Qstr::MP_QSTR_words__delegate, Self::words__delegate),
         (Qstr::MP_QSTR_words__deposit, Self::words__deposit),
         (Qstr::MP_QSTR_words__device, Self::words__device),
         (Qstr::MP_QSTR_words__disabled, Self::words__disabled),
@@ -42999,7 +42988,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__manage, Self::words__manage),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
         (Qstr::MP_QSTR_words__name, Self::words__name),
+        (Qstr::MP_QSTR_words__network, Self::words__network),
         (Qstr::MP_QSTR_words__no, Self::words__no),
+        (Qstr::MP_QSTR_words__nonce, Self::words__nonce),
         (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),
         (Qstr::MP_QSTR_words__note, Self::words__note),
         (Qstr::MP_QSTR_words__off, Self::words__off),
@@ -43036,6 +43027,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__title_success, Self::words__title_success),
         (Qstr::MP_QSTR_words__title_summary, Self::words__title_summary),
         (Qstr::MP_QSTR_words__title_threshold, Self::words__title_threshold),
+        (Qstr::MP_QSTR_words__to, Self::words__to),
         (Qstr::MP_QSTR_words__token, Self::words__token),
         (Qstr::MP_QSTR_words__transaction_fee, Self::words__transaction_fee),
         (Qstr::MP_QSTR_words__try_again, Self::words__try_again),
