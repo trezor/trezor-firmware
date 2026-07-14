@@ -28,6 +28,21 @@
 #include <sec/tropic.h>
 #include <sys/systick.h>
 
+// Per-pin SPI alternate function. Most boards route all three SPI signals on a
+// single alternate function (TROPIC01_SPI_PIN_AF), but some pins expose the SPI
+// signal on a different AF than the others (e.g. on STM32U5 SPI3_MOSI on PD6 is
+// AF5 while SPI3_SCK/MISO are AF6). Boards may override any of these
+// individually; the rest fall back to TROPIC01_SPI_PIN_AF.
+#ifndef TROPIC01_SPI_SCK_AF
+#define TROPIC01_SPI_SCK_AF TROPIC01_SPI_PIN_AF
+#endif
+#ifndef TROPIC01_SPI_MISO_AF
+#define TROPIC01_SPI_MISO_AF TROPIC01_SPI_PIN_AF
+#endif
+#ifndef TROPIC01_SPI_MOSI_AF
+#define TROPIC01_SPI_MOSI_AF TROPIC01_SPI_PIN_AF
+#endif
+
 typedef struct {
   bool initialized;
   SPI_HandleTypeDef spi;
@@ -93,14 +108,14 @@ lt_ret_t lt_port_init(lt_l2_state_t *s2) {
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = TROPIC01_SPI_PIN_AF;
-  GPIO_InitStructure.Pin = TROPIC01_SPI_SCK_PIN;
-  HAL_GPIO_Init(TROPIC01_SPI_SCK_PORT, &GPIO_InitStructure);
 
+  GPIO_InitStructure.Alternate = TROPIC01_SPI_SCK_AF;
   GPIO_InitStructure.Pin = TROPIC01_SPI_SCK_PIN;
   HAL_GPIO_Init(TROPIC01_SPI_SCK_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Alternate = TROPIC01_SPI_MISO_AF;
   GPIO_InitStructure.Pin = TROPIC01_SPI_MISO_PIN;
   HAL_GPIO_Init(TROPIC01_SPI_MISO_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Alternate = TROPIC01_SPI_MOSI_AF;
   GPIO_InitStructure.Pin = TROPIC01_SPI_MOSI_PIN;
   HAL_GPIO_Init(TROPIC01_SPI_MOSI_PORT, &GPIO_InitStructure);
 
