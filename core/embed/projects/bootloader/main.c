@@ -122,7 +122,6 @@ void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 secbool is_manufacturing_mode(void) {
   unit_properties_init();
 
-
   return sectrue;
 }
 
