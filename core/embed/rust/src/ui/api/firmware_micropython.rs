@@ -2117,7 +2117,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     text: str,
     ///     title: str | None = None,
     ///     button: str | None = None,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutContext[UiResult]:
     ///     """Simple dialog with text. TT: optional button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
 

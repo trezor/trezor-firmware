@@ -152,8 +152,20 @@ async def confirm_linear_flow(
             raise ActionCancelled
 
 
-def draw_simple(layout: trezorui_api.LayoutObj[Any]) -> None:
-    # IMPORTANT: after this call, `layout` is referenced by `trezor.ui.CURRENT_LAYOUT`
-    # and its event-handling tasks are still running. Therefore, it MUST NOT be dropped,
-    # until a new layout is started.
-    ui.Layout(layout).start()
+async def interact_simple(layout_ctx: trezorui_api.LayoutContext[T]) -> T:
+    """
+    Run a simple layout till completion, returning its result.
+
+    Neither closes other workflows, nor sends button requests, nor checks the result.
+    """
+
+    with layout_ctx as obj:
+        # Block until the user confirmation.
+        # Don't use `interact` to avoid cancelling current workflow.
+        layout = ui.Layout(obj)
+        layout.start()
+        # This task may have no access to I/O context.
+        # Therefore, the new layout won't start its own ButtonRequest handler,
+        # avoiding interference with the existing layout.
+        assert layout.button_request_handler is None
+        return await layout.get_result()

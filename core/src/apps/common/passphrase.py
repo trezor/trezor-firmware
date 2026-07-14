@@ -101,7 +101,7 @@ if not utils.USE_THP:
 
         async def _delay_request_passphrase_on_host() -> None:
             await loop.sleep(100)
-            return request_passphrase_on_host()
+            await request_passphrase_on_host()
 
         on_host = workflow.spawn(_delay_request_passphrase_on_host())
         try:
