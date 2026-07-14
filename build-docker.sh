@@ -60,6 +60,7 @@ function help_and_die() {
   echo "Option --prodtest is deprecated. Use "--targets prodtest" to build prodtest."
   echo "Set PRODUCTION=0 to run non-production builds."
   echo "Set VENDOR_HEADER=vendorheader_prodtest_unsigned.bin to use the specified vendor header for prodtest."
+  echo "USE REPRODUCIBLE_XTASK_BUILD_OPTS to pass additional parameters for xtask build."
   exit 0
 }
 
@@ -315,6 +316,7 @@ EOF
       --env TREZOR_MODEL="$TREZOR_MODEL" \
       --env PRODUCTION="$PRODUCTION" \
       --env VENDOR_HEADER="$VENDOR_HEADER" \
+      --env XTASK_BUILD_OPTS="$REPRODUCIBLE_XTASK_BUILD_OPTS" \
       --init \
       "$SNAPSHOT_NAME" \
       /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"
