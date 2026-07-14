@@ -277,7 +277,7 @@ fn main() -> Result<()> {
                     "shared/runtime/interrupt_char.c",
                     "shared/runtime/pyexec.c",
                     "shared/runtime/stdout_helpers.c",
-                    // "shared/runtime/gchelper_m3.s", // This file is added later
+                    // "shared/runtime/gchelper_thumb2.s", // This file is added later
                 ],
             );
         } else {
@@ -306,7 +306,7 @@ fn main() -> Result<()> {
         if cfg!(not(feature = "emulator")) {
             // This file must not be preprocessed in MpyBuilder so it is added here
             // after the build_genhdr step
-            lib.add_sources_in_dir(mpy_dir, ["shared/runtime/gchelper_m3.s"]);
+            lib.add_sources_in_dir(mpy_dir, ["shared/runtime/gchelper_thumb2.s"]);
         }
 
         Ok(())

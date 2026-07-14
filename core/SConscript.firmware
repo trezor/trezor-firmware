@@ -330,8 +330,8 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/moductypes.c',
     'vendor/micropython/shared/libc/abort_.c',
     'vendor/micropython/shared/libc/printf.c',
-    'vendor/micropython/shared/runtime/gchelper_m3.s',
     'vendor/micropython/shared/runtime/gchelper_native.c',
+    'vendor/micropython/shared/runtime/gchelper_thumb.s'
     'vendor/micropython/shared/runtime/interrupt_char.c',
     'vendor/micropython/shared/runtime/pyexec.c',
     'vendor/micropython/shared/runtime/stdout_helpers.c',

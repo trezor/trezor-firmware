@@ -197,15 +197,6 @@ typedef int mp_int_t; // must be pointer size
 typedef unsigned int mp_uint_t; // must be pointer size
 typedef long mp_off_t;
 
-#define MICROPY_BEGIN_ATOMIC_SECTION()     (0)
-#define MICROPY_END_ATOMIC_SECTION(state)  (void)(state)
-#define MICROPY_EVENT_POLL_HOOK \
-    do { \
-        extern void mp_handle_pending(bool); \
-        mp_handle_pending(true); \
-        __WFI(); \
-    } while (0);
-
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
 #define MICROPY_HW_MCU_NAME "STM32F427xx"
 #define MICROPY_HW_HAS_SDCARD 1
