@@ -52,6 +52,7 @@ function help_and_die() {
   echo "  --skip-normal - do not build regular firmwares"
   echo "  --repository path/to/repo - checkout the repository from the given path/url"
   echo "  --no-init - do not recreate docker environments"
+  echo "  --init-only - set up the docker environment and exit without building"
   echo "  --models - comma-separated list of models. default: --models T1B1,T2B1,T2T1,T3T1,T3W1"
   echo "  --targets - comma-separated list of targets for core build. default: --targets boardloader,bootloader,secmon,firmware"
   echo "  --nrf - build nRF bootloader and firmware (for bluetooth devices, i.e. T3W1)"
@@ -68,6 +69,7 @@ OPT_BUILD_NORMAL=1
 OPT_BUILD_BITCOINONLY=1
 OPT_BUILD_NRF=0
 INIT=1
+INIT_ONLY=0
 MODELS=(T1B1 T2B1 T2T1 T3T1 T3W1)
 CORE_TARGETS=(boardloader bootloader secmon firmware)
 
@@ -92,6 +94,10 @@ while true; do
       ;;
     --no-init)
       INIT=0
+      shift
+      ;;
+    --init-only)
+      INIT_ONLY=1
       shift
       ;;
     --models)
@@ -226,6 +232,7 @@ cat <<EOF >> "$SCRIPT_NAME"
     echo ">>> UPDATING CHECKOUT TO $TAG (${COMMIT_HASH})"
     git fetch --depth=1 origin "$TAG"
     git checkout --detach "${COMMIT_HASH}"
+    touch /build/._checkout_updated
   fi
 EOF
 
@@ -255,6 +262,8 @@ echo
 echo ">>> DOCKER REFRESH $SNAPSHOT_NAME"
 echo
 
+rm -f build/._checkout_updated
+
 $DOCKER run \
   --network=host \
   -v "$PWD:/local" \
@@ -266,12 +275,26 @@ $DOCKER run \
 
 rm $SCRIPT_NAME
 
-echo
-echo ">>> DOCKER COMMIT $SNAPSHOT_NAME"
-echo
-
-$DOCKER commit "$SNAPSHOT_NAME" "$SNAPSHOT_NAME"
+# The refresh only changes the environment when it moves the checkout (any
+# dependency change implies a new commit, since the lock files are part of the
+# repository). A fresh init must always be committed, while a reused snapshot
+# whose checkout was already current can skip the costly docker commit.
+if [ $INIT -eq 1 ] || [ -f build/._checkout_updated ]; then
+  echo
+  echo ">>> DOCKER COMMIT $SNAPSHOT_NAME"
+  echo
+  $DOCKER commit "$SNAPSHOT_NAME" "$SNAPSHOT_NAME"
+else
+  echo
+  echo ">>> DOCKER COMMIT SKIPPED (environment unchanged)"
+  echo
+fi
 $DOCKER rm "$SNAPSHOT_NAME"
+rm -f build/._checkout_updated
+
+if [ $INIT_ONLY -eq 1 ]; then
+  exit 0
+fi
 
 # stat under macOS has slightly different cli interface
 USER=$(stat -c "%u" . 2>/dev/null || stat -f "%u" .)
