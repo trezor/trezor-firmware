@@ -105,7 +105,13 @@ impl CLibrary {
 
         let mut data_out = vec![0u8; compress_bound(data_in.len())];
 
-        let config = DeflateConfig::best_compression();
+        let config = DeflateConfig {
+            // < 0 => raw deflate stream (no zlib header)
+            // -10 => 1KB window
+            window_bits: -10,
+            ..DeflateConfig::best_compression()
+        };
+
         let (compressed, code) = compress_slice(&mut data_out, &data_in, config);
 
         ensure!(
