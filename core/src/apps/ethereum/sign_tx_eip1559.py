@@ -44,8 +44,8 @@ async def sign_tx_eip1559(
     from .helpers import format_ethereum_amount, get_fee_items_eip1559, keccak256
     from .sign_tx import (
         check_common_fields,
-        confirm_data_and_summary,
         confirm_tx_data,
+        create_data_chunk_loader,
         request_initial_data,
     )
 
@@ -103,7 +103,8 @@ async def sign_tx_eip1559(
 
     initial_data = await request_initial_data(msg, sha)
 
-    confirmation = await confirm_tx_data(
+    # Confirm the transaction, using special layouts for staking, yielding and clear-signing (if supported).
+    await confirm_tx_data(
         initial_data,
         msg,
         defs,
@@ -112,9 +113,9 @@ async def sign_tx_eip1559(
         fee_items,
         payment_req_verifier,
         sender_bytes,
+        # Hash and confirm the rest of transaction calldata while loading it from the host.
+        create_data_chunk_loader(sha),
     )
-
-    await confirm_data_and_summary(confirmation, initial_data, data_length, sha)
 
     # write_access_list
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)
