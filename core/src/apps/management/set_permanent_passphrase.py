@@ -74,8 +74,7 @@ async def set_permanent_passphrase(msg: SetPermanentPassphrase) -> Success:
     storage_common.compact()
 
     # Clear cached secrets so the next operation derives from the new root.
-    ctx = context.get_context()
-    ctx.cache.delete(APP_COMMON_SEED)
-    ctx.cache.delete(APP_COMMON_SEED_WITHOUT_PASSPHRASE)
+    context.cache_delete(APP_COMMON_SEED)
+    context.cache_delete(APP_COMMON_SEED_WITHOUT_PASSPHRASE)
 
     return Success(message="Passphrase set as permanent.")

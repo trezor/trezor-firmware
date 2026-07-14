@@ -260,6 +260,7 @@ def get_backup_type() -> BackupType:
         BackupType.Slip39_Single_Extendable,
         BackupType.Slip39_Basic_Extendable,
         BackupType.Slip39_Advanced_Extendable,
+        BackupType.RawSeed,
     ):
         # Invalid backup type
         raise RuntimeError
