@@ -476,10 +476,10 @@ impl ValueInput for DurationInput {
 
     fn repr(&self) -> (u32, Option<ShortString>) {
         let units = [
-            (self.duration.to_days(), TR::plurals__lock_after_x_days),
-            (self.duration.to_hours(), TR::plurals__lock_after_x_hours),
-            (self.duration.to_mins(), TR::plurals__lock_after_x_minutes),
-            (self.duration.to_secs(), TR::plurals__lock_after_x_seconds),
+            (self.duration.to_days(), TR::plurals__days),
+            (self.duration.to_hours(), TR::plurals__hours),
+            (self.duration.to_mins(), TR::plurals__minutes),
+            (self.duration.to_secs(), TR::plurals__seconds),
         ];
 
         for &(count, tr) in &units {

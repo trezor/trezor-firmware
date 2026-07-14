@@ -59,14 +59,16 @@ def format_duration_ms(milliseconds: int) -> str:
     assert milliseconds >= 0
 
     unit_plurals = {
-        "millisecond": TR.plurals__lock_after_x_milliseconds,
-        "second": TR.plurals__lock_after_x_seconds,
-        "minute": TR.plurals__lock_after_x_minutes,
-        "hour": TR.plurals__lock_after_x_hours,
+        "millisecond": TR.plurals__milliseconds,
+        "second": TR.plurals__seconds,
+        "minute": TR.plurals__minutes,
+        "hour": TR.plurals__hours,
+        "day": TR.plurals__days,
     }
 
     # Pick appropriate unit and divisor
     units: tuple[tuple[str, int], ...] = (
+        (unit_plurals["day"], 24 * 60 * 60 * 1000),
         (unit_plurals["hour"], 60 * 60 * 1000),
         (unit_plurals["minute"], 60 * 1000),
         (unit_plurals["second"], 1000),
