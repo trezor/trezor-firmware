@@ -41,19 +41,3 @@ macro_rules! uformat {
         uformat!(@crate::strutil::ShortString, $($tt)*)
     };
 }
-
-#[allow(unused_macros)] // Should be used only for debugging purposes
-macro_rules! dbg_print {
-    ($($args:tt)*) => {
-        #[cfg(feature = "debug")]
-        ufmt::uwrite!($crate::debug::DebugConsole, $($args)*).ok();
-    }
-}
-
-#[allow(unused_macros)] // Should be used only for debugging purposes
-macro_rules! dbg_println {
-    ($($args:tt)*) => {
-        #[cfg(feature = "debug")]
-        ufmt::uwriteln!($crate::debug::DebugConsole, $($args)*).ok();
-    }
-}
