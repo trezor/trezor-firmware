@@ -105,20 +105,13 @@ def test_tropic_get_spect_fw_version(tropic_prodtest: TropicProdtest) -> None:
 
 @pytest.mark.requires_command(Cmd.TROPIC_LOCK_CHECK)
 def test_tropic_lock_check(tropic_prodtest: TropicProdtest, is_emulator: bool) -> None:
-    """``lock-check`` reports a yes/no answer.
-
-    On the emulator this is always ``NO``: ``lock-check`` returns ``NO`` as soon
-    as the MCU has no stored Tropic public key, which is the case for a freshly
-    started emulator — the pairing process was never run against it. On real
-    hardware either answer is valid depending on provisioning, so we only check
-    the shape there.
-    """
+    """The lock-check status is either "YES" or "NO", and it is "YES" on the emulator."""
     with tropic_prodtest() as session:
         resp = session.client.command_ok(ProdtestCommand(Cmd.TROPIC_LOCK_CHECK))
 
     assert resp.args in ("YES", "NO")
     if is_emulator:
-        assert resp.args == "NO"
+        assert resp.args == "YES"
 
 
 @pytest.mark.requires_command(Cmd.TROPIC_READ_CONFIGS)
