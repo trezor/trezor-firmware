@@ -362,19 +362,31 @@ bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
 
 #ifdef USE_APP_LOADING
 
-#include <io/app_loader.h>
+#include <io/app_arena.h>
 
-ts_t app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id);
+ts_t app_arena_get_info__verified(app_arena_info_t *info);
 
-ts_t app_task_get_pminfo__verified(systask_id_t task_id,
-                                   systask_postmortem_t *pminfo);
+ts_t app_arena_create_image__verified(const void *header, size_t header_size,
+                                      const sha256_digest_t *proof,
+                                      size_t proof_size,
+                                      app_image_handle_t *handle);
 
-app_cache_handle_t app_cache_create_image__verified(const app_hash_t *hash,
-                                                    size_t image_size);
+ts_t app_arena_get_image_by_index__verified(size_t idx,
+                                            app_image_handle_t *handle);
 
-ts_t app_cache_write_image__verified(app_cache_handle_t handle,
-                                     uintptr_t offset, const void *data,
-                                     size_t data_size);
+ts_t app_image_get_info__verified(app_image_handle_t handle,
+                                  app_image_info_t *info);
+
+ts_t app_image_write_chunk__verified(app_image_handle_t handle,
+                                     const void *data, size_t size,
+                                     const sha256_digest_t *hash);
+
+ts_t app_image_run__verified(app_image_handle_t handle, systask_id_t *task_id);
+
+ts_t app_image_get_pminfo__verified(app_image_handle_t handle,
+                                    systask_postmortem_t *pminfo);
+
+ts_t app_get_heap__verified(void **heap_ptr, size_t *heap_size);
 
 #endif
 

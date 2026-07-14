@@ -56,6 +56,10 @@
 #include "py/runtime.h"
 #include "py/stackctrl.h"
 
+#ifdef USE_IPC
+#include <sys/ipc.h>  // !@# for tests
+#endif
+
 // Command line options, with their defaults
 STATIC bool compile_only = false;
 STATIC uint emit_opt = MP_EMIT_OPT_NONE;
@@ -686,7 +690,15 @@ MP_NOINLINE int main_(int argc, char **argv) {
   return ret & 0xff;
 }
 
+#if USE_IPC
+uint32_t ipc_buffer[8192];
+#endif
+
 int coreapp_emu(int argc, char **argv) {
+#if USE_IPC
+  ipc_register(2, ipc_buffer, sizeof(ipc_buffer));
+#endif
+
 #if MICROPY_PY_THREAD
   mp_thread_init();
 #endif

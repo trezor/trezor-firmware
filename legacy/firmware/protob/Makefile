@@ -20,7 +20,9 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
 	BleUnpair PaymentNotification Evolu \
 	GetSerialNumber SerialNumber \
-	TelemetryGet, Telemetry
+	TelemetryGet Telemetry \
+	TrezorAppLoad TrezorAppLoaded TrezorAppHeaderRequest TrezorAppHeaderAck TrezorAppDataChunkRequest TrezorAppDataChunkAck \
+	TrezorAppMessage TrezorAppResponse
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar

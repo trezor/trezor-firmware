@@ -35,6 +35,13 @@ use crate::{
     util::interpolate,
 };
 
+#[cfg(feature = "app_loading")]
+use rkyv::{option::ArchivedOption, tuple::ArchivedTuple2};
+#[cfg(feature = "app_loading")]
+use trezor_app_sdk::structs::{
+    ArchivedSlice, ArchivedStrSlice, ArchivedTrezorUiEnum, Property, StrExt,
+};
+
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
 
@@ -1615,5 +1622,358 @@ impl FirmwareUI for UIEckhart {
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::show_tutorial::new_show_tutorial()?;
         Ok(flow)
+    }
+
+    #[cfg(feature = "app_loading")]
+    fn process_ipc_message(data: &[u8]) -> Result<(Gc<LayoutObj>, i32, Obj), Error> {
+        fn tstr_from_archived_borrowed_str(s: &ArchivedStrSlice) -> TString<'static> {
+            unwrap!(StrBuffer::alloc(s.as_str())).into()
+        }
+
+        fn tstr_from_archived_borrowed_str_option(
+            s: &ArchivedOption<ArchivedStrSlice>,
+        ) -> Option<TString<'static>> {
+            s.as_ref()
+                .map(|s| unwrap!(StrBuffer::alloc(s.as_str())).into())
+        }
+
+        fn tstr_from_archived_borrowed_tuple_option(
+            s: &ArchivedOption<ArchivedTuple2<ArchivedStrSlice, bool>>,
+        ) -> Option<(TString<'static>, bool)> {
+            s.as_ref()
+                .map(|s| (unwrap!(StrBuffer::alloc(s.0.as_str())).into(), s.1))
+        }
+
+        fn obj_from_archived_borrowed_str_option(
+            s: Option<&ArchivedStrSlice>,
+        ) -> Result<Obj, Error> {
+            match s.as_ref() {
+                Some(s) => Ok(Obj::try_from(s.as_str())?),
+                None => Ok(Obj::const_none()),
+            }
+        }
+
+        fn obj_from_strextlist(archived: &ArchivedSlice<StrExt>) -> Obj {
+            let slice = archived.as_slice();
+            let mut list = unwrap!(List::with_capacity(slice.len()));
+
+            for item in slice {
+                let obj = unwrap!(Obj::try_from((
+                    unwrap!(Obj::try_from(item.key.as_str())),
+                    unwrap!(Obj::try_from(item.mono))
+                )));
+                unwrap!(list.append(obj));
+            }
+            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+        }
+
+        fn obj_from_proplist(archived: &ArchivedSlice<Property>) -> Obj {
+            let slice = archived.as_slice();
+            let mut list = unwrap!(List::with_capacity(slice.len()));
+
+            for item in slice {
+                let obj = unwrap!(Obj::try_from((
+                    unwrap!(Obj::try_from(item.key.as_str())),
+                    unwrap!(Obj::try_from(item.value.as_str())),
+                    unwrap!(Obj::try_from(item.mono))
+                )));
+                unwrap!(list.append(obj));
+            }
+            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+        }
+
+        // Deserialize the rkyv archived data directly from the static buffer
+        let archived = unsafe { rkyv::access_unchecked::<ArchivedTrezorUiEnum>(data) };
+
+        // Access the archived data zero-copy using safe Deref access
+        match archived {
+            ArchivedTrezorUiEnum::SelectMenu(select_menu) => {
+                let mut vec = heapless::Vec::<TString<'static>, 5>::new();
+                for item in select_menu.items.as_slice() {
+                    unwrap!(vec.push(tstr_from_archived_borrowed_str(item)));
+                }
+                let layout = Self::select_menu(
+                    vec,
+                    0, // current selection (not used in this context)
+                    tstr_from_archived_borrowed_str_option(&select_menu.cancel),
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    select_menu.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ConfirmTrade(confirm_trade) => {
+                let layout = Self::confirm_trade(
+                    tstr_from_archived_borrowed_str(&confirm_trade.title),
+                    tstr_from_archived_borrowed_str(&confirm_trade.subtitle),
+                    tstr_from_archived_borrowed_str_option(&confirm_trade.sell),
+                    tstr_from_archived_borrowed_str(&confirm_trade.buy),
+                    confirm_trade.back_button,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    confirm_trade.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(confirm_trade.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ConfirmAction(confirm_action) => {
+                // Use safe Deref trait instead of raw pointers
+                let layout = Self::confirm_action(
+                    tstr_from_archived_borrowed_str(&confirm_action.title),
+                    Some(tstr_from_archived_borrowed_str(&confirm_action.action)),
+                    tstr_from_archived_borrowed_str_option(&confirm_action.description),
+                    tstr_from_archived_borrowed_str_option(&confirm_action.subtitle),
+                    tstr_from_archived_borrowed_str_option(&confirm_action.verb),
+                    confirm_action.cancel,
+                    None,
+                    confirm_action.hold,
+                    false,
+                    false,
+                    false,
+                    None,
+                    confirm_action.external_menu,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    confirm_action.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(confirm_action.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ShowInfoWithCancel(siwc) => {
+                let layout = Self::show_info_with_cancel(
+                    tstr_from_archived_borrowed_str(&siwc.title),
+                    obj_from_proplist((&siwc.items).into()),
+                    false, // horizontal
+                    siwc.chunkify,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    siwc.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(siwc.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ConfirmValueIntro(cvi) => {
+                let layout = Self::confirm_value_intro(
+                    tstr_from_archived_borrowed_str(&cvi.title),
+                    cvi.value.as_str().try_into()?,
+                    tstr_from_archived_borrowed_str_option(&cvi.subtitle),
+                    tstr_from_archived_borrowed_str_option(&cvi.verb),
+                    tstr_from_archived_borrowed_str_option(&cvi.verb_cancel),
+                    cvi.hold,
+                    cvi.chunkify,
+                )?;
+
+                Ok((
+                    layout,
+                    cvi.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(cvi.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ConfirmSummary(confirm_summary) => {
+                let layout = Self::confirm_summary(
+                    tstr_from_archived_borrowed_str_option(&confirm_summary.amount),
+                    tstr_from_archived_borrowed_str_option(&confirm_summary.amount_label),
+                    tstr_from_archived_borrowed_str(&confirm_summary.fee),
+                    tstr_from_archived_borrowed_str(&confirm_summary.fee_label),
+                    Some(tstr_from_archived_borrowed_str(&confirm_summary.title)),
+                    confirm_summary
+                        .account_items
+                        .as_ref()
+                        .map(|items| obj_from_proplist(items)),
+                    tstr_from_archived_borrowed_str_option(&confirm_summary.account_title),
+                    confirm_summary
+                        .extra_items
+                        .as_ref()
+                        .map(|items| obj_from_proplist(items)),
+                    tstr_from_archived_borrowed_str_option(&confirm_summary.extra_title),
+                    None,
+                    confirm_summary.back_button,
+                    false,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    confirm_summary.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(confirm_summary.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ConfirmValue(confirm_value) => {
+                let layout = Self::confirm_value(
+                    tstr_from_archived_borrowed_str(&confirm_value.title),
+                    Obj::try_from(confirm_value.value.as_str())?,
+                    tstr_from_archived_borrowed_str_option(&confirm_value.description),
+                    confirm_value.is_data,
+                    None,
+                    tstr_from_archived_borrowed_str_option(&confirm_value.subtitle),
+                    tstr_from_archived_borrowed_str_option(&confirm_value.verb),
+                    None,
+                    confirm_value.info,
+                    confirm_value.hold,
+                    confirm_value.chunkify,
+                    confirm_value.page_counter,
+                    false,
+                    confirm_value.cancel,
+                    false,
+                    tstr_from_archived_borrowed_tuple_option(&confirm_value.footer),
+                    confirm_value.external_menu,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    confirm_value.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(confirm_value.br_name.as_ref())?,
+                ))
+            }
+
+            ArchivedTrezorUiEnum::ShowWarning(warning) => Ok((
+                Self::show_warning(
+                    Some(tstr_from_archived_borrowed_str(&warning.title)),
+                    tstr_from_archived_borrowed_str(&warning.verb),
+                    tstr_from_archived_borrowed_str(&warning.content),
+                    TString::empty(),
+                    warning.allow_cancel,
+                    warning.danger,
+                )?,
+                warning.br_code.to_native(),
+                obj_from_archived_borrowed_str_option(warning.br_name.as_ref())?,
+            )),
+            ArchivedTrezorUiEnum::ShowMismatch(mismatch) => {
+                let layout = Self::show_mismatch(tstr_from_archived_borrowed_str(&mismatch.title))?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    mismatch.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ShowDanger(danger) => {
+                let layout = Self::show_danger(
+                    tstr_from_archived_borrowed_str(&danger.title),
+                    tstr_from_archived_borrowed_str(&danger.content),
+                    TString::empty(),
+                    tstr_from_archived_borrowed_str_option(&danger.menu_title),
+                    tstr_from_archived_borrowed_str_option(&danger.verb_cancel),
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    danger.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(danger.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ShowSuccess(success) => Ok((
+                Self::show_success(
+                    tstr_from_archived_borrowed_str(&success.title),
+                    tstr_from_archived_borrowed_str(&success.button),
+                    tstr_from_archived_borrowed_str(&success.content),
+                    false,
+                    success
+                        .duration_ms
+                        .as_ref()
+                        .map(|d| d.to_native())
+                        .unwrap_or(0),
+                )?,
+                success.br_code.to_native(),
+                obj_from_archived_borrowed_str_option(success.br_name.as_ref())?,
+            )),
+            ArchivedTrezorUiEnum::RequestNumber(request_number) => {
+                let layout = Self::request_number(
+                    tstr_from_archived_borrowed_str(&request_number.title),
+                    request_number.initial.into(),
+                    request_number.min.into(),
+                    request_number.max.into(),
+                    Some(tstr_from_archived_borrowed_str(&request_number.content)),
+                    Some(|_| TString::empty()),
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    request_number.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ConfirmProperties(confirm_properties) => {
+                let layout = Self::confirm_properties(
+                    tstr_from_archived_borrowed_str(&confirm_properties.title),
+                    tstr_from_archived_borrowed_str_option(&confirm_properties.subtitle),
+                    obj_from_proplist(&confirm_properties.props),
+                    confirm_properties.hold,
+                    tstr_from_archived_borrowed_str_option(&confirm_properties.verb),
+                    false,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    confirm_properties.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(confirm_properties.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ShowProperties(show_properties) => {
+                let layout = Self::show_properties(
+                    tstr_from_archived_borrowed_str(&show_properties.title),
+                    tstr_from_archived_borrowed_str_option(&show_properties.subtitle),
+                    obj_from_proplist(&show_properties.props),
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    show_properties.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(show_properties.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ShowPublicKey(show_public_key) => {
+                let account = tstr_from_archived_borrowed_str_option(&show_public_key.account);
+                let pubkey = tstr_from_archived_borrowed_str(&show_public_key.pubkey);
+                let layout = Self::flow_get_pubkey(
+                    pubkey,
+                    tstr_from_archived_borrowed_str(&show_public_key.title),
+                    account,
+                    tstr_from_archived_borrowed_str_option(&show_public_key.warning),
+                    pubkey,
+                    account,
+                    tstr_from_archived_borrowed_str_option(&show_public_key.path),
+                    11,
+                    tstr_from_archived_borrowed_str(&show_public_key.br_name),
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    show_public_key.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ConfirmWithInfo(confirm_with_info) => {
+                let layout = Self::confirm_with_info(
+                    tstr_from_archived_borrowed_str(&confirm_with_info.title),
+                    tstr_from_archived_borrowed_str_option(&confirm_with_info.subtitle),
+                    obj_from_strextlist(&confirm_with_info.items),
+                    tstr_from_archived_borrowed_str(&confirm_with_info.verb),
+                    tstr_from_archived_borrowed_str_option(&confirm_with_info.verb_info),
+                    None,
+                    false,
+                )?;
+                Ok((
+                    layout,
+                    confirm_with_info.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(confirm_with_info.br_name.as_ref())?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ShowAddress(show_address) => {
+                let layout = Self::flow_get_address(
+                    tstr_from_archived_borrowed_str(&show_address.address),
+                    tstr_from_archived_borrowed_str_option(&show_address.title)
+                        .unwrap_or("Receive".into()),
+                    tstr_from_archived_borrowed_str_option(&show_address.subtitle),
+                    None,
+                    None,
+                    show_address.chunkify,
+                    tstr_from_archived_borrowed_str(&show_address.address_qr),
+                    false,
+                    tstr_from_archived_borrowed_str_option(&show_address.account),
+                    tstr_from_archived_borrowed_str_option(&show_address.path),
+                    obj_from_proplist(&show_address.xpubs),
+                    10,
+                    "show_address".into(),
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    show_address.br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
+                ))
+            }
+        }
     }
 }

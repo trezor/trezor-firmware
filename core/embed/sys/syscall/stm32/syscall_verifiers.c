@@ -23,6 +23,7 @@
 
 #include <trezor_rtl.h>
 
+#include <sys/applet.h>
 #include <sys/systask.h>
 
 #include "syscall_probe.h"
@@ -364,7 +365,7 @@ access_violation:
 #ifdef FRAMEBUFFER
 
 bool display_get_frame_buffer__verified(display_fb_info_t *fb) {
-  if (!probe_write_access(fb, sizeof(*fb))) {
+  if (fb == NULL || !probe_write_access(fb, sizeof(*fb))) {
     goto access_violation;
   }
 
@@ -384,7 +385,7 @@ access_violation:
 #endif  // FRAMEBUFFER
 
 void display_fill__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -399,7 +400,7 @@ access_violation:
 }
 
 void display_copy_rgb565__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -932,7 +933,7 @@ access_violation:
 }
 
 void ble_get_state__verified(ble_state_t *state) {
-  if (!probe_write_access(state, sizeof(*state))) {
+  if (state == NULL || !probe_write_access(state, sizeof(*state))) {
     goto access_violation;
   }
 
@@ -1057,7 +1058,7 @@ access_violation:
 #ifdef USE_POWER_MANAGER
 
 pm_status_t pm_get_state__verified(pm_state_t *status) {
-  if (!probe_write_access(status, sizeof(*status))) {
+  if (status == NULL || !probe_write_access(status, sizeof(*status))) {
     goto access_violation;
   }
 
@@ -1073,7 +1074,7 @@ access_violation:
 }
 
 bool pm_get_events__verified(pm_event_t *event) {
-  if (!probe_write_access(event, sizeof(*event))) {
+  if (event == NULL || !probe_write_access(event, sizeof(*event))) {
     goto access_violation;
   }
 
@@ -1111,11 +1112,7 @@ jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {
     goto access_violation;
   }
 
-  if (input->offset > input->size) {
-    goto access_violation;
-  }
-
-  if (!probe_read_access(input->data, input->size - input->offset)) {
+  if (!probe_read_access(input->data, input->size)) {
     goto access_violation;
   }
 
@@ -1178,7 +1175,7 @@ access_violation:
 #ifdef USE_DMA2D
 
 bool dma2d_rgb565_fill__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1194,7 +1191,7 @@ access_violation:
 }
 
 bool dma2d_rgb565_copy_mono4__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1211,7 +1208,7 @@ access_violation:
 }
 
 bool dma2d_rgb565_copy_rgb565__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1228,7 +1225,7 @@ access_violation:
 }
 
 bool dma2d_rgb565_blend_mono4__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1245,7 +1242,7 @@ access_violation:
 }
 
 bool dma2d_rgb565_blend_mono8__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1262,7 +1259,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_fill__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1278,7 +1275,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_copy_mono4__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1295,7 +1292,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_copy_rgb565__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1312,7 +1309,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_copy_rgba8888__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1329,7 +1326,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_blend_mono4__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1346,7 +1343,7 @@ access_violation:
 }
 
 bool dma2d_rgba8888_blend_mono8__verified(const gfx_bitblt_t *bb) {
-  if (!probe_read_access(bb, sizeof(*bb))) {
+  if (bb == NULL || !probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;
   }
 
@@ -1444,53 +1441,123 @@ access_violation:
 
 #ifdef USE_APP_LOADING
 
-ts_t app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id) {
+ts_t app_arena_get_info__verified(app_arena_info_t *info) {
+  if (!probe_write_access(info, sizeof(*info))) {
+    goto access_violation;
+  }
+
+  return app_arena_get_info(info);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_arena_create_image__verified(const void *header, size_t header_size,
+                                      const sha256_digest_t *proof,
+                                      size_t proof_size,
+                                      app_image_handle_t *handle) {
+  if (!probe_read_access(header, header_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(proof, proof_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(handle, sizeof(*handle))) {
+    goto access_violation;
+  }
+
+  return app_arena_create_image(header, header_size, proof, proof_size, handle);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_arena_get_image_by_index__verified(size_t idx,
+                                            app_image_handle_t *handle) {
+  if (!probe_write_access(handle, sizeof(*handle))) {
+    goto access_violation;
+  }
+
+  return app_arena_get_image_by_index(idx, handle);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_image_get_info__verified(app_image_handle_t handle,
+                                  app_image_info_t *info) {
+  if (!probe_write_access(info, sizeof(*info))) {
+    goto access_violation;
+  }
+
+  return app_image_get_info(handle, info);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_image_write_chunk__verified(app_image_handle_t handle,
+                                     const void *data, size_t size,
+                                     const sha256_digest_t *hash) {
+  if (!probe_read_access(data, size)) {
+    goto access_violation;
+  }
+
   if (!probe_read_access(hash, sizeof(*hash))) {
     goto access_violation;
   }
 
+  return app_image_write_chunk(handle, data, size, hash);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t app_image_run__verified(app_image_handle_t handle, systask_id_t *task_id) {
   if (!probe_write_access(task_id, sizeof(*task_id))) {
     goto access_violation;
   }
 
-  return app_task_spawn(hash, task_id);
+  return app_image_run(handle, task_id);
+
 access_violation:
+
   apptask_access_violation();
   return TS_EACCES;
 }
 
-ts_t app_task_get_pminfo__verified(systask_id_t task_id,
-                                   systask_postmortem_t *pminfo) {
+ts_t app_image_get_pminfo__verified(app_image_handle_t handle,
+                                    systask_postmortem_t *pminfo) {
   if (!probe_write_access(pminfo, sizeof(*pminfo))) {
     goto access_violation;
   }
 
-  return app_task_get_pminfo(task_id, pminfo);
+  return app_image_get_pminfo(handle, pminfo);
+
 access_violation:
   apptask_access_violation();
   return TS_EACCES;
 }
 
-app_cache_handle_t app_cache_create_image__verified(const app_hash_t *hash,
-                                                    size_t image_size) {
-  if (!probe_read_access(hash, sizeof(*hash))) {
+// ---------------------------------------------------------------------
+
+ts_t app_get_heap__verified(void **heap_ptr, size_t *heap_size) {
+  if (!probe_write_access(heap_ptr, sizeof(*heap_ptr))) {
     goto access_violation;
   }
 
-  return app_cache_create_image(hash, image_size);
-
-access_violation:
-  apptask_access_violation();
-  return APP_CACHE_INVALID_HANDLE;
-}
-
-ts_t app_cache_write_image__verified(app_cache_handle_t handle,
-                                     uintptr_t offset, const void *data,
-                                     size_t data_size) {
-  if (!probe_read_access(data, data_size)) {
+  if (!probe_write_access(heap_size, sizeof(*heap_size))) {
     goto access_violation;
   }
-  return app_cache_write_image(handle, offset, data, data_size);
+
+  return applet_get_heap(syscall_get_context(), heap_ptr, heap_size);
 
 access_violation:
   apptask_access_violation();

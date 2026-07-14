@@ -7222,6 +7222,126 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ThpPairedCacheEntry"]:
             return isinstance(msg, cls)
 
+    class TrezorAppLoad(protobuf.MessageType):
+        id: "str"
+        version: "list[int]"
+        hash: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            id: "str",
+            hash: "AnyBytes",
+            version: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppLoad"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppLoaded(protobuf.MessageType):
+        instance_id: "int"
+
+        def __init__(
+            self,
+            *,
+            instance_id: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppLoaded"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppHeaderRequest(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppHeaderRequest"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppHeaderAck(protobuf.MessageType):
+        header: "AnyBytes"
+        proof: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            header: "AnyBytes",
+            proof: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppHeaderAck"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppDataChunkRequest(protobuf.MessageType):
+        index: "int"
+
+        def __init__(
+            self,
+            *,
+            index: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppDataChunkRequest"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppDataChunkAck(protobuf.MessageType):
+        data: "AnyBytes"
+        hash: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            data: "AnyBytes",
+            hash: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppDataChunkAck"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppMessage(protobuf.MessageType):
+        instance_id: "int"
+        message_id: "int"
+        data: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            instance_id: "int",
+            message_id: "int",
+            data: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppMessage"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppResponse(protobuf.MessageType):
+        message_id: "int"
+        data: "AnyBytes"
+        finished: "bool"
+
+        def __init__(
+            self,
+            *,
+            message_id: "int",
+            data: "AnyBytes",
+            finished: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppResponse"]:
+            return isinstance(msg, cls)
+
     class TronGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"

@@ -27,6 +27,10 @@
 #include <sys/mpu.h>
 
 bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
+  if (data == NULL) {
+    return false;
+  }
+
   uint32_t size = translations_area_bytesize();
   if (offset > size || size - offset < len) {
     return false;
@@ -50,6 +54,10 @@ const uint8_t* translations_read(uint32_t* len, uint32_t offset) {
   // TODO: _Static_assert was not happy with ASSETS_AREA.num_subareas == 1
   // error: expression in static assertion is not constant
   assert(ASSETS_AREA.num_subareas == 1);
+
+  if (len == NULL) {
+    return NULL;
+  }
 
   uint32_t size = translations_area_bytesize();
   if (offset >= size) {

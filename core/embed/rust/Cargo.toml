@@ -62,8 +62,8 @@ n4w1 = []
 translations = ["crypto"]
 secmon_layout = []
 dbg_console = []
-app_loading = []
 thp = ["crypto", "dep:trezor-thp", "dep:zeroize"]
+app_loading = ["dep:trezor-app-sdk", "dep:rkyv"]
 test = [
     "backlight",
     "button",
@@ -122,6 +122,8 @@ io = { workspace = true, optional = true }
 trezor-thp = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }
 zeroize = { workspace = true, optional = true }
+rkyv = { workspace = true, optional = true }
+trezor-app-sdk = { workspace = true, optional = true }
 
 [build-dependencies]
 bindgen.workspace = true

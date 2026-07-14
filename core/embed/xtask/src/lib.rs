@@ -1,3 +1,4 @@
+pub mod api;
 pub mod args;
 pub mod artifacts;
 pub mod cargo;

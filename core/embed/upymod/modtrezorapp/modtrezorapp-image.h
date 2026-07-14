@@ -17,78 +17,370 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <py/obj.h>
+#include <py/runtime.h>
+
 #include <trezor_rtl.h>
 
-#include <io/app_loader.h>
+#include <io/app_arena.h>
 
-/// package: trezorapp.__init__
+/// package: trezorapp
+
+/// class AppError(Exception):
+///     """
+///     Base exception for all trezorapp errors.
+///     """
+MP_DEFINE_EXCEPTION(AppError, Exception)
+
+/// class AppImageError(AppError):
+///     """
+///     Base exception for app image errors.
+///     """
+MP_DEFINE_EXCEPTION(AppImageError, AppError)
+
+/// class AppImageNotFoundError(AppImageError):
+///     """
+///     Raised when the AppImage handle is invalid or the image no longer
+///     exists.
+///     """
+MP_DEFINE_EXCEPTION(AppImageNotFoundError, AppImageError)
+
+/// class AppImageMemoryError(AppImageError):
+///     """
+///     Raised when there is not enough memory in the app arena.
+///     """
+MP_DEFINE_EXCEPTION(AppImageMemoryError, AppImageError)
+
+/// class AppImageVerificationError(AppImageError):
+///     """
+///     Raised when the app image data fails verification.
+///     """
+MP_DEFINE_EXCEPTION(AppImageVerificationError, AppImageError)
+
+/// class AppArenaError(AppError):
+///     """
+///     Raised when an app arena operation fails.
+///     """
+MP_DEFINE_EXCEPTION(AppArenaError, AppError)
 
 /// class AppImage:
 ///     """
-///     Application image image.
+///     External application loaded in the app arena
 ///     """
 typedef struct _mp_obj_AppImage_t {
   mp_obj_base_t base;
-  app_cache_handle_t image;
+  app_image_handle_t handle;
 } mp_obj_AppImage_t;
 
-/// def write(self, offset: int, data: AnyBytes) -> None
+STATIC void app_image_get_info_or_raise(app_image_handle_t handle,
+                                        app_image_info_t *info) {
+  ts_t status = app_image_get_info(handle, info);
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_type(&mp_type_AppImageNotFoundError);
+  } else if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppImageError);
+  }
+}
+
+/// def handle(self) -> int:
 ///     """
-///     Writes data to the application image at the specified offset.
+///     Return the image internal unique handle.
 ///     """
-STATIC mp_obj_t mod_trezorapp_AppImage_write(mp_obj_t self, mp_obj_t offset_obj,
-                                             mp_obj_t data_obj) {
+STATIC mp_obj_t mod_trezorapp_AppImage_handle(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
-  app_cache_handle_t image = o->image;
+  return mp_obj_new_int(o->handle);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_handle_obj,
+                                 mod_trezorapp_AppImage_handle);
 
-  mp_buffer_info_t bufinfo = {0};
-  mp_get_buffer_raise(data_obj, &bufinfo, MP_BUFFER_READ);
+/// def task_id(self) -> int:
+///     """
+///     Return the task ID associated with the application image.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_task_id(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
-  uintptr_t offset = mp_obj_get_int(offset_obj);
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
 
-  ts_t status = app_cache_write_image(image, offset, bufinfo.buf, bufinfo.len);
-  if (ts_error(status)) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to write to app image."));
+  if (!info.running) {
+    mp_raise_type(&mp_type_AppImageError);
+  }
+
+  return mp_obj_new_int(info.task_id);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_task_id_obj,
+                                 mod_trezorapp_AppImage_task_id);
+
+/// def is_running(self) -> bool:
+///     """
+///     Check if the application image is currently running.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_is_running(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_bool(info.running);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_running_obj,
+                                 mod_trezorapp_AppImage_is_running);
+
+/// def is_ready(self) -> bool:
+///     """
+///     Check if the application image has been fully loaded and verified.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_is_ready(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_bool(info.ready);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_ready_obj,
+                                 mod_trezorapp_AppImage_is_ready);
+
+/// def id(self) -> str:
+///     """
+///     Return the ID of the application image.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_id(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_str(info.id, strnlen(info.id, sizeof(info.id)));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_id_obj,
+                                 mod_trezorapp_AppImage_id);
+
+/// def size(self) -> int:
+///     """
+///     Return the size of the application image in bytes.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_size(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_int(info.code_size);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_size_obj,
+                                 mod_trezorapp_AppImage_size);
+
+/// def chunk_size(self) -> int:
+///     """
+///     Return the expected size of each payload chunk in bytes.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_chunk_size(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_int(info.chunk_size);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_chunk_size_obj,
+                                 mod_trezorapp_AppImage_chunk_size);
+
+/// def version(self) -> tuple[int, int, int, int]:
+///     """
+///     Return the version of the application image as a tuple (major, minor,
+///     patch, build).
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_version(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  mp_obj_t version_tuple[4];
+  version_tuple[0] = mp_obj_new_int((info.version >> 0) & 0xFF);   // major
+  version_tuple[1] = mp_obj_new_int((info.version >> 8) & 0xFF);   // minor
+  version_tuple[2] = mp_obj_new_int((info.version >> 16) & 0xFF);  // patch
+  version_tuple[3] = mp_obj_new_int((info.version >> 24) & 0xFF);  // build
+
+  return mp_obj_new_tuple(4, version_tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_version_obj,
+                                 mod_trezorapp_AppImage_version);
+
+/// def name(self) -> str:
+///     """
+///     Return the name of the application.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_name(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_str(info.name, strnlen(info.name, sizeof(info.name)));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_name_obj,
+                                 mod_trezorapp_AppImage_name);
+
+/// def vendor(self) -> str:
+///     """
+///     Return the vendor of the application.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_vendor(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_str(info.vendor, strnlen(info.vendor, sizeof(info.vendor)));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_vendor_obj,
+                                 mod_trezorapp_AppImage_vendor);
+
+/// def header_hash(self) -> bytes:
+///     """
+///     Return the hash of the application image header.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_header_hash(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  app_image_info_t info;
+  app_image_get_info_or_raise(o->handle, &info);
+
+  return mp_obj_new_bytes((const byte *)&info.header_hash,
+                          sizeof(info.header_hash));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_header_hash_obj,
+                                 mod_trezorapp_AppImage_header_hash);
+
+/// def write_chunk(self, data: AnyBytes, hash: AnyBytes) -> None:
+///     """
+///     Write a chunk of image data into app-arena memory.
+///     Allowed only while the image is in the loading state.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_write_chunk(mp_obj_t self,
+                                                   mp_obj_t data_obj,
+                                                   mp_obj_t hash_obj) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  mp_buffer_info_t data = {0};
+  mp_get_buffer_raise(data_obj, &data, MP_BUFFER_READ);
+
+  mp_buffer_info_t hash = {0};
+  mp_get_buffer_raise(hash_obj, &hash, MP_BUFFER_READ);
+  if (hash.len != sizeof(sha256_digest_t)) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Hash must be 32 bytes"));
+  }
+
+  ts_t status = app_image_write_chunk(o->handle, data.buf, data.len,
+                                      (const sha256_digest_t *)hash.buf);
+
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_type(&mp_type_AppImageNotFoundError);
+  } else if (ts_eq(status, TS_ENOMEM)) {
+    mp_raise_type(&mp_type_AppImageMemoryError);
+  } else if (ts_eq(status, TS_EBADMSG)) {
+    mp_raise_type(&mp_type_AppImageVerificationError);
+  } else if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppImageError);
   }
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_obj,
-                                 mod_trezorapp_AppImage_write);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_chunk_obj,
+                                 mod_trezorapp_AppImage_write_chunk);
 
-/// def finalize(self, bool accept) -> None:
+/// def delete(self) -> None:
 ///     """
-///     Finalizes loading of the application image. If `accept` is true,
-///     the image is marked as loaded and will be available for execution.
-///     If `accept` is false, the image is discarded.
+///     Delete the application and release its resources.
+///     If the image is currently running, it is stopped before
+///     deletion. After deletion, the AppImage object is invalid
+///     and must not be used.
 ///     """
-STATIC mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
-                                                mp_obj_t accept_obj) {
+STATIC mp_obj_t mod_trezorapp_AppImage_delete(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
-  bool accept = mp_obj_is_true(accept_obj);
-
-  ts_t status = app_cache_finalize_image(o->image, accept);
-
-  if (accept && ts_error(status)) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to finalize app image."));
+  ts_t status = app_image_delete(o->handle);
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_type(&mp_type_AppImageNotFoundError);
+  } else if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppImageError);
   }
-
-  UNUSED(status);
-
-  o->image = APP_CACHE_INVALID_HANDLE;
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_AppImage_finalize_obj,
-                                 mod_trezorapp_AppImage_finalize);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_delete_obj,
+                                 mod_trezorapp_AppImage_delete);
+
+/// def run(self) -> int:
+///     """
+///     Run the loaded application image and return its task ID.
+///     If the image is already running, the function returns its task ID.
+///     Only ready images are runnable.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_run(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  systask_id_t task_id = 0;
+  ts_t status = app_image_run(o->handle, &task_id);
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_type(&mp_type_AppImageNotFoundError);
+  } else if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppImageError);
+  }
+
+  return mp_obj_new_int(task_id);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_run_obj,
+                                 mod_trezorapp_AppImage_run);
+
+/// def stop(self) -> None:
+///     """
+///     Stop the running application image. If the image is not running,
+///     this operation has no effect.
+///     """
+STATIC mp_obj_t mod_trezorapp_AppImage_stop(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  ts_t status = app_image_stop(o->handle);
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_type(&mp_type_AppImageNotFoundError);
+  } else if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppImageError);
+  }
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_stop_obj,
+                                 mod_trezorapp_AppImage_stop);
 
 STATIC const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
-    {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorapp_AppImage_write_obj)},
-    {MP_ROM_QSTR(MP_QSTR_finalize),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_finalize_obj)},
+    {MP_ROM_QSTR(MP_QSTR_handle),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_handle_obj)},
+    {MP_ROM_QSTR(MP_QSTR_task_id),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_task_id_obj)},
+    {MP_ROM_QSTR(MP_QSTR_is_running),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_is_running_obj)},
+    {MP_ROM_QSTR(MP_QSTR_is_ready),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_is_ready_obj)},
+    {MP_ROM_QSTR(MP_QSTR_id), MP_ROM_PTR(&mod_trezorapp_AppImage_id_obj)},
+    {MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&mod_trezorapp_AppImage_size_obj)},
+    {MP_ROM_QSTR(MP_QSTR_chunk_size),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_chunk_size_obj)},
+    {MP_ROM_QSTR(MP_QSTR_version),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_version_obj)},
+    {MP_ROM_QSTR(MP_QSTR_name), MP_ROM_PTR(&mod_trezorapp_AppImage_name_obj)},
+    {MP_ROM_QSTR(MP_QSTR_vendor),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_vendor_obj)},
+    {MP_ROM_QSTR(MP_QSTR_header_hash),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_header_hash_obj)},
+    {MP_ROM_QSTR(MP_QSTR_write_chunk),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_write_chunk_obj)},
+    {MP_ROM_QSTR(MP_QSTR_delete),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_delete_obj)},
+    {MP_ROM_QSTR(MP_QSTR_run), MP_ROM_PTR(&mod_trezorapp_AppImage_run_obj)},
+    {MP_ROM_QSTR(MP_QSTR_stop), MP_ROM_PTR(&mod_trezorapp_AppImage_stop_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorapp_AppImage_locals_dict,
                             mod_trezorapp_AppImage_locals_dict_table);

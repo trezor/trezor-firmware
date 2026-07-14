@@ -1,0 +1,365 @@
+use crate::{
+    alloc_types::String,
+    common::COIN,
+    ed25519,
+    proto::definitions::{DefinitionType, DisplayFormatInfo, NetworkInfo, TokenInfo},
+    tokens::{token_by_chain_address, unknown_token},
+    uformat,
+};
+use prost::Message;
+use trezor_app_sdk::{
+    Error, Result,
+    crypto::{self, Hasher},
+};
+
+const THRESHOLD: usize = 2;
+const PUBLIC_KEYS: [&[u8;32]; 3] = [
+    b"\x43\x34\x99\x63\x43\x62\x3e\x46\x2f\x0f\xc9\x33\x11\xfe\xf1\x48\x4c\xa2\x3d\x2f\xf1\xee\xc6\xdf\x1f\xa8\xeb\x7e\x35\x73\xb3\xdb",
+    b"\xa9\xa2\x2c\xc2\x65\xa0\xcb\x1d\x6c\xb3\x29\xbc\x0e\x60\xbc\x45\xdf\x76\xb9\xab\x28\xfb\x87\xb6\x11\x36\xfe\xaf\x8d\x8f\xdc\x96",
+    b"\xb8\xd2\xb2\x1d\xe2\x71\x24\xf0\x51\x1f\x90\x3a\xe7\xe6\x0e\x07\x96\x18\x10\xa0\xb8\xf2\x8e\xa7\x55\xfa\x50\x36\x7a\x8a\x2b\x8b",
+];
+
+#[cfg(feature = "dev_keys")]
+const DEV_PUBLIC_KEYS: [&[u8;32]; 3] = [
+        b"\x68\x46\x0e\xbe\xf3\xb1\x38\x16\x4e\xc7\xfd\x86\x10\xe9\x58\x00\xdf\x75\x98\xf7\x0f\x2f\x2e\xa7\xdb\x51\x72\xac\x74\xeb\xc1\x44",
+        b"\x8d\x4a\xbe\x07\x4f\xef\x92\x29\xd3\xb4\x41\xdf\xea\x4f\x98\xf8\x05\xb1\xa2\xb3\xa0\x6a\xe6\x45\x81\x0e\xfe\xce\x77\xfd\x50\x44",
+        b"\x97\xf7\x13\x5a\x9a\x26\x90\xe7\x3b\xeb\x26\x55\x6f\x1c\xb1\x63\xbe\xa2\x53\x2a\xff\xa1\xe7\x78\x24\x30\xbe\x98\xc0\xe5\x68\x12",
+    ];
+
+const MIN_DATA_VERSION: u32 = 1764611524;
+const FORMAT_VERSION: &[u8] = b"trzd1";
+
+pub(crate) struct Definitions {
+    network: NetworkInfo,
+    token: Option<TokenInfo>,
+}
+
+impl Definitions {
+    fn new(network: NetworkInfo, token: Option<TokenInfo>) -> Self {
+        Self { network, token }
+    }
+
+    pub fn from_encoded(
+        encoded_network: Option<&[u8]>,
+        encoded_token: Option<&[u8]>,
+        chain_id: Option<u64>,
+        slip44: Option<u32>,
+    ) -> Result<Self> {
+        // if we have a built-in definition, use it
+        let mut token = None;
+        let mut network = if let Some(chain_id) = chain_id {
+            by_chain_id(chain_id)
+        } else if let Some(slip44) = slip44 {
+            by_slip44(slip44)
+        } else {
+            // ignore tokens if we don't have a network
+            return Ok(Self::new(unknown_network(), token));
+        };
+
+        if network == unknown_network()
+            && let Some(encoded_network) = encoded_network
+        {
+            network = decode_definition::<NetworkInfo>(encoded_network)?;
+        }
+
+        if network == unknown_network() {
+            // ignore tokens if we don't have a network
+            return Ok(Self::new(unknown_network(), token));
+        }
+
+        if let Some(chain_id) = chain_id
+            && network.chain_id != chain_id
+        {
+            return Err(Error::DataError("Network definition mismatch"))?;
+        }
+        if let Some(slip44) = slip44
+            && network.slip44 != slip44
+        {
+            return Err(Error::DataError("Network definition mismatch"))?;
+        }
+
+        // get token definition
+        if let Some(encoded_token) = encoded_token {
+            let token_info = decode_definition::<TokenInfo>(encoded_token)?;
+            // Ignore token if it doesn't match the network instead of raising an error.
+            // This might help us in the future if we allow multiple networks/tokens
+            // in the same message.
+            if token_info.chain_id == network.chain_id {
+                token = Some(token_info);
+            }
+        }
+
+        Ok(Self::new(network, token))
+    }
+
+    pub fn network(&self) -> &NetworkInfo {
+        &self.network
+    }
+
+    pub fn get_token(&self, address: &[u8]) -> TokenInfo {
+        // if we have a built-in definition, use it
+        let token = token_by_chain_address(self.network.chain_id, address);
+
+        if let Some(token_info) = token {
+            return token_info;
+        }
+
+        if let Some(token_info) = self.token.iter().find(|t| t.address.as_slice() == address) {
+            token_info.clone()
+        } else {
+            unknown_token()
+        }
+    }
+}
+
+pub(crate) trait DefinitionMessage: Message + Default {
+    fn definition_type() -> DefinitionType;
+}
+
+impl DefinitionMessage for NetworkInfo {
+    fn definition_type() -> DefinitionType {
+        DefinitionType::Network
+    }
+}
+
+impl DefinitionMessage for TokenInfo {
+    fn definition_type() -> DefinitionType {
+        DefinitionType::Token
+    }
+}
+
+impl DefinitionMessage for DisplayFormatInfo {
+    fn definition_type() -> DefinitionType {
+        DefinitionType::DisplayFormat
+    }
+}
+
+pub(crate) fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A> {
+    let expected_type = A::definition_type();
+
+    let mut offset = 0;
+    let mut remaining = encoded.len();
+
+    let header_len = FORMAT_VERSION.len() + 1 + 4 + 2; // format version + type + data version + payload length
+    if remaining < header_len {
+        return Err(Error::DataError("Invalid definition"));
+    }
+
+    // first check format version
+    if &encoded[offset..offset + FORMAT_VERSION.len()] != FORMAT_VERSION {
+        return Err(Error::DataError("Invalid definition"));
+    }
+    offset += FORMAT_VERSION.len();
+    remaining -= FORMAT_VERSION.len();
+
+    // second check the type of the data
+    if encoded[offset] != expected_type as u8 {
+        return Err(Error::DataError("Definition type mismatch"));
+    }
+    offset += 1;
+    remaining -= 1;
+
+    // third check data version
+    let version = u32::from_le_bytes(
+        encoded[offset..offset + 4]
+            .try_into()
+            .map_err(|_| Error::DataError("Invalid definition version"))?,
+    );
+    if version < MIN_DATA_VERSION {
+        return Err(Error::DataError("Definition is outdated"));
+    }
+    offset += 4;
+    remaining -= 4;
+
+    // get payload
+    let payload_len = u16::from_le_bytes(
+        encoded[offset..offset + 2]
+            .try_into()
+            .map_err(|_| Error::DataError("Invalid payload len"))?,
+    ) as usize;
+    offset += 2;
+    remaining -= 2;
+
+    if remaining < (payload_len + 1) {
+        return Err(Error::DataError("Invalid definition"));
+    }
+    let payload = &encoded[offset..offset + payload_len];
+    offset += payload_len;
+    remaining -= payload_len;
+
+    // at the end compute Merkle tree root hash using
+    // provided leaf data (payload with prefix) and proof
+
+    let mut hasher = crypto::Sha256::new(Some(b"\x00"));
+    hasher.update(&encoded[..offset]);
+    let mut hash = hasher.digest();
+
+    let proof_len = encoded[offset];
+    offset += 1;
+    remaining -= 1;
+
+    for _ in 0..proof_len {
+        if remaining < 32 {
+            return Err(Error::DataError("Invalid definition"));
+        }
+        let proof_entry = &encoded[offset..offset + 32];
+        offset += 32;
+        remaining -= 32;
+
+        let (hash_a, hash_b) = if hash.as_slice() <= proof_entry {
+            (hash.as_slice(), proof_entry)
+        } else {
+            (proof_entry, hash.as_slice())
+        };
+
+        let mut hasher = crypto::Sha256::new(Some(b"\x01"));
+        hasher.update(hash_a);
+        hasher.update(hash_b);
+        hash = hasher.digest();
+    }
+
+    if remaining < 1 + 64 {
+        return Err(Error::DataError("Invalid definition"));
+    }
+
+    let sigmask = encoded[offset];
+    offset += 1;
+    remaining -= 1;
+
+    let signature: &[u8; 64] = (&encoded[offset..offset + 64])
+        .try_into()
+        .map_err(|_| Error::DataError("Invalid definition signature"))?;
+    // offset += 64;
+    remaining -= 64;
+
+    if remaining != 0 {
+        return Err(Error::DataError("Invalid definition"));
+    }
+
+    let mut hash_str = String::new();
+    for byte in hash.as_slice() {
+        hash_str.push_str(&uformat!("{} ", *byte));
+    }
+    let mut sig_str = String::new();
+    for byte in signature {
+        sig_str.push_str(&uformat!("{} ", *byte));
+    }
+
+    // verify signature
+    #[allow(unused_mut)]
+    let mut result = ed25519::verify(signature, &hash, THRESHOLD, &PUBLIC_KEYS, sigmask)?;
+
+    #[cfg(feature = "dev_keys")]
+    if !result {
+        // if the signature is not valid with production keys, try dev keys (for testing purposes)
+        result = ed25519::verify(signature, &hash, THRESHOLD, &DEV_PUBLIC_KEYS, sigmask)?;
+    }
+
+    if !result {
+        return Err(Error::DataError("Invalid definition signature"));
+    }
+
+    // decode it if it's OK
+    A::decode(payload).map_err(|_| Error::DataError("Invalid definition payload"))
+}
+
+pub fn unknown_network() -> NetworkInfo {
+    NetworkInfo {
+        chain_id: 0,
+        symbol: "UNKN".into(),
+        slip44: 0,
+        name: "Unknown Network".into(),
+    }
+}
+
+pub fn by_chain_id(chain_id: u64) -> NetworkInfo {
+    for (c, s, sym, n) in _networks_iterator() {
+        if *c == chain_id {
+            return NetworkInfo {
+                chain_id: *c,
+                slip44: *s,
+                symbol: (*sym).into(),
+                name: (*n).into(),
+            };
+        }
+    }
+    unknown_network()
+}
+
+pub fn by_slip44(slip44: u32) -> NetworkInfo {
+    for (c, s, sym, n) in _networks_iterator() {
+        if *s == slip44 {
+            return NetworkInfo {
+                chain_id: *c,
+                slip44: *s,
+                symbol: (*sym).into(),
+                name: (*n).into(),
+            };
+        }
+    }
+    unknown_network()
+}
+
+fn _networks_iterator() -> &'static [(u64, u32, &'static str, &'static str)] {
+    &[
+        (1, 60, COIN, "Ethereum"),
+        (10, 614, COIN, "Optimism"),
+        (56, 714, "BNB", "BNB Smart Chain"),
+        (61, 61, "ETC", "Ethereum Classic"),
+        (137, 966, "POL", "Polygon"),
+        (8453, 8453, COIN, "Base"),
+        (42161, 9001, COIN, "Arbitrum One"),
+        (560048, 60, "tHOD", "Hoodi"),
+        (11155111, 60, "tSEP", "Sepolia"),
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::definitions::unknown_network;
+    use crate::proto::definitions::{NetworkInfo, TokenInfo};
+    use crate::tokens::unknown_token;
+
+    const TETHER_ADDRESS: &[u8] =
+        b"\xda\xc1\x7f\x95\x8d\x2e\xe5\x23\xa2\x20\x62\x06\x99\x45\x97\xc1\x3d\x83\x1e\xc7";
+
+    fn _make_eth_network(
+        chain_id: Option<u64>,
+        slip44: Option<u32>,
+        symbol: Option<&str>,
+        name: Option<&str>,
+    ) -> NetworkInfo {
+        NetworkInfo {
+            chain_id: chain_id.unwrap_or(0),
+            slip44: slip44.unwrap_or(0),
+            symbol: symbol.unwrap_or("FAKE").into(),
+            name: name.unwrap_or("Fake network").into(),
+        }
+    }
+
+    fn _make_eth_token(
+        symbol: Option<&str>,
+        decimals: Option<u32>,
+        address: Option<&[u8]>,
+        chain_id: Option<u64>,
+        name: Option<&str>,
+    ) -> TokenInfo {
+        TokenInfo {
+            symbol: symbol.unwrap_or("FAKE").into(),
+            decimals: decimals.unwrap_or(18),
+            address: address.unwrap_or(b"").to_vec(),
+            chain_id: chain_id.unwrap_or(0),
+            name: name.unwrap_or("Fake token").into(),
+        }
+    }
+
+    #[test]
+    fn test_empty() {
+        // no slip44 nor chain_id -- should short-circuit and always be unknown
+        let defs = Definitions::from_encoded(None, None, None, None).unwrap();
+        assert_eq!(defs.network, unknown_network());
+        assert!(defs.token.is_none());
+        assert_eq!(defs.get_token(TETHER_ADDRESS), unknown_token());
+    }
+}

@@ -7,7 +7,7 @@ help: ## show this help
 
 PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude ) common/protob/pb2py
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
-PROTO_FILES = $(shell find common core -type f -name '*.proto')
+PROTO_FILES = $(shell find common core sdk -type f -name '*.proto')
 RUST_CRATES = $(shell find core -type f -name Cargo.toml -printf "%h\n")
 
 # suppress black's warning - remove when using Python 3.14
@@ -43,6 +43,7 @@ pystyle_check: ## run code style check on application sources and tests
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
 	make -C python style_check BLACK_FLAGS=$(BLACK_FLAGS)
+	xtask modular py-style-check -p ethereum
 
 pystyle_quick_check: ## run the basic style checks, suitable for a quick git hook
 	@isort --check-only $(PY_FILES)
@@ -64,6 +65,7 @@ pystyle: ## apply code style on application sources and tests
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
 	make -C python style BLACK_FLAGS=$(BLACK_FLAGS)
+	xtask modular py-style -p ethereum
 
 changelog_check: ## check changelog format
 	@echo [CHANGELOG-CHECK]
@@ -76,10 +78,12 @@ changelog_style: ## fix changelog format
 translations_style: ## Format translation files
 	@echo [TRANSLATIONS-STYLE]
 	@./core/tools/translations/sort_keys.py
+	xtask modular translation-style -p ethereum
 
 translations_style_check: ## Check that translation files are properly formatted
 	@echo [TRANSLATIONS-STYLE-CHECK]
 	@./core/tools/translations/sort_keys.py check
+	xtask modular translation-style-check -p ethereum
 
 yaml_check: ## check yaml formatting
 	@echo [YAML-STYLE-CHECK]
@@ -118,11 +122,17 @@ ruststyle: ## apply code style on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt
 	make -C rust style
+	xtask modular fmt
+	@cd sdk/crates/modular-xtask ; cargo fmt
+	@cd sdk/crates/trezor-app-sdk ; cargo fmt
 
 ruststyle_check: ## run code style check on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt -- --check
 	make -C rust style_check
+	xtask modular fmt-check
+	@cd sdk/crates/modular-xtask ; cargo fmt -- --check
+	@cd sdk/crates/trezor-app-sdk ; cargo fmt -- --check
 
 
 typecheck: pyright
@@ -207,9 +217,15 @@ prodtest_error_codes: ## generate prodtest error codes JSON
 prodtest_error_codes_check: ## check prodtest error codes JSON is up to date
 	python3 core/tools/prodtest_error_codes.py --check
 
-gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_config hsm_keys prodtest_error_codes ## regenerate auto-generated files from sources
+api:
+	xtask api-bindings
 
-gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_config_check hsm_keys_check prodtest_error_codes_check ## check validity of auto-generated files
+api_check:
+	xtask api-bindings --check-only
+
+gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_config hsm_keys prodtest_error_codes api ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_config_check hsm_keys_check prodtest_error_codes_check api_check ## check validity of auto-generated files
 
 uvlock_check: ## check that uv.lock is up to date
 	@echo [UVLOCK-CHECK]

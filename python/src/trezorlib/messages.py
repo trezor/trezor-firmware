@@ -786,6 +786,14 @@ class MessageType(IntEnum):
     BenchmarkResult = 9103
     TelemetryGet = 1100
     Telemetry = 1101
+    TrezorAppLoad = 9200
+    TrezorAppLoaded = 9201
+    TrezorAppHeaderRequest = 9202
+    TrezorAppHeaderAck = 9203
+    TrezorAppDataChunkRequest = 9204
+    TrezorAppDataChunkAck = 9205
+    TrezorAppMessage = 9206
+    TrezorAppResponse = 9207
 
 
 class BenchmarkListNames(protobuf.MessageType):
@@ -9116,6 +9124,132 @@ class ThpPairedCacheEntry(protobuf.MessageType):
         self.mac_addr = mac_addr
         self.host_name = host_name
         self.app_name = app_name
+
+
+class TrezorAppLoad(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9200
+    FIELDS = {
+        1: protobuf.Field("id", "string", repeated=False, required=True),
+        2: protobuf.Field("version", "uint32", repeated=True, required=False, default=None),
+        3: protobuf.Field("hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        id: "str",
+        hash: "bytes",
+        version: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.version: Sequence["int"] = version if version is not None else []
+        self.id = id
+        self.hash = hash
+
+
+class TrezorAppLoaded(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9201
+    FIELDS = {
+        1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        instance_id: "int",
+    ) -> None:
+        self.instance_id = instance_id
+
+
+class TrezorAppHeaderRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9202
+
+
+class TrezorAppHeaderAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9203
+    FIELDS = {
+        1: protobuf.Field("header", "bytes", repeated=False, required=True),
+        2: protobuf.Field("proof", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        header: "bytes",
+        proof: "bytes",
+    ) -> None:
+        self.header = header
+        self.proof = proof
+
+
+class TrezorAppDataChunkRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9204
+    FIELDS = {
+        1: protobuf.Field("index", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        index: "int",
+    ) -> None:
+        self.index = index
+
+
+class TrezorAppDataChunkAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9205
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+        2: protobuf.Field("hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+        hash: "bytes",
+    ) -> None:
+        self.data = data
+        self.hash = hash
+
+
+class TrezorAppMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9206
+    FIELDS = {
+        1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("message_id", "uint32", repeated=False, required=True),
+        3: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        instance_id: "int",
+        message_id: "int",
+        data: "bytes",
+    ) -> None:
+        self.instance_id = instance_id
+        self.message_id = message_id
+        self.data = data
+
+
+class TrezorAppResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9207
+    FIELDS = {
+        1: protobuf.Field("message_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("data", "bytes", repeated=False, required=True),
+        3: protobuf.Field("finished", "bool", repeated=False, required=False, default=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        message_id: "int",
+        data: "bytes",
+        finished: Optional["bool"] = False,
+    ) -> None:
+        self.message_id = message_id
+        self.data = data
+        self.finished = finished
 
 
 class TronGetAddress(protobuf.MessageType):

@@ -726,3 +726,11 @@ if TYPE_CHECKING:
         BenchmarkResult = 9103
         TelemetryGet = 1100
         Telemetry = 1101
+        TrezorAppLoad = 9200
+        TrezorAppLoaded = 9201
+        TrezorAppHeaderRequest = 9202
+        TrezorAppHeaderAck = 9203
+        TrezorAppDataChunkRequest = 9204
+        TrezorAppDataChunkAck = 9205
+        TrezorAppMessage = 9206
+        TrezorAppResponse = 9207
