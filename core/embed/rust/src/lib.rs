@@ -23,8 +23,6 @@ mod macros;
 mod align;
 #[cfg(feature = "debug")]
 mod coverage;
-#[cfg(feature = "debug")]
-mod debug;
 mod error;
 mod io;
 mod maybe_trace;
