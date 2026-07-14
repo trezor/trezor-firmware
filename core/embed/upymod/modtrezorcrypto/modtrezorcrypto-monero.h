@@ -51,7 +51,6 @@ typedef struct _mp_obj_bignum256modm_t {
 
 static const mp_obj_type_t mod_trezorcrypto_monero_ge25519_type;
 static const mp_obj_type_t mod_trezorcrypto_monero_bignum256modm_type;
-STATIC const mp_obj_type_t mod_trezorcrypto_monero_hasher_type;
 
 #define MP_OBJ_IS_GE25519(o) \
   MP_OBJ_IS_TYPE((o), &mod_trezorcrypto_monero_ge25519_type)
