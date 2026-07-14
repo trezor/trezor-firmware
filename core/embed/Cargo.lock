@@ -893,8 +893,10 @@ dependencies = [
 name = "sys"
 version = "0.0.0"
 dependencies = [
+ "bindgen",
  "color-eyre",
  "crypto",
+ "cty",
  "models",
  "rtl",
  "xbuild",
@@ -1018,6 +1020,7 @@ dependencies = [
  "serde_json",
  "spin",
  "static-alloc",
+ "sys",
  "trezor-thp",
  "trezor-tjpgdec",
  "ufmt",

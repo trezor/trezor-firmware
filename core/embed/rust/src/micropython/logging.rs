@@ -1,9 +1,10 @@
+use sys::syslog::{log, LogLevel};
+
 use crate::micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr};
 
 use crate::{
     error::Error,
     micropython::{buffer::StrBuffer, util},
-    trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel},
     util::logger::init_rust_logging,
 };
 
@@ -14,18 +15,19 @@ fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
 
     let module_name = StrBuffer::try_from(*module)?;
 
-    if syslog_start_record(module_name.as_ref(), level) {
+    log(module_name.as_ref(), level, |writer| -> Result<(), Error> {
         if let Ok(iface_obj) = kwargs.get(Qstr::MP_QSTR_iface) {
             if iface_obj != Obj::const_none() {
                 let iface_type = iface_obj.type_().ok_or(Error::TypeError)?;
                 let iface_prefix = uformat!(len: 128, "\x1b[93m[{}]\x1b[0m ", iface_type.name());
-                syslog_write_chunk(iface_prefix.as_ref(), false);
+                writer.write(iface_prefix.as_ref());
             }
         }
 
         let msg: StrBuffer = util::modulo_format(*fmt, fmt_args)?.try_into()?;
-        syslog_write_chunk(msg.as_ref(), true);
-    }
+        writer.write(msg.as_ref());
+        Ok(())
+    })?;
 
     Ok(Obj::const_none())
 }

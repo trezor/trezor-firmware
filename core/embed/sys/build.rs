@@ -60,6 +60,8 @@ fn main() -> Result<()> {
             lib.add_define("LOCKABLE_BOOTLOADER", None);
         }
 
+        lib.add_rust_bindings(|builder| Ok(add_rust_bindings(builder)))?;
+
         build_mods!(
             lib,
             [
@@ -85,4 +87,14 @@ fn main() -> Result<()> {
 
         Ok(())
     })
+}
+
+fn add_rust_bindings(builder: bindgen::Builder) -> bindgen::Builder {
+    builder
+        .header("inc/sys/logging.h")
+        .header("dbg/inc/sys/syslog.h")
+        .allowlist_function("syslog_start_record")
+        .allowlist_function("syslog_write_chunk")
+        .allowlist_type("log_source_t")
+        .allowlist_type("log_level_t")
 }

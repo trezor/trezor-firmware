@@ -1,15 +1,13 @@
 //! Connects the `log::error!`, `log::warn!`, ... macros from the `log` crate to
 //! our C logging backend.
 
-use heapless::Vec;
 use log::{set_logger, set_max_level, Level, LevelFilter, Log, Metadata, Record};
+use sys::syslog;
 
 use core::{
-    fmt::Write,
+    fmt::Write as _,
     sync::atomic::{AtomicBool, Ordering},
 };
-
-use crate::trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel};
 
 #[cfg(test)]
 const MAX_MESSAGE_LEN: usize = 512;
@@ -20,12 +18,12 @@ static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 struct SysLogger;
 
-fn sys_level(level: Level) -> LogLevel {
+fn sys_level(level: Level) -> syslog::LogLevel {
     match level {
-        Level::Error => LogLevel::Error,
-        Level::Warn => LogLevel::Warn,
-        Level::Info => LogLevel::Info,
-        Level::Debug | Level::Trace => LogLevel::Debug,
+        Level::Error => syslog::LogLevel::Error,
+        Level::Warn => syslog::LogLevel::Warn,
+        Level::Info => syslog::LogLevel::Info,
+        Level::Debug | Level::Trace => syslog::LogLevel::Debug,
     }
 }
 
@@ -42,22 +40,10 @@ impl Log for SysLogger {
             return;
         }
 
-        let should_log = syslog_start_record(record.target(), sys_level(record.level()));
-        if !should_log {
-            return;
-        }
-
-        let mut msg = Vec::<u8, MAX_MESSAGE_LEN>::new();
-        // Might still get partial message on error.
-        let res = msg.write_fmt(*record.args());
-
-        // SAFETY: passed to C which doesn't care about UTF-8
-        let text = unsafe { str::from_utf8_unchecked(&msg) };
-        syslog_write_chunk(text, res.is_ok());
-
-        if res.is_err() {
-            syslog_write_chunk("(message truncated)", true);
-        }
+        syslog::log(record.target(), sys_level(record.level()), |write| {
+            write.write_fmt(*record.args())
+        })
+        .ok();
     }
 
     fn flush(&self) {}
