@@ -1,35 +1,4 @@
-pub struct Crc32 {
-    value: u32,
-}
-
-static CRC32TAB: [u32; 16] = [
-    0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac, 0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
-    0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c, 0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c,
-];
-
-impl Crc32 {
-    pub fn new() -> Self {
-        Self { value: u32::MAX }
-    }
-
-    pub fn update(mut self, data: &[u8]) -> Self {
-        for b in data {
-            self.value ^= *b as u32;
-            self.value = CRC32TAB[(self.value & 0x0f) as usize] ^ (self.value >> 4);
-            self.value = CRC32TAB[(self.value & 0x0f) as usize] ^ (self.value >> 4);
-        }
-        self
-    }
-
-    pub fn finalize(self) -> [u8; 4] {
-        let inverted = self.value ^ u32::MAX;
-        inverted.to_be_bytes()
-    }
-}
-
-pub fn digest(data: &[u8]) -> [u8; 4] {
-    Crc32::new().update(data).finalize()
-}
+pub use trezor_crc32::{Crc32, digest};
 
 #[cfg(test)]
 mod test {

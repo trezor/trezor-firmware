@@ -7,7 +7,7 @@ build = "build.rs"
 
 [features]
 default = ["layout_bolt"]
-crypto = ["dep:zeroize"]
+crypto = ["dep:zeroize", "dep:trezor-crc32"]
 layout_bolt = []
 layout_caesar = []
 layout_delizia = []
@@ -119,6 +119,7 @@ unsize.workspace = true
 without-alloc.workspace = true
 
 io = { workspace = true, optional = true }
+trezor-crc32 = { workspace = true, optional = true }
 trezor-thp = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }
 zeroize = { workspace = true, optional = true }

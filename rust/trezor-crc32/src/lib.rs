@@ -1,4 +1,7 @@
-#![allow(dead_code)]
+#![no_std]
+#![forbid(unsafe_code)]
+
+//! CRC-32-IEEE (zlib-style reflected polynomial `0xEDB88320`).
 
 pub struct Crc32 {
     value: u32,
@@ -10,6 +13,12 @@ static CRC32TAB: [u32; 16] = [
 ];
 
 pub const CHECKSUM_LEN: usize = 4;
+
+impl Default for Crc32 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Crc32 {
     pub fn new() -> Self {
