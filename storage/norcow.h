@@ -40,6 +40,13 @@ void norcow_init(uint32_t *norcow_version);
 void norcow_wipe(void);
 
 /*
+ * Compact the storage by copying all live entries to the other sector
+ * and erasing the current active sector. This physically destroys deleted
+ * items including their headers.
+ */
+void norcow_compact(void);
+
+/*
  * Looks for the given key, returns status of the operation
  */
 secbool norcow_get(uint16_t key, const void **val, uint16_t *len);

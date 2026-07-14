@@ -471,6 +471,19 @@ STATIC mp_obj_t mod_trezorconfig_wipe(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_wipe_obj,
                                  mod_trezorconfig_wipe);
 
+/// def compact() -> None:
+///     """
+///     Compacts the storage by copying all live entries to the other sector
+///     and erasing the current active sector. This physically destroys deleted
+///     items including their headers.
+///     """
+STATIC mp_obj_t mod_trezorconfig_compact(void) {
+  storage_compact();
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_compact_obj,
+                                 mod_trezorconfig_compact);
+
 /// from enum import IntEnum
 /// class StorageMessage(IntEnum):
 ///     NO_MSG = 0
@@ -514,6 +527,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_next_counter),
      MP_ROM_PTR(&mod_trezorconfig_next_counter_obj)},
     {MP_ROM_QSTR(MP_QSTR_wipe), MP_ROM_PTR(&mod_trezorconfig_wipe_obj)},
+    {MP_ROM_QSTR(MP_QSTR_compact), MP_ROM_PTR(&mod_trezorconfig_compact_obj)},
     {MP_ROM_QSTR(MP_QSTR_StorageMessage),
      MP_ROM_PTR(&mod_trezorconfig_StorageMessage_obj)},
 };

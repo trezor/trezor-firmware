@@ -200,6 +200,7 @@ class BackupType(IntEnum):
     Slip39_Single_Extendable = 3
     Slip39_Basic_Extendable = 4
     Slip39_Advanced_Extendable = 5
+    RawSeed = 6
 
 
 class BackupMethod(IntEnum):
@@ -549,6 +550,7 @@ class MessageType(IntEnum):
     DataChunkRequest = 991
     DataChunkAck = 992
     SetBrightness = 993
+    SetPermanentPassphrase = 1102
     GetSerialNumber = 996
     SerialNumber = 997
     GetAuthenticityProofChunk = 998
@@ -3472,6 +3474,10 @@ class SetBusy(protobuf.MessageType):
 
 class EndSession(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 83
+
+
+class SetPermanentPassphrase(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1102
 
 
 class ApplySettings(protobuf.MessageType):

@@ -114,6 +114,11 @@ pub fn wipe() {
     unsafe { ffi::storage_wipe() }
 }
 
+/// Compact storage, erasing deleted items and their headers.
+pub fn compact() {
+    unsafe { ffi::storage_compact() }
+}
+
 /// Check if storage is unlocked.
 pub fn is_unlocked() -> bool {
     ffi::sectrue == unsafe { ffi::storage_is_unlocked() }

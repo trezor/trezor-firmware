@@ -144,6 +144,17 @@ def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -
     session.call(messages.SdProtect(operation=operation), expect=messages.Success)
 
 
+@workflow(refresh_features=True)
+def set_permanent_passphrase(session: "Session") -> None:
+    """Overwrite the stored seed with the currently derived passphrase-protected root.
+
+    This action is irreversible. The original seed and all parent/sibling keys
+    will be lost. The only way to leave permanent-passphrase mode is to wipe
+    the device. The "verify seed" feature will no longer be applicable.
+    """
+    session.call(messages.SetPermanentPassphrase(), expect=messages.Success)
+
+
 @workflow(invalidate_client=True)
 def wipe(session: "Session") -> None:
     session.call(messages.WipeDevice(), expect=messages.Success)

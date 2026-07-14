@@ -2198,6 +2198,12 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EndSession"]:
             return isinstance(msg, cls)
 
+    class SetPermanentPassphrase(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SetPermanentPassphrase"]:
+            return isinstance(msg, cls)
+
     class ApplySettings(protobuf.MessageType):
         label: "str | None"
         use_passphrase: "bool | None"

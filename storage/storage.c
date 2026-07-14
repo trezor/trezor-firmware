@@ -1820,6 +1820,12 @@ void storage_wipe(void) {
   mpu_restore(mpu_mode);
 }
 
+void storage_compact(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+  norcow_compact();
+  mpu_restore(mpu_mode);
+}
+
 static void __handle_fault(const char *msg, const char *file, int line) {
   CONFIDENTIAL static secbool in_progress = secfalse;
 

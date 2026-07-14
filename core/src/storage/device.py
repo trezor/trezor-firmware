@@ -172,6 +172,36 @@ def store_mnemonic_secret(
         store_binary_mnemonic(secret, allow_derivation_fail)
 
 
+def store_raw_seed_secret(seed: bytes) -> None:
+    """
+    Overwrite the stored secret with a raw BIP-32 seed.
+
+    This is used by the "set permanent passphrase" feature: the currently
+    passphrase-derived seed becomes the new root. The original mnemonic is
+    destroyed and cannot be recovered. Future seed verification will not work
+    because the stored secret is not a BIP-39/SLIP-39 mnemonic.
+    """
+    from trezor.enums import BackupType
+
+    if len(seed) != 64:
+        raise ValueError
+
+    set_version(common.STORAGE_VERSION_CURRENT)
+    common.set(_NAMESPACE, _MNEMONIC_SECRET, seed)
+    common.set_uint8(_NAMESPACE, _BACKUP_TYPE, BackupType.RawSeed)
+    common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
+    # The raw seed cannot be backed up as words, mark it as no-backup.
+    common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, True)
+    common.delete(_NAMESPACE, _NEEDS_BACKUP)
+    # SLIP-39 metadata is not relevant for a raw seed.
+    common.delete(_NAMESPACE, _SLIP39_IDENTIFIER)
+    common.delete(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+
+    if not utils.BITCOIN_ONLY:
+        # Binary mnemonic is only meaningful for BIP-39.
+        common.delete(_NAMESPACE, _BINARY_MNEMONIC)
+
+
 if not utils.BITCOIN_ONLY:
 
     def get_binary_mnemonic() -> bytes | None:

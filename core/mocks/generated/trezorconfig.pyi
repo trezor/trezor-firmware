@@ -143,6 +143,15 @@ def wipe() -> None:
     """
     Erases the whole config. Use with caution!
     """
+
+
+# upymod/modtrezorconfig/modtrezorconfig.c
+def compact() -> None:
+    """
+    Compacts the storage by copying all live entries to the other sector
+    and erasing the current active sector. This physically destroys deleted
+    items including their headers.
+    """
 from enum import IntEnum
 
 
