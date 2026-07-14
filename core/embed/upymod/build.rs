@@ -18,7 +18,8 @@ fn main() -> Result<()> {
 
         if cfg!(feature = "emulator") {
             // There are two mpconfigport.h files in both ports/unix and projects/unix.
-            // The first one has precedence and is used for compilation.
+            // The first one has precedence and is used for compilation. We need mphalport.h
+            // from the other.
             lib.add_include("../projects/unix");
             lib.add_include(PathBuf::from(mpy_dir).join("ports/unix"));
         } else if cfg!(feature = "mcu_stm32") {
@@ -118,21 +119,12 @@ fn main() -> Result<()> {
 
         lib.add_sources_in_dir_with_attrs(mpy_dir, ["py/gc.c", "py/pystack.c", "py/vm.c"], attrs);
 
-        // silence warning about unterminated string literals
-        // TODO: remove this after we upgrade MicroPython
-        let attrs_silence_unterminated =
-            xbuild::CompileAttrs::new().with_flag("-Wno-unterminated-string-initialization");
-        lib.add_sources_in_dir_with_attrs(
-            mpy_dir,
-            ["extmod/moductypes.c"],
-            Some(attrs_silence_unterminated),
-        );
-
         lib.add_sources_in_dir(
             mpy_dir,
             [
                 "extmod/modbinascii.c",
                 "extmod/modtime.c",
+                "extmod/moductypes.c",
                 "shared/timeutils/timeutils.c",
                 "py/argcheck.c",
                 "py/asmarm.c",
@@ -147,6 +139,7 @@ fn main() -> Result<()> {
                 "py/builtinhelp.c",
                 "py/builtinimport.c",
                 "py/compile.c",
+                "py/cstack.c",
                 "py/emitbc.c",
                 "py/emitcommon.c",
                 "py/emitglue.c",
@@ -165,8 +158,6 @@ fn main() -> Result<()> {
                 "py/modmicropython.c",
                 "py/modstruct.c",
                 "py/modsys.c",
-                "py/modthread.c",
-                "py/moderrno.c",
                 "py/mpprint.c",
                 "py/mpstate.c",
                 "py/mpz.c",
@@ -178,6 +169,7 @@ fn main() -> Result<()> {
                 "py/objboundmeth.c",
                 "py/objcell.c",
                 "py/objclosure.c",
+                "py/objcode.c",
                 "py/objcomplex.c",
                 "py/objdeque.c",
                 "py/objdict.c",
@@ -233,8 +225,6 @@ fn main() -> Result<()> {
         );
 
         if cfg!(feature = "emulator") {
-            lib.add_defines([("MP_CONFIGFILE", Some("\"mpconfigport.h\""))]);
-
             if cfg!(feature = "frozen") {
                 lib.add_define("TREZOR_EMULATOR_FROZEN", None);
             }
