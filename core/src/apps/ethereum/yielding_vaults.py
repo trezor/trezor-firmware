@@ -88,6 +88,26 @@ KNOWN_VAULTS = (
             name="Trezor Steakhouse USDT Prime Vault",
         ),
     ),
+    # https://etherscan.io/address/0x704cFb08969048a8DFf298B214F959791d8Da509
+    EthereumVaultInfo(
+        address=b"\x70\x4c\xfb\x08\x96\x90\x48\xa8\xdf\xf2\x98\xb2\x14\xf9\x59\x79\x1d\x8d\xa5\x09",
+        chain_id=1,
+        name="Trezor Steakhouse ETH Prime Vault",
+        asset_token=EthereumTokenInfo(
+            symbol="WETH",
+            decimals=18,
+            address=b"\xc0\x2a\xaa\x39\xb2\x23\xfe\x8d\x0a\x0e\x5c\x4f\x27\xea\xd9\x08\x3c\x75\x6c\xc2",
+            chain_id=1,
+            name="Wrapped Ether",
+        ),
+        vault_token=EthereumTokenInfo(
+            symbol="trSHETHp",
+            decimals=18,
+            address=b"\x70\x4c\xfb\x08\x96\x90\x48\xa8\xdf\xf2\x98\xb2\x14\xf9\x59\x79\x1d\x8d\xa5\x09",
+            chain_id=1,
+            name="Trezor Steakhouse ETH Prime Vault",
+        ),
+    ),
 )
 
 UNKNOWN_VAULT = EthereumVaultInfo(
