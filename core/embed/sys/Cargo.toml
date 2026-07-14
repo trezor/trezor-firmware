@@ -5,13 +5,16 @@ edition = "2024"
 links = "sys"
 
 [build-dependencies]
+bindgen.workspace = true
 color-eyre.workspace = true
 xbuild.workspace = true
 
 [dependencies]
 crypto.workspace = true
+cty.workspace = true
 rtl.workspace = true
 models.workspace = true
+ufmt.workspace = true
 
 [features]
 

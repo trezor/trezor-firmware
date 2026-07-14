@@ -7,6 +7,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     lib.add_sources(["dbg/dbg_console.c", "dbg/syslog.c"]);
 
+    lib.add_rust_bindings(add_rust_bindings)?;
+
     if cfg!(feature = "emulator") {
         lib.add_source("dbg/unix/dbg_console_backend.c");
     } else if cfg!(feature = "mcu_stm32") {
@@ -52,4 +54,15 @@ fn def_system_view(lib: &mut CLibrary) {
             "segger/SEGGER_RTT_ASM_ARMv7M.S",
         ],
     );
+}
+
+fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
+    let builder = builder
+        .header("inc/sys/logging.h")
+        .header("dbg/inc/sys/syslog.h")
+        .allowlist_function("syslog_start_record")
+        .allowlist_function("syslog_write_chunk")
+        .allowlist_type("log_source_t")
+        .allowlist_type("log_level_t");
+    Ok(builder)
 }
