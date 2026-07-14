@@ -27,10 +27,8 @@ impl NumberInputSliderDialog {
         Self {
             area: Rect::zero(),
             input: NumberInputSlider::new(min, max, init_value).into_child(),
-            cancel_button: Button::with_text("CANCEL".into())
-                .styled(theme::button_cancel())
-                .into_child(),
-            confirm_button: Button::with_text("CONFIRM".into())
+            cancel_button: Button::with_icon(theme::ICON_CANCEL).into_child(),
+            confirm_button: Button::with_icon(theme::ICON_CONFIRM)
                 .styled(theme::button_confirm())
                 .into_child(),
         }
