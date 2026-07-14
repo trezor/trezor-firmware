@@ -9,6 +9,7 @@ from trezor.messages import Success
 from trezor.ui.layouts import confirm_action
 from trezor.wire import DataError, context
 
+from apps.common import mnemonic
 from apps.common.seed import raise_if_not_initialized
 
 if TYPE_CHECKING:
@@ -32,6 +33,13 @@ async def set_permanent_passphrase(msg: SetPermanentPassphrase) -> Success:
         raise DataError("No active session seed. Unlock the device first.")
     if len(derived_seed) != 64:
         raise DataError("Invalid seed length.")
+
+    # Refuse the operation if no passphrase is actually in effect. Overwriting
+    # the stored root with the non-passphrase-derived seed would not only be a
+    # no-op, it would permanently disable passphrase wallets on this device.
+    seed_without_passphrase = mnemonic.get_seed(passphrase="", progress_bar=False)
+    if derived_seed == seed_without_passphrase:
+        raise DataError("No passphrase is active. Use a non-empty passphrase first.")
 
     # Strong warning: this operation is irreversible. The original mnemonic
     # and all parent/sibling keys derived from it will be lost.
