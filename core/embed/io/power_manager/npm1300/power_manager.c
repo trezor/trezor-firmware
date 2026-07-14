@@ -63,10 +63,16 @@ pm_status_t pm_init(bool inherit_state) {
   memset(drv, 0, sizeof(pm_driver_t));
 
   // Initialize hardware subsystems
-  if (!pmic_init() || !stwlc38_init()) {
+  if (!pmic_init()) {
     pm_deinit();
     return PM_ERROR;
   }
+#ifdef USE_WIRELESS_CHARGER
+  if (!stwlc38_init()) {
+    pm_deinit();
+    return PM_ERROR;
+  }
+#endif
 
   if (!pm_poll_init()) {
     pm_deinit();
@@ -202,7 +208,9 @@ void pm_deinit(void) {
   }
 
   pmic_deinit();
+#ifdef USE_WIRELESS_CHARGER
   stwlc38_deinit();
+#endif
 
   drv->initialized = false;
 }

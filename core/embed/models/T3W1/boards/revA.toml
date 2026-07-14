@@ -25,6 +25,8 @@ panel = "io/touch_panel_lx250a2410a"
 [rgb_led]
 
 [power_manager]
+driver = "io/pmic_npm1300"
+wireless = "io/wireless_stwlc38"
 
 [nfc]
 

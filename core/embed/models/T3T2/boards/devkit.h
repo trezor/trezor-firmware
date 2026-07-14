@@ -2,6 +2,20 @@
 
 #define VDD_3V3 1
 
+// Power latch (soft power switch). Driven high early in the boardloader to keep
+// the supply enabled after the user releases the power button; released to turn
+// the device off.
+#define PWR_ON_PORT GPIOD
+#define PWR_ON_PIN GPIO_PIN_12
+#define PWR_ON_CLK_EN __HAL_RCC_GPIOD_CLK_ENABLE
+
+// Power button (active-low, internal pull-up). Polled via button_is_down();
+// no EXTI is wired because line 0 (PA0/EXTI0) is shared with the nRF request
+// line on PE0 and the device has no suspend/wakeup path yet.
+#define BTN_POWER_PORT GPIOA
+#define BTN_POWER_PIN GPIO_PIN_0
+#define BTN_POWER_CLK_ENA __HAL_RCC_GPIOA_CLK_ENABLE
+
 // ST7789 (Display Elektronik DEM240320B1) over 16-bit i8080 FMC bus.
 // The module has no tearing-effect (TE) output, so no DISPLAY_TE_* defines.
 #define DISPLAY_I8080_16BIT_DW 1
