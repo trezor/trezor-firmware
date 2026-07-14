@@ -153,4 +153,7 @@ async def confirm_linear_flow(
 
 
 def draw_simple(layout: trezorui_api.LayoutObj[Any]) -> None:
+    # IMPORTANT: after this call, `layout` is referenced by `trezor.ui.CURRENT_LAYOUT`
+    # and its event-handling tasks are still running. Therefore, it MUST NOT be dropped,
+    # until a new layout is started.
     ui.Layout(layout).start()

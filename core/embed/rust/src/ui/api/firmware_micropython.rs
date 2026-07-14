@@ -2137,7 +2137,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     text: str,
     ///     title: str | None = None,
     ///     button: str | None = None,
-    /// ) -> LayoutContext[UiResult]:
+    /// ) -> LayoutObj[UiResult]:
     ///     """Simple dialog with text. TT: optional button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
 
@@ -2152,7 +2152,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Success modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
 
-    /// def show_wait_text(message: str, /) -> LayoutContext[None]:
+    /// def show_wait_text(message: str, /) -> LayoutObj[None]:
     ///     """Show single-line text in the middle of the screen."""
     Qstr::MP_QSTR_show_wait_text => obj_fn_1!(new_show_wait_text).as_obj(),
 
