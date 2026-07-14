@@ -17,6 +17,10 @@ if TYPE_CHECKING:
 
     ConfirmDataFn = Callable[[AnyBytes], Awaitable[None]]
 
+    # Fetch the next calldata chunk from host.
+    # `data_left: int` argument is provided.
+    DataChunkLoader = Callable[[int], Awaitable[AnyBytes]]
+
 
 RSKIP60_NETWORKS = (30, 31)
 
