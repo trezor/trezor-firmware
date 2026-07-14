@@ -150,10 +150,9 @@ impl CLibrary {
             let output = derive_output_path(&base_dir, &src, &out_dir, output_type.extension());
 
             // Only generate .d files for object files compiled from C/C++ sources
-            let cc_dep = if matches!(output_type, OutputType::Object)
-                && src
-                    .extension()
-                    .is_some_and(|ext| ext == "c" || ext == "cpp" || ext == "cc")
+            let cc_dep = if src
+                .extension()
+                .is_some_and(|ext| ext == "c" || ext == "cpp" || ext == "cc")
             {
                 Some(output.with_extension("d"))
             } else {

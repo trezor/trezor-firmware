@@ -160,10 +160,7 @@ DEBUG_PREFIXES = ("debug",)
 def render_file(
     src: Path, dst: Path, coins: CoinsInfo, support_info: SupportInfo, models: list[str]
 ) -> None:
-    """Renders `src` template into `dst`.
-
-    `src` is a filename, `dst` is an open file object.
-    """
+    """Renders `src` template into `dst`."""
     template = mako.template.Template(filename=str(src.resolve()))
     eth_defs_date = datetime.datetime.fromisoformat(
         DEFINITIONS_TIMESTAMP_PATH.read_text().strip()
@@ -181,9 +178,14 @@ def render_file(
         **MAKO_FILTERS,
         ALL_MODELS=models,
     )
-    dst.write_text(str(result))
-    src_stat = src.stat()
-    os.utime(dst, ns=(src_stat.st_atime_ns, src_stat.st_mtime_ns))
+
+    try:
+        orig_content = dst.read_text()
+    except FileNotFoundError:
+        orig_content = None
+
+    if orig_content != str(result):
+        dst.write_text(str(result))
 
 
 # ====== validation functions ======
@@ -869,7 +871,7 @@ def dump(
 # fmt: on
 def render(
     paths: tuple[Path, ...],
-    outfile: Path,
+    outfile: Path | None,
     verbose: bool,
     bitcoin_only: bool,
     model_exclude: tuple[str, ...],
