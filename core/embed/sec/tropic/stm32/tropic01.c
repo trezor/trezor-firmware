@@ -123,6 +123,17 @@ lt_ret_t lt_port_init(lt_l2_state_t *s2) {
 
   HAL_SPI_Init(&drv->spi);
 
+  // This is a fix for: https://github.com/tropicsquare/libtropic/issues/550
+  // It can be removed once the tropic application firmware is upgraded to
+  // a version greater than 2.0.0.
+  // The bug is that tropic signals that it is in maintenance mode during
+  // startup. This causes the chip to reboot in `lt_init()`, delaying the start
+  // by 250 ms. It only manifests when `LT_L1_READ_RETRY_DELAY_MS` is too low.
+  // A 50 ms delay was the shortest one found to skip the window in which
+  // tropic signals maintenance mode on the device it was tested on. 60 ms is
+  // used here in case it varies across devices.
+  systick_delay_ms(60);
+
   drv->initialized = true;
 
   return LT_OK;
