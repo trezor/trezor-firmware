@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from trezor import TR
 from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
-from trezor.utils import HashWriter
 from trezor.wire import DataError
 
 from .helpers import (
@@ -21,6 +20,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import EthereumSignTx, EthereumTxAck
     from trezor.ui.layouts import StrPropertyType
+    from trezor.utils import HashWriter
 
     from apps.common.keychain import Keychain
     from apps.common.payment_request import PaymentRequestVerifier
