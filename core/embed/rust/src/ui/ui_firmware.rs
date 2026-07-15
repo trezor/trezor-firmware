@@ -462,8 +462,6 @@ pub trait FirmwareUI {
         time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
-    fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
-
     fn show_warning(
         title: Option<TString<'static>>,
         button: TString<'static>,

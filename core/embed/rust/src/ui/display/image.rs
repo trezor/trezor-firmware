@@ -168,7 +168,7 @@ impl JpegInfo {
                     if (c1 != 0x11) && (c1 != 0x21) & (c1 != 0x22) {
                         return None;
                     };
-                    let mcu_height = (8 * (c1 & 15)) as i16;
+                    let mcu_height = i16::from(8 * (c1 & 15));
 
                     // We now have all the information we need, but
                     // we will not exit the loop yet until we find the

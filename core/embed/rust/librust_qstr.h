@@ -588,11 +588,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__wrong_pin;
   MP_QSTR_pin_enabled;
   MP_QSTR_plurals__contains_x_keys;
-  MP_QSTR_plurals__lock_after_x_days;
-  MP_QSTR_plurals__lock_after_x_hours;
-  MP_QSTR_plurals__lock_after_x_milliseconds;
-  MP_QSTR_plurals__lock_after_x_minutes;
-  MP_QSTR_plurals__lock_after_x_seconds;
+  MP_QSTR_plurals__days;
+  MP_QSTR_plurals__hours;
+  MP_QSTR_plurals__milliseconds;
+  MP_QSTR_plurals__minutes;
+  MP_QSTR_plurals__seconds;
   MP_QSTR_plurals__sign_x_actions;
   MP_QSTR_plurals__transaction_of_x_operations;
   MP_QSTR_plurals__x_groups_needed;
@@ -868,7 +868,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_simple;
   MP_QSTR_show_success;
   MP_QSTR_show_thp_pairing_code;
-  MP_QSTR_show_wait_text;
   MP_QSTR_show_warning;
   MP_QSTR_sign;
   MP_QSTR_sign_message__bytes_template;

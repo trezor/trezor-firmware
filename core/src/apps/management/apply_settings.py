@@ -225,18 +225,11 @@ async def _require_confirm_change_display_rotation(rotation: DisplayRotation) ->
 async def _require_confirm_change_autolock_delay(delay_ms: int) -> None:
     from trezor.strings import format_duration_ms
 
-    unit_plurals = {
-        "millisecond": TR.plurals__lock_after_x_milliseconds,
-        "second": TR.plurals__lock_after_x_seconds,
-        "minute": TR.plurals__lock_after_x_minutes,
-        "hour": TR.plurals__lock_after_x_hours,
-    }
-
     await confirm_action(
         "set_autolock_delay",
         TR.auto_lock__title,
         description=TR.auto_lock__change_template,
-        description_param=format_duration_ms(delay_ms, unit_plurals),
+        description_param=format_duration_ms(delay_ms),
         br_code=BRT_PROTECT_CALL,
         prompt_screen=True,
     )

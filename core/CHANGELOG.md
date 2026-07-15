@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.12.1] (2026-06-17)
+## [2.12.1] (17th June 2026)
 
 ### Added
 - Added support for `AccountDelete` transaction in Ripple.  [#6370]
@@ -105,9 +105,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fixed Stellar Amount and Bitcoin lock time font.  [#6109]
-- Make sure to increment THP `seq_bit`.  [#6138]
+- [T3W1] Make sure to increment THP `seq_bit`.  [#6138]
 - [T3W1] Don't stall THP handling during PIN unlock.  [#6145]
-- Fixed external tamper trigger clearing.  [#6186]
+- [T3W1] Fixed external tamper trigger clearing.  [#6186]
 
 ## [2.9.5] (28th November 2025)
 
@@ -166,7 +166,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Don't allocate tracebacks in optimized builds.  [#5526]
 - Allow backup check only when the backup exists.  [#5763]
 
-## [2.9.1] (17th Sep 2025)
+## [2.9.1] (17th September 2025)
 
 ### Added
 - Cardano: Add support for signing arbitrary messages.  [#3509]
@@ -262,7 +262,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T3B1] Fix backup failing if middle button is pressed during confirmation.  [#4500]
 - [T2T1] Fixed a bug resulting in restarting the recovery flow when inputting 33-word mnemonic.  [#4537]
 
-## [2.8.7] (22th January 2025)
+## [2.8.7] (22nd January 2025)
 
 ### Added
 - Add benchmark application.  [#4101]

@@ -56,8 +56,8 @@ def get_auto_lock_delay() -> tuple[str, str] | None:
     autolock_delay_batt = storage_device.get_autolock_delay_battery_ms()
     autolock_delay_usb = storage_device.get_autolock_delay_ms()
 
-    autolock_delay_batt_fmg = strings.format_autolock_duration(autolock_delay_batt)
-    autolock_delay_usb_fmt = strings.format_autolock_duration(autolock_delay_usb)
+    autolock_delay_batt_fmg = strings.format_duration_ms(autolock_delay_batt)
+    autolock_delay_usb_fmt = strings.format_duration_ms(autolock_delay_usb)
 
     return (autolock_delay_batt_fmg, autolock_delay_usb_fmt)
 

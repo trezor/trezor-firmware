@@ -84,7 +84,7 @@ impl Component for Welcome {
         #[cfg(feature = "power_manager")]
         {
             let mut buf = [0; 20];
-            let text = unwrap!(format_i64(soc() as _, &mut buf));
+            let text = unwrap!(format_i64(soc().into(), &mut buf));
 
             shape::Text::new(screen().center(), text, fonts::FONT_BOLD_UPPER)
                 .with_fg(WHITE)

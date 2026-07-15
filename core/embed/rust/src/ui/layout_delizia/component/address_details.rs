@@ -99,7 +99,7 @@ impl AddressDetails {
         let mut xpub_index = 0;
         let mut xpub_page = scrollbar_page;
         for page_count in self.xpub_page_count.iter() {
-            let page_count = *page_count as u16;
+            let page_count = u16::from(*page_count);
             if page_count <= xpub_page {
                 xpub_page -= page_count;
                 xpub_index += 1;
@@ -114,7 +114,7 @@ impl AddressDetails {
 impl Paginate for AddressDetails {
     fn pager(&self) -> Pager {
         let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
-        Pager::new(total_xpub_pages as u16 + 1).with_current(self.current_page)
+        Pager::new(u16::from(total_xpub_pages) + 1).with_current(self.current_page)
     }
 
     fn change_page(&mut self, to_page: u16) {

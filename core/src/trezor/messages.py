@@ -3369,12 +3369,14 @@ if TYPE_CHECKING:
     class EthereumERC7730Path(protobuf.MessageType):
         path: "list[int]"
         container_path: "EthereumERC7730ContainerPath | None"
+        const_value: "str | None"
 
         def __init__(
             self,
             *,
             path: "list[int] | None" = None,
             container_path: "EthereumERC7730ContainerPath | None" = None,
+            const_value: "str | None" = None,
         ) -> None:
             pass
 
@@ -4288,6 +4290,44 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDefinitions"]:
+            return isinstance(msg, cls)
+
+    class EthereumSignAuth7702(protobuf.MessageType):
+        address_n: "list[int]"
+        chain_id: "int"
+        delegate: "str"
+        nonce: "int"
+
+        def __init__(
+            self,
+            *,
+            chain_id: "int",
+            delegate: "str",
+            nonce: "int",
+            address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumSignAuth7702"]:
+            return isinstance(msg, cls)
+
+    class EthereumAuth7702Signature(protobuf.MessageType):
+        signature_v: "int"
+        signature_r: "AnyBytes"
+        signature_s: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            signature_v: "int",
+            signature_r: "AnyBytes",
+            signature_s: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumAuth7702Signature"]:
             return isinstance(msg, cls)
 
     class EthereumAccessList(protobuf.MessageType):

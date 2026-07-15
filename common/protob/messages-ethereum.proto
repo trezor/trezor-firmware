@@ -2,6 +2,7 @@ syntax = "proto2";
 package hw.trezor.messages.ethereum;
 
 import "messages-common.proto";
+import "options.proto";
 
 // Sugar for easier handling in Java
 option java_outer_classname = "TrezorMessageEthereum";
@@ -220,4 +221,31 @@ message EthereumDefinitions {
     optional bytes encoded_network = 1;         // encoded ethereum network
     optional bytes encoded_token = 2;           // encoded ethereum token
     optional bytes encoded_display_format = 3;  // encoded display format
+}
+
+/**
+ * Request: Ask device to sign an EIP 7702 authorization
+ * @start
+ * @next EthereumAuth7702Signature
+ * @next Failure
+ */
+message EthereumSignAuth7702 {
+    option (experimental_message) = true;
+
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    required uint64 chain_id = 2;   // chain id on which the authorization is valid, or 0 for all
+    required string delegate = 3;   // address of the code that will be delegated to the EOA
+    required uint64 nonce = 4;      // account nonce for which the authorization is valid
+}
+
+/**
+ * Response: Signed EIP 7702 authorization
+ * @end
+ */
+message EthereumAuth7702Signature {
+    option (experimental_message) = true;
+
+    required uint32 signature_v = 1;  // Computed signature (y parity)
+    required bytes signature_r = 2;   // Computed signature R component (256 bit)
+    required bytes signature_s = 3;   // Computed signature S component (256 bit)
 }

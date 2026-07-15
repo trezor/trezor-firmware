@@ -4,7 +4,7 @@ pub fn crc16_itu_t(mut seed: u16, data: &[u8]) -> u16 {
         // swap high/low byte:
         seed = seed.rotate_left(8);
         // mix in next input byte
-        seed ^= byte as u16;
+        seed ^= u16::from(byte);
         // apply the ITU-T polynomial bitwise mix
         seed ^= (seed & 0x00FF) >> 4;
         seed ^= seed << 12;

@@ -62,7 +62,7 @@ impl Iterator for LinePoints {
     fn next(&mut self) -> Option<Self::Item> {
         if self.u < self.du {
             let frac = if self.dv < self.du {
-                255 - ((self.d + 2 * self.dv - 1) as i32 * 255 / (2 * self.du - 1) as i32) as u8
+                255 - (i32::from(self.d + 2 * self.dv - 1) * 255 / i32::from(2 * self.du - 1)) as u8
             } else {
                 0
             };

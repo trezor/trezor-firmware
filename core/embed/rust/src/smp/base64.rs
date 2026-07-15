@@ -35,7 +35,7 @@ pub fn base64_encode(input: &[u8], output: &mut [u8]) -> Result<usize, Base64Err
         let c = if i + 2 < len { input[i + 2] } else { 0 };
         i += 3;
 
-        let triple = ((a as u32) << 16) | ((b as u32) << 8) | (c as u32);
+        let triple = (u32::from(a) << 16) | (u32::from(b) << 8) | u32::from(c);
         output[j] = B64_TABLE[((triple >> 18) & 0x3F) as usize];
         output[j + 1] = B64_TABLE[((triple >> 12) & 0x3F) as usize];
         output[j + 2] = B64_TABLE[((triple >> 6) & 0x3F) as usize];
@@ -90,17 +90,17 @@ pub fn base64_decode(input: &[u8], output: &mut [u8]) -> Result<usize, Base64Err
     let mut i = 0;
     let mut j = 0;
     while i < len {
-        let v1 = base64_char_value(input[i]).ok_or(Base64Error::InvalidCharacter)? as u32;
-        let v2 = base64_char_value(input[i + 1]).ok_or(Base64Error::InvalidCharacter)? as u32;
+        let v1 = u32::from(base64_char_value(input[i]).ok_or(Base64Error::InvalidCharacter)?);
+        let v2 = u32::from(base64_char_value(input[i + 1]).ok_or(Base64Error::InvalidCharacter)?);
         let v3 = if input[i + 2] == b'=' {
             0
         } else {
-            base64_char_value(input[i + 2]).ok_or(Base64Error::InvalidCharacter)? as u32
+            u32::from(base64_char_value(input[i + 2]).ok_or(Base64Error::InvalidCharacter)?)
         };
         let v4 = if input[i + 3] == b'=' {
             0
         } else {
-            base64_char_value(input[i + 3]).ok_or(Base64Error::InvalidCharacter)? as u32
+            u32::from(base64_char_value(input[i + 3]).ok_or(Base64Error::InvalidCharacter)?)
         };
         i += 4;
 

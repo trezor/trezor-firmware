@@ -122,7 +122,11 @@ impl AddressDetails {
 
     fn total_pages(&self) -> u16 {
         // Base pages (QR and details) plus sum of all xpub pages
-        2 + self.xpub_page_count.iter().map(|&x| x as u16).sum::<u16>()
+        2 + self
+            .xpub_page_count
+            .iter()
+            .map(|&x| u16::from(x))
+            .sum::<u16>()
     }
 }
 

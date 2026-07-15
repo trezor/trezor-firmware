@@ -1362,12 +1362,6 @@ impl FirmwareUI for UICaesar {
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
 
-    fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        Ok(RootComponent::new(
-            Paragraph::new(&theme::TEXT_NORMAL, text).into_paragraphs(),
-        ))
-    }
-
     fn show_warning(
         title: Option<TString<'static>>,
         button: TString<'static>,

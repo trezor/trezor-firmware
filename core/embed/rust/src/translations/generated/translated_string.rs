@@ -723,10 +723,10 @@ pub enum TranslatedString {
     pin__turn_on = 470,  // "Turn on PIN protection?"
     pin__wrong_pin = 471,  // "Wrong PIN"
     plurals__contains_x_keys = 472,  // "key|keys"
-    plurals__lock_after_x_hours = 473,  // "hour|hours"
-    plurals__lock_after_x_milliseconds = 474,  // "millisecond|milliseconds"
-    plurals__lock_after_x_minutes = 475,  // "minute|minutes"
-    plurals__lock_after_x_seconds = 476,  // "second|seconds"
+    plurals__hours = 473,  // "hour|hours"
+    plurals__milliseconds = 474,  // "millisecond|milliseconds"
+    plurals__minutes = 475,  // "minute|minutes"
+    plurals__seconds = 476,  // "second|seconds"
     plurals__sign_x_actions = 477,  // "action|actions"
     plurals__transaction_of_x_operations = 478,  // "operation|operations"
     plurals__x_groups_needed = 479,  // "group|groups"
@@ -1388,7 +1388,7 @@ pub enum TranslatedString {
     words__wallet = 1028,  // "Wallet"
     words__authenticate = 1029,  // "Authenticate"
     auto_lock__description = 1032,  // "Set the time before your Trezor locks automatically."
-    plurals__lock_after_x_days = 1033,  // "day|days"
+    plurals__days = 1033,  // "day|days"
     firmware_update__restart = 1034,  // "Trezor will restart after update."
     passphrase__access_hidden_wallet = 1035,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Access Passphrase wallet"}
     passphrase__hidden_wallet = 1036,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Passphrase wallet"}
@@ -42396,11 +42396,11 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__wipe_code_exists_title, Self::pin__wipe_code_exists_title),
         (Qstr::MP_QSTR_pin__wrong_pin, Self::pin__wrong_pin),
         (Qstr::MP_QSTR_plurals__contains_x_keys, Self::plurals__contains_x_keys),
-        (Qstr::MP_QSTR_plurals__lock_after_x_days, Self::plurals__lock_after_x_days),
-        (Qstr::MP_QSTR_plurals__lock_after_x_hours, Self::plurals__lock_after_x_hours),
-        (Qstr::MP_QSTR_plurals__lock_after_x_milliseconds, Self::plurals__lock_after_x_milliseconds),
-        (Qstr::MP_QSTR_plurals__lock_after_x_minutes, Self::plurals__lock_after_x_minutes),
-        (Qstr::MP_QSTR_plurals__lock_after_x_seconds, Self::plurals__lock_after_x_seconds),
+        (Qstr::MP_QSTR_plurals__days, Self::plurals__days),
+        (Qstr::MP_QSTR_plurals__hours, Self::plurals__hours),
+        (Qstr::MP_QSTR_plurals__milliseconds, Self::plurals__milliseconds),
+        (Qstr::MP_QSTR_plurals__minutes, Self::plurals__minutes),
+        (Qstr::MP_QSTR_plurals__seconds, Self::plurals__seconds),
         (Qstr::MP_QSTR_plurals__sign_x_actions, Self::plurals__sign_x_actions),
         (Qstr::MP_QSTR_plurals__transaction_of_x_operations, Self::plurals__transaction_of_x_operations),
         (Qstr::MP_QSTR_plurals__x_groups_needed, Self::plurals__x_groups_needed),

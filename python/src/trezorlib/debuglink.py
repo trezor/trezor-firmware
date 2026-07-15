@@ -1392,6 +1392,8 @@ class TrezorTestContext:
         self.debug.model = self.model = self.client.model
         self.layout_type = self.debug.layout_type
         self.is_emulator = self.features.fw_vendor == "EMULATOR"
+        # Optiga's presence is detected from the presence of its security counter.
+        self.has_optiga = self.features.optiga_sec is not None
 
     def _get_client(self) -> client.TrezorClient:
         if self.protocol_version is ProtocolVersion.V1:

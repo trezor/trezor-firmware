@@ -288,7 +288,7 @@ impl<T: ValueInput> ValueInputDialog<T> {
 
         let (num, label) = self.value_input.repr();
 
-        if let Some(num_str) = strutil::format_i64(num as i64, &mut buf) {
+        if let Some(num_str) = strutil::format_i64(i64::from(num), &mut buf) {
             let num_font = fonts::FONT_SATOSHI_EXTRALIGHT_72;
             let label_font = fonts::FONT_SATOSHI_REGULAR_22;
 
@@ -408,7 +408,7 @@ impl<T: ValueInput> Component for ValueInputDialog<T> {
 impl<T: ValueInput> crate::trace::Trace for ValueInputDialog<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ValueInput");
-        t.int("value", self.value_input.num() as i64);
+        t.int("value", i64::from(self.value_input.num()));
     }
 }
 
@@ -476,10 +476,10 @@ impl ValueInput for DurationInput {
 
     fn repr(&self) -> (u32, Option<ShortString>) {
         let units = [
-            (self.duration.to_days(), TR::plurals__lock_after_x_days),
-            (self.duration.to_hours(), TR::plurals__lock_after_x_hours),
-            (self.duration.to_mins(), TR::plurals__lock_after_x_minutes),
-            (self.duration.to_secs(), TR::plurals__lock_after_x_seconds),
+            (self.duration.to_days(), TR::plurals__days),
+            (self.duration.to_hours(), TR::plurals__hours),
+            (self.duration.to_mins(), TR::plurals__minutes),
+            (self.duration.to_secs(), TR::plurals__seconds),
         ];
 
         for &(count, tr) in &units {

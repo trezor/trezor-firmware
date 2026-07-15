@@ -57,9 +57,9 @@ impl Rgb<u16> {
     #[inline(always)]
     fn mulshift(&self, multiplier: u32, shift: u8) -> Rgb<u8> {
         Rgb::<u8> {
-            r: ((self.r as u32 * multiplier) >> shift) as u8,
-            g: ((self.g as u32 * multiplier) >> shift) as u8,
-            b: ((self.b as u32 * multiplier) >> shift) as u8,
+            r: ((u32::from(self.r) * multiplier) >> shift) as u8,
+            g: ((u32::from(self.g) * multiplier) >> shift) as u8,
+            b: ((u32::from(self.b) * multiplier) >> shift) as u8,
         }
     }
 }
@@ -139,9 +139,9 @@ impl core::ops::SubAssign for Rgb<u16> {
 impl From<Rgb<u8>> for u16 {
     #[inline(always)]
     fn from(value: Rgb<u8>) -> u16 {
-        let r = (value.r as u16 & 0xF8) << 8;
-        let g = (value.g as u16 & 0xFC) << 3;
-        let b = (value.b as u16 & 0xF8) >> 3;
+        let r = (u16::from(value.r) & 0xF8) << 8;
+        let g = (u16::from(value.g) & 0xFC) << 3;
+        let b = (u16::from(value.b) & 0xF8) >> 3;
         r | g | b
     }
 }
@@ -149,9 +149,9 @@ impl From<Rgb<u8>> for u16 {
 impl From<Rgb<u8>> for u32 {
     #[inline(always)]
     fn from(value: Rgb<u8>) -> u32 {
-        let r = (value.r as u32) << 16;
-        let g = (value.g as u32) << 8;
-        let b = value.b as u32;
+        let r = u32::from(value.r) << 16;
+        let g = u32::from(value.g) << 8;
+        let b = u32::from(value.b);
         let alpha = 0xFF000000;
         alpha | r | g | b
     }
@@ -171,18 +171,18 @@ impl From<Rgb<u16>> for Rgb<u8> {
 impl core::ops::AddAssign<Rgb<u8>> for Rgb<u16> {
     #[inline(always)]
     fn add_assign(&mut self, rhs: Rgb<u8>) {
-        self.r += rhs.r as u16;
-        self.g += rhs.g as u16;
-        self.b += rhs.b as u16;
+        self.r += u16::from(rhs.r);
+        self.g += u16::from(rhs.g);
+        self.b += u16::from(rhs.b);
     }
 }
 
 impl core::ops::SubAssign<Rgb<u8>> for Rgb<u16> {
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Rgb<u8>) {
-        self.r -= rhs.r as u16;
-        self.g -= rhs.g as u16;
-        self.b -= rhs.b as u16;
+        self.r -= u16::from(rhs.r);
+        self.g -= u16::from(rhs.g);
+        self.b -= u16::from(rhs.b);
     }
 }
 
@@ -256,7 +256,7 @@ impl<'a> BlurAlgorithm<'a> {
 
         let divisor = (radius * 2 + 1) as u16;
         let shift = 10;
-        let multiplier = (1 << shift) as u32 / divisor as u32;
+        let multiplier = (1 << shift) as u32 / u32::from(divisor);
 
         // Prepare before averaging
         for i in 0..radius {
@@ -379,7 +379,7 @@ impl<'a> BlurAlgorithm<'a> {
         let divisor = match dim {
             Some(dim) => {
                 if dim > 0 {
-                    (self.box_side() as u16 * 255) / dim as u16
+                    (self.box_side() as u16 * 255) / u16::from(dim)
                 } else {
                     65535u16
                 }
@@ -388,7 +388,7 @@ impl<'a> BlurAlgorithm<'a> {
         };
 
         let shift = 10;
-        let multiplier = (1 << shift) as u32 / divisor as u32;
+        let multiplier = (1 << shift) as u32 / u32::from(divisor);
 
         for (i, item) in output.iter_mut().enumerate() {
             *item = self.totals[i].mulshift(multiplier, shift).into();

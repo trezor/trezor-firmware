@@ -187,8 +187,8 @@ fn render_led_simulation<'a>(
         // Calculate distance from center as a normalized factor (0 at center, 1 at
         // edges)
         let x_mid = area.center().x;
-        let x_half_width = (area.width() / 2) as f32;
-        let dist_from_mid = (slice.x0 - x_mid).abs() as f32 / x_half_width;
+        let x_half_width = f32::from(area.width() / 2);
+        let dist_from_mid = f32::from((slice.x0 - x_mid).abs()) / x_half_width;
 
         shape::Bar::new(slice)
             .with_bg(theme::BG)
@@ -206,9 +206,9 @@ fn render_edge_fade<'s>(
     // Render horizontal distance-from-mid gradient
     // Black at edges, color_mid at center with minimal opacity
     let x_mid = area.center().x;
-    let half_width = (area.width() / 2) as f32;
+    let half_width = f32::from(area.width() / 2);
     for (slice, _) in iter_slices(area, Axis::Horizontal, step_size) {
-        let dist_from_mid = (slice.x0 - x_mid).abs() as f32 / half_width;
+        let dist_from_mid = f32::from((slice.x0 - x_mid).abs()) / half_width;
         let alpha = u8::lerp(u8::MIN, u8::MAX, dist_from_mid);
         let color = Color::lerp(color_mid, theme::BLACK, dist_from_mid);
         shape::Bar::new(slice)
@@ -227,9 +227,9 @@ fn render_alert_horizontal<'s>(
     // Render horizontal distance-from-mid gradient
     // Black at edges, color_mid at center with full opacity
     let x_mid = area.center().x;
-    let half_width = (area.width() / 2) as f32;
+    let half_width = f32::from(area.width() / 2);
     for (slice, _) in iter_slices(area, Axis::Horizontal, step_size) {
-        let dist_from_mid = (slice.x0 - x_mid).abs() as f32 / half_width;
+        let dist_from_mid = f32::from((slice.x0 - x_mid).abs()) / half_width;
         let color = Color::lerp(color_mid, theme::BLACK, dist_from_mid);
         shape::Bar::new(slice)
             .with_bg(color)
@@ -277,7 +277,7 @@ fn iter_slices(area: Rect, axis: Axis, step_size: u16) -> impl Iterator<Item = (
 
         // Calculate factor based on the center of the slice for better visual accuracy
         let slice_center = pos + slice_size / 2;
-        let factor = (slice_center - start) as f32 / total_length as f32;
+        let factor = f32::from(slice_center - start) / f32::from(total_length);
         (slice, factor)
     })
 }

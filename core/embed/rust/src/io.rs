@@ -63,7 +63,7 @@ impl<'a> InputStream<'a> {
         let mut shift = 0;
         loop {
             let byte = self.read_byte()?;
-            uint += (byte as u64 & 0x7F) << shift;
+            uint += (u64::from(byte) & 0x7F) << shift;
             shift += 7;
             if byte & 0x80 == 0 {
                 break;

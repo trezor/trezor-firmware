@@ -19,6 +19,9 @@ MODELS_RE = re.compile(r"\[([A-Z0-9]{4})(,[A-Z0-9]{4})*\][ ]?")
 INTERNAL_MODELS = ("T2T1", "T2B1", "T3B1", "T3T1", "T3W1", "D001")
 INTERNAL_MODELS_SKIP = ("D001",)
 MODELS_MIN_VERSION = {
+    "T2B1": "2.6.3",
+    "T3B1": "2.8.3",
+    "T3T1": "2.7.2",
     "T3W1": "2.9.3",
 }
 
@@ -105,23 +108,49 @@ def linkify_gh_diff(changelog_file: Path, tag_prefix: str) -> None:
                 linkified = True
 
 
-def current_date(project: Path) -> str:
-    parts = project.parts
-    today = datetime.datetime.now()
+def _expected_day_suffix(day: int) -> str:
+    if 11 <= day <= 13:
+        return "th"
+    return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
 
-    if (
-        parts[-3:] == ("core", "embed", "boardloader")
-        or parts[-3:] == ("core", "embed", "bootloader")
-        or parts[-3:] == ("core", "embed", "bootloader_ci")
-        or parts[-2:] == ("legacy", "bootloader")
-        or parts[-2:] == ("legacy", "intermediate_fw")
-    ):
-        return today.strftime("%B %Y")
-    elif parts[-1] == "python":
-        return today.strftime("%Y-%m-%d")
-    else:
-        daysuffix = {1: "st", 2: "nd", 3: "rd"}.get(today.day % 10, "th")
-        return today.strftime(f"%-d{daysuffix} %B %Y")
+
+def validate_date(date: str, project: Path) -> None:
+    _MONTHS = (
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    )
+    _DATE_DAY_SUFFIX_RE = re.compile(
+        r"^([1-9]|[12][0-9]|3[01])(st|nd|rd|th) (" + "|".join(_MONTHS) + r") \d{4}$"
+    )
+    m = _DATE_DAY_SUFFIX_RE.match(date)
+    if not m:
+        raise click.BadParameter(
+            "Expected format: '18th March 2026'.", param_hint="--date"
+        )
+    day = int(m.group(1))
+    suffix = m.group(2)
+    expected_suffix = _expected_day_suffix(day)
+    if suffix != expected_suffix:
+        raise click.BadParameter(
+            f"Invalid day suffix '{day}{suffix}', expected '{day}{expected_suffix}'.",
+            param_hint="--date",
+        )
+
+
+def current_date(project: Path) -> str:
+    today = datetime.datetime.now()
+    daysuffix = _expected_day_suffix(today.day)
+    return today.strftime(f"%-d{daysuffix} %B %Y")
 
 
 def filter_changelog(changelog_file: Path, internal_name: str) -> None:
@@ -151,6 +180,10 @@ def filter_changelog(changelog_file: Path, internal_name: str) -> None:
             res = filter_line(line)
             if res is not None:
                 destination.write(res)
+
+    # Drop empty sub-sections
+    destination_file.write_text(re.sub(r"### .*\n\n", "", destination_file.read_text()))
+
     # Ensure issue links are present even if we truncated before the link block
     linkify_changelog(destination_file)
 
@@ -282,6 +315,8 @@ def generate(
 
     if date is None:
         date = current_date(project)
+    else:
+        validate_date(date, project)
 
     if only_models:
         generate_filtered(project, changelog)

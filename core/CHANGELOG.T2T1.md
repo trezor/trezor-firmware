@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.12.1] (2026-06-17)
+## [2.12.1] (17th June 2026)
 
 ### Added
 - Added support for `AccountDelete` transaction in Ripple.  [#6370]
@@ -121,7 +121,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Don't allocate tracebacks in optimized builds.  [#5526]
 - Allow backup check only when the backup exists.  [#5763]
 
-## [2.9.1] (17th Sep 2025)
+## [2.9.1] (17th September 2025)
 
 ### Added
 - Cardano: Add support for signing arbitrary messages.  [#3509]
@@ -184,8 +184,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New UI for confirming long messages.  [#4541]
 - Solana staking confirmation dialogs.  [#4560]
 
-### Changed
-
 ### Fixed
 - Cancelling device recovery after aborting from Suite.  [#3503]
 
@@ -195,7 +193,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix wrong RSOD color on some older Model T devices.  [#4491]
 - Fixed a bug resulting in restarting the recovery flow when inputting 33-word mnemonic.  [#4537]
 
-## [2.8.7] (22th January 2025)
+## [2.8.7] (22nd January 2025)
 
 ### Added
 - Add benchmark application.  [#4101]
@@ -248,23 +246,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Improve precision of PIN timeout countdown.  [#4000]
 
-### Changed
-
 ### Fixed
 - Added a progress indicator for the formatting operation.  [#3035]
 - Solana: added support for deprecated AToken Create `rent_sysvar` argument.  [#3976]
 
 ## [2.8.0] (9th July 2024)
 
-### Added
-
 ### Changed
 - Reworked PIN processing.
 
 ### Removed
 - CoSi functionality.  [#3442]
-
-### Fixed
 
 
 ## [2.7.2] (14th June 2024)
@@ -337,8 +329,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 ## [2.6.2] (internal release)
-
-### Added
 
 
 ## [2.6.1] (internal release)
@@ -654,8 +644,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Automatic breaking text on whitespace.  [#1384]
 - Introduced limit of 32 characters for device label.  [#1399]
 
-### Deprecated
-
 ### Removed
 - PIVX support
 - dropped debug-only `DebugLinkShowText` functionality
@@ -664,22 +652,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Path warning is not shown on `GetAddress(show_display=False)` call.  [#1206]
 - Settings are also erased from RAM when device is wiped.  [#1322]
 
-### Security
-
 ## 2.3.4 [7th October 2020]
 
 ### Added
 - Support for the upcoming Monero hard fork.  [#1246]
-
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 
 ## 2.3.3 [2nd September 2020]
@@ -694,8 +670,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove pre-fill bar from text rendering functions.  [#1173]
 - Display coin name when signing or verifying messages.  [#1159]
 - Allow spending coins from Bitcoin paths if the coin has implemented strong replay protection via `SIGHASH_FORKID`.  [#1188]
-
-### Deprecated
 
 ### Removed
 - Remove ETP, GIN, PTC, ZEL support.

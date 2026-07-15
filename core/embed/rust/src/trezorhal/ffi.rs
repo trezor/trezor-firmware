@@ -6,5 +6,6 @@
 #![allow(unnecessary_transmutes)]
 #![allow(clippy::transmute_int_to_bool)]
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::cast_lossless)]
 
 include!(concat!(env!("OUT_DIR"), "/trezorhal.rs"));

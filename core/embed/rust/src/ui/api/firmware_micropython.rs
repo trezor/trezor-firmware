@@ -1263,17 +1263,6 @@ extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_wait_text(message: Obj) -> Obj {
-    let block = || {
-        let message: TString<'static> = message.try_into()?;
-
-        let layout = ModelUI::show_wait_text(message)?;
-        Ok(LayoutObj::new_root(layout)?.into())
-    };
-
-    unsafe { util::try_or_raise(block) }
-}
-
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
@@ -2137,7 +2126,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     text: str,
     ///     title: str | None = None,
     ///     button: str | None = None,
-    /// ) -> LayoutContext[UiResult]:
+    /// ) -> LayoutObj[UiResult]:
     ///     """Simple dialog with text. TT: optional button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
 
@@ -2151,10 +2140,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutContext[UiResult]:
     ///     """Success modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
-
-    /// def show_wait_text(message: str, /) -> LayoutContext[None]:
-    ///     """Show single-line text in the middle of the screen."""
-    Qstr::MP_QSTR_show_wait_text => obj_fn_1!(new_show_wait_text).as_obj(),
 
     /// def show_warning(
     ///     *,
