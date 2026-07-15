@@ -3,7 +3,7 @@ from cryptography import x509
 
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.testing.common import compact_size
+from trezorlib.tools import compact_size
 
 from .certificate import (
     check_signature_mcu,
