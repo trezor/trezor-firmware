@@ -64,8 +64,6 @@ fn add_stm32u5_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32u5xx_hal_lptim.c",
             "stm32u5xx_hal_ltdc.c",
             "stm32u5xx_hal_ltdc_ex.c",
-            "stm32u5xx_hal_pcd.c",
-            "stm32u5xx_hal_pcd_ex.c",
             "stm32u5xx_hal_pwr.c",
             "stm32u5xx_hal_pwr_ex.c",
             "stm32u5xx_hal_ramcfg.c",
@@ -79,10 +77,20 @@ fn add_stm32u5_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32u5xx_hal_uart.c",
             "stm32u5xx_hal_uart_ex.c",
             "stm32u5xx_ll_fmc.c",
-            "stm32u5xx_ll_usb.c",
             "stm32u5xx_ll_sdmmc.c",
         ],
     );
+
+    if cfg!(feature = "usb") {
+        lib.add_sources_in_dir(
+            "../../vendor/stm32u5xx_hal_driver/Src/",
+            [
+                "stm32u5xx_hal_pcd.c",
+                "stm32u5xx_hal_pcd_ex.c",
+                "stm32u5xx_ll_usb.c",
+            ],
+        );
+    }
 
     if cfg!(feature = "secure_mode") {
         lib.add_sources_in_dir(
@@ -127,8 +135,6 @@ fn add_stm32f4_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32f4xx_hal_gpio.c",
             "stm32f4xx_hal_i2c.c",
             "stm32f4xx_hal_ltdc.c",
-            "stm32f4xx_hal_pcd.c",
-            "stm32f4xx_hal_pcd_ex.c",
             "stm32f4xx_hal_pwr.c",
             "stm32f4xx_hal_rcc.c",
             "stm32f4xx_hal_rcc_ex.c",
@@ -140,9 +146,19 @@ fn add_stm32f4_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32f4xx_hal_tim_ex.c",
             "stm32f4xx_ll_fmc.c",
             "stm32f4xx_ll_sdmmc.c",
-            "stm32f4xx_ll_usb.c",
         ],
     );
+
+    if cfg!(feature = "usb") {
+        lib.add_sources_in_dir(
+            "../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/",
+            [
+                "stm32f4xx_hal_pcd.c",
+                "stm32f4xx_hal_pcd_ex.c",
+                "stm32f4xx_ll_usb.c",
+            ],
+        );
+    }
 
     Ok(())
 }

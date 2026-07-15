@@ -51,7 +51,8 @@ class UsbAwareLayout(ui.Layout):
 
     def create_tasks(self) -> Iterator[loop.Task[None]]:
         yield from super().create_tasks()
-        yield self.usb_checker_task()
+        if utils.USE_USB:
+            yield self.usb_checker_task()
 
 
 class HomescreenLayout(UsbAwareLayout):

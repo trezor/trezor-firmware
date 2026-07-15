@@ -33,6 +33,7 @@ uses = [
     "touch",
     "touch_wakeup",
     "tropic",
+    "usb",
 ]
 
 elf_sections = [".flash", ".data"]

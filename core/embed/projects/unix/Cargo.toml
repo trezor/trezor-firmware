@@ -54,7 +54,6 @@ default = [
     "io/fancy_fatal_error",
     "io/kernel_mode",
     "io/secure_mode",
-    "io/usb_iface_wire",
     "sec/rdi",
     "rtl/secp256k1_zkp",
     "rtl/aes_gcm",
@@ -68,7 +67,6 @@ default = [
     "trezor_lib/ui",
     "trezor_lib/storage",
     "trezor_lib/translations",
-    "trezor_lib/usb",
     ]
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "upymod/mcu_stm32f427", "mcu_stm32f4"]
@@ -113,6 +111,8 @@ thp = ["upymod/thp", "rtl/aes_gcm", "trezor_lib/thp"]
 touch = ["io/touch", "upymod/touch", "trezor_lib/touch"]
 touch_wakeup = ["io/touch_wakeup", "upymod/touch_wakeup", "trezor_lib/touch_wakeup"]
 tropic = ["sec/tropic", "upymod/tropic", "trezor_lib/tropic"]
+usb = ["io/usb", "io/usb_iface_wire", "upymod/usb", "trezor_lib/usb"]
+# note: emulator has no vendor HAL, so no sys/usb here
 
 # Legacy coin support
 decred = ["upymod/decred"]

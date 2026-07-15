@@ -45,7 +45,6 @@ default = [
     "io/fancy_fatal_error",
     "io/kernel_mode",
     "io/secure_mode",
-    "io/usb_iface_wire",
     "models/bootloader",
     "rtl/ed25519_no_precomp",
 
@@ -54,7 +53,6 @@ default = [
     "trezor_lib/crypto",
     "trezor_lib/ui",
     "trezor_lib/bootloader",
-    "trezor_lib/usb",
     ]
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]
@@ -96,6 +94,7 @@ telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
 touch = ["io/touch", "trezor_lib/touch"]
 touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
 ui_empty_lock = ["trezor_lib/ui_empty_lock"]
+usb = ["io/usb", "io/usb_iface_wire", "sys/usb", "trezor_lib/usb"]
 
 display_mono = ["trezor_lib/display_mono"]
 display_rgb565 = ["trezor_lib/display_rgb565"]

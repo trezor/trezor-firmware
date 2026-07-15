@@ -266,6 +266,8 @@ void display_refresh(void) { syscall_invoke0(SYSCALL_DISPLAY_REFRESH); }
 // usb.h
 // =============================================================================
 
+#ifdef USE_USB
+
 #include <io/usb.h>
 
 secbool usb_start(const usb_start_params_t *params) {
@@ -281,6 +283,8 @@ usb_event_t usb_get_event(void) {
 void usb_get_state(usb_state_t *state) {
   syscall_invoke1((uint32_t)state, SYSCALL_USB_GET_STATE);
 }
+
+#endif
 
 // =============================================================================
 // sdcard.h

@@ -113,11 +113,13 @@ void display_fill__verified(const gfx_bitblt_t *bb);
 void display_copy_rgb565__verified(const gfx_bitblt_t *bb);
 
 // ---------------------------------------------------------------------
+#ifdef USE_USB
 #include <io/usb.h>
 
 void usb_get_state__verified(usb_state_t *state);
 
 secbool usb_start__verified(const usb_start_params_t *params);
+#endif
 
 // ---------------------------------------------------------------------
 

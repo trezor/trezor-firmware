@@ -35,7 +35,9 @@
 #include <io/touch.h>
 #endif
 
+#ifdef USE_USB
 #include <io/usb.h>
+#endif
 
 uint32_t last_touch_sample_time = 0;
 
@@ -47,10 +49,12 @@ uint32_t last_touch_sample_time = 0;
 
 #include "../trezorobj.h"
 
+#ifdef USE_USB
 // clang-format off
 #include "modtrezorio-usb.h"
 #include "modtrezorio-usb-if.h"
 // clang-format on
+#endif
 #ifdef USE_SD_CARD
 #include "modtrezorio-fatfs.h"
 #include "modtrezorio-sdcard.h"
@@ -144,17 +148,21 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},
     {MP_ROM_QSTR(MP_QSTR_ipc_send), MP_ROM_PTR(&mod_trezorio_ipc_send_obj)},
 #endif
+#ifdef USE_USB
     {MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezorio_USB_type)},
     {MP_ROM_QSTR(MP_QSTR_USBIF), MP_ROM_PTR(&mod_trezorio_USBIF_type)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_WIRE), MP_ROM_INT(SYSHANDLE_USB_WIRE)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_DEBUG), MP_ROM_INT(SYSHANDLE_USB_DEBUG)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_WEBAUTHN), MP_ROM_INT(SYSHANDLE_USB_WEBAUTHN)},
+#endif
 
     {MP_ROM_QSTR(MP_QSTR_poll), MP_ROM_PTR(&mod_trezorio_poll_obj)},
     {MP_ROM_QSTR(MP_QSTR_POLL_READ), MP_ROM_INT(POLL_READ)},
     {MP_ROM_QSTR(MP_QSTR_POLL_WRITE), MP_ROM_INT(POLL_WRITE)},
 
+#ifdef USE_USB
     {MP_ROM_QSTR(MP_QSTR_USB_EVENT), MP_ROM_INT(SYSHANDLE_USB)},
+#endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorio_globals,

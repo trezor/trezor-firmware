@@ -15,3 +15,5 @@ panel = "io/touch_panel_t2t1"
 [sd_card]
 
 [sbu]
+
+[usb]

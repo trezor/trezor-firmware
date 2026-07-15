@@ -286,6 +286,8 @@ USE_DBG_CONSOLE: bool
 """Whether a debug console is enabled."""
 USE_APP_LOADING: bool
 """Whether the firmware supports loading 3rd-party applications."""
+USE_USB: bool
+"""Whether the hardware supports USB."""
 USE_TELEMETRY: bool
 """Whether a telemetry is supported."""
 USE_N4W1: bool

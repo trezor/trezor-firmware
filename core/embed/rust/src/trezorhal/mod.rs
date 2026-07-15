@@ -29,6 +29,7 @@ pub mod slip39;
 pub mod storage;
 #[cfg(feature = "translations")]
 pub mod translations;
+#[cfg(feature = "usb")]
 pub mod usb;
 pub mod uzlib;
 pub mod wordlist;

@@ -205,17 +205,18 @@ def unexpected_message() -> Failure:
 
 
 def find_handler(iface: WireInterface, msg_type: int) -> Handler:
-    import usb
-
     from apps import workflow_handlers
 
     handler = workflow_handlers.find_registered_handler(msg_type)
     if handler is None:
         raise UnexpectedMessage("Unexpected message")
 
-    if __debug__ and iface is usb.iface_debug:
-        # no filtering allowed for debuglink
-        return handler
+    if __debug__ and utils.USE_USB:
+        import usb
+
+        if iface is usb.iface_debug:
+            # no filtering allowed for debuglink
+            return handler
 
     for filter in filters:
         handler = filter(msg_type, handler)

@@ -1,12 +1,12 @@
-use crate::{
-    trezorhal::usb,
-    ui::{
-        component::{Component, Event, EventCtx},
-        event::USBEvent,
-        geometry::Rect,
-        shape::Renderer,
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx},
+    event::USBEvent,
+    geometry::Rect,
+    shape::Renderer,
 };
+
+#[cfg(feature = "usb")]
+use crate::trezorhal::usb;
 
 #[cfg(feature = "ble")]
 use crate::{trezorhal::ble, ui::event::BLEEvent};
@@ -85,7 +85,14 @@ impl Component for ConnectionIndicator {
             #[cfg(feature = "ble")]
             Event::BLE(BLEEvent::Disconnected) => {
                 // Only update if USB is also disconnected
-                self.connected = usb::usb_configured();
+                #[cfg(feature = "usb")]
+                {
+                    self.connected = usb::usb_configured();
+                }
+                #[cfg(not(feature = "usb"))]
+                {
+                    self.connected = false;
+                }
             }
             _ => {}
         }
@@ -105,9 +112,16 @@ impl Component for ConnectionIndicator {
 }
 
 fn is_connected() -> bool {
-    let connected = usb::usb_configured();
+    #[allow(unused_mut)]
+    let mut connected = false;
+    #[cfg(feature = "usb")]
+    {
+        connected |= usb::usb_configured();
+    }
     #[cfg(feature = "ble")]
-    let connected = connected | ble::is_connected();
+    {
+        connected |= ble::is_connected();
+    }
     connected
 }
 

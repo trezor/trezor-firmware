@@ -416,6 +416,7 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_USB
 void usb_get_state__verified(usb_state_t *state) {
   if (!probe_write_access(state, sizeof(*state))) {
     goto access_violation;
@@ -439,6 +440,7 @@ access_violation:
   apptask_access_violation();
   return secfalse;
 }
+#endif
 
 // ---------------------------------------------------------------------
 

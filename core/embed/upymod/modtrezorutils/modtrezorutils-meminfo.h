@@ -34,7 +34,9 @@
 #include "py/objstr.h"
 #include "py/objtype.h"
 
+#ifdef USE_USB
 #include <io/usb.h>
+#endif
 #include "../../rust/librust.h"
 #include "../trezorobj.h"
 
@@ -307,8 +309,10 @@ typedef struct _mp_obj_closure_t {
 extern const mp_obj_type_t mp_type_bound_meth;
 extern const mp_obj_type_t mp_type_closure;
 extern const mp_obj_type_t mp_type_cell;
+#ifdef USE_USB
 extern const mp_obj_type_t mod_trezorio_USB_type;
 extern const mp_obj_type_t mod_trezorio_USBIF_type;
+#endif
 extern const mp_obj_type_t mod_trezorui_Display_type;
 
 typedef struct _mp_obj_protomsg_t {
@@ -607,9 +611,12 @@ void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
     dump_generator(out, value);
   }
 
-  else if (mp_obj_is_type(value, &mod_trezorio_USB_type) ||
-           mp_obj_is_type(value, &mod_trezorio_USBIF_type) ||
-           mp_obj_is_type(value, &mod_trezorui_Display_type)) {
+  else if (
+#ifdef USE_USB
+      mp_obj_is_type(value, &mod_trezorio_USB_type) ||
+      mp_obj_is_type(value, &mod_trezorio_USBIF_type) ||
+#endif
+      mp_obj_is_type(value, &mod_trezorui_Display_type)) {
     print_type(out, "trezor", NULL, value, true);
     fprintf(out, ",\n");
   }

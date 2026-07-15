@@ -2,7 +2,6 @@ use crate::{
     io::BinaryData,
     strutil::TString,
     translations::TR,
-    trezorhal::usb::usb_configured,
     ui::{
         component::{Child, Component, Event, EventCtx, Label},
         constant::{HEIGHT, WIDTH},
@@ -107,7 +106,12 @@ impl Homescreen {
 
     fn render_notification<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
-        if !usb_configured() {
+        // Without USB there is no "no USB connection" state to warn about.
+        #[cfg(feature = "usb")]
+        let no_usb = !crate::trezorhal::usb::usb_configured();
+        #[cfg(not(feature = "usb"))]
+        let no_usb = false;
+        if no_usb {
             shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
                 .with_bg(theme::BG)
                 .render(target);

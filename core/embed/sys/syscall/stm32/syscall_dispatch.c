@@ -26,7 +26,6 @@
 #include <io/dma2d_bitblt.h>
 #include <io/notify.h>
 #include <io/translations.h>
-#include <io/usb.h>
 #include <sec/boot_image.h>
 #include <sec/fwutils.h>
 #include <sec/rng_strong.h>
@@ -37,6 +36,10 @@
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <sys/systick.h>
+
+#ifdef USE_USB
+#include <io/usb.h>
+#endif
 
 #ifdef USE_SECRET
 #include <sec/secret.h>
@@ -312,6 +315,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       display_refresh();
     } break;
 
+#ifdef USE_USB
     case SYSCALL_USB_START: {
       const usb_start_params_t *params = (const usb_start_params_t *)args[0];
       args[0] = usb_start__verified(params);
@@ -329,6 +333,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       usb_state_t *state = (usb_state_t *)args[0];
       usb_get_state__verified(state);
     } break;
+#endif
 
 #ifdef USE_SD_CARD
     case SYSCALL_SDCARD_POWER_ON: {

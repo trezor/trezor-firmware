@@ -19,8 +19,9 @@ import storage
 # we will need space for XX items in the storage module
 utils.presize_module(storage, 20)
 
-if not utils.BITCOIN_ONLY:
+if not utils.BITCOIN_ONLY and utils.USE_USB:
     # storage.fido2 only imports C modules
+    # (FIDO2/U2F is only reachable over USB HID)
     import storage.fido2  # noqa: F401
 
 if __debug__:
@@ -34,7 +35,8 @@ import trezor.pin  # noqa: F401
 
 # === Prepare the USB interfaces first. Do not connect to the host yet.
 # usb imports trezor.utils and trezor.io which is a C module
-import usb
+if utils.USE_USB:
+    import usb
 
 # unlock the device, unload the boot module afterwards
 with utils.unimport():
@@ -44,7 +46,8 @@ with utils.unimport():
 # start the USB
 import storage.device
 
-usb.bus.open(storage.device.get_device_id())
+if utils.USE_USB:
+    usb.bus.open(storage.device.get_device_id())
 
 
 # enable BLE, allow connections

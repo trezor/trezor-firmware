@@ -35,11 +35,14 @@ fn main() -> Result<()> {
             "workflow/wf_host_control.c",
             "workflow/wf_ble_pairing_request.c",
             "wire/codec_v1.c",
-            "wire/wire_iface_usb.c",
             "wire/wire_iface_ble.c",
             "protob/protob.c",
             "protob/pb/messages.pb.c",
         ]);
+
+        if cfg!(feature = "usb") {
+            lib.add_source("wire/wire_iface_usb.c");
+        }
 
         if cfg!(not(feature = "emulator")) {
             if cfg!(feature = "boot_ucb") {

@@ -36,6 +36,7 @@ uses = [
     "touch",
     "touch_wakeup",
     "ui_empty_lock",
+    "usb",
 ]
 
 elf_sections = [".header", ".flash", ".data"]
