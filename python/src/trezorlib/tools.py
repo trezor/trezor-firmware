@@ -44,6 +44,31 @@ HARDENED_FLAG = 1 << 31
 Address = t.NewType("Address", list[int])
 
 
+def compact_size(n: int) -> bytes:
+    """
+    Encode an integer using Bitcoin's compact size format.
+
+    Args:
+        n (int): The integer to encode.
+
+    Returns:
+        bytes: The encoded integer.
+
+    Raises:
+        ValueError: If n is not in the range 0..2^64-1.
+    """
+    if n < 0 or n > 0xFFFF_FFFF_FFFF_FFFF:
+        raise ValueError("compact_size supports integers in range 0..2^64-1")
+    if n < 253:
+        return n.to_bytes(1, "little")
+    elif n < 0x1_0000:
+        return bytes([253]) + n.to_bytes(2, "little")
+    elif n < 0x1_0000_0000:
+        return bytes([254]) + n.to_bytes(4, "little")
+    else:
+        return bytes([255]) + n.to_bytes(8, "little")
+
+
 def H_(x: int) -> int:
     """
     Shortcut function that "hardens" a number in a BIP44 path.
