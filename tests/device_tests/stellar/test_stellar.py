@@ -133,6 +133,22 @@ def parameters_to_proto(session, parameters):
 def test_sign_tx(session: Session, parameters, result):
     tx, operations = parameters_to_proto(session, parameters)
 
+    # check fixture consistency
+    if stellar.HAVE_STELLAR_SDK:
+        from stellar_sdk import TransactionEnvelope
+
+        envelope = TransactionEnvelope.from_xdr(
+            parameters["xdr"], parameters["network_passphrase"]
+        )
+        tx_parsed, operations_parsed = stellar.from_envelope(envelope)
+        tx_parsed.address_n = parse_path(parameters["address_n"])
+        # payment requests are not encoded in XDR
+        tx_parsed.payment_req = tx.payment_req
+
+        assert tx == tx_parsed
+        for op, op_parsed in zip(operations, operations_parsed):
+            assert op == op_parsed
+
     if "signature" in result:
         response = stellar.sign_tx(
             session,
@@ -150,23 +166,6 @@ def test_sign_tx(session: Session, parameters, result):
             )
     else:
         assert False, "Invalid expected result"
-
-
-@parametrize_using_common_fixtures("stellar/sign_tx.json")
-@pytest.mark.skipif(not stellar.HAVE_STELLAR_SDK, reason="requires Stellar SDK")
-def test_xdr(session: Session, parameters, result):
-    from stellar_sdk import TransactionEnvelope
-
-    envelope = TransactionEnvelope.from_xdr(
-        parameters["xdr"], parameters["network_passphrase"]
-    )
-    tx, operations = stellar.from_envelope(envelope)
-    tx.address_n = parse_path(parameters["address_n"])
-    tx_expected, operations_expected = parameters_to_proto(session, parameters)
-    tx_expected.payment_req = None  # payment requests are not encoded in XDR
-    assert tx == tx_expected
-    for expected, actual in zip(operations_expected, operations):
-        assert expected == actual
 
 
 @parametrize_using_common_fixtures("stellar/get_address.json")
