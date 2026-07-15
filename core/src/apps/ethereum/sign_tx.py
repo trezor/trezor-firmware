@@ -132,35 +132,25 @@ _DATA_CHUNK_SIZE = const(1024)
 
 async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
     """Request at most `MAX_DATA_STORED` which we keep locally"""
+    from trezor.utils import empty_bytearray
 
     data_length = msg.data_length
     if data_length > len(msg.data_initial_chunk):
         # pre-allocate memory
-        initial_data = bytearray(min(data_length, _MAX_DATA_STORED))
+        buf_capacity = min(data_length, _MAX_DATA_STORED)
+        buf = empty_bytearray(buf_capacity)
+        buf.extend(msg.data_initial_chunk)
 
-        chunk = msg.data_initial_chunk
-        initial_data[0 : len(chunk)] = chunk
-        initial_data_length = len(chunk)
-        rlp.write_header(sha, data_length, rlp.STRING_HEADER_BYTE, chunk)
-        sha.extend(chunk)
-        data_left = data_length - initial_data_length
-        while (
-            data_left > 0 and initial_data_length + _DATA_CHUNK_SIZE <= _MAX_DATA_STORED
-        ):
+        # preload `buf_capacity` bytes from the host into `buf`
+        while (data_left := buf_capacity - len(buf)) > 0:
             chunk = await _get_next_chunk(data_left)
-            initial_data[initial_data_length : initial_data_length + len(chunk)] = chunk
-            data_left -= len(chunk)
-            initial_data_length += len(chunk)
-            sha.extend(chunk)
+            buf.extend(chunk)
     else:
-        initial_data = msg.data_initial_chunk
-        initial_data_length = len(msg.data_initial_chunk)
-        rlp.write_header(
-            sha, data_length, rlp.STRING_HEADER_BYTE, msg.data_initial_chunk
-        )
-        sha.extend(msg.data_initial_chunk)
+        buf = msg.data_initial_chunk
 
-    return initial_data
+    rlp.write_header(sha, data_length, rlp.STRING_HEADER_BYTE, buf)
+    sha.extend(buf)
+    return buf
 
 
 async def confirm_tx_data(
