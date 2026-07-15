@@ -605,8 +605,15 @@ class Dynamic(ABIValue):
         if offset + 32 > len(raw_data):
             raise OutOfBounds
         pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-        data = _read_dynamic_data(raw_data, pointer)
-        return self.parser(data), 32
+        return self.parse_body(raw_data, pointer), 32
+
+    def parse_body(self, raw_data: memoryview, body_start: int) -> AnyValue:
+        """Parse the length-prefixed value located directly at `body_start`.
+
+        Unlike `parse`, this expects `body_start` to already point at the value
+        body (no pointer indirection). Used when an enclosing `Array` has
+        already resolved the element's absolute offset."""
+        return self.parser(_read_dynamic_data(raw_data, body_start))
 
 
 class Tuple(ABIValue):
@@ -680,19 +687,44 @@ class Array(ABIValue):
         value = []
 
         for i in range(array_length):
-            p = array_start + 32 + (i * 32)
-            if p + 32 > len(raw_data):
+            i_pointer = array_start + 32 + (i * 32)
+            if i_pointer + 32 > len(raw_data):
                 raise OutOfBounds
             if isinstance(self.element_definition, Atomic):
-                # atomic types are encoded in place
-                data, _ = self.element_definition.parse(raw_data, p)
+                # e.g. `uint256[]` / `address[]`: each element is a static leaf,
+                # encoded in place (no pointer indirection), so `parse` reads the
+                # 32-byte value directly at the element head position.
+                data, _ = self.element_definition.parse(raw_data, i_pointer)
             elif isinstance(self.element_definition, Array):
-                # inner arrays: element head is a relative offset to the inner array body
-                element_pointer = int.from_bytes(raw_data[p : p + 32], "big")
+                # e.g. `uint256[][]`: each element is itself a (dynamic) array, so
+                # the element head is a relative offset to the inner array body.
+                # Dereference it, then `_parse_body` consumes the inner length
+                # prefix -- this is the array form of the "dynamic dance".
+                element_pointer = int.from_bytes(
+                    raw_data[i_pointer : i_pointer + 32], "big"
+                )
                 inner_array_start = array_start + 32 + element_pointer
                 data = self.element_definition._parse_body(raw_data, inner_array_start)
+            elif isinstance(self.element_definition, Dynamic):
+                # e.g. `bytes[]` / `string[]`: each element is a dynamic leaf, so
+                # the element head is a relative offset to the length-prefixed
+                # element body. Read the body directly, mirroring the inner-array
+                # case above -- calling `parse` here would dereference the offset
+                # a second time.
+                element_pointer = int.from_bytes(
+                    raw_data[i_pointer : i_pointer + 32], "big"
+                )
+                element_absolute_pointer = array_start + 32 + element_pointer
+                data = self.element_definition.parse_body(
+                    raw_data, element_absolute_pointer
+                )
             else:
-                element_pointer = int.from_bytes(raw_data[p : p + 32], "big")
+                # e.g. `MyStruct[]`: each element is a struct (Tuple). Inside an
+                # array a struct is encoded via a relative offset head (and parsed
+                # as static -- see `from_proto`), so dereference then `parse`.
+                element_pointer = int.from_bytes(
+                    raw_data[i_pointer : i_pointer + 32], "big"
+                )
                 element_absolute_pointer = array_start + 32 + element_pointer
                 data, _ = self.element_definition.parse(
                     raw_data, element_absolute_pointer
