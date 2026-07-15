@@ -47,6 +47,17 @@ def _pk_mldsa44(pubkey_hex: str) -> PublicKey:
 
 CHALLENGE_HEADER = b"AuthenticateDevice:"
 
+
+def get_challenge_message(challenge: bytes) -> bytes:
+    """Build the message that Trezor signs in response to an AuthenticateDevice call."""
+    return (
+        compact_size(len(CHALLENGE_HEADER))
+        + CHALLENGE_HEADER
+        + compact_size(len(challenge))
+        + challenge
+    )
+
+
 OID_TO_NAME = {
     NameOID.COMMON_NAME: "CN",
     NameOID.LOCALITY_NAME: "L",
@@ -497,12 +508,7 @@ def verify_authentication_response(
     The optional argument `root_pubkey` allows you to specify a root public key either
     as a `PublicKey` object or as a byte-string.
     """
-    challenge_bytes = (
-        compact_size(len(CHALLENGE_HEADER))
-        + CHALLENGE_HEADER
-        + compact_size(len(challenge))
-        + challenge
-    )
+    challenge_bytes = get_challenge_message(challenge)
 
     cert_chain_iter = iter(cert_chain)
 
