@@ -39,6 +39,12 @@
 // is a fixed "externally powered, active" and all charging/report calls are
 // no-ops. This mirrors how the npm1300 backend implements the same interface.
 
+// Time allowed for the supply rail to collapse after the latch is released in
+// pm_hibernate(), before treating the request as rejected. This is a passive
+// discharge of the rail's bulk capacitance (not a hardware ship-mode), so it
+// needs generous margin over the observed collapse time.
+#define PM_HIBERNATE_COLLAPSE_MS 2000
+
 static bool g_initialized = false;
 static bool g_suspended = false;
 
@@ -68,14 +74,16 @@ pm_status_t pm_hibernate(void) {
   }
 
   // Release the latch to cut the power supply and turn the device off. On a
-  // self-powered device the supply collapses within a few milliseconds and
-  // execution never reaches the return below. If the device is kept alive by
-  // an external power source the latch has no effect, so - mirroring the
-  // npm1300 backend's ship-mode contract - pm_hibernate() never returns PM_OK
-  // and reports PM_REQUEST_REJECTED on fall-through.
+  // self-powered device the supply collapses (after the bulk capacitance
+  // discharges) and execution never reaches the return below. If the device is
+  // kept alive by an external power source the latch has no effect, so -
+  // mirroring the npm1300 backend's ship-mode contract - pm_hibernate() never
+  // returns PM_OK and reports PM_REQUEST_REJECTED on fall-through.
   pmic_enter_shipmode();
 
-  systick_delay_ms(50);
+  // Wait long enough for the rail to actually collapse before concluding the
+  // request was rejected; the bulk caps can hold the supply up for a while.
+  systick_delay_ms(PM_HIBERNATE_COLLAPSE_MS);
 
   // If we are still running, power was not actually cut.
   return PM_REQUEST_REJECTED;
