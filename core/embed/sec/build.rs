@@ -18,6 +18,8 @@ mod image;
 mod iwdg;
 #[path = "mcu_attestation/build.rs"]
 mod mcu_attestation;
+#[path = "mldsa44/build.rs"]
+mod mldsa44;
 #[path = "monoctr/build.rs"]
 mod monoctr;
 #[path = "optiga/build.rs"]
@@ -67,6 +69,7 @@ fn main() -> Result<()> {
                 hash_processor if cfg!(feature = "hash_processor"),
                 hw_revision if cfg!(feature = "hw_revision"),
                 mcu_attestation if cfg!(feature = "mcu_attestation"),
+                mldsa44 if cfg!(feature = "mldsa44"),
                 monoctr,
                 option_bytes,
                 image,

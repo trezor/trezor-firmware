@@ -83,10 +83,6 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
         if args.block_on_vcp {
             features.push("block_on_vcp".into());
         }
-
-        if args.apps {
-            features.push("app_loading".into());
-        }
     }
 
     if matches!(
@@ -110,6 +106,10 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
                 bail!("storage_insecure_testing_mode cannot be enabled in production builds");
             }
             features.push("storage_insecure_testing_mode".into());
+        }
+
+        if args.apps {
+            features.push("app_loading".into());
         }
     }
 
