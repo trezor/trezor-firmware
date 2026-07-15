@@ -283,8 +283,7 @@ class Layout(Generic[T]):
 
     def request_complete_repaint(self) -> None:
         """Request a complete repaint of the layout."""
-        msg = self.layout.request_complete_repaint()
-        assert msg is None
+        return self.layout.request_complete_repaint()
 
     def repaint(self) -> None:
         """Repaint the layout. Forces drawing at this moment.
