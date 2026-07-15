@@ -2,8 +2,8 @@ import pytest
 from cryptography import x509
 
 from trezorlib import device, exceptions, messages
+from trezorlib.authentication import get_challenge_message
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.tools import compact_size
 
 from .certificate import (
     check_signature_mcu,
@@ -53,9 +53,11 @@ def test_authenticate_device_optiga(
         assert proof.mcu_signature is None
         assert proof.mcu_certificates == []
 
-    data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
     check_signature_optiga(
-        proof.optiga_signature, proof.optiga_certificates, session.model, data
+        proof.optiga_signature,
+        proof.optiga_certificates,
+        session.model,
+        get_challenge_message(challenge),
     )
 
 
@@ -76,9 +78,11 @@ def test_authenticate_device_mcu(
     assert proof.mcu_signature is not None
     assert len(proof.mcu_certificates) >= 1
 
-    data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
     check_signature_mcu(
-        proof.mcu_signature, proof.mcu_certificates, session.model, data
+        proof.mcu_signature,
+        proof.mcu_certificates,
+        session.model,
+        get_challenge_message(challenge),
     )
 
 
@@ -98,12 +102,11 @@ def test_authenticate_device_tropic(
         assert proof.mcu_signature is None
         assert proof.mcu_certificates == []
 
-    data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
     check_signature_tropic(
         proof.tropic_signature,
         proof.tropic_certificates,
         session.model,
-        data,
+        get_challenge_message(challenge),
     )
 
 
