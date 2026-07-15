@@ -50,7 +50,7 @@
 # 9. Scroll down to the bottom and look at the "signatures" section. The Trezor should generate the same signature
 #
 
-from base64 import b64encode
+from base64 import b64decode, b64encode
 
 import pytest
 
@@ -135,7 +135,7 @@ def test_sign_tx(session: Session, parameters, result):
 
     # check fixture consistency
     if stellar.HAVE_STELLAR_SDK:
-        from stellar_sdk import TransactionEnvelope
+        from stellar_sdk import Keypair, TransactionEnvelope
 
         envelope = TransactionEnvelope.from_xdr(
             parameters["xdr"], parameters["network_passphrase"]
@@ -148,6 +148,11 @@ def test_sign_tx(session: Session, parameters, result):
         assert tx == tx_parsed
         for op, op_parsed in zip(operations, operations_parsed):
             assert op == op_parsed
+
+        if "signature" in result:
+            pubkey = bytes.fromhex(result["public_key"])
+            keypair = Keypair.from_raw_ed25519_public_key(pubkey)
+            keypair.verify(envelope.hash(), b64decode(result["signature"]))
 
     if "signature" in result:
         response = stellar.sign_tx(
