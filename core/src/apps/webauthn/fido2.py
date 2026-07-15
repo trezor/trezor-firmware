@@ -8,8 +8,7 @@ import storage.device as storage_device
 from trezor import TR, config, io, log, loop, utils, wire, workflow
 from trezor.crypto import hashlib
 from trezor.crypto.curve import nist256p1
-from trezor.ui import Layout
-from trezor.ui.layouts import error_popup
+from trezor.ui.layouts import error_popup, interact_simple
 
 from apps.common import cbor
 from apps.common.lock_manager import set_homescreen
@@ -638,7 +637,7 @@ async def _show_error_popup(
         button=button,
         timeout_ms=timeout_ms,
     ) as popup:
-        await Layout(popup).get_result()
+        await interact_simple(popup)
 
 
 async def _confirm_bogus_app(title: str) -> None:

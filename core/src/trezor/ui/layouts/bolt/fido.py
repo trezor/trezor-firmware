@@ -1,9 +1,8 @@
 import trezorui_api
-from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_error_and_raise
 
-from ..common import interact
+from ..common import interact, interact_simple
 
 
 async def confirm_fido(
@@ -56,8 +55,7 @@ async def confirm_fido_reset() -> bool:
         description=TR.words__really_wanna,
         reverse=True,
     ) as layout:
-        confirm = ui.Layout(layout)
-        return (await confirm.get_result()) is trezorui_api.CONFIRMED
+        return await interact_simple(layout) is trezorui_api.CONFIRMED
 
 
 async def credential_warning(br_name: str, content: str) -> None:

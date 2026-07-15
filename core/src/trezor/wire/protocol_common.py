@@ -138,7 +138,7 @@ _UNRESPONSIVE_WARNING_TIMEOUT_MS = const(2000)
 async def _waiting_screen(raise_on_cancel: type[Exception] | None) -> None:
     import trezorui_api
     from trezor import TR
-    from trezor.ui import Layout
+    from trezor.ui.layouts import interact_simple
 
     if raise_on_cancel is not None:
         verb = TR.buttons__abort
@@ -155,15 +155,9 @@ async def _waiting_screen(raise_on_cancel: type[Exception] | None) -> None:
         danger=False,
         allow_cancel=False,
     ) as obj:
-        # Block until the user confirmation.
         # Don't use `interact` to avoid cancelling current workflow.
-        layout = Layout(obj)
-        layout.start()
-        # This task doesn't have access to I/O context - see `ButtonRequestHandler.join()`.
-        # Therefore, the new layout won't start its own ButtonRequest handler,
-        # avoiding interference with the existing layout (the one we are waiting for).
-        assert layout.button_request_handler is None
-        await layout.get_result()
+        # The new layout won't start its own ButtonRequest handler, avoiding interference with the existing layout (the one we are waiting for).
+        await interact_simple(obj)
 
     if raise_on_cancel:
         raise raise_on_cancel()
