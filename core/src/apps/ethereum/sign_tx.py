@@ -214,7 +214,7 @@ async def confirm_tx_data(
     if staking_approver is not None:
         if payment_request_verifier is not None:
             raise DataError("Payment Requests don't support staking")
-        return staking_approver
+        return await staking_approver
 
     yielding_approver = await yielding.get_approver(
         msg, initial_data, network, address_bytes, maximum_fee, fee_items, sender_bytes
@@ -222,7 +222,7 @@ async def confirm_tx_data(
     if yielding_approver is not None:
         if payment_request_verifier is not None:
             raise DataError("Payment Requests don't support yielding")
-        return yielding_approver
+        return await yielding_approver
 
     value = int.from_bytes(msg.value, "big")
 

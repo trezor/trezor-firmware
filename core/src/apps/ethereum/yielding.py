@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
 
-    from .helpers import ConfirmDataFn
     from .keychain import MsgInSignTx
     from .yielding_vaults import EthereumVaultInfo
 
@@ -117,14 +116,14 @@ async def get_approver(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     sender_bytes: AnyBytes,
-) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
+) -> Coroutine[Any, Any, None] | None:
 
     from .clear_signing import SC_FUNC_SIG_BYTES
-    from .helpers import get_progress_indicator
 
     if msg.data_length > len(initial_data):
         return None
 
+    # No more data should be loaded from host:
     if len(initial_data) < SC_FUNC_SIG_BYTES:
         return None
 
@@ -169,10 +168,7 @@ async def get_approver(
             sender_bytes=sender_bytes,
         )
 
-    if handler is not None:
-        progress_indicator = get_progress_indicator(msg.data_length)
-        return progress_indicator, handler
-    return None
+    return handler
 
 
 async def _prepare_vault_tx(
