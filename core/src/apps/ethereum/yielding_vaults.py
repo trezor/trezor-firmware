@@ -10,6 +10,29 @@ from trezor.messages import EthereumTokenInfo
 
 from .tokens import UNKNOWN_TOKEN
 
+# Ethereum address bytes (20-byte)
+_TEST_SH_USDC_VAULT_ADDRESS = (
+    b"\xa5\x11\xd6\x18\xcd\x0f\x9d\x7c\xad\x79\x10\x09\xd7\xc5\xe3\xb1\x9c\x95\x68\xda"
+)
+_SH_USDC_VAULT_ADDRESS = (
+    b"\xde\x6c\x23\xe5\x61\xf3\xe5\x58\x46\x20\x7e\xc4\x5a\x91\xb7\x77\xe0\xf7\xc8\x89"
+)
+_SH_USDT_VAULT_ADDRESS = (
+    b"\xe4\xdb\x1c\x5a\x1b\x70\x9c\xe4\xd2\xad\xa6\x98\x5d\x9d\x50\x6e\x58\xf7\x38\x29"
+)
+_SH_ETH_VAULT_ADDRESS = (
+    b"\x70\x4c\xfb\x08\x96\x90\x48\xa8\xdf\xf2\x98\xb2\x14\xf9\x59\x79\x1d\x8d\xa5\x09"
+)
+_USDC_ADDRESS = (
+    b"\xa0\xb8\x69\x91\xc6\x21\x8b\x36\xc1\xd1\x9d\x4a\x2e\x9e\xb0\xce\x36\x06\xeb\x48"
+)
+_USDT_ADDRESS = (
+    b"\xda\xc1\x7f\x95\x8d\x2e\xe5\x23\xa2\x20\x62\x06\x99\x45\x97\xc1\x3d\x83\x1e\xc7"
+)
+_WETH_ADDRESS = (
+    b"\xc0\x2a\xaa\x39\xb2\x23\xfe\x8d\x0a\x0e\x5c\x4f\x27\xea\xd9\x08\x3c\x75\x6c\xc2"
+)
+
 
 class EthereumVaultInfo:
     def __init__(
@@ -30,85 +53,111 @@ class EthereumVaultInfo:
 KNOWN_VAULTS = (
     # Test vault: https://etherscan.io/address/0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da
     EthereumVaultInfo(
-        address=b"\xa5\x11\xd6\x18\xcd\x0f\x9d\x7c\xad\x79\x10\x09\xd7\xc5\xe3\xb1\x9c\x95\x68\xda",
+        address=_TEST_SH_USDC_VAULT_ADDRESS,
         chain_id=1,
         name="Test Steakhouse USDC Prime Vault",
         asset_token=EthereumTokenInfo(
             symbol="USDC",
             decimals=6,
-            address=b"\xa0\xb8\x69\x91\xc6\x21\x8b\x36\xc1\xd1\x9d\x4a\x2e\x9e\xb0\xce\x36\x06\xeb\x48",
+            address=_USDC_ADDRESS,
             chain_id=1,
             name="USD Coin",
         ),
         vault_token=EthereumTokenInfo(
             symbol="tstSHUSDCp",
             decimals=18,
-            address=b"\xa5\x11\xd6\x18\xcd\x0f\x9d\x7c\xad\x79\x10\x09\xd7\xc5\xe3\xb1\x9c\x95\x68\xda",
+            address=_TEST_SH_USDC_VAULT_ADDRESS,
             chain_id=1,
             name="Test Steakhouse USDC Prime Vault",
         ),
     ),
     # https://etherscan.io/address/0xde6c23E561F3e55846207EC45A91b777e0F7C889
     EthereumVaultInfo(
-        address=b"\xde\x6c\x23\xe5\x61\xf3\xe5\x58\x46\x20\x7e\xc4\x5a\x91\xb7\x77\xe0\xf7\xc8\x89",
+        address=_SH_USDC_VAULT_ADDRESS,
         chain_id=1,
         name="Trezor Steakhouse USDC Prime Vault",
         asset_token=EthereumTokenInfo(
             symbol="USDC",
             decimals=6,
-            address=b"\xa0\xb8\x69\x91\xc6\x21\x8b\x36\xc1\xd1\x9d\x4a\x2e\x9e\xb0\xce\x36\x06\xeb\x48",
+            address=_USDC_ADDRESS,
             chain_id=1,
             name="USD Coin",
         ),
         vault_token=EthereumTokenInfo(
             symbol="trSHUSDCp",
             decimals=18,
-            address=b"\xde\x6c\x23\xe5\x61\xf3\xe5\x58\x46\x20\x7e\xc4\x5a\x91\xb7\x77\xe0\xf7\xc8\x89",
+            address=_SH_USDC_VAULT_ADDRESS,
             chain_id=1,
             name="Trezor Steakhouse USDC Prime Vault",
         ),
     ),
     # https://etherscan.io/address/0xE4DB1c5A1B709CE4d2adA6985D9D506e58F73829
     EthereumVaultInfo(
-        address=b"\xe4\xdb\x1c\x5a\x1b\x70\x9c\xe4\xd2\xad\xa6\x98\x5d\x9d\x50\x6e\x58\xf7\x38\x29",
+        address=_SH_USDT_VAULT_ADDRESS,
         chain_id=1,
         name="Trezor Steakhouse USDT Prime Vault",
         asset_token=EthereumTokenInfo(
             symbol="USDT",
             decimals=6,
-            address=b"\xda\xc1\x7f\x95\x8d\x2e\xe5\x23\xa2\x20\x62\x06\x99\x45\x97\xc1\x3d\x83\x1e\xc7",
+            address=_USDT_ADDRESS,
             chain_id=1,
             name="Tether USD",
         ),
         vault_token=EthereumTokenInfo(
             symbol="trSHUSDTp",
             decimals=18,
-            address=b"\xe4\xdb\x1c\x5a\x1b\x70\x9c\xe4\xd2\xad\xa6\x98\x5d\x9d\x50\x6e\x58\xf7\x38\x29",
+            address=_SH_USDT_VAULT_ADDRESS,
             chain_id=1,
             name="Trezor Steakhouse USDT Prime Vault",
         ),
     ),
     # https://etherscan.io/address/0x704cFb08969048a8DFf298B214F959791d8Da509
     EthereumVaultInfo(
-        address=b"\x70\x4c\xfb\x08\x96\x90\x48\xa8\xdf\xf2\x98\xb2\x14\xf9\x59\x79\x1d\x8d\xa5\x09",
+        address=_SH_ETH_VAULT_ADDRESS,
         chain_id=1,
         name="Trezor Steakhouse ETH Prime Vault",
         asset_token=EthereumTokenInfo(
             symbol="WETH",
             decimals=18,
-            address=b"\xc0\x2a\xaa\x39\xb2\x23\xfe\x8d\x0a\x0e\x5c\x4f\x27\xea\xd9\x08\x3c\x75\x6c\xc2",
+            address=_WETH_ADDRESS,
             chain_id=1,
             name="Wrapped Ether",
         ),
         vault_token=EthereumTokenInfo(
             symbol="trSHETHp",
             decimals=18,
-            address=b"\x70\x4c\xfb\x08\x96\x90\x48\xa8\xdf\xf2\x98\xb2\x14\xf9\x59\x79\x1d\x8d\xa5\x09",
+            address=_SH_ETH_VAULT_ADDRESS,
             chain_id=1,
             name="Trezor Steakhouse ETH Prime Vault",
         ),
     ),
 )
+
+if __debug__:
+    from ubinascii import unhexlify
+
+    # https://etherscan.io/address/0xa511d618cD0F9d7cAD791009d7c5E3b19c9568da
+    assert _TEST_SH_USDC_VAULT_ADDRESS == unhexlify(
+        "a511d618cd0f9d7cad791009d7c5e3b19c9568da"
+    )
+    # https://etherscan.io/address/0xde6c23E561F3e55846207EC45A91b777e0F7C889
+    assert _SH_USDC_VAULT_ADDRESS == unhexlify(
+        "de6c23e561f3e55846207ec45a91b777e0f7c889"
+    )
+    # https://etherscan.io/address/0xE4DB1c5A1B709CE4d2adA6985D9D506e58F73829
+    assert _SH_USDT_VAULT_ADDRESS == unhexlify(
+        "e4db1c5a1b709ce4d2ada6985d9d506e58f73829"
+    )
+    # https://etherscan.io/address/0x704cFb08969048a8DFf298B214F959791d8Da509
+    assert _SH_ETH_VAULT_ADDRESS == unhexlify(
+        "704cfb08969048a8dff298b214f959791d8da509"
+    )
+    # https://etherscan.io/token/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
+    assert _USDC_ADDRESS == unhexlify("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+    # https://etherscan.io/token/0xdAC1F958D2ee523a2206206994597C13D831ec7
+    assert _USDT_ADDRESS == unhexlify("dac17f958d2ee523a2206206994597c13d831ec7")
+    # https://etherscan.io/token/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+    assert _WETH_ADDRESS == unhexlify("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
 
 UNKNOWN_VAULT = EthereumVaultInfo(
     address=None,
