@@ -54,7 +54,7 @@ r_config:
   cfg_gpo: 0
   cfg_sensors: 0
   cfg_sleep_mode: 1
-  cfg_start_up: 9
+  cfg_start_up: 1
   cfg_uap_ecc_key_erase: 101058054
   cfg_uap_ecc_key_generate: 101058052
   cfg_uap_ecc_key_read: 101058054
