@@ -198,6 +198,11 @@ fn prepare_bindings() -> bindgen::Builder {
 
     let mut clang_args: Vec<String> = Vec::new();
 
+    // The vendored STM32U5 LL ADC header (stm32u5xx_ll_adc.h) contains a
+    // self-assignment that clang flags as an error during binding generation;
+    // it is harmless, so silence that specific diagnostic.
+    clang_args.push("-Wno-self-assign".to_string());
+
     let bindgen_macros_env = env::var("BINDGEN_MACROS").ok();
     let test_macros_env = env::var("TEST_BINDGEN_MACROS").ok();
     add_bindgen_macros(
@@ -291,6 +296,10 @@ fn prepare_bindings() -> bindgen::Builder {
 
     bindings
         .clang_args(attrs.to_compiler_args())
+        // The vendored STM32U5 LL ADC header (stm32u5xx_ll_adc.h) contains a
+        // self-assignment that clang flags as an error during binding
+        // generation; it is harmless, so silence that specific diagnostic.
+        .clang_arg("-Wno-self-assign")
         // Customize the standard types.
         .use_core()
         .ctypes_prefix("cty")

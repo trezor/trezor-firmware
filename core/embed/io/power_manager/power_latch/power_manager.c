@@ -101,16 +101,24 @@ pm_status_t pm_get_state(pm_state_t* state) {
     return PM_ERROR;
   }
   memset(state, 0, sizeof(*state));
-  // Latch-only boards are treated as always externally powered and active.
+  // Latch-only boards are treated as always powered and active. There is no
+  // fuel gauge, charger or NTC, but we can report the measured cell voltage.
   state->power_status = PM_STATE_ACTIVE;
   state->charging_status = PM_BATTERY_IDLE;
   state->usb_connected = false;
   state->wireless_connected = false;
-  state->battery_connected = false;
   state->ntc_connected = false;
   state->soc = 0;
-  state->battery_ocv = 0.0f;
   state->battery_temp = 0.0f;
+
+  pmic_report_t pmic = {0};
+  if (pmic_measure_sync(&pmic)) {
+    state->battery_connected = true;
+    state->battery_ocv = pmic.vbat;
+  } else {
+    state->battery_connected = false;
+    state->battery_ocv = 0.0f;
+  }
   return PM_OK;
 }
 
@@ -120,6 +128,12 @@ pm_status_t pm_get_report(pm_report_t* report) {
   }
   memset(report, 0, sizeof(*report));
   report->power_state = PM_STATE_ACTIVE;
+
+  pmic_report_t pmic = {0};
+  if (pmic_measure_sync(&pmic)) {
+    report->battery_voltage_v = pmic.vbat;
+    report->system_voltage_v = pmic.vsys;
+  }
   return PM_OK;
 }
 

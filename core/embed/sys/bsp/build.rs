@@ -43,6 +43,8 @@ fn add_stm32u5_bsp(lib: &mut CLibrary) -> Result<()> {
         "../../vendor/stm32u5xx_hal_driver/Src/",
         [
             "stm32u5xx_hal.c",
+            "stm32u5xx_hal_adc.c",
+            "stm32u5xx_hal_adc_ex.c",
             "stm32u5xx_hal_cortex.c",
             "stm32u5xx_hal_cryp.c",
             "stm32u5xx_hal_dma2d.c",

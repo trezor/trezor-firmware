@@ -16,6 +16,29 @@
 #define BTN_POWER_PIN GPIO_PIN_0
 #define BTN_POWER_CLK_ENA __HAL_RCC_GPIOA_CLK_ENABLE
 
+// Battery cell voltage measurement (single cell). BATTERY_MEAS_ENABLE (EN1,
+// active-high) gates the measurement path; the cell voltage is then read on
+// BATTERY_MEAS (MEAS1) = PA1 / ADC1_IN6. Q1 is only the enable switch and R7 is
+// a series/anti-alias resistor, so there is NO resistive divider (1:1) - the
+// reading therefore saturates at VREF+ = 3.3 V (fine for low-battery sensing;
+// set the divider ratio below if a divider is ever added).
+#define BATTERY_MEAS_ENABLE_PORT GPIOB
+#define BATTERY_MEAS_ENABLE_PIN GPIO_PIN_12
+#define BATTERY_MEAS_ENABLE_CLK_EN __HAL_RCC_GPIOB_CLK_ENABLE
+// Q1 is a P-channel / active-low switch (confirmed on hardware: driving EN1
+// high left the cell disconnected); enable is asserted by driving the pin low.
+#define BATTERY_MEAS_ENABLE_ACTIVE_LOW
+#define BATTERY_MEAS_PORT GPIOA
+#define BATTERY_MEAS_PIN GPIO_PIN_1
+#define BATTERY_MEAS_CLK_EN __HAL_RCC_GPIOA_CLK_ENABLE
+#define BATTERY_MEAS_ADC ADC1
+#define BATTERY_MEAS_ADC_CLK_EN __HAL_RCC_ADC12_CLK_ENABLE
+#define BATTERY_MEAS_ADC_CHANNEL ADC_CHANNEL_6
+#define BATTERY_MEAS_VREF_MV 3300
+// Cell voltage = ADC voltage * NUM / DEN (1:1, no divider on this board).
+#define BATTERY_MEAS_DIVIDER_NUM 1
+#define BATTERY_MEAS_DIVIDER_DEN 1
+
 // ST7789 (Display Elektronik DEM240320B1) over 16-bit i8080 FMC bus.
 // The module has no tearing-effect (TE) output, so no DISPLAY_TE_* defines.
 #define DISPLAY_I8080_16BIT_DW 1
