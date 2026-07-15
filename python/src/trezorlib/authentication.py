@@ -28,7 +28,7 @@ from cryptography.x509.oid import NameOID, ObjectIdentifier, SignatureAlgorithmO
 
 from . import _root_keys, device
 from .client import Session
-from .tools import workflow
+from .tools import compact_size, workflow
 
 LOG = logging.getLogger(__name__)
 
@@ -498,9 +498,9 @@ def verify_authentication_response(
     as a `PublicKey` object or as a byte-string.
     """
     challenge_bytes = (
-        len(CHALLENGE_HEADER).to_bytes(1, "big")
+        compact_size(len(CHALLENGE_HEADER))
         + CHALLENGE_HEADER
-        + len(challenge).to_bytes(1, "big")
+        + compact_size(len(challenge))
         + challenge
     )
 
