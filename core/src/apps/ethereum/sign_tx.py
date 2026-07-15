@@ -357,8 +357,9 @@ def check_common_fields(msg: MsgInSignTx) -> None:
         # prevent exceeding the limit we use a stricter limit on data length.
         if data_length > 16_000_000:
             raise DataError("Data length exceeds limit")
-        if len(msg.data_initial_chunk) > data_length:
-            raise DataError("Invalid size of initial chunk")
+
+    if len(msg.data_initial_chunk) > data_length:
+        raise DataError("Invalid size of initial chunk")
 
     if len(msg.to) not in (0, 40, 42):
         raise DataError("Invalid recipient address")
