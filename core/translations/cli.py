@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import datetime
@@ -11,7 +12,7 @@ import click
 
 from trezorlib import cosi, models, merkle_tree
 from trezorlib._internal import translations
-from trezorlib._internal.translations import VersionTuple
+from trezorlib._internal.translations import VersionTuple, version_matches_firmware
 
 HERE = Path(__file__).parent.resolve()
 LOG = logging.getLogger(__name__)
@@ -139,23 +140,44 @@ class TranslationsDir:
         )
 
     def all_languages(self) -> t.Iterable[str]:
-        return (lang_file.stem for lang_file in self.path.glob("??.json"))
+        return (lang_file.stem for lang_file in sorted(self.path.glob("??.json")))
 
-    def update_version_from_h(self, check: bool = False) -> VersionTuple:
+    def get_version(self, lang: str) -> VersionTuple:
+        blob_json = self.load_lang(lang)
+        return translations.version_from_json(blob_json["header"]["version"])
+
+    def update_version_from_h(self, check: bool = False) -> None:
         version = _version_from_version_h()
+        new_version = None
         for lang in self.all_languages():
             blob_json = self.load_lang(lang)
             blob_version = translations.version_from_json(
                 blob_json["header"]["version"]
             )
-            if blob_version != version:
+            if not version_matches_firmware(blob_version, version):
                 if check:
                     raise ValueError(
                         f"Language {lang} has version {blob_version} not matching firmware version {version}"
                     )
-                blob_json["header"]["version"] = _version_str(version[:3])
-                self.save_lang(lang, blob_json)
-        return version
+                else:
+                    if new_version is None:
+                        new_version = (*version[:3], 0)
+                    blob_json["header"]["version"] = _version_str(new_version)
+                    self.save_lang(lang, blob_json)
+        if new_version and version[3] != 0:
+            click.echo(
+                f"Warning: resetting language versions when firmware build != 0: {version}"
+            )
+
+    def bump_build_version(self) -> None:
+        for lang in self.all_languages():
+            blob_json = self.load_lang(lang)
+            blob_version = translations.version_from_json(
+                blob_json["header"]["version"]
+            )
+            new_version = (*blob_version[:3], blob_version[3] + 1)
+            blob_json["header"]["version"] = _version_str(new_version)
+            self.save_lang(lang, blob_json)
 
     def generate_single_blob(
         self,
@@ -264,7 +286,7 @@ def cli() -> None:
     "--version", "version_str", help="Set the blob version independent of JSON data."
 )
 @click.option("--check", is_flag=True, help="Only check if JSON version matches firmware.")
-def gen(signed: bool | None, version_str: str | None, check: bool | None) -> None:
+def gen(signed: bool, version_str: str | None, check: bool) -> None:
     """Generate all language blobs for all models.
 
     The generated blobs will be signed with the development keys.
@@ -272,7 +294,9 @@ def gen(signed: bool | None, version_str: str | None, check: bool | None) -> Non
     tdir = TranslationsDir()
 
     if version_str is None:
-        version = tdir.update_version_from_h(check=check)
+        if check:
+            tdir.update_version_from_h(check=True)
+        version = None
     else:
         if check:
             raise click.ClickException("Options --version and --check are mutually exclusive.")
@@ -454,6 +478,53 @@ def lowercase(lang_file: Path) -> None:
     data["translations"] = new_translations
     with open(lang_file, "w") as fh:
         json.dump(data, fh, indent=2, ensure_ascii=False)
+
+
+@cli.command()
+@click.option(
+    "--reset",
+    is_flag=True,
+    help="Set translations version from firmware version. Use when firmware version changed.",
+)
+@click.option(
+    "--bump",
+    is_flag=True,
+    help="Increase the build version of all translations. Use when releasing updated translations without releasing firmware.",
+)
+@click.pass_context
+def version(ctx: click.Context, reset: bool, bump: bool) -> None:
+    """Print versions of all language blobs and whether they match firmware.
+
+    The --reset option can be used to reconcile the translation versions with
+    the firmware version. If the versions match (i.e. differ at most in the build
+    version) the translations are left as-is. Otherwise translation versions are
+    set to the firmware version but with build version 0.
+    """
+    tdir = TranslationsDir()
+
+    if reset and bump:
+        raise click.ClickException("Options --reset and --bump are mutually exclusive.")
+    elif reset:
+        tdir.update_version_from_h(check=False)
+    elif bump:
+        tdir.bump_build_version()
+
+    firmware_version = _version_from_version_h()
+    click.echo(f"firmware {_version_str(firmware_version)} matches?")
+    all_match = True
+    for lang in tdir.all_languages():
+        blob_version = tdir.get_version(lang)
+        matches_fw = version_matches_firmware(blob_version, firmware_version)
+        all_match = all_match and matches_fw
+        matches_fw_str = "ok" if matches_fw else "VERSION MISMATCH"
+        click.echo(f"{lang}       {_version_str(blob_version)} {matches_fw_str}")
+
+    if not all_match:
+        raise click.ClickException("JSON versions do not match firmware.")
+
+    if reset or bump:
+        ctx.invoke(gen, signed=False, version_str=None, check=False)
+
 
 if __name__ == "__main__":
     cli()

@@ -101,7 +101,9 @@ def cli(project: str | Path, version: str) -> None:
             VERSION_PATCH=patch,
         )
         # also bump language JSONs
-        subprocess.run(["python", project / "translations" / "cli.py", "gen"])
+        subprocess.run(
+            ["python", project / "translations" / "cli.py", "version", "--reset"]
+        )
     elif parts[-1] == "legacy":
         bump_header(
             project / "firmware" / "version.h",
