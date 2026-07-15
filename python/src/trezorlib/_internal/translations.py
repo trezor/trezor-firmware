@@ -63,9 +63,17 @@ class JsonDef(TypedDict):
 
 def version_from_json(json_str: str) -> VersionTuple:
     version_digits = [int(v) for v in json_str.split(".")]
-    if len(version_digits) < 4:
-        version_digits.extend([0] * (4 - len(version_digits)))
+    if len(version_digits) != 4:
+        raise RuntimeError(
+            f"Version string '{json_str}' does not have MAJOR.MINOR.PATCH.LANGBUILD format"
+        )
     return t.cast(VersionTuple, tuple(version_digits))
+
+
+def version_matches_firmware(
+    translation_version: VersionTuple, firmware_version: VersionTuple
+) -> bool:
+    return translation_version[:3] == firmware_version[:3]
 
 
 def _normalize(what: str) -> str:
@@ -86,7 +94,7 @@ def offsets_seq(data: t.Iterable[bytes]) -> t.Iterator[int]:
 class Header(Struct):
     language: str
     model: Model
-    firmware_version: VersionTuple
+    version: VersionTuple
     data_len: int
     data_hash: bytes
 
@@ -95,7 +103,7 @@ class Header(Struct):
         "magic" / c.Const(b"TR"),
         "language" / c.PaddedString(8, "ascii"),  # BCP47 language tag
         "model" / EnumAdapter(c.Bytes(4), Model),
-        "firmware_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
+        "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
         "data_len" / c.Int32ul,
         "data_hash" / c.Bytes(32),
         ALIGN_SUBCON,
@@ -527,7 +535,7 @@ def blob_from_defs(
     header = Header(
         language=json_header["language"],
         model=Model.from_trezor_model(model),
-        firmware_version=version,
+        version=version,
         data_len=len(data),
         data_hash=sha256(data).digest(),
     )

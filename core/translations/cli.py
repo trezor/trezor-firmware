@@ -184,7 +184,7 @@ class TranslationsDir:
             for model in ALL_MODELS:
                 try:
                     blob = self.generate_single_blob(blob_json, model, version)
-                    blob_version = blob.header.firmware_version
+                    blob_version = blob.header.version
                     if common_version is None:
                         common_version = blob_version
                     elif blob_version != common_version:
@@ -228,7 +228,7 @@ def build_all_blobs(
         blob.proof = proof
         header = blob.header
         model = header.model.value.decode("ascii")
-        version = _version_str(header.firmware_version[:3])
+        version = _version_str(header.version[:3])
         if production:
             suffix = ""
         else:
@@ -366,7 +366,7 @@ def sign(signature_hex: str, force: bool | None, version_str: str | None) -> Non
     tree = merkle_tree.MerkleTree(b.header_bytes for b in all_blobs)
     root = tree.get_root_hash()
 
-    blob_version = all_blobs[0].header.firmware_version
+    blob_version = all_blobs[0].header.version
     signature_file: SignatureFile = json.loads(SIGNATURES_JSON.read_text())
 
     if version_str is None:
