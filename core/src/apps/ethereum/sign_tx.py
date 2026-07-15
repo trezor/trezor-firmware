@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Sequence
 
-    from trezor.messages import EthereumSignTx, EthereumTxAck
+    from trezor.messages import EthereumSignTx
     from trezor.ui.layouts import StrPropertyType
 
     from apps.common.keychain import Keychain
@@ -147,8 +147,7 @@ async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
         while (
             data_left > 0 and initial_data_length + _DATA_CHUNK_SIZE <= _MAX_DATA_STORED
         ):
-            resp = await _send_request_chunk(data_left)
-            chunk = resp.data_chunk
+            chunk = await _get_next_chunk(data_left)
             initial_data[initial_data_length : initial_data_length + len(chunk)] = chunk
             data_left -= len(chunk)
             initial_data_length += len(chunk)
@@ -305,8 +304,7 @@ def _get_digest_length(msg: EthereumSignTx, data_total: int) -> int:
 
 def create_data_chunk_loader(h: HashWriter) -> DataChunkLoader:
     async def data_chunk_loader(data_left: int) -> AnyBytes:
-        resp = await _send_request_chunk(data_left)
-        chunk = resp.data_chunk
+        chunk = await _get_next_chunk(data_left)
         h.extend(chunk)
         return chunk
 
@@ -329,13 +327,17 @@ async def _confirm_data_chunks(
         data_left -= len(chunk)
 
 
-async def _send_request_chunk(data_left: int) -> EthereumTxAck:
+async def _get_next_chunk(data_left: int) -> AnyBytes:
     from trezor.messages import EthereumTxAck
     from trezor.wire.context import call
 
     req = EthereumTxRequest()
     req.data_length = min(data_left, _DATA_CHUNK_SIZE)
-    return await call(req, EthereumTxAck)
+    resp = await call(req, EthereumTxAck)
+    data_chunk = resp.data_chunk
+    if len(data_chunk) != req.data_length:
+        raise DataError("Data length mismatch")
+    return data_chunk
 
 
 def _sign_digest(
