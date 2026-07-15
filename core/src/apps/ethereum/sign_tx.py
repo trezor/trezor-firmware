@@ -6,12 +6,7 @@ from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
 from trezor.wire import DataError
 
-from .helpers import (
-    address_from_bytes,
-    bytes_from_address,
-    get_data_confirmer,
-    get_progress_indicator,
-)
+from .helpers import address_from_bytes, bytes_from_address, get_data_confirmer
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
@@ -243,17 +238,15 @@ async def confirm_tx_data(
         )
     elif not clear_signed:
         if data_length > 0:
-            confirm_data_chunk = get_data_confirmer(data_length)
-        else:
-            confirm_data_chunk = get_progress_indicator(data_length)
-        token = (
-            None  # what we want to confirm here is the ETH amount being sent on-chain
-        )
-
-        # Stream, confirm and hash the rest of the calldata chunks.
-        await _confirm_data_chunks(
-            confirm_data_chunk, initial_data, data_length, data_chunk_loader
-        )
+            # Stream, confirm and hash the rest of the calldata chunks.
+            await _confirm_data_chunks(
+                get_data_confirmer(data_length),
+                initial_data,
+                data_length,
+                data_chunk_loader,
+            )
+        # what we want to confirm here is the ETH amount being sent on-chain
+        token = None
         return await require_confirm_tx(
             recipient_str,
             format_ethereum_amount(value, token, network),
