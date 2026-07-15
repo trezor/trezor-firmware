@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from trezor.messages import EthereumNetworkInfo
     from trezor.ui.layouts import StrPropertyType
 
-    from .helpers import ConfirmDataFn
     from .keychain import MsgInSignTx
 
 
@@ -35,7 +34,7 @@ def get_approver(
     address_bytes: bytes,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
+) -> Coroutine[Any, Any, None] | None:
     """
     Returns a awaitable confirmation for ETH staking approval.
 
@@ -43,7 +42,6 @@ def get_approver(
     """
 
     from .clear_signing import SC_FUNC_SIG_BYTES
-    from .helpers import get_progress_indicator
 
     # local_cache_attribute
     data_length = msg.data_length
@@ -51,6 +49,7 @@ def get_approver(
     if data_length > len(msg.data_initial_chunk):
         return None
 
+    # No more data should be loaded from host:
     data_reader = BufferReader(msg.data_initial_chunk)
     if data_reader.remaining_count() < SC_FUNC_SIG_BYTES:
         return None
@@ -58,17 +57,17 @@ def get_approver(
     func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
     if address_bytes in ADDRESSES_POOL:
         if func_sig == FUNC_SIG_STAKE:
-            return get_progress_indicator(data_length), _handle_staking_tx_stake(
+            return _handle_staking_tx_stake(
                 data_reader, msg, network, address_bytes, maximum_fee, fee_items
             )
         if func_sig == FUNC_SIG_UNSTAKE:
-            return get_progress_indicator(data_length), _handle_staking_tx_unstake(
+            return _handle_staking_tx_unstake(
                 data_reader, msg, network, address_bytes, maximum_fee, fee_items
             )
 
     if address_bytes in ADDRESSES_ACCOUNTING:
         if func_sig == FUNC_SIG_CLAIM:
-            return get_progress_indicator(data_length), _handle_staking_tx_claim(
+            return _handle_staking_tx_claim(
                 data_reader,
                 msg,
                 address_bytes,
