@@ -4,7 +4,7 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::{
     ffi,
-    memory::{init_ctx, Memory},
+    memory::{Memory, init_ctx},
 };
 
 pub const BLOCK_SIZE: usize = ffi::SHA256_BLOCK_LENGTH as usize;
@@ -88,37 +88,30 @@ impl NoPinSha256 {
 
 #[cfg(test)]
 mod test {
-    use crate::strutil::hexlify;
-
     use super::*;
 
-    const SHA256_EMPTY: &[u8] = b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-    const SHA256_VECTORS: &[(&[u8], &[u8])] = &[
+    const SHA256_EMPTY: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    const SHA256_VECTORS: &[(&[u8], &str)] = &[
         (b"", SHA256_EMPTY),
         (
             b"abc",
-            b"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
         ),
     ];
 
-    fn hexdigest(data: &[u8]) -> [u8; DIGEST_SIZE * 2] {
-        let mut out_hex = [0u8; DIGEST_SIZE * 2];
-
-        let digest = digest(data);
-        hexlify(&digest, &mut out_hex);
-        out_hex
+    fn hexdigest(data: &[u8]) -> String {
+        hex::encode(digest(data))
     }
 
     #[test]
     fn test_empty_ctx() {
         let mut out = Digest::default();
-        let mut out_hex = [0u8; DIGEST_SIZE * 2];
 
         init_ctx!(Sha256, ctx);
         ctx.finalize_into(&mut out);
-        hexlify(&out, &mut out_hex);
 
-        assert_eq!(out_hex, SHA256_EMPTY);
+        let out_hex = hex::encode(out);
+        assert_eq!(out_hex, SHA256_EMPTY.to_string());
     }
 
     #[test]

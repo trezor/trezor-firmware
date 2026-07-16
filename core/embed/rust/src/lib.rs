@@ -22,8 +22,6 @@ mod macros;
 mod align;
 #[cfg(feature = "debug")]
 mod coverage;
-#[cfg(feature = "crypto")]
-mod crypto;
 #[cfg(feature = "debug")]
 mod debug;
 mod error;

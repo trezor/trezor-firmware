@@ -19,6 +19,7 @@ xbuild.workspace = true
 io.workspace = true
 sec.workspace = true
 sys.workspace = true
+crypto.workspace = true
 rtl.workspace = true
 models.workspace = true
 
@@ -44,7 +45,7 @@ default = [
     "io/kernel_mode",
     "io/secure_mode",
     "models/boardloader",
-    "rtl/ed25519_no_precomp",
+    "crypto/ed25519_no_precomp",
     ]
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]

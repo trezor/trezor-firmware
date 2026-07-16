@@ -111,3 +111,19 @@ impl From<trezor_thp::Error> for Error {
         }
     }
 }
+
+#[cfg(feature = "crypto")]
+impl From<crypto::Error> for crate::error::Error {
+    fn from(e: crypto::Error) -> Self {
+        match e {
+            crypto::Error::SignatureVerificationFailed => {
+                value_error!(c"Signature verification failed")
+            }
+            crypto::Error::InvalidEncoding => value_error!(c"Invalid key or signature encoding"),
+            crypto::Error::InvalidParams => value_error!(c"Invalid cryptographic parameters"),
+            crypto::Error::InvalidContext => value_error!(c"Invalid cryptographic context"),
+            crypto::Error::AuthenticationFailed => value_error!(c"Authentication failed"),
+            crypto::Error::InvalidSigmask => value_error!(c"Invalid sigmask"),
+        }
+    }
+}

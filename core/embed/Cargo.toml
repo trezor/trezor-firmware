@@ -4,6 +4,7 @@ cargo-features = ["panic-immediate-abort"]
 members = [
     "models",
     "rtl",
+    "crypto",
     "sys",
     "sec",
     "io",
@@ -93,6 +94,7 @@ zeroize = { version = "1.8.2", default-features = false, features = ["zeroize_de
 
 models = { path = "models" }
 rtl = { path = "rtl" }
+crypto = { path = "crypto" }
 sys = { path = "sys" }
 sec = { path = "sec" }
 io = { path = "io" }

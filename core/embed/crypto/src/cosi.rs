@@ -1,6 +1,6 @@
 use heapless::Vec;
 
-use super::{ed25519, ffi, Error};
+use super::{Error, ed25519, ffi};
 
 const MAX_PUBKEYS: usize = 3;
 
@@ -39,7 +39,9 @@ fn select_keys(
     let mut selected_keys = Vec::new();
     for key in keys {
         if sigmask & 1 != 0 {
-            unwrap!(selected_keys.push(*key));
+            if selected_keys.push(*key).is_err() {
+                return Err(Error::InvalidSigmask);
+            }
         }
         sigmask >>= 1;
     }

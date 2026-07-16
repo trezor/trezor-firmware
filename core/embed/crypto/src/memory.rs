@@ -1,6 +1,6 @@
 use core::{marker::PhantomPinned, mem::MaybeUninit, pin::Pin};
 
-use zeroize::{zeroize_flat_type, Zeroize};
+use zeroize::{Zeroize, zeroize_flat_type};
 
 /// Wrapper for a memory used as a context by C functions. Its purpose is to be
 /// !Unpin, thus prevent moves when accessed through a Pin. We want to avoid
@@ -34,8 +34,6 @@ impl<T> Zeroize for Memory<T> {
     }
 }
 
-type PinnedMemory<'a, T> = Pin<&'a mut Memory<T>>;
-
 impl<T> Memory<T> {
     // SAFETY:
     // The caller must ensure that the return value is handled according to the
@@ -64,7 +62,7 @@ impl<T> Zeroize for Pin<&mut Memory<T>> {
 /// Initializes backing memory on the stack and passes it to a constructor.
 /// The macro is basically a specialized version of `core::pin::pin!` for use
 /// with Memory<T>.
-#[allow(unused_macros)]
+#[macro_export]
 macro_rules! init_ctx {
     ($type:ty, $name:ident $(, $arg:expr)*) => {
         // assign the backing memory to $name...
@@ -78,4 +76,4 @@ macro_rules! init_ctx {
     };
 }
 
-pub(crate) use init_ctx;
+pub use init_ctx;

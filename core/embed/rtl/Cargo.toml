@@ -11,24 +11,14 @@ xbuild.workspace = true
 [dependencies]
 models.workspace = true
 
-
 [features]
 
 # --------------------------------------------------------------------------
 # Selectable features
 # --------------------------------------------------------------------------
 
-aes_gcm = []
-ed25519_no_precomp = []
-emulator = ["insecure_prng", "models/emulator"]
-eos = []
-insecure_prng = []
-mldsa = []
-nem = []
-noise = ["aes_gcm"]
+emulator = ["models/emulator"]
 production = ["models/production"]
-secp256k1_zkp = []
-sphincsplus = []
 sprintf = []
 universal_fw = []
 

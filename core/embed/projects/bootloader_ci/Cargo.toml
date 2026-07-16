@@ -18,6 +18,7 @@ xbuild.workspace = true
 io.workspace = true
 sec.workspace = true
 sys.workspace = true
+crypto.workspace = true
 rtl.workspace = true
 models.workspace = true
 
@@ -45,7 +46,7 @@ default = [
     "io/secure_mode",
     "io/usb_iface_wire",
     "models/bootloader",
-    "rtl/ed25519_no_precomp",
+    "crypto/ed25519_no_precomp",
 ]
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]

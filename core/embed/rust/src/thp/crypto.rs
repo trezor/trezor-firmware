@@ -2,7 +2,7 @@ use trezor_thp::channel::{Backend, Cipher, Hash, U8Array, DH};
 
 use zeroize::{Zeroize, Zeroizing};
 
-use crate::crypto::{aesgcm, curve25519, memory::init_ctx, sha256};
+use crypto::{aesgcm, curve25519, memory::init_ctx, sha256};
 
 /// Array wrapper that zeroizes on `drop()`. Can't use zeroizing directly due to
 /// the orphan rule.
@@ -56,7 +56,9 @@ impl DH for TrezorCryptoCurve25519 {
     }
 
     fn genkey() -> Self::Key {
-        curve25519::Scalar::generate()
+        let mut bytes = [0u8; curve25519::CURVE25519_KEY_SIZE];
+        crate::trezorhal::random::bytes(&mut bytes);
+        curve25519::Scalar::from_bytes(bytes)
     }
 
     fn pubkey(privkey: &Self::Key) -> Self::Pubkey {
@@ -175,7 +177,8 @@ impl Cipher for TrezorCryptoAesGcm {
     }
 }
 
-pub type TrezorCryptoSha256 = sha256::NoPinSha256;
+#[derive(Default)]
+pub struct TrezorCryptoSha256(sha256::NoPinSha256);
 
 impl Hash for TrezorCryptoSha256 {
     fn name() -> &'static str {
@@ -186,12 +189,12 @@ impl Hash for TrezorCryptoSha256 {
     type Output = Sensitive<sha256::Digest>;
 
     fn input(&mut self, data: &[u8]) {
-        self.update(data);
+        self.0.update(data);
     }
 
     fn result(&mut self) -> Self::Output {
         let mut digest = sha256::Digest::default();
-        self.clone().finalize_into(&mut digest);
+        self.0.clone().finalize_into(&mut digest);
         Self::Output::from_slice(&digest)
     }
 }
