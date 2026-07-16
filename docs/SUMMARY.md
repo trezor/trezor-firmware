@@ -13,6 +13,7 @@
   - [Debugging on hardware](core/embed_debug/index.md)
   - [SystemView instrumentation](core/systemview/index.md)
   - [High-level Architecture](core/embed-arch/embed-arch.md)
+  - [Firmware Merkle-tree signing](core/embed-arch/firmware-merkle-tree.md)
   - [Miscellaneous](core/misc/index.md)
     - [Boot stages](core/misc/boot.md)
     - [Code style](core/misc/codestyle.md)
