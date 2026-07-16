@@ -1795,7 +1795,7 @@ if not utils.BITCOIN_ONLY:
         fee: str | None,
         account_details: tuple[str | None, str],
         address: str,
-        chunkify: bool = True,
+        chunkify: bool = False,
     ) -> None:
         await confirm_address(
             title=TR.words__send,
@@ -1818,7 +1818,7 @@ if not utils.BITCOIN_ONLY:
         recipient_addr: str,
         amount_str: str,
         maximum_fee: str,
-        chunkify: bool = True,
+        chunkify: bool = False,
     ) -> None:
 
         br_name = "tron/transfer"

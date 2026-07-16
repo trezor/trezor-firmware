@@ -9213,6 +9213,7 @@ class TronSignTx(protobuf.MessageType):
         5: protobuf.Field("data", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
         7: protobuf.Field("fee_limit", "uint64", repeated=False, required=False, default=None),
+        8: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9225,6 +9226,7 @@ class TronSignTx(protobuf.MessageType):
         address_n: Optional[Sequence["int"]] = None,
         data: Optional["bytes"] = None,
         fee_limit: Optional["int"] = None,
+        chunkify: Optional["bool"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.ref_block_bytes = ref_block_bytes
@@ -9233,6 +9235,7 @@ class TronSignTx(protobuf.MessageType):
         self.timestamp = timestamp
         self.data = data
         self.fee_limit = fee_limit
+        self.chunkify = chunkify
 
 
 class TronContractRequest(protobuf.MessageType):

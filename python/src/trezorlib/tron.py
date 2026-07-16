@@ -136,8 +136,10 @@ def sign_tx(
     tx: messages.TronSignTx,
     contract: "TronMessageType",
     address_n: "Address",
+    chunkify: bool = False,
 ) -> messages.TronSignature:
     tx.address_n = address_n
+    tx.chunkify = chunkify
     resp = session.call(tx)
     messages.TronContractRequest.ensure_isinstance(resp)
     resp = session.call(contract)
