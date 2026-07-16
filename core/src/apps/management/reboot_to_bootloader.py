@@ -57,7 +57,9 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     # For convenience, we block unofficial firmwares from jumping to bootloader
     # this way, so that the user doesn't get mysterious "install failed" errors.
     # (It would be somewhat nicer if this was a compile-time flag, but oh well.)
-    is_official = utils.firmware_vendor() != "UNSAFE, DO NOT USE!"
+    # Any UNSAFE-prefixed vendor ("UNSAFE, DO NOT USE!" for custom images,
+    # "UNSAFE, FACTORY TEST ONLY" for prodtest) is not a field-official image.
+    is_official = not utils.firmware_vendor().startswith("UNSAFE")
     if (
         msg.boot_command == BootCommand.INSTALL_UPGRADE
         and msg.firmware_header is not None
