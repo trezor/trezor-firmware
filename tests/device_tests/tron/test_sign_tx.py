@@ -31,11 +31,15 @@ def test_sign_tx(session: Session, parameters: dict, result: dict):
         if not session.debug.legacy_debug:
             client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
         if "signature" in result:
-            response = tron.sign_tx(session, tx, contract, address_n)
+            response = tron.sign_tx(
+                session, tx, contract, address_n, parameters.get("chunkify", True)
+            )
             assert response.signature == binascii.unhexlify(result["signature"])
         elif "error_message" in result:
             with pytest.raises(TrezorFailure, match=result["error_message"]):
-                tron.sign_tx(session, tx, contract, address_n)
+                tron.sign_tx(
+                    session, tx, contract, address_n, parameters.get("chunkify", True)
+                )
         else:
             assert False, "Invalid expected result"
 

@@ -51,7 +51,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
     fee_limit = msg.fee_limit or 0
     raw_contract = await process_contract(
-        contract, fee_limit, account_details, signer_address
+        contract, fee_limit, account_details, signer_address, bool(msg.chunkify)
     )
 
     raw_tx = messages.TronRawTransaction(
@@ -81,6 +81,7 @@ async def process_contract(
     fee_limit: int,
     account_details: tuple[str | None, str],
     signer_address: str,
+    chunkify: bool,
 ) -> TronRawContract:
 
     # Importing individual enums would de-clutter the code a bit.
@@ -109,11 +110,11 @@ async def process_contract(
         contract_type = TronRawContractType.TransferContract
         if contract.amount > _INT64_MAX:
             raise DataError("Tron: invalid transfer amount")
-        await confirm_trx_transfer(contract, account_details)
+        await confirm_trx_transfer(contract, account_details, chunkify)
 
     elif messages.TronTriggerSmartContract.is_type_of(contract):
         contract_type = TronRawContractType.TriggerSmartContract
-        await process_smart_contract(contract, fee_limit)
+        await process_smart_contract(contract, fee_limit, chunkify)
 
     elif messages.TronFreezeBalanceV2Contract.is_type_of(contract):
         from trezor.enums import TronResourceCode
@@ -125,6 +126,7 @@ async def process_contract(
             balance=contract.balance,
             resource=contract.resource,
             title=TR.ethereum__staking_stake,
+            chunkify=chunkify,
         )
 
         # TRON protocol uses proto3, which omits fields with default values from
@@ -146,6 +148,7 @@ async def process_contract(
             balance=contract.balance,
             resource=contract.resource,
             title=TR.ethereum__staking_unstake,
+            chunkify=chunkify,
         )
 
         if contract.resource == TronResourceCode.BANDWIDTH:
@@ -161,6 +164,7 @@ async def process_contract(
             owner_address if is_different_owner else None,
             account_details,
             TR.tron__claim_unfrozen_balance,
+            chunkify,
         )
 
     elif messages.TronWithdrawBalance.is_type_of(contract):
@@ -169,6 +173,7 @@ async def process_contract(
             owner_address if is_different_owner else None,
             account_details,
             TR.tron__claim_voting_rewards,
+            chunkify,
         )
 
     elif messages.TronVoteWitnessContract.is_type_of(contract):
@@ -193,18 +198,18 @@ async def process_contract(
 
 
 async def process_smart_contract(
-    contract: TronTriggerSmartContract, fee_limit: int
+    contract: TronTriggerSmartContract, fee_limit: int, chunkify: bool
 ) -> None:
-    if await process_known_trc20_contract(contract, fee_limit):
+    if await process_known_trc20_contract(contract, fee_limit, chunkify):
         return
     else:
-        await layout.confirm_unknown_smart_contract(contract, fee_limit)
+        await layout.confirm_unknown_smart_contract(contract, fee_limit, chunkify)
 
 
 async def process_known_trc20_contract(
-    contract: TronTriggerSmartContract, fee_limit: int
+    contract: TronTriggerSmartContract, fee_limit: int, chunkify: bool
 ) -> bool:
-    """Returns False when the contract is unrecoginsed. i.e. not (Transfer and known TRC-20)"""
+    """Returns False when the contract is unrecognised. i.e. not (Transfer and known TRC-20)"""
     from trezor.utils import BufferReader
 
     from .sc_constants import (
@@ -251,6 +256,7 @@ async def process_known_trc20_contract(
         fee_limit,
         token_decimals,
         token_symbol,
+        chunkify,
     )
     return True
 

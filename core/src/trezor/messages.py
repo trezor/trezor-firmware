@@ -7304,6 +7304,7 @@ if TYPE_CHECKING:
         data: "AnyBytes | None"
         timestamp: "int"
         fee_limit: "int | None"
+        chunkify: "bool | None"
 
         def __init__(
             self,
@@ -7315,6 +7316,7 @@ if TYPE_CHECKING:
             address_n: "list[int] | None" = None,
             data: "AnyBytes | None" = None,
             fee_limit: "int | None" = None,
+            chunkify: "bool | None" = None,
         ) -> None:
             pass
 

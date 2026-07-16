@@ -32,19 +32,22 @@ def format_energy_amount(amount: int) -> str:
 
 
 async def confirm_trx_transfer(
-    contract: TronTransferContract, account_details: tuple[str | None, str]
+    contract: TronTransferContract,
+    account_details: tuple[str | None, str],
+    chunkify: bool,
 ) -> None:
     await layouts.confirm_tron_send(
         amount=format_trx_amount(contract.amount),
         fee=None,
         account_details=account_details,
         address=get_encoded_address(contract.to_address),
+        chunkify=chunkify,
     )
 
 
 # TODO: Refactor ETH references to crypto-neutral references.
 async def confirm_unknown_smart_contract(
-    contract: TronTriggerSmartContract, fee_limit: int
+    contract: TronTriggerSmartContract, fee_limit: int, chunkify: bool
 ) -> None:
 
     from trezor.enums import ButtonRequestType
@@ -61,7 +64,7 @@ async def confirm_unknown_smart_contract(
     await confirm_address(
         title=TR.ethereum__token_contract,
         address=contract_address,
-        chunkify=True,
+        chunkify=chunkify,
     )
 
     await confirm_blob(
@@ -87,6 +90,7 @@ async def confirm_known_trc20_smart_contract(
     fee_limit: int,
     token_decimals: int,
     token_symbol: str,
+    chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_tron_approve, confirm_tron_transfer
 
@@ -106,7 +110,7 @@ async def confirm_known_trc20_smart_contract(
             amount_str=amount_str,
             is_revoke=is_revoke,
             maximum_fee=format_energy_amount(fee_limit),
-            chunkify=True,
+            chunkify=chunkify,
         )
     else:
         await confirm_tron_transfer(
@@ -115,7 +119,7 @@ async def confirm_known_trc20_smart_contract(
                 int.from_bytes(amount_arg, "big"), token_decimals, token_symbol
             ),
             maximum_fee=format_energy_amount(fee_limit),
-            chunkify=True,
+            chunkify=chunkify,
         )
 
 
@@ -124,6 +128,7 @@ async def confirm_freeze_operations(
     balance: int,
     resource: int,
     title: str,
+    chunkify: bool,
 ) -> None:
     from trezor.enums import TronResourceCode
     from trezor.ui.layouts import confirm_address, confirm_properties
@@ -131,7 +136,7 @@ async def confirm_freeze_operations(
     await confirm_address(
         title=title,
         address=get_encoded_address(owner_address),
-        chunkify=True,
+        chunkify=chunkify,
     )
 
     await confirm_properties(
@@ -153,6 +158,7 @@ async def confirm_claim(
     owner_address: str | None,
     account_details: tuple[str | None, str],
     intro_question: str,
+    chunkify: bool,
 ) -> None:
 
     title = TR.ethereum__staking_claim
@@ -166,7 +172,7 @@ async def confirm_claim(
             address=owner_address,
             verb=TR.buttons__continue,
             footer=(TR.address__warning_not_yours, True),
-            chunkify=True,
+            chunkify=chunkify,
         )
 
     await layouts.confirm_tron_claim(

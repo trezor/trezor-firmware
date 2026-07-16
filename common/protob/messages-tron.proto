@@ -47,6 +47,7 @@ message TronSignTx {
                                          // not a Tron protocol limitation)
     required uint64 timestamp = 6;       // Transaction timestamp, set as the transaction creation time
     optional uint64 fee_limit = 7;  // Not TRX. Maximum Energy cost. Only for deploying or triggering smart contracts.
+    optional bool chunkify = 8;     // Display the address in chunks of 4 characters
 }
 
 /**
