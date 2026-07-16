@@ -2,29 +2,36 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::ffi;
 
+pub type Curve25519KeyBytes = ffi::curve25519_key;
+pub const CURVE25519_KEY_SIZE: usize = core::mem::size_of::<Curve25519KeyBytes>();
+
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Point {
-    bytes: [u8; 32],
+    bytes: Curve25519KeyBytes,
 }
 
 #[cfg(feature = "thp")]
 impl trezor_thp::channel::U8Array for Point {
     fn new() -> Self {
-        Self { bytes: [0u8; 32] }
+        Self {
+            bytes: [0u8; CURVE25519_KEY_SIZE],
+        }
     }
 
     fn new_with(c: u8) -> Self {
-        Self { bytes: [c; 32] }
+        Self {
+            bytes: [c; CURVE25519_KEY_SIZE],
+        }
     }
 
     fn from_slice(src: &[u8]) -> Self {
-        let mut bytes = [0u8; 32];
+        let mut bytes = [0u8; CURVE25519_KEY_SIZE];
         bytes.copy_from_slice(src);
         Self { bytes }
     }
 
     fn len() -> usize {
-        32
+        CURVE25519_KEY_SIZE
     }
 
     fn as_slice(&self) -> &[u8] {
@@ -38,27 +45,31 @@ impl trezor_thp::channel::U8Array for Point {
 
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Scalar {
-    bytes: [u8; 32],
+    bytes: Curve25519KeyBytes,
 }
 
 #[cfg(feature = "thp")]
 impl trezor_thp::channel::U8Array for Scalar {
     fn new() -> Self {
-        Self { bytes: [0u8; 32] }
+        Self {
+            bytes: [0u8; CURVE25519_KEY_SIZE],
+        }
     }
 
     fn new_with(c: u8) -> Self {
-        Self { bytes: [c; 32] }
+        Self {
+            bytes: [c; CURVE25519_KEY_SIZE],
+        }
     }
 
     fn from_slice(src: &[u8]) -> Self {
-        let mut bytes = [0u8; 32];
+        let mut bytes = [0u8; CURVE25519_KEY_SIZE];
         bytes.copy_from_slice(src);
         Self { bytes }
     }
 
     fn len() -> usize {
-        32
+        CURVE25519_KEY_SIZE
     }
 
     fn as_slice(&self) -> &[u8] {
@@ -71,7 +82,7 @@ impl trezor_thp::channel::U8Array for Scalar {
 }
 
 impl Scalar {
-    pub fn from_bytes(bytes: [u8; 32]) -> Self {
+    pub fn from_bytes(bytes: Curve25519KeyBytes) -> Self {
         let mut res = Self { bytes };
         // taken from https://cr.yp.to/ecdh.html
         res.bytes[0] &= 248;
@@ -79,17 +90,13 @@ impl Scalar {
         res.bytes[31] |= 64;
         res
     }
-
-    pub fn generate() -> Self {
-        let mut bytes = [0u8; 32];
-        crate::trezorhal::random::bytes(&mut bytes);
-        Self::from_bytes(bytes)
-    }
 }
 
 impl Point {
     pub fn from_secret(secret: &Scalar) -> Self {
-        let mut res = Self { bytes: [0u8; 32] };
+        let mut res = Self {
+            bytes: [0u8; CURVE25519_KEY_SIZE],
+        };
         let dest = res.bytes.as_mut_ptr();
         let secret_bytes = secret.bytes.as_ptr();
         // SAFETY: ffi
@@ -100,7 +107,9 @@ impl Point {
     }
 
     pub fn multiply(&self, secret: &Scalar) -> Self {
-        let mut res = Self { bytes: [0u8; 32] };
+        let mut res = Self {
+            bytes: [0u8; CURVE25519_KEY_SIZE],
+        };
         let dest = res.bytes.as_mut_ptr();
         let secret_bytes = secret.bytes.as_ptr();
         let point_bytes = self.bytes.as_ptr();
@@ -111,16 +120,18 @@ impl Point {
 
     // No need for validation, every 32 byte array represents a valid point.
     // See https://cr.yp.to/ecdh/curve25519-20060209.pdf
-    pub fn from_bytes(bytes: [u8; 32]) -> Self {
+    pub fn from_bytes(bytes: Curve25519KeyBytes) -> Self {
         Self { bytes }
     }
 
-    pub fn to_bytes(&self) -> [u8; 32] {
+    pub fn to_bytes(&self) -> Curve25519KeyBytes {
         self.bytes
     }
 
-    pub fn map_to_curve_elligator2(input: &[u8; 32]) -> Self {
-        let mut res = Self { bytes: [0u8; 32] };
+    pub fn map_to_curve_elligator2(input: &Curve25519KeyBytes) -> Self {
+        let mut res = Self {
+            bytes: [0u8; CURVE25519_KEY_SIZE],
+        };
         let dest = res.bytes.as_mut_ptr();
         // SAFETY: ffi
         let ok = unsafe { ffi::map_to_curve_elligator2_curve25519(input.as_ptr(), dest) };
@@ -131,12 +142,29 @@ impl Point {
 
 #[cfg(test)]
 mod test {
+    use rand::prelude::*;
+    use rand::rngs::SmallRng;
+
     use super::*;
+
+    fn insecure_rng() -> SmallRng {
+        let time_seed = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos() as u64;
+        SmallRng::seed_from_u64(time_seed)
+    }
+
+    fn generate_scalar() -> Scalar {
+        let mut bytes = [0u8; CURVE25519_KEY_SIZE];
+        insecure_rng().fill_bytes(&mut bytes);
+        Scalar::from_bytes(bytes)
+    }
 
     #[test]
     fn test_generate() {
         for _ in 0..100 {
-            let bytes = Scalar::generate().bytes;
+            let bytes = generate_scalar().bytes;
             assert!(bytes[0] & 7 == 0 && bytes[31] & 128 == 0 && bytes[31] & 64 == 64)
         }
     }
@@ -167,8 +195,8 @@ mod test {
     #[test]
     fn test_multiply_random() {
         for _ in 0..100 {
-            let sk1 = Scalar::generate();
-            let sk2 = Scalar::generate();
+            let sk1 = generate_scalar();
+            let sk2 = generate_scalar();
             let pk1 = Point::from_secret(&sk1);
             let pk2 = Point::from_secret(&sk2);
             let session1 = pk2.multiply(&sk1);
@@ -180,7 +208,7 @@ mod test {
     #[test]
     fn test_clamping() {
         let mut bytes1 = [0u8; 32];
-        crate::trezorhal::random::bytes(&mut bytes1);
+        insecure_rng().fill_bytes(&mut bytes1);
 
         let mut bytes2 = bytes1;
         // flipping the bits affected by clamping should not change the results
@@ -195,14 +223,14 @@ mod test {
         let pk2 = Point::from_secret(&sk2);
         assert_eq!(pk1.to_bytes(), pk2.to_bytes());
 
-        let sk3 = Scalar::generate();
+        let sk3 = generate_scalar();
         let pk3 = Point::from_secret(&sk3);
         let res1 = pk3.multiply(&sk1);
         let res2 = pk3.multiply(&sk2);
         assert_eq!(res1.to_bytes(), res2.to_bytes());
     }
 
-    #[cfg(feature = "layout_eckhart")] // TODO replace with feature = "thp"
+    #[cfg(feature = "thp")]
     #[test]
     fn test_elligator2() {
         // https://elligator.org/vectors/curve25519_direct.vec
