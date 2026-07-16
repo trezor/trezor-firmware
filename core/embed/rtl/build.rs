@@ -24,9 +24,11 @@ fn main() -> Result<()> {
 
         add_uzlib(lib);
 
-        if cfg!(feature = "test") {
-            lib.add_source("src/test_setup.c");
+        if cfg!(feature = "error_shims") {
+            lib.add_source("error_shims.c");
         }
+
+        lib.add_rust_bindings(|builder| Ok(add_rust_bindings(builder)))?;
 
         Ok(())
     })
@@ -74,4 +76,12 @@ fn add_uzlib(lib: &mut xbuild::CLibrary) {
     lib.add_include(uzlib_path);
 
     lib.add_sources_in_dir(uzlib_path, ["adler32.c", "crc32.c", "tinflate.c"]);
+}
+
+fn add_rust_bindings(builder: bindgen::Builder) -> bindgen::Builder {
+    builder
+        .header("inc/rtl/sysexit.h")
+        .allowlist_function("system_exit")
+        .allowlist_function("system_exit_error_ex")
+        .allowlist_function("system_exit_fatal_ex")
 }

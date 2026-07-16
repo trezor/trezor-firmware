@@ -360,7 +360,7 @@ systask_id_t systask_id(const systask_t* task);
  * @param task Pointer to the task to terminate, or NULL.
  * @param exit_code Exit code for the task.
  */
-void systask_exit(systask_t* task, int exit_code);
+void __attribute__((noreturn)) systask_exit(systask_t* task, int exit_code);
 
 /**
  * @brief Terminates the task with an error message
@@ -375,9 +375,9 @@ void systask_exit(systask_t* task, int exit_code);
  * @param footer Footer string.
  * @param footer_len Length of the footer.
  */
-void systask_exit_error(systask_t* task, const char* title, size_t title_len,
-                        const char* message, size_t message_len,
-                        const char* footer, size_t footer_len);
+void __attribute__((noreturn)) systask_exit_error(
+    systask_t* task, const char* title, size_t title_len, const char* message,
+    size_t message_len, const char* footer, size_t footer_len);
 
 /**
  * @brief Terminates the task with a fatal error message
@@ -391,9 +391,11 @@ void systask_exit_error(systask_t* task, const char* title, size_t title_len,
  * @param file_len Length of the file string.
  * @param line Line number.
  */
-void systask_exit_fatal(systask_t* task, const char* message,
-                        size_t message_len, const char* file, size_t file_len,
-                        int line);
+void __attribute__((noreturn)) systask_exit_fatal(systask_t* task,
+                                                  const char* message,
+                                                  size_t message_len,
+                                                  const char* file,
+                                                  size_t file_len, int line);
 
 /**
  * @brief Prints the post-mortem information about the task to the debug output

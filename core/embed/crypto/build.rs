@@ -43,10 +43,6 @@ fn main() -> Result<()> {
             add_mldsa(lib, &attrs)?;
         }
 
-        if cfg!(feature = "test") {
-            lib.add_source("src/test_setup.c");
-        }
-
         Ok(())
     })
 }
@@ -64,6 +60,8 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
     if cfg!(feature = "ed25519_no_precomp") {
         lib.add_define("ED25519_NO_PRECOMP", None);
     }
+
+    lib.add_source("src/fault_handler.c");
 
     lib.add_sources_in_dir_with_attrs(
         CRYPTO_PATH,

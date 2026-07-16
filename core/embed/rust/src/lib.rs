@@ -55,6 +55,10 @@ pub mod util;
 #[cfg(feature = "bootloader")]
 mod bootloader;
 
+// pull in the unwrap! / ensure! / fatal_error! macros
+#[macro_use]
+extern crate rtl;
+
 #[cfg(feature = "debug")]
 #[cfg(not(test))]
 #[panic_handler]
@@ -66,9 +70,9 @@ fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
     // TODO: find out how to display message from panic_info.message()
     let msg = panic_info.message().as_str().unwrap_or("rs");
     if let Some(location) = panic_info.location() {
-        trezorhal::fatal_error::__fatal_error(msg, location.file(), location.line());
+        rtl::system_exit_fatal(msg, location.file(), location.line());
     } else {
-        trezorhal::fatal_error::__fatal_error(msg, "", 0);
+        rtl::system_exit_fatal(msg, "", 0);
     }
 }
 

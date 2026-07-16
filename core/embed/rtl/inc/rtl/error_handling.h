@@ -150,6 +150,8 @@ const char *ts_string(ts_t status);
 /**
  * Shows an error message and shuts down the device.
  *
+ * Do not use this function in new code, use `system_exit_error()` instead.
+ *
  * @param title Title of the error message (defaults to
  *  "INTERNAL ERROR" if NULL)
  * @param message Main error message (defaults to no message if NULL)
@@ -162,6 +164,8 @@ void __attribute__((noreturn)) error_shutdown_ex(const char *title,
 
 /**
  * Shows an error message and shuts down the device.
+ *
+ * Do not use this function in new code, use `system_exit_error()` instead.
  *
  * @param message Main error message (defaults to no message if NULL)
  */
@@ -180,6 +184,22 @@ void __attribute__((noreturn)) error_shutdown(const char *message);
  */
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
                                              int line);
+
+/**
+ * Shows a fatal error message with file and line information,
+ * and shuts down the device.
+ *
+ * Like `__fatal_error`, but with explicit lengths for the strings.
+ *
+ * @param msg Error message.
+ * @param msg_len Length of the error message.
+ * @param file Source file name where the error occurred.
+ * @param file_len Length of the source file name.
+ * @param line Line number in the source file where the error occurred.
+ */
+void __attribute__((noreturn)) __fatal_error_n(const char *msg, size_t msg_len,
+                                               const char *file,
+                                               size_t file_len, int line);
 
 /*
  * TSH_DECLARE, TSH_RETURN and TSH_CHECK_xxx() macros define
