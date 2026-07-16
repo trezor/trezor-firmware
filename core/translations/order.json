@@ -1260,5 +1260,7 @@
   "1258": "words__arguments",
   "1259": "words__authorization",
   "1260": "words__comm_continue",
-  "1261": "words__function"
+  "1261": "words__function",
+  "1262": "ethereum__skip_to_hash",
+  "1263": "ethereum__view_data_and_hash"
 }

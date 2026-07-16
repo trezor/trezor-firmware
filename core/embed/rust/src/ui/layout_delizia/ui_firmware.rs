@@ -156,6 +156,7 @@ impl FirmwareUI for UIDelizia {
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -166,7 +167,9 @@ impl FirmwareUI for UIDelizia {
             Some(TR::instructions__view_all_data.into()),
         )
         .with_verb(verb)
-        .with_verb_info(Some(TR::buttons__view_all_data.into()))
+        .with_verb_info(Some(
+            verb_view_all.unwrap_or(TR::buttons__view_all_data.into()),
+        ))
         .with_description_font(&theme::TEXT_SUB_GREEN_LIME)
         .with_subtitle(subtitle)
         .with_verb_cancel(verb_cancel)
