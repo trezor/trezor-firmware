@@ -11,6 +11,7 @@ name = "Ethereum"
 vendor = "SatoshiLabs"
 stack-size = 16384
 heap-size = 1024
+app-ring = 0
 
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
