@@ -48,3 +48,47 @@ class RootPacket(SanityCheckedStruct):
         "signature_0" / MLDSA_SIG,
         "signature_1" / MLDSA_SIG,
     )
+
+    # ---- higher-level, flag-like abstraction ----
+
+    def has_ring(self, index: int) -> bool:
+        """Whether ring `index` is present in the mask."""
+        return bool(self.ring_mask & (1 << index))
+
+    @property
+    def ring_indices(self) -> list[int]:
+        """Ring indices present in the mask, ascending (0..MAX_RINGS-1)."""
+        return [i for i in range(self.MAX_RINGS) if self.has_ring(i)]
+
+    def ring(self, index: int) -> bytes:
+        """The 32-byte root for ring `index`."""
+        if not self.has_ring(index):
+            raise KeyError(f"ring {index} not present in mask {self.ring_mask:#04x}")
+        # array is stored ascending by ring index; position = set bits below `index`
+        pos = bin(self.ring_mask & ((1 << index) - 1)).count("1")
+        return self.root_rings[pos]
+
+    @property
+    def rings(self) -> dict[int, bytes]:
+        """Mapping {ring_index: 32-byte root} for all present rings."""
+        return {i: self.ring(i) for i in self.ring_indices}
+
+    def sanity_check(self, image: bytes, errors: t.Sequence[str] = ()) -> None:
+        _errors: list[str] = list(errors)
+
+        # `root_rings` length must equal the number of set mask bits
+        expected = bin(self.ring_mask).count("1")
+        if len(self.root_rings) != expected:
+            _errors.append(
+                f"root_rings length {len(self.root_rings)} does not match "
+                f"mask popcount {expected} (mask {self.ring_mask:#04x})"
+            )
+
+        # no bits set above MAX_RINGS
+        if self.ring_mask >> self.MAX_RINGS:
+            _errors.append(
+                f"ring_mask {self.ring_mask:#04x} has bits set above "
+                f"MAX_RINGS={self.MAX_RINGS}"
+            )
+
+        super().sanity_check(image, _errors)
