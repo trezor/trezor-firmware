@@ -53,6 +53,7 @@ test = [
     "models/mcu_stm32u5g",
     "models/model_t3w1",
     "noise",
+    "rtl/error_shims",
     "secp256k1_zkp",
     "sphincsplus",
     "universal_fw",

@@ -17,25 +17,52 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_rtl.h>
+// Provide definitions of the system exit functions so that they can be
+// called without linking the sys crate. This is needed when compiling the
+// tests for the crates that don't depend on sys, such as the crypto crate.
 
-#include <sys/systask.h>
-#include <sys/system.h>
+#include <rtl/sysexit.h>
 
-#ifdef KERNEL_MODE
+#include <stdio.h>
+#include <stdlib.h>
 
-void system_exit(int exitcode) { systask_exit(NULL, exitcode); }
+static void print_rust_string(const char* str, size_t len) {
+  if (str != NULL && len > 0) {
+    fwrite(str, len, 1, stdout);
+  }
+}
 
 void system_exit_error_ex(const char* title, size_t title_len,
                           const char* message, size_t message_len,
                           const char* footer, size_t footer_len) {
-  systask_exit_error(NULL, title, title_len, message, message_len, footer,
-                     footer_len);
+  printf("====== ERROR ======\n");
+  if (title != NULL && title_len > 0) {
+    printf("Title: ");
+    print_rust_string(title, title_len);
+    printf("\n");
+  }
+  printf("Error: ");
+  print_rust_string(message, message_len);
+  printf("\n");
+  if (footer != NULL && footer_len > 0) {
+    printf("Footer: ");
+    print_rust_string(footer, footer_len);
+    printf("\n");
+  }
+  exit(1);
 }
 
 void system_exit_fatal_ex(const char* message, size_t message_len,
                           const char* file, size_t file_len, int line) {
-  systask_exit_fatal(NULL, message, message_len, file, file_len, line);
+  printf("====== FATAL ERROR ======\n");
+  printf("Fatal error: ");
+  print_rust_string(message, message_len);
+  printf("\n");
+  if (file != NULL && file_len > 0) {
+    printf(" at ");
+    print_rust_string(file, file_len);
+    printf(":%d", line);
+  }
+  printf("\n");
+  exit(1);
 }
-
-#endif  // KERNEL_MODE

@@ -18,7 +18,6 @@
  */
 
 #include <trezor_rtl.h>
-#include "fault_handler.h"
 
 #ifndef TREZOR_EMULATOR
 // Stack check guard value set in startup code.
@@ -63,11 +62,30 @@ const char *ts_string(ts_t status) {
   }
 }
 
+void system_exit_error(const char *title, const char *message,
+                       const char *footer) {
+  size_t title_len = title != NULL ? strlen(title) : 0;
+  size_t message_len = message != NULL ? strlen(message) : 0;
+  size_t footer_len = footer != NULL ? strlen(footer) : 0;
+
+  system_exit_error_ex(title, title_len, message, message_len, footer,
+                       footer_len);
+}
+
+void system_exit_fatal(const char *message, const char *file, int line) {
+  size_t message_len = message != NULL ? strlen(message) : 0;
+  size_t file_len = file != NULL ? strlen(file) : 0;
+  system_exit_fatal_ex(message, message_len, file, file_len, line);
+}
+
 void __attribute__((noreturn)) error_shutdown_ex(const char *title,
                                                  const char *message,
                                                  const char *footer) {
-  system_exit_error(title, message, footer);
-  while (1);
+  size_t title_len = title != NULL ? strlen(title) : 0;
+  size_t message_len = message != NULL ? strlen(message) : 0;
+  size_t footer_len = footer != NULL ? strlen(footer) : 0;
+  system_exit_error_ex(title, title_len, message, message_len, footer,
+                       footer_len);
 }
 
 void __attribute__((noreturn)) error_shutdown(const char *message) {
@@ -76,8 +94,7 @@ void __attribute__((noreturn)) error_shutdown(const char *message) {
 
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
                                              int line) {
-  system_exit_fatal(msg, file, line);
-  while (1);
+  size_t msg_len = msg != NULL ? strlen(msg) : 0;
+  size_t file_len = file != NULL ? strlen(file) : 0;
+  system_exit_fatal_ex(msg, msg_len, file, file_len, line);
 }
-
-void tc_fault_handler(const char *msg) { ensure(secfalse, msg); }
