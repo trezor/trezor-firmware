@@ -1237,5 +1237,19 @@
   "1235": "tron__claim_unfrozen_balance",
   "1236": "tron__claim_voting_rewards",
   "1237": "address__warning_not_yours",
-  "1238": "tron__owner_address"
+  "1238": "tron__owner_address",
+  "1239": "ethereum__all_evms",
+  "1240": "ethereum__auth_done",
+  "1241": "ethereum__auth_title",
+  "1242": "ethereum__auth_warn",
+  "1243": "ethereum__delegate_done",
+  "1244": "ethereum__delegate_title",
+  "1245": "ethereum__delegate_warn",
+  "1246": "ethereum__delegating",
+  "1247": "ethereum__network",
+  "1248": "ethereum__revoke_done",
+  "1249": "ethereum__revoke_title",
+  "1250": "ethereum__revoke_warn",
+  "1251": "ethereum__smart_info",
+  "1252": "ethereum__to"
 }
