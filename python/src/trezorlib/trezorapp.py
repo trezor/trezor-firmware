@@ -14,19 +14,23 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 from hashlib import sha256
-from typing import TYPE_CHECKING, Any, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Optional, Tuple, cast
 
 import construct as c
+from construct_classes import subcon
 
 from . import messages
-from .construct_helpers import TupleAdapter
+from .construct_helpers import Reserved, TupleAdapter
+from .firmware.sanity_struct import SanityCheckedStruct
 
 if TYPE_CHECKING:
     from .transport.session import Session
 
 
-class AppHeader:
+class AppHeader(SanityCheckedStruct):
     # Magic number to identify the app binary format
     magic: int
     # Header size in bytes
@@ -46,7 +50,11 @@ class AppHeader:
     # ABI version that the app was built against
     abi_version: int
     # Target architecture of the binary payload (e.g., ARMV8M, X86_64)
-    target_architecture: int
+    target_arch: int
+    # Application privilege ring
+    app_ring: int
+    # Reserved for future use
+    reserved_1: bytes | None = None
     # Size of binary payload in bytes (code + init and relocation data)
     code_size: int
     # Size of RAM required by the app (includes stack, heap, and static data)
@@ -55,72 +63,80 @@ class AppHeader:
     chunk_hash: bytes
     # Size of each chunk of the binary payload
     chunk_size: int
-    if TYPE_CHECKING:
-        # construct DSL uses overloaded operators that Pylance cannot type-check well.
-        SUBCON: Any
-    else:
-        # fmt: off
-        SUBCON = c.Struct(
-            "_start_offset" / c.Tell,
-            "magic" / c.Const(b"TRZA"),
-            "header_size" / c.Int32ul,
-            "id" / c.PaddedString(32, "utf-8"),
-            "name" / c.PaddedString(32, "utf-8"),
-            "vendor" / c.PaddedString(32, "utf-8"),
-            "model" / c.PaddedString(4, "utf-8"),
-            "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
-            "sdk_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
-            "abi_version" / c.Int8ul,
-            "payload_type" / c.Int8ul,
-            "_reserved1" / c.Padding(2),
-            "code_size" / c.Int32ul,
-            "data_size" / c.Int32ul,
-            "chunk_hash" / c.Bytes(32),
-            "chunk_size" / c.Int16ul,
-            "_reserved2" / c.Padding(2),
-            "_end_offset" / c.Tell,
-            c.Padding(
-                lambda this: this.header_size - (this._end_offset - this._start_offset)
-            ),
-        )
-        # fmt: on
+    # Reserved for future use
+    reserved_2: bytes | None = None
+    # Curves used for the app (e.g., secp256k1, ed25519)
+    curves: list[str]
+    # Allowed BIP32 path prefixes
+    paths: list[str]
+    # Reserved for future use
+    reserved_3: bytes | None = None
 
-    @classmethod
-    def parse(cls, data: bytes) -> "AppHeader":
-        return cast(AppHeader, cls.SUBCON.parse(data))
+    SUBCON = c.Struct(
+        "_start_offset" / c.Tell,
+        "magic" / c.Const(b"TRZA"),
+        "header_size" / c.Int32ul,
+        "id" / c.PaddedString(32, "utf-8"),
+        "name" / c.PaddedString(32, "utf-8"),
+        "vendor" / c.PaddedString(32, "utf-8"),
+        "model" / c.PaddedString(4, "utf-8"),
+        "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
+        "sdk_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
+        "abi_version" / c.Int8ul,
+        "target_arch" / c.Int8ul,
+        "app_ring" / c.Int8ul,
+        "reserved_1" / Reserved(1),
+        "code_size" / c.Int32ul,
+        "data_size" / c.Int32ul,
+        "chunk_hash" / c.Bytes(32),
+        "chunk_size" / c.Int16ul,
+        "reserved_2" / Reserved(2),
+        "curves"
+        / c.ExprAdapter(
+            c.Bytes(64),
+            decoder=lambda obj, ctx: [
+                curve.decode("utf-8")
+                for curve in cast(bytes, obj).split(b"\0")
+                if curve
+            ],
+            encoder=lambda obj, ctx: b"\0".join(
+                curve.encode("utf-8") for curve in cast(list[str], obj)
+            ).ljust(64, b"\0"),
+        ),
+        "paths"
+        / c.ExprAdapter(
+            c.Bytes(256),
+            decoder=lambda obj, ctx: [
+                path.decode("utf-8") for path in cast(bytes, obj).split(b"\0") if path
+            ],
+            encoder=lambda obj, ctx: b"\0".join(
+                path.encode("utf-8") for path in cast(list[str], obj)
+            ).ljust(256, b"\0"),
+        ),
+        "_end_offset" / c.Tell,
+        "reserved_3"
+        / Reserved(c.this.header_size - c.this._end_offset + c.this._start_offset),
+    )
 
 
-class AppImage:
+class AppImage(SanityCheckedStruct):
     # Parsed fixed-size app header
-    header: AppHeader
-    # Original header bytes including padding
-    header_bytes: bytes
+    header: AppHeader = subcon(AppHeader)
     # Image payload (elf file, or other proprietary binary format)
     payload: bytes
 
-    if TYPE_CHECKING:
-        # construct DSL uses overloaded operators that Pylance cannot type-check well.
-        SUBCON: Any
-    else:
-        SUBCON = c.Struct(
-            "_header_raw" / c.RawCopy(AppHeader.SUBCON),
-            "header" / c.Computed(lambda this: this._header_raw.value),
-            "header_bytes" / c.Computed(lambda this: this._header_raw.data),
-            "payload" / c.GreedyBytes,
-        )
+    SUBCON = c.Struct(
+        "header" / AppHeader.SUBCON,
+        "payload" / c.GreedyBytes,
+    )
 
-    @classmethod
-    def parse(cls, data: bytes) -> "AppImage":
-        container = cls.SUBCON.parse(data)
-        obj = object.__new__(cls)
-        obj.header = container.header
-        obj.header_bytes = container.header_bytes
-        obj.payload = container.payload
-        return obj
+    def header_bytes(self) -> bytes:
+        """Rebuild the original header bytes including padding."""
+        return self.header.build()
 
     def header_hash(self) -> bytes:
         """Calculate the SHA256 hash of the application header."""
-        return sha256(self.header_bytes).digest()
+        return sha256(self.header_bytes()).digest()
 
     def chunks(self) -> list[tuple[bytes, bytes]]:
         """Split the payload into chunks and calculate the hash chain."""
@@ -149,7 +165,7 @@ def _format_version(version: tuple[int, ...]) -> str:
 
 
 def load(
-    session: "Session",
+    session: Session,
     binary: bytes,
     proof: bytes,
     min_version: Optional[Tuple[int, int, int, int]],
@@ -191,7 +207,9 @@ def load(
     if isinstance(resp, messages.TrezorAppHeaderRequest):
         # Send the header and proof to the device
         resp = session.call(
-            messages.TrezorAppHeaderAck(header=image.header_bytes, proof=proof)
+            messages.TrezorAppHeaderAck(
+                header=image.header_bytes(), proof=proof, timestamp=0
+            )  # TODO: timestamp
         )
 
         chunks = image.chunks()
