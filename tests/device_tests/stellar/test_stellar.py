@@ -146,7 +146,7 @@ def test_sign_tx(session: Session, parameters, result):
         tx_parsed.payment_req = tx.payment_req
 
         assert tx == tx_parsed
-        for op, op_parsed in zip(operations, operations_parsed):
+        for op, op_parsed in zip(operations, operations_parsed, strict=True):
             assert op == op_parsed
 
         if "signature" in result:
