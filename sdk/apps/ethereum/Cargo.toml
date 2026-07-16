@@ -11,6 +11,27 @@ name = "Ethereum"
 vendor = "SatoshiLabs"
 stack-size = 16384
 heap-size = 1024
+app-ring = 0
+curves = ["secp256k1"]
+paths = [
+    # "44'/60'/account'",
+    # "45'/60/account",
+
+    # https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
+    # The BIP44 pattern, overloaded to be used for ETH accounts, as described above
+    "m/44'/coin_type'/0'/0/account",
+    # BIP-44 for basic (legacy) Bitcoin accounts, and widely used for other currencies:
+    # https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
+    "m/44'/coin_type'/account'/change/address_index/**",
+    # SEP-0005 for non-UTXO-based currencies, defined by Stellar:
+    # https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
+    "m/44'/coin_type'/account'",
+    # SEP-0005 Ledger Live legacy path
+    # https://github.com/trezor/trezor-firmware/issues/1749
+    "m/44'/coin_type'/0'/account",
+    # CASA pattern
+    "m/45'/coin_type/account/change/address_index",
+]
 
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
