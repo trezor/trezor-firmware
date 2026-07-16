@@ -1,28 +1,3 @@
-macro_rules! unwrap {
-    ($e:expr, $msg:expr) => {{
-        use $crate::trezorhal::fatal_error::UnwrapOrFatalError;
-        $e.unwrap_or_fatal_error($msg, file!(), line!())
-    }};
-    ($expr:expr) => {
-        unwrap!($expr, "unwrap failed")
-    };
-}
-
-#[allow(unused_macros)]
-macro_rules! ensure {
-    ($what:expr, $error:expr) => {
-        if !($what) {
-            $crate::trezorhal::fatal_error::__fatal_error($error, file!(), line!());
-        }
-    };
-}
-
-macro_rules! fatal_error {
-    ($msg:expr) => {{
-        $crate::trezorhal::fatal_error::__fatal_error($msg, file!(), line!());
-    }};
-}
-
 // from https://docs.rs/ufmt/latest/ufmt/
 // like `std::format!` it returns a `heapless::String` but uses `uwrite!`
 // instead of `write!`

@@ -711,7 +711,9 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 name = "rtl"
 version = "0.0.0"
 dependencies = [
+ "bindgen",
  "color-eyre",
+ "cty",
  "models",
  "xbuild",
 ]
@@ -899,6 +901,7 @@ dependencies = [
  "cty",
  "models",
  "rtl",
+ "ufmt",
  "xbuild",
 ]
 
@@ -1017,6 +1020,7 @@ dependencies = [
  "num-traits",
  "pareen",
  "qrcodegen",
+ "rtl",
  "serde_json",
  "spin",
  "static-alloc",

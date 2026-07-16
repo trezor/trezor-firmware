@@ -20,8 +20,7 @@
 #pragma once
 
 #include <errno.h>
-
-#include "sysexit.h"
+#include <stddef.h>
 
 // Suppresses the intellisense error in VSCode
 #ifndef __FILE_NAME__
@@ -163,6 +162,22 @@ void __attribute__((noreturn)) error_shutdown_ex(const char *title,
 /**
  * Shows an error message and shuts down the device.
  *
+ * Like `error_shutdown_ex`, but with explicit lengths for the strings.
+ *
+ * @param title Title of the error message.
+ * @param title_len Length of the title.
+ * @param message Main error message.
+ * @param message_len Length of the message.
+ * @param footer Footer of the error message.
+ * @param footer_len Length of the footer.
+ */
+void __attribute__((noreturn)) error_shutdown_ex_n(
+    const char *title, size_t title_len, const char *message,
+    size_t message_len, const char *footer, size_t footer_len);
+
+/**
+ * Shows an error message and shuts down the device.
+ *
  * @param message Main error message (defaults to no message if NULL)
  */
 void __attribute__((noreturn)) error_shutdown(const char *message);
@@ -180,6 +195,22 @@ void __attribute__((noreturn)) error_shutdown(const char *message);
  */
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
                                              int line);
+
+/**
+ * Shows a fatal error message with file and line information,
+ * and shuts down the device.
+ *
+ * Like `__fatal_error`, but with explicit lengths for the strings.
+ *
+ * @param msg Error message.
+ * @param msg_len Length of the error message.
+ * @param file Source file name where the error occurred.
+ * @param file_len Length of the source file name.
+ * @param line Line number in the source file where the error occurred.
+ */
+void __attribute__((noreturn)) __fatal_error_n(const char *msg, size_t msg_len,
+                                               const char *file,
+                                               size_t file_len, int line);
 
 /*
  * TSH_DECLARE, TSH_RETURN and TSH_CHECK_xxx() macros define
