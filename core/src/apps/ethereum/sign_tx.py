@@ -6,7 +6,7 @@ from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
 from trezor.wire import DataError
 
-from .helpers import address_from_bytes, bytes_from_address, get_data_confirmer
+from .helpers import address_from_bytes, bytes_from_address
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from apps.common.payment_request import PaymentRequestVerifier
 
     from .definitions import Definitions
-    from .helpers import ConfirmDataFn, DataChunkLoader
+    from .helpers import DataChunkLoader
     from .keychain import MsgInSignTx
 
 
@@ -238,7 +238,6 @@ async def confirm_tx_data(
         if data_length > 0:
             # Stream, confirm and hash the rest of the calldata chunks.
             await _confirm_data_chunks(
-                get_data_confirmer(data_length),
                 initial_data,
                 data_length,
                 data_chunk_loader,
@@ -293,18 +292,20 @@ def create_data_chunk_loader(h: HashWriter) -> DataChunkLoader:
 
 
 async def _confirm_data_chunks(
-    confirm_data_chunk: ConfirmDataFn,
     initial_data: AnyBytes,
     data_length: int,
     data_chunk_loader: DataChunkLoader,
 ) -> None:
-    await confirm_data_chunk(initial_data)
+    from .helpers import DataChunkConfirmer
+
+    data_chunk_confirmer = DataChunkConfirmer(data_length)
+    await data_chunk_confirmer.confirm(initial_data)
     data_left = data_length - len(initial_data)
     while data_left > 0:
         chunk = await data_chunk_loader(data_left)
-        # `confirm_data_chunk` will raise on cancellation, so
-        # `data_chunk_loader`-computed hash will be discarded.
-        await confirm_data_chunk(chunk)
+        # `data_chunk_confirmer.confirm` will raise on cancellation,
+        # so `data_chunk_loader`-computed hash will be discarded.
+        await data_chunk_confirmer.confirm(chunk)
         data_left -= len(chunk)
 
 
