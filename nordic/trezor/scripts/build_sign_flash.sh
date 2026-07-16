@@ -225,10 +225,10 @@ while getopts ${OPTSTRING} opt; do
       PRISTINE="--pristine=always"
       ;;
     d)
-      DEBUG="-- -DOVERLAY_CONFIG=debug.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_debug.conf\""
+      DEBUG="-DOVERLAY_CONFIG=debug.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_debug.conf\""
       ;;
     p)
-      PRODUCTION="-- -DOVERLAY_CONFIG=prod.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_prod.conf\""
+      PRODUCTION="-DOVERLAY_CONFIG=prod.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_prod.conf\""
       ;;
     s)
       SIGN=1
@@ -250,8 +250,23 @@ if [ -n "$BOARD" ]; then
         BOARD="$resolved_board"
     fi
     verify_environment "$BOARD"
+
+    # Board-scoped sysbuild overlays. The ed25519 image-hash override symbol
+    # (SB_CONFIG_BOOT_IMG_HASH_ALG_SHA512) only exists on nRF54L / NCS 3.3, so
+    # it must not live in the shared sysbuild.conf - assigning it on nRF52832 /
+    # NCS 2.9 aborts the build with an "undefined symbol" Kconfig warning.
+    SB_OVERLAY=
+    case "$BOARD" in
+        t3t2_dk*) SB_OVERLAY="-DSB_EXTRA_CONF_FILE=$PWD/$APP_DIR/sysbuild_nrf54l.conf" ;;
+    esac
+
+    # Assemble all post-'--' cmake args; emit the '--' separator only if any exist.
+    EXTRA_CMAKE_ARGS="$DEBUG $PRODUCTION $SB_OVERLAY"
+    CMAKE_SEP=
+    [ -n "${EXTRA_CMAKE_ARGS// /}" ] && CMAKE_SEP="--"
+
     run_under_ncs_subshell \
-        "west build ./$APP_DIR -b $BOARD --sysbuild $PRISTINE $DEBUG $PRODUCTION"
+        "west build ./$APP_DIR -b $BOARD --sysbuild $PRISTINE $CMAKE_SEP $EXTRA_CMAKE_ARGS"
 fi
 
 get_version_from_file() {
