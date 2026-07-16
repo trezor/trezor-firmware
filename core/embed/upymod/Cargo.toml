@@ -10,6 +10,7 @@ xbuild.workspace = true
 
 [dependencies]
 models.workspace = true
+crypto.workspace = true
 rtl.workspace = true
 sec.workspace = true
 io.workspace = true
@@ -62,7 +63,7 @@ thp = []
 touch = ["io/touch"]
 touch_wakeup = ["io/touch_wakeup"]
 tropic = ["sec/tropic"]
-universal_fw = ["rtl/universal_fw"]
+universal_fw = ["crypto/universal_fw"]
 
 # --------------------------------------------------------------------------
 # Automatically derived features (do not enable from outside)

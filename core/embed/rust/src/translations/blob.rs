@@ -1,11 +1,11 @@
 use core::{mem, str};
 
+use crypto::merkle::merkle_root;
+use crypto::{cosi, ed25519, sha256};
 use heapless::Vec;
 
 use super::public_keys;
 use super::translated_string::TranslatedString;
-use crate::crypto::merkle::merkle_root;
-use crate::crypto::{cosi, ed25519, sha256};
 use crate::error::{value_error, Error};
 use crate::io::InputStream;
 

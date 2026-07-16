@@ -7,7 +7,7 @@ build = "build.rs"
 
 [features]
 default = ["layout_bolt"]
-crypto = ["dep:zeroize"]
+crypto = ["dep:crypto"]
 layout_bolt = []
 layout_caesar = []
 layout_delizia = []
@@ -63,7 +63,7 @@ translations = ["crypto"]
 secmon_layout = []
 dbg_console = []
 app_loading = []
-thp = ["crypto", "dep:trezor-thp", "dep:zeroize"]
+thp = ["crypto/thp", "dep:trezor-thp", "dep:zeroize"]
 test = [
     "backlight",
     "button",
@@ -118,6 +118,7 @@ ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
 
+crypto = { workspace = true, optional = true }
 io = { workspace = true, optional = true }
 trezor-thp = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }

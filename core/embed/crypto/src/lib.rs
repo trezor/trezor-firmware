@@ -1,7 +1,8 @@
+#![cfg_attr(not(test), no_std)]
+
 use core::hint::black_box;
 
-use crate::error::value_error;
-
+#[cfg(feature = "aes_gcm")]
 pub mod aesgcm;
 pub mod cosi;
 pub mod crc32;
@@ -26,18 +27,8 @@ pub enum Error {
     InvalidContext,
     // Authentication failed (e.g. AEAD tag mismatch)
     AuthenticationFailed,
-}
-
-impl From<Error> for crate::error::Error {
-    fn from(e: Error) -> Self {
-        match e {
-            Error::SignatureVerificationFailed => value_error!(c"Signature verification failed"),
-            Error::InvalidEncoding => value_error!(c"Invalid key or signature encoding"),
-            Error::InvalidParams => value_error!(c"Invalid cryptographic parameters"),
-            Error::InvalidContext => value_error!(c"Invalid cryptographic context"),
-            Error::AuthenticationFailed => value_error!(c"Authentication failed"),
-        }
-    }
+    // Invalid sigmask
+    InvalidSigmask,
 }
 
 /// Constant time bytestring comparison for two arrays of the same length.
