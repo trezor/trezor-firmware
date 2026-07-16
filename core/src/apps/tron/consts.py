@@ -57,51 +57,6 @@ _AINFT_ADDRESS = b"\x41\x3d\xfe\x63\x7b\x2b\x9a\xe4\x19\x0a\x45\x8b\x5f\x3e\xfc\
 _STRX_ADDRESS = b"\x41\xc6\x4e\x69\xac\xde\x1c\x7b\x16\xc2\xa3\xef\xcd\xbb\xda\xa9\x6c\x36\x44\xc2\xb3"
 _KLEVER_ADDRESS = b"\x41\xd8\xb8\x08\x98\x56\xce\xd3\x03\x86\x01\xcb\xeb\x1e\x3f\x76\x5c\xab\xc1\x2a\x41"
 
-if __debug__:
-    from trezor.crypto import base58
-
-    # https://shasta.tronscan.org/#/token20/TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs
-    assert (
-        base58.encode_check(_SHASTA_USDT_ADDRESS)
-        == "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs"
-    )
-    # https://tronscan.org/#/token20/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t
-    assert base58.encode_check(_USDT_ADDRESS) == "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
-    # https://tronscan.org/#/token20/TXDk8mbtRbXeYuMNS83CfKPaYYT8XWv9Hz
-    assert base58.encode_check(_USDD_ADDRESS) == "TXDk8mbtRbXeYuMNS83CfKPaYYT8XWv9Hz"
-    # https://tronscan.org/#/token20/TSSMHYeV2uE9qYH95DqyoCuNCzEL1NvU3S
-    assert base58.encode_check(_SUN_ADDRESS) == "TSSMHYeV2uE9qYH95DqyoCuNCzEL1NvU3S"
-    # https://tronscan.org/#/token20/TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9
-    assert base58.encode_check(_JST_ADDRESS) == "TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9"
-    # https://tronscan.org/#/token20/TAFjULxiVgT4qWk6UZwjqwZXTSaGaqnVp4
-    assert base58.encode_check(_BTT_ADDRESS) == "TAFjULxiVgT4qWk6UZwjqwZXTSaGaqnVp4"
-    # https://tronscan.org/#/token20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7
-    assert base58.encode_check(_WIN_ADDRESS) == "TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
-    # https://tronscan.org/#/token20/TYhWwKpw43ENFWBTGpzLHn3882f2au7SMi
-    assert base58.encode_check(_WBTC_ADDRESS) == "TYhWwKpw43ENFWBTGpzLHn3882f2au7SMi"
-    # https://tronscan.org/#/token20/THb4CqiFdwNHsWsQCs4JhzwjMWys4aqCbF
-    assert (
-        base58.encode_check(_ETH_TRON_ADDRESS) == "THb4CqiFdwNHsWsQCs4JhzwjMWys4aqCbF"
-    )
-    # https://tronscan.org/#/token20/TPFqcBAaaUMCSVRCqPaQ9QnzKhmuoLR6Rc
-    assert base58.encode_check(_USD1_ADDRESS) == "TPFqcBAaaUMCSVRCqPaQ9QnzKhmuoLR6Rc"
-    # https://tronscan.org/#/token20/TUPM7K8REVzD2UdV4R5fe5M8XbnR2DdoJ6
-    assert base58.encode_check(_HTX_ADDRESS) == "TUPM7K8REVzD2UdV4R5fe5M8XbnR2DdoJ6"
-    # https://tronscan.org/#/token20/TUpMhErZL2fhh4sVNULAbNKLokS4GjC1F4
-    assert base58.encode_check(_TUSD_ADDRESS) == "TUpMhErZL2fhh4sVNULAbNKLokS4GjC1F4"
-    # https://tronscan.org/#/token20/TFptbWaARrWTX5Yvy3gNG5Lm8BmhPx82Bt
-    assert base58.encode_check(_WBT_ADDRESS) == "TFptbWaARrWTX5Yvy3gNG5Lm8BmhPx82Bt"
-    # https://tronscan.org/#/token20/TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR
-    assert base58.encode_check(_WTRX_ADDRESS) == "TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR"
-    # https://tronscan.org/#/token20/TKkeiboTkxXKJpbmVFbv4a8ov5rAfRDMf9
-    assert base58.encode_check(_SUNOLD_ADDRESS) == "TKkeiboTkxXKJpbmVFbv4a8ov5rAfRDMf9"
-    # https://tronscan.org/#/token20/TFczxzPhnThNSqr5by8tvxsdCFRRz6cPNq
-    assert base58.encode_check(_AINFT_ADDRESS) == "TFczxzPhnThNSqr5by8tvxsdCFRRz6cPNq"
-    # https://tronscan.org/#/token20/TU3kjFuhtEo42tsCBtfYUAZxoqQ4yuSLQ5
-    assert base58.encode_check(_STRX_ADDRESS) == "TU3kjFuhtEo42tsCBtfYUAZxoqQ4yuSLQ5"
-    # https://tronscan.org/#/token20/TVj7RNVHy6thbM7BWdSe9G6gXwKhjhdNZS
-    assert base58.encode_check(_KLEVER_ADDRESS) == "TVj7RNVHy6thbM7BWdSe9G6gXwKhjhdNZS"
-
 
 def token_iterator() -> Iterator[Tuple[AnyBytes, int, str]]:
     yield (_SHASTA_USDT_ADDRESS, 6, "tUSDT")

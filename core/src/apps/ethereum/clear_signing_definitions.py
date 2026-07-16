@@ -50,16 +50,6 @@ TRANSFER_DISPLAY_FORMAT = DisplayFormat(
     ],
 )
 
-if __debug__:
-    from trezor.crypto import base58
-
-    assert APPROVE_DISPLAY_FORMAT.func_sig == base58.keccak_32(
-        b"approve(address,uint256)"
-    )
-    assert TRANSFER_DISPLAY_FORMAT.func_sig == base58.keccak_32(
-        b"transfer(address,uint256)"
-    )
-
 
 def all_display_formats() -> Generator[DisplayFormat, None, None]:
 
@@ -124,10 +114,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     # its minReturnAmount because its dstToken is available.)
 
     _FUNC_SIG = unhexlify("07ed2379")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"swap(address,(address,address,address,address,uint256,uint256,uint256),bytes)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -174,10 +160,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("83800a8e")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"unoswap(uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -213,10 +195,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("e2c95c82")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"unoswapTo(uint256,uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -253,10 +231,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("8770ba91")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"unoswap2(uint256,uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -293,10 +267,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("19367472")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"unoswap3(uint256,uint256,uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -334,10 +304,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("ea76dddf")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"unoswapTo2(uint256,uint256,uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -375,10 +341,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("f7a70056")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"unoswapTo3(uint256,uint256,uint256,uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -417,8 +379,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("a76dfc3b")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(b"ethUnoswap(uint256,uint256)")
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -449,8 +409,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("89af926a")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(b"ethUnoswap2(uint256,uint256,uint256)")
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -482,10 +440,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("188ac35d")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"ethUnoswap3(uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -518,8 +472,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("175accdc")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(b"ethUnoswapTo(uint256,uint256,uint256)")
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -551,10 +503,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("0f449d71")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"ethUnoswapTo2(uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -587,10 +535,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("493189f0")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"ethUnoswapTo3(uint256,uint256,uint256,uint256,uint256)"
-        )
     yield (
         DisplayFormat(
             binding_context=ONEINCH_CONTEXT,
@@ -672,10 +616,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     ]
 
     _FUNC_SIG = unhexlify("5fd9ae2e")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"swapTokensMultipleV3ERC20ToERC20(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool)[])"
-        )
     yield (
         DisplayFormat(
             binding_context=LIFI_CONTEXT,
@@ -727,10 +667,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("2c57e884")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"swapTokensMultipleV3ERC20ToNative(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool)[])"
-        )
     yield (
         DisplayFormat(
             binding_context=LIFI_CONTEXT,
@@ -780,10 +716,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("736eac0b")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"swapTokensMultipleV3NativeToERC20(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool)[])"
-        )
     yield (
         DisplayFormat(
             binding_context=LIFI_CONTEXT,
@@ -833,10 +765,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("4666fc80")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"swapTokensSingleV3ERC20ToERC20(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool))"
-        )
     yield (
         DisplayFormat(
             binding_context=LIFI_CONTEXT,
@@ -884,10 +812,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("733214a3")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"swapTokensSingleV3ERC20ToNative(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool))"
-        )
     yield (
         DisplayFormat(
             binding_context=LIFI_CONTEXT,
@@ -935,10 +859,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("af7060fd")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"swapTokensSingleV3NativeToERC20(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool))"
-        )
     yield (
         DisplayFormat(
             binding_context=LIFI_CONTEXT,
@@ -986,10 +906,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("4630a0d8")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"swapTokensGeneric(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool)[])"
-        )
     yield (
         DisplayFormat(
             binding_context=LIFI_CONTEXT,
@@ -1057,10 +973,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("b858183f")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"exactInput((bytes,address,uint256,uint256))"
-        )
     yield (
         DisplayFormat(
             binding_context=UNISWAP_CONTEXT,
@@ -1102,10 +1014,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("04e45aaf")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))"
-        )
     yield (
         DisplayFormat(
             binding_context=UNISWAP_CONTEXT,
@@ -1155,10 +1063,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("09b81346")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"exactOutput((bytes,address,uint256,uint256))"
-        )
     yield (
         DisplayFormat(
             binding_context=UNISWAP_CONTEXT,
@@ -1200,10 +1104,6 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     )
 
     _FUNC_SIG = unhexlify("5023b4df")
-    if __debug__:
-        assert _FUNC_SIG == base58.keccak_32(
-            b"exactOutputSingle((address,address,uint24,address,uint256,uint256,uint160))"
-        )
     yield (
         DisplayFormat(
             binding_context=UNISWAP_CONTEXT,

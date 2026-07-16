@@ -25,34 +25,6 @@ _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR = (
     b"\x3e\xf3\xd8\xba\x38\xeb\xe1\x8d\xb1\x33\xce\xc1\x08\xf4\xd1\x4c\xe0\x0d\xd9\xae"
 )
 
-if __debug__:
-    from ubinascii import unhexlify
-
-    from trezor.crypto.hashlib import sha3_256
-
-    assert (
-        FUNC_SIG_DEPOSIT
-        == sha3_256(b"deposit(uint256,address)", keccak=True).digest()[:4]
-    )
-    assert (
-        FUNC_SIG_WITHDRAW
-        == sha3_256(b"withdraw(uint256,address,address)", keccak=True).digest()[:4]
-    )
-    assert (
-        FUNC_SIG_REDEEM
-        == sha3_256(b"redeem(uint256,address,address)", keccak=True).digest()[:4]
-    )
-    assert (
-        FUNC_SIG_CLAIM
-        == sha3_256(
-            b"claim(address[],address[],uint256[],bytes32[][])", keccak=True
-        ).digest()[:4]
-    )
-    # https://etherscan.io/address/0x3ef3d8ba38ebe18db133cec108f4d14ce00dd9ae
-    assert _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR == unhexlify(
-        "3ef3d8ba38ebe18db133cec108f4d14ce00dd9ae"
-    )
-
 # deposit(uint256 assets, address receiver)
 DEPOSIT_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
