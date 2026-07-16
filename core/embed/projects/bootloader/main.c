@@ -41,6 +41,10 @@
 #include <sec/boot_ucb.h>
 #endif
 
+#ifdef PQ_SECURE_BOOT
+#include <sec/boot_header.h>
+#endif
+
 #ifdef USE_PVD
 #include <sys/pvd.h>
 #endif
@@ -122,6 +126,23 @@ void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 static secbool is_manufacturing_mode(void) {
   unit_properties_init();
 
+#ifdef PQ_SECURE_BOOT
+  // Merkle-tree layout: there is no vendor header (so no VTRUST_ALLOW_PROVISIONING
+  // flag). The provisioning/factory image is the founder-signed prodtest variant;
+  // read that from the (write-protected, trusted) firmware_type the bootloader
+  // persisted into its own boot header. FIH: manufacturing mode disables touch +
+  // tamper enforcement, so require a POSITIVELY official prodtest variant --
+  // anything else (custom, other variant, missing header, glitch) returns
+  // secfalse and stays in the fully-enforced state.
+  const boot_header_auth_t *bl = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_unauth_t *unauth =
+      (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
+  if (unauth == NULL ||
+      firmware_type_is_custom(unauth->firmware_type) != secfalse ||
+      firmware_type_variant(unauth->firmware_type) != FW_VARIANT_PRODTEST) {
+    return secfalse;
+  }
+#else
   vendor_header vhdr;
   memset(&vhdr, 0, sizeof(vhdr));
   (void)!read_vendor_header((const uint8_t *)FIRMWARE_START,
@@ -130,6 +151,7 @@ static secbool is_manufacturing_mode(void) {
   if ((vhdr.vtrust & VTRUST_ALLOW_PROVISIONING) != VTRUST_ALLOW_PROVISIONING) {
     return secfalse;
   }
+#endif
 
 #if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
   // on T3T1 and T3W1, tester needs to run without touch and tamper, so making
