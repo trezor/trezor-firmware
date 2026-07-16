@@ -9,6 +9,7 @@ import click
 
 from trezorlib.merkle_tree import MerkleTree
 from trezorlib.root_packet import RootPacket
+from trezorlib.trezorapp import AppHeader, AppImage
 
 if t.TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -101,6 +102,30 @@ def cli(directory: Path) -> None:
     rp_0_bytes = rp0.build()
     print("\n\nRootPacket:")
     print(rp_0_bytes.hex())
+
+
+@click.command()
+def generate_apps() -> None:
+    default_magic = 0x415A5254
+    header = AppHeader(
+        magic=default_magic,
+        header_size=2,
+        id="",
+        name="str",
+        vendor="",
+        model="TTTT",
+        version=(1, 2, 3, 4),
+        sdk_version=(5, 6, 7, 8),
+        abi_version=-5,
+        target_architecture=5,
+        app_ring=1,
+        code_size=1,
+        data_size=1,
+        chunk_hash=b"\x00",
+        chunk_size=1024,
+    )
+    app_image = AppImage(header=header, payload=b"\x00")
+    print(app_image)
 
 
 if __name__ == "__main__":
