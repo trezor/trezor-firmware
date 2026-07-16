@@ -1,4 +1,4 @@
-use anyhow::{ensure, Context, Result};
+use anyhow::{Context, Result, ensure};
 use cargo_metadata::Package;
 
 pub const APP_ID_MAX_LEN: usize = 32;

@@ -71,10 +71,9 @@ struct AppHeader {
     /// (utf-8 encoded, zero-padded)
     curves: [u8; metadata::APP_CURVES_MAX_LEN],
     /// Allowed BIP32 path prefixes
-    /// Each path is a null-terminated string, and the array 
+    /// Each path is a null-terminated string, and the array
     /// is zero-padded to a fixed size.
     paths: [u8; metadata::APP_PATHS_MAX_LEN],
-
     // TODO logo
 }
 
