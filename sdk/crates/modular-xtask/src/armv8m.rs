@@ -358,7 +358,7 @@ impl Armv8mBinary {
                     return Ok(relocations);
                 }
 
-                // Supported relocation type? 
+                // Supported relocation type?
                 match r_type {
                     R_ARM_ABS32 => {}
                     R_ARM_THM_MOVW_ABS_NC | R_ARM_THM_MOVT_ABS => {
