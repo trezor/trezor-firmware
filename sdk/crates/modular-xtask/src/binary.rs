@@ -52,8 +52,10 @@ struct AppHeader {
     abi_version: u8,
     /// Target architecture of the binary payload (e.g., ARMV8M, X86_64)
     target_arch: u8,
-    // Padding, reserved for future use
-    reserved1: [u8; 2],
+    /// Application privilege ring
+    app_ring: u8,
+    /// Padding, reserved for future use
+    reserved1: [u8; 1],
     /// Size of binary payload (code + init and relocation data)
     code_size: U32<LittleEndian>,
     /// Size of RAM required by the app
@@ -64,7 +66,7 @@ struct AppHeader {
     /// Size of each chunk of the binary payload in bytes
     chunk_size: U16<LittleEndian>,
     /// Reserved field for runtime purposes (zeroed)
-    reserved2: U16<LittleEndian>,
+    reserved2: [u8; 2],
     // TODO logo
     // TODO bip32_paths
 }
@@ -122,12 +124,13 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
         sdk_version: [0; 4],
         abi_version: 1,
         target_arch: target_arch as u8,
-        reserved1: [0; 2],
+        app_ring: metadata::app_ring(package)?,
+        reserved1: [0; 1],
         code_size: U32::new(code.len() as u32),
         chunk_hash: hash_payload(&code, AppHeader::CHUNK_SIZE),
         data_size: U32::new(data_size),
         chunk_size: U16::new(AppHeader::CHUNK_SIZE as u16),
-        reserved2: U16::new(0),
+        reserved2: [0; 2],
     };
 
     let bin_path = elf_path.with_extension("bin");

@@ -102,6 +102,19 @@ pub fn heap_size(package: &Package) -> Result<u32> {
     Ok(heap_size as u32)
 }
 
+/// Retrieves the app ring from the package metadata
+pub fn app_ring(package: &Package) -> Result<u8> {
+    let ring = get_metadata_number(package, "app-ring")?;
+
+    ensure!(
+        ring <= 2,
+        "App ring {} is invalid (must be 0, 1, or 2)",
+        ring
+    );
+
+    Ok(ring as u8)
+}
+
 fn get_metadata_string(package: &Package, key: &str) -> Result<String> {
     let value = package
         .metadata
