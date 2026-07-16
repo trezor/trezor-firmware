@@ -45,6 +45,11 @@ def verify(data: AnyBytes) -> None:
 
 
 # rust/src/translations/obj.rs
+def version_matches_firmware(translations_version: tuple[int, int, int, int], firmware_version: tuple[int, int, int, int]) -> bool:
+    """Returns true if translations version and firmware version are compatible."""
+
+
+# rust/src/translations/obj.rs
 class TranslationsHeader:
     """Metadata about the translations blob."""
     language: str
