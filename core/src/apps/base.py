@@ -63,7 +63,7 @@ def _language_version_matches() -> bool:
     if header is None:
         return True
 
-    return header.version[:3] == utils.VERSION[:3]
+    return translations.version_matches_firmware(header.version, utils.VERSION)
 
 
 def get_features() -> Features:
