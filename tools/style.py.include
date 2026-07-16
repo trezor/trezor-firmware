@@ -3,6 +3,7 @@
 ^core/site_scons/
 ^core/tests/
 ^core/tools/
+^core/translations/
 ^crypto/
 ^legacy/
 ^storage/

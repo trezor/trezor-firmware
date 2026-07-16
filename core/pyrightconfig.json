@@ -2,6 +2,7 @@
     "include": [
         "src",
         "tools",
+        "translations",
         "*.py"
     ],
     "exclude": [

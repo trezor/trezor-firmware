@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import json
 import os
 import sys
@@ -40,14 +41,16 @@ def generate_new_order() -> None:
 
 def check_order() -> None:
     old_order: dict[str, str] = json.loads(output_file.read_text())
-    keys = { int(k) for k in old_order.keys() }
+    keys = {int(k) for k in old_order.keys()}
     for i in range(len(old_order)):
         if i not in keys:
             raise ValueError(f"order.json is missing index {i}")
 
 
 @click.command()
-@click.option("--check", is_flag=True, help="Do not modify order.json, only check if it's valid.")
+@click.option(
+    "--check", is_flag=True, help="Do not modify order.json, only check if it's valid."
+)
 def main(check: bool | None) -> None:
     check_order()
     if check:
