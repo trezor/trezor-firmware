@@ -54,7 +54,15 @@ pub fn elf_to_bin(
         }
 
         Project::Prodtest => {
-            if model_config.secmon {
+            if model_config.has_feature("pq_secure_boot") {
+                // Merkle-tree layout: prodtest is a single secure module + its
+                // manifest ([.manifest | .header (TRZM) | code]). Plain objcopy of
+                // the tree sections; the TRZM header's chunk hashes + the manifest
+                // entry are filled by fill_firmware_tree_headers (cargo.rs), and the
+                // firmware_root is folded into the bootloader header by the founder
+                // tree signer -- so there is no legacy secmon-split / vendor header.
+                objcopy(source, &project_profile.elf_sections)
+            } else if model_config.secmon {
                 // On secmon models prodtest is a secmon-signed body with a plain
                 // vendor header prepended. The body is signed before concatenation.
                 let body_sections =
@@ -124,6 +132,41 @@ pub fn sign_binary(
     let status = cmd.status().context("Failed to execute headertool")?;
 
     ensure!(status.success(), "headertool failed with status: {status}");
+
+    Ok(())
+}
+
+/// Fills the per-module chunk hashes of a Merkle-tree firmware image
+/// (`firmware.bin`, a chain of TRZM modules) in place, at build time. The
+/// firmware_root is folded into the bootloader header later by the tree signer.
+///
+/// When `custom` is set, builds a CUSTOM/unofficial image: the kernel+coreapp
+/// entry's manifest hash is zeroed (a wildcard), so the (dev-signed) manifest
+/// still folds to firmware_root and the secmon conforms, but any kernel+coreapp
+/// is treated as unofficial.
+pub fn fill_firmware_tree_headers(binary: &Path, custom: bool) -> Result<()> {
+    println!(
+        "xtask: Filling module headers in `{}`{}",
+        binary
+            .file_name()
+            .context("Failed to get binary file name")?
+            .to_string_lossy(),
+        if custom { " (CUSTOM/unofficial)" } else { "" }
+    );
+
+    let mut cmd = process::Command::new("headertool_pq");
+    if custom {
+        cmd.arg("--custom");
+    }
+    let status = cmd
+        .arg(binary)
+        .status()
+        .context("Failed to execute headertool_pq")?;
+
+    ensure!(
+        status.success(),
+        "headertool_pq failed with status: {status}"
+    );
 
     Ok(())
 }

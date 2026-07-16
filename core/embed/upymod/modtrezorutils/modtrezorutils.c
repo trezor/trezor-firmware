@@ -255,7 +255,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
 
 /// def firmware_vendor() -> str:
 ///     """
-///     Returns the firmware vendor string from the vendor header.
+///     Returns the firmware vendor string. For the legacy layout this is the
+///     vendor-header string; for the Merkle-tree layout it is derived from the
+///     boot header's firmware_type ("UNSAFE, DO NOT USE!" for a custom image,
+///     otherwise the variant name).
 ///     """
 STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 #ifdef TREZOR_EMULATOR

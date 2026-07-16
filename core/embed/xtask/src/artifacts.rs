@@ -5,7 +5,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{args::BuildArgs, helpers};
+use crate::{
+    args::{BuildArgs, Project},
+    helpers,
+};
 
 /// Returns whether a filesystem entry exists without following symlinks, so
 /// broken symlinks are still treated as present and can be replaced.
@@ -86,13 +89,24 @@ pub fn collect_artifacts(args: &BuildArgs, is_dependency: bool) -> Result<()> {
     ];
 
     if !args.emulator {
-        if !is_dependency {
+        // Collect the raw .bin for top-level builds, and additionally for the
+        // secmon/kernel dependencies of a pq_secure_boot firmware build -- their
+        // freshly-built binaries (with the real code_size) are otherwise only in
+        // the transient OUT_DIR. Publishing them lets a custom (--unsafe-fw) build
+        // reuse a committed prebuilt dev secmon (secmon_DEV.bin) sourced from here.
+        if !is_dependency || matches!(args.project, Project::Secmon | Project::Kernel) {
             let ubin = elf.with_extension("ubin");
             let bin = elf.with_extension("bin");
             // Prefer .ubin (firmware on T2T1/T2B1), fall back to .bin
             let bin_src = if ubin.exists() { ubin } else { bin };
 
             artifacts.push((bin_src, format!("{name}.bin")));
+        }
+        // Publish the secmon secure-gateway veneer object next to its .bin, so a
+        // committed prebuilt dev secmon stays a matched pair (secmon_DEV.bin +
+        // secmon_api_DEV.o) -- the kernel links this veneer and faults if it drifts.
+        if matches!(args.project, Project::Secmon) {
+            artifacts.push((profile_dir.join("secmon_api.o"), "secmon_api.o".to_string()));
         }
         artifacts.push((
             profile_dir.join(format!("{binary_name}.map")),

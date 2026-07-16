@@ -41,6 +41,10 @@ impl ModelConfig {
         matches!(self.mcu.as_str(), "stm32f427" | "stm32f429")
     }
 
+    pub fn has_feature(&self, name: &str) -> bool {
+        self.features.iter().any(|f| f == name)
+    }
+
     pub fn mcu_feature(&self) -> String {
         format!("mcu_{}", self.mcu)
     }

@@ -75,7 +75,10 @@ def firmware_hash(
 # upymod/modtrezorutils/modtrezorutils.c
 def firmware_vendor() -> str:
     """
-    Returns the firmware vendor string from the vendor header.
+    Returns the firmware vendor string. For the legacy layout this is the
+    vendor-header string; for the Merkle-tree layout it is derived from the
+    boot header's firmware_type ("UNSAFE, DO NOT USE!" for a custom image,
+    otherwise the variant name).
     """
 
 

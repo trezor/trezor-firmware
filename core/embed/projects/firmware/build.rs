@@ -67,17 +67,27 @@ fn main() -> Result<()> {
         // before the module header (kernel.bin is code-only). It is excluded
         // from this module's hash but placed here so the kernel links correctly.
         if cfg!(feature = "pq_secure_boot") {
-            // The prefixed secmon must be the SAME one the kernel was built
-            // against (see kernel/build.rs embed_secmon_binary) or the kernel
-            // secure-faults. Dev builds use the committed prebuilt dev secmon
-            // (secmon_DEV); release builds use the freshly-built one.
+            // The prefixed secmon MUST be the exact same binary the kernel was
+            // built against (see kernel/build.rs embed_secmon_binary) or the
+            // kernel secure-faults, so mirror that selection here:
+            //   - dev build: the freshly-built secmon (from source), so a normal
+            //     dev build tracks the current secmon source;
+            //   - dev + --unsafe-fw: the committed prebuilt dev secmon
+            //     (secmon_DEV) -- a STABLE signed secmon the dev bundle's manifest
+            //     commits -- so a custom build's kernel+coreapp can deviate while
+            //     the secmon still conforms (and for compatibility testing);
+            //   - release: the officially built secmon.
+            let model_id = xbuild::current_model_id()?;
+            let dir = PathBuf::from(format!("../../models/{}/secmon", model_id));
             if cfg!(feature = "bootloader_devel") {
-                let model_id = xbuild::current_model_id()?;
-                let dir = PathBuf::from(format!("../../models/{}/secmon", model_id));
-                lib.embed_binary(dir.join("secmon_DEV.bin"), "secmon")?;
+                if cfg!(feature = "unsafe_fw") {
+                    lib.embed_binary(dir.join("secmon_DEV.bin"), "secmon")?;
+                } else {
+                    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+                    lib.embed_binary(out_dir.join("../../../secmon.bin"), "secmon")?;
+                }
             } else {
-                let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-                lib.embed_binary(out_dir.join("../../../secmon.bin"), "secmon")?;
+                lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
             }
         }
         embed_kernel_binary(lib)?;

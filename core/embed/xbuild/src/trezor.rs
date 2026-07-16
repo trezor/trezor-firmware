@@ -226,9 +226,20 @@ impl CLibrary {
             println!("cargo:rerun-if-changed={memory_ld}");
 
             // Include the linker script that defines the layout of the
-            // final binary according to the selected binary type.
+            // final binary according to the selected binary type. The
+            // Merkle-tree layout (pq_secure_boot feature) uses a separate
+            // `{binary_type}_pq.ld` variant so the legacy layout is preserved.
+            // Only the modules whose layout changes have a _pq variant; the
+            // bootloader keeps its layout (it only gains verification code).
+            let ld_suffix = if has_feature("pq_secure_boot")
+                && matches!(binary_type, "firmware" | "secmon" | "kernel" | "prodtest")
+            {
+                "_pq"
+            } else {
+                ""
+            };
             let target_ld = if has_feature("mcu_stm32u5g") {
-                format!("sys/linker/stm32u5g/{binary_type}.ld")
+                format!("sys/linker/stm32u5g/{binary_type}{ld_suffix}.ld")
             } else if has_feature("mcu_stm32u5a") {
                 format!("sys/linker/stm32u5a/{binary_type}.ld")
             } else if has_feature("mcu_stm32u58") {
