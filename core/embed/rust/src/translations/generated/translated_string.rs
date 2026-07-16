@@ -1651,6 +1651,8 @@ pub enum TranslatedString {
     ethereum__smart_info = 1251,  // "Smart account contract info"
     #[cfg(feature = "universal_fw")]
     ethereum__to = 1252,  // "To"
+    #[cfg(feature = "universal_fw")]
+    ethereum__calldata_digest = 1253,  // "ERC-8213 digest"
 }
 
 impl TranslatedString {
@@ -2911,6 +2913,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4169,6 +4172,7 @@ impl TranslatedString {
                 19588,
                 19615,
                 19617,
+                19632,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5426,6 +5430,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6684,6 +6689,7 @@ impl TranslatedString {
                 19588,
                 19615,
                 19617,
+                19632,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7941,6 +7947,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9199,6 +9206,7 @@ impl TranslatedString {
                 19588,
                 19615,
                 19617,
+                19632,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10456,6 +10464,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11714,6 +11723,7 @@ impl TranslatedString {
                 19588,
                 19615,
                 19617,
+                19632,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12972,6 +12982,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14230,6 +14241,7 @@ impl TranslatedString {
                 17476,
                 17503,
                 17505,
+                17520,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15487,6 +15499,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16745,6 +16758,7 @@ impl TranslatedString {
                 17476,
                 17503,
                 17505,
+                17520,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18002,6 +18016,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19260,6 +19275,7 @@ impl TranslatedString {
                 17476,
                 17503,
                 17505,
+                17520,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20517,6 +20533,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21775,6 +21792,7 @@ impl TranslatedString {
                 17476,
                 17503,
                 17505,
+                17520,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23033,6 +23051,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24291,6 +24310,7 @@ impl TranslatedString {
                 19188,
                 19215,
                 19217,
+                19232,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25548,6 +25568,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26806,6 +26827,7 @@ impl TranslatedString {
                 19188,
                 19215,
                 19217,
+                19232,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28063,6 +28085,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29321,6 +29344,7 @@ impl TranslatedString {
                 19188,
                 19215,
                 19217,
+                19232,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30578,6 +30602,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31836,6 +31861,7 @@ impl TranslatedString {
                 19188,
                 19215,
                 19217,
+                19232,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33094,6 +33120,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34352,6 +34379,7 @@ impl TranslatedString {
                 20496,
                 20523,
                 20525,
+                20540,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35609,6 +35637,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36867,6 +36896,7 @@ impl TranslatedString {
                 20496,
                 20523,
                 20525,
+                20540,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38124,6 +38154,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39382,6 +39413,7 @@ impl TranslatedString {
                 20496,
                 20523,
                 20525,
+                20540,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40639,6 +40671,7 @@ impl TranslatedString {
                 "Revoke {0} from smart account delegation?",
                 "Smart account contract info",
                 "To",
+                "ERC-8213 digest",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41897,6 +41930,7 @@ impl TranslatedString {
                 20496,
                 20523,
                 20525,
+                20540,
             ];
 
         }
@@ -42417,6 +42451,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__auth_title, Self::ethereum__auth_title),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__auth_warn, Self::ethereum__auth_warn),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__calldata_digest, Self::ethereum__calldata_digest),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__calldata_suffix, Self::ethereum__calldata_suffix),
         #[cfg(feature = "universal_fw")]

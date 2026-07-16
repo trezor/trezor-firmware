@@ -800,6 +800,7 @@
     },
     "ethereum__auth_title": "EIP-7702 Authorization",
     "ethereum__auth_warn": "Authorize your account to a third-party contract using EIP-7702?",
+    "ethereum__calldata_digest": "ERC-8213 digest",
     "ethereum__calldata_suffix": "Calldata suffix",
     "ethereum__confirm_contract": "Confirm contract",
     "ethereum__contract_address": "Provider contract address",
