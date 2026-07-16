@@ -28,7 +28,8 @@ async def _confirm_word(
     from trezor.ui.layouts.reset import select_word
 
     # remove duplicates
-    non_duplicates = list(set(share_words))
+    # sort list to make UI tests independent on micropython hash function
+    non_duplicates = sorted(set(share_words))
     # shuffle list
     random.shuffle(non_duplicates)
     # take top _NUM_OF_CHOICES words
