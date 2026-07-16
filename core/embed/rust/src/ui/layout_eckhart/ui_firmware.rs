@@ -574,6 +574,7 @@ impl FirmwareUI for UIEckhart {
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -581,7 +582,7 @@ impl FirmwareUI for UIEckhart {
             title,
             subtitle,
             value,
-            TR::buttons__view_all_data.into(),
+            verb_view_all.unwrap_or(TR::buttons__view_all_data.into()),
             verb_cancel,
             verb,
             hold,

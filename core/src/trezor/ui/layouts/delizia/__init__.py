@@ -674,6 +674,7 @@ async def confirm_blob_intro(
     subtitle: str,
     verb: str,
     verb_cancel: str,
+    verb_view_all: str,
     br_name: str,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> bool:
@@ -690,6 +691,7 @@ async def confirm_blob_intro(
         subtitle=subtitle,
         verb=verb,
         verb_cancel=verb_cancel,
+        verb_view_all=verb_view_all,
     ) as layout:
         res = await interact(
             layout,
@@ -1032,13 +1034,24 @@ if not utils.BITCOIN_ONLY:
             ),
             para=[(utils.hexlify_if_bytes(prefix), True)],
             confirm="",  # will return False
-            button_text=TR.words__confirm_all,  # will return True
+            button_text=TR.ethereum__skip_to_hash,  # will return True
             br_name=br_name,
             br_code=br_code,
         )
         if show_more:
             return len(prefix)
         return None
+
+    async def confirm_calldata_digest(digest: AnyBytes, size: int) -> None:
+        await confirm_blob(
+            title=TR.ethereum__title_input_data,
+            subtitle=TR.ethereum__data_size_template.format(size),
+            description=TR.ethereum__calldata_digest,
+            data=digest,
+            prompt_screen=False,
+            br_name="confirm_digest",
+            br_code=ButtonRequestType.SignTx,
+        )
 
     def _get_account_info_items(
         account: str | None, account_path: str | None, title: str | None = None

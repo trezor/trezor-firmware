@@ -972,6 +972,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_verb;
   MP_QSTR_verb_cancel;
   MP_QSTR_verb_info;
+  MP_QSTR_verb_view_all;
   MP_QSTR_verify;
   MP_QSTR_version;
   MP_QSTR_wait_ble_host_confirmation;
@@ -1318,6 +1319,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__show_full_message;
   MP_QSTR_ethereum__show_full_struct;
   MP_QSTR_ethereum__sign_eip712;
+  MP_QSTR_ethereum__skip_to_hash;
   MP_QSTR_ethereum__smart_info;
   MP_QSTR_ethereum__staking_claim;
   MP_QSTR_ethereum__staking_claim_address;
@@ -1349,6 +1351,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__vault_redeem_intro;
   MP_QSTR_ethereum__vault_redeem_to;
   MP_QSTR_ethereum__vault_withdraw_intro;
+  MP_QSTR_ethereum__view_data_and_hash;
   MP_QSTR_ethereum__withdraw;
   MP_QSTR_ethereum__withdraw_amount;
   MP_QSTR_ethereum__withdraw_from;
