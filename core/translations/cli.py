@@ -4,13 +4,13 @@ from __future__ import annotations
 import datetime
 import json
 import logging
-import typing as t
 import subprocess
+import typing as t
 from pathlib import Path
 
 import click
 
-from trezorlib import cosi, models, merkle_tree
+from trezorlib import cosi, merkle_tree, models
 from trezorlib._internal import translations
 from trezorlib._internal.translations import VersionTuple, version_matches_firmware
 
@@ -112,7 +112,7 @@ def update_merkle_root(signature_file: SignatureFile, merkle_root: bytes) -> boo
 
 
 class TranslationsDir:
-    def __init__(self, path: Path = HERE):
+    def __init__(self, path: Path = HERE) -> None:
         self.path = path
         self.order = translations.order_from_json(
             json.loads((self.path / "order.json").read_text())
@@ -237,7 +237,9 @@ def build_all_blobs(
 ) -> None:
     max_sizes = {}
     for model in ALL_MODELS:
-        parser_output = subprocess.check_output(args=["layout_parser", model.internal_name, "ASSETS_MAXSIZE"])
+        parser_output = subprocess.check_output(
+            args=["layout_parser", model.internal_name, "ASSETS_MAXSIZE"]
+        )
         max_sizes[model.internal_name] = int(parser_output.decode().strip())
 
     sizes = []
@@ -272,7 +274,9 @@ def build_all_blobs(
         else:
             log_fn, icon = LOG.error, "🔴"
 
-        log_fn(f"{icon} {filename} flash utilization is {ratio * 100:.1f}% (out of {max_size / 1024:.1f} kB)")
+        log_fn(
+            f"{icon} {filename} flash utilization is {ratio * 100:.1f}% (out of {max_size / 1024:.1f} kB)"
+        )
 
 
 @click.group()
@@ -285,7 +289,9 @@ def cli() -> None:
 @click.option(
     "--version", "version_str", help="Set the blob version independent of JSON data."
 )
-@click.option("--check", is_flag=True, help="Only check if JSON version matches firmware.")
+@click.option(
+    "--check", is_flag=True, help="Only check if JSON version matches firmware."
+)
 def gen(signed: bool, version_str: str | None, check: bool) -> None:
     """Generate all language blobs for all models.
 
@@ -299,7 +305,9 @@ def gen(signed: bool, version_str: str | None, check: bool) -> None:
         version = None
     else:
         if check:
-            raise click.ClickException("Options --version and --check are mutually exclusive.")
+            raise click.ClickException(
+                "Options --version and --check are mutually exclusive."
+            )
         version = translations.version_from_json(version_str)
 
     all_blobs = tdir.generate_all_blobs(version)
@@ -320,10 +328,9 @@ def gen(signed: bool, version_str: str | None, check: bool) -> None:
                 sigmask, signature = signature_bytes[0], signature_bytes[1:]
                 build_all_blobs(all_blobs, tree, sigmask, signature, production=True)
                 return
-        else:
-            raise click.ClickException(
-                "No matching signature found in signatures.json. Run `cli.py sign` first."
-            )
+        raise click.ClickException(
+            "No matching signature found in signatures.json. Run `cli.py sign` first."
+        )
 
     signature = cosi.sign_with_privkeys(root, PRIVATE_KEYS_DEV)
     sigmask = 0b111
@@ -441,7 +448,7 @@ def merge(update_json: t.Tuple[t.TextIO, ...]) -> None:
         new_data = json.load(f)
         lang = new_data["header"]["language"][:2]
         orig_data = tdir.load_lang(lang)
-        _dict_merge(orig_data, new_data)
+        _dict_merge(orig_data, new_data)  # type: ignore ["JsonDef" is not assignable to "dict[Unknown, Unknown]"]
         tdir.save_lang(lang, orig_data)
         click.echo(f"Updated {lang}")
 
@@ -454,7 +461,7 @@ def characters(lang_file: t.TextIO) -> None:
     chars = filter(lambda c: ord(c) > 127, all_chars)
     print("(")
     for c in sorted(chars):
-        print(f"    \"{c}\",")
+        print(f'    "{c}",')
     print(")")
 
 
@@ -472,7 +479,7 @@ def lowercase(lang_file: Path) -> None:
         else:
             return s[0] + s[1:].lower()
 
-    for k, v in data['translations'].items():
+    for k, v in data["translations"].items():
         new_translations[k] = f(v)
 
     data["translations"] = new_translations
