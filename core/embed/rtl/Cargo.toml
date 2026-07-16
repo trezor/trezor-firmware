@@ -5,10 +5,12 @@ edition = "2024"
 links = "rtl"
 
 [build-dependencies]
+bindgen.workspace = true
 color-eyre.workspace = true
 xbuild.workspace = true
 
 [dependencies]
+cty.workspace = true
 models.workspace = true
 
 [features]
@@ -21,11 +23,6 @@ emulator = ["models/emulator"]
 production = ["models/production"]
 sprintf = []
 universal_fw = []
+error_shims = []
 
-test = [
-    "models/model_t3w1",
-    "emulator",
-]
-
-
-
+test = ["models/model_t3w1", "emulator", "error_shims"]

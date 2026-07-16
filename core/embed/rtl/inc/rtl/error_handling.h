@@ -150,6 +150,8 @@ const char *ts_string(ts_t status);
 /**
  * Shows an error message and shuts down the device.
  *
+ * Do not use this function in new code, use `system_exit_error()` instead.
+ *
  * @param title Title of the error message (defaults to
  *  "INTERNAL ERROR" if NULL)
  * @param message Main error message (defaults to no message if NULL)
@@ -162,6 +164,8 @@ void __attribute__((noreturn)) error_shutdown_ex(const char *title,
 
 /**
  * Shows an error message and shuts down the device.
+ *
+ * Do not use this function in new code, use `system_exit_error()` instead.
  *
  * @param message Main error message (defaults to no message if NULL)
  */

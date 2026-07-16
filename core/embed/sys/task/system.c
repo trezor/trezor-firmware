@@ -39,19 +39,3 @@ void system_exit_fatal_ex(const char* message, size_t message_len,
 }
 
 #endif  // KERNEL_MODE
-
-void system_exit_error(const char* title, const char* message,
-                       const char* footer) {
-  size_t title_len = title != NULL ? strlen(title) : 0;
-  size_t message_len = message != NULL ? strlen(message) : 0;
-  size_t footer_len = footer != NULL ? strlen(footer) : 0;
-
-  system_exit_error_ex(title, title_len, message, message_len, footer,
-                       footer_len);
-}
-
-void system_exit_fatal(const char* message, const char* file, int line) {
-  size_t message_len = message != NULL ? strlen(message) : 0;
-  size_t file_len = file != NULL ? strlen(file) : 0;
-  system_exit_fatal_ex(message, message_len, file, file_len, line);
-}

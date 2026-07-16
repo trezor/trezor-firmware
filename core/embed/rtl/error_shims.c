@@ -21,29 +21,32 @@
 // called without linking the sys crate. This is needed when compiling the
 // tests for the crates that don't depend on sys, such as the crypto crate.
 
+#include <rtl/sysexit.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
-void system_exit_error(const char *title, const char *message,
-                       const char *footer) {
-  printf("Error: %s\n", message);
+void system_exit_error_ex(const char* title, size_t title_len,
+                          const char* message, size_t message_len,
+                          const char* footer, size_t footer_len) {
+  printf("====== ERROR ======\n");
   if (title != NULL && *title != '\0') {
-    printf("Title: %s\n", title);
+    printf("Title: %*s\n", (int)title_len, title);
   }
-
+  printf("Error: %*s\n", (int)message_len, message);
   if (footer != NULL && *footer != '\0') {
-    printf("Footer: %s\n", footer);
+    printf("Footer: %*s\n", (int)footer_len, footer);
   }
-
   exit(1);
 }
 
-void system_exit_fatal(const char *message, const char *file, int line) {
-  printf("Fatal error: %s", message);
+void system_exit_fatal_ex(const char* message, size_t message_len,
+                          const char* file, size_t file_len, int line) {
+  printf("====== FATAL ERROR ======\n");
+  printf("Fatal error: %*s", (int)message_len, message);
   if (file != NULL && *file != '\0') {
-    printf(" at %s:%d", file, line);
+    printf(" at %*s:%d", (int)file_len, file, line);
   }
   printf("\n");
-
   exit(1);
 }

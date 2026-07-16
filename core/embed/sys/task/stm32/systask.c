@@ -340,7 +340,7 @@ uint32_t systask_get_r0(systask_t* task) {
   return stack[STK_FRAME_R0];
 }
 
-static void systask_kill(systask_t* task) {
+static void __attribute__((noreturn)) systask_kill(systask_t* task) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
   systask_print_pminfo(task);
@@ -366,6 +366,10 @@ static void systask_kill(systask_t* task) {
       // Switch to the kernel task
       systask_yield_to(&scheduler->kernel_task);
     }
+  }
+
+  while (1) {
+    // This point should never be reached
   }
 }
 
