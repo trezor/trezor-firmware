@@ -1,0 +1,59 @@
+[package]
+name = "crypto"
+version = "0.0.0"
+edition = "2024"
+links = "crypto"
+
+[dependencies]
+cty.workspace = true
+heapless = { workspace = true, default-features = false }
+models = { workspace = true }
+rtl = { workspace = true }
+trezor-thp = { workspace = true, optional = true }
+zeroize = { workspace = true, default-features = false, features = ["derive"] }
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+bindgen = { workspace = true, default-features = false }
+cc.workspace = true
+glob.workspace = true
+
+[dev-dependencies]
+hex.workspace = true
+rand.workspace = true
+
+[features]
+model_t2t1 = ["models/model_t2t1"]
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+
+emulator = ["models/emulator", "insecure_prng"]
+
+aes_gcm = []
+ed25519_no_precomp = []
+eos = []
+insecure_prng = []
+mldsa = []
+nem = []
+noise = ["aes_gcm"]
+production = ["rtl/production"]
+secp256k1_zkp = []
+sphincsplus = []
+thp = ["dep:trezor-thp"]
+universal_fw = []
+
+test = [
+    "aes_gcm",
+    "emulator",
+    "insecure_prng",
+    "mldsa",
+    "models/mcu_stm32u5g",
+    "models/model_t3w1",
+    "noise",
+    "secp256k1_zkp",
+    "sphincsplus",
+    "universal_fw",
+]

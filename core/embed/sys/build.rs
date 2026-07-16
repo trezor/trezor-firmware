@@ -38,6 +38,7 @@ mod trustzone;
 fn main() -> Result<()> {
     xbuild::build(|lib| {
         lib.import_lib("rtl")?;
+        lib.import_lib("crypto")?;
 
         lib.add_includes([
             "syscall/inc", // temporary hack

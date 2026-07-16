@@ -17,6 +17,7 @@ xbuild.workspace = true
 [dependencies]
 sec.workspace = true
 sys.workspace = true
+crypto.workspace = true
 rtl.workspace = true
 models.workspace = true
 
@@ -49,7 +50,7 @@ default = [
     "sec/secure_mode",
     "sec/storage",
     "sec/rdi",
-    "rtl/aes_gcm",
+    "crypto/aes_gcm",
     ]
 
 mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
