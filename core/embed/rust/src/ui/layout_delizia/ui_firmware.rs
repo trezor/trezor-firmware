@@ -18,7 +18,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            CachedJpeg, ComponentExt, Empty, FormattedText, MsgMap, Never, Timeout,
+            ComponentExt, Empty, FormattedText, Jpeg, MsgMap, Never, Timeout,
         },
         flow::FlowMsg,
         geometry::{self, Direction, Offset},
@@ -219,7 +219,7 @@ impl FirmwareUI for UIDelizia {
                 return Err(value_error!(c"Invalid image."));
             };
 
-            flow::confirm_homescreen::new_confirm_homescreen(title, CachedJpeg::new(image, 1)?)?
+            flow::confirm_homescreen::new_confirm_homescreen(title, Jpeg::new(image, 1))?
         };
         Ok(layout)
     }

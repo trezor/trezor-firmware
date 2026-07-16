@@ -8,6 +8,8 @@ use crate::{
     },
 };
 
+use super::paginated::SinglePage;
+
 pub struct Jpeg {
     area: Rect,
     image: BinaryData<'static>,
@@ -43,6 +45,8 @@ impl Component for Jpeg {
             .render(target);
     }
 }
+
+impl SinglePage for Jpeg {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Jpeg {

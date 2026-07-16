@@ -3,7 +3,7 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{swipe_detect::SwipeSettings, CachedJpeg, ComponentExt},
+        component::{swipe_detect::SwipeSettings, ComponentExt, Jpeg},
         flow::{
             base::{Decision, DecisionBuilder},
             FlowController, FlowMsg, SwipeFlow,
@@ -51,7 +51,7 @@ impl FlowController for ConfirmHomescreen {
 
 pub fn new_confirm_homescreen(
     title: TString<'static>,
-    image: CachedJpeg,
+    image: Jpeg,
 ) -> Result<SwipeFlow, error::Error> {
     let content_homescreen = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),

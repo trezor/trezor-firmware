@@ -9,12 +9,21 @@ features = [
     "pvd",
     "secret",
     "secure_aes",
-    "framebuffer",
     "secure_mode",
     "tamper",
+    "framebuffer",
     "layout_delizia",
     "display_rgb565",
 ]
 
 [project_overrides.bootloader]
 exclude = ["haptic"]
+
+# Firmware and kernel run the display without a framebuffer (direct-to-panel
+# rendering) to save SRAM. The flash-constrained bootloader/boardloader/prodtest
+# keep the framebuffer, where RAM is not the limiting factor.
+[project_overrides.firmware]
+exclude = ["framebuffer"]
+
+[project_overrides.kernel]
+exclude = ["framebuffer"]

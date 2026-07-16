@@ -23,7 +23,6 @@ use crate::ui::{
     component::{base::AttachType, Label},
     constant::{screen, HEIGHT, WIDTH},
     lerp::Lerp,
-    shape::{render_on_canvas, ImageBuffer, Rgb565Canvas},
     util::animation_disabled,
 };
 
@@ -509,7 +508,6 @@ pub struct Homescreen {
     labels_height: i16,
     notification: Option<Notification>,
     image: Option<BinaryData<'static>>,
-    bg_image: ImageBuffer<Rgb565Canvas<'static>>,
     hold_to_lock: bool,
     loader: Loader,
     delay: Timer,
@@ -538,15 +536,6 @@ impl Homescreen {
         let labels_height = label_device_height + label_unlocked_height;
 
         let image = get_homescreen_image();
-        let mut buf = ImageBuffer::new(AREA.size())?;
-
-        render_on_canvas(buf.canvas(), None, |target| {
-            if let Some(image) = image {
-                shape::JpegImage::new_image(Point::zero(), image).render(target);
-            } else {
-                render_default_hs(target);
-            }
-        });
 
         Ok(Self {
             label_device: Label::new(label, Alignment::Start, theme::TEXT_DEMIBOLD)
@@ -561,7 +550,6 @@ impl Homescreen {
             labels_height,
             notification,
             image,
-            bg_image: buf,
             hold_to_lock,
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             delay: Timer::new(),
@@ -823,7 +811,6 @@ pub struct Lockscreen {
     image: Option<BinaryData<'static>>,
     bootscreen: bool,
     coinjoin_authorized: bool,
-    bg_image: ImageBuffer<Rgb565Canvas<'static>>,
     label_anim: HideLabelAnimation,
 }
 
@@ -834,15 +821,6 @@ impl Lockscreen {
         coinjoin_authorized: bool,
     ) -> Result<Self, Error> {
         let image = get_homescreen_image();
-        let mut buf = ImageBuffer::new(AREA.size())?;
-
-        render_on_canvas(buf.canvas(), None, |target| {
-            if let Some(image) = image {
-                shape::JpegImage::new_image(Point::zero(), image).render(target);
-            } else {
-                render_default_hs(target);
-            }
-        });
 
         let name_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
 
@@ -866,7 +844,6 @@ impl Lockscreen {
             image,
             bootscreen,
             coinjoin_authorized,
-            bg_image: buf,
             label_anim: HideLabelAnimation::new(label_width),
         })
     }
@@ -925,7 +902,15 @@ impl Component for Lockscreen {
 
         let center = AREA.center();
 
-        shape::RawImage::new(AREA, self.bg_image.view()).render(target);
+        if let Some(image) = self.image {
+            if let ImageInfo::Jpeg(_) = ImageInfo::parse(image) {
+                shape::JpegImage::new_image(center, image)
+                    .with_align(Alignment2D::CENTER)
+                    .render(target);
+            }
+        } else {
+            render_default_hs(target);
+        }
 
         let overlay_rotation = self.anim.eval();
         cshape::UnlockOverlay::new(center, overlay_rotation).render(target);

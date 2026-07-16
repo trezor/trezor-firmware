@@ -142,7 +142,6 @@ layout_delizia = [
     "trezor_lib/layout_delizia",
     "upymod/layout_delizia",
     "trezor_lib/ui_blurring",
-    "trezor_lib/ui_image_buffer",
     "trezor_lib/ui_overlay",
     "trezor_lib/ui_jpeg",
     "trezor_lib/ui_font_kerning",

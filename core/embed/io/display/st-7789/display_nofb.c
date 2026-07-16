@@ -28,6 +28,14 @@
 
 #ifdef KERNEL_MODE
 
+#ifdef USE_TRUSTZONE
+void display_set_unpriv_access(bool unpriv) {
+  // Without a framebuffer there is no dedicated SRAM region to expose;
+  // pixel data is written directly to the panel's internal RAM.
+  (void)unpriv;
+}
+#endif  // USE_TRUSTZONE
+
 void display_refresh(void) {
   // If the framebuffer is not used then, we do not need
   // to refresh the display explicitly as we write the data
