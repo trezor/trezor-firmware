@@ -4,6 +4,7 @@
 BUILD_DIR = build-xtask/artifacts/latest
 
 TREZOR_MODEL ?= T3W1
+VARIANT ?= universal
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
 XTASK_BUILD_OPTS ?=
@@ -246,6 +247,35 @@ build_secmon: ## build security monitor image
 
 build_firmware: ## build firmware with frozen modules
 	xtask build firmware $(XTASK_BUILD_OPTS)
+
+build_pq: ## [prototype] build + sign a multi-variant PQ (pq_secure_boot) bundle (one command)
+	# Builds every variant + the bootloader, folds the founder firmware_root in,
+	# re-signs, writes proofs, and runs a consistency guard. Output: a ready-to-
+	# flash / ready-to-OTA bundle in build-xtask/tree/$(TREZOR_MODEL)/.
+	# Override variants/target via TREE_OPTS, e.g.
+	#   make build_pq TREE_OPTS="--variant universal --flash-target universal"
+	python tools/trezor_core_tools/build_firmware_pq.py --model $(TREZOR_MODEL) $(TREE_OPTS)
+
+upload_pq: ## [prototype] OTA-upload a variant from the build_pq bundle zip
+	# Uploads VARIANT (default: universal) from build-xtask/tree/$(TREZOR_MODEL).zip
+	# to a connected device in bootloader mode. Official-vs-custom is AUTO-DETECTED
+	# from the image (a custom/--unsafe-fw bundle installs as custom without any
+	# flag). Select the variant and pass extra flags via UPLOAD_OPTS, e.g.
+	#   make upload_pq VARIANT=prodtest
+	#   make upload_pq VARIANT=universal UPLOAD_OPTS="--skip-check"
+	python tools/trezor_core_tools/firmware_pq_update.py \
+		--bundle build-xtask/tree/$(TREZOR_MODEL).zip --variant $(VARIANT) $(UPLOAD_OPTS)
+
+sign_pq: ## [prototype] fold firmware_root into the bootloader header and sign it
+	# The module TRZM headers in firmware.bin are already filled at build time
+	# (headertool_pq, via the firmware post-build step). This step only recomputes
+	# the firmware_root from the filled image and folds it into the (re-signed)
+	# bootloader header.
+	python tools/trezor_core_tools/firmware_pq_sign.py \
+		--firmware $(BUILD_DIR)/firmware.bin \
+		--bootloader $(BUILD_DIR)/bootloader.bin \
+		--manifest-out $(BUILD_DIR)/firmware_tree.json \
+		--vector-out $(BUILD_DIR)/firmware_tree.vec
 
 build_unix: ## build unix port
 	xtask build firmware --emulator $(XTASK_BUILD_OPTS) --pyopt=false
