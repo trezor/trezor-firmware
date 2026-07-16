@@ -143,6 +143,7 @@ impl FirmwareUI for UIBolt {
         _subtitle: Option<TString<'static>>,
         _verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
+        _verb_view_all: Option<TString<'static>>,
         _hold: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {

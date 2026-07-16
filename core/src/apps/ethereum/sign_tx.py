@@ -308,6 +308,8 @@ async def _confirm_data_chunks(
         await data_chunk_confirmer.confirm(chunk)
         data_left -= len(chunk)
 
+    await data_chunk_confirmer.confirm_digest()
+
 
 async def _get_next_chunk(data_left: int) -> AnyBytes:
     from trezor.messages import EthereumTxAck

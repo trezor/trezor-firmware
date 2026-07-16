@@ -752,6 +752,7 @@ async def confirm_blob_intro(
     subtitle: str,
     verb: str,
     verb_cancel: str,
+    verb_view_all: str,
     br_name: str,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> bool:
@@ -1121,6 +1122,9 @@ if not utils.BITCOIN_ONLY:
         if show_more:
             return len(prefix)
         return None
+
+    async def confirm_calldata_digest(digest: AnyBytes, size: int) -> None:
+        pass
 
     def confirm_ethereum_unknown_contract_warning(
         _title: str | None,

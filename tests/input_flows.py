@@ -1762,6 +1762,13 @@ class InputFlowEthereumSignTxData(InputFlowBase):
                 is_intro = False
                 continue
 
+            if br.name == "confirm_digest":
+                content = self.debug.read_layout().text_content()
+                # TODO: read and verify hash (needs keccak256)
+                assert TR.ethereum__calldata_digest in content
+                self.debug.press_yes()
+                continue
+
             # data confirmation is over - confirm tx details
             if confirm_tx is None:
                 confirm_tx = self.confirm_tx

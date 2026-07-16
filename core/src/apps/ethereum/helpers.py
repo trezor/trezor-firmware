@@ -237,6 +237,7 @@ class DataChunkConfirmer:
         self.confirmed_len = 0
         self.progress_bar = None
         self.first: bool = True
+        self.hasher: HashWriter | None = None
 
     async def confirm(self, chunk: AnyBytes) -> None:
         from trezor.enums import ButtonRequestType
@@ -251,12 +252,20 @@ class DataChunkConfirmer:
                 subtitle=TR.ethereum__data_size_template.format(self.total_len),
                 verb=TR.buttons__confirm,
                 verb_cancel=TR.send__cancel_sign,
+                verb_view_all=TR.ethereum__view_data_and_hash,
                 br_name="confirm_data",
                 br_code=ButtonRequestType.SignTx,
             )
             if skip:
                 # skip following chunks confirmation - use a progress bar instead
                 self.progress_bar = self._get_progress_indicator()
+            else:
+                # ERC-8213 calldata digest will be confirmed after all calldata is hashed
+                # https://ethereum-magicians.org/t/erc-8213-wallet-signature-and-calldata-digest-display/24295#calldata-digest
+                self.hasher = keccak256(self.total_len.to_bytes(32, "big"))
+
+        if self.hasher is not None:
+            self.hasher.extend(chunk)
 
         if self.progress_bar is not None:
             return self.progress_bar(chunk)
@@ -300,6 +309,20 @@ class DataChunkConfirmer:
             layout.report(_progress_value())
 
         return confirm_fn
+
+    async def confirm_digest(self) -> None:
+        if self.hasher is None:
+            return
+
+        if self.confirmed_len != self.total_len:
+            from trezor.wire import ProcessError
+
+            raise ProcessError("Missing calldata")
+
+        from trezor.ui.layouts import confirm_calldata_digest
+
+        # TODO: missing on Bolt & Caesar
+        return await confirm_calldata_digest(self.hasher.get_digest(), self.total_len)
 
 
 def keccak256(data: AnyBytes | None = None) -> HashWriter:
