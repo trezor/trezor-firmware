@@ -1279,6 +1279,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__auth_done;
   MP_QSTR_ethereum__auth_title;
   MP_QSTR_ethereum__auth_warn;
+  MP_QSTR_ethereum__calldata_digest;
   MP_QSTR_ethereum__calldata_suffix;
   MP_QSTR_ethereum__confirm_contract;
   MP_QSTR_ethereum__contract_address;

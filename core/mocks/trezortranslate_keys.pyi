@@ -338,6 +338,7 @@ class TR:
     ethereum__auth_done: str = "EIP-7702 authorization signed."
     ethereum__auth_title: str = "EIP-7702 Authorization"
     ethereum__auth_warn: str = "Authorize your account to a third-party contract using EIP-7702?"
+    ethereum__calldata_digest: str = "ERC-8213 digest"
     ethereum__calldata_suffix: str = "Calldata suffix"
     ethereum__confirm_contract: str = "Confirm contract"
     ethereum__contract_address: str = "Provider contract address"
