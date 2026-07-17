@@ -138,14 +138,9 @@ def sign_tx(
     return signature.hex()
 
 
-DEFAULT_APP_DOMAIN = b"\x00" * solana.OffchainMessageV0.APP_LEN
-
-
 @cli.command()
 @click.argument("message", type=str)
 @click.option("-n", "--address", default=DEFAULT_PATH, help=PATH_HELP)
-@click.option("-t", "--text", is_flag=True, help="Interpret message as text")
-@click.option("-a", "--app", type=str, help="Application domain (base58, 32 B)")
 @click.option(
     "-s",
     "--signer",
@@ -159,95 +154,64 @@ def sign_message(
     session: "Session",
     address: str,
     message: str,
-    text: bool,
-    app: str | None,
     signer: tuple[str, ...],
     chunkify: bool,
 ) -> str:
     """Sign a Solana off-chain message.
 
-    There are two ways to specify the MESSAGE argument:
-
-    1. Raw mode (Default)
-
-    sign-message [--address PATH] MESSAGE
-
-    The provided MESSAGE is treated as a hex string representing a
-    pre-formatted off-chain message. Only the --address option is
-    allowed in this mode [1]. The specified address must correspond
-    to one of the public keys in the message.
-
-    2. Format mode
-
-    sign-message [--address PATH] [--app APP] [--signer SIGNER]... --text MESSAGE
-
-    The provided MESSAGE is treated as a plain text string. The
-    formatted message will be constructed based on the supplied
-    arguments. The --signer option can be used multiple times. The
-    final list of signers will consist of the public key derived
+    The --signer option can be used multiple times. The final
+    list of signers will consist of the public key derived
     from --address, plus any public keys provided via --signer.
 
     Also see: https://docs.anza.xyz/proposals/off-chain-message-signing
-
-    [1] The --chunkify flag is always applicable.
     """
 
     address_n = tools.parse_path(address)
 
-    if text:
-        app_bytes = tools.b58decode(app) if app else DEFAULT_APP_DOMAIN
+    signers = [solana.get_public_key(session, address_n, show_display=False)]
+    signers.extend(tools.b58decode(s) for s in signer)
 
-        signers = [solana.get_public_key(session, address_n, show_display=False)]
-        signers.extend(tools.b58decode(s) for s in signer)
+    offchain_msg = messages.SolanaOffchainMessageV1(
+        signers=signers,
+        message=message,
+    )
 
-        offchain_msg = solana.OffchainMessageV0(app_bytes, signers, message).to_bytes()
-    else:
-        if app or signer:
-            raise click.UsageError("Only the --address option can be used in raw mode")
+    result = solana.sign_message(session, address_n, offchain_msg, chunkify=chunkify)
 
-        offchain_msg = bytes.fromhex(message)
+    if result.signed_data is not None:
+        click.echo(f"Signed data: {result.signed_data.hex()}")
 
-    click.echo(f"Message: {offchain_msg.hex()}")
-
-    signature = solana.sign_message(session, address_n, offchain_msg, chunkify=chunkify)
-    return signature.hex()
+    return result.signature.hex()
 
 
 @cli.command()
 @click.argument("message", type=str)
-@click.option("-s", "--signature", type=str, multiple=True, help="Signature (hex)")
+@click.option(
+    "-s", "--signer", type=str, multiple=True, help="Public key of a signer (base58)"
+)
+@click.option("-S", "--signature", type=str, multiple=True, help="Signature (hex)")
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def verify_message(
     session: "Session",
     message: str,
+    signer: tuple[str, ...],
     signature: tuple[str, ...],
     chunkify: bool,
 ) -> bool:
     """Verify a signed Solana off-chain message.
 
-    This command operates in two modes depending on whether the
-    --signature option is provided; in either case, the provided MESSAGE
-    must be a hex string:
-
-    If the --signature option is not used, the provided MESSAGE must
-    be wrapped in an envelope containing signatures from all signers
-    specified in the message header.
-
-    If the --signature option is used, the provided MESSAGE must be a
-    pre-formatted off-chain message without an envelope. You must provide
-    all signatures in the correct order as specified by the message header
-    (by using the --signature option multiple times if necessary). The
-    envelope will be constructed automatically.
-
-    Also see: https://docs.anza.xyz/proposals/off-chain-message-signing#envelope
+    The --signer and --signature options can be used multiple times.
+    Signatures must be provided in the order in which the corresponding
+    signers are listed.
     """
 
-    if signature:
-        signatures = [bytes.fromhex(s) for s in signature]
-        msg_bytes = bytes.fromhex(message)
-        envelope = solana.Envelope(signatures, msg_bytes).to_bytes()
-    else:
-        envelope = bytes.fromhex(message)
+    signers = [tools.b58decode(s) for s in signer]
+    signatures = [bytes.fromhex(s) for s in signature]
 
-    return solana.verify_message(session, envelope, chunkify=chunkify)
+    offchain_msg = messages.SolanaOffchainMessageV1(
+        signers=signers,
+        message=message,
+    )
+
+    return solana.verify_message(session, offchain_msg, signatures, chunkify=chunkify)

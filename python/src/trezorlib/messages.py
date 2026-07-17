@@ -7906,18 +7906,35 @@ class SolanaTxSignature(protobuf.MessageType):
         self.signature = signature
 
 
-class SolanaSignMessage(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 906
+class SolanaOffchainMessageV1(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        2: protobuf.Field("message", "bytes", repeated=False, required=True),
-        3: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        1: protobuf.Field("message", "string", repeated=False, required=True),
+        2: protobuf.Field("signers", "bytes", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        message: "bytes",
+        message: "str",
+        signers: Optional[Sequence["bytes"]] = None,
+    ) -> None:
+        self.signers: Sequence["bytes"] = signers if signers is not None else []
+        self.message = message
+
+
+class SolanaSignMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 906
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        3: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("message", "SolanaOffchainMessageV1", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        message: "SolanaOffchainMessageV1",
         address_n: Optional[Sequence["int"]] = None,
         chunkify: Optional["bool"] = None,
     ) -> None:
@@ -7930,30 +7947,36 @@ class SolanaMessageSignature(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 907
     FIELDS = {
         1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        2: protobuf.Field("signed_data", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         signature: "bytes",
+        signed_data: Optional["bytes"] = None,
     ) -> None:
         self.signature = signature
+        self.signed_data = signed_data
 
 
 class SolanaVerifyMessage(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 908
     FIELDS = {
-        1: protobuf.Field("envelope", "bytes", repeated=False, required=True),
         2: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        3: protobuf.Field("message", "SolanaOffchainMessageV1", repeated=False, required=True),
+        4: protobuf.Field("signatures", "bytes", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        envelope: "bytes",
+        message: "SolanaOffchainMessageV1",
+        signatures: Optional[Sequence["bytes"]] = None,
         chunkify: Optional["bool"] = None,
     ) -> None:
-        self.envelope = envelope
+        self.signatures: Sequence["bytes"] = signatures if signatures is not None else []
+        self.message = message
         self.chunkify = chunkify
 
 

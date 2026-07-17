@@ -887,7 +887,6 @@ class TR:
     sn__action: str = "Allow connected device to get serial number of your Trezor Safe 7?"
     sn__title: str = "Serial number"
     solana__account_index: str = "Account index"
-    solana__app_domain: str = "Application domain"
     solana__associated_token_account: str = "Associated token account"
     solana__base_fee: str = "Base fee"
     solana__claim: str = "Claim"

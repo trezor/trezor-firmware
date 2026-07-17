@@ -1455,7 +1455,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_ripple__destination_tag_missing;
   MP_QSTR_ripple__destination_tag_template;
   MP_QSTR_solana__account_index;
-  MP_QSTR_solana__app_domain;
   MP_QSTR_solana__associated_token_account;
   MP_QSTR_solana__base_fee;
   MP_QSTR_solana__claim;
