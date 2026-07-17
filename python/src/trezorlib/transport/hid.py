@@ -47,6 +47,7 @@ class HidTransport(Transport):
 
     PATH_PREFIX = "hid"
     ENABLED = HID_IMPORTED
+    CHUNK_SIZE = 64
 
     def __init__(self, device: HidDevice, probe_hid_version: bool = False) -> None:
         self.device = device
