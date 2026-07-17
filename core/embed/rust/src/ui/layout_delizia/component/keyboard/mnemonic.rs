@@ -1,16 +1,9 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Label, Maybe},
-        geometry::{Alignment, Grid, Insets, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::super::super::{
-    component::{Button, ButtonMsg},
-    cshape, theme,
-};
+use super::super::super::component::{Button, ButtonMsg};
+use super::super::super::{cshape, theme};
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Label, Maybe};
+use crate::ui::geometry::{Alignment, Grid, Insets, Rect};
+use crate::ui::shape::Renderer;
 
 pub const MNEMONIC_KEY_COUNT: usize = 9;
 const BACK_BUTTON_RIGHT_EXPAND: i16 = 24;

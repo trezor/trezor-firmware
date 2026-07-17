@@ -1,17 +1,13 @@
-use super::super::{
-    component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
-    fonts,
-    theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE},
-};
-use crate::ui::{
-    component::{text::TextStyle, LineBreaking::BreakWordsNoHyphen},
-    constant::{HEIGHT, WIDTH},
-    display::Color,
-    geometry::{Offset, Point, Rect},
-    util::include_res,
-};
-
+use super::super::component::{ButtonStyle, ButtonStyleSheet, ResultStyle};
+use super::super::fonts;
+use super::super::theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE};
 use super::GREY_MEDIUM;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::LineBreaking::BreakWordsNoHyphen;
+use crate::ui::constant::{HEIGHT, WIDTH};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::util::include_res;
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x1E, 0xAD);
 pub const BLD_FG: Color = WHITE;

@@ -1,10 +1,8 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::{Alignment, Alignment2D, Offset, Rect},
-    shape::Renderer,
-};
-
-use super::{super::cshape, theme, Button, ButtonContent, ButtonMsg, ButtonStyleSheet};
+use super::super::cshape;
+use super::{theme, Button, ButtonContent, ButtonMsg, ButtonStyleSheet};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Rect};
+use crate::ui::shape::Renderer;
 
 pub enum BinarySelectionMsg {
     Left,

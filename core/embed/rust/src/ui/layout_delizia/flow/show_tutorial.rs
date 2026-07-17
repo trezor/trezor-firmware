@@ -1,23 +1,12 @@
-use crate::{
-    error,
-    translations::TR,
-    ui::{
-        component::{
-            swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, Paragraphs},
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
-};
-
-use super::super::{
-    component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
-    theme,
-};
+use super::super::component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
+use super::super::theme;
+use crate::error;
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ShowTutorial {

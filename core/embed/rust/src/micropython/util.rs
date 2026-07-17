@@ -2,14 +2,12 @@ use core::slice;
 
 use heapless::Vec;
 
-use super::{
-    ffi,
-    iter::IterBuf,
-    map::{Map, MapElem},
-    obj::Obj,
-    qstr::Qstr,
-    runtime::{catch_exception, raise_exception},
-};
+use super::ffi;
+use super::iter::IterBuf;
+use super::map::{Map, MapElem};
+use super::obj::Obj;
+use super::qstr::Qstr;
+use super::runtime::{catch_exception, raise_exception};
 use crate::error::{value_error, Error};
 
 /// Perform a call and convert errors into a raised MicroPython exception.

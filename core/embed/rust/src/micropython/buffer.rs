@@ -1,8 +1,11 @@
-use core::{convert::TryFrom, ops::Deref, ptr, slice, str};
-
-use crate::{error::Error, micropython::obj::Obj, strutil::hexlify};
+use core::convert::TryFrom;
+use core::ops::Deref;
+use core::{ptr, slice, str};
 
 use super::ffi;
+use crate::error::Error;
+use crate::micropython::obj::Obj;
+use crate::strutil::hexlify;
 
 /// Represents an immutable UTF-8 string managed by MicroPython GC.
 /// This either means static data, or a valid GC object.

@@ -1,7 +1,5 @@
-use crate::{
-    time::{Duration, Instant},
-    ui::lerp::{InvLerp, Lerp},
-};
+use crate::time::{Duration, Instant};
+use crate::ui::lerp::{InvLerp, Lerp};
 
 /// Running, time-based linear progression of a value.
 #[derive(Clone)]

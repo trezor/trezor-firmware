@@ -1,19 +1,17 @@
-use crate::{
-    translations::TR,
-    trezorhal::{random, wordlist::Wordlist},
-    ui::{
-        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
-        geometry::Rect,
-        shape::Renderer,
-        util::char_to_string,
-    },
-};
+use heapless::Vec;
 
 use super::super::{
     theme, ButtonLayout, ChangingTextLine, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg,
     ChoicePage,
 };
-use heapless::Vec;
+use crate::translations::TR;
+use crate::trezorhal::random;
+use crate::trezorhal::wordlist::Wordlist;
+use crate::ui::component::text::common::TextBox;
+use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
+use crate::ui::util::char_to_string;
 
 enum WordlistAction {
     Letter(char),

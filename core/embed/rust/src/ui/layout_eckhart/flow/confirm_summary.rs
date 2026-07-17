@@ -1,34 +1,26 @@
 use heapless::Vec;
 
-use crate::{
-    error::{self},
-    strutil::TString,
-    time::Duration,
-    translations::TR,
-    ui::{
-        component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
-            ComponentExt,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::{Direction, LinearPlacement},
-        layout::util::PropsList,
-    },
+use super::super::component::Button;
+use super::super::firmware::{
+    ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+    VerticalMenuScreen, VerticalMenuScreenMsg,
 };
-
-use super::super::{
-    component::Button,
-    firmware::{
-        ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
-        VerticalMenuScreen, VerticalMenuScreenMsg,
-    },
-    flow,
-    flow::util::content_menu_info,
-    theme::{self, gradient::Gradient},
+use super::super::flow;
+use super::super::flow::util::content_menu_info;
+use super::super::theme::gradient::Gradient;
+use super::super::theme::{self};
+use crate::error::{self};
+use crate::strutil::TString;
+use crate::time::Duration;
+use crate::translations::TR;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, VecExt,
 };
+use crate::ui::component::ComponentExt;
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::{Direction, LinearPlacement};
+use crate::ui::layout::util::PropsList;
 
 const MENU_ITEM_CANCEL: usize = 0;
 const MENU_ITEM_EXTRA_INFO: usize = 1;

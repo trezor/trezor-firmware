@@ -1,29 +1,21 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        button_request::ButtonRequestCode,
-        component::{
-            swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-            ButtonRequestExt, ComponentExt, EventCtx, Paginate as _,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
-};
 use heapless::Vec;
 
-use super::super::{
-    component::{
-        Footer, Frame, Header, InternallySwipableContent, PromptScreen, ShareWords, SwipeContent,
-    },
-    theme,
+use super::super::component::{
+    Footer, Frame, Header, InternallySwipableContent, PromptScreen, ShareWords, SwipeContent,
 };
+use super::super::theme;
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::button_request::ButtonRequestCode;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs,
+};
+use crate::ui::component::{ButtonRequestExt, ComponentExt, EventCtx, Paginate as _};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ShowShareWords {

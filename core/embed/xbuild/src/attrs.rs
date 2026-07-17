@@ -1,15 +1,14 @@
 use std::path::{Path, PathBuf};
 
-use color_eyre::{
-    Result,
-    eyre::{WrapErr, ensure},
-};
+use color_eyre::Result;
+use color_eyre::eyre::{WrapErr, ensure};
 
 use crate::helpers::{join_paths_lexically, library_metadata, relative_to_manifest};
 
 /// Attributes for configuring C compilation.
 ///
-/// This struct holds compiler flags, defines, and include paths for use when compiling C code.
+/// This struct holds compiler flags, defines, and include paths for use when
+/// compiling C code.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct CompileAttrs {
     /// Compiler flags (e.g. `-O3`, `-fno-exceptions`, etc.)
@@ -28,7 +27,8 @@ impl CompileAttrs {
         Self::default()
     }
 
-    /// Appends a compiler flag and returns the modified `CompileAttrs` for chaining.
+    /// Appends a compiler flag and returns the modified `CompileAttrs` for
+    /// chaining.
     ///
     /// # Parameters
     /// - `flag`: The compiler flag to add (e.g., `-O2`).
@@ -41,7 +41,8 @@ impl CompileAttrs {
         self
     }
 
-    /// Appends an include path and returns the modified `CompileAttrs` for chaining.
+    /// Appends an include path and returns the modified `CompileAttrs` for
+    /// chaining.
     ///
     /// # Parameters
     /// - `path`: The include path to add.
@@ -70,7 +71,8 @@ impl CompileAttrs {
         self.flags.retain(|f| f != flag);
     }
 
-    /// Adds a preprocessor define, with an optional value, if not already present.
+    /// Adds a preprocessor define, with an optional value, if not already
+    /// present.
     ///
     /// # Parameters
     /// - `name`: The name of the define (e.g., `FOO`).
@@ -82,7 +84,8 @@ impl CompileAttrs {
         }
     }
 
-    /// Adds an include path, making it relative to the Cargo manifest if possible, if not already present.
+    /// Adds an include path, making it relative to the Cargo manifest if
+    /// possible, if not already present.
     ///
     /// # Parameters
     /// - `path`: The include path to add.
@@ -93,7 +96,8 @@ impl CompileAttrs {
         }
     }
 
-    /// Merges another `CompileAttrs` into this one, combining their flags, defines, and includes.
+    /// Merges another `CompileAttrs` into this one, combining their flags,
+    /// defines, and includes.
     ///
     /// Duplicate flags are allowed, but defines and includes are deduplicated.
     ///
@@ -124,7 +128,8 @@ impl CompileAttrs {
         self
     }
 
-    /// Configures and returns a `cc::Tool` based on the current compile attributes.
+    /// Configures and returns a `cc::Tool` based on the current compile
+    /// attributes.
     ///
     /// This can be used to compile C code with the same settings.
     ///
@@ -150,13 +155,16 @@ impl CompileAttrs {
         build.get_compiler()
     }
 
-    /// Exports the compile attributes as Cargo metadata for use in dependent crates.
+    /// Exports the compile attributes as Cargo metadata for use in dependent
+    /// crates.
     ///
-    /// This function prints metadata for includes, defines, and flags to stdout for Cargo to consume.
+    /// This function prints metadata for includes, defines, and flags to stdout
+    /// for Cargo to consume.
     ///
     /// # Errors
     ///
-    /// Returns an error if the manifest directory is not set or if path conversion fails.
+    /// Returns an error if the manifest directory is not set or if path
+    /// conversion fails.
     pub fn export_as_metadata(&self) -> Result<()> {
         let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
             .context("CARGO_MANIFEST_DIR is required but not set")?;
@@ -197,7 +205,8 @@ impl CompileAttrs {
         Ok(())
     }
 
-    /// Imports the specified crate's public C compiler attributes from Cargo metadata.
+    /// Imports the specified crate's public C compiler attributes from Cargo
+    /// metadata.
     ///
     /// # Parameters
     /// - `library`: The name of the library whose metadata to import.
@@ -240,7 +249,8 @@ impl CompileAttrs {
     ///
     /// # Errors
     ///
-    /// Returns an error if the compiler cannot be executed or its output cannot be parsed.
+    /// Returns an error if the compiler cannot be executed or its output cannot
+    /// be parsed.
     pub fn import_cc_compiler_includes(&mut self) -> Result<()> {
         let compiler = cc::Build::new().get_compiler();
         let cc_output = compiler
@@ -270,7 +280,8 @@ impl CompileAttrs {
         Ok(())
     }
 
-    /// Returns a list of arguments that represent the compile attributes, suitable for passing to a C compiler.
+    /// Returns a list of arguments that represent the compile attributes,
+    /// suitable for passing to a C compiler.
     ///
     /// # Returns
     ///

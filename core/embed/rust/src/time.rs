@@ -1,7 +1,5 @@
-use core::{
-    cmp::Ordering,
-    ops::{Div, Mul},
-};
+use core::cmp::Ordering;
+use core::ops::{Div, Mul};
 
 use crate::trezorhal::time;
 

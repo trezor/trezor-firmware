@@ -1,6 +1,6 @@
-use xbuild::{CLibrary, Result, bail_unsupported};
-
 use std::path::PathBuf;
+
+use xbuild::{CLibrary, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("tropic/inc");

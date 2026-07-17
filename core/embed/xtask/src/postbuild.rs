@@ -1,20 +1,16 @@
+use std::path::{Path, PathBuf};
+use std::{fs, process};
+
 use anyhow::{Context, Result, ensure};
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    process,
-};
 
-use crate::{
-    args::Project,
-    config::{ModelConfig, ProjectProfile},
-    helpers,
-    model::Model,
-};
+use crate::args::Project;
+use crate::config::{ModelConfig, ProjectProfile};
+use crate::helpers;
+use crate::model::Model;
 
-/// Extracts appropriate sections from the ELF file and creates a raw unsigned binary.
-/// Section lists are read from the project's `project.toml`; model-specific split
-/// behaviour is controlled by `model_config`.
+/// Extracts appropriate sections from the ELF file and creates a raw unsigned
+/// binary. Section lists are read from the project's `project.toml`;
+/// model-specific split behaviour is controlled by `model_config`.
 pub fn elf_to_bin(
     source: &Path,
     project: Project,
@@ -128,8 +124,9 @@ pub fn sign_binary(
     Ok(())
 }
 
-/// Extracts specified sections from an ELF file into a raw binary using objcopy.
-/// The output file is created in the same directory as the input with the same name but .bin extension.
+/// Extracts specified sections from an ELF file into a raw binary using
+/// objcopy. The output file is created in the same directory as the input with
+/// the same name but .bin extension.
 fn objcopy<S, I>(input: &Path, sections: I) -> Result<PathBuf>
 where
     S: AsRef<str>,
@@ -308,9 +305,11 @@ pub fn publish_artifact(
 
 #[cfg(test)]
 mod tests {
-    use super::merge_compile_commands;
-    use serde_json::Value;
     use std::fs;
+
+    use serde_json::Value;
+
+    use super::merge_compile_commands;
 
     #[test]
     fn merge_compile_commands_prefers_first_input_for_duplicates() {

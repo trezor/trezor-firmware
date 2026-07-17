@@ -1,21 +1,10 @@
-use crate::{
-    time::ShortDuration,
-    ui::{
-        component::text::{
-            layout::{Chunks, LineBreaking, PageBreaking},
-            TextStyle,
-        },
-        notification::NotificationLevel,
-    },
-};
-
-use super::{
-    super::{
-        component::{ButtonStyle, ButtonStyleSheet},
-        fonts,
-    },
-    *,
-};
+use super::super::component::{ButtonStyle, ButtonStyleSheet};
+use super::super::fonts;
+use super::*;
+use crate::time::ShortDuration;
+use crate::ui::component::text::layout::{Chunks, LineBreaking, PageBreaking};
+use crate::ui::component::text::TextStyle;
+use crate::ui::notification::NotificationLevel;
 
 // props settings
 pub const PROP_INNER_SPACING: i16 = 12; // [px]

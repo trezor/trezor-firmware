@@ -1,19 +1,13 @@
-use crate::{
-    error::Error,
-    strutil::{self, TString},
-    ui::{
-        component::{
-            paginated::SinglePage,
-            text::paragraphs::{Paragraph, Paragraphs},
-            Component, Event, EventCtx, Pad,
-        },
-        event::TouchEvent,
-        geometry::{Alignment, Grid, Insets, Offset, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::{super::fonts::FONT_DEMIBOLD, theme, Button, ButtonMsg};
+use super::super::fonts::FONT_DEMIBOLD;
+use super::{theme, Button, ButtonMsg};
+use crate::error::Error;
+use crate::strutil::{self, TString};
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
+use crate::ui::component::{Component, Event, EventCtx, Pad};
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment, Grid, Insets, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
 
 pub enum NumberInputDialogMsg {
     Changed(u16),

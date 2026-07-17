@@ -1,5 +1,4 @@
 use super::{echo, image_info, process_rx_byte, reset, upload};
-
 use crate::util::from_c_array;
 
 #[no_mangle]

@@ -1,6 +1,7 @@
+use std::collections::{HashMap, HashSet};
+
 use anyhow::{Context, Result, anyhow, bail};
 use serde::Deserialize;
-use std::collections::{HashMap, HashSet};
 
 use crate::args::Project;
 use crate::helpers::workspace_dir;

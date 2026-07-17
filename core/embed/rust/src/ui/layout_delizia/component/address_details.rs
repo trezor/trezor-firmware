@@ -1,26 +1,22 @@
 use heapless::Vec;
 
-use crate::{
-    error::Error,
-    micropython::{buffer::StrBuffer, gc::GcBox},
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            swipe_detect::SwipeConfig,
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Component, Event, EventCtx, Paginate,
-        },
-        event::SwipeEvent,
-        flow::Swipable,
-        geometry::{Direction, Rect},
-        layout::util::MAX_XPUBS,
-        shape::Renderer,
-        util::Pager,
-    },
-};
-
 use super::{theme, Frame, FrameMsg, Header};
+use crate::error::Error;
+use crate::micropython::buffer::StrBuffer;
+use crate::micropython::gc::GcBox;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
+};
+use crate::ui::component::{Component, Event, EventCtx, Paginate};
+use crate::ui::event::SwipeEvent;
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{Direction, Rect};
+use crate::ui::layout::util::MAX_XPUBS;
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 pub struct AddressDetails {
     details: Frame<Paragraphs<ParagraphVecShort<'static>>>,

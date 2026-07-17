@@ -1,30 +1,21 @@
 use core::iter;
 
-use crate::{
-    strutil::ShortString,
-    trezorhal::slip39,
-    ui::{
-        component::{
-            text::common::{TextBox, TextEdit},
-            Component, Event, EventCtx,
-        },
-        constant::WIDTH,
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        shape::{self, Renderer},
-        util::ResultExt,
-    },
+use super::super::super::component::keyboard::common::{
+    render_pending_marker, render_pill_shape, MultiTapKeyboard,
 };
-
-use super::super::{
-    super::component::{
-        keyboard::{
-            common::{render_pending_marker, render_pill_shape, MultiTapKeyboard},
-            mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
-        },
-        Button, ButtonContent, ButtonMsg,
-    },
-    theme,
+use super::super::super::component::keyboard::mnemonic::{
+    MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT,
 };
+use super::super::super::component::{Button, ButtonContent, ButtonMsg};
+use super::super::theme;
+use crate::strutil::ShortString;
+use crate::trezorhal::slip39;
+use crate::ui::component::text::common::{TextBox, TextEdit};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::constant::WIDTH;
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::ResultExt;
 
 const MAX_LENGTH: usize = 8;
 

@@ -1,17 +1,13 @@
-use crate::ui::{
-    component::{text::TextStyle, LineBreaking::BreakWordsNoHyphen},
-    display::Color,
-    util::include_icon,
-};
-
+use super::super::component::{ButtonStyle, ButtonStyleSheet};
+use super::super::fonts;
 use super::{
-    super::{
-        component::{ButtonStyle, ButtonStyleSheet},
-        fonts,
-    },
     BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK,
     ORANGE, RED, WHITE,
 };
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::LineBreaking::BreakWordsNoHyphen;
+use crate::ui::display::Color;
+use crate::ui::util::include_icon;
 
 pub const BLD_BG: Color = BLACK;
 pub const BLD_FG: Color = WHITE;

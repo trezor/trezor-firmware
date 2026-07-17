@@ -1,14 +1,10 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::{Offset, Rect},
-    shape::{Bar, Renderer},
-};
-
-use super::super::{
-    component::{Button, ButtonMsg},
-    theme::{self, GREY_EXTRA_DARK},
-};
 use heapless::Vec;
+
+use super::super::component::{Button, ButtonMsg};
+use super::super::theme::{self, GREY_EXTRA_DARK};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Offset, Rect};
+use crate::ui::shape::{Bar, Renderer};
 
 pub const MENU_MAX_ITEMS: usize = 4;
 

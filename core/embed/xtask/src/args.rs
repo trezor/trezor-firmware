@@ -1,6 +1,7 @@
+use std::process;
+
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use std::process;
 
 pub use crate::model::Model;
 
@@ -230,8 +231,10 @@ pub struct BuildArgs {
     #[arg(long)]
     pub log_stack_usage: bool,
 
-    /// Use blocking VCP writes, in order to allow reliable debug data transmission over VCP.
-    /// Disabled by default, to prevent debug firmware from getting stuck while writing log messages (if the host is not reading them).
+    /// Use blocking VCP writes, in order to allow reliable debug data
+    /// transmission over VCP. Disabled by default, to prevent debug
+    /// firmware from getting stuck while writing log messages (if the host
+    /// is not reading them).
     #[arg(long)]
     pub block_on_vcp: bool,
 

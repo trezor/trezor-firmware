@@ -1,10 +1,11 @@
-use crate::{
-    io::BinaryData,
-    trezorhal::uzlib::{ZlibInflate, UZLIB_WINDOW_SIZE},
-    ui::display::image::ToifInfo,
-};
 use core::cell::UnsafeCell;
-use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
+
+use without_alloc::alloc::LocalAllocLeakExt;
+use without_alloc::FixedVec;
+
+use crate::io::BinaryData;
+use crate::trezorhal::uzlib::{ZlibInflate, UZLIB_WINDOW_SIZE};
+use crate::ui::display::image::ToifInfo;
 
 struct ZlibCacheSlot<'a> {
     /// Decompression context for the current zdata.

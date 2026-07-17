@@ -1,17 +1,14 @@
-use crate::{
-    translations::TR,
-    ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
-        display::Color,
-        geometry::{Insets, Rect},
-        shape::Renderer,
-        util::Pager,
-    },
-};
-
 use super::{
     constant, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos,
 };
+use crate::translations::TR;
+use crate::ui::component::{
+    Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate,
+};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Insets, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 pub struct ButtonPage<T>
 where

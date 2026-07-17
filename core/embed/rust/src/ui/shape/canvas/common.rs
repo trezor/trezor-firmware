@@ -1,13 +1,7 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Point, Rect},
-};
-
-use super::super::{
-    utils::{circle_points, line_points, sin_f32},
-    Bitmap, BitmapFormat, BitmapView, Viewport,
-};
-
+use super::super::utils::{circle_points, line_points, sin_f32};
+use super::super::{Bitmap, BitmapFormat, BitmapView, Viewport};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Point, Rect};
 #[cfg(feature = "ui_blurring")]
 use crate::ui::shape::DrawingCache;
 

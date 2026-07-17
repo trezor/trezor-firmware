@@ -1,15 +1,10 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Rect},
-};
-
 use qrcodegen::QrCode;
-
-use super::{
-    utils::line_points, Bitmap, BitmapFormat, Canvas, DrawingCache, Renderer, Shape, ShapeClone,
-};
-
 use without_alloc::alloc::LocalAllocLeakExt;
+
+use super::utils::line_points;
+use super::{Bitmap, BitmapFormat, Canvas, DrawingCache, Renderer, Shape, ShapeClone};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Rect};
 
 const MAX_QRCODE_BYTES: usize = 400;
 

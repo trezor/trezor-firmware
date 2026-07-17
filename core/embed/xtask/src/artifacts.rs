@@ -1,11 +1,11 @@
-use anyhow::{Context, Result};
-use std::{
-    fs,
-    os::unix,
-    path::{Path, PathBuf},
-};
+use std::fs;
+use std::os::unix;
+use std::path::{Path, PathBuf};
 
-use crate::{args::BuildArgs, helpers};
+use anyhow::{Context, Result};
+
+use crate::args::BuildArgs;
+use crate::helpers;
 
 /// Returns whether a filesystem entry exists without following symlinks, so
 /// broken symlinks are still treated as present and can be replaced.

@@ -4,31 +4,27 @@ pub mod micropython;
 mod tests;
 mod time;
 
-use crate::{error::Error, micropython::obj::Obj, time::Instant};
-
-use core::{mem::replace, num::NonZeroU16};
-
-use heapless::{
-    deque::{Deque, DequeView},
-    linear_map::{Entry, LinearMap, LinearMapView},
-    Vec,
-};
-use spin::{Lazy, Mutex};
-
-use trezor_thp::{
-    channel::{
-        device::{Channel, ChannelIdAllocator, ChannelOpen, Mux},
-        PacketInResult, PairingState, Phase, MAX_CREDENTIAL_LEN, MAX_RETRANSMISSION_COUNT,
-        PUBKEY_LEN,
-    },
-    control_byte::ControlByte,
-    credential::CredentialVerifier,
-    error::TransportError,
-    ChannelIO, Error as ThpError,
-};
+use core::mem::replace;
+use core::num::NonZeroU16;
 
 use crypto::TrezorCrypto;
+use heapless::deque::{Deque, DequeView};
+use heapless::linear_map::{Entry, LinearMap, LinearMapView};
+use heapless::Vec;
+use spin::{Lazy, Mutex};
 use time::{least_recently_used, ChannelTiming};
+use trezor_thp::channel::device::{Channel, ChannelIdAllocator, ChannelOpen, Mux};
+use trezor_thp::channel::{
+    PacketInResult, PairingState, Phase, MAX_CREDENTIAL_LEN, MAX_RETRANSMISSION_COUNT, PUBKEY_LEN,
+};
+use trezor_thp::control_byte::ControlByte;
+use trezor_thp::credential::CredentialVerifier;
+use trezor_thp::error::TransportError;
+use trezor_thp::{ChannelIO, Error as ThpError};
+
+use crate::error::Error;
+use crate::micropython::obj::Obj;
+use crate::time::Instant;
 
 type TrezorMux = Mux<TrezorCrypto>;
 type TrezorChannelOpen = ChannelOpen<TrezorCredentialVerifier, TrezorCrypto>;

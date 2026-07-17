@@ -1,24 +1,16 @@
+use super::super::cshape::ScreenBorder;
+use super::super::theme::{
+    ACTION_BAR_HEIGHT, HEADER_HEIGHT, LED_RED, PADDING, RED, SIDE_INSETS, TEXT_NORMAL, TEXT_SMALL,
+    TEXT_SMALL_GREY, TEXT_SMALL_GREY_EXTRA_LIGHT, TEXT_SMALL_RED, TEXT_VERTICAL_SPACING,
+};
+use super::super::WAIT_FOR_RESTART_MESSAGE;
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Label, Never};
+use crate::ui::constant::SCREEN;
+use crate::ui::geometry::{Insets, Rect};
 #[cfg(feature = "rgb_led")]
 use crate::ui::led::LedState;
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Label, Never},
-        constant::SCREEN,
-        geometry::{Insets, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::super::{
-    cshape::ScreenBorder,
-    theme::{
-        ACTION_BAR_HEIGHT, HEADER_HEIGHT, LED_RED, PADDING, RED, SIDE_INSETS, TEXT_NORMAL,
-        TEXT_SMALL, TEXT_SMALL_GREY, TEXT_SMALL_GREY_EXTRA_LIGHT, TEXT_SMALL_RED,
-        TEXT_VERTICAL_SPACING,
-    },
-    WAIT_FOR_RESTART_MESSAGE,
-};
+use crate::ui::shape::Renderer;
 
 /// Full-screen component showing Eckhart RSOD. To keep it minimal, this screen
 /// does not use any other components.

@@ -1,12 +1,9 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    event::BLEEvent,
-    geometry::Rect,
-    shape::Renderer,
-};
-
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::event::BLEEvent;
+use crate::ui::geometry::Rect;
 #[cfg(feature = "rgb_led")]
 use crate::ui::led::{Effect, LedState};
+use crate::ui::shape::Renderer;
 
 pub enum BLEHandlerMode {
     /// Advertising without whitelist started, waiting for some host to respond
@@ -87,14 +84,10 @@ where
 #[cfg(feature = "micropython")]
 mod micropython {
     use super::*;
-    use crate::{
-        error::Error,
-        micropython::obj::Obj,
-        ui::layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED},
-        },
-    };
+    use crate::error::Error;
+    use crate::micropython::obj::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
+    use crate::ui::layout::result::{CANCELLED, CONFIRMED};
     impl<T> ComponentMsgObj for BLEHandler<T>
     where
         T: ComponentMsgObj,

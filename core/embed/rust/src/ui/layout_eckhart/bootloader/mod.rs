@@ -26,7 +26,6 @@ pub use connect::ConnectScreen;
 pub use pairing_finalization::PairingFinalizationScreen;
 #[cfg(feature = "ble")]
 pub use pairing_mode::PairingModeScreen;
+pub use welcome_screen::BldWelcomeScreen;
 #[cfg(feature = "ble")]
 pub use wireless_setup_screen::WirelessSetupScreen;
-
-pub use welcome_screen::BldWelcomeScreen;

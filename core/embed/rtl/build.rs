@@ -1,6 +1,6 @@
-use xbuild::{Result, WrapErr, bail, ensure};
-
 use std::process::Command;
+
+use xbuild::{Result, WrapErr, bail, ensure};
 
 fn main() -> Result<()> {
     xbuild::build(|lib| {

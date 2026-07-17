@@ -1,11 +1,8 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    geometry::{Alignment2D, Offset, Rect},
-    shape,
-    shape::Renderer,
-};
-
 use super::super::theme;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 const ICON_TOP_MARGIN: i16 = 12;
 

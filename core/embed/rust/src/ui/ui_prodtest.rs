@@ -1,9 +1,9 @@
 #[cfg(feature = "touch")]
-use crate::ui::{event::TouchEvent, geometry::Rect};
-#[cfg(feature = "touch")]
 use heapless::Vec;
 
 use crate::ui::component::Event;
+#[cfg(feature = "touch")]
+use crate::ui::{event::TouchEvent, geometry::Rect};
 
 pub trait ProdtestLayoutType {
     fn event(&mut self, event: Option<Event>) -> u32;

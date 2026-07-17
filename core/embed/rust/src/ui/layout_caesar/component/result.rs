@@ -1,11 +1,9 @@
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Label, Never, Pad},
-    constant::{screen, HEIGHT, WIDTH},
-    display::{Color, Icon},
-    geometry::{Alignment2D, Offset, Point, Rect},
-    shape,
-    shape::Renderer,
-};
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::constant::{screen, HEIGHT, WIDTH};
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 const MESSAGE_AREA_START: i16 = 24 + 11;
 const MESSAGE_AREA_START_2L: i16 = 24 + 7;

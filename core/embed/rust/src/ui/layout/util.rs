@@ -1,23 +1,15 @@
-use crate::{
-    error::{value_error, Error},
-    io::BinaryData,
-    micropython::{
-        buffer::{hexlify_bytes, StrBuffer},
-        gc::Gc,
-        list::List,
-        obj::Obj,
-        util::{iter_into_array, try_or_raise},
-    },
-    storage::{get_avatar_len, load_avatar},
-    strutil::TString,
-    ui::{
-        component::text::{
-            paragraphs::{Paragraph, ParagraphSource},
-            TextStyle,
-        },
-        util::set_animation_disabled,
-    },
-};
+use crate::error::{value_error, Error};
+use crate::io::BinaryData;
+use crate::micropython::buffer::{hexlify_bytes, StrBuffer};
+use crate::micropython::gc::Gc;
+use crate::micropython::list::List;
+use crate::micropython::obj::Obj;
+use crate::micropython::util::{iter_into_array, try_or_raise};
+use crate::storage::{get_avatar_len, load_avatar};
+use crate::strutil::TString;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
+use crate::ui::component::text::TextStyle;
+use crate::ui::util::set_animation_disabled;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "layout_bolt")] {

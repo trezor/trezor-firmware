@@ -1,17 +1,10 @@
-use crate::{
-    time::{Duration, Instant},
-    ui::{
-        component::{Component, Event, EventCtx},
-        event::ButtonEvent,
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
-
-use super::{
-    loader::{Loader, DEFAULT_DURATION_MS},
-    theme, ButtonContent, ButtonDetails, LoaderMsg, LoaderStyleSheet,
-};
+use super::loader::{Loader, DEFAULT_DURATION_MS};
+use super::{theme, ButtonContent, ButtonDetails, LoaderMsg, LoaderStyleSheet};
+use crate::time::{Duration, Instant};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::event::ButtonEvent;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 pub enum HoldToConfirmMsg {
     Confirmed,

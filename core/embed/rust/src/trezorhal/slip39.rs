@@ -1,4 +1,5 @@
-use core::{ffi::CStr, str};
+use core::ffi::CStr;
+use core::str;
 
 use super::ffi;
 

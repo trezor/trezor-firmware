@@ -7,52 +7,41 @@ pub mod welcome;
 pub mod pairing_finalization;
 
 use heapless::String;
-use ufmt::uwrite;
-
-use super::{
-    bootloader::{connect::Connect, welcome::Welcome},
-    component::{
-        bl_confirm::{Confirm, ConfirmTitle},
-        Button, ResultScreen, WelcomeScreen,
-    },
-    cshape::{render_loader, LoaderRange},
-    fonts,
-    theme::{
-        self,
-        bootloader::{
-            button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
-            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40,
-            DOWNLOAD32, FIRE32, FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE, TEXT_BOLD,
-            TEXT_NORMAL, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
-        },
-        FG,
-    },
-    UIBolt,
-};
-use crate::{
-    bootloader::run,
-    time::Duration,
-    trezorhal::time,
-    ui::{
-        component::Label,
-        display::{self, toif::Toif, Color, Icon, LOADER_MAX},
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        layout::simplified::show,
-        shape::{self, render_on_display},
-        ui_bootloader::BootloaderUI,
-        util::animation_disabled,
-        CommonUI,
-    },
-};
 use intro::Intro;
 use menu::Menu;
+use ufmt::uwrite;
 
+use super::bootloader::connect::Connect;
+use super::bootloader::welcome::Welcome;
+use super::component::bl_confirm::{Confirm, ConfirmTitle};
+use super::component::{Button, ResultScreen, WelcomeScreen};
+use super::cshape::{render_loader, LoaderRange};
+use super::theme::bootloader::{
+    button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
+    BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32,
+    FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL, TEXT_WIPE_BOLD,
+    TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+};
+use super::theme::{self, FG};
 #[cfg(feature = "ble")]
 use super::{
     bootloader::pairing_finalization::PairingFinalization,
     component::{confirm_pairing::ConfirmPairing, pairing_mode::PairingMode},
     theme::bootloader::{button_confirm_initial, button_initial},
 };
+use super::{fonts, UIBolt};
+use crate::bootloader::run;
+use crate::time::Duration;
+use crate::trezorhal::time;
+use crate::ui::component::Label;
+use crate::ui::display::toif::Toif;
+use crate::ui::display::{self, Color, Icon, LOADER_MAX};
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
+use crate::ui::layout::simplified::show;
+use crate::ui::shape::{self, render_on_display};
+use crate::ui::ui_bootloader::BootloaderUI;
+use crate::ui::util::animation_disabled;
+use crate::ui::CommonUI;
 
 pub type BootloaderString = String<128>;
 

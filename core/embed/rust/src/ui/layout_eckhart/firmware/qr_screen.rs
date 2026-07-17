@@ -1,19 +1,13 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label, Pad, Qr},
-        flow::Swipable,
-        geometry::{Alignment, Insets, Rect},
-        shape::Renderer,
-        util::Pager,
-    },
-};
-
-use super::super::{
-    component::{Button, ButtonMsg},
-    constant::SCREEN,
-    firmware::{theme, Header},
-};
+use super::super::component::{Button, ButtonMsg};
+use super::super::constant::SCREEN;
+use super::super::firmware::{theme, Header};
+use crate::strutil::TString;
+use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::{Component, Event, EventCtx, Label, Pad, Qr};
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{Alignment, Insets, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 pub enum QrMsg {
     Cancelled,

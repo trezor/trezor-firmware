@@ -1,7 +1,8 @@
-use crate::ui::{component::text::TextStyle, display::Color, util::include_icon};
-
 use super::super::fonts;
 pub use super::super::theme::{BLACK, WHITE};
+use crate::ui::component::text::TextStyle;
+use crate::ui::display::Color;
+use crate::ui::util::include_icon;
 
 pub const BLD_BG: Color = BLACK;
 pub const BLD_FG: Color = WHITE;

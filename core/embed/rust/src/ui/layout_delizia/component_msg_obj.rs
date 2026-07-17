@@ -6,24 +6,19 @@ use super::component::{
     PromptScreen, SelectWordCount, SelectWordCountMsg, StatusScreen, SwipeContent, SwipeUpScreen,
     SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
 };
-use crate::{
-    error::Error,
-    micropython::{gc::GcBox, obj::Obj},
-    ui::{
-        component::{paginated::Paginate, Component, Never},
-        flow::Swipable,
-        layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED},
-        },
-    },
-};
-
+use crate::error::Error;
+use crate::micropython::gc::GcBox;
+use crate::micropython::obj::Obj;
+use crate::ui::component::paginated::Paginate;
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
     Timeout,
 };
+use crate::ui::component::{Component, Never};
+use crate::ui::flow::Swipable;
+use crate::ui::layout::obj::ComponentMsgObj;
+use crate::ui::layout::result::{CANCELLED, CONFIRMED};
 
 impl TryFrom<SelectWordCountMsg> for Obj {
     type Error = Error;

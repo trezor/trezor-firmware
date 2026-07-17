@@ -1,33 +1,30 @@
 #![allow(unused_imports)]
 
-use super::ffi;
 use core::mem::{self, MaybeUninit};
 
-use crate::ui::component::Event;
 pub use ffi::{sysevents_t, syshandle_t};
 
+use super::ffi;
 #[cfg(feature = "ble")]
 use crate::trezorhal::ble::ble_parse_event;
-#[cfg(feature = "ble")]
-use crate::ui::event::BLEEvent;
-
-#[cfg(feature = "touch")]
-use crate::trezorhal::touch::touch_get_event;
-#[cfg(feature = "touch")]
-use crate::ui::event::TouchEvent;
-
-#[cfg(feature = "power_manager")]
-use crate::trezorhal::power_manager::pm_parse_event;
-#[cfg(feature = "power_manager")]
-use crate::ui::event::PMEvent;
-
 #[cfg(feature = "button")]
 use crate::trezorhal::button::button_parse_event;
 #[cfg(feature = "button")]
 use crate::trezorhal::ffi::button_get_event;
+#[cfg(feature = "power_manager")]
+use crate::trezorhal::power_manager::pm_parse_event;
 use crate::trezorhal::time::ticks_ms;
+#[cfg(feature = "touch")]
+use crate::trezorhal::touch::touch_get_event;
+use crate::ui::component::Event;
+#[cfg(feature = "ble")]
+use crate::ui::event::BLEEvent;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
+#[cfg(feature = "power_manager")]
+use crate::ui::event::PMEvent;
+#[cfg(feature = "touch")]
+use crate::ui::event::TouchEvent;
 
 #[derive(PartialEq, Debug, Eq, Clone, Copy)]
 pub enum Syshandle {

@@ -1,14 +1,9 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad},
-    constant::screen,
-    geometry::{Offset, Point, Rect},
-    shape::{self, Renderer},
-};
-
-use super::{
-    super::theme::{BLACK, GREY, WHITE},
-    fonts,
-};
+use super::super::theme::{BLACK, GREY, WHITE};
+use super::fonts;
+use crate::ui::component::{Component, Event, EventCtx, Never, Pad};
+use crate::ui::constant::screen;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 const TEXT_ORIGIN: Point = Point::new(0, 105);
 const STRIDE: i16 = 22;

@@ -1,18 +1,13 @@
-use crate::{
-    error::{value_error, Error},
-    io::BinaryData,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{Component, Event, EventCtx, Label},
-        constant::SCREEN,
-        display::image::ImageInfo,
-        geometry::{Insets, Rect},
-        shape::{self, Renderer},
-    },
-};
-
 use super::{check_homescreen_format, theme, ActionBar, ActionBarMsg, Header};
+use crate::error::{value_error, Error};
+use crate::io::BinaryData;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::constant::SCREEN;
+use crate::ui::display::image::ImageInfo;
+use crate::ui::geometry::{Insets, Rect};
+use crate::ui::shape::{self, Renderer};
 
 /// Full-screen component for confirming a new homescreen image. If the image is
 /// empty, the user is asked to confirm the default homescreen.

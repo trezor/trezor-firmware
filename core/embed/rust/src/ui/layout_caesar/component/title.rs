@@ -1,15 +1,10 @@
-use crate::{
-    strutil::TString,
-    time::Instant,
-    ui::{
-        component::{Component, Event, EventCtx, Marquee, Never},
-        geometry::{Alignment, Offset, Rect},
-        shape,
-        shape::Renderer,
-    },
-};
-
 use super::super::theme;
+use crate::strutil::TString;
+use crate::time::Instant;
+use crate::ui::component::{Component, Event, EventCtx, Marquee, Never};
+use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 pub struct Title {
     area: Rect,

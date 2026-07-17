@@ -1,34 +1,24 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        button_request::{ButtonRequest, ButtonRequestCode},
-        component::{
-            button_request::ButtonRequestExt,
-            text::{
-                op::OpTextLayout,
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            },
-            ComponentExt, FormattedText, MsgMap, SendButtonRequest,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::{Direction, LinearPlacement},
-        layout::util::RecoveryType,
-    },
+use super::super::component::Button;
+use super::super::firmware::{
+    ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
+    VerticalMenuScreenMsg,
 };
-
-use super::super::{
-    component::Button,
-    firmware::{
-        ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
-        VerticalMenuScreen, VerticalMenuScreenMsg,
-    },
-    theme::{self, gradient::Gradient},
+use super::super::theme::gradient::Gradient;
+use super::super::theme::{self};
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
+use crate::ui::component::button_request::ButtonRequestExt;
+use crate::ui::component::text::op::OpTextLayout;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
 };
+use crate::ui::component::{ComponentExt, FormattedText, MsgMap, SendButtonRequest};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::{Direction, LinearPlacement};
+use crate::ui::layout::util::RecoveryType;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ContinueRecoveryBeforeShares {

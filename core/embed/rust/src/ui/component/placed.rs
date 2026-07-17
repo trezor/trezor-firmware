@@ -1,10 +1,7 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::{Alignment, Alignment2D, Axis, Grid, GridCellSpan, Insets, Offset, Rect},
-    shape::Renderer,
-};
-
 use super::paginated::SinglePage;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment, Alignment2D, Axis, Grid, GridCellSpan, Insets, Offset, Rect};
+use crate::ui::shape::Renderer;
 
 pub struct GridPlaced<T> {
     inner: T,

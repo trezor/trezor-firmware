@@ -1,11 +1,8 @@
-use crate::ui::{
-    button_request::ButtonRequest,
-    component::{Component, Event, EventCtx},
-    geometry::Rect,
-};
-
+use crate::ui::button_request::ButtonRequest;
 #[cfg(all(feature = "micropython", feature = "touch"))]
 use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::Rect;
 
 /// Component that sends a ButtonRequest after receiving Event::Attach. The
 /// request is either sent only once or on every Event::Attach configured by

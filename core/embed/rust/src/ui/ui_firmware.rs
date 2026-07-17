@@ -1,16 +1,15 @@
-use crate::{
-    error::Error,
-    io::BinaryData,
-    micropython::{buffer::StrBuffer, gc::Gc, list::List, obj::Obj},
-    strutil::TString,
-    ui::notification::Notification,
-};
 use heapless::Vec;
 
-use super::layout::{
-    obj::{LayoutMaybeTrace, LayoutObj},
-    util::RecoveryType,
-};
+use super::layout::obj::{LayoutMaybeTrace, LayoutObj};
+use super::layout::util::RecoveryType;
+use crate::error::Error;
+use crate::io::BinaryData;
+use crate::micropython::buffer::StrBuffer;
+use crate::micropython::gc::Gc;
+use crate::micropython::list::List;
+use crate::micropython::obj::Obj;
+use crate::strutil::TString;
+use crate::ui::notification::Notification;
 
 pub const MAX_CHECKLIST_ITEMS: usize = 3;
 pub const MAX_WORD_QUIZ_ITEMS: usize = 3;

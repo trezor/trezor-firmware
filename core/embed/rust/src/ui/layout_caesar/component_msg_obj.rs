@@ -5,22 +5,14 @@ use super::component::{
     ConfirmHomescreen, Flow, Frame, Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry,
     PinEntry, Progress, ScrollableFrame, ShowMore, WordlistEntry,
 };
-use crate::{
-    error::Error,
-    micropython::obj::Obj,
-    ui::{
-        component::{
-            base::Component,
-            paginated::{PageMsg, Paginate},
-            text::paragraphs::{ParagraphSource, Paragraphs},
-            Never, Timeout,
-        },
-        layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED, INFO},
-        },
-    },
-};
+use crate::error::Error;
+use crate::micropython::obj::Obj;
+use crate::ui::component::base::Component;
+use crate::ui::component::paginated::{PageMsg, Paginate};
+use crate::ui::component::text::paragraphs::{ParagraphSource, Paragraphs};
+use crate::ui::component::{Never, Timeout};
+use crate::ui::layout::obj::ComponentMsgObj;
+use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
 
 impl From<CancelConfirmMsg> for Obj {
     fn from(value: CancelConfirmMsg) -> Self {

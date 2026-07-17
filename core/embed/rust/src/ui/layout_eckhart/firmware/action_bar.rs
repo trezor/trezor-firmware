@@ -1,22 +1,14 @@
-use crate::{
-    strutil::TString,
-    time::Duration,
-    translations::TR,
-    ui::{
-        component::{Component, Event, EventCtx, Timeout},
-        geometry::{Alignment2D, Insets, Offset, Rect},
-        shape::{self, Renderer},
-        util::{animation_disabled, Pager},
-    },
-};
-
+use super::super::component::{Button, ButtonMsg};
+use super::{theme, HoldToConfirmAnim};
+use crate::strutil::TString;
+use crate::time::Duration;
+use crate::translations::TR;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{self, HapticEffect};
-
-use super::{
-    super::component::{Button, ButtonMsg},
-    theme, HoldToConfirmAnim,
-};
+use crate::ui::component::{Component, Event, EventCtx, Timeout};
+use crate::ui::geometry::{Alignment2D, Insets, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::{animation_disabled, Pager};
 
 /// Component for control buttons in the bottom of the screen.
 pub struct ActionBar {

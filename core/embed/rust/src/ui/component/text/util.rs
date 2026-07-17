@@ -1,16 +1,9 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        display::{Color, Font},
-        geometry::{Alignment, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::{
-    layout::{LayoutFit, TextLayout},
-    TextStyle,
-};
+use super::layout::{LayoutFit, TextLayout};
+use super::TextStyle;
+use crate::strutil::TString;
+use crate::ui::display::{Color, Font};
+use crate::ui::geometry::{Alignment, Rect};
+use crate::ui::shape::Renderer;
 
 /// Draws longer multiline texts inside an area.
 /// Splits lines on word boundaries/whitespace.

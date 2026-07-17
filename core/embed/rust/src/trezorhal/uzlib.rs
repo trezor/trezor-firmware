@@ -1,6 +1,10 @@
+use core::cell::RefCell;
+use core::marker::PhantomData;
+use core::mem::MaybeUninit;
+use core::ptr;
+
 use super::ffi;
 use crate::io::BinaryData;
-use core::{cell::RefCell, marker::PhantomData, mem::MaybeUninit, ptr};
 
 pub const UZLIB_WINDOW_SIZE: usize = 1 << 10;
 pub use ffi::uzlib_uncomp;

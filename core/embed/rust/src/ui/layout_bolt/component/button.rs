@@ -1,22 +1,18 @@
+use super::theme;
+use crate::strutil::TString;
+use crate::time::ShortDuration;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{self, HapticEffect};
-use crate::{
-    strutil::TString,
-    time::ShortDuration,
-    ui::{
-        component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, Timer,
-        },
-        constant,
-        display::{toif::Icon, Color, Font},
-        event::TouchEvent,
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        shape::{self, Renderer},
-        util::split_two_lines,
-    },
+use crate::ui::component::{
+    Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, Timer,
 };
-
-use super::theme;
+use crate::ui::constant;
+use crate::ui::display::toif::Icon;
+use crate::ui::display::{Color, Font};
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment2D, Insets, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::split_two_lines;
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum ButtonMsg {

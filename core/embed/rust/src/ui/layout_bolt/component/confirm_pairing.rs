@@ -1,25 +1,18 @@
-use super::{
-    super::{
-        constant::WIDTH,
-        theme::bootloader::{BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING, TITLE_AREA},
-    },
-    Button,
-    ButtonMsg::Clicked,
+use super::super::constant::WIDTH;
+use super::super::fonts;
+use super::super::theme::bootloader::{
+    BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING, TITLE_AREA,
 };
-use crate::{
-    strutil::format_i64,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Label, Pad},
-        constant,
-        display::Color,
-        event::BLEEvent,
-        geometry::{Offset, Point, Rect},
-        shape,
-        shape::Renderer,
-    },
-};
-
-use super::{super::fonts, theme::WHITE};
+use super::theme::WHITE;
+use super::Button;
+use super::ButtonMsg::Clicked;
+use crate::strutil::format_i64;
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
+use crate::ui::display::Color;
+use crate::ui::event::BLEEvent;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::{constant, shape};
 
 const ICON_TOP: i16 = 17;
 const CONTENT_START: i16 = 72;

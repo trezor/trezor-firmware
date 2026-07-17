@@ -1,6 +1,6 @@
-use super::ffi;
-
 use num_traits::FromPrimitive;
+
+use super::ffi;
 
 #[derive(PartialEq, Debug, Eq, Clone, Copy, FromPrimitive, ToPrimitive)]
 pub enum BootloaderWFResult {

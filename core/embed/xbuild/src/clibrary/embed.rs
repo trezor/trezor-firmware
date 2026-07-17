@@ -1,18 +1,13 @@
 use std::path::Path;
 
-use color_eyre::{
-    Result,
-    eyre::{WrapErr, ensure},
-};
+use color_eyre::Result;
+use color_eyre::eyre::{WrapErr, ensure};
+use zlib_rs::{DeflateConfig, ReturnCode, compress_bound, compress_slice};
 
 use super::CLibrary;
+use crate::dep_tracking::{run_command, run_if_changed};
 use crate::helpers::{derive_output_path, ensure_parent_directory, path_from_env};
-use crate::{
-    dep_tracking::{run_command, run_if_changed},
-    is_rust_analyzer,
-};
-
-use zlib_rs::{DeflateConfig, ReturnCode, compress_bound, compress_slice};
+use crate::is_rust_analyzer;
 
 impl CLibrary {
     /// Embeds a binary file into the library by converting it into an object
@@ -93,7 +88,8 @@ impl CLibrary {
         self.embed_binary(compressed_path, section)
     }
 
-    /// Compresses a file using zlib and write the compressed data to an output file.
+    /// Compresses a file using zlib and write the compressed data to an output
+    /// file.
     fn compress_file(&self, input: impl AsRef<Path>, output: impl AsRef<Path>) -> Result<()> {
         let input = input.as_ref();
         let output = output.as_ref();

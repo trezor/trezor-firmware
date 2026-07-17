@@ -1,25 +1,17 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{text::op::OpTextLayout, ComponentExt, FormattedText},
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::{Alignment, Direction},
-    },
+use super::super::component::Button;
+use super::super::firmware::{
+    Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
+    VerticalMenuScreenMsg,
 };
-
-use super::super::{
-    component::Button,
-    firmware::{
-        Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
-        VerticalMenuScreenMsg,
-    },
-    fonts, theme,
-};
+use super::super::{fonts, theme};
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::text::op::OpTextLayout;
+use crate::ui::component::{ComponentExt, FormattedText};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::{Alignment, Direction};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ShowPairingCode {

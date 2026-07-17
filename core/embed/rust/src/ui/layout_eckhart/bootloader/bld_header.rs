@@ -1,18 +1,12 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Label},
-        display::{Color, Icon},
-        geometry::{Alignment2D, Insets, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::super::{
-    component::{Button, ButtonContent, ButtonMsg, FuelGauge},
-    constant,
-    theme::{self, bootloader::text_title},
-};
+use super::super::component::{Button, ButtonContent, ButtonMsg, FuelGauge};
+use super::super::constant;
+use super::super::theme::bootloader::text_title;
+use super::super::theme::{self};
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Alignment2D, Insets, Rect};
+use crate::ui::shape::{self, Renderer};
 
 const BUTTON_EXPAND_BORDER: i16 = 32;
 

@@ -1,17 +1,12 @@
-use crate::{
-    trezorhal::ble,
-    ui::{
-        component::{Component, Event, EventCtx},
-        geometry::{Alignment, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::{
-    super::{component::Button, cshape::ScreenBorder, theme},
-    bld_menu::BldMenuSelectionMsg,
-    BldHeader, BldHeaderMsg, BldMenu,
-};
+use super::super::component::Button;
+use super::super::cshape::ScreenBorder;
+use super::super::theme;
+use super::bld_menu::BldMenuSelectionMsg;
+use super::{BldHeader, BldHeaderMsg, BldMenu};
+use crate::trezorhal::ble;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment, Rect};
+use crate::ui::shape::Renderer;
 
 const BUTTON_AREA_START: i16 = 56;
 const BUTTON_SPACING: i16 = 8;

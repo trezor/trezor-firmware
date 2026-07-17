@@ -1,12 +1,10 @@
-use crate::ui::{
-    component::{base::ComponentExt, Child, Component, Event, EventCtx},
-    constant::screen,
-    event::TouchEvent,
-    geometry::{Grid, Insets, Point, Rect},
-    shape::{self, Renderer},
-};
-
 use super::{theme, Button, ButtonMsg};
+use crate::ui::component::base::ComponentExt;
+use crate::ui::component::{Child, Component, Event, EventCtx};
+use crate::ui::constant::screen;
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Grid, Insets, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 pub enum NumberInputSliderDialogMsg {
     Changed(u8),

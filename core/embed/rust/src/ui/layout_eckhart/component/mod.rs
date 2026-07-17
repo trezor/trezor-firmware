@@ -15,11 +15,9 @@ pub use update_screen::UpdateScreen;
 pub use welcome_screen::WelcomeScreen;
 
 use super::{fonts, theme};
-use crate::ui::{
-    display::Font,
-    geometry::{Alignment2D, Offset, Point},
-    shape::{self, Renderer},
-};
+use crate::ui::display::Font;
+use crate::ui::geometry::{Alignment2D, Offset, Point};
+use crate::ui::shape::{self, Renderer};
 
 pub fn render_logo<'s>(target: &mut impl Renderer<'s>) {
     const TEXT_ORIGIN: Point = Point::new(24, 76);

@@ -1,5 +1,4 @@
 use crate::error::Error;
-
 #[cfg(feature = "micropython")]
 use crate::micropython::{buffer::get_buffer, gc::Gc, obj::Obj};
 

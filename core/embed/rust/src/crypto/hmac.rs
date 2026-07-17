@@ -2,10 +2,8 @@ use core::pin::Pin;
 
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use super::{
-    ffi,
-    memory::{init_ctx, Memory},
-};
+use super::ffi;
+use super::memory::{init_ctx, Memory};
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
@@ -52,9 +50,8 @@ pub fn digest(key: &[u8], data: &[u8]) -> Digest {
 
 #[cfg(test)]
 mod test {
-    use crate::strutil::hexlify;
-
     use super::*;
+    use crate::strutil::hexlify;
 
     const HMAC_SHA256_EMPTY: &[u8] =
         b"b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad";

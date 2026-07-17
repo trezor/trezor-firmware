@@ -1,30 +1,22 @@
-use crate::{
-    io::BinaryData,
-    strutil::TString,
-    time::{Duration, Instant},
-    translations::TR,
-    trezorhal::usb::usb_configured,
-    ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Pad, Timer},
-        display::{
-            image::{ImageInfo, ToifFormat},
-            toif::Icon,
-            Color,
-        },
-        event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
-        layout::util::get_user_custom_image,
-        notification::{Notification, NotificationLevel},
-        shape::{self, Renderer},
-    },
-};
-
+use super::super::theme::IMAGE_HOMESCREEN;
+use super::super::{constant, fonts};
+use super::{theme, Loader, LoaderMsg};
+use crate::io::BinaryData;
+use crate::strutil::TString;
+use crate::time::{Duration, Instant};
+use crate::translations::TR;
+use crate::trezorhal::usb::usb_configured;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, Pad, Timer};
 use crate::ui::constant::{HEIGHT, WIDTH};
-
-use super::{
-    super::{constant, fonts, theme::IMAGE_HOMESCREEN},
-    theme, Loader, LoaderMsg,
-};
+use crate::ui::display::image::{ImageInfo, ToifFormat};
+use crate::ui::display::toif::Icon;
+use crate::ui::display::Color;
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect};
+use crate::ui::layout::util::get_user_custom_image;
+use crate::ui::notification::{Notification, NotificationLevel};
+use crate::ui::shape::{self, Renderer};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();

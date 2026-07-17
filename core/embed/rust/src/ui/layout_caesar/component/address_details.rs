@@ -1,24 +1,19 @@
 use heapless::Vec;
 
-use crate::{
-    error::Error,
-    micropython::buffer::StrBuffer,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Child, Component, Event, EventCtx, Pad, Paginate, Qr,
-        },
-        geometry::Rect,
-        layout::util::MAX_XPUBS,
-        shape::Renderer,
-    },
-};
-
 use super::{
     theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, Frame,
 };
+use crate::error::Error;
+use crate::micropython::buffer::StrBuffer;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
+};
+use crate::ui::component::{Child, Component, Event, EventCtx, Pad, Paginate, Qr};
+use crate::ui::geometry::Rect;
+use crate::ui::layout::util::MAX_XPUBS;
+use crate::ui::shape::Renderer;
 
 const QR_BORDER: i16 = 3;
 

@@ -1,21 +1,13 @@
+use super::bumps;
+use crate::trezorhal::display;
+use crate::ui::display::Color;
+use crate::ui::geometry::Offset;
+use crate::ui::shape::render::ScopedRenderer;
+use crate::ui::shape::{BasicCanvas, DirectRenderer, DrawingCache, Rgba8888Canvas, Viewport};
 #[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
 use crate::ui::{CommonUI, ModelUI};
-use crate::{
-    trezorhal::display,
-    ui::{
-        display::Color,
-        geometry::Offset,
-        shape::{
-            render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Rgba8888Canvas,
-            Viewport,
-        },
-    },
-};
-
 #[cfg(feature = "ui_performance_overlay")]
 use crate::{trezorhal::time, ui::PerformanceOverlay};
-
-use super::bumps;
 
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgba8888Canvas<'alloc>>;
 

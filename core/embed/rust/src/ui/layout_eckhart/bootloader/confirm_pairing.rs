@@ -1,20 +1,15 @@
-use crate::{
-    strutil::{format_pairing_code, ShortString},
-    trezorhal::ble::PAIRING_CODE_LEN,
-    ui::{
-        component::{Component, Event, EventCtx, Label},
-        constant::SCREEN,
-        display::Font,
-        event::BLEEvent,
-        geometry::{Alignment, Offset, Point, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::{
-    super::{component::Button, cshape::ScreenBorder, fonts, theme},
-    BldActionBar, BldActionBarMsg, BldHeader,
-};
+use super::super::component::Button;
+use super::super::cshape::ScreenBorder;
+use super::super::{fonts, theme};
+use super::{BldActionBar, BldActionBarMsg, BldHeader};
+use crate::strutil::{format_pairing_code, ShortString};
+use crate::trezorhal::ble::PAIRING_CODE_LEN;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::constant::SCREEN;
+use crate::ui::display::Font;
+use crate::ui::event::BLEEvent;
+use crate::ui::geometry::{Alignment, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 #[derive(Copy, Clone, ToPrimitive)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]

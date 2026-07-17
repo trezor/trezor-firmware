@@ -1,9 +1,7 @@
-use crate::ui::{
-    component::{Component, ComponentExt, Event, EventCtx, Pad},
-    display::Color,
-    geometry::Rect,
-    shape::Renderer,
-};
+use crate::ui::component::{Component, ComponentExt, Event, EventCtx, Pad};
+use crate::ui::display::Color;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 pub struct Maybe<T> {
     inner: T,

@@ -1,25 +1,17 @@
-use super::super::{
-    fonts,
-    theme::{
-        bootloader::{START_URL, WELCOME_COLOR},
-        GREY_MEDIUM, WHITE,
-    },
-};
-use crate::ui::{
-    component::{Component, Event, EventCtx, Pad},
-    constant::screen,
-    display::{toif::Toif, Icon},
-    geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-    shape::{self, Renderer},
-};
-
-use super::super::{
-    component::Button,
-    theme::bootloader::{button_initial, CORNER_BUTTON_AREA, MENU32},
-};
-
+use super::super::component::Button;
 #[cfg(feature = "power_manager")]
 use super::super::component::ButtonMsg::Clicked;
+use super::super::fonts;
+use super::super::theme::bootloader::{
+    button_initial, CORNER_BUTTON_AREA, MENU32, START_URL, WELCOME_COLOR,
+};
+use super::super::theme::{GREY_MEDIUM, WHITE};
+use crate::ui::component::{Component, Event, EventCtx, Pad};
+use crate::ui::constant::screen;
+use crate::ui::display::toif::Toif;
+use crate::ui::display::Icon;
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]

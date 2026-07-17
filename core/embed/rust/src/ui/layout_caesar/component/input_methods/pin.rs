@@ -1,22 +1,18 @@
-use crate::{
-    strutil::{ShortString, TString},
-    time::Duration,
-    translations::TR,
-    trezorhal::random,
-    ui::{
-        component::{
-            text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx, Timer,
-        },
-        display::Icon,
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
-
+use super::super::super::fonts;
+use super::super::title::Title;
 use super::super::{
-    super::fonts, theme, title::Title, ButtonDetails, ButtonLayout, CancelConfirmMsg,
-    ChangingTextLine, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
+    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceControls,
+    ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
+use crate::strutil::{ShortString, TString};
+use crate::time::Duration;
+use crate::translations::TR;
+use crate::trezorhal::random;
+use crate::ui::component::text::common::TextBox;
+use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Timer};
+use crate::ui::display::Icon;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 #[derive(Clone, Copy)]
 enum PinAction {

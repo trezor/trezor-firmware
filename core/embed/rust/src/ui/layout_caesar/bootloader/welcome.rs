@@ -1,14 +1,9 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad},
-    geometry::{Alignment, Offset, Rect},
-    shape,
-    shape::Renderer,
-};
-
-use super::{
-    super::theme::bootloader::{BLD_BG, BLD_FG},
-    fonts,
-};
+use super::super::theme::bootloader::{BLD_BG, BLD_FG};
+use super::fonts;
+use crate::ui::component::{Component, Event, EventCtx, Never, Pad};
+use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 pub struct Welcome {
     bg: Pad,

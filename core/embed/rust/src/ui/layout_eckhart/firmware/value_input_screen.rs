@@ -1,24 +1,16 @@
-use crate::{
-    strutil::{self, plural_form, ShortString, TString},
-    time::Duration,
-    translations::TR,
-    ui::{
-        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label, Maybe, Timer},
-        flow::Swipable,
-        geometry::{Alignment, Insets, Offset, Rect},
-        shape::{self, Renderer},
-        util::Pager,
-    },
-};
-
-use super::{
-    super::{
-        super::constant::SCREEN,
-        component::{Button, ButtonMsg},
-        fonts, theme,
-    },
-    ActionBar, ActionBarMsg, Header, HeaderMsg,
-};
+use super::super::super::constant::SCREEN;
+use super::super::component::{Button, ButtonMsg};
+use super::super::{fonts, theme};
+use super::{ActionBar, ActionBarMsg, Header, HeaderMsg};
+use crate::strutil::{self, plural_form, ShortString, TString};
+use crate::time::Duration;
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::{Component, Event, EventCtx, Label, Maybe, Timer};
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::Pager;
 
 pub enum ValueInputScreenMsg {
     Cancelled,
@@ -525,7 +517,8 @@ impl DurationInput {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::super::constant::SCREEN, *};
+    use super::super::super::constant::SCREEN;
+    use super::*;
 
     #[test]
     fn test_component_heights_fit_screen() {

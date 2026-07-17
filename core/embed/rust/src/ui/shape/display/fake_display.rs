@@ -1,7 +1,6 @@
-use crate::ui::{
-    display::Color,
-    shape::{render::ScopedRenderer, DirectRenderer, Mono8Canvas, Viewport},
-};
+use crate::ui::display::Color;
+use crate::ui::shape::render::ScopedRenderer;
+use crate::ui::shape::{DirectRenderer, Mono8Canvas, Viewport};
 
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Mono8Canvas<'alloc>>;
 

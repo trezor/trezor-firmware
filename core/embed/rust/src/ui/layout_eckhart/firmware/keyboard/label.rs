@@ -1,32 +1,19 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            text::{
-                common::TextBox,
-                layout::{LayoutFit, LineBreaking},
-                TextStyle,
-            },
-            Component, Event, EventCtx, TextLayout,
-        },
-        event::TouchEvent,
-        geometry::{Alignment, Insets, Offset, Rect},
-        shape::{Bar, Renderer, Text},
-        util::long_line_content_with_ellipsis,
-    },
+use super::super::constant::SCREEN;
+use super::super::keyboard::common::{
+    render_pending_marker, MultiTapKeyboard, KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS,
+    SHOWN_INSETS,
 };
-
-use super::super::{
-    constant::SCREEN,
-    keyboard::{
-        common::{
-            render_pending_marker, MultiTapKeyboard, KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS,
-            SHOWN_INSETS,
-        },
-        keypad::{ButtonState, KeypadState},
-    },
-    theme, StringInput, StringInputMsg,
-};
+use super::super::keyboard::keypad::{ButtonState, KeypadState};
+use super::super::{theme, StringInput, StringInputMsg};
+use crate::strutil::TString;
+use crate::ui::component::text::common::TextBox;
+use crate::ui::component::text::layout::{LayoutFit, LineBreaking};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, TextLayout};
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
+use crate::ui::shape::{Bar, Renderer, Text};
+use crate::ui::util::long_line_content_with_ellipsis;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]

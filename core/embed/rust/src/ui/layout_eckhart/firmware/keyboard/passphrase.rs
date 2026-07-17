@@ -1,34 +1,21 @@
-use crate::{
-    strutil::TString,
-    time::Duration,
-    ui::{
-        component::{
-            text::{
-                common::TextBox,
-                layout::{LayoutFit, LineBreaking},
-                TextStyle,
-            },
-            Component, Event, EventCtx, TextLayout, Timer,
-        },
-        display::Icon,
-        event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        shape::{Bar, Renderer, Text, ToifImage},
-        util::DisplayStyle,
-    },
+use super::super::constant::SCREEN;
+use super::super::keyboard::common::{
+    render_pending_marker, MultiTapKeyboard, FADING_ICON_COLORS, FADING_ICON_COUNT,
+    KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS, SHOWN_INSETS,
 };
-
-use super::super::{
-    constant::SCREEN,
-    keyboard::{
-        common::{
-            render_pending_marker, MultiTapKeyboard, FADING_ICON_COLORS, FADING_ICON_COUNT,
-            KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS, SHOWN_INSETS,
-        },
-        keypad::{ButtonState, KeypadState},
-    },
-    theme, StringInput, StringInputMsg,
-};
+use super::super::keyboard::keypad::{ButtonState, KeypadState};
+use super::super::{theme, StringInput, StringInputMsg};
+use crate::strutil::TString;
+use crate::time::Duration;
+use crate::ui::component::text::common::TextBox;
+use crate::ui::component::text::layout::{LayoutFit, LineBreaking};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, TextLayout, Timer};
+use crate::ui::display::Icon;
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Rect};
+use crate::ui::shape::{Bar, Renderer, Text, ToifImage};
+use crate::ui::util::DisplayStyle;
 
 pub struct PassphraseInput {
     area: Rect,

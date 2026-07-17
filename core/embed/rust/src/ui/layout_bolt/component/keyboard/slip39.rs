@@ -1,27 +1,16 @@
 use core::iter;
 
-use crate::{
-    strutil::ShortString,
-    trezorhal::slip39,
-    ui::{
-        component::{
-            text::common::{TextBox, TextEdit},
-            Component, Event, EventCtx,
-        },
-        geometry::{Alignment2D, Offset, Rect},
-        shape::{self, Renderer},
-        util::ResultExt,
-    },
-};
-
-use super::super::{
-    super::theme,
-    keyboard::{
-        common::{render_pending_marker, MultiTapKeyboard},
-        mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
-    },
-    Button, ButtonContent, ButtonMsg,
-};
+use super::super::super::theme;
+use super::super::keyboard::common::{render_pending_marker, MultiTapKeyboard};
+use super::super::keyboard::mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT};
+use super::super::{Button, ButtonContent, ButtonMsg};
+use crate::strutil::ShortString;
+use crate::trezorhal::slip39;
+use crate::ui::component::text::common::{TextBox, TextEdit};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::ResultExt;
 
 const MAX_LENGTH: usize = 8;
 

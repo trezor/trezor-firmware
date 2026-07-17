@@ -1,9 +1,11 @@
+use minicbor::data::Type;
+use minicbor::{decode, Decoder, Encoder};
+
 use super::{
     receiver_acquire, receiver_release, send_request, wait_for_response, MsgType, SmpBuffer,
     SmpHeader, SMP_CMD_ID_IMAGE_STATE, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_READ,
 };
 use crate::time::Duration;
-use minicbor::{data::Type, decode, Decoder, Encoder};
 
 /// MCUboot-compatible version structure matching image header format
 #[derive(Clone, Copy, Debug)]

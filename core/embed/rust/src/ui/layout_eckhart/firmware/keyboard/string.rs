@@ -1,25 +1,17 @@
-use crate::{
-    strutil::{ShortString, TString},
-    ui::{
-        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label, Swipe},
-        flow::Swipable,
-        geometry::{Alignment, Direction, Insets, Rect},
-        shape::Renderer,
-        util::Pager,
-    },
+use super::super::super::component::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet};
+use super::super::constant::SCREEN;
+use super::super::keyboard::common::{
+    KeyboardLayout, INPUT_TOUCH_HEIGHT, KEYBOARD_PROMPT_INSETS, KEYPAD_VISIBLE_HEIGHT,
 };
-
-use super::super::{
-    super::component::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
-    constant::SCREEN,
-    keyboard::{
-        common::{
-            KeyboardLayout, INPUT_TOUCH_HEIGHT, KEYBOARD_PROMPT_INSETS, KEYPAD_VISIBLE_HEIGHT,
-        },
-        keypad::{Keypad, KeypadButton, KeypadMsg, KeypadState},
-    },
-    theme,
-};
+use super::super::keyboard::keypad::{Keypad, KeypadButton, KeypadMsg, KeypadState};
+use super::super::theme;
+use crate::strutil::{ShortString, TString};
+use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::{Component, Event, EventCtx, Label, Swipe};
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{Alignment, Direction, Insets, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 pub enum StringKeyboardMsg {
     Confirmed(ShortString),

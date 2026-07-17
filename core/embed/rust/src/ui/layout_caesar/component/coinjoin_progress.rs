@@ -1,22 +1,15 @@
 use core::mem;
 
-use crate::{
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            base::Never,
-            text::util::{text_multiline, text_multiline_bottom},
-            Component, Event, EventCtx,
-        },
-        geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        shape,
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
-
 use super::super::{cshape, fonts, theme};
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::base::Never;
+use crate::ui::component::text::util::{text_multiline, text_multiline_bottom};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
 
 const FOOTER_TEXT_MARGIN: i16 = 8;
 const LOADER_OFFSET: i16 = -15;

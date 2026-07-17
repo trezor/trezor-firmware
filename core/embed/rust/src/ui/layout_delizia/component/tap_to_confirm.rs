@@ -1,20 +1,16 @@
-use crate::{
-    time::Duration,
-    ui::{
-        component::{Component, Event, EventCtx},
-        display::{toif::Icon, Color},
-        geometry::{Alignment2D, Offset, Rect},
-        lerp::Lerp,
-        shape,
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
+use pareen;
 
 use super::{theme, Button, ButtonContent, ButtonMsg};
-
-use crate::{time::Stopwatch, ui::constant::screen};
-use pareen;
+use crate::time::{Duration, Stopwatch};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::constant::screen;
+use crate::ui::display::toif::Icon;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
 
 #[derive(Default, Clone)]
 struct TapToConfirmAnim {

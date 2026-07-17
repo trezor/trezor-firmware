@@ -3,16 +3,13 @@ use core::num::Saturating;
 #[cfg(feature = "translations")]
 use spin::RwLockReadGuard;
 
-use crate::ui::{
-    constant,
-    geometry::Offset,
-    shape::{Bitmap, BitmapFormat},
-};
-
 #[cfg(feature = "translations")]
 use crate::translations::flash;
 #[cfg(feature = "translations")]
 use crate::translations::Translations;
+use crate::ui::constant;
+use crate::ui::geometry::Offset;
+use crate::ui::shape::{Bitmap, BitmapFormat};
 
 #[cfg(feature = "ui_font_kerning")]
 /// Two-level kerning lookup table.

@@ -33,9 +33,8 @@ pub fn digest(data: &[u8]) -> [u8; 4] {
 
 #[cfg(test)]
 mod test {
-    use crate::strutil::hexlify;
-
     use super::*;
+    use crate::strutil::hexlify;
 
     const CRC32_VECTORS: &[(&[u8], &[u8])] = &[
         (b"", b"00000000"),

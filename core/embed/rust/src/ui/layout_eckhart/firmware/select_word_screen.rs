@@ -1,22 +1,15 @@
 use heapless::Vec;
 
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Label},
-        geometry::{Alignment, Insets, Offset, Rect},
-        shape,
-        shape::Renderer,
-        ui_firmware::MAX_WORD_QUIZ_ITEMS,
-    },
-};
-
-use super::super::{
-    component::{Button, ButtonMsg},
-    constant::SCREEN,
-    firmware::{Header, HeaderMsg},
-    theme,
-};
+use super::super::component::{Button, ButtonMsg};
+use super::super::constant::SCREEN;
+use super::super::firmware::{Header, HeaderMsg};
+use super::super::theme;
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
+use crate::ui::ui_firmware::MAX_WORD_QUIZ_ITEMS;
 
 pub struct SelectWordScreen {
     header: Header,
@@ -183,7 +176,8 @@ impl crate::trace::Trace for SelectWordScreen {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::super::constant::SCREEN, *};
+    use super::super::super::constant::SCREEN;
+    use super::*;
 
     #[test]
     fn test_component_heights_fit_screen() {

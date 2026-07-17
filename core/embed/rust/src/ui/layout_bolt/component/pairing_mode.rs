@@ -1,16 +1,11 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Pad},
-        display::{Color, Font},
-        event::BLEEvent,
-        geometry::{Alignment, Offset, Rect},
-        layout::simplified::ReturnToC,
-        shape::{self, Renderer},
-    },
-};
-
 use super::{Button, ButtonMsg};
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Pad};
+use crate::ui::display::{Color, Font};
+use crate::ui::event::BLEEvent;
+use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::layout::simplified::ReturnToC;
+use crate::ui::shape::{self, Renderer};
 
 #[repr(u32)]
 pub enum PairingMsg {

@@ -1,18 +1,11 @@
 use heapless::Vec;
 
-use crate::{
-    error::Error,
-    strutil::{ShortString, TString},
-    time::Duration,
-    ui::{
-        button_request::{ButtonRequest, ButtonRequestCode},
-        component::{MsgMap, PageMap},
-        geometry::{Offset, Rect},
-        shape::Renderer,
-        util::Pager,
-    },
-};
-
+use super::Paginate;
+use crate::error::Error;
+use crate::strutil::{ShortString, TString};
+use crate::time::Duration;
+use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
+use crate::ui::component::{MsgMap, PageMap};
 #[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
 #[cfg(feature = "button")]
@@ -20,13 +13,14 @@ use crate::ui::event::ButtonEvent;
 #[cfg(feature = "power_manager")]
 use crate::ui::event::PMEvent;
 use crate::ui::event::USBEvent;
+use crate::ui::geometry::{Offset, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 #[cfg(feature = "touch")]
 use crate::ui::{
     event::{SwipeEvent, TouchEvent},
     geometry::Direction,
 };
-
-use super::Paginate;
 
 /// Type used by components that do not return any messages.
 ///

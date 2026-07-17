@@ -1,17 +1,12 @@
-use crate::ui::{
-    display::Color,
-    geometry::Offset,
-    shape::{
-        render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Mono8Canvas, Viewport,
-    },
-};
-
-#[cfg(feature = "ui_debug_overlay")]
-use crate::ui::{CommonUI, ModelUI};
+use static_alloc::Bump;
 
 use crate::trezorhal::display;
-
-use static_alloc::Bump;
+use crate::ui::display::Color;
+use crate::ui::geometry::Offset;
+use crate::ui::shape::render::ScopedRenderer;
+use crate::ui::shape::{BasicCanvas, DirectRenderer, DrawingCache, Mono8Canvas, Viewport};
+#[cfg(feature = "ui_debug_overlay")]
+use crate::ui::{CommonUI, ModelUI};
 
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Mono8Canvas<'alloc>>;
 

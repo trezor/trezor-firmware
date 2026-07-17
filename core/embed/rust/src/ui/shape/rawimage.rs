@@ -1,8 +1,7 @@
-use crate::ui::geometry::Rect;
+use without_alloc::alloc::LocalAllocLeakExt;
 
 use super::{BitmapView, Canvas, DrawingCache, Renderer, Shape, ShapeClone};
-
-use without_alloc::alloc::LocalAllocLeakExt;
+use crate::ui::geometry::Rect;
 
 /// A shape for rendering compressed TOIF images.
 pub struct RawImage<'a> {

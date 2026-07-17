@@ -5,15 +5,11 @@
 //! selection, and the top-level `build_and_link()` entry point that ties
 //! them together.
 
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
+use std::{env, fs};
 
-use color_eyre::{
-    Result,
-    eyre::{WrapErr, bail},
-};
+use color_eyre::Result;
+use color_eyre::eyre::{WrapErr, bail};
 
 use crate::CLibrary;
 use crate::helpers::{is_rust_analyzer, links_name};
@@ -39,7 +35,8 @@ pub fn current_model_id() -> Result<String> {
 
 /// Returns the sorted list of model ids found in `models_dir` — the names of
 /// subdirectories that contain a `model.toml`. Emits `rerun-if-changed` for the
-/// directory and each `model.toml` so callers rebuild when the model set changes.
+/// directory and each `model.toml` so callers rebuild when the model set
+/// changes.
 pub fn model_ids(models_dir: &Path) -> Result<Vec<String>> {
     println!("cargo::rerun-if-changed={}", models_dir.display());
     let mut models = Vec::new();

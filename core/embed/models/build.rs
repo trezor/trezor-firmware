@@ -1,7 +1,8 @@
 use xbuild::{CLibrary, Result, bail_unsupported};
 
 fn main() -> Result<()> {
-    // Emit model identity for dependent build scripts (readable as DEP_MODELS_MODEL).
+    // Emit model identity for dependent build scripts (readable as
+    // DEP_MODELS_MODEL).
     let model_id = if cfg!(feature = "model_t2t1") {
         "T2T1"
     } else if cfg!(feature = "model_t2b1") {
@@ -195,9 +196,9 @@ fn main() -> Result<()> {
 ///
 /// Reads the model's `default_board` from `<model>/model.toml` and that board's
 /// `header` (or `emulator_header` for an emulator build) from
-/// `<model>/boards/<default_board>.toml`, so the tomls stay the single source of
-/// truth. Returns "" for an unselected model; that case is rejected later by the
-/// model dispatch in `main`.
+/// `<model>/boards/<default_board>.toml`, so the tomls stay the single source
+/// of truth. Returns "" for an unselected model; that case is rejected later by
+/// the model dispatch in `main`.
 fn default_board_header(model_id: &str) -> Result<String> {
     if model_id.is_empty() {
         return Ok(String::new());

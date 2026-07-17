@@ -1,16 +1,14 @@
-use super::zlib_cache::ZlibCache;
+use core::cell::{RefCell, RefMut};
+
+use without_alloc::alloc::LocalAllocLeakExt;
 
 #[cfg(feature = "ui_blurring")]
 use super::blur_cache::BlurCache;
-
 #[cfg(all(feature = "ui_jpeg", not(feature = "hw_jpeg_decoder")))]
 use super::jpeg_cache::JpegCache;
-
+use super::zlib_cache::ZlibCache;
 #[cfg(feature = "hw_jpeg_decoder")]
 use crate::trezorhal::jpegdec;
-
-use core::cell::{RefCell, RefMut};
-use without_alloc::alloc::LocalAllocLeakExt;
 
 const ALIGN_PAD: usize = 8;
 

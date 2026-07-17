@@ -1,23 +1,14 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Label, Never, Pad},
-        constant::screen,
-        geometry::{Alignment2D, Point, Rect},
-        shape,
-        shape::Renderer,
-    },
+use super::super::constant::WIDTH;
+use super::super::theme::{
+    self, FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE,
 };
-
-use super::{
-    super::{
-        constant::WIDTH,
-        theme::{
-            self, FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE,
-        },
-    },
-    ResultFooter, ResultStyle,
-};
+use super::{ResultFooter, ResultStyle};
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::constant::screen;
+use crate::ui::geometry::{Alignment2D, Point, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 const ICON_TOP: i16 = 23;
 const TITLE_AREA_START: i16 = 70;

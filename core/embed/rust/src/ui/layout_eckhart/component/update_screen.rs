@@ -1,10 +1,8 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Label, Never},
-    geometry::{Alignment2D, Rect},
-    shape::{self, Renderer},
-};
-
-use super::super::{constant::SCREEN, theme, WAIT_MESSAGE};
+use super::super::constant::SCREEN;
+use super::super::{theme, WAIT_MESSAGE};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never};
+use crate::ui::geometry::{Alignment2D, Rect};
+use crate::ui::shape::{self, Renderer};
 
 pub struct UpdateScreen {
     text_header: Label<'static>,

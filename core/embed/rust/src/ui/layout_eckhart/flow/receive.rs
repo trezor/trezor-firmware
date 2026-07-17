@@ -1,34 +1,26 @@
-use crate::{
-    error,
-    micropython::{obj::Obj, util},
-    strutil::TString,
-    translations::TR,
-    ui::{
-        button_request::ButtonRequest,
-        component::{
-            text::paragraphs::{
-                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, VecExt,
-            },
-            ButtonRequestExt, ComponentExt, Qr,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::{Direction, LinearPlacement},
-        layout::util::{ContentType, MAX_XPUBS},
-    },
-};
 use heapless::Vec;
 
-use super::super::{
-    component::Button,
-    firmware::{
-        ActionBar, Header, Hint, QrScreen, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
-        VerticalMenuScreen, VerticalMenuScreenMsg,
-    },
-    theme::{self, gradient::Gradient},
+use super::super::component::Button;
+use super::super::firmware::{
+    ActionBar, Header, Hint, QrScreen, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+    VerticalMenuScreen, VerticalMenuScreenMsg,
 };
+use super::super::theme::gradient::Gradient;
+use super::super::theme::{self};
+use crate::error;
+use crate::micropython::obj::Obj;
+use crate::micropython::util;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::button_request::ButtonRequest;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, VecExt,
+};
+use crate::ui::component::{ButtonRequestExt, ComponentExt, Qr};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::{Direction, LinearPlacement};
+use crate::ui::layout::util::{ContentType, MAX_XPUBS};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Receive {

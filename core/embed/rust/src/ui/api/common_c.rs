@@ -1,12 +1,10 @@
 //! Reexporting the `screens` module according to the
 //! current feature (Trezor model)
 
-use crate::ui::{CommonUI, ModelUI};
-
-use crate::{ui::shape, util::from_c_str};
-
 #[cfg(feature = "ui_debug")]
 use crate::ui::util::set_animation_disabled;
+use crate::ui::{shape, CommonUI, ModelUI};
+use crate::util::from_c_str;
 
 #[no_mangle]
 extern "C" fn display_rsod_rust(

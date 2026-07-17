@@ -1,14 +1,12 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Paginate},
-        geometry::{Insets, Rect},
-        shape::Renderer,
-        util::Pager,
-    },
-};
-
-use super::{super::constant, scrollbar::SCROLLBAR_SPACE, theme, title::Title, ScrollBar};
+use super::super::constant;
+use super::scrollbar::SCROLLBAR_SPACE;
+use super::title::Title;
+use super::{theme, ScrollBar};
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Paginate};
+use crate::ui::geometry::{Insets, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 /// Component for holding another component and displaying a title.
 pub struct Frame<T>

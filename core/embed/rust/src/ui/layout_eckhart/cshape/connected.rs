@@ -1,10 +1,7 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Point, Rect},
-    shape::{self, Renderer},
-};
-
 use super::super::theme;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 // outer circle
 pub const INDICATOR_OUTER_RADIUS: i16 = 10;

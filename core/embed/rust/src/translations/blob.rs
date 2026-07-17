@@ -2,13 +2,12 @@ use core::{mem, str};
 
 use heapless::Vec;
 
-use crate::{
-    crypto::{cosi, ed25519, merkle::merkle_root, sha256},
-    error::{value_error, Error},
-    io::InputStream,
-};
-
-use super::{public_keys, translated_string::TranslatedString};
+use super::public_keys;
+use super::translated_string::TranslatedString;
+use crate::crypto::merkle::merkle_root;
+use crate::crypto::{cosi, ed25519, sha256};
+use crate::error::{value_error, Error};
+use crate::io::InputStream;
 
 pub const MAX_HEADER_LEN: u16 = 1024;
 pub const EMPTY_BYTE: u8 = 0xFF;

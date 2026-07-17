@@ -1,10 +1,8 @@
 use super::super::theme::{BLACK, WHITE};
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Qr},
-    constant::screen,
-    geometry::{Offset, Point, Rect},
-    shape::{self, Renderer},
-};
+use crate::ui::component::{Component, Event, EventCtx, Never, Qr};
+use crate::ui::constant::screen;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 pub struct Welcome {
     id: Option<&'static str>,

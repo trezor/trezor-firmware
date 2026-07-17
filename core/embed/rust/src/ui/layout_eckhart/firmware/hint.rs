@@ -1,16 +1,13 @@
-use crate::{
-    strutil::{ShortString, TString},
-    ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
-        constant::screen,
-        display::{Color, Font, Icon},
-        geometry::{Alignment, Alignment2D, Insets, Point, Rect},
-        shape::{self, Renderer, Text},
-        util::Pager,
-    },
-};
-
-use super::{super::fonts, theme};
+use super::super::fonts;
+use super::theme;
+use crate::strutil::{ShortString, TString};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, Label, Never};
+use crate::ui::constant::screen;
+use crate::ui::display::{Color, Font, Icon};
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Point, Rect};
+use crate::ui::shape::{self, Renderer, Text};
+use crate::ui::util::Pager;
 
 /// Component rendered above ActionBar, showing one of these:
 ///     - a task instruction/hint with optional icon, e.g. "Confirm

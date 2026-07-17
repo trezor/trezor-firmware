@@ -1,42 +1,33 @@
-use crate::{
-    error::Error,
-    io::BinaryData,
-    micropython::{
-        buffer::StrBuffer,
-        gc::Gc,
-        iter::IterBuf,
-        list::List,
-        macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
-    },
-    strutil::TString,
-    trezorhal::model,
-    ui::{
-        backlight::BACKLIGHT_LEVELS_OBJ,
-        component::Empty,
-        layout::{
-            base::LAYOUT_STATE,
-            device_menu_result::DEVICE_MENU_RESULT,
-            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
-            result::{BACK, CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, RecoveryType},
-        },
-        notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ},
-        ui_firmware::{
-            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_PAIRED_DEVICES,
-            MAX_WORD_QUIZ_ITEMS,
-        },
-        ModelUI,
-    },
-};
 use heapless::Vec;
 
+use crate::error::Error;
+use crate::io::BinaryData;
+use crate::micropython::buffer::StrBuffer;
+use crate::micropython::gc::Gc;
+use crate::micropython::iter::IterBuf;
+use crate::micropython::list::List;
+use crate::micropython::macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module};
+use crate::micropython::map::Map;
+use crate::micropython::module::Module;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::util;
+use crate::strutil::TString;
+use crate::trezorhal::model;
+use crate::ui::backlight::BACKLIGHT_LEVELS_OBJ;
+use crate::ui::component::Empty;
 #[cfg(feature = "backlight")]
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
+use crate::ui::layout::base::LAYOUT_STATE;
+use crate::ui::layout::device_menu_result::DEVICE_MENU_RESULT;
+use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
+use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
+use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
+use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
+use crate::ui::ui_firmware::{
+    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
+};
+use crate::ui::ModelUI;
 
 /// Dummy implementation so that we can use `Empty` in a return type of
 /// unimplemented trait function

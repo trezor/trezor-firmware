@@ -1,25 +1,16 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
-};
-
 use core::sync::atomic::{AtomicU16, Ordering};
 
-use super::super::{
-    component::{
-        Frame, Header, NumberInputDialog, NumberInputDialogMsg, SwipeContent, UpdatableMoreInfo,
-        VerticalMenu,
-    },
-    theme,
+use super::super::component::{
+    Frame, Header, NumberInputDialog, NumberInputDialogMsg, SwipeContent, UpdatableMoreInfo,
+    VerticalMenu,
 };
+use super::super::theme;
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum RequestNumber {

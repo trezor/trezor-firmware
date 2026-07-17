@@ -1,4 +1,6 @@
-use core::{convert::Infallible, ffi::CStr, num::TryFromIntError};
+use core::convert::Infallible;
+use core::ffi::CStr;
+use core::num::TryFromIntError;
 
 #[cfg(feature = "micropython")]
 use {

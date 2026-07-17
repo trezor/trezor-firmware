@@ -1,17 +1,13 @@
-use super::{
-    super::{cshape::ScreenBorder, theme},
-    BldHeader, BldHeaderMsg,
-};
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label},
-        event::BLEEvent,
-        geometry::{Insets, Rect},
-        layout::simplified::ReturnToC,
-        shape::Renderer,
-    },
-};
+use super::super::cshape::ScreenBorder;
+use super::super::theme;
+use super::{BldHeader, BldHeaderMsg};
+use crate::strutil::TString;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::event::BLEEvent;
+use crate::ui::geometry::{Insets, Rect};
+use crate::ui::layout::simplified::ReturnToC;
+use crate::ui::shape::Renderer;
 
 #[repr(u32)]
 pub enum PairingMsg {

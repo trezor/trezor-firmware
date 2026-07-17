@@ -1,10 +1,8 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::fs;
+use std::path::{Path, PathBuf};
 
-use color_eyre::{Result, eyre::WrapErr};
-
+use color_eyre::Result;
+use color_eyre::eyre::WrapErr;
 use globset::Glob;
 
 /// Helper struct for managing input files based on glob-like filters.
@@ -61,7 +59,8 @@ impl InputFiles {
         Ok(())
     }
 
-    /// Removes files matching the given filter under the specified base directory.
+    /// Removes files matching the given filter under the specified base
+    /// directory.
     pub fn remove(&mut self, base: impl AsRef<Path>, filter: &str) {
         let base = base.as_ref();
         let normalized_filter = filter.trim_start_matches('/');
@@ -182,8 +181,9 @@ fn filter_search_dirs(base: &Path, filter: &str) -> Result<Vec<PathBuf>> {
 
 #[cfg(test)]
 mod tests {
-    use super::InputFiles;
     use std::path::PathBuf;
+
+    use super::InputFiles;
 
     #[test]
     fn remove_files_removes_only_matching_files_under_base() {

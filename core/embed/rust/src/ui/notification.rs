@@ -1,5 +1,4 @@
-use crate::{error::Error, strutil::TString};
-
+use crate::error::Error;
 #[cfg(feature = "micropython")]
 use crate::micropython::{
     macros::{obj_dict, obj_map, obj_type},
@@ -8,6 +7,7 @@ use crate::micropython::{
     simple_type::SimpleTypeObj,
     typ::Type,
 };
+use crate::strutil::TString;
 
 /// Homescreen notification.
 #[derive(Clone)]

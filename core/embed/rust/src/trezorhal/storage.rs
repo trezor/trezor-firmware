@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
-use super::ffi;
-use crate::error::{value_error, Error};
 use core::ptr;
 
 use num_traits::FromPrimitive;
+
+use super::ffi;
+use crate::error::{value_error, Error};
 
 /// Result of PIN delay callback.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

@@ -1,10 +1,9 @@
-use anyhow::{Context, Result, ensure};
 use std::fs;
 
-use crate::{
-    args::{CombineArgs, Model, Project},
-    helpers, postbuild,
-};
+use anyhow::{Context, Result, ensure};
+
+use crate::args::{CombineArgs, Model, Project};
+use crate::{helpers, postbuild};
 
 const COMBINED_PREFIX: &str = "combined-";
 

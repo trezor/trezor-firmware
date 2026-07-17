@@ -1,16 +1,12 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx},
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
+use heapless::Vec;
 
 use super::super::{
     ButtonDetails, ButtonLayout, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
-use heapless::Vec;
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
@@ -154,14 +150,10 @@ impl Component for SimpleChoice {
 #[cfg(feature = "micropython")]
 mod micropython {
     use super::SimpleChoice;
-    use crate::{
-        error::Error,
-        micropython::obj::Obj,
-        ui::layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED},
-        },
-    };
+    use crate::error::Error;
+    use crate::micropython::obj::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
+    use crate::ui::layout::result::{CANCELLED, CONFIRMED};
 
     impl ComponentMsgObj for SimpleChoice {
         fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {

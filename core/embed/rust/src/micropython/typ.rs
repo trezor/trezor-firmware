@@ -1,7 +1,5 @@
-use super::{
-    ffi,
-    obj::{Obj, ObjBase},
-};
+use super::ffi;
+use super::obj::{Obj, ObjBase};
 
 pub type Type = ffi::mp_obj_type_t;
 

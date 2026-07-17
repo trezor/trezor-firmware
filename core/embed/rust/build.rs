@@ -1,7 +1,7 @@
+use std::env;
 #[cfg(all(feature = "test", not(feature = "with_new_crates")))]
 use std::ffi::OsStr;
-use std::{env, path::PathBuf};
-
+use std::path::PathBuf;
 #[cfg(not(feature = "with_new_crates"))]
 use std::process::Command;
 

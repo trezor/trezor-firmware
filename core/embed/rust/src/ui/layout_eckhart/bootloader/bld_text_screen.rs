@@ -1,17 +1,10 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Label},
-    constant::SCREEN,
-    geometry::{Insets, Rect},
-    shape::Renderer,
-};
-
-use super::{
-    super::{
-        cshape::ScreenBorder,
-        theme::{ACTION_BAR_HEIGHT, HEADER_HEIGHT, SIDE_INSETS, TEXT_VERTICAL_SPACING},
-    },
-    BldActionBar, BldActionBarMsg, BldHeader, BldHeaderMsg,
-};
+use super::super::cshape::ScreenBorder;
+use super::super::theme::{ACTION_BAR_HEIGHT, HEADER_HEIGHT, SIDE_INSETS, TEXT_VERTICAL_SPACING};
+use super::{BldActionBar, BldActionBarMsg, BldHeader, BldHeaderMsg};
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::constant::SCREEN;
+use crate::ui::geometry::{Insets, Rect};
+use crate::ui::shape::Renderer;
 
 /// Full-screen component for rendering text. Reduced variant for Bootloader UI.
 ///

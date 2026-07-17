@@ -1,16 +1,16 @@
 use std::path::{Path, PathBuf};
 
-use color_eyre::{Result, eyre::WrapErr};
+use color_eyre::Result;
+use color_eyre::eyre::WrapErr;
 
 use super::CLibrary;
 use crate::attrs::CompileAttrs;
 use crate::dep_tracking::{run_command, run_command_with_cc_dep};
-use crate::parallel::run_parallel;
-
 use crate::helpers::{
     derive_output_path, ensure_parent_directory, join_paths_lexically, links_name, measure_time,
     path_from_env,
 };
+use crate::parallel::run_parallel;
 
 // Represents a single compilation task
 #[derive(Clone)]
@@ -85,14 +85,17 @@ impl CompileUnit {
 }
 
 impl CLibrary {
-    /// Compiles all sources in parallel and generates object files for the library.
+    /// Compiles all sources in parallel and generates object files for the
+    /// library.
     ///
-    /// This function compiles all source files associated with the library in parallel,
-    /// creates a static library archive, and exports the library's metadata for downstream crates.
+    /// This function compiles all source files associated with the library in
+    /// parallel, creates a static library archive, and exports the
+    /// library's metadata for downstream crates.
     ///
     /// # Errors
     ///
-    /// Returns an error if compilation or archiving fails, or if required environment variables are missing.
+    /// Returns an error if compilation or archiving fails, or if required
+    /// environment variables are missing.
     pub(crate) fn compile(&self) -> Result<()> {
         let lib_name = links_name()?;
 
@@ -116,9 +119,11 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `output_ext`: The file extension for the output files (e.g., `"upydef"`).
+    /// - `output_ext`: The file extension for the output files (e.g.,
+    ///   `"upydef"`).
     /// - `extra_args`: Additional compiler/preprocessor flags.
-    /// - `extra_sources`: Additional source files to process beyond the library's own sources.
+    /// - `extra_sources`: Additional source files to process beyond the
+    ///   library's own sources.
     ///
     /// # Returns
     ///
@@ -199,12 +204,14 @@ impl CLibrary {
 
     /// Preprocesses a C header or source file using the configured C compiler.
     ///
-    /// This runs the compiler in preprocessor mode (`-E`) and writes the output to the specified file.
+    /// This runs the compiler in preprocessor mode (`-E`) and writes the output
+    /// to the specified file.
     ///
     /// # Parameters
     ///
     /// - `input`: Path to the input C header or source file.
-    /// - `output`: Path to the output file where the preprocessed result will be written.
+    /// - `output`: Path to the output file where the preprocessed result will
+    ///   be written.
     ///
     /// # Errors
     ///

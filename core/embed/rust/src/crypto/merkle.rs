@@ -1,4 +1,5 @@
-use super::{memory::init_ctx, sha256};
+use super::memory::init_ctx;
+use super::sha256;
 
 /// Calculate a Merkle root based on a leaf element and a proof of inclusion.
 ///

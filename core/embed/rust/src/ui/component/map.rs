@@ -1,8 +1,8 @@
 use super::{Component, Event, EventCtx};
-use crate::ui::{geometry::Rect, shape::Renderer};
-
 #[cfg(all(feature = "micropython", feature = "touch"))]
 use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 pub struct MsgMap<T, F> {
     inner: T,

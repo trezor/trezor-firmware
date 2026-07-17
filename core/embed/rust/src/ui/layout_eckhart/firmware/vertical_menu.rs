@@ -1,21 +1,15 @@
 use core::ops::DerefMut;
 
-use crate::{
-    micropython::gc::GcBox,
-    ui::{
-        component::{Component, Event, EventCtx},
-        event::TouchEvent,
-        geometry::{Direction, Insets, Offset, Rect},
-        shape::{Bar, Renderer},
-        util::animation_disabled,
-    },
-};
-
-use super::{
-    super::component::{Button, ButtonMsg, HapticMode},
-    theme,
-};
 use heapless::Vec;
+
+use super::super::component::{Button, ButtonMsg, HapticMode};
+use super::theme;
+use crate::micropython::gc::GcBox;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Direction, Insets, Offset, Rect};
+use crate::ui::shape::{Bar, Renderer};
+use crate::ui::util::animation_disabled;
 
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.

@@ -1,5 +1,6 @@
-use crate::ui::lerp::Lerp;
 use core::ops::{Add, Mul, Neg, Sub};
+
+use crate::ui::lerp::Lerp;
 
 const fn min(a: i16, b: i16) -> i16 {
     if a < b {

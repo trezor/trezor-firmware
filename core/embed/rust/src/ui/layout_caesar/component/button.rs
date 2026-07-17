@@ -1,18 +1,14 @@
-use crate::{
-    strutil::TString,
-    time::Duration,
-    ui::{
-        component::{Component, Event, EventCtx, Never},
-        constant,
-        display::{Font, Icon},
-        event::PhysicalButton,
-        geometry::{Alignment2D, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
-    },
-};
-
-use super::{super::fonts, loader::DEFAULT_DURATION_MS, theme};
+use super::super::fonts;
+use super::loader::DEFAULT_DURATION_MS;
+use super::theme;
+use crate::strutil::TString;
+use crate::time::Duration;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::display::{Font, Icon};
+use crate::ui::event::PhysicalButton;
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::{constant, shape};
 
 const HALF_SCREEN_BUTTON_WIDTH: i16 = constant::WIDTH / 2 - 1;
 

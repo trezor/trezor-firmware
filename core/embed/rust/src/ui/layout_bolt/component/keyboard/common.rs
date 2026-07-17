@@ -1,13 +1,10 @@
-use crate::{
-    time::Duration,
-    ui::{
-        component::{text::common::TextEdit, Event, EventCtx, Timer},
-        display::{Color, Font},
-        geometry::{Offset, Point, Rect},
-        shape,
-        shape::Renderer,
-    },
-};
+use crate::time::Duration;
+use crate::ui::component::text::common::TextEdit;
+use crate::ui::component::{Event, EventCtx, Timer};
+use crate::ui::display::{Color, Font};
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 /// Contains state commonly used in implementations multi-tap keyboards.
 pub struct MultiTapKeyboard {

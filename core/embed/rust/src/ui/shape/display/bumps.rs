@@ -1,6 +1,6 @@
-use crate::ui::shape::DrawingCache;
-
 use static_alloc::Bump;
+
+use crate::ui::shape::DrawingCache;
 
 /// Memory reserved for `ProgressiveRenderer`s shape storage.
 /// ProgressiveRenderer is used if framebuffer is not available.

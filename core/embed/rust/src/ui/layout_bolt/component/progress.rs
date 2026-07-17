@@ -1,25 +1,16 @@
 use core::mem;
 
-use super::{
-    super::cshape::{render_loader, LoaderRange},
-    theme,
-};
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            base::ComponentExt,
-            text::paragraphs::{Paragraph, Paragraphs},
-            Child, Component, Event, EventCtx, Label, Never, Pad,
-        },
-        display::LOADER_MAX,
-        geometry::{Insets, Offset, Rect},
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
-
+use super::super::cshape::{render_loader, LoaderRange};
 use super::super::{constant, fonts};
+use super::theme;
+use crate::strutil::TString;
+use crate::ui::component::base::ComponentExt;
+use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::display::LOADER_MAX;
+use crate::ui::geometry::{Insets, Offset, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
 
 pub struct Progress {
     title: Child<Label<'static>>,

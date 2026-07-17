@@ -1,10 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
-
-use xtask::{
-    args::{Cli, Cmd},
-    cargo, combine, flash, upload,
-};
+use xtask::args::{Cli, Cmd};
+use xtask::{cargo, combine, flash, upload};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();

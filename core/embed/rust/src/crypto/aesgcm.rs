@@ -2,7 +2,8 @@ use core::pin::Pin;
 
 use zeroize::Zeroize;
 
-use super::{consteq, ffi, memory::Memory, Error};
+use super::memory::Memory;
+use super::{consteq, ffi, Error};
 
 // Tag size is a parameter but we fix it to 16 here for simplicity.
 pub const TAG_SIZE: usize = 16;
@@ -225,7 +226,8 @@ impl Drop for AesGcmInner<'_> {
 
 #[cfg(test)]
 mod test {
-    use super::{super::memory::init_ctx, *};
+    use super::super::memory::init_ctx;
+    use super::*;
 
     struct Vector {
         key: &'static str,

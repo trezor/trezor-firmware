@@ -1,27 +1,18 @@
 use heapless::Vec;
 
-use crate::{
-    strutil::TString,
-    time::{Duration, Stopwatch},
-    ui::{
-        component::{
-            base::{AttachType, Component},
-            paginated::SinglePage,
-            Event, EventCtx, Paginate,
-        },
-        constant::screen,
-        display::{Color, Icon},
-        geometry::{Direction, Offset, Rect},
-        lerp::Lerp,
-        shape::{Bar, Renderer},
-        util::{animation_disabled, Pager},
-    },
-};
-
-use super::{
-    super::component::button::{Button, ButtonContent, ButtonMsg, IconText},
-    theme,
-};
+use super::super::component::button::{Button, ButtonContent, ButtonMsg, IconText};
+use super::theme;
+use crate::strutil::TString;
+use crate::time::{Duration, Stopwatch};
+use crate::ui::component::base::{AttachType, Component};
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::{Event, EventCtx, Paginate};
+use crate::ui::constant::screen;
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Direction, Offset, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::{Bar, Renderer};
+use crate::ui::util::{animation_disabled, Pager};
 
 pub enum VerticalMenuChoiceMsg {
     Selected(usize),

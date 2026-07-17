@@ -19,5 +19,4 @@ pub use button::{ButtonEvent, PhysicalButton};
 pub use power_manager::PMEvent;
 #[cfg(feature = "touch")]
 pub use touch::{SwipeEvent, TouchEvent};
-
 pub use usb::USBEvent;

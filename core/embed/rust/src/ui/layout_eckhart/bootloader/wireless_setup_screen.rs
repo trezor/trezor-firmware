@@ -1,18 +1,13 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Label},
-        event::BLEEvent,
-        geometry::{Alignment2D, Insets, Offset, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::{
-    super::{component::Button, constant::SCREEN, theme},
-    pairing_mode::PairingMsg,
-    BldActionBar, BldActionBarMsg, BldHeader, BldHeaderMsg,
-};
+use super::super::component::Button;
+use super::super::constant::SCREEN;
+use super::super::theme;
+use super::pairing_mode::PairingMsg;
+use super::{BldActionBar, BldActionBarMsg, BldHeader, BldHeaderMsg};
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::event::BLEEvent;
+use crate::ui::geometry::{Alignment2D, Insets, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
 
 /// Full-screen component for the wireless setup screen. It shows instructions
 /// for the user and QR code to download the Trezor Suite app.

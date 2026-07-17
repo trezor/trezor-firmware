@@ -3,23 +3,20 @@ pub mod font;
 pub mod image;
 pub mod toif;
 
-use super::geometry::{Offset, Point, Rect};
-
-#[cfg(feature = "backlight")]
-use crate::{time::Duration, trezorhal::time};
-
-use crate::{strutil::TString, trezorhal::display};
-
-#[cfg(feature = "backlight")]
-use crate::ui::lerp::Lerp;
-
-#[cfg(feature = "backlight")]
-use crate::{time::Stopwatch, ui::util::animation_disabled};
-
-// Reexports
-pub use crate::ui::display::toif::Icon;
 pub use color::Color;
 pub use font::{Font, Glyph, GlyphMetrics};
+
+use super::geometry::{Offset, Point, Rect};
+use crate::strutil::TString;
+use crate::trezorhal::display;
+// Reexports
+pub use crate::ui::display::toif::Icon;
+#[cfg(feature = "backlight")]
+use crate::ui::lerp::Lerp;
+#[cfg(feature = "backlight")]
+use crate::{time::Duration, trezorhal::time};
+#[cfg(feature = "backlight")]
+use crate::{time::Stopwatch, ui::util::animation_disabled};
 
 pub const LOADER_MIN: u16 = 0;
 pub const LOADER_MAX: u16 = 1000;

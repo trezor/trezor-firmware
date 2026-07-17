@@ -1,18 +1,12 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{swipe_detect::SwipeSettings, CachedJpeg, ComponentExt},
-        flow::{
-            base::{Decision, DecisionBuilder},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
-};
-
 use super::super::component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::{CachedJpeg, ComponentExt};
+use crate::ui::flow::base::{Decision, DecisionBuilder};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 /// Flow for a setting of homescreen wallpaper showing a preview of the image,
 /// menu to cancel and tap to confirm prompt.

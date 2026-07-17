@@ -1,23 +1,25 @@
+use heapless::Vec;
+
+#[cfg(feature = "power_manager")]
+use crate::time::Duration;
+#[cfg(feature = "ble")]
+use crate::trezorhal::bootloader::bootloader_process_ble;
+use crate::trezorhal::bootloader::{bootloader_process_usb, BootloaderWFResult};
+#[cfg(feature = "debuglink")]
+use crate::trezorhal::bootloader::{
+    debuglink_notify_layout_change, debuglink_process, DebuglinkResult,
+};
+#[cfg(all(feature = "haptic", feature = "power_manager"))]
+use crate::trezorhal::haptic::{play, HapticEffect};
+use crate::trezorhal::sysevent::{sysevents_poll, Syshandle};
+use crate::ui::component::base::AttachType;
+use crate::ui::component::{Component, Event, EventCtx};
 #[cfg(all(feature = "button", feature = "power_manager"))]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "button")]
 use crate::ui::layout::simplified::button_eval;
-
-use crate::{
-    trezorhal::{
-        bootloader::{bootloader_process_usb, BootloaderWFResult},
-        sysevent::{sysevents_poll, Syshandle},
-    },
-    ui::{
-        component::{base::AttachType, Component, Event, EventCtx},
-        layout::simplified::{render, ReturnToC},
-        CommonUI, ModelUI,
-    },
-};
-
-#[cfg(feature = "ble")]
-use crate::trezorhal::bootloader::bootloader_process_ble;
-
+use crate::ui::layout::simplified::{render, ReturnToC};
+use crate::ui::{CommonUI, ModelUI};
 #[cfg(feature = "power_manager")]
 use crate::{
     time::Instant,
@@ -25,19 +27,6 @@ use crate::{
     ui::display::fade_backlight_duration,
     ui::event::PhysicalButton,
 };
-
-#[cfg(all(feature = "haptic", feature = "power_manager"))]
-use crate::trezorhal::haptic::{play, HapticEffect};
-
-#[cfg(feature = "debuglink")]
-use crate::trezorhal::bootloader::{
-    debuglink_notify_layout_change, debuglink_process, DebuglinkResult,
-};
-
-use heapless::Vec;
-
-#[cfg(feature = "power_manager")]
-use crate::time::Duration;
 #[cfg(feature = "power_manager")]
 const FADE_TIME: Duration = Duration::from_millis(30000);
 #[cfg(feature = "power_manager")]

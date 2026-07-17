@@ -1,18 +1,11 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Label, Never, Pad},
-        constant::{screen, WIDTH},
-        geometry::{Alignment2D, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
-    },
-};
-
-use super::super::{
-    cshape, theme,
-    theme::{BG, FG, TITLE_AREA_HEIGHT},
-};
+use super::super::theme::{BG, FG, TITLE_AREA_HEIGHT};
+use super::super::{cshape, theme};
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::constant::{screen, WIDTH};
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 const FOOTER_AREA_HEIGHT: i16 = 20;
 const DIVIDER_POSITION: i16 = 43;

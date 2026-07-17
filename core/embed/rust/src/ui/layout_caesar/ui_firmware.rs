@@ -1,49 +1,41 @@
 use core::cmp::Ordering;
 
-use crate::{
-    error::Error,
-    io::BinaryData,
-    maybe_trace::MaybeTrace,
-    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            text::{
-                op::OpTextLayout,
-                paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
-                },
-                TextStyle,
-            },
-            Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
-        },
-        geometry,
-        layout::{
-            obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmValueParams, PropsList, RecoveryType},
-        },
-        notification::Notification,
-        ui_firmware::{
-            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
-            MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
-        },
-        ModelUI,
-    },
-};
-
-use super::{
-    component::{
-        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
-        CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen,
-        NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords,
-        ShowMore, SimpleChoice, WordlistEntry, WordlistType,
-    },
-    constant, fonts, theme, UICaesar,
-};
-
 use heapless::Vec;
+
+use super::component::{
+    AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
+    CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen,
+    NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords, ShowMore,
+    SimpleChoice, WordlistEntry, WordlistType,
+};
+use super::{constant, fonts, theme, UICaesar};
+use crate::error::Error;
+use crate::io::BinaryData;
+use crate::maybe_trace::MaybeTrace;
+use crate::micropython::buffer::StrBuffer;
+use crate::micropython::gc::Gc;
+use crate::micropython::iter::IterBuf;
+use crate::micropython::list::List;
+use crate::micropython::obj::Obj;
+use crate::micropython::util;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::text::op::OpTextLayout;
+use crate::ui::component::text::paragraphs::{
+    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
+};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{
+    Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
+};
+use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
+use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
+use crate::ui::notification::Notification;
+use crate::ui::ui_firmware::{
+    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
+    MAX_WORD_QUIZ_ITEMS,
+};
+use crate::ui::{geometry, ModelUI};
 
 impl FirmwareUI for UICaesar {
     fn confirm_action(

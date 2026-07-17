@@ -1,9 +1,7 @@
-use crate::ui::{
-    button_request::ButtonRequest,
-    component::{base::AttachType, Event, EventCtx},
-};
-
 use crate::error::Error;
+use crate::ui::button_request::ButtonRequest;
+use crate::ui::component::base::AttachType;
+use crate::ui::component::{Event, EventCtx};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum LayoutState {
@@ -22,15 +20,12 @@ pub trait Layout<T> {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::micropython::{
-        macros::{obj_dict, obj_map, obj_type},
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-    };
-
     use super::LayoutState;
+    use crate::micropython::macros::{obj_dict, obj_map, obj_type};
+    use crate::micropython::obj::Obj;
+    use crate::micropython::qstr::Qstr;
+    use crate::micropython::simple_type::SimpleTypeObj;
+    use crate::micropython::typ::Type;
 
     static STATE_INITIAL_TYPE: Type = obj_type! {
         name: Qstr::MP_QSTR_INITIAL,

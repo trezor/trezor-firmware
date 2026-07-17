@@ -1,5 +1,7 @@
+use core::cmp::Ordering;
+use core::ffi::CStr;
+
 use super::ffi;
-use core::{cmp::Ordering, ffi::CStr};
 
 /// Holds all the possible words with the possibility to interact
 /// with the "list" - filtering it further, getting their count, etc.

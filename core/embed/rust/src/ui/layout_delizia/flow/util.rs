@@ -1,34 +1,26 @@
-use crate::{
-    error::Error,
-    maybe_trace::MaybeTrace,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            swipe_detect::SwipeSettings,
-            text::{
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
-                TextStyle,
-            },
-            Component,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder},
-            FlowController, FlowMsg, Swipable, SwipeFlow, SwipePage,
-        },
-        geometry::Direction,
-        layout::util::{ConfirmValueParams, StrOrBytes},
-    },
-};
 use heapless::Vec;
 
+use super::super::component::{
+    Frame, Header, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+};
+use super::super::{flow, theme};
 use super::{
-    super::{
-        component::{Frame, Header, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
-        flow, theme,
-    },
     ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionOptions, ConfirmActionStrings,
 };
+use crate::error::Error;
+use crate::maybe_trace::MaybeTrace;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecLong, VecExt,
+};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::Component;
+use crate::ui::flow::base::{Decision, DecisionBuilder};
+use crate::ui::flow::{FlowController, FlowMsg, Swipable, SwipeFlow, SwipePage};
+use crate::ui::geometry::Direction;
+use crate::ui::layout::util::{ConfirmValueParams, StrOrBytes};
 
 pub struct ConfirmValue {
     title: TString<'static>,

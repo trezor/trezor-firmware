@@ -1,29 +1,22 @@
-use crate::{
-    error::{self, Error},
-    maybe_trace::MaybeTrace,
-    micropython::{
-        gc::{self, GcBox},
-        obj::Obj,
-    },
-    ui::{
-        component::{
-            base::AttachType::{self, Swipe},
-            Component, Event, EventCtx, FlowMsg, SwipeDetect,
-        },
-        display::Color,
-        event::SwipeEvent,
-        flow::{base::Decision, FlowController},
-        geometry::{Direction, Rect},
-        layout::base::{Layout, LayoutState},
-        shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
-        util::animation_disabled,
-        CommonUI, ModelUI,
-    },
-};
-
-use super::{base::FlowState, Swipable};
-
 use heapless::Vec;
+
+use super::base::FlowState;
+use super::Swipable;
+use crate::error::{self, Error};
+use crate::maybe_trace::MaybeTrace;
+use crate::micropython::gc::{self, GcBox};
+use crate::micropython::obj::Obj;
+use crate::ui::component::base::AttachType::{self, Swipe};
+use crate::ui::component::{Component, Event, EventCtx, FlowMsg, SwipeDetect};
+use crate::ui::display::Color;
+use crate::ui::event::SwipeEvent;
+use crate::ui::flow::base::Decision;
+use crate::ui::flow::FlowController;
+use crate::ui::geometry::{Direction, Rect};
+use crate::ui::layout::base::{Layout, LayoutState};
+use crate::ui::shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer};
+use crate::ui::util::animation_disabled;
+use crate::ui::{CommonUI, ModelUI};
 
 /// Component-like proto-object-safe trait.
 ///

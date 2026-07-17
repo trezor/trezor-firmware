@@ -1,9 +1,10 @@
-use crate::{
-    error::Error,
-    micropython::{
-        ffi, macros::obj_type, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util,
-    },
-};
+use crate::error::Error;
+use crate::micropython::macros::obj_type;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::simple_type::SimpleTypeObj;
+use crate::micropython::typ::Type;
+use crate::micropython::{ffi, util};
 
 #[derive(Copy, Clone)]
 pub enum DeviceMenuMsg {

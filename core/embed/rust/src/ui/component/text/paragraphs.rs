@@ -1,17 +1,15 @@
 use heapless::Vec;
 
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{paginated::SinglePage, Component, Event, EventCtx, Never, Paginate},
-        display::{font::Font, toif::Icon, Color},
-        geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect},
-        shape::{self, Renderer},
-        util::Pager,
-    },
-};
-
 use super::layout::{LayoutFit, TextLayout, TextStyle};
+use crate::strutil::TString;
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::{Component, Event, EventCtx, Never, Paginate};
+use crate::ui::display::font::Font;
+use crate::ui::display::toif::Icon;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::Pager;
 
 /// Used as an upper bound of number of different styles we may render on single
 /// page.
@@ -275,9 +273,8 @@ where
 
 #[cfg(feature = "ui_debug")]
 pub mod trace {
-    use crate::ui::component::text::layout::trace::TraceSink;
-
     use super::*;
+    use crate::ui::component::text::layout::trace::TraceSink;
 
     impl<'a, T: ParagraphSource<'a>> crate::trace::Trace for Paragraphs<T> {
         fn trace(&self, t: &mut dyn crate::trace::Tracer) {
@@ -765,7 +762,9 @@ impl<'a, T: ParagraphSource<'a>> crate::trace::Trace for Checklist<T> {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    use crate::error::Error;
+    use crate::micropython::obj::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
     impl<'a, T: super::ParagraphSource<'a>> ComponentMsgObj for super::Checklist<T> {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
             unreachable!();

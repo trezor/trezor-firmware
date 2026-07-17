@@ -1,22 +1,17 @@
-use crate::{
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{Component, Event, EventCtx, Label},
-        geometry::Rect,
-        shape::Renderer,
-    },
+use super::super::super::component::ButtonContent;
+use super::super::super::constant::SCREEN;
+use super::super::super::firmware::keyboard::common::{
+    INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS, KEYPAD_VISIBLE_HEIGHT,
 };
-
-use super::super::super::{
-    component::ButtonContent,
-    constant::SCREEN,
-    firmware::keyboard::{
-        common::{INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS, KEYPAD_VISIBLE_HEIGHT},
-        keypad::{ButtonState, Keypad, KeypadButton, KeypadMsg},
-    },
-    theme,
+use super::super::super::firmware::keyboard::keypad::{
+    ButtonState, Keypad, KeypadButton, KeypadMsg,
 };
+use super::super::super::theme;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 pub const MNEMONIC_KEY_COUNT: usize = 9;
 

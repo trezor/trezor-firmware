@@ -1,41 +1,35 @@
-use crate::{
-    bootloader::run,
-    ui::{
-        component::{base::Component, text::TextStyle, Label},
-        display::{self, toif::Toif, Color},
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        layout::simplified::show,
-        shape::{self, render_on_display},
-        ui_bootloader::BootloaderUI,
-        CommonUI,
-    },
-};
-
 use heapless::String;
 use ufmt::uwrite;
 
-use super::{
-    bootloader::{
-        BldActionBar, BldHeader, BldHeaderMsg, BldMenuScreen, BldTextScreen, BldWelcomeScreen,
-        ConnectScreen, WirelessSetupScreen,
-    },
-    component::{render_logo, Button},
-    cshape::{render_loader, ScreenBorder},
-    fonts::{FONT_SATOSHI_MEDIUM_26, FONT_SATOSHI_REGULAR_38},
-    theme::{
-        self,
-        bootloader::{
-            button_cancel, button_confirm, button_default, button_wipe_confirm, BLD_BG, BLD_FG,
-            TEXT_FW_FINGERPRINT, TEXT_WARNING, WELCOME_COLOR,
-        },
-        BLACK, BLUE, GREEN_LIGHT, GREY, ICON_CHECKMARK, ICON_CROSS, RED, TEXT_NORMAL,
-        TEXT_SMALL_GREY, WHITE,
-    },
-    UIEckhart, CANCEL_MESSAGE, WAIT_FOR_RESTART_MESSAGE, WAIT_MESSAGE,
+use super::bootloader::{
+    BldActionBar, BldHeader, BldHeaderMsg, BldMenuScreen, BldTextScreen, BldWelcomeScreen,
+    ConnectScreen, WirelessSetupScreen,
 };
-
 #[cfg(feature = "ble")]
 use super::bootloader::{ConfirmPairingScreen, PairingFinalizationScreen, PairingModeScreen};
+use super::component::{render_logo, Button};
+use super::cshape::{render_loader, ScreenBorder};
+use super::fonts::{FONT_SATOSHI_MEDIUM_26, FONT_SATOSHI_REGULAR_38};
+use super::theme::bootloader::{
+    button_cancel, button_confirm, button_default, button_wipe_confirm, BLD_BG, BLD_FG,
+    TEXT_FW_FINGERPRINT, TEXT_WARNING, WELCOME_COLOR,
+};
+use super::theme::{
+    self, BLACK, BLUE, GREEN_LIGHT, GREY, ICON_CHECKMARK, ICON_CROSS, RED, TEXT_NORMAL,
+    TEXT_SMALL_GREY, WHITE,
+};
+use super::{UIEckhart, CANCEL_MESSAGE, WAIT_FOR_RESTART_MESSAGE, WAIT_MESSAGE};
+use crate::bootloader::run;
+use crate::ui::component::base::Component;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::Label;
+use crate::ui::display::toif::Toif;
+use crate::ui::display::{self, Color};
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
+use crate::ui::layout::simplified::show;
+use crate::ui::shape::{self, render_on_display};
+use crate::ui::ui_bootloader::BootloaderUI;
+use crate::ui::CommonUI;
 
 pub type BootloaderString = String<128>;
 

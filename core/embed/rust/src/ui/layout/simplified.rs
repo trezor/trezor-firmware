@@ -1,17 +1,16 @@
+use num_traits::ToPrimitive;
+
 #[cfg(feature = "button")]
 use crate::trezorhal::button::button_get_event;
+use crate::ui::component::base::AttachType;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::display::color::Color;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
-use crate::ui::{
-    component::{base::AttachType, Component, EventCtx, Never},
-    display, CommonUI, ModelUI,
-};
-
-use crate::ui::{component::Event, display::color::Color, shape::render_on_display};
-
-use num_traits::ToPrimitive;
+use crate::ui::shape::render_on_display;
+use crate::ui::{display, CommonUI, ModelUI};
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;

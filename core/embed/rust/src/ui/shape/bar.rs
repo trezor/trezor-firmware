@@ -1,8 +1,8 @@
-use crate::ui::{display::Color, geometry::Rect};
+use without_alloc::alloc::LocalAllocLeakExt;
 
 use super::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
-
-use without_alloc::alloc::LocalAllocLeakExt;
+use crate::ui::display::Color;
+use crate::ui::geometry::Rect;
 
 /// A shape for the rendering variuous type of rectangles.
 pub struct Bar {

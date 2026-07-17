@@ -1,14 +1,11 @@
-use crate::ui::{
-    component::{
-        text::{layout::Chunks, paragraphs::PARAGRAPH_BOTTOM_SPACE, TextStyle},
-        LineBreaking, PageBreaking,
-    },
-    display::{Color, Font},
-    geometry::Offset,
-    util::include_icon,
-};
-
 use super::fonts;
+use crate::ui::component::text::layout::Chunks;
+use crate::ui::component::text::paragraphs::PARAGRAPH_BOTTOM_SPACE;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{LineBreaking, PageBreaking};
+use crate::ui::display::{Color, Font};
+use crate::ui::geometry::Offset;
+use crate::ui::util::include_icon;
 
 pub mod bootloader;
 

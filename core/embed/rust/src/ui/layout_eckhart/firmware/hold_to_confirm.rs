@@ -1,28 +1,21 @@
-use crate::{
-    strutil::TString,
-    time::{Duration, Stopwatch},
-    ui::{
-        component::{Component, Event, EventCtx},
-        display::Color,
-        geometry::{Alignment2D, Insets, Offset, Rect},
-        lerp::Lerp,
-        shape::{self, Renderer},
-    },
-};
-
-use super::{
-    super::{cshape::ScreenBorder, firmware::Header, theme},
-    constant::SCREEN,
-};
-
 #[cfg(feature = "haptic")]
 use pareen;
 
+use super::super::cshape::ScreenBorder;
+use super::super::firmware::Header;
+use super::super::theme;
+use super::constant::SCREEN;
+use crate::strutil::TString;
+use crate::time::{Duration, Stopwatch};
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic;
-
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment2D, Insets, Offset, Rect};
 #[cfg(feature = "rgb_led")]
 use crate::ui::led::LedState;
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::{self, Renderer};
 
 /// A component that displays a border that grows from the bottom of the screen
 /// to the top. The animation is parametrizable by color and duration.

@@ -1,6 +1,5 @@
-use crate::ui::geometry::{Offset, Point, Rect};
-
 use crate::trezorhal::display::{DISPLAY_RESX, DISPLAY_RESY};
+use crate::ui::geometry::{Offset, Point, Rect};
 
 pub const WIDTH: i16 = DISPLAY_RESX as _;
 pub const HEIGHT: i16 = DISPLAY_RESY as _;

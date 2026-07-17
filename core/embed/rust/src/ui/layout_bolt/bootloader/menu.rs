@@ -1,18 +1,14 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Label, Pad},
-    constant::{screen, WIDTH},
-    display::Icon,
-    geometry::{Insets, Point, Rect},
-    shape::Renderer,
+use super::super::component::ButtonMsg::Clicked;
+use super::super::component::{Button, IconText};
+use super::super::theme::bootloader::{
+    button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
+    CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TITLE_AREA, X32,
 };
-
-use super::super::{
-    component::{Button, ButtonMsg::Clicked, IconText},
-    theme::bootloader::{
-        button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
-        CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TITLE_AREA, X32,
-    },
-};
+use crate::ui::component::{Component, Event, EventCtx, Label, Pad};
+use crate::ui::constant::{screen, WIDTH};
+use crate::ui::display::Icon;
+use crate::ui::geometry::{Insets, Point, Rect};
+use crate::ui::shape::Renderer;
 
 const BUTTON_AREA_START: i16 = 56;
 const BUTTON_SPACING: i16 = 8;

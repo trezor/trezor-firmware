@@ -1,12 +1,9 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    display,
-    event::TouchEvent,
-    geometry::{Point, Rect},
-    shape::Renderer,
-};
-
 use super::super::theme::backlight;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::display;
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Point, Rect};
+use crate::ui::shape::Renderer;
 
 pub enum SwipeDirection {
     Up,

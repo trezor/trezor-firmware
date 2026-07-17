@@ -1,4 +1,5 @@
-use super::{ffi, wordlist::Wordlist};
+use super::ffi;
+use super::wordlist::Wordlist;
 
 pub fn complete_word(prefix: &str) -> Option<&'static str> {
     if prefix.is_empty() {

@@ -1,11 +1,7 @@
-use crate::{
-    time::Duration,
-    ui::{
-        component::{Component, Event, EventCtx, Timer},
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
+use crate::time::Duration;
+use crate::ui::component::{Component, Event, EventCtx, Timer};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 pub struct Timeout {
     time_ms: u32,

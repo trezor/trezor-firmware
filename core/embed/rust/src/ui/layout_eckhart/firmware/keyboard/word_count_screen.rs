@@ -1,22 +1,13 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Label},
-        geometry::{Alignment, Insets, Offset, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::super::{
-    super::{
-        super::constant::SCREEN,
-        component::{Button, ButtonMsg},
-        theme,
-    },
-    Header,
-};
-
 use heapless::Vec;
+
+use super::super::super::super::constant::SCREEN;
+use super::super::super::component::{Button, ButtonMsg};
+use super::super::super::theme;
+use super::super::Header;
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
+use crate::ui::shape::Renderer;
 
 pub enum SelectWordCountMsg {
     Cancelled,
@@ -280,7 +271,8 @@ impl Component for ValueKeypad {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::super::constant::SCREEN, *};
+    use super::super::super::constant::SCREEN;
+    use super::*;
 
     #[test]
     fn test_component_heights_fit_screen() {

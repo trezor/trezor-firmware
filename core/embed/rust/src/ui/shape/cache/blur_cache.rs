@@ -1,9 +1,9 @@
-use crate::ui::{
-    geometry::Offset,
-    shape::utils::{BlurAlgorithm, BlurBuff},
-};
 use core::cell::UnsafeCell;
+
 use without_alloc::alloc::LocalAllocLeakExt;
+
+use crate::ui::geometry::Offset;
+use crate::ui::shape::utils::{BlurAlgorithm, BlurBuff};
 
 pub struct BlurCache<'a> {
     algo: Option<BlurAlgorithm<'a>>,

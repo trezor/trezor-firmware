@@ -1,13 +1,11 @@
-use core::{convert::TryFrom, ptr};
+use core::convert::TryFrom;
+use core::ptr;
 
+use super::ffi;
+use super::gc::{Gc, GcBox};
+use super::obj::Obj;
+use super::runtime::catch_exception;
 use crate::error::Error;
-
-use super::{
-    ffi,
-    gc::{Gc, GcBox},
-    obj::Obj,
-    runtime::catch_exception,
-};
 
 pub type List = ffi::mp_obj_list_t;
 
@@ -149,10 +147,11 @@ impl TryFrom<Obj> for Gc<List> {
 
 #[cfg(test)]
 mod tests {
-    use crate::micropython::{iter::IterBuf, testutil::mpy_init};
+    use heapless::Vec;
 
     use super::*;
-    use heapless::Vec;
+    use crate::micropython::iter::IterBuf;
+    use crate::micropython::testutil::mpy_init;
 
     #[test]
     fn list_from_iter() {

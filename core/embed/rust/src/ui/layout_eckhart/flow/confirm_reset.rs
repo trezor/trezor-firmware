@@ -1,28 +1,18 @@
-use crate::{
-    error,
-    translations::TR,
-    ui::{
-        button_request::ButtonRequestCode,
-        component::{
-            text::paragraphs::{Paragraph, ParagraphSource},
-            ButtonRequestExt, ComponentExt,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::{Direction, LinearPlacement},
-    },
+use super::super::component::Button;
+use super::super::firmware::{
+    ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+    VerticalMenuScreen, VerticalMenuScreenMsg,
 };
-
-use super::super::{
-    component::Button,
-    firmware::{
-        ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
-        VerticalMenuScreen, VerticalMenuScreenMsg,
-    },
-    theme::{self, gradient::Gradient},
-};
+use super::super::theme::gradient::Gradient;
+use super::super::theme::{self};
+use crate::error;
+use crate::translations::TR;
+use crate::ui::button_request::ButtonRequestCode;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
+use crate::ui::component::{ButtonRequestExt, ComponentExt};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::{Direction, LinearPlacement};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmReset {

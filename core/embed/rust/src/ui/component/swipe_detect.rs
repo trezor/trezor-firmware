@@ -1,14 +1,10 @@
-use crate::{
-    time::{Duration, Instant},
-    ui::{
-        animation::Animation,
-        component::{Event, EventCtx},
-        constant::screen,
-        event::{SwipeEvent, TouchEvent},
-        geometry::{Axis, Direction, Offset, Point},
-        util::{animation_disabled, Pager},
-    },
-};
+use crate::time::{Duration, Instant};
+use crate::ui::animation::Animation;
+use crate::ui::component::{Event, EventCtx};
+use crate::ui::constant::screen;
+use crate::ui::event::{SwipeEvent, TouchEvent};
+use crate::ui::geometry::{Axis, Direction, Offset, Point};
+use crate::ui::util::{animation_disabled, Pager};
 
 #[derive(Copy, Clone)]
 pub enum SwipeSettings {

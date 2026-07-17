@@ -1,25 +1,22 @@
-use crate::micropython::{func::Func, macros::obj_fn_2, obj::Obj, testutil::mpy_init};
-
-use std::{
-    assert_matches,
-    collections::{HashMap, VecDeque},
-    iter::repeat_n,
-};
+use std::assert_matches;
+use std::collections::{HashMap, VecDeque};
+use std::iter::repeat_n;
 
 use spin::MutexGuard;
-
-use trezor_thp::{
-    channel::{
-        buffered::{Buffered, ChannelExt},
-        host, ChannelIO, PacketInResult, PairingState, Phase, APP_HEADER_LEN, PRIVKEY_LEN, TAG_LEN,
-    },
-    credential::{CredentialStore, FoundCredential, NullCredentialStore},
-    error::TransportError,
+use trezor_thp::channel::buffered::{Buffered, ChannelExt};
+use trezor_thp::channel::{
+    host, ChannelIO, PacketInResult, PairingState, Phase, APP_HEADER_LEN, PRIVKEY_LEN, TAG_LEN,
 };
+use trezor_thp::credential::{CredentialStore, FoundCredential, NullCredentialStore};
+use trezor_thp::error::TransportError;
 
 use super::{
     Error, ThpAuxiliaryInfo, ThpContext, TrezorCrypto, TrezorInResult, THP_AUX, THP_CONTEXT,
 };
+use crate::micropython::func::Func;
+use crate::micropython::macros::obj_fn_2;
+use crate::micropython::obj::Obj;
+use crate::micropython::testutil::mpy_init;
 
 type HostChannel = host::Channel<TrezorCrypto>;
 type HostChannelOpen<C> = host::ChannelOpen<C, TrezorCrypto>;

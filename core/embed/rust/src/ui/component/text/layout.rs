@@ -1,8 +1,7 @@
-use crate::ui::{
-    display::{toif::Icon, Color, Font, GlyphMetrics},
-    geometry::{Alignment, Alignment2D, Dimensions, Offset, Point, Rect},
-    shape::{self, Renderer},
-};
+use crate::ui::display::toif::Icon;
+use crate::ui::display::{Color, Font, GlyphMetrics};
+use crate::ui::geometry::{Alignment, Alignment2D, Dimensions, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 const ELLIPSIS: &str = "...";
 
@@ -581,9 +580,9 @@ where
 
 #[cfg(feature = "ui_debug")]
 pub mod trace {
-    use crate::{trace::ListTracer, ui::geometry::Point};
-
     use super::*;
+    use crate::trace::ListTracer;
+    use crate::ui::geometry::Point;
 
     /// `LayoutSink` for debugging purposes.
     pub struct TraceSink<'a>(pub &'a mut dyn ListTracer);

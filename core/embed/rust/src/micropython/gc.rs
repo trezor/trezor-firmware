@@ -1,12 +1,9 @@
-use core::{
-    alloc::Layout,
-    ops::{Deref, DerefMut},
-    ptr::{self, NonNull},
-};
-
-use crate::error::Error;
+use core::alloc::Layout;
+use core::ops::{Deref, DerefMut};
+use core::ptr::{self, NonNull};
 
 use super::ffi;
+use crate::error::Error;
 
 /// A pointer type for values on the garbage-collected heap.
 pub struct Gc<T: ?Sized>(NonNull<T>);
@@ -296,9 +293,8 @@ impl<T: ?Sized> Drop for GcBox<T> {
 mod test {
     use core::cell::Cell;
 
-    use crate::micropython::testutil::mpy_init;
-
     use super::*;
+    use crate::micropython::testutil::mpy_init;
 
     struct SignalDrop<'a>(&'a Cell<bool>);
 

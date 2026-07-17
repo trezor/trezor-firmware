@@ -1,21 +1,15 @@
+use super::super::cshape::{render_loader, LoaderRange};
+use super::{constant, theme};
+use crate::time::{Duration, Instant};
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
-use crate::{
-    time::{Duration, Instant},
-    ui::{
-        animation::Animation,
-        component::{Component, Event, EventCtx, Pad},
-        display::{self, toif::Icon, Color, LOADER_MAX},
-        geometry::{Alignment2D, Offset, Rect},
-        shape::{self, Renderer},
-        util::animation_disabled,
-    },
-};
-
-use super::{
-    super::cshape::{render_loader, LoaderRange},
-    constant, theme,
-};
+use crate::ui::animation::Animation;
+use crate::ui::component::{Component, Event, EventCtx, Pad};
+use crate::ui::display::toif::Icon;
+use crate::ui::display::{self, Color, LOADER_MAX};
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::animation_disabled;
 
 const GROWING_DURATION_MS: u32 = 1000;
 const SHRINKING_DURATION_MS: u32 = 500;

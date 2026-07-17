@@ -1,19 +1,14 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Never, Paginate},
-        display::Font,
-        geometry::{Offset, Rect},
-        shape::{self, Renderer},
-        util::Pager,
-    },
-};
-
-use super::super::{fonts, theme};
-
 use heapless::Vec;
 #[cfg(feature = "ui_debug")]
 use ufmt::uwrite;
+
+use super::super::{fonts, theme};
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Never, Paginate};
+use crate::ui::display::Font;
+use crate::ui::geometry::{Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::Pager;
 
 const WORDS_PER_PAGE: usize = 4;
 const TOP_PADDING_OFFSET: i16 = 13;

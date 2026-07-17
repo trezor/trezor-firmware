@@ -1,17 +1,14 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    time::SystemTime,
-};
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
-use color_eyre::{
-    Result,
-    eyre::{WrapErr, ensure},
-};
+use color_eyre::Result;
+use color_eyre::eyre::{WrapErr, ensure};
 
 use crate::helpers::{delete_file_if_exists, emit_rerun_if_changed, ensure_parent_directory};
 
-/// Runs a command with dependency tracking and optional C compiler dependency file support.
+/// Runs a command with dependency tracking and optional C compiler dependency
+/// file support.
 ///
 /// Executes the command if any input is newer than any output, any output is
 /// missing, or the command arguments have changed (tracked via a .dep file).
@@ -26,7 +23,8 @@ use crate::helpers::{delete_file_if_exists, emit_rerun_if_changed, ensure_parent
 /// * `outputs` - Output files to check for existence and modification time.
 ///
 /// # Returns
-/// * `Result<()>` - Ok if the command was run or skipped successfully, Err otherwise.
+/// * `Result<()>` - Ok if the command was run or skipped successfully, Err
+///   otherwise.
 pub fn run_command<I, O, In, Out>(
     cmd: &mut std::process::Command,
     inputs: In,
@@ -41,7 +39,8 @@ where
     run_command_with_cc_dep(cmd, inputs, outputs, None)
 }
 
-/// Runs a command with dependency tracking and optional C compiler dependency file support.
+/// Runs a command with dependency tracking and optional C compiler dependency
+/// file support.
 ///
 /// Executes the command if any input is newer than any output, any output is
 /// missing, or the command arguments have changed (tracked via a .dep file).
@@ -61,7 +60,8 @@ where
 /// * `cc_dep` - Optional path to a C compiler dependency file.
 ///
 /// # Returns
-/// * `Result<()>` - Ok if the command was run or skipped successfully, Err otherwise.
+/// * `Result<()>` - Ok if the command was run or skipped successfully, Err
+///   otherwise.
 pub fn run_command_with_cc_dep<I, O, In, Out>(
     cmd: &mut std::process::Command,
     inputs: In,
@@ -111,7 +111,8 @@ where
 /// * `output` - Output file to check for existence and modification time.
 ///
 /// # Returns
-/// * `Result<()>` - Ok if the command was run or skipped successfully, Err otherwise.
+/// * `Result<()>` - Ok if the command was run or skipped successfully, Err
+///   otherwise.
 pub fn run_command_to_file<I, O, In>(
     cmd: &mut std::process::Command,
     inputs: In,
@@ -156,7 +157,8 @@ where
 
 /// Checks if any of the input files are newer than any of the output files.
 ///
-/// Returns true if any input file is newer than the oldest output file, or if any output is missing.
+/// Returns true if any input file is newer than the oldest output file, or if
+/// any output is missing.
 ///
 /// # Arguments
 /// * `inputs` - Slice of input file paths.
@@ -252,13 +254,15 @@ fn cc_dep_paths(cc_dep: &str) -> impl Iterator<Item = &str> {
 
 /// Runs a function with dependency tracking.
 ///
-/// Executes the function if any input is newer than any output, any output is missing,
-/// or the command arguments have changed (tracked via a `.dep` file). The `.dep` file,
-/// named after the first output with a `.dep` extension (e.g., `build/main.o.dep`), records
-/// arguments and dependencies and is updated on each run.
+/// Executes the function if any input is newer than any output, any output is
+/// missing, or the command arguments have changed (tracked via a `.dep` file).
+/// The `.dep` file, named after the first output with a `.dep` extension (e.g.,
+/// `build/main.o.dep`), records arguments and dependencies and is updated on
+/// each run.
 ///
-/// If `cc_dep` is given, it should be a dependency file (e.g., `.d` from a C compiler);
-/// if missing or if any of its dependencies are newer than the outputs, the function is re-run.
+/// If `cc_dep` is given, it should be a dependency file (e.g., `.d` from a C
+/// compiler); if missing or if any of its dependencies are newer than the
+/// outputs, the function is re-run.
 pub fn run_if_changed<I, O, In, Out, F>(
     inputs: In,
     outputs: Out,

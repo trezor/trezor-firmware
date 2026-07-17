@@ -1,13 +1,9 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{paginated::SinglePage, Bar, Component, Event, EventCtx, Label, Never},
-        geometry::{Insets, Rect},
-        shape::Renderer,
-    },
-};
-
 use super::super::theme;
+use crate::strutil::TString;
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::{Bar, Component, Event, EventCtx, Label, Never};
+use crate::ui::geometry::{Insets, Rect};
+use crate::ui::shape::Renderer;
 
 pub struct TradeScreen {
     sell_amount: Option<Label<'static>>,

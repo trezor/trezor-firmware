@@ -2,18 +2,21 @@
 #![allow(non_upper_case_globals)]
 #![allow(dead_code)]
 
-use core::{convert::TryFrom, slice, str::from_utf8};
+use core::convert::TryFrom;
+use core::slice;
+use core::str::from_utf8;
 
+use super::ffi;
+use super::obj::Obj;
 use crate::error::Error;
-
-use super::{ffi, obj::Obj};
 
 impl Qstr {
     pub const fn to_obj(self) -> Obj {
         // SAFETY:
         //  - Micropython compiled with `MICROPY_OBJ_REPR == MICROPY_OBJ_REPR_A`.
-        //    micropython/py/obj.h #define MP_OBJ_NEW_QSTR(qst)
-        //    ((mp_obj_t)((((mp_uint_t)(qst)) << 3) | 2))
+        //
+        // micropython/py/obj.h
+        // #define MP_OBJ_NEW_QSTR(qst) ((mp_obj_t)((((mp_uint_t)(qst)) << 3) | 2))
         let bits = (self.0 << 3) | 2;
         unsafe { Obj::from_bits(bits) }
     }

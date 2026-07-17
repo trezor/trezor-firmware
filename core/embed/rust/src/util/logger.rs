@@ -1,13 +1,11 @@
 //! Connects the `log::error!`, `log::warn!`, ... macros from the `log` crate to
 //! our C logging backend.
 
+use core::fmt::Write;
+use core::sync::atomic::{AtomicBool, Ordering};
+
 use heapless::Vec;
 use log::{set_logger, set_max_level, Level, LevelFilter, Log, Metadata, Record};
-
-use core::{
-    fmt::Write,
-    sync::atomic::{AtomicBool, Ordering},
-};
 
 use crate::trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel};
 

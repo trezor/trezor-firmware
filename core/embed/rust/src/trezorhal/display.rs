@@ -1,9 +1,9 @@
-use super::ffi;
-
 #[cfg(feature = "framebuffer")]
 use core::ptr;
 
 use ffi::{DISPLAY_RESX_, DISPLAY_RESY_};
+
+use super::ffi;
 
 pub const DISPLAY_RESX: u32 = DISPLAY_RESX_;
 pub const DISPLAY_RESY: u32 = DISPLAY_RESY_;

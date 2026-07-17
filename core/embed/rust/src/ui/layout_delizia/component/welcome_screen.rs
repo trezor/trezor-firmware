@@ -1,10 +1,8 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    geometry::{Alignment, Alignment2D, Offset, Rect},
-    shape::{self, Renderer},
-};
-
-use super::{super::fonts, theme};
+use super::super::fonts;
+use super::theme;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
 
 const TEXT_BOTTOM_MARGIN: i16 = 54;
 const ICON_TOP_MARGIN: i16 = 48;

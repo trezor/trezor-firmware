@@ -1,16 +1,10 @@
-use std::{
-    env,
-    ffi::OsStr,
-    fs,
-    path::{Component, Path, PathBuf},
-};
+use std::ffi::OsStr;
+use std::path::{Component, Path, PathBuf};
+use std::{env, fs};
 
+use color_eyre::Result;
+use color_eyre::eyre::{WrapErr, eyre};
 use pathdiff::diff_paths;
-
-use color_eyre::{
-    Result,
-    eyre::{WrapErr, eyre},
-};
 
 /// Checks if the parent directory of the given output path exists,
 /// and creates it if it doesn't.
@@ -33,9 +27,11 @@ pub fn delete_file_if_exists(path: impl AsRef<Path>) -> Result<()> {
     Ok(())
 }
 
-/// Returns the library name from the `CARGO_MANIFEST_LINKS` environment variable.
+/// Returns the library name from the `CARGO_MANIFEST_LINKS` environment
+/// variable.
 ///
-/// This variable is set by Cargo when building a crate that has a `links` field in its `Cargo.toml`.
+/// This variable is set by Cargo when building a crate that has a `links` field
+/// in its `Cargo.toml`.
 ///
 /// # Errors
 ///
@@ -44,7 +40,8 @@ pub fn links_name() -> Result<String> {
     env::var("CARGO_MANIFEST_LINKS").context("Failed to get CARGO_MANIFEST_LINKS")
 }
 
-/// Reads a `DEP_<CRATE>_PUBLIC_C_<KEY>` metadata variable exported by a dependency's build script.
+/// Reads a `DEP_<CRATE>_PUBLIC_C_<KEY>` metadata variable exported by a
+/// dependency's build script.
 pub fn library_metadata(lib_name: &str, kind: &str) -> Result<String> {
     std::env::var(format!("DEP_{}_PUBLIC_C_{}", lib_name.to_uppercase(), kind)).context(format!(
         "Failed to get public C metadata for crate `{lib_name}` and kind `{kind}`"
@@ -115,7 +112,8 @@ fn starts_with_parent(path: &Path) -> bool {
     matches!(path.components().next(), Some(Component::ParentDir))
 }
 
-/// Makes an output path for a source file, placing it under `out_dir` and changing the extension.
+/// Makes an output path for a source file, placing it under `out_dir` and
+/// changing the extension.
 pub fn derive_output_path(base_dir: &Path, src: &Path, out_dir: &Path, extension: &str) -> PathBuf {
     // If `src` is absolute or starts with `..`, treat it as out-of-tree and
     // place it under `OUT_DIR/__oot/...`.

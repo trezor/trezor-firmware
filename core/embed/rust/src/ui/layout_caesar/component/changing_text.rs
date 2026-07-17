@@ -1,15 +1,11 @@
-use crate::{
-    strutil::ShortString,
-    ui::{
-        component::{Component, Event, EventCtx, Never, Pad},
-        display::Font,
-        geometry::{Alignment, Point, Rect},
-        shape::{self, Renderer},
-        util::long_line_content_with_ellipsis,
-    },
-};
-
-use super::{super::fonts, theme};
+use super::super::fonts;
+use super::theme;
+use crate::strutil::ShortString;
+use crate::ui::component::{Component, Event, EventCtx, Never, Pad};
+use crate::ui::display::Font;
+use crate::ui::geometry::{Alignment, Point, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::long_line_content_with_ellipsis;
 
 /// Component that allows for "allocating" a standalone line of text anywhere
 /// on the screen and updating it arbitrarily - without affecting the rest

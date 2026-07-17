@@ -1,29 +1,18 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
-            ComponentExt, MsgMap,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::{Direction, LinearPlacement},
-    },
+use super::super::component::Button;
+use super::super::firmware::{
+    ActionBar, Header, HeaderMsg, Hint, ShortMenuVec, TextScreen, TextScreenMsg,
+    TutorialPowerScreen, TutorialPowerScreenMsg, TutorialWelcomeScreen, TutorialWelcomeScreenMsg,
+    VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
 };
-
-use super::super::{
-    component::Button,
-    firmware::{
-        ActionBar, Header, HeaderMsg, Hint, ShortMenuVec, TextScreen, TextScreenMsg,
-        TutorialPowerScreen, TutorialPowerScreenMsg, TutorialWelcomeScreen,
-        TutorialWelcomeScreenMsg, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
-    },
-    theme::{self, Gradient, ScreenBackground},
-};
+use super::super::theme::{self, Gradient, ScreenBackground};
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
+use crate::ui::component::{ComponentExt, MsgMap};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::{Direction, LinearPlacement};
 
 const WELCOME_SCREEN_DURATION_MS: u32 = 3000;
 type TropicScreen = TextScreen<Paragraphs<Paragraph<'static>>>;

@@ -1,22 +1,20 @@
 mod welcome;
 
-use crate::ui::{
-    component::Event,
-    constant::screen,
-    display,
-    display::Color,
-    event::{
-        TouchEvent,
-        TouchEvent::{TouchEnd, TouchMove, TouchStart},
-    },
-    geometry::{Alignment, Offset, Rect},
-    layout::simplified::{process_frame_event, show},
-    shape::{self, render_on_display},
-    ui_prodtest::{ProdtestLayoutType, ProdtestUI},
-};
 use heapless::Vec;
 
-use super::{cshape::ScreenBorder, fonts, prodtest::welcome::Welcome, UIEckhart};
+use super::cshape::ScreenBorder;
+use super::prodtest::welcome::Welcome;
+use super::{fonts, UIEckhart};
+use crate::ui::component::Event;
+use crate::ui::constant::screen;
+use crate::ui::display;
+use crate::ui::display::Color;
+use crate::ui::event::TouchEvent;
+use crate::ui::event::TouchEvent::{TouchEnd, TouchMove, TouchStart};
+use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::layout::simplified::{process_frame_event, show};
+use crate::ui::shape::{self, render_on_display};
+use crate::ui::ui_prodtest::{ProdtestLayoutType, ProdtestUI};
 
 #[allow(clippy::large_enum_variant)]
 pub enum ProdtestLayout {

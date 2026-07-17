@@ -1,5 +1,6 @@
 use super::{Component, Event, EventCtx, Never};
-use crate::ui::{geometry::Rect, shape::Renderer};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 #[derive(Clone)]
 pub struct Empty;

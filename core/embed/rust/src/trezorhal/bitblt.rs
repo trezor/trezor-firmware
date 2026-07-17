@@ -1,12 +1,8 @@
 use super::ffi;
-
-use crate::ui::{
-    display::Color,
-    geometry::Rect,
-    shape::{Bitmap, BitmapFormat, BitmapView},
-};
-
 use crate::trezorhal::display::{DISPLAY_RESX, DISPLAY_RESY};
+use crate::ui::display::Color;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::{Bitmap, BitmapFormat, BitmapView};
 
 /// Waits for the DMA2D peripheral transfer to complete.
 pub fn wait_for_transfer() {

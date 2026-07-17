@@ -1,20 +1,16 @@
-use crate::{
-    strutil::{ShortString, TString},
-    translations::TR,
-    trezorhal::random,
-    ui::{
-        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
-        display::Icon,
-        geometry::Rect,
-        shape::Renderer,
-        util::char_to_string,
-    },
-};
-
 use super::super::{
     theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceControls,
     ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
+use crate::strutil::{ShortString, TString};
+use crate::translations::TR;
+use crate::trezorhal::random;
+use crate::ui::component::text::common::TextBox;
+use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx};
+use crate::ui::display::Icon;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
+use crate::ui::util::char_to_string;
 
 /// Defines the choices currently available on the screen
 #[derive(PartialEq, Clone, Copy)]

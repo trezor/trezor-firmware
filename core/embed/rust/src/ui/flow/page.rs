@@ -1,10 +1,8 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Paginate},
-    event::SwipeEvent,
-    geometry::{Axis, Direction, Rect},
-    shape::Renderer,
-    util::Pager,
-};
+use crate::ui::component::{Component, Event, EventCtx, Paginate};
+use crate::ui::event::SwipeEvent;
+use crate::ui::geometry::{Axis, Direction, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 /// Allows any implementor of `Paginate` to be part of `Swipable` UI flow.
 /// Renders sliding animation when changing pages.

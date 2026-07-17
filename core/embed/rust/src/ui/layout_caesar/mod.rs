@@ -1,13 +1,11 @@
-use super::{geometry::Rect, CommonUI};
-
+use super::geometry::Rect;
 #[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
 use super::shape;
-
-#[cfg(feature = "ui_debug_overlay")]
-use super::{display::Color, geometry::Offset};
-
+use super::CommonUI;
 #[cfg(feature = "ui_performance_overlay")]
 use super::PerformanceOverlay;
+#[cfg(feature = "ui_debug_overlay")]
+use super::{display::Color, geometry::Offset};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -24,8 +22,9 @@ pub mod cshape;
 pub mod fonts;
 pub mod theme;
 
-use crate::ui::layout::simplified::show;
 use component::{ErrorScreen, WelcomeScreen};
+
+use crate::ui::layout::simplified::show;
 
 pub struct UICaesar {}
 

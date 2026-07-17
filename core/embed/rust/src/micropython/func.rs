@@ -1,4 +1,5 @@
-use super::{ffi, obj::Obj};
+use super::ffi;
+use super::obj::Obj;
 
 pub type Func = ffi::mp_obj_fun_builtin_fixed_t;
 

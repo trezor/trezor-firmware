@@ -1,5 +1,8 @@
+use std::fs;
+use std::ops::Range;
+use std::path::Path;
+
 use anyhow::{Context, Result, bail};
-use std::{fs, ops::Range, path::Path};
 
 #[derive(Debug, Clone)]
 struct MemoryRegion {

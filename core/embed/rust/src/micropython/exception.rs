@@ -1,6 +1,9 @@
 #![allow(non_upper_case_globals)]
 
-use super::{ffi, obj::Obj, qstr::Qstr, typ::Type};
+use super::ffi;
+use super::obj::Obj;
+use super::qstr::Qstr;
+use super::typ::Type;
 
 pub const AttributeError: &Type = unsafe { &ffi::mp_type_AttributeError };
 pub const EOFError: &Type = unsafe { &ffi::mp_type_EOFError };

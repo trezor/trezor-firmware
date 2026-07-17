@@ -1,27 +1,18 @@
-use crate::{
-    strutil::ShortString,
-    trezorhal::power_manager::{self, ChargingState},
-    ui::{
-        component::{Component, Event, EventCtx, Never},
-        display::{Color, Font, Icon},
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-#[cfg(feature = "micropython")]
-use crate::ui::component::Timer;
-
-use super::super::{
-    fonts,
-    theme::{
-        GREY_LIGHT, ICON_BATTERY_EMPTY, ICON_BATTERY_FULL, ICON_BATTERY_LOW,
-        ICON_BATTERY_MID_MINUS, ICON_BATTERY_MID_PLUS, ICON_BATTERY_ZAP, RED, YELLOW,
-    },
-};
-
+use super::super::fonts;
 #[cfg(feature = "micropython")]
 use super::super::theme::firmware::FUEL_GAUGE_DURATION;
+use super::super::theme::{
+    GREY_LIGHT, ICON_BATTERY_EMPTY, ICON_BATTERY_FULL, ICON_BATTERY_LOW, ICON_BATTERY_MID_MINUS,
+    ICON_BATTERY_MID_PLUS, ICON_BATTERY_ZAP, RED, YELLOW,
+};
+use crate::strutil::ShortString;
+use crate::trezorhal::power_manager::{self, ChargingState};
+#[cfg(feature = "micropython")]
+use crate::ui::component::Timer;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::display::{Color, Font, Icon};
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 const ICON_PERCENT_GAP: i16 = 16;
 

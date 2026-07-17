@@ -1,10 +1,8 @@
-use crate::ui::{
-    display::Color,
-    geometry::Rect,
-    shape::{Canvas, DrawingCache, Mono8Canvas, Renderer, Shape, ShapeClone},
-};
-
 use without_alloc::alloc::LocalAllocLeakExt;
+
+use crate::ui::display::Color;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::{Canvas, DrawingCache, Mono8Canvas, Renderer, Shape, ShapeClone};
 
 /// A special shape for rendering keyboard overlay.
 /// Makes the corner buttons have rounded corners.

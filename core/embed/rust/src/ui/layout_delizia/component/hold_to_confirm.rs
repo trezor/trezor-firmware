@@ -1,33 +1,19 @@
-use crate::{
-    time::{Duration, ShortDuration},
-    translations::TR,
-    ui::{
-        component::{Component, Event, EventCtx},
-        display::Color,
-        geometry::{Alignment2D, Offset, Rect},
-        lerp::Lerp,
-        shape,
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
+use pareen;
 
-use super::{
-    theme::{self, TITLE_HEIGHT},
-    Button, ButtonContent, ButtonMsg,
-};
-
+use super::theme::{self, TITLE_HEIGHT};
+use super::{Button, ButtonContent, ButtonMsg};
+use crate::time::{Duration, ShortDuration, Stopwatch};
+use crate::translations::TR;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{self, HapticEffect};
-use crate::{
-    time::Stopwatch,
-    ui::{
-        component::Label,
-        constant::screen,
-        geometry::{Alignment, Point},
-    },
-};
-use pareen;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::constant::screen;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
 
 #[derive(Default, Clone)]
 struct HoldToConfirmAnim {

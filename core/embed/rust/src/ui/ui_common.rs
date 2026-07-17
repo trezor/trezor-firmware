@@ -1,5 +1,4 @@
 use crate::ui::geometry::Rect;
-
 #[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
 use crate::ui::shape::Renderer;
 

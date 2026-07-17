@@ -1,13 +1,10 @@
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Pad},
-    geometry::{Offset, Rect},
-    shape::Renderer,
-    util::animation_disabled,
-};
-
 use super::super::{
     constant, theme, AutomaticMover, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
 };
+use crate::ui::component::{Child, Component, Event, EventCtx, Pad};
+use crate::ui::geometry::{Offset, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
 
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
 

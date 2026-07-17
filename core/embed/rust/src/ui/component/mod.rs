@@ -59,8 +59,6 @@ pub use qr_code::Qr;
 pub use swipe::Swipe;
 #[cfg(feature = "touch")]
 pub use swipe_detect::SwipeDetect;
-pub use text::{
-    formatted::FormattedText,
-    layout::{LineBreaking, PageBreaking, TextLayout},
-};
+pub use text::formatted::FormattedText;
+pub use text::layout::{LineBreaking, PageBreaking, TextLayout};
 pub use timeout::Timeout;

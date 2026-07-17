@@ -1,10 +1,8 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, SwipeDetect},
-    event::SwipeEvent,
-    flow::Swipable,
-    geometry::Rect,
-    shape::Renderer,
-};
+use crate::ui::component::{Component, Event, EventCtx, SwipeDetect};
+use crate::ui::event::SwipeEvent;
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 /// Wrapper component adding "swipe up" handling to `content`.
 pub struct SwipeUpScreen<T> {

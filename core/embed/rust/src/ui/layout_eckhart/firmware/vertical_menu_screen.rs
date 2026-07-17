@@ -1,25 +1,20 @@
-use crate::{
-    strutil::TString,
-    time::Instant,
-    ui::{
-        component::{
-            swipe_detect::{SwipeConfig, SwipeSettings},
-            text::{layout::LayoutFit, TextStyle},
-            Component, Event, EventCtx, Label, LineBreaking, SwipeDetect, TextLayout,
-        },
-        display::Icon,
-        event::SwipeEvent,
-        flow::Swipable,
-        geometry::{Alignment2D, Direction, Insets, Offset, Rect},
-        shape::{Renderer, ToifImage},
-        util::{animation_disabled, Pager},
-    },
+use super::super::component::HapticMode;
+use super::constant::SCREEN;
+use super::{theme, Header, HeaderMsg, MenuItems, ShortMenuVec, VerticalMenu, VerticalMenuMsg};
+use crate::strutil::TString;
+use crate::time::Instant;
+use crate::ui::component::swipe_detect::{SwipeConfig, SwipeSettings};
+use crate::ui::component::text::layout::LayoutFit;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{
+    Component, Event, EventCtx, Label, LineBreaking, SwipeDetect, TextLayout,
 };
-
-use super::{
-    super::component::HapticMode, constant::SCREEN, theme, Header, HeaderMsg, MenuItems,
-    ShortMenuVec, VerticalMenu, VerticalMenuMsg,
-};
+use crate::ui::display::Icon;
+use crate::ui::event::SwipeEvent;
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{Alignment2D, Direction, Insets, Offset, Rect};
+use crate::ui::shape::{Renderer, ToifImage};
+use crate::ui::util::{animation_disabled, Pager};
 
 pub struct VerticalMenuScreen<T> {
     header: Header,
@@ -474,7 +469,8 @@ impl<T: MenuItems> crate::trace::Trace for VerticalMenuScreen<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::VerticalMenu, *};
+    use super::super::VerticalMenu;
+    use super::*;
 
     #[test]
     fn test_min_offset() {

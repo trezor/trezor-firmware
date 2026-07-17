@@ -1,16 +1,13 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Label},
-    geometry::Rect,
-    shape::Renderer,
-};
-
-use super::{
-    super::{component::Button, constant::SCREEN, cshape::ScreenBorder, theme},
-    BldActionBar, BldActionBarMsg, BldHeader,
-};
-
+use super::super::component::Button;
+use super::super::constant::SCREEN;
+use super::super::cshape::ScreenBorder;
+use super::super::theme;
 #[cfg(feature = "power_manager")]
 use super::BldHeaderMsg;
+use super::{BldActionBar, BldActionBarMsg, BldHeader};
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]

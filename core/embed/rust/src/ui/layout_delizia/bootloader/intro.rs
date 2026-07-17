@@ -1,22 +1,16 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Label, Pad},
-        constant::screen,
-        display::Icon,
-        geometry::{Alignment, Insets, Point, Rect},
-        shape::Renderer,
-    },
+use super::super::component::Button;
+use super::super::component::ButtonMsg::Clicked;
+use super::super::constant::WIDTH;
+use super::super::theme::bootloader::{
+    button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
+    CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
 };
-
-use super::super::{
-    component::{Button, ButtonMsg::Clicked},
-    constant::WIDTH,
-    theme::bootloader::{
-        button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
-        CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
-    },
-};
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
+use crate::ui::constant::screen;
+use crate::ui::display::Icon;
+use crate::ui::geometry::{Alignment, Insets, Point, Rect};
+use crate::ui::shape::Renderer;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]

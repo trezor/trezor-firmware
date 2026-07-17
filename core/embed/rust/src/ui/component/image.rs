@@ -1,13 +1,9 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    display::{
-        toif::{Toif, ToifFormat},
-        Color, Icon,
-    },
-    geometry::{Alignment2D, Offset, Point, Rect},
-    shape,
-    shape::Renderer,
-};
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::display::toif::{Toif, ToifFormat};
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Image {
