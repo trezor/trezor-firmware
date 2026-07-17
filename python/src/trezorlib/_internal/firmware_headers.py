@@ -516,9 +516,7 @@ class BootloaderV2Image(firmware.BootableImage):
             raise ValueError("Sigmask specifies more public keys than provided.")
 
         # Verify ed25519 signatures
-        if mask.bit_count() != len(  # type: ignore [Cannot access attribute] # bit_count() is not available with Python 3.9
-            self.unauth.ec_signatures
-        ):
+        if mask.bit_count() != len(self.unauth.ec_signatures):
             raise ValueError("Sigmask does not specify valid number of ed25519 keys.")
 
         sig_idx = 0
@@ -533,9 +531,7 @@ class BootloaderV2Image(firmware.BootableImage):
             sig_idx += 1
 
         # Verify slh-dsa signatures
-        if mask.bit_count() != len(  # type: ignore [Cannot access attribute] # bit_count() is not available with Python 3.9
-            self.unauth.slh_signatures
-        ):
+        if mask.bit_count() != len(self.unauth.slh_signatures):
             raise ValueError("Sigmask does not specify valid number of slh-dsa keys.")
 
         sig_idx = 0

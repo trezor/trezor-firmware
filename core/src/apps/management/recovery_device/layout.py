@@ -295,8 +295,6 @@ if not utils.USE_N4W1:
 else:
 
     if TYPE_CHECKING:
-        from trezor.messages import BackupMethod
-
         from .recover import Slip39State
 
     async def choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
