@@ -2,14 +2,11 @@ from __future__ import annotations
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.checkers.utils import check_messages
-from pylint.interfaces import IAstroidChecker
+from pylint.checkers.utils import only_required_for_messages
 from pylint.lint import PyLinter
 
 
 class AsyncAwaitableChecker(BaseChecker):
-    __implements__ = IAstroidChecker
-
     name = "async-awaitable-checker"
     priority = -1
     msgs = {
@@ -20,7 +17,7 @@ class AsyncAwaitableChecker(BaseChecker):
         ),
     }
 
-    @check_messages("async-awaitable-return")
+    @only_required_for_messages("async-awaitable-return")
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         # Check if the return type is explicitly an Awaitable
         if node.returns and "Awaitable" in node.returns.as_string():
@@ -37,8 +34,6 @@ class InternalModelComparisonChecker(BaseChecker):
     When multiple comparisons are necessary, you may need to silence another
     pylint warning: # pylint: disable=consider-using-in
     """
-
-    __implements__ = IAstroidChecker
 
     name = "internal-model-comparison-checker"
     priority = -1
@@ -59,7 +54,7 @@ class InternalModelComparisonChecker(BaseChecker):
             and node.expr.name == "utils"
         )
 
-    @check_messages("internal-model-tuple-comparison")
+    @only_required_for_messages("internal-model-tuple-comparison")
     def visit_compare(self, node: nodes.Compare) -> None:
         if not self._is_internal_model(node.left):
             return
