@@ -1,17 +1,14 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    geometry::{Alignment2D, Offset, Rect},
-    shape,
-    shape::Renderer,
-};
-
 #[cfg(not(feature = "bootloader"))]
 use super::super::fonts;
 use super::theme;
 #[cfg(feature = "bootloader")]
 use super::theme::bootloader::DEVICE_NAME;
+use crate::ui::component::{Component, Event, EventCtx, Never};
 #[cfg(feature = "bootloader")]
 use crate::ui::display::toif::Toif;
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 const TEXT_BOTTOM_MARGIN: i16 = 24; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 48;

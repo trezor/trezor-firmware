@@ -1,21 +1,12 @@
-use crate::{
-    error::Error,
-    maybe_trace::MaybeTrace,
-    strutil::TString,
-    ui::{
-        component::{
-            text::paragraphs::{ParagraphSource, Paragraphs},
-            Component, ComponentExt, MsgMap,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder},
-            FlowController, FlowMsg, Swipable, SwipeFlow,
-        },
-        geometry::{Direction, LinearPlacement},
-    },
-};
-
 use super::super::firmware::{Header, TextScreen, TextScreenMsg};
+use crate::error::Error;
+use crate::maybe_trace::MaybeTrace;
+use crate::strutil::TString;
+use crate::ui::component::text::paragraphs::{ParagraphSource, Paragraphs};
+use crate::ui::component::{Component, ComponentExt, MsgMap};
+use crate::ui::flow::base::{Decision, DecisionBuilder};
+use crate::ui::flow::{FlowController, FlowMsg, Swipable, SwipeFlow};
+use crate::ui::geometry::{Direction, LinearPlacement};
 
 enum SinglePage {
     Show,

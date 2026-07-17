@@ -49,14 +49,12 @@ pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, FrameMsg};
 #[cfg(feature = "micropython")]
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg, Lockscreen};
-pub use keyboard::{
-    bip39::Bip39Input,
-    mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
-    passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
-    pin::{PinKeyboard, PinKeyboardMsg},
-    slip39::Slip39Input,
-    word_count::{SelectWordCount, SelectWordCountLayout, SelectWordCountMsg},
-};
+pub use keyboard::bip39::Bip39Input;
+pub use keyboard::mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg};
+pub use keyboard::passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg};
+pub use keyboard::pin::{PinKeyboard, PinKeyboardMsg};
+pub use keyboard::slip39::Slip39Input;
+pub use keyboard::word_count::{SelectWordCount, SelectWordCountLayout, SelectWordCountMsg};
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 #[cfg(feature = "translations")]
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};

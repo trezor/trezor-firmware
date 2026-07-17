@@ -1,17 +1,13 @@
-use crate::{
-    strutil::ShortString,
-    ui::{
-        component::text::{layout::Lines, TextStyle},
-        constant::screen,
-        display::Icon,
-        geometry::{Alignment2D, Offset, Point, Rect},
-        shape::{self, Renderer},
-    },
-};
-
 use heapless::{String, Vec};
 
 use super::super::{theme, ButtonDetails, ButtonLayout, Choice};
+use crate::strutil::ShortString;
+use crate::ui::component::text::layout::Lines;
+use crate::ui::component::text::TextStyle;
+use crate::ui::constant::screen;
+use crate::ui::display::Icon;
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 const ICON_RIGHT_PADDING: i16 = 2;
 

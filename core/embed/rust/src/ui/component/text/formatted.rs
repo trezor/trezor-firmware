@@ -1,14 +1,9 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Paginate},
-    geometry::{Alignment, Offset, Rect},
-    shape::Renderer,
-    util::Pager,
-};
-
-use super::{
-    layout::{LayoutFit, LayoutSink, TextNoOp, TextRenderer},
-    op::OpTextLayout,
-};
+use super::layout::{LayoutFit, LayoutSink, TextNoOp, TextRenderer};
+use super::op::OpTextLayout;
+use crate::ui::component::{Component, Event, EventCtx, Never, Paginate};
+use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 #[derive(Clone)]
 pub struct FormattedText {
@@ -175,7 +170,9 @@ impl crate::trace::Trace for FormattedText {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    use crate::error::Error;
+    use crate::micropython::obj::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
     impl ComponentMsgObj for super::FormattedText {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
             unreachable!();

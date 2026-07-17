@@ -1,14 +1,11 @@
-use crate::{
-    time::Duration,
-    ui::{
-        component::{text::common::TextEdit, Event, EventCtx, Timer},
-        display::{Color, Font},
-        geometry::{Insets, Offset, Point, Rect},
-        shape::{Bar, Renderer},
-    },
-};
-
-use super::super::{super::component::ButtonContent, theme};
+use super::super::super::component::ButtonContent;
+use super::super::theme;
+use crate::time::Duration;
+use crate::ui::component::text::common::TextEdit;
+use crate::ui::component::{Event, EventCtx, Timer};
+use crate::ui::display::{Color, Font};
+use crate::ui::geometry::{Insets, Offset, Point, Rect};
+use crate::ui::shape::{Bar, Renderer};
 
 /// Contains state commonly used in implementations multi-tap keyboards.
 pub struct MultiTapKeyboard {

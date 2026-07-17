@@ -2,26 +2,16 @@ pub mod bootloader;
 
 pub mod backlight;
 
-use crate::{
-    time::ShortDuration,
-    ui::{
-        component::{
-            text::{
-                layout::Chunks, paragraphs::PARAGRAPH_BOTTOM_SPACE, LineBreaking, PageBreaking,
-                TextStyle,
-            },
-            FixedHeightBar,
-        },
-        display::Color,
-        geometry::Offset,
-        util::include_icon,
-    },
-};
-
-use super::{
-    component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet, ResultStyle},
-    fonts,
-};
+use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet, ResultStyle};
+use super::fonts;
+use crate::time::ShortDuration;
+use crate::ui::component::text::layout::Chunks;
+use crate::ui::component::text::paragraphs::PARAGRAPH_BOTTOM_SPACE;
+use crate::ui::component::text::{LineBreaking, PageBreaking, TextStyle};
+use crate::ui::component::FixedHeightBar;
+use crate::ui::display::Color;
+use crate::ui::geometry::Offset;
+use crate::ui::util::include_icon;
 
 pub const ERASE_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
 

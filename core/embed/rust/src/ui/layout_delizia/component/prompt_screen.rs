@@ -1,10 +1,9 @@
-use crate::ui::{
-    component::{paginated::SinglePage, Component, Event, EventCtx},
-    geometry::Rect,
-    shape::Renderer,
-};
-
-use super::{super::theme, BinarySelection, ButtonContent, HoldToConfirm, TapToConfirm};
+use super::super::theme;
+use super::{BinarySelection, ButtonContent, HoldToConfirm, TapToConfirm};
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 /// Component requesting an action from a user. Most typically embedded as a
 /// content of a Frame. Options are:

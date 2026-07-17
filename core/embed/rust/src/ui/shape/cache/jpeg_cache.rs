@@ -1,15 +1,12 @@
-use crate::{
-    io::BinaryData,
-    ui::{
-        constant::WIDTH,
-        geometry::{Offset, Point, Rect},
-        shape::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas},
-    },
-};
-
 use core::cell::UnsafeCell;
+
 use trezor_tjpgdec as tjpgd;
 use without_alloc::alloc::LocalAllocLeakExt;
+
+use crate::io::BinaryData;
+use crate::ui::constant::WIDTH;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas};
 
 // JDEC work buffer size
 //

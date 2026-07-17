@@ -1,21 +1,14 @@
 use core::mem;
 
-use crate::{
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{Component, Event, EventCtx, Label, Never},
-        geometry::{Alignment2D, Offset, Rect},
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
-
-use super::super::{
-    constant::SCREEN,
-    cshape::{render_loader, render_loader_indeterminate, ScreenBorder},
-    theme,
-};
+use super::super::constant::SCREEN;
+use super::super::cshape::{render_loader, render_loader_indeterminate, ScreenBorder};
+use super::super::theme;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::{Component, Event, EventCtx, Label, Never};
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
 
 const LOADER_SPEED: u16 = 5;
 

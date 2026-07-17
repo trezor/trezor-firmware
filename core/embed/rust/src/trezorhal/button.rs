@@ -1,6 +1,6 @@
-use super::ffi;
-
 use num_traits::FromPrimitive;
+
+use super::ffi;
 
 #[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]

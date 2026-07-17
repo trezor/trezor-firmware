@@ -7,19 +7,16 @@ pub mod bootloader;
 pub mod firmware;
 pub mod gradient;
 #[cfg(feature = "micropython")]
+pub use background::ScreenBackground;
+#[cfg(feature = "micropython")]
 pub use firmware::*;
-
-use crate::ui::{
-    component::text::TextStyle,
-    display::Color,
-    geometry::{Grid, Insets, Offset, Point, Rect},
-    util::include_icon,
-};
+pub use gradient::Gradient;
 
 use super::fonts;
-#[cfg(feature = "micropython")]
-pub use background::ScreenBackground;
-pub use gradient::Gradient;
+use crate::ui::component::text::TextStyle;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Grid, Insets, Offset, Point, Rect};
+use crate::ui::util::include_icon;
 
 // Color palette.
 pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);

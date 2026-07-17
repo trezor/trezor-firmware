@@ -1,18 +1,15 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{text::TextStyle, Component, Event, EventCtx},
-        display::{Color, Font},
-        event::SwipeEvent,
-        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Point, Rect},
-        lerp::Lerp,
-        shape::{self, Renderer, Text},
-        util::Pager,
-        CommonUI, ModelUI,
-    },
-};
-
-use super::{super::fonts::FONT_SUB, theme, Button, ButtonMsg};
+use super::super::fonts::FONT_SUB;
+use super::{theme, Button, ButtonMsg};
+use crate::strutil::TString;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::display::{Color, Font};
+use crate::ui::event::SwipeEvent;
+use crate::ui::geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Point, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::{self, Renderer, Text};
+use crate::ui::util::Pager;
+use crate::ui::{CommonUI, ModelUI};
 
 /// Component showing a task instruction, e.g. "Swipe up", and an optional
 /// content consisting of one of these:

@@ -1,10 +1,8 @@
-use crate::strutil::TString;
-
 use super::blob::{Translations, ENGLISH_CHUNK};
 pub use super::generated::translated_string::TranslatedString;
-
 #[cfg(feature = "micropython")]
 use crate::micropython::qstr::Qstr;
+use crate::strutil::TString;
 
 impl TranslatedString {
     fn untranslated(self) -> &'static str {

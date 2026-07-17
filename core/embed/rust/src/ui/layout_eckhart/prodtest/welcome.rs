@@ -1,24 +1,19 @@
-use super::super::{
-    component::{Button, ButtonMsg},
-    constant::SCREEN,
-    cshape::ScreenBorder,
-    fonts,
-    theme::{bootloader::button_cancel, BLUE, GREEN, RED, WHITE},
+use super::super::component::{Button, ButtonMsg};
+use super::super::constant::SCREEN;
+use super::super::cshape::ScreenBorder;
+use super::super::fonts;
+use super::super::theme::bootloader::button_cancel;
+use super::super::theme::{BLUE, GREEN, RED, WHITE};
+use crate::strutil::format_i64;
+use crate::trezorhal::power_manager::{
+    charging_disable, charging_enable, charging_state, is_battery_connected, is_charging_limited,
+    is_ntc_connected, soc, ChargingState,
 };
-use crate::{
-    strutil::format_i64,
-    trezorhal::power_manager::{
-        charging_disable, charging_enable, charging_state, is_battery_connected,
-        is_charging_limited, is_ntc_connected, soc, ChargingState,
-    },
-    ui::{
-        component::{Component, Event, EventCtx, Never, Qr},
-        constant::screen,
-        display::Color,
-        geometry::{Alignment, Offset, Point, Rect},
-        shape::{self, Renderer},
-    },
-};
+use crate::ui::component::{Component, Event, EventCtx, Never, Qr};
+use crate::ui::constant::screen;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 pub struct Welcome {
     id: Option<&'static str>,

@@ -1,7 +1,7 @@
-use color_eyre::{Result, eyre::WrapErr};
+use color_eyre::Result;
+use color_eyre::eyre::WrapErr;
 
 use super::CLibrary;
-
 use crate::helpers::{derive_output_path, join_paths_lexically, links_name, path_from_env};
 
 /// Path to the partial compile_commands.json fragment within OUT_DIR.

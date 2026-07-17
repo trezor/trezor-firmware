@@ -1,13 +1,10 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad, Paginate},
-    geometry::{Offset, Point, Rect},
-    shape::{self, Renderer},
-    util::Pager,
-};
+use heapless::Vec;
 
 use super::super::theme;
-
-use heapless::Vec;
+use crate::ui::component::{Component, Event, EventCtx, Never, Pad, Paginate};
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::Pager;
 
 /// Scrollbar to be painted horizontally at the top right of the screen.
 pub struct ScrollBar {

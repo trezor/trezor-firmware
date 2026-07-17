@@ -1,22 +1,18 @@
-use crate::{
-    strutil::{ShortString, TString},
-    translations::TR,
-    ui::{
-        component::{
-            text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
-        },
-        display::Font,
-        geometry::{Alignment, Offset, Rect},
-        shape::{self, Renderer},
-        util::Pager,
-    },
-};
-
 use heapless::Vec;
 #[cfg(feature = "ui_debug")]
 use ufmt::uwrite;
 
-use super::{super::fonts, scrollbar::SCROLLBAR_SPACE, theme, ScrollBar};
+use super::super::fonts;
+use super::scrollbar::SCROLLBAR_SPACE;
+use super::{theme, ScrollBar};
+use crate::strutil::{ShortString, TString};
+use crate::translations::TR;
+use crate::ui::component::text::util::text_multiline;
+use crate::ui::component::{Child, Component, Event, EventCtx, Never, Paginate};
+use crate::ui::display::Font;
+use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::Pager;
 
 const WORDS_PER_PAGE: usize = 3;
 const EXTRA_LINE_HEIGHT: i16 = -2;

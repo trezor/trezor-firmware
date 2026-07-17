@@ -1,29 +1,23 @@
 use heapless::String;
 
-use crate::{
-    strutil::{ShortString, TString},
-    time::Duration,
-    ui::{
-        component::{
-            text::{layout::LayoutFit, LineBreaking, TextStyle},
-            Component, Event, EventCtx, Label, TextLayout, Timer,
-        },
-        display::Icon,
-        event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        shape::{Bar, Renderer, Text, ToifImage},
-        util::DisplayStyle,
-    },
+use super::super::super::component::ButtonContent;
+use super::super::super::constant::SCREEN;
+use super::super::super::theme;
+use super::common::{
+    FADING_ICON_COLORS, FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS,
+    KEYBOARD_INPUT_RADIUS, KEYBOARD_PROMPT_INSETS, KEYPAD_VISIBLE_HEIGHT, SHOWN_INSETS,
 };
-
-use super::{
-    super::super::{component::ButtonContent, constant::SCREEN, theme},
-    common::{
-        FADING_ICON_COLORS, FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS,
-        KEYBOARD_INPUT_RADIUS, KEYBOARD_PROMPT_INSETS, KEYPAD_VISIBLE_HEIGHT, SHOWN_INSETS,
-    },
-    keypad::{ButtonState, Keypad, KeypadMsg, KeypadState},
-};
+use super::keypad::{ButtonState, Keypad, KeypadMsg, KeypadState};
+use crate::strutil::{ShortString, TString};
+use crate::time::Duration;
+use crate::ui::component::text::layout::LayoutFit;
+use crate::ui::component::text::{LineBreaking, TextStyle};
+use crate::ui::component::{Component, Event, EventCtx, Label, TextLayout, Timer};
+use crate::ui::display::Icon;
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Rect};
+use crate::ui::shape::{Bar, Renderer, Text, ToifImage};
+use crate::ui::util::DisplayStyle;
 
 pub enum PinKeyboardMsg {
     Confirmed,

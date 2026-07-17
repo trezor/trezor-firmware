@@ -1,9 +1,7 @@
-use crate::ui::{
-    display::Color,
-    shape::{render::ScopedRenderer, Canvas, DirectRenderer, DrawingCache},
-};
-
 use super::bumps::run_with_bumps;
+use crate::ui::display::Color;
+use crate::ui::shape::render::ScopedRenderer;
+use crate::ui::shape::{Canvas, DirectRenderer, DrawingCache};
 
 /// Creates the `Renderer` object for drawing on a specified canvas and invokes
 /// a user-defined function that takes a single argument `target`. The user's

@@ -1,30 +1,19 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        button_request::{ButtonRequest, ButtonRequestCode},
-        component::{
-            button_request::ButtonRequestExt,
-            swipe_detect::SwipeSettings,
-            text::paragraphs::{
-                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
-            },
-            ComponentExt, EventCtx, Paginate as _,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow, SwipePage,
-        },
-        geometry::Direction,
-        layout::util::RecoveryType,
-    },
+use super::super::component::{Footer, Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
+use super::super::theme;
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
+use crate::ui::component::button_request::ButtonRequestExt;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
 };
-
-use super::super::{
-    component::{Footer, Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
-    theme,
-};
+use crate::ui::component::{ComponentExt, EventCtx, Paginate as _};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
+use crate::ui::geometry::Direction;
+use crate::ui::layout::util::RecoveryType;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ContinueRecoveryBeforeShares {

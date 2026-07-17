@@ -1,25 +1,16 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            image::Image,
-            text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
-            Child, Component, Event, EventCtx, Label, Paginate,
-        },
-        display,
-        geometry::{Insets, Rect},
-        shape::{self, Renderer},
-        util::Pager,
-    },
-};
-
-use super::{
-    fido_icons::get_fido_icon_data,
-    swipe::{Swipe, SwipeDirection},
-    theme, CancelConfirmMsg, ScrollBar,
-};
-
 use core::cell::Cell;
+
+use super::fido_icons::get_fido_icon_data;
+use super::swipe::{Swipe, SwipeDirection};
+use super::{theme, CancelConfirmMsg, ScrollBar};
+use crate::strutil::TString;
+use crate::ui::component::image::Image;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Paginate};
+use crate::ui::display;
+use crate::ui::geometry::{Insets, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::Pager;
 
 const ICON_HEIGHT: i16 = 70;
 const SCROLLBAR_INSET_TOP: i16 = 5;

@@ -1,13 +1,8 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Never},
-        geometry::{Insets, Rect},
-        shape::Renderer,
-    },
-};
-
 use super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, Event, EventCtx, Never};
+use crate::ui::geometry::{Insets, Rect};
+use crate::ui::shape::Renderer;
 
 pub enum CancelInfoConfirmMsg {
     Cancelled,

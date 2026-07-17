@@ -1,9 +1,10 @@
+use minicbor::Encoder;
+
 use super::{
     receiver_acquire, receiver_release, send_request, wait_for_response, MsgType, SmpBuffer,
     SmpHeader, SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE,
 };
 use crate::time::Duration;
-use minicbor::Encoder;
 
 const CHUNK_SIZE: usize = 256;
 const MAX_PACKET_SIZE: usize = 512;

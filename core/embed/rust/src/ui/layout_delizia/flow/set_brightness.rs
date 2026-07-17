@@ -1,27 +1,19 @@
 use core::sync::atomic::{AtomicU8, Ordering};
 
-use crate::{
-    error::Error,
-    storage,
-    translations::TR,
-    trezorhal::display,
-    ui::{
-        component::{swipe_detect::SwipeSettings, EventCtx, FlowMsg},
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, SwipeFlow,
-        },
-        geometry::Direction,
-    },
+use super::super::component::number_input_slider::{
+    NumberInputSliderDialog, NumberInputSliderDialogMsg,
 };
-
-use super::super::{
-    component::{
-        number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
-        Footer, Frame, Header,
-    },
-    theme,
-};
+use super::super::component::{Footer, Frame, Header};
+use super::super::theme;
+use crate::error::Error;
+use crate::storage;
+use crate::translations::TR;
+use crate::trezorhal::display;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::{EventCtx, FlowMsg};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
 pub enum SetBrightness {

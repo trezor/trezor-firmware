@@ -6,17 +6,16 @@ mod image_info;
 mod reset;
 mod upload;
 
-use crate::{
-    time::{Duration, Instant},
-    trezorhal::{
-        irq::{irq_lock, irq_unlock},
-        nrf::send_data,
-    },
-};
+use core::cell::UnsafeCell;
+use core::convert::Infallible;
+
 use base64::{base64_decode, base64_encode};
-use core::{cell::UnsafeCell, convert::Infallible};
 use crc16::crc16_itu_t;
 use minicbor::encode::write::Write;
+
+use crate::time::{Duration, Instant};
+use crate::trezorhal::irq::{irq_lock, irq_unlock};
+use crate::trezorhal::nrf::send_data;
 
 pub const SMP_HEADER_SIZE: usize = 8;
 

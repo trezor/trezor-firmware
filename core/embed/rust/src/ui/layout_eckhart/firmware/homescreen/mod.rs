@@ -3,32 +3,25 @@ mod helpers;
 mod notification_center;
 
 use header::HomescreenHeader;
+pub use helpers::check_homescreen_format;
 use helpers::get_homescreen_image;
 use notification_center::HomescreenNotificationCenter;
 
-pub use helpers::check_homescreen_format;
-
-use crate::{
-    error::Error,
-    io::BinaryData,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{Component, Event, EventCtx, Swipe},
-        display::image::ImageInfo,
-        geometry::{Direction, Rect},
-        notification::Notification,
-        shape::{self, Renderer},
-        util::animation_disabled,
-    },
-};
-
-use super::{
-    super::component::{Button, ButtonContent},
-    constant::SCREEN,
-    theme::{self, firmware::button_homebar_style},
-    ActionBar, ActionBarMsg,
-};
+use super::super::component::{Button, ButtonContent};
+use super::constant::SCREEN;
+use super::theme::firmware::button_homebar_style;
+use super::theme::{self};
+use super::{ActionBar, ActionBarMsg};
+use crate::error::Error;
+use crate::io::BinaryData;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::{Component, Event, EventCtx, Swipe};
+use crate::ui::display::image::ImageInfo;
+use crate::ui::geometry::{Direction, Rect};
+use crate::ui::notification::Notification;
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::animation_disabled;
 
 /// Full-screen component for the homescreen and lockscreen.
 pub struct Homescreen {

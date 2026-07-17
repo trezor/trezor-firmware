@@ -1,21 +1,13 @@
-use crate::{
-    trezorhal::bip39,
-    ui::{
-        component::{text::common::TextBox, Component, Event, EventCtx},
-        geometry::{Alignment2D, Offset, Rect},
-        shape,
-        shape::Renderer,
-    },
-};
-
-use super::super::{
-    super::theme,
-    keyboard::{
-        common::{render_pending_marker, MultiTapKeyboard},
-        mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
-    },
-    Button, ButtonContent, ButtonMsg,
-};
+use super::super::super::theme;
+use super::super::keyboard::common::{render_pending_marker, MultiTapKeyboard};
+use super::super::keyboard::mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT};
+use super::super::{Button, ButtonContent, ButtonMsg};
+use crate::trezorhal::bip39;
+use crate::ui::component::text::common::TextBox;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 const MAX_LENGTH: usize = 8;
 

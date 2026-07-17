@@ -1,12 +1,8 @@
-use crate::{
-    io::BinaryData,
-    ui::{
-        component::{Component, Event, EventCtx, Never},
-        geometry::{Alignment2D, Rect},
-        shape,
-        shape::Renderer,
-    },
-};
+use crate::io::BinaryData;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::geometry::{Alignment2D, Rect};
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 pub struct Jpeg {
     area: Rect,
@@ -53,7 +49,9 @@ impl crate::trace::Trace for Jpeg {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    use crate::error::Error;
+    use crate::micropython::obj::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
     impl ComponentMsgObj for super::Jpeg {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
             unreachable!();

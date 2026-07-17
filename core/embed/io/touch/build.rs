@@ -50,8 +50,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 // -------------------------------------------------------------------------
 
 fn set_panel_t2t1(_lib: &mut CLibrary) {
-    // The T2T1 panel needs no touch coordinate correction; the driver falls back
-    // to identity mapping when no TOUCH_PANEL_* macro is defined.
+    // The T2T1 panel needs no touch coordinate correction; the driver falls
+    // back to identity mapping when no TOUCH_PANEL_* macro is defined.
 }
 
 fn set_panel_lx154a2422cpt23(lib: &mut CLibrary) {

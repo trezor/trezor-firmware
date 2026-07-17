@@ -1,4 +1,6 @@
-use core::{marker::PhantomData, mem::MaybeUninit, ptr::NonNull};
+use core::marker::PhantomData;
+use core::mem::MaybeUninit;
+use core::ptr::NonNull;
 
 pub use super::ffi::c_layout_t;
 

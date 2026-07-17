@@ -1,26 +1,17 @@
+use super::super::theme::TITLE_HEIGHT;
 use super::{theme, Footer, Header};
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            base::AttachType,
-            paginated::Paginate,
-            swipe_detect::{SwipeConfig, SwipeSettings},
-            Component,
-            Event::{self, Swipe},
-            EventCtx, FlowMsg, MsgMap, SwipeDetect,
-        },
-        event::SwipeEvent,
-        geometry::{Direction, Insets, Point, Rect},
-        lerp::Lerp,
-        shape::{self, Renderer},
-    },
-};
-
+use crate::strutil::TString;
+use crate::ui::component::base::AttachType;
+use crate::ui::component::paginated::Paginate;
+use crate::ui::component::swipe_detect::{SwipeConfig, SwipeSettings};
+use crate::ui::component::Event::{self, Swipe};
+use crate::ui::component::{Component, EventCtx, FlowMsg, MsgMap, SwipeDetect};
+use crate::ui::event::SwipeEvent;
+use crate::ui::geometry::{Direction, Insets, Point, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::{self, Renderer};
 #[cfg(feature = "micropython")]
 use crate::ui::util::Pager;
-
-use super::super::theme::TITLE_HEIGHT;
 
 #[derive(Clone)]
 pub struct HorizontalSwipe {

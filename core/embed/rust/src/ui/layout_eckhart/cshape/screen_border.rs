@@ -1,13 +1,8 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Alignment2D, Rect},
-    shape::{self, Renderer},
-};
-
-use super::super::{
-    constant::SCREEN,
-    theme::{ICON_BORDER_BL, ICON_BORDER_BR, ICON_BORDER_TOP},
-};
+use super::super::constant::SCREEN;
+use super::super::theme::{ICON_BORDER_BL, ICON_BORDER_BR, ICON_BORDER_TOP};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment2D, Rect};
+use crate::ui::shape::{self, Renderer};
 
 /// Custom shape for a full screen border overlay, parameterizable by color.
 pub struct ScreenBorder {

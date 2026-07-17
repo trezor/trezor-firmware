@@ -41,7 +41,6 @@ pub mod ui_common;
 pub mod ui_firmware;
 
 pub use ui_common::CommonUI;
-
 #[cfg(feature = "ui_performance_overlay")]
 pub use ui_common::PerformanceOverlay;
 

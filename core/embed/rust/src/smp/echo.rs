@@ -1,9 +1,11 @@
+use minicbor::data::Type;
+use minicbor::{decode, Decoder, Encoder};
+
 use super::{
     receiver_acquire, receiver_release, send_request, wait_for_response, MsgType, SmpBuffer,
     SmpHeader, SMP_CMD_ID_ECHO, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ,
 };
 use crate::time::Duration;
-use minicbor::{data::Type, decode, Decoder, Encoder};
 
 pub fn send(text: &str) -> bool {
     let mut cbor_data = [0u8; 64];

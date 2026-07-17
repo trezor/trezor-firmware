@@ -1,18 +1,11 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx},
-        geometry::{Grid, GridCellSpan, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::super::{
-    super::theme,
-    button::{Button, ButtonMsg},
-};
-
 use heapless::Vec;
+
+use super::super::super::theme;
+use super::super::button::{Button, ButtonMsg};
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Grid, GridCellSpan, Rect};
+use crate::ui::shape::Renderer;
 
 #[derive(Copy, Clone)]
 pub enum SelectWordCountMsg {

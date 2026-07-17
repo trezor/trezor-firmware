@@ -1,32 +1,22 @@
-use crate::{
-    error,
-    micropython::{gc::Gc, list::List},
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            paginated::Paginate as _,
-            swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, Paragraphs},
-            EventCtx,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow, SwipePage,
-        },
-        geometry::Direction,
-    },
-};
-
-use super::super::{
-    component::{
-        FidoCredential, Footer, Frame, Header, PagedVerticalMenu, PromptScreen, SwipeContent,
-        VerticalMenu,
-    },
-    theme,
-};
-
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+use super::super::component::{
+    FidoCredential, Footer, Frame, Header, PagedVerticalMenu, PromptScreen, SwipeContent,
+    VerticalMenu,
+};
+use super::super::theme;
+use crate::error;
+use crate::micropython::gc::Gc;
+use crate::micropython::list::List;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::paginated::Paginate as _;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
+use crate::ui::component::EventCtx;
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmFido {

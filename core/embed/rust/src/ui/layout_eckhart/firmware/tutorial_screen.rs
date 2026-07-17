@@ -1,28 +1,20 @@
-use crate::{
-    time::{Duration, Stopwatch},
-    translations::TR,
-    ui::{
-        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label},
-        display::{toif::Toif, Color},
-        flow::Swipable,
-        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
-        shape::{Bar, Renderer, ToifImage},
-        util::{animation_disabled, Pager},
-    },
-};
-
-use super::{
-    super::{
-        component::Button,
-        constant::SCREEN,
-        cshape::{render_loader_indeterminate, ScreenBorder},
-        theme::{self, ScreenBackground},
-    },
-    ActionBar, ActionBarMsg,
-};
-
+use super::super::component::Button;
+use super::super::constant::SCREEN;
+use super::super::cshape::{render_loader_indeterminate, ScreenBorder};
+use super::super::theme::{self, ScreenBackground};
+use super::{ActionBar, ActionBarMsg};
+use crate::time::{Duration, Stopwatch};
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::display::toif::Toif;
+use crate::ui::display::Color;
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect};
 #[cfg(feature = "rgb_led")]
 use crate::ui::led::LedState;
+use crate::ui::shape::{Bar, Renderer, ToifImage};
+use crate::ui::util::{animation_disabled, Pager};
 
 // Duration of the loader animation
 const LOADER_DURATION: Duration = Duration::from_secs(3);

@@ -1,6 +1,5 @@
-use crate::time::Duration;
-
 use super::ffi;
+use crate::time::Duration;
 
 /// Returns the current time in milliseconds since the device was reset.
 /// Time is represented as a 32-bit number that wraps around every 49.7 days.

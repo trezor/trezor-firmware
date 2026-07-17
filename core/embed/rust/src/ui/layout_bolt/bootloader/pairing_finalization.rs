@@ -1,19 +1,12 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Pad},
-        display::{Color, Font},
-        event::BLEEvent,
-        geometry::{Alignment, Offset, Point, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::super::{
-    component::{Button, ButtonMsg},
-    constant::WIDTH,
-    theme::bootloader::{BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING},
-};
+use super::super::component::{Button, ButtonMsg};
+use super::super::constant::WIDTH;
+use super::super::theme::bootloader::{BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING};
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Pad};
+use crate::ui::display::{Color, Font};
+use crate::ui::event::BLEEvent;
+use crate::ui::geometry::{Alignment, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]

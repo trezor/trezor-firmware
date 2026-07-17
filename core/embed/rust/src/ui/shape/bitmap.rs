@@ -1,8 +1,10 @@
-use crate::{error::Error, trezorhal::bitblt};
+use core::cell::Cell;
+use core::marker::PhantomData;
 
-use crate::ui::{display::Color, geometry::Offset};
-
-use core::{cell::Cell, marker::PhantomData};
+use crate::error::Error;
+use crate::trezorhal::bitblt;
+use crate::ui::display::Color;
+use crate::ui::geometry::Offset;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum BitmapFormat {

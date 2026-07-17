@@ -1,20 +1,17 @@
-use core::{
-    convert::{TryFrom, TryInto},
-    str,
-};
+use core::convert::{TryFrom, TryInto};
+use core::str;
 
-use crate::{
-    error::Error,
-    io::InputStream,
-    micropython::{buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr, util},
-};
-
-use super::{
-    defs::{self, FieldDef, FieldType, MsgDef},
-    error,
-    obj::{MsgDefObj, MsgObj},
-    zigzag,
-};
+use super::defs::{self, FieldDef, FieldType, MsgDef};
+use super::obj::{MsgDefObj, MsgObj};
+use super::{error, zigzag};
+use crate::error::Error;
+use crate::io::InputStream;
+use crate::micropython::gc::Gc;
+use crate::micropython::list::List;
+use crate::micropython::map::Map;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::{buffer, util};
 
 pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
     let block = || {

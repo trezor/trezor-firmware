@@ -1,12 +1,9 @@
-use super::ffi;
-
-use crate::ui::{
-    geometry::{Offset, Point, Rect},
-    shape::{Bitmap, BitmapFormat, BitmapView},
-};
-
-use crate::io::BinaryData;
 use num_traits::FromPrimitive;
+
+use super::ffi;
+use crate::io::BinaryData;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{Bitmap, BitmapFormat, BitmapView};
 
 pub const RGBA8888_BUFFER_SIZE: usize = ffi::JPEGDEC_RGBA8888_BUFFER_SIZE as _;
 pub const MONO8_BUFFER_SIZE: usize = ffi::JPEGDEC_MONO8_BUFFER_SIZE as _;

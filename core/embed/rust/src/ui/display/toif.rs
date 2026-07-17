@@ -1,7 +1,5 @@
-use crate::{
-    error::{value_error, Error},
-    ui::geometry::Offset,
-};
+use crate::error::{value_error, Error};
+use crate::ui::geometry::Offset;
 
 const TOIF_HEADER_LENGTH: usize = 12;
 

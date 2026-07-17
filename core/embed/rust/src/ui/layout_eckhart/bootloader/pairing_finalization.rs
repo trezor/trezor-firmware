@@ -1,14 +1,11 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Label},
-    event::BLEEvent,
-    geometry::Rect,
-    shape::Renderer,
-};
-
-use super::{
-    super::{component::Button, cshape::ScreenBorder, theme, CANCEL_MESSAGE},
-    BldActionBar, BldActionBarMsg, BldHeader,
-};
+use super::super::component::Button;
+use super::super::cshape::ScreenBorder;
+use super::super::{theme, CANCEL_MESSAGE};
+use super::{BldActionBar, BldActionBarMsg, BldHeader};
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::event::BLEEvent;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]

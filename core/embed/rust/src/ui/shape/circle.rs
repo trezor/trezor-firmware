@@ -1,11 +1,8 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Point, Rect},
-};
+use without_alloc::alloc::LocalAllocLeakExt;
 
 use super::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
-
-use without_alloc::alloc::LocalAllocLeakExt;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Point, Rect};
 
 /// A shape for rendering various types of circles or circle sectors.
 pub struct Circle {

@@ -1,10 +1,8 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    display::Color,
-    geometry::Rect,
-    shape,
-    shape::Renderer,
-};
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::display::Color;
+use crate::ui::geometry::Rect;
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 pub struct Bar {
     area: Rect,

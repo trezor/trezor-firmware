@@ -1,10 +1,6 @@
-use crate::{
-    error::Error,
-    ui::{
-        geometry::Offset,
-        shape::{Bitmap, BitmapView, Canvas, CanvasBuilder},
-    },
-};
+use crate::error::Error;
+use crate::ui::geometry::Offset;
+use crate::ui::shape::{Bitmap, BitmapView, Canvas, CanvasBuilder};
 
 /// Size of image buffer in bytes
 /// (up to 240x240 pixel, 16-bit RGB565 image)

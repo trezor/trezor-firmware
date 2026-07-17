@@ -1,24 +1,18 @@
-use crate::{
-    error::Error,
-    io::InputStream,
-    micropython::{
-        buffer::get_buffer,
-        ffi,
-        macros::{
-            attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type,
-        },
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
-    trezorhal::translations,
-};
-
 use super::translated_string::TranslatedString;
+use crate::error::Error;
+use crate::io::InputStream;
+use crate::micropython::buffer::get_buffer;
+use crate::micropython::macros::{
+    attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type,
+};
+use crate::micropython::map::Map;
+use crate::micropython::module::Module;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::simple_type::SimpleTypeObj;
+use crate::micropython::typ::Type;
+use crate::micropython::{ffi, util};
+use crate::trezorhal::translations;
 
 // SAFETY: Caller is supposed to be MicroPython, or copy MicroPython contracts
 // about the meaning of arguments.

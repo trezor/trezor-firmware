@@ -1,15 +1,11 @@
-use crate::{
-    strutil::TString,
-    time::{Duration, Instant},
-    ui::{
-        animation::Animation,
-        component::{Component, Event, EventCtx, Never, Timer},
-        display::{Color, Font},
-        geometry::{Offset, Rect},
-        shape::{self, Renderer},
-        util::animation_disabled,
-    },
-};
+use crate::strutil::TString;
+use crate::time::{Duration, Instant};
+use crate::ui::animation::Animation;
+use crate::ui::component::{Component, Event, EventCtx, Never, Timer};
+use crate::ui::display::{Color, Font};
+use crate::ui::geometry::{Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::animation_disabled;
 
 const ANIMATION_DURATION_MS: u32 = 2000;
 const PAUSE_DURATION_MS: u32 = 1000;

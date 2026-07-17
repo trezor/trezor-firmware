@@ -1,11 +1,10 @@
-use anyhow::{Context, Result, ensure};
-use owo_colors::OwoColorize;
 use std::process;
 
-use crate::{
-    args::{BuildArgs, Project, TestArgs},
-    artifacts, helpers, memusage, postbuild, prebuild,
-};
+use anyhow::{Context, Result, ensure};
+use owo_colors::OwoColorize;
+
+use crate::args::{BuildArgs, Project, TestArgs};
+use crate::{artifacts, helpers, memusage, postbuild, prebuild};
 
 pub fn build(args: BuildArgs) -> Result<()> {
     build_impl(args.clone(), false)?;

@@ -1,4 +1,3 @@
-use crate::{trezorhal::display, ui::geometry::Offset};
 /// This is a simple and fast blurring algorithm that uses a box filter -
 /// a square kernel with all coefficients set to 1.
 ///
@@ -39,6 +38,9 @@ use crate::{trezorhal::display, ui::geometry::Offset};
 /// }
 /// ```
 use core::mem::size_of;
+
+use crate::trezorhal::display;
+use crate::ui::geometry::Offset;
 
 const MAX_RADIUS: usize = 4;
 const MAX_SIDE: usize = 1 + MAX_RADIUS * 2;

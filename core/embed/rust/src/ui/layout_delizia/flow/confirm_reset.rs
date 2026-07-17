@@ -1,26 +1,15 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        button_request::ButtonRequestCode,
-        component::{
-            swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
-            ButtonRequestExt,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
-};
-
-use super::super::{
-    component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
-    theme,
-};
+use super::super::component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
+use super::super::theme;
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::button_request::ButtonRequestCode;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort};
+use crate::ui::component::ButtonRequestExt;
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmResetCreate {

@@ -1,18 +1,12 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{paginated::SinglePage, Component, Event, EventCtx},
-        geometry::{Alignment, Grid, GridCellSpan, Rect},
-        shape::Renderer,
-    },
-};
-
 use heapless::Vec;
 
-use super::super::super::{
-    component::button::{Button, ButtonMsg},
-    cshape, theme,
-};
+use super::super::super::component::button::{Button, ButtonMsg};
+use super::super::super::{cshape, theme};
+use crate::strutil::TString;
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment, Grid, GridCellSpan, Rect};
+use crate::ui::shape::Renderer;
 
 #[derive(Copy, Clone)]
 pub enum SelectWordCountMsg {

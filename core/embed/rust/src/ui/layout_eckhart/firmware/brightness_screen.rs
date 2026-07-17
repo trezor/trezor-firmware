@@ -1,21 +1,14 @@
-use crate::{
-    storage,
-    translations::TR,
-    trezorhal::display,
-    ui::{
-        component::{Component, Event, EventCtx},
-        event::TouchEvent,
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        shape::{Bar, Renderer},
-    },
-};
-
-use super::super::{
-    component::Button,
-    constant::SCREEN,
-    firmware::{Header, HeaderMsg},
-    theme,
-};
+use super::super::component::Button;
+use super::super::constant::SCREEN;
+use super::super::firmware::{Header, HeaderMsg};
+use super::super::theme;
+use crate::storage;
+use crate::translations::TR;
+use crate::trezorhal::display;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment2D, Insets, Offset, Point, Rect};
+use crate::ui::shape::{Bar, Renderer};
 
 pub struct SetBrightnessScreen {
     header: Header,
@@ -214,7 +207,8 @@ impl crate::trace::Trace for VerticalSlider {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::super::constant::SCREEN, *};
+    use super::super::super::constant::SCREEN;
+    use super::*;
 
     #[test]
     fn test_component_heights_fit_screen() {

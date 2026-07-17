@@ -42,7 +42,6 @@ pub use progressive_render::ProgressiveRenderer;
 pub use qrcode::QrImage;
 pub use rawimage::RawImage;
 pub use render::{DirectRenderer, Renderer, ScopedRenderer};
-
 pub use text::Text;
 pub use toif::ToifImage;
 #[cfg(feature = "ui_image_buffer")]

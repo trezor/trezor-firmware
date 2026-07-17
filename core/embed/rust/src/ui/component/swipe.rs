@@ -1,9 +1,7 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    event::TouchEvent,
-    geometry::{Direction, Point, Rect},
-    shape::Renderer,
-};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Direction, Point, Rect};
+use crate::ui::shape::Renderer;
 
 #[derive(Clone)]
 pub struct Swipe {

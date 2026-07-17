@@ -1,13 +1,9 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Label, Maybe},
-        geometry::{Alignment2D, Grid, Offset, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::super::{super::theme, Button, ButtonMsg, Swipe, SwipeDirection};
+use super::super::super::theme;
+use super::super::{Button, ButtonMsg, Swipe, SwipeDirection};
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Maybe};
+use crate::ui::geometry::{Alignment2D, Grid, Offset, Rect};
+use crate::ui::shape::Renderer;
 
 pub const MNEMONIC_KEY_COUNT: usize = 9;
 

@@ -1,10 +1,8 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Alignment2D, Offset, Point, Rect},
-    shape::{Canvas, DrawingCache, Renderer, Shape, ShapeClone},
-};
-
 use without_alloc::alloc::LocalAllocLeakExt;
+
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::shape::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
 
 #[derive(Clone, Copy)]
 pub enum CornerPosition {

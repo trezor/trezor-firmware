@@ -1,17 +1,11 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label},
-        display::{Color, Icon},
-        geometry::{Alignment2D, Insets, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::{
-    super::component::{Button, ButtonContent, ButtonMsg, FuelGauge},
-    constant, theme,
-};
+use super::super::component::{Button, ButtonContent, ButtonMsg, FuelGauge};
+use super::{constant, theme};
+use crate::strutil::TString;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, Label};
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Alignment2D, Insets, Rect};
+use crate::ui::shape::{self, Renderer};
 
 /// Component for the header of a screen. Eckhart UI shows the title (can be two
 /// lines), optional icon button on the left, and optional icon button

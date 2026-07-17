@@ -1,32 +1,21 @@
 use heapless::String;
-
-use crate::ui::{
-    component::{Label, LineBreaking::BreakWordsNoHyphen},
-    constant::{self, HEIGHT, SCREEN},
-    display::{self, Color, Icon},
-    geometry::{Alignment2D, Offset, Point},
-    layout::simplified::{show, ReturnToC},
-};
-
-use super::{
-    component::{
-        bl_confirm::{Confirm, ConfirmMsg},
-        ResultScreen, WelcomeScreen,
-    },
-    cshape, fonts,
-    theme::{
-        bootloader::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS},
-        ICON_ARM_LEFT, ICON_ARM_RIGHT, TEXT_BOLD, TEXT_NORMAL,
-    },
-    UICaesar,
-};
-
-use crate::{
-    bootloader::run,
-    ui::{display::toif::Toif, geometry::Alignment, shape, shape::render_on_display},
-};
-
 use ufmt::uwrite;
+
+use super::component::bl_confirm::{Confirm, ConfirmMsg};
+use super::component::{ResultScreen, WelcomeScreen};
+use super::theme::bootloader::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS};
+use super::theme::{ICON_ARM_LEFT, ICON_ARM_RIGHT, TEXT_BOLD, TEXT_NORMAL};
+use super::{cshape, fonts, UICaesar};
+use crate::bootloader::run;
+use crate::ui::component::Label;
+use crate::ui::component::LineBreaking::BreakWordsNoHyphen;
+use crate::ui::constant::{self, HEIGHT, SCREEN};
+use crate::ui::display::toif::Toif;
+use crate::ui::display::{self, Color, Icon};
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point};
+use crate::ui::layout::simplified::{show, ReturnToC};
+use crate::ui::shape;
+use crate::ui::shape::render_on_display;
 
 mod intro;
 mod menu;
@@ -34,15 +23,15 @@ mod welcome;
 
 mod connect;
 
-use crate::{
-    time::Duration,
-    trezorhal::time,
-    ui::{ui_bootloader::BootloaderUI, util::animation_disabled},
-};
 use connect::Connect;
 use intro::Intro;
 use menu::Menu;
 use welcome::Welcome;
+
+use crate::time::Duration;
+use crate::trezorhal::time;
+use crate::ui::ui_bootloader::BootloaderUI;
+use crate::ui::util::animation_disabled;
 
 pub type BootloaderString = String<128>;
 

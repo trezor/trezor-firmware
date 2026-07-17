@@ -1,13 +1,8 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::{Alignment2D, Insets, Offset, Rect},
-    shape::{self, Renderer},
-};
-
-use super::super::{
-    component::{Button, ButtonMsg},
-    theme,
-};
+use super::super::component::{Button, ButtonMsg};
+use super::super::theme;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment2D, Insets, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
 
 /// Component for control buttons in the bottom of the screen. Reduced variant
 /// for Bootloader UI.

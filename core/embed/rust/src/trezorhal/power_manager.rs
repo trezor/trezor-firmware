@@ -1,6 +1,6 @@
-use super::ffi;
 use core::ptr::null_mut;
 
+use super::ffi;
 #[cfg(feature = "ui")]
 use crate::ui::event::PMEvent;
 

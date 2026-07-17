@@ -1,10 +1,8 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Point, Rect},
-    shape::{Canvas, DrawingCache, Renderer, Shape, ShapeClone},
-};
-
 use without_alloc::alloc::LocalAllocLeakExt;
+
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
 
 // Shape of horizontal solid/dotted line
 pub struct HorizontalLine {

@@ -1,19 +1,13 @@
-use crate::{
-    strutil::TString,
-    time::{Duration, Instant},
-    ui::{
-        animation::Animation,
-        component::{Child, Component, Event, EventCtx},
-        constant,
-        display::{self, Color, Font, LOADER_MAX},
-        geometry::{Offset, Point, Rect},
-        shape,
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
-
 use super::{theme, Progress};
+use crate::strutil::TString;
+use crate::time::{Duration, Instant};
+use crate::ui::animation::Animation;
+use crate::ui::component::{Child, Component, Event, EventCtx};
+use crate::ui::display::{self, Color, Font, LOADER_MAX};
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
+use crate::ui::{constant, shape};
 
 pub const DEFAULT_DURATION_MS: u32 = 1000;
 pub const SHRINKING_DURATION_MS: u32 = 500;

@@ -1,28 +1,19 @@
-use crate::{
-    strutil::TString,
-    time::Duration,
-    translations::TR,
-    ui::{
-        component::{Component, Event, EventCtx, Never, Timer},
-        display::Color,
-        geometry::{Alignment2D, Offset, Rect},
-        notification::{Notification, NotificationLevel},
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
-
-use super::{
-    super::{
-        super::component::{Button, ButtonContent},
-        theme::{self, firmware::button_homebar_style, ScreenBackground},
-        Hint,
-    },
-    helpers::{render_pill_shaped_background, SHADOW_HEIGHT},
-};
-
+use super::super::super::component::{Button, ButtonContent};
+use super::super::theme::firmware::button_homebar_style;
+use super::super::theme::{self, ScreenBackground};
+use super::super::Hint;
+use super::helpers::{render_pill_shaped_background, SHADOW_HEIGHT};
+use crate::strutil::TString;
+use crate::time::Duration;
+use crate::translations::TR;
+use crate::ui::component::{Component, Event, EventCtx, Never, Timer};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
 #[cfg(feature = "rgb_led")]
 use crate::ui::led::LedState;
+use crate::ui::notification::{Notification, NotificationLevel};
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
 
 pub(super) struct HomescreenNotificationCenter {
     /// Current notification to display, if any

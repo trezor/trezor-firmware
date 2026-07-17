@@ -1,19 +1,16 @@
-use super::{super::model, *};
-use crate::{
-    error::Error,
-    micropython::{
-        buffer::{get_buffer, get_buffer_mut, StrBuffer},
-        list::List,
-        macros::*,
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
-};
+use super::super::model;
+use super::*;
+use crate::error::Error;
+use crate::micropython::buffer::{get_buffer, get_buffer_mut, StrBuffer};
+use crate::micropython::list::List;
+use crate::micropython::macros::*;
+use crate::micropython::map::Map;
+use crate::micropython::module::Module;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::simple_type::SimpleTypeObj;
+use crate::micropython::typ::Type;
+use crate::micropython::util;
 
 extern "C" fn py_erase_bonds() -> Obj {
     let block = || {

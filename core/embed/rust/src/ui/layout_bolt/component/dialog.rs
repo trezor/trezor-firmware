@@ -1,20 +1,13 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            image::BlendedImage,
-            text::{
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-                TextStyle,
-            },
-            Child, Component, Event, EventCtx, Never,
-        },
-        geometry::{Insets, LinearPlacement, Rect},
-        shape::Renderer,
-    },
-};
-
 use super::theme;
+use crate::strutil::TString;
+use crate::ui::component::image::BlendedImage;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
+};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Child, Component, Event, EventCtx, Never};
+use crate::ui::geometry::{Insets, LinearPlacement, Rect};
+use crate::ui::shape::Renderer;
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum DialogMsg<T, U> {

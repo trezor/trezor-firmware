@@ -1,15 +1,10 @@
-use crate::{
-    error::Error,
-    io::BinaryData,
-    ui::{
-        component::{Component, Event, EventCtx, Never},
-        display::image::ImageInfo,
-        geometry::{Offset, Point, Rect},
-        shape::{self, render_on_canvas, ImageBuffer, Renderer, Rgb565Canvas},
-    },
-};
-
 use super::paginated::SinglePage;
+use crate::error::Error;
+use crate::io::BinaryData;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::display::image::ImageInfo;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{self, render_on_canvas, ImageBuffer, Renderer, Rgb565Canvas};
 
 pub struct CachedJpeg {
     area: Rect,
@@ -86,7 +81,9 @@ impl crate::trace::Trace for CachedJpeg {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    use crate::error::Error;
+    use crate::micropython::obj::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
     impl ComponentMsgObj for super::CachedJpeg {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
             unreachable!();

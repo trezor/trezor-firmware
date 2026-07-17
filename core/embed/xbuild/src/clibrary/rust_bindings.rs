@@ -1,8 +1,8 @@
 use bindgen;
-use color_eyre::{Result, eyre::WrapErr};
+use color_eyre::Result;
+use color_eyre::eyre::WrapErr;
 
 use super::CLibrary;
-
 use crate::helpers::{links_name, path_from_env};
 
 impl CLibrary {
@@ -44,8 +44,8 @@ impl CLibrary {
                 .use_core()
                 .ctypes_prefix("cty")
                 .size_t_is_usize(true)
-                // Disable the layout tests. They spew out a lot of code-style bindings, and are not too
-                // relevant for our use-case.
+                // Disable the layout tests. They spew out a lot of code-style bindings, and are not
+                // too relevant for our use-case.
                 .layout_tests(false)
                 // Tell cargo to invalidate the built crate whenever any of the
                 // included header files change.

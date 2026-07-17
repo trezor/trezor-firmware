@@ -1,31 +1,22 @@
-use crate::{
-    error,
-    micropython::{gc::Gc, list::List},
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            base::ComponentExt,
-            text::paragraphs::{Paragraph, ParagraphSource},
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::{Direction, LinearPlacement},
-    },
-};
-
-use super::super::{
-    component::Button,
-    firmware::{
-        ActionBar, FidoCredential, Header, LongMenuGc, ShortMenuVec, TextScreen, TextScreenMsg,
-        VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
-    },
-    theme::{self, gradient::Gradient},
-};
-
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+use super::super::component::Button;
+use super::super::firmware::{
+    ActionBar, FidoCredential, Header, LongMenuGc, ShortMenuVec, TextScreen, TextScreenMsg,
+    VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
+};
+use super::super::theme::gradient::Gradient;
+use super::super::theme::{self};
+use crate::error;
+use crate::micropython::gc::Gc;
+use crate::micropython::list::List;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::base::ComponentExt;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::{Direction, LinearPlacement};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmFido {

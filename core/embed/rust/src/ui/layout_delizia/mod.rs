@@ -1,18 +1,16 @@
-use super::{geometry::Rect, CommonUI};
+use theme::backlight;
 
+use super::geometry::Rect;
+use super::CommonUI;
 #[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
 use super::{display::Color, geometry::Offset, shape};
-
 #[cfg(feature = "ui_performance_overlay")]
 use super::{
     geometry::{Alignment, Alignment2D, Point},
     PerformanceOverlay,
 };
-
 #[cfg(feature = "ui_performance_overlay")]
 use crate::strutil::ShortString;
-
-use theme::backlight;
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -30,8 +28,9 @@ pub mod fonts;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
 
-use crate::ui::layout::simplified::show;
 use component::{ErrorScreen, WelcomeScreen};
+
+use crate::ui::layout::simplified::show;
 
 pub struct UIDelizia;
 

@@ -1,26 +1,17 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            swipe_detect::SwipeConfig,
-            text::{
-                layout::LayoutFit,
-                paragraphs::{Checklist, ParagraphSource, Paragraphs},
-                TextStyle,
-            },
-            Component, Event, EventCtx, FormattedText, Label, Paginate, TextLayout,
-        },
-        flow::Swipable,
-        geometry::{Offset, Rect},
-        shape::Renderer,
-        util::Pager,
-    },
+use super::theme::{self, ScreenBackground, CONTENT_INSETS_NO_HEADER, SIDE_INSETS};
+use super::{ActionBar, ActionBarMsg, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint};
+use crate::strutil::TString;
+use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::text::layout::LayoutFit;
+use crate::ui::component::text::paragraphs::{Checklist, ParagraphSource, Paragraphs};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{
+    Component, Event, EventCtx, FormattedText, Label, Paginate, TextLayout,
 };
-
-use super::{
-    theme::{self, ScreenBackground, CONTENT_INSETS_NO_HEADER, SIDE_INSETS},
-    ActionBar, ActionBarMsg, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint,
-};
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{Offset, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 const SUBTITLE_HEIGHT: i16 = 44;
 const SUBTITLE_DOUBLE_HEIGHT: i16 = 76;

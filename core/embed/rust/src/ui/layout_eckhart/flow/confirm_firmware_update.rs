@@ -1,28 +1,17 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            text::paragraphs::{Paragraph, ParagraphSource},
-            ComponentExt,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::{Direction, LinearPlacement},
-    },
+use super::super::component::Button;
+use super::super::firmware::{
+    ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+    VerticalMenuScreen, VerticalMenuScreenMsg,
 };
-
-use super::super::{
-    component::Button,
-    firmware::{
-        ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
-        VerticalMenuScreen, VerticalMenuScreenMsg,
-    },
-    theme,
-};
+use super::super::theme;
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
+use crate::ui::component::ComponentExt;
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::{Direction, LinearPlacement};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmFirmwareUpdate {

@@ -1,4 +1,7 @@
-use crate::ui::{constant, display::Color, geometry::Point, shape, shape::Renderer};
+use crate::ui::display::Color;
+use crate::ui::geometry::Point;
+use crate::ui::shape::Renderer;
+use crate::ui::{constant, shape};
 
 pub enum LoaderRange {
     Full,

@@ -7,26 +7,17 @@ use super::component::{
     NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg,
     Progress, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog, SimplePage,
 };
-use crate::{
-    error::Error,
-    micropython::obj::Obj,
-    strutil::TString,
-    ui::{
-        component::{
-            paginated::PageMsg,
-            placed::GridPlaced,
-            text::paragraphs::{ParagraphSource, Paragraphs},
-            Component, FormattedText, Never, Paginate,
-        },
-        layout::{
-            obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED, INFO},
-        },
-    },
-};
-
+use crate::error::Error;
+use crate::micropython::obj::Obj;
+use crate::strutil::TString;
+use crate::ui::component::paginated::PageMsg;
+use crate::ui::component::placed::GridPlaced;
+use crate::ui::component::text::paragraphs::{ParagraphSource, Paragraphs};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::Timeout;
+use crate::ui::component::{Component, FormattedText, Never, Paginate};
+use crate::ui::layout::obj::ComponentMsgObj;
+use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
 
 impl TryFrom<CancelConfirmMsg> for Obj {
     type Error = Error;

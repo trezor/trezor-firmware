@@ -1,24 +1,14 @@
-use crate::{
-    trezorhal::{
-        bitblt::{BitBltCopy, BitBltFill},
-        display,
-    },
-    ui::shape::render::ScopedRenderer,
-};
-
-#[cfg(feature = "ui_debug_overlay")]
-use crate::ui::{CommonUI, ModelUI};
-
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Rect},
-};
+use static_alloc::Bump;
 
 use super::super::{BasicCanvas, BitmapView, DrawingCache, ProgressiveRenderer, Viewport};
-
 use super::bumps;
-
-use static_alloc::Bump;
+use crate::trezorhal::bitblt::{BitBltCopy, BitBltFill};
+use crate::trezorhal::display;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Rect};
+use crate::ui::shape::render::ScopedRenderer;
+#[cfg(feature = "ui_debug_overlay")]
+use crate::ui::{CommonUI, ModelUI};
 
 pub type ConcreteRenderer<'a, 'alloc> =
     ProgressiveRenderer<'a, 'alloc, Bump<[u8; bumps::BUMP_A_SIZE]>, DisplayCanvas>;

@@ -1,5 +1,4 @@
 use crate::error::Error;
-
 pub use crate::trezorhal::button::PhysicalButton;
 use crate::trezorhal::button::PhysicalButtonEvent;
 

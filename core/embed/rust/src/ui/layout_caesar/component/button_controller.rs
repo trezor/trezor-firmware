@@ -1,15 +1,12 @@
 use super::{
     theme, Button, ButtonDetails, ButtonLayout, ButtonPos, HoldToConfirm, HoldToConfirmMsg,
 };
-use crate::{
-    time::{Duration, Instant},
-    ui::{
-        component::{base::Event, Component, EventCtx, Pad, Timer},
-        event::{ButtonEvent, PhysicalButton},
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
+use crate::time::{Duration, Instant};
+use crate::ui::component::base::Event;
+use crate::ui::component::{Component, EventCtx, Pad, Timer};
+use crate::ui::event::{ButtonEvent, PhysicalButton};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 /// All possible states buttons (left and right) can be at.
 #[derive(Copy, Clone, PartialEq, Eq)]

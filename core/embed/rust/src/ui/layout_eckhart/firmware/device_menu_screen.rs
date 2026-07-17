@@ -1,45 +1,34 @@
 use core::ops::{Deref, DerefMut};
 
-pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
-use crate::{
-    error::Error,
-    micropython::{gc::GcBox, obj::Obj},
-    strutil::TString,
-    translations::TR,
-    trezorhal::usb,
-    ui::{
-        component::{
-            text::{
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-                TextStyle,
-            },
-            Component, Event, EventCtx,
-        },
-        geometry::{LinearPlacement, Rect},
-        layout::util::PropsList,
-        shape::Renderer,
-        ui_firmware::MAX_PAIRED_DEVICES,
-    },
-};
-
-#[cfg(feature = "ble")]
-use crate::{trezorhal::ble, ui::event::BLEEvent};
-
-use crate::ui::event::USBEvent;
-
-use super::{
-    super::{
-        component::{Button, ButtonStyleSheet, FuelGauge},
-        constant::SCREEN,
-        firmware::{
-            Header, HeaderMsg, RegulatoryMsg, RegulatoryScreen, TextScreen, TextScreenMsg,
-            VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg, MEDIUM_MENU_ITEMS,
-        },
-    },
-    theme, MediumMenuVec, ShortMenuVec,
-};
 use heapless::Vec;
 use num_traits::{FromPrimitive, ToPrimitive};
+
+use super::super::component::{Button, ButtonStyleSheet, FuelGauge};
+use super::super::constant::SCREEN;
+use super::super::firmware::{
+    Header, HeaderMsg, RegulatoryMsg, RegulatoryScreen, TextScreen, TextScreenMsg, VerticalMenu,
+    VerticalMenuScreen, VerticalMenuScreenMsg, MEDIUM_MENU_ITEMS,
+};
+use super::{theme, MediumMenuVec, ShortMenuVec};
+use crate::error::Error;
+use crate::micropython::gc::GcBox;
+use crate::micropython::obj::Obj;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::trezorhal::usb;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
+};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::event::USBEvent;
+use crate::ui::geometry::{LinearPlacement, Rect};
+pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
+use crate::ui::layout::util::PropsList;
+use crate::ui::shape::Renderer;
+use crate::ui::ui_firmware::MAX_PAIRED_DEVICES;
+#[cfg(feature = "ble")]
+use crate::{trezorhal::ble, ui::event::BLEEvent};
 
 #[repr(u8)]
 #[derive(Copy, Clone, Default, FromPrimitive, ToPrimitive, PartialEq, Eq)]

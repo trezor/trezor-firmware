@@ -1,7 +1,5 @@
-use super::{
-    obj::{Obj, ObjBase},
-    typ::Type,
-};
+use super::obj::{Obj, ObjBase};
+use super::typ::Type;
 
 /// Simple MicroPython object type builder.
 ///

@@ -1,21 +1,13 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Label, Pad},
-        geometry::{Alignment, Alignment2D, Rect},
-        layout::simplified::ReturnToC,
-        shape,
-        shape::Renderer,
-    },
-};
-
-use super::super::{
-    component::{ButtonController, ButtonControllerMsg::Triggered, ButtonLayout, ButtonPos},
-    theme::{
-        bootloader::{BLD_BG, BLD_FG, TEXT_NORMAL},
-        BUTTON_HEIGHT, ICON_WARN_TITLE, TITLE_AREA_HEIGHT,
-    },
-};
+use super::super::component::ButtonControllerMsg::Triggered;
+use super::super::component::{ButtonController, ButtonLayout, ButtonPos};
+use super::super::theme::bootloader::{BLD_BG, BLD_FG, TEXT_NORMAL};
+use super::super::theme::{BUTTON_HEIGHT, ICON_WARN_TITLE, TITLE_AREA_HEIGHT};
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
+use crate::ui::geometry::{Alignment, Alignment2D, Rect};
+use crate::ui::layout::simplified::ReturnToC;
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 const LEFT_BUTTON_TEXT: &str = "Init connection";
 const RIGHT_BUTTON_TEXT: &str = "MENU";

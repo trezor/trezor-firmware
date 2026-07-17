@@ -1,18 +1,11 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        display::{Color, Font},
-        geometry::{Alignment, Offset, Rect},
-        util::ResultExt,
-    },
-};
-
-use super::{
-    layout::{Chunks, LayoutFit, LayoutSink, TextLayout},
-    LineBreaking, TextStyle,
-};
-
 use heapless::Vec;
+
+use super::layout::{Chunks, LayoutFit, LayoutSink, TextLayout};
+use super::{LineBreaking, TextStyle};
+use crate::strutil::TString;
+use crate::ui::display::{Color, Font};
+use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::util::ResultExt;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.

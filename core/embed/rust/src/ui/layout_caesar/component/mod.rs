@@ -8,7 +8,6 @@ mod loader;
 mod result;
 mod welcome_screen;
 
-use super::{common_messages, constant, theme};
 pub use button::{
     Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonPos,
 };
@@ -16,13 +15,13 @@ pub use button_controller::{AutomaticMover, ButtonController, ButtonControllerMs
 pub use common_messages::CancelConfirmMsg;
 pub use error::ErrorScreen;
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
-pub use input_methods::{
-    choice::{Choice, ChoiceControls, ChoiceFactory, ChoiceMsg, ChoicePage},
-    choice_item::ChoiceItem,
-};
+pub use input_methods::choice::{Choice, ChoiceControls, ChoiceFactory, ChoiceMsg, ChoicePage};
+pub use input_methods::choice_item::ChoiceItem;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet, ProgressLoader};
 pub use result::ResultScreen;
 pub use welcome_screen::WelcomeScreen;
+
+use super::{common_messages, constant, theme};
 
 #[cfg(all(feature = "micropython", feature = "translations"))]
 mod address_details;
@@ -45,7 +44,6 @@ mod title;
 
 #[cfg(all(feature = "micropython", feature = "translations"))]
 pub use address_details::AddressDetails;
-
 pub use changing_text::ChangingTextLine;
 #[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;

@@ -1,17 +1,10 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, ComponentExt, Event, EventCtx, Label, Pad},
-        display::Color,
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
-
-use super::{
-    theme::{BUTTON_HEIGHT, TEXT_BOLD, TITLE_AREA_HEIGHT},
-    ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
-};
+use super::theme::{BUTTON_HEIGHT, TEXT_BOLD, TITLE_AREA_HEIGHT};
+use super::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
+use crate::strutil::TString;
+use crate::ui::component::{Component, ComponentExt, Event, EventCtx, Label, Pad};
+use crate::ui::display::Color;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 const ALERT_AREA_START: i16 = 39;
 

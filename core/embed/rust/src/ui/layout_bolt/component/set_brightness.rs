@@ -1,18 +1,11 @@
-use crate::{
-    storage,
-    trezorhal::display,
-    ui::{
-        component::{Component, Event, EventCtx},
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
-
-use super::{
-    super::theme,
-    number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
-    CancelConfirmMsg,
-};
+use super::super::theme;
+use super::number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg};
+use super::CancelConfirmMsg;
+use crate::storage;
+use crate::trezorhal::display;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 pub struct SetBrightnessDialog(NumberInputSliderDialog);
 

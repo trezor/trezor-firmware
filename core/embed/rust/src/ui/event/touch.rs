@@ -1,7 +1,5 @@
-use crate::{
-    error::Error,
-    ui::geometry::{Direction, Point},
-};
+use crate::error::Error;
+use crate::ui::geometry::{Direction, Point};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]

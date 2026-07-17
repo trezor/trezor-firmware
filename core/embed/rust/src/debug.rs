@@ -12,10 +12,11 @@ mod unix_ffi {
     }
 }
 
-#[cfg(feature = "micropython")]
-use crate::micropython::print::print;
 #[cfg(not(feature = "micropython"))]
 pub use unix_ffi::print;
+
+#[cfg(feature = "micropython")]
+use crate::micropython::print::print;
 
 pub struct DebugConsole;
 

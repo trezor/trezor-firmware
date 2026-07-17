@@ -1,27 +1,20 @@
-use crate::{
-    io::BinaryData,
-    strutil::TString,
-    translations::TR,
-    trezorhal::usb::usb_configured,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Label},
-        constant::{HEIGHT, WIDTH},
-        display::{
-            image::{ImageInfo, ToifFormat},
-            Font, Icon,
-        },
-        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
-        layout::util::get_user_custom_image,
-        notification::Notification,
-        shape::{self, Renderer},
-    },
-};
-
+use super::super::{constant, fonts};
 use super::{
-    super::{constant, fonts},
     theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, CancelConfirmMsg,
     LoaderMsg, ProgressLoader,
 };
+use crate::io::BinaryData;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::trezorhal::usb::usb_configured;
+use crate::ui::component::{Child, Component, Event, EventCtx, Label};
+use crate::ui::constant::{HEIGHT, WIDTH};
+use crate::ui::display::image::{ImageInfo, ToifFormat};
+use crate::ui::display::{Font, Icon};
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect};
+use crate::ui::layout::util::get_user_custom_image;
+use crate::ui::notification::Notification;
+use crate::ui::shape::{self, Renderer};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();

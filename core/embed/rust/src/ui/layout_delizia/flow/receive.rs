@@ -1,29 +1,23 @@
-use crate::{
-    error,
-    micropython::{buffer::StrBuffer, obj::Obj, util},
-    strutil::TString,
-    translations::TR,
-    ui::{
-        button_request::ButtonRequest,
-        component::{
-            swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
-            ButtonRequestExt, ComponentExt, Qr,
-        },
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow, SwipePage,
-        },
-        geometry::Direction,
-        layout::util::{ConfirmValueParams, ContentType, MAX_XPUBS},
-    },
-};
 use heapless::Vec;
 
-use super::super::{
-    component::{AddressDetails, Frame, Header, PromptScreen, SwipeContent, VerticalMenu},
-    theme,
+use super::super::component::{
+    AddressDetails, Frame, Header, PromptScreen, SwipeContent, VerticalMenu,
 };
+use super::super::theme;
+use crate::error;
+use crate::micropython::buffer::StrBuffer;
+use crate::micropython::obj::Obj;
+use crate::micropython::util;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::button_request::ButtonRequest;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
+use crate::ui::component::{ButtonRequestExt, ComponentExt, Qr};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
+use crate::ui::geometry::Direction;
+use crate::ui::layout::util::{ConfirmValueParams, ContentType, MAX_XPUBS};
 
 const QR_BORDER: i16 = 4;
 

@@ -1,11 +1,8 @@
 use spin::{RwLock, RwLockReadGuard};
 
-use crate::{
-    error::{value_error, Error},
-    trezorhal::translations,
-};
-
 use super::blob::Translations;
+use crate::error::{value_error, Error};
+use crate::trezorhal::translations;
 
 static TRANSLATIONS_ON_FLASH: RwLock<Option<Translations>> = RwLock::new(None);
 

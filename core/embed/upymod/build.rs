@@ -1,11 +1,9 @@
-use std::{
-    env,
-    fs::{self, File},
-    io::{BufRead, BufReader, Write},
-    iter::once,
-    os::unix,
-    path::{Path, PathBuf},
-};
+use std::env;
+use std::fs::{self, File};
+use std::io::{BufRead, BufReader, Write};
+use std::iter::once;
+use std::os::unix;
+use std::path::{Path, PathBuf};
 
 use xbuild::{
     CLibrary, InputFiles, OutputType, Result, WrapErr, bail, bail_unsupported, current_model_id,
@@ -848,7 +846,8 @@ impl<'a> MpyBuilder<'a> {
         let mut mpy_files = xbuild::run_parallel(py_files.as_paths(), compile_func)
             .context("Failed to build frozen modules")?;
 
-        // Sort .mpy files by their path to ensure deterministic order in the generated C file
+        // Sort .mpy files by their path to ensure deterministic order in the generated
+        // C file
         mpy_files.sort_by_key(|mpy_file| mpy_file.display().to_string());
 
         // Build C file from mpy modules

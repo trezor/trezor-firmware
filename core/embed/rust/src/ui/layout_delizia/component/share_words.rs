@@ -1,21 +1,17 @@
-use crate::{
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            base::AttachType, paginated::Paginate, text::TextStyle, Component, Event, EventCtx,
-            Never,
-        },
-        event::SwipeEvent,
-        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Rect},
-        shape::{self, Renderer},
-        util::Pager,
-    },
-};
-
 use heapless::Vec;
 
-use super::{super::component::swipe_content::SwipeAttachAnimation, theme};
+use super::super::component::swipe_content::SwipeAttachAnimation;
+use super::theme;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::base::AttachType;
+use crate::ui::component::paginated::Paginate;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::event::SwipeEvent;
+use crate::ui::geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::Pager;
 
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 

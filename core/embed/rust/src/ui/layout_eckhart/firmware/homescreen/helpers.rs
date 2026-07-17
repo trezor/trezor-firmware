@@ -1,17 +1,10 @@
-use crate::{
-    io::BinaryData,
-    ui::{
-        display::image::ImageInfo,
-        geometry::Rect,
-        layout::util::get_user_custom_image,
-        shape::{self, Renderer},
-    },
-};
-
-use super::super::{
-    constant::{HEIGHT, WIDTH},
-    theme,
-};
+use super::super::constant::{HEIGHT, WIDTH};
+use super::super::theme;
+use crate::io::BinaryData;
+use crate::ui::display::image::ImageInfo;
+use crate::ui::geometry::Rect;
+use crate::ui::layout::util::get_user_custom_image;
+use crate::ui::shape::{self, Renderer};
 
 pub const SHADOW_HEIGHT: i16 = 54;
 

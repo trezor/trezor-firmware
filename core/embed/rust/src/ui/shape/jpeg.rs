@@ -1,20 +1,13 @@
-use crate::{
-    io::BinaryData,
-    ui::{
-        display::image::JpegInfo,
-        geometry::{Alignment2D, Offset, Point, Rect},
-    },
-};
-
-use super::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
+use without_alloc::alloc::LocalAllocLeakExt;
 
 #[cfg(not(feature = "hw_jpeg_decoder"))]
 use super::{Bitmap, BitmapFormat, BitmapView};
-
+use super::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
+use crate::io::BinaryData;
+use crate::ui::display::image::JpegInfo;
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
 #[cfg(feature = "hw_jpeg_decoder")]
 use crate::{trezorhal::jpegdec::JpegDecoder, ui::display::Color};
-
-use without_alloc::alloc::LocalAllocLeakExt;
 
 /// A shape for rendering compressed JPEG images.
 pub struct JpegImage<'a> {

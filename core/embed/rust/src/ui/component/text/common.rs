@@ -1,7 +1,6 @@
-use crate::{
-    strutil::ShortString,
-    ui::{component::EventCtx, util::ResultExt},
-};
+use crate::strutil::ShortString;
+use crate::ui::component::EventCtx;
+use crate::ui::util::ResultExt;
 
 /// Reified editing operations of `TextBox`.
 ///

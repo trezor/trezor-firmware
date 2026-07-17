@@ -1,10 +1,8 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Point, Rect},
-    shape::{Canvas, DrawingCache, Mono8Canvas, Renderer, Shape, ShapeClone},
-};
-
 use without_alloc::alloc::LocalAllocLeakExt;
+
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{Canvas, DrawingCache, Mono8Canvas, Renderer, Shape, ShapeClone};
 
 /// A special shape for rendering 7 differently rotated circular
 /// sectors on 5 concentric circles, used as an overlay on the background

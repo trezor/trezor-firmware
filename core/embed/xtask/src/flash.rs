@@ -1,13 +1,10 @@
-use anyhow::{Context, Result, ensure};
-use std::{
-    fs,
-    {path::Path, process},
-};
+use std::path::Path;
+use std::{fs, process};
 
-use crate::{
-    args::{FlashArgs, FlashEraseArgs, FlashSection, Model, ResetArgs},
-    helpers,
-};
+use anyhow::{Context, Result, ensure};
+
+use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, ResetArgs};
+use crate::helpers;
 
 /// Flashes the specified project to the device using OpenOCD.
 pub fn flash(args: FlashArgs) -> Result<()> {
@@ -39,8 +36,8 @@ pub fn flash(args: FlashArgs) -> Result<()> {
     run_openocd(args.model, &flash_instruction)
 }
 
-/// Erase specified flash section using OpenOCD. The section boundaries are determined
-/// by reading symbols from the model's memory.ld file.
+/// Erase specified flash section using OpenOCD. The section boundaries are
+/// determined by reading symbols from the model's memory.ld file.
 pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
     let mem_ld = args.model.model_memory_ld()?;
     let content = fs::read_to_string(&mem_ld)
@@ -121,9 +118,10 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::{build_flash_erase_instruction, build_flash_write_instruction};
     use crate::args::FlashSection;
-    use std::path::Path;
 
     #[test]
     fn builds_flash_write_instruction() {

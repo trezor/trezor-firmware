@@ -1,16 +1,11 @@
-use crate::{
-    io::BinaryData,
-    ui::{
-        display::image::JpegInfo,
-        geometry::{Alignment2D, Offset, Point, Rect},
-    },
-};
+use without_alloc::alloc::LocalAllocLeakExt;
 
 use super::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
-
-use crate::{trezorhal::jpegdec::JpegDecoder, ui::display::Color};
-
-use without_alloc::alloc::LocalAllocLeakExt;
+use crate::io::BinaryData;
+use crate::trezorhal::jpegdec::JpegDecoder;
+use crate::ui::display::image::JpegInfo;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
 
 /// A shape for rendering grayscale JPEG images as a transparent overlay
 /// over the existing content.

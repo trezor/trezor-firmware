@@ -1,17 +1,12 @@
-use super::theme;
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            base::ComponentExt, label::Label, text::TextStyle, Child, Component, Event, EventCtx,
-        },
-        display::Icon,
-        geometry::{Alignment, Insets, Offset, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::{Button, ButtonMsg, CancelInfoConfirmMsg};
+use super::{theme, Button, ButtonMsg, CancelInfoConfirmMsg};
+use crate::strutil::TString;
+use crate::ui::component::base::ComponentExt;
+use crate::ui::component::label::Label;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Child, Component, Event, EventCtx};
+use crate::ui::display::Icon;
+use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
+use crate::ui::shape::Renderer;
 
 pub struct Frame<T> {
     border: Insets,

@@ -1,59 +1,47 @@
-use core::{
-    cell::{RefCell, RefMut},
-    convert::{TryFrom, TryInto},
-    marker::PhantomData,
-    ops::{Deref, DerefMut},
-};
-use num_traits::FromPrimitive;
+use core::cell::{RefCell, RefMut};
+use core::convert::{TryFrom, TryInto};
+use core::marker::PhantomData;
+use core::ops::{Deref, DerefMut};
 
-#[cfg(feature = "touch")]
-use crate::ui::{event::TouchEvent, geometry::Direction};
+use num_traits::FromPrimitive;
 #[cfg(feature = "touch")]
 use num_traits::ToPrimitive;
 
+use super::base::{Layout, LayoutState};
+use crate::error::Error;
+use crate::maybe_trace::MaybeTrace;
+use crate::micropython::buffer::StrBuffer;
+use crate::micropython::gc::{self, Gc, GcBox};
+use crate::micropython::macros::{
+    obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type,
+};
+use crate::micropython::map::Map;
+use crate::micropython::obj::{Obj, ObjBase};
+use crate::micropython::qstr::Qstr;
+use crate::micropython::simple_type::SimpleTypeObj;
+use crate::micropython::typ::Type;
+use crate::micropython::util;
+use crate::time::Duration;
+use crate::ui::button_request::ButtonRequest;
+use crate::ui::component::base::{AttachType, TimerToken};
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::display::{self, Color};
 #[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
-
+#[cfg(feature = "power_manager")]
+use crate::ui::event::PMEvent;
+use crate::ui::event::USBEvent;
+use crate::ui::shape::render_on_display;
+#[cfg(any(feature = "rgb_led", feature = "ui_debug"))]
+use crate::ui::shape::Renderer;
+#[cfg(feature = "touch")]
+use crate::ui::{event::TouchEvent, geometry::Direction};
+use crate::ui::{CommonUI, ModelUI};
 #[cfg(feature = "button")]
 use crate::{
     trezorhal::button::{PhysicalButton, PhysicalButtonEvent},
     ui::event::ButtonEvent,
 };
-
-#[cfg(feature = "power_manager")]
-use crate::ui::event::PMEvent;
-
-use super::base::{Layout, LayoutState};
-use crate::{
-    error::Error,
-    maybe_trace::MaybeTrace,
-    micropython::{
-        buffer::StrBuffer,
-        gc::{self, Gc, GcBox},
-        macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
-        map::Map,
-        obj::{Obj, ObjBase},
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
-    time::Duration,
-    ui::{
-        button_request::ButtonRequest,
-        component::{
-            base::{AttachType, TimerToken},
-            Component, Event, EventCtx, Never,
-        },
-        display::{self, Color},
-        event::USBEvent,
-        shape::render_on_display,
-        CommonUI, ModelUI,
-    },
-};
-
-#[cfg(any(feature = "rgb_led", feature = "ui_debug"))]
-use crate::ui::shape::Renderer;
 
 impl AttachType {
     fn to_obj(self) -> Obj {

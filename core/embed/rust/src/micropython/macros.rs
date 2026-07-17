@@ -256,7 +256,6 @@ macro_rules! attr_tuple {
 // required because they are used in expansion of macros below
 pub(crate) use _obj_fn_make_fixed;
 pub(crate) use _obj_fn_make_var;
-
 pub(crate) use attr_tuple;
 pub(crate) use obj_dict;
 pub(crate) use obj_fn_0;

@@ -1,26 +1,17 @@
 use core::sync::atomic::{AtomicBool, Ordering};
 
-use crate::{
-    strutil::TString,
-    time::{Duration, Instant, Stopwatch},
-    ui::{
-        component::{Component, Event, EventCtx, Label, Never, Timer},
-        event::TouchEvent,
-        geometry::{Alignment2D, Offset, Point, Rect},
-        lerp::Lerp,
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
-
-use super::{
-    super::{
-        super::component::{ConnectionIndicator, FuelGauge},
-        constant::SCREEN,
-        theme,
-    },
-    helpers::{render_pill_shaped_background, SHADOW_HEIGHT},
-};
+use super::super::super::component::{ConnectionIndicator, FuelGauge};
+use super::super::constant::SCREEN;
+use super::super::theme;
+use super::helpers::{render_pill_shaped_background, SHADOW_HEIGHT};
+use crate::strutil::TString;
+use crate::time::{Duration, Instant, Stopwatch};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Timer};
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
 
 static FIRST_BOOT: AtomicBool = AtomicBool::new(true);
 

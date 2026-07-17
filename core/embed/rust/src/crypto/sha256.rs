@@ -1,11 +1,10 @@
-use core::{mem::MaybeUninit, pin::Pin};
+use core::mem::MaybeUninit;
+use core::pin::Pin;
 
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use super::{
-    ffi,
-    memory::{init_ctx, Memory},
-};
+use super::ffi;
+use super::memory::{init_ctx, Memory};
 
 pub const BLOCK_SIZE: usize = ffi::SHA256_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
@@ -88,9 +87,8 @@ impl NoPinSha256 {
 
 #[cfg(test)]
 mod test {
-    use crate::strutil::hexlify;
-
     use super::*;
+    use crate::strutil::hexlify;
 
     const SHA256_EMPTY: &[u8] = b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
     const SHA256_VECTORS: &[(&[u8], &[u8])] = &[

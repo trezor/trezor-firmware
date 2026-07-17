@@ -1,13 +1,8 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Alignment2D, Insets},
-    shape::{self, Renderer},
-};
-
-use super::super::{
-    constant::SCREEN,
-    theme::{self, Gradient, TILES_GRID},
-};
+use super::super::constant::SCREEN;
+use super::super::theme::{self, Gradient, TILES_GRID};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment2D, Insets};
+use crate::ui::shape::{self, Renderer};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ScreenBackground {

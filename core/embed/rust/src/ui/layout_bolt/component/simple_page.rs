@@ -1,12 +1,11 @@
-use crate::ui::{
-    component::{base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, Paginate},
-    display::{self, Color},
-    geometry::{Axis, Insets, Rect},
-    shape::Renderer,
-};
+use core::cell::Cell;
 
 use super::{theme, ScrollBar, Swipe, SwipeDirection};
-use core::cell::Cell;
+use crate::ui::component::base::ComponentExt;
+use crate::ui::component::{Component, Event, EventCtx, Pad, PageMsg, Paginate};
+use crate::ui::display::{self, Color};
+use crate::ui::geometry::{Axis, Insets, Rect};
+use crate::ui::shape::Renderer;
 
 const SCROLLBAR_HEIGHT: i16 = 18;
 const SCROLLBAR_BORDER: i16 = 4;

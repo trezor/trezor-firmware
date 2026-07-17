@@ -31,16 +31,14 @@ pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
 pub use hold_to_confirm::{HoldToConfirmAnim, HoldToConfirmMsg};
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg};
-pub use keyboard::{
-    bip39::Bip39Input,
-    label::LabelInput,
-    mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
-    passphrase::PassphraseInput,
-    pin::{PinKeyboard, PinKeyboardMsg},
-    slip39::Slip39Input,
-    string::{StringInput, StringInputMsg, StringKeyboard, StringKeyboardMsg},
-    word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
-};
+pub use keyboard::bip39::Bip39Input;
+pub use keyboard::label::LabelInput;
+pub use keyboard::mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg};
+pub use keyboard::passphrase::PassphraseInput;
+pub use keyboard::pin::{PinKeyboard, PinKeyboardMsg};
+pub use keyboard::slip39::Slip39Input;
+pub use keyboard::string::{StringInput, StringInputMsg, StringKeyboard, StringKeyboardMsg};
+pub use keyboard::word_count_screen::{SelectWordCountMsg, SelectWordCountScreen};
 pub use progress_screen::ProgressScreen;
 pub use qr_screen::{QrMsg, QrScreen};
 pub use regulatory_screen::{RegulatoryMsg, RegulatoryScreen};

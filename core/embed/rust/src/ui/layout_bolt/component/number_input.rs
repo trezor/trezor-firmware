@@ -1,19 +1,13 @@
-use crate::{
-    error::Error,
-    strutil::{self, TString},
-    translations::TR,
-    ui::{
-        component::{
-            base::ComponentExt,
-            text::paragraphs::{Paragraph, Paragraphs},
-            Child, Component, Event, EventCtx, Pad,
-        },
-        geometry::{Alignment, Grid, Insets, Offset, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::{super::fonts, theme, Button, ButtonMsg};
+use super::super::fonts;
+use super::{theme, Button, ButtonMsg};
+use crate::error::Error;
+use crate::strutil::{self, TString};
+use crate::translations::TR;
+use crate::ui::component::base::ComponentExt;
+use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
+use crate::ui::component::{Child, Component, Event, EventCtx, Pad};
+use crate::ui::geometry::{Alignment, Grid, Insets, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum NumberInputDialogMsg {

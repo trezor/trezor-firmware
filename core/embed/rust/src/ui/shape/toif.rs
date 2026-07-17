@@ -1,14 +1,11 @@
-use crate::{
-    io::BinaryData,
-    ui::{
-        display::{image::ToifInfo, toif::Toif, Color},
-        geometry::{Alignment2D, Offset, Point, Rect},
-    },
-};
+use without_alloc::alloc::LocalAllocLeakExt;
 
 use super::{Bitmap, BitmapFormat, Canvas, DrawingCache, Renderer, Shape, ShapeClone};
-
-use without_alloc::alloc::LocalAllocLeakExt;
+use crate::io::BinaryData;
+use crate::ui::display::image::ToifInfo;
+use crate::ui::display::toif::Toif;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
 
 /// A shape for rendering compressed TOIF images.
 pub struct ToifImage<'a> {

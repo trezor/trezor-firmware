@@ -1,20 +1,11 @@
-use crate::{
-    trezorhal::random,
-    ui::{
-        component::{Component, Event, EventCtx, Maybe},
-        geometry::{Alignment, Insets, Offset, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::{
-    super::super::{
-        component::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
-        constant::SCREEN,
-        theme,
-    },
-    common::KEYPAD_VISIBLE_HEIGHT,
-};
+use super::super::super::component::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet};
+use super::super::super::constant::SCREEN;
+use super::super::super::theme;
+use super::common::KEYPAD_VISIBLE_HEIGHT;
+use crate::trezorhal::random;
+use crate::ui::component::{Component, Event, EventCtx, Maybe};
+use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
+use crate::ui::shape::Renderer;
 
 #[derive(PartialEq)]
 pub enum KeypadButton {
@@ -539,13 +530,9 @@ impl KeypadGrid {
 #[cfg(test)]
 mod tests {
 
-    use super::{
-        super::{
-            super::constant::SCREEN,
-            common::{INPUT_TOUCH_HEIGHT, KEYPAD_VISIBLE_HEIGHT},
-        },
-        *,
-    };
+    use super::super::super::constant::SCREEN;
+    use super::super::common::{INPUT_TOUCH_HEIGHT, KEYPAD_VISIBLE_HEIGHT};
+    use super::*;
 
     #[test]
     fn test_layout_constraints() {

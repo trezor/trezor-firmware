@@ -1,8 +1,7 @@
-use crate::ui::geometry::Rect;
+use without_alloc::alloc::LocalAllocLeakExt;
 
 use super::{Canvas, DrawingCache};
-
-use without_alloc::alloc::LocalAllocLeakExt;
+use crate::ui::geometry::Rect;
 
 // ==========================================================================
 // trait Shape

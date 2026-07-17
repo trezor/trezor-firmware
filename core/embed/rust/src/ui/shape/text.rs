@@ -1,11 +1,8 @@
-use crate::ui::{
-    display::{Color, Font},
-    geometry::{Alignment, Offset, Point, Rect},
-};
+use without_alloc::alloc::LocalAllocLeakExt;
 
 use super::{BitmapView, Canvas, DrawingCache, Renderer, Shape, ShapeClone};
-
-use without_alloc::alloc::LocalAllocLeakExt;
+use crate::ui::display::{Color, Font};
+use crate::ui::geometry::{Alignment, Offset, Point, Rect};
 
 /// A shape for text strings rendering.
 pub struct Text<'a> {

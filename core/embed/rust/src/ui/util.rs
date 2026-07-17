@@ -1,6 +1,5 @@
-use crate::strutil::ShortString;
-
 use super::display::Font;
+use crate::strutil::ShortString;
 
 pub trait ResultExt {
     fn assert_if_debugging_ui(self, message: &str);

@@ -1,11 +1,12 @@
-use crate::micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr};
-
-use crate::{
-    error::Error,
-    micropython::{buffer::StrBuffer, util},
-    trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel},
-    util::logger::init_rust_logging,
-};
+use crate::error::Error;
+use crate::micropython::buffer::StrBuffer;
+use crate::micropython::map::Map;
+use crate::micropython::module::Module;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::util;
+use crate::trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel};
+use crate::util::logger::init_rust_logging;
 
 fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
     let [module, fmt, fmt_args @ ..] = args else {

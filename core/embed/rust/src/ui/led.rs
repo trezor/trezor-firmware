@@ -1,8 +1,6 @@
-pub use crate::trezorhal::rgb_led::Effect;
-
-use crate::trezorhal::rgb_led::set_color;
-
 use super::display::Color;
+use crate::trezorhal::rgb_led::set_color;
+pub use crate::trezorhal::rgb_led::Effect;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum LedState {

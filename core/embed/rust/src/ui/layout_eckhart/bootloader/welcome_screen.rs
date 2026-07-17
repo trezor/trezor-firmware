@@ -1,24 +1,14 @@
-use crate::{
-    strutil::TString,
-    trezorhal::ble,
-    ui::{
-        component::{Component, Event, EventCtx},
-        geometry::{Alignment2D, Offset, Point, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::{
-    super::{
-        component::{render_logo, Button},
-        constant::SCREEN,
-        fonts, theme,
-    },
-    BldActionBar, BldActionBarMsg, BldHeader,
-};
-
+use super::super::component::{render_logo, Button};
+use super::super::constant::SCREEN;
+use super::super::{fonts, theme};
 #[cfg(feature = "power_manager")]
 use super::BldHeaderMsg;
+use super::{BldActionBar, BldActionBarMsg, BldHeader};
+use crate::strutil::TString;
+use crate::trezorhal::ble;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]

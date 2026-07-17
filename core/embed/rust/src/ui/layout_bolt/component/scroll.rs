@@ -1,12 +1,9 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Paginate},
-    display::toif::Icon,
-    geometry::{Alignment2D, Axis, LinearPlacement, Offset, Rect},
-    shape::{self, Renderer},
-    util::Pager,
-};
-
 use super::theme;
+use crate::ui::component::{Component, Event, EventCtx, Never, Paginate};
+use crate::ui::display::toif::Icon;
+use crate::ui::geometry::{Alignment2D, Axis, LinearPlacement, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::Pager;
 
 pub struct ScrollBar {
     area: Rect,

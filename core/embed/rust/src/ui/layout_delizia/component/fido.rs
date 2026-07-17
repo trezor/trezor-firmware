@@ -1,18 +1,14 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            image::Image,
-            paginated::SinglePage,
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-            Component, Event, EventCtx,
-        },
-        geometry::{Insets, Offset, Rect},
-        shape::Renderer,
-    },
+use super::super::component::fido_icons::get_fido_icon_data;
+use super::super::component::theme;
+use crate::strutil::TString;
+use crate::ui::component::image::Image;
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs,
 };
-
-use super::super::component::{fido_icons::get_fido_icon_data, theme};
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::{Insets, Offset, Rect};
+use crate::ui::shape::Renderer;
 
 pub struct FidoCredential<F: Fn() -> TString<'static>> {
     app_icon: Option<Image>,

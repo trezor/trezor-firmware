@@ -1,14 +1,10 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Never},
-        display::Font,
-        geometry::{Alignment, Insets, Offset, Point, Rect},
-        shape::Renderer,
-    },
-};
-
-use super::{text::TextStyle, TextLayout};
+use super::text::TextStyle;
+use super::TextLayout;
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::display::Font;
+use crate::ui::geometry::{Alignment, Insets, Offset, Point, Rect};
+use crate::ui::shape::Renderer;
 
 #[derive(Clone)]
 pub struct Label<'a> {

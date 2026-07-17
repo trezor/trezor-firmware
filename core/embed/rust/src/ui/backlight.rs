@@ -1,10 +1,11 @@
-use crate::{
-    error::Error,
-    micropython::{
-        ffi, macros::obj_type, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util,
-    },
-    ui::{CommonUI, ModelUI},
-};
+use crate::error::Error;
+use crate::micropython::macros::obj_type;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::simple_type::SimpleTypeObj;
+use crate::micropython::typ::Type;
+use crate::micropython::{ffi, util};
+use crate::ui::{CommonUI, ModelUI};
 
 /*
  * This whole module should be removed, in favor of fully

@@ -1,11 +1,10 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Point, Rect},
-    shape::{BasicCanvas, Canvas, DrawingCache, Renderer, Shape, ShapeClone, Viewport},
-};
-use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
+use without_alloc::alloc::LocalAllocLeakExt;
+use without_alloc::FixedVec;
 
 use super::Rgb565Canvas;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{BasicCanvas, Canvas, DrawingCache, Renderer, Shape, ShapeClone, Viewport};
 
 struct ShapeHolder<'a> {
     shape: &'a mut dyn Shape<'a>,

@@ -1,19 +1,12 @@
-use crate::{
-    error,
-    strutil::{ShortString, TString},
-    ui::{
-        component::ComponentExt,
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
-};
-
 use super::super::component::{
     Frame, Header, PassphraseKeyboard, PassphraseKeyboardMsg, PromptScreen,
 };
+use crate::error;
+use crate::strutil::{ShortString, TString};
+use crate::ui::component::ComponentExt;
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum RequestPassphrase {

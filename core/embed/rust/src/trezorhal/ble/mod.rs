@@ -1,12 +1,13 @@
 #[cfg(feature = "micropython")]
 mod micropython;
 
-#[cfg(feature = "ui")]
-use crate::ui::event::BLEEvent;
+use core::ptr;
 
 use super::ffi;
-use crate::{error::Error, trezorhal::ffi::bt_le_addr_t};
-use core::ptr;
+use crate::error::Error;
+use crate::trezorhal::ffi::bt_le_addr_t;
+#[cfg(feature = "ui")]
+use crate::ui::event::BLEEvent;
 
 pub const ADV_NAME_LEN: usize = ffi::BLE_ADV_NAME_LEN as usize;
 pub const BLE_MAX_BONDS: usize = ffi::BLE_MAX_BONDS as usize;

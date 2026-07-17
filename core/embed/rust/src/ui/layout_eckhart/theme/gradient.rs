@@ -1,11 +1,8 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Axis, Point, Rect},
-    lerp::Lerp,
-    shape::{self, Renderer},
-};
-
 use super::super::theme;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Axis, Point, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::{self, Renderer};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Gradient {

@@ -1,10 +1,9 @@
-use anyhow::{Result, bail};
 use std::process;
 
-use crate::{
-    args::{BuildArgs, ConsoleType, Project, ResolvedBuild},
-    config, helpers,
-};
+use anyhow::{Result, bail};
+
+use crate::args::{BuildArgs, ConsoleType, Project, ResolvedBuild};
+use crate::{config, helpers};
 
 /// Resolves cargo features and target triple from the provided CLI arguments.
 pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
@@ -203,8 +202,9 @@ pub fn configure_cargo(args: &BuildArgs, cmd: &mut process::Command) -> Result<(
         // - https://blog.japaric.io/stack-analysis/
         // - https://github.com/japaric/stack-sizes/
         //
-        // Use --config instead of RUSTFLAGS env so that rustflags in .cargo/config.toml are
-        // not overridden (RUSTFLAGS env has higher precedence and replaces them entirely).
+        // Use --config instead of RUSTFLAGS env so that rustflags in .cargo/config.toml
+        // are not overridden (RUSTFLAGS env has higher precedence and replaces
+        // them entirely).
         cmd.args([
             "--config",
             "build.rustflags=[\"-Zprint-type-sizes\", \"-Zemit-stack-sizes\"]",
@@ -214,11 +214,12 @@ pub fn configure_cargo(args: &BuildArgs, cmd: &mut process::Command) -> Result<(
     if args.emulator && args.asan {
         // -Zsanitizer=address is a rustc flag passed via RUSTFLAGS.
         //
-        // Without an explicit --target, cargo compiles proc-macros and the firmware in the
-        // same pass and RUSTFLAGS leaks into proc-macro crates, causing "can't find crate"
-        // errors. Passing --target explicitly (even the same triple as the host) makes cargo
-        // separate the host (proc-macros / build scripts) and target (firmware) compilation
-        // units, so RUSTFLAGS only reaches the firmware crates.
+        // Without an explicit --target, cargo compiles proc-macros and the firmware in
+        // the same pass and RUSTFLAGS leaks into proc-macro crates, causing
+        // "can't find crate" errors. Passing --target explicitly (even the same
+        // triple as the host) makes cargo separate the host (proc-macros /
+        // build scripts) and target (firmware) compilation units, so RUSTFLAGS
+        // only reaches the firmware crates.
         cmd.args(["--target", &helpers::host_triple()?]);
         cmd.args([
             "--config",

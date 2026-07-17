@@ -1,14 +1,9 @@
-use crate::{
-    strutil::ShortString,
-    translations::TR,
-    ui::{
-        component::{Component, Event, EventCtx},
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
-
 use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage};
+use crate::strutil::ShortString;
+use crate::translations::TR;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 struct ChoiceFactoryNumberInput {
     min: u32,

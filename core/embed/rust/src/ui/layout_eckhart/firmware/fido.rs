@@ -1,21 +1,15 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            image::Image,
-            paginated::SinglePage,
-            text::{
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-                TextStyle,
-            },
-            Component, Event, EventCtx, LineBreaking, Never,
-        },
-        geometry::{LinearPlacement, Rect},
-        shape::Renderer,
-    },
+use super::super::firmware::fido_icons::get_fido_icon_data;
+use super::super::theme;
+use crate::strutil::TString;
+use crate::ui::component::image::Image;
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs,
 };
-
-use super::super::{firmware::fido_icons::get_fido_icon_data, theme};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, LineBreaking, Never};
+use crate::ui::geometry::{LinearPlacement, Rect};
+use crate::ui::shape::Renderer;
 
 pub trait FidoAccountName: Fn() -> TString<'static> {}
 impl<T: Fn() -> TString<'static>> FidoAccountName for T {}

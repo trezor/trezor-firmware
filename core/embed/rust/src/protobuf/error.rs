@@ -1,7 +1,5 @@
-use crate::{
-    error::{value_error, Error},
-    micropython::qstr::Qstr,
-};
+use crate::error::{value_error, Error};
+use crate::micropython::qstr::Qstr;
 
 pub const fn experimental_not_enabled() -> Error {
     value_error!(c"Experimental features are disabled.")

@@ -1,12 +1,10 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Point, Rect},
-    shape::{Canvas, DrawingCache, Renderer, Shape, ShapeClone},
-};
+use core::f32::consts::SQRT_2;
 
 use without_alloc::alloc::LocalAllocLeakExt;
 
-use core::f32::consts::SQRT_2;
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::shape::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
 
 const STAR_COUNT: usize = 8;
 const STAR_SMALL: i16 = 2;

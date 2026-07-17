@@ -9,37 +9,21 @@ mod trezor;
 pub use attrs::CompileAttrs;
 pub use clibrary::CLibrary;
 pub use clibrary::compile::OutputType;
-pub use input_files::InputFiles;
-
-pub use dep_tracking::format_command_error;
-pub use dep_tracking::needs_rebuild;
-pub use dep_tracking::run_command;
-pub use dep_tracking::run_command_to_file;
-pub use dep_tracking::run_if_changed;
-
-pub use helpers::cargo_target_dir;
-pub use helpers::derive_output_path;
-pub use helpers::emit_rerun_if_changed;
-pub use helpers::is_rust_analyzer;
-
-pub use parallel::optimal_parallel_job_count;
-pub use parallel::run_parallel;
-
-pub use trezor::build;
-pub use trezor::build_and_link;
-pub use trezor::current_model_id;
-pub use trezor::model_ids;
-pub use trezor::vendor_header_path;
-
 // Re-exports from color_eyre
 pub use color_eyre::Result;
-pub use color_eyre::eyre::WrapErr;
-pub use color_eyre::eyre::bail;
-pub use color_eyre::eyre::ensure;
+pub use color_eyre::eyre::{WrapErr, bail, ensure};
+pub use dep_tracking::{
+    format_command_error, needs_rebuild, run_command, run_command_to_file, run_if_changed,
+};
+pub use helpers::{cargo_target_dir, derive_output_path, emit_rerun_if_changed, is_rust_analyzer};
+pub use input_files::InputFiles;
+pub use parallel::{optimal_parallel_job_count, run_parallel};
+pub use trezor::{build, build_and_link, current_model_id, model_ids, vendor_header_path};
 
 /// Return early with an error.
 ///
-/// This macro is equivalent to `return Err(eyre!("Unsupported Configuration"))`.
+/// This macro is equivalent to `return Err(eyre!("Unsupported
+/// Configuration"))`.
 ///
 /// Use in situations where the current configuration or any combination
 /// of features is not supported and the code cannot proceed.

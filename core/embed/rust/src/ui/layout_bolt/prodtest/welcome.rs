@@ -1,13 +1,10 @@
-use super::super::{
-    fonts,
-    theme::{bootloader::WELCOME_COLOR, WHITE},
-};
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad, Qr},
-    constant::screen,
-    geometry::{Alignment, Offset, Point, Rect},
-    shape::{self, Renderer},
-};
+use super::super::fonts;
+use super::super::theme::bootloader::WELCOME_COLOR;
+use super::super::theme::WHITE;
+use crate::ui::component::{Component, Event, EventCtx, Never, Pad, Qr};
+use crate::ui::constant::screen;
+use crate::ui::geometry::{Alignment, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 #[cfg(feature = "power_manager")]
 use crate::{
     strutil::format_i64,

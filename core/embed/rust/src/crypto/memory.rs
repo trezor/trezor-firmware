@@ -1,4 +1,6 @@
-use core::{marker::PhantomPinned, mem::MaybeUninit, pin::Pin};
+use core::marker::PhantomPinned;
+use core::mem::MaybeUninit;
+use core::pin::Pin;
 
 use zeroize::{zeroize_flat_type, Zeroize};
 

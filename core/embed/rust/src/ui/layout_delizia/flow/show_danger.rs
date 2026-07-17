@@ -1,21 +1,12 @@
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::text::paragraphs::{Paragraph, ParagraphSource},
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
-};
-
-use super::super::{
-    component::{Frame, Header, StatusScreen, SwipeContent, VerticalMenu},
-    theme,
-};
+use super::super::component::{Frame, Header, StatusScreen, SwipeContent, VerticalMenu};
+use super::super::theme;
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ShowDanger {

@@ -1,5 +1,6 @@
-use crate::strutil::TString;
 use num_traits::FromPrimitive;
+
+use crate::strutil::TString;
 
 // ButtonRequestType from messages-common.proto
 // Eventually this should be generated

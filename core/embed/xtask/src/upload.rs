@@ -1,7 +1,9 @@
-use anyhow::{Context, Result, ensure};
 use std::process;
 
-use crate::{args::UploadArgs, helpers};
+use anyhow::{Context, Result, ensure};
+
+use crate::args::UploadArgs;
+use crate::helpers;
 
 pub fn upload(args: UploadArgs) -> Result<()> {
     ensure!(

@@ -1,10 +1,8 @@
-use crate::ui::{
-    component::{base::AttachType, swipe_detect::SwipeConfig},
-    geometry::Direction,
-    util::Pager,
-};
-
+use crate::ui::component::base::AttachType;
+use crate::ui::component::swipe_detect::SwipeConfig;
 pub use crate::ui::component::FlowMsg;
+use crate::ui::geometry::Direction;
+use crate::ui::util::Pager;
 
 pub trait Swipable {
     fn get_swipe_config(&self) -> SwipeConfig;

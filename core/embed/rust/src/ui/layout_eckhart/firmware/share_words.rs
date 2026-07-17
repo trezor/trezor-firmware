@@ -1,26 +1,18 @@
-use crate::{
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            swipe_detect::SwipeConfig, text::TextStyle, Component, Event, EventCtx, Label, Never,
-            Paginate, Swipe,
-        },
-        flow::Swipable,
-        geometry::{Alignment, Direction, Insets, Offset, Rect},
-        shape::{Bar, Renderer, Text},
-        util::Pager,
-    },
-};
-
 use heapless::Vec;
 
-use super::super::{
-    component::Button,
-    constant::SCREEN,
-    firmware::{ActionBar, ActionBarMsg, Header, HeaderMsg, Hint},
-    fonts, theme,
-};
+use super::super::component::Button;
+use super::super::constant::SCREEN;
+use super::super::firmware::{ActionBar, ActionBarMsg, Header, HeaderMsg, Hint};
+use super::super::{fonts, theme};
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Paginate, Swipe};
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{Alignment, Direction, Insets, Offset, Rect};
+use crate::ui::shape::{Bar, Renderer, Text};
+use crate::ui::util::Pager;
 
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 type IndexVec = Vec<u8, MAX_WORDS>;
@@ -340,7 +332,8 @@ impl<'a> crate::trace::Trace for ShareWords<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::super::constant::SCREEN, *};
+    use super::super::super::constant::SCREEN;
+    use super::*;
 
     #[test]
     fn test_component_heights_fit_screen() {

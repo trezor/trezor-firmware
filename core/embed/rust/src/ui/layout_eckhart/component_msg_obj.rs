@@ -1,19 +1,5 @@
 use num_traits::ToPrimitive;
 
-#[cfg(not(feature = "clippy"))]
-use crate::ui::component::{
-    text::paragraphs::{ParagraphSource, Paragraphs},
-    Component, Timeout,
-};
-use crate::{
-    error::Error,
-    micropython::{obj::Obj, util::new_tuple},
-    ui::layout::{
-        obj::ComponentMsgObj,
-        result::{CANCELLED, CONFIRMED, INFO},
-    },
-};
-
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuScreen, Homescreen,
     HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
@@ -21,6 +7,16 @@ use super::firmware::{
     SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
     TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
+use crate::error::Error;
+use crate::micropython::obj::Obj;
+use crate::micropython::util::new_tuple;
+#[cfg(not(feature = "clippy"))]
+use crate::ui::component::{
+    text::paragraphs::{ParagraphSource, Paragraphs},
+    Component, Timeout,
+};
+use crate::ui::layout::obj::ComponentMsgObj;
+use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
 
 impl ComponentMsgObj for PinKeyboard<'_> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {

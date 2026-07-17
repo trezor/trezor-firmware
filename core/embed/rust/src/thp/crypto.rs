@@ -1,8 +1,8 @@
 use trezor_thp::channel::{Backend, Cipher, Hash, U8Array, DH};
-
 use zeroize::{Zeroize, Zeroizing};
 
-use crate::crypto::{aesgcm, curve25519, memory::init_ctx, sha256};
+use crate::crypto::memory::init_ctx;
+use crate::crypto::{aesgcm, curve25519, sha256};
 
 /// Array wrapper that zeroizes on `drop()`. Can't use zeroizing directly due to
 /// the orphan rule.

@@ -1,17 +1,14 @@
 use super::theme;
-use crate::{
-    strutil::TString,
-    time::{Duration, Stopwatch},
-    ui::{
-        component::{paginated::SinglePage, Component, Event, EventCtx, Label, Timeout},
-        constant::screen,
-        display::{Color, Icon},
-        geometry::{Alignment, Alignment2D, Insets, Point, Rect},
-        lerp::Lerp,
-        shape::{self, Renderer},
-        util::animation_disabled,
-    },
-};
+use crate::strutil::TString;
+use crate::time::{Duration, Stopwatch};
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::{Component, Event, EventCtx, Label, Timeout};
+use crate::ui::constant::screen;
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Point, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::animation_disabled;
 
 const ANIMATION_TIME_MS: u32 = 1200;
 const TIMEOUT_MS: u32 = ANIMATION_TIME_MS + 2000;

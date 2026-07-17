@@ -1,8 +1,5 @@
-use std::{
-    env,
-    sync::{Arc, Mutex, mpsc},
-    thread,
-};
+use std::sync::{Arc, Mutex, mpsc};
+use std::{env, thread};
 
 use color_eyre::Result;
 

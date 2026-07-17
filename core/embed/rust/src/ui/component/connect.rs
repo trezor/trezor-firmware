@@ -1,12 +1,8 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Never, Pad},
-        display::{Color, Font},
-        geometry::{Alignment, Offset, Rect},
-        shape::{self, Renderer},
-    },
-};
+use crate::strutil::TString;
+use crate::ui::component::{Component, Event, EventCtx, Never, Pad};
+use crate::ui::display::{Color, Font};
+use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::shape::{self, Renderer};
 
 pub struct Connect {
     fg: Color,
@@ -62,9 +58,10 @@ impl Component for Connect {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
-
     use super::Connect;
+    use crate::error::Error;
+    use crate::micropython::obj::Obj;
+    use crate::ui::layout::obj::ComponentMsgObj;
 
     impl ComponentMsgObj for Connect {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {

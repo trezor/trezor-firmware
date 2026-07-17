@@ -1,17 +1,14 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
-        constant::SCREEN,
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
-
+use super::scrollbar::SCROLLBAR_SPACE;
+use super::title::Title;
 use super::{
-    scrollbar::SCROLLBAR_SPACE, theme, title::Title, ButtonAction, ButtonController,
-    ButtonControllerMsg, ButtonLayout, ButtonPos, CancelInfoConfirmMsg, FlowPages, Page, ScrollBar,
+    theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
+    CancelInfoConfirmMsg, FlowPages, Page, ScrollBar,
 };
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate};
+use crate::ui::constant::SCREEN;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 pub struct Flow<F>
 where

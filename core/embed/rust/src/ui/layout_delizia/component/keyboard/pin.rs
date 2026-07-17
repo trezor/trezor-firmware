@@ -1,33 +1,20 @@
 use core::mem;
 
-use crate::{
-    strutil::{ShortString, TString},
-    time::{Duration, Stopwatch},
-    trezorhal::random,
-    ui::{
-        component::{
-            base::{AttachType, ComponentExt},
-            text::TextStyle,
-            Component, Event, EventCtx, Label, Never, Pad, Timer,
-        },
-        event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect},
-        shape::{Bar, Renderer, Text, ToifImage},
-        util::{animation_disabled, DisplayStyle},
-    },
-};
-
-use super::super::super::{
-    component::{
-        button::{
-            Button, ButtonContent,
-            ButtonMsg::{self, Clicked},
-        },
-        theme,
-    },
-    cshape,
-    fonts::FONT_MONO,
-};
+use super::super::super::component::button::ButtonMsg::{self, Clicked};
+use super::super::super::component::button::{Button, ButtonContent};
+use super::super::super::component::theme;
+use super::super::super::cshape;
+use super::super::super::fonts::FONT_MONO;
+use crate::strutil::{ShortString, TString};
+use crate::time::{Duration, Stopwatch};
+use crate::trezorhal::random;
+use crate::ui::component::base::{AttachType, ComponentExt};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad, Timer};
+use crate::ui::event::TouchEvent;
+use crate::ui::geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect};
+use crate::ui::shape::{Bar, Renderer, Text, ToifImage};
+use crate::ui::util::{animation_disabled, DisplayStyle};
 
 pub enum PinKeyboardMsg {
     Confirmed,

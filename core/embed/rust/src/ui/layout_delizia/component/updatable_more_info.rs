@@ -1,17 +1,10 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            paginated::SinglePage,
-            text::paragraphs::{Paragraph, Paragraphs},
-            Component, Event, EventCtx, Never,
-        },
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
-
 use super::theme;
+use crate::strutil::TString;
+use crate::ui::component::paginated::SinglePage;
+use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 
 pub struct UpdatableMoreInfo<F>
 where

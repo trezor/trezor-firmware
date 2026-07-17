@@ -2,25 +2,19 @@ use trezor_thp::channel::{
     Phase, APP_HEADER_LEN, MAX_CREDENTIAL_LEN, MAX_DEVICE_PROPERTIES_LEN, SEND_BUFFER_OVERHEAD,
 };
 
-use crate::{
-    error::Error,
-    micropython::{
-        buffer::{get_buffer, get_buffer_mut},
-        exception,
-        macros::{
-            attr_tuple, obj_fn_0, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_kw, obj_module, obj_type,
-        },
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
-    },
-};
-
 use super::{TrezorInResult, CANNOT_UNLOCK, THP_AUX, THP_CONTEXT};
+use crate::error::Error;
+use crate::micropython::buffer::{get_buffer, get_buffer_mut};
+use crate::micropython::macros::{
+    attr_tuple, obj_fn_0, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_kw, obj_module, obj_type,
+};
+use crate::micropython::map::Map;
+use crate::micropython::module::Module;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::simple_type::SimpleTypeObj;
+use crate::micropython::typ::Type;
+use crate::micropython::{exception, util};
 
 extern "C" fn thp_init(iface_num: Obj, device_properties: Obj) -> Obj {
     let block = || {

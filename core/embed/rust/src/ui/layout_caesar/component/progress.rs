@@ -1,22 +1,14 @@
 use core::mem;
 
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            text::paragraphs::{Paragraph, Paragraphs},
-            Child, Component, Event, EventCtx, Label, Never, Pad,
-        },
-        constant,
-        display::{Icon, LOADER_MAX},
-        geometry::{Alignment2D, Offset, Rect},
-        shape,
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
-
 use super::super::{cshape, fonts, theme};
+use crate::strutil::TString;
+use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::display::{Icon, LOADER_MAX};
+use crate::ui::geometry::{Alignment2D, Offset, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
+use crate::ui::{constant, shape};
 
 const BOTTOM_DESCRIPTION_MARGIN: i16 = 11;
 const LOADER_Y_OFFSET_TITLE: i16 = -10;

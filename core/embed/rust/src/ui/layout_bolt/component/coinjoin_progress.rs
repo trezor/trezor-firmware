@@ -1,23 +1,18 @@
 use core::mem;
 
-use crate::{
-    error::Error,
-    maybe_trace::MaybeTrace,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            base::Never, Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
-        },
-        constant,
-        geometry::{Insets, Offset, Rect},
-        shape,
-        shape::Renderer,
-        util::animation_disabled,
-    },
-};
-
 use super::{theme, Frame};
+use crate::error::Error;
+use crate::maybe_trace::MaybeTrace;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::base::Never;
+use crate::ui::component::{
+    Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
+};
+use crate::ui::geometry::{Insets, Offset, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::animation_disabled;
+use crate::ui::{constant, shape};
 
 const RECTANGLE_HEIGHT: i16 = 56;
 const LABEL_TOP: i16 = 135;

@@ -1,17 +1,11 @@
-use crate::{
-    trezorhal::usb,
-    ui::{
-        component::{Component, Event, EventCtx},
-        event::USBEvent,
-        geometry::Rect,
-        shape::Renderer,
-    },
-};
-
+use super::super::cshape::{render_connected_indicator, INDICATOR_OUTER_RADIUS};
+use crate::trezorhal::usb;
+use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::event::USBEvent;
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
 #[cfg(feature = "ble")]
 use crate::{trezorhal::ble, ui::event::BLEEvent};
-
-use super::super::cshape::{render_connected_indicator, INDICATOR_OUTER_RADIUS};
 
 pub struct ConnectionIndicator {
     pub area: Rect,

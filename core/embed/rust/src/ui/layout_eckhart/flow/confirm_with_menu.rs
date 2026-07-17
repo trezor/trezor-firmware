@@ -1,28 +1,20 @@
 use heapless::Vec;
 
-use crate::{
-    error,
-    maybe_trace::MaybeTrace,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::ComponentExt,
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
+use super::super::component::Button;
+use super::super::firmware::{
+    ActionBar, AllowedTextContent, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg,
+    VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
 };
-
-use super::super::{
-    component::Button,
-    firmware::{
-        ActionBar, AllowedTextContent, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg,
-        VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
-    },
-    theme::{self, gradient::Gradient},
-};
+use super::super::theme::gradient::Gradient;
+use super::super::theme::{self};
+use crate::error;
+use crate::maybe_trace::MaybeTrace;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::ComponentExt;
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 const TIMEOUT_MS: u32 = 2000;
 const MENU_ITEM_CANCEL: usize = 0;

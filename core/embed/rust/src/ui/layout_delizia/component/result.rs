@@ -1,19 +1,13 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Pad},
-        constant::screen,
-        display::{Color, Icon},
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        shape::{self, Renderer},
-    },
-};
-
-use super::{
-    super::fonts,
-    constant::WIDTH,
-    theme::{FG, RESULT_FOOTER_START, RESULT_PADDING},
-};
+use super::super::fonts;
+use super::constant::WIDTH;
+use super::theme::{FG, RESULT_FOOTER_START, RESULT_PADDING};
+use crate::strutil::TString;
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::constant::screen;
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Alignment2D, Insets, Offset, Point, Rect};
+use crate::ui::shape::{self, Renderer};
 
 const MESSAGE_AREA_START: i16 = 97;
 const ICON_CENTER_Y: i16 = 62;

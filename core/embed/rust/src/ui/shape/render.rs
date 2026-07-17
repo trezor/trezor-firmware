@@ -1,11 +1,8 @@
+use super::{Canvas, DrawingCache, Shape, ShapeClone, Viewport};
+use crate::ui::display::Color;
+use crate::ui::geometry::{Offset, Rect};
 #[cfg(feature = "rgb_led")]
 use crate::ui::led::LedState;
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Rect},
-};
-
-use super::{Canvas, DrawingCache, Shape, ShapeClone, Viewport};
 
 // ==========================================================================
 // trait Renderer

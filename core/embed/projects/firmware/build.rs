@@ -1,4 +1,5 @@
-use std::{env, path::PathBuf};
+use std::env;
+use std::path::PathBuf;
 
 use xbuild::{CLibrary, Result, bail_unsupported};
 

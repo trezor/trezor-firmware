@@ -1,29 +1,18 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
-        constant,
-        constant::screen,
-        display::{Color, Icon},
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
-    },
+use super::constant::WIDTH;
+use super::theme::bootloader::{
+    text_fingerprint, text_title, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
+    CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TITLE_AREA, X32,
 };
-
-use super::{
-    constant::WIDTH,
-    theme::{
-        bootloader::{
-            text_fingerprint, text_title, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
-            CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TITLE_AREA, X32,
-        },
-        WHITE,
-    },
-    Button,
-    ButtonMsg::Clicked,
-    ButtonStyleSheet,
-};
+use super::theme::WHITE;
+use super::ButtonMsg::Clicked;
+use super::{Button, ButtonStyleSheet};
+use crate::strutil::TString;
+use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad};
+use crate::ui::constant::screen;
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Alignment2D, Insets, Offset, Point, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::{constant, shape};
 
 const ICON_TOP: i16 = 17;
 const CONTENT_START: i16 = 72;

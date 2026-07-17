@@ -1,20 +1,14 @@
-use crate::{
-    strutil::TString,
-    time::{Duration, Stopwatch},
-    ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, FlowMsg, Label},
-        display::{Color, Icon},
-        geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        lerp::Lerp,
-        shape::{self, Renderer},
-        util::animation_disabled,
-    },
-};
-
-use super::super::{
-    component::{Button, ButtonMsg, ButtonStyleSheet},
-    theme::{self, TITLE_HEIGHT},
-};
+use super::super::component::{Button, ButtonMsg, ButtonStyleSheet};
+use super::super::theme::{self, TITLE_HEIGHT};
+use crate::strutil::TString;
+use crate::time::{Duration, Stopwatch};
+use crate::ui::component::text::TextStyle;
+use crate::ui::component::{Component, Event, EventCtx, FlowMsg, Label};
+use crate::ui::display::{Color, Icon};
+use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::animation_disabled;
 
 const ANIMATION_TIME_MS: u32 = 1000;
 

@@ -1,4 +1,5 @@
-use crate::{io::BinaryData, ui::geometry::Offset};
+use crate::io::BinaryData;
+use crate::ui::geometry::Offset;
 
 impl<'a> BinaryData<'a> {
     fn read_u8(&self, ofs: usize) -> Option<u8> {

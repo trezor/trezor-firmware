@@ -1,6 +1,6 @@
-use crate::time::{Duration, Instant};
-
 use trezor_thp::channel::retransmit_after_ms;
+
+use crate::time::{Duration, Instant};
 
 const MAX_LATENCY_MS: Duration = Duration::from_millis(800);
 
@@ -103,9 +103,10 @@ pub fn least_recently_used(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use heapless::Vec;
     use trezor_thp::channel::MAX_RETRANSMISSION_COUNT;
+
+    use super::*;
 
     fn make_map(channels: &[(u16, u32)]) -> Vec<(u16, ChannelTiming), 16> {
         let mut chans = Vec::new();

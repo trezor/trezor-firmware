@@ -1,20 +1,14 @@
-use crate::{
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{
-            swipe_detect::SwipeConfig,
-            text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
-            Component, Event, EventCtx, Paginate,
-        },
-        flow::Swipable,
-        geometry::{LinearPlacement, Rect},
-        shape::Renderer,
-        util::Pager,
-    },
-};
-
-use super::{constant::SCREEN, theme, ActionBar, ActionBarMsg, Header};
+use super::constant::SCREEN;
+use super::{theme, ActionBar, ActionBarMsg, Header};
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeConfig;
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
+use crate::ui::component::{Component, Event, EventCtx, Paginate};
+use crate::ui::flow::Swipable;
+use crate::ui::geometry::{LinearPlacement, Rect};
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 pub enum UpdatableInfoScreenMsg {
     Close,

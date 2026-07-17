@@ -1,15 +1,10 @@
-use crate::ui::{
-    constant::SCREEN,
-    geometry::{Alignment2D, Offset, Point, Rect},
-    lerp::Lerp,
-    shape::{self, Renderer},
-    util::animation_disabled,
-};
-
-use super::{
-    super::theme::{self, ICON_BORDER_BL, ICON_BORDER_BR},
-    ScreenBorder,
-};
+use super::super::theme::{self, ICON_BORDER_BL, ICON_BORDER_BR};
+use super::ScreenBorder;
+use crate::ui::constant::SCREEN;
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::ui::lerp::Lerp;
+use crate::ui::shape::{self, Renderer};
+use crate::ui::util::animation_disabled;
 
 /// Renders the loader. Higher `progress` reveals the `border` from the top in
 /// clock-wise direction. Used in ProgressScreen and Bootloader. `progress` goes

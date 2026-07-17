@@ -1,14 +1,10 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{base::Component, FormattedText, Paginate},
-        geometry::Rect,
-        shape::Renderer,
-        util::Pager,
-    },
-};
-
 use super::{ButtonActions, ButtonDetails, ButtonLayout};
+use crate::strutil::TString;
+use crate::ui::component::base::Component;
+use crate::ui::component::{FormattedText, Paginate};
+use crate::ui::geometry::Rect;
+use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
@@ -184,8 +180,9 @@ impl Paginate for Page {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Page {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        use crate::ui::component::text::layout::LayoutFit;
         use core::cell::Cell;
+
+        use crate::ui::component::text::layout::LayoutFit;
         let fit: Cell<Option<LayoutFit>> = Cell::new(None);
         t.component("Page");
         if let Some(title) = &self.title {

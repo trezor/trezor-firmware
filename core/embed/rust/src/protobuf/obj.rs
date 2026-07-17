@@ -1,26 +1,18 @@
 use core::convert::TryFrom;
 
-use crate::{
-    error::Error,
-    micropython::{
-        dict::Dict,
-        ffi,
-        gc::Gc,
-        macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_type},
-        map::Map,
-        module::Module,
-        obj::{Obj, ObjBase},
-        qstr::Qstr,
-        typ::Type,
-        util,
-    },
-};
-
-use super::{
-    decode::{protobuf_decode, Decoder},
-    defs::{find_name_by_msg_offset, get_msg, MsgDef},
-    encode::{protobuf_encode, protobuf_len},
-};
+use super::decode::{protobuf_decode, Decoder};
+use super::defs::{find_name_by_msg_offset, get_msg, MsgDef};
+use super::encode::{protobuf_encode, protobuf_len};
+use crate::error::Error;
+use crate::micropython::dict::Dict;
+use crate::micropython::gc::Gc;
+use crate::micropython::macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_type};
+use crate::micropython::map::Map;
+use crate::micropython::module::Module;
+use crate::micropython::obj::{Obj, ObjBase};
+use crate::micropython::qstr::Qstr;
+use crate::micropython::typ::Type;
+use crate::micropython::{ffi, util};
 
 #[repr(C)]
 pub struct MsgObj {

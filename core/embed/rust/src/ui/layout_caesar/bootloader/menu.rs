@@ -1,20 +1,15 @@
+use super::super::component::{ButtonLayout, Choice, ChoiceFactory, ChoiceMsg, ChoicePage};
+use super::super::fonts;
+use super::super::theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH};
 #[cfg(feature = "ui_debug")]
 use crate::trace::{Trace, Tracer};
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Pad},
-    constant::screen,
-    display::Icon,
-    geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-    layout::simplified::ReturnToC,
-    shape,
-    shape::Renderer,
-};
-
-use super::super::{
-    component::{ButtonLayout, Choice, ChoiceFactory, ChoiceMsg, ChoicePage},
-    fonts,
-    theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
-};
+use crate::ui::component::{Child, Component, Event, EventCtx, Pad};
+use crate::ui::constant::screen;
+use crate::ui::display::Icon;
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
+use crate::ui::layout::simplified::ReturnToC;
+use crate::ui::shape;
+use crate::ui::shape::Renderer;
 
 #[repr(u32)]
 #[derive(Copy, Clone)]

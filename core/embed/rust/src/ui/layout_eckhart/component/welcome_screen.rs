@@ -1,10 +1,7 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    geometry::{Offset, Rect},
-    shape::Renderer,
-};
-
 use super::super::component::render_logo;
+use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::geometry::{Offset, Rect};
+use crate::ui::shape::Renderer;
 
 const TEXT_OFFSET: Offset = Offset::new(30, 40);
 

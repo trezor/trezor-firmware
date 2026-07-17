@@ -1,28 +1,18 @@
 use heapless::Vec;
 
-use crate::{
-    error,
-    strutil::TString,
-    translations::TR,
-    ui::{
-        component::{swipe_detect::SwipeSettings, ComponentExt},
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
-        },
-        geometry::Direction,
-    },
+use super::super::component::{
+    Frame, Header, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
 };
-
-use super::{
-    super::{
-        component::{
-            Frame, Header, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
-        },
-        theme,
-    },
-    util::{dummy_page, ShowInfoParams},
-};
+use super::super::theme;
+use super::util::{dummy_page, ShowInfoParams};
+use crate::error;
+use crate::strutil::TString;
+use crate::translations::TR;
+use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::ComponentExt;
+use crate::ui::flow::base::{Decision, DecisionBuilder as _};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::geometry::Direction;
 
 const MENU_ITEM_CANCEL: usize = 0;
 const MENU_ITEM_EXTRA_INFO: usize = 1;
