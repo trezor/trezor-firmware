@@ -26,6 +26,8 @@
     - [Translation data format](core/misc/translations.md)
     - [UI Layout lifecycle](core/misc/layout-lifecycle.md)
     - [Optiga configuration](core/misc/optiga.md)
+    - [Tropic slot configuration](core/misc/tropic.md)
+    - [PIN verification](core/misc/pin-verification.md)
     - [Tropic configurations](core/misc/tropic_configs.md)
     - [Logging for debugging purposes](core/misc/logging.md)
 - [Legacy](legacy/index.md)
