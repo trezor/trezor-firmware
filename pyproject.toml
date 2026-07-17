@@ -32,7 +32,7 @@ dependencies = [
     "munch>=4,<5",
     "autoflake",
     "flake8-requirements>=2.1.0",
-    "pylint~=2.11",
+    "pylint~=3.3",
     "demjson3",
     "graphviz",
     "click>=8,<9",
