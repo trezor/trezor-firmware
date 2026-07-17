@@ -28,6 +28,9 @@
 #include <trezor_rtl.h>
 
 #include <rtl/sizedefs.h>
+#ifdef USE_EXT_FLASH
+#include <sys/ext_flash.h>
+#endif
 #include <sys/irq.h>
 #include <sys/mpu.h>
 
@@ -255,7 +258,7 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 0, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_CODE,   NO,    NO );
   SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO );
   SET_REGION( 2, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_DATA,  YES,    NO );
-  DIS_REGION( 3 );
+  DIS_REGION( 3 ); // ext_flash mmap opened transiently via MPU_MODE_UNUSED_FLASH (region 6)
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE ,     SRAM,        YES,    NO );
 #elif defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -487,6 +490,13 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_DATA,  YES,    NO );
       break;
 #endif
+    case MPU_MODE_UNUSED_FLASH:
+#ifdef USE_EXT_FLASH
+  SET_REGION( 6, EXT_FLASH_MMAP_BASE,      EXT_FLASH_SIZE,     FLASH_DATA,   NO,    NO );
+#else
+  DIS_REGION( 6);
+#endif
+  break;
     case MPU_MODE_BOOTARGS:
       SET_REGION( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
       break;
