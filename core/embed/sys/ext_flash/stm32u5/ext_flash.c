@@ -20,6 +20,14 @@
 // External NvM driver for AT25SF161B (16 Mbit, 2 MB NOR flash) connected via
 // OCTOSPI1 in Quad-SPI mode on STM32U5.
 //
+// TODO: error handling review — currently all HAL call failures and busy-poll
+// timeouts propagate as a bare `false` return with a LOG_ERR to the debug UART.
+// The caller has no way to distinguish a timeout from a hardware fault, a
+// write-protect violation, or an OSPI bus error. Consider exposing a richer
+// error type (or at minimum separate timeout vs. hard-fault codes) and
+// reviewing whether any failure paths leave the peripheral in an inconsistent
+// state (e.g. mmap disabled but drv->mmap_enabled still true).
+//
 // The driver operates in polling mode (no DMA, no interrupts).  It supports:
 //   - Read         Fast Read Quad I/O  cmd 0xEB  1-4-4  mode byte + 4 dummy
 //   - Page program Quad Page Program   cmd 0x32  1-1-4
@@ -55,10 +63,11 @@ LOG_DECLARE(ext_flash);
 #define CMD_READ_SR3          0x15
 #define CMD_WRITE_SR3         0x11  // writes Status Register 3 (1 byte)
 #define CMD_READ_JEDEC_ID     0x9F
-#define CMD_READ              0x03  // 1-1-1: standard slow read, no dummy cycles
+#define CMD_READ              0x03  // 1-1-1: standard read, no dummy cycles, max 55 MHz
 #define CMD_FAST_READ_QUAD_IO 0xEB  // 1-4-4: addr+mode+data on 4 lines, 4 dummy cycles
 #define CMD_QUAD_PAGE_PROGRAM 0x32  // 1-1-4: addr on 1 line, data on 4 lines
 #define CMD_SECTOR_ERASE_4K   0x20
+#define CMD_BLOCK_ERASE_32K   0x52
 #define CMD_BLOCK_ERASE_64K   0xD8
 #define CMD_CHIP_ERASE        0xC7
 
@@ -83,13 +92,11 @@ LOG_DECLARE(ext_flash);
 // The HAL decrements the value by 1, so we pass 21 to HAL_OSPI_Init.
 #define OSPI_DEVICE_SIZE_BITS 21
 
-// Prescaler: OSPI_CLK = kernel_clk / (prescaler + 1).
+// HAL ClockPrescaler is a 1-based divisor: HAL writes (ClockPrescaler - 1) to
+// DCR2.PRESCALER, so ClockPrescaler=1 → register=0 → divide-by-1 → 100 MHz.
 // Kernel clock source: PLL2Q = 100 MHz, switched to OCTOSPISEL in startup_init.c
 // when the board header defines USE_PLL2_FOR_OSPI (PLL2: VCO=200 MHz, DIVQ=2).
-// 100 MHz / (99 + 1) = 1 MHz — safe for initial bring-up without signal-integrity
-// validation. Raise to prescaler=0 (100 MHz) once series resistors are fitted and
-// waveforms are verified with a logic analyser.
-#define OSPI_CLK_PRESCALER 0
+#define OSPI_CLK_PRESCALER 1
 
 // CS must stay high at least 20 ns (tCSH, DS Table 13.4).
 // At 100 MHz: 1 cycle = 10 ns.  3 cycles = 30 ns gives a safe 10 ns margin
@@ -103,15 +110,17 @@ LOG_DECLARE(ext_flash);
 #define OSPI_READ_DUMMY_CYCLES 4
 
 // Per-operation HAL timeouts (milliseconds). DS Table 13.5 worst-case values:
-//   Page program (256 B): 1.8 ms  → 10 ms
-//   Sector erase  (4 kB): 220 ms  → 500 ms
-//   Block erase  (64 kB): 700 ms  → 2000 ms
-//   Chip erase:           11 s    → 15000 ms
-#define TIMEOUT_CMD_MS          HAL_OSPI_TIMEOUT_DEFAULT_VALUE  // 5 s
-#define TIMEOUT_PAGE_PROGRAM_MS 10
-#define TIMEOUT_SECTOR_ERASE_MS 500
-#define TIMEOUT_BLOCK_ERASE_MS  2000
-#define TIMEOUT_CHIP_ERASE_MS   15000
+//   Page program   (256 B): 1.8 ms  → 10 ms
+//   Sector erase    (4 kB): 220 ms  → 500 ms
+//   Half-block erase(32kB): 600 ms  → 1000 ms
+//   Block erase    (64 kB): 700 ms  → 2000 ms
+//   Chip erase:             11 s    → 15000 ms
+#define TIMEOUT_CMD_MS               HAL_OSPI_TIMEOUT_DEFAULT_VALUE  // 5 s
+#define TIMEOUT_PAGE_PROGRAM_MS      10
+#define TIMEOUT_SECTOR_ERASE_MS      500
+#define TIMEOUT_HALFBLOCK_ERASE_MS   1000
+#define TIMEOUT_BLOCK_ERASE_MS       2000
+#define TIMEOUT_CHIP_ERASE_MS        15000
 
 // ---------------------------------------------------------------------------
 // Driver state
@@ -134,10 +143,10 @@ static void gpio_init(void) {
   GPIO_InitTypeDef gpio = {0};
   gpio.Mode  = GPIO_MODE_AF_PP;
   gpio.Pull  = GPIO_NOPULL;
-  // VERY_HIGH is required for 100 MHz OSPI operation on STM32U5.
+  // HIGH/VERY_HIGH is required for 100 MHz OSPI operation on STM32U5.
   // WARNING: ensure 22-33 Ω series resistors are fitted on CLK and IO0-IO3
   // and validate signal integrity with a logic analyser before use.
-  gpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  gpio.Speed = GPIO_SPEED_FREQ_HIGH;
 
   EXT_FLASH_CLK_CLK_EN();
   gpio.Alternate = EXT_FLASH_CLK_AF;
@@ -196,6 +205,9 @@ static bool ospi_init(ext_flash_driver_t *drv) {
   h->Init.ChipSelectHighTime  = OSPI_CS_HIGH_CYCLES;
   h->Init.FreeRunningClock    = HAL_OSPI_FREERUNCLK_DISABLE;
   h->Init.ClockMode           = HAL_OSPI_CLOCK_MODE_0;
+  // TODO: set WrapSize to HAL_OSPI_WRAP_16_BYTES (or 32/64) once the chip is
+  // configured with CMD_SET_BURST_WRAP (0x77) and WRAP_CFG slot is added to
+  // ext_flash_mmap_enable(). All three must use the same wrap size.
   h->Init.WrapSize            = HAL_OSPI_WRAP_NOT_SUPPORTED;
   h->Init.ClockPrescaler      = OSPI_CLK_PRESCALER;
   // AT25SF161B samples on rising CLK edge (SPI Mode 0). HALFCYCLE would move
@@ -312,6 +324,13 @@ static bool cmd_with_addr(ext_flash_driver_t *drv, uint8_t cmd, uint32_t addr) {
   return HAL_OSPI_Command(&drv->hospi, &c, TIMEOUT_CMD_MS) == HAL_OK;
 }
 
+// TODO: consider replacing the software SR1 polling loop with the OCTOSPI
+// hardware auto-polling mode (HAL_OSPI_AutoPolling). The peripheral issues
+// CMD_READ_SR1 repeatedly and raises a flag / interrupt when the match
+// condition (SR1_BUSY == 0) is met, freeing the CPU between polls. Requires
+// switching from polling to interrupt mode (HAL_OSPI_AutoPolling_IT) for the
+// full benefit; in blocking mode (HAL_OSPI_AutoPolling) the CPU is still stalled
+// but the peripheral handles the re-issue timing more efficiently.
 static bool wait_not_busy(ext_flash_driver_t *drv, uint32_t timeout_ms) {
   uint32_t deadline = HAL_GetTick() + timeout_ms;
   uint8_t sr1 = 0xFF;
@@ -491,14 +510,30 @@ bool ext_flash_init(void) {
     goto fail;
   }
 
-  // Set flash output drive to 100 % (30 pF) for 100 MHz operation.
-  // Factory default is Auto (7 pF) which is insufficient at this clock rate.
-  if (!ext_flash_set_drive_strength(EXT_FLASH_SR3_DRV_100)) {
+  // Mark driver initialized before calling public helpers that guard on it.
+  drv->initialized = true;
+
+  // Set flash output drive to 75 % (22 pF) — reduced from 100 % (30 pF) to
+  // lower IO line ringing on prototype PCB without series resistors.
+  // TODO: evaluate whether 100 % is needed once series resistors are fitted.
+  if (!ext_flash_set_drive_strength(EXT_FLASH_SR3_DRV_75)) {
     LOG_ERR("ext_flash_init: set drive strength failed");
+    drv->initialized = false;
     goto fail;
   }
 
-  drv->initialized = true;
+  // TODO: call ext_flash_set_burst_wrap(WRAP_SIZE) here — issues
+  // CMD_SET_BURST_WRAP (0x77) to configure the chip for wrap burst reads.
+  // Must match WrapSize in ospi_init() and WRAP_CFG slot in
+  // ext_flash_mmap_enable().
+
+  if (!ext_flash_mmap_enable()) {
+    LOG_ERR("ext_flash_init: mmap_enable failed");
+    drv->initialized = false;
+    goto fail;
+  }
+
+  mpu_set_ext_flash_mmap_app(true);
   return true;
 
 fail:
@@ -529,6 +564,8 @@ void ext_flash_deinit(void) {
   if (!drv->initialized) {
     return;
   }
+
+  mpu_set_ext_flash_mmap_app(false);
 
   if (drv->mmap_enabled) {
     ext_flash_mmap_disable();
@@ -602,8 +639,9 @@ bool ext_flash_read_slow_debug(uint32_t addr, uint8_t *buf, uint32_t len) {
     return false;
   }
 
-  // Standard Read (0x03): 1-1-1 mode, no dummy cycles, max ~50 MHz.
+  // Standard Read (0x03): 1-1-1 mode, no dummy cycles, max 55 MHz (DS fCLK2).
   // Bypasses IO2/IO3 entirely — useful for bring-up when quad lines are suspect.
+  // IMPORTANT: caller must reduce OSPI clock to ≤55 MHz before calling this.
   OSPI_RegularCmdTypeDef c = {0};
   c.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
   c.FlashId            = HAL_OSPI_FLASH_ID_1;
@@ -669,6 +707,38 @@ bool ext_flash_write_page(uint32_t addr, const uint8_t *buf, uint32_t len) {
   return wait_not_busy(drv, TIMEOUT_PAGE_PROGRAM_MS);
 }
 
+bool ext_flash_write(uint32_t addr, const uint8_t *buf, uint32_t len) {
+  ext_flash_driver_t *drv = &g_drv;
+
+  if (!drv->initialized) return false;
+
+  bool was_mmap = drv->mmap_enabled;
+  if (was_mmap) ext_flash_mmap_disable();
+
+  bool ok = true;
+  while (len > 0) {
+    uint32_t page_remain = EXT_FLASH_PAGE_SIZE - (addr % EXT_FLASH_PAGE_SIZE);
+    uint32_t chunk = len < page_remain ? len : page_remain;
+    if (!ext_flash_write_page(addr, buf, chunk)) {
+      ok = false;
+      break;
+    }
+    addr += chunk;
+    buf += chunk;
+    len -= chunk;
+  }
+
+  // TODO: invalidate D-cache and I-cache for the written range before
+  // re-enabling mmap. With the mmap MPU region now cacheable (EXT_FLASH
+  // attribute, WT/RA), stale cache lines covering addr..addr+len survive
+  // mmap_disable/mmap_enable and the CPU will read back pre-write data (or
+  // execute stale instructions for XIP code). Call:
+  //   SCB_InvalidateDCache_by_Addr((void *)(EXT_FLASH_MMAP_BASE + original_addr), original_len);
+  //   SCB_InvalidateICache();  // or range variant once addr/len are tracked above
+  if (was_mmap) ext_flash_mmap_enable();
+  return ok;
+}
+
 bool ext_flash_erase_sector(uint32_t addr) {
   ext_flash_driver_t *drv = &g_drv;
 
@@ -690,6 +760,32 @@ bool ext_flash_erase_sector(uint32_t addr) {
   }
   if (!wait_not_busy(drv, TIMEOUT_SECTOR_ERASE_MS)) {
     LOG_ERR("erase_sector: timed out at 0x%08X", (unsigned int)aligned);
+    return false;
+  }
+  return true;
+}
+
+bool ext_flash_erase_halfblock(uint32_t addr) {
+  ext_flash_driver_t *drv = &g_drv;
+
+  if (!drv->initialized || drv->mmap_enabled) {
+    LOG_ERR("erase_halfblock: not ready (init=%d mmap=%d)", drv->initialized,
+            drv->mmap_enabled);
+    return false;
+  }
+
+  if (!write_enable(drv)) {
+    LOG_ERR("erase_halfblock: write_enable failed");
+    return false;
+  }
+
+  uint32_t aligned = addr & ~((uint32_t)(EXT_FLASH_HALFBLOCK_SIZE - 1));
+  if (!cmd_with_addr(drv, CMD_BLOCK_ERASE_32K, aligned)) {
+    LOG_ERR("erase_halfblock: command failed at 0x%08X", (unsigned int)aligned);
+    return false;
+  }
+  if (!wait_not_busy(drv, TIMEOUT_HALFBLOCK_ERASE_MS)) {
+    LOG_ERR("erase_halfblock: timed out at 0x%08X", (unsigned int)aligned);
     return false;
   }
   return true;
@@ -765,7 +861,13 @@ bool ext_flash_mmap_enable(void) {
   cmd.AddressMode        = HAL_OSPI_ADDRESS_4_LINES;
   cmd.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
   cmd.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
-  cmd.AlternateBytes     = 0xFF;
+  // TODO: to enable Continuous Read Mode (§7.5.1): set AlternateBytes to a
+  // value with M5:4=(1,0) (e.g. 0xA0) and change SIOOMode to
+  // HAL_OSPI_SIOO_INST_ONLY_FIRST_CMD. The instruction is then sent only on
+  // the first mmap transaction; subsequent ones start directly with the address,
+  // saving 8 clocks per access. A Continuous Read Mode Reset command must be
+  // issued before any non-mmap (indirect) access to restore normal operation.
+  cmd.AlternateBytes     = 0xFF;  // M5:4=(1,1) — continuous read NOT activated
   cmd.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_4_LINES;
   cmd.AlternateBytesSize = HAL_OSPI_ALTERNATE_BYTES_8_BITS;
   cmd.DataMode           = HAL_OSPI_DATA_4_LINES;
@@ -791,7 +893,20 @@ bool ext_flash_mmap_enable(void) {
     return false;
   }
 
+  // TODO: add HAL_OSPI_OPTYPE_WRAP_CFG slot here once wrap burst is enabled.
+  // Use the same CMD_FAST_READ_QUAD_IO (0xEB) command as READ_CFG but with
+  // DummyCycles adjusted for the wrap burst mode and no AlternateBytes.
+  // WrapSize in ospi_init() and CMD_SET_BURST_WRAP (0x77) during init must
+  // agree on the same wrap size.
+
   OSPI_MemoryMappedTypeDef mmap = {0};
+  // TODO: consider enabling the timeout counter for power saving when the flash
+  // is not accessed frequently. Set TimeOutActivation to
+  // HAL_OSPI_TIMEOUT_COUNTER_ENABLE and TimeOutPeriod to the desired number of
+  // idle clock cycles after which the OCTOSPI automatically aborts mmap mode
+  // (deasserts CS, gates the clock). The abort triggers an interrupt — the ISR
+  // must call ext_flash_mmap_disable() to update driver state, and mmap will be
+  // transparently re-enabled on the next access via the MPU fault handler.
   mmap.TimeOutActivation = HAL_OSPI_TIMEOUT_COUNTER_DISABLE;
 
   if (HAL_OSPI_MemoryMapped(&drv->hospi, &mmap) != HAL_OK) {
@@ -801,6 +916,28 @@ bool ext_flash_mmap_enable(void) {
 
   drv->mmap_enabled = true;
   return true;
+}
+
+bool ext_flash_erase(uint32_t addr, ext_flash_erase_t entity) {
+  ext_flash_driver_t *drv = &g_drv;
+
+  bool was_mmap = drv->mmap_enabled;
+  if (was_mmap) ext_flash_mmap_disable();
+
+  bool ok;
+  switch (entity) {
+    case EXT_FLASH_ERASE_SECTOR:    ok = ext_flash_erase_sector(addr);    break;
+    case EXT_FLASH_ERASE_HALFBLOCK: ok = ext_flash_erase_halfblock(addr); break;
+    case EXT_FLASH_ERASE_BLOCK:     ok = ext_flash_erase_block(addr);     break;
+    case EXT_FLASH_ERASE_CHIP:      ok = ext_flash_erase_chip();          break;
+    default:                     ok = false;                         break;
+  }
+
+  // TODO: invalidate D-cache and I-cache for the erased range before
+  // re-enabling mmap — same requirement as in ext_flash_write(). For chip
+  // erase (EXT_FLASH_ERASE_CHIP) invalidate the full EXT_FLASH_SIZE range.
+  if (was_mmap) ext_flash_mmap_enable();
+  return ok;
 }
 
 void ext_flash_mmap_disable(void) {
