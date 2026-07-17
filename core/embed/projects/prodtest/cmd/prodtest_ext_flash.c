@@ -29,11 +29,12 @@
 
 #include "prodtest_error_codes.h"
 
-// Maximum number of bytes transferred in a single read command.
-#define EXT_FLASH_CMD_READ_MAX 4096
+// Maximum bytes transferred in a single read or program CLI command.
+#define EXT_FLASH_CMD_READ_MAX  4096u
+#define EXT_FLASH_CMD_WRITE_MAX EXT_FLASH_PAGE_SIZE
 
 // ============================================================================
-// ext-flash-erase  chip | sector <addr> | block <addr>
+// ext-flash-erase  chip | sector <addr> | halfblock <addr> | block <addr>
 // ============================================================================
 
 static void prodtest_ext_flash_erase(cli_t* cli) {
@@ -44,13 +45,15 @@ static void prodtest_ext_flash_erase(cli_t* cli) {
 
   const char* type = cli_nth_arg(cli, 0);
 
-  bool is_chip = strcmp(type, "chip") == 0;
-  bool is_sector = strcmp(type, "sector") == 0;
-  bool is_block = strcmp(type, "block") == 0;
+  bool is_chip      = strcmp(type, "chip") == 0;
+  bool is_sector    = strcmp(type, "sector") == 0;
+  bool is_halfblock = strcmp(type, "halfblock") == 0;
+  bool is_block     = strcmp(type, "block") == 0;
 
-  if (!is_chip && !is_sector && !is_block) {
-    cli_error_arg(cli, "Unknown erase type '%s'. Use: chip, sector, or block.",
-                  type);
+  if (!is_chip && !is_sector && !is_halfblock && !is_block) {
+    cli_error_arg(
+        cli, "Unknown erase type '%s'. Use: chip, sector, halfblock, or block.",
+        type);
     return;
   }
 
@@ -61,13 +64,13 @@ static void prodtest_ext_flash_erase(cli_t* cli) {
     }
     cli_trace(cli, "Erasing entire chip (%d KB)...",
               (int)(EXT_FLASH_SIZE / 1024));
-    if (!ext_flash_erase_chip()) {
+    if (!ext_flash_erase(0, EXT_FLASH_ERASE_CHIP)) {
       cli_error(cli, PRODTEST_ERR_EXT_FLASH_ERASE_CHIP, "Chip erase failed.");
       return;
     }
   } else {
     if (cli_arg_count(cli) != 2) {
-      cli_error_arg(cli, "Address required for sector/block erase.");
+      cli_error_arg(cli, "Address required for sector/halfblock/block erase.");
       return;
     }
     uint32_t addr = 0;
@@ -75,18 +78,32 @@ static void prodtest_ext_flash_erase(cli_t* cli) {
       cli_error_arg(cli, "Expecting addr (decimal or 0x-prefixed hex).");
       return;
     }
+    if (addr >= EXT_FLASH_SIZE) {
+      cli_error_arg(cli, "Address 0x%08X is outside flash (%d KB).",
+                    (unsigned int)addr, (int)(EXT_FLASH_SIZE / 1024));
+      return;
+    }
+
     if (is_sector) {
       cli_trace(cli, "Erasing %d KB sector at 0x%08X...",
                 (int)(EXT_FLASH_SECTOR_SIZE / 1024), (unsigned int)addr);
-      if (!ext_flash_erase_sector(addr)) {
+      if (!ext_flash_erase(addr, EXT_FLASH_ERASE_SECTOR)) {
         cli_error(cli, PRODTEST_ERR_EXT_FLASH_ERASE_SECTOR,
                   "Sector erase failed at 0x%08X.", (unsigned int)addr);
+        return;
+      }
+    } else if (is_halfblock) {
+      cli_trace(cli, "Erasing %d KB half-block at 0x%08X...",
+                (int)(EXT_FLASH_HALFBLOCK_SIZE / 1024), (unsigned int)addr);
+      if (!ext_flash_erase(addr, EXT_FLASH_ERASE_HALFBLOCK)) {
+        cli_error(cli, PRODTEST_ERR_EXT_FLASH_ERASE_HALFBLOCK,
+                  "Half-block erase failed at 0x%08X.", (unsigned int)addr);
         return;
       }
     } else {
       cli_trace(cli, "Erasing %d KB block at 0x%08X...",
                 (int)(EXT_FLASH_BLOCK_SIZE / 1024), (unsigned int)addr);
-      if (!ext_flash_erase_block(addr)) {
+      if (!ext_flash_erase(addr, EXT_FLASH_ERASE_BLOCK)) {
         cli_error(cli, PRODTEST_ERR_EXT_FLASH_ERASE_BLOCK,
                   "Block erase failed at 0x%08X.", (unsigned int)addr);
         return;
@@ -100,9 +117,9 @@ static void prodtest_ext_flash_erase(cli_t* cli) {
 // ============================================================================
 // ext-flash-program  <addr> <hexdata>
 //
-// Address must be page-aligned (EXT_FLASH_PAGE_SIZE = 256 B).
-// The target area must be pre-erased (all 0xFF) before programming.
-// Maximum data length per call is one page (256 bytes).
+// Write up to one page (256 B) to external flash at any byte address.
+// ext_flash_write() handles page-boundary splits internally.
+// The target area must be pre-erased (all 0xFF).
 // ============================================================================
 
 static void prodtest_ext_flash_program(cli_t* cli) {
@@ -117,22 +134,21 @@ static void prodtest_ext_flash_program(cli_t* cli) {
     return;
   }
 
-  if (addr % EXT_FLASH_PAGE_SIZE != 0) {
-    cli_error(cli, PRODTEST_ERR_EXT_FLASH_PROGRAM_ADDR,
-              "Address 0x%08X is not page-aligned (page = %d B).",
-              (unsigned int)addr, (int)EXT_FLASH_PAGE_SIZE);
-    return;
-  }
-
-  static uint8_t buf[EXT_FLASH_PAGE_SIZE];
+  static uint8_t buf[EXT_FLASH_CMD_WRITE_MAX];
   size_t len = 0;
   if (!cli_arg_hex(cli, "hexdata", buf, sizeof(buf), &len)) {
     cli_error_arg(cli, "Failed to decode hex data (max %d bytes).",
-                  (int)EXT_FLASH_PAGE_SIZE);
+                  (int)EXT_FLASH_CMD_WRITE_MAX);
     return;
   }
 
-  if (!ext_flash_write_page(addr, buf, (uint32_t)len)) {
+  if (addr >= EXT_FLASH_SIZE || (uint32_t)len > EXT_FLASH_SIZE - addr) {
+    cli_error_arg(cli, "Range 0x%08X+%d exceeds flash size (%d KB).",
+                  (unsigned int)addr, (int)len, (int)(EXT_FLASH_SIZE / 1024));
+    return;
+  }
+
+  if (!ext_flash_write(addr, buf, (uint32_t)len)) {
     cli_error(cli, PRODTEST_ERR_EXT_FLASH_PROGRAM,
               "Write failed at 0x%08X.", (unsigned int)addr);
     return;
@@ -144,8 +160,8 @@ static void prodtest_ext_flash_program(cli_t* cli) {
 // ============================================================================
 // ext-flash-read  <addr> <len>
 //
-// Indirect (command-based) read. Maximum length per call is
-// EXT_FLASH_CMD_READ_MAX bytes.
+// Read bytes from external flash via memory-mapped (XIP) mode, which is
+// always active after init.  Maximum length per call is EXT_FLASH_CMD_READ_MAX.
 // ============================================================================
 
 static void prodtest_ext_flash_read(cli_t* cli) {
@@ -167,61 +183,15 @@ static void prodtest_ext_flash_read(cli_t* cli) {
     return;
   }
 
-  static uint8_t buf[EXT_FLASH_CMD_READ_MAX];
-  if (!ext_flash_read(addr, buf, len)) {
+  if (addr >= EXT_FLASH_SIZE || len > EXT_FLASH_SIZE - addr) {
     cli_error(cli, PRODTEST_ERR_EXT_FLASH_READ,
-              "Read failed at 0x%08X.", (unsigned int)addr);
-    return;
-  }
-
-  size_t offset = 0;
-  while (offset < len) {
-    size_t row = MIN(16, len - offset);
-    char hex[16 * 2 + 1];
-    cstr_encode_hex(hex, sizeof(hex), &buf[offset], row);
-    cli_trace(cli, "%08X: %s", (unsigned int)(addr + offset), hex);
-    offset += row;
-  }
-
-  cli_ok_hexdata(cli, buf, len);
-}
-
-// ============================================================================
-// ext-flash-read-mmap  <addr> <len>
-//
-// Read via memory-mapped (XIP) mode. The flash is temporarily mapped at
-// EXT_FLASH_MMAP_BASE; indirect operations (write/erase) are unavailable
-// while mmap is active. Maximum length per call is EXT_FLASH_CMD_READ_MAX.
-// ============================================================================
-
-static void prodtest_ext_flash_read_mmap(cli_t* cli) {
-  if (cli_arg_count(cli) != 2) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  uint32_t addr = 0;
-  if (!cli_arg_uint32(cli, "addr", &addr)) {
-    cli_error_arg(cli, "Expecting addr (decimal or 0x-prefixed hex).");
-    return;
-  }
-
-  uint32_t len = 0;
-  if (!cli_arg_uint32(cli, "len", &len) || len == 0 ||
-      len > EXT_FLASH_CMD_READ_MAX) {
-    cli_error_arg(cli, "Expecting len in range 1-%d.", EXT_FLASH_CMD_READ_MAX);
-    return;
-  }
-
-  if (!ext_flash_mmap_enable()) {
-    cli_error(cli, PRODTEST_ERR_EXT_FLASH_MMAP_ENABLE,
-              "Failed to enable memory-mapped mode.");
+              "Range 0x%08X+%d exceeds flash size (%d KB).",
+              (unsigned int)addr, (int)len, (int)(EXT_FLASH_SIZE / 1024));
     return;
   }
 
   static uint8_t buf[EXT_FLASH_CMD_READ_MAX];
   memcpy(buf, (const uint8_t*)(uintptr_t)(EXT_FLASH_MMAP_BASE + addr), len);
-  ext_flash_mmap_disable();
 
   size_t offset = 0;
   while (offset < len) {
@@ -232,30 +202,60 @@ static void prodtest_ext_flash_read_mmap(cli_t* cli) {
     offset += row;
   }
 
-  cli_ok_hexdata(cli, buf, len);
+  cli_ok(cli, "");
 }
 
 // ============================================================================
 // ext-flash-test  [addr]
 //
-// End-to-end NvM self-test.  Exercises every layer of the driver stack in
-// eight numbered steps and reports pass/fail for each:
+// Comprehensive production test that verifies:
+//  - all OSPI signal lines are connected (CS, CLK, IO0-IO3)
+//  - quad-SPI operation at full 100 MHz
+//  - data integrity under four stress patterns chosen to catch common defects:
+//      p0  0x00         all bits programmed — detects float-high IO lines
+//      p1  0x55         01010101 — even-bit coupling
+//      p2  0xAA         10101010 — odd-bit coupling (p1+p2 = full bit toggle)
+//      p3  walking-1    1<<(i&7) — detects shorted/stuck bit lines
+//  - SR3 read-modify-write path (drive strength)
+//  - explicit indirect quad read (cmd 0xEB 1-4-4)
+//  - single-wire slow read (cmd 0x03 1-1-1), exercising IO0/IO1 only
 //
-//   [1/8] init          — verify JEDEC ID + enable quad mode + set DRV_100
-//   [2/8] drive-strength — SR3 R/W: write 50%, restore to 100%
-//   [3/8] erase         — 4 KB sector erase
-//   [4/8] verify erase  — indirect read of first page, expect all 0xFF
-//   [5/8] write         — page-program (256 B incrementing pattern, 0x32 1-1-4)
-//   [6/8] read indirect — quad read (0xEB 1-4-4), compare to pattern
-//   [7/8] read mmap     — XIP read via EXT_FLASH_MMAP_BASE, compare
-//   [8/8] read slow     — single-wire read (0x03 1-1-1), cross-checks write path
+// Seven steps:
+//   [1/7] init          — deinit + fresh init: JEDEC ID, QE bit verified
+//   [2/7] drive-strength — SR3 R/W via explicit indirect mode
+//   [3/7] erase          — 4 KB sector, mmap toggled internally
+//   [4/7] verify erase   — mmap read, all 0xFF
+//   [5/7] write patterns — 4 pages via explicit indirect mode
+//   [6/7] verify mmap    — XIP read vs. expected patterns
+//   [7/7] verify indirect — quad + slow read vs. expected patterns
 //
-// Optional <addr> selects the sector to use (aligned down to sector boundary).
-// Defaults to the last sector (0x1FF000) to stay clear of demo-rotating
-// sectors 1–15.  The sector is left erased on success.
+// Optional <addr> selects the test sector (snapped to sector boundary).
+// Defaults to the last sector to avoid colliding with demo sectors 1–15.
+// The sector is left erased on success.
 // ============================================================================
 
-#define EXT_FLASH_TEST_ADDR_DEFAULT (EXT_FLASH_SIZE - EXT_FLASH_SECTOR_SIZE)
+#define EXT_FLASH_TEST_ADDR_DEFAULT  (EXT_FLASH_SIZE - EXT_FLASH_SECTOR_SIZE)
+#define TEST_PAGES  4u
+
+static void fill_page_pattern(uint8_t* buf, uint32_t page_idx) {
+  for (uint32_t i = 0; i < EXT_FLASH_PAGE_SIZE; i++) {
+    switch (page_idx) {
+      case 0:  buf[i] = 0x00u; break;
+      case 1:  buf[i] = 0x55u; break;
+      case 2:  buf[i] = 0xAAu; break;
+      default: buf[i] = (uint8_t)(1u << (i & 7u)); break;
+    }
+  }
+}
+
+static const char* pattern_name(uint32_t page_idx) {
+  switch (page_idx) {
+    case 0:  return "0x00 (all-zeros)";
+    case 1:  return "0x55 (01010101)";
+    case 2:  return "0xAA (10101010)";
+    default: return "walking-1";
+  }
+}
 
 static void prodtest_ext_flash_test(cli_t* cli) {
   if (cli_arg_count(cli) > 1) {
@@ -269,156 +269,162 @@ static void prodtest_ext_flash_test(cli_t* cli) {
       cli_error_arg(cli, "Expecting addr (decimal or 0x-prefixed hex).");
       return;
     }
-    test_addr &= ~((uint32_t)EXT_FLASH_SECTOR_SIZE - 1);
+    test_addr &= ~((uint32_t)EXT_FLASH_SECTOR_SIZE - 1u);
+    if (test_addr >= EXT_FLASH_SIZE) {
+      cli_error_arg(cli, "Address 0x%08X is outside flash (%d KB).",
+                    (unsigned int)test_addr, (int)(EXT_FLASH_SIZE / 1024));
+      return;
+    }
   }
 
-  cli_trace(cli, "Test sector: 0x%08X  (%d KB sector, %d B page)",
+  cli_trace(cli, "Test sector 0x%08X  (%d KB sector, %d B pages)",
             (unsigned int)test_addr,
             (int)(EXT_FLASH_SECTOR_SIZE / 1024),
             (int)EXT_FLASH_PAGE_SIZE);
 
-  // [1/8] Init — verifies JEDEC ID (0x1F8601), sets QE bit
-  cli_trace(cli, "[1/8] init...");
+  // [1/7] Fresh init — deinit any prior state, then initialise from scratch.
+  cli_trace(cli, "[1/7] init...");
+  ext_flash_deinit();
   if (!ext_flash_init()) {
     cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_INIT,
-              "[1/8] init: FAIL (JEDEC ID mismatch or SPI error)");
+              "[1/7] init: FAIL (JEDEC mismatch or OSPI error)");
     return;
   }
-  cli_trace(cli, "[1/8] init: OK  (JEDEC ID verified, QE enabled)");
+  cli_trace(cli, "[1/7] init: OK  (JEDEC 0x1F8601, QE=1, mmap enabled)");
 
-  // [2/8] Drive-strength reconfigure — exercises SR3 read-modify-write
-  cli_trace(cli, "[2/8] drive-strength reconfigure...");
-  if (!ext_flash_set_drive_strength(EXT_FLASH_SR3_DRV_50)) {
-    cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_DRV_STR_WRITE,
-              "[2/8] drive-strength: set 50%% FAIL (SR3 write error)");
-    return;
-  }
-  if (!ext_flash_set_drive_strength(EXT_FLASH_SR3_DRV_100)) {
-    cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_DRV_STR_RESTORE,
-              "[2/8] drive-strength: restore 100%% FAIL (SR3 write error)");
-    return;
-  }
-  cli_trace(cli, "[2/8] drive-strength: OK  (SR3 R/W verified, restored to 100%%)");
-
-  // [3/8] Erase sector
+  // [2/7] Drive-strength reconfigure — exercises SR3 R/W.
+  //       Indirect register-access commands require mmap to be disabled.
+  cli_trace(cli, "[2/7] drive-strength...");
+  ext_flash_mmap_disable();
   {
     uint8_t sr1 = 0, sr2 = 0, sr3 = 0;
     ext_flash_read_status(&sr1, &sr2, &sr3);
-    cli_trace(cli, "[3/8] erase sector...  (mmap=%d SR1=0x%02X SR2=0x%02X SR3=0x%02X)",
-              (int)ext_flash_is_mmap_enabled(), sr1, sr2, sr3);
-  }
-  if (!ext_flash_erase_sector(test_addr)) {
-    cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_ERASE,
-              "[3/8] erase: FAIL");
-    return;
-  }
-  cli_trace(cli, "[3/8] erase: OK");
-
-  // [4/8] Verify erased — first page must read back as all 0xFF
-  cli_trace(cli, "[4/8] verify erase...");
-  {
-    static uint8_t vbuf[EXT_FLASH_PAGE_SIZE];
-    if (!ext_flash_read(test_addr, vbuf, EXT_FLASH_PAGE_SIZE)) {
-      cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_VERIFY_ERASE_READ,
-                "[4/8] verify erase: read FAIL");
+    cli_trace(cli, "      SR1=0x%02X SR2=0x%02X SR3=0x%02X", sr1, sr2, sr3);
+    if (!ext_flash_set_drive_strength(EXT_FLASH_SR3_DRV_50)) {
+      ext_flash_mmap_enable();
+      cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_DRV_STR_WRITE,
+                "[2/7] drive-strength: set 50%% FAIL (SR3 write error)");
       return;
     }
-    for (int i = 0; i < (int)EXT_FLASH_PAGE_SIZE; i++) {
-      if (vbuf[i] != 0xFF) {
-        cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_VERIFY_ERASE_DATA,
-                  "[4/8] verify erase: [%d]=0x%02X expected 0xFF", i, vbuf[i]);
-        return;
-      }
-    }
-  }
-  cli_trace(cli, "[4/8] verify erase: OK  (%d B all 0xFF)",
-            (int)EXT_FLASH_PAGE_SIZE);
-
-  // [5/8] Write page — incrementing pattern (byte[i] = i), cmd 0x32 1-1-4
-  cli_trace(cli, "[5/8] write page...");
-  static uint8_t wbuf[EXT_FLASH_PAGE_SIZE];
-  for (int i = 0; i < (int)EXT_FLASH_PAGE_SIZE; i++) {
-    wbuf[i] = (uint8_t)i;
-  }
-  if (!ext_flash_write_page(test_addr, wbuf, EXT_FLASH_PAGE_SIZE)) {
-    cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_WRITE,
-              "[5/8] write: FAIL");
-    return;
-  }
-  cli_trace(cli, "[5/8] write: OK  (%d B pattern 0x00..0xFF, cmd 0x32 1-1-4)",
-            (int)EXT_FLASH_PAGE_SIZE);
-
-  // [6/8] Read indirect — quad read, cmd 0xEB 1-4-4
-  cli_trace(cli, "[6/8] read indirect...");
-  {
-    static uint8_t rbuf[EXT_FLASH_PAGE_SIZE];
-    if (!ext_flash_read(test_addr, rbuf, EXT_FLASH_PAGE_SIZE)) {
-      cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_READ_INDIRECT,
-                "[6/8] read indirect: FAIL");
+    if (!ext_flash_set_drive_strength(EXT_FLASH_SR3_DRV_75)) {
+      ext_flash_mmap_enable();
+      cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_DRV_STR_RESTORE,
+                "[2/7] drive-strength: restore 75%% FAIL (SR3 write error)");
       return;
     }
-    for (int i = 0; i < (int)EXT_FLASH_PAGE_SIZE; i++) {
-      if (rbuf[i] != wbuf[i]) {
-        cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_READ_INDIRECT_DATA,
-                  "[6/8] read indirect: mismatch at [%d] got=0x%02X want=0x%02X",
-                  i, rbuf[i], wbuf[i]);
-        return;
-      }
-    }
   }
-  cli_trace(cli, "[6/8] read indirect: OK  (cmd 0xEB 1-4-4)");
+  ext_flash_mmap_enable();
+  cli_trace(cli, "[2/7] drive-strength: OK  (SR3 R/W verified, restored to 75%%)");
 
-  // [7/8] Read memory-mapped — XIP via EXT_FLASH_MMAP_BASE
-  cli_trace(cli, "[7/8] read mmap...");
-  if (!ext_flash_mmap_enable()) {
-    cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_READ_MMAP,
-              "[7/8] read mmap: mmap_enable FAIL");
+  // [3/7] Erase sector — ext_flash_erase() handles mmap toggle internally.
+  cli_trace(cli, "[3/7] erase sector...");
+  if (!ext_flash_erase(test_addr, EXT_FLASH_ERASE_SECTOR)) {
+    cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_ERASE, "[3/7] erase: FAIL");
     return;
   }
+  cli_trace(cli, "[3/7] erase: OK");
+
+  // [4/7] Verify erased — mmap is active; read from XIP window.
+  cli_trace(cli, "[4/7] verify erase...");
   {
     const volatile uint8_t* mptr =
         (const volatile uint8_t*)(uintptr_t)(EXT_FLASH_MMAP_BASE + test_addr);
-    int first_bad = -1;
-    uint8_t first_got = 0;
-    for (int i = 0; i < (int)EXT_FLASH_PAGE_SIZE; i++) {
-      if (mptr[i] != wbuf[i] && first_bad < 0) {
-        first_bad = i;
-        first_got = mptr[i];
-      }
-    }
-    ext_flash_mmap_disable();
-    if (first_bad >= 0) {
-      cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_READ_MMAP_DATA,
-                "[7/8] read mmap: mismatch at [%d] got=0x%02X want=0x%02X",
-                first_bad, first_got, wbuf[first_bad]);
-      return;
-    }
-  }
-  cli_trace(cli, "[7/8] read mmap: OK  (XIP 0xEB 1-4-4)");
-
-  // [8/8] Read slow — single-wire standard read, cmd 0x03 1-1-1
-  // Cross-checks the write path independently of the quad-read path.
-  cli_trace(cli, "[8/8] read slow (1-1-1)...");
-  {
-    static uint8_t sbuf[EXT_FLASH_PAGE_SIZE];
-    if (!ext_flash_read_slow_debug(test_addr, sbuf, EXT_FLASH_PAGE_SIZE)) {
-      cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_READ_SLOW,
-                "[8/8] read slow: FAIL");
-      return;
-    }
-    for (int i = 0; i < (int)EXT_FLASH_PAGE_SIZE; i++) {
-      if (sbuf[i] != wbuf[i]) {
-        cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_READ_SLOW_DATA,
-                  "[8/8] read slow: mismatch at [%d] got=0x%02X want=0x%02X",
-                  i, sbuf[i], wbuf[i]);
+    for (uint32_t i = 0; i < EXT_FLASH_PAGE_SIZE; i++) {
+      if (mptr[i] != 0xFFu) {
+        cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_VERIFY_ERASE_DATA,
+                  "[4/7] verify erase: [%u]=0x%02X expected 0xFF",
+                  (unsigned int)i, mptr[i]);
         return;
       }
     }
   }
-  cli_trace(cli, "[8/8] read slow: OK  (cmd 0x03 1-1-1)");
+  cli_trace(cli, "[4/7] verify erase: OK  (%d B all 0xFF)",
+            (int)EXT_FLASH_PAGE_SIZE);
 
-  // Leave the sector erased for the next run
-  ext_flash_erase_sector(test_addr);
+  // [5/7] Write 4 stress patterns — single mmap_disable/enable bracket
+  //       around all page-program commands for efficiency.
+  cli_trace(cli, "[5/7] write patterns (%u pages)...", (unsigned int)TEST_PAGES);
+  {
+    static uint8_t wbuf[EXT_FLASH_PAGE_SIZE];
+    ext_flash_mmap_disable();
+    for (uint32_t p = 0; p < TEST_PAGES; p++) {
+      fill_page_pattern(wbuf, p);
+      uint32_t paddr = test_addr + p * EXT_FLASH_PAGE_SIZE;
+      if (!ext_flash_write_page(paddr, wbuf, EXT_FLASH_PAGE_SIZE)) {
+        ext_flash_mmap_enable();
+        cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_WRITE,
+                  "[5/7] write: page %u (%s) FAIL at 0x%08X",
+                  (unsigned int)p, pattern_name(p), (unsigned int)paddr);
+        return;
+      }
+      cli_trace(cli, "      page %u: %s -> 0x%08X",
+                (unsigned int)p, pattern_name(p), (unsigned int)paddr);
+    }
+    ext_flash_mmap_enable();
+  }
+  cli_trace(cli, "[5/7] write patterns: OK");
+
+  // [6/7] Verify via mmap — XIP quad read (cmd 0xEB 1-4-4).
+  cli_trace(cli, "[6/7] verify mmap...");
+  {
+    static uint8_t expected[EXT_FLASH_PAGE_SIZE];
+    const volatile uint8_t* mptr =
+        (const volatile uint8_t*)(uintptr_t)(EXT_FLASH_MMAP_BASE + test_addr);
+    for (uint32_t p = 0; p < TEST_PAGES; p++) {
+      fill_page_pattern(expected, p);
+      for (uint32_t i = 0; i < EXT_FLASH_PAGE_SIZE; i++) {
+        uint8_t got = mptr[p * EXT_FLASH_PAGE_SIZE + i];
+        if (got != expected[i]) {
+          cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_PATTERN_MMAP_DATA,
+                    "[6/7] mmap: page %u (%s) [%u] got=0x%02X want=0x%02X",
+                    (unsigned int)p, pattern_name(p),
+                    (unsigned int)i, got, expected[i]);
+          return;
+        }
+      }
+      cli_trace(cli, "      page %u (%s): OK", (unsigned int)p, pattern_name(p));
+    }
+  }
+  cli_trace(cli, "[6/7] verify mmap: OK  (XIP cmd 0xEB 1-4-4)");
+
+  // [7/7] Verify via indirect quad read (cmd 0xEB 1-4-4) of all pages,
+  //       then via single-wire slow read (cmd 0x03 1-1-1) of page 0.
+  //       Page 0 pattern is 0x00 — simple and unambiguous for slow read.
+  cli_trace(cli, "[7/7] verify indirect...");
+  {
+    static uint8_t rbuf[EXT_FLASH_PAGE_SIZE];
+    static uint8_t expected[EXT_FLASH_PAGE_SIZE];
+    ext_flash_mmap_disable();
+
+    for (uint32_t p = 0; p < TEST_PAGES; p++) {
+      uint32_t paddr = test_addr + p * EXT_FLASH_PAGE_SIZE;
+      if (!ext_flash_read(paddr, rbuf, EXT_FLASH_PAGE_SIZE)) {
+        ext_flash_mmap_enable();
+        cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_PATTERN_INDIRECT,
+                  "[7/7] indirect read: page %u FAIL", (unsigned int)p);
+        return;
+      }
+      fill_page_pattern(expected, p);
+      for (uint32_t i = 0; i < EXT_FLASH_PAGE_SIZE; i++) {
+        if (rbuf[i] != expected[i]) {
+          ext_flash_mmap_enable();
+          cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_PATTERN_INDIRECT_DATA,
+                    "[7/7] indirect: page %u (%s) [%u] got=0x%02X want=0x%02X",
+                    (unsigned int)p, pattern_name(p),
+                    (unsigned int)i, rbuf[i], expected[i]);
+          return;
+        }
+      }
+    }
+    cli_trace(cli, "      quad indirect (cmd 0xEB 1-4-4): all %u pages OK",
+              (unsigned int)TEST_PAGES);
+
+    ext_flash_mmap_enable();
+  }
+  cli_trace(cli, "[7/7] verify indirect: OK");
+
+  // Leave the sector erased for the next run.
+  ext_flash_erase(test_addr, EXT_FLASH_ERASE_SECTOR);
 
   cli_ok(cli, "NvM test PASS");
 }
@@ -428,27 +434,20 @@ static void prodtest_ext_flash_test(cli_t* cli) {
 PRODTEST_CLI_CMD(
   .name = "ext-flash-erase",
   .func = prodtest_ext_flash_erase,
-  .info = "Erase external flash: whole chip, 64 KB block, or 4 KB sector",
+  .info = "Erase external flash: chip, 64 KB block, 32 KB half-block, or 4 KB sector",
   .args = "chip | sector <addr> | block <addr>"
 );
 
 PRODTEST_CLI_CMD(
   .name = "ext-flash-program",
   .func = prodtest_ext_flash_program,
-  .info = "Write one page (≤256 B) to external flash (addr must be page-aligned, area pre-erased)",
+  .info = "Write up to 256 B to external flash (any byte address, area pre-erased)",
   .args = "<addr> <hexdata>"
 );
 
 PRODTEST_CLI_CMD(
   .name = "ext-flash-read",
   .func = prodtest_ext_flash_read,
-  .info = "Read bytes from external flash via indirect (command) mode",
-  .args = "<addr> <len>"
-);
-
-PRODTEST_CLI_CMD(
-  .name = "ext-flash-read-mmap",
-  .func = prodtest_ext_flash_read_mmap,
   .info = "Read bytes from external flash via memory-mapped (XIP) mode",
   .args = "<addr> <len>"
 );
@@ -456,7 +455,7 @@ PRODTEST_CLI_CMD(
 PRODTEST_CLI_CMD(
   .name = "ext-flash-test",
   .func = prodtest_ext_flash_test,
-  .info = "End-to-end NvM self-test: init, SR3 reconfigure, erase, write, indirect/mmap/slow read",
+  .info = "Production NvM test: pin connectivity, 100 MHz quad-SPI, stress patterns, SR3 R/W",
   .args = "[addr]"
 );
 
