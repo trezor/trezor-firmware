@@ -25,6 +25,7 @@ from trezorlib import ethereum, exceptions, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path, unharden
 
 from ...common import parametrize_using_common_fixtures
@@ -533,6 +534,60 @@ def test_signtx_data_pagination(session: Session, scroll: bool, size: int):
     with client, pytest.raises(exceptions.Cancelled):
         client.set_input_flow(flow.get())
         _sign_tx_call()
+
+
+def test_signtx_data_bad_init(session: Session):
+    DATA = b"A" * 256
+
+    with session.test_ctx as client:
+
+        def _filter(msg: MessageType) -> MessageType:
+            req = messages.EthereumSignTx.ensure_isinstance(msg)
+            assert req.data_initial_chunk is not None
+            req.data_initial_chunk += b"EXTRA"
+            return req
+
+        client.set_filter(message_type=messages.EthereumSignTx, callback=_filter)
+        with pytest.raises(TrezorFailure, match="Invalid size of initial chunk"):
+            ethereum.sign_tx(
+                session,
+                n=parse_path("m/44h/60h/0h/0/0"),
+                nonce=0x0,
+                gas_price=0x14,
+                gas_limit=0x14,
+                to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+                chain_id=1,
+                value=0xA,
+                tx_type=None,
+                data=DATA,
+            )
+
+
+def test_signtx_data_bad_ack(session: Session):
+    DATA = b"A" * 2000
+
+    with session.test_ctx as client:
+
+        def _filter(msg: MessageType) -> MessageType:
+            req = messages.EthereumTxAck.ensure_isinstance(msg)
+            assert req.data_chunk is not None
+            req.data_chunk = req.data_chunk + b"EXTRA"
+            return req
+
+        client.set_filter(message_type=messages.EthereumTxAck, callback=_filter)
+        with pytest.raises(TrezorFailure, match="Too much data"):
+            ethereum.sign_tx(
+                session,
+                n=parse_path("m/44h/60h/0h/0/0"),
+                nonce=0x0,
+                gas_price=0x14,
+                gas_limit=0x14,
+                to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+                chain_id=1,
+                value=0xA,
+                tx_type=None,
+                data=DATA,
+            )
 
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking.json")
