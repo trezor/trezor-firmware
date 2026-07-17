@@ -21,6 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <io/nfc.h>
+#include <rfal_rf.h>
 #include <rfal_t4t.h>
 #include <rtl/cli.h>
 #include <stdlib.h>
@@ -35,6 +36,8 @@ static uint8_t cli_cmd_byte_buf[256] = {0};
 
 static const uint8_t aid_select_ndef_app[7] = {0xd2, 0x76, 0x00, 0x00,
                                                0x85, 0x01, 0x01};
+static const uint8_t aid_select_custom_app[7] = {0xA0, 0x00, 0x00, 0x09,
+                                                 0x59, 0x00, 0x01};
 
 static const uint8_t select_ndef_file[2] = {0xe1, 0x04};
 static const uint8_t ndef_file_header_size = 5u;
@@ -710,6 +713,137 @@ cleanup:
 
 } 
 
+static void prodtest_nfc_backup_custom_frame_cmd(cli_t* cli) {
+  nfc_status_t nfc_status = nfc_start_discovery(NFC_DISCOVERY_TYPE_CARD_READER);
+
+  if (nfc_status == NFC_NOT_INITIALIZED) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC not initialized");
+    goto cleanup;
+  } else if (nfc_status != NFC_OK) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC activation failed");
+    goto cleanup;
+  } else {
+    cli_trace(cli, "Attach Type A NFC card.");
+  }
+
+  // Clear leftover events
+  nfc_event_t event_flag;
+  nfc_get_event(&event_flag);
+  sysevents_t awaited_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+  sysevents_t signalled_events = {0};
+  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
+
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "NFC test aborted");
+      goto cleanup;
+    }
+
+    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(10));
+
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
+      continue;
+    }
+
+    if (!nfc_get_event(&event_flag)) {
+      cli_error(cli, CLI_ERROR, "Failed to get NFC events");
+      continue;
+    }
+
+    if (event_flag == NFC_EVENT_CONNECTED) {
+      cli_trace(cli, "NFC card detected.");
+
+      nfc_dev_read_info(&dev_info);
+      if (dev_info.type != NFC_DEV_TYPE_A) {
+        cli_error(cli, CLI_ERROR_ABORT, "Unexpected card type (%d)", dev_info.type);
+        goto cleanup;
+      }
+
+      {
+        rfalIsoDepApduBufFormat select_apdu;
+        uint16_t select_apdu_len = 0;
+        uint8_t* select_resp = NULL;
+        uint16_t* select_resp_len = NULL;
+
+        ReturnCode rc = rfalT4TPollerComposeSelectAppl(
+            &select_apdu, aid_select_custom_app, sizeof(aid_select_custom_app),
+            &select_apdu_len);
+        if (rc != RFAL_ERR_NONE) {
+          cli_error(cli, CLI_ERROR, "Failed to compose SELECT AID APDU (%d)", rc);
+          goto cleanup;
+        }
+
+        nfc_status = nfc_transceive((const uint8_t*)select_apdu.apdu,
+                                    select_apdu_len,
+                                    &select_resp,
+                                    &select_resp_len);
+        if ((nfc_status != NFC_OK) || (select_resp == NULL) ||
+            (select_resp_len == NULL) || (*select_resp_len < 2U)) {
+          cli_error(cli, CLI_ERROR, "SELECT AID transceive failed");
+          goto cleanup;
+        }
+
+        if ((select_resp[*select_resp_len - 2U] != 0x90U) ||
+            (select_resp[*select_resp_len - 1U] != 0x00U)) {
+          cli_error(cli,
+                    CLI_ERROR,
+                    "SELECT AID failed SW=%02X%02X",
+                    select_resp[*select_resp_len - 2U],
+                    select_resp[*select_resp_len - 1U]);
+          goto cleanup;
+        }
+
+        cli_trace(cli, "SELECT AID OK (SW=9000)");
+      }
+
+      // Custom frame
+      uint8_t tx_info_block[32] = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x10,
+                                  0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+                                  0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20};
+
+      uint8_t rx_buf[32] = {0};
+      uint16_t rx_bits = 0;
+      uint32_t flags = (uint32_t)RFAL_TXRX_FLAGS_CRC_TX_MANUAL |
+             (uint32_t)RFAL_TXRX_FLAGS_CRC_RX_KEEP |
+             (uint32_t)RFAL_TXRX_FLAGS_CRC_RX_MANUAL|
+             (uint32_t)RFAL_TXRX_FLAGS_PAR_TX_AUTO |
+             (uint32_t)RFAL_TXRX_FLAGS_PAR_RX_REMV;
+
+      ReturnCode rc = rfalISO14443ATransceiveCustomFrame(
+          tx_info_block,
+          rfalConvBytesToBits(sizeof(tx_info_block)),
+          rx_buf,
+          rfalConvBytesToBits(sizeof(rx_buf)),
+          &rx_bits,
+          flags,
+          rfalConvMsTo1fc(100));
+
+      cli_trace(cli, "custom frame result: rc=%d, rx_bits=%u", rc, (unsigned)rx_bits);
+      if (rx_bits > 0U) {
+        cli_ok_hexdata(cli, rx_buf, rfalConvBitsToBytes(rx_bits));
+      }
+
+      if (rc == RFAL_ERR_NONE) {
+        cli_ok(cli, "Custom frame transceive done");
+      } else {
+        cli_error(cli, CLI_ERROR, "Custom frame transceive failed (%d)", rc);
+      }
+      goto cleanup;
+    }
+
+    if (event_flag == NFC_EVENT_DISCONNECTED) {
+      cli_trace(cli, "NFC card removed.");
+      goto cleanup;
+    }
+
+    systick_delay_ms(1);
+  }
+
+cleanup:
+  nfc_stop_discovery();
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -731,6 +865,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_nfc_backup_read_ndef_cmd,
   .info = "Read NDEF data from NFC backup card",
   .args = "[<timeout>]"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-custom-frame",
+  .func = prodtest_nfc_backup_custom_frame_cmd,
+  .info = "Send example custom ISO14443A frame via RF layer",
+  .args = ""
 );
 
 #endif  // USE_NFC
