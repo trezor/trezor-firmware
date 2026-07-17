@@ -111,6 +111,8 @@ trezor_message_impl! {
     TrezorAppLoaded => MessageType_TrezorAppLoaded,
     TrezorAppHeaderRequest => MessageType_TrezorAppHeaderRequest,
     TrezorAppHeaderAck => MessageType_TrezorAppHeaderAck,
+    TrezorAppRootPacketRequest => MessageType_TrezorAppRootPacketRequest,
+    TrezorAppRootPacketAck => MessageType_TrezorAppRootPacketAck,
     TrezorAppDataChunkRequest => MessageType_TrezorAppDataChunkRequest,
     TrezorAppDataChunkAck => MessageType_TrezorAppDataChunkAck,
     TrezorAppMessage => MessageType_TrezorAppMessage,
