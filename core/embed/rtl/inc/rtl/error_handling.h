@@ -52,7 +52,7 @@ typedef struct {
  * with standard errno codes */
 #define TS_ENOINIT ts_make(2000) /* Not initialized */
 #define TS_ENOEN ts_make(2001)   /* Not enabled */
-
+#define TS_ECRYPTO ts_make(2002) /* Crypto error */
 /**
  * Extracts the code integer value from status structure.
  *
