@@ -1183,6 +1183,35 @@ ReturnCode rfalISO14443ATransceiveShortFrame( rfal14443AShortFrameCmd txCmd, uin
 
 /*!
  *****************************************************************************
+ * \brief Transceives a single custom ISO14443A frame (blocking)
+ *
+ * This sends exactly one custom frame using the given flags and waits for
+ * the response. The caller provides Tx/Rx lengths in bits, allowing custom
+ * parity/CRC handling through the flags.
+ *
+ * \param[in]  txBuf      : buffer containing the frame to be transmitted
+ * \param[in]  txBufLen   : transmit length in bits
+ * \param[out] rxBuf      : buffer to place received frame
+ * \param[in]  rxBufLen   : receive buffer length in bits
+ * \param[out] rxRcvdLen  : received length in bits
+ * \param[in]  flags      : RFAL transceive flags (CRC/PAR handling)
+ * \param[in]  fwt        : Frame Waiting Time in 1/fc
+ *
+ * \note If RFAL_TXRX_FLAGS_PAR_RX_KEEP is set, RFAL_TXRX_FLAGS_CRC_RX_MANUAL
+ *       must also be set.
+ *
+ * \return RFAL_ERR_NONE        : If there is no error
+ * \return RFAL_ERR_BUSY        : Operation ongoing (internal)
+ * \return RFAL_ERR_WRONG_STATE : RFAL not initialized, mode not set, or no field
+ * \return RFAL_ERR_PARAM       : Invalid parameter
+ * \return RFAL_ERR_NOTSUPP     : Unsupported flags combination
+ *****************************************************************************
+ */
+ReturnCode rfalISO14443ATransceiveCustomFrame( uint8_t *txBuf, uint16_t txBufLen, uint8_t *rxBuf, uint16_t rxBufLen, uint16_t *rxRcvdLen, uint32_t flags, uint32_t fwt );
+
+
+/*!
+ *****************************************************************************
  * \brief Sends an ISO14443A Anticollision Frame 
  * 
  * This is used to perform ISO14443A anti-collision. 
