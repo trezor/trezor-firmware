@@ -78,6 +78,10 @@
 #include <io/sdcard.h>
 #endif
 
+#ifdef USE_EXT_FLASH
+#include <sys/ext_flash.h>
+#endif
+
 #ifdef USE_TOUCH
 #include <io/touch.h>
 #endif
@@ -361,6 +365,30 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = sdcard_write_blocks__verified(src, block_num, num_blocks);
     } break;
 #endif
+
+#ifdef USE_EXT_FLASH
+    case SYSCALL_EXT_FLASH_INIT: {
+      args[0] = ext_flash_init();
+    } break;
+
+    case SYSCALL_EXT_FLASH_DEINIT: {
+      ext_flash_deinit();
+    } break;
+
+    case SYSCALL_EXT_FLASH_WRITE: {
+      uint32_t addr = args[0];
+      const uint8_t *buf = (const uint8_t *)args[1];
+      uint32_t len = args[2];
+      args[0] = ext_flash_write__verified(addr, buf, len);
+    } break;
+
+    case SYSCALL_EXT_FLASH_ERASE: {
+      uint32_t addr = args[0];
+      ext_flash_erase_t entity = (ext_flash_erase_t)args[1];
+      args[0] = ext_flash_erase(addr, entity);
+    } break;
+
+#endif  // USE_EXT_FLASH
 
     case SYSCALL_UNIT_PROPERTIES_GET: {
       unit_properties_t *props = (unit_properties_t *)args[0];

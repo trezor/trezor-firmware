@@ -319,6 +319,31 @@ secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 #endif  // USE_SD_CARD
 
 // =============================================================================
+// ext_flash.h
+// =============================================================================
+
+#ifdef USE_EXT_FLASH
+
+#include <sys/ext_flash.h>
+
+bool ext_flash_init(void) {
+  return (bool)syscall_invoke0(SYSCALL_EXT_FLASH_INIT);
+}
+
+void ext_flash_deinit(void) { syscall_invoke0(SYSCALL_EXT_FLASH_DEINIT); }
+
+bool ext_flash_write(uint32_t addr, const uint8_t *buf, uint32_t len) {
+  return (bool)syscall_invoke3(addr, (uint32_t)buf, len,
+                               SYSCALL_EXT_FLASH_WRITE);
+}
+
+bool ext_flash_erase(uint32_t addr, ext_flash_erase_t entity) {
+  return (bool)syscall_invoke2(addr, (uint32_t)entity, SYSCALL_EXT_FLASH_ERASE);
+}
+
+#endif  // USE_EXT_FLASH
+
+// =============================================================================
 // unit_properties.h
 // =============================================================================
 

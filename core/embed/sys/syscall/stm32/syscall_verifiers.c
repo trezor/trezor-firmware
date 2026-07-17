@@ -483,6 +483,25 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_EXT_FLASH
+
+#include <sys/ext_flash.h>
+
+bool ext_flash_write__verified(uint32_t addr, const uint8_t *buf,
+                               uint32_t len) {
+  if (!probe_read_access(buf, len)) {
+    goto access_violation;
+  }
+  return ext_flash_write(addr, buf, len);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_EXT_FLASH
+
+// ---------------------------------------------------------------------
+
 void unit_properties_get__verified(unit_properties_t *props) {
   if (!probe_write_access(props, sizeof(*props))) {
     goto access_violation;

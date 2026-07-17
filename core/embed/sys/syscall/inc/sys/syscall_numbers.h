@@ -206,6 +206,12 @@ typedef enum {
   SYSCALL_MCU_ATTESTATION_SIGN,
 
   SYSCALL_TELEMETRY_GET,
+
+  SYSCALL_EXT_FLASH_INIT,
+  SYSCALL_EXT_FLASH_DEINIT,
+  SYSCALL_EXT_FLASH_WRITE,
+  SYSCALL_EXT_FLASH_ERASE,
+
   // ------------------------------------------------------
   // Following syscalls are executed in kernel thread mode
 

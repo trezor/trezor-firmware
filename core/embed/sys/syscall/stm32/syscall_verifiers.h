@@ -135,6 +135,16 @@ secbool __wur sdcard_write_blocks__verified(const uint32_t *src,
 #endif  // USE_SD_CARD
 
 // ---------------------------------------------------------------------
+
+#ifdef USE_EXT_FLASH
+
+#include <sys/ext_flash.h>
+
+bool ext_flash_write__verified(uint32_t addr, const uint8_t *buf, uint32_t len);
+
+#endif  // USE_EXT_FLASH
+
+// ---------------------------------------------------------------------
 #include <sec/unit_properties.h>
 
 void unit_properties_get__verified(unit_properties_t *props);
