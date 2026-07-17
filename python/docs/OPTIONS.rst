@@ -272,7 +272,6 @@ Ethereum commands.
     - HTTP or HTTPS URL
     - path to local directory
     - path to local tar archive
-    
 
     For debugging purposes, it is possible to force use a specific network and token definition by
     using the `--network` and `--token` options. These options accept either a path to a file with a
@@ -488,7 +487,9 @@ Solana commands.
   Commands:
     get-address     Get Solana address.
     get-public-key  Get Solana public key.
+    sign-message    Sign a Solana off-chain message.
     sign-tx         Sign Solana transaction.
+    verify-message  Verify a signed Solana off-chain message.
 
 Stellar commands.
 ~~~~~~~~~~~~~~~~~

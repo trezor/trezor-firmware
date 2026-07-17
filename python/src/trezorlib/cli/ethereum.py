@@ -306,7 +306,6 @@ def cli(
     - HTTP or HTTPS URL
     - path to local directory
     - path to local tar archive
-    \b
 
     For debugging purposes, it is possible to force use a specific network, token
     or contract descriptor definition by using the `--network`, `--token` and
