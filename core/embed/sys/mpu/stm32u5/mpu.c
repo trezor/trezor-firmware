@@ -42,6 +42,10 @@
 #define MPUX_TYPE_PERIPHERAL 2
 #define MPUX_TYPE_FLASH_DATA 3
 #define MPUX_TYPE_SRAM_CODE 4
+// EXT_FLASH reuses Attr[0] (Write-Through, Read-Allocate) to make the OCTOSPI
+// mmap window cacheable. Required by STM32U5 errata 2.6.7: sub-word mmap reads
+// corrupt the next 4-byte-window read when the region is non-cacheable.
+#define MPUX_TYPE_EXT_FLASH 5
 
 static const struct {
   uint32_t xn;    // executable
@@ -78,6 +82,12 @@ static const struct {
         .xn = LL_MPU_INSTRUCTION_ACCESS_ENABLE,
         .attr = LL_MPU_ATTRIBUTES_NUMBER1,
         .sh = LL_MPU_ACCESS_INNER_SHAREABLE,
+    },
+    // 5 - EXT_FLASH (OCTOSPI mmap, cacheable WT/RA, executable for XIP)
+    {
+        .xn = LL_MPU_INSTRUCTION_ACCESS_ENABLE,
+        .attr = LL_MPU_ATTRIBUTES_NUMBER0,
+        .sh = LL_MPU_ACCESS_NOT_SHAREABLE,
     },
 };
 
@@ -212,6 +222,11 @@ typedef struct {
   mpu_area_t active_fb;
   // Applet thread-local storage area
   mpu_area_t app_tls;
+#ifdef USE_EXT_FLASH
+  // When true, MPU_MODE_APP maps EXT_FLASH_MMAP_BASE in region 6 (UNPRIV=YES)
+  // instead of ASSETS, giving unprivileged firmware direct read access.
+  bool app_ext_flash_mmap;
+#endif
 
 } mpu_driver_t;
 
@@ -432,6 +447,16 @@ bool mpu_inside_active_fb(const void* addr, size_t size) {
   return result;
 }
 
+#ifdef USE_EXT_FLASH
+void mpu_set_ext_flash_mmap_app(bool enabled) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  irq_key_t irq_key = irq_lock();
+  drv->app_ext_flash_mmap = enabled;
+  irq_unlock(irq_key);
+}
+#endif
+
 mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   mpu_driver_t* drv = &g_mpu_driver;
 
@@ -492,7 +517,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 #endif
     case MPU_MODE_UNUSED_FLASH:
 #ifdef USE_EXT_FLASH
-  SET_REGION( 6, EXT_FLASH_MMAP_BASE,      EXT_FLASH_SIZE,     FLASH_DATA,   NO,    NO );
+  SET_REGION( 6, EXT_FLASH_MMAP_BASE,      EXT_FLASH_SIZE,     EXT_FLASH,    NO,    NO );
 #else
   DIS_REGION( 6);
 #endif
@@ -524,7 +549,15 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 #endif
     case MPU_MODE_APP_SAES:
     case MPU_MODE_APP:
-      SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
+#ifdef USE_EXT_FLASH
+      if (drv->app_ext_flash_mmap) {
+        SET_REGRUN( 6, EXT_FLASH_MMAP_BASE,    EXT_FLASH_SIZE,     EXT_FLASH,    NO,   YES );
+      } else {
+        SET_REGION( 6, ASSETS_START,            ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
+      }
+#else
+      SET_REGION( 6, ASSETS_START,              ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
+#endif
       break;
     default:
 #ifndef BOARDLOADER

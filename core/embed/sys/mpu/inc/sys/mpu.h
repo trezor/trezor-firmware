@@ -109,4 +109,14 @@ void mpu_set_active_fb(const void* addr, size_t size);
 // the active framebuffer previously set by `mpu_set_active_fb()`.
 bool mpu_inside_active_fb(const void* addr, size_t size);
 
+#ifdef USE_EXT_FLASH
+// Controls whether the external flash memory-mapped window at EXT_FLASH_MMAP_BASE
+// is accessible to unprivileged code when the MPU is in MPU_MODE_APP.
+//
+// When enabled, region 6 in MPU_MODE_APP maps EXT_FLASH_MMAP_BASE (RO, UNPRIV=YES)
+// instead of ASSETS. The change takes effect on the next reconfiguration to
+// MPU_MODE_APP.
+void mpu_set_ext_flash_mmap_app(bool enabled);
+#endif
+
 #endif  // KERNEL_MODE
