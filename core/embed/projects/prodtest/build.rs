@@ -28,6 +28,7 @@ fn main() -> Result<()> {
                 "prodtest_button.c",
                 "prodtest_crc.c",
                 "prodtest_display.c",
+                "prodtest_ext_flash.c",
                 "prodtest_prodtest.c",
                 "prodtest_backup_ram.c",
                 "prodtest_get_cpuid.c",

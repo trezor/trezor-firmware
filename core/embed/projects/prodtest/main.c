@@ -47,6 +47,10 @@
 #include <io/sbu.h>
 #endif
 
+#ifdef USE_EXT_FLASH
+#include <sys/ext_flash.h>
+#endif
+
 #ifdef USE_SD_CARD
 #include <io/sdcard.h>
 #endif
@@ -173,6 +177,9 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
+#endif
+#ifdef USE_EXT_FLASH
+  ext_flash_init();
 #endif
 #ifdef USE_SD_CARD
   sdcard_init();
