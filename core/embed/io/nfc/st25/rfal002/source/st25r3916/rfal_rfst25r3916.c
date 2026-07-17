@@ -2976,6 +2976,45 @@ ReturnCode rfalISO14443ATransceiveShortFrame( rfal14443AShortFrameCmd txCmd, uin
 
 
 /*******************************************************************************/
+ReturnCode rfalISO14443ATransceiveCustomFrame( uint8_t *txBuf, uint16_t txBufLen, uint8_t *rxBuf, uint16_t rxBufLen, uint16_t *rxRcvdLen, uint32_t flags, uint32_t fwt )
+{
+    ReturnCode            ret;
+    rfalTransceiveContext ctx;
+
+    /* Check if RFAL is properly initialized and in NFCA poll mode */
+    if( (!st25r3916IsTxEnabled()) || (gRFAL.state < RFAL_STATE_MODE_SET) || (( gRFAL.mode != RFAL_MODE_POLL_NFCA ) && ( gRFAL.mode != RFAL_MODE_POLL_NFCA_T1T )) )
+    {
+        return RFAL_ERR_WRONG_STATE;
+    }
+
+    /* Check for valid parameters */
+    if( (txBuf == NULL) || (rxBuf == NULL) || (rxRcvdLen == NULL) || (txBufLen == 0U) || (rxBufLen == 0U) )
+    {
+        return RFAL_ERR_PARAM;
+    }
+
+    /* If parity check is disabled, CRC check must be disabled as well */
+    if( ((flags & (uint32_t)RFAL_TXRX_FLAGS_PAR_RX_KEEP) != 0) && ((flags & (uint32_t)RFAL_TXRX_FLAGS_CRC_RX_MANUAL) == 0U) )
+    {
+        return RFAL_ERR_NOTSUPP;
+    }
+
+    ctx.txBuf     = txBuf;
+    ctx.txBufLen  = txBufLen;
+    ctx.rxBuf     = rxBuf;
+    ctx.rxBufLen  = rxBufLen;
+    ctx.rxRcvdLen = rxRcvdLen;
+    ctx.flags     = flags;
+    ctx.fwt       = fwt;
+
+    RFAL_EXIT_ON_ERR( ret, rfalStartTransceive( &ctx ) );
+    RFAL_EXIT_ON_ERR( ret, rfalTransceiveRunBlockingTx() );
+
+    return rfalTransceiveBlockingRx();
+}
+
+
+/*******************************************************************************/
 ReturnCode rfalISO14443ATransceiveAnticollisionFrame( uint8_t *buf, uint8_t *bytesToSend, uint8_t *bitsToSend, uint16_t *rxLength, uint32_t fwt )
 {
     ReturnCode ret;
