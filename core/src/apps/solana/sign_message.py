@@ -21,9 +21,10 @@ async def sign_message(
     from apps.common import seed
 
     from .layout import confirm_offchain_signverify
-    from .offchain_message import OffchainMessage
+    from .offchain_message import serialize_offchain_message
 
-    offchain_message = OffchainMessage.from_bytes(msg.message)
+    offchain_message = msg.message
+    serialized = serialize_offchain_message(offchain_message)
 
     node = keychain.derive(msg.address_n)
     public_key = seed.remove_ed25519_prefix(node.public_key())
@@ -40,5 +41,5 @@ async def sign_message(
         chunkify=bool(msg.chunkify),
     )
 
-    signature = ed25519.sign(node.private_key(), msg.message)
-    return SolanaMessageSignature(signature=signature)
+    signature = ed25519.sign(node.private_key(), serialized)
+    return SolanaMessageSignature(signature=signature, signed_data=serialized)

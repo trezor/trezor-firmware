@@ -6106,15 +6106,31 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["SolanaTxSignature"]:
             return isinstance(msg, cls)
 
-    class SolanaSignMessage(protobuf.MessageType):
-        address_n: "list[int]"
-        message: "AnyBytes"
-        chunkify: "bool | None"
+    class SolanaOffchainMessageV1(protobuf.MessageType):
+        message: "str"
+        signers: "list[AnyBytes]"
 
         def __init__(
             self,
             *,
-            message: "AnyBytes",
+            message: "str",
+            signers: "list[AnyBytes] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaOffchainMessageV1"]:
+            return isinstance(msg, cls)
+
+    class SolanaSignMessage(protobuf.MessageType):
+        address_n: "list[int]"
+        chunkify: "bool | None"
+        message: "SolanaOffchainMessageV1"
+
+        def __init__(
+            self,
+            *,
+            message: "SolanaOffchainMessageV1",
             address_n: "list[int] | None" = None,
             chunkify: "bool | None" = None,
         ) -> None:
@@ -6126,11 +6142,13 @@ if TYPE_CHECKING:
 
     class SolanaMessageSignature(protobuf.MessageType):
         signature: "AnyBytes"
+        signed_data: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             signature: "AnyBytes",
+            signed_data: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -6139,13 +6157,15 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class SolanaVerifyMessage(protobuf.MessageType):
-        envelope: "AnyBytes"
         chunkify: "bool | None"
+        message: "SolanaOffchainMessageV1"
+        signatures: "list[AnyBytes]"
 
         def __init__(
             self,
             *,
-            envelope: "AnyBytes",
+            message: "SolanaOffchainMessageV1",
+            signatures: "list[AnyBytes] | None" = None,
             chunkify: "bool | None" = None,
         ) -> None:
             pass

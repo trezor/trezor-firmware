@@ -2769,7 +2769,6 @@
       "Eckhart": "Serial number"
     },
     "solana__account_index": "Account index",
-    "solana__app_domain": "Application domain",
     "solana__associated_token_account": "Associated token account",
     "solana__base_fee": "Base fee",
     "solana__claim": "Claim",

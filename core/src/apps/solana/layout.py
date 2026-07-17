@@ -21,11 +21,10 @@ from .types import AddressType, is_address_reference
 if TYPE_CHECKING:
     from typing import Sequence
 
-    from trezor.messages import PaymentRequest, SolanaTokenInfo
+    from trezor.messages import PaymentRequest, SolanaOffchainMessageV1, SolanaTokenInfo
     from trezor.ui.layouts import PropertyType, StrPropertyType
 
     from .definitions import Definitions
-    from .offchain_message import OffchainMessage
     from .transaction import Fee
     from .transaction.instructions import Instruction, SystemProgramTransferInstruction
     from .types import AddressReference
@@ -637,23 +636,13 @@ async def confirm_payment_request(
 
 
 async def confirm_offchain_signverify(
-    offchain_message: OffchainMessage,
+    offchain_message: SolanaOffchainMessageV1,
     verify: bool,
     signer_index: int = 0,
     signer_path: list[int] | None = None,
     chunkify: bool = False,
 ) -> None:
     from trezor.ui.layouts import confirm_address, confirm_signverify
-
-    from .offchain_message import OffchainMessageV0
-
-    if isinstance(offchain_message, OffchainMessageV0):
-        await confirm_address(
-            TR.solana__app_domain,
-            base58.encode(offchain_message.app),
-            verb=TR.buttons__continue,
-            chunkify=chunkify,
-        )
 
     if len(offchain_message.signers) > 1:
         await confirm_metadata(

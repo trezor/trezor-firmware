@@ -88,6 +88,14 @@ message SolanaTxSignature {
 }
 
 /**
+ * @embed
+ */
+message SolanaOffchainMessageV1 {
+    required string message = 1;
+    repeated bytes signers = 2;
+}
+
+/**
  * Request: Ask device to sign a Solana off-chain message
  * @start
  * @next SolanaMessageSignature
@@ -95,8 +103,9 @@ message SolanaTxSignature {
  */
 message SolanaSignMessage {
     repeated uint32 address_n = 1;  // BIP-32 path to derive the key to sign with
-    required bytes message = 2;     // message to be signed, in OCMS format
+    reserved 2;                     // deprecated: message in OCMS v0 format
     optional bool chunkify = 3;     // display the address in chunks of 4 characters
+    required SolanaOffchainMessageV1 message = 4;
 }
 
 /**
@@ -104,7 +113,8 @@ message SolanaSignMessage {
  * @end
  */
 message SolanaMessageSignature {
-    required bytes signature = 1;  // message signature
+    required bytes signature = 1;    // message signature
+    optional bytes signed_data = 2;  // serialized message that was signed
 }
 
 /**
@@ -114,6 +124,8 @@ message SolanaMessageSignature {
  * @next Failure
  */
 message SolanaVerifyMessage {
-    required bytes envelope = 1;  // OCMS envelope containing the signatures and the message
-    optional bool chunkify = 2;   // display the address in chunks of 4 characters
+    reserved 1;                     // deprecated: message in OCMS v0 format with an envelope
+    optional bool chunkify = 2;     // display the address in chunks of 4 characters
+    required SolanaOffchainMessageV1 message = 3;
+    repeated bytes signatures = 4;  // signatures to verify, order must match the order of message.signers
 }

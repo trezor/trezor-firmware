@@ -1703,16 +1703,195 @@ impl ::protobuf::reflect::ProtobufValue for SolanaTxSignature {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.solana.SolanaOffchainMessageV1)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SolanaOffchainMessageV1 {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaOffchainMessageV1.message)
+    pub message: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaOffchainMessageV1.signers)
+    pub signers: ::std::vec::Vec<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaOffchainMessageV1.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SolanaOffchainMessageV1 {
+    fn default() -> &'a SolanaOffchainMessageV1 {
+        <SolanaOffchainMessageV1 as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SolanaOffchainMessageV1 {
+    pub fn new() -> SolanaOffchainMessageV1 {
+        ::std::default::Default::default()
+    }
+
+    // required string message = 1;
+
+    pub fn message(&self) -> &str {
+        match self.message.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_message(&mut self) {
+        self.message = ::std::option::Option::None;
+    }
+
+    pub fn has_message(&self) -> bool {
+        self.message.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_message(&mut self, v: ::std::string::String) {
+        self.message = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_message(&mut self) -> &mut ::std::string::String {
+        if self.message.is_none() {
+            self.message = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.message.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_message(&mut self) -> ::std::string::String {
+        self.message.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "message",
+            |m: &SolanaOffchainMessageV1| { &m.message },
+            |m: &mut SolanaOffchainMessageV1| { &mut m.message },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "signers",
+            |m: &SolanaOffchainMessageV1| { &m.signers },
+            |m: &mut SolanaOffchainMessageV1| { &mut m.signers },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaOffchainMessageV1>(
+            "SolanaOffchainMessageV1",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SolanaOffchainMessageV1 {
+    const NAME: &'static str = "SolanaOffchainMessageV1";
+
+    fn is_initialized(&self) -> bool {
+        if self.message.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.message = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.signers.push(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.message.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        for value in &self.signers {
+            my_size += ::protobuf::rt::bytes_size(2, &value);
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.message.as_ref() {
+            os.write_string(1, v)?;
+        }
+        for v in &self.signers {
+            os.write_bytes(2, &v)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SolanaOffchainMessageV1 {
+        SolanaOffchainMessageV1::new()
+    }
+
+    fn clear(&mut self) {
+        self.message = ::std::option::Option::None;
+        self.signers.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SolanaOffchainMessageV1 {
+        static instance: SolanaOffchainMessageV1 = SolanaOffchainMessageV1 {
+            message: ::std::option::Option::None,
+            signers: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SolanaOffchainMessageV1 {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SolanaOffchainMessageV1").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SolanaOffchainMessageV1 {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SolanaOffchainMessageV1 {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.solana.SolanaSignMessage)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct SolanaSignMessage {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignMessage.address_n)
     pub address_n: ::std::vec::Vec<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignMessage.message)
-    pub message: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignMessage.chunkify)
     pub chunkify: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignMessage.message)
+    pub message: ::protobuf::MessageField<SolanaOffchainMessageV1>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaSignMessage.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1727,42 +1906,6 @@ impl<'a> ::std::default::Default for &'a SolanaSignMessage {
 impl SolanaSignMessage {
     pub fn new() -> SolanaSignMessage {
         ::std::default::Default::default()
-    }
-
-    // required bytes message = 2;
-
-    pub fn message(&self) -> &[u8] {
-        match self.message.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_message(&mut self) {
-        self.message = ::std::option::Option::None;
-    }
-
-    pub fn has_message(&self) -> bool {
-        self.message.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_message(&mut self, v: ::std::vec::Vec<u8>) {
-        self.message = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_message(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.message.is_none() {
-            self.message = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.message.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_message(&mut self) -> ::std::vec::Vec<u8> {
-        self.message.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional bool chunkify = 3;
@@ -1793,14 +1936,14 @@ impl SolanaSignMessage {
             |m: &mut SolanaSignMessage| { &mut m.address_n },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "message",
-            |m: &SolanaSignMessage| { &m.message },
-            |m: &mut SolanaSignMessage| { &mut m.message },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "chunkify",
             |m: &SolanaSignMessage| { &m.chunkify },
             |m: &mut SolanaSignMessage| { &mut m.chunkify },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, SolanaOffchainMessageV1>(
+            "message",
+            |m: &SolanaSignMessage| { &m.message },
+            |m: &mut SolanaSignMessage| { &mut m.message },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaSignMessage>(
             "SolanaSignMessage",
@@ -1817,6 +1960,11 @@ impl ::protobuf::Message for SolanaSignMessage {
         if self.message.is_none() {
             return false;
         }
+        for v in &self.message {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -1829,11 +1977,11 @@ impl ::protobuf::Message for SolanaSignMessage {
                 8 => {
                     self.address_n.push(is.read_uint32()?);
                 },
-                18 => {
-                    self.message = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 24 => {
                     self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                34 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.message)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1850,11 +1998,12 @@ impl ::protobuf::Message for SolanaSignMessage {
         for value in &self.address_n {
             my_size += ::protobuf::rt::uint32_size(1, *value);
         };
-        if let Some(v) = self.message.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
-        }
         if let Some(v) = self.chunkify {
             my_size += 1 + 1;
+        }
+        if let Some(v) = self.message.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -1865,11 +2014,11 @@ impl ::protobuf::Message for SolanaSignMessage {
         for v in &self.address_n {
             os.write_uint32(1, *v)?;
         };
-        if let Some(v) = self.message.as_ref() {
-            os.write_bytes(2, v)?;
-        }
         if let Some(v) = self.chunkify {
             os.write_bool(3, v)?;
+        }
+        if let Some(v) = self.message.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1889,16 +2038,16 @@ impl ::protobuf::Message for SolanaSignMessage {
 
     fn clear(&mut self) {
         self.address_n.clear();
-        self.message = ::std::option::Option::None;
         self.chunkify = ::std::option::Option::None;
+        self.message.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static SolanaSignMessage {
         static instance: SolanaSignMessage = SolanaSignMessage {
             address_n: ::std::vec::Vec::new(),
-            message: ::std::option::Option::None,
             chunkify: ::std::option::Option::None,
+            message: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1928,6 +2077,8 @@ pub struct SolanaMessageSignature {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaMessageSignature.signature)
     pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaMessageSignature.signed_data)
+    pub signed_data: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaMessageSignature.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1980,13 +2131,54 @@ impl SolanaMessageSignature {
         self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes signed_data = 2;
+
+    pub fn signed_data(&self) -> &[u8] {
+        match self.signed_data.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signed_data(&mut self) {
+        self.signed_data = ::std::option::Option::None;
+    }
+
+    pub fn has_signed_data(&self) -> bool {
+        self.signed_data.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signed_data(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signed_data = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signed_data(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signed_data.is_none() {
+            self.signed_data = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signed_data.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signed_data(&mut self) -> ::std::vec::Vec<u8> {
+        self.signed_data.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "signature",
             |m: &SolanaMessageSignature| { &m.signature },
             |m: &mut SolanaMessageSignature| { &mut m.signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signed_data",
+            |m: &SolanaMessageSignature| { &m.signed_data },
+            |m: &mut SolanaMessageSignature| { &mut m.signed_data },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaMessageSignature>(
             "SolanaMessageSignature",
@@ -2012,6 +2204,9 @@ impl ::protobuf::Message for SolanaMessageSignature {
                 10 => {
                     self.signature = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                18 => {
+                    self.signed_data = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2027,6 +2222,9 @@ impl ::protobuf::Message for SolanaMessageSignature {
         if let Some(v) = self.signature.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
+        if let Some(v) = self.signed_data.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2035,6 +2233,9 @@ impl ::protobuf::Message for SolanaMessageSignature {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.signature.as_ref() {
             os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.signed_data.as_ref() {
+            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2054,12 +2255,14 @@ impl ::protobuf::Message for SolanaMessageSignature {
 
     fn clear(&mut self) {
         self.signature = ::std::option::Option::None;
+        self.signed_data = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static SolanaMessageSignature {
         static instance: SolanaMessageSignature = SolanaMessageSignature {
             signature: ::std::option::Option::None,
+            signed_data: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2087,10 +2290,12 @@ impl ::protobuf::reflect::ProtobufValue for SolanaMessageSignature {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct SolanaVerifyMessage {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaVerifyMessage.envelope)
-    pub envelope: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaVerifyMessage.chunkify)
     pub chunkify: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaVerifyMessage.message)
+    pub message: ::protobuf::MessageField<SolanaOffchainMessageV1>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaVerifyMessage.signatures)
+    pub signatures: ::std::vec::Vec<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaVerifyMessage.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2105,42 +2310,6 @@ impl<'a> ::std::default::Default for &'a SolanaVerifyMessage {
 impl SolanaVerifyMessage {
     pub fn new() -> SolanaVerifyMessage {
         ::std::default::Default::default()
-    }
-
-    // required bytes envelope = 1;
-
-    pub fn envelope(&self) -> &[u8] {
-        match self.envelope.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_envelope(&mut self) {
-        self.envelope = ::std::option::Option::None;
-    }
-
-    pub fn has_envelope(&self) -> bool {
-        self.envelope.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_envelope(&mut self, v: ::std::vec::Vec<u8>) {
-        self.envelope = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_envelope(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.envelope.is_none() {
-            self.envelope = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.envelope.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_envelope(&mut self) -> ::std::vec::Vec<u8> {
-        self.envelope.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional bool chunkify = 2;
@@ -2163,17 +2332,22 @@ impl SolanaVerifyMessage {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "envelope",
-            |m: &SolanaVerifyMessage| { &m.envelope },
-            |m: &mut SolanaVerifyMessage| { &mut m.envelope },
-        ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "chunkify",
             |m: &SolanaVerifyMessage| { &m.chunkify },
             |m: &mut SolanaVerifyMessage| { &mut m.chunkify },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, SolanaOffchainMessageV1>(
+            "message",
+            |m: &SolanaVerifyMessage| { &m.message },
+            |m: &mut SolanaVerifyMessage| { &mut m.message },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "signatures",
+            |m: &SolanaVerifyMessage| { &m.signatures },
+            |m: &mut SolanaVerifyMessage| { &mut m.signatures },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaVerifyMessage>(
             "SolanaVerifyMessage",
@@ -2187,20 +2361,28 @@ impl ::protobuf::Message for SolanaVerifyMessage {
     const NAME: &'static str = "SolanaVerifyMessage";
 
     fn is_initialized(&self) -> bool {
-        if self.envelope.is_none() {
+        if self.message.is_none() {
             return false;
         }
+        for v in &self.message {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                10 => {
-                    self.envelope = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 16 => {
                     self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.message)?;
+                },
+                34 => {
+                    self.signatures.push(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -2214,24 +2396,31 @@ impl ::protobuf::Message for SolanaVerifyMessage {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.envelope.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
-        }
         if let Some(v) = self.chunkify {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.message.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        for value in &self.signatures {
+            my_size += ::protobuf::rt::bytes_size(4, &value);
+        };
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.envelope.as_ref() {
-            os.write_bytes(1, v)?;
-        }
         if let Some(v) = self.chunkify {
             os.write_bool(2, v)?;
         }
+        if let Some(v) = self.message.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        }
+        for v in &self.signatures {
+            os.write_bytes(4, &v)?;
+        };
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2249,15 +2438,17 @@ impl ::protobuf::Message for SolanaVerifyMessage {
     }
 
     fn clear(&mut self) {
-        self.envelope = ::std::option::Option::None;
         self.chunkify = ::std::option::Option::None;
+        self.message.clear();
+        self.signatures.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static SolanaVerifyMessage {
         static instance: SolanaVerifyMessage = SolanaVerifyMessage {
-            envelope: ::std::option::Option::None,
             chunkify: ::std::option::Option::None,
+            message: ::protobuf::MessageField::none(),
+            signatures: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2304,14 +2495,19 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0eadditionalInfo\x12J\n\x0bpayment_req\x18\x04\x20\x01(\x0b2).hw.trezo\
     r.messages.common.PaymentRequestR\npaymentReq\x12\x1a\n\x08chunkify\x18\
     \x05\x20\x01(\x08R\x08chunkify\"1\n\x11SolanaTxSignature\x12\x1c\n\tsign\
-    ature\x18\x01\x20\x02(\x0cR\tsignature\"f\n\x11SolanaSignMessage\x12\x1b\
-    \n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\n\x07message\x18\
-    \x02\x20\x02(\x0cR\x07message\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\x08\
-    R\x08chunkify\"6\n\x16SolanaMessageSignature\x12\x1c\n\tsignature\x18\
-    \x01\x20\x02(\x0cR\tsignature\"M\n\x13SolanaVerifyMessage\x12\x1a\n\x08e\
-    nvelope\x18\x01\x20\x02(\x0cR\x08envelope\x12\x1a\n\x08chunkify\x18\x02\
-    \x20\x01(\x08R\x08chunkifyB:\n#com.satoshilabs.trezor.lib.protobufB\x13T\
-    rezorMessageSolana\
+    ature\x18\x01\x20\x02(\x0cR\tsignature\"M\n\x17SolanaOffchainMessageV1\
+    \x12\x18\n\x07message\x18\x01\x20\x02(\tR\x07message\x12\x18\n\x07signer\
+    s\x18\x02\x20\x03(\x0cR\x07signers\"\xa0\x01\n\x11SolanaSignMessage\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x1a\n\x08chunkify\
+    \x18\x03\x20\x01(\x08R\x08chunkify\x12L\n\x07message\x18\x04\x20\x02(\
+    \x0b22.hw.trezor.messages.solana.SolanaOffchainMessageV1R\x07messageJ\
+    \x04\x08\x02\x10\x03\"W\n\x16SolanaMessageSignature\x12\x1c\n\tsignature\
+    \x18\x01\x20\x02(\x0cR\tsignature\x12\x1f\n\x0bsigned_data\x18\x02\x20\
+    \x01(\x0cR\nsignedData\"\xa5\x01\n\x13SolanaVerifyMessage\x12\x1a\n\x08c\
+    hunkify\x18\x02\x20\x01(\x08R\x08chunkify\x12L\n\x07message\x18\x03\x20\
+    \x02(\x0b22.hw.trezor.messages.solana.SolanaOffchainMessageV1R\x07messag\
+    e\x12\x1e\n\nsignatures\x18\x04\x20\x03(\x0cR\nsignaturesJ\x04\x08\x01\
+    \x10\x02B:\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageSolana\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -2330,7 +2526,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(11);
+            let mut messages = ::std::vec::Vec::with_capacity(12);
             messages.push(SolanaGetPublicKey::generated_message_descriptor_data());
             messages.push(SolanaPublicKey::generated_message_descriptor_data());
             messages.push(SolanaGetAddress::generated_message_descriptor_data());
@@ -2339,6 +2535,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(SolanaTxAdditionalInfo::generated_message_descriptor_data());
             messages.push(SolanaSignTx::generated_message_descriptor_data());
             messages.push(SolanaTxSignature::generated_message_descriptor_data());
+            messages.push(SolanaOffchainMessageV1::generated_message_descriptor_data());
             messages.push(SolanaSignMessage::generated_message_descriptor_data());
             messages.push(SolanaMessageSignature::generated_message_descriptor_data());
             messages.push(SolanaVerifyMessage::generated_message_descriptor_data());

@@ -14,6 +14,8 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core"
 
 ADDRESS_N = parse_path("m/44h/501h/0h/0h")
 ED25519_PRIV_SIZE = 32
+ED25519_PUB_SIZE = 32
+ED25519_SIG_SIZE = 64
 
 
 @pytest.mark.parametrize(
@@ -40,29 +42,27 @@ def test_sign_verify(session: Session, n_cosigners: int, message: str) -> None:
 
     pubs = cosigner_pubs + [signer_pub]
 
-    offchain_message = solana.OffchainMessageV0(
-        app=b"\x00" * solana.OffchainMessageV0.APP_LEN,
+    offchain_message = solana.messages.SolanaOffchainMessageV1(
         signers=[pub.public_bytes_raw() for pub in pubs],
         message=message,
-    ).to_bytes()
+    )
 
-    signatures = [priv.sign(offchain_message) for priv in cosigner_privs]
-    signatures.append(solana.sign_message(session, ADDRESS_N, offchain_message))
+    result = solana.sign_message(session, ADDRESS_N, offchain_message)
+    assert result.signed_data is not None
+    signatures = [priv.sign(result.signed_data) for priv in cosigner_privs]
+    signatures.append(result.signature)
 
     for pub, sig in zip(pubs, signatures):
-        pub.verify(sig, offchain_message)
+        pub.verify(sig, result.signed_data)
 
-    envelope = solana.Envelope(signatures, offchain_message).to_bytes()
-
-    assert solana.verify_message(session, envelope)
+    assert solana.verify_message(session, offchain_message, signatures)
 
 
 def test_missing_signer(session: Session) -> None:
-    offchain_message = solana.OffchainMessageV0(
-        app=b"\x00" * solana.OffchainMessageV0.APP_LEN,
-        signers=[b"\x00" * solana.OffchainMessageV0.PUB_KEY_LEN],
+    offchain_message = solana.messages.SolanaOffchainMessageV1(
+        signers=[b"\x00" * ED25519_PUB_SIZE],
         message="Missing signer!",
-    ).to_bytes()
+    )
 
     with pytest.raises(
         exceptions.TrezorFailure, match="Requested key not among signers"
@@ -74,20 +74,18 @@ def test_missing_signer(session: Session) -> None:
     "signatures",
     [
         pytest.param([], id="missing"),
-        pytest.param([b"\x00" * (solana.Envelope.SIG_LEN - 1)], id="malformed"),
-        pytest.param([b"\x00" * solana.Envelope.SIG_LEN], id="invalid"),
-        pytest.param([b"\x00" * solana.Envelope.SIG_LEN] * 2, id="extra"),
+        pytest.param([b"\x00" * (ED25519_SIG_SIZE - 1)], id="malformed"),
+        pytest.param([b"\x00" * ED25519_SIG_SIZE], id="invalid"),
+        pytest.param([b"\x00" * ED25519_SIG_SIZE] * 2, id="extra"),
     ],
 )
-def test_invalid_envelope(session: Session, signatures: list[bytes]) -> None:
-    offchain_message = solana.OffchainMessageV0(
-        app=b"\x00" * solana.OffchainMessageV0.APP_LEN,
+def test_invalid_signed(session: Session, signatures: list[bytes]) -> None:
+    offchain_message = solana.messages.SolanaOffchainMessageV1(
         signers=[solana.get_public_key(session, ADDRESS_N, show_display=False)],
-        message="Invalid envelope!",
-    ).to_bytes()
+        message="Invalid signed message!",
+    )
 
+    # verify that the message itself is valid and can be signed
     solana.sign_message(session, ADDRESS_N, offchain_message)
 
-    envelope = solana.Envelope(signatures, offchain_message).to_bytes()
-
-    assert not solana.verify_message(session, envelope)
+    assert not solana.verify_message(session, offchain_message, signatures)
