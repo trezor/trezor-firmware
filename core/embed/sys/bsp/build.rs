@@ -63,6 +63,7 @@ fn add_stm32u5_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32u5xx_hal_i2c_ex.c",
             "stm32u5xx_hal_icache.c",
             "stm32u5xx_hal_iwdg.c",
+            "stm32u5xx_hal_ospi.c",
             "stm32u5xx_hal_lptim.c",
             "stm32u5xx_hal_ltdc.c",
             "stm32u5xx_hal_ltdc_ex.c",

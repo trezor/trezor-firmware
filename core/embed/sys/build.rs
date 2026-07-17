@@ -6,6 +6,8 @@ mod bsp;
 mod cpuid;
 #[path = "dbg/build.rs"]
 mod dbg;
+#[path = "ext_flash/build.rs"]
+mod ext_flash;
 #[path = "flash/build.rs"]
 mod flash;
 #[path = "i2c_bus/build.rs"]
@@ -65,6 +67,7 @@ fn main() -> Result<()> {
                 bsp,
                 cpuid,
                 dbg if cfg!(feature = "dbg_console"),
+                ext_flash if cfg!(feature = "ext_flash"),
                 i2c_bus if cfg!(feature = "i2c_bus"),
                 ipc if cfg!(feature = "ipc"),
                 irq,

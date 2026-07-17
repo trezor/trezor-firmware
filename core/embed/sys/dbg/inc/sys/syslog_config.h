@@ -82,4 +82,8 @@
 #define SYSLOG_optiga_transport_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
+#ifndef SYSLOG_ext_flash_MAX_LOG_LEVEL
+#define SYSLOG_ext_flash_MAX_LOG_LEVEL LOG_LEVEL_DBG
+#endif
+
 // Add more module-specific max log level definitions here...
