@@ -282,8 +282,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         array_parser = Array(
             Tuple(
                 (parse_address, parse_string),
-                # Note: dynamic structs that sit inside arrays behave as static structs
-                is_dynamic=False,
+                # the `string` field makes the struct a dynamic type, so the
+                # array encodes its elements via offset heads
+                is_dynamic=True,
             )
         )
 
@@ -326,6 +327,66 @@ class TestEthereumClearSigning(unittest.TestCase):
 
         self.assertEqual(parsed, [(addr1, text1), (addr2, text2)])
         self.assertEqual(consumed, 32)
+
+    def test_array_of_static_structs(self):
+        # (address,address,uint256)[]: the struct has no dynamic fields, so it
+        # is a static type - array elements are encoded IN PLACE right after
+        # the length word, at a stride of the struct size (96 bytes), with no
+        # offset heads at all.
+        array_parser = Array(
+            Tuple(
+                (parse_address, parse_address, parse_uint256),
+                is_dynamic=False,
+            )
+        )
+
+        addr1 = unhexlify("6666666666666666666666666666666666666666")
+        addr2 = unhexlify("7777777777777777777777777777777777777777")
+        addr3 = unhexlify("8888888888888888888888888888888888888888")
+        addr4 = unhexlify("9999999999999999999999999999999999999999")
+
+        def pad_addr(addr):
+            return b"\x00" * (32 - 20) + addr
+
+        array_pointer = len(FIVE_RANDOM_BYTES) + 32  # absolute pos of array body
+        payload = (
+            to_bytes(array_pointer)
+            + to_bytes(2)  # element count; elements follow in place
+            + pad_addr(addr1)  # element 0
+            + pad_addr(addr2)
+            + to_bytes(6000000)
+            + pad_addr(addr3)  # element 1
+            + pad_addr(addr4)
+            + to_bytes(1500000)
+        )
+        data = memoryview(FIVE_RANDOM_BYTES + payload + SEVEN_RANDOM_BYTES)
+
+        parsed, consumed = array_parser.parse(data, len(FIVE_RANDOM_BYTES))
+
+        self.assertEqual(parsed, [(addr1, addr2, 6000000), (addr3, addr4, 1500000)])
+        self.assertEqual(consumed, 32)  # only the array's own offset head
+
+        # count claims two elements but only one is present: the heads area
+        # (2 * 96 bytes) fails the bounds pre-check
+        truncated = (
+            to_bytes(32)  # pointer to array body (absolute pos, no prefix)
+            + to_bytes(2)
+            + pad_addr(addr1)
+            + pad_addr(addr2)
+            + to_bytes(6000000)
+        )
+        with self.assertRaises(OutOfBounds):
+            array_parser.parse(memoryview(truncated), 0)
+
+    def test_empty_tuple_rejected(self):
+        # Zero-field structs don't exist in Solidity. A static one would have
+        # head_size == 0, and inside an Array that zero stride would defeat
+        # the heads bounds pre-check (array_length * 0) and let an
+        # attacker-controlled length word drive an unbounded parse loop.
+        with self.assertRaises(InvalidFormatDefinition):
+            Tuple((), is_dynamic=False)
+        with self.assertRaises(InvalidFormatDefinition):
+            Tuple((), is_dynamic=True)
 
     def test_bytes32_parsing(self):
         atomic_bytes32 = Atomic(parse_bytes32)

@@ -108,6 +108,9 @@ enum EthereumABIType {
  */
 message EthereumABITupleInfo {
     repeated EthereumABIValueInfo fields = 1;
+    // Whether the tuple is a dynamic ABI type, i.e. at least one of its
+    // fields is dynamic. For tuples nested inside an array the firmware
+    // ignores this flag and derives the value from `fields` instead.
     required bool is_dynamic = 2;
 }
 
@@ -118,7 +121,7 @@ message EthereumABITupleInfo {
 message EthereumABIValueInfo {
     // Exactly one of the following should be set:
     optional EthereumABIType atomic = 1;      // Atomic(parser)
-    optional EthereumABIType dynamic = 2;     // Dynamic(parser)
+    optional EthereumABIType dynamic = 2;     // DynamicLeaf(parser)
     optional EthereumABITupleInfo tuple = 3;  // Tuple(fields, is_dynamic)
     optional EthereumABIValueInfo array = 4;  // Array(element_type)
 }
