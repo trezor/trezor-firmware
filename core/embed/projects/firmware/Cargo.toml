@@ -104,6 +104,7 @@ power_manager = [
     "trezor_lib/pmic",
 ]
 rgb_led = ["io/rgb_led", "upymod/rgb_led", "trezor_lib/rgb_led"]
+ext_flash = ["sys/ext_flash"]
 sd_card = ["io/sd_card", "upymod/sd_card", "trezor_lib/sd_card"]
 secmon_layout = ["models/secmon_layout"]
 secret = ["sec/secret"]

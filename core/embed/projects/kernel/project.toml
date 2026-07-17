@@ -7,6 +7,7 @@ uses = [
     "consumption_mask",
     "display",
     "dma2d",
+    "ext_flash",
     "framebuffer",
     "haptic",
     "hash_processor",
