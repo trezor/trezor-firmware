@@ -255,6 +255,25 @@ void SystemInit(void) {
 
   MODIFY_REG(RCC->CFGR1, RCC_CFGR1_SW, RCC_SYSCLKSOURCE_PLLCLK);
 
+#ifdef USE_PLL2_FOR_OSPI
+  // Configure PLL2Q at 100 MHz as the OSPI kernel clock source.
+  // Same 16 MHz oscillator as PLL1; PLLM=2 → VCI_in=8 MHz (range 0: 4–8 MHz),
+  // PLLN=25 → VCO_out=200 MHz, PLLQ=2 → PLL2Q=100 MHz.
+  // OCTOSPISEL is switched here (secure world) because PLL2SEC and PRESCSEC are
+  // both set on TrustZone targets; non-secure code cannot write RCC->CCIPR2.
+#ifdef USE_HSE
+  __HAL_RCC_PLL2_CONFIG(RCC_PLLSOURCE_HSE, 2, 25, 2, 2, 2);
+#else
+  __HAL_RCC_PLL2_CONFIG(RCC_PLLSOURCE_HSI, 2, 25, 2, 2, 2);
+#endif
+  __HAL_RCC_PLL2FRACN_DISABLE();
+  __HAL_RCC_PLL2_VCIRANGE(RCC_PLLVCIRANGE_0);
+  __HAL_RCC_PLL2CLKOUT_ENABLE(RCC_PLL2_DIVQ);
+  __HAL_RCC_PLL2_ENABLE();
+  while (READ_BIT(RCC->CR, RCC_CR_PLL2RDY) == 0U);
+  __HAL_RCC_OSPI_CONFIG(RCC_OSPICLKSOURCE_PLL2);
+#endif  // USE_PLL2_FOR_OSPI
+
   // Disable the internal Pull-Up in Dead Battery pins of UCPD peripheral
   HAL_PWREx_DisableUCPDDeadBattery();
 
