@@ -58,7 +58,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         Array,
         BindingContext,
         DateFormatter,
-        Dynamic,
+        DynamicLeaf,
         RawFormatter,
         Tuple,
         UnitFormatter,
@@ -131,7 +131,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
                     ),
                     is_dynamic=False,
                 ),  # desc
-                Dynamic(parse_bytes),  # data
+                DynamicLeaf(parse_bytes),  # data
             ],
             field_definitions=[
                 FieldDefinition(
@@ -785,8 +785,8 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
                 Atomic(parse_bytes32),  # 5 hashBytes32
                 Atomic(parse_bool),  # 6 flagBool
                 Atomic(parse_uint160),  # 7 sizedUint
-                Dynamic(parse_string),  # 8 note
-                Dynamic(parse_bytes),  # 9 payload
+                DynamicLeaf(parse_string),  # 8 note
+                DynamicLeaf(parse_bytes),  # 9 payload
             ],
             field_definitions=[
                 FieldDefinition((0,), "Recipient", AddressNameFormatter),
@@ -863,7 +863,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             intent="Trezor Test Paths. DO NOT USE",
             parameter_definitions=[
                 Atomic(parse_uint256),  # 0 amount (reused by both slice fields)
-                Dynamic(parse_bytes),  # 1 packedPath (sliced for token addresses)
+                DynamicLeaf(parse_bytes),  # 1 packedPath (sliced for token addresses)
                 Array(  # 2 swapData: (sendingAssetId, receivingAssetId, fromAmount)[]
                     Tuple(
                         (parse_address, parse_address, parse_uint256),

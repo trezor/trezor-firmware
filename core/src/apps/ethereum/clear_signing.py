@@ -48,6 +48,7 @@ if TYPE_CHECKING:
 
 
 SC_FUNC_SIG_BYTES = const(4)
+_EVM_WORD_SIZE = const(32)  # in bytes
 
 
 class ClearSigningFailed(Exception):
@@ -93,22 +94,22 @@ def _check_padding_zero(
     raw_data: memoryview, used_bytes: int, exc: type[ValueOverflow] = ValueOverflow
 ) -> None:
     """Sanity check to make sure unused data is zeroed out."""
-    if not 0 <= used_bytes <= 32:
+    if not 0 <= used_bytes <= _EVM_WORD_SIZE:
         raise InvalidFormatDefinition
-    if any(raw_data[: 32 - used_bytes]):
+    if any(raw_data[: _EVM_WORD_SIZE - used_bytes]):
         raise exc
 
 
 def parse_address(raw_data: memoryview) -> Value:
     _ZERO_PADDING = const(20)
-    if len(raw_data) < 32:
+    if len(raw_data) < _EVM_WORD_SIZE:
         raise OutOfBounds
     _check_padding_zero(raw_data, _ZERO_PADDING, DirtyAddress)
-    return bytes(raw_data[32 - _ZERO_PADDING :])
+    return bytes(raw_data[_EVM_WORD_SIZE - _ZERO_PADDING :])
 
 
 def parse_uint256(raw_data: memoryview) -> Value:
-    if len(raw_data) < 32:
+    if len(raw_data) < _EVM_WORD_SIZE:
         raise OutOfBounds
     return int.from_bytes(raw_data, "big")
 
@@ -117,7 +118,7 @@ def _make_uint_parser(bit_width: int) -> "Parser":
     byte_width = bit_width // 8
 
     def parser(raw_data: memoryview) -> Value:
-        if len(raw_data) < 32:
+        if len(raw_data) < _EVM_WORD_SIZE:
             raise OutOfBounds
         _check_padding_zero(raw_data, byte_width)
         return parse_uint256(raw_data)
@@ -142,13 +143,13 @@ parse_uint8 = _make_uint_parser(8)
 
 
 def parse_bytes32(raw_data: memoryview) -> Value:
-    if len(raw_data) < 32:
+    if len(raw_data) < _EVM_WORD_SIZE:
         raise OutOfBounds
-    return bytes(raw_data[:32])
+    return bytes(raw_data[:_EVM_WORD_SIZE])
 
 
 def parse_bool(raw_data: memoryview) -> Value:
-    if len(raw_data) < 32:
+    if len(raw_data) < _EVM_WORD_SIZE:
         raise OutOfBounds
     uint_value = parse_uint256(raw_data)
     if uint_value not in (0, 1):
@@ -518,6 +519,12 @@ class BindingContext:
 
 
 class ABIValue:
+    """A node of an ABI type tree, able to parse its value from raw calldata.
+
+    Encoding reference: the Solidity ABI specification,
+    https://docs.soliditylang.org/en/latest/abi-spec.html#formal-specification-of-the-encoding
+    """
+
     def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
         raise NotImplementedError
 
@@ -526,7 +533,7 @@ class ABIValue:
         if info.atomic is not None:
             return Atomic(_get_parser(info.atomic, is_dynamic=False))
         elif info.dynamic is not None:
-            return Dynamic(_get_parser(info.dynamic, is_dynamic=True))
+            return DynamicLeaf(_get_parser(info.dynamic, is_dynamic=True))
         elif info.tuple is not None:
             return Tuple(
                 tuple(_get_leaf_parser(f) for f in info.tuple.fields),
@@ -537,7 +544,7 @@ class ABIValue:
             if element.atomic is not None:
                 return Array(Atomic(_get_parser(element.atomic, is_dynamic=False)))
             elif element.dynamic is not None:
-                return Array(Dynamic(_get_parser(element.dynamic, is_dynamic=True)))
+                return Array(DynamicLeaf(_get_parser(element.dynamic, is_dynamic=True)))
             elif element.tuple is not None:
                 return Array(
                     Tuple(
@@ -553,7 +560,7 @@ class ABIValue:
                     )
                 elif inner.dynamic is not None:
                     return Array(
-                        Array(Dynamic(_get_parser(inner.dynamic, is_dynamic=True)))
+                        Array(DynamicLeaf(_get_parser(inner.dynamic, is_dynamic=True)))
                     )
                 raise InvalidFormatDefinition  # deeper nesting not supported
             raise InvalidFormatDefinition
@@ -561,42 +568,46 @@ class ABIValue:
 
 
 class Atomic(ABIValue):
-    """Atomic values, such as integers or addresses, are always stored on 32 bytes."""
+    """Atomic values, such as integers or addresses, are always stored on one EVM word."""
 
     def __init__(self, parser: Parser) -> None:
         self.parser = parser
 
     def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
-        if offset + 32 > len(raw_data):
+        if offset + _EVM_WORD_SIZE > len(raw_data):
             raise OutOfBounds
-        return self.parser(raw_data[offset : offset + 32]), 32
+        return (
+            self.parser(raw_data[offset : offset + _EVM_WORD_SIZE]),
+            _EVM_WORD_SIZE,
+        )
 
 
 def _read_dynamic_data(raw_data: memoryview, pointer: int) -> memoryview:
     """Read a variable-length blob located at `pointer` in `raw_data`,
-    encoded as a 32-byte length prefix followed by `length` bytes of data."""
-    if pointer + 32 > len(raw_data):
+    encoded as a one-word length prefix followed by `length` bytes of data."""
+    if pointer + _EVM_WORD_SIZE > len(raw_data):
         raise OutOfBounds
-    length = int.from_bytes(raw_data[pointer : pointer + 32], "big")
-    if pointer + 32 + length > len(raw_data):
+    length = int.from_bytes(raw_data[pointer : pointer + _EVM_WORD_SIZE], "big")
+    body_start = pointer + _EVM_WORD_SIZE
+    if body_start + length > len(raw_data):
         raise OutOfBounds
-    return raw_data[pointer + 32 : pointer + 32 + length]
+    return raw_data[body_start : body_start + length]
 
 
-class Dynamic(ABIValue):
-    """Dynamic values, such as strings or `bytes` are stored later in the calldata,
-    the inline value being just a pointer to the actual location.
-    Also they have an arbitrary length, which is encoded on the first 32 bytes,
+class DynamicLeaf(ABIValue):
+    """Dynamic leaf values, such as strings or `bytes`, are stored later in the
+    calldata, the inline value being just a pointer to the actual location.
+    Also they have an arbitrary length, which is encoded on the first word,
     after which the actual value follows."""
 
     def __init__(self, parser: Parser) -> None:
         self.parser = parser
 
     def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
-        if offset + 32 > len(raw_data):
+        if offset + _EVM_WORD_SIZE > len(raw_data):
             raise OutOfBounds
-        pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-        return self.parse_body(raw_data, pointer), 32
+        pointer = int.from_bytes(raw_data[offset : offset + _EVM_WORD_SIZE], "big")
+        return self.parse_body(raw_data, pointer), _EVM_WORD_SIZE
 
     def parse_body(self, raw_data: memoryview, body_start: int) -> AnyValue:
         """Parse the length-prefixed value located directly at `body_start`.
@@ -617,18 +628,18 @@ class Tuple(ABIValue):
     def __init__(self, fields: tuple[Parser, ...], is_dynamic: bool) -> None:
         self.fields = fields
         self.is_dynamic = is_dynamic
-        self.static_size = len(fields) * 32
+        self.static_size = len(fields) * _EVM_WORD_SIZE
 
     def parse(self, raw_data: memoryview, offset: int) -> tuple[TupleValue, int]:
         if not self.is_dynamic:
             base_offset = offset
             consumed = self.static_size
         else:
-            if offset + 32 > len(raw_data):
+            if offset + _EVM_WORD_SIZE > len(raw_data):
                 raise OutOfBounds
-            pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
+            pointer = int.from_bytes(raw_data[offset : offset + _EVM_WORD_SIZE], "big")
             base_offset = pointer
-            consumed = 32  # dynamic structs just consume the pointer
+            consumed = _EVM_WORD_SIZE  # dynamic structs just consume the pointer
 
         if base_offset + self.static_size > len(raw_data):
             raise OutOfBounds
@@ -636,8 +647,8 @@ class Tuple(ABIValue):
         value: list[Value] = [None] * len(self.fields)
 
         for i, parser in enumerate(self.fields):
-            field_head_pos = base_offset + (i * 32)
-            raw_field = raw_data[field_head_pos : field_head_pos + 32]
+            field_head_pos = base_offset + (i * _EVM_WORD_SIZE)
+            raw_field = raw_data[field_head_pos : field_head_pos + _EVM_WORD_SIZE]
             if parser not in DYNAMIC_DATA_PARSERS:
                 value[i] = parser(raw_field)
             else:
@@ -654,50 +665,63 @@ class Array(ABIValue):
         self.element_definition = element_definition
 
     def parse(self, raw_data: memoryview, offset: int) -> tuple[ListValue, int]:
-        if offset + 32 > len(raw_data):
+        if offset + _EVM_WORD_SIZE > len(raw_data):
             raise OutOfBounds
-        array_pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
-        return self._parse_body(raw_data, array_pointer), 32
+        array_pointer = int.from_bytes(
+            raw_data[offset : offset + _EVM_WORD_SIZE], "big"
+        )
+        return self._parse_body(raw_data, array_pointer), _EVM_WORD_SIZE
 
     def _parse_body(self, raw_data: memoryview, array_start: int) -> ListValue:
-        if array_start + 32 > len(raw_data):
+        if array_start + _EVM_WORD_SIZE > len(raw_data):
             raise OutOfBounds
-        array_length = int.from_bytes(raw_data[array_start : array_start + 32], "big")
-        array_heads_end = array_start + 32 + (array_length * 32)
+        array_length = int.from_bytes(
+            raw_data[array_start : array_start + _EVM_WORD_SIZE], "big"
+        )
+        # element heads are laid out right after the length word, and any
+        # offsets among them are relative to this position
+        elements_start = array_start + _EVM_WORD_SIZE
+        array_heads_end = elements_start + (array_length * _EVM_WORD_SIZE)
         if array_heads_end > len(raw_data):
             raise OutOfBounds
 
         value = []
 
         for i in range(array_length):
-            i_pointer = array_start + 32 + (i * 32)
-            if i_pointer + 32 > len(raw_data):
+            element_head_offset = elements_start + (i * _EVM_WORD_SIZE)
+            if element_head_offset + _EVM_WORD_SIZE > len(raw_data):
                 raise OutOfBounds
             if isinstance(self.element_definition, Atomic):
                 # e.g. `uint256[]` / `address[]`: each element is a static leaf,
                 # encoded in place (no pointer indirection), so `parse` reads the
-                # 32-byte value directly at the element head position.
-                data, _ = self.element_definition.parse(raw_data, i_pointer)
+                # one-word value directly at the element head position.
+                data, _ = self.element_definition.parse(raw_data, element_head_offset)
             elif isinstance(self.element_definition, Array):
                 # e.g. `uint256[][]`: each element is itself a (dynamic) array, so
                 # the element head is a relative offset to the inner array body.
                 # Dereference it, then `_parse_body` consumes the inner length
                 # prefix -- this is the array form of the "dynamic dance".
                 element_pointer = int.from_bytes(
-                    raw_data[i_pointer : i_pointer + 32], "big"
+                    raw_data[
+                        element_head_offset : element_head_offset + _EVM_WORD_SIZE
+                    ],
+                    "big",
                 )
-                inner_array_start = array_start + 32 + element_pointer
+                inner_array_start = elements_start + element_pointer
                 data = self.element_definition._parse_body(raw_data, inner_array_start)
-            elif isinstance(self.element_definition, Dynamic):
+            elif isinstance(self.element_definition, DynamicLeaf):
                 # e.g. `bytes[]` / `string[]`: each element is a dynamic leaf, so
                 # the element head is a relative offset to the length-prefixed
                 # element body. Read the body directly, mirroring the inner-array
                 # case above -- calling `parse` here would dereference the offset
                 # a second time.
                 element_pointer = int.from_bytes(
-                    raw_data[i_pointer : i_pointer + 32], "big"
+                    raw_data[
+                        element_head_offset : element_head_offset + _EVM_WORD_SIZE
+                    ],
+                    "big",
                 )
-                element_absolute_pointer = array_start + 32 + element_pointer
+                element_absolute_pointer = elements_start + element_pointer
                 data = self.element_definition.parse_body(
                     raw_data, element_absolute_pointer
                 )
@@ -706,9 +730,12 @@ class Array(ABIValue):
                 # array a struct is encoded via a relative offset head (and parsed
                 # as static -- see `from_proto`), so dereference then `parse`.
                 element_pointer = int.from_bytes(
-                    raw_data[i_pointer : i_pointer + 32], "big"
+                    raw_data[
+                        element_head_offset : element_head_offset + _EVM_WORD_SIZE
+                    ],
+                    "big",
                 )
-                element_absolute_pointer = array_start + 32 + element_pointer
+                element_absolute_pointer = elements_start + element_pointer
                 data, _ = self.element_definition.parse(
                     raw_data, element_absolute_pointer
                 )
