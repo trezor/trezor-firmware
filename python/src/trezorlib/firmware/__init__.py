@@ -45,11 +45,9 @@ if True:
 if t.TYPE_CHECKING:
     from ..client import Session
 
-    T = t.TypeVar("T", bound="FirmwareType")
-
     class FirmwareType(Protocol):
         @classmethod
-        def parse(cls: type[T], data: bytes) -> T: ...
+        def parse(cls, data: bytes) -> FirmwareType: ...
 
         def verify(self, dev_keys: bool = False) -> None: ...
 
