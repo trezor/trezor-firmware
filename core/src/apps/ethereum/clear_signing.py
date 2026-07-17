@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 
     # Parses a Value from a slice of the calldata.
     # Assumes that the memoryview contains just that value.
-    Parser = Callable[[memoryview], AnyValue]
+    Parser = Callable[[memoryview], Value]
 
 
 SC_FUNC_SIG_BYTES = const(4)
@@ -164,16 +164,7 @@ def parse_string(raw_data: memoryview) -> Value:
     return bytes(raw_data).decode("utf-8")
 
 
-def parse_uint256_array(raw_data: memoryview) -> list[Value]:
-    if len(raw_data) % 32 != 0:
-        raise InvalidFunctionCall
-    return [
-        parse_uint256(raw_data[i * 32 : (i + 1) * 32])
-        for i in range(len(raw_data) // 32)
-    ]
-
-
-DYNAMIC_DATA_PARSERS = [parse_bytes, parse_string, parse_uint256_array]
+DYNAMIC_DATA_PARSERS = [parse_bytes, parse_string]
 
 
 def _get_parser(t: int, is_dynamic: bool) -> Parser:
@@ -648,19 +639,11 @@ class Tuple(ABIValue):
             field_head_pos = base_offset + (i * 32)
             raw_field = raw_data[field_head_pos : field_head_pos + 32]
             if parser not in DYNAMIC_DATA_PARSERS:
-                v = parser(raw_field)
-                if isinstance(v, (tuple, list)):
-                    # Tuple or Array inside a Tuple
-                    raise NotImplementedError
-                value[i] = v
+                value[i] = parser(raw_field)
             else:
                 field_pointer = base_offset + int.from_bytes(raw_field, "big")
                 raw_field = _read_dynamic_data(raw_data, field_pointer)
-                v = parser(raw_field)
-                if isinstance(v, (tuple, list)):
-                    # Tuple or Array inside a Tuple
-                    raise NotImplementedError
-                value[i] = v
+                value[i] = parser(raw_field)
         return tuple(value), consumed
 
 
